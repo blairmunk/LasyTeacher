@@ -1,0 +1,44 @@
+{% extends 'task_manager/base.html' %}
+
+{% block title %}{{ analoggroup.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>{{ analoggroup.name }}</h2>
+    <a href="{% url 'task_manager:analoggroup-list' %}" class="btn btn-secondary">
+        <i class="fas fa-list"></i> К списку групп
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        {% if analoggroup.description %}
+        <div class="alert alert-info">
+            <strong>Описание:</strong> {{ analoggroup.description }}
+        </div>
+        {% endif %}
+
+        <h4>Задания в группе ({{ analoggroup.tasks.count }})</h4>
+        
+        {% for task in analoggroup.tasks.all %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h6 class="card-title">{{ task.topic }}</h6>
+                <p class="card-text">{{ task.text|truncatewords:30 }}</p>
+                <div class="mb-2">
+                    <span class="badge bg-primary">{{ task.get_task_type_display }}</span>
+                    <span class="badge bg-secondary">{{ task.get_difficulty_display }}</span>
+                </div>
+                <a href="{% url 'task_manager:task-detail' task.pk %}" class="btn btn-sm btn-outline-primary">
+                    Подробнее
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-warning">
+            В этой группе пока нет заданий.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

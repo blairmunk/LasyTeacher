@@ -1,0 +1,85 @@
+{% extends 'task_manager/base.html' %}
+
+{% block title %}{{ variant.work.name }} - Вариант {{ variant.number }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2>{{ variant.work.name }}</h2>
+                <h4 class="text-muted">Вариант {{ variant.number }}</h4>
+            </div>
+            <div>
+                <a href="{% url 'task_manager:variant-list' %}" class="btn btn-secondary">
+                    <i class="fas fa-list"></i> К списку вариантов
+                </a>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <strong>Время выполнения:</strong> {{ variant.work.duration }} минут
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Заданий в варианте:</strong> {{ variant.tasks.count }}
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Создан:</strong> {{ variant.created_at|date:"d.m.Y H:i" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h4>Задания варианта</h4>
+        {% for task in variant.tasks.all %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <div class="d-flex justify-content-between">
+                    <h5>Задание {{ forloop.counter }}</h5>
+                    <div>
+                        <span class="badge bg-primary">{{ task.get_task_type_display }}</span>
+                        <span class="badge bg-secondary">{{ task.get_difficulty_display }}</span>
+                    </div>
+                </div>
+                <small class="text-muted">{{ task.topic }}</small>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Условие:</strong>
+                    <div class="mt-2 p-3 bg-light border rounded">
+                        {{ task.text|linebreaks }}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Ответ:</strong>
+                    <div class="mt-2 p-3 bg-success text-white border rounded">
+                        {{ task.answer|linebreaks }}
+                    </div>
+                </div>
+                
+                {% if task.short_solution %}
+                <div class="mb-3">
+                    <strong>Краткое решение:</strong>
+                    <div class="mt-2 p-3 border rounded">
+                        {{ task.short_solution|linebreaks }}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <a href="{% url 'task_manager:task-detail' task.pk %}" class="btn btn-sm btn-outline-primary">
+                    Подробнее о задании
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-warning">
+            В варианте нет заданий.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

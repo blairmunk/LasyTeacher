@@ -1,0 +1,42 @@
+{% extends 'task_manager/base.html' %}
+
+{% block title %}Список классов{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Классы</h2>
+    <a href="/admin/task_manager/studentgroup/add/" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Создать класс
+    </a>
+</div>
+
+<div class="row">
+    {% for group in student_groups %}
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ group.name }}</h5>
+                <p class="card-text">
+                    <i class="fas fa-users"></i> Учеников: {{ group.students.count }}
+                </p>
+                <p class="card-text">
+                    <small class="text-muted">Создан: {{ group.created_at|date:"d.m.Y H:i" }}</small>
+                </p>
+                <a href="{% url 'task_manager:studentgroup-detail' group.pk %}" class="btn btn-primary">
+                    <i class="fas fa-eye"></i> Подробнее
+                </a>
+                <a href="/admin/task_manager/studentgroup/{{ group.pk }}/change/" class="btn btn-outline-secondary">
+                    <i class="fas fa-edit"></i> Редактировать
+                </a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            Классов пока нет. <a href="/admin/task_manager/studentgroup/add/">Создать первый класс</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

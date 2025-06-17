@@ -1,0 +1,119 @@
+{% extends 'task_manager/base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}
+    {% if object %}Редактирование задания{% else %}Создание задания{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h2>
+            {% if object %}
+                Редактирование задания
+            {% else %}
+                Создание нового задания
+            {% endif %}
+        </h2>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.section.id_for_label }}" class="form-label">{{ form.section.label }}</label>
+                    {{ form.section|add_class:"form-control" }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.topic.id_for_label }}" class="form-label">{{ form.topic.label }}</label>
+                    {{ form.topic|add_class:"form-control" }}
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.subtopic.id_for_label }}" class="form-label">{{ form.subtopic.label }}</label>
+                    {{ form.subtopic|add_class:"form-control" }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.task_type.id_for_label }}" class="form-label">{{ form.task_type.label }}</label>
+                    {{ form.task_type|add_class:"form-select" }}
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.text.id_for_label }}" class="form-label">{{ form.text.label }}</label>
+                {{ form.text|add_class:"form-control" }}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.answer.id_for_label }}" class="form-label">{{ form.answer.label }}</label>
+                {{ form.answer|add_class:"form-control" }}
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.short_solution.id_for_label }}" class="form-label">{{ form.short_solution.label }}</label>
+                    {{ form.short_solution|add_class:"form-control" }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.full_solution.id_for_label }}" class="form-label">{{ form.full_solution.label }}</label>
+                    {{ form.full_solution|add_class:"form-control" }}
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.hint.id_for_label }}" class="form-label">{{ form.hint.label }}</label>
+                    {{ form.hint|add_class:"form-control" }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.instruction.id_for_label }}" class="form-label">{{ form.instruction.label }}</label>
+                    {{ form.instruction|add_class:"form-control" }}
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.difficulty.id_for_label }}" class="form-label">{{ form.difficulty.label }}</label>
+                    {{ form.difficulty|add_class:"form-select" }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.content_element.id_for_label }}" class="form-label">{{ form.content_element.label }}</label>
+                    {{ form.content_element|add_class:"form-control" }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="{{ form.requirement_element.id_for_label }}" class="form-label">{{ form.requirement_element.label }}</label>
+                    {{ form.requirement_element|add_class:"form-control" }}
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">{{ form.analog_groups.label }}</label>
+                <div class="row">
+                    {% for choice in form.analog_groups %}
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            {{ choice.tag }}
+                            <label class="form-check-label" for="{{ choice.id_for_label }}">
+                                {{ choice.choice_label }}
+                            </label>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> 
+                    {% if object %}Обновить{% else %}Создать{% endif %}
+                </button>
+                <a href="{% url 'task_manager:task-list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Отмена
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

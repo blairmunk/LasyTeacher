@@ -2,7 +2,7 @@ from django.urls import path
 from . import views
 
 
-app_name = 'task_manager'  # Добавляем namespace
+app_name = 'task_manager'
 
 
 urlpatterns = [
@@ -18,6 +18,11 @@ urlpatterns = [
     # Группы аналогов
     path('analog-groups/', views.AnalogGroupListView.as_view(), name='analoggroup-list'),
     path('analog-groups/<int:pk>/', views.AnalogGroupDetailView.as_view(), name='analoggroup-detail'),
+    path('analog-groups/new/', views.AnalogGroupCreateView.as_view(), name='analoggroup-create'),  # ДОБАВЛЕНО
+    path('analog-groups/<int:pk>/edit/', views.AnalogGroupUpdateView.as_view(), name='analoggroup-update'),  # ДОБАВЛЕНО
+    path('analog-groups/<int:group_id>/add-tasks/', views.add_tasks_to_group, name='add-tasks-to-group'),  # ДОБАВЛЕНО
+    path('analog-groups/<int:group_id>/remove-task/<int:task_id>/', views.remove_task_from_group, name='remove-task-from-group'),  # ДОБАВЛЕНО
+    path('quick-add-to-group/', views.quick_add_to_group, name='quick-add-to-group'),  # ДОБАВЛЕНО
     
     # Работы
     path('works/', views.WorkListView.as_view(), name='work-list'),

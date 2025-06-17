@@ -57,6 +57,52 @@
                 <a href="{% url 'task_manager:task-update' task.pk %}" class="btn btn-sm btn-outline-secondary">
                     Редактировать
                 </a>
+                <!-- Добавить после кнопки "Редактировать" в каждой карточке задания -->
+                <div class="dropdown d-inline">
+                    <button class="btn btn-sm btn-outline-info dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-layer-group"></i> Группы
+                    </button>
+                    <ul class="dropdown-menu">
+                        {% for group in task.analog_groups.all %}
+                        <li>
+                            <span class="dropdown-item-text">
+                                <i class="fas fa-check text-success"></i> {{ group.name }}
+                                <form method="post" action="{% url 'task_manager:quick-add-to-group' %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="task_id" value="{{ task.id }}">
+                                    <input type="hidden" name="group_id" value="{{ group.id }}">
+                                    <input type="hidden" name="action" value="remove">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger ms-2">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </form>
+                            </span>
+                        </li>
+                        {% empty %}
+                        <li><span class="dropdown-item-text text-muted">Нет групп</span></li>
+                        {% endfor %}
+                        
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Добавить в группу:</h6></li>
+                        
+                        {% for group in all_groups %}
+                            {% if group not in task.analog_groups.all %}
+                            <li>
+                                <form method="post" action="{% url 'task_manager:quick-add-to-group' %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="task_id" value="{{ task.id }}">
+                                    <input type="hidden" name="group_id" value="{{ group.id }}">
+                                    <input type="hidden" name="action" value="add">
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="fas fa-plus text-success"></i> {{ group.name }}
+                                    </button>
+                                </form>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+
             </div>
         </div>
     </div>

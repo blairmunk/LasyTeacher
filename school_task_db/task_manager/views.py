@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.db.models import Q, Count, Avg
 from datetime import datetime, timedelta
 from .models import (
@@ -30,7 +30,7 @@ def index(request):
 # Задания
 class TaskListView(ListView):
     model = Task
-    template_name = 'task_manager/task_list.html'  # ИСПРАВЛЕНО
+    template_name = 'task_manager/task_list.html'
     context_object_name = 'tasks'
     paginate_by = 20
     
@@ -44,6 +44,12 @@ class TaskListView(ListView):
                 Q(section__icontains=search)
             )
         return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['all_groups'] = AnalogGroup.objects.all()  # ДОБАВЛЕНО
+        return context
+
 
 class TaskDetailView(DetailView):
     model = Task
@@ -315,3 +321,99 @@ def analog_group_tasks_api(request, group_id):
     }
     
     return JsonResponse(data)
+
+class AnalogGroupCreateView(CreateView):
+    model = AnalogGroup
+    form_class = AnalogGroupForm
+    template_name = 'task_manager/analoggroup_form.html'
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Группа аналогов успешно создана!')
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse('task_manager:analoggroup-detail', kwargs={'pk': self.object.pk})
+
+
+class AnalogGroupUpdateView(UpdateView):
+    model = AnalogGroup
+    form_class = AnalogGroupForm
+    template_name = 'task_manager/analoggroup_form.html'
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Группа аналогов успешно обновлена!')
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse('task_manager:analoggroup-detail', kwargs={'pk': self.object.pk})
+
+
+def add_tasks_to_group(request, group_id):
+    """Добавление заданий в группу аналогов"""
+    group = get_object_or_404(AnalogGroup, pk=group_id)
+    
+    if request.method == 'POST':
+        task_ids = request.POST.getlist('selected_tasks')
+        if task_ids:
+            tasks = Task.objects.filter(id__in=task_ids)
+            for task in tasks:
+                task.analog_groups.add(group)
+            messages.success(request, f'Добавлено {len(tasks)} заданий в группу "{group.name}"')
+        return redirect('task_manager:analoggroup-detail', pk=group.pk)
+    
+    # Получаем задания, которых еще нет в этой группе
+    available_tasks = Task.objects.exclude(analog_groups=group).order_by('-created_at')
+    
+    # Поиск
+    search = request.GET.get('search')
+    if search:
+        available_tasks = available_tasks.filter(
+            Q(text__icontains=search) |
+            Q(topic__icontains=search) |
+            Q(section__icontains=search)
+        )
+    
+    context = {
+        'group': group,
+        'available_tasks': available_tasks,
+        'search': search,
+    }
+    return render(request, 'task_manager/add_tasks_to_group.html', context)
+
+
+def remove_task_from_group(request, group_id, task_id):
+    """Удаление задания из группы аналогов"""
+    group = get_object_or_404(AnalogGroup, pk=group_id)
+    task = get_object_or_404(Task, pk=task_id)
+    
+    if request.method == 'POST':
+        task.analog_groups.remove(group)
+        messages.success(request, f'Задание "{task.topic}" удалено из группы "{group.name}"')
+    
+    return redirect('task_manager:analoggroup-detail', pk=group.pk)
+
+
+def quick_add_to_group(request):
+    """Быстрое добавление задания в группу через AJAX"""
+    if request.method == 'POST':
+        task_id = request.POST.get('task_id')
+        group_id = request.POST.get('group_id')
+        action = request.POST.get('action')  # 'add' или 'remove'
+        
+        task = get_object_or_404(Task, pk=task_id)
+        group = get_object_or_404(AnalogGroup, pk=group_id)
+        
+        if action == 'add':
+            task.analog_groups.add(group)
+            message = f'Задание добавлено в группу "{group.name}"'
+        elif action == 'remove':
+            task.analog_groups.remove(group)
+            message = f'Задание удалено из группы "{group.name}"'
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'message': message})
+        else:
+            messages.success(request, message)
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+    
+    return JsonResponse({'success': False})

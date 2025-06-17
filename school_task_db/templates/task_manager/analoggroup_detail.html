@@ -5,38 +5,71 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>{{ analoggroup.name }}</h2>
-    <a href="{% url 'task_manager:analoggroup-list' %}" class="btn btn-secondary">
-        <i class="fas fa-list"></i> К списку групп
-    </a>
+    <div>
+        <a href="{% url 'task_manager:add-tasks-to-group' analoggroup.pk %}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Добавить задания
+        </a>
+        <a href="{% url 'task_manager:analoggroup-update' analoggroup.pk %}" class="btn btn-primary">
+            <i class="fas fa-edit"></i> Редактировать
+        </a>
+        <a href="{% url 'task_manager:analoggroup-list' %}" class="btn btn-secondary">
+            <i class="fas fa-list"></i> К списку групп
+        </a>
+    </div>
 </div>
 
 <div class="row">
-    <div class="col-md-8">
+    <div class="col-md-12">
         {% if analoggroup.description %}
         <div class="alert alert-info">
             <strong>Описание:</strong> {{ analoggroup.description }}
         </div>
         {% endif %}
 
-        <h4>Задания в группе ({{ analoggroup.tasks.count }})</h4>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>Задания в группе ({{ analoggroup.tasks.count }})</h4>
+            {% if analoggroup.tasks.count > 0 %}
+            <small class="text-muted">Для удаления задания из группы нажмите на крестик</small>
+            {% endif %}
+        </div>
         
         {% for task in analoggroup.tasks.all %}
         <div class="card mb-3">
             <div class="card-body">
-                <h6 class="card-title">{{ task.topic }}</h6>
-                <p class="card-text">{{ task.text|truncatewords:30 }}</p>
-                <div class="mb-2">
-                    <span class="badge bg-primary">{{ task.get_task_type_display }}</span>
-                    <span class="badge bg-secondary">{{ task.get_difficulty_display }}</span>
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <h6 class="card-title">{{ task.topic }}</h6>
+                        <p class="card-text">{{ task.text|truncatewords:30 }}</p>
+                        <div class="mb-2">
+                            <span class="badge bg-primary">{{ task.get_task_type_display }}</span>
+                            <span class="badge bg-secondary">{{ task.get_difficulty_display }}</span>
+                            {% if task.images.exists %}
+                                <span class="badge bg-info">{{ task.images.count }} изображ.</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <a href="{% url 'task_manager:task-detail' task.pk %}" class="btn btn-sm btn-outline-primary mb-1">
+                            <i class="fas fa-eye"></i> Подробнее
+                        </a>
+                        <form method="post" action="{% url 'task_manager:remove-task-from-group' analoggroup.pk task.pk %}" class="d-inline" onsubmit="return confirm('Удалить задание из группы?')">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-times"></i> Удалить
+                            </button>
+                        </form>
+                    </div>
                 </div>
-                <a href="{% url 'task_manager:task-detail' task.pk %}" class="btn btn-sm btn-outline-primary">
-                    Подробнее
-                </a>
             </div>
         </div>
         {% empty %}
         <div class="alert alert-warning">
-            В этой группе пока нет заданий.
+            <div class="d-flex justify-content-between align-items-center">
+                <span>В этой группе пока нет заданий.</span>
+                <a href="{% url 'task_manager:add-tasks-to-group' analoggroup.pk %}" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Добавить задания
+                </a>
+            </div>
         </div>
         {% endfor %}
     </div>

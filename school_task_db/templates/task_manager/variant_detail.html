@@ -4,20 +4,23 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-md-10">
+    <div class="col-md-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h2>{{ variant.work.name }}</h2>
                 <h4 class="text-muted">Вариант {{ variant.number }}</h4>
             </div>
             <div>
+                <button onclick="window.print()" class="btn btn-info">
+                    <i class="fas fa-print"></i> Печать
+                </button>
                 <a href="{% url 'task_manager:variant-list' %}" class="btn btn-secondary">
                     <i class="fas fa-list"></i> К списку вариантов
                 </a>
             </div>
         </div>
 
-        <div class="card mb-4">
+        <div class="card mb-4 d-print-none">
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4">
@@ -33,10 +36,20 @@
             </div>
         </div>
 
-        <h4>Задания варианта</h4>
+        <!-- Печатная версия -->
+        <div class="print-version">
+            <div class="text-center mb-4">
+                <h3>{{ variant.work.name }}</h3>
+                <h4>Вариант {{ variant.number }}</h4>
+                <p>Время выполнения: {{ variant.work.duration }} минут</p>
+                <hr>
+            </div>
+        </div>
+
+        <h4 class="d-print-none">Задания варианта</h4>
         {% for task in variant.tasks.all %}
         <div class="card mb-4">
-            <div class="card-header">
+            <div class="card-header d-print-none">
                 <div class="d-flex justify-content-between">
                     <h5>Задание {{ forloop.counter }}</h5>
                     <div>
@@ -47,32 +60,65 @@
                 <small class="text-muted">{{ task.topic }}</small>
             </div>
             <div class="card-body">
-                <div class="mb-3">
-                    <strong>Условие:</strong>
-                    <div class="mt-2 p-3 bg-light border rounded">
-                        {{ task.text|linebreaks }}
-                    </div>
+                <!-- Для печати -->
+                <div class="d-none d-print-block mb-3">
+                    <strong>{{ forloop.counter }}. {{ task.topic }}</strong>
                 </div>
                 
                 <div class="mb-3">
-                    <strong>Ответ:</strong>
-                    <div class="mt-2 p-3 bg-success text-white border rounded">
-                        {{ task.answer|linebreaks }}
+                    <div class="task-content">
+                        <div class="task-text-with-images">
+                            <!-- Изображения справа -->
+                            {% for image in task.images.all %}
+                                {% if image.position == 'right_40' or image.position == 'right_20' %}
+                                    <div class="task-image {{ image.get_css_class }}">
+                                        <img src="{{ image.image.url }}" alt="{{ image.caption|default:'Изображение к заданию' }}" />
+                                        {% if image.caption %}
+                                            <div class="task-image-caption">{{ image.caption }}</div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {{ task.text|linebreaks }}
+                            
+                            <!-- Изображения снизу -->
+                            {% for image in task.images.all %}
+                                {% if image.position == 'bottom_100' or image.position == 'bottom_70' %}
+                                    <div class="task-image {{ image.get_css_class }}">
+                                        <img src="{{ image.image.url }}" alt="{{ image.caption|default:'Изображение к заданию' }}" />
+                                        {% if image.caption %}
+                                            <div class="task-image-caption">{{ image.caption }}</div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <div style="clear: both;"></div>
                     </div>
                 </div>
                 
-                {% if task.short_solution %}
-                <div class="mb-3">
-                    <strong>Краткое решение:</strong>
-                    <div class="mt-2 p-3 border rounded">
-                        {{ task.short_solution|linebreaks }}
+                <div class="d-print-none">
+                    <div class="mb-3">
+                        <strong>Ответ:</strong>
+                        <div class="mt-2 p-3 bg-success text-white border rounded">
+                            {{ task.answer|linebreaks }}
+                        </div>
                     </div>
+                    
+                    {% if task.short_solution %}
+                    <div class="mb-3">
+                        <strong>Краткое решение:</strong>
+                        <div class="mt-2 p-3 border rounded">
+                            {{ task.short_solution|linebreaks }}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <a href="{% url 'task_manager:task-detail' task.pk %}" class="btn btn-sm btn-outline-primary">
+                        Подробнее о задании
+                    </a>
                 </div>
-                {% endif %}
-                
-                <a href="{% url 'task_manager:task-detail' task.pk %}" class="btn btn-sm btn-outline-primary">
-                    Подробнее о задании
-                </a>
             </div>
         </div>
         {% empty %}
@@ -82,4 +128,41 @@
         {% endfor %}
     </div>
 </div>
+
+<style>
+/* Стили для печати */
+@media print {
+    .d-print-none {
+        display: none !important;
+    }
+    
+    .d-print-block {
+        display: block !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+        margin-bottom: 20px;
+    }
+    
+    .card-body {
+        padding: 0 !important;
+    }
+    
+    .task-image img {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+    
+    body {
+        font-size: 12px;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid;
+    }
+}
+</style>
 {% endblock %}

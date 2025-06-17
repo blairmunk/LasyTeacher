@@ -1,8 +1,26 @@
 from django import forms
 from django.forms import inlineformset_factory
 from .models import (
-    Task, AnalogGroup, Work, WorkAnalogGroup, Variant,
+    Task, TaskImage, AnalogGroup, Work, WorkAnalogGroup, Variant,
     Student, StudentGroup, Event, Mark
+)
+
+
+class TaskImageForm(forms.ModelForm):
+    class Meta:
+        model = TaskImage
+        fields = ['image', 'position', 'caption', 'order']
+        widgets = {
+            'caption': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Подпись к изображению (необязательно)'}),
+            'order': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
+            'position': forms.Select(attrs={'class': 'form-select'}),
+            'image': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+        }
+
+
+# Формсет для изображений задания
+TaskImageFormSet = inlineformset_factory(
+    Task, TaskImage, form=TaskImageForm, extra=1, can_delete=True
 )
 
 

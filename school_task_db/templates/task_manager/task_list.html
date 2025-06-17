@@ -27,12 +27,30 @@
     <div class="col-md-6 mb-3">
         <div class="card">
             <div class="card-body">
-                <h6 class="card-title">{{ task.topic }}</h6>
+                <h6 class="card-title">
+                    {{ task.topic }}
+                    {% if task.images.exists %}
+                        <i class="fas fa-image text-info" title="Содержит изображения"></i>
+                    {% endif %}
+                </h6>
                 <p class="card-text">{{ task.text|truncatewords:20 }}</p>
                 <div class="mb-2">
                     <span class="badge bg-primary">{{ task.get_task_type_display }}</span>
                     <span class="badge bg-secondary">{{ task.get_difficulty_display }}</span>
+                    {% if task.images.exists %}
+                        <span class="badge bg-info">{{ task.images.count }} изображ.</span>
+                    {% endif %}
                 </div>
+                
+                <!-- Предварительный просмотр первого изображения -->
+                {% if task.images.exists %}
+                    {% with task.images.first as first_image %}
+                    <div class="mb-2">
+                        <img src="{{ first_image.image.url }}" class="img-thumbnail" style="max-width: 80px; max-height: 60px; object-fit: cover;" alt="Превью">
+                    </div>
+                    {% endwith %}
+                {% endif %}
+                
                 <a href="{% url 'task_manager:task-detail' task.pk %}" class="btn btn-sm btn-outline-primary">
                     Подробнее
                 </a>

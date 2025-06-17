@@ -2,6 +2,13 @@ from django.db import models
 from django.urls import reverse
 import json
 import random
+import os
+
+
+def task_image_upload_path(instance, filename):
+    """Путь для загрузки изображений заданий"""
+    return f'task_images/task_{instance.task.id}/{filename}'
+
 
 class AnalogGroup(models.Model):
     """Группа аналогичных заданий"""
@@ -20,6 +27,7 @@ class AnalogGroup(models.Model):
     def get_sample_task(self):
         """Возвращает одно задание из группы для предварительного просмотра"""
         return self.tasks.first()
+
 
 class Task(models.Model):
     """Задание"""
@@ -74,8 +82,45 @@ class Task(models.Model):
         return f"{self.topic} - {self.text[:50]}..."
     
     def get_absolute_url(self):
-        return reverse('task_manager:task-detail', kwargs={'pk': self.pk})  # ИСПРАВЛЕНО
+        return reverse('task_manager:task-detail', kwargs={'pk': self.pk})
 
+
+class TaskImage(models.Model):
+    """Изображение для задания"""
+    POSITION_CHOICES = [
+        ('right_40', 'Справа 40% (обтекание текстом 60%)'),
+        ('right_20', 'Справа 20% (обтекание текстом 80%)'),
+        ('bottom_100', 'Снизу по центру 100% ширины'),
+        ('bottom_70', 'Снизу по центру 70% ширины'),
+    ]
+    
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='images', verbose_name='Задание')
+    image = models.ImageField('Изображение', upload_to=task_image_upload_path)
+    position = models.CharField('Расположение', max_length=20, choices=POSITION_CHOICES, default='bottom_70')
+    caption = models.CharField('Подпись к изображению', max_length=200, blank=True)
+    order = models.PositiveIntegerField('Порядок отображения', default=1)
+    created_at = models.DateTimeField('Создано', auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'Изображение задания'
+        verbose_name_plural = 'Изображения заданий'
+        ordering = ['order', 'created_at']
+    
+    def __str__(self):
+        return f"Изображение для {self.task.topic} ({self.get_position_display()})"
+    
+    def get_css_class(self):
+        """Возвращает CSS класс для позиционирования изображения"""
+        css_classes = {
+            'right_40': 'task-image-right-40',
+            'right_20': 'task-image-right-20',
+            'bottom_100': 'task-image-bottom-100',
+            'bottom_70': 'task-image-bottom-70',
+        }
+        return css_classes.get(self.position, 'task-image-bottom-70')
+
+
+# Остальные модели остаются без изменений...
 class Work(models.Model):
     """Работа"""
     name = models.CharField('Название работы', max_length=200)
@@ -92,7 +137,7 @@ class Work(models.Model):
         return self.name
     
     def get_absolute_url(self):
-        return reverse('task_manager:work-detail', kwargs={'pk': self.pk})  # ИСПРАВЛЕНО
+        return reverse('task_manager:work-detail', kwargs={'pk': self.pk})
     
     def generate_variants(self, count=1):
         """Генерация вариантов на основе работы"""
@@ -117,6 +162,7 @@ class Work(models.Model):
         self.save()
         return variants
 
+
 class WorkAnalogGroup(models.Model):
     """Связь работы с группой аналогов и количеством заданий"""
     work = models.ForeignKey(Work, on_delete=models.CASCADE, verbose_name='Работа')
@@ -130,6 +176,7 @@ class WorkAnalogGroup(models.Model):
     
     def __str__(self):
         return f"{self.work.name} - {self.analog_group.name} ({self.count})"
+
 
 class Variant(models.Model):
     """Вариант работы"""
@@ -148,7 +195,8 @@ class Variant(models.Model):
         return f"{self.work.name} - Вариант {self.number}"
     
     def get_absolute_url(self):
-        return reverse('task_manager:variant-detail', kwargs={'pk': self.pk})  # ИСПРАВЛЕНО
+        return reverse('task_manager:variant-detail', kwargs={'pk': self.pk})
+
 
 class Student(models.Model):
     """Ученик"""
@@ -172,6 +220,7 @@ class Student(models.Model):
             parts.append(self.middle_name)
         return ' '.join(parts)
 
+
 class StudentGroup(models.Model):
     """Класс"""
     name = models.CharField('Название класса', max_length=100)
@@ -185,6 +234,7 @@ class StudentGroup(models.Model):
     
     def __str__(self):
         return self.name
+
 
 class Event(models.Model):
     """Событие (проведение работы)"""
@@ -212,7 +262,8 @@ class Event(models.Model):
         return f"{self.name} - {self.student_group.name}"
     
     def get_absolute_url(self):
-        return reverse('task_manager:event-detail', kwargs={'pk': self.pk})  # ИСПРАВЛЕНО
+        return reverse('task_manager:event-detail', kwargs={'pk': self.pk})
+
 
 class Mark(models.Model):
     """Отметка"""
@@ -229,3 +280,4 @@ class Mark(models.Model):
     
     def __str__(self):
         return f"{self.student} - {self.variant} - {self.score or 'Не оценено'}"
+        

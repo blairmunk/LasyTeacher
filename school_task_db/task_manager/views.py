@@ -15,6 +15,7 @@ from .forms import (
     VariantGenerationForm, StudentForm, StudentGroupForm, EventForm,
     MarkForm, StudentVariantAssignmentForm
 )
+from .forms import TaskImageFormSet
 
 # Главная страница
 def index(request):
@@ -48,23 +49,58 @@ class TaskDetailView(DetailView):
     model = Task
     template_name = 'task_manager/task_detail.html'  # ИСПРАВЛЕНО
 
+
 class TaskCreateView(CreateView):
     model = Task
     form_class = TaskForm
-    template_name = 'task_manager/task_form.html'  # ИСПРАВЛЕНО
+    template_name = 'task_manager/task_form.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['image_formset'] = TaskImageFormSet(self.request.POST, self.request.FILES)
+        else:
+            context['image_formset'] = TaskImageFormSet()
+        return context
     
     def form_valid(self, form):
-        messages.success(self.request, 'Задание успешно создано!')
-        return super().form_valid(form)
+        context = self.get_context_data()
+        image_formset = context['image_formset']
+        
+        if image_formset.is_valid():
+            response = super().form_valid(form)
+            image_formset.instance = self.object
+            image_formset.save()
+            messages.success(self.request, 'Задание успешно создано!')
+            return response
+        else:
+            return self.render_to_response(self.get_context_data(form=form))
+
 
 class TaskUpdateView(UpdateView):
     model = Task
     form_class = TaskForm
-    template_name = 'task_manager/task_form.html'  # ИСПРАВЛЕНО
+    template_name = 'task_manager/task_form.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['image_formset'] = TaskImageFormSet(self.request.POST, self.request.FILES, instance=self.object)
+        else:
+            context['image_formset'] = TaskImageFormSet(instance=self.object)
+        return context
     
     def form_valid(self, form):
-        messages.success(self.request, 'Задание успешно обновлено!')
-        return super().form_valid(form)
+        context = self.get_context_data()
+        image_formset = context['image_formset']
+        
+        if image_formset.is_valid():
+            response = super().form_valid(form)
+            image_formset.save()
+            messages.success(self.request, 'Задание успешно обновлено!')
+            return response
+        else:
+            return self.render_to_response(self.get_context_data(form=form))
 
 # Группы аналогов
 class AnalogGroupListView(ListView):

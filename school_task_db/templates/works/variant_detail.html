@@ -51,7 +51,10 @@
             </div>
             <div class="card-body">
                 <div class="d-none d-print-block mb-3">
-                    <strong>{{ forloop.counter }}. {{ task.topic }}</strong>
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ forloop.counter }}. {{ task.topic }}</strong>
+                        <span class="uuid-print">{{ task.get_short_uuid }}</span>  <!-- ДОБАВИТЬ -->
+                    </div>
                 </div>
                 
                 <div class="mb-3">
@@ -104,6 +107,9 @@
             В варианте нет заданий.
         </div>
         {% endfor %}
+    </div>
+    <div class="uuid-code">
+        Вариант: {{ variant.get_medium_uuid }} | Работа: {{ variant.work.get_short_uuid }}
     </div>
 </div>
 {% endblock %}

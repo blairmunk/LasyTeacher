@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Результаты поиска{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Результаты поиска</h2>
+    
+    {% if query %}
+        <div class="alert alert-info">
+            <i class="fas fa-search"></i> Поиск по запросу: "<strong>{{ query }}</strong>"
+        </div>
+        
+        <div class="row">
+            <!-- Задания -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-tasks"></i> Задания ({{ results.tasks.count }})</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if results.tasks %}
+                            {% for task in results.tasks %}
+                            <div class="border-bottom py-2">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <strong>{{ task.topic }}</strong><br>
+                                        <small class="text-muted">{{ task.text|truncatewords:10 }}</small>
+                                    </div>
+                                    <div>
+                                        <span class="uuid-badge">{{ task.get_short_uuid }}</span><br>
+                                        <a href="{% url 'tasks:detail' task.pk %}" class="btn btn-sm btn-outline-primary mt-1">
+                                            Открыть
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">Заданий не найдено</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Работы -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-file-alt"></i> Работы ({{ results.works.count }})</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if results.works %}
+                            {% for work in results.works %}
+                            <div class="border-bottom py-2">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <strong>{{ work.name }}</strong><br>
+                                        <small class="text-muted">{{ work.duration }} минут</small>
+                                    </div>
+                                    <div>
+                                        <span class="uuid-badge">{{ work.get_short_uuid }}</span><br>
+                                        <a href="{% url 'works:detail' work.pk %}" class="btn btn-sm btn-outline-primary mt-1">
+                                            Открыть
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">Работ не найдено</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Варианты -->
+        <div class="row">
+            <div class="col-md-12 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-copy"></i> Варианты ({{ results.variants.count }})</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if results.variants %}
+                            <div class="row">
+                                {% for variant in results.variants %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="border p-3 rounded">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <strong>{{ variant.work.name }}</strong><br>
+                                                <small class="text-muted">Вариант {{ variant.number }} | {{ variant.tasks.count }} заданий</small>
+                                            </div>
+                                            <div>
+                                                <span class="uuid-badge">{{ variant.get_short_uuid }}</span><br>
+                                                <a href="{% url 'works:variant-detail' variant.pk %}" class="btn btn-sm btn-outline-primary mt-1">
+                                                    Открыть
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted">Вариантов не найдено</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    {% else %}
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i> Введите запрос для поиска
+        </div>
+    {% endif %}
+    
+    <!-- Форма поиска -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5>Новый поиск</h5>
+            <form method="get">
+                <div class="input-group">
+                    <input type="text" class="form-control" name="q" value="{{ query }}" 
+                           placeholder="Введите UUID или его часть (например: A7B3, #F2D9)...">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search"></i> Искать
+                    </button>
+                </div>
+                <small class="form-text text-muted">
+                    Можно искать по полному или частичному UUID. Минимум 3 символа.
+                </small>
+            </form>
+        </div>
+    </div>
+    
+    <div class="mt-3">
+        <a href="{% url 'core:index' %}" class="btn btn-secondary">
+            <i class="fas fa-home"></i> На главную
+        </a>
+    </div>
+</div>
+{% endblock %}

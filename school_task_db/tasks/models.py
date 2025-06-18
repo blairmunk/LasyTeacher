@@ -50,7 +50,7 @@ class Task(BaseModel):
         ordering = ['-created_at']
     
     def __str__(self):
-        return f"{self.topic} - {self.text[:50]}..."
+        return f"[{self.get_short_uuid()}] {self.topic} - {self.text[:50]}..."
     
     def get_absolute_url(self):
         return reverse('tasks:detail', kwargs={'pk': self.pk})

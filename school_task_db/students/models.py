@@ -15,7 +15,7 @@ class Student(BaseModel):
         ordering = ['last_name', 'first_name']
     
     def __str__(self):
-        return f"{self.last_name} {self.first_name}"
+        return f"[{self.get_short_uuid()}] {self.last_name} {self.first_name}"
     
     def get_full_name(self):
         parts = [self.last_name, self.first_name]
@@ -34,7 +34,7 @@ class StudentGroup(BaseModel):
         ordering = ['name']
     
     def __str__(self):
-        return self.name
+        return f"[{self.get_short_uuid()}] {self.name}"
     
     def get_absolute_url(self):
         return reverse('students:group-detail', kwargs={'pk': self.pk})

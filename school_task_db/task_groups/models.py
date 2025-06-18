@@ -13,7 +13,7 @@ class AnalogGroup(BaseModel):
         ordering = ['name']
     
     def __str__(self):
-        return self.name
+        return f"[{self.get_short_uuid()}] {self.name}"
     
     def get_absolute_url(self):
         return reverse('groups:detail', kwargs={'pk': self.pk})

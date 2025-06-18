@@ -69,6 +69,7 @@ class TaskUpdateView(UpdateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        from task_groups.models import AnalogGroup 
         if self.request.POST:
             context['image_formset'] = TaskImageFormSet(self.request.POST, self.request.FILES, instance=self.object)
         else:

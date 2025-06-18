@@ -24,7 +24,7 @@ class Event(BaseModel):
         ordering = ['-date']
     
     def __str__(self):
-        return f"{self.name} - {self.student_group.name}"
+        return f"[{self.get_short_uuid()}] {self.name} - {self.student_group.name}"
     
     def get_absolute_url(self):
         return reverse('events:detail', kwargs={'pk': self.pk})
@@ -42,4 +42,4 @@ class Mark(BaseModel):
         ordering = ['-created_at']
     
     def __str__(self):
-        return f"{self.student} - {self.variant} - {self.score or 'Не оценено'}"
+        return f"[{self.get_short_uuid()}] {self.student} - {self.variant} - {self.score or 'Не оценено'}"

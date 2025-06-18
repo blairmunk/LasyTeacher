@@ -31,12 +31,10 @@
     <div class="col-md-6 mb-3">
         <div class="card">
             <div class="card-body">
-                <h6 class="card-title">
-                    {{ task.topic }}
-                    {% if task.images.exists %}
-                        <i class="fas fa-image text-info" title="Содержит изображения"></i>
-                    {% endif %}
-                </h6>
+                <div class="d-flex justify-content-between align-items-start">
+                    <h6 class="card-title">{{ task.topic }}</h6>
+                    <small class="uuid-badge">{{ task.get_display_id }}</small>  <!-- ДОБАВИТЬ -->
+                </div>
                 <p class="card-text">{{ task.text|truncatewords:20 }}</p>
                 <div class="mb-2">
                     <span class="badge bg-primary">{{ task.get_task_type_display }}</span>

@@ -15,7 +15,7 @@ class Work(BaseModel):
         ordering = ['-created_at']
     
     def __str__(self):
-        return self.name
+        return f"[{self.get_short_uuid()}] {self.name}"
     
     def get_absolute_url(self):
         return reverse('works:detail', kwargs={'pk': self.pk})
@@ -73,7 +73,7 @@ class Variant(BaseModel):
         unique_together = ['work', 'number']
     
     def __str__(self):
-        return f"{self.work.name} - Вариант {self.number}"
+        return f"[{self.get_short_uuid()}] {self.work.name} - Вариант {self.number}"
     
     def get_absolute_url(self):
         return reverse('works:variant-detail', kwargs={'pk': self.pk})

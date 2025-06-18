@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}
+    {% if object %}Редактирование работы{% else %}Создание работы{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h2>
+            {% if object %}
+                Редактирование работы: {{ object.name }}
+            {% else %}
+                Создание новой работы
+            {% endif %}
+        </h2>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Основная информация</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                        {{ form.name|add_class:"form-control" }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.duration.id_for_label }}" class="form-label">{{ form.duration.label }}</label>
+                        {{ form.duration|add_class:"form-control" }}
+                        <div class="form-text">Время в минутах</div>
+                    </div>
+                </div>
+            </div>
+
+            {% if formset %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Группы заданий</h5>
+                </div>
+                <div class="card-body">
+                    {{ formset.management_form }}
+                    <div id="formset-container">
+                        {% for form in formset %}
+                        <div class="formset-form border p-3 mb-3">
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.non_field_errors }}
+                                </div>
+                            {% endif %}
+                            
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <label class="form-label">Группа аналогов</label>
+                                    {{ form.analog_group|add_class:"form-select" }}
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Количество</label>
+                                    {{ form.count|add_class:"form-control" }}
+                                </div>
+                                <div class="col-md-1 d-flex align-items-end">
+                                    {{ form.DELETE }}
+                                    {% if form.DELETE %}
+                                        <label for="{{ form.DELETE.id_for_label }}" class="form-label">Удалить</label>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {{ form.id }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="alert alert-info">
+                        <small>Добавьте группы заданий, которые будут включены в эту работу. Указывайте количество заданий из каждой группы.</small>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> 
+                    {% if object %}Обновить{% else %}Создать{% endif %}
+                </button>
+                <a href="{% url 'works:list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Отмена
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

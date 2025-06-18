@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Список вариантов{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Варианты работ</h2>
+</div>
+
+<div class="row">
+    {% for variant in variants %}
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ variant.work.name }}</h5>
+                <h6 class="text-muted">Вариант {{ variant.number }}</h6>
+                <p class="card-text">
+                    <i class="fas fa-tasks"></i> Заданий: {{ variant.tasks.count }}<br>
+                    <i class="fas fa-clock"></i> Время: {{ variant.work.duration }} минут
+                </p>
+                <p class="card-text">
+                    <small class="text-muted">Создан: {{ variant.created_at|date:"d.m.Y H:i" }}</small>
+                </p>
+                <a href="{% url 'works:variant-detail' variant.pk %}" class="btn btn-primary">
+                    <i class="fas fa-eye"></i> Подробнее
+                </a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            Вариантов пока нет. Создайте работы и сгенерируйте варианты.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Список событий{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>События</h2>
+    <a href="{% url 'events:create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Создать событие
+    </a>
+</div>
+
+<div class="row">
+    {% for event in events %}
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ event.name }}</h5>
+                <h6 class="text-muted">{{ event.student_group.name }}</h6>
+                <p class="card-text">
+                    <i class="fas fa-file-alt"></i> Работа: {{ event.work.name }}<br>
+                    <i class="fas fa-calendar"></i> Дата: {{ event.date|date:"d.m.Y H:i" }}<br>
+                    <i class="fas fa-info-circle"></i> Статус: 
+                    {% if event.status == 'planned' %}
+                        <span class="badge bg-secondary">{{ event.get_status_display }}</span>
+                    {% elif event.status == 'conducted' %}
+                        <span class="badge bg-info">{{ event.get_status_display }}</span>
+                    {% elif event.status == 'checked' %}
+                        <span class="badge bg-warning">{{ event.get_status_display }}</span>
+                    {% elif event.status == 'graded' %}
+                        <span class="badge bg-success">{{ event.get_status_display }}</span>
+                    {% else %}
+                        <span class="badge bg-dark">{{ event.get_status_display }}</span>
+                    {% endif %}
+                </p>
+                <a href="{% url 'events:detail' event.pk %}" class="btn btn-primary">
+                    <i class="fas fa-eye"></i> Подробнее
+                </a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            Событий пока нет. <a href="{% url 'events:create' %}">Создать первое событие</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

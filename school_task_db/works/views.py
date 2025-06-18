@@ -47,6 +47,31 @@ class WorkCreateView(CreateView):
         else:
             return self.render_to_response(self.get_context_data(form=form))
 
+class WorkUpdateView(UpdateView):  # ← ДОБАВИТЬ ЭТО
+    model = Work
+    form_class = WorkForm
+    template_name = 'works/form.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['formset'] = WorkAnalogGroupFormSet(self.request.POST, instance=self.object)
+        else:
+            context['formset'] = WorkAnalogGroupFormSet(instance=self.object)
+        return context
+    
+    def form_valid(self, form):
+        context = self.get_context_data()
+        formset = context['formset']
+        
+        if formset.is_valid():
+            response = super().form_valid(form)
+            formset.save()
+            messages.success(self.request, 'Работа успешно обновлена!')
+            return response
+        else:
+            return self.render_to_response(self.get_context_data(form=form))
+
 def generate_variants(request, work_id):
     """Генерация вариантов для работы"""
     work = get_object_or_404(Work, pk=work_id)

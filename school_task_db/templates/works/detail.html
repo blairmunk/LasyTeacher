@@ -48,7 +48,7 @@
                     {% for work_group in analog_groups %}
                     <tr>
                         <td>
-                            <a href="{% url 'groups:detail' work_group.analog_group.pk %}">
+                            <a href="{% url 'task_groups:detail' work_group.analog_group.pk %}">
                                 {{ work_group.analog_group.name }}
                             </a>
                         </td>

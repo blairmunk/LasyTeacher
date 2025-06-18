@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 
-app_name = 'groups'
+app_name = 'task_groups'
 
 urlpatterns = [
     path('', views.AnalogGroupListView.as_view(), name='list'),

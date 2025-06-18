@@ -8,13 +8,13 @@ from .forms import AnalogGroupForm
 
 class AnalogGroupListView(ListView):
     model = AnalogGroup
-    template_name = 'groups/list.html'
+    template_name = 'task_groups/list.html'
     context_object_name = 'analog_groups'
     paginate_by = 20
 
 class AnalogGroupDetailView(DetailView):
     model = AnalogGroup
-    template_name = 'groups/detail.html'
+    template_name = 'task_groups/detail.html'
     context_object_name = 'analoggroup'
     
     def get_context_data(self, **kwargs):
@@ -25,7 +25,7 @@ class AnalogGroupDetailView(DetailView):
 class AnalogGroupCreateView(CreateView):
     model = AnalogGroup
     form_class = AnalogGroupForm
-    template_name = 'groups/form.html'
+    template_name = 'task_groups/form.html'
     
     def form_valid(self, form):
         messages.success(self.request, 'Группа аналогов успешно создана!')
@@ -34,7 +34,7 @@ class AnalogGroupCreateView(CreateView):
 class AnalogGroupUpdateView(UpdateView):
     model = AnalogGroup
     form_class = AnalogGroupForm
-    template_name = 'groups/form.html'
+    template_name = 'task_groups/form.html'
     
     def form_valid(self, form):
         messages.success(self.request, 'Группа аналогов успешно обновлена!')
@@ -52,7 +52,7 @@ def add_tasks_to_group(request, group_id):
             for task in tasks:
                 TaskGroup.objects.get_or_create(task=task, group=group)
             messages.success(request, f'Добавлено {len(tasks)} заданий в группу "{group.name}"')
-        return redirect('groups:detail', pk=group.pk)
+        return redirect('task_groups:detail', pk=group.pk)
     
     # Получаем задания, которых еще нет в этой группе
     from tasks.models import Task
@@ -73,7 +73,7 @@ def add_tasks_to_group(request, group_id):
         'available_tasks': available_tasks,
         'search': search,
     }
-    return render(request, 'groups/add_tasks.html', context)
+    return render(request, 'task_groups/add_tasks.html', context)
 
 def remove_task_from_group(request, group_id, task_id):
     """Удаление задания из группы аналогов"""
@@ -83,4 +83,4 @@ def remove_task_from_group(request, group_id, task_id):
         TaskGroup.objects.filter(group=group, task_id=task_id).delete()
         messages.success(request, f'Задание удалено из группы "{group.name}"')
     
-    return redirect('groups:detail', pk=group.pk)
+    return redirect('task_groups:detail', pk=group.pk)

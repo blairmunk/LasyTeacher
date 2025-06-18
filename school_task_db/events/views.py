@@ -17,7 +17,7 @@ class EventDetailView(DetailView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['marks'] = Mark.objects.filter(event=self.object)
+        context['marks'] = Mark.objects.filter(event=self.object).select_related('student', 'variant')
         return context
 
 class EventCreateView(CreateView):

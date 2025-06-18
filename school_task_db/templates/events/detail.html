@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ event.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2>{{ event.name }}</h2>
+                <h4 class="text-muted">{{ event.student_group.name }}</h4>
+            </div>
+            <div>
+                <a href="{% url 'events:assign-variants' event.pk %}" class="btn btn-success">
+                    <i class="fas fa-random"></i> Назначить варианты
+                </a>
+                <a href="{% url 'events:list' %}" class="btn btn-secondary">
+                    <i class="fas fa-list"></i> К списку событий
+                </a>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Работа:</strong> 
+                        <a href="{% url 'works:detail' event.work.pk %}">{{ event.work.name }}</a>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Дата проведения:</strong> {{ event.date|date:"d.m.Y H:i" }}
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-6">
+                        <strong>Статус:</strong> 
+                        {% if event.status == 'planned' %}
+                            <span class="badge bg-secondary">{{ event.get_status_display }}</span>
+                        {% elif event.status == 'conducted' %}
+                            <span class="badge bg-info">{{ event.get_status_display }}</span>
+                        {% elif event.status == 'checked' %}
+                            <span class="badge bg-warning">{{ event.get_status_display }}</span>
+                        {% elif event.status == 'graded' %}
+                            <span class="badge bg-success">{{ event.get_status_display }}</span>
+                        {% else %}
+                            <span class="badge bg-dark">{{ event.get_status_display }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>UUID:</strong> <span class="uuid-badge">{{ event.get_short_uuid }}</span>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-12">
+                        <strong>Создано:</strong> {{ event.created_at|date:"d.m.Y H:i" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h4>Отметки ({{ marks.count }})</h4>
+        {% if marks %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>№</th>
+                        <th>Ученик</th>
+                        <th>Вариант</th>
+                        <th>Оценка</th>
+                        <th>UUID варианта</th>
+                        <th>Дата</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mark in marks %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ mark.student.get_full_name }}</td>
+                        <td>
+                            <a href="{% url 'works:variant-detail' mark.variant.pk %}">
+                                Вариант {{ mark.variant.number }}
+                            </a>
+                        </td>
+                        <td>
+                            {% if mark.score %}
+                                {% if mark.score == 5 %}
+                                    <span class="badge bg-success">{{ mark.score }}</span>
+                                {% elif mark.score == 4 %}
+                                    <span class="badge bg-info">{{ mark.score }}</span>
+                                {% elif mark.score == 3 %}
+                                    <span class="badge bg-warning">{{ mark.score }}</span>
+                                {% else %}
+                                    <span class="badge bg-danger">{{ mark.score }}</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-secondary">Не оценено</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="uuid-badge">{{ mark.variant.get_short_uuid }}</span>
+                        </td>
+                        <td>{{ mark.created_at|date:"d.m.Y H:i" }}</td>
+                        <td>
+                            <a href="/admin/events/mark/{{ mark.pk }}/change/" class="btn btn-sm btn-outline-primary" target="_blank">
+                                <i class="fas fa-edit"></i> Изменить
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Статистика по оценкам -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <h5>Статистика</h5>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <h3>{{ marks|length|add:0 }}</h3>
+                                <small>Всего работ</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body text-center">
+                                <h3>{% for mark in marks %}{% if mark.score %}{{ mark.score|add:0 }}{% endif %}{% empty %}0{% endfor %}</h3>
+                                <small>Оценено работ</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body text-center">
+                                <h3>{% for mark in marks %}{% if not mark.score %}1{% endif %}{% empty %}0{% endfor %}</h3>
+                                <small>Не оценено</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body text-center">
+                                <h3>{{ event.student_group.students.count }}</h3>
+                                <small>Учеников в классе</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <div class="d-flex justify-content-between align-items-center">
+                <span>Отметок пока нет.</span>
+                <a href="{% url 'events:assign-variants' event.pk %}" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Назначить варианты ученикам
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- UUID в правом нижнем углу -->
+<div class="uuid-code">
+    Событие: {{ event.get_short_uuid }}
+</div>
+{% endblock %}

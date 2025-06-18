@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Назначение вариантов - {{ event.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10">
+        <h2>Назначение вариантов</h2>
+        <h4 class="text-muted">{{ event.name }} - {{ event.student_group.name }}</h4>
+        
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5>Информация о событии</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Работа:</strong> {{ event.work.name }}</p>
+                        <p><strong>Дата:</strong> {{ event.date|date:"d.m.Y H:i" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Класс:</strong> {{ event.student_group.name }}</p>
+                        <p><strong>Доступно вариантов:</strong> {{ event.work.variant_set.count }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% if form %}
+        <form method="post">
+            {% csrf_token %}
+            <div class="card">
+                <div class="card-header">
+                    <h5>Назначение вариантов ученикам</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Ученик</th>
+                                    <th>Вариант</th>
+                                    <th>UUID варианта</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for field in form %}
+                                <tr>
+                                    <td>
+                                        <label for="{{ field.id_for_label }}" class="form-label">
+                                            {{ field.label }}
+                                        </label>
+                                    </td>
+                                    <td>
+                                        {{ field|add_class:"form-select" }}
+                                    </td>
+                                    <td>
+                                        <span class="uuid-display text-muted" id="uuid-{{ field.name }}">
+                                            <!-- UUID будет отображаться здесь -->
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Сохранить назначения
+                        </button>
+                        <a href="{% url 'events:detail' event.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Отмена
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+        {% else %}
+        <div class="alert alert-warning">
+            В классе нет учеников или для работы не созданы варианты.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Обновление UUID при выборе варианта
+document.addEventListener('DOMContentLoaded', function() {
+    const selects = document.querySelectorAll('select[name^="student_"]');
+    
+    selects.forEach(function(select) {
+        select.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const uuidSpan = document.getElementById('uuid-' + this.name);
+            
+            if (selectedOption.value && selectedOption.textContent) {
+                // Извлекаем номер варианта из текста опции
+                const variantText = selectedOption.textContent;
+                const match = variantText.match(/Вариант (\d+)/);
+                if (match) {
+                    uuidSpan.textContent = `Вариант ${match[1]}`;
+                    uuidSpan.className = 'uuid-badge';
+                } else {
+                    uuidSpan.textContent = '';
+                    uuidSpan.className = 'uuid-display text-muted';
+                }
+            } else {
+                uuidSpan.textContent = '';
+                uuidSpan.className = 'uuid-display text-muted';
+            }
+        });
+        
+        // Инициализация при загрузке страницы
+        select.dispatchEvent(new Event('change'));
+    });
+});
+</script>
+{% endblock %}

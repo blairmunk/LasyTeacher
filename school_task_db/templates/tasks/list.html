@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+
+{% block title %}Список заданий{% endblock %}
+
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Задания</h2>
+    <a href="{% url 'tasks:create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Добавить задание
+    </a>
+</div>
+
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <form method="get" class="d-flex">
+            <input type="text" name="search" class="form-control me-2" 
+                   placeholder="Поиск заданий..." value="{{ request.GET.search }}">
+            <button type="submit" class="btn btn-outline-secondary">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+
+<div class="row">
+    {% for task in tasks %}
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">
+                    {{ task.topic }}
+                    {% if task.images.exists %}
+                        <i class="fas fa-image text-info" title="Содержит изображения"></i>
+                    {% endif %}
+                </h6>
+                <p class="card-text">{{ task.text|truncatewords:20 }}</p>
+                <div class="mb-2">
+                    <span class="badge bg-primary">{{ task.get_task_type_display }}</span>
+                    <span class="badge bg-secondary">{{ task.get_difficulty_display }}</span>
+                    {% if task.images.exists %}
+                        <span class="badge bg-info">{{ task.images.count }} изображ.</span>
+                    {% endif %}
+                </div>
+                
+                {% if task.images.exists %}
+                    {% with task.images.first as first_image %}
+                    <div class="mb-2">
+                        <img src="{{ first_image.image.url }}" class="img-thumbnail" style="max-width: 80px; max-height: 60px; object-fit: cover;" alt="Превью">
+                    </div>
+                    {% endwith %}
+                {% endif %}
+                
+                <div class="btn-group" role="group">
+                    <a href="{% url 'tasks:detail' task.pk %}" class="btn btn-sm btn-outline-primary">
+                        Подробнее
+                    </a>
+                    <a href="{% url 'tasks:update' task.pk %}" class="btn btn-sm btn-outline-secondary">
+                        Редактировать
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            Заданий пока нет. <a href="{% url 'tasks:create' %}">Создать первое задание</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+
+<!-- Пагинация -->
+{% if is_paginated %}
+<nav aria-label="Навигация по страницам">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Первая</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Назад</a>
+            </li>
+        {% endif %}
+        
+        <li class="page-item active">
+            <span class="page-link">{{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+        </li>
+        
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Вперед</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Последняя</a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

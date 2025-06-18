@@ -17,11 +17,23 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    # Внешние пакеты
     'crispy_forms',
-    'crispy_bootstrap5', 
+    'crispy_bootstrap5',
     'widget_tweaks',
-    'task_manager',                #  наше приложение
+    
+    # Наши приложения
+    'core',           # Базовые компоненты
+    'tasks',          # Задания
+    'task_groups',         # Группы аналогов
+    'works',          # Работы и варианты
+    'students',       # Ученики и классы
+    'events',         # События
+    'reports',        # Отчеты
 ]
+
+
 
 
 MIDDLEWARE = [

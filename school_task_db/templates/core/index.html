@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+
+{% block title %}База заданий{% endblock %}
+
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1>База данных заданий для средней школы</h1>
+        <p class="lead">Управление заданиями, создание работ и ведение учёта успеваемости.</p>
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Задания</h5>
+                        <h2>{{ tasks_count }}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-tasks fa-2x"></i>
+                    </div>
+                </div>
+                <a href="{% url 'tasks:list' %}" class="text-white">Просмотр заданий</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Работы</h5>
+                        <h2>{{ works_count }}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-file-alt fa-2x"></i>
+                    </div>
+                </div>
+                <a href="{% url 'works:list' %}" class="text-white">Просмотр работ</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Ученики</h5>
+                        <h2>{{ students_count }}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+                <a href="{% url 'students:list' %}" class="text-white">Просмотр учеников</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">События</h5>
+                        <h2>{{ events_count }}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-calendar fa-2x"></i>
+                    </div>
+                </div>
+                <a href="{% url 'events:list' %}" class="text-white">Просмотр событий</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <h3>Быстрые действия</h3>
+        <div class="btn-group" role="group">
+            <a href="{% url 'tasks:create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Добавить задание
+            </a>
+            <a href="{% url 'works:create' %}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Создать работу
+            </a>
+            <a href="{% url 'students:create' %}" class="btn btn-info">
+                <i class="fas fa-plus"></i> Добавить ученика
+            </a>
+            <a href="{% url 'events:create' %}" class="btn btn-warning">
+                <i class="fas fa-plus"></i> Создать событие
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

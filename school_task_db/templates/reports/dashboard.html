@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}Отчёты{% endblock %}
+
+{% block content %}
+<h2>Отчёты и аналитика</h2>
+
+<div class="row">
+    <!-- Просроченные события -->
+    <div class="col-md-6 mb-4">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5><i class="fas fa-exclamation-triangle"></i> Просроченные события</h5>
+            </div>
+            <div class="card-body">
+                {% if overdue_events %}
+                    <ul class="list-group list-group-flush">
+                        {% for event in overdue_events %}
+                        <li class="list-group-item d-flex justify-content-between">
+                            <div>
+                                <strong>{{ event.name }}</strong><br>
+                                <small class="text-muted">{{ event.student_group.name }} - {{ event.date|date:"d.m.Y H:i" }}</small>
+                            </div>
+                            <a href="{% url 'events:detail' event.pk %}" class="btn btn-sm btn-outline-primary">
+                                Открыть
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-success">Просроченных событий нет</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Грядущие события -->
+    <div class="col-md-6 mb-4">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5><i class="fas fa-clock"></i> Грядущие события (7 дней)</h5>
+            </div>
+            <div class="card-body">
+                {% if upcoming_events %}
+                    <ul class="list-group list-group-flush">
+                        {% for event in upcoming_events %}
+                        <li class="list-group-item d-flex justify-content-between">
+                            <div>
+                                <strong>{{ event.name }}</strong><br>
+                                <small class="text-muted">{{ event.student_group.name }} - {{ event.date|date:"d.m.Y H:i" }}</small>
+                            </div>
+                            <a href="{% url 'events:detail' event.pk %}" class="btn btn-sm btn-outline-primary">
+                                Открыть
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">Грядущих событий нет</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Неоценённые работы -->
+    <div class="col-md-6 mb-4">
+        <div class="card border-secondary">
+            <div class="card-header bg-secondary text-white">
+                <h5><i class="fas fa-question-circle"></i> Неоценённые работы</h5>
+            </div>
+            <div class="card-body">
+                {% if ungraded_marks %}
+                    <p><strong>Работ без оценки:</strong> {{ ungraded_marks.count }}</p>
+                    <ul class="list-group list-group-flush">
+                        {% for mark in ungraded_marks|slice:":5" %}
+                        <li class="list-group-item">
+                            <strong>{{ mark.student.get_full_name }}</strong><br>
+                            <small class="text-muted">{{ mark.variant.work.name }} - Вариант {{ mark.variant.number }}</small>
+                        </li>
+                        {% endfor %}
+                        {% if ungraded_marks.count > 5 %}
+                        <li class="list-group-item text-center">
+                            <small class="text-muted">И ещё {{ ungraded_marks.count|add:"-5" }}...</small>
+                        </li>
+                        {% endif %}
+                    </ul>
+                {% else %}
+                    <p class="text-success">Все работы оценены</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Ученики без оценок -->
+    <div class="col-md-6 mb-4">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5><i class="fas fa-user-times"></i> Ученики без оценок</h5>
+            </div>
+            <div class="card-body">
+                {% if students_without_marks %}
+                    <p><strong>Учеников без оценок:</strong> {{ students_without_marks.count }}</p>
+                    <ul class="list-group list-group-flush">
+                        {% for student in students_without_marks|slice:":5" %}
+                        <li class="list-group-item">
+                            {{ student.get_full_name }}
+                        </li>
+                        {% endfor %}
+                        {% if students_without_marks.count > 5 %}
+                        <li class="list-group-item text-center">
+                            <small class="text-muted">И ещё {{ students_without_marks.count|add:"-5" }}...</small>
+                        </li>
+                        {% endif %}
+                    </ul>
+                {% else %}
+                    <p class="text-success">У всех учеников есть оценки</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-bar"></i> Быстрые действия</h5>
+            </div>
+            <div class="card-body">
+                <div class="btn-group" role="group">
+                    <a href="{% url 'events:create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Создать событие
+                    </a>
+                    <a href="{% url 'works:create' %}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Создать работу
+                    </a>
+                    <a href="{% url 'students:create' %}" class="btn btn-info">
+                        <i class="fas fa-plus"></i> Добавить ученика
+                    </a>
+                    <a href="/admin/" class="btn btn-secondary">
+                        <i class="fas fa-cog"></i> Админ-панель
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

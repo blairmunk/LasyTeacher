@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ task.topic }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>{{ task.topic }}</h2>
+            <div>
+                <a href="{% url 'tasks:update' task.pk %}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Редактировать
+                </a>
+                <a href="{% url 'tasks:list' %}" class="btn btn-secondary">
+                    <i class="fas fa-list"></i> К списку
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Тематический раздел:</strong> {{ task.section }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Подтема:</strong> {{ task.subtopic|default:"—" }}
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Тип задания:</strong> 
+                        <span class="badge bg-primary">{{ task.get_task_type_display }}</span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Сложность:</strong> 
+                        <span class="badge bg-secondary">{{ task.get_difficulty_display }}</span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h5>Текст задания</h5>
+                    <div class="border p-3 bg-light task-content">
+                        <div class="task-text-with-images">
+                            {% for image in task.images.all %}
+                                {% if image.position == 'right_40' or image.position == 'right_20' %}
+                                    <div class="task-image {{ image.get_css_class }}">
+                                        <img src="{{ image.image.url }}" alt="{{ image.caption|default:'Изображение к заданию' }}" />
+                                        {% if image.caption %}
+                                            <div class="task-image-caption">{{ image.caption }}</div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {{ task.text|linebreaks }}
+                            
+                            {% for image in task.images.all %}
+                                {% if image.position == 'bottom_100' or image.position == 'bottom_70' %}
+                                    <div class="task-image {{ image.get_css_class }}">
+                                        <img src="{{ image.image.url }}" alt="{{ image.caption|default:'Изображение к заданию' }}" />
+                                        {% if image.caption %}
+                                            <div class="task-image-caption">{{ image.caption }}</div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <div style="clear: both;"></div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h5>Ответ</h5>
+                    <div class="border p-3 bg-success text-white">
+                        {{ task.answer|linebreaks }}
+                    </div>
+                </div>
+
+                {% if task.short_solution %}
+                <div class="mb-4">
+                    <h5>Краткое решение</h5>
+                    <div class="border p-3">
+                        {{ task.short_solution|linebreaks }}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if task.full_solution %}
+                <div class="mb-4">
+                    <h5>Полное решение</h5>
+                    <div class="border p-3">
+                        {{ task.full_solution|linebreaks }}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if task.hint %}
+                <div class="mb-4">
+                    <h5>Подсказка</h5>
+                    <div class="border p-3 bg-warning">
+                        {{ task.hint|linebreaks }}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if task.instruction %}
+                <div class="mb-4">
+                    <h5>Инструкция к выполнению</h5>
+                    <div class="border p-3 bg-info text-white">
+                        {{ task.instruction|linebreaks }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

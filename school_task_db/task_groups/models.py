@@ -16,7 +16,7 @@ class AnalogGroup(BaseModel):
         return f"[{self.get_short_uuid()}] {self.name}"
     
     def get_absolute_url(self):
-        return reverse('groups:detail', kwargs={'pk': self.pk})
+        return reverse('task_groups:detail', kwargs={'pk': self.pk})
     
     def get_sample_task(self):
         """Возвращает одно задание из группы для предварительного просмотра"""

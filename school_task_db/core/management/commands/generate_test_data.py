@@ -1,5 +1,5 @@
 import random
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from faker import Faker
@@ -10,12 +10,12 @@ from tasks.models import Task, TaskImage
 from task_groups.models import AnalogGroup, TaskGroup
 from works.models import Work, WorkAnalogGroup, Variant
 from students.models import Student, StudentGroup
-from events.models import Event, Mark
+from events.models import Event, EventParticipation, Mark
 
 fake = Faker('ru_RU')
 
 class Command(BaseCommand):
-    help = 'Генерирует тестовые данные с упрощенной структурой Topic/SubTopic'
+    help = 'Генерирует тестовые данные с новой архитектурой Event/EventParticipation/Mark'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -42,7 +42,7 @@ class Command(BaseCommand):
             self.clear_data()
 
         with transaction.atomic():
-            self.stdout.write('Создание тестовых данных с новой структурой Topic/SubTopic...')
+            self.stdout.write('Создание тестовых данных с новой архитектурой Event/EventParticipation/Mark...')
             
             # Создаем данные в правильном порядке
             topics = self.create_topics()
@@ -59,8 +59,9 @@ class Command(BaseCommand):
             students = self.create_students(options['students'])
             student_groups = self.create_student_groups(students)
             
-            events = self.create_events(works, student_groups, courses)
-            self.create_marks(events, variants, students)
+            # НОВАЯ АРХИТЕКТУРА:
+            events = self.create_events_new(works, students, student_groups, courses)
+            self.create_marks_new(events)
 
         self.stdout.write(
             self.style.SUCCESS(
@@ -74,13 +75,15 @@ class Command(BaseCommand):
                 f'  - Вариантов: {sum(len(work.variant_set.all()) for work in works)}\n'
                 f'  - Учеников: {len(students)}\n'
                 f'  - Классов: {len(student_groups)}\n'
-                f'  - Событий: {len(events)}'
+                f'  - Событий: {len(events)}\n'
+                f'  - Участий в событиях: {sum(e.get_participants_count() for e in events)}'
             )
         )
 
     def clear_data(self):
         """Очистка всех тестовых данных"""
         Mark.objects.all().delete()
+        EventParticipation.objects.all().delete()
         Event.objects.all().delete()
         Variant.objects.all().delete()
         CourseAssignment.objects.all().delete()
@@ -90,8 +93,8 @@ class Command(BaseCommand):
         TaskGroup.objects.all().delete()
         AnalogGroup.objects.all().delete()
         Task.objects.all().delete()
-        SubTopic.objects.all().delete()  # Сначала подтемы
-        Topic.objects.all().delete()     # Потом темы
+        SubTopic.objects.all().delete()
+        Topic.objects.all().delete()
         StudentGroup.objects.all().delete()
         Student.objects.all().delete()
         self.stdout.write('Данные очищены.')
@@ -129,6 +132,12 @@ class Command(BaseCommand):
             ('geometry', 9, 'Векторы', 'Координаты вектора', 1),
             ('geometry', 9, 'Векторы', 'Скалярное произведение векторов', 2),
             ('geometry', 9, 'Движения', 'Центральная симметрия', 1),
+            
+            # Алгебра 10 класс
+            ('algebra', 10, 'Тригонометрия', 'Тригонометрические функции', 1),
+            ('algebra', 10, 'Тригонометрия', 'Тригонометрические уравнения', 2),
+            ('algebra', 10, 'Показательная функция', 'Показательные уравнения', 1),
+            ('algebra', 10, 'Логарифмическая функция', 'Логарифмические уравнения', 1),
         ]
 
         topics = []
@@ -180,6 +189,11 @@ class Command(BaseCommand):
                 'Формула n-го члена',
                 'Сумма первых n членов',
                 'Свойства арифметической прогрессии'
+            ],
+            'Тригонометрические функции': [
+                'Синус и косинус',
+                'Тангенс и котангенс',
+                'Графики тригонометрических функций'
             ]
         }
 
@@ -222,17 +236,26 @@ class Command(BaseCommand):
             'Квадратные уравнения': [
                 'Решите уравнение: {a}x² + {b}x + {c} = 0',
                 'Найдите дискриминант уравнения {a}x² + {b}x + {c} = 0',
-                'При каких значениях параметра p уравнение x² + px + {a} = 0 имеет два корня?'
+                'При каких значениях параметра p уравнение x² + px + {a} = 0 имеет два корня?',
+                'Разложите на множители квадратный трехчлен {a}x² + {b}x + {c}'
             ],
             'Формулы сокращенного умножения': [
                 'Упростите выражение: ({a}x + {b})² - ({c}x - {d})²',
                 'Разложите на множители: {a}x² - {b}',
-                'Вычислите, используя формулы сокращенного умножения: {a}² - {b}²'
+                'Вычислите, используя формулы сокращенного умножения: {a}² - {b}²',
+                'Представьте в виде произведения: x³ + {a}'
             ],
             'Арифметическая прогрессия': [
                 'Найдите {n}-й член арифметической прогрессии, если a₁ = {a}, d = {b}',
                 'Найдите сумму первых {n} членов арифметической прогрессии: {a}, {b}, {c}, ...',
-                'Между числами {a} и {b} вставьте {n} чисел так, чтобы получилась арифметическая прогрессия'
+                'Между числами {a} и {b} вставьте {n} чисел так, чтобы получилась арифметическая прогрессия',
+                'В арифметической прогрессии a₃ = {a}, a₇ = {b}. Найдите a₁ и d'
+            ],
+            'Тригонометрические уравнения': [
+                'Решите уравнение: sin x = {a}/2',
+                'Найдите все корни уравнения cos x = {a}/2 на отрезке [0; 2π]',
+                'Решите уравнение: tg x = {a}',
+                'Найдите решение системы: sin x = {a}/2, cos y = {b}/2'
             ]
         }
         
@@ -240,12 +263,20 @@ class Command(BaseCommand):
             'Параллелограмм и его свойства': [
                 'В параллелограмме ABCD диагонали пересекаются в точке O. Найдите периметр треугольника AOB, если AB = {a} см, BC = {b} см, AC = {c} см',
                 'Стороны параллелограмма равны {a} см и {b} см, угол между ними {c}°. Найдите площадь',
-                'Диагонали параллелограмма равны {a} см и {b} см, угол между ними {c}°. Найдите площадь'
+                'Диагонали параллелограмма равны {a} см и {b} см, угол между ними {c}°. Найдите площадь',
+                'В параллелограмме одна сторона равна {a} см, а высота, проведенная к ней, равна {b} см. Найдите площадь'
             ],
             'Площадь треугольника': [
                 'Найдите площадь треугольника со сторонами {a} см, {b} см и {c} см',
                 'В треугольнике ABC высота, проведенная к стороне BC, равна {a} см. Найдите площадь, если BC = {b} см',
-                'Найдите площадь прямоугольного треугольника с катетами {a} см и {b} см'
+                'Найдите площадь прямоугольного треугольника с катетами {a} см и {b} см',
+                'Стороны треугольника относятся как {a}:{b}:{c}, а периметр равен {d} см. Найдите площадь'
+            ],
+            'Окружность': [
+                'Радиус окружности равен {a} см. Найдите длину дуги, соответствующей центральному углу {b}°',
+                'Хорда окружности равна {a} см и стягивает дугу в {b}°. Найдите радиус окружности',
+                'В окружности проведены две хорды AB = {a} см и CD = {b} см. Найдите расстояние от центра до хорд',
+                'Окружность разделена точками на {a} равных частей. Найдите угол, под которым видна одна часть из центра'
             ]
         }
 
@@ -271,6 +302,7 @@ class Command(BaseCommand):
                 short_solution=fake.text(max_nb_chars=150) if random.random() > 0.4 else '',
                 full_solution=fake.text(max_nb_chars=400) if random.random() > 0.6 else '',
                 hint=fake.sentence() if random.random() > 0.7 else '',
+                instruction=fake.sentence() if random.random() > 0.8 else '',
                 topic=topic,
                 subtopic=subtopic,
                 task_type=random.choice(task_types),
@@ -325,7 +357,10 @@ class Command(BaseCommand):
         text_lower = text.lower()
         
         if 'уравнение' in text_lower:
-            return f"x = {random.randint(-10, 10)}"
+            if 'система' in text_lower:
+                return f"x = {random.randint(-10, 10)}, y = {random.randint(-10, 10)}"
+            else:
+                return f"x = {random.randint(-10, 10)}"
         elif 'площадь' in text_lower:
             return f"{random.randint(10, 200)} см²"
         elif 'периметр' in text_lower:
@@ -334,6 +369,12 @@ class Command(BaseCommand):
             return f"a_{random.randint(5, 20)} = {random.randint(10, 100)}"
         elif 'дискриминант' in text_lower:
             return f"D = {random.randint(1, 100)}"
+        elif 'длина' in text_lower:
+            return f"{random.randint(5, 50)} см"
+        elif 'угол' in text_lower:
+            return f"{random.randint(10, 180)}°"
+        elif 'радиус' in text_lower:
+            return f"{random.randint(3, 25)} см"
         else:
             return fake.sentence(nb_words=random.randint(2, 8))
 
@@ -352,6 +393,8 @@ class Command(BaseCommand):
             ('Площади фигур', 'Вычисление площадей различных фигур'),
             ('Прогрессии', 'Арифметическая и геометрическая прогрессии'),
             ('Векторы', 'Операции с векторами и их применение'),
+            ('Тригонометрия', 'Тригонометрические функции и уравнения'),
+            ('Логарифмы и показательные', 'Логарифмические и показательные функции'),
         ]
 
         groups = []
@@ -388,7 +431,6 @@ class Command(BaseCommand):
             for group in selected_groups:
                 TaskGroup.objects.get_or_create(task=task, group=group)
 
-    # Остальные методы остаются такими же как в предыдущей версии
     def create_works(self, groups):
         """Создание работ"""
         works_data = [
@@ -399,6 +441,8 @@ class Command(BaseCommand):
             ('Диагностическая работа "Функции"', 40, 'diagnostic'),
             ('Домашняя работа "Прогрессии"', 60, 'homework'),
             ('Практическая работа "Площади фигур"', 45, 'practice'),
+            ('Контрольная работа "Тригонометрия"', 50, 'test'),
+            ('Самостоятельная работа "Логарифмы"', 35, 'quiz'),
         ]
 
         works = []
@@ -430,6 +474,7 @@ class Command(BaseCommand):
             ('Геометрия 8 класс', 'geometry', 8, '2024-2025', 'Базовый курс геометрии для 8 класса'),
             ('Алгебра 9 класс', 'algebra', 9, '2024-2025', 'Курс алгебры для 9 класса с подготовкой к ОГЭ'),
             ('Геометрия 9 класс', 'geometry', 9, '2024-2025', 'Курс геометрии для 9 класса с подготовкой к ОГЭ'),
+            ('Алгебра 10 класс', 'algebra', 10, '2024-2025', 'Курс алгебры для 10 класса'),
             ('Математика 8 класс (углубленный)', 'mathematics', 8, '2024-2025', 'Углубленный курс математики'),
         ]
 
@@ -471,7 +516,7 @@ class Command(BaseCommand):
         """Создание вариантов для работ"""
         variants = []
         for work in works:
-            num_variants = random.randint(4, 6)
+            num_variants = random.randint(4, 8)
             new_variants = work.generate_variants(num_variants)
             variants.extend(new_variants)
 
@@ -511,58 +556,179 @@ class Command(BaseCommand):
         self.stdout.write(f'  Создано классов: {len(student_groups)}')
         return student_groups
 
-    def create_events(self, works, student_groups, courses):
-        """Создание событий"""
-        statuses = ['planned', 'conducted', 'checked', 'graded', 'closed']
+    def create_events_new(self, works, students, student_groups, courses):
+        """Создание событий с новой архитектурой"""
         events = []
         
         for work in works:
-            for student_group in random.sample(student_groups, random.randint(1, 2)):
-                course = None
-                matching_courses = [c for c in courses 
-                                  if str(student_group.name[0]) == str(c.grade_level)]
-                if matching_courses:
-                    course = random.choice(matching_courses)
+            # Создаем 2-4 события для каждой работы
+            for i in range(random.randint(2, 4)):
+                # Определяем тип события
+                event_types = ['full_class', 'partial_class', 'individual']
+                weights = [0.6, 0.3, 0.1]  # Больше вероятности для полного класса
+                event_type = random.choices(event_types, weights=weights)[0]
                 
+                # Выбираем участников в зависимости от типа
+                if event_type == 'full_class':
+                    # Весь класс
+                    student_group = random.choice(student_groups)
+                    participants = list(student_group.students.all())
+                    event_name = f"{work.name} - {student_group.name}"
+                elif event_type == 'partial_class':
+                    # Часть класса (50-80% учеников)
+                    student_group = random.choice(student_groups)
+                    all_students = list(student_group.students.all())
+                    if len(all_students) > 2:
+                        count = random.randint(len(all_students)//2, int(len(all_students)*0.8))
+                        participants = random.sample(all_students, max(1, count))
+                    else:
+                        participants = all_students
+                    event_name = f"{work.name} - {student_group.name} (частично)"
+                else:
+                    # Индивидуальное (1-3 ученика)
+                    count = random.randint(1, 3)
+                    participants = random.sample(students, min(count, len(students)))
+                    if len(participants) == 1:
+                        event_name = f"{work.name} - {participants[0].get_full_name()}"
+                    else:
+                        event_name = f"{work.name} - индивидуальное ({len(participants)} чел.)"
+                
+                if not participants:
+                    continue
+                
+                # Подбираем подходящий курс
+                course = None
+                for student in participants:
+                    student_groups_list = list(student.studentgroup_set.all())
+                    if student_groups_list:
+                        grade_str = student_groups_list[0].name[0]  # Извлекаем класс из названия
+                        try:
+                            grade = int(grade_str)
+                            matching_courses = [c for c in courses if c.grade_level == grade]
+                            if matching_courses:
+                                course = random.choice(matching_courses)
+                                break
+                        except ValueError:
+                            continue
+                
+                # Создаем событие
+                planned_date = fake.date_time_between(start_date='-60d', end_date='+30d')
                 event = Event.objects.create(
-                    name=f"{work.name} - {student_group.name}",
-                    date=fake.date_time_between(start_date='-30d', end_date='+30d'),
+                    name=event_name,
                     work=work,
-                    student_group=student_group,
-                    status=random.choice(statuses),
+                    planned_date=planned_date,
+                    actual_start=fake.date_time_between(start_date=planned_date, end_date=planned_date + timedelta(hours=2)) if random.random() > 0.3 else None,
+                    actual_end=fake.date_time_between(start_date=planned_date + timedelta(minutes=work.duration), end_date=planned_date + timedelta(hours=3)) if random.random() > 0.5 else None,
+                    status=random.choice(['planned', 'in_progress', 'completed', 'reviewing', 'graded', 'closed']),
                     course=course,
-                    planned_date=fake.date_time_between(start_date='-30d', end_date='+30d'),
-                    actual_date=fake.date_time_between(start_date='-30d', end_date='+30d') if random.random() > 0.3 else None
+                    description=f"Проведение работы '{work.name}' для {len(participants)} участников",
+                    location=random.choice(['Кабинет 301', 'Кабинет 205', 'Актовый зал', 'Кабинет 112', 'Кабинет 203'])
                 )
+                
+                # Создаем участие для каждого ученика
+                available_variants = list(Variant.objects.filter(work=work))
+                for j, student in enumerate(participants):
+                    variant = random.choice(available_variants) if available_variants else None
+                    
+                    participation_status = random.choice(['assigned', 'started', 'completed', 'graded', 'absent'])
+                    
+                    participation = EventParticipation.objects.create(
+                        event=event,
+                        student=student,
+                        variant=variant,
+                        status=participation_status,
+                        started_at=fake.date_time_between(start_date=planned_date, end_date=planned_date + timedelta(hours=1)) if participation_status not in ['assigned', 'absent'] else None,
+                        completed_at=fake.date_time_between(start_date=planned_date + timedelta(minutes=work.duration//2), end_date=planned_date + timedelta(minutes=work.duration + 30)) if participation_status in ['completed', 'graded'] else None,
+                        graded_at=fake.date_time_between(start_date=planned_date + timedelta(days=1), end_date=planned_date + timedelta(days=7)) if participation_status == 'graded' else None,
+                        seat_number=f"{j+1}" if len(participants) > 5 else ""
+                    )
+                
                 events.append(event)
-
-        self.stdout.write(f'  Создано событий: {len(events)}')
+                self.stdout.write(f'  Создано событие: {event.name} ({len(participants)} участников)')
+        
         return events
 
-    def create_marks(self, events, variants, students):
-        """Создание отметок"""
+    def create_marks_new(self, events):
+        """Создание отметок с новой архитектурой"""
         marks_count = 0
         
         for event in events:
-            if event.status in ['conducted', 'checked', 'graded', 'closed']:
-                class_students = list(event.student_group.students.all())
-                available_variants = [v for v in variants if v.work == event.work]
-                
-                if available_variants and class_students:
-                    for student in class_students:
-                        if random.random() > 0.1:  # 90% учеников выполняют работу
-                            variant = random.choice(available_variants)
-                            score = None
-                            
-                            if event.status in ['graded', 'closed']:
-                                score = random.randint(2, 5)
-                            
-                            Mark.objects.create(
-                                student=student,
-                                variant=variant,
-                                event=event,
-                                score=score
-                            )
-                            marks_count += 1
-
+            # Создаем отметки для участников, которые завершили работу
+            participations = event.eventparticipation_set.filter(
+                status__in=['completed', 'graded']
+            )
+            
+            for participation in participations:
+                if random.random() > 0.05:  # 95% вероятность наличия отметки для завершивших
+                    # Генерируем случайные баллы
+                    max_points = random.randint(15, 35)
+                    points = random.randint(int(max_points * 0.2), max_points)
+                    
+                    # Переводим в оценку
+                    percentage = (points / max_points) * 100
+                    if percentage >= 85:
+                        score = 5
+                    elif percentage >= 70:
+                        score = 4
+                    elif percentage >= 50:
+                        score = 3
+                    else:
+                        score = 2
+                    
+                    # Создаем детализацию по заданиям
+                    task_scores = {}
+                    if participation.variant:
+                        tasks = list(participation.variant.tasks.all()[:6])  # Берем до 6 заданий
+                        for task in tasks:
+                            task_max = random.randint(2, 6)
+                            task_points = random.randint(0, task_max)
+                            task_scores[f"task_{task.id}"] = {
+                                "points": task_points,
+                                "max_points": task_max,
+                                "comment": fake.sentence() if random.random() > 0.8 else ""
+                            }
+                    
+                    # Генерируем комментарии в зависимости от оценки
+                    if score == 5:
+                        teacher_comments = [
+                            "Отличная работа! Все задания выполнены верно.",
+                            "Превосходный результат. Решения логичны и последовательны.",
+                            "Замечательно! Видна глубокая проработка материала."
+                        ]
+                    elif score == 4:
+                        teacher_comments = [
+                            "Хорошая работа с небольшими недочетами.",
+                            "Материал усвоен хорошо, есть незначительные ошибки.",
+                            "Неплохой результат, но можно лучше."
+                        ]
+                    elif score == 3:
+                        teacher_comments = [
+                            "Удовлетворительно. Базовые знания есть.",
+                            "Работа выполнена, но есть существенные пробелы.",
+                            "Нужно повторить материал и отработать решения."
+                        ]
+                    else:
+                        teacher_comments = [
+                            "Неудовлетворительно. Много ошибок.",
+                            "Материал не усвоен. Требуется дополнительная работа.",
+                            "Необходимо серьезно поработать над темой."
+                        ]
+                    
+                    mark = Mark.objects.create(
+                        participation=participation,
+                        score=score,
+                        points=points,
+                        max_points=max_points,
+                        task_scores=task_scores,
+                        teacher_comment=random.choice(teacher_comments) if random.random() > 0.3 else "",
+                        mistakes_analysis=fake.text(max_nb_chars=150) if score <= 3 and random.random() > 0.6 else "",
+                        recommendations=fake.sentence() if score <= 3 and random.random() > 0.7 else "",
+                        checked_at=fake.date_time_between(start_date=event.planned_date + timedelta(days=1), end_date=event.planned_date + timedelta(days=10)),
+                        checked_by=random.choice(['Иванов И.И.', 'Петрова М.С.', 'Сидоров А.В.', 'Козлова Е.П.', 'Морозов Д.А.']),
+                        is_retake=random.random() > 0.95,
+                        is_excellent=score == 5 and random.random() > 0.8,
+                        needs_attention=score <= 3 and random.random() > 0.6
+                    )
+                    marks_count += 1
+        
         self.stdout.write(f'  Создано отметок: {marks_count}')

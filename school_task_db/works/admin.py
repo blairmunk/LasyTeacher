@@ -7,9 +7,9 @@ class WorkAnalogGroupInline(admin.TabularInline):
 
 @admin.register(Work)
 class WorkAdmin(admin.ModelAdmin):
-    list_display = ['get_short_uuid', 'name', 'work_type', 'duration', 'variant_counter', 'created_at']  # ДОБАВЛЕНО work_type
-    list_filter = ['work_type', 'duration', 'created_at']  # ДОБАВЛЕНО work_type
-    search_fields = ['name', 'uuid']
+    list_display = ['get_short_uuid', 'name', 'work_type', 'duration', 'variant_counter', 'created_at']
+    list_filter = ['work_type', 'duration', 'created_at']
+    search_fields = ['name', 'uuid']  # ОБЯЗАТЕЛЬНО для автокомплита
     readonly_fields = ['uuid', 'variant_counter']
     inlines = [WorkAnalogGroupInline]
     
@@ -20,8 +20,9 @@ class WorkAdmin(admin.ModelAdmin):
 @admin.register(Variant)
 class VariantAdmin(admin.ModelAdmin):
     list_display = ['get_short_uuid', 'work', 'number', 'tasks_count', 'created_at']
-    list_filter = ['work', 'work__work_type', 'created_at']  # ДОБАВЛЕНО фильтр по типу работы
+    list_filter = ['work', 'work__work_type', 'created_at']
     filter_horizontal = ['tasks']
+    search_fields = ['work__name', 'number', 'uuid']  # ОБЯЗАТЕЛЬНО для автокомплита
     readonly_fields = ['uuid']
     
     def get_short_uuid(self, obj):
@@ -31,4 +32,9 @@ class VariantAdmin(admin.ModelAdmin):
     def tasks_count(self, obj):
         return obj.tasks.count()
     tasks_count.short_description = 'Количество заданий'
-    
+
+@admin.register(WorkAnalogGroup)
+class WorkAnalogGroupAdmin(admin.ModelAdmin):
+    list_display = ['work', 'analog_group', 'count']
+    list_filter = ['work', 'analog_group']
+    search_fields = ['work__name', 'analog_group__name']

@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+
+{% block title %}Анализ работ и результатов{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Анализ работ и результатов</h2>
+        <div>
+            <a href="{% url 'reports:dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> К панели отчетов
+            </a>
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print"></i> Печать
+            </button>
+        </div>
+    </div>
+
+    <!-- Сводная статистика -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>{{ works_analysis|length }}</h3>
+                    <p>Всего работ</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>
+                        {% for work in works_analysis %}
+                            {% if work.difficulty_assessment == "Легкая" %}{{ forloop.counter }}{% endif %}
+                        {% endfor %}
+                    </h3>
+                    <p>Легких работ</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h3>
+                        {% for work in works_analysis %}
+                            {% if work.difficulty_assessment == "Сложная" or work.difficulty_assessment == "Очень сложная" %}{{ forloop.counter }}{% endif %}
+                        {% endfor %}
+                    </h3>
+                    <p>Сложных работ</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>
+                        {% for work in works_analysis %}{{ work.total_marks|add:0 }}{% endfor %}
+                    </h3>
+                    <p>Всего отметок</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Рейтинг работ по сложности -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5><i class="fas fa-exclamation-circle"></i> Самые сложные работы</h5>
+                </div>
+                <div class="card-body">
+                    {% for work in works_analysis|slice:":5" %}
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-2 border rounded">
+                        <div>
+                            <strong>{{ work.work.name }}</strong>
+                            <span class="uuid-badge ms-2">{{ work.work.get_short_uuid }}</span>
+                            <br>
+                            <small class="text-muted">
+                                {{ work.work.get_work_type_display }} • {{ work.work.duration }} мин
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-{% if work.difficulty_assessment == 'Очень сложная' %}danger{% elif work.difficulty_assessment == 'Сложная' %}warning{% else %}info{% endif %}">
+                                {{ work.difficulty_assessment }}
+                            </span>
+                            <br>
+                            <small class="text-muted">Ср. оценка: {{ work.average_score }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5><i class="fas fa-check-circle"></i> Самые легкие работы</h5>
+                </div>
+                <div class="card-body">
+                    {% for work in works_analysis|dictsort:"average_score"|slice:"-5:" %}
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-2 border rounded">
+                        <div>
+                            <strong>{{ work.work.name }}</strong>
+                            <span class="uuid-badge ms-2">{{ work.work.get_short_uuid }}</span>
+                            <br>
+                            <small class="text-muted">
+                                {{ work.work.get_work_type_display }} • {{ work.work.duration }} мин
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-{% if work.difficulty_assessment == 'Легкая' %}success{% elif work.difficulty_assessment == 'Средняя' %}info{% else %}warning{% endif %}">
+                                {{ work.difficulty_assessment }}
+                            </span>
+                            <br>
+                            <small class="text-muted">Ср. оценка: {{ work.average_score }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Детальный анализ всех работ -->
+    <div class="card">
+        <div class="card-header">
+            <h5>Детальный анализ всех работ</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>№</th>
+                            <th>Название работы</th>
+                            <th>UUID</th>
+                            <th>Тип</th>
+                            <th>Длительность</th>
+                            <th>Событий</th>
+                            <th>Отметок</th>
+                            <th>Ср. оценка</th>
+                            <th>Ср. %</th>
+                            <th>Сложность</th>
+                            <th>Распределение оценок</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for work in works_analysis %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <strong>{{ work.work.name }}</strong>
+                                <br>
+                                <small class="text-muted">{{ work.work.variant_set.count }} вариантов</small>
+                            </td>
+                            <td><span class="uuid-badge">{{ work.work.get_short_uuid }}</span></td>
+                            <td>
+                                <span class="badge bg-secondary">{{ work.work.get_work_type_display }}</span>
+                            </td>
+                            <td>{{ work.work.duration }} мин</td>
+                            <td>{{ work.events_count }}</td>
+                            <td>{{ work.total_marks }}</td>
+                            <td>
+                                <span class="badge bg-{% if work.average_score >= 4 %}success{% elif work.average_score >= 3 %}info{% elif work.average_score >= 2 %}warning{% else %}danger{% endif %}">
+                                    {{ work.average_score }}
+                                </span>
+                            </td>
+                            <td>{{ work.average_percentage }}%</td>
+                            <td>
+                                <span class="badge bg-{% if work.difficulty_assessment == 'Легкая' %}success{% elif work.difficulty_assessment == 'Средняя' %}info{% elif work.difficulty_assessment == 'Сложная' %}warning{% else %}danger{% endif %}">
+                                    {{ work.difficulty_assessment }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    {% for score in work.score_distribution %}
+                                    <small class="badge bg-{% if score.score == 5 %}success{% elif score.score == 4 %}info{% elif score.score == 3 %}warning{% else %}danger{% endif %}">
+                                        {{ score.score }}:{{ score.count }}
+                                    </small>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Рекомендации -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5><i class="fas fa-lightbulb"></i> Рекомендации</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Для сложных работ:</h6>
+                            <ul>
+                                <li>Рассмотреть возможность упрощения заданий</li>
+                                <li>Добавить дополнительные подготовительные материалы</li>
+                                <li>Увеличить время выполнения</li>
+                                <li>Провести дополнительные консультации</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Для легких работ:</h6>
+                            <ul>
+                                <li>Усложнить задания для более способных учеников</li>
+                                <li>Добавить дополнительные задания</li>
+                                <li>Сократить время выполнения</li>
+                                <li>Использовать как тренировочные</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .btn, .navbar { display: none !important; }
+    .card { border: 1px solid #000 !important; }
+}
+</style>
+{% endblock %}

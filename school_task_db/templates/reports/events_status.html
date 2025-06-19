@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+
+{% block title %}Отчет по статусам событий{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Отчет по статусам событий</h2>
+        <div>
+            <a href="{% url 'reports:dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> К панели отчетов
+            </a>
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print"></i> Печать
+            </button>
+        </div>
+    </div>
+
+    <!-- Статистика по статусам событий -->
+    <div class="row mb-4">
+        {% for status in events_by_status %}
+        <div class="col-md-2">
+            <div class="card bg-{% if status.status == 'graded' %}success{% elif status.status == 'completed' %}info{% elif status.status == 'reviewing' %}warning{% elif status.status == 'planned' %}secondary{% else %}primary{% endif %} text-white">
+                <div class="card-body text-center">
+                    <h3>{{ status.count }}</h3>
+                    <p>{{ status.status|capfirst }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Статистика по участию -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Статистика по участию в событиях</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for participation in participation_stats %}
+                        <div class="col-md-2">
+                            <div class="text-center p-3 border rounded">
+                                <h4 class="text-{% if participation.status == 'graded' %}success{% elif participation.status == 'completed' %}info{% elif participation.status == 'absent' %}danger{% else %}secondary{% endif %}">
+                                    {{ participation.count }}
+                                </h4>
+                                <small>{{ participation.status|capfirst }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- События требующие внимания -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h6><i class="fas fa-exclamation-triangle"></i> Просроченные события ({{ overdue_events.count }})</h6>
+                </div>
+                <div class="card-body">
+                    {% for event in overdue_events %}
+                    <div class="border-bottom py-2">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>{{ event.name }}</strong>
+                                <span class="uuid-badge ms-1">{{ event.get_short_uuid }}</span>
+                                <br>
+                                <small class="text-muted">{{ event.work.name }}</small>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-danger">{{ event.planned_date|date:"d.m.Y" }}</small>
+                                <br>
+                                <span class="badge bg-danger">{{ event.get_status_display }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">Нет просроченных событий</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <h6><i class="fas fa-clock"></i> Долго на проверке ({{ long_reviewing.count }})</h6>
+                </div>
+                <div class="card-body">
+                    {% for event in long_reviewing %}
+                    <div class="border-bottom py-2">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>{{ event.name }}</strong>
+                                <span class="uuid-badge ms-1">{{ event.get_short_uuid }}</span>
+                                <br>
+                                <small class="text-muted">{{ event.work.name }}</small>
+                            </div>
+                            <div class="text-end">
+                                {% if event.actual_end %}
+                                    <small class="text-warning">{{ event.actual_end|date:"d.m.Y" }}</small>
+                                {% endif %}
+                                <br>
+                                <span class="badge bg-warning">{{ event.get_status_display }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">Нет событий долго на проверке</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h6><i class="fas fa-check"></i> Завершены, не проверены ({{ completed_unchecked.count }})</h6>
+                </div>
+                <div class="card-body">
+                    {% for event in completed_unchecked %}
+                    <div class="border-bottom py-2">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>{{ event.name }}</strong>
+                                <span class="uuid-badge ms-1">{{ event.get_short_uuid }}</span>
+                                <br>
+                                <small class="text-muted">{{ event.work.name }}</small>
+                            </div>
+                            <div class="text-end">
+                                {% if event.actual_end %}
+                                    <small class="text-info">{{ event.actual_end|date:"d.m.Y" }}</small>
+                                {% endif %}
+                                <br>
+                                <span class="badge bg-info">{{ event.get_status_display }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">Нет непроверенных событий</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Детальная таблица всех событий -->
+    <div class="card">
+        <div class="card-header">
+            <h5>Все события системы</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>№</th>
+                            <th>Название события</th>
+                            <th>UUID</th>
+                            <th>Работа</th>
+                            <th>Участников</th>
+                            <th>Завершено</th>
+                            <th>Проверено</th>
+                            <th>Запланировано</th>
+                            <th>Статус</th>
+                            <th>Прогресс</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in all_events %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <strong>{{ event.name }}</strong>
+                                {% if event.location %}
+                                    <br><small class="text-muted"><i class="fas fa-map-marker-alt"></i> {{ event.location }}</small>
+                                {% endif %}
+                            </td>
+                            <td><span class="uuid-badge">{{ event.get_short_uuid }}</span></td>
+                            <td>
+                                {{ event.work.name }}
+                                <br>
+                                <small class="text-muted">{{ event.work.get_work_type_display }} • {{ event.work.duration }} мин</small>
+                            </td>
+                            <td>{{ event.get_participants_count }}</td>
+                            <td>{{ event.get_completed_count }}</td>
+                            <td>{{ event.get_graded_count }}</td>
+                            <td>{{ event.planned_date|date:"d.m.Y H:i" }}</td>
+                            <td>
+                                <span class="badge bg-{% if event.status == 'graded' %}success{% elif event.status == 'completed' %}info{% elif event.status == 'reviewing' %}warning{% elif event.status == 'planned' %}secondary{% else %}primary{% endif %}">
+                                    {{ event.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-{% if event.get_progress_percentage >= 80 %}success{% elif event.get_progress_percentage >= 60 %}info{% elif event.get_progress_percentage >= 40 %}warning{% else %}danger{% endif %} fs-6">
+                                    {{ event.get_progress_percentage }}%
+                                </span>
+                                <br>
+                                <small class="text-muted">прогресс</small>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'events:detail' event.pk %}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if event.status == 'completed' or event.status == 'reviewing' %}
+                                    <a href="/admin/events/event/{{ event.pk }}/change/" class="btn btn-outline-warning btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Рекомендации по действиям -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5><i class="fas fa-tasks"></i> Рекомендуемые действия</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="alert alert-danger">
+                                <h6><i class="fas fa-exclamation-triangle"></i> Срочно:</h6>
+                                <ul class="mb-0">
+                                    <li>Обновить статус просроченных событий</li>
+                                    <li>Связаться с отсутствующими учениками</li>
+                                    <li>Перенести или отменить просроченные мероприятия</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="alert alert-warning">
+                                <h6><i class="fas fa-clock"></i> В ближайшее время:</h6>
+                                <ul class="mb-0">
+                                    <li>Проверить завершенные работы</li>
+                                    <li>Выставить оценки за проверенные работы</li>
+                                    <li>Уведомить учеников о результатах</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-chart-line"></i> Планирование:</h6>
+                                <ul class="mb-0">
+                                    <li>Запланировать новые события</li>
+                                    <li>Подготовить материалы для будущих работ</li>
+                                    <li>Проанализировать результаты завершенных событий</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .btn, .navbar { display: none !important; }
+    .card { border: 1px solid #000 !important; }
+}
+</style>
+{% endblock %}

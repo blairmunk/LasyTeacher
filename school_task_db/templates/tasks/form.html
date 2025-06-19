@@ -27,23 +27,29 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="{{ form.section.id_for_label }}" class="form-label">{{ form.section.label }}</label>
-                            {{ form.section|add_class:"form-control" }}
+                            <label for="{{ form.topic.id_for_label }}" class="form-label">{{ form.topic.label }}</label>
+                            {{ form.topic|add_class:"form-select" }}
+                            {% if form.topic.errors %}
+                                <div class="text-danger">{{ form.topic.errors }}</div>
+                            {% endif %}
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="{{ form.topic.id_for_label }}" class="form-label">{{ form.topic.label }}</label>
-                            {{ form.topic|add_class:"form-control" }}
+                            <label for="{{ form.subtopic.id_for_label }}" class="form-label">{{ form.subtopic.label }}</label>
+                            {{ form.subtopic|add_class:"form-select" }}
+                            {% if form.subtopic.errors %}
+                                <div class="text-danger">{{ form.subtopic.errors }}</div>
+                            {% endif %}
                         </div>
                     </div>
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="{{ form.subtopic.id_for_label }}" class="form-label">{{ form.subtopic.label }}</label>
-                            {{ form.subtopic|add_class:"form-control" }}
-                        </div>
-                        <div class="col-md-6 mb-3">
                             <label for="{{ form.task_type.id_for_label }}" class="form-label">{{ form.task_type.label }}</label>
                             {{ form.task_type|add_class:"form-select" }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.difficulty.id_for_label }}" class="form-label">{{ form.difficulty.label }}</label>
+                            {{ form.difficulty|add_class:"form-select" }}
                         </div>
                     </div>
                     
@@ -89,22 +95,30 @@
                 </div>
             </div>
 
-            <!-- Классификация -->
+            <!-- Дополнительные характеристики -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5>Классификация</h5>
+                    <h5>Дополнительные характеристики</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <label for="{{ form.difficulty.id_for_label }}" class="form-label">{{ form.difficulty.label }}</label>
-                            {{ form.difficulty|add_class:"form-select" }}
+                            <label for="{{ form.cognitive_level.id_for_label }}" class="form-label">{{ form.cognitive_level.label }}</label>
+                            {{ form.cognitive_level|add_class:"form-select" }}
                         </div>
                         <div class="col-md-4 mb-3">
+                            <label for="{{ form.estimated_time.id_for_label }}" class="form-label">{{ form.estimated_time.label }}</label>
+                            {{ form.estimated_time|add_class:"form-control" }}
+                            <div class="form-text">Время в минутах</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
                             <label for="{{ form.content_element.id_for_label }}" class="form-label">{{ form.content_element.label }}</label>
                             {{ form.content_element|add_class:"form-control" }}
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-6 mb-3">
                             <label for="{{ form.requirement_element.id_for_label }}" class="form-label">{{ form.requirement_element.label }}</label>
                             {{ form.requirement_element|add_class:"form-control" }}
                         </div>
@@ -179,4 +193,23 @@
         </form>
     </div>
 </div>
+
+<script>
+// Обновление списка подтем при выборе темы
+document.addEventListener('DOMContentLoaded', function() {
+    const topicSelect = document.getElementById('{{ form.topic.id_for_label }}');
+    const subtopicSelect = document.getElementById('{{ form.subtopic.id_for_label }}');
+    
+    if (topicSelect && subtopicSelect) {
+        topicSelect.addEventListener('change', function() {
+            const topicId = this.value;
+            if (topicId) {
+                // Здесь можно добавить AJAX запрос для загрузки подтем
+                // Пока что просто очищаем список подтем
+                subtopicSelect.innerHTML = '<option value="">---------</option>';
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

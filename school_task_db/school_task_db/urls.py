@@ -12,6 +12,7 @@ urlpatterns = [
     path('students/', include('students.urls')),  # Ученики
     path('events/', include('events.urls')),  # События
     path('reports/', include('reports.urls')), # Отчеты
+    path('curriculum/', include('curriculum.urls')), # Учебные курсы
 ]
 
 if settings.DEBUG:

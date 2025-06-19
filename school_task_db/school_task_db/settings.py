@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'students',       # Ученики и классы
     'events',         # События
     'reports',        # Отчеты
+    'curriculum',     # Учебные курсы
 ]
 
 

@@ -18,6 +18,15 @@ class Event(BaseModel):
     student_group = models.ForeignKey('students.StudentGroup', on_delete=models.CASCADE, verbose_name='Класс')
     status = models.CharField('Статус', max_length=20, choices=STATUS_CHOICES, default='planned')
     
+    # НОВЫЕ ПОЛЯ:
+    course = models.ForeignKey('curriculum.Course', on_delete=models.CASCADE,
+                              null=True, blank=True, verbose_name='Курс')
+    planned_date = models.DateTimeField('Запланированная дата', null=True, blank=True)
+    actual_date = models.DateTimeField('Фактическая дата проведения', null=True, blank=True)
+    completion_rate = models.FloatField('Процент выполнения', null=True, blank=True, 
+                                      help_text='От 0.0 до 1.0')
+    average_score = models.FloatField('Средний балл', null=True, blank=True)
+    
     class Meta:
         verbose_name = 'Событие'
         verbose_name_plural = 'События'

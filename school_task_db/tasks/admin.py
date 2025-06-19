@@ -8,16 +8,45 @@ class TaskImageInline(admin.TabularInline):
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ['get_display_id', 'text_preview', 'topic', 'task_type', 'difficulty', 'images_count', 'created_at']
-    list_filter = ['task_type', 'difficulty', 'section', 'topic']
-    search_fields = ['text', 'topic', 'section', 'uuid']  # Добавить поиск по UUID
-    # filter_horizontal = ['analog_groups']
+    list_display = ['get_short_uuid', 'text_preview', 'get_topic_name', 'task_type', 'difficulty', 'images_count', 'created_at']
+    list_filter = ['task_type', 'difficulty', 'topic__subject', 'topic__grade_level', 'cognitive_level']  # ОБНОВЛЕНО
+    search_fields = ['text', 'topic__name', 'topic__section', 'uuid']  # ОБНОВЛЕНО: поиск через связь
     readonly_fields = ['uuid', 'get_short_uuid', 'get_medium_uuid']
+    inlines = [TaskImageInline]
     
-    def get_display_id(self, obj):
-        return obj.get_display_id()
-    get_display_id.short_description = 'ID'
-    get_display_id.admin_order_field = 'uuid'
+    fieldsets = [
+        ('Основная информация', {
+            'fields': ['text', 'answer']
+        }),
+        ('Тематическая принадлежность', {
+            'fields': ['topic', 'subtopic']  # ОБНОВЛЕНО
+        }),
+        ('Решения и подсказки', {
+            'fields': ['short_solution', 'full_solution', 'hint', 'instruction'],
+            'classes': ['collapse']
+        }),
+        ('Классификация', {
+            'fields': ['task_type', 'difficulty', 'cognitive_level', 'estimated_time']  # ОБНОВЛЕНО
+        }),
+        ('Кодификатор', {
+            'fields': ['content_element', 'requirement_element'],
+            'classes': ['collapse']
+        }),
+        ('Служебная информация', {
+            'fields': ['uuid', 'get_short_uuid'],
+            'classes': ['collapse']
+        })
+    ]
+    
+    def get_short_uuid(self, obj):
+        return obj.get_short_uuid()
+    get_short_uuid.short_description = 'UUID'
+    get_short_uuid.admin_order_field = 'uuid'
+    
+    def get_topic_name(self, obj):
+        return obj.topic.name if obj.topic else 'Без темы'
+    get_topic_name.short_description = 'Тема'
+    get_topic_name.admin_order_field = 'topic__name'
     
     def text_preview(self, obj):
         return obj.text[:100] + '...' if len(obj.text) > 100 else obj.text

@@ -5,9 +5,21 @@ import random
 
 class Work(BaseModel):
     """Работа"""
+    WORK_TYPE_CHOICES = [
+        ('test', 'Контрольная работа'),
+        ('quiz', 'Самостоятельная работа'),
+        ('exam', 'Экзамен'),
+        ('diagnostic', 'Диагностическая работа'),
+        ('homework', 'Домашняя работа'),
+        ('practice', 'Практическая работа')
+    ]
+    
     name = models.CharField('Название работы', max_length=200)
     duration = models.PositiveIntegerField('Время выполнения (минуты)', default=45)
     variant_counter = models.PositiveIntegerField('Счётчик вариантов', default=0)
+    
+    # НОВЫЕ ПОЛЯ:
+    work_type = models.CharField('Тип работы', max_length=50, choices=WORK_TYPE_CHOICES, default='test')
     
     class Meta:
         verbose_name = 'Работа'

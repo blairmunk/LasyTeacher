@@ -1,10 +1,13 @@
 from django.db import models
 from django.urls import reverse
+from django.core.exceptions import ValidationError
 from core.models import BaseModel
+
 
 def task_image_upload_path(instance, filename):
     """Путь для загрузки изображений заданий"""
     return f'task_images/task_{instance.task.id}/{filename}'
+
 
 class Task(BaseModel):
     """Задание"""
@@ -24,6 +27,7 @@ class Task(BaseModel):
         (5, 'Экспертный'),
     ]
     
+    # Основное содержание
     text = models.TextField('Текст задания')
     answer = models.TextField('Ответ')
     short_solution = models.TextField('Краткое решение', blank=True)
@@ -31,10 +35,12 @@ class Task(BaseModel):
     hint = models.TextField('Подсказка', blank=True)
     instruction = models.TextField('Инструкция к выполнению', blank=True)
     
-    # Тематическая структура
-    section = models.CharField('Тематический раздел', max_length=200)
-    topic = models.CharField('Тема', max_length=200)
-    subtopic = models.CharField('Подтема', max_length=200, blank=True)
+    # ОБНОВЛЕННЫЕ СВЯЗИ:
+    topic = models.ForeignKey('curriculum.Topic', on_delete=models.PROTECT, 
+                             verbose_name='Основная тема')
+    subtopic = models.ForeignKey('curriculum.SubTopic', on_delete=models.SET_NULL,
+                               null=True, blank=True, 
+                               verbose_name='Подтема')
     
     # Кодификатор
     content_element = models.CharField('Элемент содержания', max_length=100, blank=True)
@@ -44,16 +50,56 @@ class Task(BaseModel):
     task_type = models.CharField('Тип задания', max_length=20, choices=TASK_TYPES)
     difficulty = models.IntegerField('Сложность', choices=DIFFICULTY_LEVELS)
     
+    # Дополнительные поля
+    cognitive_level = models.CharField('Уровень познания', max_length=20, choices=[
+        ('remember', 'Запоминание'),
+        ('understand', 'Понимание'), 
+        ('apply', 'Применение'),
+        ('analyze', 'Анализ'),
+        ('evaluate', 'Оценка'),
+        ('create', 'Создание')
+    ], default='understand')
+    
+    estimated_time = models.PositiveIntegerField('Время выполнения (мин)', null=True, blank=True)
+    
     class Meta:
         verbose_name = 'Задание'
         verbose_name_plural = 'Задания'
         ordering = ['-created_at']
     
     def __str__(self):
-        return f"[{self.get_short_uuid()}] {self.topic} - {self.text[:50]}..."
+        return f"[{self.get_short_uuid()}] {self.topic.name} - {self.text[:50]}..."
     
     def get_absolute_url(self):
         return reverse('tasks:detail', kwargs={'pk': self.pk})
+    
+    def clean(self):
+        """Валидация: подтема должна принадлежать выбранной теме"""
+        if self.subtopic and self.topic:
+            if self.subtopic.topic != self.topic:
+                raise ValidationError('Подтема должна принадлежать выбранной основной теме')
+    
+    # Свойства для удобства
+    @property
+    def subject(self):
+        """Предмет через тему"""
+        return self.topic.subject if self.topic else None
+    
+    @property
+    def grade_level(self):
+        """Класс через тему"""
+        return self.topic.grade_level if self.topic else None
+    
+    @property
+    def section(self):
+        """Раздел через тему"""
+        return self.topic.section if self.topic else None
+    
+    def get_full_topic_path(self):
+        """Полный путь темы для отображения"""
+        if self.subtopic:
+            return f"{self.topic.name} → {self.subtopic.name}"
+        return self.topic.name
 
 class TaskImage(BaseModel):
     """Изображение для задания"""
@@ -76,7 +122,7 @@ class TaskImage(BaseModel):
         ordering = ['order', 'created_at']
     
     def __str__(self):
-        return f"Изображение для {self.task.topic} ({self.get_position_display()})"
+        return f"Изображение для {self.task.topic.name} ({self.get_position_display()})"
     
     def get_css_class(self):
         """Возвращает CSS класс для позиционирования изображения"""

@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     
     # Наши приложения
     'core',           # Базовые компоненты
+    'references',
     'tasks',          # Задания
     'task_groups',         # Группы аналогов
     'works',          # Работы и варианты

@@ -1,5 +1,6 @@
 from django.views.generic import ListView, DetailView
-from .models import Topic, Course
+from django.http import JsonResponse
+from .models import Topic, SubTopic, Course
 
 class TopicListView(ListView):
     model = Topic
@@ -22,3 +23,20 @@ class CourseDetailView(DetailView):
     model = Course
     template_name = 'curriculum/course_detail.html'
     context_object_name = 'course'
+
+def topic_subtopics_api(request, topic_id):
+    """API для получения подтем определенной темы"""
+    try:
+        topic = Topic.objects.get(pk=topic_id)
+        subtopics = topic.subtopics.all().order_by('order')
+        data = [
+            {
+                'id': subtopic.id,
+                'name': subtopic.name,
+                'description': subtopic.description
+            }
+            for subtopic in subtopics
+        ]
+        return JsonResponse({'subtopics': data})
+    except Topic.DoesNotExist:
+        return JsonResponse({'subtopics': []})

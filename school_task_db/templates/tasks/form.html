@@ -19,29 +19,39 @@
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             
+            <!-- Тематическая принадлежность -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Тематическая принадлежность</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.topic.id_for_label }}" class="form-label">{{ form.topic.label }}</label>
+                            {{ form.topic }}
+                            {% if form.topic.errors %}
+                                <div class="text-danger">{{ form.topic.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">Основная тема задания</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.subtopic.id_for_label }}" class="form-label">{{ form.subtopic.label }}</label>
+                            {{ form.subtopic }}
+                            {% if form.subtopic.errors %}
+                                <div class="text-danger">{{ form.subtopic.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">Подтема (если применимо)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Основная информация -->
             <div class="card mb-4">
                 <div class="card-header">
                     <h5>Основная информация</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.topic.id_for_label }}" class="form-label">{{ form.topic.label }}</label>
-                            {{ form.topic|add_class:"form-select" }}
-                            {% if form.topic.errors %}
-                                <div class="text-danger">{{ form.topic.errors }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.subtopic.id_for_label }}" class="form-label">{{ form.subtopic.label }}</label>
-                            {{ form.subtopic|add_class:"form-select" }}
-                            {% if form.subtopic.errors %}
-                                <div class="text-danger">{{ form.subtopic.errors }}</div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="{{ form.task_type.id_for_label }}" class="form-label">{{ form.task_type.label }}</label>
@@ -55,12 +65,12 @@
                     
                     <div class="mb-3">
                         <label for="{{ form.text.id_for_label }}" class="form-label">{{ form.text.label }}</label>
-                        {{ form.text|add_class:"form-control" }}
+                        {{ form.text }}
                     </div>
                     
                     <div class="mb-3">
                         <label for="{{ form.answer.id_for_label }}" class="form-label">{{ form.answer.label }}</label>
-                        {{ form.answer|add_class:"form-control" }}
+                        {{ form.answer }}
                     </div>
                 </div>
             </div>
@@ -74,22 +84,22 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="{{ form.short_solution.id_for_label }}" class="form-label">{{ form.short_solution.label }}</label>
-                            {{ form.short_solution|add_class:"form-control" }}
+                            {{ form.short_solution }}
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="{{ form.full_solution.id_for_label }}" class="form-label">{{ form.full_solution.label }}</label>
-                            {{ form.full_solution|add_class:"form-control" }}
+                            {{ form.full_solution }}
                         </div>
                     </div>
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="{{ form.hint.id_for_label }}" class="form-label">{{ form.hint.label }}</label>
-                            {{ form.hint|add_class:"form-control" }}
+                            {{ form.hint }}
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="{{ form.instruction.id_for_label }}" class="form-label">{{ form.instruction.label }}</label>
-                            {{ form.instruction|add_class:"form-control" }}
+                            {{ form.instruction }}
                         </div>
                     </div>
                 </div>
@@ -108,7 +118,7 @@
                         </div>
                         <div class="col-md-4 mb-3">
                             <label for="{{ form.estimated_time.id_for_label }}" class="form-label">{{ form.estimated_time.label }}</label>
-                            {{ form.estimated_time|add_class:"form-control" }}
+                            {{ form.estimated_time }}
                             <div class="form-text">Время в минутах</div>
                         </div>
                     </div>
@@ -195,18 +205,38 @@
 </div>
 
 <script>
-// Обновление списка подтем при выборе темы
+// AJAX для обновления списка подтем при выборе темы
 document.addEventListener('DOMContentLoaded', function() {
-    const topicSelect = document.getElementById('{{ form.topic.id_for_label }}');
-    const subtopicSelect = document.getElementById('{{ form.subtopic.id_for_label }}');
+    const topicSelect = document.getElementById('id_topic');
+    const subtopicSelect = document.getElementById('id_subtopic');
     
     if (topicSelect && subtopicSelect) {
         topicSelect.addEventListener('change', function() {
             const topicId = this.value;
+            
+            // Очищаем список подтем
+            subtopicSelect.innerHTML = '<option value="">--- Загрузка... ---</option>';
+            
             if (topicId) {
-                // Здесь можно добавить AJAX запрос для загрузки подтем
-                // Пока что просто очищаем список подтем
-                subtopicSelect.innerHTML = '<option value="">---------</option>';
+                // Загружаем подтемы через AJAX
+                fetch(`/curriculum/api/topics/${topicId}/subtopics/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        subtopicSelect.innerHTML = '<option value="">--- Выберите подтему (необязательно) ---</option>';
+                        
+                        data.subtopics.forEach(subtopic => {
+                            const option = document.createElement('option');
+                            option.value = subtopic.id;
+                            option.textContent = subtopic.name;
+                            subtopicSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Ошибка загрузки подтем:', error);
+                        subtopicSelect.innerHTML = '<option value="">--- Ошибка загрузки ---</option>';
+                    });
+            } else {
+                subtopicSelect.innerHTML = '<option value="">--- Выберите подтему (необязательно) ---</option>';
             }
         });
     }

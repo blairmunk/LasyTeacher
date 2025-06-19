@@ -9,8 +9,8 @@ class TaskImageInline(admin.TabularInline):
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
     list_display = ['get_short_uuid', 'text_preview', 'get_topic_name', 'task_type', 'difficulty', 'images_count', 'created_at']
-    list_filter = ['task_type', 'difficulty', 'topic__subject', 'topic__grade_level', 'cognitive_level']  # ОБНОВЛЕНО
-    search_fields = ['text', 'topic__name', 'topic__section', 'uuid']  # ОБНОВЛЕНО: поиск через связь
+    list_filter = ['task_type', 'difficulty', 'topic__subject', 'topic__grade_level', 'cognitive_level']
+    search_fields = ['text', 'topic__name', 'topic__section', 'uuid']
     readonly_fields = ['uuid', 'get_short_uuid', 'get_medium_uuid']
     inlines = [TaskImageInline]
     
@@ -19,14 +19,14 @@ class TaskAdmin(admin.ModelAdmin):
             'fields': ['text', 'answer']
         }),
         ('Тематическая принадлежность', {
-            'fields': ['topic', 'subtopic']  # ОБНОВЛЕНО
+            'fields': ['topic', 'subtopic']
         }),
         ('Решения и подсказки', {
             'fields': ['short_solution', 'full_solution', 'hint', 'instruction'],
             'classes': ['collapse']
         }),
         ('Классификация', {
-            'fields': ['task_type', 'difficulty', 'cognitive_level', 'estimated_time']  # ОБНОВЛЕНО
+            'fields': ['task_type', 'difficulty', 'cognitive_level', 'estimated_time']
         }),
         ('Кодификатор', {
             'fields': ['content_element', 'requirement_element'],

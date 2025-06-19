@@ -13,6 +13,7 @@ urlpatterns = [
     path('events/', include('events.urls')),  # События
     path('reports/', include('reports.urls')), # Отчеты
     path('curriculum/', include('curriculum.urls')), # Учебные курсы
+    path('review/', include('review.urls')), # Модуль проверки заданий
 ]
 
 if settings.DEBUG:

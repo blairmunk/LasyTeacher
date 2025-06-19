@@ -1,0 +1,393 @@
+{% extends 'base.html' %}
+
+{% block title %}Проверка работы: {{ participation.student.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Навигация и заголовок -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>Проверка работы</h2>
+            <h4 class="text-muted">{{ participation.student.get_full_name }}</h4>
+            <p class="mb-0">
+                <span class="badge bg-info">{{ participation.event.name }}</span>
+                <span class="uuid-badge ms-2">{{ participation.student.get_short_uuid }}</span>
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'review:event-review' participation.event.pk %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> К списку участников
+            </a>
+        </div>
+    </div>
+
+    <!-- Навигация между работами -->
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="card bg-light">
+                <div class="card-body py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            {% if previous_participation %}
+                                <a href="{% url 'review:participation-review' previous_participation.pk %}" 
+                                class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-chevron-left"></i> Предыдущая
+                                </a>
+                            {% else %}
+                                <button class="btn btn-sm btn-outline-secondary" disabled>
+                                    <i class="fas fa-chevron-left"></i> Предыдущая
+                                </button>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="text-center">
+                            <strong>Работа {{ current_position }} из {{ total_positions }}</strong>
+                            <div class="progress mt-1" style="width: 200px; height: 6px;">
+                                <div class="progress-bar bg-info" 
+                                    style="width: {{ navigation_progress }}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            {% if next_participation %}
+                                <a href="{% url 'review:participation-review' next_participation.pk %}" 
+                                class="btn btn-sm btn-outline-primary">
+                                    Следующая <i class="fas fa-chevron-right"></i>
+                                </a>
+                            {% else %}
+                                <button class="btn btn-sm btn-outline-secondary" disabled>
+                                    Следующая <i class="fas fa-chevron-right"></i>
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="row">
+            <!-- Левая колонка: информация о работе -->
+            <div class="col-md-8">
+                <!-- Информация о варианте -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-file-alt"></i> Информация о работе</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Работа:</strong> {{ participation.event.work.name }}</p>
+                                <p><strong>Вариант:</strong> 
+                                    {% if participation.variant %}
+                                        Вариант {{ participation.variant.number }}
+                                        <span class="uuid-badge">{{ participation.variant.get_short_uuid }}</span>
+                                    {% else %}
+                                        <span class="text-muted">Не назначен</span>
+                                    {% endif %}
+                                </p>
+                                <p><strong>Дата проведения:</strong> {{ participation.event.planned_date|date:"d.m.Y H:i" }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Статус участия:</strong> 
+                                    <span class="badge bg-{% if participation.status == 'graded' %}success{% elif participation.status == 'completed' %}info{% else %}secondary{% endif %}">
+                                        {{ participation.get_status_display }}
+                                    </span>
+                                </p>
+                                <p><strong>Завершено в:</strong> 
+                                    {% if participation.completed_at %}
+                                        {{ participation.completed_at|date:"d.m.Y H:i" }}
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Задания варианта -->
+                {% if tasks_with_scores %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-tasks"></i> Задания варианта ({{ tasks_with_scores|length }})</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for task_data in tasks_with_scores %}
+                        <div class="card mb-3 border-secondary">
+                            <div class="card-header bg-light">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">Задание {{ forloop.counter }}</h6>
+                                    <div>
+                                        <span class="badge bg-secondary">{{ task_data.task.topic.name }}</span>
+                                        <span class="badge bg-info">{{ task_data.task.get_difficulty_display }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <p><strong>Текст задания:</strong></p>
+                                        <p>{{ task_data.task.text }}</p>
+                                        {% if task_data.task.answer %}
+                                            <p><strong>Правильный ответ:</strong> <span class="text-success">{{ task_data.task.answer }}</span></p>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="border p-3 bg-light">
+                                            <label class="form-label"><strong>Баллы за задание:</strong></label>
+                                            <div class="input-group input-group-sm mb-2">
+                                                <input type="number" name="task_{{ task_data.task.id }}" 
+                                                    class="form-control task-points" 
+                                                    data-task-id="{{ task_data.task.id }}"
+                                                    value="{{ task_data.points }}"
+                                                    min="0" max="10">
+                                                <span class="input-group-text">из</span>
+                                                <input type="number" name="task_{{ task_data.task.id }}_max" 
+                                                    class="form-control task-max-points"
+                                                    value="{{ task_data.max_points }}"
+                                                    min="1" max="20">
+                                            </div>
+                                            <textarea name="task_{{ task_data.task.id }}_comment" 
+                                                    class="form-control form-control-sm" 
+                                                    rows="2" placeholder="Комментарий к заданию"
+                                                    >{{ task_data.comment }}</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+
+                <!-- Загрузка скана работы -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-file-upload"></i> Скан работы</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if mark.work_scan %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-file-pdf"></i> 
+                                Скан работы загружен: 
+                                <a href="{{ mark.work_scan.url }}" target="_blank" class="alert-link">Открыть PDF</a>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <label for="work_scan" class="form-label">Загрузить скан работы (PDF):</label>
+                            <input type="file" name="work_scan" class="form-control" accept=".pdf">
+                            <div class="form-text">Поддерживаются файлы PDF размером до 10 МБ</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Правая колонка: оценка и комментарии -->
+            <div class="col-md-4">
+                <!-- Итоговая оценка -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5><i class="fas fa-star"></i> Итоговая оценка</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label for="points" class="form-label">Баллы:</label>
+                                <input type="number" name="points" id="points" 
+                                       class="form-control" value="{{ mark.points|default:0 }}" min="0">
+                            </div>
+                            <div class="col-6">
+                                <label for="max_points" class="form-label">Из:</label>
+                                <input type="number" name="max_points" id="max_points" 
+                                       class="form-control" value="{{ mark.max_points|default:20 }}" min="1">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="score" class="form-label">Оценка:</label>
+                            <select name="score" id="score" class="form-select">
+                                <option value="">Не выставлена</option>
+                                <option value="5" {% if mark.score == 5 %}selected{% endif %}>5 (отлично)</option>
+                                <option value="4" {% if mark.score == 4 %}selected{% endif %}>4 (хорошо)</option>
+                                <option value="3" {% if mark.score == 3 %}selected{% endif %}>3 (удовлетворительно)</option>
+                                <option value="2" {% if mark.score == 2 %}selected{% endif %}>2 (неудовлетворительно)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="text-center">
+                            <button type="button" class="btn btn-outline-info btn-sm" onclick="calculateScore()">
+                                <i class="fas fa-calculator"></i> Рассчитать оценку
+                            </button>
+                        </div>
+                        
+                        <div id="score-info" class="mt-2"></div>
+                    </div>
+                </div>
+
+                <!-- Комментарии -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-comments"></i> Комментарии</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="teacher_comment" class="form-label">Комментарий учителя:</label>
+                            <textarea name="teacher_comment" id="teacher_comment" 
+                                      class="form-control" rows="4" 
+                                      placeholder="Общий комментарий к работе..."
+                                      >{{ mark.teacher_comment|default:'' }}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="mistakes_analysis" class="form-label">Анализ ошибок:</label>
+                            <textarea name="mistakes_analysis" id="mistakes_analysis" 
+                                      class="form-control" rows="3"
+                                      placeholder="Описание основных ошибок..."
+                                      >{{ mark.mistakes_analysis|default:'' }}</textarea>
+                        </div>
+
+                        <!-- Типовые комментарии -->
+                        {% if typical_comments %}
+                        <div class="mb-3">
+                            <label class="form-label">Типовые комментарии:</label>
+                            <div class="d-flex flex-wrap gap-1">
+                                {% for comment in typical_comments %}
+                                <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                        onclick="addTypicalComment('{{ comment.text|escapejs }}')">
+                                    {{ comment.text|truncatechars:30 }}
+                                </button>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Действия -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button type="submit" name="save" class="btn btn-success">
+                                <i class="fas fa-save"></i> Сохранить
+                            </button>
+                            
+                            <button type="submit" name="save_and_next" class="btn btn-primary">
+                                <i class="fas fa-arrow-right"></i> Сохранить и следующая
+                            </button>
+                            
+                            <a href="{% url 'review:event-review' participation.event.pk %}" 
+                               class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Отменить
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+// Автоматический расчет общих баллов при изменении баллов по заданиям
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.task-points, .task-max-points').forEach(function(input) {
+        input.addEventListener('change', updateTotalPoints);
+    });
+    
+    updateTotalPoints(); // Инициализация
+});
+
+function updateTotalPoints() {
+    let totalPoints = 0;
+    let totalMaxPoints = 0;
+    
+    document.querySelectorAll('.task-points').forEach(function(input) {
+        totalPoints += parseInt(input.value) || 0;
+    });
+    
+    document.querySelectorAll('.task-max-points').forEach(function(input) {
+        totalMaxPoints += parseInt(input.value) || 0;
+    });
+    
+    document.getElementById('points').value = totalPoints;
+    document.getElementById('max_points').value = totalMaxPoints;
+    
+    calculateScore();
+}
+
+function calculateScore() {
+    const points = parseInt(document.getElementById('points').value) || 0;
+    const maxPoints = parseInt(document.getElementById('max_points').value) || 1;
+    
+    const percentage = (points / maxPoints) * 100;
+    let score = 2;
+    
+    if (percentage >= 85) score = 5;
+    else if (percentage >= 70) score = 4;
+    else if (percentage >= 50) score = 3;
+    else score = 2;
+    
+    document.getElementById('score').value = score;
+    
+    // Отображение информации
+    const scoreInfo = document.getElementById('score-info');
+    scoreInfo.innerHTML = `
+        <div class="alert alert-info alert-sm">
+            <small>
+                ${points} из ${maxPoints} баллов<br>
+                ${percentage.toFixed(1)}% выполнения<br>
+                Рекомендуемая оценка: <strong>${score}</strong>
+            </small>
+        </div>
+    `;
+}
+
+function addTypicalComment(text) {
+    const textarea = document.getElementById('teacher_comment');
+    if (textarea.value) {
+        textarea.value += '\n' + text;
+    } else {
+        textarea.value = text;
+    }
+}
+
+// Горячие клавиши
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey || e.metaKey) {
+        switch(e.key) {
+            case 's':
+                e.preventDefault();
+                document.querySelector('button[name="save"]').click();
+                break;
+            case 'Enter':
+                e.preventDefault();
+                document.querySelector('button[name="save_and_next"]').click();
+                break;
+        }
+    }
+});
+</script>
+
+<style>
+.uuid-badge {
+    font-size: 0.8em;
+}
+
+.alert-sm {
+    padding: 0.5rem;
+    margin-bottom: 0;
+}
+
+.card-header h5, .card-header h6 {
+    margin-bottom: 0;
+}
+</style>
+{% endblock %}

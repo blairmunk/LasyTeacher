@@ -6,17 +6,8 @@ from core.models import BaseModel
 class Topic(BaseModel):
     """Основная тема (без иерархии)"""
     name = models.CharField('Название темы', max_length=200)
-    subject = models.CharField('Предмет', max_length=100, choices=[
-        ('mathematics', 'Математика'),
-        ('algebra', 'Алгебра'),
-        ('geometry', 'Геометрия'),
-        ('physics', 'Физика'), 
-        ('chemistry', 'Химия'),
-        ('russian', 'Русский язык'),
-        ('literature', 'Литература'),
-        ('history', 'История'),
-        ('biology', 'Биология'),
-    ])
+    subject = models.CharField('Предмет', max_length=100, 
+                         help_text='Предмет из справочника предметов')
     section = models.CharField('Тематический раздел', max_length=200)
     grade_level = models.PositiveIntegerField('Класс', help_text='7, 8, 9, 10, 11')
     
@@ -93,17 +84,8 @@ class Course(BaseModel):
     description = models.TextField('Описание курса', blank=True)
     
     # Основные параметры
-    subject = models.CharField('Предмет', max_length=100, choices=[
-        ('mathematics', 'Математика'),
-        ('algebra', 'Алгебра'),
-        ('geometry', 'Геометрия'),
-        ('physics', 'Физика'), 
-        ('chemistry', 'Химия'),
-        ('russian', 'Русский язык'),
-        ('literature', 'Литература'),
-        ('history', 'История'),
-        ('biology', 'Биология'),
-    ])
+    subject = models.CharField('Предмет', max_length=100, 
+                             help_text='Предмет из справочника предметов')
     grade_level = models.PositiveIntegerField('Класс')
     academic_year = models.CharField('Учебный год', max_length=20, default='2024-2025')
     

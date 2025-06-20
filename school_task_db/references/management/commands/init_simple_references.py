@@ -42,11 +42,11 @@ class Command(BaseCommand):
 Экспериментальное задание'''),
             
             # Уровни сложности
-            ('difficulty_levels', '''Подготовительный
-Базовый
-Повышенный
-Высокий
-Экспертный'''),
+            ('difficulty_levels', '''1
+2
+3
+4
+5'''),
             
             # Когнитивные уровни (по Блуму)
             ('cognitive_levels', '''Запоминание
@@ -136,7 +136,7 @@ class Command(BaseCommand):
         """Создание справочников кодификатора по предметам"""
         self.stdout.write('  📚 Создание справочников кодификатора...')
         
-        # Элементы содержания для математики
+        # Элементы содержания для математики  
         math_content = '''1.1|Натуральные числа
 1.2|Дроби
 1.3|Рациональные числа
@@ -191,13 +191,13 @@ class Command(BaseCommand):
 4.3|Ядерные реакции'''
 
         subject_references_data = [
-            # Математика
-            ('mathematics', 'content_elements', math_content),
-            ('mathematics', 'requirement_elements', math_requirements),
+            # Математика (разные классы)
+            ('mathematics', '5-6', 'content_elements', math_content),
+            ('mathematics', '7-9', 'requirement_elements', math_requirements),
             
             # Физика  
-            ('physics', 'content_elements', physics_content),
-            ('physics', 'requirement_elements', '''1.1|Понимание смысла физических понятий
+            ('physics', '7-9', 'content_elements', physics_content),
+            ('physics', '7-9', 'requirement_elements', '''1.1|Понимание смысла физических понятий
 1.2|Понимание смысла физических законов
 1.3|Понимание принципов действия приборов
 2.1|Описание и объяснение физических явлений
@@ -206,7 +206,7 @@ class Command(BaseCommand):
 2.4|Проведение простых физических опытов'''),
             
             # Алгебра (упрощенный вариант)
-            ('algebra', 'content_elements', '''1.1|Числа и вычисления
+            ('algebra', '7-9', 'content_elements', '''1.1|Числа и вычисления
 2.1|Алгебраические выражения
 2.2|Многочлены и их разложение
 3.1|Уравнения и их системы
@@ -215,7 +215,7 @@ class Command(BaseCommand):
 5.1|Функции и их свойства'''),
             
             # Геометрия
-            ('geometry', 'content_elements', '''6.1|Начальные понятия геометрии
+            ('geometry', '7-11', 'content_elements', '''6.1|Начальные понятия геометрии
 6.2|Треугольник
 6.3|Четырёхугольники
 6.4|Многоугольники
@@ -227,12 +227,17 @@ class Command(BaseCommand):
         
         created_count = 0
         
-        for subject, category, items_text in subject_references_data:
+        for subject, grade_level, category, items_text in subject_references_data:
             if force:
-                SubjectReference.objects.filter(subject=subject, category=category).delete()
+                SubjectReference.objects.filter(
+                    subject=subject, 
+                    grade_level=grade_level, 
+                    category=category
+                ).delete()
             
             obj, created = SubjectReference.objects.get_or_create(
                 subject=subject,
+                grade_level=grade_level,
                 category=category,
                 defaults={
                     'items_text': items_text,
@@ -242,14 +247,15 @@ class Command(BaseCommand):
             
             if created:
                 created_count += 1
+                grade_text = f" ({grade_level})" if grade_level else " (все классы)"
                 items_count = len(obj.get_items_dict())
-                self.stdout.write(f'    ✅ {obj.get_subject_display()} - {obj.get_category_display()}: {items_count} элементов')
+                # ИСПРАВЛЕНО: используем obj.subject вместо obj.get_subject_display()
+                self.stdout.write(f'    ✅ {obj.subject}{grade_text} - {obj.get_category_display()}: {items_count} элементов')
             elif force:
                 obj.items_text = items_text
                 obj.save()
-                items_count = len(obj.get_items_dict())
-                self.stdout.write(f'    🔄 {obj.get_subject_display()} - {obj.get_category_display()}: обновлено')
+                self.stdout.write(f'    🔄 {obj.subject} - {obj.get_category_display()}: обновлено')
             else:
-                self.stdout.write(f'    ⚠️  {obj.get_subject_display()} - {obj.get_category_display()}: уже существует')
+                self.stdout.write(f'    ⚠️  {obj.subject} - {obj.get_category_display()}: уже существует')
         
         return created_count

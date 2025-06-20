@@ -205,41 +205,56 @@
 </div>
 
 <script>
-// AJAX для обновления списка подтем при выборе темы
 document.addEventListener('DOMContentLoaded', function() {
     const topicSelect = document.getElementById('id_topic');
     const subtopicSelect = document.getElementById('id_subtopic');
     
     if (topicSelect && subtopicSelect) {
-        topicSelect.addEventListener('change', function() {
-            const topicId = this.value;
+        // Сохраняем все подтемы для восстановления
+        const allSubtopics = Array.from(subtopicSelect.options).slice(1); // Убираем первый option (empty)
+        
+        function filterSubtopics(topicId) {
+            if (!topicId) {
+                // Если тема не выбрана - показываем подсказку
+                subtopicSelect.innerHTML = '<option value="">--- Сначала выберите тему ---</option>';
+                return;
+            }
             
-            // Очищаем список подтем
+            // Показываем загрузку
             subtopicSelect.innerHTML = '<option value="">--- Загрузка... ---</option>';
             
-            if (topicId) {
-                // Загружаем подтемы через AJAX
-                fetch(`/curriculum/api/topics/${topicId}/subtopics/`)
-                    .then(response => response.json())
-                    .then(data => {
-                        subtopicSelect.innerHTML = '<option value="">--- Выберите подтему (необязательно) ---</option>';
-                        
-                        data.subtopics.forEach(subtopic => {
-                            const option = document.createElement('option');
-                            option.value = subtopic.id;
-                            option.textContent = subtopic.name;
-                            subtopicSelect.appendChild(option);
-                        });
-                    })
-                    .catch(error => {
-                        console.error('Ошибка загрузки подтем:', error);
-                        subtopicSelect.innerHTML = '<option value="">--- Ошибка загрузки ---</option>';
+            fetch(`/tasks/ajax/load-subtopics/?topic_id=${topicId}`)
+                .then(response => response.json())
+                .then(data => {
+                    subtopicSelect.innerHTML = '<option value="">--- Выберите подтему (необязательно) ---</option>';
+                    
+                    data.subtopics.forEach(subtopic => {
+                        const option = document.createElement('option');
+                        option.value = subtopic.id;
+                        option.textContent = subtopic.name;
+                        subtopicSelect.appendChild(option);
                     });
-            } else {
-                subtopicSelect.innerHTML = '<option value="">--- Выберите подтему (необязательно) ---</option>';
-            }
+                })
+                .catch(error => {
+                    console.error('Ошибка загрузки подтем:', error);
+                    subtopicSelect.innerHTML = '<option value="">--- Ошибка загрузки ---</option>';
+                });
+        }
+        
+        topicSelect.addEventListener('change', function() {
+            filterSubtopics(this.value);
         });
+        
+        // Инициализация при загрузке
+        if (!topicSelect.value) {
+            subtopicSelect.innerHTML = '<option value="">--- Сначала выберите тему ---</option>';
+        } else {
+            // Если тема уже выбрана (при редактировании) - фильтруем подтемы
+            filterSubtopics(topicSelect.value);
+        }
     }
 });
 </script>
+
+
 {% endblock %}

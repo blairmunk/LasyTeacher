@@ -97,6 +97,46 @@ def get_difficulty_choices(include_empty=False):
     """Получить уровни сложности"""
     return get_reference_choices('difficulty_levels', include_empty)
 
+def get_difficulty_choices_for_forms(include_empty=False):
+    """Получить choices сложности для форм (всегда numbers + labels)"""
+    from tasks.models import Task
+    
+    try:
+        # Пытаемся получить из справочника
+        ref_choices = get_reference_choices('difficulty_levels', include_empty=False)
+        
+        if ref_choices:
+            # Проверяем, что в справочнике числа
+            numbers = []
+            for code, name in ref_choices:
+                try:
+                    numbers.append(int(code))
+                except ValueError:
+                    # Если не числа - используем статические
+                    return Task.DIFFICULTY_LEVELS if not include_empty else [('', '--- Выберите ---')] + Task.DIFFICULTY_LEVELS
+            
+            # Создаем choices: число -> название из модели
+            choices = []
+            for num in sorted(numbers):
+                # Ищем название в статических choices модели
+                for choice_num, choice_name in Task.DIFFICULTY_LEVELS:
+                    if choice_num == num:
+                        choices.append((num, choice_name))
+                        break
+            
+            if include_empty:
+                choices = [('', '--- Выберите ---')] + choices
+            
+            return choices
+    except:
+        pass
+    
+    # Fallback на статические choices из модели
+    choices = Task.DIFFICULTY_LEVELS
+    if include_empty:
+        choices = [('', '--- Выберите ---')] + choices
+    return choices
+
 def get_cognitive_level_choices(include_empty=False):
     """Получить когнитивные уровни"""
     return get_reference_choices('cognitive_levels', include_empty)

@@ -48,7 +48,9 @@ class Task(BaseModel):
     
     # Характеристики
     task_type = models.CharField('Тип задания', max_length=20, choices=TASK_TYPES)
-    difficulty = models.IntegerField('Сложность', choices=DIFFICULTY_LEVELS)
+    difficulty = models.IntegerField('Сложность', 
+                               choices=DIFFICULTY_LEVELS,  # ДОБАВИТЬ choices!
+                               help_text='Уровень сложности задания')
     
     # Дополнительные поля
     cognitive_level = models.CharField('Уровень познания', max_length=20, choices=[

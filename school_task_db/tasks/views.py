@@ -1,23 +1,17 @@
-# tasks/views.py (ИСПРАВЛЕННАЯ ВЕРСИЯ)
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.db.models import Q
-from django.http import JsonResponse  # ДОБАВЛЯЕМ импорт для AJAX
+from django.http import JsonResponse
 
-# ИСПРАВИТЬ ИМПОРТ - убрать TaskImageFormSet пока что
-try:
-    from .forms import TaskForm  # НОВАЯ ВЕРСИЯ - импортируем только то что есть
-except ImportError:
-    TaskForm = None  # Если формы еще нет
-
+from .forms import TaskForm  # ИСПОЛЬЗУЕМ ТОЛЬКО TaskForm
 from .models import Task, TaskImage
 from curriculum.models import Topic, SubTopic
 
 class TaskListView(ListView):
     model = Task
-    template_name = 'tasks/list.html'  # ИСПРАВЛЕНО: было task_list.html
+    template_name = 'tasks/list.html'
     context_object_name = 'tasks'
     paginate_by = 20
     
@@ -54,7 +48,6 @@ class TaskListView(ListView):
             from references.helpers import get_task_type_choices
             context['task_types'] = get_task_type_choices()
         except ImportError:
-            # Fallback если справочники не работают
             context['task_types'] = [
                 ('computational', 'Расчётная задача'),
                 ('qualitative', 'Качественная задача'),
@@ -65,7 +58,7 @@ class TaskListView(ListView):
 
 class TaskDetailView(DetailView):
     model = Task
-    template_name = 'tasks/detail.html'  # ИСПРАВЛЕНО: было task_detail.html
+    template_name = 'tasks/detail.html'
     context_object_name = 'task'
     
     def get_queryset(self):
@@ -73,44 +66,37 @@ class TaskDetailView(DetailView):
 
 class TaskCreateView(CreateView):
     model = Task
-    template_name = 'tasks/form.html'  # ИСПРАВЛЕНО: было task_form.html
-    fields = [
-        'text', 'answer', 'topic', 'subtopic',
-        'task_type', 'difficulty', 'cognitive_level',
-        'content_element', 'requirement_element',
-        'short_solution', 'full_solution', 'hint', 'instruction',
-        'estimated_time'
-    ]
-    
-    def get_form_class(self):
-        # Используем кастомную форму если есть, иначе стандартную
-        if TaskForm:
-            return TaskForm
-        return super().get_form_class()
+    form_class = TaskForm  # ИСПОЛЬЗУЕМ form_class вместо fields
+    template_name = 'tasks/form.html'
     
     def form_valid(self, form):
         messages.success(self.request, 'Задание успешно создано!')
         return super().form_valid(form)
+    
+    def form_invalid(self, form):
+        """ДОБАВЛЕНО: Показываем ошибки валидации"""
+        messages.error(self.request, 'Ошибка при создании задания. Проверьте введённые данные.')
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, f'{field}: {error}')
+        return super().form_invalid(form)
 
 class TaskUpdateView(UpdateView):
     model = Task
-    template_name = 'tasks/form.html'  # ИСПРАВЛЕНО: было task_form.html
-    fields = [
-        'text', 'answer', 'topic', 'subtopic',
-        'task_type', 'difficulty', 'cognitive_level',
-        'content_element', 'requirement_element',
-        'short_solution', 'full_solution', 'hint', 'instruction',
-        'estimated_time'
-    ]
-    
-    def get_form_class(self):
-        if TaskForm:
-            return TaskForm
-        return super().get_form_class()
+    form_class = TaskForm  # ИСПОЛЬЗУЕМ form_class вместо fields  
+    template_name = 'tasks/form.html'
     
     def form_valid(self, form):
         messages.success(self.request, 'Задание успешно обновлено!')
         return super().form_valid(form)
+    
+    def form_invalid(self, form):
+        """ДОБАВЛЕНО: Показываем ошибки валидации"""
+        messages.error(self.request, 'Ошибка при обновлении задания. Проверьте введённые данные.')
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, f'{field}: {error}')
+        return super().form_invalid(form)
 
 class TaskDeleteView(DeleteView):
     model = Task
@@ -122,25 +108,32 @@ class TaskDeleteView(DeleteView):
         messages.success(request, 'Задание успешно удалено!')
         return super().delete(request, *args, **kwargs)
 
-# AJAX views для динамической загрузки
 def load_subtopics(request):
     """AJAX для загрузки подтем при выборе темы"""
     topic_id = request.GET.get('topic_id')
-    subtopics = SubTopic.objects.filter(topic_id=topic_id).order_by('name')
     
-    data = {
-        'subtopics': [
-            {'id': subtopic.id, 'name': subtopic.name} 
-            for subtopic in subtopics
-        ]
-    }
+    if not topic_id:
+        return JsonResponse({'subtopics': []})
+    
+    try:
+        topic = Topic.objects.get(pk=topic_id)
+        subtopics = topic.subtopics.all().order_by('order', 'name')
+        
+        data = {
+            'subtopics': [
+                {'id': subtopic.id, 'name': subtopic.name} 
+                for subtopic in subtopics
+            ]
+        }
+    except Topic.DoesNotExist:
+        data = {'subtopics': []}
     
     return JsonResponse(data)
 
 def load_codifier_elements(request):
     """AJAX для загрузки элементов кодификатора при выборе предмета"""
     subject = request.GET.get('subject')
-    category = request.GET.get('category')  # content_elements или requirement_elements
+    category = request.GET.get('category')
     
     try:
         from references.helpers import get_subject_reference_choices

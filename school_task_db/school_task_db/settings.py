@@ -108,6 +108,9 @@ STATICFILES_DIRS = [            # ДОБАВЛЯЕМ
     BASE_DIR / "static",
 ]
 
+# Для разработки также добавить:
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

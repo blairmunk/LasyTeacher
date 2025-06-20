@@ -13,21 +13,30 @@ class LaTeXGenerator:
         self.output_dir = Path(output_dir)
         self.templates_dir = Path(__file__).parent / 'templates'
     
-    def generate_variant(self, variant, output_format='pdf'):
-        """Генерирует LaTeX/PDF для варианта"""
+    def generate_all_variants(self, variants, output_format='pdf', with_answers=False):
+        """Генерирует ОДИН LaTeX/PDF файл со ВСЕМИ вариантами"""
         
-        # Подготовка данных
-        context = self._prepare_context(variant)
+        # Подготовка данных для всех вариантов
+        all_variants_data = []
+        for variant in variants:
+            variant_data = self._prepare_variant_context(variant)
+            all_variants_data.append(variant_data)
+        
+        # Контекст для шаблона
+        context = {
+            'work': self.work,
+            'work_name': sanitize_latex(self.work.name),
+            'variants': all_variants_data,
+            'total_variants': len(all_variants_data),
+            'with_answers': with_answers,
+        }
         
         # Генерация LaTeX
-        latex_content = render_to_string(
-            'latex/work_variant.tex',
-            context
-        )
+        latex_content = render_to_string('latex/work_all_variants.tex', context)
         
         # Сохранение LaTeX файла
-        latex_filename = f"{self.work.name}_variant_{variant.number}.tex"
-        latex_file = self.output_dir / sanitize_filename(latex_filename)
+        latex_filename = f"{sanitize_filename(self.work.name)}_all_variants.tex"
+        latex_file = self.output_dir / latex_filename
         
         with open(latex_file, 'w', encoding='utf-8') as f:
             f.write(latex_content)
@@ -42,8 +51,8 @@ class LaTeXGenerator:
         
         return files
     
-    def _prepare_context(self, variant):
-        """Подготавливает контекст для шаблона"""
+    def _prepare_variant_context(self, variant):
+        """Подготавливает контекст для одного варианта"""
         tasks = variant.tasks.all().order_by('id')  # Детерминированный порядок
         
         # Подготавливаем задания с изображениями
@@ -66,11 +75,9 @@ class LaTeXGenerator:
             prepared_tasks.append(task_data)
         
         return {
-            'work': self.work,
             'variant': variant,
             'tasks': prepared_tasks,
             'total_tasks': len(prepared_tasks),
-            'work_name': sanitize_latex(self.work.name),
         }
     
     def _compile_latex_to_pdf(self, latex_file):
@@ -80,22 +87,24 @@ class LaTeXGenerator:
             old_cwd = os.getcwd()
             os.chdir(self.output_dir)
             
-            # Запускаем pdflatex
-            result = subprocess.run([
-                'pdflatex', 
-                '-interaction=nonstopmode',
-                '-halt-on-error',
-                latex_file.name
-            ], capture_output=True, text=True, encoding='utf-8')
+            # Запускаем pdflatex дважды (для правильных ссылок)
+            for i in range(2):
+                result = subprocess.run([
+                    'pdflatex', 
+                    '-interaction=nonstopmode',
+                    '-halt-on-error',
+                    latex_file.name
+                ], capture_output=True, text=True, encoding='utf-8')
+                
+                if result.returncode != 0:
+                    print(f"❌ Ошибка компиляции LaTeX (проход {i+1}): {result.stderr}")
+                    os.chdir(old_cwd)
+                    return None
             
             os.chdir(old_cwd)
             
-            if result.returncode == 0:
-                pdf_file = latex_file.with_suffix('.pdf')
-                return pdf_file if pdf_file.exists() else None
-            else:
-                print(f"❌ Ошибка компиляции LaTeX: {result.stderr}")
-                return None
+            pdf_file = latex_file.with_suffix('.pdf')
+            return pdf_file if pdf_file.exists() else None
                 
         except FileNotFoundError:
             print("❌ pdflatex не найден. Установите TeX Live или MikTeX")

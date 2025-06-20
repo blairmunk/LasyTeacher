@@ -7,15 +7,10 @@ from works.models import Work, Variant
 from works.latex.generator import LaTeXGenerator
 
 class Command(BaseCommand):
-    help = 'Генерация LaTeX/PDF для работы'
+    help = 'Генерация LaTeX/PDF для работы (все варианты в одном файле)'
     
     def add_arguments(self, parser):
         parser.add_argument('work_id', type=int, help='ID работы')
-        parser.add_argument(
-            '--variant', 
-            type=int, 
-            help='Номер конкретного варианта (по умолчанию все)'
-        )
         parser.add_argument(
             '--format',
             choices=['latex', 'pdf'],
@@ -27,12 +22,17 @@ class Command(BaseCommand):
             default='latex_output',
             help='Папка для сохранения файлов'
         )
+        parser.add_argument(
+            '--with-answers',
+            action='store_true',
+            help='Добавить лист ответов в конце'
+        )
 
     def handle(self, *args, **options):
         work_id = options['work_id']
-        variant_number = options.get('variant')
         output_format = options['format']
         output_dir = Path(options['output_dir'])
+        with_answers = options['with_answers']
         
         try:
             work = Work.objects.get(pk=work_id)
@@ -42,36 +42,20 @@ class Command(BaseCommand):
         # Создаем папку для вывода
         output_dir.mkdir(exist_ok=True)
         
+        variants = Variant.objects.filter(work=work).order_by('number')
+        if not variants.exists():
+            raise CommandError('У работы нет вариантов. Сначала сгенерируйте варианты.')
+        
         self.stdout.write(f'🚀 Генерация LaTeX для работы: {work.name}')
+        self.stdout.write(f'📋 Найдено вариантов: {variants.count()}')
         
         generator = LaTeXGenerator(work, output_dir)
         
-        if variant_number:
-            # Генерируем один вариант
-            try:
-                variant = Variant.objects.get(work=work, number=variant_number)
-                files = generator.generate_variant(variant, output_format)
-                self.stdout.write(
-                    self.style.SUCCESS(
-                        f'✅ Вариант {variant_number} сгенерирован: {files}'
-                    )
-                )
-            except Variant.DoesNotExist:
-                raise CommandError(f'Вариант {variant_number} не найден')
-        else:
-            # Генерируем все варианты
-            variants = Variant.objects.filter(work=work).order_by('number')
-            if not variants.exists():
-                raise CommandError('У работы нет вариантов. Сначала сгенерируйте варианты.')
-            
-            all_files = []
-            for variant in variants:
-                files = generator.generate_variant(variant, output_format)
-                all_files.extend(files)
-                self.stdout.write(f'  ✅ Вариант {variant.number}: {files}')
-            
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f'🎉 Готово! Сгенерировано {len(variants)} вариантов: {len(all_files)} файлов'
-                )
+        # Генерируем ОДИН документ со ВСЕМИ вариантами
+        files = generator.generate_all_variants(variants, output_format, with_answers)
+        
+        self.stdout.write(
+            self.style.SUCCESS(
+                f'🎉 Готово! Создан файл с {variants.count()} вариантами: {files}'
             )
+        )

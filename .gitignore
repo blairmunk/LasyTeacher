@@ -197,6 +197,7 @@ cython_debug/
 # Static files (автоматически генерируются)
 staticfiles/
 static_root/
+latex_output/
 
 
 # Media files (загружаются пользователями)

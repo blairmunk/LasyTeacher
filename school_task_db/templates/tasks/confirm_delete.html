@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Удаление задания{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="text-danger">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        Подтвердите удаление
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p>Вы действительно хотите удалить задание:</p>
+                    <div class="alert alert-warning">
+                        <strong>{{ task.text|truncatewords:20 }}</strong>
+                    </div>
+                    
+                    <p class="text-muted">
+                        <small>
+                            Тема: {{ task.topic.name }}<br>
+                            Создано: {{ task.created_at|date:"d.m.Y H:i" }}
+                        </small>
+                    </p>
+                    
+                    <div class="d-flex gap-2">
+                        <form method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Да, удалить
+                            </button>
+                        </form>
+                        <a href="{{ task.get_absolute_url }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Отмена
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

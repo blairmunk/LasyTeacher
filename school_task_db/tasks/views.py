@@ -4,9 +4,9 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.db.models import Q
+from django.http import JsonResponse  # ДОБАВЛЯЕМ импорт для AJAX
 
 # ИСПРАВИТЬ ИМПОРТ - убрать TaskImageFormSet пока что
-# from .forms import TaskForm, TaskImageFormSet  # СТАРАЯ ВЕРСИЯ
 try:
     from .forms import TaskForm  # НОВАЯ ВЕРСИЯ - импортируем только то что есть
 except ImportError:
@@ -15,12 +15,9 @@ except ImportError:
 from .models import Task, TaskImage
 from curriculum.models import Topic, SubTopic
 
-# Остальные view можно оставить как есть, но использовать стандартные Django формы
-# если кастомные еще не готовы
-
 class TaskListView(ListView):
     model = Task
-    template_name = 'tasks/task_list.html'
+    template_name = 'tasks/list.html'  # ИСПРАВЛЕНО: было task_list.html
     context_object_name = 'tasks'
     paginate_by = 20
     
@@ -68,7 +65,7 @@ class TaskListView(ListView):
 
 class TaskDetailView(DetailView):
     model = Task
-    template_name = 'tasks/task_detail.html'
+    template_name = 'tasks/detail.html'  # ИСПРАВЛЕНО: было task_detail.html
     context_object_name = 'task'
     
     def get_queryset(self):
@@ -76,7 +73,7 @@ class TaskDetailView(DetailView):
 
 class TaskCreateView(CreateView):
     model = Task
-    template_name = 'tasks/task_form.html'
+    template_name = 'tasks/form.html'  # ИСПРАВЛЕНО: было task_form.html
     fields = [
         'text', 'answer', 'topic', 'subtopic',
         'task_type', 'difficulty', 'cognitive_level',
@@ -97,7 +94,7 @@ class TaskCreateView(CreateView):
 
 class TaskUpdateView(UpdateView):
     model = Task
-    template_name = 'tasks/task_form.html'
+    template_name = 'tasks/form.html'  # ИСПРАВЛЕНО: было task_form.html
     fields = [
         'text', 'answer', 'topic', 'subtopic',
         'task_type', 'difficulty', 'cognitive_level',
@@ -117,7 +114,7 @@ class TaskUpdateView(UpdateView):
 
 class TaskDeleteView(DeleteView):
     model = Task
-    template_name = 'tasks/task_confirm_delete.html'
+    template_name = 'tasks/confirm_delete.html'  
     context_object_name = 'task'
     success_url = reverse_lazy('tasks:list')
     

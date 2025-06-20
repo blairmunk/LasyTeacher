@@ -73,24 +73,26 @@ class SubjectReference(BaseModel):
     Формат: код|название ИЛИ просто название
     """
     
-    SUBJECT_CHOICES = [
-        ('mathematics', 'Математика'),
-        ('algebra', 'Алгебра'),
-        ('geometry', 'Геометрия'),
-        ('physics', 'Физика'),
-        ('chemistry', 'Химия'),
-        ('russian', 'Русский язык'),
-        ('literature', 'Литература'),
-        ('history', 'История'),
-        ('biology', 'Биология'),
-    ]
+    # УБИРАЕМ hardcoded SUBJECT_CHOICES, делаем обычное поле
+    subject = models.CharField(
+        'Предмет', 
+        max_length=100,
+        help_text='Предмет из справочника предметов'
+    )
+    
+    # ДОБАВЛЯЕМ поле для класса
+    grade_level = models.CharField(
+        'Класс', 
+        max_length=50, 
+        blank=True,
+        help_text='Класс (например: 5, 7-9, 10-11). Если пусто - для всех классов'
+    )
     
     CATEGORIES = [
         ('content_elements', 'Элементы содержания'),
         ('requirement_elements', 'Элементы требований'),
     ]
     
-    subject = models.CharField('Предмет', max_length=100, choices=SUBJECT_CHOICES)
     category = models.CharField('Категория', max_length=50, choices=CATEGORIES)
     
     items_text = models.TextField(
@@ -106,12 +108,16 @@ class SubjectReference(BaseModel):
     class Meta:
         verbose_name = 'Справочник кодификатора'
         verbose_name_plural = 'Справочники кодификатора'
-        unique_together = ['subject', 'category']
-        ordering = ['subject', 'category']
+        # ОБНОВЛЯЕМ unique_together с учетом нового поля
+        unique_together = ['subject', 'grade_level', 'category']
+        ordering = ['subject', 'grade_level', 'category']
     
     def __str__(self):
-        return f"{self.get_subject_display()} - {self.get_category_display()}"
+        # ОБНОВЛЯЕМ метод __str__ с учетом класса
+        grade_part = f" ({self.grade_level})" if self.grade_level else " (все классы)"
+        return f"{self.subject}{grade_part} - {self.get_category_display()}"
     
+    # Остальные методы остаются без изменений
     def get_items_dict(self):
         """Получить словарь {код: название}"""
         if not self.items_text:
@@ -149,3 +155,4 @@ class SubjectReference(BaseModel):
         choices = [('', '--- Выберите ---')]
         choices.extend(self.get_choices())
         return choices
+

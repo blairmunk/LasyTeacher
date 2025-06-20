@@ -193,3 +193,11 @@ cython_debug/
 .cursorignore
 .cursorindexingignore*/migrations/*.py
 */migrations/*.py >> .gitignore/migrations/__init__.py
+
+# Static files (автоматически генерируются)
+staticfiles/
+static_root/
+
+
+# Media files (загружаются пользователями)
+media/

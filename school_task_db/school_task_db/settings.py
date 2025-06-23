@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'reports',        # Отчеты
     'curriculum',     # Учебные курсы
     'review',
+    'latex_generator',
 ]
 
 

@@ -74,8 +74,9 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            os.path.join(BASE_DIR, 'templates'),
-            os.path.join(BASE_DIR, 'works', 'latex', 'templates'),  # ДОБАВИТЬ
+            BASE_DIR / 'templates',
+            BASE_DIR / 'latex_generator' / 'templates',  # НОВЫЙ ПУТЬ
+            # BASE_DIR / 'works' / 'latex' / 'templates',  # СТАРЫЙ - можно пока оставить
         ],
         'APP_DIRS': True,
         'OPTIONS': {

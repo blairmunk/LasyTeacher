@@ -1,0 +1,40 @@
+{% comment %}
+Базовый шаблон для LaTeX документов
+{% endcomment %}
+
+\documentclass[12pt,a4paper]{article}
+
+% Пакеты для русского языка
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian]{babel}
+
+% Пакеты для форматирования
+\usepackage[margin=2cm]{geometry}
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+
+% Настройка заголовков
+\titleformat{\section}{\large\bfseries}{\thesection.}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection.}{1em}{}
+
+% Настройка колонтитулов
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{ {% block header_left %}{% endblock %} }
+\fancyhead[R]{ {% block header_right %}\thepage{% endblock %} }
+\fancyfoot[C]{ {% block footer_center %}{% endblock %} }
+
+% Настройка отступов
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+\begin{document}
+
+{% block content %}
+{% endblock %}
+
+\end{document}

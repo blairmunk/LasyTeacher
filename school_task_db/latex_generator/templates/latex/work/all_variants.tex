@@ -1,0 +1,106 @@
+\documentclass[12pt,a4paper]{article}
+
+% Пакеты для русского языка
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian]{babel}
+
+% Пакеты для форматирования
+\usepackage[margin=2cm]{geometry}
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+
+% Настройка заголовков
+\titleformat{\section}{\large\bfseries}{\thesection.}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection.}{1em}{}
+
+% Настройка колонтитулов
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{ {{work_name}} }
+\fancyhead[R]{\thepage}
+\fancyfoot[C]{Всего вариантов: {{ total_variants }}}
+
+% Настройка отступов
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+\begin{document}
+
+% Титульный лист
+\begin{center}
+    {\LARGE\bfseries {{ work_name }} }\\[0.8cm]
+    {% if work.duration %}
+    {\large Время выполнения: {{ work.duration }} минут}\\[0.4cm]
+    {% endif %}
+    {\large Количество вариантов: {{ total_variants }}}\\[0.3cm]
+    {\normalsize \today}
+\end{center}
+
+\vspace{1cm}
+
+% Общая инструкция
+{\small\textit{%
+Внимательно прочитайте задания и дайте развернутые ответы. \\
+Показывайте ход решения. Каждый вариант начинается с новой страницы.
+}}
+
+\newpage
+
+% Перебираем все варианты
+{% for variant_data in variants %}
+
+% Заголовок варианта
+\begin{center}
+    {\Large\bfseries Вариант {{ variant_data.variant.number }} }
+\end{center}
+
+\vspace{0.8cm}
+
+% Задания варианта
+{% for task_data in variant_data.tasks %}
+\section*{Задание {{ task_data.number }}}
+
+{{ task_data.text }}
+
+{% comment %}
+TODO: Здесь будет обработка изображений после Step 4
+{% for image in task_data.images %}
+    % Обработка изображений
+{% endfor %}
+{% endcomment %}
+
+\vspace{1cm}
+
+{% endfor %}
+
+% Новая страница для следующего варианта (кроме последнего)
+{% if not forloop.last %}
+\newpage
+{% endif %}
+
+{% endfor %}
+
+{% if with_answers %}
+\newpage
+% Лист ответов
+\section*{\centering ОТВЕТЫ}
+
+{% for variant_data in variants %}
+\subsection*{Вариант {{ variant_data.variant.number }}}
+
+\begin{enumerate}
+{% for task_data in variant_data.tasks %}
+\item {{ task_data.answer }}
+{% endfor %}
+\end{enumerate}
+
+{% if not forloop.last %}\vspace{0.5cm}{% endif %}
+
+{% endfor %}
+{% endif %}
+
+\end{document}

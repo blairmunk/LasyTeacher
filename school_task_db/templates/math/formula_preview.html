@@ -1,0 +1,34 @@
+{% if formulas %}
+<div class="formula-preview mt-2">
+    <small class="text-muted">🔍 Формулы в тексте:</small>
+    {% if has_errors %}
+        <span class="badge bg-danger ms-1">Ошибки</span>
+    {% elif has_warnings %}
+        <span class="badge bg-warning text-dark ms-1">Предупреждения</span>
+    {% else %}
+        <span class="badge bg-success ms-1">ОК</span>
+    {% endif %}
+    
+    <div class="formula-list mt-1">
+        {% for formula in formulas %}
+            <div class="badge bg-light text-dark me-1 mb-1 d-inline-block">
+                {% if formula.validation.is_valid %}
+                    <span class="text-success">✓</span>
+                {% else %}
+                    <span class="text-danger">✗</span>
+                {% endif %}
+                
+                {% if formula.type == 'display' %}
+                    $${{ formula.content|truncatechars:30 }}$$
+                {% else %}
+                    ${{ formula.content|truncatechars:30 }}$
+                {% endif %}
+            </div>
+        {% endfor %}
+        
+        {% if has_more %}
+            <small class="text-muted">и еще {{ total_count|add:"-3" }}...</small>
+        {% endif %}
+    </div>
+</div>
+{% endif %}

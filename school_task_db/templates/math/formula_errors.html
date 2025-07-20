@@ -1,0 +1,25 @@
+{% if has_errors or has_warnings %}
+<div class="formula-validation mt-2">
+    {% if has_errors %}
+    <div class="alert alert-danger alert-sm py-2">
+        <strong>🚨 Ошибки в формулах:</strong>
+        <ul class="mb-0 mt-1">
+            {% for error in errors %}
+            <li><small>{{ error }}</small></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    
+    {% if has_warnings %}
+    <div class="alert alert-warning alert-sm py-2">
+        <strong>⚠️ Предупреждения:</strong>
+        <ul class="mb-0 mt-1">
+            {% for warning in warnings %}
+            <li><small>{{ warning }}</small></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+{% endif %}

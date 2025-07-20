@@ -21,35 +21,65 @@
             </button>
         </form>
     </div>
+    
+    <!-- НОВОЕ: Фильтр по статусу формул -->
+    <div class="col-md-6 d-flex justify-content-end">
+        <div class="btn-group" role="group" aria-label="Фильтр формул">
+            <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}math_filter=all" 
+               class="btn btn-outline-secondary {% if request.GET.math_filter == 'all' or not request.GET.math_filter %}active{% endif %}">
+                Все
+            </a>
+            <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}math_filter=with_math" 
+               class="btn btn-outline-success {% if request.GET.math_filter == 'with_math' %}active{% endif %}">
+                С формулами
+            </a>
+            <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}math_filter=with_errors" 
+               class="btn btn-outline-danger {% if request.GET.math_filter == 'with_errors' %}active{% endif %}">
+                С ошибками
+            </a>
+        </div>
+    </div>
 </div>
 
 <div class="row">
     {% for task in tasks %}
     <div class="col-md-6 mb-3">
-        <div class="card">
+        <div class="card 
+            {% if task.text|has_math_errors %}border-danger{% elif task.text|has_math_warnings %}border-warning{% endif %}">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start">
                     <h6 class="card-title">{{ task.topic }}</h6>
                     <small class="uuid-badge">{{ task.get_display_id }}</small>
                 </div>
-                <!-- ОБНОВЛЕНО: Рендеринг формул в списке -->
+                
                 <p class="card-text">{{ task.text|render_math|truncatewords:20 }}</p>
+                
                 <div class="mb-2">
                     <span class="badge bg-primary">{{ task.get_task_type_display }}</span>
                     <span class="badge bg-secondary">{{ task.get_difficulty_display }}</span>
                     {% if task.images.exists %}
                         <span class="badge bg-info">{{ task.images.count }} изображ.</span>
                     {% endif %}
-                    <!-- НОВОЕ: Индикатор математических формул -->
-                    {% if task.text|has_math %}
-                        <span class="badge bg-success">📐 {{ task.text|math_count }}</span>
-                    {% endif %}
+                    <!-- ОБНОВЛЕНО: Индикатор математических формул с ошибками -->
+                    {% math_indicator task.text %}
                 </div>
+                
+                <!-- НОВОЕ: Краткое превью ошибок -->
+                {% if task.text|has_math_errors %}
+                <div class="alert alert-danger alert-sm py-1 mb-2">
+                    <small><strong>Ошибки в формулах:</strong> {{ task.text|math_errors|length }} шт.</small>
+                </div>
+                {% elif task.text|has_math_warnings %}
+                <div class="alert alert-warning alert-sm py-1 mb-2">
+                    <small><strong>Предупреждения:</strong> {{ task.text|math_warnings|length }} шт.</small>
+                </div>
+                {% endif %}
                 
                 {% if task.images.exists %}
                     {% with task.images.first as first_image %}
                     <div class="mb-2">
-                        <img src="{{ first_image.image.url }}" class="img-thumbnail" style="max-width: 80px; max-height: 60px; object-fit: cover;" alt="Превью">
+                        <img src="{{ first_image.image.url }}" class="img-thumbnail" 
+                             style="max-width: 80px; max-height: 60px; object-fit: cover;" alt="Превью">
                     </div>
                     {% endwith %}
                 {% endif %}
@@ -80,10 +110,10 @@
     <ul class="pagination justify-content-center">
         {% if page_obj.has_previous %}
             <li class="page-item">
-                <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Первая</a>
+                <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.math_filter %}&math_filter={{ request.GET.math_filter }}{% endif %}">Первая</a>
             </li>
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Назад</a>
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.math_filter %}&math_filter={{ request.GET.math_filter }}{% endif %}">Назад</a>
             </li>
         {% endif %}
         
@@ -93,10 +123,10 @@
         
         {% if page_obj.has_next %}
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Вперед</a>
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.math_filter %}&math_filter={{ request.GET.math_filter }}{% endif %}">Вперед</a>
             </li>
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Последняя</a>
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.math_filter %}&math_filter={{ request.GET.math_filter }}{% endif %}">Последняя</a>
             </li>
         {% endif %}
     </ul>

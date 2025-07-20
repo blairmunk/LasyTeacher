@@ -1,26 +1,348 @@
-"""Утилиты для работы с математическими формулами"""
+"""Утилиты для работы с математическими формулами с обработкой ошибок"""
 
 import re
-from typing import List, Tuple, Dict
+import logging
+from typing import List, Tuple, Dict, Optional
+from django.utils.html import escape
+
+logger = logging.getLogger(__name__)
+
+class FormulaValidationError(Exception):
+    """Ошибка валидации формулы"""
+    pass
 
 class FormulaProcessor:
-    """Обработчик математических формул в тексте"""
+    """Обработчик математических формул в тексте с валидацией"""
     
     # Регулярные выражения для поиска формул
     INLINE_MATH_PATTERN = r'\$([^$]+)\$'          # $формула$
     DISPLAY_MATH_PATTERN = r'\$\$([^$]+)\$\$'     # $$формула$$
     
+    # Список разрешенных LaTeX команд (белый список)
+    ALLOWED_COMMANDS = {
+        # Математические операторы
+        r'\\frac', r'\\sqrt', r'\\sum', r'\\prod', r'\\int', r'\\oint',
+        r'\\lim', r'\\sup', r'\\inf', r'\\max', r'\\min', r'\\gcd',
+        
+        # Тригонометрические функции
+        r'\\sin', r'\\cos', r'\\tan', r'\\cot', r'\\sec', r'\\csc',
+        r'\\arcsin', r'\\arccos', r'\\arctan',
+        
+        # Логарифмы и экспоненты
+        r'\\log', r'\\ln', r'\\lg', r'\\exp',
+        
+        # Греческие буквы
+        r'\\alpha', r'\\beta', r'\\gamma', r'\\delta', r'\\epsilon', r'\\zeta',
+        r'\\eta', r'\\theta', r'\\iota', r'\\kappa', r'\\lambda', r'\\mu',
+        r'\\nu', r'\\xi', r'\\pi', r'\\rho', r'\\sigma', r'\\tau',
+        r'\\upsilon', r'\\phi', r'\\chi', r'\\psi', r'\\omega',
+        r'\\Gamma', r'\\Delta', r'\\Theta', r'\\Lambda', r'\\Xi',
+        r'\\Pi', r'\\Sigma', r'\\Upsilon', r'\\Phi', r'\\Psi', r'\\Omega',
+        
+        # Математические символы
+        r'\\pm', r'\\mp', r'\\times', r'\\div', r'\\cdot', r'\\ast',
+        r'\\leq', r'\\geq', r'\\neq', r'\\approx', r'\\equiv', r'\\sim',
+        r'\\propto', r'\\parallel', r'\\perp', r'\\subset', r'\\supset',
+        r'\\in', r'\\notin', r'\\cup', r'\\cap', r'\\emptyset', r'\\infty',
+        
+        # Стрелки
+        r'\\rightarrow', r'\\leftarrow', r'\\leftrightarrow',
+        r'\\Rightarrow', r'\\Leftarrow', r'\\Leftrightarrow',
+        
+        # Скобки и разделители
+        r'\\left', r'\\right', r'\\big', r'\\Big', r'\\bigg', r'\\Bigg',
+        
+        # Текст и пробелы
+        r'\\text', r'\\mathrm', r'\\mathit', r'\\mathbf', r'\\mathbb',
+        r'\\quad', r'\\qquad', r'\\,', r'\\:', r'\\;', r'\\ ',
+        
+        # Индексы и степени (неявно разрешены через ^ и _)
+        
+        # Матрицы и системы
+        r'\\begin', r'\\end', r'\\matrix', r'\\pmatrix', r'\\bmatrix',
+        r'\\vmatrix', r'\\Vmatrix', r'\\cases', r'\\split', r'\\align',
+        
+        # Символы множеств
+        r'\\mathbb', r'\\mathcal', r'\\mathfrak',
+    }
+    
+    # Опасные команды (черный список)
+    DANGEROUS_COMMANDS = {
+        r'\\input', r'\\include', r'\\write', r'\\immediate', r'\\openout',
+        r'\\closeout', r'\\read', r'\\readline', r'\\catcode', r'\\def',
+        r'\\let', r'\\expandafter', r'\\csname', r'\\endcsname', r'\\the',
+        r'\\jobname', r'\\meaning', r'\\string', r'\\detokenize',
+        r'\\scantokens', r'\\directlua', r'\\luaexec',
+    }
+    
     def __init__(self):
         self.inline_pattern = re.compile(self.INLINE_MATH_PATTERN)
         self.display_pattern = re.compile(self.DISPLAY_MATH_PATTERN)
-
+        
+        # Компилируем регулярки для команд
+        self.allowed_commands_pattern = re.compile('|'.join(self.ALLOWED_COMMANDS))
+        self.dangerous_commands_pattern = re.compile('|'.join(self.DANGEROUS_COMMANDS))
+    
+    def validate_formula_security(self, formula: str) -> Dict[str, any]:
+        """Проверяет формулу на безопасность"""
+        errors = []
+        warnings = []
+        
+        # Проверяем на опасные команды
+        dangerous_matches = list(self.dangerous_commands_pattern.finditer(formula))
+        for match in dangerous_matches:
+            cmd = match.group()
+            errors.append(f"Опасная команда {cmd} не разрешена из соображений безопасности")
+        
+        # Проверяем парные скобки
+        bracket_pairs = {'{': '}', '[': ']', '(': ')'}
+        stack = []
+        
+        for i, char in enumerate(formula):
+            if char in bracket_pairs:
+                stack.append((char, i))
+            elif char in bracket_pairs.values():
+                if not stack:
+                    errors.append(f"Непарная закрывающая скобка '{char}' в позиции {i}")
+                else:
+                    opening, pos = stack.pop()
+                    if bracket_pairs[opening] != char:
+                        errors.append(f"Неправильная пара скобок: '{opening}' (поз. {pos}) и '{char}' (поз. {i})")
+        
+        # Незакрытые скобки
+        for opening, pos in stack:
+            errors.append(f"Незакрытая скобка '{opening}' в позиции {pos}")
+        
+        # Проверяем длину формулы (защита от DoS)
+        if len(formula) > 1000:
+            warnings.append("Формула очень длинная, это может замедлить рендеринг")
+        
+        # Проверяем вложенность команд (защита от DoS)
+        nesting_level = 0
+        max_nesting = 0
+        for char in formula:
+            if char == '{':
+                nesting_level += 1
+                max_nesting = max(max_nesting, nesting_level)
+            elif char == '}':
+                nesting_level -= 1
+        
+        if max_nesting > 20:
+            warnings.append("Слишком глубокая вложенность команд")
+        
+        return {
+            'is_safe': len(errors) == 0,
+            'errors': errors,
+            'warnings': warnings,
+            'max_nesting': max_nesting
+        }
+    
+    def validate_formula_syntax(self, formula: str) -> Dict[str, any]:
+        """Проверяет синтаксис формулы"""
+        errors = []
+        warnings = []
+        
+        # Проверяем базовые LaTeX конструкции
+        # Проверяем \frac{}{} 
+        frac_pattern = r'\\frac\s*\{[^}]*\}\s*\{[^}]*\}'
+        incomplete_frac = r'\\frac(?!\s*\{[^}]*\}\s*\{[^}]*\})'
+        
+        if re.search(incomplete_frac, formula):
+            errors.append("Неполная команда \\frac - должна быть \\frac{числитель}{знаменатель}")
+        
+        # Проверяем \sqrt{}
+        sqrt_pattern = r'\\sqrt(?:\[[^\]]*\])?\s*\{[^}]*\}'
+        incomplete_sqrt = r'\\sqrt(?!(?:\[[^\]]*\])?\s*\{)'
+        
+        if re.search(incomplete_sqrt, formula):
+            errors.append("Неполная команда \\sqrt - должна быть \\sqrt{выражение}")
+        
+        # Проверяем парность \left и \right
+        left_count = len(re.findall(r'\\left', formula))
+        right_count = len(re.findall(r'\\right', formula))
+        
+        if left_count != right_count:
+            errors.append(f"Несоответствие количества \\left ({left_count}) и \\right ({right_count})")
+        
+        # Проверяем матричные окружения
+        matrix_envs = ['matrix', 'pmatrix', 'bmatrix', 'vmatrix', 'Vmatrix', 'cases']
+        for env in matrix_envs:
+            begin_pattern = f'\\\\begin{{{env}}}'
+            end_pattern = f'\\\\end{{{env}}}'
+            
+            begin_count = len(re.findall(begin_pattern, formula))
+            end_count = len(re.findall(end_pattern, formula))
+            
+            if begin_count != end_count:
+                errors.append(f"Несоответствие \\begin{{{env}}} ({begin_count}) и \\end{{{env}}} ({end_count})")
+        
+        return {
+            'is_valid': len(errors) == 0,
+            'errors': errors,
+            'warnings': warnings
+        }
+    
+    def safe_validate_formula(self, formula: str) -> Dict[str, any]:
+        """Комплексная валидация формулы"""
+        try:
+            # Проверяем безопасность
+            security_result = self.validate_formula_security(formula)
+            
+            # Проверяем синтаксис (только если безопасно)
+            if security_result['is_safe']:
+                syntax_result = self.validate_formula_syntax(formula)
+            else:
+                syntax_result = {'is_valid': False, 'errors': [], 'warnings': []}
+            
+            return {
+                'is_valid': security_result['is_safe'] and syntax_result['is_valid'],
+                'is_safe': security_result['is_safe'],
+                'errors': security_result['errors'] + syntax_result['errors'],
+                'warnings': security_result['warnings'] + syntax_result['warnings'],
+                'formula': formula
+            }
+            
+        except Exception as e:
+            logger.error(f"Ошибка при валидации формулы '{formula}': {e}")
+            return {
+                'is_valid': False,
+                'is_safe': False,
+                'errors': [f"Внутренняя ошибка валидации: {str(e)}"],
+                'warnings': [],
+                'formula': formula
+            }
+    
+    def process_text_safe(self, text: str) -> Dict[str, any]:
+        """Безопасная обработка текста с формулами"""
+        if not text:
+            return {
+                'original_text': text,
+                'has_math': False,
+                'processed_text': text,
+                'errors': [],
+                'warnings': [],
+                'formulas': []
+            }
+        
+        all_errors = []
+        all_warnings = []
+        all_formulas = []
+        
+        # Обрабатываем display формулы
+        display_matches = list(self.display_pattern.finditer(text))
+        for match in display_matches:
+            formula = match.group(1).strip()
+            validation = self.safe_validate_formula(formula)
+            
+            all_formulas.append({
+                'type': 'display',
+                'content': formula,
+                'original': match.group(0),
+                'validation': validation,
+                'position': (match.start(), match.end())
+            })
+            
+            all_errors.extend(validation['errors'])
+            all_warnings.extend(validation['warnings'])
+        
+        # Обрабатываем inline формулы (исключаем те что в display)
+        temp_text = text
+        for match in display_matches:
+            temp_text = temp_text.replace(match.group(0), ' ' * len(match.group(0)))
+        
+        inline_matches = list(self.inline_pattern.finditer(temp_text))
+        for match in inline_matches:
+            formula = match.group(1).strip()
+            validation = self.safe_validate_formula(formula)
+            
+            all_formulas.append({
+                'type': 'inline',
+                'content': formula,
+                'original': text[match.start():match.end()],  # Берем из оригинального текста
+                'validation': validation,
+                'position': (match.start(), match.end())
+            })
+            
+            all_errors.extend(validation['errors'])
+            all_warnings.extend(validation['warnings'])
+        
+        return {
+            'original_text': text,
+            'has_math': len(all_formulas) > 0,
+            'processed_text': text,  # Пока оставляем как есть
+            'errors': all_errors,
+            'warnings': all_warnings,
+            'formulas': all_formulas,
+            'total_formulas': len(all_formulas),
+            'has_errors': len(all_errors) > 0,
+            'has_warnings': len(all_warnings) > 0
+        }
+    
+    def render_for_latex_safe(self, text: str) -> Dict[str, any]:
+        """Безопасное преобразование для LaTeX компиляции"""
+        if not text:
+            return {'content': text, 'errors': [], 'warnings': []}
+        
+        # Обрабатываем текст
+        processed = self.process_text_safe(text)
+        
+        if processed['has_errors']:
+            # Если есть ошибки, возвращаем текст с экранированными формулами
+            safe_text = text
+            
+            # Заменяем проблемные формулы на текстовые версии
+            for formula in processed['formulas']:
+                if not formula['validation']['is_valid']:
+                    # Заменяем на безопасный текст
+                    safe_replacement = f"[ФОРМУЛА: {escape(formula['content'])}]"
+                    safe_text = safe_text.replace(formula['original'], safe_replacement)
+                else:
+                    # Преобразуем в LaTeX формат
+                    if formula['type'] == 'display':
+                        latex_formula = f"\\[{formula['content']}\\]"
+                    else:
+                        latex_formula = f"\\({formula['content']}\\)"
+                    
+                    safe_text = safe_text.replace(formula['original'], latex_formula)
+            
+            return {
+                'content': safe_text,
+                'errors': processed['errors'],
+                'warnings': processed['warnings']
+            }
+        
+        else:
+            # Преобразуем все формулы в LaTeX формат
+            latex_text = text
+            
+            # Заменяем $...$ на \(...\)
+            latex_text = re.sub(
+                self.INLINE_MATH_PATTERN, 
+                r'\\(\1\\)', 
+                latex_text
+            )
+            
+            # Заменяем $$...$$ на \[...\]
+            latex_text = re.sub(
+                self.DISPLAY_MATH_PATTERN, 
+                r'\\[\1\\]', 
+                latex_text
+            )
+            
+            return {
+                'content': latex_text,
+                'errors': [],
+                'warnings': processed['warnings']
+            }
+    
+    # Сохраняем старые методы для обратной совместимости
     def has_math(self, text: str) -> bool:
         """Быстрая проверка есть ли в тексте формулы"""
         if not text:
             return False
         
         return bool(self.inline_pattern.search(text) or self.display_pattern.search(text))
-
+    
     def count_formulas(self, text: str) -> int:
         """Подсчитывает количество формул в тексте"""
         if not text:
@@ -34,160 +356,6 @@ class FormulaProcessor:
         inline_count = len(self.inline_pattern.findall(temp_text))
         
         return display_count + inline_count
-    
-    def parse_text(self, text: str) -> Dict[str, any]:
-        """Парсит текст и извлекает формулы"""
-        if not text:
-            return {
-                'original_text': text,
-                'has_math': False,
-                'inline_formulas': [],
-                'display_formulas': [],
-                'processed_text': text
-            }
-        
-        # Ищем display формулы ($$...$$) - обрабатываем первыми
-        display_formulas = []
-        display_matches = list(self.display_pattern.finditer(text))
-        
-        for i, match in enumerate(display_matches):
-            formula_id = f"DISPLAY_MATH_{i}"
-            display_formulas.append({
-                'id': formula_id,
-                'content': match.group(1).strip(),
-                'original': match.group(0),
-                'type': 'display'
-            })
-        
-        # Ищем inline формулы ($...$)
-        inline_formulas = []
-        inline_matches = list(self.inline_pattern.finditer(text))
-        
-        for i, match in enumerate(inline_matches):
-            # Проверяем что это не часть display формулы
-            in_display = False
-            for display_match in display_matches:
-                if (match.start() >= display_match.start() and 
-                    match.end() <= display_match.end()):
-                    in_display = True
-                    break
-            
-            if not in_display:
-                formula_id = f"INLINE_MATH_{i}"
-                inline_formulas.append({
-                    'id': formula_id,
-                    'content': match.group(1).strip(),
-                    'original': match.group(0),
-                    'type': 'inline'
-                })
-        
-        # Создаем обработанный текст с плейсхолдерами
-        processed_text = text
-        
-        # Заменяем display формулы
-        for formula in display_formulas:
-            processed_text = processed_text.replace(
-                formula['original'], 
-                f"[{formula['id']}]"
-            )
-        
-        # Заменяем inline формулы
-        for formula in inline_formulas:
-            processed_text = processed_text.replace(
-                formula['original'], 
-                f"[{formula['id']}]"
-            )
-        
-        return {
-            'original_text': text,
-            'has_math': bool(display_formulas or inline_formulas),
-            'inline_formulas': inline_formulas,
-            'display_formulas': display_formulas,
-            'processed_text': processed_text,
-            'total_formulas': len(display_formulas) + len(inline_formulas)
-        }
-    
-    def validate_latex(self, latex_content: str) -> Dict[str, any]:
-        """Простая валидация LaTeX синтаксиса"""
-        errors = []
-        warnings = []
-        
-        # Проверяем парные скобки
-        brackets = {'{': '}', '[': ']', '(': ')'}
-        stack = []
-        
-        for i, char in enumerate(latex_content):
-            if char in brackets.keys():
-                stack.append((char, i))
-            elif char in brackets.values():
-                if not stack:
-                    errors.append(f"Непарная закрывающая скобка '{char}' в позиции {i}")
-                else:
-                    opening, pos = stack.pop()
-                    if brackets[opening] != char:
-                        errors.append(f"Неправильная пара скобок: '{opening}' в позиции {pos} и '{char}' в позиции {i}")
-        
-        # Проверяем незакрытые скобки
-        for opening, pos in stack:
-            errors.append(f"Незакрытая скобка '{opening}' в позиции {pos}")
-        
-        # Проверяем основные LaTeX команды
-        common_commands = [
-            r'\\frac', r'\\sqrt', r'\\sum', r'\\int', r'\\lim',
-            r'\\sin', r'\\cos', r'\\tan', r'\\log', r'\\ln'
-        ]
-        
-        found_commands = []
-        for cmd in common_commands:
-            if re.search(cmd, latex_content):
-                found_commands.append(cmd.replace('\\\\', '\\'))
-        
-        # Проверяем потенциально опасные команды
-        dangerous_commands = [r'\\input', r'\\include', r'\\write', r'\\immediate']
-        
-        for cmd in dangerous_commands:
-            if re.search(cmd, latex_content):
-                errors.append(f"Опасная команда {cmd.replace('\\\\', '\\')} не разрешена")
-        
-        return {
-            'is_valid': len(errors) == 0,
-            'errors': errors,
-            'warnings': warnings,
-            'found_commands': found_commands,
-            'complexity_score': len(found_commands)
-        }
-    
-    def render_for_mathjax(self, text: str) -> str:
-        """Подготавливает текст для рендеринга в MathJax"""
-        if not text:
-            return text
-        
-        # MathJax понимает $ и $$ нативно, просто возвращаем исходный текст
-        return text
-    
-    def render_for_latex(self, text: str) -> str:
-        """Подготавливает текст для LaTeX компиляции"""
-        if not text:
-            return text
-        
-        # В LaTeX нужно экранировать некоторые символы
-        processed = text
-        
-        # Заменяем $...$ на \(...\) для inline math
-        processed = re.sub(
-            self.INLINE_MATH_PATTERN, 
-            r'\\(\1\\)', 
-            processed
-        )
-        
-        # Заменяем $$...$$ на \[...\] для display math
-        processed = re.sub(
-            self.DISPLAY_MATH_PATTERN, 
-            r'\\[\1\\]', 
-            processed
-        )
-        
-        return processed
 
 # Создаем глобальный экземпляр
 formula_processor = FormulaProcessor()

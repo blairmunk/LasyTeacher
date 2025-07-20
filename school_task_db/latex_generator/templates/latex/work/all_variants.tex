@@ -67,7 +67,8 @@
 % НОВОЕ: Используем предварительно сгенерированный LaTeX код с minipage
 {{ task_data.latex_content|safe }}
 
-\vspace{1cm}
+% ИСПРАВЛЕНИЕ 3: Заменяем большой пробел на малый
+\vspace{1ex}
 
 {% endfor %}
 

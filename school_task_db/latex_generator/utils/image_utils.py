@@ -47,17 +47,21 @@ def get_minipage_config(position):
             'layout': 'side_by_side',
             'text_width': '0.55\\textwidth',
             'image_width': '0.4\\textwidth',
+            'text_align': '[t]',      
             'image_align': '[t]',
             'spacing': '\\hfill',
             'image_position': 'right',
+            'vertical_adjust': '\\vspace*{-3em}',  # ИСПРАВЛЕНИЕ 1: подтягиваем изображение вверх
         },
         'right_20': {
             'layout': 'side_by_side',
             'text_width': '0.75\\textwidth',
             'image_width': '0.2\\textwidth',
+            'text_align': '[t]',      
             'image_align': '[t]',
             'spacing': '\\hfill',
             'image_position': 'right',
+            'vertical_adjust': '\\vspace*{-3em}',  # ИСПРАВЛЕНИЕ 1: подтягиваем изображение вверх
         },
         'bottom_100': {
             'layout': 'vertical',
@@ -66,6 +70,7 @@ def get_minipage_config(position):
             'image_align': '[c]',
             'spacing': '\\vspace{0.5cm}',
             'image_position': 'bottom',
+            'center_image': True,     # ИСПРАВЛЕНИЕ 2: центрирование
         },
         'bottom_70': {
             'layout': 'vertical',
@@ -74,6 +79,7 @@ def get_minipage_config(position):
             'image_align': '[c]',
             'spacing': '\\vspace{0.5cm}',
             'image_position': 'bottom',
+            'center_image': True,     # ИСПРАВЛЕНИЕ 2: центрирование
         },
     }
     
@@ -109,14 +115,20 @@ def render_task_with_images(task_data, images):
 def generate_side_by_side_minipage(task_data, image, config):
     """Генерирует горизонтальную компоновку с minipage"""
     
+    # ИСПРАВЛЕНИЕ 1: Добавляем выравнивание по верху для ОБЕИХ minipage
+    text_align = config.get('text_align', '[t]')  
+    vertical_adjust = config.get('vertical_adjust', '')  # Вертикальная коррекция
+    
     latex_code = f"""
 % Горизонтальная компоновка с minipage - текст слева, изображение справа
+% ИСПРАВЛЕНО: оба блока выровнены по верху + вертикальная коррекция
 \\noindent
-\\begin{{minipage}}{{{config['text_width']}}}
+\\begin{{minipage}}{text_align}{{{config['text_width']}}}
 {task_data['text']}
 \\end{{minipage}}
 {config['spacing']}
 \\begin{{minipage}}{config['image_align']}{{{config['image_width']}}}
+{vertical_adjust}
 \\centering
 \\includegraphics[width=\\textwidth]{{{image['filename']}}}"""
     
@@ -143,7 +155,16 @@ def generate_vertical_minipage(task_data, image, config):
 
 {config['spacing']}
 
-\\noindent
+"""
+    
+    # ИСПРАВЛЕНИЕ 2: Добавляем центрирование для изображений с center_image=True
+    if config.get('center_image', False):
+        latex_code += """
+% ИСПРАВЛЕНО: центрирование изображения по горизонтали
+\\begin{center}
+"""
+    
+    latex_code += f"""
 \\begin{{minipage}}{config['image_align']}{{{config['image_width']}}}
 \\centering
 \\includegraphics[width=\\textwidth]{{{image['filename']}}}"""
@@ -154,7 +175,11 @@ def generate_vertical_minipage(task_data, image, config):
 \\small\\textit{{{image['caption']}}}"""
     
     latex_code += """
-\\end{minipage}
-"""
+\\end{minipage}"""
+    
+    # Закрываем центрирование если оно было добавлено
+    if config.get('center_image', False):
+        latex_code += """
+\\end{center}"""
     
     return latex_code

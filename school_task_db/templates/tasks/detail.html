@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load math_tags %}
 
 {% block title %}{{ task.topic }}{% endblock %}
 
@@ -36,6 +37,8 @@
                     <div class="col-md-6">
                         <strong>Сложность:</strong> 
                         <span class="badge bg-secondary">{{ task.get_difficulty_display }}</span>
+                        <!-- НОВОЕ: Индикатор формул -->
+                        {% math_indicator task.text %}
                     </div>
                 </div>
 
@@ -54,7 +57,8 @@
                                 {% endif %}
                             {% endfor %}
                             
-                            {{ task.text|linebreaks }}
+                            <!-- ОБНОВЛЕНО: Рендеринг математических формул -->
+                            {{ task.text|render_math|linebreaks }}
                             
                             {% for image in task.images.all %}
                                 {% if image.position == 'bottom_100' or image.position == 'bottom_70' %}
@@ -72,44 +76,49 @@
                 </div>
 
                 <div class="mb-4">
-                    <h5>Ответ</h5>
+                    <h5>Ответ {% math_indicator task.answer %}</h5>
                     <div class="border p-3 bg-success text-white">
-                        {{ task.answer|linebreaks }}
+                        <!-- ОБНОВЛЕНО: Рендеринг формул в ответе -->
+                        {{ task.answer|render_math|linebreaks }}
                     </div>
                 </div>
 
                 {% if task.short_solution %}
                 <div class="mb-4">
-                    <h5>Краткое решение</h5>
+                    <h5>Краткое решение {% math_indicator task.short_solution %}</h5>
                     <div class="border p-3">
-                        {{ task.short_solution|linebreaks }}
+                        <!-- ОБНОВЛЕНО: Рендеринг формул в решении -->
+                        {{ task.short_solution|render_math|linebreaks }}
                     </div>
                 </div>
                 {% endif %}
 
                 {% if task.full_solution %}
                 <div class="mb-4">
-                    <h5>Полное решение</h5>
+                    <h5>Полное решение {% math_indicator task.full_solution %}</h5>
                     <div class="border p-3">
-                        {{ task.full_solution|linebreaks }}
+                        <!-- ОБНОВЛЕНО: Рендеринг формул в полном решении -->
+                        {{ task.full_solution|render_math|linebreaks }}
                     </div>
                 </div>
                 {% endif %}
 
                 {% if task.hint %}
                 <div class="mb-4">
-                    <h5>Подсказка</h5>
+                    <h5>Подсказка {% math_indicator task.hint %}</h5>
                     <div class="border p-3 bg-warning">
-                        {{ task.hint|linebreaks }}
+                        <!-- ОБНОВЛЕНО: Рендеринг формул в подсказке -->
+                        {{ task.hint|render_math|linebreaks }}
                     </div>
                 </div>
                 {% endif %}
 
                 {% if task.instruction %}
                 <div class="mb-4">
-                    <h5>Инструкция к выполнению</h5>
+                    <h5>Инструкция к выполнению {% math_indicator task.instruction %}</h5>
                     <div class="border p-3 bg-info text-white">
-                        {{ task.instruction|linebreaks }}
+                        <!-- ОБНОВЛЕНО: Рендеринг формул в инструкции -->
+                        {{ task.instruction|render_math|linebreaks }}
                     </div>
                 </div>
                 {% endif %}

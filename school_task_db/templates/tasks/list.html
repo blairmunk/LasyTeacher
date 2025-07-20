@@ -1,8 +1,7 @@
 {% extends 'base.html' %}
-
+{% load math_tags %}
 
 {% block title %}Список заданий{% endblock %}
-
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -11,7 +10,6 @@
         <i class="fas fa-plus"></i> Добавить задание
     </a>
 </div>
-
 
 <div class="row mb-3">
     <div class="col-md-6">
@@ -25,7 +23,6 @@
     </div>
 </div>
 
-
 <div class="row">
     {% for task in tasks %}
     <div class="col-md-6 mb-3">
@@ -33,14 +30,19 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start">
                     <h6 class="card-title">{{ task.topic }}</h6>
-                    <small class="uuid-badge">{{ task.get_display_id }}</small>  <!-- ДОБАВИТЬ -->
+                    <small class="uuid-badge">{{ task.get_display_id }}</small>
                 </div>
-                <p class="card-text">{{ task.text|truncatewords:20 }}</p>
+                <!-- ОБНОВЛЕНО: Рендеринг формул в списке -->
+                <p class="card-text">{{ task.text|render_math|truncatewords:20 }}</p>
                 <div class="mb-2">
                     <span class="badge bg-primary">{{ task.get_task_type_display }}</span>
                     <span class="badge bg-secondary">{{ task.get_difficulty_display }}</span>
                     {% if task.images.exists %}
                         <span class="badge bg-info">{{ task.images.count }} изображ.</span>
+                    {% endif %}
+                    <!-- НОВОЕ: Индикатор математических формул -->
+                    {% if task.text|has_math %}
+                        <span class="badge bg-success">📐 {{ task.text|math_count }}</span>
                     {% endif %}
                 </div>
                 
@@ -72,8 +74,7 @@
     {% endfor %}
 </div>
 
-
-<!-- Пагинация -->
+<!-- Пагинация остается без изменений -->
 {% if is_paginated %}
 <nav aria-label="Навигация по страницам">
     <ul class="pagination justify-content-center">

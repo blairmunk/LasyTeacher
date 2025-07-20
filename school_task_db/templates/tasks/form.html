@@ -66,12 +66,20 @@
                     <div class="mb-3">
                         <label for="{{ form.text.id_for_label }}" class="form-label">{{ form.text.label }}</label>
                         {{ form.text }}
+                        <!-- НОВОЕ: Подсказка по синтаксису формул -->
+                        <div class="form-text">
+                            💡 <strong>Математические формулы:</strong> используйте <code>$формула$</code> для строчных формул 
+                            и <code>$$формула$$</code> для выделенных формул.<br>
+                            <small>Примеры: <code>$x^2 + 1 = 0$</code>, <code>$$\int_0^1 x dx = \frac{1}{2}$$</code></small>
+                        </div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="{{ form.answer.id_for_label }}" class="form-label">{{ form.answer.label }}</label>
                         {{ form.answer }}
+                        <div class="form-text">Также поддерживает математические формулы</div>
                     </div>
+
                 </div>
             </div>
 

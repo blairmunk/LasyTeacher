@@ -80,6 +80,19 @@ class Task(BaseModel):
         if self.subtopic and self.topic:
             if self.subtopic.topic != self.topic:
                 raise ValidationError('Подтема должна принадлежать выбранной основной теме')
+
+    def save(self, *args, **kwargs):
+        """Переопределенное сохранение для отслеживания изменений текста"""
+        # Проверяем изменился ли текст задания
+        if self.pk:
+            try:
+                old_instance = Task.objects.get(pk=self.pk)
+                if old_instance.text != self.text:
+                    self._text_changed = True
+            except Task.DoesNotExist:
+                pass
+        
+        super().save(*args, **kwargs)
     
     # Свойства для удобства
     @property
@@ -135,3 +148,4 @@ class TaskImage(BaseModel):
             'bottom_70': 'task-image-bottom-70',
         }
         return css_classes.get(self.position, 'task-image-bottom-70')
+

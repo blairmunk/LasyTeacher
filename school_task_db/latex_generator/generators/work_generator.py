@@ -1,8 +1,9 @@
-"""Генератор LaTeX для работ с поддержкой математических формул"""
+"""Генератор LaTeX для работ с полной обработкой ошибок"""
 
 from typing import Dict, Any
 from latex_generator.utils import sanitize_latex, prepare_images, render_task_with_images
 from latex_generator.utils.formula_utils import formula_processor
+from latex_generator.utils.compilation import latex_compiler
 from .base import BaseLatexGenerator
 import logging
 
@@ -47,7 +48,7 @@ class WorkLatexGenerator(BaseLatexGenerator):
             'total_variants': len(all_variants_data),
             'with_answers': getattr(self, '_with_answers', False),
             
-            # НОВОЕ: информация об ошибках
+            # Информация об ошибках формул
             'has_formula_errors': len(document_errors) > 0,
             'has_formula_warnings': len(document_warnings) > 0,
             'formula_errors': document_errors,
@@ -145,9 +146,9 @@ class WorkLatexGenerator(BaseLatexGenerator):
         }
     
     def generate(self, work, output_format='pdf'):
-        """Переопределенная генерация с логированием ошибок формул"""
+        """ОБНОВЛЕНО: Генерация с полной обработкой ошибок"""
         try:
-            # Вызываем базовую генерацию
+            # Вызываем базовую генерацию LaTeX файла
             files = super().generate(work, output_format)
             
             # Проверяем наличие ошибок формул в контексте
@@ -159,11 +160,111 @@ class WorkLatexGenerator(BaseLatexGenerator):
             if context.get('has_formula_warnings'):
                 logger.info(f"Работа {work.name} содержит предупреждения в формулах: {context['formula_warnings']}")
             
+            # Если запросили PDF, пытаемся скомпилировать
+            if output_format == 'pdf' and files:
+                latex_file_path = files[0]  # Первый файл - LaTeX
+                
+                compilation_result = latex_compiler.compile_latex_safe(
+                    Path(latex_file_path), 
+                    self.output_dir
+                )
+                
+                if compilation_result['success']:
+                    # Успешная компиляция - добавляем PDF к списку файлов
+                    files.append(compilation_result['pdf_path'])
+                    
+                    if compilation_result.get('has_warnings'):
+                        logger.info(f"LaTeX компиляция с предупреждениями для {work.name}")
+                    
+                else:
+                    # Неудачная компиляция - логируем детали
+                    error_msg = compilation_result.get('message', 'Неизвестная ошибка')
+                    logger.error(f"LaTeX компиляция неудачна для работы {work.name}: {error_msg}")
+                    
+                    # Генерируем детальный отчет об ошибке
+                    error_report = self._generate_error_report(work, compilation_result)
+                    
+                    # Сохраняем отчет об ошибках
+                    error_file = self.output_dir / f"{work.name}_latex_errors.txt"
+                    error_file.write_text(error_report, encoding='utf-8')
+                    files.append(str(error_file))
+                    
+                    # НОВОЕ: Возвращаем информацию об ошибке в контексте исключения
+                    raise LaTeXCompilationError(
+                        error_msg, 
+                        error_details=compilation_result,
+                        latex_log=compilation_result.get('latex_log')
+                    )
+            
             return files
             
         except Exception as e:
             logger.error(f"Ошибка генерации LaTeX для работы {work.name}: {e}")
             raise
+    
+    def _generate_error_report(self, work, compilation_result: Dict) -> str:
+        """Генерирует детальный отчет об ошибках компиляции"""
+        report_lines = [
+            f"ОТЧЕТ ОБ ОШИБКАХ LATEX КОМПИЛЯЦИИ",
+            f"======================================",
+            f"",
+            f"Работа: {work.name}",
+            f"Дата: {work.created_at if hasattr(work, 'created_at') else 'Неизвестно'}",
+            f"Тип ошибки: {compilation_result.get('error_type', 'unknown')}",
+            f"",
+            f"ОСНОВНАЯ ОШИБКА:",
+            f"{compilation_result.get('message', 'Описание недоступно')}",
+            f"",
+        ]
+        
+        # Добавляем детали ошибок
+        errors = compilation_result.get('errors', [])
+        if errors:
+            report_lines.extend([
+                "ДЕТАЛИ ОШИБОК:",
+                "==============="
+            ])
+            
+            for i, error in enumerate(errors, 1):
+                report_lines.extend([
+                    f"{i}. {error.get('message', 'Неизвестная ошибка')}",
+                    f"   Строка: {error.get('line_number', 'Неизвестно')}",
+                ])
+                
+                # Добавляем контекст если есть
+                context = error.get('context', [])
+                if context:
+                    report_lines.extend([
+                        "   Контекст:"
+                    ] + [f"   {line}" for line in context])
+                
+                report_lines.append("")
+        
+        # Добавляем предложения
+        suggestions = compilation_result.get('suggestions', [])
+        if suggestions:
+            report_lines.extend([
+                "ПРЕДЛОЖЕНИЯ ПО ИСПРАВЛЕНИЮ:",
+                "============================"
+            ])
+            
+            for i, suggestion in enumerate(suggestions, 1):
+                report_lines.append(f"{i}. {suggestion}")
+            
+            report_lines.append("")
+        
+        # Добавляем часть лога LaTeX (если есть)
+        latex_log = compilation_result.get('latex_log')
+        if latex_log:
+            report_lines.extend([
+                "ФРАГМЕНТ ЛОГА LATEX:",
+                "====================",
+                latex_log[:2000],  # Первые 2000 символов
+                "",
+                "...(полный лог доступен для анализа)..."
+            ])
+        
+        return "\n".join(report_lines)
     
     def generate_with_answers(self, work, output_format='pdf'):
         """Генерирует работу с ответами"""
@@ -172,3 +273,6 @@ class WorkLatexGenerator(BaseLatexGenerator):
             return self.generate(work, output_format)
         finally:
             self._with_answers = False
+
+# Импорт для обратной совместимости
+from latex_generator.utils.compilation import LaTeXCompilationError

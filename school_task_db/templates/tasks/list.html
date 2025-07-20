@@ -25,16 +25,16 @@
     <!-- НОВОЕ: Фильтр по статусу формул -->
     <div class="col-md-6 d-flex justify-content-end">
         <div class="btn-group" role="group" aria-label="Фильтр формул">
-            <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}math_filter=all" 
-               class="btn btn-outline-secondary {% if request.GET.math_filter == 'all' or not request.GET.math_filter %}active{% endif %}">
+            <a href="?{% if search_query %}search={{ search_query }}&{% endif %}math_filter=all" 
+            class="btn btn-outline-secondary {% if current_filter == 'all' %}active{% endif %}">
                 Все
             </a>
-            <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}math_filter=with_math" 
-               class="btn btn-outline-success {% if request.GET.math_filter == 'with_math' %}active{% endif %}">
+            <a href="?{% if search_query %}search={{ search_query }}&{% endif %}math_filter=with_math" 
+            class="btn btn-outline-success {% if current_filter == 'with_math' %}active{% endif %}">
                 С формулами
             </a>
-            <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}math_filter=with_errors" 
-               class="btn btn-outline-danger {% if request.GET.math_filter == 'with_errors' %}active{% endif %}">
+            <a href="?{% if search_query %}search={{ search_query }}&{% endif %}math_filter=with_errors" 
+            class="btn btn-outline-danger {% if current_filter == 'with_errors' %}active{% endif %}">
                 С ошибками
             </a>
         </div>
@@ -104,16 +104,16 @@
     {% endfor %}
 </div>
 
-<!-- Пагинация остается без изменений -->
+<!-- Пагинация с сохранением фильтров -->
 {% if is_paginated %}
 <nav aria-label="Навигация по страницам">
     <ul class="pagination justify-content-center">
         {% if page_obj.has_previous %}
             <li class="page-item">
-                <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.math_filter %}&math_filter={{ request.GET.math_filter }}{% endif %}">Первая</a>
+                <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if current_filter != 'all' %}&math_filter={{ current_filter }}{% endif %}">Первая</a>
             </li>
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.math_filter %}&math_filter={{ request.GET.math_filter }}{% endif %}">Назад</a>
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_filter != 'all' %}&math_filter={{ current_filter }}{% endif %}">Назад</a>
             </li>
         {% endif %}
         
@@ -123,10 +123,10 @@
         
         {% if page_obj.has_next %}
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.math_filter %}&math_filter={{ request.GET.math_filter }}{% endif %}">Вперед</a>
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_filter != 'all' %}&math_filter={{ current_filter }}{% endif %}">Вперед</a>
             </li>
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.math_filter %}&math_filter={{ request.GET.math_filter }}{% endif %}">Последняя</a>
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_filter != 'all' %}&math_filter={{ current_filter }}{% endif %}">Последняя</a>
             </li>
         {% endif %}
     </ul>

@@ -14,4 +14,7 @@ urlpatterns = [
     # AJAX endpoints
     path('ajax/load-subtopics/', views.load_subtopics, name='ajax-load-subtopics'),
     path('ajax/load-codifier/', views.load_codifier_elements, name='ajax-load-codifier'),
+
+    # Управление кэшем (только для администраторов)
+    path('admin/refresh-math-cache/', views.refresh_math_cache, name='refresh_math_cache'),
 ]

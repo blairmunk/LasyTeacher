@@ -4,10 +4,14 @@ from django.contrib import messages
 from django.urls import reverse_lazy
 from django.db.models import Q
 from django.http import JsonResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 
-from .forms import TaskForm  # ИСПОЛЬЗУЕМ ТОЛЬКО TaskForm
+from .forms import TaskForm
 from .models import Task, TaskImage
+from .utils import math_status_cache  # НОВЫЙ ИМПОРТ
 from curriculum.models import Topic, SubTopic
+from latex_generator.utils.formula_utils import formula_processor
 
 class TaskListView(ListView):
     model = Task
@@ -37,6 +41,19 @@ class TaskListView(ListView):
         if task_type:
             queryset = queryset.filter(task_type=task_type)
         
+        # ОПТИМИЗИРОВАНО: Фильтрация с использованием кэша
+        math_filter = self.request.GET.get('math_filter')
+        
+        if math_filter == 'with_math':
+            # Получаем ID заданий с формулами из кэша
+            task_ids_with_math = math_status_cache.get_tasks_with_math_ids()
+            queryset = queryset.filter(id__in=task_ids_with_math)
+        
+        elif math_filter == 'with_errors':
+            # Получаем ID заданий с ошибками из кэша
+            task_ids_with_errors = math_status_cache.get_tasks_with_errors_ids()
+            queryset = queryset.filter(id__in=task_ids_with_errors)
+        
         return queryset
     
     def get_context_data(self, **kwargs):
@@ -54,8 +71,17 @@ class TaskListView(ListView):
                 ('theoretical', 'Теоретический вопрос'),
             ]
         
+        # Информация о текущем фильтре
+        context['current_filter'] = self.request.GET.get('math_filter', 'all')
+        context['search_query'] = self.request.GET.get('search', '')
+        
+        # НОВОЕ: Добавляем статистику кэша для администраторов
+        if self.request.user.is_staff:
+            context['cache_stats'] = math_status_cache.get_cache_stats()
+        
         return context
 
+# Остальные классы остаются без изменений
 class TaskDetailView(DetailView):
     model = Task
     template_name = 'tasks/detail.html'
@@ -66,7 +92,7 @@ class TaskDetailView(DetailView):
 
 class TaskCreateView(CreateView):
     model = Task
-    form_class = TaskForm  # ИСПОЛЬЗУЕМ form_class вместо fields
+    form_class = TaskForm
     template_name = 'tasks/form.html'
     
     def form_valid(self, form):
@@ -74,7 +100,6 @@ class TaskCreateView(CreateView):
         return super().form_valid(form)
     
     def form_invalid(self, form):
-        """ДОБАВЛЕНО: Показываем ошибки валидации"""
         messages.error(self.request, 'Ошибка при создании задания. Проверьте введённые данные.')
         for field, errors in form.errors.items():
             for error in errors:
@@ -83,7 +108,7 @@ class TaskCreateView(CreateView):
 
 class TaskUpdateView(UpdateView):
     model = Task
-    form_class = TaskForm  # ИСПОЛЬЗУЕМ form_class вместо fields  
+    form_class = TaskForm
     template_name = 'tasks/form.html'
     
     def form_valid(self, form):
@@ -91,7 +116,6 @@ class TaskUpdateView(UpdateView):
         return super().form_valid(form)
     
     def form_invalid(self, form):
-        """ДОБАВЛЕНО: Показываем ошибки валидации"""
         messages.error(self.request, 'Ошибка при обновлении задания. Проверьте введённые данные.')
         for field, errors in form.errors.items():
             for error in errors:
@@ -100,7 +124,7 @@ class TaskUpdateView(UpdateView):
 
 class TaskDeleteView(DeleteView):
     model = Task
-    template_name = 'tasks/confirm_delete.html'  
+    template_name = 'tasks/confirm_delete.html'
     context_object_name = 'task'
     success_url = reverse_lazy('tasks:list')
     
@@ -149,3 +173,23 @@ def load_codifier_elements(request):
         data = {'elements': []}
     
     return JsonResponse(data)
+
+# НОВЫЕ VIEW для управления кэшем
+def refresh_math_cache(request):
+    """Принудительное обновление кэша формул (только для администраторов)"""
+    if not request.user.is_staff:
+        return JsonResponse({'error': 'Доступ запрещен'}, status=403)
+    
+    try:
+        stats = math_status_cache.refresh_cache()
+        return JsonResponse({
+            'success': True,
+            'message': 'Кэш успешно обновлен',
+            'stats': {
+                'with_math': len(stats['with_math']),
+                'with_errors': len(stats['with_errors']),
+                'with_warnings': len(stats['with_warnings']),
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

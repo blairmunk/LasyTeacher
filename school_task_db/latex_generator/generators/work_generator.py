@@ -1,7 +1,7 @@
 """Генератор LaTeX для работ"""
 
 from typing import Dict, Any
-from latex_generator.utils import sanitize_latex, prepare_images
+from latex_generator.utils import sanitize_latex, prepare_images, render_task_with_images
 from .base import BaseLatexGenerator
 
 class WorkLatexGenerator(BaseLatexGenerator):
@@ -40,19 +40,24 @@ class WorkLatexGenerator(BaseLatexGenerator):
         # Подготавливаем задания с изображениями
         prepared_tasks = []
         for i, task in enumerate(tasks, 1):
+            # Подготавливаем изображения
+            task_images = []
+            for image in task.images.all().order_by('order'):
+                image_data = prepare_images(image, self.output_dir)
+                if image_data:
+                    task_images.append(image_data)
+            
+            # Базовые данные задания
             task_data = {
                 'number': i,
                 'task': task,
                 'text': sanitize_latex(task.text),
                 'answer': sanitize_latex(task.answer),
-                'images': []
+                'images': task_images,
             }
             
-            # Подготавливаем изображения
-            for image in task.images.all().order_by('order'):
-                image_data = prepare_images(image, self.output_dir)
-                if image_data:
-                    task_data['images'].append(image_data)
+            # НОВОЕ: Генерируем итоговый LaTeX код с учетом изображений
+            task_data['latex_content'] = render_task_with_images(task_data, task_images)
             
             prepared_tasks.append(task_data)
         

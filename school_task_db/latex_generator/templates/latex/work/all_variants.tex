@@ -64,14 +64,8 @@
 {% for task_data in variant_data.tasks %}
 \section*{Задание {{ task_data.number }}}
 
-{{ task_data.text }}
-
-{% comment %}
-TODO: Здесь будет обработка изображений после Step 4
-{% for image in task_data.images %}
-    % Обработка изображений
-{% endfor %}
-{% endcomment %}
+% НОВОЕ: Используем предварительно сгенерированный LaTeX код с minipage
+{{ task_data.latex_content|safe }}
 
 \vspace{1cm}
 

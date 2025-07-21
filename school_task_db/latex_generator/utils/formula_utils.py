@@ -279,61 +279,138 @@ class FormulaProcessor:
         }
     
     def render_for_latex_safe(self, text: str) -> Dict[str, any]:
-        """Безопасное преобразование для LaTeX компиляции"""
+        """КАРДИНАЛЬНО ИСПРАВЛЕНО: Безопасное преобразование для LaTeX компиляции"""
         if not text:
             return {'content': text, 'errors': [], 'warnings': []}
         
-        # Обрабатываем текст
+        # ИЗМЕНЕНА ЛОГИКА: Сначала находим формулы в ИСХОДНОМ тексте
         processed = self.process_text_safe(text)
         
-        if processed['has_errors']:
-            # Если есть ошибки, возвращаем текст с экранированными формулами
-            safe_text = text
-            
-            # Заменяем проблемные формулы на текстовые версии
-            for formula in processed['formulas']:
-                if not formula['validation']['is_valid']:
-                    # Заменяем на безопасный текст
-                    safe_replacement = f"[ФОРМУЛА: {escape(formula['content'])}]"
-                    safe_text = safe_text.replace(formula['original'], safe_replacement)
-                else:
-                    # Преобразуем в LaTeX формат
-                    if formula['type'] == 'display':
-                        latex_formula = f"\\[{formula['content']}\\]"
-                    else:
-                        latex_formula = f"\\({formula['content']}\\)"
-                    
-                    safe_text = safe_text.replace(formula['original'], latex_formula)
-            
-            return {
-                'content': safe_text,
-                'errors': processed['errors'],
-                'warnings': processed['warnings']
-            }
+        if not processed['has_math']:
+            # Если формул нет, просто очищаем от опасных команд вне формул
+            cleaned_text = self._sanitize_dangerous_latex_completely(text)
+            return {'content': cleaned_text, 'errors': [], 'warnings': []}
         
-        else:
-            # Преобразуем все формулы в LaTeX формат
-            latex_text = text
+        # Обрабатываем текст с формулами
+        safe_text = text
+        all_errors = []
+        all_warnings = []
+        
+        # Обрабатываем формулы в порядке убывания позиций (справа налево)
+        # чтобы позиции не сбивались при замене
+        formulas_by_position = sorted(processed['formulas'], key=lambda f: f['position'][0], reverse=True)
+        
+        for formula in formulas_by_position:
+            if not formula['validation']['is_valid']:
+                # ИСПРАВЛЕНО: Заменяем ВСЮ формулу (включая $ или $$) на безопасный текст
+                errors = formula['validation']['errors']
+                
+                if any('опасная команда' in error.lower() for error in errors):
+                    # Для опасных команд - простой текст БЕЗ математических окружений
+                    safe_replacement = "\\textbf{[ЗАБЛОКИРОВАННАЯ КОМАНДА]}"
+                else:
+                    # Для других ошибок
+                    error_count = len(errors)
+                    safe_replacement = f"\\textbf{{[ОШИБКА: {error_count} проблем]}}"
+                
+                # Заменяем ВСЮ формулу включая $ или $$
+                safe_text = safe_text[:formula['position'][0]] + safe_replacement + safe_text[formula['position'][1]:]
+                
+                all_errors.extend(formula['validation']['errors'])
+                all_warnings.extend(formula['validation']['warnings'])
+                
+            else:
+                # Для корректных формул - преобразуем в LaTeX формат
+                if formula['type'] == 'display':
+                    latex_formula = f"\\[{formula['content']}\\]"
+                else:
+                    latex_formula = f"\\({formula['content']}\\)"
+                
+                # Заменяем формулу на LaTeX версию
+                safe_text = safe_text[:formula['position'][0]] + latex_formula + safe_text[formula['position'][1]:]
+        
+        # Очищаем от опасных команд ВНЕ формул (которые остались)
+        safe_text = self._sanitize_dangerous_latex_completely(safe_text)
+        
+        return {
+            'content': safe_text,
+            'errors': all_errors,
+            'warnings': all_warnings
+        }
+
+
+
+    def _sanitize_dangerous_latex_completely(self, text: str) -> str:
+        """УЛУЧШЕНО: Полная очистка от опасных LaTeX команд ВНЕ математических окружений"""
+        if not text:
+            return text
+        
+        # НЕ трогаем уже обработанные математические окружения \(...\) и \[...\]
+        # Они уже безопасны
+        
+        # Опасные команды только ВНЕ математических окружений
+        dangerous_patterns = [
+            r'\\input\{[^}]*\}',           # \input{файл}
+            r'\\include\{[^}]*\}',         # \include{файл}  
+            r'\\write\d*\{[^}]*\}',        # \write18{команда}
+            r'\\immediate\b',              # \immediate
+            r'\\openout\d*\{[^}]*\}',      # \openout
+            r'\\closeout\d*',              # \closeout
+            r'\\read\d*',                  # \read
+            r'\\catcode[^\s]*',            # \catcode
+            r'\\def\\[^\s]*\{[^}]*\}',     # \def
+            r'\\let\\[^\s]*',              # \let
+            r'\\csname[^\\]*\\endcsname',  # \csname
+            r'\\expandafter\b',            # \expandafter
+            r'\\the\\[^\s]*',              # \the
+            r'\\jobname\b',                # \jobname
+            r'\\meaning\b',                # \meaning
+            r'\\string\b',                 # \string
+            r'\\detokenize\{[^}]*\}',      # \detokenize
+            r'\\scantokens\{[^}]*\}',      # \scantokens
+            r'\\directlua\{[^}]*\}',       # \directlua (LuaTeX)
+            r'\\luaexec\{[^}]*\}',         # \luaexec
+        ]
+        
+        clean_text = text
+        replacements_made = []
+        
+        # Сначала найдем все математические окружения чтобы их не трогать
+        math_ranges = []
+        
+        # Находим \(...\) окружения
+        for match in re.finditer(r'\\\\?\((.*?)\\\\?\)', clean_text):
+            math_ranges.append((match.start(), match.end()))
+        
+        # Находим \[...\] окружения  
+        for match in re.finditer(r'\\\\?\[(.*?)\\\\?\]', clean_text):
+            math_ranges.append((match.start(), match.end()))
+        
+        # Сортируем диапазоны
+        math_ranges.sort()
+        
+        for pattern in dangerous_patterns:
+            matches = list(re.finditer(pattern, clean_text, re.IGNORECASE))
             
-            # Заменяем $...$ на \(...\)
-            latex_text = re.sub(
-                self.INLINE_MATH_PATTERN, 
-                r'\\(\1\\)', 
-                latex_text
-            )
-            
-            # Заменяем $$...$$ на \[...\]
-            latex_text = re.sub(
-                self.DISPLAY_MATH_PATTERN, 
-                r'\\[\1\\]', 
-                latex_text
-            )
-            
-            return {
-                'content': latex_text,
-                'errors': [],
-                'warnings': processed['warnings']
-            }
+            for match in matches:
+                # Проверяем что команда НЕ внутри математического окружения
+                in_math = False
+                for start, end in math_ranges:
+                    if start <= match.start() < end:
+                        in_math = True
+                        break
+                
+                if not in_math:
+                    replacements_made.append(match.group())
+                    # Заменяем на безопасный текст
+                    clean_text = clean_text.replace(match.group(), '\\textbf{[ЗАБЛОКИРОВАНО]}', 1)
+        
+        if replacements_made:
+            logger.warning(f"Заблокированы опасные команды: {replacements_made}")
+        
+        return clean_text
+
+
     
     # Сохраняем старые методы для обратной совместимости
     def has_math(self, text: str) -> bool:

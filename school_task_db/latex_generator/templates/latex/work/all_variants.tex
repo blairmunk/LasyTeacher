@@ -64,10 +64,9 @@
 {% for task_data in variant_data.tasks %}
 \section*{Задание {{ task_data.number }}}
 
-% НОВОЕ: Используем предварительно сгенерированный LaTeX код с minipage
+% Используем предварительно сгенерированный LaTeX код с minipage
 {{ task_data.latex_content|safe }}
 
-% ИСПРАВЛЕНИЕ 3: Заменяем большой пробел на малый
 \vspace{1ex}
 
 {% endfor %}
@@ -89,7 +88,7 @@
 
 \begin{enumerate}
 {% for task_data in variant_data.tasks %}
-\item {{ task_data.answer }}
+\item {{ task_data.answer|safe }}
 {% endfor %}
 \end{enumerate}
 

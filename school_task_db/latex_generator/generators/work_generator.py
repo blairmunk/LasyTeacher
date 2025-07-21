@@ -1,9 +1,10 @@
 """Генератор LaTeX для работ с полной обработкой ошибок"""
 
 from typing import Dict, Any
+from pathlib import Path  # ДОБАВЛЕНО: Импорт Path
 from latex_generator.utils import sanitize_latex, prepare_images, render_task_with_images
 from latex_generator.utils.formula_utils import formula_processor
-from latex_generator.utils.compilation import latex_compiler
+from latex_generator.utils.compilation import latex_compiler, LaTeXCompilationError
 from .base import BaseLatexGenerator
 import logging
 
@@ -66,7 +67,7 @@ class WorkLatexGenerator(BaseLatexGenerator):
         for i, task in enumerate(tasks, 1):
             # Обрабатываем текст задания
             text_processed = formula_processor.render_for_latex_safe(task.text)
-            answer_processed = formula_processor.render_for_latex_safe(task.answer)
+            answer_processed = formula_processor.render_for_latex_safe(task.answer or '')  # ИСПРАВЛЕНО: добавлено or ''
             
             # Собираем ошибки и предупреждения
             task_errors = []
@@ -81,6 +82,7 @@ class WorkLatexGenerator(BaseLatexGenerator):
             short_solution_processed = {'content': '', 'errors': [], 'warnings': []}
             full_solution_processed = {'content': '', 'errors': [], 'warnings': []}
             hint_processed = {'content': '', 'errors': [], 'warnings': []}
+            instruction_processed = {'content': '', 'errors': [], 'warnings': []}  # ДОБАВЛЕНО
             
             if task.short_solution:
                 short_solution_processed = formula_processor.render_for_latex_safe(task.short_solution)
@@ -96,6 +98,12 @@ class WorkLatexGenerator(BaseLatexGenerator):
                 hint_processed = formula_processor.render_for_latex_safe(task.hint)
                 task_errors.extend(hint_processed['errors'])
                 task_warnings.extend(hint_processed['warnings'])
+            
+            # ДОБАВЛЕНО: Обработка instruction
+            if hasattr(task, 'instruction') and task.instruction:
+                instruction_processed = formula_processor.render_for_latex_safe(task.instruction)
+                task_errors.extend(instruction_processed['errors'])
+                task_warnings.extend(instruction_processed['warnings'])
             
             # Подготавливаем изображения
             task_images = []
@@ -113,6 +121,7 @@ class WorkLatexGenerator(BaseLatexGenerator):
                 'short_solution': short_solution_processed['content'],
                 'full_solution': full_solution_processed['content'],
                 'hint': hint_processed['content'],
+                'instruction': instruction_processed['content'],  # ДОБАВЛЕНО
                 'images': task_images,
                 
                 # Информация об ошибках формул
@@ -146,7 +155,7 @@ class WorkLatexGenerator(BaseLatexGenerator):
         }
     
     def generate(self, work, output_format='pdf'):
-        """ОБНОВЛЕНО: Генерация с полной обработкой ошибок"""
+        """ИСПРАВЛЕНО: Генерация без дублирования файлов"""
         try:
             # Вызываем базовую генерацию LaTeX файла
             files = super().generate(work, output_format)
@@ -162,16 +171,18 @@ class WorkLatexGenerator(BaseLatexGenerator):
             
             # Если запросили PDF, пытаемся скомпилировать
             if output_format == 'pdf' and files:
-                latex_file_path = files[0]  # Первый файл - LaTeX
+                latex_file_path = Path(files[0])  
                 
                 compilation_result = latex_compiler.compile_latex_safe(
-                    Path(latex_file_path), 
+                    latex_file_path, 
                     self.output_dir
                 )
                 
                 if compilation_result['success']:
-                    # Успешная компиляция - добавляем PDF к списку файлов
-                    files.append(compilation_result['pdf_path'])
+                    # ИСПРАВЛЕНО: Проверяем что PDF не дублируется
+                    pdf_path = compilation_result['pdf_path']
+                    if pdf_path not in files:
+                        files.append(pdf_path)
                     
                     if compilation_result.get('has_warnings'):
                         logger.info(f"LaTeX компиляция с предупреждениями для {work.name}")
@@ -187,7 +198,11 @@ class WorkLatexGenerator(BaseLatexGenerator):
                     # Сохраняем отчет об ошибках
                     error_file = self.output_dir / f"{work.name}_latex_errors.txt"
                     error_file.write_text(error_report, encoding='utf-8')
-                    files.append(str(error_file))
+                    
+                    # ИСПРАВЛЕНО: Проверяем что файл отчета не дублируется
+                    error_file_str = str(error_file)
+                    if error_file_str not in files:
+                        files.append(error_file_str)
                     
                     # НОВОЕ: Возвращаем информацию об ошибке в контексте исключения
                     raise LaTeXCompilationError(
@@ -198,9 +213,13 @@ class WorkLatexGenerator(BaseLatexGenerator):
             
             return files
             
+        except LaTeXCompilationError:
+            # Пробрасываем LaTeX ошибки как есть
+            raise
         except Exception as e:
             logger.error(f"Ошибка генерации LaTeX для работы {work.name}: {e}")
             raise
+
     
     def _generate_error_report(self, work, compilation_result: Dict) -> str:
         """Генерирует детальный отчет об ошибках компиляции"""
@@ -209,7 +228,7 @@ class WorkLatexGenerator(BaseLatexGenerator):
             f"======================================",
             f"",
             f"Работа: {work.name}",
-            f"Дата: {work.created_at if hasattr(work, 'created_at') else 'Неизвестно'}",
+            f"Дата: {getattr(work, 'created_at', 'Неизвестно')}",
             f"Тип ошибки: {compilation_result.get('error_type', 'unknown')}",
             f"",
             f"ОСНОВНАЯ ОШИБКА:",
@@ -274,5 +293,3 @@ class WorkLatexGenerator(BaseLatexGenerator):
         finally:
             self._with_answers = False
 
-# Импорт для обратной совместимости
-from latex_generator.utils.compilation import LaTeXCompilationError

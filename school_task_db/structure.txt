@@ -1,0 +1,268 @@
+
+## Project File Tree
+
+```
+school_task_db/
+├── .gitignore
+├── core
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── management
+│   │   ├── __init__.py
+│   │   └── commands
+│   │       ├── __init__.py
+│   │       ├── generate_clean_test_data.py
+│   │       ├── generate_test_data.py
+│   │       └── generate_test_data_with_images.py
+│   ├── migrations
+│   │   └── __init__.py
+│   ├── models.py
+│   ├── tests.py
+│   ├── urls.py
+│   ├── utils.py
+│   └── views.py
+├── curriculum
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── migrations
+│   │   ├── 0001_initial.py
+│   │   ├── 0002_initial.py
+│   │   └── __init__.py
+│   ├── models.py
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
+├── document_generator
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── document_generator.txt
+│   ├── management
+│   │   ├── __init__.py
+│   │   └── commands
+│   │       └── __init__.py
+│   ├── migrations
+│   │   └── __init__.py
+│   ├── models.py
+│   ├── tests
+│   │   └── __init__.py
+│   ├── tests.py
+│   ├── utils
+│   │   ├── __init__.py
+│   │   ├── file_utils.py
+│   │   ├── formula_utils.py
+│   │   └── image_utils.py
+│   └── views.py
+├── events
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── forms.py
+│   ├── migrations
+│   │   ├── 0001_initial.py
+│   │   └── __init__.py
+│   ├── models.py
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
+├── latex_generator
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── generators
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   ├── registry.py
+│   │   └── work_generator.py
+│   ├── latex_generator.txt
+│   ├── management
+│   │   └── commands
+│   │       ├── generate_latex.py
+│   │       └── list_generators.py
+│   ├── migrations
+│   │   └── __init__.py
+│   ├── models.py
+│   ├── templates
+│   │   ├── admin
+│   │   │   └── latex_generator
+│   │   │       └── generate.html
+│   │   └── latex
+│   │       ├── base
+│   │       │   └── document_base.tex
+│   │       └── work
+│   │           ├── all_variants.tex
+│   │           └── work_all_variants.tex
+│   ├── templatetags
+│   │   └── math_tags.py
+│   ├── tests
+│   │   ├── __init__.py
+│   │   └── test_basic.py
+│   ├── tests.py
+│   ├── urls.py
+│   ├── utils
+│   │   ├── __init__.py
+│   │   ├── compilation.py
+│   │   ├── latex_specific.py
+│   │   └── latex_utils.py
+│   └── views.py
+├── latex_output
+│   ├── Контрольная_работа_1_all_variants.aux
+│   ├── Контрольная_работа_1_all_variants.tex
+│   ├── ТЕСТ: Работа с ошибками формул_latex_errors.txt
+│   ├── ТЕСТ__Контрольная_работа_с_изображениями_all_variants.aux
+│   ├── ТЕСТ__Контрольная_работа_с_изображениями_all_variants.tex
+│   └── ТЕСТ__Работа_с_ошибками_формул_all_variants.tex
+├── manage.py
+├── references
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── helpers.py
+│   ├── management
+│   │   ├── __init__.py
+│   │   └── commands
+│   │       ├── __init__.py
+│   │       └── init_simple_references.py
+│   ├── migrations
+│   │   ├── 0001_initial.py
+│   │   └── __init__.py
+│   ├── models.py
+│   ├── tests.py
+│   └── views.py
+├── reports
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
+├── requirements.txt
+├── review
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── migrations
+│   │   ├── 0001_initial.py
+│   │   └── __init__.py
+│   ├── models.py
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
+├── school_task_db
+│   ├── __init__.py
+│   ├── asgi.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── static
+│   └── admin
+│       └── js
+│           ├── admin_inline.js
+│           └── admin_task_form.js
+├── students
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── forms.py
+│   ├── migrations
+│   │   ├── 0001_initial.py
+│   │   └── __init__.py
+│   ├── models.py
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
+├── task_groups
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── forms.py
+│   ├── migrations
+│   │   ├── 0001_initial.py
+│   │   └── __init__.py
+│   ├── models.py
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
+├── tasks
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── forms.py
+│   ├── management
+│   │   ├── __init__.py
+│   │   └── commands
+│   │       ├── __init__.py
+│   │       └── manage_math_cache.py
+│   ├── migrations
+│   │   ├── 0001_initial.py
+│   │   └── __init__.py
+│   ├── models.py
+│   ├── tests.py
+│   ├── urls.py
+│   ├── utils.py
+│   └── views.py
+├── templates
+│   ├── base.html
+│   ├── core
+│   │   ├── index.html
+│   │   └── search_results.html
+│   ├── events
+│   │   ├── assign_variants.html
+│   │   ├── detail.html
+│   │   ├── form.html
+│   │   └── list.html
+│   ├── math
+│   │   ├── formula_errors.html
+│   │   └── formula_preview.html
+│   ├── reports
+│   │   ├── dashboard.html
+│   │   ├── events_status.html
+│   │   ├── student_performance.html
+│   │   └── work_analysis.html
+│   ├── review
+│   │   ├── dashboard.html
+│   │   ├── event_review.html
+│   │   └── participation_review.html
+│   ├── students
+│   │   ├── form.html
+│   │   ├── group_detail.html
+│   │   ├── group_list.html
+│   │   └── list.html
+│   ├── task_groups
+│   │   ├── add_tasks.html
+│   │   ├── detail.html
+│   │   ├── form.html
+│   │   └── list.html
+│   ├── tasks
+│   │   ├── confirm_delete.html
+│   │   ├── detail.html
+│   │   ├── form.html
+│   │   └── list.html
+│   └── works
+│       ├── detail.html
+│       ├── form.html
+│       ├── generate_variants.html
+│       ├── list.html
+│       ├── variant_detail.html
+│       └── variant_list.html
+└── works
+    ├── __init__.py
+    ├── admin.py
+    ├── apps.py
+    ├── forms.py
+    ├── management
+    │   └── commands
+    │       └── generate_work_latex.py
+    ├── migrations
+    │   ├── 0001_initial.py
+    │   └── __init__.py
+    ├── models.py
+    ├── tests.py
+    ├── urls.py
+    └── views.py
+```
+
+

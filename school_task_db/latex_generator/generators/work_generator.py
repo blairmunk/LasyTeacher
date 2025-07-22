@@ -1,10 +1,15 @@
 """Генератор LaTeX для работ с полной обработкой ошибок"""
 
 from typing import Dict, Any
-from pathlib import Path  # ДОБАВЛЕНО: Импорт Path
-from latex_generator.utils import sanitize_latex, prepare_images, render_task_with_images
-from latex_generator.utils.formula_utils import formula_processor
+from pathlib import Path
+
+from document_generator.utils.formula_utils import formula_processor
+from document_generator.utils.image_utils import prepare_images 
+from document_generator.utils.file_utils import sanitize_filename
+from latex_generator.utils import sanitize_latex, render_task_with_images
+from latex_generator.utils.latex_specific import latex_formula_processor
 from latex_generator.utils.compilation import latex_compiler, LaTeXCompilationError
+
 from .base import BaseLatexGenerator
 import logging
 
@@ -38,7 +43,7 @@ class WorkLatexGenerator(BaseLatexGenerator):
             document_warnings.extend(variant_data.get('warnings', []))
         
         # Обрабатываем название работы
-        work_name_processed = formula_processor.render_for_latex_safe(work.name)
+        work_name_processed = latex_formula_processor.render_for_latex_safe(work.name)
         document_errors.extend(work_name_processed['errors'])
         document_warnings.extend(work_name_processed['warnings'])
         
@@ -66,8 +71,8 @@ class WorkLatexGenerator(BaseLatexGenerator):
         
         for i, task in enumerate(tasks, 1):
             # Обрабатываем текст задания
-            text_processed = formula_processor.render_for_latex_safe(task.text)
-            answer_processed = formula_processor.render_for_latex_safe(task.answer or '')  # ИСПРАВЛЕНО: добавлено or ''
+            text_processed = latex_formula_processor.render_for_latex_safe(task.text)
+            answer_processed = latex_formula_processor.render_for_latex_safe(task.answer or '')  # ИСПРАВЛЕНО: добавлено or ''
             
             # Собираем ошибки и предупреждения
             task_errors = []
@@ -85,23 +90,23 @@ class WorkLatexGenerator(BaseLatexGenerator):
             instruction_processed = {'content': '', 'errors': [], 'warnings': []}  # ДОБАВЛЕНО
             
             if task.short_solution:
-                short_solution_processed = formula_processor.render_for_latex_safe(task.short_solution)
+                short_solution_processed = latex_formula_processor.render_for_latex_safe(task.short_solution)
                 task_errors.extend(short_solution_processed['errors'])
                 task_warnings.extend(short_solution_processed['warnings'])
             
             if task.full_solution:
-                full_solution_processed = formula_processor.render_for_latex_safe(task.full_solution)
+                full_solution_processed = latex_formula_processor.render_for_latex_safe(task.full_solution)
                 task_errors.extend(full_solution_processed['errors'])
                 task_warnings.extend(full_solution_processed['warnings'])
             
             if task.hint:
-                hint_processed = formula_processor.render_for_latex_safe(task.hint)
+                hint_processed = latex_formula_processor.render_for_latex_safe(task.hint)
                 task_errors.extend(hint_processed['errors'])
                 task_warnings.extend(hint_processed['warnings'])
             
             # ДОБАВЛЕНО: Обработка instruction
             if hasattr(task, 'instruction') and task.instruction:
-                instruction_processed = formula_processor.render_for_latex_safe(task.instruction)
+                instruction_processed = latex_formula_processor.render_for_latex_safe(task.instruction)
                 task_errors.extend(instruction_processed['errors'])
                 task_warnings.extend(instruction_processed['warnings'])
             

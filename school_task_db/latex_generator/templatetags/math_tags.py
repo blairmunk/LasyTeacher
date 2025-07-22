@@ -3,7 +3,7 @@
 from django import template
 from django.utils.safestring import mark_safe
 from django.utils.html import escape
-from latex_generator.utils.formula_utils import formula_processor
+from document_generator.utils.formula_utils import formula_processor
 
 register = template.Library()
 
@@ -21,6 +21,20 @@ def render_math(text):
 def has_math(text):
     """Проверяет есть ли в тексте формулы"""
     return formula_processor.has_math(text)
+
+@register.filter
+def has_math_formulas(text):
+    """Проверяет содержит ли текст математические формулы"""
+    if not text:
+        return False
+    return formula_processor.has_math(text)
+
+@register.filter  
+def count_formulas(text):
+    """Подсчитывает количество формул в тексте"""
+    if not text:
+        return 0
+    return formula_processor.count_formulas(text)
 
 @register.filter
 def math_count(text):

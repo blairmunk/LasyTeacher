@@ -1,42 +1,51 @@
-"""Утилиты для обработки изображений в LaTeX с minipage"""
+"""Общие утилиты для обработки изображений"""
 
 import shutil
+import logging
 from pathlib import Path
+from typing import Dict, Optional, List
 from django.conf import settings
-from .latex_utils import sanitize_latex
 
-def prepare_images(task_image, output_dir):
-    """Подготавливает изображение для LaTeX с minipage"""
+logger = logging.getLogger(__name__)
+
+
+def prepare_images(image, output_dir: Path) -> Optional[Dict]:
+    """
+    ПЕРЕМЕЩЕНО из latex_generator: Подготавливает изображение для генерации документа
+    """
     try:
-        # Путь к оригинальному изображению
-        if hasattr(task_image.image, 'path'):
-            original_path = Path(task_image.image.path)
+        # Получаем путь к изображению
+        if hasattr(image.image, 'path') and Path(image.image.path).exists():
+            image_path = Path(image.image.path)
+        elif hasattr(settings, 'MEDIA_ROOT'):
+            image_path = Path(settings.MEDIA_ROOT) / image.image.name
+            if not image_path.exists():
+                logger.warning(f"Изображение не найдено: {image_path}")
+                return None
         else:
-            # Если путь относительный
-            original_path = Path(settings.MEDIA_ROOT) / task_image.image.name
-        
-        if not original_path.exists():
-            print(f"⚠️ Изображение не найдено: {original_path}")
+            logger.warning(f"Не удается определить путь к изображению: {image}")
             return None
         
-        # Копируем изображение в папку вывода
-        image_filename = f"image_{task_image.task.id}_{task_image.id}{original_path.suffix}"
+        # Генерируем уникальное имя файла
+        image_filename = f"image_{image.task.id}_{image.id}{image_path.suffix}"
         dest_path = output_dir / image_filename
-        shutil.copy2(original_path, dest_path)
         
-        # Получаем конфигурацию minipage
-        minipage_config = get_minipage_config(task_image.position)
+        # Копируем изображение
+        shutil.copy2(image_path, dest_path)
+        
+        logger.debug(f"Изображение скопировано: {image_path} -> {dest_path}")
         
         return {
             'filename': image_filename,
-            'caption': sanitize_latex(task_image.caption or ''),
-            'position': task_image.position,
-            'minipage_config': minipage_config,
-            'order': task_image.order,
+            'path': str(dest_path),
+            'caption': image.caption or '',
+            'position': image.position,
+            'order': image.order,
+            'original_path': str(image_path),
         }
         
     except Exception as e:
-        print(f"⚠️ Ошибка при подготовке изображения {task_image.id}: {e}")
+        logger.error(f"Ошибка подготовки изображения {image.id}: {e}")
         return None
 
 def get_minipage_config(position):

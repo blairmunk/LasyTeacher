@@ -1,0 +1,439 @@
+You are an expert software architect. The user is providing you with the complete source code for a project, contained in a single file. Your task is to meticulously analyze the provided codebase to gain a comprehensive understanding of its structure, functionality, dependencies, and overall architecture.
+
+A file tree is provided below to give you a high-level overview. The subsequent sections contain the full content of each file, clearly marked with "// FILE: <path>".
+
+Your instructions are:
+1.  **Analyze Thoroughly:** Read through every file to understand its purpose and how it interacts with other files.
+2.  **Identify Key Components:** Pay close attention to configuration files (like package.json, pyproject.toml), entry points (like index.js, main.py), and core logic.
+
+## Project File Tree
+
+```
+document_generator/
+├── __init__.py
+├── admin.py
+├── apps.py
+├── management
+│   ├── __init__.py
+│   └── commands
+│       └── __init__.py
+├── models.py
+├── tests.py
+├── utils
+│   ├── __init__.py
+│   ├── file_utils.py
+│   ├── formula_utils.py
+│   └── image_utils.py
+└── views.py
+```
+
+---
+
+// FILE: __init__.py
+```
+
+```
+
+// FILE: admin.py
+```
+from django.contrib import admin
+
+# Register your models here.
+
+```
+
+// FILE: apps.py
+```
+from django.apps import AppConfig
+
+class DocumentGeneratorConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'document_generator'
+    verbose_name = 'Document Generator Core'
+    
+    def ready(self):
+        """Инициализация общих компонентов для генерации документов"""
+        pass
+
+```
+
+// FILE: management/__init__.py
+```
+
+```
+
+// FILE: management/commands/__init__.py
+```
+
+```
+
+// FILE: models.py
+```
+from django.db import models
+
+# Create your models here.
+
+```
+
+// FILE: tests.py
+```
+from django.test import TestCase
+
+# Create your tests here.
+
+```
+
+// FILE: utils/__init__.py
+```
+
+```
+
+// FILE: utils/file_utils.py
+```
+"""Общие утилиты для работы с файлами"""
+
+import re
+import os
+import tempfile
+from pathlib import Path
+from typing import Union
+
+def sanitize_filename(filename: str) -> str:
+    """
+    ПЕРЕМЕЩЕНО из latex_generator: Очищает имя файла от недопустимых символов
+    """
+    if not filename:
+        return "untitled"
+    
+    # Заменяем недопустимые символы
+    sanitized = re.sub(r'[<>:"/\\|?*]', '_', filename)
+    
+    # Заменяем множественные пробелы и подчеркивания
+    sanitized = re.sub(r'[\s_]+', '_', sanitized)
+    
+    # Удаляем ведущие и замыкающие подчеркивания
+    sanitized = sanitized.strip('_')
+    
+    # Ограничиваем длину
+    if len(sanitized) > 200:
+        sanitized = sanitized[:200]
+    
+    # Убеждаемся что имя не пустое
+    if not sanitized:
+        sanitized = "untitled"
+    
+    return sanitized
+
+# TODO: ДОПОЛНИТЕЛЬНЫЕ ОБЩИЕ ФУНКЦИИ...
+```
+
+// FILE: utils/formula_utils.py
+```
+"""Общие утилиты для обработки математических формул"""
+
+import re
+import logging
+from typing import Dict, List, Any, Set, Optional
+from html import escape
+
+logger = logging.getLogger(__name__)
+
+class FormulaProcessor:
+    """Процессор математических формул с валидацией и обработкой ошибок"""
+    
+    # Регулярные выражения для поиска формул
+    INLINE_MATH_PATTERN = r'\$([^$]+?)\$'
+    DISPLAY_MATH_PATTERN = r'\$\$([^$]+?)\$\$'
+    
+    # Опасные LaTeX команды
+    DANGEROUS_COMMANDS = {
+        r'\\input\{[^}]*\}': 'Опасная команда \\input не разрешена из соображений безопасности',
+        r'\\include\{[^}]*\}': 'Опасная команда \\include не разрешена из соображений безопасности',
+        r'\\write\d*\{[^}]*\}': 'Опасная команда \\write не разрешена из соображений безопасности',
+        r'\\immediate\b': 'Опасная команда \\immediate не разрешена из соображений безопасности',
+        r'\\openout\d*\{[^}]*\}': 'Опасная команда \\openout не разрешена из соображений безопасности',
+        r'\\closeout\d*': 'Опасная команда \\closeout не разрешена из соображений безопасности',
+        r'\\read\d*': 'Опасная команда \\read не разрешена из соображений безопасности',
+        r'\\def\\[^\s]*\{[^}]*\}': 'Опасная команда \\def не разрешена из соображений безопасности',
+        r'\\let\\[^\s]*': 'Опасная команда \\let не разрешена из соображений безопасности',
+        r'\\csname[^\\]*\\endcsname': 'Опасная команда \\csname не разрешена из соображений безопасности',
+        r'\\expandafter\b': 'Опасная команда \\expandafter не разрешена из соображений безопасности',
+        r'\\directlua\{[^}]*\}': 'Опасная команда \\directlua не разрешена из соображений безопасности',
+    }
+    
+    def has_math(self, text: str) -> bool:
+        """Проверяет содержит ли текст математические формулы"""
+        if not text:
+            return False
+        return bool(re.search(self.INLINE_MATH_PATTERN, text) or 
+                   re.search(self.DISPLAY_MATH_PATTERN, text))
+    
+    def count_formulas(self, text: str) -> int:
+        """ДОБАВЛЕНО: Подсчитывает количество формул в тексте"""
+        if not text:
+            return 0
+        
+        inline_count = len(re.findall(self.INLINE_MATH_PATTERN, text))
+        display_count = len(re.findall(self.DISPLAY_MATH_PATTERN, text))
+        return inline_count + display_count
+    
+    # ... ОСТАЛЬНЫЕ МЕТОДЫ ИЗ ИСХОДНОГО ФАЙЛА БЕЗ ИЗМЕНЕНИЙ ...
+    # (extract_formulas, validate_formula, process_text_safe и т.д.)
+    
+    def render_for_latex_safe(self, text: str) -> Dict[str, Any]:
+        """СПЕЦИФИЧНО ДЛЯ LaTeX: Безопасное преобразование для LaTeX компиляции"""
+        # ЭТОТ МЕТОД ПЕРЕНОСИМ В latex_generator/utils/latex_specific.py
+        # А ЗДЕСЬ ОСТАВЛЯЕМ ЗАГЛУШКУ ИЛИ БАЗОВУЮ РЕАЛИЗАЦИЮ
+        raise NotImplementedError("Используйте специфичную реализацию для вашего формата")
+    
+    def render_for_html_safe(self, text: str) -> Dict[str, Any]:
+        """НОВОЕ: Безопасное преобразование для HTML (MathJax)"""
+        if not text:
+            return {'content': text, 'errors': [], 'warnings': []}
+        
+        # Для HTML мы НЕ преобразуем $ в LaTeX команды
+        # MathJax обработает $ и $$ автоматически
+        processed = self.process_text_safe(text)
+        
+        if processed['has_errors']:
+            # Заменяем только проблемные формулы
+            safe_text = text
+            
+            for formula in processed['formulas']:
+                if not formula['validation']['is_valid']:
+                    errors = formula['validation']['errors']
+                    
+                    if any('опасная команда' in error.lower() for error in errors):
+                        # HTML безопасная замена
+                        safe_replacement = '<span class="blocked-formula">[ЗАБЛОКИРОВАННАЯ КОМАНДА]</span>'
+                    else:
+                        error_count = len(errors)
+                        safe_replacement = f'<span class="formula-error" title="{"; ".join(errors)}">[ОШИБКА: {error_count} проблем]</span>'
+                    
+                    safe_text = safe_text.replace(formula['original'], safe_replacement)
+            
+            return {
+                'content': safe_text,
+                'errors': processed['errors'],
+                'warnings': processed['warnings']
+            }
+        else:
+            # Возвращаем текст как есть - MathJax обработает формулы
+            return {
+                'content': text,
+                'errors': [],
+                'warnings': processed['warnings']
+            }
+
+# Глобальный экземпляр процессора формул
+formula_processor = FormulaProcessor()
+
+```
+
+// FILE: utils/image_utils.py
+```
+"""Общие утилиты для обработки изображений"""
+
+import shutil
+import logging
+from pathlib import Path
+from typing import Dict, Optional, List
+from django.conf import settings
+
+logger = logging.getLogger(__name__)
+
+
+def prepare_images(image, output_dir: Path) -> Optional[Dict]:
+    """
+    ПЕРЕМЕЩЕНО из latex_generator: Подготавливает изображение для генерации документа
+    """
+    try:
+        # Получаем путь к изображению
+        if hasattr(image.image, 'path') and Path(image.image.path).exists():
+            image_path = Path(image.image.path)
+        elif hasattr(settings, 'MEDIA_ROOT'):
+            image_path = Path(settings.MEDIA_ROOT) / image.image.name
+            if not image_path.exists():
+                logger.warning(f"Изображение не найдено: {image_path}")
+                return None
+        else:
+            logger.warning(f"Не удается определить путь к изображению: {image}")
+            return None
+        
+        # Генерируем уникальное имя файла
+        image_filename = f"image_{image.task.id}_{image.id}{image_path.suffix}"
+        dest_path = output_dir / image_filename
+        
+        # Копируем изображение
+        shutil.copy2(image_path, dest_path)
+        
+        logger.debug(f"Изображение скопировано: {image_path} -> {dest_path}")
+        
+        return {
+            'filename': image_filename,
+            'path': str(dest_path),
+            'caption': image.caption or '',
+            'position': image.position,
+            'order': image.order,
+            'original_path': str(image_path),
+        }
+        
+    except Exception as e:
+        logger.error(f"Ошибка подготовки изображения {image.id}: {e}")
+        return None
+
+def get_minipage_config(position):
+    """Конфигурация minipage для разных позиций изображений"""
+    
+    configs = {
+        'right_40': {
+            'layout': 'side_by_side',
+            'text_width': '0.55\\textwidth',
+            'image_width': '0.4\\textwidth',
+            'text_align': '[t]',      
+            'image_align': '[t]',
+            'spacing': '\\hfill',
+            'image_position': 'right',
+            'vertical_adjust': '\\vspace*{-3em}',  # ИСПРАВЛЕНИЕ 1: подтягиваем изображение вверх
+        },
+        'right_20': {
+            'layout': 'side_by_side',
+            'text_width': '0.75\\textwidth',
+            'image_width': '0.2\\textwidth',
+            'text_align': '[t]',      
+            'image_align': '[t]',
+            'spacing': '\\hfill',
+            'image_position': 'right',
+            'vertical_adjust': '\\vspace*{-3em}',  # ИСПРАВЛЕНИЕ 1: подтягиваем изображение вверх
+        },
+        'bottom_100': {
+            'layout': 'vertical',
+            'text_width': '\\textwidth',
+            'image_width': '\\textwidth',
+            'image_align': '[c]',
+            'spacing': '\\vspace{0.5cm}',
+            'image_position': 'bottom',
+            'center_image': True,     # ИСПРАВЛЕНИЕ 2: центрирование
+        },
+        'bottom_70': {
+            'layout': 'vertical',
+            'text_width': '\\textwidth',
+            'image_width': '0.7\\textwidth',
+            'image_align': '[c]',
+            'spacing': '\\vspace{0.5cm}',
+            'image_position': 'bottom',
+            'center_image': True,     # ИСПРАВЛЕНИЕ 2: центрирование
+        },
+    }
+    
+    return configs.get(position, configs['bottom_70'])  # По умолчанию bottom_70
+
+def render_task_with_images(task_data, images):
+    """Генерирует LaTeX код для задания с изображениями используя minipage"""
+    
+    if not images:
+        # Без изображений - просто текст
+        return task_data['text']
+    
+    # Группируем изображения по позиции
+    images_by_position = {}
+    for image in images:
+        pos = image['position']
+        if pos not in images_by_position:
+            images_by_position[pos] = []
+        images_by_position[pos].append(image)
+    
+    # Пока обрабатываем только первое изображение
+    # TODO: в следующих коммитах добавить поддержку нескольких изображений
+    first_image = images[0]
+    config = first_image['minipage_config']
+    
+    if config['layout'] == 'side_by_side':
+        # Горизонтальная компоновка
+        return generate_side_by_side_minipage(task_data, first_image, config)
+    else:
+        # Вертикальная компоновка
+        return generate_vertical_minipage(task_data, first_image, config)
+
+def generate_side_by_side_minipage(task_data, image, config):
+    """Генерирует горизонтальную компоновку с minipage"""
+    
+    # ИСПРАВЛЕНИЕ 1: Добавляем выравнивание по верху для ОБЕИХ minipage
+    text_align = config.get('text_align', '[t]')  
+    vertical_adjust = config.get('vertical_adjust', '')  # Вертикальная коррекция
+    
+    latex_code = f"""
+% Горизонтальная компоновка с minipage - текст слева, изображение справа
+% ИСПРАВЛЕНО: оба блока выровнены по верху + вертикальная коррекция
+\\noindent
+\\begin{{minipage}}{text_align}{{{config['text_width']}}}
+{task_data['text']}
+\\end{{minipage}}
+{config['spacing']}
+\\begin{{minipage}}{config['image_align']}{{{config['image_width']}}}
+{vertical_adjust}
+\\centering
+\\includegraphics[width=\\textwidth]{{{image['filename']}}}"""
+    
+    if image['caption']:
+        latex_code += f"""
+\\\\[0.2cm]
+\\small\\textit{{{image['caption']}}}"""
+    
+    latex_code += """
+\\end{minipage}
+"""
+    
+    return latex_code
+
+def generate_vertical_minipage(task_data, image, config):
+    """Генерирует вертикальную компоновку с minipage"""
+    
+    latex_code = f"""
+% Вертикальная компоновка с minipage - текст сверху, изображение снизу
+\\noindent
+\\begin{{minipage}}{{{config['text_width']}}}
+{task_data['text']}
+\\end{{minipage}}
+
+{config['spacing']}
+
+"""
+    
+    # ИСПРАВЛЕНИЕ 2: Добавляем центрирование для изображений с center_image=True
+    if config.get('center_image', False):
+        latex_code += """
+% ИСПРАВЛЕНО: центрирование изображения по горизонтали
+\\begin{center}
+"""
+    
+    latex_code += f"""
+\\begin{{minipage}}{config['image_align']}{{{config['image_width']}}}
+\\centering
+\\includegraphics[width=\\textwidth]{{{image['filename']}}}"""
+    
+    if image['caption']:
+        latex_code += f"""
+\\\\[0.2cm]
+\\small\\textit{{{image['caption']}}}"""
+    
+    latex_code += """
+\\end{minipage}"""
+    
+    # Закрываем центрирование если оно было добавлено
+    if config.get('center_image', False):
+        latex_code += """
+\\end{center}"""
+    
+    return latex_code
+
+```
+
+// FILE: views.py
+```
+from django.shortcuts import render
+
+# Create your views here.
+
+```
+

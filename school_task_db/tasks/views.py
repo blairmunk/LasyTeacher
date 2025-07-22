@@ -11,7 +11,7 @@ from .forms import TaskForm
 from .models import Task, TaskImage
 from .utils import math_status_cache  # НОВЫЙ ИМПОРТ
 from curriculum.models import Topic, SubTopic
-from latex_generator.utils.formula_utils import formula_processor
+from document_generator.utils.formula_utils import formula_processor
 
 class TaskListView(ListView):
     model = Task

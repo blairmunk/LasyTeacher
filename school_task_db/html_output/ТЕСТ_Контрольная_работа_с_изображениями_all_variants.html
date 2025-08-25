@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ТЕСТ: Контрольная работа с изображениями</title>
+    
+    <!-- CSS стили -->
+    
+        <style>
+        /* Базовые стили для HTML документов */
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            line-height: 1.6;
+            margin: 40px;
+            background-color: #ffffff;
+        }
+        
+        .document-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+        }
+        
+        .document-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .variant-section {
+            margin-bottom: 40px;
+            page-break-after: always;
+        }
+        
+        .variant-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 10px;
+        }
+        
+        .task {
+            margin-bottom: 25px;
+            padding: 15px;
+            border-left: 3px solid #007bff;
+            background-color: #f8f9fa;
+        }
+        
+        .task-number {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #007bff;
+        }
+        
+        .task-text {
+            flex: 1;  /* ИСПРАВЛЕНО: Текст занимает оставшееся место */
+            min-width: 0; /* Позволяет тексту сжиматься */
+        }
+        
+        .task-answer {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            font-style: italic;
+        }
+        
+        /* Стили для изображений */
+        .task-with-image-horizontal {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        
+        .task-with-image-vertical {
+            margin: 15px 0;
+        }
+        
+        .task-image {
+            flex-shrink: 0; /* ИСПРАВЛЕНО: Изображение не сжимается */
+            text-align: center;
+        }
+        
+        .task-image img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .image-caption {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .image-right {
+            flex-shrink: 0;
+        }
+        
+        /* ИСПРАВЛЕНО: Классы ширины применяются к контейнеру изображения */
+        .task-image.image-40 { 
+            width: 40%; 
+            max-width: 40%;
+        }
+        
+        .task-image.image-20 { 
+            width: 20%; 
+            max-width: 20%;
+        }
+        
+        .task-image.image-70 { 
+            width: 70%; 
+            max-width: 70%;
+        }
+        
+        .task-image.image-100 { 
+            width: 100%; 
+            max-width: 100%;
+        }
+
+        /* Стили для вертикального отображения остаются */
+        .image-bottom {
+            display: block;
+            margin: 20px auto;
+        }
+
+        /* ДОБАВЛЕНО: Responsive поведение */
+        @media (max-width: 768px) {
+            .task-with-image-horizontal {
+                flex-direction: column;
+            }
+            
+            .task-image.image-40,
+            .task-image.image-20 {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+        }
+        
+        /* Стили для печати */
+        @media print {
+            body { margin: 20px; }
+            .variant-section { page-break-after: always; }
+            .task { break-inside: avoid; }
+        }
+        
+        /* Стили для формул MathJax */
+        .MathJax {
+            font-size: 1.1em !important;
+        }
+
+        /* ДОПОЛНИТЕЛЬНО: Улучшенные отступы и выравнивание */
+        .task-with-image-horizontal .task-text {
+            padding-right: 10px; /* Немного отступа от изображения */
+        }
+
+        .task-with-image-horizontal .task-image {
+            padding-left: 10px;  /* Немного отступа от текста */
+        }
+
+        /* Улучшенное вертикальное выравнивание */
+        .task-with-image-horizontal {
+            align-items: flex-start; /* Выравнивание по верху */
+        }
+
+        /* Если нужно выравнивание по центру */
+        .task-with-image-horizontal.align-center {
+            align-items: center;
+        }
+
+        </style>
+        
+    
+    <!-- MathJax для формул -->
+    
+        <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                packages: {'[+]': ['ams', 'newcommand', 'configMacros']}
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+        </script>
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+        
+</head>
+<body>
+    <!-- Заголовок документа -->
+    <div class="document-header">
+        <div class="document-title">ТЕСТ: Контрольная работа с изображениями</div>
+        <div class="document-info">
+            <p><strong>Всего вариантов:</strong> 8</p>
+            <p><strong>Дата генерации:</strong> 2025-08-25 15:23:56</p>
+            
+        </div>
+    </div>
+
+    <!-- Информация об ошибках формул -->
+    
+
+    <!-- Варианты работы -->
+    
+    <div class="variant-section">
+        <div class="variant-title">
+            Вариант 1
+        </div>
+
+        <!-- Задания варианта -->
+        
+    </div>
+    
+    <div class="variant-section">
+        <div class="variant-title">
+            Вариант 2
+        </div>
+
+        <!-- Задания варианта -->
+        
+    </div>
+    
+    <div class="variant-section">
+        <div class="variant-title">
+            Вариант 3
+        </div>
+
+        <!-- Задания варианта -->
+        
+    </div>
+    
+    <div class="variant-section">
+        <div class="variant-title">
+            Вариант 4
+        </div>
+
+        <!-- Задания варианта -->
+        
+    </div>
+    
+    <div class="variant-section">
+        <div class="variant-title">
+            Вариант 5
+        </div>
+
+        <!-- Задания варианта -->
+        
+        <div class="task">
+            <div class="task-number">
+                Задание 1
+            </div>
+
+            <!-- Содержимое задания с изображениями или без -->
+            <div class="task-content">
+                
+                    <!-- Задание с изображениями - используем HTML код из утилит -->
+                    
+    <div class="task-with-image-vertical">
+        <div class="task-text">
+            ТЕСТ: Исследуйте функцию формулы_3 и постройте её график.
+        </div>
+        <div class="task-image image-bottom">
+            <img src="data:image/png;base64,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" alt="ТЕСТ: Рисунок 3 - bottom_100" class="image-bottom image-100">
+            <div class="image-caption">ТЕСТ: Рисунок 3 - bottom_100</div>
+        </div>
+    </div>
+    
+                
+            </div>
+
+            <!-- Дополнительные поля -->
+            
+            <div class="task-hint" style="margin-top: 10px; padding: 8px; background-color: #e7f3ff; border-left: 3px solid #007bff;">
+                <strong>💡 Подсказка:</strong> ТЕСТ: Подсказка 3 - обратите внимание на изображение
+            </div>
+            
+
+            
+
+            <!-- Ответы (если включены) -->
+            
+
+            
+
+            
+
+            <!-- Отображение ошибок формул для конкретного задания -->
+            
+        </div>
+        
+        <div class="task">
+            <div class="task-number">
+                Задание 2
+            </div>
+
+            <!-- Содержимое задания с изображениями или без -->
+            <div class="task-content">
+                
+                    <!-- Задание с изображениями - используем HTML код из утилит -->
+                    
+    <div class="task-with-image-vertical">
+        <div class="task-text">
+            ТЕСТ: Проанализируйте график формулы_7 и найдите область определения.
+        </div>
+        <div class="task-image image-bottom">
+            <img src="data:image/png;base64,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" alt="ТЕСТ: Рисунок 7 - bottom_100" class="image-bottom image-100">
+            <div class="image-caption">ТЕСТ: Рисунок 7 - bottom_100</div>
+        </div>
+    </div>
+    
+                
+            </div>
+
+            <!-- Дополнительные поля -->
+            
+            <div class="task-hint" style="margin-top: 10px; padding: 8px; background-color: #e7f3ff; border-left: 3px solid #007bff;">
+                <strong>💡 Подсказка:</strong> ТЕСТ: Подсказка 7 - обратите внимание на изображение
+            </div>
+            
+
+            
+
+            <!-- Ответы (если включены) -->
+            
+
+            
+
+            
+
+            <!-- Отображение ошибок формул для конкретного задания -->
+            
+        </div>
+        
+        <div class="task">
+            <div class="task-number">
+                Задание 3
+            </div>
+
+            <!-- Содержимое задания с изображениями или без -->
+            <div class="task-content">
+                
+                    <!-- Задание с изображениями - используем HTML код из утилит -->
+                    
+    <div class="task-with-image-vertical">
+        <div class="task-text">
+            ТЕСТ: Исследуйте поведение формулы_12 в заданном интервале.
+        </div>
+        <div class="task-image image-bottom">
+            <img src="data:image/png;base64,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" alt="ТЕСТ: Рисунок 12 - bottom_70" class="image-bottom image-70">
+            <div class="image-caption">ТЕСТ: Рисунок 12 - bottom_70</div>
+        </div>
+    </div>
+    
+                
+            </div>
+
+            <!-- Дополнительные поля -->
+            
+            <div class="task-hint" style="margin-top: 10px; padding: 8px; background-color: #e7f3ff; border-left: 3px solid #007bff;">
+                <strong>💡 Подсказка:</strong> ТЕСТ: Подсказка 12 - обратите внимание на изображение
+            </div>
+            
+
+            
+
+            <!-- Ответы (если включены) -->
+            
+
+            
+
+            
+
+            <!-- Отображение ошибок формул для конкретного задания -->
+            
+        </div>
+        
+    </div>
+    
+    <div class="variant-section">
+        <div class="variant-title">
+            Вариант 6
+        </div>
+
+        <!-- Задания варианта -->
+        
+        <div class="task">
+            <div class="task-number">
+                Задание 1
+            </div>
+
+            <!-- Содержимое задания с изображениями или без -->
+            <div class="task-content">
+                
+                    <!-- Задание с изображениями - используем HTML код из утилит -->
+                    
+    <div class="task-with-image-vertical">
+        <div class="task-text">
+            ТЕСТ: Исследуйте функцию формулы_3 и постройте её график.
+        </div>
+        <div class="task-image image-bottom">
+            <img src="data:image/png;base64,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" alt="ТЕСТ: Рисунок 3 - bottom_100" class="image-bottom image-100">
+            <div class="image-caption">ТЕСТ: Рисунок 3 - bottom_100</div>
+        </div>
+    </div>
+    
+                
+            </div>
+
+            <!-- Дополнительные поля -->
+            
+            <div class="task-hint" style="margin-top: 10px; padding: 8px; background-color: #e7f3ff; border-left: 3px solid #007bff;">
+                <strong>💡 Подсказка:</strong> ТЕСТ: Подсказка 3 - обратите внимание на изображение
+            </div>
+            
+
+            
+
+            <!-- Ответы (если включены) -->
+            
+
+            
+
+            
+
+            <!-- Отображение ошибок формул для конкретного задания -->
+            
+        </div>
+        
+        <div class="task">
+            <div class="task-number">
+                Задание 2
+            </div>
+
+            <!-- Содержимое задания с изображениями или без -->
+            <div class="task-content">
+                
+                    <!-- Задание с изображениями - используем HTML код из утилит -->
+                    
+    <div class="task-with-image-vertical">
+        <div class="task-text">
+            ТЕСТ: Используя формулу формулы_8, решите практическую задачу.
+        </div>
+        <div class="task-image image-bottom">
+            <img src="data:image/png;base64,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" alt="ТЕСТ: Рисунок 8 - bottom_70" class="image-bottom image-70">
+            <div class="image-caption">ТЕСТ: Рисунок 8 - bottom_70</div>
+        </div>
+    </div>
+    
+                
+            </div>
+
+            <!-- Дополнительные поля -->
+            
+            <div class="task-hint" style="margin-top: 10px; padding: 8px; background-color: #e7f3ff; border-left: 3px solid #007bff;">
+                <strong>💡 Подсказка:</strong> ТЕСТ: Подсказка 8 - обратите внимание на изображение
+            </div>
+            
+
+            
+
+            <!-- Ответы (если включены) -->
+            
+
+            
+
+            
+
+            <!-- Отображение ошибок формул для конкретного задания -->
+            
+        </div>
+        
+        <div class="task">
+            <div class="task-number">
+                Задание 3
+            </div>
+
+            <!-- Содержимое задания с изображениями или без -->
+            <div class="task-content">
+                
+                    <!-- Задание с изображениями - используем HTML код из утилит -->
+                    
+    <div class="task-with-image-horizontal">
+        <div class="task-text">
+            ТЕСТ: Постройте модель формулы_10 согласно условиям задачи.
+        </div>
+        <div class="task-image image-right image-20">
+            <img src="data:image/png;base64,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" alt="ТЕСТ: Рисунок 10 - right_20">
+            <div class="image-caption">ТЕСТ: Рисунок 10 - right_20</div>
+        </div>
+    </div>
+    
+                
+            </div>
+
+            <!-- Дополнительные поля -->
+            
+            <div class="task-hint" style="margin-top: 10px; padding: 8px; background-color: #e7f3ff; border-left: 3px solid #007bff;">
+                <strong>💡 Подсказка:</strong> ТЕСТ: Подсказка 10 - обратите внимание на изображение
+            </div>
+            
+
+            
+
+            <!-- Ответы (если включены) -->
+            
+
+            
+
+            
+
+            <!-- Отображение ошибок формул для конкретного задания -->
+            
+        </div>
+        
+    </div>
+    
+    <div class="variant-section">
+        <div class="variant-title">
+            Вариант 7
+        </div>
+
+        <!-- Задания варианта -->
+        
+        <div class="task">
+            <div class="task-number">
+                Задание 1
+            </div>
+
+            <!-- Содержимое задания с изображениями или без -->
+            <div class="task-content">
+                
+                    <!-- Задание с изображениями - используем HTML код из утилит -->
+                    
+    <div class="task-with-image-horizontal">
+        <div class="task-text">
+            ТЕСТ: На рисунке изображена схема формулы_2. Найдите указанные элементы.
+        </div>
+        <div class="task-image image-right image-20">
+            <img src="data:image/png;base64,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" alt="ТЕСТ: Рисунок 2 - right_20">
+            <div class="image-caption">ТЕСТ: Рисунок 2 - right_20</div>
+        </div>
+    </div>
+    
+                
+            </div>
+
+            <!-- Дополнительные поля -->
+            
+            <div class="task-hint" style="margin-top: 10px; padding: 8px; background-color: #e7f3ff; border-left: 3px solid #007bff;">
+                <strong>💡 Подсказка:</strong> ТЕСТ: Подсказка 2 - обратите внимание на изображение
+            </div>
+            
+
+            
+
+            <!-- Ответы (если включены) -->
+            
+
+            
+
+            
+
+            <!-- Отображение ошибок формул для конкретного задания -->
+            
+        </div>
+        
+        <div class="task">
+            <div class="task-number">
+                Задание 2
+            </div>
+
+            <!-- Содержимое задания с изображениями или без -->
+            <div class="task-content">
+                
+                    <!-- Задание с изображениями - используем HTML код из утилит -->
+                    
+    <div class="task-with-image-horizontal">
+        <div class="task-text">
+            ТЕСТ: Постройте модель формулы_10 согласно условиям задачи.
+        </div>
+        <div class="task-image image-right image-20">
+            <img src="data:image/png;base64,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" alt="ТЕСТ: Рисунок 10 - right_20">
+            <div class="image-caption">ТЕСТ: Рисунок 10 - right_20</div>
+        </div>
+    </div>
+    
+                
+            </div>
+
+            <!-- Дополнительные поля -->
+            
+            <div class="task-hint" style="margin-top: 10px; padding: 8px; background-color: #e7f3ff; border-left: 3px solid #007bff;">
+                <strong>💡 Подсказка:</strong> ТЕСТ: Подсказка 10 - обратите внимание на изображение
+            </div>
+            
+
+            
+
+            <!-- Ответы (если включены) -->
+            
+
+            
+
+            
+
+            <!-- Отображение ошибок формул для конкретного задания -->
+            
+        </div>
+        
+        <div class="task">
+            <div class="task-number">
+                Задание 3
+            </div>
+
+            <!-- Содержимое задания с изображениями или без -->
+            <div class="task-content">
+                
+                    <!-- Задание с изображениями - используем HTML код из утилит -->
+                    
+    <div class="task-with-image-vertical">
+        <div class="task-text">
+            ТЕСТ: Исследуйте поведение формулы_12 в заданном интервале.
+        </div>
+        <div class="task-image image-bottom">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAaQAAAFACAAAAADW8ld9AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAACYktHRAD/h4/MvwAAAAd0SU1FB+kHFgseBgu6QbIAAAfuSURBVHja7dh9bFX1Hcfxz+0utFhYoUBEKoEZnwZugFPXDNTJYpRR13Vk40GGS7bwEExs3QJRsweyLca4ALongehsjGOSFhAwko6Z0UnAUYaDabs51rKwTWfQQulQWPnuj5b2tjja8c85n+X9+ut37z2/H79z3j09t2SahbTLS3oD6B+RDBDJAJEMEMkAkQwQyQCRDBDJQLZnOCHpvaCXlu4Rd5IBIhkgkgEiGSCSASIZIJIBIhkgkgEiGSCSASIZIJIBIhkgkgEiGSCSASIZIJIBIhkgkgEiGSCSASIZIJIBIhkgkgEiGSCSASIZIJIBIhkgkgEiGSCSASIZIJIBIhkgkgEiGSCSASIZIJIBIhkgkgEiGSCSASIZIJIBIhkgkgEiGSCSASIZIJIBIhkgkgEiGSCSASIZIJIBIhkgkgEiGSCSASIZIJIBIhkgkgEiGSCSASIZIJIBIhkgkgEiGSCSASIZIJIBIhkgkgEiGSCSASIZIJIBIhkgkgEiGSCSASIZIJIBIhkgkgEiGSCSASIZIJIBIhkgkgEiGSCSASIZIJIBIhkgkgEiGSCSASIZIJIBIhkgkgEiGSCSASIZIJIBIhkgkgEiGSCSASIZIJIBIhkgkgEiGSCSASIZIJIBIhkgkgEiGSCSASIZIJIBIhkgkgEiGSCSASIZIJIBIhkgkoGURRo14YIfL8g0Jb3DJKQs0gdZkTlycRPP1ld9onjIxOXH/rdp2xZOLB5y9fzfJX3ePQwibb5+/MVN/Outa9o/PeOfj065UOTWLYf7vFNdUzj9s/kbbngq6RPvlv5Ir71RcZEzB1e90bTpheaZR5df4KA/V2zr885jJ/ZtrT20Je4/nfSpn5OWSGfXfLRgXNVJSfpOZp0kqSlzuyRtUoWknTcXFlf8SZKiLPNTSXogs6SfNceuulLSsFXaJWlO5lFJ+n7m7v62UpKVpPLLj7+d9EU5Jy2Rlladunfu1pkdkhZl10qS1mmxJG2+apJUc8eB+cveKW2RlKkuuf+gVPfIx9YMbOki5Utaf8VDr0gvf/uqJwY2a8/fR1+W9EU5J5v0Bjr9et3k3YVaOb21SBpbXttwg/Re9aXlko4cWCG1Lx609zqp8jFJGrnhtjkNJ758ycaC7uk/PtCzVMnKPms/rbskffi5aXNf/fe87HPD+t/Nz+vfb/5NwZNp+QGWmrtFgu7R5oiIFzQ+InbqaxHxjB6IiFitvREbtDgi4t1haoyI+K4WztDPcqaX55zQpD5L7ykY81Z0rjS7TD/s+y/v0+rzdrNY0mV1SV6PiIieMimJ9HEdi4ho0/iIiGsLj0dMz2uOiLi55GzEcj0bERHTOiN1fEZaMMCVXx05dE/X8C6pIvej3KfT+N6z2l75XObhJC9I5EZKya+749liSRpaKElaUvns0tdfvnOCpLd3L81Ix3WpJGlM59F5Fb9S1cAW3nfnmR2lXePZ21SZ+9ktWUnHtt84UdKo3tOG3rSp9MGZk5O+LF1SEqnoyDvFkk62j5Kkex5cu3Rt59eG589WSCrSW5KkNzuPblpR/O5X9+b3TH885y/Py7+Xs259WXbnTV3jlsrhbYv2F/Z8uGiRpIbt8ys/aEcfuq2hnki9TD1Y/3lJ9Z2vhs97ctczY8skafOIWyVNVf18Sa0HJUnvzTm1te6Rr/+oZ/pLz/eMJ+VE2vGFwl9O6Rqfmdu69fffXPb0QLd0WIOSvird0vFMekmTT0a0X9/1bNivEn0rIuJE/sKIiJPF+Yci4j6pMSKW6KE4U6rafletGTzmte4X39B90TFD1X2OOe+LQ2vN6YjoWJfJHk7yiuQ+kzLN3bkmJPmzsmj9hNmZTWP/UNQiSfrkb/Naxkn6xbwt5ZJUM2fIvDH1hybubrxWNV/81K6sWqbqQD87brqu45aPSJLWD9KLs6bsHax/TGnff02vgxpuXF3Z642j40ZcU9L2+tHM4/cmeUGklp5hOu6k6Fh19eCSyraR4ztfPqGyiIj40iX/6nyjbtqQ4eVNd6sx/lI04khERK1KT194zT3dJ3kq/jZ66B8jIl7MTD7V66Dz7qRTP7hjXH7BlV9pSPR6RBrvpD6W/WT7LEnvj769NumtJKale5Sev6pzvVl9xUxJ2tl2sf+5+n8lJd/uetnYuLF9ZZ4kzYqk95IKaYz0VN3YhxckvYk0SWOkHUlvIG3S+UxCL0QyQCQDRDJAJANEMkAkA0QyQCQDRDJAJANEMkAkA0QyQCQDRDJAJANEMkAkA0QyQCQDRDJAJANEMkAkA0QyQCQDRDJAJANEMkAkA0QyQCQDRDJAJANEMkAkA0QyQCQDRDJAJANEMkAkA0QyQCQDRDJAJANEMkAkA0QyQCQDRDJAJANEMkAkA0QyQCQDRDJAJANEMkAkA0QyQCQDRDJAJANEMkAkA0QyQCQDRDJAJANEMkAkA0QyQCQDRDJAJANEMkAkA0QyQCQDRDJAJANEMkAkA0QyQCQDRDJAJANEMkAkA0QyQCQDRDJAJANEMkAkA0QyQCQDRDJAJANEMkAkA0QyQCQDRDJAJANEMkAkA0QyQCQDRDJAJANEMkAkA0QyQCQDRDJAJANEMkAkA0QyQCQDRDJAJANEMkAkA0QyQCQDRDJAJANEMkAkA0QyQCQDRDJAJANEMpDtGbYkvRf8F9xJBohkgEgGiGSASAaIZIBIBohkgEgG/gOhJtZ1bGs30gAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyNS0wNy0yMlQxMTozMDowNiswMDowMOQcxBUAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjUtMDctMjJUMTE6MzA6MDYrMDA6MDCVQXypAAAAKHRFWHRkYXRlOnRpbWVzdGFtcAAyMDI1LTA3LTIyVDExOjMwOjA2KzAwOjAwwlRddgAAAABJRU5ErkJggg==" alt="ТЕСТ: Рисунок 12 - bottom_70" class="image-bottom image-70">
+            <div class="image-caption">ТЕСТ: Рисунок 12 - bottom_70</div>
+        </div>
+    </div>
+    
+                
+            </div>
+
+            <!-- Дополнительные поля -->
+            
+            <div class="task-hint" style="margin-top: 10px; padding: 8px; background-color: #e7f3ff; border-left: 3px solid #007bff;">
+                <strong>💡 Подсказка:</strong> ТЕСТ: Подсказка 12 - обратите внимание на изображение
+            </div>
+            
+
+            
+
+            <!-- Ответы (если включены) -->
+            
+
+            
+
+            
+
+            <!-- Отображение ошибок формул для конкретного задания -->
+            
+        </div>
+        
+    </div>
+    
+    <div class="variant-section">
+        <div class="variant-title">
+            Вариант 8
+        </div>
+
+        <!-- Задания варианта -->
+        
+        <div class="task">
+            <div class="task-number">
+                Задание 1
+            </div>
+
+            <!-- Содержимое задания с изображениями или без -->
+            <div class="task-content">
+                
+                    <!-- Задание с изображениями - используем HTML код из утилит -->
+                    
+    <div class="task-with-image-horizontal">
+        <div class="task-text">
+            ТЕСТ: Решите квадратное уравнение формулы_1. Постройте график функции.
+        </div>
+        <div class="task-image image-right image-40">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAaQAAAFACAAAAADW8ld9AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAACYktHRAD/h4/MvwAAAAd0SU1FB+kHFgseBZKzEAgAAAbcSURBVHja7dZ7iFZlAsfx35tTXmtyxS6QYmXZZpbYZbrRjQgswqaNrgsbu23mspSkRnYBu41/RFgaYrVtRXeltki70KpYLIZUBraVZs3I7h/GdNFMu0z59ofj67yTNm9Dcd4vfD9/Pe855znn4fl6nFNqjerdbkUvQD0zEoCRAIwEYCQAIwEYCcBIAEYCaNgxHFH0WlSlrTLyTQIwEoCRAIwEYCQAIwEYCcBIAEYCMBKAkQCMBGAkACMBGAnASABGAjASgJEAjARgJAAjARgJwEgARgIwEoCRAIwEYCQAIwEYCcBIAEYCMBKAkQCMBGAkACMBGAnASABGAjASgJEAjARgJAAjARgJwEgARgIwEoCRAIwEYCQAIwEYCcBIAEYCMBKAkQCMBGAkACMBGAnASABGAjASgJEAjARgJAAjARgJwEgARgIwEoCRAIwEYCQAIwEYCcBIAEYCMBKAkQCMBGAkACMBGAnASABGAjASgJEAjARgJAAjARgJwEgARgIwEoCRAIwEYCQAIwEYCcBIAEYCMBKAkQCMBGAkACMBGAnASABGAjASgJEAjARgJAAjARgJwEgARgIwEoCRAIwEYCQAIwEYCcBIAEYCMBKAkQCMBGAkACMBGAnASABGAjASgJEAjARgJIA6i/TpZcP6j5pd9CrqTZ1F2jJm4epLr1nQw1Xl/0w9Zkj/w6a0/7Kbr5kxYVip9FVN1z5x/KDG0xYVvR2dSq2V4Yii19Lp6z1nTqs68MWyow6sOrB+/xwyumNF+36vj9z1bTYtHn1I9ZF5k/qMWvvdpkE1rOGmO/Zp7nh2w9xJBe5DW2VUZ29Sktww9M/VB1Y3d/snvfvVH6z518LWCeun/Mxt1jU/0+3Imcs3/XdwTUt4q2XYqnkPvjn42v8VvRlJ6iPSeaU5SXJz6YokmfHQoiE9TBhyz6gkA+/OsiR/Kt2WJHeVLujpOSOP71/jiu4r37hPcvDV3zxc9N4kqY9I/xw+bWWyuOXw2ckPf3tg2bga5zWmb5K5o255LVkxfcQ/fr0VLcn4JBmfJUXvTZKkoegFJPndk6de9PaWP/adPyCbL1z1+MC1jUNrmvdwzk0ycH7TZe80XJyn9u7Fo5c92uXHndv/L/y+td/wJDk0a4remyT1ESkn3jZ9Yvv6B0YnK1/M6clfanop3rpp6K1JcuSsSZf3bb2zqTdPfv/BLj9mbI/05dbGJEljNhS9NUnq5euuPP6VXPLETk5c/PSO8cFrq069d/pXL52ybXjhgpy9sLTj1BVdtn7f9VWz9vukhq+7z4dsm7W1z8DaPth/E22VUV28SSk1v5LJOztxar8k7S82HZZk36oz75y1ZVFno/xhQa7p0ignfZ9kw/PjxiRp7MVy9ixtTJJs7NXs32B76uJN+nDc7htHr+i3i7NvnDDn792PLT9766KTO8f/H9vx9fC39+p2xbtjZl7/03t1e5OWPtLlx6zK9/nIj9YNT7Ki6bSlxW1KW2VUF2/Stxdtfvm1OybPq33G4gl7/PvYzvEPl362oG3alU/15smru0a6vRLpjI9evjLJSzmj6K1JUh+f4Jm68rqzbjnpvvk1T1h4zoCl2xtlxusTL5gy/un7e/Pkq8pdHFA5PLHU0p60zu53edFbk6Q+3qTn7m26PX2eHPvXYw6qbcLH53ccOitJMndAlrQcMSulR8ZOPvGIHqZ9OjXZmKsact3hPVx59PSWMc0dz2yYO6zovdmmtaJckHWDGz8ul8vl53Lstzu9YHnmVB9YWVn9F+VP9u//brlcLi/Z7febqy5alZnd7lP58/tqz4t67LgBg055oagt2bbcivr4cNBOtFVGdfE3ST/PSABGAjASgJEAjARgJAAjARgJwEgARgIwEoCRAIwEYCQAIwEYCcBIAEYCMBKAkQCMBGAkACMBGAnASABGAjASgJEAjARgJAAjARgJwEgARgIwEoCRAIwEYCQAIwEYCcBIAEYCMBKAkQCMBGAkACMBGAnASABGAjASgJEAjARgJAAjARgJwEgARgIwEoCRAIwEYCQAIwEYCcBIAEYCMBKAkQCMBGAkACMBGAnASABGAjASgJEAjARgJAAjARgJwEgARgIwEoCRAIwEYCQAIwEYCcBIAEYCMBKAkQCMBGAkACMBGAnASABGAjASgJEAjARgJAAjARgJwEgARgIwEoCRAIwEYCQAIwEYCcBIAEYCMBKAkQCMBGAkACMBGAnASABGAjASgJEAjARgJAAjARgJwEgARgIwEoCRAIwEYCQAIwEYCcBIAEYCMBKAkQCMBNCwY9hW9Fq0C75JAEYCMBKAkQCMBGAkACMBGAnASAA/AohXcc9bu1klAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDI1LTA3LTIyVDExOjMwOjA1KzAwOjAw1fTeiAAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyNS0wNy0yMlQxMTozMDowNSswMDowMKSpZjQAAAAodEVYdGRhdGU6dGltZXN0YW1wADIwMjUtMDctMjJUMTE6MzA6MDUrMDA6MDDzvEfrAAAAAElFTkSuQmCC" alt="ТЕСТ: Рисунок 1 - right_40">
+            <div class="image-caption">ТЕСТ: Рисунок 1 - right_40</div>
+        </div>
+    </div>
+    
+                
+            </div>
+
+            <!-- Дополнительные поля -->
+            
+            <div class="task-hint" style="margin-top: 10px; padding: 8px; background-color: #e7f3ff; border-left: 3px solid #007bff;">
+                <strong>💡 Подсказка:</strong> ТЕСТ: Подсказка 1 - обратите внимание на изображение
+            </div>
+            
+
+            
+
+            <!-- Ответы (если включены) -->
+            
+
+            
+
+            
+
+            <!-- Отображение ошибок формул для конкретного задания -->
+            
+        </div>
+        
+        <div class="task">
+            <div class="task-number">
+                Задание 2
+            </div>
+
+            <!-- Содержимое задания с изображениями или без -->
+            <div class="task-content">
+                
+                    <!-- Задание с изображениями - используем HTML код из утилит -->
+                    
+    <div class="task-with-image-horizontal">
+        <div class="task-text">
+            ТЕСТ: На рисунке изображена схема формулы_2. Найдите указанные элементы.
+        </div>
+        <div class="task-image image-right image-20">
+            <img src="data:image/png;base64,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" alt="ТЕСТ: Рисунок 2 - right_20">
+            <div class="image-caption">ТЕСТ: Рисунок 2 - right_20</div>
+        </div>
+    </div>
+    
+                
+            </div>
+
+            <!-- Дополнительные поля -->
+            
+            <div class="task-hint" style="margin-top: 10px; padding: 8px; background-color: #e7f3ff; border-left: 3px solid #007bff;">
+                <strong>💡 Подсказка:</strong> ТЕСТ: Подсказка 2 - обратите внимание на изображение
+            </div>
+            
+
+            
+
+            <!-- Ответы (если включены) -->
+            
+
+            
+
+            
+
+            <!-- Отображение ошибок формул для конкретного задания -->
+            
+        </div>
+        
+        <div class="task">
+            <div class="task-number">
+                Задание 3
+            </div>
+
+            <!-- Содержимое задания с изображениями или без -->
+            <div class="task-content">
+                
+                    <!-- Задание с изображениями - используем HTML код из утилит -->
+                    
+    <div class="task-with-image-vertical">
+        <div class="task-text">
+            ТЕСТ: Проанализируйте график формулы_7 и найдите область определения.
+        </div>
+        <div class="task-image image-bottom">
+            <img src="data:image/png;base64,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" alt="ТЕСТ: Рисунок 7 - bottom_100" class="image-bottom image-100">
+            <div class="image-caption">ТЕСТ: Рисунок 7 - bottom_100</div>
+        </div>
+    </div>
+    
+                
+            </div>
+
+            <!-- Дополнительные поля -->
+            
+            <div class="task-hint" style="margin-top: 10px; padding: 8px; background-color: #e7f3ff; border-left: 3px solid #007bff;">
+                <strong>💡 Подсказка:</strong> ТЕСТ: Подсказка 7 - обратите внимание на изображение
+            </div>
+            
+
+            
+
+            <!-- Ответы (если включены) -->
+            
+
+            
+
+            
+
+            <!-- Отображение ошибок формул для конкретного задания -->
+            
+        </div>
+        
+    </div>
+    
+
+    <!-- Футер документа -->
+    <div class="document-footer" style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ccc; text-align: center; color: #666; font-size: 12px;">
+        <p>Документ сгенерирован HTML Generator • 2025-08-25 15:23:56</p>
+        <p>Формулы отображаются с помощью <a href="https://www.mathjax.org/" target="_blank">MathJax</a></p>
+    </div>
+
+    <!-- Скрипт для финализации MathJax -->
+    <script>
+    // Дожидаемся полной загрузки MathJax
+    window.addEventListener('load', function() {
+        console.log('📊 HTML документ загружен');
+        console.log('🔢 Найдено вариантов: 8');
+        console.log('📝 Всего заданий: 0 + 0 + 0 + 0 + 3 + 3 + 3 + 3');
+        
+        
+        
+        // Уведомляем о готовности MathJax
+        if (window.MathJax) {
+            MathJax.startup.promise.then(() => {
+                console.log('✅ MathJax готов к отображению формул');
+            });
+        }
+    });
+    </script>
+</body>
+</html>

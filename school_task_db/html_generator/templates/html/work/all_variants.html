@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ work_name }}</title>
+    
+    <!-- CSS стили -->
+    {{ css_styles|safe }}
+    
+    <!-- MathJax для формул -->
+    {{ js_scripts|safe }}
+</head>
+<body>
+    <!-- Заголовок документа -->
+    <div class="document-header">
+        <div class="document-title">{{ work_name }}</div>
+        <div class="document-info">
+            <p><strong>Всего вариантов:</strong> {{ total_variants }}</p>
+            <p><strong>Дата генерации:</strong> {{ timestamp }}</p>
+            {% if with_answers %}
+            <p><strong>Версия:</strong> с ответами</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Информация об ошибках формул -->
+    {% if has_formula_errors or has_formula_warnings %}
+    <div class="formula-issues">
+        {% if has_formula_errors %}
+        <div class="formula-errors" style="background-color: #f8d7da; color: #721c24; padding: 10px; margin: 10px 0; border-radius: 5px;">
+            <strong>⚠️ Ошибки в формулах:</strong>
+            <ul>
+            {% for error in formula_errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if has_formula_warnings %}
+        <div class="formula-warnings" style="background-color: #fff3cd; color: #856404; padding: 10px; margin: 10px 0; border-radius: 5px;">
+            <strong>⚠️ Предупреждения:</strong>
+            <ul>
+            {% for warning in formula_warnings %}
+                <li>{{ warning }}</li>
+            {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Варианты работы -->
+    {% for variant_data in variants %}
+    <div class="variant-section">
+        <div class="variant-title">
+            Вариант {{ variant_data.variant.number }}
+        </div>
+
+        <!-- Задания варианта -->
+        {% for task_data in variant_data.tasks %}
+        <div class="task">
+            <div class="task-number">
+                Задание {{ task_data.number }}
+            </div>
+
+            <!-- Содержимое задания с изображениями или без -->
+            <div class="task-content">
+                {% if task_data.images %}
+                    <!-- Задание с изображениями - используем HTML код из утилит -->
+                    {{ task_data.html_content|safe }}
+                {% else %}
+                    <!-- Обычное задание без изображений -->
+                    <div class="task-text">{{ task_data.text|safe }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Дополнительные поля -->
+            {% if task_data.hint %}
+            <div class="task-hint" style="margin-top: 10px; padding: 8px; background-color: #e7f3ff; border-left: 3px solid #007bff;">
+                <strong>💡 Подсказка:</strong> {{ task_data.hint|safe }}
+            </div>
+            {% endif %}
+
+            {% if task_data.instruction %}
+            <div class="task-instruction" style="margin-top: 10px; padding: 8px; background-color: #f0f8ff; border-left: 3px solid #17a2b8;">
+                <strong>📋 Инструкция:</strong> {{ task_data.instruction|safe }}
+            </div>
+            {% endif %}
+
+            <!-- Ответы (если включены) -->
+            {% if with_answers and task_data.answer %}
+            <div class="task-answer">
+                <strong>Ответ:</strong> {{ task_data.answer|safe }}
+            </div>
+            {% endif %}
+
+            {% if with_answers and task_data.short_solution %}
+            <div class="task-solution" style="margin-top: 10px; padding: 10px; background-color: #d1ecf1; border-radius: 5px;">
+                <strong>🔍 Краткое решение:</strong> {{ task_data.short_solution|safe }}
+            </div>
+            {% endif %}
+
+            {% if with_answers and task_data.full_solution %}
+            <div class="task-full-solution" style="margin-top: 10px; padding: 10px; background-color: #d4edda; border-radius: 5px;">
+                <strong>📝 Полное решение:</strong> {{ task_data.full_solution|safe }}
+            </div>
+            {% endif %}
+
+            <!-- Отображение ошибок формул для конкретного задания -->
+            {% if task_data.has_formula_errors %}
+            <div class="task-formula-errors" style="margin-top: 10px; padding: 8px; background-color: #f8d7da; color: #721c24; border-radius: 3px; font-size: 12px;">
+                <strong>⚠️ Ошибки формул в задании:</strong>
+                {% for error in task_data.formula_errors %}
+                    <span class="error-item">{{ error }}</span>{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+
+    <!-- Футер документа -->
+    <div class="document-footer" style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ccc; text-align: center; color: #666; font-size: 12px;">
+        <p>Документ сгенерирован HTML Generator • {{ timestamp }}</p>
+        <p>Формулы отображаются с помощью <a href="https://www.mathjax.org/" target="_blank">MathJax</a></p>
+    </div>
+
+    <!-- Скрипт для финализации MathJax -->
+    <script>
+    // Дожидаемся полной загрузки MathJax
+    window.addEventListener('load', function() {
+        console.log('📊 HTML документ загружен');
+        console.log('🔢 Найдено вариантов: {{ total_variants }}');
+        console.log('📝 Всего заданий: {% for variant in variants %}{{ variant.total_tasks }}{% if not forloop.last %} + {% endif %}{% endfor %}');
+        
+        {% if has_formula_errors %}
+        console.warn('⚠️ Документ содержит {{ formula_errors|length }} ошибок в формулах');
+        {% endif %}
+        
+        // Уведомляем о готовности MathJax
+        if (window.MathJax) {
+            MathJax.startup.promise.then(() => {
+                console.log('✅ MathJax готов к отображению формул');
+            });
+        }
+    });
+    </script>
+</body>
+</html>

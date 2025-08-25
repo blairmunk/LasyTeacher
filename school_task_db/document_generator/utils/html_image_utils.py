@@ -69,16 +69,18 @@ def render_task_with_images_html(task_data, images):
         return generate_vertical_html(task_data, first_image)
 
 def generate_side_by_side_html(task_data, image):
-    """Генерирует HTML код для бок-о-бок компоновки"""
-    width_class = f"image-{image['position'].split('_')[1]}"  # right_40 -> image-40
+    """ИСПРАВЛЕНО: Генерирует HTML код для бок-о-бок компоновки"""
+    # Извлекаем процент ширины для изображения
+    width_percent = image['position'].split('_')[1]  # right_40 -> "40"
+    image_width_class = f"image-{width_percent}"     # -> "image-40"
     
     return f"""
     <div class="task-with-image-horizontal">
-        <div class="task-text {width_class}">
+        <div class="task-text">
             {task_data['text']}
         </div>
-        <div class="task-image image-right">
-            <img src="{image['data_uri']}" alt="{image['caption']}" class="{image['html_class']}">
+        <div class="task-image image-right {image_width_class}">
+            <img src="{image['data_uri']}" alt="{image['caption']}">
             {f'<div class="image-caption">{image["caption"]}</div>' if image['caption'] else ''}
         </div>
     </div>

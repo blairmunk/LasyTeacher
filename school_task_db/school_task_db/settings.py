@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'review',
     'document_generator',
     'latex_generator',
+    'html_generator',      # НОВОЕ: HTML генератор
 ]
 
 

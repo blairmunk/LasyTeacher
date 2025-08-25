@@ -18,6 +18,593 @@ latex_generator/
 │   ├── base.py
 │   ├── registry.py
 │   └── work_generator.py
+├── latex_generator.txt
+├── management
+│   └── commands
+│       ├── generate_latex.py
+│       └── list_generators.py
+├── migrations
+│   └── __init__.py
+├── models.py
+├── templates
+│   ├── admin
+│   │   └── latex_generator
+│   │       └── generate.html
+│   └── latex
+│       ├── base
+│       │   └── document_base.tex
+│       └── work
+│           ├── all_variants.tex
+│           └── work_all_variants.tex
+├── templatetags
+│   └── math_tags.py
+├── tests
+│   ├── __init__.py
+│   └── test_basic.py
+├── tests.py
+├── urls.py
+├── utils
+│   ├── __init__.py
+│   ├── compilation.py
+│   ├── latex_image_utils.py
+│   ├── latex_specific.py
+│   └── latex_utils.py
+└── views.py
+```
+
+---
+
+// FILE: __init__.py
+```
+
+```
+
+// FILE: admin.py
+```
+from django.contrib import admin
+from django.http import HttpResponseRedirect
+from django.urls import path
+from django.shortcuts import render
+from django.contrib import messages
+from .generators.registry import registry
+from works.models import Work
+
+class LaTeXGeneratorAdmin:
+    """Админка для управления LaTeX генераторами"""
+    
+    def __init__(self, admin_site):
+        self.admin_site = admin_site
+    
+    def get_urls(self):
+        urls = [
+            path('latex-generator/', self.admin_site.admin_view(self.generate_view), name='latex_generator_generate'),
+        ]
+        return urls
+    
+    def generate_view(self, request):
+        """Представление для генерации документов"""
+        if request.method == 'POST':
+            doc_type = request.POST.get('type')
+            object_id = request.POST.get('object_id')
+            output_format = request.POST.get('format', 'pdf')
+            with_answers = request.POST.get('with_answers') == 'on'
+            
+            try:
+                generator_class = registry.get_generator(doc_type)
+                
+                if doc_type == 'work':
+                    work = Work.objects.get(pk=object_id)
+                    generator = generator_class(output_dir='latex_output')
+                    
+                    if with_answers:
+                        files = generator.generate_with_answers(work, output_format)
+                    else:
+                        files = generator.generate(work, output_format)
+                    
+                    messages.success(request, f'Документ создан: {", ".join(files)}')
+                
+            except Exception as e:
+                messages.error(request, f'Ошибка генерации: {e}')
+            
+            return HttpResponseRedirect(request.path)
+        
+        # GET запрос - показываем форму
+        context = {
+            'title': 'Генерация LaTeX документов',
+            'available_generators': registry.get_available_types(),
+            'works': Work.objects.all()[:10],  # Показываем первые 10 работ
+        }
+        
+        return render(request, 'admin/latex_generator/generate.html', context)
+
+# ВРЕМЕННО УБИРАЕМ РЕГИСТРАЦИЮ АДМИНКИ
+# admin.site.register(LaTeXGeneratorProxy, LaTeXGeneratorAdmin)
+
+```
+
+// FILE: apps.py
+```
+from django.apps import AppConfig
+
+class LatexGeneratorConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'latex_generator'
+    verbose_name = 'LaTeX Generator'
+    
+    def ready(self):
+        """Инициализация при запуске приложения"""
+        pass
+
+```
+
+// FILE: generators/__init__.py
+```
+"""Экспорт генераторов"""
+
+from .base import BaseLatexGenerator
+from .work_generator import WorkLatexGenerator
+from .registry import registry
+
+__all__ = [
+    'BaseLatexGenerator',
+    'WorkLatexGenerator',
+    'registry',
+]
+
+```
+
+// FILE: generators/base.py
+```
+"""Базовый генератор LaTeX документов"""
+
+from abc import ABC, abstractmethod
+from typing import Dict, Any, List, Optional
+from pathlib import Path
+from django.template.loader import render_to_string
+from latex_generator.utils import sanitize_filename, compile_latex_to_pdf
+
+class BaseLatexGenerator(ABC):
+    """Абстрактный базовый класс для генераторов LaTeX"""
+    
+    def __init__(self, output_dir: Path):
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+    
+    @abstractmethod
+    def get_template_name(self) -> str:
+        """Возвращает имя шаблона для генерации"""
+        pass
+    
+    @abstractmethod
+    def prepare_context(self, source_object: Any) -> Dict[str, Any]:
+        """Подготавливает контекст для рендеринга шаблона"""
+        pass
+    
+    @abstractmethod
+    def get_output_filename(self, source_object: Any) -> str:
+        """Возвращает имя файла для сохранения"""
+        pass
+    
+    def generate(self, source_object: Any, output_format: str = 'pdf') -> List[str]:
+        """
+        Генерирует LaTeX документ
+        
+        Args:
+            source_object: Объект для генерации (Work, Report, etc.)
+            output_format: 'latex' или 'pdf'
+            
+        Returns:
+            Список путей к созданным файлам
+        """
+        # Подготавливаем контекст
+        context = self.prepare_context(source_object)
+        
+        # Рендерим шаблон
+        template_name = self.get_template_name()
+        latex_content = render_to_string(template_name, context)
+        
+        # Сохраняем LaTeX файл
+        filename = self.get_output_filename(source_object)
+        latex_filename = sanitize_filename(filename)
+        latex_file = self.output_dir / latex_filename
+        
+        with open(latex_file, 'w', encoding='utf-8') as f:
+            f.write(latex_content)
+        
+        files = [str(latex_file)]
+        
+        # Компилируем в PDF если нужно
+        if output_format == 'pdf':
+            pdf_file = compile_latex_to_pdf(latex_file, self.output_dir)
+            if pdf_file:
+                files.append(str(pdf_file))
+        
+        return files
+
+```
+
+// FILE: generators/registry.py
+```
+"""Реестр генераторов LaTeX"""
+
+from typing import Dict, Type
+from .base import BaseLatexGenerator
+from .work_generator import WorkLatexGenerator
+
+class GeneratorRegistry:
+    """Реестр всех доступных генераторов"""
+    
+    _generators: Dict[str, Type[BaseLatexGenerator]] = {
+        'work': WorkLatexGenerator,
+        # В будущем добавим:
+        # 'report': ReportLatexGenerator,
+        # 'certificate': CertificateLatexGenerator,
+    }
+    
+    @classmethod
+    def get_generator(cls, generator_type: str) -> Type[BaseLatexGenerator]:
+        """Получить класс генератора по типу"""
+        if generator_type not in cls._generators:
+            available = ', '.join(cls._generators.keys())
+            raise ValueError(f"Неизвестный тип генератора: {generator_type}. Доступные: {available}")
+        
+        return cls._generators[generator_type]
+    
+    @classmethod
+    def get_available_types(cls) -> list:
+        """Получить список доступных типов генераторов"""
+        return list(cls._generators.keys())
+    
+    @classmethod
+    def register_generator(cls, generator_type: str, generator_class: Type[BaseLatexGenerator]):
+        """Зарегистрировать новый генератор"""
+        cls._generators[generator_type] = generator_class
+
+# Экземпляр для использования
+registry = GeneratorRegistry()
+
+```
+
+// FILE: generators/work_generator.py
+```
+"""Генератор LaTeX для работ с полной обработкой ошибок"""
+
+from typing import Dict, Any
+from pathlib import Path
+
+from document_generator.utils.formula_utils import formula_processor
+from document_generator.utils.file_utils import sanitize_filename
+from latex_generator.utils import sanitize_latex
+from latex_generator.utils.latex_image_utils import prepare_images_for_latex, render_task_with_images
+from latex_generator.utils.latex_specific import latex_formula_processor
+from latex_generator.utils.compilation import latex_compiler, LaTeXCompilationError
+
+from .base import BaseLatexGenerator
+import logging
+
+logger = logging.getLogger(__name__)
+
+class WorkLatexGenerator(BaseLatexGenerator):
+    """Генератор LaTeX документов для работ с математическими формулами"""
+    
+    def get_template_name(self) -> str:
+        return 'latex/work/all_variants.tex'
+    
+    def get_output_filename(self, work) -> str:
+        return f"{work.name}_all_variants.tex"
+    
+    def prepare_context(self, work) -> Dict[str, Any]:
+        """Подготавливает контекст для работы с обработкой формул"""
+        
+        variants = work.variant_set.all().order_by('number')
+        
+        # Подготавливаем данные для каждого варианта
+        all_variants_data = []
+        document_errors = []
+        document_warnings = []
+        
+        for variant in variants:
+            variant_data = self._prepare_variant_context(variant)
+            all_variants_data.append(variant_data)
+            
+            # Собираем ошибки и предупреждения
+            document_errors.extend(variant_data.get('errors', []))
+            document_warnings.extend(variant_data.get('warnings', []))
+        
+        # Обрабатываем название работы
+        work_name_processed = latex_formula_processor.render_for_latex_safe(work.name)
+        document_errors.extend(work_name_processed['errors'])
+        document_warnings.extend(work_name_processed['warnings'])
+        
+        return {
+            'work': work,
+            'work_name': work_name_processed['content'],
+            'variants': all_variants_data,
+            'total_variants': len(all_variants_data),
+            'with_answers': getattr(self, '_with_answers', False),
+            
+            # Информация об ошибках формул
+            'has_formula_errors': len(document_errors) > 0,
+            'has_formula_warnings': len(document_warnings) > 0,
+            'formula_errors': document_errors,
+            'formula_warnings': document_warnings,
+        }
+    
+    def _prepare_variant_context(self, variant):
+        """Подготавливает контекст для одного варианта с обработкой формул"""
+        print(f"🔍 DEBUG: Обрабатываем вариант {variant.number}")
+        
+        tasks = variant.tasks.all().order_by('id')
+        
+        prepared_tasks = []
+        variant_errors = []
+        variant_warnings = []
+        
+        for i, task in enumerate(tasks, 1):
+            print(f"🔍 DEBUG: Обрабатываем задание {task.id} (номер {i})")
+            
+            # Обрабатываем текст задания
+            try:
+                text_processed = latex_formula_processor.render_for_latex_safe(task.text)
+                answer_processed = latex_formula_processor.render_for_latex_safe(task.answer or '')
+            except Exception as e:
+                print(f"❌ ОШИБКА в обработке формул задания {task.id}: {e}")
+                # Fallback - используем исходный текст
+                text_processed = {'content': task.text, 'errors': [str(e)], 'warnings': []}
+                answer_processed = {'content': task.answer or '', 'errors': [], 'warnings': []}
+            
+            # Собираем ошибки и предупреждения
+            task_errors = []
+            task_warnings = []
+            
+            task_errors.extend(text_processed['errors'])
+            task_errors.extend(answer_processed['errors'])
+            task_warnings.extend(text_processed['warnings'])
+            task_warnings.extend(answer_processed['warnings'])
+            
+            # Обрабатываем дополнительные поля если есть
+            additional_fields = {}
+            for field_name in ['short_solution', 'full_solution', 'hint', 'instruction']:
+                field_value = getattr(task, field_name, None)
+                if field_value:
+                    try:
+                        processed = latex_formula_processor.render_for_latex_safe(field_value)
+                        additional_fields[field_name] = processed['content']
+                        task_errors.extend(processed['errors'])
+                        task_warnings.extend(processed['warnings'])
+                    except Exception as e:
+                        print(f"❌ ОШИБКА в обработке поля {field_name}: {e}")
+                        additional_fields[field_name] = field_value  # Fallback
+                else:
+                    additional_fields[field_name] = ''
+            
+            # ОТЛАДКА: Проверяем есть ли изображения у задания
+            try:
+                images_count = task.images.count()
+                print(f"🔍 Задание {task.id}: найдено {images_count} изображений")
+                
+                if images_count > 0:
+                    for img in task.images.all():
+                        print(f"🔍   Изображение {img.id}: файл={img.image.name}, позиция={img.position}")
+                
+                # Подготавливаем изображения
+                task_images = prepare_images_for_latex(task, self.output_dir)
+                print(f"🔍 После prepare_images_for_latex: {len(task_images)} изображений")
+                
+                # ОТЛАДКА: Проверяем структуру данных изображений
+                for idx, img in enumerate(task_images):
+                    print(f"🔍 Изображение {idx}: ключи = {list(img.keys())}")
+                    if 'minipage_config' in img:
+                        print(f"🔍   minipage_config есть, layout = {img['minipage_config']['layout']}")
+                    else:
+                        print("❌   minipage_config ОТСУТСТВУЕТ!")
+                        
+            except Exception as e:
+                print(f"❌ КРИТИЧЕСКАЯ ОШИБКА при обработке изображений задания {task.id}: {e}")
+                print(f"❌ Тип ошибки: {type(e).__name__}")
+                import traceback
+                print(f"❌ Traceback: {traceback.format_exc()}")
+                task_images = []  # Fallback - без изображений
+            
+            # Базовые данные задания с обработанными формулами
+            task_data = {
+                'number': i,
+                'task': task,
+                'text': text_processed['content'],
+                'answer': answer_processed['content'],
+                'images': task_images,
+                
+                # Информация об ошибках формул
+                'has_formula_errors': len(task_errors) > 0,
+                'has_formula_warnings': len(task_warnings) > 0,
+                'formula_errors': task_errors,
+                'formula_warnings': task_warnings,
+            }
+            
+            # Добавляем дополнительные поля
+            task_data.update(additional_fields)
+            
+            # Генерируем итоговый LaTeX код с учетом изображений
+            try:
+                if task_images:
+                    print(f"🔍 Вызываем render_task_with_images с {len(task_images)} изображениями")
+                    latex_content = render_task_with_images(
+                        {'text': task_data['text']}, 
+                        task_images
+                    )
+                    print(f"🔍 render_task_with_images вернул: {len(latex_content)} символов")
+                    print(f"🔍 Первые 100 символов: {latex_content[:100]}...")
+                    task_data['latex_content'] = latex_content
+                else:
+                    print("🔍 Нет изображений, используем обычный текст")
+                    task_data['latex_content'] = task_data['text']
+            except Exception as e:
+                print(f"❌ ОШИБКА в render_task_with_images: {e}")
+                task_data['latex_content'] = task_data['text']  # Fallback
+            
+            prepared_tasks.append(task_data)
+            variant_errors.extend(task_errors)
+            variant_warnings.extend(task_warnings)
+        
+        return {
+            'variant': variant,
+            'tasks': prepared_tasks,
+            'total_tasks': len(prepared_tasks),
+            'errors': variant_errors,
+            'warnings': variant_warnings,
+        }
+    
+    def generate(self, work, output_format='pdf'):
+        """Генерация с полной обработкой ошибок"""
+        try:
+            # Вызываем базовую генерацию LaTeX файла
+            files = super().generate(work, output_format)
+            
+            # Проверяем наличие ошибок формул в контексте
+            context = self.prepare_context(work)
+            
+            if context.get('has_formula_errors'):
+                logger.warning(f"Работа {work.name} содержит ошибки в формулах: {context['formula_errors']}")
+            
+            if context.get('has_formula_warnings'):
+                logger.info(f"Работа {work.name} содержит предупреждения в формулах: {context['formula_warnings']}")
+            
+            # Если запросили PDF, пытаемся скомпилировать
+            if output_format == 'pdf' and files:
+                latex_file_path = Path(files[0])
+                
+                compilation_result = latex_compiler.compile_latex_safe(
+                    latex_file_path, 
+                    self.output_dir
+                )
+                
+                if compilation_result['success']:
+                    # Проверяем что PDF не дублируется
+                    pdf_path = compilation_result['pdf_path']
+                    if pdf_path not in files:
+                        files.append(pdf_path)
+                    
+                    if compilation_result.get('has_warnings'):
+                        logger.info(f"LaTeX компиляция с предупреждениями для {work.name}")
+                
+                else:
+                    # Неудачная компиляция - логируем детали
+                    error_msg = compilation_result.get('message', 'Неизвестная ошибка')
+                    logger.error(f"LaTeX компиляция неудачна для работы {work.name}: {error_msg}")
+                    
+                    # Генерируем детальный отчет об ошибке
+                    error_report = self._generate_error_report(work, compilation_result)
+                    
+                    # Сохраняем отчет об ошибках
+                    error_file = self.output_dir / f"{work.name}_latex_errors.txt"
+                    error_file.write_text(error_report, encoding='utf-8')
+                    
+                    # Проверяем что файл отчета не дублируется
+                    error_file_str = str(error_file)
+                    if error_file_str not in files:
+                        files.append(error_file_str)
+                    
+                    # Возвращаем информацию об ошибке в контексте исключения
+                    raise LaTeXCompilationError(
+                        error_msg, 
+                        error_details=compilation_result,
+                        latex_log=compilation_result.get('latex_log')
+                    )
+            
+            return files
+            
+        except LaTeXCompilationError:
+            # Пробрасываем LaTeX ошибки как есть
+            raise
+        except Exception as e:
+            logger.error(f"Ошибка генерации LaTeX для работы {work.name}: {e}")
+            raise
+    
+    def _generate_error_report(self, work, compilation_result: Dict) -> str:
+        """Генерирует детальный отчет об ошибках компиляции"""
+        report_lines = [
+            f"ОТЧЕТ ОБ ОШИБКАХ LATEX КОМПИЛЯЦИИ",
+            f"======================================",
+            f"",
+            f"Работа: {work.name}",
+            f"Дата: {getattr(work, 'created_at', 'Неизвестно')}",
+            f"Тип ошибки: {compilation_result.get('error_type', 'unknown')}",
+            f"",
+            f"ОСНОВНАЯ ОШИБКА:",
+            f"{compilation_result.get('message', 'Описание недоступно')}",
+            f"",
+        ]
+        
+        # Добавляем детали ошибок
+        errors = compilation_result.get('errors', [])
+        if errors:
+            report_lines.extend([
+                "ДЕТАЛИ ОШИБОК:",
+                "==============="
+            ])
+            
+            for i, error in enumerate(errors, 1):
+                report_lines.extend([
+                    f"{i}. {error.get('message', 'Неизвестная ошибка')}",
+                    f"   Строка: {error.get('line_number', 'Неизвестно')}",
+                ])
+                
+                # Добавляем контекст если есть
+                context = error.get('context', [])
+                if context:
+                    report_lines.extend([
+                        "   Контекст:"
+                    ] + [f"   {line}" for line in context])
+                
+                report_lines.append("")
+        
+        # Добавляем предложения
+        suggestions = compilation_result.get('suggestions', [])
+        if suggestions:
+            report_lines.extend([
+                "ПРЕДЛОЖЕНИЯ ПО ИСПРАВЛЕНИЮ:",
+                "============================"
+            ])
+            
+            for i, suggestion in enumerate(suggestions, 1):
+                report_lines.append(f"{i}. {suggestion}")
+            
+            report_lines.append("")
+        
+        return "\n".join(report_lines)
+    
+    def generate_with_answers(self, work, output_format='pdf'):
+        """Генерирует работу с ответами"""
+        self._with_answers = True
+        try:
+            return self.generate(work, output_format)
+        finally:
+            self._with_answers = False
+
+```
+
+// FILE: latex_generator.txt
+```
+You are an expert software architect. The user is providing you with the complete source code for a project, contained in a single file. Your task is to meticulously analyze the provided codebase to gain a comprehensive understanding of its structure, functionality, dependencies, and overall architecture.
+
+A file tree is provided below to give you a high-level overview. The subsequent sections contain the full content of each file, clearly marked with "// FILE: <path>".
+
+Your instructions are:
+1.  **Analyze Thoroughly:** Read through every file to understand its purpose and how it interacts with other files.
+2.  **Identify Key Components:** Pay close attention to configuration files (like package.json, pyproject.toml), entry points (like index.js, main.py), and core logic.
+
+## Project File Tree
+
+```
+latex_generator/
+├── __init__.py
+├── admin.py
+├── apps.py
+├── generators
+│   ├── __init__.py
+│   ├── base.py
+│   ├── registry.py
+│   └── work_generator.py
 ├── management
 │   └── commands
 │       ├── generate_latex.py
@@ -1750,6 +2337,1512 @@ def sanitize_latex(text):
     result = result.replace('\n', '\\\\ ')
     
     return result
+
+def sanitize_filename(filename):
+    """Очищает имя файла от недопустимых символов"""
+    # Убираем недопустимые символы
+    clean = re.sub(r'[<>:"/\\|?*]', '_', filename)
+    # Убираем лишние пробелы
+    clean = re.sub(r'\s+', '_', clean)
+    return clean
+
+```
+
+// FILE: views.py
+```
+from django.shortcuts import render
+from django.views.generic import TemplateView
+
+class GenerateView(TemplateView):
+    """Представление для генерации документов"""
+    template_name = 'latex_generator/generate.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Генерация LaTeX документов'
+        return context
+
+class StatusView(TemplateView):
+    """Представление статуса генерации"""
+    template_name = 'latex_generator/status.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Статус генерации'
+        return context
+
+```
+
+
+```
+
+// FILE: management/commands/generate_latex.py
+```
+"""Универсальная команда для генерации LaTeX документов"""
+
+from pathlib import Path
+from django.core.management.base import BaseCommand, CommandError
+from django.apps import apps
+
+from latex_generator.generators.registry import registry
+
+class Command(BaseCommand):
+    help = 'Универсальная генерация LaTeX документов'
+    
+    def add_arguments(self, parser):
+        parser.add_argument(
+            'type', 
+            choices=registry.get_available_types(),
+            help='Тип документа для генерации'
+        )
+        parser.add_argument('object_id', type=int, help='ID объекта для генерации')
+        parser.add_argument(
+            '--format',
+            choices=['latex', 'pdf'],
+            default='pdf',
+            help='Формат вывода: latex или pdf'
+        )
+        parser.add_argument(
+            '--output-dir',
+            default='latex_output',
+            help='Папка для сохранения файлов'
+        )
+        parser.add_argument(
+            '--with-answers',
+            action='store_true',
+            help='Включить ответы (для работ)'
+        )
+    
+    def handle(self, *args, **options):
+        doc_type = options['type']
+        object_id = options['object_id']
+        output_format = options['format']
+        output_dir = Path(options['output_dir'])
+        with_answers = options['with_answers']
+        
+        # Получаем класс генератора
+        generator_class = registry.get_generator(doc_type)
+        
+        # Получаем объект для генерации
+        try:
+            model_class = self._get_model_class(doc_type)
+            obj = model_class.objects.get(pk=object_id)
+        except model_class.DoesNotExist:
+            raise CommandError(f'{doc_type.title()} с ID {object_id} не найден')
+        
+        # Создаем генератор
+        generator = generator_class(output_dir)
+        
+        # Выводим информацию
+        self.stdout.write(f'🚀 Генерация {doc_type} для: {obj}')
+        if doc_type == 'work':
+            # ИСПРАВЛЕНО: variants -> variant_set
+            variants_count = obj.variant_set.count()
+            if variants_count == 0:
+                raise CommandError('У работы нет вариантов. Сначала сгенерируйте варианты.')
+            self.stdout.write(f'📋 Найдено вариантов: {variants_count}')
+        
+        # Генерируем документ
+        try:
+            if doc_type == 'work' and with_answers:
+                files = generator.generate_with_answers(obj, output_format)
+            else:
+                files = generator.generate(obj, output_format)
+            
+            self.stdout.write(
+                self.style.SUCCESS(f'🎉 Готово! Создано файлов: {len(files)}')
+            )
+            
+            for file_path in files:
+                self.stdout.write(f'  📄 {file_path}')
+                
+        except Exception as e:
+            raise CommandError(f'Ошибка при генерации: {e}')
+    
+    def _get_model_class(self, doc_type):
+        """Получить класс модели по типу документа"""
+        model_mapping = {
+            'work': 'works.Work',
+            # В будущем добавим:
+            # 'report': 'reports.Report',
+        }
+        
+        if doc_type not in model_mapping:
+            raise CommandError(f'Неизвестный тип документа: {doc_type}')
+        
+        app_label, model_name = model_mapping[doc_type].split('.')
+        return apps.get_model(app_label, model_name)
+
+```
+
+// FILE: management/commands/list_generators.py
+```
+"""Команда для просмотра доступных генераторов"""
+
+from django.core.management.base import BaseCommand
+from latex_generator.generators.registry import registry
+
+class Command(BaseCommand):
+    help = 'Показать список доступных генераторов LaTeX'
+    
+    def handle(self, *args, **options):
+        self.stdout.write('📋 Доступные генераторы LaTeX:')
+        
+        for generator_type in registry.get_available_types():
+            generator_class = registry.get_generator(generator_type)
+            self.stdout.write(f'  • {generator_type}: {generator_class.__name__}')
+        
+        self.stdout.write('\n💡 Использование:')
+        self.stdout.write('  python manage.py generate_latex <тип> <id> [опции]')
+        self.stdout.write('\n🔧 Примеры:')
+        self.stdout.write('  python manage.py generate_latex work 1 --format pdf')
+        self.stdout.write('  python manage.py generate_latex work 1 --with-answers')
+
+```
+
+// FILE: migrations/__init__.py
+```
+
+```
+
+// FILE: models.py
+```
+from django.db import models
+
+# Create your models here.
+
+```
+
+// FILE: templates/admin/latex_generator/generate.html
+```
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Генерация LaTeX документов{% endblock %}
+
+{% block content_title %}
+    <h1>Генерация LaTeX документов</h1>
+{% endblock %}
+
+{% block content %}
+<div class="module filtered">
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-row">
+            <div class="field-box">
+                <label for="type">Тип документа:</label>
+                <select name="type" id="type" required>
+                    {% for generator_type in available_generators %}
+                        <option value="{{ generator_type }}">{{ generator_type|capfirst }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="field-box">
+                <label for="object_id">Объект:</label>
+                <select name="object_id" id="object_id" required>
+                    {% for work in works %}
+                        <option value="{{ work.id }}">{{ work.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="field-box">
+                <label for="format">Формат:</label>
+                <select name="format" id="format">
+                    <option value="pdf">PDF</option>
+                    <option value="latex">LaTeX</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="field-box">
+                <label for="with_answers">
+                    <input type="checkbox" name="with_answers" id="with_answers">
+                    Включить ответы
+                </label>
+            </div>
+        </div>
+        
+        <div class="submit-row">
+            <input type="submit" value="Генерировать" class="default">
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+```
+
+// FILE: templates/latex/base/document_base.tex
+```
+{% comment %}
+Базовый шаблон для LaTeX документов
+{% endcomment %}
+
+\documentclass[12pt,a4paper]{article}
+
+% Пакеты для русского языка
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian]{babel}
+
+% Пакеты для форматирования
+\usepackage[margin=2cm]{geometry}
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+
+% Настройка заголовков
+\titleformat{\section}{\large\bfseries}{\thesection.}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection.}{1em}{}
+
+% Настройка колонтитулов
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{ {% block header_left %}{% endblock %} }
+\fancyhead[R]{ {% block header_right %}\thepage{% endblock %} }
+\fancyfoot[C]{ {% block footer_center %}{% endblock %} }
+
+% Настройка отступов
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+\begin{document}
+
+{% block content %}
+{% endblock %}
+
+\end{document}
+
+```
+
+// FILE: templates/latex/work/all_variants.tex
+```
+\documentclass[12pt,a4paper]{article}
+
+% Пакеты для русского языка
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian]{babel}
+
+% Пакеты для форматирования
+\usepackage[margin=2cm]{geometry}
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+
+% Настройка заголовков
+\titleformat{\section}{\large\bfseries}{\thesection.}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection.}{1em}{}
+
+% Настройка колонтитулов
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{ {{work_name}} }
+\fancyhead[R]{\thepage}
+\fancyfoot[C]{Всего вариантов: {{ total_variants }}}
+
+% Настройка отступов
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+\begin{document}
+
+% Титульный лист
+\begin{center}
+    {\LARGE\bfseries {{ work_name }} }\\[0.8cm]
+    {% if work.duration %}
+    {\large Время выполнения: {{ work.duration }} минут}\\[0.4cm]
+    {% endif %}
+    {\large Количество вариантов: {{ total_variants }}}\\[0.3cm]
+    {\normalsize \today}
+\end{center}
+
+\vspace{1cm}
+
+% Общая инструкция
+{\small\textit{%
+Внимательно прочитайте задания и дайте развернутые ответы. \\
+Показывайте ход решения. Каждый вариант начинается с новой страницы.
+}}
+
+\newpage
+
+% Перебираем все варианты
+{% for variant_data in variants %}
+
+% Заголовок варианта
+\begin{center}
+    {\Large\bfseries Вариант {{ variant_data.variant.number }} }
+\end{center}
+
+\vspace{0.8cm}
+
+% Задания варианта
+{% for task_data in variant_data.tasks %}
+\section*{Задание {{ task_data.number }}}
+
+% Используем предварительно сгенерированный LaTeX код с minipage
+{{ task_data.latex_content|safe }}
+
+\vspace{1ex}
+
+{% endfor %}
+
+% Новая страница для следующего варианта (кроме последнего)
+{% if not forloop.last %}
+\newpage
+{% endif %}
+
+{% endfor %}
+
+{% if with_answers %}
+\newpage
+% Лист ответов
+\section*{\centering ОТВЕТЫ}
+
+{% for variant_data in variants %}
+\subsection*{Вариант {{ variant_data.variant.number }}}
+
+\begin{enumerate}
+{% for task_data in variant_data.tasks %}
+\item {{ task_data.answer|safe }}
+{% endfor %}
+\end{enumerate}
+
+{% if not forloop.last %}\vspace{0.5cm}{% endif %}
+
+{% endfor %}
+{% endif %}
+
+\end{document}
+
+```
+
+// FILE: templates/latex/work/work_all_variants.tex
+```
+\documentclass[12pt,a4paper]{article}
+
+% Пакеты для русского языка
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian]{babel}
+
+% Пакеты для форматирования
+\usepackage[margin=2cm]{geometry}
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+
+% Настройка заголовков
+\titleformat{\section}{\large\bfseries}{\thesection.}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection.}{1em}{}
+
+% Настройка колонтитулов
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{ {{ work_name }} }
+\fancyhead[R]{\thepage}
+\fancyfoot[C]{Всего вариантов: {{ total_variants }}}
+
+% Настройка отступов
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+\begin{document}
+
+% Титульный лист
+\begin{center}
+    {\LARGE\bfseries {{ work_name }} }\\[0.8cm]
+    {% if work.duration %}
+    {\large Время выполнения: {{ work.duration }} минут}\\[0.4cm]
+    {% endif %}
+    {\large Количество вариантов: {{ total_variants }}}\\[0.3cm]
+    {\normalsize \today}
+\end{center}
+
+\vspace{1cm}
+
+% Общая инструкция
+{\small\textit{%
+Внимательно прочитайте задания и дайте развернутые ответы. \\
+Показывайте ход решения. Каждый вариант начинается с новой страницы.
+}}
+
+\newpage
+
+% Перебираем все варианты
+{% for variant_data in variants %}
+
+% Заголовок варианта
+\begin{center}
+    {\Large\bfseries Вариант {{ variant_data.variant.number }} }
+\end{center}
+
+\vspace{0.8cm}
+
+% Задания варианта
+{% for task_data in variant_data.tasks %}
+\section*{Задание {{ task_data.number }}}
+
+{{ task_data.text }}
+
+{% for image in task_data.images %}
+    {% if image.latex_position.placement == 'figure' %}
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width={{ image.latex_position.width }}]{ {{ image.filename }} }
+        {% if image.caption %}
+        \caption{ {{ image.caption }} }
+        {% endif %}
+    \end{figure}
+    {% elif image.latex_position.placement == 'wrapfigure' %}
+    \begin{wrapfigure}{ {{ image.latex_position.align }} }{ {{ image.latex_position.width }} }
+        \centering
+        \includegraphics[width={{ image.latex_position.width }}]{ {{ image.filename }} }
+        {% if image.caption %}
+        \caption{ {{ image.caption }} }
+        {% endif %}
+    \end{wrapfigure}
+    {% endif %}
+{% endfor %}
+
+\vspace{1cm}
+
+{% endfor %}
+
+% Новая страница для следующего варианта (кроме последнего)
+{% if not forloop.last %}
+\newpage
+{% endif %}
+
+{% endfor %}
+
+{% if with_answers %}
+\newpage
+% Лист ответов
+\section*{\centering ОТВЕТЫ}
+
+{% for variant_data in variants %}
+\subsection*{Вариант {{ variant_data.variant.number }}}
+
+\begin{enumerate}
+{% for task_data in variant_data.tasks %}
+\item {{ task_data.answer }}
+{% endfor %}
+\end{enumerate}
+
+{% if not forloop.last %}\vspace{0.5cm}{% endif %}
+
+{% endfor %}
+{% endif %}
+
+\end{document}
+
+```
+
+// FILE: templatetags/math_tags.py
+```
+"""Template tags для рендеринга математических формул с обработкой ошибок"""
+
+from django import template
+from django.utils.safestring import mark_safe
+from django.utils.html import escape
+from document_generator.utils.formula_utils import formula_processor
+
+register = template.Library()
+
+@register.filter
+def render_math(text):
+    """Фильтр для рендеринга математических формул в веб-интерфейсе"""
+    if not text:
+        return ''
+    
+    # Для веб-рендеринга просто возвращаем текст как есть
+    # MathJax обработает $ и $$ автоматически
+    return mark_safe(text)
+
+@register.filter  
+def has_math(text):
+    """Проверяет есть ли в тексте формулы"""
+    return formula_processor.has_math(text)
+
+@register.filter
+def has_math_formulas(text):
+    """Проверяет содержит ли текст математические формулы"""
+    if not text:
+        return False
+    return formula_processor.has_math(text)
+
+@register.filter  
+def count_formulas(text):
+    """Подсчитывает количество формул в тексте"""
+    if not text:
+        return 0
+    return formula_processor.count_formulas(text)
+
+@register.filter
+def math_count(text):
+    """Возвращает количество формул в тексте"""
+    return formula_processor.count_formulas(text)
+
+@register.filter
+def math_errors(text):
+    """НОВОЕ: Возвращает ошибки в формулах"""
+    if not text:
+        return []
+    
+    processed = formula_processor.process_text_safe(text)
+    return processed.get('errors', [])
+
+@register.filter
+def math_warnings(text):
+    """НОВОЕ: Возвращает предупреждения в формулах"""
+    if not text:
+        return []
+    
+    processed = formula_processor.process_text_safe(text)
+    return processed.get('warnings', [])
+
+@register.filter
+def has_math_errors(text):
+    """НОВОЕ: Проверяет есть ли ошибки в формулах"""
+    if not text:
+        return False
+    
+    processed = formula_processor.process_text_safe(text)
+    return processed.get('has_errors', False)
+
+@register.filter
+def has_math_warnings(text):
+    """НОВОЕ: Проверяет есть ли предупреждения в формулах"""
+    if not text:
+        return False
+    
+    processed = formula_processor.process_text_safe(text)
+    return processed.get('has_warnings', False)
+
+@register.simple_tag
+def math_indicator(text):
+    """Показывает индикатор наличия формул с индикацией ошибок"""
+    if not formula_processor.has_math(text):
+        return ''
+    
+    count = formula_processor.count_formulas(text)
+    processed = formula_processor.process_text_safe(text)
+    
+    # Определяем стиль бейджа в зависимости от наличия ошибок
+    if processed.get('has_errors', False):
+        badge_class = 'bg-danger'
+        icon = '⚠️'
+        title = f"Формул: {count}. Есть ошибки!"
+    elif processed.get('has_warnings', False):
+        badge_class = 'bg-warning text-dark'
+        icon = '⚡'
+        title = f"Формул: {count}. Есть предупреждения"
+    else:
+        badge_class = 'bg-success'
+        icon = '📐'
+        title = f"Формул: {count}. Все корректно"
+    
+    return mark_safe(
+        f'<span class="badge {badge_class} formula-badge" title="{title}">'
+        f'{icon} {count}</span>'
+    )
+
+@register.inclusion_tag('math/formula_errors.html')
+def show_formula_errors(text, show_warnings=True):
+    """НОВОЕ: Показывает подробную информацию об ошибках формул"""
+    if not text:
+        return {'errors': [], 'warnings': [], 'formulas': []}
+    
+    processed = formula_processor.process_text_safe(text)
+    
+    return {
+        'errors': processed.get('errors', []),
+        'warnings': processed.get('warnings', []) if show_warnings else [],
+        'formulas': processed.get('formulas', []),
+        'has_errors': processed.get('has_errors', False),
+        'has_warnings': processed.get('has_warnings', False),
+    }
+
+@register.inclusion_tag('math/formula_preview.html')
+def formula_preview(text, max_formulas=3):
+    """Показывает превью формул из текста с индикацией статуса"""
+    if not text:
+        return {'formulas': [], 'has_issues': False}
+    
+    processed = formula_processor.process_text_safe(text)
+    all_formulas = processed.get('formulas', [])
+    
+    return {
+        'formulas': all_formulas[:max_formulas],
+        'total_count': len(all_formulas),
+        'has_more': len(all_formulas) > max_formulas,
+        'has_errors': processed.get('has_errors', False),
+        'has_warnings': processed.get('has_warnings', False),
+    }
+
+@register.simple_tag
+def math_status_alert(text, alert_id=None):
+    """НОВОЕ: Генерирует alert с информацией о статусе формул"""
+    if not formula_processor.has_math(text):
+        return ''
+    
+    processed = formula_processor.process_text_safe(text)
+    
+    if not processed.get('has_errors') and not processed.get('has_warnings'):
+        return ''  # Все хорошо, не показываем alert
+    
+    alert_id = alert_id or 'math-alert'
+    errors = processed.get('errors', [])
+    warnings = processed.get('warnings', [])
+    
+    if errors:
+        alert_class = 'alert-danger'
+        icon = '🚨'
+        title = 'Ошибки в формулах'
+        items = errors
+    elif warnings:
+        alert_class = 'alert-warning'
+        icon = '⚠️'
+        title = 'Предупреждения в формулах'
+        items = warnings
+    else:
+        return ''
+    
+    items_html = ''.join([f'<li>{escape(item)}</li>' for item in items])
+    
+    return mark_safe(f'''
+    <div class="alert {alert_class} alert-dismissible fade show" role="alert" id="{alert_id}">
+        <h6>{icon} {title}</h6>
+        <ul class="mb-0">
+            {items_html}
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+    </div>
+    ''')
+
+```
+
+// FILE: tests/__init__.py
+```
+
+```
+
+// FILE: tests/test_basic.py
+```
+"""Базовые тесты для проверки утилит"""
+
+from django.test import TestCase
+from latex_generator.utils import sanitize_latex, sanitize_filename
+
+class BasicUtilsTest(TestCase):
+    """Базовые тесты утилит"""
+    
+    def test_sanitize_latex_basic(self):
+        """Тест базового экранирования"""
+        result = sanitize_latex("Простой текст")
+        self.assertEqual(result, "Простой текст")
+        
+        result = sanitize_latex("Цена $5 & скидка 10%")
+        self.assertEqual(result, "Цена \\$5 \\& скидка 10\\%")
+    
+    def test_sanitize_filename_basic(self):
+        """Тест очистки имен файлов"""
+        result = sanitize_filename("test_file.tex")
+        self.assertEqual(result, "test_file.tex")
+        
+        result = sanitize_filename("file<>*.tex")
+        self.assertEqual(result, "file___.tex")
+
+```
+
+// FILE: tests.py
+```
+from django.test import TestCase
+
+# Create your tests here.
+
+```
+
+// FILE: urls.py
+```
+from django.urls import path
+from . import views
+
+app_name = 'latex_generator'
+
+urlpatterns = [
+    # Временно убираем URL'ы
+    # path('generate/', views.GenerateView.as_view(), name='generate'),
+    # path('status/', views.StatusView.as_view(), name='status'),
+]
+
+```
+
+// FILE: utils/__init__.py
+```
+"""Экспорт основных утилит с новыми импортами"""
+
+from document_generator.utils.file_utils import sanitize_filename
+from document_generator.utils.image_utils import prepare_images
+from .latex_image_utils import prepare_images_for_latex, render_task_with_images
+from .latex_utils import sanitize_latex  # Остается в latex_generator
+from .compilation import compile_latex_to_pdf, latex_compiler
+
+__all__ = [
+    'sanitize_latex',
+    'sanitize_filename', 
+    'prepare_images_for_latex',
+    'render_task_with_images',
+    'compile_latex_to_pdf',
+    'latex_compiler',
+]
+
+```
+
+// FILE: utils/compilation.py
+```
+"""Безопасная компиляция LaTeX с обработкой ошибок"""
+
+import subprocess
+import tempfile
+import shutil
+import os
+import re
+import logging
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+from django.conf import settings
+
+logger = logging.getLogger(__name__)
+
+class LaTeXCompilationError(Exception):
+    """Ошибка компиляции LaTeX"""
+    def __init__(self, message, error_details=None, latex_log=None):
+        super().__init__(message)
+        self.error_details = error_details or []
+        self.latex_log = latex_log
+
+class LaTeXCompiler:
+    """Безопасный компилятор LaTeX с детальной обработкой ошибок"""
+    
+    def __init__(self):
+        self.latex_command = self._detect_latex_command()
+        self.timeout = getattr(settings, 'LATEX_COMPILATION_TIMEOUT', 300)  # 5 минут
+        self.max_file_size = getattr(settings, 'LATEX_MAX_FILE_SIZE', 50 * 1024 * 1024)  # 50MB
+    
+    def _detect_latex_command(self) -> Optional[str]:
+        """Определяет доступную команду LaTeX"""
+        commands_to_try = ['pdflatex', 'xelatex', 'lualatex']
+        
+        for cmd in commands_to_try:
+            try:
+                result = subprocess.run(
+                    [cmd, '--version'], 
+                    capture_output=True, 
+                    timeout=10,
+                    check=False
+                )
+                if result.returncode == 0:
+                    logger.info(f"Найдена LaTeX команда: {cmd}")
+                    return cmd
+            except (subprocess.TimeoutExpired, FileNotFoundError):
+                continue
+        
+        logger.warning("LaTeX команды не найдены в системе")
+        return None
+    
+    def is_available(self) -> bool:
+        """Проверяет доступность LaTeX"""
+        return self.latex_command is not None
+    
+    def _safe_decode_bytes(self, byte_content: bytes) -> str:
+        """НОВОЕ: Безопасное декодирование байтов в строку"""
+        if not byte_content:
+            return ""
+        
+        encodings_to_try = ['utf-8', 'latin1', 'cp1251', 'cp866', 'iso-8859-1']
+        
+        for encoding in encodings_to_try:
+            try:
+                return byte_content.decode(encoding)
+            except UnicodeDecodeError:
+                continue
+        
+        # Если все кодировки не сработали, декодируем с игнорированием ошибок
+        return byte_content.decode('utf-8', errors='ignore')
+    
+    def _safe_read_log(self, log_file_path: Path) -> str:
+        """Безопасное чтение лог файла с разными кодировками"""
+        if not log_file_path.exists():
+            return ""
+        
+        # Пробуем разные кодировки
+        encodings_to_try = ['utf-8', 'latin1', 'cp1251', 'cp866', 'iso-8859-1']
+        
+        for encoding in encodings_to_try:
+            try:
+                with open(log_file_path, 'r', encoding=encoding, errors='ignore') as f:
+                    content = f.read()
+                logger.debug(f"Успешно прочитан лог с кодировкой: {encoding}")
+                return content
+            except Exception as e:
+                logger.debug(f"Не удалось прочитать лог с кодировкой {encoding}: {e}")
+                continue
+        
+        # Если все кодировки не сработали, читаем как binary и декодируем с игнорированием ошибок
+        try:
+            with open(log_file_path, 'rb') as f:
+                content = f.read().decode('utf-8', errors='ignore')
+            logger.warning("Лог прочитан в режиме binary с игнорированием ошибок")
+            return content
+        except Exception as e:
+            logger.error(f"Не удалось прочитать лог файл: {e}")
+            return f"Ошибка чтения лог файла: {e}"
+    
+    def parse_latex_log(self, log_content: str) -> Dict[str, any]:
+        """Парсит лог LaTeX и извлекает ошибки"""
+        errors = []
+        warnings = []
+        
+        if not log_content:
+            return {
+                'errors': [],
+                'warnings': [],
+                'has_errors': False,
+                'has_warnings': False,
+                'total_issues': 0
+            }
+        
+        # Регулярные выражения для поиска ошибок и предупреждений
+        error_patterns = [
+            r'! (.+)',  # Основные ошибки LaTeX
+            r'.*Error: (.+)',  # Ошибки с префиксом Error
+            r'.*Fatal error (.+)',  # Критические ошибки
+        ]
+        
+        warning_patterns = [
+            r'Warning: (.+)',  # Предупреждения
+            r'LaTeX Warning: (.+)',  # LaTeX предупреждения
+            r'Package .+ Warning: (.+)',  # Предупреждения пакетов
+        ]
+        
+        lines = log_content.split('\n')
+        
+        for i, line in enumerate(lines):
+            line = line.strip()
+            
+            # Ищем ошибки
+            for pattern in error_patterns:
+                try:
+                    match = re.search(pattern, line)
+                    if match:
+                        error_context = self._get_error_context(lines, i)
+                        errors.append({
+                            'message': match.group(1).strip(),
+                            'line_number': i + 1,
+                            'context': error_context,
+                            'severity': 'error'
+                        })
+                except Exception as e:
+                    logger.debug(f"Ошибка при парсинге строки {i}: {e}")
+            
+            # Ищем предупреждения
+            for pattern in warning_patterns:
+                try:
+                    match = re.search(pattern, line)
+                    if match:
+                        warnings.append({
+                            'message': match.group(1).strip(),
+                            'line_number': i + 1,
+                            'severity': 'warning'
+                        })
+                except Exception as e:
+                    logger.debug(f"Ошибка при парсинге предупреждения строки {i}: {e}")
+        
+        return {
+            'errors': errors,
+            'warnings': warnings,
+            'has_errors': len(errors) > 0,
+            'has_warnings': len(warnings) > 0,
+            'total_issues': len(errors) + len(warnings)
+        }
+    
+    def _get_error_context(self, lines: List[str], error_line: int, context_size: int = 2) -> List[str]:
+        """Получает контекст вокруг строки с ошибкой"""
+        start = max(0, error_line - context_size)
+        end = min(len(lines), error_line + context_size + 1)
+        
+        context = []
+        for i in range(start, end):
+            prefix = '>>> ' if i == error_line else '    '
+            context.append(f"{prefix}{lines[i].strip()}")
+        
+        return context
+    
+    def compile_latex_safe(self, latex_file: Path, output_dir: Path, 
+                          max_attempts: int = 3) -> Dict[str, any]:
+        """Безопасная компиляция LaTeX с детальной обработкой ошибок"""
+        
+        if not self.is_available():
+            return {
+                'success': False,
+                'error_type': 'system_error',
+                'message': 'LaTeX не установлен в системе',
+                'pdf_path': None,
+                'suggestions': [
+                    'Установите LaTeX: sudo apt-get install texlive-full (Ubuntu)',
+                    'Или используйте HTML генератор для создания документов'
+                ]
+            }
+        
+        # Проверяем размер файла
+        try:
+            if latex_file.stat().st_size > self.max_file_size:
+                return {
+                    'success': False,
+                    'error_type': 'file_too_large',
+                    'message': f'Файл слишком большой: {latex_file.stat().st_size / 1024 / 1024:.1f}MB',
+                    'pdf_path': None
+                }
+        except Exception as e:
+            logger.error(f"Ошибка проверки размера файла: {e}")
+        
+        # Создаем временную папку для компиляции
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_dir_path = Path(temp_dir)
+            
+            try:
+                # Копируем LaTeX файл во временную папку
+                temp_latex_file = temp_dir_path / latex_file.name
+                shutil.copy2(latex_file, temp_latex_file)
+                
+                # Копируем все изображения
+                try:
+                    for image_file in output_dir.glob('*.png'):
+                        shutil.copy2(image_file, temp_dir_path)
+                    for image_file in output_dir.glob('*.jpg'):
+                        shutil.copy2(image_file, temp_dir_path)
+                    for image_file in output_dir.glob('*.jpeg'):
+                        shutil.copy2(image_file, temp_dir_path)
+                except Exception as e:
+                    logger.warning(f"Ошибка копирования изображений: {e}")
+                
+                # Пытаемся скомпилировать
+                for attempt in range(max_attempts):
+                    try:
+                        logger.info(f"LaTeX компиляция, попытка {attempt + 1}/{max_attempts}")
+                        
+                        # ИСПРАВЛЕНО: Убираем text=True для безопасной обработки кодировки
+                        result = subprocess.run(
+                            [
+                                self.latex_command,
+                                '-interaction=nonstopmode',  # Не останавливаться на ошибках
+                                '-output-directory', str(temp_dir_path),
+                                '-file-line-error',  # Показывать номера строк в ошибках
+                                str(temp_latex_file)
+                            ],
+                            cwd=temp_dir_path,
+                            capture_output=True,
+                            # УБРАНО: text=True  <- Это вызывало ошибку кодировки
+                            timeout=self.timeout
+                        )
+                        
+                        # ИСПРАВЛЕНО: Безопасно декодируем вывод subprocess
+                        stdout_content = self._safe_decode_bytes(result.stdout)
+                        stderr_content = self._safe_decode_bytes(result.stderr)
+                        
+                        # Читаем лог файл безопасно
+                        log_file = temp_dir_path / f"{temp_latex_file.stem}.log"
+                        log_content = self._safe_read_log(log_file)
+                        
+                        # Парсим лог
+                        log_analysis = self.parse_latex_log(log_content)
+                        
+                        # Проверяем результат компиляции
+                        pdf_file = temp_dir_path / f"{temp_latex_file.stem}.pdf"
+                        
+                        if pdf_file.exists() and pdf_file.stat().st_size > 0:
+                            # Успешная компиляция - копируем PDF в output_dir
+                            output_pdf = output_dir / f"{latex_file.stem}.pdf"
+                            shutil.copy2(pdf_file, output_pdf)
+                            
+                            return {
+                                'success': True,
+                                'pdf_path': str(output_pdf),
+                                'attempts': attempt + 1,
+                                'warnings': log_analysis.get('warnings', []),
+                                'has_warnings': log_analysis.get('has_warnings', False),
+                                'latex_log': log_content[:5000] if log_content else None  # Первые 5KB лога
+                            }
+                        
+                        else:
+                            # Неудачная компиляция
+                            if attempt == max_attempts - 1:  # Последняя попытка
+                                return {
+                                    'success': False,
+                                    'error_type': 'compilation_failed',
+                                    'message': 'LaTeX компиляция завершилась с ошибками',
+                                    'errors': log_analysis.get('errors', []),
+                                    'warnings': log_analysis.get('warnings', []),
+                                    'latex_log': log_content,
+                                    'subprocess_stdout': stdout_content,  # ДОБАВЛЕНО: вывод процесса
+                                    'subprocess_stderr': stderr_content,  # ДОБАВЛЕНО: ошибки процесса
+                                    'suggestions': self._get_error_suggestions(log_analysis.get('errors', [])),
+                                    'pdf_path': None
+                                }
+                            else:
+                                # Не последняя попытка - продолжаем
+                                logger.warning(f"Попытка {attempt + 1} неудачна, повторяем")
+                                continue
+                    
+                    except subprocess.TimeoutExpired:
+                        if attempt == max_attempts - 1:
+                            return {
+                                'success': False,
+                                'error_type': 'timeout',
+                                'message': f'Компиляция превысила лимит времени: {self.timeout}s',
+                                'pdf_path': None,
+                                'suggestions': [
+                                    'Упростите документ или уменьшите количество изображений',
+                                    'Проверьте наличие циклических зависимостей в формулах'
+                                ]
+                            }
+                    
+                    except Exception as e:
+                        error_msg = f'Системная ошибка: {str(e)}'
+                        logger.error(f"Попытка {attempt + 1} завершилась с ошибкой: {e}")
+                        
+                        if attempt == max_attempts - 1:
+                            return {
+                                'success': False,
+                                'error_type': 'system_error', 
+                                'message': error_msg,
+                                'pdf_path': None
+                            }
+                        else:
+                            continue
+                            
+            except Exception as e:
+                logger.error(f"Ошибка подготовки к компиляции: {e}")
+                return {
+                    'success': False,
+                    'error_type': 'preparation_error',
+                    'message': f'Ошибка подготовки к компиляции: {str(e)}',
+                    'pdf_path': None
+                }
+    
+    def _get_error_suggestions(self, errors: List[Dict]) -> List[str]:
+        """Генерирует предложения по исправлению ошибок"""
+        suggestions = set()  # Используем set для избежания дубликатов
+        
+        for error in errors:
+            message = error.get('message', '').lower()
+            
+            if 'undefined control sequence' in message:
+                suggestions.add('Проверьте правильность написания LaTeX команд')
+                suggestions.add('Убедитесь что используете только разрешенные математические команды')
+            
+            elif 'missing' in message and '$' in message:
+                suggestions.add('Проверьте парность математических символов $ и $$')
+                suggestions.add('Убедитесь что все формулы правильно закрыты')
+            
+            elif 'file not found' in message:
+                suggestions.add('Проверьте что все изображения существуют и доступны')
+                suggestions.add('Убедитесь что пути к файлам указаны корректно')
+            
+            elif 'package' in message and 'not found' in message:
+                suggestions.add('Установите недостающие LaTeX пакеты')
+                suggestions.add('Обратитесь к администратору для установки пакетов')
+        
+        # Общие предложения
+        if not suggestions:
+            suggestions.update([
+                'Проверьте синтаксис LaTeX команд',
+                'Убедитесь что все скобки закрыты правильно',
+                'Попробуйте упростить формулы или разбить на части'
+            ])
+        
+        return list(suggestions)
+
+# Глобальный экземпляр компилятора
+latex_compiler = LaTeXCompiler()
+
+def compile_latex_to_pdf(latex_file: Path, output_dir: Path) -> Optional[str]:
+    """Обертка для обратной совместимости"""
+    result = latex_compiler.compile_latex_safe(latex_file, output_dir)
+    
+    if result['success']:
+        return result['pdf_path']
+    else:
+        logger.error(f"LaTeX компиляция неудачна: {result.get('message')}")
+        return None
+
+```
+
+// FILE: utils/latex_image_utils.py
+```
+"""LaTeX специфичные утилиты для обработки изображений"""
+
+from typing import Dict, List
+from document_generator.utils.image_utils import prepare_images
+from .latex_utils import sanitize_latex
+
+def prepare_images_for_latex(task, output_dir) -> List[Dict]:
+    """Подготавливает изображения для LaTeX с minipage конфигурацией"""
+    print(f"🔍 prepare_images_for_latex: обрабатываем задание {task.id}")
+    
+    latex_images = []
+    
+    for image in task.images.all().order_by('order'):
+        print(f"🔍 Обрабатываем изображение {image.id}, позиция: {image.position}")
+        
+        # Используем общую функцию подготовки
+        image_data = prepare_images(image, output_dir)
+        
+        if image_data:
+            print(f"🔍 prepare_images вернул данные: {list(image_data.keys())}")
+            
+            # ДОБАВЛЯЕМ LaTeX специфичную конфигурацию
+            minipage_config = get_minipage_config(image_data['position'])
+            print(f"🔍 minipage_config: {minipage_config}")
+            
+            latex_images.append({
+                **image_data,  # Базовые данные из общей функции
+                'minipage_config': minipage_config,  # LaTeX специфичные настройки
+            })
+            print(f"🔍 Добавлено изображение в latex_images, итого: {len(latex_images)}")
+        else:
+            print(f"❌ prepare_images вернул None для изображения {image.id}")
+    
+    print(f"🔍 prepare_images_for_latex возвращает {len(latex_images)} изображений")
+    return latex_images
+
+def get_minipage_config(position):
+    """LaTeX специфичная конфигурация minipage для разных позиций изображений"""
+    
+    configs = {
+        'right_40': {
+            'layout': 'side_by_side',
+            'text_width': '0.55\\textwidth',
+            'image_width': '0.4\\textwidth',
+            'text_align': '[t]',      
+            'image_align': '[t]',
+            'spacing': '\\hfill',
+            'image_position': 'right',
+            'vertical_adjust': '\\vspace*{-3em}',
+        },
+        'right_20': {
+            'layout': 'side_by_side',
+            'text_width': '0.75\\textwidth',
+            'image_width': '0.2\\textwidth',
+            'text_align': '[t]',      
+            'image_align': '[t]',
+            'spacing': '\\hfill',
+            'image_position': 'right',
+            'vertical_adjust': '\\vspace*{-3em}',
+        },
+        'bottom_100': {
+            'layout': 'vertical',
+            'text_width': '\\textwidth',
+            'image_width': '\\textwidth',
+            'image_align': '[c]',
+            'spacing': '\\vspace{0.5cm}',
+            'image_position': 'bottom',
+            'center_image': True,
+        },
+        'bottom_70': {
+            'layout': 'vertical',
+            'text_width': '\\textwidth',
+            'image_width': '0.7\\textwidth',
+            'image_align': '[c]',
+            'spacing': '\\vspace{0.5cm}',
+            'image_position': 'bottom',
+            'center_image': True,
+        },
+    }
+    
+    return configs.get(position, configs['bottom_70'])
+
+def render_task_with_images(task_data, images):
+    """Генерирует LaTeX код для задания с изображениями используя minipage"""
+    
+    print(f"🔍 render_task_with_images: получено {len(images)} изображений")
+    
+    if not images:
+        print("🔍 Нет изображений, возвращаем обычный текст")
+        return task_data['text']
+    
+    # Проверяем первое изображение
+    first_image = images[0]
+    print(f"🔍 Первое изображение: {list(first_image.keys())}")
+    
+    if 'minipage_config' not in first_image:
+        print("❌ КРИТИЧЕСКАЯ ОШИБКА: minipage_config отсутствует!")
+        return task_data['text']
+    
+    config = first_image['minipage_config']
+    print(f"🔍 minipage_config: layout = {config['layout']}")
+    
+    if config['layout'] == 'side_by_side':
+        print("🔍 Генерируем side_by_side minipage")
+        result = generate_side_by_side_minipage(task_data, first_image, config)
+    else:
+        print("🔍 Генерируем vertical minipage")
+        result = generate_vertical_minipage(task_data, first_image, config)
+    
+    print(f"🔍 Сгенерированный LaTeX код ({len(result)} символов):")
+    print("=" * 50)
+    print(result)
+    print("=" * 50)
+    
+    return result
+
+def generate_side_by_side_minipage(task_data, image, config):
+    """Генерирует горизонтальную компоновку с minipage"""
+    
+    text_align = config.get('text_align', '[t]')  
+    vertical_adjust = config.get('vertical_adjust', '')
+    
+    latex_code = f"""
+% Горизонтальная компоновка с minipage - текст слева, изображение справа
+% ИСПРАВЛЕНО: оба блока выровнены по верху + вертикальная коррекция
+\\noindent
+\\begin{{minipage}}{text_align}{{{config['text_width']}}}
+{task_data['text']}
+\\end{{minipage}}
+{config['spacing']}
+\\begin{{minipage}}{config['image_align']}{{{config['image_width']}}}
+{vertical_adjust}
+\\centering
+\\includegraphics[width=\\textwidth]{{{image['filename']}}}"""
+    
+    if image['caption']:
+        # ИСПРАВЛЕНО: Экранируем подпись изображения
+        safe_caption = sanitize_latex(image['caption'])
+        latex_code += f"""
+\\\\[0.2cm]
+\\small\\textit{{{safe_caption}}}"""
+    
+    latex_code += """
+\\end{minipage}
+"""
+    
+    return latex_code
+
+def generate_vertical_minipage(task_data, image, config):
+    """ИСПРАВЛЕНО: Генерирует вертикальную компоновку с minipage"""
+    
+    latex_code = f"""
+% Вертикальная компоновка с minipage - текст сверху, изображение снизу
+\\noindent
+\\begin{{minipage}}{{{config['text_width']}}}
+{task_data['text']}
+\\end{{minipage}}
+
+{config['spacing']}
+
+"""
+    
+    if config.get('center_image', False):
+        latex_code += """
+% ИСПРАВЛЕНО: центрирование изображения по горизонтали
+\\begin{center}
+"""
+    
+    latex_code += f"""
+\\begin{{minipage}}{config['image_align']}{{{config['image_width']}}}
+\\centering
+\\includegraphics[width=\\textwidth]{{{image['filename']}}}"""
+    
+    if image['caption']:
+        # ИСПРАВЛЕНО: ДОБАВЛЕНО экранирование подписи изображения!
+        safe_caption = sanitize_latex(image['caption'])
+        latex_code += f"""
+\\\\[0.2cm]
+\\small\\textit{{{safe_caption}}}"""
+    
+    latex_code += """
+\\end{minipage}"""
+    
+    if config.get('center_image', False):
+        latex_code += """
+\\end{center}"""
+    
+    return latex_code
+```
+
+// FILE: utils/latex_specific.py
+```
+"""LaTeX специфичные утилиты"""
+
+import re
+from typing import Dict, Any
+from document_generator.utils.formula_utils import formula_processor as base_processor
+from .latex_utils import sanitize_latex
+
+class LaTeXFormulaProcessor:
+    """LaTeX специфичный процессор формул"""
+    
+    def __init__(self):
+        self.base_processor = base_processor
+    
+    def render_for_latex_safe(self, text: str) -> Dict[str, Any]:
+        """ИСПРАВЛЕНО: Простая и надежная логика обработки"""
+        if not text:
+            return {'content': text, 'errors': [], 'warnings': []}
+        
+        # ШАГ 1: Анализируем и обрабатываем формулы в исходном тексте
+        processed = self.process_text_safe(text)
+        
+        if not processed['has_math']:
+            # Если формул нет, просто очищаем и экранируем весь текст
+            cleaned_text = self._sanitize_dangerous_latex_completely(text)
+            safe_text = sanitize_latex(cleaned_text)
+            return {'content': safe_text, 'errors': [], 'warnings': []}
+        
+        # ШАГ 2: Заменяем формулы в порядке убывания позиций
+        safe_text = text
+        all_errors = []
+        all_warnings = []
+        
+        formulas_by_position = sorted(processed['formulas'], key=lambda f: f['position'][0], reverse=True)
+        
+        for formula in formulas_by_position:
+            start, end = formula['position']
+            
+            if not formula['validation']['is_valid']:
+                # Проблемные формулы заменяем на текст
+                errors = formula['validation']['errors']
+                
+                if any('опасная команда' in error.lower() for error in errors):
+                    safe_replacement = "\\textbf{[ЗАБЛОКИРОВАННАЯ КОМАНДА]}"
+                else:
+                    error_count = len(errors)
+                    safe_replacement = f"\\textbf{{[ОШИБКА: {error_count} проблем]}}"
+                
+                all_errors.extend(formula['validation']['errors'])
+                all_warnings.extend(formula['validation']['warnings'])
+            else:
+                # Корректные формулы преобразуем в LaTeX формат
+                if formula['type'] == 'display':
+                    safe_replacement = f"\\[{formula['content']}\\]"
+                else:
+                    safe_replacement = f"\\({formula['content']}\\)"
+            
+            # Заменяем формулу
+            safe_text = safe_text[:start] + safe_replacement + safe_text[end:]
+        
+        # ШАГ 3: Очищаем от опасных команд
+        safe_text = self._sanitize_dangerous_latex_completely(safe_text)
+        
+        # ШАГ 4: Экранируем LaTeX символы, НО не трогаем \(...\) и \[...\]
+        safe_text = self._smart_sanitize_latex(safe_text)
+        
+        return {
+            'content': safe_text,
+            'errors': all_errors,
+            'warnings': all_warnings
+        }
+
+    def _smart_sanitize_latex(self, text: str) -> str:
+        """ИСПРАВЛЕНО: Умное экранирование с плейсхолдерами БЕЗ подчеркиваний"""
+        if not text:
+            return text
+        
+        # Временно заменяем LaTeX математические окружения
+        math_placeholders = {}
+        placeholder_counter = 0
+        temp_text = text
+        
+        def save_latex_math(match):
+            nonlocal placeholder_counter
+            # ИСПРАВЛЕНО: Плейсхолдер БЕЗ подчеркиваний и спецсимволов
+            placeholder = f"LATEXMATHBLOCK{placeholder_counter}LATEXMATHBLOCK"
+            math_placeholders[placeholder] = match.group(0)
+            placeholder_counter += 1
+            return placeholder
+        
+        # Ищем \(...\) окружения (inline math)
+        temp_text = re.sub(r'\\\([^)]*\\\)', save_latex_math, temp_text)
+        # Ищем \[...\] окружения (display math)  
+        temp_text = re.sub(r'\\\[[^\]]*\\\]', save_latex_math, temp_text)
+        
+        # Экранируем специальные символы в оставшемся тексте
+        sanitized_text = sanitize_latex(temp_text)
+        
+        # ИСПРАВЛЕНО: Возвращаем математические окружения обратно
+        # Теперь плейсхолдеры не изменились после sanitize_latex
+        for placeholder, original in math_placeholders.items():
+            sanitized_text = sanitized_text.replace(placeholder, original)
+        
+        return sanitized_text
+    
+    def __getattr__(self, name):
+        """ДОБАВЛЕНО: Проксируем все остальные методы к базовому процессору"""
+        return getattr(self.base_processor, name)
+
+# Создаем LaTeX специфичный экземпляр
+latex_formula_processor = LaTeXFormulaProcessor()
+
+```
+
+// FILE: utils/latex_utils.py
+```
+"""LaTeX утилиты для экранирования и форматирования"""
+
+import re
+
+def sanitize_latex(text):
+    """ИСПРАВЛЕНО: Экранирует специальные символы LaTeX в правильном порядке"""
+    if not text:
+        return ''
+    
+    result = text
+    
+    # ВАЖНО: Сначала экранируем обратный слеш, потом остальные символы
+    # Иначе будет двойное экранирование
+    result = result.replace('\\', r'\textbackslash{}')
+    
+    # Остальные символы (БЕЗ обратного слеша)
+    other_replacements = {
+        '{': r'\{',
+        '}': r'\}',
+        '$': r'\$',
+        '&': r'\&',
+        '%': r'\%',
+        '#': r'\#',
+        '^': r'\textasciicircum{}',
+        '_': r'\_',  # КЛЮЧЕВОЙ символ - подчеркивание
+        '~': r'\textasciitilde{}',
+        '<': r'\textless{}',
+        '>': r'\textgreater{}',
+    }
+    
+    # Применяем остальные замены
+    for char, replacement in other_replacements.items():
+        result = result.replace(char, replacement)
+    
+    # Обрабатываем переносы строк
+    result = result.replace('\n', '\\\\ ')
+    
+    return result
+
 
 def sanitize_filename(filename):
     """Очищает имя файла от недопустимых символов"""

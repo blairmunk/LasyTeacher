@@ -8,7 +8,6 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-
 def prepare_images(image, output_dir: Path) -> Optional[Dict]:
     """Универсальная подготовка изображения для генерации документа"""
     try:
@@ -61,7 +60,28 @@ def get_image_dimensions(image_path: Path) -> Dict[str, int]:
 
 def optimize_image_for_web(image_path: Path, quality: int = 85) -> Optional[Path]:
     """Оптимизирует изображение для веб-использования"""
-    # TODO: ... код оптимизации для HTML/веб использования
-    pass
+    try:
+        from PIL import Image
+        
+        optimized_path = image_path.parent / f"{image_path.stem}_optimized{image_path.suffix}"
+        
+        with Image.open(image_path) as img:
+            # Конвертируем в RGB если нужно
+            if img.mode in ('RGBA', 'LA'):
+                background = Image.new('RGB', img.size, (255, 255, 255))
+                background.paste(img, mask=img.split()[-1])
+                img = background
+            
+            # Сохраняем с оптимизацией
+            img.save(optimized_path, optimize=True, quality=quality)
+        
+        return optimized_path
+        
+    except ImportError:
+        logger.warning("PIL не установлен, оптимизация изображения недоступна")
+        return None
+    except Exception as e:
+        logger.error(f"Ошибка оптимизации изображения {image_path}: {e}")
+        return None
 
-
+# УБРАНО: Все LaTeX специфичные функции перенесены в latex_generator

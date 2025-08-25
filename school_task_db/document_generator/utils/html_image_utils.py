@@ -6,7 +6,7 @@ from typing import Dict, List
 from .image_utils import prepare_images
 
 def prepare_images_for_html(task, output_dir: Path) -> List[Dict]:
-    """Подготавливает изображения для HTML с base64 кодировкой"""
+    """Подготавливает изображения для HTML с base64 кодировкой и CSS классами"""
     html_images = []
     
     for image in task.images.all().order_by('order'):
@@ -27,6 +27,7 @@ def prepare_images_for_html(task, output_dir: Path) -> List[Dict]:
                     'base64': base64_data,
                     'mime_type': mime_type,
                     'html_class': get_html_css_class(image.position),
+                    'data_uri': f"data:{mime_type};base64,{base64_data}",
                 })
     
     return html_images
@@ -52,3 +53,47 @@ def get_html_css_class(position: str) -> str:
         'bottom_70': 'image-bottom image-70',
     }
     return css_classes.get(position, 'image-bottom image-70')
+
+def render_task_with_images_html(task_data, images):
+    """Генерирует HTML код для задания с изображениями"""
+    if not images:
+        return task_data['text']
+    
+    # HTML специфичная логика
+    first_image = images[0]
+    position = first_image['position']
+    
+    if position.startswith('right_'):
+        return generate_side_by_side_html(task_data, first_image)
+    else:
+        return generate_vertical_html(task_data, first_image)
+
+def generate_side_by_side_html(task_data, image):
+    """Генерирует HTML код для бок-о-бок компоновки"""
+    width_class = f"image-{image['position'].split('_')[1]}"  # right_40 -> image-40
+    
+    return f"""
+    <div class="task-with-image-horizontal">
+        <div class="task-text {width_class}">
+            {task_data['text']}
+        </div>
+        <div class="task-image image-right">
+            <img src="{image['data_uri']}" alt="{image['caption']}" class="{image['html_class']}">
+            {f'<div class="image-caption">{image["caption"]}</div>' if image['caption'] else ''}
+        </div>
+    </div>
+    """
+
+def generate_vertical_html(task_data, image):
+    """Генерирует HTML код для вертикальной компоновки"""
+    return f"""
+    <div class="task-with-image-vertical">
+        <div class="task-text">
+            {task_data['text']}
+        </div>
+        <div class="task-image image-bottom">
+            <img src="{image['data_uri']}" alt="{image['caption']}" class="{image['html_class']}">
+            {f'<div class="image-caption">{image["caption"]}</div>' if image['caption'] else ''}
+        </div>
+    </div>
+    """

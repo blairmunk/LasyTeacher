@@ -3,13 +3,18 @@
 import re
 
 def sanitize_latex(text):
-    """Экранирует специальные символы LaTeX"""
+    """ИСПРАВЛЕНО: Экранирует специальные символы LaTeX в правильном порядке"""
     if not text:
         return ''
     
-    # Словарь замен для LaTeX
-    replacements = {
-        '\\': r'\textbackslash{}',
+    result = text
+    
+    # ВАЖНО: Сначала экранируем обратный слеш, потом остальные символы
+    # Иначе будет двойное экранирование
+    result = result.replace('\\', r'\textbackslash{}')
+    
+    # Остальные символы (БЕЗ обратного слеша)
+    other_replacements = {
         '{': r'\{',
         '}': r'\}',
         '$': r'\$',
@@ -17,21 +22,21 @@ def sanitize_latex(text):
         '%': r'\%',
         '#': r'\#',
         '^': r'\textasciicircum{}',
-        '_': r'\_',
+        '_': r'\_',  # КЛЮЧЕВОЙ символ - подчеркивание
         '~': r'\textasciitilde{}',
         '<': r'\textless{}',
         '>': r'\textgreater{}',
     }
     
-    # Применяем замены
-    result = text
-    for char, replacement in replacements.items():
+    # Применяем остальные замены
+    for char, replacement in other_replacements.items():
         result = result.replace(char, replacement)
     
     # Обрабатываем переносы строк
     result = result.replace('\n', '\\\\ ')
     
     return result
+
 
 def sanitize_filename(filename):
     """Очищает имя файла от недопустимых символов"""

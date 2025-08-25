@@ -4,9 +4,9 @@ from typing import Dict, Any
 from pathlib import Path
 
 from document_generator.utils.formula_utils import formula_processor
-from document_generator.utils.image_utils import prepare_images 
 from document_generator.utils.file_utils import sanitize_filename
-from latex_generator.utils import sanitize_latex, render_task_with_images
+from latex_generator.utils import sanitize_latex
+from latex_generator.utils.latex_image_utils import prepare_images_for_latex, render_task_with_images
 from latex_generator.utils.latex_specific import latex_formula_processor
 from latex_generator.utils.compilation import latex_compiler, LaTeXCompilationError
 
@@ -63,6 +63,8 @@ class WorkLatexGenerator(BaseLatexGenerator):
     
     def _prepare_variant_context(self, variant):
         """Подготавливает контекст для одного варианта с обработкой формул"""
+        print(f"🔍 DEBUG: Обрабатываем вариант {variant.number}")
+        
         tasks = variant.tasks.all().order_by('id')
         
         prepared_tasks = []
@@ -70,9 +72,17 @@ class WorkLatexGenerator(BaseLatexGenerator):
         variant_warnings = []
         
         for i, task in enumerate(tasks, 1):
+            print(f"🔍 DEBUG: Обрабатываем задание {task.id} (номер {i})")
+            
             # Обрабатываем текст задания
-            text_processed = latex_formula_processor.render_for_latex_safe(task.text)
-            answer_processed = latex_formula_processor.render_for_latex_safe(task.answer or '')  # ИСПРАВЛЕНО: добавлено or ''
+            try:
+                text_processed = latex_formula_processor.render_for_latex_safe(task.text)
+                answer_processed = latex_formula_processor.render_for_latex_safe(task.answer or '')
+            except Exception as e:
+                print(f"❌ ОШИБКА в обработке формул задания {task.id}: {e}")
+                # Fallback - используем исходный текст
+                text_processed = {'content': task.text, 'errors': [str(e)], 'warnings': []}
+                answer_processed = {'content': task.answer or '', 'errors': [], 'warnings': []}
             
             # Собираем ошибки и предупреждения
             task_errors = []
@@ -84,49 +94,55 @@ class WorkLatexGenerator(BaseLatexGenerator):
             task_warnings.extend(answer_processed['warnings'])
             
             # Обрабатываем дополнительные поля если есть
-            short_solution_processed = {'content': '', 'errors': [], 'warnings': []}
-            full_solution_processed = {'content': '', 'errors': [], 'warnings': []}
-            hint_processed = {'content': '', 'errors': [], 'warnings': []}
-            instruction_processed = {'content': '', 'errors': [], 'warnings': []}  # ДОБАВЛЕНО
+            additional_fields = {}
+            for field_name in ['short_solution', 'full_solution', 'hint', 'instruction']:
+                field_value = getattr(task, field_name, None)
+                if field_value:
+                    try:
+                        processed = latex_formula_processor.render_for_latex_safe(field_value)
+                        additional_fields[field_name] = processed['content']
+                        task_errors.extend(processed['errors'])
+                        task_warnings.extend(processed['warnings'])
+                    except Exception as e:
+                        print(f"❌ ОШИБКА в обработке поля {field_name}: {e}")
+                        additional_fields[field_name] = field_value  # Fallback
+                else:
+                    additional_fields[field_name] = ''
             
-            if task.short_solution:
-                short_solution_processed = latex_formula_processor.render_for_latex_safe(task.short_solution)
-                task_errors.extend(short_solution_processed['errors'])
-                task_warnings.extend(short_solution_processed['warnings'])
-            
-            if task.full_solution:
-                full_solution_processed = latex_formula_processor.render_for_latex_safe(task.full_solution)
-                task_errors.extend(full_solution_processed['errors'])
-                task_warnings.extend(full_solution_processed['warnings'])
-            
-            if task.hint:
-                hint_processed = latex_formula_processor.render_for_latex_safe(task.hint)
-                task_errors.extend(hint_processed['errors'])
-                task_warnings.extend(hint_processed['warnings'])
-            
-            # ДОБАВЛЕНО: Обработка instruction
-            if hasattr(task, 'instruction') and task.instruction:
-                instruction_processed = latex_formula_processor.render_for_latex_safe(task.instruction)
-                task_errors.extend(instruction_processed['errors'])
-                task_warnings.extend(instruction_processed['warnings'])
-            
-            # Подготавливаем изображения
-            task_images = []
-            for image in task.images.all().order_by('order'):
-                image_data = prepare_images(image, self.output_dir)
-                if image_data:
-                    task_images.append(image_data)
+            # ОТЛАДКА: Проверяем есть ли изображения у задания
+            try:
+                images_count = task.images.count()
+                print(f"🔍 Задание {task.id}: найдено {images_count} изображений")
+                
+                if images_count > 0:
+                    for img in task.images.all():
+                        print(f"🔍   Изображение {img.id}: файл={img.image.name}, позиция={img.position}")
+                
+                # Подготавливаем изображения
+                task_images = prepare_images_for_latex(task, self.output_dir)
+                print(f"🔍 После prepare_images_for_latex: {len(task_images)} изображений")
+                
+                # ОТЛАДКА: Проверяем структуру данных изображений
+                for idx, img in enumerate(task_images):
+                    print(f"🔍 Изображение {idx}: ключи = {list(img.keys())}")
+                    if 'minipage_config' in img:
+                        print(f"🔍   minipage_config есть, layout = {img['minipage_config']['layout']}")
+                    else:
+                        print("❌   minipage_config ОТСУТСТВУЕТ!")
+                        
+            except Exception as e:
+                print(f"❌ КРИТИЧЕСКАЯ ОШИБКА при обработке изображений задания {task.id}: {e}")
+                print(f"❌ Тип ошибки: {type(e).__name__}")
+                import traceback
+                print(f"❌ Traceback: {traceback.format_exc()}")
+                task_images = []  # Fallback - без изображений
             
             # Базовые данные задания с обработанными формулами
             task_data = {
                 'number': i,
                 'task': task,
-                'text': text_processed['content'],  # Уже обработано для LaTeX
+                'text': text_processed['content'],
                 'answer': answer_processed['content'],
-                'short_solution': short_solution_processed['content'],
-                'full_solution': full_solution_processed['content'],
-                'hint': hint_processed['content'],
-                'instruction': instruction_processed['content'],  # ДОБАВЛЕНО
                 'images': task_images,
                 
                 # Информация об ошибках формул
@@ -136,16 +152,26 @@ class WorkLatexGenerator(BaseLatexGenerator):
                 'formula_warnings': task_warnings,
             }
             
+            # Добавляем дополнительные поля
+            task_data.update(additional_fields)
+            
             # Генерируем итоговый LaTeX код с учетом изображений
-            if task_images:
-                # Если есть изображения, используем существующую логику minipage
-                task_data['latex_content'] = render_task_with_images(
-                    {'text': task_data['text']}, 
-                    task_images
-                )
-            else:
-                # Если нет изображений, просто используем обработанный текст
-                task_data['latex_content'] = task_data['text']
+            try:
+                if task_images:
+                    print(f"🔍 Вызываем render_task_with_images с {len(task_images)} изображениями")
+                    latex_content = render_task_with_images(
+                        {'text': task_data['text']}, 
+                        task_images
+                    )
+                    print(f"🔍 render_task_with_images вернул: {len(latex_content)} символов")
+                    print(f"🔍 Первые 100 символов: {latex_content[:100]}...")
+                    task_data['latex_content'] = latex_content
+                else:
+                    print("🔍 Нет изображений, используем обычный текст")
+                    task_data['latex_content'] = task_data['text']
+            except Exception as e:
+                print(f"❌ ОШИБКА в render_task_with_images: {e}")
+                task_data['latex_content'] = task_data['text']  # Fallback
             
             prepared_tasks.append(task_data)
             variant_errors.extend(task_errors)
@@ -160,7 +186,7 @@ class WorkLatexGenerator(BaseLatexGenerator):
         }
     
     def generate(self, work, output_format='pdf'):
-        """ИСПРАВЛЕНО: Генерация без дублирования файлов"""
+        """Генерация с полной обработкой ошибок"""
         try:
             # Вызываем базовую генерацию LaTeX файла
             files = super().generate(work, output_format)
@@ -176,7 +202,7 @@ class WorkLatexGenerator(BaseLatexGenerator):
             
             # Если запросили PDF, пытаемся скомпилировать
             if output_format == 'pdf' and files:
-                latex_file_path = Path(files[0])  
+                latex_file_path = Path(files[0])
                 
                 compilation_result = latex_compiler.compile_latex_safe(
                     latex_file_path, 
@@ -184,14 +210,14 @@ class WorkLatexGenerator(BaseLatexGenerator):
                 )
                 
                 if compilation_result['success']:
-                    # ИСПРАВЛЕНО: Проверяем что PDF не дублируется
+                    # Проверяем что PDF не дублируется
                     pdf_path = compilation_result['pdf_path']
                     if pdf_path not in files:
                         files.append(pdf_path)
                     
                     if compilation_result.get('has_warnings'):
                         logger.info(f"LaTeX компиляция с предупреждениями для {work.name}")
-                    
+                
                 else:
                     # Неудачная компиляция - логируем детали
                     error_msg = compilation_result.get('message', 'Неизвестная ошибка')
@@ -204,12 +230,12 @@ class WorkLatexGenerator(BaseLatexGenerator):
                     error_file = self.output_dir / f"{work.name}_latex_errors.txt"
                     error_file.write_text(error_report, encoding='utf-8')
                     
-                    # ИСПРАВЛЕНО: Проверяем что файл отчета не дублируется
+                    # Проверяем что файл отчета не дублируется
                     error_file_str = str(error_file)
                     if error_file_str not in files:
                         files.append(error_file_str)
                     
-                    # НОВОЕ: Возвращаем информацию об ошибке в контексте исключения
+                    # Возвращаем информацию об ошибке в контексте исключения
                     raise LaTeXCompilationError(
                         error_msg, 
                         error_details=compilation_result,
@@ -224,7 +250,6 @@ class WorkLatexGenerator(BaseLatexGenerator):
         except Exception as e:
             logger.error(f"Ошибка генерации LaTeX для работы {work.name}: {e}")
             raise
-
     
     def _generate_error_report(self, work, compilation_result: Dict) -> str:
         """Генерирует детальный отчет об ошибках компиляции"""
@@ -277,17 +302,6 @@ class WorkLatexGenerator(BaseLatexGenerator):
             
             report_lines.append("")
         
-        # Добавляем часть лога LaTeX (если есть)
-        latex_log = compilation_result.get('latex_log')
-        if latex_log:
-            report_lines.extend([
-                "ФРАГМЕНТ ЛОГА LATEX:",
-                "====================",
-                latex_log[:2000],  # Первые 2000 символов
-                "",
-                "...(полный лог доступен для анализа)..."
-            ])
-        
         return "\n".join(report_lines)
     
     def generate_with_answers(self, work, output_format='pdf'):
@@ -297,4 +311,3 @@ class WorkLatexGenerator(BaseLatexGenerator):
             return self.generate(work, output_format)
         finally:
             self._with_answers = False
-

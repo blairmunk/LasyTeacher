@@ -97,76 +97,121 @@ class HtmlToPdfGenerator:
                 await browser.close()
     
     async def _wait_for_mathjax(self, page: Page):
-        """ИСПРАВЛЕНО: Улучшенное ожидание MathJax с graceful fallback"""
-        logger.debug("Ожидаем загрузки MathJax...")
+        """КАРДИНАЛЬНО УЛУЧШЕННОЕ: Умное ожидание MathJax с быстрой диагностикой"""
+        logger.debug("Проверяем наличие и статус MathJax...")
         
         try:
-            # Проверяем наличие MathJax
-            mathjax_exists = await page.evaluate("typeof window.MathJax !== 'undefined'")
+            # ШАГ 1: Быстрая проверка - есть ли MathJax в HTML
+            has_mathjax_script = await page.evaluate("""
+                () => {
+                    const scripts = Array.from(document.querySelectorAll('script'));
+                    return scripts.some(script => 
+                        script.src && script.src.includes('mathjax') || 
+                        script.innerHTML.includes('MathJax')
+                    );
+                }
+            """)
             
-            if not mathjax_exists:
-                logger.debug("MathJax не найден на странице, пропускаем ожидание")
+            if not has_mathjax_script:
+                logger.debug("❌ MathJax скрипт не найден в HTML - пропускаем ожидание")
                 return
             
-            # ИСПРАВЛЕНО: Более надежная проверка готовности MathJax
-            await page.wait_for_function(
-                """
+            # ШАГ 2: Проверяем есть ли формулы для рендеринга
+            has_math_content = await page.evaluate("""
                 () => {
-                    try {
-                        if (typeof window.MathJax === 'undefined') return true;
+                    const text = document.body.innerText;
+                    // Ищем формулы $...$ или $$...$$
+                    return /\$[^$]+\$/.test(text);
+                }
+            """)
+            
+            if not has_math_content:
+                logger.debug("ℹ️ Формулы не найдены - MathJax не нужен")
+                return
+            
+            logger.debug("✅ MathJax скрипт найден, формулы есть - ожидаем загрузки...")
+            
+            # ШАГ 3: Ждем загрузки MathJax (но не более 5 сек)
+            try:
+                await page.wait_for_function(
+                    "typeof window.MathJax !== 'undefined'",
+                    timeout=5000  # Только 5 сек на загрузку скрипта
+                )
+                logger.debug("✅ MathJax объект загружен")
+            except:
+                logger.warning("⚠️ MathJax не загрузился за 5 сек - возможно проблема с CDN")
+                return
+            
+            # ШАГ 4: Используем правильный колбэк для MathJax 3.x
+            await page.evaluate("""
+                () => {
+                    if (window.MathJax && window.MathJax.startup) {
+                        // Устанавливаем флаг готовности
+                        window.mathJaxReady = false;
                         
-                        // MathJax 3.x проверка
-                        if (window.MathJax.startup) {
-                            const state = window.MathJax.startup.document.state();
-                            console.log('MathJax state:', state);
-                            return state >= 8; // ИСПРАВЛЕНО: Менее строгий критерий (было >= 10)
-                        }
-                        
-                        // MathJax 2.x проверка (fallback)
-                        if (window.MathJax.Hub) {
-                            return window.MathJax.Hub.queue.pending === 0;
-                        }
-                        
-                        // Если неизвестная версия, считаем готовым через 3 сек
-                        return true;
-                    } catch (e) {
-                        console.log('MathJax check error:', e);
-                        return true; // При ошибке считаем готовым
+                        // Для MathJax 3.x используем promise
+                        window.MathJax.startup.promise.then(() => {
+                            console.log('MathJax 3.x полностью готов');
+                            window.mathJaxReady = true;
+                        }).catch((err) => {
+                            console.log('MathJax 3.x ошибка:', err);
+                            window.mathJaxReady = true; // Считаем готовым даже с ошибкой
+                        });
+                    } else if (window.MathJax && window.MathJax.Hub) {
+                        // Для MathJax 2.x используем StartupHook
+                        window.mathJaxReady = false;
+                        window.MathJax.Hub.Register.StartupHook("End", function() {
+                            console.log('MathJax 2.x полностью готов');
+                            window.mathJaxReady = true;
+                        });
+                    } else {
+                        // Неизвестная версия - считаем готовым
+                        window.mathJaxReady = true;
                     }
                 }
-                """,
-                timeout=15000  # ИСПРАВЛЕНО: Увеличен timeout до 15 сек
+            """)
+            
+            # ШАГ 5: Ждем флаг готовности (максимум 8 сек)
+            await page.wait_for_function(
+                "window.mathJaxReady === true",
+                timeout=8000  # 8 сек на рендеринг формул
             )
             
-            # ИСПРАВЛЕНО: Дополнительное ожидание завершения рендеринга
-            await page.wait_for_timeout(2000)  # 2 секунды буфера
+            # Небольшая задержка для стабильности
+            await page.wait_for_timeout(500)
             
-            logger.debug("✅ MathJax готов")
+            logger.debug("✅ MathJax полностью готов к генерации PDF")
             
         except Exception as e:
-            # ИСПРАВЛЕНО: Более детальная диагностика
-            logger.warning(f"Таймаут MathJax (продолжаем генерацию): {e}")
+            logger.warning(f"MathJax таймаут или ошибка: {e}")
             
-            # Дополнительная диагностика
+            # Диагностируем проблему
             try:
-                mathjax_info = await page.evaluate("""
+                diagnosis = await page.evaluate("""
                     () => {
-                        if (typeof window.MathJax !== 'undefined') {
-                            return {
-                                version: window.MathJax.version || 'unknown',
-                                startup_state: window.MathJax.startup ? window.MathJax.startup.document.state() : 'no startup',
-                                hub_pending: window.MathJax.Hub ? window.MathJax.Hub.queue.pending : 'no hub'
-                            };
-                        }
-                        return 'MathJax not found';
+                        return {
+                            mathJaxExists: typeof window.MathJax !== 'undefined',
+                            mathJaxVersion: window.MathJax ? (window.MathJax.version || 'unknown') : 'none',
+                            hasStartup: window.MathJax && !!window.MathJax.startup,
+                            hasHub: window.MathJax && !!window.MathJax.Hub,
+                            readyFlag: window.mathJaxReady,
+                            mathElements: document.querySelectorAll('.MathJax').length,
+                            errorElements: document.querySelectorAll('.MathJax_Error').length
+                        };
                     }
                 """)
-                logger.debug(f"MathJax диагностика: {mathjax_info}")
+                logger.debug(f"MathJax диагностика: {diagnosis}")
+                
+                # Если есть ошибки MathJax - предупреждаем
+                if diagnosis.get('errorElements', 0) > 0:
+                    logger.warning("⚠️ Обнаружены ошибки рендеринга MathJax в документе")
+                    
             except:
-                pass
+                logger.debug("Не удалось получить диагностику MathJax")
             
-            # Даем еще немного времени и продолжаем
-            await page.wait_for_timeout(3000)
+            # Даем еще 2 сек и продолжаем
+            await page.wait_for_timeout(2000)
+            logger.info("Продолжаем генерацию PDF несмотря на проблемы с MathJax")
     
     def generate_pdf(self, html_file_path: Path, output_path: Path) -> Path:
         """Синхронный wrapper для асинхронной генерации PDF"""

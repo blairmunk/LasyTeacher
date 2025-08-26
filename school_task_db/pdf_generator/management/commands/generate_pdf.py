@@ -15,6 +15,8 @@ class Command(BaseCommand):
         parser.add_argument('--output-dir', default='pdf_output')
         parser.add_argument('--keep-html', action='store_true', help='Сохранить HTML файлы')
         parser.add_argument('--format', choices=['A4', 'A5', 'Letter'], default='A4')
+        parser.add_argument('--fast', action='store_true', help='Быстрый режим - не ждать MathJax')
+        parser.add_argument('--mathjax-timeout', type=int, default=8, help='Таймаут MathJax в секундах')
 
     def handle(self, *args, **options):
         object_type = options['object_type']
@@ -40,7 +42,11 @@ class Command(BaseCommand):
                 
                 # ШАГ 2: HTML → PDF
                 from pdf_generator.generators.html_to_pdf import HtmlToPdfGenerator
-                pdf_gen = HtmlToPdfGenerator(format=options['format'])
+                pdf_gen = HtmlToPdfGenerator(
+                    format=options['format'],
+                    wait_for_mathjax=not options['fast'],  # Отключаем в быстром режиме
+                    mathjax_render_timeout=options['mathjax_timeout'] * 1000
+                )
                 
                 pdf_files = []
                 for html_file in html_files:

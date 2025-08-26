@@ -46,7 +46,9 @@ PDF_GENERATOR_SETTINGS = {
     'DEFAULT_MARGIN': {'top': '1cm', 'right': '1cm', 'bottom': '1cm', 'left': '1cm'},
     'PRINT_BACKGROUND': True,
     'WAIT_FOR_MATHJAX': True,
-    'MATHJAX_TIMEOUT': 10000,  # 10 секунд
+    'FAST_MODE': False,  # НОВОЕ: быстрый режим без ожидания MathJax
+    'MATHJAX_SCRIPT_TIMEOUT': 5000,   # 5 сек на загрузку скрипта  
+    'MATHJAX_RENDER_TIMEOUT': 8000,   # 8 сек на рендеринг формул
     'OUTPUT_DIR': 'pdf_output',
 }
 

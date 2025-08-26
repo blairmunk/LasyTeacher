@@ -178,32 +178,40 @@ class DocumentGenerator {
         }
     }
 
+
     showAlert(message, type = 'info') {
+        console.log(`📢 Показываем уведомление: ${message} (тип: ${type})`); // DEBUG
+        
         // Используем существующую Django messages структуру
-        const container = document.querySelector('.container');
+        let container = document.querySelector('.container');
+        if (!container) {
+            container = document.querySelector('main') || document.body;
+        }
         
         // Удаляем предыдущие алерты от генератора
         const oldAlerts = document.querySelectorAll('.alert.generator-alert');
         oldAlerts.forEach(alert => alert.remove());
 
         const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type} alert-dismissible fade show generator-alert`;
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show generator-alert mt-3`;
         alertDiv.innerHTML = `
-            ${message}
+            <i class="fas fa-info-circle"></i> ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
 
-        // Вставляем сразу после навбара
-        const firstChild = container.firstElementChild;
-        container.insertBefore(alertDiv, firstChild);
+        // ИСПРАВЛЕНО: Вставляем в начало контейнера
+        container.insertBefore(alertDiv, container.firstChild);
 
-        // Автоматически убираем через 7 секунд
+        // ИСПРАВЛЕНО: Увеличиваем время до 10 секунд для важных уведомлений  
+        const timeout = type === 'success' ? 10000 : 7000;
         setTimeout(() => {
             if (alertDiv.parentNode) {
-                alertDiv.remove();
+                alertDiv.classList.remove('show');
+                setTimeout(() => alertDiv.remove(), 150);
             }
-        }, 7000);
+        }, timeout);
     }
+
 
     getCSRFToken() {
         // Получаем CSRF токен из мета-тега или cookie

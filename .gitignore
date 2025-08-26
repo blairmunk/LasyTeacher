@@ -203,6 +203,7 @@ pdf_output/
 pdf_test/
 web_html_output/
 web_pdf_output/
+web_latex_output
 
 
 

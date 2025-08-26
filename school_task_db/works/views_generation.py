@@ -58,7 +58,7 @@ def generate_work_ajax(request, work_id):
                 files_info.append({
                     'name': path.name,
                     'size': f'{file_size:.1f} KB',
-                    'download_url': reverse('download_generated_file', kwargs={
+                    'download_url': reverse('works:download_generated_file', kwargs={  # ИСПРАВЛЕНО: добавлен namespace
                         'file_type': generator_type,
                         'filename': path.name
                     })
@@ -79,15 +79,16 @@ def generate_work_ajax(request, work_id):
         })
 
 def generate_latex_work(work, with_answers=False):
-    """Генерирует LaTeX документ для работы"""
-    from latex_generator.generators.work_generator import WorkGenerator
+    """ИСПРАВЛЕНО: Генерирует LaTeX документ для работы"""
+    from latex_generator.generators.work_generator import WorkLatexGenerator  # ИСПРАВЛЕНО
     
-    generator = WorkGenerator(output_dir='web_latex_output')
+    generator = WorkLatexGenerator(output_dir='web_latex_output')
     
     if with_answers:
         return generator.generate_with_answers(work)
     else:
-        return generator.generate_variants_only(work)
+        return generator.generate(work)
+
 
 def generate_html_work(work, with_answers=False):
     """Генерирует HTML документ для работы"""

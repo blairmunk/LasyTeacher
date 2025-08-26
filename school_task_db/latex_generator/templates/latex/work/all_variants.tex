@@ -1,17 +1,35 @@
-\documentclass[12pt,a4paper]{article}
+\documentclass[12pt,{{ page_format|lower }}]{article}
 
 % Пакеты для русского языка
 \usepackage[utf8]{inputenc}
 \usepackage[T2A]{fontenc}
 \usepackage[russian]{babel}
 
-% Пакеты для форматирования
-\usepackage[margin=2cm]{geometry}
+% ОБНОВЛЕНО: Пакеты для форматирования с переменной геометрией
+\usepackage[{{ page_geometry }}]{geometry}
 \usepackage{amsmath, amsfonts, amssymb}
 \usepackage{graphicx}
 \usepackage{enumitem}
 \usepackage{titlesec}
 \usepackage{fancyhdr}
+
+% Условная настройка для A5
+{% if page_format == 'A5' %}
+% Уменьшенные размеры шрифтов для A5
+\usepackage[small]{titlesec}
+\renewcommand{\normalsize}{\fontsize{10}{12}\selectfont}
+\renewcommand{\large}{\fontsize{12}{14}\selectfont}
+\renewcommand{\Large}{\fontsize{14}{16}\selectfont}
+\renewcommand{\LARGE}{\fontsize{16}{18}\selectfont}
+
+% Уменьшенные отступы для A5
+\setlength{\parskip}{4pt}
+\titlespacing*{\section}{0pt}{8pt}{4pt}
+{% else %}
+% Стандартные настройки для A4
+\setlength{\parskip}{6pt}
+\titlespacing*{\section}{0pt}{12pt}{6pt}
+{% endif %}
 
 % Настройка заголовков
 \titleformat{\section}{\large\bfseries}{\thesection.}{1em}{}

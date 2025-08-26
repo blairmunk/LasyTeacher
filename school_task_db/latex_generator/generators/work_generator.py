@@ -15,6 +15,14 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def get_latex_geometry(page_format: str) -> str:
+    """Возвращает геометрию страницы для LaTeX"""
+    geometries = {
+        'A4': 'a4paper,margin=2cm',
+        'A5': 'a5paper,margin=1.5cm,landscape=false'
+    }
+    return geometries.get(page_format, geometries['A4'])
+
 class WorkLatexGenerator(BaseLatexGenerator):
     """Генератор LaTeX документов для работ с математическими формулами"""
     
@@ -46,6 +54,8 @@ class WorkLatexGenerator(BaseLatexGenerator):
         work_name_processed = latex_formula_processor.render_for_latex_safe(work.name)
         document_errors.extend(work_name_processed['errors'])
         document_warnings.extend(work_name_processed['warnings'])
+        content_config = getattr(self, '_content_config', {})
+        page_format = content_config.get('page_format', 'A4').upper()
         
         return {
             'work': work,
@@ -54,12 +64,17 @@ class WorkLatexGenerator(BaseLatexGenerator):
             'total_variants': len(all_variants_data),
             'with_answers': getattr(self, '_with_answers', False),
             
+            # НОВОЕ: Формат страницы для LaTeX
+            'page_format': page_format,
+            'page_geometry': get_latex_geometry(page_format),
+            
             # Информация об ошибках формул
             'has_formula_errors': len(document_errors) > 0,
             'has_formula_warnings': len(document_warnings) > 0,
             'formula_errors': document_errors,
             'formula_warnings': document_warnings,
         }
+
     
     def _prepare_variant_context(self, variant):
         """ОБНОВЛЕНО: Подготовка контекста с поддержкой 4 типов контента"""
@@ -135,20 +150,35 @@ class WorkLatexGenerator(BaseLatexGenerator):
             else:
                 additional_fields['full_solution'] = ''
             
-            # Подсказки и инструкции (всегда обрабатываем если есть)
-            for field_name in ['hint', 'instruction']:
-                field_value = getattr(task, field_name, None)
-                if field_value:
-                    try:
-                        processed = latex_formula_processor.render_for_latex_safe(field_value)
-                        additional_fields[field_name] = processed['content']
-                        task_errors.extend(processed['errors'])
-                        task_warnings.extend(processed['warnings'])
-                    except Exception as e:
-                        print(f"❌ ОШИБКА в обработке поля {field_name}: {e}")
-                        additional_fields[field_name] = field_value  # Fallback
-                else:
-                    additional_fields[field_name] = ''
+            # Подсказки и инструкции - только если опционально запрошены  
+            include_hints = content_config.get('include_hints', False)
+            include_instructions = content_config.get('include_instructions', False)
+
+            # Подсказки - только если включены И есть контент
+            if include_hints and task.hint:
+                try:
+                    processed = latex_formula_processor.render_for_latex_safe(task.hint)
+                    additional_fields['hint'] = processed['content']
+                    task_errors.extend(processed['errors'])
+                    task_warnings.extend(processed['warnings'])
+                except Exception as e:
+                    print(f"❌ ОШИБКА в обработке подсказки: {e}")
+                    additional_fields['hint'] = task.hint
+            else:
+                additional_fields['hint'] = ''
+
+            # Инструкции - только если включены И есть контент
+            if include_instructions and task.instruction:
+                try:
+                    processed = latex_formula_processor.render_for_latex_safe(task.instruction)
+                    additional_fields['instruction'] = processed['content']
+                    task_errors.extend(processed['errors'])
+                    task_warnings.extend(processed['warnings'])
+                except Exception as e:
+                    print(f"❌ ОШИБКА в обработке инструкции: {e}")
+                    additional_fields['instruction'] = task.instruction
+            else:
+                additional_fields['instruction'] = ''
             
             # ОТЛАДКА: Проверяем есть ли изображения у задания
             try:

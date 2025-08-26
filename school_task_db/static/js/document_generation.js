@@ -66,13 +66,16 @@ class DocumentGenerator {
 
         const formData = new FormData(form);
         
-        // РАСШИРЕННЫЕ параметры
+        // ОБНОВЛЕННЫЕ параметры с hints/instructions
         const params = {
             workId: formData.get('work_id'),
             type: formData.get('generator_type'),
-            answerType: formData.get('answer_type'), // tasks_only, with_answers, with_short_solutions, with_full_solutions
+            answerType: formData.get('answer_type'),
             format: formData.get('format'),
-            variantSelection: formData.get('variant_selection') // all или ID варианта
+            variantSelection: formData.get('variant_selection'),
+            // НОВОЕ: дополнительный контент
+            includeHints: formData.get('include_hints') === '1',
+            includeInstructions: formData.get('include_instructions') === '1'
         };
 
         // Преобразуем answer_type для совместимости
@@ -105,6 +108,15 @@ class DocumentGenerator {
 
             configMessage += answerMessages[params.answerType] || '';
 
+            // НОВОЕ: Добавляем информацию о дополнительном контенте
+            if (params.includeHints && params.includeInstructions) {
+                configMessage += ' • с подсказками и инструкциями';
+            } else if (params.includeHints) {
+                configMessage += ' • с подсказками';
+            } else if (params.includeInstructions) {
+                configMessage += ' • с инструкциями';
+            }
+
             this.showAlert(`🔄 Генерируется ${configMessage}...`, 'info');
 
             const response = await fetch(`/works/ajax/generate/${params.workId}/`, {
@@ -117,8 +129,11 @@ class DocumentGenerator {
                     generator_type: params.type,
                     with_answers: params.withAnswers ? '1' : '0',
                     format: params.format || 'A4',
-                    answer_type: params.answerType,        // ИСПРАВЛЕНО: всегда передаем правильный тип
-                    variant_selection: params.variantSelection || 'all'
+                    answer_type: params.answerType,
+                    variant_selection: params.variantSelection || 'all',
+                    // НОВОЕ: дополнительные параметры
+                    include_hints: params.includeHints ? '1' : '0',
+                    include_instructions: params.includeInstructions ? '1' : '0'
                 })
             });
 

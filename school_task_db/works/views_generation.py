@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 @require_http_methods(["POST"])
 def generate_work_ajax(request, work_id):
-    """Ajax генерация документов для работы с поддержкой 4 типов ответов"""
+    """Ajax генерация документов с поддержкой hints/instructions"""
     work = get_object_or_404(Work, id=work_id)
     
     try:
@@ -27,21 +27,28 @@ def generate_work_ajax(request, work_id):
         generator_type = request.POST.get('generator_type', 'pdf')
         pdf_format = request.POST.get('format', 'A4')
         
-        # НОВОЕ: Определяем тип контента
+        # Тип контента
         answer_type = request.POST.get('answer_type', 'tasks_only')
-        # Совместимость со старым параметром
         if request.POST.get('with_answers', '0') == '1' and answer_type == 'tasks_only':
             answer_type = 'with_answers'
         
+        # НОВОЕ: дополнительный контент
+        include_hints = request.POST.get('include_hints', '0') == '1'
+        include_instructions = request.POST.get('include_instructions', '0') == '1'
+        
         logger.info(f"🌐 Веб-генерация {generator_type} для работы {work.id}: {work.name}")
         logger.info(f"   Тип контента: {answer_type}")
+        logger.info(f"   Дополнительно: hints={include_hints}, instructions={include_instructions}")
         
-        # Определяем что включать в документ
+        # ОБНОВЛЕННАЯ конфигурация контента
         content_config = {
             'include_answers': answer_type in ['with_answers', 'with_short_solutions', 'with_full_solutions'],
             'include_short_solutions': answer_type in ['with_short_solutions', 'with_full_solutions'],
             'include_full_solutions': answer_type == 'with_full_solutions',
-            'answer_type': answer_type  # Для генераторов которые хотят знать точный тип
+            'answer_type': answer_type,
+            # НОВОЕ: опциональный контент
+            'include_hints': include_hints,
+            'include_instructions': include_instructions
         }
         
         # Выбираем генератор и запускаем
@@ -86,7 +93,21 @@ def generate_work_ajax(request, work_id):
             'with_full_solutions': 'с полными решениями'
         }
         
-        success_message = f'{file_type} документ создан ({content_descriptions[answer_type]})'
+        base_description = content_descriptions[answer_type]
+        
+        # Добавляем информацию о дополнительном контенте
+        additional_content = []
+        if include_hints:
+            additional_content.append('подсказки')
+        if include_instructions:
+            additional_content.append('инструкции')
+            
+        if additional_content:
+            full_description = f"{base_description} + {' + '.join(additional_content)}"
+        else:
+            full_description = base_description
+        
+        success_message = f'{file_type} документ создан ({full_description})'
         
         return JsonResponse({
             'success': True,
@@ -103,19 +124,20 @@ def generate_work_ajax(request, work_id):
         })
 
 def generate_latex_work(work, content_config, pdf_format='A4'):
-    """ОБНОВЛЕНО: LaTeX генератор с поддержкой 4 типов контента"""
+    """LaTeX генератор с поддержкой форматов страниц"""
     from latex_generator.generators.work_generator import WorkLatexGenerator
     
     generator = WorkLatexGenerator(output_dir='web_latex_output')
     
-    # Передаем конфигурацию в генератор
+    # Добавляем формат страницы в конфигурацию
+    content_config['page_format'] = pdf_format
     generator._content_config = content_config
     
-    # Используем старый метод, но с новой логикой внутри
     if content_config['include_answers'] or content_config['include_short_solutions'] or content_config['include_full_solutions']:
         return generator.generate_with_answers(work)
     else:
         return generator.generate(work)
+
 
 def generate_html_work(work, content_config):
     """ОБНОВЛЕНО: HTML генератор с поддержкой 4 типов контента"""

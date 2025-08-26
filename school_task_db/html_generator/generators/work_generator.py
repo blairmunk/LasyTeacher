@@ -69,13 +69,16 @@ class WorkHtmlGenerator(BaseHtmlGenerator):
         variant_errors = []
         variant_warnings = []
         
-        # ДОБАВЛЕНО: Получаем конфигурацию контента
+        # ИСПРАВЛЕНО: Получаем конфигурацию контента В САМОМ НАЧАЛЕ
         content_config = getattr(self, '_content_config', {})
         include_answers = content_config.get('include_answers', False)
         include_short_solutions = content_config.get('include_short_solutions', False) 
         include_full_solutions = content_config.get('include_full_solutions', False)
+        include_hints = content_config.get('include_hints', False)            # ДОБАВЛЕНО
+        include_instructions = content_config.get('include_instructions', False)  # ДОБАВЛЕНО
         
         print(f"🔍 HTML: Конфигурация контента: answers={include_answers}, short={include_short_solutions}, full={include_full_solutions}")
+        print(f"🔍 HTML: Дополнительно: hints={include_hints}, instructions={include_instructions}")  # ДОБАВЛЕНО
         
         for i, task in enumerate(tasks, 1):
             print(f"🔍 HTML: Обрабатываем задание {task.id} (номер {i})")
@@ -134,20 +137,31 @@ class WorkHtmlGenerator(BaseHtmlGenerator):
             else:
                 additional_fields['full_solution'] = ''
             
-            # Подсказки и инструкции (всегда обрабатываем если есть)
-            for field_name in ['hint', 'instruction']:
-                field_value = getattr(task, field_name, None)
-                if field_value:
-                    try:
-                        processed = html_formula_processor.render_for_html_safe(field_value)
-                        additional_fields[field_name] = processed['content']
-                        task_errors.extend(processed['errors'])
-                        task_warnings.extend(processed['warnings'])
-                    except Exception as e:
-                        print(f"❌ ОШИБКА в HTML обработке поля {field_name}: {e}")
-                        additional_fields[field_name] = html_formula_processor._escape_html(field_value)
-                else:
-                    additional_fields[field_name] = ''
+            # Подсказки и инструкции (опционально)
+            if include_hints and task.hint:
+                try:
+                    processed = html_formula_processor.render_for_html_safe(task.hint)
+                    additional_fields['hint'] = processed['content']
+                    task_errors.extend(processed['errors'])
+                    task_warnings.extend(processed['warnings'])
+                except Exception as e:
+                    print(f"❌ ОШИБКА в HTML обработке подсказки: {e}")
+                    additional_fields['hint'] = html_formula_processor._escape_html(task.hint)
+            else:
+                additional_fields['hint'] = ''
+
+            # Инструкции - только если включены И есть контент
+            if include_instructions and task.instruction:
+                try:
+                    processed = html_formula_processor.render_for_html_safe(task.instruction)
+                    additional_fields['instruction'] = processed['content']
+                    task_errors.extend(processed['errors'])
+                    task_warnings.extend(processed['warnings'])
+                except Exception as e:
+                    print(f"❌ ОШИБКА в HTML обработке инструкции: {e}")
+                    additional_fields['instruction'] = html_formula_processor._escape_html(task.instruction)
+            else:
+                additional_fields['instruction'] = ''
             
             # Подготавливаем изображения для HTML
             try:

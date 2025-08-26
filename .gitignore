@@ -198,7 +198,12 @@ cython_debug/
 staticfiles/
 static_root/
 latex_output/
+html_output/
+pdf_output/
+pdf_test/
+
 
 
 # Media files (загружаются пользователями)
 media/
+

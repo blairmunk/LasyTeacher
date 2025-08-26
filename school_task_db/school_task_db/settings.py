@@ -23,7 +23,7 @@ INSTALLED_APPS = [
     'crispy_bootstrap5',
     'widget_tweaks',
     
-    # Наши приложения
+    # Приложения
     'core',           # Базовые компоненты
     'references',
     'tasks',          # Задания
@@ -36,10 +36,19 @@ INSTALLED_APPS = [
     'review',
     'document_generator',
     'latex_generator',
-    'html_generator',      # НОВОЕ: HTML генератор
+    'html_generator',      # HTML генератор
+    'pdf_generator',       # PDF генератор
 ]
 
-
+# Настройки для PDF генерации
+PDF_GENERATOR_SETTINGS = {
+    'DEFAULT_FORMAT': 'A4',
+    'DEFAULT_MARGIN': {'top': '1cm', 'right': '1cm', 'bottom': '1cm', 'left': '1cm'},
+    'PRINT_BACKGROUND': True,
+    'WAIT_FOR_MATHJAX': True,
+    'MATHJAX_TIMEOUT': 10000,  # 10 секунд
+    'OUTPUT_DIR': 'pdf_output',
+}
 
 
 MIDDLEWARE = [

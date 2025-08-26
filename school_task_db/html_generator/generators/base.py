@@ -37,7 +37,7 @@ class BaseHtmlGenerator(ABC):
         pass
     
     def generate(self, obj, **kwargs) -> List[str]:
-        """Генерирует HTML документ"""
+        """Генерирует HTML документ с принудительной UTF-8 кодировкой"""
         try:
             logger.info(f"Начало генерации HTML для {obj}")
             
@@ -56,6 +56,10 @@ class BaseHtmlGenerator(ABC):
             template_name = self.get_template_name()
             html_content = render_to_string(template_name, context)
             
+            # ИСПРАВЛЕНО: Убеждаемся что контент в UTF-8
+            if isinstance(html_content, str):
+                html_content = html_content.encode('utf-8').decode('utf-8')
+            
             # Генерируем имя файла и сохраняем
             output_filename = sanitize_filename(self.get_output_filename(obj))
             if not output_filename.endswith('.html'):
@@ -63,8 +67,9 @@ class BaseHtmlGenerator(ABC):
             
             output_path = self.output_dir / output_filename
             
-            # Сохраняем HTML файл
-            output_path.write_text(html_content, encoding='utf-8')
+            # ИСПРАВЛЕНО: Явно указываем кодировку при сохранении
+            with open(output_path, 'w', encoding='utf-8', newline='\n') as f:
+                f.write(html_content)
             
             logger.info(f"HTML документ сохранен: {output_path}")
             
@@ -80,10 +85,12 @@ class BaseHtmlGenerator(ABC):
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
     def _get_css_styles(self) -> str:
-        """Возвращает CSS стили для документа"""
+        """ИСПРАВЛЕНО: CSS с улучшенной поддержкой печати"""
         return """
         <style>
-        /* Базовые стили для HTML документов */
+        /* ================================
+        БАЗОВЫЕ СТИЛИ ДОКУМЕНТА
+        ================================ */
         body {
             font-family: 'Times New Roman', Times, serif;
             line-height: 1.6;
@@ -104,6 +111,9 @@ class BaseHtmlGenerator(ABC):
             margin-bottom: 10px;
         }
         
+        /* ================================
+        БЛОК: ВАРИАНТ
+        ================================ */
         .variant-section {
             margin-bottom: 40px;
             page-break-after: always;
@@ -118,25 +128,28 @@ class BaseHtmlGenerator(ABC):
             padding-bottom: 10px;
         }
         
+        /* ================================
+        БЛОК: ЗАДАНИЕ 
+        ================================ */
         .task {
             margin-bottom: 25px;
             padding: 15px;
             border-left: 3px solid #007bff;
             background-color: #f8f9fa;
+            break-inside: avoid;
         }
         
-        .task-number {
+        .task__number {
             font-weight: bold;
             margin-bottom: 10px;
             color: #007bff;
         }
         
-        .task-text {
-            flex: 1;  /* ИСПРАВЛЕНО: Текст занимает оставшееся место */
-            min-width: 0; /* Позволяет тексту сжиматься */
+        .task__content {
+            margin-bottom: 10px;
         }
         
-        .task-answer {
+        .task__answer {
             margin-top: 15px;
             padding: 10px;
             background-color: #e9ecef;
@@ -144,24 +157,22 @@ class BaseHtmlGenerator(ABC):
             font-style: italic;
         }
         
-        /* Стили для изображений */
-        .task-with-image-horizontal {
-            display: flex;
-            align-items: flex-start;
-            gap: 20px;
+        /* ================================
+        БЛОК: ЗАДАНИЕ С ИЗОБРАЖЕНИЕМ
+        ================================ */
+        .task-with-image {
             margin: 15px 0;
         }
         
-        .task-with-image-vertical {
-            margin: 15px 0;
+        .task-with-image__text {
+            margin-bottom: 15px;
         }
         
-        .task-image {
-            flex-shrink: 0; /* ИСПРАВЛЕНО: Изображение не сжимается */
+        .task-with-image__image {
             text-align: center;
         }
         
-        .task-image img {
+        .task-with-image__img {
             max-width: 100%;
             height: auto;
             border: 1px solid #ddd;
@@ -169,91 +180,187 @@ class BaseHtmlGenerator(ABC):
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
-        .image-caption {
+        .task-with-image__caption {
             margin-top: 8px;
             font-size: 12px;
             color: #666;
             font-style: italic;
         }
         
-        .image-right {
+        /* ================================
+        МОДИФИКАТОР: ГОРИЗОНТАЛЬНЫЙ LAYOUT
+        ================================ */
+        .task-with-image_layout_horizontal {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+        }
+        
+        .task-with-image_layout_horizontal .task-with-image__text {
+            flex: 1;
+            margin-bottom: 0;
+            min-width: 0;
+        }
+        
+        .task-with-image_layout_horizontal .task-with-image__image {
             flex-shrink: 0;
         }
         
-        /* ИСПРАВЛЕНО: Классы ширины применяются к контейнеру изображения */
-        .task-image.image-40 { 
-            width: 40%; 
-            max-width: 40%;
+        /* ================================
+        МОДИФИКАТОРЫ: РАЗМЕРЫ ИЗОБРАЖЕНИЯ
+        ================================ */
+        .task-with-image_image-size_20 .task-with-image__image {
+            width: 20%;
         }
         
-        .task-image.image-20 { 
-            width: 20%; 
-            max-width: 20%;
+        .task-with-image_image-size_40 .task-with-image__image {
+            width: 40%;
         }
         
-        .task-image.image-70 { 
-            width: 70%; 
-            max-width: 70%;
+        .task-with-image_image-size_70 .task-with-image__image {
+            width: 70%;
+            margin: 0 auto;
         }
         
-        .task-image.image-100 { 
-            width: 100%; 
-            max-width: 100%;
+        .task-with-image_image-size_100 .task-with-image__image {
+            width: 100%;
         }
-
-        /* Стили для вертикального отображения остаются */
-        .image-bottom {
-            display: block;
-            margin: 20px auto;
+        
+        /* ================================
+        СТИЛИ ДЛЯ ПЕЧАТИ (ПЕРЕРАБОТАНО!)
+        ================================ */
+        @media print {
+            body { 
+                margin: 10px;
+                font-size: 12pt;
+                line-height: 1.4;
+            }
+            
+            .variant-section { 
+                page-break-after: always;
+            }
+            
+            .task { 
+                break-inside: avoid;
+                margin-bottom: 15px;
+                padding: 10px;
+            }
+            
+            /* НОВЫЙ ПОДХОД: Float вместо flexbox/table для печати */
+            .task-with-image_layout_horizontal {
+                display: block !important;
+                overflow: hidden;  /* clearfix */
+                zoom: 1; /* IE clearfix */
+            }
+            
+            .task-with-image_layout_horizontal .task-with-image__text {
+                display: block !important;
+                float: left;
+                margin-bottom: 0 !important;
+                padding-right: 15px;
+                box-sizing: border-box;
+            }
+            
+            .task-with-image_layout_horizontal .task-with-image__image {
+                display: block !important;
+                float: right;
+                text-align: center;
+                box-sizing: border-box;
+            }
+            
+            /* Четкие размеры для печати */
+            .task-with-image_image-size_20 .task-with-image__text {
+                width: 75% !important;
+            }
+            .task-with-image_image-size_20 .task-with-image__image {
+                width: 20% !important;
+            }
+            
+            .task-with-image_image-size_40 .task-with-image__text {
+                width: 55% !important;
+            }
+            .task-with-image_image-size_40 .task-with-image__image {
+                width: 40% !important;
+            }
+            
+            /* Изображения в печати */
+            .task-with-image__img {
+                max-width: 100% !important;
+                height: auto !important;
+                border: 1px solid #999 !important;
+                page-break-inside: avoid;
+            }
+            
+            .task-with-image__caption {
+                font-size: 10pt !important;
+                color: #333 !important;
+                margin-top: 5px !important;
+            }
+            
+            /* Очистка float */
+            .task-with-image_layout_horizontal:after {
+                content: "";
+                display: table;
+                clear: both;
+            }
+            
+            /* Вертикальные остаются простыми */
+            .task-with-image_layout_vertical .task-with-image__image {
+                margin: 15px auto !important;
+                display: block !important;
+            }
+            
+            /* Скрываем лишнее при печати */
+            .document-footer {
+                page-break-before: always;
+                font-size: 8pt !important;
+            }
+            
+            /* Принудительные цвета для печати */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
         }
-
-        /* ДОБАВЛЕНО: Responsive поведение */
+        
+        /* ================================
+        RESPONSIVE ДИЗАЙН
+        ================================ */
         @media (max-width: 768px) {
-            .task-with-image-horizontal {
+            .task-with-image_layout_horizontal {
                 flex-direction: column;
             }
             
-            .task-image.image-40,
-            .task-image.image-20 {
+            .task-with-image_layout_horizontal .task-with-image__text {
+                margin-bottom: 15px;
+            }
+            
+            .task-with-image_layout_horizontal .task-with-image__image {
                 width: 100% !important;
-                max-width: 100% !important;
             }
         }
         
-        /* Стили для печати */
-        @media print {
-            body { margin: 20px; }
-            .variant-section { page-break-after: always; }
-            .task { break-inside: avoid; }
-        }
-        
-        /* Стили для формул MathJax */
+        /* ================================
+        СТИЛИ ДЛЯ ФОРМУЛ MATHJAX
+        ================================ */
         .MathJax {
             font-size: 1.1em !important;
         }
-
-        /* ДОПОЛНИТЕЛЬНО: Улучшенные отступы и выравнивание */
-        .task-with-image-horizontal .task-text {
-            padding-right: 10px; /* Немного отступа от изображения */
+        
+        /* Ошибки формул */
+        .formula-error {
+            color: orange;
+            font-weight: bold;
         }
-
-        .task-with-image-horizontal .task-image {
-            padding-left: 10px;  /* Немного отступа от текста */
+        
+        .blocked-formula {
+            color: red;
+            font-weight: bold;
         }
-
-        /* Улучшенное вертикальное выравнивание */
-        .task-with-image-horizontal {
-            align-items: flex-start; /* Выравнивание по верху */
-        }
-
-        /* Если нужно выравнивание по центру */
-        .task-with-image-horizontal.align-center {
-            align-items: center;
-        }
-
         </style>
         """
-    
+
+
     def _get_js_scripts(self) -> str:
         """Возвращает JavaScript скрипты для документа (MathJax)"""
         return """

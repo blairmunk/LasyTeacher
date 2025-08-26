@@ -7,7 +7,7 @@ from document_generator.utils.html_image_utils import (
     prepare_images_for_html, 
     render_task_with_images_html,
     get_image_mime_type,
-    get_html_css_class
+    get_bem_classes_for_position,
 )
 
 # HTML специфичные функции
@@ -19,6 +19,6 @@ __all__ = [
     'prepare_images_for_html',
     'render_task_with_images_html',
     'get_image_mime_type',
-    'get_html_css_class',
+    'get_bem_classes_for_position',
     'html_formula_processor',
 ]

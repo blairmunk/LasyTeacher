@@ -62,8 +62,16 @@ class WorkLatexGenerator(BaseLatexGenerator):
         }
     
     def _prepare_variant_context(self, variant):
-        """Подготавливает контекст для одного варианта с обработкой формул"""
+        """ОБНОВЛЕНО: Подготовка контекста с поддержкой 4 типов контента"""
         print(f"🔍 DEBUG: Обрабатываем вариант {variant.number}")
+        
+        # Получаем конфигурацию контента
+        content_config = getattr(self, '_content_config', {})
+        include_answers = content_config.get('include_answers', False)
+        include_short_solutions = content_config.get('include_short_solutions', False) 
+        include_full_solutions = content_config.get('include_full_solutions', False)
+        
+        print(f"🔍 Конфигурация контента: answers={include_answers}, short={include_short_solutions}, full={include_full_solutions}")
         
         tasks = variant.tasks.all().order_by('id')
         
@@ -95,7 +103,40 @@ class WorkLatexGenerator(BaseLatexGenerator):
             
             # Обрабатываем дополнительные поля если есть
             additional_fields = {}
-            for field_name in ['short_solution', 'full_solution', 'hint', 'instruction']:
+        # Ответы - включаем если любой тип ответов запрошен
+            if include_answers:
+                additional_fields['answer'] = answer_processed['content']
+            else:
+                additional_fields['answer'] = ''
+            
+            # Краткие решения
+            if include_short_solutions and task.short_solution:
+                try:
+                    short_processed = latex_formula_processor.render_for_latex_safe(task.short_solution)
+                    additional_fields['short_solution'] = short_processed['content']
+                    task_errors.extend(short_processed['errors'])
+                    task_warnings.extend(short_processed['warnings'])
+                except Exception as e:
+                    print(f"❌ ОШИБКА в обработке краткого решения: {e}")
+                    additional_fields['short_solution'] = task.short_solution
+            else:
+                additional_fields['short_solution'] = ''
+            
+            # Полные решения
+            if include_full_solutions and task.full_solution:
+                try:
+                    full_processed = latex_formula_processor.render_for_latex_safe(task.full_solution)
+                    additional_fields['full_solution'] = full_processed['content']
+                    task_errors.extend(full_processed['errors'])
+                    task_warnings.extend(full_processed['warnings'])
+                except Exception as e:
+                    print(f"❌ ОШИБКА в обработке полного решения: {e}")
+                    additional_fields['full_solution'] = task.full_solution
+            else:
+                additional_fields['full_solution'] = ''
+            
+            # Подсказки и инструкции (всегда обрабатываем если есть)
+            for field_name in ['hint', 'instruction']:
                 field_value = getattr(task, field_name, None)
                 if field_value:
                     try:

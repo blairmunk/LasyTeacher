@@ -1,6 +1,6 @@
 /**
  * Веб-генератор документов для школьной базы заданий
- * Интегрируется с существующим Bootstrap 5 интерфейсом
+ * ИСПРАВЛЕНО: правильная обработка параметров для быстрых кнопок
  */
 
 class DocumentGenerator {
@@ -33,13 +33,27 @@ class DocumentGenerator {
             return;
         }
 
+        // ИСПРАВЛЕНО: Правильное определение answerType для быстрых кнопок
+        const withAnswers = button.dataset.withAnswers === '1';
+        let answerType;
+        
+        if (withAnswers) {
+            answerType = 'with_answers';  // Для кнопок "PDF + ответы"
+        } else {
+            answerType = 'tasks_only';    // Для обычных кнопок
+        }
+
         // Получаем параметры из data-атрибутов кнопки
         const params = {
             workId: button.dataset.workId,
             type: button.dataset.type || 'pdf',
-            withAnswers: button.dataset.withAnswers === '1',
-            format: button.dataset.format || 'A4'
+            answerType: answerType,       // ИСПРАВЛЕНО: правильный тип
+            withAnswers: withAnswers,     // Для совместимости
+            format: button.dataset.format || 'A4',
+            variantSelection: 'all'       // Быстрые кнопки всегда генерируют все варианты
         };
+
+        console.log('⚡ Быстрая генерация с параметрами:', params);
 
         await this.generateDocument(params, button);
     }
@@ -51,12 +65,20 @@ class DocumentGenerator {
         }
 
         const formData = new FormData(form);
+        
+        // РАСШИРЕННЫЕ параметры
         const params = {
             workId: formData.get('work_id'),
             type: formData.get('generator_type'),
-            withAnswers: formData.get('with_answers') === '1',
-            format: formData.get('format')
+            answerType: formData.get('answer_type'), // tasks_only, with_answers, with_short_solutions, with_full_solutions
+            format: formData.get('format'),
+            variantSelection: formData.get('variant_selection') // all или ID варианта
         };
+
+        // Преобразуем answer_type для совместимости
+        params.withAnswers = params.answerType !== 'tasks_only';
+
+        console.log('🔧 Расширенная генерация с параметрами:', params);
 
         await this.generateDocument(params, form.querySelector('button[type="submit"]'));
     }
@@ -67,6 +89,23 @@ class DocumentGenerator {
 
         try {
             console.log(`🌐 Веб-генерация ${params.type} для работы ${params.workId}`);
+            
+            // Формируем детальное сообщение
+            let configMessage = `${params.type.toUpperCase()}`;
+            if (params.format && params.type !== 'latex') {
+                configMessage += ` (${params.format})`;
+            }
+
+            const answerMessages = {
+                'tasks_only': '',
+                'with_answers': ' • с ответами',
+                'with_short_solutions': ' • с краткими решениями', 
+                'with_full_solutions': ' • с полными решениями'
+            };
+
+            configMessage += answerMessages[params.answerType] || '';
+
+            this.showAlert(`🔄 Генерируется ${configMessage}...`, 'info');
 
             const response = await fetch(`/works/ajax/generate/${params.workId}/`, {
                 method: 'POST',
@@ -77,7 +116,9 @@ class DocumentGenerator {
                 body: new URLSearchParams({
                     generator_type: params.type,
                     with_answers: params.withAnswers ? '1' : '0',
-                    format: params.format
+                    format: params.format || 'A4',
+                    answer_type: params.answerType,        // ИСПРАВЛЕНО: всегда передаем правильный тип
+                    variant_selection: params.variantSelection || 'all'
                 })
             });
 
@@ -88,16 +129,16 @@ class DocumentGenerator {
             const data = await response.json();
 
             if (data.success) {
-                this.showAlert(data.message, 'success');
+                this.showAlert(`✅ ${data.message}`, 'success');
                 this.displayResults(data.files);
                 console.log(`✅ Генерация завершена: ${data.total_files} файлов`);
             } else {
-                this.showAlert(`Ошибка: ${data.error}`, 'danger');
+                this.showAlert(`❌ ${data.error}`, 'danger');
             }
 
         } catch (error) {
             console.error('❌ Ошибка генерации:', error);
-            this.showAlert(`Ошибка сети: ${error.message}`, 'danger');
+            this.showAlert(`🚨 Ошибка сети: ${error.message}`, 'danger');
         } finally {
             this.isGenerating = false;
             this.setLoadingState(triggerElement, false);
@@ -178,9 +219,8 @@ class DocumentGenerator {
         }
     }
 
-
     showAlert(message, type = 'info') {
-        console.log(`📢 Показываем уведомление: ${message} (тип: ${type})`); // DEBUG
+        console.log(`📢 Показываем уведомление: ${message} (тип: ${type})`);
         
         // Используем существующую Django messages структуру
         let container = document.querySelector('.container');
@@ -199,10 +239,10 @@ class DocumentGenerator {
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
 
-        // ИСПРАВЛЕНО: Вставляем в начало контейнера
+        // Вставляем в начало контейнера
         container.insertBefore(alertDiv, container.firstChild);
 
-        // ИСПРАВЛЕНО: Увеличиваем время до 10 секунд для важных уведомлений  
+        // Увеличиваем время до 10 секунд для важных уведомлений  
         const timeout = type === 'success' ? 10000 : 7000;
         setTimeout(() => {
             if (alertDiv.parentNode) {
@@ -211,7 +251,6 @@ class DocumentGenerator {
             }
         }, timeout);
     }
-
 
     getCSRFToken() {
         // Получаем CSRF токен из мета-тега или cookie

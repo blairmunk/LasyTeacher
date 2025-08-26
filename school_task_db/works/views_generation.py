@@ -19,28 +19,42 @@ logger = logging.getLogger(__name__)
 
 @require_http_methods(["POST"])
 def generate_work_ajax(request, work_id):
-    """Ajax генерация документов для работы"""
+    """Ajax генерация документов для работы с поддержкой 4 типов ответов"""
     work = get_object_or_404(Work, id=work_id)
     
     try:
-        # Получаем параметры из POST
-        generator_type = request.POST.get('generator_type', 'pdf')  # pdf, html, latex
-        with_answers = request.POST.get('with_answers', '0') == '1'
+        # Базовые параметры
+        generator_type = request.POST.get('generator_type', 'pdf')
         pdf_format = request.POST.get('format', 'A4')
         
+        # НОВОЕ: Определяем тип контента
+        answer_type = request.POST.get('answer_type', 'tasks_only')
+        # Совместимость со старым параметром
+        if request.POST.get('with_answers', '0') == '1' and answer_type == 'tasks_only':
+            answer_type = 'with_answers'
+        
         logger.info(f"🌐 Веб-генерация {generator_type} для работы {work.id}: {work.name}")
+        logger.info(f"   Тип контента: {answer_type}")
+        
+        # Определяем что включать в документ
+        content_config = {
+            'include_answers': answer_type in ['with_answers', 'with_short_solutions', 'with_full_solutions'],
+            'include_short_solutions': answer_type in ['with_short_solutions', 'with_full_solutions'],
+            'include_full_solutions': answer_type == 'with_full_solutions',
+            'answer_type': answer_type  # Для генераторов которые хотят знать точный тип
+        }
         
         # Выбираем генератор и запускаем
         if generator_type == 'latex':
-            files = generate_latex_work(work, with_answers)
+            files = generate_latex_work(work, content_config, pdf_format)
             file_type = 'LaTeX'
             
         elif generator_type == 'html':
-            files = generate_html_work(work, with_answers)
+            files = generate_html_work(work, content_config)
             file_type = 'HTML'
             
         elif generator_type == 'pdf':
-            files = generate_pdf_work(work, with_answers, pdf_format)
+            files = generate_pdf_work(work, content_config, pdf_format)
             file_type = 'PDF'
             
         else:
@@ -58,15 +72,25 @@ def generate_work_ajax(request, work_id):
                 files_info.append({
                     'name': path.name,
                     'size': f'{file_size:.1f} KB',
-                    'download_url': reverse('works:download_generated_file', kwargs={  # ИСПРАВЛЕНО: добавлен namespace
+                    'download_url': reverse('works:download_generated_file', kwargs={
                         'file_type': generator_type,
                         'filename': path.name
                     })
                 })
         
+        # Красивое сообщение об успехе
+        content_descriptions = {
+            'tasks_only': 'только задания',
+            'with_answers': 'с ответами',
+            'with_short_solutions': 'с краткими решениями',
+            'with_full_solutions': 'с полными решениями'
+        }
+        
+        success_message = f'{file_type} документ создан ({content_descriptions[answer_type]})'
+        
         return JsonResponse({
             'success': True,
-            'message': f'{file_type} документ успешно создан!',
+            'message': success_message,
             'files': files_info,
             'total_files': len(files_info)
         })
@@ -78,33 +102,38 @@ def generate_work_ajax(request, work_id):
             'error': str(e)
         })
 
-def generate_latex_work(work, with_answers=False):
-    """ИСПРАВЛЕНО: Генерирует LaTeX документ для работы"""
-    from latex_generator.generators.work_generator import WorkLatexGenerator  # ИСПРАВЛЕНО
+def generate_latex_work(work, content_config, pdf_format='A4'):
+    """ОБНОВЛЕНО: LaTeX генератор с поддержкой 4 типов контента"""
+    from latex_generator.generators.work_generator import WorkLatexGenerator
     
     generator = WorkLatexGenerator(output_dir='web_latex_output')
     
-    if with_answers:
+    # Передаем конфигурацию в генератор
+    generator._content_config = content_config
+    
+    # Используем старый метод, но с новой логикой внутри
+    if content_config['include_answers'] or content_config['include_short_solutions'] or content_config['include_full_solutions']:
         return generator.generate_with_answers(work)
     else:
         return generator.generate(work)
 
-
-def generate_html_work(work, with_answers=False):
-    """Генерирует HTML документ для работы"""
+def generate_html_work(work, content_config):
+    """ОБНОВЛЕНО: HTML генератор с поддержкой 4 типов контента"""
     from html_generator.generators.work_generator import WorkHtmlGenerator
     
     generator = WorkHtmlGenerator(output_dir='web_html_output')
     
-    if with_answers:
+    # Передаем конфигурацию в генератор
+    generator._content_config = content_config
+    
+    if content_config['include_answers'] or content_config['include_short_solutions'] or content_config['include_full_solutions']:
         return generator.generate_with_answers(work)  
     else:
         return generator.generate(work)
 
-def generate_pdf_work(work, with_answers=False, pdf_format='A4'):
-    """Генерирует PDF документ для работы через HTML→PDF"""
+def generate_pdf_work(work, content_config, pdf_format='A4'):
+    """ОБНОВЛЕНО: PDF генератор с поддержкой 4 типов контента"""
     import tempfile
-    import shutil
     from html_generator.generators.work_generator import WorkHtmlGenerator
     from pdf_generator.generators.html_to_pdf import HtmlToPdfGenerator
     
@@ -112,7 +141,10 @@ def generate_pdf_work(work, with_answers=False, pdf_format='A4'):
     with tempfile.TemporaryDirectory() as temp_dir:
         html_gen = WorkHtmlGenerator(output_dir=temp_dir)
         
-        if with_answers:
+        # Передаем конфигурацию в генератор
+        html_gen._content_config = content_config
+        
+        if content_config['include_answers'] or content_config['include_short_solutions'] or content_config['include_full_solutions']:
             html_files = html_gen.generate_with_answers(work)
         else:
             html_files = html_gen.generate(work)

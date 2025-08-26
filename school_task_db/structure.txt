@@ -1,6 +1,3 @@
-
-## Project File Tree
-
 ```
 school_task_db/
 ├── .gitignore
@@ -53,6 +50,7 @@ school_task_db/
 │   │   ├── __init__.py
 │   │   ├── file_utils.py
 │   │   ├── formula_utils.py
+│   │   ├── html_image_utils.py
 │   │   └── image_utils.py
 │   └── views.py
 ├── events
@@ -67,6 +65,24 @@ school_task_db/
 │   ├── tests.py
 │   ├── urls.py
 │   └── views.py
+├── html_generator
+│   ├── apps.py
+│   ├── generators
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   └── work_generator.py
+│   ├── management
+│   │   ├── __init__.py
+│   │   └── commands
+│   │       ├── __init__.py
+│   │       └── generate_html.py
+│   ├── templates
+│   │   └── html
+│   │       └── work
+│   │           └── all_variants.html
+│   └── utils
+│       ├── __init__.py
+│       └── html_specific.py
 ├── latex_generator
 │   ├── __init__.py
 │   ├── admin.py
@@ -104,17 +120,37 @@ school_task_db/
 │   ├── utils
 │   │   ├── __init__.py
 │   │   ├── compilation.py
+│   │   ├── latex_image_utils.py
 │   │   ├── latex_specific.py
 │   │   └── latex_utils.py
 │   └── views.py
 ├── latex_output
-│   ├── Контрольная_работа_1_all_variants.aux
-│   ├── Контрольная_работа_1_all_variants.tex
-│   ├── ТЕСТ: Работа с ошибками формул_latex_errors.txt
-│   ├── ТЕСТ__Контрольная_работа_с_изображениями_all_variants.aux
-│   ├── ТЕСТ__Контрольная_работа_с_изображениями_all_variants.tex
-│   └── ТЕСТ__Работа_с_ошибками_формул_all_variants.tex
+│   ├── ТЕСТ_LaTeX_с_изображениями_all_variants.tex
+│   ├── ТЕСТ_Контрольная_работа_с_изображениями_all_variants.aux
+│   ├── ТЕСТ_Контрольная_работа_с_изображениями_all_variants.tex
+│   ├── ТЕСТ_Работа_с_ошибками_формул_all_variants.aux
+│   └── ТЕСТ_Работа_с_ошибками_формул_all_variants.tex
 ├── manage.py
+├── pdf_generator
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── generators
+│   │   ├── __init__.py
+│   │   └── html_to_pdf.py
+│   ├── management
+│   │   ├── __init__.py
+│   │   └── commands
+│   │       ├── __init__.py
+│   │       ├── generate_pdf.py
+│   │       └── html_to_pdf.py
+│   ├── migrations
+│   │   └── __init__.py
+│   ├── models.py
+│   ├── tests.py
+│   ├── utils
+│   │   └── __init__.py
+│   └── views.py
 ├── references
 │   ├── __init__.py
 │   ├── admin.py
@@ -162,6 +198,7 @@ school_task_db/
 │       └── js
 │           ├── admin_inline.js
 │           └── admin_task_form.js
+├── structure.txt
 ├── students
 │   ├── __init__.py
 │   ├── admin.py
@@ -262,7 +299,6 @@ school_task_db/
     ├── models.py
     ├── tests.py
     ├── urls.py
-    └── views.py
+    ├── views.py
+    └── views_generation.py
 ```
-
-

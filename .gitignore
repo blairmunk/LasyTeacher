@@ -201,6 +201,8 @@ latex_output/
 html_output/
 pdf_output/
 pdf_test/
+web_html_output/
+web_pdf_output/
 
 
 

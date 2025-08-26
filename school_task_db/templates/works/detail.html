@@ -65,6 +65,135 @@
         </div>
         {% endif %}
 
+        <!-- Блок генерации документов -->
+        <div class="card mb-4 document-generation-block">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-export"></i> Генерация документов
+                </h5>
+                <small class="text-muted">
+                    Варианты: {{ work.variant_counter }}
+                </small>
+            </div>
+            <div class="card-body">
+                <!-- Быстрая генерация -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h6 class="border-bottom pb-2 mb-3">
+                            <i class="fas fa-bolt text-warning"></i> Быстрая генерация
+                        </h6>
+                        <div class="btn-group me-3 mb-2" role="group" aria-label="PDF генерация">
+                            <button type="button" class="btn btn-primary btn-generate-doc" 
+                                    data-work-id="{{ work.id }}" 
+                                    data-type="pdf"
+                                    data-with-answers="0"
+                                    title="HTML→PDF через современный движок">
+                                <i class="fas fa-mobile-alt"></i> PDF
+                            </button>
+                            <button type="button" class="btn btn-success btn-generate-doc" 
+                                    data-work-id="{{ work.id }}" 
+                                    data-type="pdf"  
+                                    data-with-answers="1"
+                                    title="PDF с ответами и решениями">
+                                <i class="fas fa-mobile-alt"></i> PDF + ответы
+                            </button>
+                        </div>
+                        
+                        <div class="btn-group me-3 mb-2" role="group" aria-label="Другие форматы">
+                            <button type="button" class="btn btn-info btn-generate-doc" 
+                                    data-work-id="{{ work.id }}" 
+                                    data-type="html"
+                                    data-with-answers="0"
+                                    title="HTML с MathJax формулами">
+                                <i class="fas fa-globe"></i> HTML
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-generate-doc" 
+                                    data-work-id="{{ work.id }}" 
+                                    data-type="latex"
+                                    data-with-answers="0"
+                                    title="LaTeX исходный код">
+                                <i class="fas fa-file-code"></i> LaTeX
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Расширенные настройки -->
+                <div class="accordion" id="advancedSettings">
+                    <div class="accordion-item">
+                        <h6 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" 
+                                    data-bs-toggle="collapse" data-bs-target="#collapseAdvanced">
+                                <i class="fas fa-cog me-2"></i> Расширенные настройки
+                            </button>
+                        </h6>
+                        <div id="collapseAdvanced" class="accordion-collapse collapse" data-bs-parent="#advancedSettings">
+                            <div class="accordion-body">
+                                <form id="advanced-generation-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="work_id" value="{{ work.id }}">
+                                    
+                                    <div class="row">
+                                        <div class="col-md-3 mb-3">
+                                            <label for="generator_type" class="form-label">Тип генератора:</label>
+                                            <select name="generator_type" id="generator_type" class="form-select">
+                                                <option value="pdf">📱 PDF (HTML→PDF)</option>
+                                                <option value="html">🌐 HTML (с MathJax)</option>
+                                                <option value="latex">📝 LaTeX</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="col-md-3 mb-3">
+                                            <label for="format" class="form-label">Формат страницы:</label>
+                                            <select name="format" id="format" class="form-select">
+                                                <option value="A4">A4</option>
+                                                <option value="A3">A3</option>
+                                                <option value="Letter">Letter</option>
+                                                <option value="Legal">Legal</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="col-md-3 mb-3">
+                                            <div class="form-check mt-4">
+                                                <input class="form-check-input" type="checkbox" name="with_answers" id="with_answers" value="1">
+                                                <label class="form-check-label" for="with_answers">
+                                                    Включить ответы и решения
+                                                </label>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label">&nbsp;</label>
+                                            <button type="submit" class="btn btn-primary d-block">
+                                                <i class="fas fa-rocket"></i> Генерировать
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Статистика -->
+                <div class="mt-3 p-2 bg-light rounded">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i>
+                        📊 Работа содержит: <strong>{{ work.variant_counter }}</strong> {{ work.variant_counter|pluralize:"вариант,варианта,вариантов" }}
+                        {% if work.workanaloggroup_set.exists %}
+                            {% with task_count=work.workanaloggroup_set.all|length %}
+                            • <strong>{{ task_count }}</strong> {{ task_count|pluralize:"группа заданий,группы заданий,групп заданий" }}
+                            {% endwith %}
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+
+
+
+
+
         <h4 class="mt-4">Созданные варианты ({{ variants.count }})</h4>
         {% if variants %}
         <div class="row">

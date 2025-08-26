@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import views, views_generation
 
 app_name = 'works'
 
@@ -11,4 +11,8 @@ urlpatterns = [
     path('<int:work_id>/generate-variants/', views.generate_variants, name='generate-variants'),
     path('variants/', views.VariantListView.as_view(), name='variant-list'),
     path('variants/<int:pk>/', views.VariantDetailView.as_view(), name='variant-detail'),
+    path('ajax/generate/<int:work_id>/', views_generation.generate_work_ajax, name='generate_work_ajax'),
+    path('ajax/generate/variant/<int:variant_id>/', views_generation.generate_variant_ajax, name='generate_variant_ajax'), 
+    path('ajax/generation-status/', views_generation.generation_status_ajax, name='generation_status_ajax'),
+    path('download/<str:file_type>/<str:filename>/', views_generation.download_generated_file, name='download_generated_file'),
 ]

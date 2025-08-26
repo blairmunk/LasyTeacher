@@ -1,0 +1,43 @@
+{
+  "metadata": {
+    "created_at": "2025-08-26T16:16:37.114363",
+    "size": {
+      "students": 500,
+      "tasks": 2000,
+      "works": 50
+    },
+    "total_records": {
+      "students": 498,
+      "tasks": 2000,
+      "works": 50,
+      "events": 14,
+      "marks": 515
+    }
+  },
+  "summary": {
+    "subjects": [
+      "Физика",
+      "Математика"
+    ],
+    "grades": [
+      8,
+      9,
+      7
+    ],
+    "task_types": [
+      "test",
+      "theoretical",
+      "computational",
+      "qualitative",
+      "practical"
+    ],
+    "work_types": [
+      "test",
+      "homework",
+      "exam",
+      "practice",
+      "diagnostic",
+      "quiz"
+    ]
+  }
+}

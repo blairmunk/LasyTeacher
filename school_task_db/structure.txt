@@ -124,12 +124,6 @@ school_task_db/
 │   │   ├── latex_specific.py
 │   │   └── latex_utils.py
 │   └── views.py
-├── latex_output
-│   ├── ТЕСТ_LaTeX_с_изображениями_all_variants.tex
-│   ├── ТЕСТ_Контрольная_работа_с_изображениями_all_variants.aux
-│   ├── ТЕСТ_Контрольная_работа_с_изображениями_all_variants.tex
-│   ├── ТЕСТ_Работа_с_ошибками_формул_all_variants.aux
-│   └── ТЕСТ_Работа_с_ошибками_формул_all_variants.tex
 ├── manage.py
 ├── pdf_generator
 │   ├── __init__.py
@@ -194,10 +188,12 @@ school_task_db/
 │   ├── urls.py
 │   └── wsgi.py
 ├── static
-│   └── admin
-│       └── js
-│           ├── admin_inline.js
-│           └── admin_task_form.js
+│   ├── admin
+│   │   └── js
+│   │       ├── admin_inline.js
+│   │       └── admin_task_form.js
+│   └── js
+│       └── document_generation.js
 ├── structure.txt
 ├── students
 │   ├── __init__.py
@@ -285,6 +281,8 @@ school_task_db/
 │       ├── list.html
 │       ├── variant_detail.html
 │       └── variant_list.html
+├── web_latex_output
+│   └── ТЕСТ_LaTeX_с_изображениями_all_variants.tex
 └── works
     ├── __init__.py
     ├── admin.py

@@ -1,7 +1,13 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, register_converter
 from django.conf import settings
 from django.conf.urls.static import static
+
+# ДОБАВЛЕНО: Регистрация универсальных конвертеров
+from core.url_converters import UniversalUUIDConverter, FlexibleUUIDConverter
+
+register_converter(UniversalUUIDConverter, 'pk')  # Переопределяем стандартный pk
+register_converter(FlexibleUUIDConverter, 'flex')  # Гибкий конвертер
 
 urlpatterns = [
     path('admin/', admin.site.urls),

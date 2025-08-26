@@ -1,9 +1,12 @@
+# core/models.py
 from django.db import models
 import uuid
 
 class BaseModel(models.Model):
-    """Базовая модель с общими полями"""
-    uuid = models.UUIDField('UUID', default=uuid.uuid4, editable=False, unique=True, db_index=True)
+    """Базовая модель с UUID как primary key"""
+    # ИЗМЕНЕНО: UUID стал primary key
+    id = models.UUIDField('ID', primary_key=True, default=uuid.uuid4, editable=False)
+    
     created_at = models.DateTimeField('Создано', auto_now_add=True)
     updated_at = models.DateTimeField('Обновлено', auto_now=True)
     
@@ -12,11 +15,11 @@ class BaseModel(models.Model):
     
     def get_short_uuid(self):
         """Возвращает последние 4 символа UUID для отображения"""
-        return str(self.uuid)[-4:].upper()
+        return str(self.id)[-4:].upper()
     
     def get_medium_uuid(self):
         """Возвращает последние 8 символов UUID"""
-        return str(self.uuid)[-8:].upper()
+        return str(self.id)[-8:].upper()
     
     def get_display_id(self):
         """Красивый ID для отображения пользователю"""
@@ -24,26 +27,31 @@ class BaseModel(models.Model):
     
     @classmethod
     def get_by_uuid(cls, uuid_str):
-        """Поиск по полному или частичному UUID"""
+        """УПРОЩЕНО: теперь UUID = primary key"""
         try:
             if len(uuid_str) == 36:
                 # Полный UUID
-                return cls.objects.get(uuid=uuid_str)
+                return cls.objects.get(id=uuid_str)  # id теперь UUID
             elif len(uuid_str) >= 3:
-                # Поиск по окончанию UUID (регистронезависимый)
+                # Поиск по окончанию UUID
                 uuid_str = uuid_str.lower().replace('#', '')
-                matches = cls.objects.filter(uuid__iendswith=uuid_str)
-                if matches.count() == 1:
-                    return matches.first()
-                elif matches.count() > 1:
-                    # Если найдено несколько, вернуть точное совпадение по последним символам
-                    for obj in matches:
-                        if str(obj.uuid)[-len(uuid_str):].lower() == uuid_str:
-                            return obj
-                return matches.first()
+                matches = cls.objects.filter(id__iendswith=uuid_str)
+                return matches.first() if matches.count() == 1 else None
         except (cls.DoesNotExist, ValueError):
             pass
         return None
+    
+    # НОВОЕ: удобные методы для совместимости
+    @property
+    def uuid(self):
+        """Алиас для совместимости со старым кодом"""
+        return self.id
+    
+    @property
+    def pk(self):
+        """Primary key - теперь UUID"""
+        return self.id
+
 
 class BaseModelWithOrder(BaseModel):
     """Базовая модель с полем порядка"""

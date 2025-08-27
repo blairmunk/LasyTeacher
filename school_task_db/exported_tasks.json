@@ -1,0 +1,2657 @@
+{
+  "format_version": "1.0",
+  "metadata": {
+    "description": "Экспорт заданий из базы данных",
+    "created_at": "2025-08-27T09:48:49.204513",
+    "filters": {
+      "subject": null,
+      "grade_level": null,
+      "limit": null
+    },
+    "totals": {
+      "tasks": 101,
+      "groups": 18,
+      "topics": 17
+    }
+  },
+  "topics": [
+    {
+      "name": "Параллельные прямые",
+      "subject": "Математика",
+      "grade_level": 7,
+      "section": "Геометрия",
+      "description": "Изучение параллельные прямые в 7 классе"
+    },
+    {
+      "name": "Площадь",
+      "subject": "Математика",
+      "grade_level": 8,
+      "section": "Геометрия",
+      "description": "Изучение площадь в 8 классе"
+    },
+    {
+      "name": "Тригонометрия",
+      "subject": "Математика",
+      "grade_level": 9,
+      "section": "Алгебра",
+      "description": "Изучение тригонометрия в 9 классе"
+    },
+    {
+      "name": "Прогрессии",
+      "subject": "Математика",
+      "grade_level": 9,
+      "section": "Алгебра",
+      "description": "Изучение прогрессии в 9 классе"
+    },
+    {
+      "name": "Взаимодействие тел",
+      "subject": "Физика",
+      "grade_level": 7,
+      "section": "Механика",
+      "description": "Изучение взаимодействие тел в 7 классе"
+    },
+    {
+      "name": "Четырехугольники",
+      "subject": "Математика",
+      "grade_level": 8,
+      "section": "Геометрия",
+      "description": "Изучение четырехугольники в 8 классе"
+    },
+    {
+      "name": "Функции",
+      "subject": "Математика",
+      "grade_level": 7,
+      "section": "Алгебра",
+      "description": "Изучение функции в 7 классе"
+    },
+    {
+      "name": "Линейные уравнения",
+      "subject": "Математика",
+      "grade_level": 7,
+      "section": "Алгебра",
+      "description": "Изучение линейные уравнения в 7 классе"
+    },
+    {
+      "name": "Квадратные корни",
+      "subject": "Математика",
+      "grade_level": 8,
+      "section": "Алгебра",
+      "description": "Изучение квадратные корни в 8 классе"
+    },
+    {
+      "name": "Механическое движение",
+      "subject": "Физика",
+      "grade_level": 7,
+      "section": "Механика",
+      "description": "Изучение механическое движение в 7 классе"
+    },
+    {
+      "name": "Треугольники",
+      "subject": "Математика",
+      "grade_level": 7,
+      "section": "Геометрия",
+      "description": "Изучение треугольники в 7 классе"
+    },
+    {
+      "name": "Неравенства",
+      "subject": "Математика",
+      "grade_level": 8,
+      "section": "Алгебра",
+      "description": "Изучение неравенства в 8 классе"
+    },
+    {
+      "name": "Внутренняя энергия",
+      "subject": "Физика",
+      "grade_level": 8,
+      "section": "Тепловые явления",
+      "description": "Изучение внутренняя энергия в 8 классе"
+    },
+    {
+      "name": "Алгебраические выражения",
+      "subject": "Математика",
+      "grade_level": 7,
+      "section": "Алгебра",
+      "description": "Изучение алгебраические выражения в 7 классе"
+    },
+    {
+      "name": "Изменения агрегатных состояний",
+      "subject": "Физика",
+      "grade_level": 8,
+      "section": "Тепловые явления",
+      "description": "Изучение изменения агрегатных состояний в 8 классе"
+    },
+    {
+      "name": "Квадратные уравнения",
+      "subject": "Математика",
+      "grade_level": 8,
+      "section": "Алгебра",
+      "description": "Изучение квадратные уравнения в 8 классе"
+    },
+    {
+      "name": "Функции и их свойства",
+      "subject": "Математика",
+      "grade_level": 9,
+      "section": "Алгебра",
+      "description": "Изучение функции и их свойства в 9 классе"
+    }
+  ],
+  "analog_groups": [
+    {
+      "id": "5da667cb-296e-4b0c-b89b-1361d3638044",
+      "name": "Математика 7 Линейные уравнения - Группа 1",
+      "description": "Аналогичные задания по теме Линейные уравнения"
+    },
+    {
+      "id": "25fad3a5-c6a3-4173-8223-a552f70e90dd",
+      "name": "Математика 7 Треугольники - Группа 1",
+      "description": "Аналогичные задания по теме Треугольники"
+    },
+    {
+      "id": "20114d6a-7c5b-4e1c-92c3-07dcc68c9151",
+      "name": "Математика 9 Прогрессии - Группа 1",
+      "description": "Аналогичные задания по теме Прогрессии"
+    },
+    {
+      "id": "811dac74-50e9-4610-86bc-d4a3d042189e",
+      "name": "Математика 9 Тригонометрия - Группа 2",
+      "description": "Аналогичные задания по теме Тригонометрия"
+    },
+    {
+      "id": "ab14e17a-b86a-4a0c-819c-72754b6801b6",
+      "name": "Физика 8 Изменения агрегатных состояний - Группа 1",
+      "description": "Аналогичные задания по теме Изменения агрегатных состояний"
+    },
+    {
+      "id": "4efd4088-492b-4722-b032-a89ff598e09d",
+      "name": "Физика 7 Механическое движение - Группа 2",
+      "description": "Аналогичные задания по теме Механическое движение"
+    },
+    {
+      "id": "e6eff896-a012-4a90-9c41-9265e10f795f",
+      "name": "Физика 7 Взаимодействие тел - Группа 2",
+      "description": "Аналогичные задания по теме Взаимодействие тел"
+    },
+    {
+      "id": "7191b654-03bb-438e-a004-e458c5d50dd8",
+      "name": "Физика 7 Механическое движение - Группа 1",
+      "description": "Аналогичные задания по теме Механическое движение"
+    },
+    {
+      "id": "977067d0-af2c-4410-bb85-90cc451d011f",
+      "name": "Математика 7 Алгебраические выражения - Группа 1",
+      "description": "Аналогичные задания по теме Алгебраические выражения"
+    },
+    {
+      "id": "1c709881-b740-4f9b-836c-371d76ac0568",
+      "name": "Математика 9 Тригонометрия - Группа 1",
+      "description": "Аналогичные задания по теме Тригонометрия"
+    },
+    {
+      "id": "a6fa4084-3cda-42ed-9070-2d3d5201ba36",
+      "name": "Математика 8 Четырехугольники - Группа 1",
+      "description": "Аналогичные задания по теме Четырехугольники"
+    },
+    {
+      "id": "8cf12474-d90f-4fdd-be40-72cc79e874be",
+      "name": "Физика 8 Внутренняя энергия - Группа 1",
+      "description": "Аналогичные задания по теме Внутренняя энергия"
+    },
+    {
+      "id": "789a2f02-2c57-4713-941d-20d31830213c",
+      "name": "Математика 9 Функции и их свойства - Группа 1",
+      "description": "Аналогичные задания по теме Функции и их свойства"
+    },
+    {
+      "id": "e9a3a6e8-2be1-4d01-881d-c5a146ab68f3",
+      "name": "Математика 8 Квадратные корни - Группа 1",
+      "description": "Аналогичные задания по теме Квадратные корни"
+    },
+    {
+      "id": "ab8bccf9-03a8-4b2e-9b3e-83613a055d7c",
+      "name": "Математика 8 Неравенства - Группа 1",
+      "description": "Аналогичные задания по теме Неравенства"
+    },
+    {
+      "id": "faef8c76-686d-4972-b73a-7ef7a4d11029",
+      "name": "Физика 8 Изменения агрегатных состояний - Группа 2",
+      "description": "Аналогичные задания по теме Изменения агрегатных состояний"
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111111",
+      "name": "Квадратные уравнения - тест импорта",
+      "description": "Тестовая группа для проверки импорта"
+    },
+    {
+      "id": "5be3244d-3f49-4f2f-8284-b19da230328c",
+      "name": "Физика 7 Взаимодействие тел - Группа 1",
+      "description": "Аналогичные задания по теме Взаимодействие тел"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "22222222-2222-2222-2222-222222222222",
+      "text": "Решите уравнение: $x^2 - 5x + 6 = 0$",
+      "answer": "$x_1 = 2, x_2 = 3$",
+      "short_solution": "Используем формулу корней квадратного уравнения",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "",
+      "requirement_element": "",
+      "task_type": "computational",
+      "difficulty": 3,
+      "cognitive_level": "understand",
+      "estimated_time": null,
+      "topic": {
+        "name": "Квадратные уравнения",
+        "subject": "Математика",
+        "grade_level": 8
+      },
+      "groups": [
+        "11111111-1111-1111-1111-111111111111"
+      ]
+    },
+    {
+      "id": "39ecaf39-1365-4c2a-85c4-e67f56527f4a",
+      "text": "Решите уравнение: $7x + 18 = 12$",
+      "answer": "$x_1 = 16, x_2 = 67$",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "2.3",
+      "requirement_element": "3.3",
+      "task_type": "test",
+      "difficulty": 1,
+      "cognitive_level": "remember",
+      "estimated_time": 7,
+      "topic": {
+        "name": "Треугольники",
+        "subject": "Математика",
+        "grade_level": 7
+      },
+      "groups": [
+        "25fad3a5-c6a3-4173-8223-a552f70e90dd"
+      ]
+    },
+    {
+      "id": "eb33b0bc-702b-4064-afcb-f4ed910050e7",
+      "text": "Найдите значение выражения: $(20)^2 - 11 \\cdot 18 + 18$",
+      "answer": "Ответ: 38",
+      "short_solution": "Применяем формулу и получаем Ответ: 38",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: Ответ: 38",
+      "hint": "Вспомните основные формулы по теме 'Прогрессии'",
+      "instruction": "",
+      "content_element": "1.5",
+      "requirement_element": "2.4",
+      "task_type": "computational",
+      "difficulty": 3,
+      "cognitive_level": "remember",
+      "estimated_time": 14,
+      "topic": {
+        "name": "Прогрессии",
+        "subject": "Математика",
+        "grade_level": 9
+      },
+      "groups": [
+        "20114d6a-7c5b-4e1c-92c3-07dcc68c9151"
+      ]
+    },
+    {
+      "id": "353e0149-4e2c-468a-b3f4-4a08c14560c2",
+      "text": "Упростите выражение: $\\frac{2x + 3}{15x - 3}$",
+      "answer": "$\\frac{46}{43}$",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "Вспомните основные формулы по теме 'Прогрессии'",
+      "instruction": "",
+      "content_element": "1.2",
+      "requirement_element": "3.3",
+      "task_type": "test",
+      "difficulty": 4,
+      "cognitive_level": "remember",
+      "estimated_time": 7,
+      "topic": {
+        "name": "Прогрессии",
+        "subject": "Математика",
+        "grade_level": 9
+      },
+      "subtopic": {
+        "name": "Сумма прогрессии"
+      },
+      "groups": [
+        "20114d6a-7c5b-4e1c-92c3-07dcc68c9151"
+      ]
+    },
+    {
+      "id": "845a3b04-6077-429a-bc8b-d2251411563d",
+      "text": "Автомобиль движется со скоростью 4 м/с. Какой путь он пройдет за 2 секунд?",
+      "answer": "Q = 98 кДж",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "1.4",
+      "requirement_element": "2.3",
+      "task_type": "computational",
+      "difficulty": 1,
+      "cognitive_level": "analyze",
+      "estimated_time": 13,
+      "topic": {
+        "name": "Изменения агрегатных состояний",
+        "subject": "Физика",
+        "grade_level": 8
+      },
+      "groups": [
+        "faef8c76-686d-4972-b73a-7ef7a4d11029"
+      ]
+    },
+    {
+      "id": "41603a77-b386-430c-b75c-7ab337627510",
+      "text": "Найдите значение выражения: $(19)^2 - 10 \\cdot 20 + 2$",
+      "answer": "Точки пересечения: (15, 0) и (0, 5)",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "1.1",
+      "requirement_element": "2.2",
+      "task_type": "theoretical",
+      "difficulty": 3,
+      "cognitive_level": "evaluate",
+      "estimated_time": 14,
+      "topic": {
+        "name": "Тригонометрия",
+        "subject": "Математика",
+        "grade_level": 9
+      },
+      "groups": [
+        "811dac74-50e9-4610-86bc-d4a3d042189e"
+      ]
+    },
+    {
+      "id": "6d036bc5-ec56-4569-97b3-a252c64ad3d6",
+      "text": "Найдите количество теплоты, необходимое для плавления 10 кг льда при температуре плавления",
+      "answer": "ρ = 58 г/см³",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "2.5",
+      "requirement_element": "3.4",
+      "task_type": "theoretical",
+      "difficulty": 2,
+      "cognitive_level": "remember",
+      "estimated_time": 5,
+      "topic": {
+        "name": "Механическое движение",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "groups": [
+        "4efd4088-492b-4722-b032-a89ff598e09d"
+      ]
+    },
+    {
+      "id": "99b926ce-7885-4364-8474-3b3a1a032dfc",
+      "text": "Найдите количество теплоты, необходимое для плавления 18 кг льда при температуре плавления",
+      "answer": "s = 1 м",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "Вспомните основные формулы по теме 'Механическое движение'",
+      "instruction": "",
+      "content_element": "4.5",
+      "requirement_element": "2.1",
+      "task_type": "practical",
+      "difficulty": 5,
+      "cognitive_level": "evaluate",
+      "estimated_time": 9,
+      "topic": {
+        "name": "Механическое движение",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "subtopic": {
+        "name": "Путь и перемещение"
+      },
+      "groups": [
+        "4efd4088-492b-4722-b032-a89ff598e09d"
+      ]
+    },
+    {
+      "id": "408007a9-e039-4280-b982-9c5922ff24f2",
+      "text": "Упростите выражение: $\\frac{12x + 16}{20x - 17}$",
+      "answer": "x = 79",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "1.3",
+      "requirement_element": "1.1",
+      "task_type": "practical",
+      "difficulty": 3,
+      "cognitive_level": "understand",
+      "estimated_time": 8,
+      "topic": {
+        "name": "Тригонометрия",
+        "subject": "Математика",
+        "grade_level": 9
+      },
+      "subtopic": {
+        "name": "Формулы приведения"
+      },
+      "groups": [
+        "1c709881-b740-4f9b-836c-371d76ac0568"
+      ]
+    },
+    {
+      "id": "87a5ffcd-67a8-4b55-a85a-20926f183ab2",
+      "text": "Решите уравнение: $17x + 16 = 19$",
+      "answer": "x = 76",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "Вспомните основные формулы по теме 'Квадратные уравнения'",
+      "instruction": "",
+      "content_element": "1.3",
+      "requirement_element": "1.2",
+      "task_type": "qualitative",
+      "difficulty": 5,
+      "cognitive_level": "remember",
+      "estimated_time": 5,
+      "topic": {
+        "name": "Квадратные уравнения",
+        "subject": "Математика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Теорема Виета"
+      }
+    },
+    {
+      "id": "24d19924-acdc-45c8-9ca4-615725415ea8",
+      "text": "При нагревании 11 г воды от 20°C до 13°C затрачено 8 Дж энергии. Найдите удельную теплоемкость воды.",
+      "answer": "Q = 71 кДж",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "3.1",
+      "requirement_element": "1.3",
+      "task_type": "qualitative",
+      "difficulty": 1,
+      "cognitive_level": "remember",
+      "estimated_time": 13,
+      "topic": {
+        "name": "Изменения агрегатных состояний",
+        "subject": "Физика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Плавление"
+      },
+      "groups": [
+        "faef8c76-686d-4972-b73a-7ef7a4d11029"
+      ]
+    },
+    {
+      "id": "b1b2548d-5dd2-48c3-9d39-808db9d4e1ed",
+      "text": "Упростите выражение: $\\frac{5x + 1}{8x - 9}$",
+      "answer": "Ответ: 76",
+      "short_solution": "Применяем формулу и получаем Ответ: 76",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: Ответ: 76",
+      "hint": "",
+      "instruction": "",
+      "content_element": "3.5",
+      "requirement_element": "3.1",
+      "task_type": "theoretical",
+      "difficulty": 4,
+      "cognitive_level": "analyze",
+      "estimated_time": 3,
+      "topic": {
+        "name": "Площадь",
+        "subject": "Математика",
+        "grade_level": 8
+      }
+    },
+    {
+      "id": "4bc3b2d9-5758-4dc7-ae6d-6ad5f669c03e",
+      "text": "Упростите выражение: $\\frac{20x + 18}{6x - 9}$",
+      "answer": "$\\frac{96}{61}$",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "4.1",
+      "requirement_element": "1.4",
+      "task_type": "computational",
+      "difficulty": 3,
+      "cognitive_level": "evaluate",
+      "estimated_time": 8,
+      "topic": {
+        "name": "Четырехугольники",
+        "subject": "Математика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Прямоугольник"
+      },
+      "groups": [
+        "a6fa4084-3cda-42ed-9070-2d3d5201ba36"
+      ]
+    },
+    {
+      "id": "eb132610-b8ba-480d-aa2c-b9fae842e0d6",
+      "text": "Тело массой 12 кг действует на опору с силой 6 Н. Найдите ускорение свободного падения.",
+      "answer": "Q = 77 кДж",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "2.5",
+      "requirement_element": "1.4",
+      "task_type": "practical",
+      "difficulty": 5,
+      "cognitive_level": "remember",
+      "estimated_time": 10,
+      "topic": {
+        "name": "Изменения агрегатных состояний",
+        "subject": "Физика",
+        "grade_level": 8
+      },
+      "groups": [
+        "faef8c76-686d-4972-b73a-7ef7a4d11029"
+      ]
+    },
+    {
+      "id": "f939abfd-bc60-49d4-9bf4-fd946e5c9899",
+      "text": "Тело массой 13 кг действует на опору с силой 8 Н. Найдите ускорение свободного падения.",
+      "answer": "c = 68 Дж/(кг·°C)",
+      "short_solution": "Применяем формулу и получаем c = 68 Дж/(кг·°C)",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: c = 68 Дж/(кг·°C)",
+      "hint": "",
+      "instruction": "",
+      "content_element": "3.5",
+      "requirement_element": "2.2",
+      "task_type": "theoretical",
+      "difficulty": 4,
+      "cognitive_level": "remember",
+      "estimated_time": 7,
+      "topic": {
+        "name": "Внутренняя энергия",
+        "subject": "Физика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Способы изменения внутренней энергии"
+      }
+    },
+    {
+      "id": "5b0766f7-f1f6-493e-8033-a007b85a915b",
+      "text": "Тело массой 8 кг действует на опору с силой 1 Н. Найдите ускорение свободного падения.",
+      "answer": "g = 84 м/с²",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "3.5",
+      "requirement_element": "2.1",
+      "task_type": "test",
+      "difficulty": 3,
+      "cognitive_level": "understand",
+      "estimated_time": 10,
+      "topic": {
+        "name": "Взаимодействие тел",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "groups": [
+        "5be3244d-3f49-4f2f-8284-b19da230328c"
+      ]
+    },
+    {
+      "id": "5745c493-28f4-4bd0-b579-e0f0b6d1d23e",
+      "text": "Найдите количество теплоты, необходимое для плавления 3 кг льда при температуре плавления",
+      "answer": "ρ = 32 г/см³",
+      "short_solution": "Применяем формулу и получаем ρ = 32 г/см³",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: ρ = 32 г/см³",
+      "hint": "",
+      "instruction": "",
+      "content_element": "1.3",
+      "requirement_element": "3.2",
+      "task_type": "qualitative",
+      "difficulty": 4,
+      "cognitive_level": "apply",
+      "estimated_time": 14,
+      "topic": {
+        "name": "Механическое движение",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "subtopic": {
+        "name": "Равномерное движение"
+      },
+      "groups": [
+        "4efd4088-492b-4722-b032-a89ff598e09d"
+      ]
+    },
+    {
+      "id": "ab00dabc-38ae-48fa-9849-7c966adbceca",
+      "text": "Тело массой 18 кг действует на опору с силой 9 Н. Найдите ускорение свободного падения.",
+      "answer": "ρ = 29 г/см³",
+      "short_solution": "Применяем формулу и получаем ρ = 29 г/см³",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: ρ = 29 г/см³",
+      "hint": "",
+      "instruction": "",
+      "content_element": "3.1",
+      "requirement_element": "1.3",
+      "task_type": "test",
+      "difficulty": 3,
+      "cognitive_level": "remember",
+      "estimated_time": 15,
+      "topic": {
+        "name": "Механическое движение",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "subtopic": {
+        "name": "Равномерное движение"
+      },
+      "groups": [
+        "7191b654-03bb-438e-a004-e458c5d50dd8"
+      ]
+    },
+    {
+      "id": "ae768bbe-8ec9-472c-ba03-3428a915ccff",
+      "text": "Найдите количество теплоты, необходимое для плавления 13 кг льда при температуре плавления",
+      "answer": "Q = 82 кДж",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "1.1",
+      "requirement_element": "2.2",
+      "task_type": "practical",
+      "difficulty": 1,
+      "cognitive_level": "analyze",
+      "estimated_time": 14,
+      "topic": {
+        "name": "Механическое движение",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "groups": [
+        "7191b654-03bb-438e-a004-e458c5d50dd8"
+      ]
+    },
+    {
+      "id": "c7069708-f099-43e8-a1e1-1cda792bf3ee",
+      "text": "Найдите корни квадратного уравнения: $2x^2 + 3x + 20 = 0$",
+      "answer": "Точки пересечения: (50, 0) и (0, 48)",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "Вспомните основные формулы по теме 'Алгебраические выражения'",
+      "instruction": "",
+      "content_element": "1.4",
+      "requirement_element": "2.1",
+      "task_type": "test",
+      "difficulty": 1,
+      "cognitive_level": "analyze",
+      "estimated_time": 9,
+      "topic": {
+        "name": "Алгебраические выражения",
+        "subject": "Математика",
+        "grade_level": 7
+      },
+      "groups": [
+        "977067d0-af2c-4410-bb85-90cc451d011f"
+      ]
+    },
+    {
+      "id": "79b39035-7515-40ad-bead-11f64fc8f2d9",
+      "text": "Найдите корни квадратного уравнения: $20x^2 + 5x + 12 = 0$",
+      "answer": "x = 18",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "4.2",
+      "requirement_element": "1.1",
+      "task_type": "qualitative",
+      "difficulty": 1,
+      "cognitive_level": "understand",
+      "estimated_time": 12,
+      "topic": {
+        "name": "Тригонометрия",
+        "subject": "Математика",
+        "grade_level": 9
+      },
+      "groups": [
+        "811dac74-50e9-4610-86bc-d4a3d042189e"
+      ]
+    },
+    {
+      "id": "e4649408-7ef1-425c-834b-45f3685f5c08",
+      "text": "Автомобиль движется со скоростью 14 м/с. Какой путь он пройдет за 8 секунд?",
+      "answer": "c = 46 Дж/(кг·°C)",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "Вспомните основные формулы по теме 'Механическое движение'",
+      "instruction": "",
+      "content_element": "4.1",
+      "requirement_element": "1.3",
+      "task_type": "practical",
+      "difficulty": 1,
+      "cognitive_level": "evaluate",
+      "estimated_time": 6,
+      "topic": {
+        "name": "Механическое движение",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "subtopic": {
+        "name": "Скорость"
+      },
+      "groups": [
+        "7191b654-03bb-438e-a004-e458c5d50dd8"
+      ]
+    },
+    {
+      "id": "b9c9507c-6218-4fc2-8286-3c1590a51a12",
+      "text": "Найдите значение выражения: $(13)^2 - 14 \\cdot 7 + 6$",
+      "answer": "$x_1 = 57, x_2 = 54$",
+      "short_solution": "Применяем формулу и получаем $x_1 = 57, x_2 = 54$",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: $x_1 = 57, x_2 = 54$",
+      "hint": "",
+      "instruction": "",
+      "content_element": "2.5",
+      "requirement_element": "1.4",
+      "task_type": "computational",
+      "difficulty": 2,
+      "cognitive_level": "apply",
+      "estimated_time": 13,
+      "topic": {
+        "name": "Треугольники",
+        "subject": "Математика",
+        "grade_level": 7
+      },
+      "groups": [
+        "25fad3a5-c6a3-4173-8223-a552f70e90dd"
+      ]
+    },
+    {
+      "id": "03d6d738-e0a9-48dc-ac2a-7111281ded32",
+      "text": "Определите плотность вещества, если масса тела 3 г, а объем 11 см³",
+      "answer": "Q = 62 кДж",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "3.5",
+      "requirement_element": "3.1",
+      "task_type": "computational",
+      "difficulty": 3,
+      "cognitive_level": "evaluate",
+      "estimated_time": 14,
+      "topic": {
+        "name": "Изменения агрегатных состояний",
+        "subject": "Физика",
+        "grade_level": 8
+      },
+      "groups": [
+        "ab14e17a-b86a-4a0c-819c-72754b6801b6"
+      ]
+    },
+    {
+      "id": "4f4fac6b-ed21-4d61-a28e-811b86849b61",
+      "text": "Найдите количество теплоты, необходимое для плавления 1 кг льда при температуре плавления",
+      "answer": "c = 13 Дж/(кг·°C)",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "Вспомните основные формулы по теме 'Взаимодействие тел'",
+      "instruction": "",
+      "content_element": "1.4",
+      "requirement_element": "3.4",
+      "task_type": "computational",
+      "difficulty": 4,
+      "cognitive_level": "evaluate",
+      "estimated_time": 5,
+      "topic": {
+        "name": "Взаимодействие тел",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "subtopic": {
+        "name": "Масса"
+      },
+      "groups": [
+        "5be3244d-3f49-4f2f-8284-b19da230328c"
+      ]
+    },
+    {
+      "id": "111f625a-586f-4c67-ae1d-5db9bb10fa78",
+      "text": "Решите уравнение: $18x + 9 = 10$",
+      "answer": "$\\frac{71}{80}$",
+      "short_solution": "Применяем формулу и получаем $\\frac{71}{80}$",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: $\\frac{71}{80}$",
+      "hint": "",
+      "instruction": "",
+      "content_element": "1.2",
+      "requirement_element": "3.4",
+      "task_type": "theoretical",
+      "difficulty": 2,
+      "cognitive_level": "remember",
+      "estimated_time": 4,
+      "topic": {
+        "name": "Четырехугольники",
+        "subject": "Математика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Параллелограмм"
+      },
+      "groups": [
+        "a6fa4084-3cda-42ed-9070-2d3d5201ba36"
+      ]
+    },
+    {
+      "id": "0c6b2594-d306-4429-a191-93d06e7f7db2",
+      "text": "Определите плотность вещества, если масса тела 11 г, а объем 4 см³",
+      "answer": "g = 99 м/с²",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "1.5",
+      "requirement_element": "2.1",
+      "task_type": "test",
+      "difficulty": 5,
+      "cognitive_level": "evaluate",
+      "estimated_time": 5,
+      "topic": {
+        "name": "Внутренняя энергия",
+        "subject": "Физика",
+        "grade_level": 8
+      }
+    },
+    {
+      "id": "4e6b55b0-a46b-479e-a761-b7248fc799c9",
+      "text": "Определите плотность вещества, если масса тела 7 г, а объем 13 см³",
+      "answer": "s = 4 м",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "4.4",
+      "requirement_element": "3.2",
+      "task_type": "qualitative",
+      "difficulty": 1,
+      "cognitive_level": "analyze",
+      "estimated_time": 12,
+      "topic": {
+        "name": "Механическое движение",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "groups": [
+        "7191b654-03bb-438e-a004-e458c5d50dd8"
+      ]
+    },
+    {
+      "id": "36da4e4c-99f4-49bf-8bb0-bbee12a23e98",
+      "text": "Найдите количество теплоты, необходимое для плавления 20 кг льда при температуре плавления",
+      "answer": "c = 43 Дж/(кг·°C)",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "Вспомните основные формулы по теме 'Взаимодействие тел'",
+      "instruction": "",
+      "content_element": "1.5",
+      "requirement_element": "1.4",
+      "task_type": "computational",
+      "difficulty": 4,
+      "cognitive_level": "understand",
+      "estimated_time": 14,
+      "topic": {
+        "name": "Взаимодействие тел",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "groups": [
+        "5be3244d-3f49-4f2f-8284-b19da230328c"
+      ]
+    },
+    {
+      "id": "9b9290b8-aa19-473a-95cb-bdee632793e6",
+      "text": "При нагревании 7 г воды от 7°C до 8°C затрачено 19 Дж энергии. Найдите удельную теплоемкость воды.",
+      "answer": "c = 40 Дж/(кг·°C)",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "4.2",
+      "requirement_element": "3.1",
+      "task_type": "qualitative",
+      "difficulty": 2,
+      "cognitive_level": "remember",
+      "estimated_time": 14,
+      "topic": {
+        "name": "Взаимодействие тел",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "groups": [
+        "5be3244d-3f49-4f2f-8284-b19da230328c"
+      ]
+    },
+    {
+      "id": "e9a01242-ec67-4569-a2e7-13c89718aae5",
+      "text": "Автомобиль движется со скоростью 7 м/с. Какой путь он пройдет за 20 секунд?",
+      "answer": "g = 37 м/с²",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "4.5",
+      "requirement_element": "2.2",
+      "task_type": "test",
+      "difficulty": 2,
+      "cognitive_level": "remember",
+      "estimated_time": 3,
+      "topic": {
+        "name": "Изменения агрегатных состояний",
+        "subject": "Физика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Парообразование"
+      },
+      "groups": [
+        "ab14e17a-b86a-4a0c-819c-72754b6801b6"
+      ]
+    },
+    {
+      "id": "ff592901-1308-456a-bba2-5ef880d811ff",
+      "text": "Найдите значение выражения: $(1)^2 - 10 \\cdot 9 + 10$",
+      "answer": "$x_1 = 16, x_2 = 90$",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "2.1",
+      "requirement_element": "3.4",
+      "task_type": "qualitative",
+      "difficulty": 1,
+      "cognitive_level": "understand",
+      "estimated_time": 13,
+      "topic": {
+        "name": "Неравенства",
+        "subject": "Математика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Линейные неравенства"
+      },
+      "groups": [
+        "ab8bccf9-03a8-4b2e-9b3e-83613a055d7c"
+      ]
+    },
+    {
+      "id": "ddfc8d27-dda3-4e92-9958-d25363498b5a",
+      "text": "Найдите значение выражения: $(19)^2 - 8 \\cdot 9 + 9$",
+      "answer": "Точки пересечения: (26, 0) и (0, 85)",
+      "short_solution": "Применяем формулу и получаем Точки пересечения: (26, 0) и (0, 85)",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: Точки пересечения: (26, 0) и (0, 85)",
+      "hint": "",
+      "instruction": "",
+      "content_element": "4.2",
+      "requirement_element": "3.4",
+      "task_type": "computational",
+      "difficulty": 5,
+      "cognitive_level": "apply",
+      "estimated_time": 9,
+      "topic": {
+        "name": "Треугольники",
+        "subject": "Математика",
+        "grade_level": 7
+      },
+      "subtopic": {
+        "name": "Прямоугольный треугольник"
+      },
+      "groups": [
+        "25fad3a5-c6a3-4173-8223-a552f70e90dd"
+      ]
+    },
+    {
+      "id": "f8ad196f-9be2-4dd4-a12d-de6311872ecd",
+      "text": "При нагревании 1 г воды от 11°C до 5°C затрачено 8 Дж энергии. Найдите удельную теплоемкость воды.",
+      "answer": "s = 18 м",
+      "short_solution": "Применяем формулу и получаем s = 18 м",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: s = 18 м",
+      "hint": "",
+      "instruction": "",
+      "content_element": "4.4",
+      "requirement_element": "2.4",
+      "task_type": "theoretical",
+      "difficulty": 3,
+      "cognitive_level": "analyze",
+      "estimated_time": 6,
+      "topic": {
+        "name": "Взаимодействие тел",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "subtopic": {
+        "name": "Сила тяжести"
+      }
+    },
+    {
+      "id": "af8ad040-1d4a-4b13-95b7-25af2591f5d3",
+      "text": "Упростите выражение: $\\frac{1x + 4}{6x - 10}$",
+      "answer": "Ответ: 64",
+      "short_solution": "Применяем формулу и получаем Ответ: 64",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: Ответ: 64",
+      "hint": "",
+      "instruction": "",
+      "content_element": "4.5",
+      "requirement_element": "2.1",
+      "task_type": "practical",
+      "difficulty": 2,
+      "cognitive_level": "remember",
+      "estimated_time": 8,
+      "topic": {
+        "name": "Функции и их свойства",
+        "subject": "Математика",
+        "grade_level": 9
+      },
+      "groups": [
+        "789a2f02-2c57-4713-941d-20d31830213c"
+      ]
+    },
+    {
+      "id": "633a2b3c-6bd8-44f3-94b8-e7a0dee183b5",
+      "text": "Определите плотность вещества, если масса тела 9 г, а объем 19 см³",
+      "answer": "c = 21 Дж/(кг·°C)",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "4.3",
+      "requirement_element": "3.3",
+      "task_type": "qualitative",
+      "difficulty": 4,
+      "cognitive_level": "evaluate",
+      "estimated_time": 13,
+      "topic": {
+        "name": "Изменения агрегатных состояний",
+        "subject": "Физика",
+        "grade_level": 8
+      },
+      "groups": [
+        "ab14e17a-b86a-4a0c-819c-72754b6801b6"
+      ]
+    },
+    {
+      "id": "9f7ba164-db6a-4969-8043-e69a41ac9eca",
+      "text": "Автомобиль движется со скоростью 8 м/с. Какой путь он пройдет за 12 секунд?",
+      "answer": "g = 76 м/с²",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "Вспомните основные формулы по теме 'Изменения агрегатных состояний'",
+      "instruction": "",
+      "content_element": "1.5",
+      "requirement_element": "3.3",
+      "task_type": "computational",
+      "difficulty": 5,
+      "cognitive_level": "evaluate",
+      "estimated_time": 3,
+      "topic": {
+        "name": "Изменения агрегатных состояний",
+        "subject": "Физика",
+        "grade_level": 8
+      },
+      "groups": [
+        "faef8c76-686d-4972-b73a-7ef7a4d11029"
+      ]
+    },
+    {
+      "id": "b4474198-7845-4130-8b59-14c56b896a17",
+      "text": "Постройте график функции $y = 4x + 20$ и найдите точки пересечения с осями координат",
+      "answer": "$x_1 = 54, x_2 = 80$",
+      "short_solution": "Применяем формулу и получаем $x_1 = 54, x_2 = 80$",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: $x_1 = 54, x_2 = 80$",
+      "hint": "",
+      "instruction": "",
+      "content_element": "1.3",
+      "requirement_element": "2.3",
+      "task_type": "computational",
+      "difficulty": 3,
+      "cognitive_level": "apply",
+      "estimated_time": 10,
+      "topic": {
+        "name": "Параллельные прямые",
+        "subject": "Математика",
+        "grade_level": 7
+      },
+      "subtopic": {
+        "name": "Свойства параллельных прямых"
+      }
+    },
+    {
+      "id": "028988ff-66ba-40ae-a56c-57dc01a4855c",
+      "text": "При нагревании 8 г воды от 19°C до 10°C затрачено 15 Дж энергии. Найдите удельную теплоемкость воды.",
+      "answer": "Q = 87 кДж",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "3.3",
+      "requirement_element": "2.3",
+      "task_type": "test",
+      "difficulty": 3,
+      "cognitive_level": "remember",
+      "estimated_time": 12,
+      "topic": {
+        "name": "Изменения агрегатных состояний",
+        "subject": "Физика",
+        "grade_level": 8
+      },
+      "groups": [
+        "ab14e17a-b86a-4a0c-819c-72754b6801b6"
+      ]
+    },
+    {
+      "id": "80d7b32b-835e-4927-8b34-676b8b82c1ba",
+      "text": "Найдите корни квадратного уравнения: $8x^2 + 10x + 6 = 0$",
+      "answer": "Ответ: 88",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "4.4",
+      "requirement_element": "1.4",
+      "task_type": "theoretical",
+      "difficulty": 2,
+      "cognitive_level": "analyze",
+      "estimated_time": 12,
+      "topic": {
+        "name": "Квадратные корни",
+        "subject": "Математика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Свойства корней"
+      },
+      "groups": [
+        "e9a3a6e8-2be1-4d01-881d-c5a146ab68f3"
+      ]
+    },
+    {
+      "id": "97a02028-1b5e-42cc-a4a7-374968b036e2",
+      "text": "Упростите выражение: $\\frac{11x + 5}{3x - 7}$",
+      "answer": "Точки пересечения: (59, 0) и (0, 46)",
+      "short_solution": "Применяем формулу и получаем Точки пересечения: (59, 0) и (0, 46)",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: Точки пересечения: (59, 0) и (0, 46)",
+      "hint": "",
+      "instruction": "",
+      "content_element": "3.2",
+      "requirement_element": "1.3",
+      "task_type": "practical",
+      "difficulty": 3,
+      "cognitive_level": "remember",
+      "estimated_time": 15,
+      "topic": {
+        "name": "Неравенства",
+        "subject": "Математика",
+        "grade_level": 8
+      },
+      "groups": [
+        "ab8bccf9-03a8-4b2e-9b3e-83613a055d7c"
+      ]
+    },
+    {
+      "id": "35104338-1421-4b5f-9b35-7a9bcacddb55",
+      "text": "Найдите количество теплоты, необходимое для плавления 8 кг льда при температуре плавления",
+      "answer": "s = 76 м",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "3.3",
+      "requirement_element": "1.4",
+      "task_type": "computational",
+      "difficulty": 3,
+      "cognitive_level": "evaluate",
+      "estimated_time": 15,
+      "topic": {
+        "name": "Изменения агрегатных состояний",
+        "subject": "Физика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Удельная теплота"
+      },
+      "groups": [
+        "faef8c76-686d-4972-b73a-7ef7a4d11029"
+      ]
+    },
+    {
+      "id": "f7643ab0-4859-429b-a335-57c9f60e10fc",
+      "text": "При нагревании 14 г воды от 6°C до 9°C затрачено 12 Дж энергии. Найдите удельную теплоемкость воды.",
+      "answer": "Q = 52 кДж",
+      "short_solution": "Применяем формулу и получаем Q = 52 кДж",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: Q = 52 кДж",
+      "hint": "",
+      "instruction": "",
+      "content_element": "1.2",
+      "requirement_element": "2.1",
+      "task_type": "computational",
+      "difficulty": 2,
+      "cognitive_level": "understand",
+      "estimated_time": 9,
+      "topic": {
+        "name": "Внутренняя энергия",
+        "subject": "Физика",
+        "grade_level": 8
+      }
+    },
+    {
+      "id": "0692e3ba-4238-44c4-840b-e8b157b1495f",
+      "text": "Автомобиль движется со скоростью 2 м/с. Какой путь он пройдет за 8 секунд?",
+      "answer": "c = 80 Дж/(кг·°C)",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "1.2",
+      "requirement_element": "1.4",
+      "task_type": "test",
+      "difficulty": 5,
+      "cognitive_level": "understand",
+      "estimated_time": 10,
+      "topic": {
+        "name": "Взаимодействие тел",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "groups": [
+        "5be3244d-3f49-4f2f-8284-b19da230328c"
+      ]
+    },
+    {
+      "id": "81a0d97f-82cc-48e9-8fe2-923e7b7d0cae",
+      "text": "При нагревании 2 г воды от 2°C до 10°C затрачено 15 Дж энергии. Найдите удельную теплоемкость воды.",
+      "answer": "s = 85 м",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "Вспомните основные формулы по теме 'Взаимодействие тел'",
+      "instruction": "",
+      "content_element": "4.3",
+      "requirement_element": "3.4",
+      "task_type": "computational",
+      "difficulty": 5,
+      "cognitive_level": "understand",
+      "estimated_time": 13,
+      "topic": {
+        "name": "Взаимодействие тел",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "subtopic": {
+        "name": "Сила"
+      },
+      "groups": [
+        "5be3244d-3f49-4f2f-8284-b19da230328c"
+      ]
+    },
+    {
+      "id": "4e1c9062-d853-4cc9-ad88-a7de52470005",
+      "text": "Упростите выражение: $\\frac{13x + 7}{18x - 12}$",
+      "answer": "Ответ: 78",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "2.4",
+      "requirement_element": "2.3",
+      "task_type": "qualitative",
+      "difficulty": 2,
+      "cognitive_level": "understand",
+      "estimated_time": 7,
+      "topic": {
+        "name": "Неравенства",
+        "subject": "Математика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Системы неравенств"
+      },
+      "groups": [
+        "ab8bccf9-03a8-4b2e-9b3e-83613a055d7c"
+      ]
+    },
+    {
+      "id": "4afcd611-c58d-4d59-85a6-ccae8d42334d",
+      "text": "Найдите корни квадратного уравнения: $8x^2 + 7x + 10 = 0$",
+      "answer": "$\\frac{70}{17}$",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "Вспомните основные формулы по теме 'Функции'",
+      "instruction": "",
+      "content_element": "3.5",
+      "requirement_element": "3.4",
+      "task_type": "test",
+      "difficulty": 5,
+      "cognitive_level": "analyze",
+      "estimated_time": 14,
+      "topic": {
+        "name": "Функции",
+        "subject": "Математика",
+        "grade_level": 7
+      }
+    },
+    {
+      "id": "23aeb8c1-c8b1-4bbc-8a39-306274b058e6",
+      "text": "Найдите количество теплоты, необходимое для плавления 13 кг льда при температуре плавления",
+      "answer": "s = 69 м",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "Вспомните основные формулы по теме 'Механическое движение'",
+      "instruction": "",
+      "content_element": "1.3",
+      "requirement_element": "2.3",
+      "task_type": "computational",
+      "difficulty": 3,
+      "cognitive_level": "evaluate",
+      "estimated_time": 8,
+      "topic": {
+        "name": "Механическое движение",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "groups": [
+        "7191b654-03bb-438e-a004-e458c5d50dd8"
+      ]
+    },
+    {
+      "id": "2c7bc45a-7ab9-45d4-ac35-57bf1343a604",
+      "text": "При нагревании 3 г воды от 6°C до 6°C затрачено 18 Дж энергии. Найдите удельную теплоемкость воды.",
+      "answer": "c = 76 Дж/(кг·°C)",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "1.1",
+      "requirement_element": "1.3",
+      "task_type": "theoretical",
+      "difficulty": 4,
+      "cognitive_level": "remember",
+      "estimated_time": 6,
+      "topic": {
+        "name": "Внутренняя энергия",
+        "subject": "Физика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Конвекция"
+      }
+    },
+    {
+      "id": "32fa68f6-9bce-4e9c-812b-85d0ad041bb6",
+      "text": "Определите плотность вещества, если масса тела 13 г, а объем 20 см³",
+      "answer": "c = 81 Дж/(кг·°C)",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "1.5",
+      "requirement_element": "1.3",
+      "task_type": "computational",
+      "difficulty": 5,
+      "cognitive_level": "evaluate",
+      "estimated_time": 11,
+      "topic": {
+        "name": "Взаимодействие тел",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "subtopic": {
+        "name": "Плотность"
+      },
+      "groups": [
+        "e6eff896-a012-4a90-9c41-9265e10f795f"
+      ]
+    },
+    {
+      "id": "95c7af94-9ad6-49ef-b7d8-31e6fb3fe5a3",
+      "text": "Найдите количество теплоты, необходимое для плавления 20 кг льда при температуре плавления",
+      "answer": "s = 63 м",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "1.3",
+      "requirement_element": "1.3",
+      "task_type": "computational",
+      "difficulty": 2,
+      "cognitive_level": "evaluate",
+      "estimated_time": 11,
+      "topic": {
+        "name": "Внутренняя энергия",
+        "subject": "Физика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Способы изменения внутренней энергии"
+      }
+    },
+    {
+      "id": "a2ff7a27-2794-4f53-b5d3-4d9850fc0394",
+      "text": "Упростите выражение: $\\frac{10x + 19}{2x - 13}$",
+      "answer": "Ответ: 63",
+      "short_solution": "Применяем формулу и получаем Ответ: 63",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: Ответ: 63",
+      "hint": "",
+      "instruction": "",
+      "content_element": "1.3",
+      "requirement_element": "2.3",
+      "task_type": "test",
+      "difficulty": 2,
+      "cognitive_level": "remember",
+      "estimated_time": 15,
+      "topic": {
+        "name": "Четырехугольники",
+        "subject": "Математика",
+        "grade_level": 8
+      },
+      "groups": [
+        "a6fa4084-3cda-42ed-9070-2d3d5201ba36"
+      ]
+    },
+    {
+      "id": "d70516f1-3ed4-4b77-b827-e812c22a0c61",
+      "text": "Найдите корни квадратного уравнения: $7x^2 + 13x + 6 = 0$",
+      "answer": "x = 93",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "Вспомните основные формулы по теме 'Параллельные прямые'",
+      "instruction": "",
+      "content_element": "1.2",
+      "requirement_element": "2.3",
+      "task_type": "computational",
+      "difficulty": 1,
+      "cognitive_level": "analyze",
+      "estimated_time": 10,
+      "topic": {
+        "name": "Параллельные прямые",
+        "subject": "Математика",
+        "grade_level": 7
+      },
+      "subtopic": {
+        "name": "Углы при параллельных"
+      }
+    },
+    {
+      "id": "b2924a4b-a20d-4c67-b56d-129902d44ee3",
+      "text": "Найдите количество теплоты, необходимое для плавления 17 кг льда при температуре плавления",
+      "answer": "s = 65 м",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "3.2",
+      "requirement_element": "3.2",
+      "task_type": "theoretical",
+      "difficulty": 1,
+      "cognitive_level": "remember",
+      "estimated_time": 7,
+      "topic": {
+        "name": "Взаимодействие тел",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "groups": [
+        "e6eff896-a012-4a90-9c41-9265e10f795f"
+      ]
+    },
+    {
+      "id": "dcdd9419-773f-4ab3-b3ac-bfa6c86c07d1",
+      "text": "Найдите корни квадратного уравнения: $20x^2 + 12x + 8 = 0$",
+      "answer": "$\\frac{83}{51}$",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "3.1",
+      "requirement_element": "3.1",
+      "task_type": "computational",
+      "difficulty": 2,
+      "cognitive_level": "remember",
+      "estimated_time": 3,
+      "topic": {
+        "name": "Алгебраические выражения",
+        "subject": "Математика",
+        "grade_level": 7
+      },
+      "groups": [
+        "977067d0-af2c-4410-bb85-90cc451d011f"
+      ]
+    },
+    {
+      "id": "54d0eec7-4fc8-4af8-a281-c18e8b042421",
+      "text": "Решите уравнение: $9x + 6 = 9$",
+      "answer": "Ответ: 33",
+      "short_solution": "Применяем формулу и получаем Ответ: 33",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: Ответ: 33",
+      "hint": "",
+      "instruction": "",
+      "content_element": "3.2",
+      "requirement_element": "2.3",
+      "task_type": "qualitative",
+      "difficulty": 2,
+      "cognitive_level": "evaluate",
+      "estimated_time": 12,
+      "topic": {
+        "name": "Тригонометрия",
+        "subject": "Математика",
+        "grade_level": 9
+      },
+      "groups": [
+        "1c709881-b740-4f9b-836c-371d76ac0568"
+      ]
+    },
+    {
+      "id": "7156dd9b-1add-4518-8888-7ddf81b103d4",
+      "text": "Решите уравнение: $15x + 3 = 12$",
+      "answer": "Ответ: 50",
+      "short_solution": "Применяем формулу и получаем Ответ: 50",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: Ответ: 50",
+      "hint": "Вспомните основные формулы по теме 'Тригонометрия'",
+      "instruction": "",
+      "content_element": "1.2",
+      "requirement_element": "2.2",
+      "task_type": "qualitative",
+      "difficulty": 3,
+      "cognitive_level": "evaluate",
+      "estimated_time": 13,
+      "topic": {
+        "name": "Тригонометрия",
+        "subject": "Математика",
+        "grade_level": 9
+      },
+      "groups": [
+        "811dac74-50e9-4610-86bc-d4a3d042189e"
+      ]
+    },
+    {
+      "id": "a83ed156-cf39-48d7-8df3-85c8a6384fd5",
+      "text": "Постройте график функции $y = 19x + 1$ и найдите точки пересечения с осями координат",
+      "answer": "Точки пересечения: (70, 0) и (0, 69)",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "Вспомните основные формулы по теме 'Неравенства'",
+      "instruction": "",
+      "content_element": "2.1",
+      "requirement_element": "1.3",
+      "task_type": "practical",
+      "difficulty": 2,
+      "cognitive_level": "evaluate",
+      "estimated_time": 6,
+      "topic": {
+        "name": "Неравенства",
+        "subject": "Математика",
+        "grade_level": 8
+      },
+      "groups": [
+        "ab8bccf9-03a8-4b2e-9b3e-83613a055d7c"
+      ]
+    },
+    {
+      "id": "af158151-d28b-4217-a80c-5966d3e0ebaf",
+      "text": "Решите уравнение: $15x + 1 = 16$",
+      "answer": "x = 64",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "3.2",
+      "requirement_element": "2.1",
+      "task_type": "practical",
+      "difficulty": 2,
+      "cognitive_level": "understand",
+      "estimated_time": 10,
+      "topic": {
+        "name": "Четырехугольники",
+        "subject": "Математика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Параллелограмм"
+      }
+    },
+    {
+      "id": "dad7d322-9a69-49d6-9a11-a741adb31232",
+      "text": "Определите плотность вещества, если масса тела 10 г, а объем 20 см³",
+      "answer": "s = 70 м",
+      "short_solution": "Применяем формулу и получаем s = 70 м",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: s = 70 м",
+      "hint": "Вспомните основные формулы по теме 'Взаимодействие тел'",
+      "instruction": "",
+      "content_element": "1.2",
+      "requirement_element": "3.2",
+      "task_type": "test",
+      "difficulty": 3,
+      "cognitive_level": "evaluate",
+      "estimated_time": 3,
+      "topic": {
+        "name": "Взаимодействие тел",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "subtopic": {
+        "name": "Сила"
+      },
+      "groups": [
+        "e6eff896-a012-4a90-9c41-9265e10f795f"
+      ]
+    },
+    {
+      "id": "89936ed6-8ad2-42bc-9475-822c98b06741",
+      "text": "Решите уравнение: $9x + 18 = 19$",
+      "answer": "Ответ: 64",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "3.4",
+      "requirement_element": "3.2",
+      "task_type": "test",
+      "difficulty": 1,
+      "cognitive_level": "remember",
+      "estimated_time": 5,
+      "topic": {
+        "name": "Алгебраические выражения",
+        "subject": "Математика",
+        "grade_level": 7
+      },
+      "subtopic": {
+        "name": "Формулы сокращенного умножения"
+      },
+      "groups": [
+        "977067d0-af2c-4410-bb85-90cc451d011f"
+      ]
+    },
+    {
+      "id": "347eab58-ef7b-46d6-82f6-1b659a13dd0d",
+      "text": "Решите уравнение: $7x + 16 = 3$",
+      "answer": "Ответ: 17",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "4.5",
+      "requirement_element": "2.4",
+      "task_type": "test",
+      "difficulty": 2,
+      "cognitive_level": "analyze",
+      "estimated_time": 14,
+      "topic": {
+        "name": "Линейные уравнения",
+        "subject": "Математика",
+        "grade_level": 7
+      },
+      "groups": [
+        "5da667cb-296e-4b0c-b89b-1361d3638044"
+      ]
+    },
+    {
+      "id": "c87de88b-bef4-400c-9f79-24eed71bea3e",
+      "text": "Постройте график функции $y = 11x + 6$ и найдите точки пересечения с осями координат",
+      "answer": "x = 23",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "1.5",
+      "requirement_element": "3.4",
+      "task_type": "qualitative",
+      "difficulty": 4,
+      "cognitive_level": "remember",
+      "estimated_time": 14,
+      "topic": {
+        "name": "Прогрессии",
+        "subject": "Математика",
+        "grade_level": 9
+      },
+      "groups": [
+        "20114d6a-7c5b-4e1c-92c3-07dcc68c9151"
+      ]
+    },
+    {
+      "id": "4c2274ae-812f-45e8-b12f-9fa3efd3e0b3",
+      "text": "Постройте график функции $y = 10x + 2$ и найдите точки пересечения с осями координат",
+      "answer": "x = 3",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "3.3",
+      "requirement_element": "1.3",
+      "task_type": "theoretical",
+      "difficulty": 3,
+      "cognitive_level": "understand",
+      "estimated_time": 7,
+      "topic": {
+        "name": "Функции и их свойства",
+        "subject": "Математика",
+        "grade_level": 9
+      },
+      "subtopic": {
+        "name": "Экстремумы"
+      },
+      "groups": [
+        "789a2f02-2c57-4713-941d-20d31830213c"
+      ]
+    },
+    {
+      "id": "dbbcb949-583c-4064-8c76-9fb223a3d855",
+      "text": "Автомобиль движется со скоростью 15 м/с. Какой путь он пройдет за 13 секунд?",
+      "answer": "g = 23 м/с²",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "2.3",
+      "requirement_element": "1.4",
+      "task_type": "test",
+      "difficulty": 4,
+      "cognitive_level": "evaluate",
+      "estimated_time": 15,
+      "topic": {
+        "name": "Внутренняя энергия",
+        "subject": "Физика",
+        "grade_level": 8
+      },
+      "groups": [
+        "8cf12474-d90f-4fdd-be40-72cc79e874be"
+      ]
+    },
+    {
+      "id": "d4b4a50e-89b9-4c48-b189-f26b59e4a71e",
+      "text": "Решите уравнение: $13x + 1 = 2$",
+      "answer": "Точки пересечения: (24, 0) и (0, 10)",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "3.3",
+      "requirement_element": "1.3",
+      "task_type": "practical",
+      "difficulty": 1,
+      "cognitive_level": "evaluate",
+      "estimated_time": 5,
+      "topic": {
+        "name": "Четырехугольники",
+        "subject": "Математика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Прямоугольник"
+      },
+      "groups": [
+        "a6fa4084-3cda-42ed-9070-2d3d5201ba36"
+      ]
+    },
+    {
+      "id": "c62a5978-5b40-4309-a367-8ca5452fc280",
+      "text": "Тело массой 3 кг действует на опору с силой 8 Н. Найдите ускорение свободного падения.",
+      "answer": "g = 81 м/с²",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "4.1",
+      "requirement_element": "2.3",
+      "task_type": "theoretical",
+      "difficulty": 5,
+      "cognitive_level": "remember",
+      "estimated_time": 9,
+      "topic": {
+        "name": "Механическое движение",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "subtopic": {
+        "name": "Скорость"
+      },
+      "groups": [
+        "7191b654-03bb-438e-a004-e458c5d50dd8"
+      ]
+    },
+    {
+      "id": "b3440de2-d4bb-4460-9a7a-470027f95af6",
+      "text": "Автомобиль движется со скоростью 14 м/с. Какой путь он пройдет за 14 секунд?",
+      "answer": "g = 57 м/с²",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "Вспомните основные формулы по теме 'Изменения агрегатных состояний'",
+      "instruction": "",
+      "content_element": "2.3",
+      "requirement_element": "3.4",
+      "task_type": "test",
+      "difficulty": 4,
+      "cognitive_level": "remember",
+      "estimated_time": 8,
+      "topic": {
+        "name": "Изменения агрегатных состояний",
+        "subject": "Физика",
+        "grade_level": 8
+      },
+      "groups": [
+        "ab14e17a-b86a-4a0c-819c-72754b6801b6"
+      ]
+    },
+    {
+      "id": "a7ca5863-8884-448f-b10c-8358d398b6de",
+      "text": "Решите уравнение: $1x + 7 = 14$",
+      "answer": "x = 65",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "Вспомните основные формулы по теме 'Четырехугольники'",
+      "instruction": "",
+      "content_element": "1.5",
+      "requirement_element": "3.1",
+      "task_type": "test",
+      "difficulty": 3,
+      "cognitive_level": "analyze",
+      "estimated_time": 14,
+      "topic": {
+        "name": "Четырехугольники",
+        "subject": "Математика",
+        "grade_level": 8
+      },
+      "groups": [
+        "a6fa4084-3cda-42ed-9070-2d3d5201ba36"
+      ]
+    },
+    {
+      "id": "1d1a4399-02c7-415a-a679-75c36c3cebc7",
+      "text": "Найдите количество теплоты, необходимое для плавления 20 кг льда при температуре плавления",
+      "answer": "s = 87 м",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "3.5",
+      "requirement_element": "1.3",
+      "task_type": "computational",
+      "difficulty": 5,
+      "cognitive_level": "evaluate",
+      "estimated_time": 5,
+      "topic": {
+        "name": "Внутренняя энергия",
+        "subject": "Физика",
+        "grade_level": 8
+      }
+    },
+    {
+      "id": "ff22070c-6af8-4a5a-b8f9-614f12f14bf3",
+      "text": "Решите уравнение: $19x + 8 = 14$",
+      "answer": "$x_1 = 45, x_2 = 24$",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "4.1",
+      "requirement_element": "3.3",
+      "task_type": "computational",
+      "difficulty": 5,
+      "cognitive_level": "evaluate",
+      "estimated_time": 10,
+      "topic": {
+        "name": "Алгебраические выражения",
+        "subject": "Математика",
+        "grade_level": 7
+      },
+      "groups": [
+        "977067d0-af2c-4410-bb85-90cc451d011f"
+      ]
+    },
+    {
+      "id": "58d79dad-741f-4058-9628-6ff22adc2d4f",
+      "text": "Тело массой 10 кг действует на опору с силой 19 Н. Найдите ускорение свободного падения.",
+      "answer": "g = 88 м/с²",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "Вспомните основные формулы по теме 'Изменения агрегатных состояний'",
+      "instruction": "",
+      "content_element": "1.1",
+      "requirement_element": "3.3",
+      "task_type": "computational",
+      "difficulty": 3,
+      "cognitive_level": "analyze",
+      "estimated_time": 14,
+      "topic": {
+        "name": "Изменения агрегатных состояний",
+        "subject": "Физика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Удельная теплота"
+      },
+      "groups": [
+        "faef8c76-686d-4972-b73a-7ef7a4d11029"
+      ]
+    },
+    {
+      "id": "e34bb2be-b1a9-4eca-af6f-0695882e80c9",
+      "text": "Постройте график функции $y = 1x + 2$ и найдите точки пересечения с осями координат",
+      "answer": "$\\frac{91}{82}$",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "Вспомните основные формулы по теме 'Линейные уравнения'",
+      "instruction": "",
+      "content_element": "4.1",
+      "requirement_element": "1.2",
+      "task_type": "qualitative",
+      "difficulty": 3,
+      "cognitive_level": "apply",
+      "estimated_time": 11,
+      "topic": {
+        "name": "Линейные уравнения",
+        "subject": "Математика",
+        "grade_level": 7
+      },
+      "groups": [
+        "5da667cb-296e-4b0c-b89b-1361d3638044"
+      ]
+    },
+    {
+      "id": "da8d60b5-52b2-452d-a887-791fcd70e9d9",
+      "text": "Определите плотность вещества, если масса тела 13 г, а объем 10 см³",
+      "answer": "Q = 98 кДж",
+      "short_solution": "Применяем формулу и получаем Q = 98 кДж",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: Q = 98 кДж",
+      "hint": "Вспомните основные формулы по теме 'Взаимодействие тел'",
+      "instruction": "",
+      "content_element": "4.5",
+      "requirement_element": "2.2",
+      "task_type": "theoretical",
+      "difficulty": 2,
+      "cognitive_level": "remember",
+      "estimated_time": 10,
+      "topic": {
+        "name": "Взаимодействие тел",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "groups": [
+        "e6eff896-a012-4a90-9c41-9265e10f795f"
+      ]
+    },
+    {
+      "id": "bb2c496d-94f5-4e5a-abb0-50af8f36e631",
+      "text": "Определите плотность вещества, если масса тела 13 г, а объем 2 см³",
+      "answer": "g = 44 м/с²",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "Вспомните основные формулы по теме 'Внутренняя энергия'",
+      "instruction": "",
+      "content_element": "3.4",
+      "requirement_element": "1.1",
+      "task_type": "test",
+      "difficulty": 2,
+      "cognitive_level": "remember",
+      "estimated_time": 5,
+      "topic": {
+        "name": "Внутренняя энергия",
+        "subject": "Физика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Способы изменения внутренней энергии"
+      },
+      "groups": [
+        "8cf12474-d90f-4fdd-be40-72cc79e874be"
+      ]
+    },
+    {
+      "id": "e9d6b0b4-ea16-48b0-a5dd-328b4be267e7",
+      "text": "Найдите корни квадратного уравнения: $1x^2 + 5x + 9 = 0$",
+      "answer": "$x_1 = 96, x_2 = 39$",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "1.5",
+      "requirement_element": "1.1",
+      "task_type": "qualitative",
+      "difficulty": 1,
+      "cognitive_level": "evaluate",
+      "estimated_time": 9,
+      "topic": {
+        "name": "Квадратные уравнения",
+        "subject": "Математика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Формула корней"
+      }
+    },
+    {
+      "id": "5a124c5c-fe64-45ab-8171-9569cf1e0c15",
+      "text": "Решите уравнение: $11x + 8 = 14$",
+      "answer": "$x_1 = 78, x_2 = 99$",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "2.1",
+      "requirement_element": "1.2",
+      "task_type": "practical",
+      "difficulty": 5,
+      "cognitive_level": "understand",
+      "estimated_time": 3,
+      "topic": {
+        "name": "Линейные уравнения",
+        "subject": "Математика",
+        "grade_level": 7
+      },
+      "subtopic": {
+        "name": "Текстовые задачи"
+      },
+      "groups": [
+        "5da667cb-296e-4b0c-b89b-1361d3638044"
+      ]
+    },
+    {
+      "id": "2a67e109-fccf-4718-a075-da1677d94980",
+      "text": "Найдите значение выражения: $(17)^2 - 2 \\cdot 8 + 4$",
+      "answer": "Точки пересечения: (66, 0) и (0, 87)",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "2.2",
+      "requirement_element": "2.1",
+      "task_type": "test",
+      "difficulty": 5,
+      "cognitive_level": "apply",
+      "estimated_time": 13,
+      "topic": {
+        "name": "Площадь",
+        "subject": "Математика",
+        "grade_level": 8
+      }
+    },
+    {
+      "id": "a50846ce-09bb-4a4d-a4d5-89e2c84f08a1",
+      "text": "Найдите количество теплоты, необходимое для плавления 10 кг льда при температуре плавления",
+      "answer": "g = 10 м/с²",
+      "short_solution": "Применяем формулу и получаем g = 10 м/с²",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: g = 10 м/с²",
+      "hint": "",
+      "instruction": "",
+      "content_element": "2.1",
+      "requirement_element": "3.2",
+      "task_type": "theoretical",
+      "difficulty": 5,
+      "cognitive_level": "evaluate",
+      "estimated_time": 14,
+      "topic": {
+        "name": "Внутренняя энергия",
+        "subject": "Физика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Конвекция"
+      },
+      "groups": [
+        "8cf12474-d90f-4fdd-be40-72cc79e874be"
+      ]
+    },
+    {
+      "id": "34496100-7976-4553-9f4d-7f1f54c09aae",
+      "text": "Упростите выражение: $\\frac{3x + 2}{15x - 15}$",
+      "answer": "x = 9",
+      "short_solution": "Применяем формулу и получаем x = 9",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: x = 9",
+      "hint": "",
+      "instruction": "",
+      "content_element": "3.4",
+      "requirement_element": "2.2",
+      "task_type": "computational",
+      "difficulty": 1,
+      "cognitive_level": "understand",
+      "estimated_time": 5,
+      "topic": {
+        "name": "Квадратные корни",
+        "subject": "Математика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Преобразования"
+      },
+      "groups": [
+        "e9a3a6e8-2be1-4d01-881d-c5a146ab68f3"
+      ]
+    },
+    {
+      "id": "9aae2511-f779-4ca0-9b9d-deb4b96626e3",
+      "text": "Найдите значение выражения: $(10)^2 - 8 \\cdot 13 + 3$",
+      "answer": "Точки пересечения: (30, 0) и (0, 62)",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "2.3",
+      "requirement_element": "2.4",
+      "task_type": "theoretical",
+      "difficulty": 4,
+      "cognitive_level": "analyze",
+      "estimated_time": 4,
+      "topic": {
+        "name": "Треугольники",
+        "subject": "Математика",
+        "grade_level": 7
+      },
+      "subtopic": {
+        "name": "Признаки равенства"
+      },
+      "groups": [
+        "25fad3a5-c6a3-4173-8223-a552f70e90dd"
+      ]
+    },
+    {
+      "id": "be8668c6-837c-4e19-a9cf-43accf244c0d",
+      "text": "Упростите выражение: $\\frac{10x + 19}{13x - 15}$",
+      "answer": "Точки пересечения: (15, 0) и (0, 96)",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "1.5",
+      "requirement_element": "2.3",
+      "task_type": "test",
+      "difficulty": 2,
+      "cognitive_level": "evaluate",
+      "estimated_time": 15,
+      "topic": {
+        "name": "Прогрессии",
+        "subject": "Математика",
+        "grade_level": 9
+      },
+      "groups": [
+        "20114d6a-7c5b-4e1c-92c3-07dcc68c9151"
+      ]
+    },
+    {
+      "id": "bfbdb8c5-795c-452d-9f93-693889dac209",
+      "text": "Упростите выражение: $\\frac{2x + 8}{15x - 11}$",
+      "answer": "Точки пересечения: (60, 0) и (0, 27)",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "1.2",
+      "requirement_element": "3.1",
+      "task_type": "qualitative",
+      "difficulty": 3,
+      "cognitive_level": "apply",
+      "estimated_time": 11,
+      "topic": {
+        "name": "Тригонометрия",
+        "subject": "Математика",
+        "grade_level": 9
+      },
+      "subtopic": {
+        "name": "Формулы приведения"
+      },
+      "groups": [
+        "1c709881-b740-4f9b-836c-371d76ac0568"
+      ]
+    },
+    {
+      "id": "b218b6dd-0feb-4c57-afd9-726a95a5db1b",
+      "text": "Найдите корни квадратного уравнения: $15x^2 + 17x + 11 = 0$",
+      "answer": "$x_1 = 71, x_2 = 49$",
+      "short_solution": "Применяем формулу и получаем $x_1 = 71, x_2 = 49$",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: $x_1 = 71, x_2 = 49$",
+      "hint": "Вспомните основные формулы по теме 'Квадратные корни'",
+      "instruction": "",
+      "content_element": "4.1",
+      "requirement_element": "2.1",
+      "task_type": "test",
+      "difficulty": 1,
+      "cognitive_level": "apply",
+      "estimated_time": 13,
+      "topic": {
+        "name": "Квадратные корни",
+        "subject": "Математика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Свойства корней"
+      },
+      "groups": [
+        "e9a3a6e8-2be1-4d01-881d-c5a146ab68f3"
+      ]
+    },
+    {
+      "id": "a108e1d1-2947-450c-88a8-9b5c657ccc36",
+      "text": "Постройте график функции $y = 8x + 11$ и найдите точки пересечения с осями координат",
+      "answer": "Ответ: 74",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "Вспомните основные формулы по теме 'Квадратные корни'",
+      "instruction": "",
+      "content_element": "1.1",
+      "requirement_element": "2.1",
+      "task_type": "practical",
+      "difficulty": 4,
+      "cognitive_level": "apply",
+      "estimated_time": 5,
+      "topic": {
+        "name": "Квадратные корни",
+        "subject": "Математика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Преобразования"
+      },
+      "groups": [
+        "e9a3a6e8-2be1-4d01-881d-c5a146ab68f3"
+      ]
+    },
+    {
+      "id": "b8270fd8-676a-4e79-b63d-e09f770c996b",
+      "text": "Решите уравнение: $1x + 19 = 2$",
+      "answer": "$x_1 = 79, x_2 = 74$",
+      "short_solution": "Применяем формулу и получаем $x_1 = 79, x_2 = 74$",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: $x_1 = 79, x_2 = 74$",
+      "hint": "Вспомните основные формулы по теме 'Функции и их свойства'",
+      "instruction": "",
+      "content_element": "1.3",
+      "requirement_element": "3.4",
+      "task_type": "practical",
+      "difficulty": 3,
+      "cognitive_level": "remember",
+      "estimated_time": 14,
+      "topic": {
+        "name": "Функции и их свойства",
+        "subject": "Математика",
+        "grade_level": 9
+      },
+      "groups": [
+        "789a2f02-2c57-4713-941d-20d31830213c"
+      ]
+    },
+    {
+      "id": "207cce6e-1cd8-46e0-8916-17cd1bc3eaf0",
+      "text": "При нагревании 12 г воды от 2°C до 13°C затрачено 2 Дж энергии. Найдите удельную теплоемкость воды.",
+      "answer": "s = 43 м",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "4.1",
+      "requirement_element": "3.4",
+      "task_type": "computational",
+      "difficulty": 2,
+      "cognitive_level": "remember",
+      "estimated_time": 6,
+      "topic": {
+        "name": "Взаимодействие тел",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "subtopic": {
+        "name": "Сила"
+      },
+      "groups": [
+        "5be3244d-3f49-4f2f-8284-b19da230328c"
+      ]
+    },
+    {
+      "id": "8fe583f2-76b1-4098-b417-3892f4646f3e",
+      "text": "Упростите выражение: $\\frac{8x + 3}{1x - 1}$",
+      "answer": "Точки пересечения: (52, 0) и (0, 67)",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "4.4",
+      "requirement_element": "3.3",
+      "task_type": "computational",
+      "difficulty": 3,
+      "cognitive_level": "apply",
+      "estimated_time": 4,
+      "topic": {
+        "name": "Алгебраические выражения",
+        "subject": "Математика",
+        "grade_level": 7
+      },
+      "groups": [
+        "977067d0-af2c-4410-bb85-90cc451d011f"
+      ]
+    },
+    {
+      "id": "5f13daf3-7af6-4dae-86fc-0c43e9f620cb",
+      "text": "Упростите выражение: $\\frac{13x + 4}{8x - 8}$",
+      "answer": "x = 60",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "3.5",
+      "requirement_element": "2.4",
+      "task_type": "qualitative",
+      "difficulty": 3,
+      "cognitive_level": "evaluate",
+      "estimated_time": 11,
+      "topic": {
+        "name": "Тригонометрия",
+        "subject": "Математика",
+        "grade_level": 9
+      },
+      "subtopic": {
+        "name": "Синус и косинус"
+      },
+      "groups": [
+        "811dac74-50e9-4610-86bc-d4a3d042189e"
+      ]
+    },
+    {
+      "id": "76a804b3-e284-40f3-ba74-3f8096b5e660",
+      "text": "Автомобиль движется со скоростью 7 м/с. Какой путь он пройдет за 15 секунд?",
+      "answer": "ρ = 49 г/см³",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "1.5",
+      "requirement_element": "1.3",
+      "task_type": "practical",
+      "difficulty": 1,
+      "cognitive_level": "understand",
+      "estimated_time": 13,
+      "topic": {
+        "name": "Механическое движение",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "subtopic": {
+        "name": "Равномерное движение"
+      },
+      "groups": [
+        "4efd4088-492b-4722-b032-a89ff598e09d"
+      ]
+    },
+    {
+      "id": "35c9374f-500a-4973-a71f-c02ad423f50b",
+      "text": "При нагревании 3 г воды от 1°C до 20°C затрачено 8 Дж энергии. Найдите удельную теплоемкость воды.",
+      "answer": "g = 4 м/с²",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "4.3",
+      "requirement_element": "2.3",
+      "task_type": "theoretical",
+      "difficulty": 5,
+      "cognitive_level": "evaluate",
+      "estimated_time": 6,
+      "topic": {
+        "name": "Механическое движение",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "groups": [
+        "7191b654-03bb-438e-a004-e458c5d50dd8"
+      ]
+    },
+    {
+      "id": "a6d774a4-bc60-4063-b092-ef303535e8b3",
+      "text": "Определите плотность вещества, если масса тела 14 г, а объем 2 см³",
+      "answer": "Q = 52 кДж",
+      "short_solution": "Применяем формулу и получаем Q = 52 кДж",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: Q = 52 кДж",
+      "hint": "",
+      "instruction": "",
+      "content_element": "2.2",
+      "requirement_element": "1.2",
+      "task_type": "qualitative",
+      "difficulty": 5,
+      "cognitive_level": "evaluate",
+      "estimated_time": 3,
+      "topic": {
+        "name": "Взаимодействие тел",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "groups": [
+        "5be3244d-3f49-4f2f-8284-b19da230328c"
+      ]
+    },
+    {
+      "id": "4b9eaa75-9a6d-42f9-9ea2-1b185c192900",
+      "text": "Постройте график функции $y = 20x + 1$ и найдите точки пересечения с осями координат",
+      "answer": "Точки пересечения: (14, 0) и (0, 24)",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "4.5",
+      "requirement_element": "3.1",
+      "task_type": "practical",
+      "difficulty": 3,
+      "cognitive_level": "apply",
+      "estimated_time": 12,
+      "topic": {
+        "name": "Четырехугольники",
+        "subject": "Математика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Параллелограмм"
+      }
+    },
+    {
+      "id": "893e52be-2f18-4496-9a72-0362cb4a9d74",
+      "text": "Найдите корни квадратного уравнения: $7x^2 + 13x + 9 = 0$",
+      "answer": "$x_1 = 31, x_2 = 58$",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "3.5",
+      "requirement_element": "2.1",
+      "task_type": "theoretical",
+      "difficulty": 4,
+      "cognitive_level": "apply",
+      "estimated_time": 15,
+      "topic": {
+        "name": "Функции и их свойства",
+        "subject": "Математика",
+        "grade_level": 9
+      },
+      "groups": [
+        "789a2f02-2c57-4713-941d-20d31830213c"
+      ]
+    },
+    {
+      "id": "ae4b99b5-499e-4761-a4e6-07ec0128037d",
+      "text": "Тело массой 15 кг действует на опору с силой 9 Н. Найдите ускорение свободного падения.",
+      "answer": "s = 25 м",
+      "short_solution": "Применяем формулу и получаем s = 25 м",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: s = 25 м",
+      "hint": "",
+      "instruction": "",
+      "content_element": "4.4",
+      "requirement_element": "2.1",
+      "task_type": "test",
+      "difficulty": 2,
+      "cognitive_level": "evaluate",
+      "estimated_time": 12,
+      "topic": {
+        "name": "Внутренняя энергия",
+        "subject": "Физика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Способы изменения внутренней энергии"
+      },
+      "groups": [
+        "8cf12474-d90f-4fdd-be40-72cc79e874be"
+      ]
+    },
+    {
+      "id": "12cdb0d5-7e8f-47df-99f6-9a515ea63f8e",
+      "text": "Упростите выражение: $\\frac{8x + 18}{13x - 7}$",
+      "answer": "x = 82",
+      "short_solution": "Применяем формулу и получаем x = 82",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: x = 82",
+      "hint": "",
+      "instruction": "",
+      "content_element": "3.1",
+      "requirement_element": "2.3",
+      "task_type": "practical",
+      "difficulty": 4,
+      "cognitive_level": "remember",
+      "estimated_time": 13,
+      "topic": {
+        "name": "Функции и их свойства",
+        "subject": "Математика",
+        "grade_level": 9
+      },
+      "subtopic": {
+        "name": "Монотонность"
+      },
+      "groups": [
+        "789a2f02-2c57-4713-941d-20d31830213c"
+      ]
+    },
+    {
+      "id": "4bd4fc4a-abb7-4cbe-8b4a-df6b545aa14a",
+      "text": "При нагревании 1 г воды от 1°C до 5°C затрачено 18 Дж энергии. Найдите удельную теплоемкость воды.",
+      "answer": "ρ = 86 г/см³",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "Вспомните основные формулы по теме 'Механическое движение'",
+      "instruction": "",
+      "content_element": "2.2",
+      "requirement_element": "3.3",
+      "task_type": "theoretical",
+      "difficulty": 5,
+      "cognitive_level": "evaluate",
+      "estimated_time": 3,
+      "topic": {
+        "name": "Механическое движение",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "subtopic": {
+        "name": "Скорость"
+      },
+      "groups": [
+        "7191b654-03bb-438e-a004-e458c5d50dd8"
+      ]
+    },
+    {
+      "id": "b2229c7c-492c-4315-ba69-5021d3e90102",
+      "text": "При нагревании 4 г воды от 1°C до 16°C затрачено 14 Дж энергии. Найдите удельную теплоемкость воды.",
+      "answer": "s = 86 м",
+      "short_solution": "Применяем формулу и получаем s = 86 м",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: s = 86 м",
+      "hint": "",
+      "instruction": "",
+      "content_element": "3.4",
+      "requirement_element": "3.3",
+      "task_type": "qualitative",
+      "difficulty": 2,
+      "cognitive_level": "understand",
+      "estimated_time": 3,
+      "topic": {
+        "name": "Внутренняя энергия",
+        "subject": "Физика",
+        "grade_level": 8
+      },
+      "subtopic": {
+        "name": "Способы изменения внутренней энергии"
+      },
+      "groups": [
+        "8cf12474-d90f-4fdd-be40-72cc79e874be"
+      ]
+    },
+    {
+      "id": "a0d4508d-30b8-4aa2-b749-031e8883bd7f",
+      "text": "Найдите значение выражения: $(3)^2 - 6 \\cdot 13 + 18$",
+      "answer": "x = 66",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "3.1",
+      "requirement_element": "1.2",
+      "task_type": "qualitative",
+      "difficulty": 3,
+      "cognitive_level": "analyze",
+      "estimated_time": 10,
+      "topic": {
+        "name": "Тригонометрия",
+        "subject": "Математика",
+        "grade_level": 9
+      },
+      "subtopic": {
+        "name": "Основное тригонометрическое тождество"
+      },
+      "groups": [
+        "811dac74-50e9-4610-86bc-d4a3d042189e"
+      ]
+    },
+    {
+      "id": "ff621dea-5556-4b4f-b491-d98aa310c43c",
+      "text": "Автомобиль движется со скоростью 6 м/с. Какой путь он пройдет за 9 секунд?",
+      "answer": "g = 50 м/с²",
+      "short_solution": "Применяем формулу и получаем g = 50 м/с²",
+      "full_solution": "Подробное решение:\n1. Анализируем условие\n2. Применяем соответствующую формулу\n3. Вычисляем результат: g = 50 м/с²",
+      "hint": "Вспомните основные формулы по теме 'Механическое движение'",
+      "instruction": "",
+      "content_element": "4.4",
+      "requirement_element": "3.2",
+      "task_type": "practical",
+      "difficulty": 1,
+      "cognitive_level": "analyze",
+      "estimated_time": 10,
+      "topic": {
+        "name": "Механическое движение",
+        "subject": "Физика",
+        "grade_level": 7
+      },
+      "groups": [
+        "4efd4088-492b-4722-b032-a89ff598e09d"
+      ]
+    },
+    {
+      "id": "3ccfa2a9-93a3-472f-a58f-fad524ce6dab",
+      "text": "Упростите выражение: $\\frac{15x + 5}{16x - 10}$",
+      "answer": "$\\frac{99}{75}$",
+      "short_solution": "",
+      "full_solution": "",
+      "hint": "",
+      "instruction": "",
+      "content_element": "4.1",
+      "requirement_element": "2.2",
+      "task_type": "qualitative",
+      "difficulty": 5,
+      "cognitive_level": "remember",
+      "estimated_time": 12,
+      "topic": {
+        "name": "Треугольники",
+        "subject": "Математика",
+        "grade_level": 7
+      },
+      "groups": [
+        "25fad3a5-c6a3-4173-8223-a552f70e90dd"
+      ]
+    }
+  ]
+}

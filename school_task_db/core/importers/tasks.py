@@ -303,6 +303,25 @@ class TaskImporter(BaseImporter):
                 self.log_error(f"Ошибка создания группы {group_name}: {e}", e)
         
         return None
+
+    def _import_task_images(self, images_data: List[Dict[str, Any]]):
+        """Импорт изображений заданий"""
+        print("🖼️ Импорт изображений заданий...")
+        
+        for image_data in images_data:
+            try:
+                task_uuid = image_data.get('task_id')
+                if task_uuid not in self.context.imported_tasks:
+                    self.log_warning(f"Задание не найдено для изображения: {task_uuid[-8:]}")
+                    continue
+                
+                task = self.context.imported_tasks[task_uuid]
+                
+                # Создание изображения из base64 или файла
+                # ... логика импорта изображений
+                
+            except Exception as e:
+                self.log_error(f"Ошибка импорта изображения: {e}", e)
     
     def _analyze_uuid_conflicts(self, json_data: Dict[str, Any]):
         """Анализ конфликтов UUID"""

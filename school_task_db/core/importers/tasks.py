@@ -305,34 +305,383 @@ class TaskImporter(BaseImporter):
         return None
 
     def _import_task_images(self, images_data: List[Dict[str, Any]]):
-        """Импорт изображений заданий"""
+        """Импорт изображений заданий из base64 или файлов"""
         print("🖼️ Импорт изображений заданий...")
         
         for image_data in images_data:
             try:
-                task_uuid = image_data.get('task_id')
+                task_uuid = image_data.get('task_uuid') or image_data.get('task_id')
+                
                 if task_uuid not in self.context.imported_tasks:
-                    self.log_warning(f"Задание не найдено для изображения: {task_uuid[-8:]}")
+                    self.log_warning(f"Задание не найдено для изображения: {task_uuid[-8:] if task_uuid else 'Unknown'}")
                     continue
                 
                 task = self.context.imported_tasks[task_uuid]
                 
-                # Создание изображения из base64 или файла
-                # ... логика импорта изображений
+                # Генерируем UUID для изображения
+                image_uuid = self.generate_uuid_if_missing(image_data, 'id')
+                
+                # Проверяем существующее изображение
+                existing_image = self.safe_get_by_uuid(TaskImage, image_uuid)
+                if existing_image and not self.should_create_object(existing_image, image_data):
+                    if self.mode == 'update':
+                        self._update_task_image(existing_image, image_data)
+                        self.stats.updated += 1
+                    else:  # skip
+                        pass
+                    continue
+                
+                # Создание нового изображения
+                if not existing_image:
+                    image = self._create_task_image(task, image_uuid, image_data)
+                    if image:
+                        self.stats.created += 1
+                        self.log_success(f"Создано изображение для задания {task.get_short_uuid()}")
                 
             except Exception as e:
                 self.log_error(f"Ошибка импорта изображения: {e}", e)
-    
+
+    def _create_task_image(self, task: Task, image_uuid: str, image_data: Dict[str, Any]) -> Optional[TaskImage]:
+        """Создание изображения задания"""
+        try:
+            # ИСПРАВЛЕНО: Валидация UUID формата
+            import uuid as uuid_module
+            
+            try:
+                # Проверяем что UUID валидный
+                uuid_obj = uuid_module.UUID(image_uuid)
+                self.log_info(f"UUID валиден: {str(uuid_obj)[-8:]}")
+            except ValueError as e:
+                self.log_error(f"Некорректный UUID изображения: {image_uuid} - {e}")
+                return None
+            
+            # Обработка содержимого изображения
+            image_content = None
+            filename = image_data.get('filename', 'imported_image.jpg')
+            
+            if 'base64_data' in image_data:
+                # Импорт из base64
+                import base64
+                from django.core.files.base import ContentFile
+                
+                try:
+                    # Убираем префикс data:image/...;base64, если есть
+                    base64_string = image_data['base64_data']
+                    if ',' in base64_string:
+                        base64_string = base64_string.split(',')[1]
+                    
+                    image_content = ContentFile(
+                        base64.b64decode(base64_string),
+                        name=filename
+                    )
+                    self.log_info(f"Base64 декодирован: {len(base64_string)} символов")
+                except Exception as e:
+                    self.log_error(f"Ошибка декодирования base64: {e}", e)
+                    return None
+                    
+            elif hasattr(self, 'images_dir') and self.images_dir and 'filename' in image_data:
+                # Импорт из файла
+                from pathlib import Path
+                from django.core.files.base import ContentFile
+                
+                image_path = Path(self.images_dir) / image_data['filename']
+                if image_path.exists():
+                    with open(image_path, 'rb') as f:
+                        image_content = ContentFile(f.read(), name=filename)
+                else:
+                    self.log_warning(f"Файл изображения не найден: {image_path}")
+                    return None
+            else:
+                self.log_warning(f"Нет данных изображения (base64_data или filename)")
+                return None
+            
+            if image_content:
+                # ИСПРАВЛЕНО: Создаем изображение с правильным UUID
+                task_image = TaskImage.objects.create(
+                    id=image_uuid,  # UUID уже валидирован выше
+                    task=task,
+                    image=image_content,
+                    position=image_data.get('position', 'bottom_70'),
+                    caption=image_data.get('caption', ''),
+                    order=image_data.get('order', 1)
+                )
+                
+                self.log_info(f"Изображение создано: {task_image.get_short_uuid()}")
+                return task_image
+            
+        except Exception as e:
+            self.log_error(f"Ошибка создания изображения: {e}", e)
+            # ДОБАВЛЕНО: Подробная диагностика
+            self.log_error(f"UUID: {image_uuid}")
+            self.log_error(f"Task: {task}")
+            self.log_error(f"Image data keys: {list(image_data.keys())}")
+        
+        return None
+
+    def _update_task_image(self, image: TaskImage, image_data: Dict[str, Any]):
+        """Обновление существующего изображения"""
+        try:
+            # Обновляем метаданные
+            image.position = image_data.get('position', image.position)
+            image.caption = image_data.get('caption', image.caption)
+            image.order = image_data.get('order', image.order)
+            
+            # Обновляем файл изображения если есть новые данные
+            if 'base64_data' in image_data:
+                import base64
+                from django.core.files.base import ContentFile
+                
+                base64_string = image_data['base64_data']
+                if ',' in base64_string:
+                    base64_string = base64_string.split(',')[1]
+                
+                filename = image_data.get('filename', f'updated_{image.image.name}')
+                new_content = ContentFile(
+                    base64.b64decode(base64_string),
+                    name=filename
+                )
+                image.image = new_content
+            
+            image.save()
+            self.log_success(f"Обновлено изображение {image.get_short_uuid()}")
+            
+        except Exception as e:
+            self.log_error(f"Ошибка обновления изображения: {e}", e)
+
     def _analyze_uuid_conflicts(self, json_data: Dict[str, Any]):
         """Анализ конфликтов UUID"""
         print("\n📊 UUID АНАЛИЗ:")
         
-        # ... код анализа UUID как в предыдущей версии ...
-    
+        tasks_data = json_data.get('tasks', [])
+        groups_data = json_data.get('analog_groups', [])
+        images_data = json_data.get('task_images', [])
+        
+        # Анализ заданий
+        task_conflicts = {'existing': [], 'new': [], 'invalid': []}
+        for i, task_data in enumerate(tasks_data):
+            task_uuid = task_data.get('id')
+            
+            if not task_uuid:
+                task_conflicts['invalid'].append(f"Задание {i}: UUID отсутствует")
+                continue
+            
+            try:
+                import uuid
+                uuid.UUID(task_uuid)  # Валидация формата
+                
+                existing_task = self.safe_get_by_uuid(Task, task_uuid)
+                if existing_task:
+                    task_conflicts['existing'].append(task_uuid)
+                else:
+                    task_conflicts['new'].append(task_uuid)
+                    
+            except ValueError:
+                task_conflicts['invalid'].append(f"Задание {i}: некорректный UUID '{task_uuid}'")
+        
+        # Анализ групп
+        group_conflicts = {'existing': [], 'new': [], 'invalid': []}
+        for i, group_data in enumerate(groups_data):
+            group_uuid = group_data.get('id')
+            
+            if not group_uuid:
+                group_conflicts['invalid'].append(f"Группа {i}: UUID отсутствует")
+                continue
+                
+            try:
+                import uuid
+                uuid.UUID(group_uuid)
+                
+                existing_group = self.safe_get_by_uuid(AnalogGroup, group_uuid)
+                if existing_group:
+                    group_conflicts['existing'].append(group_uuid)
+                else:
+                    group_conflicts['new'].append(group_uuid)
+                    
+            except ValueError:
+                group_conflicts['invalid'].append(f"Группа {i}: некорректный UUID '{group_uuid}'")
+        
+        # Вывод анализа
+        print(f"  📝 ЗАДАНИЯ:")
+        print(f"    🆕 Новых: {len(task_conflicts['new'])}")
+        print(f"    🔄 Существующих: {len(task_conflicts['existing'])}")
+        print(f"    ❌ Некорректных UUID: {len(task_conflicts['invalid'])}")
+        
+        print(f"  📋 ГРУППЫ:")
+        print(f"    🆕 Новых: {len(group_conflicts['new'])}")
+        print(f"    🔄 Существующих: {len(group_conflicts['existing'])}")
+        print(f"    ❌ Некорректных UUID: {len(group_conflicts['invalid'])}")
+        
+        if images_data:
+            print(f"  🖼️ ИЗОБРАЖЕНИЯ: {len(images_data)}")
+        
+        # Предупреждения
+        if task_conflicts['existing'] and self.mode == 'strict':
+            print(f"  ⚠️ В режиме strict будут ошибки для {len(task_conflicts['existing'])} существующих заданий")
+        
+        if task_conflicts['invalid'] or group_conflicts['invalid']:
+            print(f"  🚨 Некорректные UUID будут пропущены")
+
     def _analyze_dependencies(self, json_data: Dict[str, Any]):
         """Анализ зависимостей"""
         print("\n🔍 АНАЛИЗ ЗАВИСИМОСТЕЙ:")
         
-        # ... код анализа зависимостей как в предыдущей версии ...
-    
-    # Остальные вспомогательные методы...
+        tasks_data = json_data.get('tasks', [])
+        missing_topics = set()
+        missing_groups = set()
+        broken_references = []
+        
+        # Анализ тем
+        for i, task_data in enumerate(tasks_data):
+            topic_data = task_data.get('topic')
+            if topic_data:
+                topic = self._find_topic(topic_data)
+                if not topic:
+                    if isinstance(topic_data, dict):
+                        topic_key = f"{topic_data.get('subject', 'Unknown')} - {topic_data.get('name', 'Unknown')}"
+                        if topic_data.get('grade_level'):
+                            topic_key += f" ({topic_data['grade_level']} класс)"
+                    else:
+                        topic_key = str(topic_data)
+                    missing_topics.add(topic_key)
+        
+        # Анализ связей с группами
+        declared_group_uuids = {g.get('id') for g in json_data.get('analog_groups', []) if g.get('id')}
+        
+        for i, task_data in enumerate(tasks_data):
+            task_text = task_data.get('text', 'Unknown')[:30]
+            
+            # Проверяем UUID группы
+            for group_uuid in task_data.get('groups', []):
+                if group_uuid not in declared_group_uuids:
+                    # Проверяем в базе данных
+                    existing_group = self.safe_get_by_uuid(AnalogGroup, group_uuid)
+                    if not existing_group:
+                        missing_groups.add(group_uuid)
+                        broken_references.append(f"Задание '{task_text}' → группа {group_uuid[-8:]}")
+            
+            # Проверяем имя группы (fallback)
+            group_name = task_data.get('group_name')
+            if group_name and not task_data.get('groups'):
+                if not AnalogGroup.objects.filter(name=group_name).exists():
+                    missing_groups.add(f"По имени: {group_name}")
+        
+        # Вывод анализа зависимостей
+        if missing_topics:
+            print(f"  📚 ОТСУТСТВУЮЩИЕ ТЕМЫ: {len(missing_topics)}")
+            for topic in sorted(list(missing_topics))[:3]:
+                print(f"    - {topic}")
+            if len(missing_topics) > 3:
+                print(f"    ... и еще {len(missing_topics) - 3}")
+            
+            if self.create_missing:
+                print(f"    ✅ Будут созданы автоматически (--create-topics)")
+            else:
+                print(f"    ⚠️ Задания без тем будут пропущены (используйте --create-topics)")
+        
+        if missing_groups:
+            print(f"  📋 ОТСУТСТВУЮЩИЕ ГРУППЫ: {len(missing_groups)}")
+            for group in sorted(list(missing_groups))[:3]:
+                print(f"    - {group}")
+            if len(missing_groups) > 3:
+                print(f"    ... и еще {len(missing_groups) - 3}")
+                
+            if self.create_missing:
+                print(f"    ✅ Будут созданы автоматически (--create-groups)")
+            else:
+                print(f"    ⚠️ Связи будут пропущены (используйте --create-groups)")
+        
+        if broken_references:
+            print(f"  🔗 ПРОБЛЕМНЫЕ СВЯЗИ: {len(broken_references)}")
+            for ref in broken_references[:3]:
+                print(f"    - {ref}")
+            if len(broken_references) > 3:
+                print(f"    ... и еще {len(broken_references) - 3}")
+        
+        # Рекомендации
+        recommendations = []
+        if missing_topics and not self.create_missing:
+            recommendations.append("Добавьте --create-topics для автоматического создания тем")
+        if missing_groups and not self.create_missing:
+            recommendations.append("Добавьте --create-groups для автоматического создания групп")
+        if broken_references:
+            recommendations.append("Проверьте UUID групп в JSON файле")
+        
+        if recommendations:
+            print(f"  💡 РЕКОМЕНДАЦИИ:")
+            for rec in recommendations:
+                print(f"    • {rec}")
+
+    def _update_analog_group(self, group: AnalogGroup, group_data: Dict[str, Any]):
+        """Обновление существующей группы аналогов"""
+        try:
+            group.name = group_data.get('name', group.name)
+            group.description = group_data.get('description', group.description)
+            group.save()
+            
+            self.log_success(f"Обновлена группа: {group.name} [{group.get_short_uuid()}]")
+            
+        except Exception as e:
+            self.log_error(f"Ошибка обновления группы: {e}", e)
+
+    def _update_task(self, task: Task, task_data: Dict[str, Any]):
+        """Обновление существующего задания"""
+        try:
+            # Обновляем основные поля
+            task.text = task_data.get('text', task.text)
+            task.answer = task_data.get('answer', task.answer)
+            task.short_solution = task_data.get('short_solution', task.short_solution)
+            task.full_solution = task_data.get('full_solution', task.full_solution)
+            task.hint = task_data.get('hint', task.hint)
+            task.instruction = task_data.get('instruction', task.instruction)
+            
+            # Обновляем метаданные
+            task.content_element = task_data.get('content_element', task.content_element)
+            task.requirement_element = task_data.get('requirement_element', task.requirement_element)
+            task.task_type = task_data.get('task_type', task.task_type)
+            task.difficulty = task_data.get('difficulty', task.difficulty)
+            task.cognitive_level = task_data.get('cognitive_level', task.cognitive_level)
+            task.estimated_time = task_data.get('estimated_time', task.estimated_time)
+            
+            # Обновляем тему если указана
+            topic_data = task_data.get('topic')
+            if topic_data:
+                topic = self._find_or_create_topic(topic_data)
+                if topic:
+                    task.topic = topic
+            
+            task.save()
+            self.log_success(f"Обновлено задание: {task.get_short_uuid()}")
+            
+        except Exception as e:
+            self.log_error(f"Ошибка обновления задания: {e}", e)
+
+    def _find_or_create_subtopic(self, subtopic_data: Any, topic: Topic) -> Optional[SubTopic]:
+        """Поиск или создание подтемы"""
+        if not subtopic_data or not topic:
+            return None
+        
+        subtopic_name = subtopic_data if isinstance(subtopic_data, str) else subtopic_data.get('name')
+        if not subtopic_name:
+            return None
+        
+        # Поиск существующей подтемы
+        existing_subtopic = SubTopic.objects.filter(topic=topic, name=subtopic_name).first()
+        if existing_subtopic:
+            return existing_subtopic
+        
+        # Создание новой подтемы если разрешено
+        if self.create_missing:
+            try:
+                subtopic = SubTopic.objects.create(
+                    topic=topic,
+                    name=subtopic_name,
+                    description=subtopic_data.get('description', '') if isinstance(subtopic_data, dict) else '',
+                    order=subtopic_data.get('order', 1) if isinstance(subtopic_data, dict) else 1
+                )
+                self.log_success(f"Создана подтема: {subtopic_name}")
+                return subtopic
+            except Exception as e:
+                self.log_error(f"Ошибка создания подтемы: {e}", e)
+        
+        return None
+

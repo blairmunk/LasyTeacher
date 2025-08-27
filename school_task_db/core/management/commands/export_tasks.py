@@ -21,9 +21,16 @@ class Command(BaseCommand):
         parser.add_argument('--filter-subject', type=str, help='Фильтр по предмету')
         parser.add_argument('--filter-grade', type=int, help='Фильтр по классу')
         parser.add_argument('--limit', type=int, help='Ограничить количество заданий')
+        parser.add_argument('--verbose', action='store_true', help='Подробный вывод процесса экспорта')
 
     def handle(self, *args, **options):
-        print("📤 ЭКСПОРТ ЗАДАНИЙ В JSON:")
+        # ИСПРАВЛЕНО: добавить verbose логирование
+        verbose = options.get('verbose', False)
+        
+        if verbose:
+            print("📤 ЭКСПОРТ ЗАДАНИЙ В JSON (verbose режим):")
+        else:
+            print("📤 ЭКСПОРТ ЗАДАНИЙ В JSON:")
         
         # Базовый queryset заданий
         tasks_qs = Task.objects.select_related('topic', 'subtopic').prefetch_related('taskgroup_set__group')
@@ -48,15 +55,37 @@ class Command(BaseCommand):
         used_groups = set()
         used_topics = set()
         
-        for task in tasks:
+        # ИСПРАВЛЕНО: verbose детали обработки
+        if verbose:
+            print("  🔍 Анализ связанных данных...")
+        
+        for i, task in enumerate(tasks):
             if task.topic:
                 used_topics.add(task.topic)
             
             for task_group in task.taskgroup_set.all():
                 used_groups.add(task_group.group)
+            
+            # ДОБАВЛЕНО: Progress в verbose режиме
+            if verbose and (i + 1) % 50 == 0:
+                print(f"    Обработано заданий: {i + 1}/{len(tasks)}")
         
         print(f"  📋 Связанных групп: {len(used_groups)}")
         print(f"  📚 Связанных тем: {len(used_topics)}")
+
+        # ДОБАВЛЕНО: детали групп и тем в verbose режиме
+        if verbose:
+            print("  📋 Группы:")
+            for group in sorted(used_groups, key=lambda x: x.name)[:5]:
+                print(f"    - {group.name} [{group.get_short_uuid()}]")
+            if len(used_groups) > 5:
+                print(f"    ... и еще {len(used_groups) - 5}")
+            
+            print("  📚 Темы:")
+            for topic in sorted(used_topics, key=lambda x: (x.subject, x.grade_level, x.name))[:5]:
+                print(f"    - {topic.subject} {topic.grade_level} класс: {topic.name}")
+            if len(used_topics) > 5:
+                print(f"    ... и еще {len(used_topics) - 5}")
         
         # Создаем JSON структуру
         export_data = {
@@ -142,11 +171,41 @@ class Command(BaseCommand):
         # Сохраняем JSON
         output_path = Path(options['output_file'])
         try:
+            if verbose:
+                print(f"  💾 Сохранение в файл: {output_path}")
+            
             with open(output_path, 'w', encoding='utf-8') as f:
                 json.dump(export_data, f, ensure_ascii=False, indent=2, cls=DjangoJSONEncoder)
             
             print(f"✅ Экспорт завершен: {output_path}")
             print(f"📊 Размер файла: {output_path.stat().st_size / 1024:.1f} KB")
+            
+            # ДОБАВЛЕНО: детальная статистика в verbose режиме
+            if verbose:
+                print("\n📊 ДЕТАЛЬНАЯ СТАТИСТИКА:")
+                print(f"  📝 Заданий экспортировано: {len(export_data['tasks'])}")
+                if 'analog_groups' in export_data:
+                    print(f"  📋 Групп экспортировано: {len(export_data['analog_groups'])}")
+                if 'topics' in export_data:
+                    print(f"  📚 Тем экспортировано: {len(export_data['topics'])}")
+                
+                # Анализ типов заданий
+                task_types = {}
+                difficulties = {}
+                for task in export_data['tasks']:
+                    t_type = task.get('task_type', 'unknown')
+                    task_types[t_type] = task_types.get(t_type, 0) + 1
+                    
+                    difficulty = task.get('difficulty', 0)
+                    difficulties[difficulty] = difficulties.get(difficulty, 0) + 1
+                
+                print(f"  🎯 Типы заданий:")
+                for t_type, count in sorted(task_types.items()):
+                    print(f"    - {t_type}: {count}")
+                
+                print(f"  📈 Уровни сложности:")
+                for diff, count in sorted(difficulties.items()):
+                    print(f"    - {diff}: {count}")
             
         except Exception as e:
             raise CommandError(f"Ошибка записи файла: {e}")

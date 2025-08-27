@@ -1,0 +1,49 @@
+{
+  "format_version": "1.0",
+  "metadata": {
+    "description": "Тест импорта РЕАЛЬНОГО изображения",
+    "created_at": "2024-08-26T20:00:00Z"
+  },
+  "topics": [
+    {
+      "name": "Квадратные уравнения",
+      "subject": "Математика",
+      "grade_level": 8,
+      "section": "Алгебра"
+    }
+  ],
+  "analog_groups": [
+    {
+      "id": "c3d67550-307c-4650-a31a-f11b30256f98",
+      "name": "Квадратные уравнения с графиками",
+      "description": "Задания с реальными изображениями графиков"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "5187a1f8-884e-4182-847e-84365908f6da",
+      "text": "На рисунке изображен график функции y = x² - 5x + 6. Найдите корни уравнения x² - 5x + 6 = 0.",
+      "answer": "x₁ = 2, x₂ = 3",
+      "short_solution": "Корни функции — это точки пересечения с осью X",
+      "topic": {
+        "name": "Квадратные уравнения",
+        "subject": "Математика",
+        "grade_level": 8
+      },
+      "groups": [
+        "c3d67550-307c-4650-a31a-f11b30256f98"
+      ]
+    }
+  ],
+  "task_images": [
+    {
+      "id": "f7a978ac-06f9-4209-af1b-8c0c8e3d4e03",
+      "task_uuid": "5187a1f8-884e-4182-847e-84365908f6da",
+      "filename": "quadratic_graph.png",
+      "base64_data": "data:image/png;base64,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",
+      "position": "right_40",
+      "caption": "График функции y = x² - 5x + 6",
+      "order": 1
+    }
+  ]
+}

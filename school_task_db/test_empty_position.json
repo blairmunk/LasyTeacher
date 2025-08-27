@@ -1,0 +1,27 @@
+{
+  "format_version": "1.0",
+  "metadata": {
+    "description": "Тест импорта изображения БЕЗ позиции"
+  },
+  "tasks": [
+    {
+      "id": "44444444-4444-4444-4444-444444444444",
+      "text": "Тестовое задание с изображением без позиции",
+      "answer": "Ответ",
+      "topic": {
+        "name": "Тестовая тема",
+        "subject": "Математика",
+        "grade_level": 8
+      }
+    }
+  ],
+  "task_images": [
+    {
+      "id": "55555555-5555-5555-5555-555555555555",
+      "task_uuid": "44444444-4444-4444-4444-444444444444",
+      "filename": "test_no_position.png",
+      "base64_data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+      "caption": "Изображение без указания позиции - будет настроено позже"
+    }
+  ]
+}

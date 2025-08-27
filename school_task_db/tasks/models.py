@@ -127,7 +127,9 @@ class TaskImage(BaseModel):
     
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='images', verbose_name='Задание')
     image = models.ImageField('Изображение', upload_to=task_image_upload_path)
-    position = models.CharField('Расположение', max_length=20, choices=POSITION_CHOICES, default='bottom_70')
+    # ИЗМЕНЕНО: убрать default, разрешить пустые значения
+    position = models.CharField('Расположение', max_length=20, choices=POSITION_CHOICES, 
+                               blank=True, help_text='Оставьте пустым для установки позже')
     caption = models.CharField('Подпись к изображению', max_length=200, blank=True)
     order = models.PositiveIntegerField('Порядок отображения', default=1)
     
@@ -137,15 +139,32 @@ class TaskImage(BaseModel):
         ordering = ['order', 'created_at']
     
     def __str__(self):
-        return f"Изображение для {self.task.topic.name} ({self.get_position_display()})"
+        position_display = self.get_position_display() if self.position else 'Позиция не задана'
+        return f"Изображение для {self.task.topic.name} ({position_display})"
     
     def get_css_class(self):
         """Возвращает CSS класс для позиционирования изображения"""
         css_classes = {
             'right_40': 'task-image-right-40',
-            'right_20': 'task-image-right-20',
+            'right_20': 'task-image-right-20', 
             'bottom_100': 'task-image-bottom-100',
             'bottom_70': 'task-image-bottom-70',
         }
+        # ИЗМЕНЕНО: для пустых позиций возвращаем bottom_70 + специальный класс
+        if not self.position:
+            return 'task-image-bottom-70 task-image-no-position'
         return css_classes.get(self.position, 'task-image-bottom-70')
+    
+    @property
+    def needs_position(self):
+        """True если позиция не задана"""
+        return not bool(self.position)
+    
+    def get_position_status(self):
+        """Статус позиции для отчетов"""
+        if self.position:
+            return f"✅ {self.get_position_display()}"
+        else:
+            return "⚠️ Позиция не задана"
+
 

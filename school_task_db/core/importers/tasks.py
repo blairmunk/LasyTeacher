@@ -396,22 +396,29 @@ class TaskImporter(BaseImporter):
                 return None
             
             if image_content:
-                # ИСПРАВЛЕНО: Создаем изображение с правильным UUID
+                # ИЗМЕНЕНО: НЕ устанавливаем position по умолчанию
+                position = image_data.get('position', '')  # Пустая строка вместо 'bottom_70'
+                
                 task_image = TaskImage.objects.create(
-                    id=image_uuid,  # UUID уже валидирован выше
+                    id=image_uuid,
                     task=task,
                     image=image_content,
-                    position=image_data.get('position', 'bottom_70'),
+                    position=position,  # Может быть пустой строкой
                     caption=image_data.get('caption', ''),
                     order=image_data.get('order', 1)
                 )
                 
-                self.log_info(f"Изображение создано: {task_image.get_short_uuid()}")
+                # ДОБАВЛЕНО: Логирование статуса позиции
+                if position:
+                    self.log_info(f"Изображение создано с позицией: {position}")
+                else:
+                    self.log_info(f"Изображение создано БЕЗ позиции (для настройки позже)")
+                    self.stats.add_warning(f"Изображение {image_uuid[-8:]} создано без позиции")
+                
                 return task_image
             
         except Exception as e:
             self.log_error(f"Ошибка создания изображения: {e}", e)
-            # ДОБАВЛЕНО: Подробная диагностика
             self.log_error(f"UUID: {image_uuid}")
             self.log_error(f"Task: {task}")
             self.log_error(f"Image data keys: {list(image_data.keys())}")

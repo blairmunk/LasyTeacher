@@ -147,41 +147,85 @@
             <!-- Изображения -->
             {% if image_formset %}
             <div class="card mb-4">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5><i class="fas fa-images"></i> Изображения к заданию</h5>
+                    <small class="text-muted">Максимум 10 изображений</small>
                 </div>
                 <div class="card-body">
                     {{ image_formset.management_form }}
                     
+                    <!-- ДОБАВЛЕНО: Отображение ошибок formset -->
+                    {% if image_formset.non_form_errors %}
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                {% for error in image_formset.non_form_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    
                     <div id="image-formset-container">
                         {% for form in image_formset %}
-                        <div class="image-form border p-3 mb-3">
+                        <div class="image-form border rounded p-3 mb-3 {% if form.errors %}border-danger{% endif %}">
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    <label class="form-label">Изображение</label>
+                                    <label class="form-label">
+                                        Изображение
+                                        {% if form.instance.pk %}<span class="text-success">(загружено)</span>{% endif %}
+                                    </label>
                                     {{ form.image|add_class:"form-control" }}
+                                    
+                                    <!-- Отображение ошибок поля -->
+                                    {% if form.image.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.image.errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <!-- Превью существующего изображения -->
                                     {% if form.instance.image %}
                                         <div class="mt-2">
                                             <img src="{{ form.instance.image.url }}" class="img-thumbnail" style="max-width: 150px;">
+                                            <small class="text-muted d-block">Текущее изображение</small>
                                         </div>
                                     {% endif %}
                                 </div>
+                                
                                 <div class="col-md-3 mb-3">
                                     <label class="form-label">Расположение</label>
                                     {{ form.position|add_class:"form-select" }}
+                                    {% if form.position.errors %}
+                                        <div class="text-danger small">{{ form.position.errors }}</div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Можно оставить пустым</small>
                                 </div>
+                                
                                 <div class="col-md-3 mb-3">
                                     <label class="form-label">Порядок</label>
                                     {{ form.order|add_class:"form-control" }}
+                                    {% if form.order.errors %}
+                                        <div class="text-danger small">{{ form.order.errors }}</div>
+                                    {% endif %}
                                 </div>
-                                <div class="col-md-2 mb-3 d-flex align-items-end">
+                                
+                                <div class="col-md-2 mb-3 d-flex flex-column justify-content-end">
                                     {% if form.DELETE %}
-                                        <div class="form-check">
+                                        <div class="form-check mb-2">
                                             {{ form.DELETE }}
                                             <label for="{{ form.DELETE.id_for_label }}" class="form-check-label text-danger">
-                                                Удалить
+                                                <i class="fas fa-trash"></i> Удалить
                                             </label>
                                         </div>
+                                    {% endif %}
+                                    
+                                    <!-- Показать статус позиции -->
+                                    {% if form.instance.pk %}
+                                        <small class="text-muted">
+                                            {{ form.instance.get_position_status }}
+                                        </small>
                                     {% endif %}
                                 </div>
                             </div>
@@ -189,11 +233,23 @@
                             <div class="mb-3">
                                 <label class="form-label">Подпись к изображению</label>
                                 {{ form.caption|add_class:"form-control" }}
+                                {% if form.caption.errors %}
+                                    <div class="text-danger small">{{ form.caption.errors }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">Описание изображения для читателей</small>
                             </div>
                             
                             {{ form.id }}
                         </div>
                         {% endfor %}
+                    </div>
+                    
+                    <!-- Подсказка для пользователей -->
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Подсказка:</strong> 
+                        Поддерживаются форматы: JPG, PNG, GIF. Рекомендуемый размер: не более 2 МБ.
+                        Позицию можно оставить пустой и настроить позже через отчеты.
                     </div>
                 </div>
             </div>
@@ -261,6 +317,163 @@ document.addEventListener('DOMContentLoaded', function() {
             filterSubtopics(topicSelect.value);
         }
     }
+
+    const imageFormsContainer = document.getElementById('image-formset-container');
+    const totalFormsInput = document.querySelector('input[name="images-TOTAL_FORMS"]');
+    
+    if (imageFormsContainer && totalFormsInput) {
+        
+        // Функция для добавления новой формы изображения
+        function addImageForm() {
+            const totalForms = parseInt(totalFormsInput.value);
+            const maxForms = parseInt(document.querySelector('input[name="images-MAX_NUM_FORMS"]').value);
+            
+            if (totalForms >= maxForms) {
+                alert(`Максимальное количество изображений: ${maxForms}`);
+                return;
+            }
+            
+            // Клонируем шаблон пустой формы (если он есть) или последнюю форму
+            const emptyForm = document.querySelector('#images-empty-form');
+            const lastForm = imageFormsContainer.querySelector('.image-form:last-child');
+            
+            let newForm;
+            if (emptyForm) {
+                // Используем шаблон пустой формы
+                newForm = emptyForm.cloneNode(true);
+                newForm.id = '';
+                newForm.style.display = 'block';
+            } else if (lastForm) {
+                // Клонируем последнюю форму
+                newForm = lastForm.cloneNode(true);
+            } else {
+                console.error('Не найден шаблон для новой формы');
+                return;
+            }
+            
+            // Обновляем индексы в новой форме
+            const formInputs = newForm.querySelectorAll('input, select, textarea');
+            formInputs.forEach(input => {
+                const name = input.name;
+                if (name) {
+                    const newName = name.replace(/images-\d+-/, `images-${totalForms}-`);
+                    input.name = newName;
+                    input.id = `id_${newName}`;
+                    
+                    // Очищаем значения в новой форме (кроме hidden ID полей)
+                    if (input.type !== 'hidden' || name.includes('-id')) {
+                        input.value = '';
+                    }
+                    if (input.type === 'checkbox') {
+                        input.checked = false;
+                    }
+                }
+            });
+            
+            // Удаляем превью изображения
+            const imgPreview = newForm.querySelector('img');
+            if (imgPreview) {
+                imgPreview.remove();
+            }
+            
+            // Добавляем форму в контейнер
+            imageFormsContainer.appendChild(newForm);
+            
+            // Обновляем счетчик форм
+            totalFormsInput.value = totalForms + 1;
+            
+            // Добавляем кнопку удаления для новой формы
+            addRemoveButton(newForm);
+        }
+        
+        // Функция для добавления кнопки удаления
+        function addRemoveButton(formDiv) {
+            const removeButtonContainer = formDiv.querySelector('.col-md-2');
+            if (removeButtonContainer && !removeButtonContainer.querySelector('.btn-remove-image')) {
+                const removeButton = document.createElement('button');
+                removeButton.type = 'button';
+                removeButton.className = 'btn btn-outline-danger btn-sm btn-remove-image';
+                removeButton.innerHTML = '<i class="fas fa-times"></i> Удалить';
+                removeButton.onclick = function() {
+                    removeImageForm(formDiv);
+                };
+                removeButtonContainer.appendChild(removeButton);
+            }
+        }
+        
+        // Функция для удаления формы изображения
+        function removeImageForm(formDiv) {
+            const deleteInput = formDiv.querySelector('input[name*="-DELETE"]');
+            if (deleteInput) {
+                // Если форма существующего изображения - помечаем для удаления
+                deleteInput.checked = true;
+                formDiv.style.display = 'none';
+            } else {
+                // Если новая форма - просто удаляем из DOM
+                formDiv.remove();
+                
+                // Обновляем индексы оставшихся форм
+                reindexForms();
+            }
+        }
+        
+        // Функция для переиндексации форм после удаления
+        function reindexForms() {
+            const forms = imageFormsContainer.querySelectorAll('.image-form:not([style*="display: none"])');
+            forms.forEach((form, index) => {
+                const inputs = form.querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    if (input.name) {
+                        const newName = input.name.replace(/images-\d+-/, `images-${index}-`);
+                        input.name = newName;
+                        input.id = `id_${newName}`;
+                    }
+                });
+            });
+            
+            totalFormsInput.value = forms.length;
+        }
+        
+        // Добавляем кнопку "Добавить изображение"
+        const addImageButton = document.createElement('button');
+        addImageButton.type = 'button';
+        addImageButton.className = 'btn btn-outline-primary btn-sm mb-3';
+        addImageButton.innerHTML = '<i class="fas fa-plus"></i> Добавить изображение';
+        addImageButton.onclick = addImageForm;
+        
+        // Вставляем кнопку после заголовка
+        const cardHeader = imageFormsContainer.parentElement.querySelector('.card-header');
+        cardHeader.insertAdjacentElement('afterend', addImageButton);
+        
+        // Добавляем кнопки удаления к существующим формам
+        const existingForms = imageFormsContainer.querySelectorAll('.image-form');
+        existingForms.forEach(addRemoveButton);
+    }
+    
+    // Предварительный просмотр загружаемых изображений
+    imageFormsContainer?.addEventListener('change', function(e) {
+        if (e.target.type === 'file' && e.target.files[0]) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                // Найти или создать элемент превью
+                let preview = e.target.closest('.col-md-4').querySelector('.image-preview');
+                if (!preview) {
+                    preview = document.createElement('div');
+                    preview.className = 'image-preview mt-2';
+                    e.target.closest('.col-md-4').appendChild(preview);
+                }
+                
+                preview.innerHTML = `
+                    <img src="${e.target.result}" class="img-thumbnail" style="max-width: 150px;">
+                    <small class="text-muted d-block">Новое изображение</small>
+                `;
+            };
+            
+            reader.readAsDataURL(file);
+        }
+    });
 });
 </script>
 

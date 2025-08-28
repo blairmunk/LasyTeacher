@@ -7,9 +7,9 @@ from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 
-from .forms import TaskForm
+from .forms import TaskForm, TaskImageFormSet
 from .models import Task, TaskImage
-from .utils import math_status_cache  # НОВЫЙ ИМПОРТ
+from .utils import math_status_cache
 from curriculum.models import Topic, SubTopic
 from document_generator.utils.formula_utils import formula_processor
 
@@ -81,7 +81,6 @@ class TaskListView(ListView):
         
         return context
 
-# Остальные классы остаются без изменений
 class TaskDetailView(DetailView):
     model = Task
     template_name = 'tasks/detail.html'
@@ -95,32 +94,109 @@ class TaskCreateView(CreateView):
     form_class = TaskForm
     template_name = 'tasks/form.html'
     
-    def form_valid(self, form):
-        messages.success(self.request, 'Задание успешно создано!')
-        return super().form_valid(form)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # ИСПРАВЛЕНО: Для создания используем пустой formset
+        if self.request.POST:
+            context['image_formset'] = TaskImageFormSet(
+                self.request.POST, 
+                self.request.FILES,
+                prefix='images'
+            )
+        else:
+            context['image_formset'] = TaskImageFormSet(
+                prefix='images'
+            )
+        
+        return context
     
-    def form_invalid(self, form):
-        messages.error(self.request, 'Ошибка при создании задания. Проверьте введённые данные.')
-        for field, errors in form.errors.items():
-            for error in errors:
-                messages.error(self.request, f'{field}: {error}')
-        return super().form_invalid(form)
+    def form_valid(self, form):
+        context = self.get_context_data()
+        image_formset = context['image_formset']
+        
+        if image_formset.is_valid():
+            # Сначала сохраняем задание
+            self.object = form.save()
+            
+            # Затем сохраняем изображения с привязкой к заданию
+            image_formset.instance = self.object  # ВАЖНО: устанавливаем instance
+            image_formset.save()
+            
+            # Подсчитываем созданные изображения
+            created_images = len([img for img in image_formset.forms if img.instance.pk and not img.cleaned_data.get('DELETE', False)])
+            
+            messages.success(self.request, f'Задание успешно создано!')
+            if created_images > 0:
+                messages.info(self.request, f'Добавлено изображений: {created_images}')
+            
+            return redirect(self.object.get_absolute_url())
+        else:
+            messages.error(self.request, 'Ошибка при создании задания. Проверьте данные изображений.')
+            return self.form_invalid(form)
 
 class TaskUpdateView(UpdateView):
     model = Task
     form_class = TaskForm
     template_name = 'tasks/form.html'
     
-    def form_valid(self, form):
-        messages.success(self.request, 'Задание успешно обновлено!')
-        return super().form_valid(form)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # ИСПРАВЛЕНО: Для обновления используем instance
+        if self.request.POST:
+            context['image_formset'] = TaskImageFormSet(
+                self.request.POST, 
+                self.request.FILES,
+                instance=self.object,  # ✅ Теперь это работает!
+                prefix='images'
+            )
+        else:
+            context['image_formset'] = TaskImageFormSet(
+                instance=self.object,  # ✅ Теперь это работает!
+                prefix='images'
+            )
+        
+        return context
     
-    def form_invalid(self, form):
-        messages.error(self.request, 'Ошибка при обновлении задания. Проверьте введённые данные.')
-        for field, errors in form.errors.items():
-            for error in errors:
-                messages.error(self.request, f'{field}: {error}')
-        return super().form_invalid(form)
+    def form_valid(self, form):
+        context = self.get_context_data()
+        image_formset = context['image_formset']
+        
+        if image_formset.is_valid():
+            # Сначала сохраняем задание
+            self.object = form.save()
+            
+            # Сохраняем formset (instance уже установлен в get_context_data)
+            saved_images = image_formset.save()
+            
+            # Статистика изменений
+            created_images = len([img for img in saved_images if img.pk and not hasattr(img, '_created')])
+            deleted_count = len(image_formset.deleted_objects)
+            
+            messages.success(self.request, 'Задание успешно обновлено!')
+            
+            if created_images > 0:
+                messages.info(self.request, f'Добавлено изображений: {created_images}')
+            if deleted_count > 0:
+                messages.info(self.request, f'Удалено изображений: {deleted_count}')
+            
+            return redirect(self.object.get_absolute_url())
+        else:
+            messages.error(self.request, 'Ошибка при обновлении задания. Проверьте данные изображений.')
+            
+            # Отладочная информация в development режиме
+            if settings.DEBUG:
+                for i, form in enumerate(image_formset.forms):
+                    if form.errors:
+                        for field, errors in form.errors.items():
+                            messages.error(self.request, f'Изображение {i+1}, поле {field}: {", ".join(errors)}')
+                
+                if image_formset.non_form_errors():
+                    for error in image_formset.non_form_errors():
+                        messages.error(self.request, f'Formset ошибка: {error}')
+            
+            return self.form_invalid(form)
 
 class TaskDeleteView(DeleteView):
     model = Task

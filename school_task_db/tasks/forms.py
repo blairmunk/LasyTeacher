@@ -94,12 +94,17 @@ class TaskImageForm(forms.ModelForm):
             'order': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
         }
 
-from django.forms import modelformset_factory
+from django.forms import modelformset_factory, inlineformset_factory
 
-TaskImageFormSet = modelformset_factory(
-    TaskImage,
+TaskImageFormSet = inlineformset_factory(
+    Task,  # Родительская модель
+    TaskImage,  # Связанная модель
     form=TaskImageForm,
-    extra=1,
+    extra=2,  # Показываем 2 пустые формы для добавления
     can_delete=True,
-    can_order=True
+    max_num=10,  # Максимум 10 изображений
+    validate_max=True,
+    can_order=False
 )
+
+

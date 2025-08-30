@@ -172,7 +172,13 @@
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">
                                         Изображение
-                                        {% if form.instance.pk %}<span class="text-success">(загружено)</span>{% endif %}
+                                        {% if form.instance.pk and form.instance.image %}
+                                            <span class="text-success"><i class="fas fa-check-circle"></i> загружено</span>
+                                        {% elif form.instance.pk %}
+                                            <span class="text-warning"><i class="fas fa-exclamation-circle"></i> не загружено</span>
+                                        {% else %}
+                                            <span class="text-muted"><i class="fas fa-plus-circle"></i> новое</span>
+                                        {% endif %}
                                     </label>
                                     {{ form.image|add_class:"form-control" }}
                                     
@@ -189,7 +195,21 @@
                                     {% if form.instance.image %}
                                         <div class="mt-2">
                                             <img src="{{ form.instance.image.url }}" class="img-thumbnail" style="max-width: 150px;">
-                                            <small class="text-muted d-block">Текущее изображение</small>
+                                            <small class="text-success d-block">
+                                                <i class="fas fa-info-circle"></i> 
+                                                Текущее изображение
+                                                {% if form.instance.image.size %}
+                                                    ({{ form.instance.image.size|filesizeformat }})
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    {% elif form.instance.pk %}
+                                        <!-- Если объект существует, но изображения нет -->
+                                        <div class="mt-2 p-2 bg-light border rounded">
+                                            <small class="text-muted">
+                                                <i class="fas fa-image"></i> 
+                                                Изображение не загружено - выберите файл для загрузки
+                                            </small>
                                         </div>
                                     {% endif %}
                                 </div>
@@ -221,10 +241,25 @@
                                         </div>
                                     {% endif %}
                                     
-                                    <!-- Показать статус позиции -->
+                                    <!-- УЛУЧШЕННЫЙ показ статуса -->
                                     {% if form.instance.pk %}
                                         <small class="text-muted">
-                                            {{ form.instance.get_position_status }}
+                                            {% if form.instance.image %}
+                                                <i class="fas fa-check text-success"></i> {{ form.instance.get_position_status }}
+                                            {% else %}
+                                                <i class="fas fa-exclamation-triangle text-warning"></i> Файл отсутствует
+                                            {% endif %}
+                                        </small>
+                                        
+                                        <!-- Показать размер файла если есть -->
+                                        {% if form.instance.image and form.instance.image.size %}
+                                            <small class="text-muted d-block">
+                                                Размер: {{ form.instance.image.size|filesizeformat }}
+                                            </small>
+                                        {% endif %}
+                                    {% else %}
+                                        <small class="text-muted">
+                                            <i class="fas fa-plus text-primary"></i> Новое изображение
                                         </small>
                                     {% endif %}
                                 </div>
@@ -236,7 +271,19 @@
                                 {% if form.caption.errors %}
                                     <div class="text-danger small">{{ form.caption.errors }}</div>
                                 {% endif %}
-                                <small class="form-text text-muted">Описание изображения для читателей</small>
+                                
+                                <!-- РАСШИРЕННАЯ подсказка -->
+                                {% if form.instance.pk and form.instance.image %}
+                                    <small class="form-text text-success">
+                                        <i class="fas fa-info-circle"></i> 
+                                        Файл: {{ form.instance.image.name|default:"неизвестно" }}
+                                        {% if form.instance.created_at %}
+                                            • Загружено: {{ form.instance.created_at|date:"d.m.Y H:i" }}
+                                        {% endif %}
+                                    </small>
+                                {% else %}
+                                    <small class="form-text text-muted">Описание изображения для читателей</small>
+                                {% endif %}
                             </div>
                             
                             {{ form.id }}

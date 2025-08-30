@@ -167,4 +167,26 @@ class TaskImage(BaseModel):
         else:
             return "⚠️ Позиция не задана"
 
+    @property
+    def file_size_human(self):
+        """Размер файла в человекочитаемом виде"""
+        if self.image and hasattr(self.image, 'size'):
+            from django.template.defaultfilters import filesizeformat
+            return filesizeformat(self.image.size)
+        return "Неизвестно"
+
+    @property  
+    def is_image_uploaded(self):
+        """True если файл изображения существует"""
+        return bool(self.image and hasattr(self.image, 'url'))
+
+    def get_upload_status(self):
+        """Статус загрузки для отображения"""
+        if self.is_image_uploaded:
+            return "✅ Загружено"
+        elif self.pk:
+            return "⚠️ Не загружено" 
+        else:
+            return "🆕 Новое"
+
 

@@ -219,6 +219,17 @@ class Command(BaseCommand):
             f'\n📚 {action} курс: {course.name}'
         ))
 
+        # Привязываем классы к курсу
+        from students.models import StudentGroup
+        grade = course_data['grade_level']
+        matching_groups = StudentGroup.objects.filter(
+            name__startswith=str(grade)
+        )
+        if matching_groups.exists():
+            course.student_groups.set(matching_groups)
+            group_names = ', '.join(g.name for g in matching_groups)
+            self.stdout.write(f'  🎓 Привязаны классы: {group_names}')
+
         # Создаём работы
         works_created = 0
         works_skipped = 0

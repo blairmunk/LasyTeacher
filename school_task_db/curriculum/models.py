@@ -88,6 +88,14 @@ class Course(BaseModel):
                              help_text='Предмет из справочника предметов')
     grade_level = models.PositiveIntegerField('Класс')
     academic_year = models.CharField('Учебный год', max_length=20, default='2024-2025')
+
+    student_groups = models.ManyToManyField(
+        'students.StudentGroup',
+        verbose_name='Классы',
+        blank=True,
+        related_name='courses',
+        help_text='Классы, которым назначен этот курс',
+    )
     
     # Временные параметры
     start_date = models.DateField('Дата начала', null=True, blank=True)

@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+
+{% block title %}Тепловая карта успеваемости{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-th"></i> Тепловая карта успеваемости</h2>
+        <a href="{% url 'reports:dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> К дашборду
+        </a>
+    </div>
+
+    <!-- Фильтры -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Курс</label>
+                    <select name="course" class="form-select" id="course-select" required>
+                        <option value="">Выберите курс...</option>
+                        {% for c in courses %}
+                        <option value="{{ c.pk }}" 
+                                {% if selected_course == c.pk|stringformat:"s" %}selected{% endif %}>
+                            {{ c.name }} ({{ c.academic_year }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Класс</label>
+                    <select name="group" class="form-select" id="group-select" required>
+                        <option value="">
+                            {% if selected_course %}Выберите класс...{% else %}Сначала выберите курс{% endif %}
+                        </option>
+                        {% for g in student_groups %}
+                        <option value="{{ g.pk }}" 
+                                {% if selected_group == g.pk|stringformat:"s" %}selected{% endif %}>
+                            {{ g.name }} ({{ g.students.count }} уч.)
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-chart-bar"></i> Построить карту
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
+    </div>
+    {% endif %}
+
+    {% if heatmap_json %}
+    <!-- Тепловая карта -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-th"></i> 
+                {{ group.name }} — {{ course.name }}
+            </h5>
+            <div>
+                <button onclick="downloadHeatmap()" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-download"></i> PNG
+                </button>
+                <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-print"></i> Печать
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0" style="overflow-x: auto;">
+            <div id="heatmap-chart" style="width: 100%; min-width: 600px;"></div>
+        </div>
+    </div>
+    
+    <!-- Легенда -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-center gap-4">
+                <span><span style="display:inline-block;width:20px;height:20px;background:#dc3545;border-radius:3px;vertical-align:middle;"></span> 2 — Неудовл.</span>
+                <span><span style="display:inline-block;width:20px;height:20px;background:#ffc107;border-radius:3px;vertical-align:middle;"></span> 3 — Удовл.</span>
+                <span><span style="display:inline-block;width:20px;height:20px;background:#28a745;border-radius:3px;vertical-align:middle;"></span> 4 — Хорошо</span>
+                <span><span style="display:inline-block;width:20px;height:20px;background:#0d6efd;border-radius:3px;vertical-align:middle;"></span> 5 — Отлично</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Сводная статистика -->
+    {% if stats %}
+    <div class="row mb-4">
+        <!-- Общие показатели -->
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <div class="fs-2 fw-bold 
+                        {% if stats.overall_avg >= 4 %}text-success
+                        {% elif stats.overall_avg >= 3 %}text-warning
+                        {% else %}text-danger{% endif %}">
+                        {{ stats.overall_avg }}
+                    </div>
+                    <small class="text-muted">Средний балл</small>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            {{ stats.filled_cells }}/{{ stats.total_cells }} ячеек
+                            {% if stats.empty_cells > 0 %}
+                            ({{ stats.empty_cells }} пустых)
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Проблемные темы -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header py-2">
+                    <h6 class="mb-0 text-danger">
+                        <i class="fas fa-exclamation-triangle"></i> Сложные темы
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for g in stats.group_avgs|slice:":3" %}
+                        <li class="list-group-item py-1 d-flex justify-content-between">
+                            <small class="text-truncate" style="max-width:150px;">{{ g.name }}</small>
+                            <span class="badge {% if g.avg < 3 %}bg-danger{% elif g.avg < 3.5 %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                {{ g.avg }}
+                            </span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Проблемные ученики -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header py-2">
+                    <h6 class="mb-0 text-warning">
+                        <i class="fas fa-user-times"></i> Нужна помощь
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for zone in stats.problem_zones|slice:":5" %}
+                        <li class="list-group-item py-1 d-flex justify-content-between">
+                            <small>{{ zone.student }} → {{ zone.group|truncatechars:15 }}</small>
+                            <span class="badge bg-danger">{{ zone.score }}</span>
+                        </li>
+                        {% endfor %}
+                        {% if not stats.problem_zones %}
+                        <li class="list-group-item py-1 text-success">
+                            <small>✅ Нет проблемных зон</small>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Отличники -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header py-2">
+                    <h6 class="mb-0 text-success">
+                        <i class="fas fa-star"></i> Лучшие результаты
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for zone in stats.excellent_zones|slice:":5" %}
+                        <li class="list-group-item py-1 d-flex justify-content-between">
+                            <small>{{ zone.student }} → {{ zone.group|truncatechars:15 }}</small>
+                            <span class="badge bg-primary">{{ zone.score }}</span>
+                        </li>
+                        {% endfor %}
+                        {% if not stats.excellent_zones %}
+                        <li class="list-group-item py-1 text-muted">
+                            <small>Нет оценок ≥ 4.5</small>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Рейтинг учеников -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-sort-amount-down"></i> Рейтинг учеников</h6>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>#</th><th>Ученик</th><th>Ср. балл</th><th>Работ</th></tr></thead>
+                        <tbody>
+                            {% for s in stats.student_avgs %}
+                            <tr>
+                                <td class="text-muted">{{ forloop.counter }}</td>
+                                <td>{{ s.name }}</td>
+                                <td>
+                                    {% if s.avg %}
+                                    <span class="badge {% if s.avg >= 4 %}bg-success{% elif s.avg >= 3 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                        {{ s.avg }}
+                                    </span>
+                                    {% else %}
+                                    <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted">{{ s.count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-book"></i> Средний балл по темам</h6>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>#</th><th>Тема</th><th>Ср. балл</th><th>Оценок</th></tr></thead>
+                        <tbody>
+                            {% for g in stats.group_avgs %}
+                            <tr>
+                                <td class="text-muted">{{ forloop.counter }}</td>
+                                <td>{{ g.name }}</td>
+                                <td>
+                                    {% if g.avg %}
+                                    <span class="badge {% if g.avg >= 4 %}bg-success{% elif g.avg >= 3 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                        {{ g.avg }}
+                                    </span>
+                                    {% else %}
+                                    <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted">{{ g.count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% elif course and group %}
+    <div class="alert alert-warning">
+        <i class="fas fa-info-circle"></i> 
+        Нет данных для построения карты. Убедитесь, что проведены события.
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>
+// Динамическая фильтрация групп по курсу
+document.querySelector('select[name="course"]').addEventListener('change', function() {
+    if (this.value) {
+        // Перезагружаем страницу с выбранным курсом для фильтрации групп
+        const url = new URL(window.location);
+        url.searchParams.set('course', this.value);
+        url.searchParams.delete('group');
+        window.location = url;
+    }
+});
+{% if heatmap_json %}
+const heatmapConfig = {{ heatmap_json|safe }};
+
+Plotly.newPlot(
+    'heatmap-chart',
+    heatmapConfig.data,
+    heatmapConfig.layout,
+    heatmapConfig.config
+);
+
+function downloadHeatmap() {
+    Plotly.downloadImage('heatmap-chart', {
+        format: 'png', width: 1200,
+        height: heatmapConfig.layout.height,
+        filename: 'heatmap_{{ group.name }}_{{ course.name }}'
+    });
+}
+
+function printHeatmap() {
+    window.print();
+}
+{% endif %}
+</script>
+{% endblock %}

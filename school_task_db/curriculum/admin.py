@@ -57,6 +57,7 @@ class CourseAssignmentInline(admin.TabularInline):
 class CourseAdmin(admin.ModelAdmin):
     list_display = ['get_short_uuid', 'name', 'subject', 'grade_level', 'academic_year', 'is_active']
     list_filter = ['subject', 'grade_level', 'academic_year', 'is_active']
+    filter_horizontal = ['student_groups']  # ← удобный виджет для M2M
     search_fields = ['name', 'description']
     readonly_fields = ['uuid']
     inlines = [CourseAssignmentInline]

@@ -1,0 +1,48 @@
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-5">
+                <h6 class="mb-1">{{ event_data.event.name }}</h6>
+                <small class="text-muted">
+                    {% if event_data.event.work %}
+                        {{ event_data.event.work.get_work_type_display }} •
+                    {% endif %}
+                    {{ event_data.event.planned_date|date:"d.m.Y" }}
+                    {% if event_data.event.course %}
+                        • {{ event_data.event.course.name }}
+                    {% endif %}
+                </small>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex gap-3 text-center">
+                    <div>
+                        <div class="fs-5 fw-bold">{{ event_data.active_participants }}</div>
+                        <small class="text-muted">участн.</small>
+                    </div>
+                    <div>
+                        <div class="fs-5 fw-bold text-success">{{ event_data.graded_participants }}</div>
+                        <small class="text-muted">провер.</small>
+                    </div>
+                    <div>
+                        <div class="fs-5 fw-bold text-danger">{{ event_data.remaining }}</div>
+                        <small class="text-muted">осталось</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar bg-{{ btn_class }}"
+                         style="width: {{ event_data.progress_percentage }}%"></div>
+                </div>
+                <small class="text-muted">{{ event_data.progress_percentage }}%</small>
+            </div>
+            <div class="col-md-2 text-end">
+                <a href="{% url 'review:event-review' event_data.event.pk %}"
+                   class="btn btn-{{ btn_class }} btn-sm">
+                    <i class="fas fa-{% if btn_class == 'warning' %}play{% elif btn_class == 'info' %}edit{% else %}eye{% endif %}"></i>
+                    {{ btn_text }}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

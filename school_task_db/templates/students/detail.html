@@ -1,0 +1,296 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ student.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Заголовок -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-user-graduate"></i>
+                {{ student.get_full_name }}
+            </h2>
+            <div class="d-flex gap-2 align-items-center">
+                {% for g in student_groups %}
+                <a href="{% url 'students:group-detail' g.pk %}" class="badge bg-primary fs-6 text-decoration-none">
+                    {{ g.name }}
+                </a>
+                {% endfor %}
+                {% if student.email %}
+                <span class="text-muted"><i class="fas fa-envelope"></i> {{ student.email }}</span>
+                {% endif %}
+                <span class="uuid-badge">{{ student.get_short_uuid }}</span>
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'students:update' student.pk %}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-edit"></i> Редактировать
+            </a>
+            <a href="{% url 'students:list' %}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i> К списку
+            </a>
+        </div>
+    </div>
+
+    <!-- Карточки статистики -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body py-2">
+                    <div class="fs-3 fw-bold {% if stats.avg_score >= 4 %}text-success{% elif stats.avg_score >= 3 %}text-warning{% else %}text-danger{% endif %}">
+                        {{ stats.avg_score }}
+                    </div>
+                    <small class="text-muted">Средний балл</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body py-2">
+                    <div class="fs-3 fw-bold">{{ stats.graded_works }}</div>
+                    <small class="text-muted">Работ</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body py-2">
+                    <div class="fs-3 fw-bold text-primary">{{ stats.score_counts.5 }}</div>
+                    <small class="text-muted">Пятёрок</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body py-2">
+                    <div class="fs-3 fw-bold text-danger">{{ stats.score_counts.2 }}</div>
+                    <small class="text-muted">Двоек</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body py-2">
+                    <div class="fs-3 fw-bold">{{ stats.absent_count }}</div>
+                    <small class="text-muted">Пропусков</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body py-2">
+                    <div class="fs-3 fw-bold {% if stats.attendance_rate >= 90 %}text-success{% elif stats.attendance_rate >= 75 %}text-warning{% else %}text-danger{% endif %}">
+                        {{ stats.attendance_rate }}%
+                    </div>
+                    <small class="text-muted">Посещаемость</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Графики -->
+    <div class="row mb-4">
+        {% if dynamics_chart_json %}
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body p-2">
+                    <div id="dynamics-chart"></div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% if score_chart_json %}
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body p-2">
+                    <div id="score-chart"></div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Мини-heatmap: темы -->
+    {% if mini_heatmap_json %}
+    <div class="card mb-4">
+        <div class="card-header py-2">
+            <h6 class="mb-0"><i class="fas fa-th"></i> Успеваемость по темам</h6>
+        </div>
+        <div class="card-body p-2" style="overflow-x: auto;">
+            <div id="mini-heatmap"></div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Сильные/слабые темы -->
+    {% if group_scores %}
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header py-2">
+                    <h6 class="mb-0 text-danger"><i class="fas fa-exclamation-triangle"></i> Слабые темы</h6>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0">
+                        <tbody>
+                            {% for g in group_scores %}
+                            {% if g.avg and g.avg < 3.5 %}
+                            <tr>
+                                <td>{{ g.name }}</td>
+                                <td class="text-end">
+                                    <span class="badge bg-{% if g.avg < 3 %}danger{% else %}warning text-dark{% endif %}">
+                                        {{ g.avg }}
+                                    </span>
+                                </td>
+                                <td class="text-end text-muted" style="width:60px;">{{ g.count }} оц.</td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header py-2">
+                    <h6 class="mb-0 text-success"><i class="fas fa-star"></i> Сильные темы</h6>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0">
+                        <tbody>
+                            {% for g in group_scores reversed %}
+                            {% if g.avg and g.avg >= 4 %}
+                            <tr>
+                                <td>{{ g.name }}</td>
+                                <td class="text-end">
+                                    <span class="badge bg-{% if g.avg >= 4.5 %}primary{% else %}success{% endif %}">
+                                        {{ g.avg }}
+                                    </span>
+                                </td>
+                                <td class="text-end text-muted" style="width:60px;">{{ g.count }} оц.</td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Все оценки -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-list"></i> Все работы</h5>
+            <small class="text-muted">{{ participations_data|length }} записей</small>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Дата</th>
+                        <th>Работа</th>
+                        <th>Тип</th>
+                        <th class="text-center">Вариант</th>
+                        <th class="text-center">Оценка</th>
+                        <th class="text-center">Баллы</th>
+                        <th>Комментарий</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in participations_data %}
+                    <tr class="{% if data.is_absent %}table-secondary{% endif %}">
+                        <td>
+                            {% if data.event.planned_date %}
+                            <small>{{ data.event.planned_date|date:"d.m.Y" }}</small>
+                            {% else %}
+                            <small class="text-muted">—</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if data.is_absent %}
+                            <span class="text-muted">{{ data.event.name }}</span>
+                            {% else %}
+                            <a href="{% url 'review:participation-review' data.participation.pk %}" 
+                               class="text-decoration-none">
+                                {{ data.event.name }}
+                            </a>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if data.work %}
+                            <span class="badge bg-{% if data.work.work_type == 'test' %}danger{% elif data.work.work_type == 'exam' %}dark{% elif data.work.work_type == 'quiz' %}primary{% elif data.work.work_type == 'diagnostic' %}info{% else %}secondary{% endif %} badge-sm">
+                                {{ data.work.get_work_type_display }}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if data.variant_number %}
+                            <span class="badge bg-secondary">В-{{ data.variant_number }}</span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if data.is_absent %}
+                            <span class="badge bg-secondary">Н</span>
+                            {% elif data.score %}
+                            <span class="badge fs-6 bg-{% if data.score == 5 %}primary{% elif data.score == 4 %}success{% elif data.score == 3 %}warning text-dark{% else %}danger{% endif %}">
+                                {{ data.score }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if data.mark and data.mark.points %}
+                            <small>{{ data.mark.points }}/{{ data.mark.max_points }}</small>
+                            {% else %}
+                            <small class="text-muted">—</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if data.mark and data.mark.teacher_comment %}
+                            <small class="text-muted" title="{{ data.mark.teacher_comment }}">
+                                {{ data.mark.teacher_comment|truncatechars:40 }}
+                            </small>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                            Нет данных о работах
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>
+{% if dynamics_chart_json %}
+const dynConfig = {{ dynamics_chart_json|safe }};
+Plotly.newPlot('dynamics-chart', dynConfig.data, dynConfig.layout, dynConfig.config);
+{% endif %}
+
+{% if score_chart_json %}
+const scoreConfig = {{ score_chart_json|safe }};
+Plotly.newPlot('score-chart', scoreConfig.data, scoreConfig.layout, scoreConfig.config);
+{% endif %}
+
+{% if mini_heatmap_json %}
+const hmConfig = {{ mini_heatmap_json|safe }};
+Plotly.newPlot('mini-heatmap', hmConfig.data, hmConfig.layout, hmConfig.config);
+{% endif %}
+</script>
+{% endblock %}

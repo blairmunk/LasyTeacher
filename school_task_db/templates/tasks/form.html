@@ -194,14 +194,21 @@
                                     <!-- Превью существующего изображения -->
                                     {% if form.instance.image %}
                                         <div class="mt-2">
-                                            <img src="{{ form.instance.image.url }}" class="img-thumbnail" style="max-width: 150px;">
-                                            <small class="text-success d-block">
-                                                <i class="fas fa-info-circle"></i> 
-                                                Текущее изображение
-                                                {% if form.instance.image.size %}
-                                                    ({{ form.instance.image.size|filesizeformat }})
-                                                {% endif %}
-                                            </small>
+                                            {% if form.instance.safe_url %}
+                                                <img src="{{ form.instance.safe_url }}" class="img-thumbnail" style="max-width: 150px;">
+                                                <small class="text-success d-block">
+                                                    <i class="fas fa-info-circle"></i> 
+                                                    Текущее изображение
+                                                    ({{ form.instance.file_size_human }})
+                                                </small>
+                                            {% else %}
+                                                <div class="p-2 bg-light border border-warning rounded">
+                                                    <small class="text-warning">
+                                                        <i class="fas fa-exclamation-triangle"></i>
+                                                        Файл не найден на диске: <code>{{ form.instance.image.name }}</code>
+                                                    </small>
+                                                </div>
+                                            {% endif %}
                                         </div>
                                     {% elif form.instance.pk %}
                                         <!-- Если объект существует, но изображения нет -->
@@ -244,17 +251,18 @@
                                     <!-- УЛУЧШЕННЫЙ показ статуса -->
                                     {% if form.instance.pk %}
                                         <small class="text-muted">
-                                            {% if form.instance.image %}
+                                            {% if form.instance.has_file %}
                                                 <i class="fas fa-check text-success"></i> {{ form.instance.get_position_status }}
+                                            {% elif form.instance.image.name %}
+                                                <i class="fas fa-unlink text-danger"></i> Файл потерян
                                             {% else %}
                                                 <i class="fas fa-exclamation-triangle text-warning"></i> Файл отсутствует
                                             {% endif %}
                                         </small>
                                         
-                                        <!-- Показать размер файла если есть -->
-                                        {% if form.instance.image and form.instance.image.size %}
+                                        {% if form.instance.has_file %}
                                             <small class="text-muted d-block">
-                                                Размер: {{ form.instance.image.size|filesizeformat }}
+                                                Размер: {{ form.instance.file_size_human }}
                                             </small>
                                         {% endif %}
                                     {% else %}
@@ -273,10 +281,13 @@
                                 {% endif %}
                                 
                                 <!-- РАСШИРЕННАЯ подсказка -->
-                                {% if form.instance.pk and form.instance.image %}
-                                    <small class="form-text text-success">
+                                {% if form.instance.pk and form.instance.image.name %}
+                                    <small class="form-text {% if form.instance.has_file %}text-success{% else %}text-warning{% endif %}">
                                         <i class="fas fa-info-circle"></i> 
                                         Файл: {{ form.instance.image.name|default:"неизвестно" }}
+                                        {% if not form.instance.has_file %}
+                                            <span class="text-danger">(не найден на диске)</span>
+                                        {% endif %}
                                         {% if form.instance.created_at %}
                                             • Загружено: {{ form.instance.created_at|date:"d.m.Y H:i" }}
                                         {% endif %}

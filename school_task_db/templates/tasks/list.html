@@ -78,8 +78,14 @@
                 {% if task.images.exists %}
                     {% with task.images.first as first_image %}
                     <div class="mb-2">
-                        <img src="{{ first_image.image.url }}" class="img-thumbnail" 
-                             style="max-width: 80px; max-height: 60px; object-fit: cover;" alt="Превью">
+                        {% if first_image.safe_url %}
+                            <img src="{{ first_image.safe_url }}" class="img-thumbnail" 
+                                style="max-width: 80px; max-height: 60px; object-fit: cover;" alt="Превью">
+                        {% else %}
+                            <span class="badge bg-warning text-dark">
+                                <i class="fas fa-exclamation-triangle"></i> нет файла
+                            </span>
+                        {% endif %}
                     </div>
                     {% endwith %}
                 {% endif %}

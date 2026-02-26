@@ -127,7 +127,6 @@ class TaskImage(BaseModel):
     
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='images', verbose_name='Задание')
     image = models.ImageField('Изображение', upload_to=task_image_upload_path)
-    # ИЗМЕНЕНО: убрать default, разрешить пустые значения
     position = models.CharField('Расположение', max_length=20, choices=POSITION_CHOICES, 
                                blank=True, help_text='Оставьте пустым для установки позже')
     caption = models.CharField('Подпись к изображению', max_length=200, blank=True)
@@ -150,7 +149,6 @@ class TaskImage(BaseModel):
             'bottom_100': 'task-image-bottom-100',
             'bottom_70': 'task-image-bottom-70',
         }
-        # ИЗМЕНЕНО: для пустых позиций возвращаем bottom_70 + специальный класс
         if not self.position:
             return 'task-image-bottom-70 task-image-no-position'
         return css_classes.get(self.position, 'task-image-bottom-70')
@@ -161,29 +159,60 @@ class TaskImage(BaseModel):
         return not bool(self.position)
     
     def get_position_status(self):
-        """Статус позиции для отчетов"""
+        """Статус позиции для отчётов"""
         if self.position:
             return f"✅ {self.get_position_display()}"
         else:
             return "⚠️ Позиция не задана"
 
+    # ===== ИСПРАВЛЕННЫЕ СВОЙСТВА =====
+
     @property
-    def file_size_human(self):
-        """Размер файла в человекочитаемом виде"""
-        if self.image and hasattr(self.image, 'size'):
-            from django.template.defaultfilters import filesizeformat
-            return filesizeformat(self.image.size)
-        return "Неизвестно"
+    def has_file(self):
+        """Проверяет, что файл реально существует на диске"""
+        if not self.image:
+            return False
+        if not self.image.name:
+            return False
+        try:
+            return self.image.storage.exists(self.image.name)
+        except Exception:
+            return False
+
+    @property
+    def safe_url(self):
+        """Безопасное получение URL — возвращает None вместо ValueError"""
+        if not self.image:
+            return None
+        if not self.image.name:
+            return None
+        try:
+            return self.image.url
+        except ValueError:
+            return None
 
     @property  
     def is_image_uploaded(self):
-        """True если файл изображения существует"""
-        return bool(self.image and hasattr(self.image, 'url'))
+        """True если файл изображения существует — ИСПРАВЛЕНО"""
+        return self.has_file
+
+    @property
+    def file_size_human(self):
+        """Размер файла в человекочитаемом виде"""
+        if not self.has_file:
+            return "Файл отсутствует"
+        try:
+            from django.template.defaultfilters import filesizeformat
+            return filesizeformat(self.image.size)
+        except (OSError, ValueError):
+            return "Неизвестно"
 
     def get_upload_status(self):
         """Статус загрузки для отображения"""
-        if self.is_image_uploaded:
+        if self.has_file:
             return "✅ Загружено"
+        elif self.image.name:
+            return "❌ Файл не найден на диске"
         elif self.pk:
             return "⚠️ Не загружено" 
         else:

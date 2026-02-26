@@ -183,16 +183,17 @@ class TaskImporter(BaseImporter):
         
         return task
     
-    def _find_or_create_topic(self, topic_data: Any) -> Optional[Topic]:
-        """Поиск или создание темы"""
-        if not topic_data:
-            return None
-        
-        # Поиск существующей темы
-        topic = self._find_topic(topic_data)
+    def _find_or_create_topic(self, topic_data):
+        topic = self._find_topic(topic_data)   # ← ищет
         if topic:
             return topic
         
+        if self.create_missing and isinstance(topic_data, dict):  # ← создаёт
+            topic = Topic.objects.create(...)
+            self.log_success(f"Создана тема: {topic.name}")  # ← правильный метод!
+            return topic
+
+            
         # Создание новой темы если разрешено
         if self.create_missing and isinstance(topic_data, dict):
             try:
@@ -210,9 +211,9 @@ class TaskImporter(BaseImporter):
                 self.log_error(f"Ошибка создания темы: {e}", e)
         
         return None
-    
+        
     def _find_topic(self, topic_data: Any) -> Optional[Topic]:
-        """Поиск темы по данным"""
+        """Поиск темы по данным (только поиск, без создания)"""
         if not topic_data:
             return None
         
@@ -232,6 +233,7 @@ class TaskImporter(BaseImporter):
                 return Topic.objects.filter(**filters).first()
         
         return None
+
     
     def _create_task_group_relations(self, json_data: Dict[str, Any]):
         """Создание связей задание-группа"""

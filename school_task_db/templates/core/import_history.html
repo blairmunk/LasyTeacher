@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block title %}История импортов{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 mx-auto">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-history"></i> История импортов</h2>
+            <a href="{% url 'core:import' %}" class="btn btn-success">
+                <i class="fas fa-file-import"></i> Новый импорт
+            </a>
+        </div>
+
+        {% if imports %}
+        <div class="card">
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 40px;"></th>
+                            <th>Файл</th>
+                            <th>Режим</th>
+                            <th class="text-center">Создано</th>
+                            <th class="text-center">Обновлено</th>
+                            <th class="text-center">Пропущено</th>
+                            <th class="text-center">Ошибки</th>
+                            <th>Размер</th>
+                            <th>Время</th>
+                            <th>Дата</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for imp in imports %}
+                        <tr>
+                            <td class="text-center">{{ imp.status_icon }}</td>
+                            <td>
+                                <strong>{{ imp.filename }}</strong>
+                                {% if imp.dry_run %}
+                                    <span class="badge bg-info">dry-run</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ imp.get_mode_display }}</span>
+                            </td>
+                            <td class="text-center text-success fw-bold">{{ imp.tasks_created }}</td>
+                            <td class="text-center text-primary">{{ imp.tasks_updated }}</td>
+                            <td class="text-center text-muted">{{ imp.tasks_skipped }}</td>
+                            <td class="text-center {% if imp.errors_count %}text-danger fw-bold{% else %}text-muted{% endif %}">
+                                {{ imp.errors_count }}
+                            </td>
+                            <td><small class="text-muted">{{ imp.file_size_human }}</small></td>
+                            <td><small class="text-muted">{{ imp.duration_human }}</small></td>
+                            <td><small class="text-muted">{{ imp.created_at|date:"d.m.Y H:i" }}</small></td>
+                        </tr>
+                        <!-- Раскрывающаяся строка с деталями -->
+                        {% if imp.error_messages %}
+                        <tr>
+                            <td></td>
+                            <td colspan="9">
+                                <details>
+                                    <summary class="text-danger small">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        Показать ошибки ({{ imp.errors_count }})
+                                    </summary>
+                                    <ul class="list-unstyled mt-2 ms-3">
+                                        {% for err in imp.error_messages %}
+                                        <li class="small text-danger">• {{ err }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </details>
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Пагинация -->
+        {% if is_paginated %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        <!-- Сводная статистика -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-chart-bar"></i> Сводка</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="fs-4 fw-bold">{{ imports|length }}</div>
+                        <small class="text-muted">Всего импортов</small>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="fs-4 fw-bold text-success" id="total-created">—</div>
+                        <small class="text-muted">Заданий создано</small>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="fs-4 fw-bold text-primary" id="total-updated">—</div>
+                        <small class="text-muted">Заданий обновлено</small>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="fs-4 fw-bold text-danger" id="total-errors">—</div>
+                        <small class="text-muted">Ошибок</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Импортов пока нет</h5>
+            <p class="text-muted">Загрузите первый JSON-файл с заданиями</p>
+            <a href="{% url 'core:import' %}" class="btn btn-success">
+                <i class="fas fa-file-import"></i> Импортировать
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Подсчёт сводки на клиенте
+document.addEventListener('DOMContentLoaded', function() {
+    let created = 0, updated = 0, errors = 0;
+    document.querySelectorAll('tbody tr').forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 7) {
+            created += parseInt(cells[3]?.textContent) || 0;
+            updated += parseInt(cells[4]?.textContent) || 0;
+            errors += parseInt(cells[6]?.textContent) || 0;
+        }
+    });
+    const el = (id) => document.getElementById(id);
+    if (el('total-created')) el('total-created').textContent = created;
+    if (el('total-updated')) el('total-updated').textContent = updated;
+    if (el('total-errors')) el('total-errors').textContent = errors;
+});
+</script>
+{% endblock %}

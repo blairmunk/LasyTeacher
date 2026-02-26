@@ -1,0 +1,463 @@
+<!-- templates/core/import.html -->
+{% extends 'base.html' %}
+
+{% block title %}Импорт заданий{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 mx-auto">
+        <h2><i class="fas fa-file-import"></i> Импорт заданий из JSON</h2>
+        
+        <!-- Загрузка файла -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">1. Выберите файл</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-7">
+                        <div class="mb-3">
+                            <input type="file" id="json-file" class="form-control form-control-lg" 
+                                   accept=".json">
+                            <div class="form-text">
+                                Формат: JSON. Максимальный размер: 50 МБ.
+                            </div>
+                        </div>
+                        <div id="file-info" class="d-none alert alert-info">
+                            <i class="fas fa-file-code"></i>
+                            <span id="file-name"></span> — 
+                            <span id="file-size"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="card bg-light">
+                            <div class="card-body py-2">
+                                <small class="text-muted">
+                                    <strong>Нет файла?</strong><br>
+                                    <a href="{% url 'core:import-sample' %}" class="btn btn-outline-secondary btn-sm mt-1">
+                                        <i class="fas fa-download"></i> Скачать пример JSON
+                                    </a>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Параметры -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">2. Параметры импорта</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Режим импорта</label>
+                        <select id="import-mode" class="form-select">
+                            <option value="update" selected>
+                                Обновление (update)
+                            </option>
+                            <option value="skip">
+                                Пропуск дубликатов (skip)
+                            </option>
+                            <option value="strict">
+                                Строгий (strict)
+                            </option>
+                        </select>
+                        <div id="mode-description" class="form-text mt-2">
+                            Обновляет существующие записи, создаёт новые.
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Опции</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="create-missing" checked>
+                            <label class="form-check-label" for="create-missing">
+                                Создавать недостающие темы и группы
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="dry-run">
+                            <label class="form-check-label" for="dry-run">
+                                <i class="fas fa-eye"></i> Только превью (dry-run)
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Действия</label>
+                        <div class="d-grid gap-2">
+                            <button id="btn-validate" class="btn btn-outline-primary" disabled>
+                                <i class="fas fa-check-circle"></i> Валидация и превью
+                            </button>
+                            <button id="btn-import" class="btn btn-success" disabled>
+                                <i class="fas fa-file-import"></i> Импортировать
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Результат валидации -->
+        <div id="validation-result" class="d-none card mb-4">
+            <div class="card-header" id="validation-header">
+                <h5 class="mb-0"><i class="fas fa-clipboard-check"></i> Результат проверки</h5>
+            </div>
+            <div class="card-body">
+                <!-- Сводка -->
+                <div id="validation-summary" class="row mb-3"></div>
+                
+                <!-- Ошибки -->
+                <div id="validation-errors" class="d-none">
+                    <h6 class="text-danger"><i class="fas fa-times-circle"></i> Ошибки:</h6>
+                    <ul id="error-list" class="list-group list-group-flush"></ul>
+                </div>
+                
+                <!-- Предупреждения -->
+                <div id="validation-warnings" class="d-none mt-3">
+                    <h6 class="text-warning"><i class="fas fa-exclamation-triangle"></i> Предупреждения:</h6>
+                    <ul id="warning-list" class="list-group list-group-flush"></ul>
+                </div>
+                
+                <!-- Превью dry-run -->
+                <div id="preview-section" class="d-none mt-3">
+                    <h6><i class="fas fa-search"></i> Превью импорта (dry-run):</h6>
+                    <div id="preview-content"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Результат импорта -->
+        <div id="import-result" class="d-none card mb-4">
+            <div class="card-header bg-success text-white" id="import-header">
+                <h5 class="mb-0"><i class="fas fa-check"></i> Результат импорта</h5>
+            </div>
+            <div class="card-body">
+                <pre id="import-report" class="bg-dark text-light p-3 rounded" 
+                     style="font-family: monospace; white-space: pre-wrap;"></pre>
+                <div class="mt-3">
+                    <a href="{% url 'tasks:list' %}" class="btn btn-primary">
+                        <i class="fas fa-list"></i> Перейти к заданиям
+                    </a>
+                    <a href="{% url 'core:import-history' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-history"></i> История импортов
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Последние импорты -->
+        {% if recent_imports %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history"></i> Последние импорты</h5>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Файл</th>
+                            <th>Режим</th>
+                            <th>Создано</th>
+                            <th>Обновлено</th>
+                            <th>Ошибки</th>
+                            <th>Время</th>
+                            <th>Дата</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for imp in recent_imports %}
+                        <tr>
+                            <td>{{ imp.status_icon }}</td>
+                            <td>
+                                {{ imp.filename }}
+                                {% if imp.dry_run %}
+                                    <span class="badge bg-info">dry-run</span>
+                                {% endif %}
+                            </td>
+                            <td><span class="badge bg-secondary">{{ imp.get_mode_display }}</span></td>
+                            <td class="text-success">{{ imp.tasks_created }}</td>
+                            <td class="text-primary">{{ imp.tasks_updated }}</td>
+                            <td class="{% if imp.errors_count %}text-danger fw-bold{% else %}text-muted{% endif %}">
+                                {{ imp.errors_count }}
+                            </td>
+                            <td>{{ imp.duration_ms }} мс</td>
+                            <td>{{ imp.created_at|date:"d.m.Y H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+const csrfToken = '{{ csrf_token }}';
+const fileInput = document.getElementById('json-file');
+const btnValidate = document.getElementById('btn-validate');
+const btnImport = document.getElementById('btn-import');
+
+// Описания режимов
+const modeDescriptions = {
+    'update': 'Обновляет существующие записи по UUID, создаёт новые.',
+    'skip': 'Пропускает задания с уже существующими UUID.',
+    'strict': 'Ошибка при любом конфликте UUID. Самый безопасный режим.',
+};
+
+document.getElementById('import-mode').addEventListener('change', function() {
+    document.getElementById('mode-description').textContent = modeDescriptions[this.value];
+});
+
+// Выбор файла
+let selectedFile = null;
+
+fileInput.addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) {
+        btnValidate.disabled = true;
+        btnImport.disabled = true;
+        document.getElementById('file-info').classList.add('d-none');
+        selectedFile = null;
+        return;
+    }
+    
+    selectedFile = file;
+    document.getElementById('file-name').textContent = file.name;
+    document.getElementById('file-size').textContent = formatSize(file.size);
+    document.getElementById('file-info').classList.remove('d-none');
+    btnValidate.disabled = false;
+    
+    // Скрыть предыдущие результаты
+    document.getElementById('validation-result').classList.add('d-none');
+    document.getElementById('import-result').classList.add('d-none');
+    btnImport.disabled = true;
+});
+
+// Валидация
+btnValidate.addEventListener('click', async function() {
+    if (!selectedFile) return;
+    
+    btnValidate.disabled = true;
+    btnValidate.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Проверяю...';
+    
+    const formData = new FormData();
+    formData.append('json_file', selectedFile);
+    
+    try {
+        const resp = await fetch('{% url "core:import-validate" %}', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken },
+            body: formData,
+        });
+        const data = await resp.json();
+        showValidation(data, resp.ok);
+    } catch (err) {
+        showError('Ошибка сети: ' + err.message);
+    } finally {
+        btnValidate.disabled = false;
+        btnValidate.innerHTML = '<i class="fas fa-check-circle"></i> Валидация и превью';
+    }
+});
+
+// Импорт
+btnImport.addEventListener('click', async function() {
+    if (!selectedFile) return;
+    
+    const dryRun = document.getElementById('dry-run').checked;
+    if (!dryRun && !confirm('Начать импорт? Данные будут записаны в базу.')) return;
+    
+    btnImport.disabled = true;
+    btnImport.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Импортирую...';
+    
+    const formData = new FormData();
+    formData.append('json_file', selectedFile);
+    formData.append('mode', document.getElementById('import-mode').value);
+    formData.append('dry_run', dryRun);
+    formData.append('create_missing', document.getElementById('create-missing').checked);
+    
+    try {
+        const resp = await fetch('{% url "core:import-execute" %}', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken },
+            body: formData,
+        });
+        const data = await resp.json();
+        showImportResult(data, resp.ok);
+    } catch (err) {
+        showError('Ошибка сети: ' + err.message);
+    } finally {
+        btnImport.disabled = false;
+        btnImport.innerHTML = '<i class="fas fa-file-import"></i> Импортировать';
+    }
+});
+
+function showValidation(data, ok) {
+    const block = document.getElementById('validation-result');
+    const header = document.getElementById('validation-header');
+    block.classList.remove('d-none');
+    
+    if (!ok) {
+        header.className = 'card-header bg-danger text-white';
+        header.innerHTML = '<h5 class="mb-0"><i class="fas fa-times-circle"></i> Ошибка</h5>';
+        document.getElementById('validation-summary').innerHTML = 
+            `<div class="col-12"><div class="alert alert-danger">${data.error}</div></div>`;
+        btnImport.disabled = true;
+        return;
+    }
+    
+    const v = data.validation;
+    const s = v.summary;
+    
+    // Заголовок
+    if (v.is_valid) {
+        header.className = 'card-header bg-success text-white';
+        header.innerHTML = '<h5 class="mb-0"><i class="fas fa-check-circle"></i> Файл валиден</h5>';
+        btnImport.disabled = false;
+    } else {
+        header.className = 'card-header bg-danger text-white';
+        header.innerHTML = '<h5 class="mb-0"><i class="fas fa-times-circle"></i> Файл содержит ошибки</h5>';
+        btnImport.disabled = true;
+    }
+    
+    // Сводка
+    document.getElementById('validation-summary').innerHTML = `
+        <div class="col-md-2">
+            <div class="text-center p-2 border rounded">
+                <div class="fs-3 fw-bold">${s.tasks_total}</div>
+                <small class="text-muted">Заданий</small>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="text-center p-2 border rounded">
+                <div class="fs-3 fw-bold text-success">${s.tasks_valid}</div>
+                <small class="text-muted">Валидных</small>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="text-center p-2 border rounded">
+                <div class="fs-3 fw-bold">${s.topics_total}</div>
+                <small class="text-muted">Тем</small>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="text-center p-2 border rounded">
+                <div class="fs-3 fw-bold">${s.groups_total}</div>
+                <small class="text-muted">Групп</small>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="text-center p-2 border rounded">
+                <div class="fs-3 fw-bold">${s.images_total}</div>
+                <small class="text-muted">Изображений</small>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="text-center p-2 border rounded">
+                <div class="fs-3 fw-bold ${s.tasks_errors > 0 ? 'text-danger' : 'text-success'}">${s.tasks_errors}</div>
+                <small class="text-muted">Ошибок</small>
+            </div>
+        </div>
+    `;
+    
+    // Ошибки
+    const errBlock = document.getElementById('validation-errors');
+    const errList = document.getElementById('error-list');
+    if (v.errors.length > 0) {
+        errBlock.classList.remove('d-none');
+        errList.innerHTML = v.errors.map(e => 
+            `<li class="list-group-item list-group-item-danger py-1"><small>${e}</small></li>`
+        ).join('');
+    } else {
+        errBlock.classList.add('d-none');
+    }
+    
+    // Предупреждения
+    const warnBlock = document.getElementById('validation-warnings');
+    const warnList = document.getElementById('warning-list');
+    if (v.warnings.length > 0) {
+        warnBlock.classList.remove('d-none');
+        warnList.innerHTML = v.warnings.slice(0, 20).map(w => 
+            `<li class="list-group-item list-group-item-warning py-1"><small>${w}</small></li>`
+        ).join('');
+        if (v.warnings.length > 20) {
+            warnList.innerHTML += `<li class="list-group-item py-1"><small class="text-muted">...и ещё ${v.warnings.length - 20}</small></li>`;
+        }
+    } else {
+        warnBlock.classList.add('d-none');
+    }
+    
+    // Превью dry-run
+    const prevSection = document.getElementById('preview-section');
+    const prevContent = document.getElementById('preview-content');
+    if (data.preview) {
+        prevSection.classList.remove('d-none');
+        prevContent.innerHTML = buildPreviewTable(data.preview);
+    } else {
+        prevSection.classList.add('d-none');
+    }
+}
+
+function showImportResult(data, ok) {
+    const block = document.getElementById('import-result');
+    const header = document.getElementById('import-header');
+    const report = document.getElementById('import-report');
+    
+    block.classList.remove('d-none');
+    
+    if (!ok || data.status === 'error') {
+        header.className = 'card-header bg-danger text-white';
+        header.innerHTML = '<h5 class="mb-0"><i class="fas fa-times"></i> Ошибка импорта</h5>';
+        report.textContent = data.error || 'Неизвестная ошибка';
+        return;
+    }
+    
+    if (data.dry_run) {
+        header.className = 'card-header bg-info text-white';
+        header.innerHTML = '<h5 class="mb-0"><i class="fas fa-eye"></i> Превью (dry-run)</h5>';
+    } else {
+        header.className = 'card-header bg-success text-white';
+        header.innerHTML = '<h5 class="mb-0"><i class="fas fa-check"></i> Импорт завершён</h5>';
+    }
+    
+    report.textContent = data.message;
+}
+
+function buildPreviewTable(preview) {
+    let html = '<table class="table table-sm"><thead><tr><th>Показатель</th><th>Значение</th></tr></thead><tbody>';
+    html += `<tr><td>Всего создано (dry-run)</td><td class="text-success fw-bold">${preview.total_created || 0}</td></tr>`;
+    html += `<tr><td>Всего обновлено (dry-run)</td><td class="text-primary fw-bold">${preview.total_updated || 0}</td></tr>`;
+    html += `<tr><td>Заданий в контексте</td><td>${preview.tasks_in_context || 0}</td></tr>`;
+    html += `<tr><td>Групп в контексте</td><td>${preview.groups_in_context || 0}</td></tr>`;
+    html += `<tr><td>Тем в контексте</td><td>${preview.topics_in_context || 0}</td></tr>`;
+    
+    if (preview.context) {
+        for (const [key, value] of Object.entries(preview.context)) {
+            if (value > 0) {
+                html += `<tr><td>${key}</td><td>${value}</td></tr>`;
+            }
+        }
+    }
+    
+    html += '</tbody></table>';
+    return html;
+}
+
+function showError(msg) {
+    const block = document.getElementById('validation-result');
+    block.classList.remove('d-none');
+    document.getElementById('validation-header').className = 'card-header bg-danger text-white';
+    document.getElementById('validation-summary').innerHTML = 
+        `<div class="col-12"><div class="alert alert-danger">${msg}</div></div>`;
+}
+
+function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' Б';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' КБ';
+    return (bytes / 1024 / 1024).toFixed(1) + ' МБ';
+}
+</script>
+{% endblock %}

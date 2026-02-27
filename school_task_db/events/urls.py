@@ -10,6 +10,7 @@ urlpatterns = [
     path('<uuid:pk>/update/', views.EventUpdateView.as_view(), name='update'),
     path('<uuid:event_id>/add-participants/', views.add_participants, name='add-participants'),
     path('<uuid:event_id>/assign-variants/', views.assign_variants, name='assign-variants'),
+    path('<uuid:event_id>/assign-single-variant/', views.assign_single_variant, name='assign-single-variant'),
     path('<uuid:event_id>/change-status/', views.change_status, name='change-status'),
     path('review/', views.review_works, name='review-works'),
     path('participation/<uuid:participation_id>/grade/', views.grade_participation, name='grade-participation'),

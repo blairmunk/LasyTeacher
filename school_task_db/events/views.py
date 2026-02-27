@@ -106,6 +106,15 @@ class EventDetailView(DetailView):
             })
         context['status_steps'] = status_steps
 
+        # Доступные варианты для inline-назначения
+        if event.work:
+            from works.models import Variant
+            context['available_variants'] = Variant.objects.filter(
+                work=event.work
+            ).order_by('number')
+        else:
+            context['available_variants'] = []
+
         return context
 
 
@@ -291,6 +300,30 @@ def grade_participation(request, participation_id):
     })
 
 from django.views.decorators.http import require_POST
+
+@require_POST
+def assign_single_variant(request, event_id):
+    """Inline-назначение варианта одному участнику"""
+    event = get_object_or_404(Event, pk=event_id)
+    participation_id = request.POST.get('participation_id')
+    variant_id = request.POST.get('variant_id')
+
+    if participation_id and variant_id:
+        from works.models import Variant
+        participation = get_object_or_404(
+            EventParticipation, pk=participation_id, event=event
+        )
+        variant = get_object_or_404(Variant, pk=variant_id)
+        participation.variant = variant
+        participation.save()
+        messages.success(
+            request,
+            f'Вариант {variant.number} → {participation.student.last_name} {participation.student.first_name}'
+        )
+    else:
+        messages.error(request, 'Не указан вариант или участник')
+
+    return redirect('events:detail', pk=event.pk)
 
 @require_POST
 def change_status(request, event_id):

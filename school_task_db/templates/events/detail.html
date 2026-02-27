@@ -215,10 +215,25 @@
                         <td class="text-center">
                             {% if p.variant %}
                             <span class="badge bg-secondary">В-{{ p.variant.number }}</span>
+                            {% elif available_variants %}
+                            <form method="post" action="{% url 'events:assign-single-variant' event.pk %}"
+                                  class="d-inline-flex gap-1 align-items-center">
+                                {% csrf_token %}
+                                <input type="hidden" name="participation_id" value="{{ p.pk }}">
+                                <select name="variant_id" class="form-select form-select-sm"
+                                        style="width: 75px; font-size: 0.75rem;" required>
+                                    <option value="">—</option>
+                                    {% for v in available_variants %}
+                                    <option value="{{ v.pk }}">В-{{ v.number }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-outline-warning btn-sm py-0 px-1"
+                                        title="Назначить">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </form>
                             {% else %}
-                            <span class="text-danger">
-                                <i class="fas fa-exclamation-circle"></i> нет
-                            </span>
+                            <span class="text-muted">—</span>
                             {% endif %}
                         </td>
                         <td class="text-center">
@@ -247,11 +262,9 @@
                             {% if p.status == 'absent' %}
                                 <span class="text-muted">—</span>
                             {% elif not p.variant %}
-                                <a href="{% url 'events:assign-variants' event.pk %}"
-                                   class="btn btn-sm btn-outline-warning"
-                                   title="Назначить вариант">
-                                    <i class="fas fa-random"></i> Вариант
-                                </a>
+                                <span class="text-muted" title="Выберите вариант слева">
+                                    <i class="fas fa-arrow-left"></i>
+                                </span>
                             {% elif can_review %}
                                 <a href="{% url 'review:participation-review' p.pk %}"
                                    class="btn btn-sm btn-{% if p.mark_obj and p.mark_obj.score %}outline-primary{% else %}warning{% endif %}">

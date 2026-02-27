@@ -115,6 +115,29 @@ class EventDetailView(DetailView):
         else:
             context['available_variants'] = []
 
+        # Доступные переходы статуса
+        TRANSITIONS = {
+            'planned': [
+                ('completed', 'Отметить как завершённое', 'info', 'fa-check'),
+            ],
+            'in_progress': [
+                ('completed', 'Завершить', 'info', 'fa-check'),
+            ],
+            'completed': [
+                ('reviewing', 'Начать проверку', 'warning', 'fa-clipboard-check'),
+            ],
+            'reviewing': [
+                ('graded', 'Завершить проверку', 'success', 'fa-check-circle'),
+            ],
+            'graded': [
+                ('closed', 'Закрыть событие', 'dark', 'fa-lock'),
+            ],
+            'closed': [
+                ('graded', 'Вернуть на проверку', 'warning', 'fa-undo'),
+            ],
+        }
+        context['status_transitions'] = TRANSITIONS.get(event.status, [])
+
         return context
 
 
@@ -216,7 +239,11 @@ def add_participants(request, event_id):
                 else:
                     messages.info(request, 'Все выбранные ученики уже добавлены')
 
+                next_url = request.POST.get('next', '')
+                if next_url:
+                    return redirect(next_url)
                 return redirect('events:detail', pk=event.pk)
+
     else:
         form = StudentSelectionForm()
 
@@ -323,7 +350,12 @@ def assign_single_variant(request, event_id):
     else:
         messages.error(request, 'Не указан вариант или участник')
 
+    # Возврат туда, откуда пришли
+    next_url = request.POST.get('next', '')
+    if next_url:
+        return redirect(next_url)
     return redirect('events:detail', pk=event.pk)
+
 
 @require_POST
 def change_status(request, event_id):

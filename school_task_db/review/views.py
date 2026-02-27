@@ -142,6 +142,16 @@ class EventReviewView(DetailView):
 
         context['blocked'] = False
 
+        # Доступные варианты для inline-назначения
+        if event.work:
+            from works.models import Variant
+            context['available_variants'] = Variant.objects.filter(
+                work=event.work
+            ).order_by('number')
+        else:
+            context['available_variants'] = []
+
+
         participations_data = []
         graded_count = 0
         absent_count = 0

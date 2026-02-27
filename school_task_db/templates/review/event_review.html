@@ -163,6 +163,24 @@
                             {% if data.variant %}
                             <span class="badge bg-secondary">В-{{ data.variant.number }}</span>
                             <small class="text-muted">({{ data.variant.tasks.count }} зад.)</small>
+                            {% elif available_variants %}
+                            <form method="post" action="{% url 'events:assign-single-variant' event.pk %}"
+                                  class="d-inline-flex gap-1 align-items-center">
+                                {% csrf_token %}
+                                <input type="hidden" name="participation_id" value="{{ data.participation.pk }}">
+                                <input type="hidden" name="next" value="{{ request.path }}">
+                                <select name="variant_id" class="form-select form-select-sm"
+                                        style="width: 75px; font-size: 0.75rem;" required>
+                                    <option value="">—</option>
+                                    {% for v in available_variants %}
+                                    <option value="{{ v.pk }}">В-{{ v.number }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-outline-warning btn-sm py-0 px-1"
+                                        title="Назначить">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </form>
                             {% else %}
                             <span class="text-danger"><i class="fas fa-exclamation-circle"></i> не назначен</span>
                             {% endif %}

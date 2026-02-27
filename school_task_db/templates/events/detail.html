@@ -77,6 +77,22 @@
                             {% endfor %}
                         </div>
                     </div>
+                    <!-- Кнопки смены статуса -->
+                    {% if status_transitions %}
+                    <div class="d-flex gap-2 mt-3 pt-3 border-top">
+                        {% for new_status, label, color, icon in status_transitions %}
+                        <form method="post" action="{% url 'events:change-status' event.pk %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="new_status" value="{{ new_status }}">
+                            <button type="submit" class="btn btn-{{ color }} btn-sm"
+                                    onclick="return confirm('Изменить статус на «{{ label }}»?')">
+                                <i class="fas {{ icon }}"></i> {{ label }}
+                            </button>
+                        </form>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
                 </div>
             </div>
         </div>

@@ -91,6 +91,7 @@
                         <th class="text-center">Статус</th>
                         <th class="text-center">Оценка</th>
                         <th class="text-center">Баллы</th>
+                        <th class="text-center">Скан</th>
                         <th class="text-center">Действия</th>
                     </tr>
                 </thead>
@@ -138,6 +139,17 @@
                             {% endif %}
                         </td>
                         <td class="text-center">
+                            {% if data.mark and data.mark.work_scan %}
+                            <a href="{{ data.mark.work_scan.url }}" target="_blank"
+                               title="Открыть скан: {{ data.mark.work_scan.name|cut:'work_scans/' }}"
+                               class="text-success">
+                                <i class="fas fa-file-image"></i>
+                            </a>
+                            {% elif not data.is_absent %}
+                            <span class="text-muted"><i class="fas fa-minus"></i></span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
                             {% if not data.is_absent %}
                             <a href="{% url 'review:participation-review' data.participation.pk %}"
                                class="btn btn-sm btn-{% if data.has_mark %}outline-primary{% else %}warning{% endif %}">
@@ -145,6 +157,13 @@
                                 {% if data.has_mark %}Изменить{% else %}Проверить{% endif %}
                             </a>
                             {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                            Нет участников
                         </td>
                     </tr>
                     {% endfor %}

@@ -292,11 +292,7 @@ class ParticipationReviewView(TemplateView):
 
         # Комментарии
         mark.teacher_comment = request.POST.get('teacher_comment', '')
-
-        # Поле mistakes_analysis — только если есть в модели
-        mistakes = request.POST.get('mistakes_analysis', '')
-        if hasattr(mark, 'mistakes_analysis'):
-            mark.mistakes_analysis = mistakes
+        mark.mistakes_analysis = request.POST.get('mistakes_analysis', '')
 
         mark.checked_at = timezone.now()
         mark.checked_by = (
@@ -304,6 +300,37 @@ class ParticipationReviewView(TemplateView):
             if request.user.is_authenticated
             else 'Учитель'
         )
+
+        # === Загрузка скана работы ===
+        if 'work_scan' in request.FILES:
+            uploaded_file = request.FILES['work_scan']
+
+            # Валидация
+            max_size = 10 * 1024 * 1024  # 10 МБ
+            allowed_types = [
+                'application/pdf',
+                'image/jpeg',
+                'image/png',
+                'image/webp',
+            ]
+
+            if uploaded_file.size > max_size:
+                messages.warning(
+                    request,
+                    f'⚠️ Файл слишком большой ({uploaded_file.size // 1024 // 1024} МБ). '
+                    f'Максимум 10 МБ.'
+                )
+            elif uploaded_file.content_type not in allowed_types:
+                messages.warning(
+                    request,
+                    f'⚠️ Неподдерживаемый формат: {uploaded_file.content_type}. '
+                    f'Допустимы: PDF, JPEG, PNG, WebP.'
+                )
+            else:
+                # Удаляем старый файл если есть
+                if mark.work_scan:
+                    mark.work_scan.delete(save=False)
+                mark.work_scan = uploaded_file
 
         # Детализация по заданиям
         task_scores = {}
@@ -336,11 +363,9 @@ class ParticipationReviewView(TemplateView):
         all_graded = all_active.filter(status='graded')
 
         if all_active.count() > 0 and all_active.count() == all_graded.count():
-            # Все проверены — ставим статус graded
             event.status = 'graded'
             event.save()
         elif event.status not in ('reviewing', 'graded'):
-            # Началась проверка
             event.status = 'reviewing'
             event.save()
 
@@ -348,7 +373,11 @@ class ParticipationReviewView(TemplateView):
         student = participation.student
         student_name = f'{student.last_name} {student.first_name}'
 
-        messages.success(request, f'Работа {student_name} проверена (оценка: {mark.score})')
+        # Сообщение об успехе
+        scan_msg = ''
+        if 'work_scan' in request.FILES and mark.work_scan:
+            scan_msg = ' + скан загружен'
+        messages.success(request, f'Работа {student_name} проверена (оценка: {mark.score}){scan_msg}')
 
         # Навигация
         if 'save_and_next' in request.POST:
@@ -365,7 +394,6 @@ class ParticipationReviewView(TemplateView):
             except StopIteration:
                 current_index = -1
 
-            # Ищем следующую непроверенную
             next_p = None
             for i in range(current_index + 1, len(all_participations)):
                 p = all_participations[i]
@@ -375,7 +403,6 @@ class ParticipationReviewView(TemplateView):
                     next_p = p
                     break
 
-            # Если непроверенных нет — просто следующая
             if next_p is None and current_index + 1 < len(all_participations):
                 next_p = all_participations[current_index + 1]
 

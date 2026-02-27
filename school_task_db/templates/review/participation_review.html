@@ -57,7 +57,7 @@
         </div>
     </div>
 
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="row">
             <!-- Левая колонка: задания -->
@@ -172,6 +172,41 @@
                             </div>
                         </div>
                         {% endif %}
+
+                        <!-- Загрузка скана работы -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-light py-2">
+                                <h6 class="mb-0"><i class="fas fa-file-upload"></i> Скан работы</h6>
+                            </div>
+                            <div class="card-body">
+                                {% if mark.work_scan %}
+                                <div class="mb-3">
+                                    <div class="d-flex align-items-center gap-2 p-2 bg-success bg-opacity-10 rounded">
+                                        <i class="fas fa-check-circle text-success"></i>
+                                        <small class="text-truncate flex-grow-1" style="max-width: 200px;"
+                                            title="{{ mark.work_scan.name }}">
+                                            {{ mark.work_scan.name|cut:"work_scans/" }}
+                                        </small>
+                                        <a href="{{ mark.work_scan.url }}" target="_blank" 
+                                        class="btn btn-sm btn-outline-success flex-shrink-0">
+                                            <i class="fas fa-external-link-alt"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <input type="file" name="work_scan" class="form-control form-control-sm" 
+                                    accept=".pdf,.jpg,.jpeg,.png,.webp">
+                                <div class="form-text">
+                                    PDF, JPEG, PNG или WebP, до 10 МБ
+                                    {% if mark.work_scan %}
+                                        <br><small class="text-warning">
+                                            ⚠️ Загрузка нового файла заменит текущий
+                                        </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Кнопки -->
                         <div class="d-grid gap-2">

@@ -35,49 +35,62 @@
                 </div>
 
                 <div class="row">
-                    <!-- Работа -->
                     <div class="col-md-6 mb-3">
                         <label for="{{ form.work.id_for_label }}" class="form-label fw-bold">Работа</label>
                         {{ form.work }}
-                        {% if form.work.errors %}
-                        <div class="invalid-feedback d-block">{{ form.work.errors.0 }}</div>
-                        {% endif %}
                     </div>
-
-                    <!-- Курс -->
                     <div class="col-md-6 mb-3">
                         <label for="{{ form.course.id_for_label }}" class="form-label fw-bold">Курс</label>
                         {{ form.course }}
-                        {% if form.course.errors %}
-                        <div class="invalid-feedback d-block">{{ form.course.errors.0 }}</div>
-                        {% endif %}
                     </div>
                 </div>
 
                 <div class="row">
-                    <!-- Дата -->
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label for="{{ form.planned_date.id_for_label }}" class="form-label fw-bold">
                             Дата и время
                         </label>
                         {{ form.planned_date }}
-                        {% if form.planned_date.errors %}
-                        <div class="invalid-feedback d-block">{{ form.planned_date.errors.0 }}</div>
-                        {% endif %}
                     </div>
-
-                    <!-- Статус -->
-                    <div class="col-md-3 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label for="{{ form.status.id_for_label }}" class="form-label fw-bold">Статус</label>
                         {{ form.status }}
                     </div>
-
-                    <!-- Кабинет -->
-                    <div class="col-md-3 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label for="{{ form.location.id_for_label }}" class="form-label fw-bold">Кабинет</label>
                         {{ form.location }}
                     </div>
                 </div>
+
+                <!-- Участники — только при создании -->
+                {% if not object %}
+                <div class="card mb-3 border-success">
+                    <div class="card-header bg-success bg-opacity-75 text-white py-2">
+                        <h6 class="mb-0"><i class="fas fa-users"></i> Участники</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-5">
+                                <label for="{{ form.student_group.id_for_label }}" class="form-label fw-bold">
+                                    Класс
+                                </label>
+                                {{ form.student_group }}
+                                <div class="form-text">{{ form.student_group.help_text }}</div>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-center justify-content-center">
+                                <span class="text-muted fw-bold">и/или</span>
+                            </div>
+                            <div class="col-md-5">
+                                <label for="{{ form.individual_students.id_for_label }}" class="form-label fw-bold">
+                                    Отдельные ученики
+                                </label>
+                                {{ form.individual_students }}
+                                <div class="form-text">{{ form.individual_students.help_text }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
 
                 <!-- Описание -->
                 <div class="mb-3">
@@ -105,16 +118,16 @@
                 </div>
                 <div class="card-body">
                     <p class="small mb-2">
-                        <strong>1.</strong> Создайте событие, указав работу и дату.
+                        <strong>1.</strong> Укажите работу, курс и дату.
                     </p>
                     <p class="small mb-2">
-                        <strong>2.</strong> После создания добавьте участников (класс или отдельных учеников).
+                        <strong>2.</strong> Выберите класс — ученики добавятся автоматически.
                     </p>
                     <p class="small mb-2">
-                        <strong>3.</strong> Назначьте варианты участникам.
+                        <strong>3.</strong> На странице события назначьте варианты.
                     </p>
                     <p class="small mb-0">
-                        <strong>4.</strong> После проведения — перейдите к проверке.
+                        <strong>4.</strong> Завершите событие → приступите к проверке.
                     </p>
                 </div>
             </div>

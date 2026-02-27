@@ -6,12 +6,31 @@ from works.models import Variant
 
 class EventForm(forms.ModelForm):
     """Форма для создания события"""
+    
+    # Поля для добавления участников при создании
+    student_group = forms.ModelChoiceField(
+        queryset=StudentGroup.objects.all(),
+        required=False,
+        label='Класс',
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        help_text='Все ученики класса будут добавлены как участники',
+    )
+    individual_students = forms.ModelMultipleChoiceField(
+        queryset=Student.objects.all().order_by('last_name', 'first_name'),
+        required=False,
+        label='Отдельные ученики',
+        widget=forms.SelectMultiple(attrs={
+            'class': 'form-select', 'size': '6',
+        }),
+        help_text='Ctrl + клик для выбора нескольких',
+    )
+    
     class Meta:
         model = Event
         fields = [
             'name', 'work', 'planned_date', 'status', 'course', 
             'description', 'location'
-        ]  # ОБНОВЛЕННЫЕ ПОЛЯ
+        ]
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'work': forms.Select(attrs={'class': 'form-select'}),

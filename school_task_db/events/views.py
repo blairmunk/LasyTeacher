@@ -113,7 +113,6 @@ class EventCreateView(CreateView):
     model = Event
     form_class = EventForm
     template_name = 'events/form.html'
-    success_url = reverse_lazy('events:list')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -122,8 +121,38 @@ class EventCreateView(CreateView):
         return context
 
     def form_valid(self, form):
-        messages.success(self.request, 'Событие успешно создано!')
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        event = self.object
+
+        # Добавляем участников
+        students = []
+        if form.cleaned_data.get('student_group'):
+            students.extend(form.cleaned_data['student_group'].students.all())
+        if form.cleaned_data.get('individual_students'):
+            students.extend(form.cleaned_data['individual_students'])
+
+        created_count = 0
+        with transaction.atomic():
+            for student in students:
+                _, created = EventParticipation.objects.get_or_create(
+                    event=event, student=student,
+                    defaults={'status': 'assigned'}
+                )
+                if created:
+                    created_count += 1
+
+        if created_count:
+            messages.success(
+                self.request,
+                f'Событие создано, добавлено {created_count} учеников'
+            )
+        else:
+            messages.success(self.request, 'Событие создано')
+
+        return response
+
+    def get_success_url(self):
+        return reverse_lazy('events:detail', kwargs={'pk': self.object.pk})
 
 
 class EventUpdateView(UpdateView):

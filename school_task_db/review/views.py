@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.db.models import Q, Count, Avg
 from django.http import JsonResponse
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from events.models import Event, EventParticipation, Mark
 from .models import ReviewSession, ReviewComment
@@ -479,3 +480,22 @@ def finalize_event(request, pk):
     event.save()
     messages.success(request, f'✅ Проверка завершена: {event.name}')
     return redirect('review:event-review', pk=event.pk)
+
+@require_POST
+def toggle_absent(request, pk):
+    """Переключить статус отсутствия"""
+    participation = get_object_or_404(EventParticipation, pk=pk)
+
+    if participation.status == 'absent':
+        participation.status = 'assigned'
+        messages.info(request, f'{participation.student.last_name} — статус снят')
+    else:
+        participation.status = 'absent'
+        messages.warning(request, f'{participation.student.last_name} — отсутствовал')
+
+    participation.save()
+
+    next_url = request.POST.get('next', '')
+    if next_url:
+        return redirect(next_url)
+    return redirect('review:event-review', pk=participation.event.pk)

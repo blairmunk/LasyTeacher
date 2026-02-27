@@ -15,6 +15,11 @@
             </small>
         </div>
         <div class="d-flex gap-2">
+            {% if can_review %}
+            <a href="{% url 'review:event-review' event.pk %}" class="btn btn-warning btn-sm">
+                <i class="fas fa-clipboard-check"></i> К проверке
+            </a>
+            {% endif %}
             <a href="{% url 'events:update' event.pk %}" class="btn btn-outline-primary btn-sm">
                 <i class="fas fa-edit"></i> Редактировать
             </a>
@@ -24,25 +29,21 @@
         </div>
     </div>
 
-    <!-- Информация + workflow -->
     <div class="row mb-4">
+        <!-- Информация -->
         <div class="col-md-8">
             <div class="card">
                 <div class="card-body">
-                    <div class="row">
+                    <div class="row mb-3">
                         <div class="col-md-4">
                             <small class="text-muted d-block">Работа</small>
                             {% if event.work %}
                             <a href="{% url 'works:detail' event.work.pk %}">{{ event.work.name }}</a>
-                            {% else %}
-                            <span class="text-muted">—</span>
-                            {% endif %}
+                            {% else %}<span class="text-muted">—</span>{% endif %}
                         </div>
                         <div class="col-md-3">
                             <small class="text-muted d-block">Статус</small>
-                            <span class="badge bg-{{ status_color }}">
-                                {{ event.get_status_display }}
-                            </span>
+                            <span class="badge bg-{{ status_color }}">{{ event.get_status_display }}</span>
                         </div>
                         <div class="col-md-3">
                             <small class="text-muted d-block">Кабинет</small>
@@ -55,28 +56,25 @@
                     </div>
 
                     {% if event.description %}
-                    <div class="mt-3">
+                    <div class="mb-3">
                         <small class="text-muted d-block">Описание</small>
                         {{ event.description }}
                     </div>
                     {% endif %}
 
-                    <!-- Прогресс-бар статуса -->
-                    <div class="mt-3">
-                        <div class="d-flex gap-1">
-                            {% for s in status_steps %}
-                            <div class="flex-fill text-center">
-                                <div class="progress mb-1" style="height: 6px;">
-                                    <div class="progress-bar bg-{{ s.color }}" style="width: 100%;"></div>
-                                </div>
-                                <small class="{% if s.current %}fw-bold{% else %}text-muted{% endif %}"
-                                       style="font-size: 0.7rem;">
-                                    {{ s.label }}
-                                </small>
+                    <!-- Прогресс статуса -->
+                    <div class="d-flex gap-1">
+                        {% for s in status_steps %}
+                        <div class="flex-fill text-center">
+                            <div class="progress mb-1" style="height: 6px;">
+                                <div class="progress-bar bg-{{ s.color }}" style="width: 100%;"></div>
                             </div>
-                            {% endfor %}
+                            <small class="{% if s.current %}fw-bold{% else %}text-muted{% endif %}"
+                                   style="font-size: 0.7rem;">{{ s.label }}</small>
                         </div>
+                        {% endfor %}
                     </div>
+
                     <!-- Кнопки смены статуса -->
                     {% if status_transitions %}
                     <div class="d-flex gap-2 mt-3 pt-3 border-top">
@@ -92,7 +90,6 @@
                         {% endfor %}
                     </div>
                     {% endif %}
-
                 </div>
             </div>
         </div>
@@ -105,11 +102,11 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="list-group list-group-flush">
-                        <!-- Шаг 1: Добавить учеников -->
+                        <!-- 1. Ученики -->
                         {% if participations|length > 0 %}
                         <div class="list-group-item py-2 text-success">
                             <i class="fas fa-check-circle"></i>
-                            <strong>1.</strong> Ученики добавлены ({{ participations|length }})
+                            <strong>1.</strong> Ученики ({{ participations|length }})
                         </div>
                         {% else %}
                         <a href="{% url 'events:add-participants' event.pk %}"
@@ -119,7 +116,7 @@
                         </a>
                         {% endif %}
 
-                        <!-- Шаг 2: Назначить варианты -->
+                        <!-- 2. Варианты -->
                         {% if all_variants_assigned %}
                         <div class="list-group-item py-2 text-success">
                             <i class="fas fa-check-circle"></i>
@@ -139,34 +136,24 @@
                         </div>
                         {% endif %}
 
-                        <!-- Шаг 3: Провести -->
-                        {% if event.status == 'planned' and all_variants_assigned %}
-                        <form method="post" action="{% url 'events:change-status' event.pk %}" class="list-group-item p-0">
-                            {% csrf_token %}
-                            <input type="hidden" name="new_status" value="completed">
-                            <button type="submit"
-                               class="list-group-item list-group-item-action py-2 list-group-item-info border-0 w-100 text-start">
-                                <i class="fas fa-arrow-right"></i>
-                                <strong>3.</strong> Отметить как проведённое
-                            </button>
-                        </form>
-                        {% elif event.status in 'completed,reviewing,graded,closed' %}
+                        <!-- 3. Провести -->
+                        {% if event.status in 'completed,reviewing,graded,closed' %}
                         <div class="list-group-item py-2 text-success">
                             <i class="fas fa-check-circle"></i>
                             <strong>3.</strong> Проведено
                         </div>
                         {% else %}
                         <div class="list-group-item py-2 text-muted">
-                            <i class="fas fa-lock"></i>
+                            <i class="fas fa-clock"></i>
                             <strong>3.</strong> Провести работу
                         </div>
                         {% endif %}
 
-                        <!-- Шаг 4: Проверить -->
+                        <!-- 4. Проверить -->
                         {% if event.status == 'graded' %}
                         <div class="list-group-item py-2 text-success">
                             <i class="fas fa-check-circle"></i>
-                            <strong>4.</strong> Работы проверены
+                            <strong>4.</strong> Проверено
                         </div>
                         {% elif can_review %}
                         <a href="{% url 'review:event-review' event.pk %}"
@@ -189,16 +176,14 @@
     <!-- Участники -->
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">
-                <i class="fas fa-users"></i> Участники ({{ participations|length }})
-            </h5>
+            <h5 class="mb-0"><i class="fas fa-users"></i> Участники ({{ participations|length }})</h5>
             <div class="d-flex gap-2">
                 <a href="{% url 'events:add-participants' event.pk %}" class="btn btn-success btn-sm">
-                    <i class="fas fa-user-plus"></i> Добавить учеников
+                    <i class="fas fa-user-plus"></i> Добавить
                 </a>
                 {% if participations|length > 0 %}
                 <a href="{% url 'events:assign-variants' event.pk %}" class="btn btn-primary btn-sm">
-                    <i class="fas fa-random"></i> Назначить варианты
+                    <i class="fas fa-random"></i> Варианты
                 </a>
                 {% endif %}
             </div>
@@ -213,12 +198,12 @@
                         <th class="text-center">Вариант</th>
                         <th class="text-center">Статус</th>
                         <th class="text-center">Оценка</th>
-                        <th class="text-center">Действия</th>
+                        <th class="text-center">Скан</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for p in participations %}
-                    <tr class="{% if p.status == 'absent' %}table-secondary{% elif p.mark_obj and p.mark_obj.score %}table-success-subtle{% elif not p.variant %}table-light{% endif %}">
+                    <tr class="{% if p.status == 'absent' %}table-secondary{% elif p.mark_obj and p.mark_obj.score %}{% elif not p.variant %}table-light{% endif %}">
                         <td class="text-muted">{{ forloop.counter }}</td>
                         <td>
                             <a href="{% url 'students:detail' p.student.pk %}" class="text-decoration-none">
@@ -243,8 +228,7 @@
                                     <option value="{{ v.pk }}">В-{{ v.number }}</option>
                                     {% endfor %}
                                 </select>
-                                <button type="submit" class="btn btn-outline-warning btn-sm py-0 px-1"
-                                        title="Назначить">
+                                <button type="submit" class="btn btn-outline-warning btn-sm py-0 px-1">
                                     <i class="fas fa-check"></i>
                                 </button>
                             </form>
@@ -259,10 +243,8 @@
                                 <span class="badge bg-success">Проверено</span>
                             {% elif not p.variant %}
                                 <span class="badge bg-light text-dark">Нет варианта</span>
-                            {% elif can_review %}
-                                <span class="badge bg-warning text-dark">Не проверено</span>
                             {% else %}
-                                <span class="badge bg-info">{{ p.get_status_display }}</span>
+                                <span class="badge bg-warning text-dark">Ожидает</span>
                             {% endif %}
                         </td>
                         <td class="text-center">
@@ -275,22 +257,13 @@
                             {% endif %}
                         </td>
                         <td class="text-center">
-                            {% if p.status == 'absent' %}
-                                <span class="text-muted">—</span>
-                            {% elif not p.variant %}
-                                <span class="text-muted" title="Выберите вариант слева">
-                                    <i class="fas fa-arrow-left"></i>
-                                </span>
-                            {% elif can_review %}
-                                <a href="{% url 'review:participation-review' p.pk %}"
-                                   class="btn btn-sm btn-{% if p.mark_obj and p.mark_obj.score %}outline-primary{% else %}warning{% endif %}">
-                                    <i class="fas fa-{% if p.mark_obj and p.mark_obj.score %}edit{% else %}play{% endif %}"></i>
-                                    {% if p.mark_obj and p.mark_obj.score %}Изменить{% else %}Проверить{% endif %}
-                                </a>
-                            {% else %}
-                                <span class="text-muted" title="Сначала проведите работу">
-                                    <i class="fas fa-lock"></i>
-                                </span>
+                            {% if p.mark_obj and p.mark_obj.work_scan %}
+                            <a href="{{ p.mark_obj.work_scan.url }}" target="_blank"
+                               title="Открыть скан" class="text-success">
+                                <i class="fas fa-file-image"></i>
+                            </a>
+                            {% elif p.status != 'absent' %}
+                            <span class="text-muted"><i class="fas fa-minus"></i></span>
                             {% endif %}
                         </td>
                     </tr>

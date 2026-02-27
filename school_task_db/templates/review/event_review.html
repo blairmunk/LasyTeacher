@@ -4,21 +4,25 @@
 
 {% block content %}
 <div class="container-fluid">
+    <!-- Компактный заголовок -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2>{{ event.name }}</h2>
+            <h2 class="mb-1">
+                <i class="fas fa-clipboard-check text-warning"></i>
+                {{ event.name }}
+            </h2>
             <small class="text-muted">
-                {% if event.work %}{{ event.work.get_work_type_display }} • {% endif %}
-                {{ event.planned_date|date:"d.m.Y" }}
+                {{ event.planned_date|date:"d.m.Y"|default:"—" }}
                 {% if event.course %} • {{ event.course.name }}{% endif %}
+                {% if event.work %} • {{ event.work.name }}{% endif %}
             </small>
         </div>
         <div class="d-flex gap-2">
             <a href="{% url 'events:detail' event.pk %}" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-info-circle"></i> К событию
+                <i class="fas fa-info-circle"></i> Событие
             </a>
             <a href="{% url 'review:dashboard' %}" class="btn btn-secondary btn-sm">
-                <i class="fas fa-arrow-left"></i> К списку
+                <i class="fas fa-arrow-left"></i> Все проверки
             </a>
         </div>
     </div>
@@ -28,9 +32,9 @@
     <div class="text-center py-5">
         <i class="fas fa-user-plus fa-4x text-muted mb-4"></i>
         <h4 class="text-muted">Нет участников</h4>
-        <p class="text-muted mb-4">Добавьте учеников в событие, прежде чем начать проверку</p>
-        <a href="{% url 'events:add-participants' event.pk %}" class="btn btn-success btn-lg">
-            <i class="fas fa-user-plus"></i> Добавить учеников
+        <p class="text-muted mb-4">Добавьте учеников на странице события</p>
+        <a href="{% url 'events:detail' event.pk %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-arrow-right"></i> К событию
         </a>
     </div>
 
@@ -39,16 +43,16 @@
     <div class="text-center py-5">
         <i class="fas fa-random fa-4x text-muted mb-4"></i>
         <h4 class="text-muted">Варианты не назначены</h4>
-        <p class="text-muted mb-4">Назначьте варианты участникам, прежде чем начать проверку</p>
-        <a href="{% url 'events:assign-variants' event.pk %}" class="btn btn-primary btn-lg">
-            <i class="fas fa-random"></i> Назначить варианты
+        <p class="text-muted mb-4">Назначьте варианты на странице события или в таблице ниже</p>
+        <a href="{% url 'events:detail' event.pk %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-arrow-right"></i> К событию
         </a>
     </div>
 
     {% else %}
-    <!-- Прогресс -->
+    <!-- Прогресс + статистика -->
     <div class="row mb-4">
-        <div class="col-md-8">
+        <div class="col-md-7">
             <div class="card">
                 <div class="card-body py-3">
                     <div class="d-flex justify-content-between mb-2">
@@ -56,7 +60,7 @@
                         <span class="fw-bold">{{ progress_percentage }}%</span>
                     </div>
                     <div class="progress" style="height: 12px;">
-                        <div class="progress-bar bg-{% if progress_percentage >= 100 %}success{% elif progress_percentage > 0 %}info{% else %}danger{% endif %}"
+                        <div class="progress-bar bg-{% if progress_percentage >= 100 %}success{% elif progress_percentage > 0 %}info{% else %}secondary{% endif %}"
                              style="width: {{ progress_percentage }}%"></div>
                     </div>
                     {% if absent_participants > 0 %}
@@ -65,7 +69,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-5">
             {% if avg_score > 0 %}
             <div class="card">
                 <div class="card-body py-3 text-center">
@@ -91,25 +95,22 @@
         </div>
     </div>
 
-    <!-- Предупреждение: не все варианты назначены -->
+    <!-- Предупреждение: не все варианты -->
     {% if not all_variants_assigned %}
-    <div class="alert alert-warning d-flex justify-content-between align-items-center mb-4">
+    <div class="alert alert-warning d-flex justify-content-between align-items-center mb-4 py-2">
         <div>
             <i class="fas fa-exclamation-triangle"></i>
-            <strong>Внимание:</strong> не у всех участников назначены варианты.
+            Не у всех участников назначены варианты — назначьте в колонке «Вариант»
         </div>
-        <a href="{% url 'events:assign-variants' event.pk %}" class="btn btn-warning btn-sm">
-            <i class="fas fa-random"></i> Назначить варианты
-        </a>
     </div>
     {% endif %}
 
-    <!-- Управление статусом -->
+    <!-- Завершение проверки -->
     {% if progress_percentage >= 100 and event.status != 'graded' %}
-    <div class="alert alert-info d-flex justify-content-between align-items-center mb-4">
+    <div class="alert alert-success d-flex justify-content-between align-items-center mb-4 py-2">
         <div>
-            <i class="fas fa-info-circle"></i>
-            Все работы проверены, но статус события: <strong>{{ event.get_status_display }}</strong>
+            <i class="fas fa-check-circle"></i>
+            <strong>Все работы проверены!</strong>
         </div>
         <form method="post" action="{% url 'review:finalize-event' event.pk %}">
             {% csrf_token %}
@@ -120,18 +121,10 @@
     </div>
     {% endif %}
 
-    <!-- Список учеников -->
+    <!-- Таблица проверки -->
     <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0"><i class="fas fa-users"></i> Участники</h5>
-            <div class="d-flex gap-2">
-                <a href="{% url 'events:add-participants' event.pk %}" class="btn btn-outline-success btn-sm">
-                    <i class="fas fa-user-plus"></i>
-                </a>
-                <a href="{% url 'events:assign-variants' event.pk %}" class="btn btn-outline-primary btn-sm">
-                    <i class="fas fa-random"></i>
-                </a>
-            </div>
+        <div class="card-header py-2">
+            <h5 class="mb-0"><i class="fas fa-list-check"></i> Проверка работ</h5>
         </div>
         <div class="card-body p-0">
             <table class="table table-hover mb-0">
@@ -155,9 +148,6 @@
                             <a href="{% url 'students:detail' data.student.pk %}" class="text-decoration-none">
                                 <strong>{{ data.student.last_name }} {{ data.student.first_name }}</strong>
                             </a>
-                            {% if data.student.middle_name %}
-                            <small class="text-muted">{{ data.student.middle_name }}</small>
-                            {% endif %}
                         </td>
                         <td>
                             {% if data.variant %}
@@ -176,28 +166,36 @@
                                     <option value="{{ v.pk }}">В-{{ v.number }}</option>
                                     {% endfor %}
                                 </select>
-                                <button type="submit" class="btn btn-outline-warning btn-sm py-0 px-1"
-                                        title="Назначить">
+                                <button type="submit" class="btn btn-outline-warning btn-sm py-0 px-1">
                                     <i class="fas fa-check"></i>
                                 </button>
                             </form>
                             {% else %}
-                            <span class="text-danger"><i class="fas fa-exclamation-circle"></i> не назначен</span>
+                            <span class="text-danger"><i class="fas fa-exclamation-circle"></i> нет</span>
                             {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <form method="post" action="{% url 'review:toggle-absent' data.participation.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.path }}">
+                                {% if data.is_absent %}
+                                <button type="submit" class="btn btn-secondary btn-sm py-0 px-2"
+                                        title="Нажмите чтобы снять отсутствие">
+                                    <i class="fas fa-user-slash"></i> Н
+                                </button>
+                                {% else %}
+                                <button type="submit" class="btn btn-outline-secondary btn-sm py-0 px-2"
+                                        title="Отметить отсутствие"
+                                        onclick="return confirm('Отметить {{ data.student.last_name }} как отсутствующего?')">
+                                    <i class="fas fa-user-check"></i>
+                                </button>
+                                {% endif %}
+                            </form>
                         </td>
                         <td class="text-center">
                             {% if data.is_absent %}
-                                <span class="badge bg-secondary">Отсутствует</span>
-                            {% elif data.has_mark %}
-                                <span class="badge bg-success">Проверено</span>
-                            {% elif not data.variant %}
-                                <span class="badge bg-light text-dark">Нет варианта</span>
-                            {% else %}
-                                <span class="badge bg-warning text-dark">Не проверено</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-center">
-                            {% if data.has_mark and data.mark.score %}
+                                <span class="badge bg-secondary">Н</span>
+                            {% elif data.has_mark and data.mark.score %}
                             <span class="badge fs-6 bg-{% if data.mark.score == 5 %}primary{% elif data.mark.score == 4 %}success{% elif data.mark.score == 3 %}warning text-dark{% else %}danger{% endif %}">
                                 {{ data.mark.score }}
                             </span>
@@ -226,8 +224,8 @@
                             {% if data.is_absent %}
                                 <span class="text-muted">—</span>
                             {% elif not data.variant %}
-                                <span class="text-muted" title="Сначала назначьте вариант">
-                                    <i class="fas fa-lock"></i>
+                                <span class="text-muted" title="Назначьте вариант">
+                                    <i class="fas fa-arrow-left"></i>
                                 </span>
                             {% else %}
                             <a href="{% url 'review:participation-review' data.participation.pk %}"
@@ -236,6 +234,13 @@
                                 {% if data.has_mark %}Изменить{% else %}Проверить{% endif %}
                             </a>
                             {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                            Нет участников
                         </td>
                     </tr>
                     {% endfor %}

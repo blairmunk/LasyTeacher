@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'latex_generator',
     'html_generator',      # HTML генератор
     'pdf_generator',       # PDF генератор
+    'codifier',            # Кодификатор заданий
 ]
 
 # Настройки для PDF генерации

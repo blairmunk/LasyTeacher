@@ -5,11 +5,12 @@ app_name = 'events'
 
 urlpatterns = [
     path('', views.EventListView.as_view(), name='list'),
-    path('<pk:pk>/', views.EventDetailView.as_view(), name='detail'),
+    path('<uuid:pk>/', views.EventDetailView.as_view(), name='detail'),
     path('create/', views.EventCreateView.as_view(), name='create'),
-    path('<pk:pk>/update/', views.EventUpdateView.as_view(), name='update'),
-    path('<pk:event_id>/add-participants/', views.add_participants, name='add-participants'),
-    path('<pk:event_id>/assign-variants/', views.assign_variants, name='assign-variants'),
+    path('<uuid:pk>/update/', views.EventUpdateView.as_view(), name='update'),
+    path('<uuid:event_id>/add-participants/', views.add_participants, name='add-participants'),
+    path('<uuid:event_id>/assign-variants/', views.assign_variants, name='assign-variants'),
+    path('<uuid:event_id>/change-status/', views.change_status, name='change-status'),
     path('review/', views.review_works, name='review-works'),
-    path('participation/<pk:participation_id>/grade/', views.grade_participation, name='grade-participation'),
+    path('participation/<uuid:participation_id>/grade/', views.grade_participation, name='grade-participation'),
 ]

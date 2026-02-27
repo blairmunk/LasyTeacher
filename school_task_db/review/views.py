@@ -117,6 +117,31 @@ class EventReviewView(DetailView):
             'student', 'variant'
         ).order_by('student__last_name', 'student__first_name')
 
+        # Проверяем готовность
+        total_count = participations.count()
+        has_participants = total_count > 0
+        variants_assigned = participations.filter(variant__isnull=False).exists()
+        all_variants_assigned = has_participants and not participations.filter(
+            variant__isnull=True
+        ).exclude(status='absent').exists()
+
+        context['has_participants'] = has_participants
+        context['variants_assigned'] = variants_assigned
+        context['all_variants_assigned'] = all_variants_assigned
+
+        # Блокировка: нет учеников или нет вариантов
+        if not has_participants:
+            context['blocked'] = True
+            context['block_reason'] = 'no_participants'
+            return context
+
+        if not variants_assigned:
+            context['blocked'] = True
+            context['block_reason'] = 'no_variants'
+            return context
+
+        context['blocked'] = False
+
         participations_data = []
         graded_count = 0
         absent_count = 0
@@ -147,8 +172,6 @@ class EventReviewView(DetailView):
             graded_count / active_participants * 100, 1
         ) if active_participants > 0 else 100
 
-        # Статистика оценок
-        avg_score = round(sum(scores) / len(scores), 2) if scores else 0
         score_dist = {2: 0, 3: 0, 4: 0, 5: 0}
         for s in scores:
             if s in score_dist:
@@ -161,11 +184,10 @@ class EventReviewView(DetailView):
             'graded_participants': graded_count,
             'absent_participants': absent_count,
             'progress_percentage': progress,
-            'avg_score': avg_score,
+            'avg_score': round(sum(scores) / len(scores), 2) if scores else 0,
             'score_distribution': score_dist,
         })
 
-        # Сессия проверки
         if self.request.user.is_authenticated:
             session, _ = ReviewSession.objects.get_or_create(
                 reviewer=self.request.user,

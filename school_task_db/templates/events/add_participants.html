@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Добавить учеников — {{ event.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">Добавить учеников</h2>
+                    <small class="text-muted">{{ event.name }}</small>
+                </div>
+                <a href="{% url 'events:detail' event.pk %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> К событию
+                </a>
+            </div>
+
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+
+                <!-- Добавить класс -->
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white py-2">
+                        <h6 class="mb-0"><i class="fas fa-users"></i> Добавить класс целиком</h6>
+                    </div>
+                    <div class="card-body">
+                        <label for="{{ form.student_group.id_for_label }}" class="form-label">
+                            Выберите класс
+                        </label>
+                        {{ form.student_group }}
+                        <div class="form-text">
+                            Все ученики выбранного класса будут добавлены в событие
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Добавить отдельных учеников -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white py-2">
+                        <h6 class="mb-0"><i class="fas fa-user-plus"></i> Добавить отдельных учеников</h6>
+                    </div>
+                    <div class="card-body">
+                        <label for="{{ form.individual_students.id_for_label }}" class="form-label">
+                            Выберите учеников
+                        </label>
+                        {{ form.individual_students }}
+                        <div class="form-text">
+                            Удерживайте Ctrl для выбора нескольких учеников
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-user-plus"></i> Добавить
+                    </button>
+                    <a href="{% url 'events:detail' event.pk %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Отмена
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Текущие участники -->
+        <div class="col-md-4">
+            <div class="card mt-5">
+                <div class="card-header bg-light py-2">
+                    <h6 class="mb-0"><i class="fas fa-users"></i> Уже добавлены</h6>
+                </div>
+                <div class="card-body p-0">
+                    {% for p in current_participants %}
+                    <div class="px-3 py-1 border-bottom">
+                        <small>{{ p.student.last_name }} {{ p.student.first_name }}</small>
+                    </div>
+                    {% empty %}
+                    <div class="p-3 text-center text-muted">
+                        <small>Пока никого</small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

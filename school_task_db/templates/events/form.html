@@ -1,50 +1,124 @@
 {% extends 'base.html' %}
-{% load widget_tweaks %}
 
-{% block title %}Создание события{% endblock %}
+{% block title %}{{ page_title|default:"Событие" }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-6">
-        <h2>Создание нового события</h2>
-        
-        <form method="post">
-            {% csrf_token %}
-            
-            <div class="mb-3">
-                <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
-                {{ form.name|add_class:"form-control" }}
-            </div>
-            
-            <div class="mb-3">
-                <label for="{{ form.date.id_for_label }}" class="form-label">{{ form.date.label }}</label>
-                {{ form.date|add_class:"form-control" }}
-            </div>
-            
-            <div class="mb-3">
-                <label for="{{ form.work.id_for_label }}" class="form-label">{{ form.work.label }}</label>
-                {{ form.work|add_class:"form-select" }}
-            </div>
-            
-            <div class="mb-3">
-                <label for="{{ form.student_group.id_for_label }}" class="form-label">{{ form.student_group.label }}</label>
-                {{ form.student_group|add_class:"form-select" }}
-            </div>
-            
-            <div class="mb-3">
-                <label for="{{ form.status.id_for_label }}" class="form-label">{{ form.status.label }}</label>
-                {{ form.status|add_class:"form-select" }}
-            </div>
-            
-            <div class="mb-3">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Создать
-                </button>
-                <a href="{% url 'events:list' %}" class="btn btn-secondary">
-                    <i class="fas fa-times"></i> Отмена
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>{{ page_title|default:"Событие" }}</h2>
+                <a href="{% url 'events:list' %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> К списку
                 </a>
             </div>
-        </form>
+
+            {% if form.errors %}
+            <div class="alert alert-danger">
+                <h6><i class="fas fa-exclamation-triangle"></i> Исправьте ошибки:</h6>
+                {{ form.errors }}
+            </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+
+                <!-- Название -->
+                <div class="mb-3">
+                    <label for="{{ form.name.id_for_label }}" class="form-label fw-bold">
+                        Название <span class="text-danger">*</span>
+                    </label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                    <div class="invalid-feedback d-block">{{ form.name.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <!-- Работа -->
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.work.id_for_label }}" class="form-label fw-bold">Работа</label>
+                        {{ form.work }}
+                        {% if form.work.errors %}
+                        <div class="invalid-feedback d-block">{{ form.work.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Курс -->
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.course.id_for_label }}" class="form-label fw-bold">Курс</label>
+                        {{ form.course }}
+                        {% if form.course.errors %}
+                        <div class="invalid-feedback d-block">{{ form.course.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Дата -->
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.planned_date.id_for_label }}" class="form-label fw-bold">
+                            Дата и время
+                        </label>
+                        {{ form.planned_date }}
+                        {% if form.planned_date.errors %}
+                        <div class="invalid-feedback d-block">{{ form.planned_date.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Статус -->
+                    <div class="col-md-3 mb-3">
+                        <label for="{{ form.status.id_for_label }}" class="form-label fw-bold">Статус</label>
+                        {{ form.status }}
+                    </div>
+
+                    <!-- Кабинет -->
+                    <div class="col-md-3 mb-3">
+                        <label for="{{ form.location.id_for_label }}" class="form-label fw-bold">Кабинет</label>
+                        {{ form.location }}
+                    </div>
+                </div>
+
+                <!-- Описание -->
+                <div class="mb-3">
+                    <label for="{{ form.description.id_for_label }}" class="form-label fw-bold">Описание</label>
+                    {{ form.description }}
+                </div>
+
+                <!-- Кнопки -->
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {{ submit_text|default:"Сохранить" }}
+                    </button>
+                    <a href="{% url 'events:list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Отмена
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Подсказка -->
+        <div class="col-md-4">
+            <div class="card mt-5">
+                <div class="card-header bg-light py-2">
+                    <h6 class="mb-0"><i class="fas fa-info-circle"></i> Подсказка</h6>
+                </div>
+                <div class="card-body">
+                    <p class="small mb-2">
+                        <strong>1.</strong> Создайте событие, указав работу и дату.
+                    </p>
+                    <p class="small mb-2">
+                        <strong>2.</strong> После создания добавьте участников (класс или отдельных учеников).
+                    </p>
+                    <p class="small mb-2">
+                        <strong>3.</strong> Назначьте варианты участникам.
+                    </p>
+                    <p class="small mb-0">
+                        <strong>4.</strong> После проведения — перейдите к проверке.
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

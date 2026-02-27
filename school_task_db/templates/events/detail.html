@@ -3,171 +3,281 @@
 {% block title %}{{ event.name }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-10">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2>{{ event.name }}</h2>
-                <h4 class="text-muted">{{ event.student_group.name }}</h4>
-            </div>
-            <div>
-                <a href="{% url 'events:assign-variants' event.pk %}" class="btn btn-success">
-                    <i class="fas fa-random"></i> Назначить варианты
-                </a>
-                <a href="{% url 'events:list' %}" class="btn btn-secondary">
-                    <i class="fas fa-list"></i> К списку событий
-                </a>
+<div class="container-fluid">
+    <!-- Заголовок -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">{{ event.name }}</h2>
+            <small class="text-muted">
+                {% if event.work %}{{ event.work.get_work_type_display }} • {% endif %}
+                {{ event.planned_date|date:"d.m.Y H:i"|default:"дата не указана" }}
+                {% if event.course %} • {{ event.course.name }}{% endif %}
+            </small>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'events:update' event.pk %}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-edit"></i> Редактировать
+            </a>
+            <a href="{% url 'events:list' %}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i> К списку
+            </a>
+        </div>
+    </div>
+
+    <!-- Информация + workflow -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Работа</small>
+                            {% if event.work %}
+                            <a href="{% url 'works:detail' event.work.pk %}">{{ event.work.name }}</a>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted d-block">Статус</small>
+                            <span class="badge bg-{{ status_color }}">
+                                {{ event.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted d-block">Кабинет</small>
+                            {{ event.location|default:"—" }}
+                        </div>
+                        <div class="col-md-2">
+                            <small class="text-muted d-block">UUID</small>
+                            <span class="uuid-badge">{{ event.get_short_uuid }}</span>
+                        </div>
+                    </div>
+
+                    {% if event.description %}
+                    <div class="mt-3">
+                        <small class="text-muted d-block">Описание</small>
+                        {{ event.description }}
+                    </div>
+                    {% endif %}
+
+                    <!-- Прогресс-бар статуса -->
+                    <div class="mt-3">
+                        <div class="d-flex gap-1">
+                            {% for s in status_steps %}
+                            <div class="flex-fill text-center">
+                                <div class="progress mb-1" style="height: 6px;">
+                                    <div class="progress-bar bg-{{ s.color }}" style="width: 100%;"></div>
+                                </div>
+                                <small class="{% if s.current %}fw-bold{% else %}text-muted{% endif %}"
+                                       style="font-size: 0.7rem;">
+                                    {{ s.label }}
+                                </small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="card mb-4">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <strong>Работа:</strong> 
-                        <a href="{% url 'works:detail' event.work.pk %}">{{ event.work.name }}</a>
-                    </div>
-                    <div class="col-md-6">
-                        <strong>Дата проведения:</strong> {{ event.date|date:"d.m.Y H:i" }}
-                    </div>
+        <!-- Шаги проведения -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-light py-2">
+                    <h6 class="mb-0"><i class="fas fa-tasks"></i> Шаги проведения</h6>
                 </div>
-                <div class="row mt-2">
-                    <div class="col-md-6">
-                        <strong>Статус:</strong> 
-                        {% if event.status == 'planned' %}
-                            <span class="badge bg-secondary">{{ event.get_status_display }}</span>
-                        {% elif event.status == 'conducted' %}
-                            <span class="badge bg-info">{{ event.get_status_display }}</span>
-                        {% elif event.status == 'checked' %}
-                            <span class="badge bg-warning">{{ event.get_status_display }}</span>
-                        {% elif event.status == 'graded' %}
-                            <span class="badge bg-success">{{ event.get_status_display }}</span>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <!-- Шаг 1: Добавить учеников -->
+                        {% if participations|length > 0 %}
+                        <div class="list-group-item py-2 text-success">
+                            <i class="fas fa-check-circle"></i>
+                            <strong>1.</strong> Ученики добавлены ({{ participations|length }})
+                        </div>
                         {% else %}
-                            <span class="badge bg-dark">{{ event.get_status_display }}</span>
+                        <a href="{% url 'events:add-participants' event.pk %}"
+                           class="list-group-item list-group-item-action py-2 list-group-item-warning">
+                            <i class="fas fa-arrow-right"></i>
+                            <strong>1.</strong> Добавить учеников
+                        </a>
+                        {% endif %}
+
+                        <!-- Шаг 2: Назначить варианты -->
+                        {% if all_variants_assigned %}
+                        <div class="list-group-item py-2 text-success">
+                            <i class="fas fa-check-circle"></i>
+                            <strong>2.</strong> Варианты назначены
+                        </div>
+                        {% elif participations|length > 0 %}
+                        <a href="{% url 'events:assign-variants' event.pk %}"
+                           class="list-group-item list-group-item-action py-2 list-group-item-warning">
+                            <i class="fas fa-arrow-right"></i>
+                            <strong>2.</strong> Назначить варианты
+                            {% if some_variants_assigned %}(частично){% endif %}
+                        </a>
+                        {% else %}
+                        <div class="list-group-item py-2 text-muted">
+                            <i class="fas fa-lock"></i>
+                            <strong>2.</strong> Назначить варианты
+                        </div>
+                        {% endif %}
+
+                        <!-- Шаг 3: Провести -->
+                        {% if event.status == 'planned' and all_variants_assigned %}
+                        <form method="post" action="{% url 'events:change-status' event.pk %}" class="list-group-item p-0">
+                            {% csrf_token %}
+                            <input type="hidden" name="new_status" value="completed">
+                            <button type="submit"
+                               class="list-group-item list-group-item-action py-2 list-group-item-info border-0 w-100 text-start">
+                                <i class="fas fa-arrow-right"></i>
+                                <strong>3.</strong> Отметить как проведённое
+                            </button>
+                        </form>
+                        {% elif event.status in 'completed,reviewing,graded,closed' %}
+                        <div class="list-group-item py-2 text-success">
+                            <i class="fas fa-check-circle"></i>
+                            <strong>3.</strong> Проведено
+                        </div>
+                        {% else %}
+                        <div class="list-group-item py-2 text-muted">
+                            <i class="fas fa-lock"></i>
+                            <strong>3.</strong> Провести работу
+                        </div>
+                        {% endif %}
+
+                        <!-- Шаг 4: Проверить -->
+                        {% if event.status == 'graded' %}
+                        <div class="list-group-item py-2 text-success">
+                            <i class="fas fa-check-circle"></i>
+                            <strong>4.</strong> Работы проверены
+                        </div>
+                        {% elif can_review %}
+                        <a href="{% url 'review:event-review' event.pk %}"
+                           class="list-group-item list-group-item-action py-2 list-group-item-warning">
+                            <i class="fas fa-arrow-right"></i>
+                            <strong>4.</strong> Проверить работы
+                        </a>
+                        {% else %}
+                        <div class="list-group-item py-2 text-muted">
+                            <i class="fas fa-lock"></i>
+                            <strong>4.</strong> Проверить работы
+                        </div>
                         {% endif %}
                     </div>
-                    <div class="col-md-6">
-                        <strong>UUID:</strong> <span class="uuid-badge">{{ event.get_short_uuid }}</span>
-                    </div>
-                </div>
-                <div class="row mt-2">
-                    <div class="col-md-12">
-                        <strong>Создано:</strong> {{ event.created_at|date:"d.m.Y H:i" }}
-                    </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <h4>Отметки ({{ marks.count }})</h4>
-        {% if marks %}
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
+    <!-- Участники -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-users"></i> Участники ({{ participations|length }})
+            </h5>
+            <div class="d-flex gap-2">
+                <a href="{% url 'events:add-participants' event.pk %}" class="btn btn-success btn-sm">
+                    <i class="fas fa-user-plus"></i> Добавить учеников
+                </a>
+                {% if participations|length > 0 %}
+                <a href="{% url 'events:assign-variants' event.pk %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-random"></i> Назначить варианты
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if participations %}
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
                     <tr>
-                        <th>№</th>
+                        <th style="width:40px;">#</th>
                         <th>Ученик</th>
-                        <th>Вариант</th>
-                        <th>Оценка</th>
-                        <th>UUID варианта</th>
-                        <th>Дата</th>
-                        <th>Действия</th>
+                        <th class="text-center">Вариант</th>
+                        <th class="text-center">Статус</th>
+                        <th class="text-center">Оценка</th>
+                        <th class="text-center">Действия</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for mark in marks %}
-                    <tr>
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ mark.student.get_full_name }}</td>
+                    {% for p in participations %}
+                    <tr class="{% if p.status == 'absent' %}table-secondary{% elif p.mark_obj and p.mark_obj.score %}table-success-subtle{% elif not p.variant %}table-light{% endif %}">
+                        <td class="text-muted">{{ forloop.counter }}</td>
                         <td>
-                            <a href="{% url 'works:variant-detail' mark.variant.pk %}">
-                                Вариант {{ mark.variant.number }}
+                            <a href="{% url 'students:detail' p.student.pk %}" class="text-decoration-none">
+                                <strong>{{ p.student.last_name }} {{ p.student.first_name }}</strong>
                             </a>
-                        </td>
-                        <td>
-                            {% if mark.score %}
-                                {% if mark.score == 5 %}
-                                    <span class="badge bg-success">{{ mark.score }}</span>
-                                {% elif mark.score == 4 %}
-                                    <span class="badge bg-info">{{ mark.score }}</span>
-                                {% elif mark.score == 3 %}
-                                    <span class="badge bg-warning">{{ mark.score }}</span>
-                                {% else %}
-                                    <span class="badge bg-danger">{{ mark.score }}</span>
-                                {% endif %}
-                            {% else %}
-                                <span class="badge bg-secondary">Не оценено</span>
+                            {% if p.student.middle_name %}
+                            <small class="text-muted">{{ p.student.middle_name }}</small>
                             {% endif %}
                         </td>
-                        <td>
-                            <span class="uuid-badge">{{ mark.variant.get_short_uuid }}</span>
+                        <td class="text-center">
+                            {% if p.variant %}
+                            <span class="badge bg-secondary">В-{{ p.variant.number }}</span>
+                            {% else %}
+                            <span class="text-danger">
+                                <i class="fas fa-exclamation-circle"></i> нет
+                            </span>
+                            {% endif %}
                         </td>
-                        <td>{{ mark.created_at|date:"d.m.Y H:i" }}</td>
-                        <td>
-                            <a href="/admin/events/mark/{{ mark.pk }}/change/" class="btn btn-sm btn-outline-primary" target="_blank">
-                                <i class="fas fa-edit"></i> Изменить
-                            </a>
+                        <td class="text-center">
+                            {% if p.status == 'absent' %}
+                                <span class="badge bg-secondary">Отсутствует</span>
+                            {% elif p.mark_obj and p.mark_obj.score %}
+                                <span class="badge bg-success">Проверено</span>
+                            {% elif not p.variant %}
+                                <span class="badge bg-light text-dark">Нет варианта</span>
+                            {% elif can_review %}
+                                <span class="badge bg-warning text-dark">Не проверено</span>
+                            {% else %}
+                                <span class="badge bg-info">{{ p.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if p.mark_obj and p.mark_obj.score %}
+                            <span class="badge fs-6 bg-{% if p.mark_obj.score == 5 %}primary{% elif p.mark_obj.score == 4 %}success{% elif p.mark_obj.score == 3 %}warning text-dark{% else %}danger{% endif %}">
+                                {{ p.mark_obj.score }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if p.status == 'absent' %}
+                                <span class="text-muted">—</span>
+                            {% elif not p.variant %}
+                                <a href="{% url 'events:assign-variants' event.pk %}"
+                                   class="btn btn-sm btn-outline-warning"
+                                   title="Назначить вариант">
+                                    <i class="fas fa-random"></i> Вариант
+                                </a>
+                            {% elif can_review %}
+                                <a href="{% url 'review:participation-review' p.pk %}"
+                                   class="btn btn-sm btn-{% if p.mark_obj and p.mark_obj.score %}outline-primary{% else %}warning{% endif %}">
+                                    <i class="fas fa-{% if p.mark_obj and p.mark_obj.score %}edit{% else %}play{% endif %}"></i>
+                                    {% if p.mark_obj and p.mark_obj.score %}Изменить{% else %}Проверить{% endif %}
+                                </a>
+                            {% else %}
+                                <span class="text-muted" title="Сначала проведите работу">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
-        
-        <!-- Статистика по оценкам -->
-        <div class="row mt-4">
-            <div class="col-md-12">
-                <h5>Статистика</h5>
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="card bg-success text-white">
-                            <div class="card-body text-center">
-                                <h3>{{ marks|length|add:0 }}</h3>
-                                <small>Всего работ</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card bg-info text-white">
-                            <div class="card-body text-center">
-                                <h3>{% for mark in marks %}{% if mark.score %}{{ mark.score|add:0 }}{% endif %}{% empty %}0{% endfor %}</h3>
-                                <small>Оценено работ</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card bg-warning text-white">
-                            <div class="card-body text-center">
-                                <h3>{% for mark in marks %}{% if not mark.score %}1{% endif %}{% empty %}0{% endfor %}</h3>
-                                <small>Не оценено</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card bg-primary text-white">
-                            <div class="card-body text-center">
-                                <h3>{{ event.student_group.students.count }}</h3>
-                                <small>Учеников в классе</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% else %}
-        <div class="alert alert-info">
-            <div class="d-flex justify-content-between align-items-center">
-                <span>Отметок пока нет.</span>
-                <a href="{% url 'events:assign-variants' event.pk %}" class="btn btn-success">
-                    <i class="fas fa-plus"></i> Назначить варианты ученикам
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-user-plus fa-3x text-muted mb-3"></i>
+                <p class="text-muted mb-3">Участники ещё не добавлены</p>
+                <a href="{% url 'events:add-participants' event.pk %}" class="btn btn-success">
+                    <i class="fas fa-user-plus"></i> Добавить учеников
                 </a>
             </div>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
-</div>
-
-<!-- UUID в правом нижнем углу -->
-<div class="uuid-code">
-    Событие: {{ event.get_short_uuid }}
 </div>
 {% endblock %}

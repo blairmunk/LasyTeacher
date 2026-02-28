@@ -317,8 +317,24 @@
 
                 </ul>
 
-                <!-- Правая часть: поиск + админ -->
-                <ul class="navbar-nav">
+                <!-- Правая часть: год + поиск + админ -->
+                <ul class="navbar-nav align-items-center">
+                    {% if all_years %}
+                    <li class="nav-item me-2">
+                        <form method="get" class="d-flex align-items-center">
+                            <select name="year" class="form-select form-select-sm bg-dark text-light border-secondary"
+                                    style="width: auto; font-size: 0.85rem;"
+                                    onchange="this.form.submit()">
+                                {% for y in all_years %}
+                                <option value="{{ y.pk }}"
+                                    {% if current_year and current_year.pk == y.pk %}selected{% endif %}>
+                                    📅 {{ y.name }}{% if y.is_active %} ★{% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </li>
+                    {% endif %}
                     <li class="nav-item">
                         <a class="nav-link" href="/admin/" title="Админ-панель">
                             <i class="fas fa-cog"></i>

@@ -74,6 +74,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if options['clear']:
+            from core.models import AcademicYear
             from curriculum.models import Course, CourseAssignment
             CourseAssignment.objects.all().delete()
             Course.objects.all().delete()
@@ -86,26 +87,50 @@ class Command(BaseCommand):
             Task.objects.all().delete()
             Student.objects.all().delete()
             StudentGroup.objects.all().delete()
+            AcademicYear.objects.all().delete()
             self.stdout.write(self.style.WARNING('🗑  Все данные удалены'))
 
         with transaction.atomic():
-            groups = self._create_groups()
+            year = self._create_academic_year()
+            groups = self._create_groups(year)
             students = self._create_students(groups)
             tasks = self._create_tasks()
             works = self._create_works(tasks)
-            course = self._create_course(works, groups)
+            course = self._create_course(works, groups, year)
             self._create_events(works, students, groups)
 
         self.stdout.write(self.style.SUCCESS('\n🎉 Тестовые данные загружены!'))
 
+    def _create_academic_year(self):
+        from core.models import AcademicYear
+        from datetime import date
 
-    def _create_groups(self):
+        year, created = AcademicYear.objects.get_or_create(
+            name='2025-2026',
+            defaults={
+                'start_date': date(2025, 9, 1),
+                'end_date': date(2026, 6, 30),
+                'is_active': True,
+            }
+        )
+        if created:
+            self.stdout.write(f'📅 Учебный год: {year.name}')
+        else:
+            self.stdout.write(f'📅 Учебный год: {year.name} (уже существует)')
+        return year
+
+
+    def _create_groups(self, year):
         groups = {}
         for name in ['9А', '9Б']:
-            group, _ = StudentGroup.objects.get_or_create(name=name)
+            group, _ = StudentGroup.objects.get_or_create(
+                name=name,
+                academic_year=year,
+            )
             groups[name] = group
         self.stdout.write(f'👥 Классы: {len(groups)}')
         return groups
+
 
     def _create_students(self, groups):
         students = {'9А': [], '9Б': []}
@@ -298,8 +323,7 @@ class Command(BaseCommand):
         self.stdout.write(f'📋 Работ: {len(works)}')
         return works
 
-    def _create_course(self, works, groups):
-        """Создание курса и привязка работ"""
+    def _create_course(self, works, groups, year):
         from curriculum.models import Course, CourseAssignment
         from datetime import date
 
@@ -307,11 +331,12 @@ class Command(BaseCommand):
             name='Физика 9 класс',
             subject='Физика',
             grade_level=9,
-            academic_year='2025-2026',
+            year=year,
             defaults={
-                'description': 'Курс физики для 9 класса. Механика, силы, тепловые явления.',
-                'start_date': date(2025, 9, 1),
-                'end_date': date(2026, 5, 25),
+                'academic_year': year.name,
+                'description': 'Курс физики для 9 класса.',
+                'start_date': year.start_date,
+                'end_date': year.end_date,
                 'total_hours': 68,
                 'hours_per_week': 2,
                 'is_active': True,

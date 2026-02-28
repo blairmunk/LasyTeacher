@@ -62,6 +62,41 @@ class BaseModelWithOrder(BaseModel):
         abstract = True
         ordering = ['order', 'created_at']
 
+class AcademicYear(BaseModel):
+    """Учебный год"""
+    name = models.CharField(
+        'Название', max_length=20, unique=True,
+        help_text='Например: 2025-2026'
+    )
+    start_date = models.DateField('Начало')
+    end_date = models.DateField('Окончание')
+    is_active = models.BooleanField(
+        'Текущий год', default=False,
+        help_text='Только один год может быть активным'
+    )
+
+    class Meta:
+        verbose_name = 'Учебный год'
+        verbose_name_plural = 'Учебные годы'
+        ordering = ['-start_date']
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        # Гарантируем только один активный год
+        if self.is_active:
+            AcademicYear.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get_current(cls):
+        """Возвращает текущий активный год или None"""
+        return cls.objects.filter(is_active=True).first()
+
+    def contains_date(self, dt):
+        """Попадает ли дата в этот учебный год"""
+        return self.start_date <= dt <= self.end_date
 
 class ImportLog(BaseModel):
     """Лог операции импорта заданий"""

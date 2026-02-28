@@ -39,20 +39,29 @@ class Student(BaseModel):
 class StudentGroup(BaseModel):
     """Класс"""
     name = models.CharField('Название класса', max_length=10)
+    academic_year = models.ForeignKey(
+        'core.AcademicYear',
+        on_delete=models.PROTECT,
+        verbose_name='Учебный год',
+        related_name='student_groups',
+        null=True, blank=True,
+    )
     students = models.ManyToManyField(Student, verbose_name='Ученики', blank=True)
-    
+
     class Meta:
         verbose_name = 'Класс'
         verbose_name_plural = 'Классы'
         ordering = ['name']
-    
+        unique_together = ['name', 'academic_year']
+
     def __str__(self):
-        return f"[{self.get_short_uuid()}] {self.name}"
-    
+        year_str = f" ({self.academic_year.name})" if self.academic_year else ""
+        return f"{self.name}{year_str}"
+
     def get_absolute_url(self):
         return reverse('students:group-detail', kwargs={'pk': self.pk})
     
-    def get_students_count(self):  # ДОБАВИТЬ ЭТОТ МЕТОД
+    def get_students_count(self):
         """Количество учеников в классе"""
         return self.students.count()
     

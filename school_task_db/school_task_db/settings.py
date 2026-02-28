@@ -62,6 +62,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.AcademicYearMiddleware',
 ]
 
 
@@ -71,26 +72,9 @@ ROOT_URLCONF = 'school_task_db.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],  #  путь к шаблонам
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
-        },
-    },
-]
-
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             BASE_DIR / 'templates',
-            BASE_DIR / 'latex_generator' / 'templates',  # НОВЫЙ ПУТЬ
-            # BASE_DIR / 'works' / 'latex' / 'templates',  # СТАРЫЙ - можно пока оставить
+            BASE_DIR / 'latex_generator' / 'templates',
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -99,6 +83,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'core.context_processors.academic_year',
             ],
         },
     },

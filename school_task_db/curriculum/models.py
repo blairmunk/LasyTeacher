@@ -87,7 +87,14 @@ class Course(BaseModel):
     subject = models.CharField('Предмет', max_length=100, 
                              help_text='Предмет из справочника предметов')
     grade_level = models.PositiveIntegerField('Класс')
-    academic_year = models.CharField('Учебный год', max_length=20, default='2024-2025')
+    academic_year = models.CharField('Учебный год (старое)', max_length=20, default='2024-2025')
+    year = models.ForeignKey(
+        'core.AcademicYear',
+        on_delete=models.PROTECT,
+        verbose_name='Учебный год',
+        related_name='courses',
+        null=True, blank=True,
+    )
 
     student_groups = models.ManyToManyField(
         'students.StudentGroup',

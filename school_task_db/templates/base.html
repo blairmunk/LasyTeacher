@@ -204,33 +204,89 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'tasks:list' %}">Задания</a>
+
+                    <!-- Контент -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button"
+                           data-bs-toggle="dropdown">
+                            <i class="fas fa-pencil-alt"></i> Контент
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'tasks:list' %}">
+                                    <i class="fas fa-tasks text-primary"></i> Задания
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'task_groups:list' %}">
+                                    <i class="fas fa-layer-group text-info"></i> Группы заданий
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'works:list' %}">
+                                    <i class="fas fa-file-alt text-success"></i> Работы
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'codifier:list' %}">
+                                    <i class="fas fa-book text-warning"></i> Кодификатор
+                                </a>
+                            </li>
+                        </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'task_groups:list' %}">Группы</a>
+
+                    <!-- Ученики -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button"
+                           data-bs-toggle="dropdown">
+                            <i class="fas fa-users"></i> Ученики
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'students:list' %}">
+                                    <i class="fas fa-user text-primary"></i> Список учеников
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'students:group-list' %}">
+                                    <i class="fas fa-chalkboard text-info"></i> Классы
+                                </a>
+                            </li>
+                        </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'works:list' %}">Работы</a>
+
+                    <!-- События -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button"
+                           data-bs-toggle="dropdown">
+                            <i class="fas fa-calendar-alt"></i> События
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'events:list' %}">
+                                    <i class="fas fa-calendar text-primary"></i> Все события
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'review:dashboard' %}">
+                                    <i class="fas fa-clipboard-check text-warning"></i> Проверка работ
+                                </a>
+                            </li>
+                        </ul>
                     </li>
+
+                    <!-- Отчёты -->
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'students:list' %}">Ученики</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'events:list' %}">События</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'reports:dashboard' %}">Отчеты</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'review:dashboard' %}">
-                            <i class="fas fa-clipboard-check"></i> Проверка работ
+                        <a class="nav-link" href="{% url 'reports:dashboard' %}">
+                            <i class="fas fa-chart-bar"></i> Отчёты
                         </a>
                     </li>
-                    <!-- ДОБАВЛЕНО: Импорт/Экспорт -->
+
+                    <!-- Данные -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" 
-                           data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle" href="#" role="button"
+                           data-bs-toggle="dropdown">
                             <i class="fas fa-exchange-alt"></i> Данные
                         </a>
                         <ul class="dropdown-menu">
@@ -257,13 +313,19 @@
                             </li>
                         </ul>
                     </li>
+
                 </ul>
+
+                <!-- Правая часть: поиск + админ -->
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="/admin/">Админ</a>
+                        <a class="nav-link" href="/admin/" title="Админ-панель">
+                            <i class="fas fa-cog"></i>
+                        </a>
                     </li>
                 </ul>
             </div>
+
             <form class="d-flex me-3" method="get" action="{% url 'core:search' %}">
                 <input class="form-control me-2" type="search" name="q" placeholder="Поиск по UUID..." style="width: 200px;">
                 <button class="btn btn-outline-secondary" type="submit">

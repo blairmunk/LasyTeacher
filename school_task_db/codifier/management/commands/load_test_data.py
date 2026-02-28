@@ -484,5 +484,13 @@ class Command(BaseCommand):
                 f'  📅 {config["name"]}: {participations} уч., {graded} оценок'
             )
 
+        # Обновляем статусы участий
+        updated = EventParticipation.objects.filter(
+            mark__isnull=False
+        ).exclude(status='absent').update(status='graded')
+        
+        absent = EventParticipation.objects.filter(status='absent').count()
+        self.stdout.write(f'✅ Статусы участий обновлены: {updated} graded, {absent} absent')
+
         self.stdout.write(f'📅 Событий: {event_count}')
 

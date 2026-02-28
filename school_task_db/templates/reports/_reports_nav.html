@@ -1,0 +1,42 @@
+{# Навигация по отчётам — включать на всех страницах reports #}
+<div class="card mt-4">
+    <div class="card-body py-2">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <span class="fw-bold text-muted me-2">
+                <i class="fas fa-chart-line"></i> Отчёты:
+            </span>
+
+            <a href="{% url 'reports:dashboard' %}"
+               class="btn btn-sm {% if active_report == 'dashboard' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">
+                <i class="fas fa-tachometer-alt"></i> Обзор
+            </a>
+            <a href="{% url 'reports:heatmap' %}"
+               class="btn btn-sm {% if active_report == 'heatmap' %}btn-danger{% else %}btn-outline-danger{% endif %}">
+                <i class="fas fa-th"></i> Тепловая карта
+            </a>
+            <a href="{% url 'reports:student-performance' %}"
+               class="btn btn-sm {% if active_report == 'student-performance' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                <i class="fas fa-user-graduate"></i> Успеваемость
+            </a>
+            <a href="{% url 'reports:work-analysis' %}"
+               class="btn btn-sm {% if active_report == 'work-analysis' %}btn-success{% else %}btn-outline-success{% endif %}">
+                <i class="fas fa-chart-bar"></i> Анализ работ
+            </a>
+            <a href="{% url 'reports:events-status' %}"
+               class="btn btn-sm {% if active_report == 'events-status' %}btn-info{% else %}btn-outline-info{% endif %}">
+                <i class="fas fa-calendar-check"></i> События
+            </a>
+
+            {% if courses %}
+            <span class="border-start ps-2 ms-1"></span>
+            <span class="text-muted small">Курсы:</span>
+            {% for course in courses %}
+            <a href="{% url 'reports:heatmap-course' course.pk %}"
+               class="btn btn-sm {% if active_course_pk == course.pk %}btn-dark{% else %}btn-outline-dark{% endif %}">
+                <i class="fas fa-book"></i> {{ course.name|truncatechars:20 }}
+            </a>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>

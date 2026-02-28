@@ -16,6 +16,15 @@ from tasks.models import Task
 from events.models import Mark, EventParticipation
 from curriculum.models import Topic, SubTopic
 
+def _get_nav_context(active_report='', active_course_pk=None):
+    """Общий контекст для навигации по отчётам"""
+    from curriculum.models import Course
+    return {
+        'active_report': active_report,
+        'active_course_pk': active_course_pk,
+        'courses': Course.objects.filter(is_active=True).order_by('grade_level', 'name'),
+    }
+
 
 class ReportsDashboardView(TemplateView):
     template_name = 'reports/dashboard.html'
@@ -197,6 +206,8 @@ class ReportsDashboardView(TemplateView):
         context['courses'] = Course.objects.filter(is_active=True).order_by('grade_level', 'name')
         context['student_groups'] = StudentGroup.objects.all()
         
+        context.update(_get_nav_context('dashboard'))
+
         return context
 
 
@@ -270,6 +281,8 @@ class StudentPerformanceView(TemplateView):
             ) if students_with_scores > 0 else 0,
         }
         
+        context.update(_get_nav_context('student-performance'))
+
         return context
 
 
@@ -331,6 +344,9 @@ class WorkAnalysisView(TemplateView):
             'hard_works': hard_works_count,
             'total_marks': total_marks_all,
         }
+
+        context.update(_get_nav_context('work-analysis'))
+
         return context
     
     def assess_difficulty(self, avg_score, avg_percentage):
@@ -379,6 +395,9 @@ class EventsStatusView(TemplateView):
             'status'
         ).annotate(count=Count('id')).order_by('status')
         context['participation_stats'] = list(participation_stats)
+
+        context['all_events'] = Event.objects.select_related('work').order_by('-planned_date')
+        context.update(_get_nav_context('events-status'))
         
         return context
 
@@ -391,7 +410,7 @@ from collections import defaultdict
 
 
 class HeatmapView(View):
-    """Тепловая карта: ученики × темы"""
+    """Тепловая карта: ученики x темы"""
 
     def get(self, request):
         group_id = request.GET.get('group')
@@ -418,6 +437,7 @@ class HeatmapView(View):
                 'groups': groups, 'selected_group': group,
                 'sections': sections, 'selected_section': section,
                 'has_data': False, 'is_transposed': transpose,
+                **_get_nav_context('heatmap'),
             })
 
         columns, rows, col_averages = _build_topic_data(students, section)
@@ -477,6 +497,7 @@ class HeatmapView(View):
             'total_students': len(students),
             'total_topics': len(columns),
             'has_data': bool(rows and columns),
+            **_get_nav_context('heatmap'),
         })
 
 class HeatmapCourseView(View):
@@ -513,6 +534,7 @@ class HeatmapCourseView(View):
                 'selected_group': group,
                 'has_data': False,
                 'is_transposed': transpose,
+                **_get_nav_context('heatmap-course', course.pk),
             })
 
         # Темы курса: через CourseAssignment → Work → Variant → Task → Topic
@@ -581,11 +603,12 @@ class HeatmapCourseView(View):
             'total_topics': len(columns),
             'has_data': bool(rows and columns),
             'timeline_json': timeline_json,
+            **_get_nav_context('heatmap-course', course.pk),
         })
 
 
 class HeatmapDrilldownView(View):
-    """Drill-down: ученики × подтемы одной темы"""
+    """Drill-down: ученики x подтемы одной темы"""
 
     def get(self, request, topic_pk):
         topic = get_object_or_404(Topic, pk=topic_pk)
@@ -684,6 +707,7 @@ class HeatmapDrilldownView(View):
             'grid_col_headers': grid_col_headers,
             'grid_col_averages': grid_col_averages,
             'has_data': bool(rows and columns),
+            **_get_nav_context('heatmap'),
         })
 
 
@@ -813,6 +837,7 @@ class HeatmapStudentView(View):
             'selected_subtopic': selected_subtopic,
             'group_param': group_param,
             'group_suffix': group_suffix,
+            **_get_nav_context('heatmap'),
         })
 
 
@@ -940,6 +965,7 @@ class HeatmapSubtopicView(View):
             'overall_css': _color_class(overall_pct) if overall_pct else 'no-data',
             'total_students': len(students),
             'students_with_data': students_with_data,
+            **_get_nav_context('heatmap'),
         })
 
 

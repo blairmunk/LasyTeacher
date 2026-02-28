@@ -81,7 +81,7 @@ class Event(BaseModel):
         if total == 0:
             return 0
         completed = self.get_completed_count()
-        return round((completed / total) * 100, 1)
+        return round((completed / total) * 100)
     
     def assign_variants_randomly(self):
         """Назначить варианты случайным образом"""

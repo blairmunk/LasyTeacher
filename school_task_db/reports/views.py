@@ -214,77 +214,82 @@ class ReportsDashboardView(TemplateView):
 class StudentPerformanceView(TemplateView):
     """Отчет по успеваемости учеников"""
     template_name = 'reports/student_performance.html'
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
-        from students.models import Student
+
+        from students.models import Student, StudentGroup
         from events.models import Mark, EventParticipation
-        
+
+        groups = StudentGroup.objects.all().order_by('name')
+        group_id = self.request.GET.get('group')
+
+        if group_id:
+            group = StudentGroup.objects.filter(pk=group_id).first()
+            students = group.students.all() if group else Student.objects.all()
+        else:
+            group = None
+            students = Student.objects.all()
+
+        students = students.order_by('last_name', 'first_name')
+
         students_stats = []
-        high_performers_count = 0
-        students_with_scores = 0
-        students_with_activity = 0
-        total_completion_rate = 0
-        total_average_score = 0
-        
-        for student in Student.objects.all():
+        for student in students:
             participations = student.eventparticipation_set.all()
             completed = participations.filter(
                 status__in=['completed', 'graded']
             )
-            student_marks = Mark.objects.filter(
-                participation__student=student, score__isnull=False
-            )
-            avg_score = student_marks.aggregate(
-                avg=Avg('score')
-            )['avg'] or 0
+            marks = Mark.objects.filter(participation__student=student)
+            avg_score = marks.aggregate(avg=Avg('score'))['avg'] or 0
+
+            # Средний % по task_scores
+            total_pts = 0
+            total_max = 0
+            for mark in marks:
+                if mark.task_scores:
+                    for scores in mark.task_scores.values():
+                        total_pts += scores.get('points', 0)
+                        total_max += scores.get('max_points', 0)
+            avg_pct = round(total_pts / total_max * 100) if total_max > 0 else None
+
             completion_rate = round(
                 (completed.count() / participations.count() * 100)
                 if participations.count() > 0 else 0, 1
             )
-            
-            students_stats.append({
+
+            stat = {
                 'student': student,
                 'total_participations': participations.count(),
                 'completed_participations': completed.count(),
-                'total_marks': student_marks.count(),
-                'average_score': round(avg_score, 2) if avg_score else 0,
                 'completion_rate': completion_rate,
+                'total_marks': marks.count(),
+                'average_score': round(avg_score, 2) if avg_score else 0,
+                'average_pct': avg_pct,
                 'last_activity': participations.order_by(
                     '-created_at'
-                ).first()
-            })
-            
+                ).first(),
+            }
             if participations.count() > 0:
-                total_completion_rate += completion_rate
-                students_with_activity += 1
-            if avg_score > 0:
-                total_average_score += avg_score
-                students_with_scores += 1
-                if avg_score >= 4.5:
-                    high_performers_count += 1
-        
-        students_stats.sort(
-            key=lambda x: x['average_score'], reverse=True
-        )
-        
+                students_stats.append(stat)
+
         context['students_stats'] = students_stats
+        context['groups'] = groups
+        context['selected_group'] = group
         context['summary_stats'] = {
             'total_students': len(students_stats),
-            'high_performers': high_performers_count,
+            'high_performers': sum(1 for s in students_stats if (s['average_pct'] or 0) >= 85),
+            'need_attention': sum(1 for s in students_stats if s['average_pct'] is not None and s['average_pct'] < 45),
             'avg_completion_rate': round(
-                total_completion_rate / students_with_activity, 1
-            ) if students_with_activity > 0 else 0,
-            'avg_score': round(
-                total_average_score / students_with_scores, 1
-            ) if students_with_scores > 0 else 0,
+                sum(s['completion_rate'] for s in students_stats) / len(students_stats), 1
+            ) if students_stats else 0,
+            'avg_pct': round(
+                sum(s['average_pct'] for s in students_stats if s['average_pct'] is not None) /
+                max(sum(1 for s in students_stats if s['average_pct'] is not None), 1)
+            ),
         }
-        
+
         context.update(_get_nav_context('student-performance'))
-
         return context
-
 
 class WorkAnalysisView(TemplateView):
     """Анализ работ и их результатов"""
@@ -340,9 +345,12 @@ class WorkAnalysisView(TemplateView):
         context['works_analysis'] = works_analysis
         context['summary_stats'] = {
             'total_works': len(works_analysis),
-            'easy_works': easy_works_count,
-            'hard_works': hard_works_count,
-            'total_marks': total_marks_all,
+            'total_marks': sum(w['total_marks'] for w in works_analysis),
+            'easy_works': sum(1 for w in works_analysis if w['difficulty_assessment'] == 'Легкая'),
+            'hard_works': sum(1 for w in works_analysis if w['difficulty_assessment'] in ('Сложная', 'Очень сложная')),
+            'avg_score': round(
+                sum(w['average_score'] for w in works_analysis) / len(works_analysis), 2
+            ) if works_analysis else 0,
         }
 
         context.update(_get_nav_context('work-analysis'))

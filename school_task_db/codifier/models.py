@@ -34,10 +34,10 @@ class CodifierSpec(BaseModel):
         return reverse('codifier:spec-detail', kwargs={'pk': self.pk})
 
     def get_content_tree(self):
-        """Дерево содержания: только корневые элементы (children подтянутся)"""
-        return self.content_entries.filter(
-            parent__isnull=True
-        ).order_by('code')
+        """Корневые элементы содержания с натуральной сортировкой"""
+        roots = list(self.content_entries.filter(parent__isnull=True))
+        roots.sort(key=lambda x: [int(p) for p in x.code.split('.')])
+        return roots
 
     def get_coverage(self, tasks_qs=None):
         """
@@ -145,6 +145,12 @@ class ContentEntry(BaseModel):
         if self.topic:
             return Task.objects.filter(topic=self.topic)
         return Task.objects.none()
+    
+    def get_sorted_children(self):
+        """Дочерние элементы с натуральной сортировкой (1.2 < 1.10)"""
+        children = list(self.children.all())
+        children.sort(key=lambda x: [int(p) for p in x.code.split('.')])
+        return children
 
     def get_all_tasks(self):
         """Задания включая дочерние элементы"""

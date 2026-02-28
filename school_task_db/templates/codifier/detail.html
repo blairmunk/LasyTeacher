@@ -97,15 +97,15 @@
                                 <td colspan="6"><strong>{{ entry.name }}</strong></td>
                             </tr>
 
-                            {% for child in entry.children.all %}
-                            {% if child.children.exists %}
+                            {% for child in entry.get_sorted_children %}
+                            {% if child.get_sorted_children %}
                             <!-- Подраздел (level 1, есть дочерние → ЕГЭ) -->
                             <tr class="table-light">
                                 <td class="ps-3"><strong>{{ child.code }}</strong></td>
                                 <td colspan="6"><strong>{{ child.name }}</strong></td>
                             </tr>
 
-                            {% for leaf in child.children.all %}
+                            {% for leaf in child.get_sorted_children %}
                             <!-- Элемент (level 2) -->
                             <tr>
                                 <td class="ps-4 text-muted">{{ leaf.code }}</td>

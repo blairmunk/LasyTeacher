@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}{{ subtopic.name }} — анализ подтемы{% endblock %}
+
+{% block extra_css %}
+<style>
+    .score-bar {
+        display: inline-block;
+        height: 22px;
+        border-radius: 4px;
+        min-width: 30px;
+        text-align: center;
+        color: #fff;
+        font-size: 0.8rem;
+        line-height: 22px;
+    }
+    .score-bar.perfect   { background-color: #1b8a2e; }
+    .score-bar.excellent { background-color: #28a745; }
+    .score-bar.good      { background-color: #7bc67e; }
+    .score-bar.moderate  { background-color: #f0ad4e; }
+    .score-bar.warning   { background-color: #ffc107; color: #333; }
+    .score-bar.danger    { background-color: #dc3545; }
+    .score-bar.no-data   { background-color: #f0f0f0; color: #999; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+
+    <!-- Хлебные крошки -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'reports:heatmap' %}{{ group_param }}">
+                    <i class="fas fa-th"></i> Тепловая карта
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'reports:heatmap-drilldown' topic.pk %}{{ group_param }}">
+                    {{ topic.name }}
+                </a>
+            </li>
+            <li class="breadcrumb-item active">{{ subtopic.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2>
+                <i class="fas fa-microscope"></i>
+                {{ subtopic.name }}
+            </h2>
+            <p class="text-muted mb-0">
+                {{ topic.section }} → {{ topic.name }} → <strong>{{ subtopic.name }}</strong>
+            </p>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <form method="get" class="d-flex gap-2 align-items-center">
+                <label class="form-label mb-0 fw-bold">Класс:</label>
+                <select name="group" class="form-select form-select-sm" style="width: auto;"
+                        onchange="this.form.submit()">
+                    <option value="">Все</option>
+                    {% for g in groups %}
+                    <option value="{{ g.pk }}"
+                        {% if selected_group and selected_group.pk == g.pk %}selected{% endif %}>
+                        {{ g.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+    </div>
+
+    <!-- Общая статистика -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="mb-0">
+                        {% if overall_pct is not None %}
+                        <span class="score-bar {{ overall_css }}" style="font-size: 1.5rem; padding: 4px 16px;">
+                            {{ overall_pct }}%
+                        </span>
+                        {% else %}—{% endif %}
+                    </h3>
+                    <small class="text-muted">Средний результат</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="mb-0">{{ students_with_data }}/{{ total_students }}</h3>
+                    <small class="text-muted">Учеников с данными</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="mb-0">{{ task_rows|length }}</h3>
+                    <small class="text-muted">Заданий по подтеме</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Результаты учеников -->
+    <h4 class="mb-3">Результаты учеников</h4>
+    <div class="table-responsive mb-4">
+        <table class="table table-sm table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Ученик</th>
+                    <th class="text-center">Баллы</th>
+                    <th class="text-center" style="min-width: 200px;">Результат</th>
+                    <th>События</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in student_rows %}
+                <tr>
+                    <td>
+                        {% if row.url %}
+                        <a href="{{ row.url }}">{{ row.student.get_short_name }}</a>
+                        {% else %}
+                        {{ row.student.get_short_name }}
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if row.pct is not None %}
+                        {{ row.points }}/{{ row.max_points }}
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if row.pct is not None %}
+                        <div class="progress" style="height: 22px;">
+                            <div class="progress-bar
+                                {% if row.pct >= 85 %}bg-success
+                                {% elif row.pct >= 70 %}bg-info
+                                {% elif row.pct >= 45 %}bg-warning
+                                {% else %}bg-danger{% endif %}"
+                                style="width: {{ row.pct }}%;">
+                                {{ row.pct }}%
+                            </div>
+                        </div>
+                        {% else %}
+                        <span class="text-muted">Нет данных</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% for event_name in row.events %}
+                        <span class="badge bg-light text-dark me-1">{{ event_name }}</span>
+                        {% empty %}
+                        <span class="text-muted">—</span>
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Анализ заданий -->
+    {% if task_rows %}
+    <h4 class="mb-3">Анализ заданий</h4>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Задание</th>
+                    <th class="text-center">Сложность</th>
+                    <th class="text-center">Решали</th>
+                    <th class="text-center" style="min-width: 150px;">Средний %</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in task_rows %}
+                <tr>
+                    <td>
+                        <a href="{% url 'tasks:detail' row.task.pk %}">
+                            {{ row.task.text|truncatechars:80 }}
+                        </a>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge
+                            {% if row.task.difficulty >= 4 %}bg-danger
+                            {% elif row.task.difficulty >= 3 %}bg-warning text-dark
+                            {% else %}bg-secondary{% endif %}">
+                            {{ row.task.get_difficulty_display }}
+                        </span>
+                    </td>
+                    <td class="text-center">{{ row.students_count }} уч.</td>
+                    <td class="text-center">
+                        <div class="progress" style="height: 22px;">
+                            <div class="progress-bar
+                                {% if row.avg_pct >= 85 %}bg-success
+                                {% elif row.avg_pct >= 70 %}bg-info
+                                {% elif row.avg_pct >= 45 %}bg-warning
+                                {% else %}bg-danger{% endif %}"
+                                style="width: {{ row.avg_pct }}%;">
+                                {{ row.avg_pct }}%
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

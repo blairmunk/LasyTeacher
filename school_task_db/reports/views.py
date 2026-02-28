@@ -607,7 +607,7 @@ from collections import defaultdict
 
 
 class HeatmapView(View):
-    """Тепловая карта: ученики × темы (с транспонированием)"""
+    """Тепловая карта: ученики × темы"""
 
     def get(self, request):
         group_id = request.GET.get('group')
@@ -637,6 +637,7 @@ class HeatmapView(View):
             })
 
         columns, rows, col_averages = _build_topic_data(students, section)
+        group_param = f'?group={group.pk}' if group else ''
 
         if not transpose:
             grid_row_header = 'Ученик'
@@ -657,9 +658,7 @@ class HeatmapView(View):
             grid_rows = []
             for i, topic in enumerate(columns):
                 cells = [rows[j]['cells'][i] for j in range(len(rows))]
-                url = reverse('reports:heatmap-drilldown', args=[topic.pk])
-                if group:
-                    url += f'?group={group.pk}'
+                url = reverse('reports:heatmap-drilldown', args=[topic.pk]) + group_param
                 grid_rows.append({
                     'label': topic.name,
                     'url': url,
@@ -698,7 +697,7 @@ class HeatmapView(View):
 
 
 class HeatmapDrilldownView(View):
-    """Drill-down: ученики × подтемы одной темы (с транспонированием)"""
+    """Drill-down: ученики × подтемы одной темы"""
 
     def get(self, request, topic_pk):
         topic = get_object_or_404(Topic, pk=topic_pk)
@@ -715,36 +714,66 @@ class HeatmapDrilldownView(View):
             students = list(Student.objects.all().order_by('last_name', 'first_name'))
 
         columns, rows, col_averages = _build_subtopic_data(students, topic)
+        group_param = f'?group={group.pk}' if group else ''
+        group_suffix = f'&group={group.pk}' if group else ''
 
         if not transpose:
             grid_row_header = 'Ученик'
-            grid_rows = [{
-                'label': row['student'].get_short_name(),
-                'url': reverse('reports:heatmap-student', args=[topic.pk, row['student'].pk]),
-                'cells': row['cells'],
-                'avg': row['avg'],
-                'avg_css': row['avg_css'],
-            } for row in rows]
+            grid_rows = []
+            for row in rows:
+                cells_with_urls = []
+                for i, cell in enumerate(row['cells']):
+                    url = None
+                    if cell['pct'] is not None:
+                        url = (reverse('reports:heatmap-student',
+                                       args=[topic.pk, row['student'].pk])
+                               + f'?subtopic={columns[i].pk}{group_suffix}')
+                    cells_with_urls.append({**cell, 'url': url})
+
+                student_url = (reverse('reports:heatmap-student',
+                                       args=[topic.pk, row['student'].pk])
+                               + group_param)
+                grid_rows.append({
+                    'label': row['student'].get_short_name(),
+                    'url': student_url,
+                    'cells': cells_with_urls,
+                    'avg': row['avg'],
+                    'avg_css': row['avg_css'],
+                })
+
             grid_col_headers = [{
                 'label': sub.name,
                 'title': sub.name,
+                'url': reverse('reports:heatmap-subtopic', args=[sub.pk]) + group_param,
             } for sub in columns]
             grid_col_averages = col_averages
         else:
             grid_row_header = 'Подтема'
             grid_rows = []
             for i, sub in enumerate(columns):
-                cells = [rows[j]['cells'][i] for j in range(len(rows))]
+                cells_with_urls = []
+                for j in range(len(rows)):
+                    cell = rows[j]['cells'][i]
+                    url = None
+                    if cell['pct'] is not None:
+                        url = (reverse('reports:heatmap-student',
+                                       args=[topic.pk, rows[j]['student'].pk])
+                               + f'?subtopic={sub.pk}{group_suffix}')
+                    cells_with_urls.append({**cell, 'url': url})
+
                 grid_rows.append({
                     'label': sub.name,
-                    'url': '#',
-                    'cells': cells,
+                    'url': reverse('reports:heatmap-subtopic', args=[sub.pk]) + group_param,
+                    'cells': cells_with_urls,
                     'avg': col_averages[i]['pct'],
                     'avg_css': col_averages[i]['css'],
                 })
+
             grid_col_headers = [{
                 'label': row['student'].get_short_name(),
                 'title': row['student'].get_full_name(),
+                'url': (reverse('reports:heatmap-student',
+                                args=[topic.pk, row['student'].pk]) + group_param),
             } for row in rows]
             grid_col_averages = [{'pct': row['avg'], 'css': row['avg_css']} for row in rows]
 
@@ -759,6 +788,7 @@ class HeatmapDrilldownView(View):
             'topic': topic,
             'groups': groups,
             'selected_group': group,
+            'group_param': group_param,
             'is_transposed': transpose,
             'toggle_url': toggle_url,
             'grid_row_header': grid_row_header,
@@ -770,11 +800,18 @@ class HeatmapDrilldownView(View):
 
 
 class HeatmapStudentView(View):
-    """Детальный вид: один ученик × подтемы одной темы + список работ"""
+    """Детальный вид: один ученик × подтемы одной темы"""
 
     def get(self, request, topic_pk, student_pk):
         topic = get_object_or_404(Topic, pk=topic_pk)
         student = get_object_or_404(Student, pk=student_pk)
+        subtopic_id = request.GET.get('subtopic')
+        group_id = request.GET.get('group')
+        group_param = f'?group={group_id}' if group_id else ''
+
+        selected_subtopic = None
+        if subtopic_id:
+            selected_subtopic = SubTopic.objects.filter(pk=subtopic_id).first()
 
         marks = Mark.objects.filter(
             participation__student=student,
@@ -786,8 +823,7 @@ class HeatmapStudentView(View):
         all_task_ids = set()
         for mark in marks:
             if mark.task_scores:
-                for key in mark.task_scores.keys():
-                    all_task_ids.add(key)
+                all_task_ids.update(mark.task_scores.keys())
 
         tasks_qs = Task.objects.filter(
             pk__in=all_task_ids,
@@ -795,16 +831,23 @@ class HeatmapStudentView(View):
         ).select_related('subtopic')
         task_map = {str(t.pk): t for t in tasks_qs}
 
-        # Детализация: per-mark дедупликация (uuid/task_uuid)
+        # Детализация: per-mark дедупликация
         details = []
         for mark in marks:
-            student_id = mark.participation.student_id
             if not mark.task_scores:
                 continue
             event = mark.participation.event
+            seen = set()
             for task_id, scores in mark.task_scores.items():
+                if task_id in seen:
+                    continue
+                seen.add(task_id)
+
                 task = task_map.get(task_id)
-                if not task or not task.topic:
+                if not task:
+                    continue
+                # Фильтр по подтеме
+                if selected_subtopic and task.subtopic_id != selected_subtopic.id:
                     continue
 
                 pts = scores.get('points', 0)
@@ -825,9 +868,27 @@ class HeatmapStudentView(View):
             d['event'].planned_date,
         ))
 
-        # Агрегация по подтемам
+        # Агрегация по подтемам (всегда все — для карточек)
+        all_details = []
+        for mark in marks:
+            if not mark.task_scores:
+                continue
+            seen = set()
+            for task_id, scores in mark.task_scores.items():
+                if task_id in seen:
+                    continue
+                seen.add(task_id)
+                task = task_map.get(task_id)
+                if not task:
+                    continue
+                all_details.append({
+                    'subtopic': task.subtopic,
+                    'points': scores.get('points', 0),
+                    'max_points': scores.get('max_points', 0),
+                })
+
         sub_agg = defaultdict(lambda: {'points': 0, 'max_points': 0})
-        for d in details:
+        for d in all_details:
             if d['subtopic']:
                 sub_agg[d['subtopic'].id]['points'] += d['points']
                 sub_agg[d['subtopic'].id]['max_points'] += d['max_points']
@@ -835,6 +896,7 @@ class HeatmapStudentView(View):
         subtopic_summary = []
         for sub in SubTopic.objects.filter(topic=topic).order_by('order'):
             data = sub_agg.get(sub.id)
+            is_selected = selected_subtopic and sub.id == selected_subtopic.id
             if data and data['max_points'] > 0:
                 pct = round(data['points'] / data['max_points'] * 100)
                 subtopic_summary.append({
@@ -843,19 +905,153 @@ class HeatmapStudentView(View):
                     'max_points': data['max_points'],
                     'pct': pct,
                     'css': _color_class(pct),
+                    'is_selected': is_selected,
                 })
             else:
                 subtopic_summary.append({
                     'subtopic': sub,
                     'pct': None,
                     'css': 'no-data',
+                    'is_selected': is_selected,
                 })
+
+        group_suffix = f'&group={group_id}' if group_id else ''
 
         return render(request, 'reports/heatmap_student.html', {
             'topic': topic,
             'student': student,
             'details': details,
             'subtopic_summary': subtopic_summary,
+            'selected_subtopic': selected_subtopic,
+            'group_param': group_param,
+            'group_suffix': group_suffix,
+        })
+
+
+class HeatmapSubtopicView(View):
+    """Анализ подтемы: все ученики × задания одной подтемы"""
+
+    def get(self, request, subtopic_pk):
+        subtopic = get_object_or_404(SubTopic, pk=subtopic_pk)
+        topic = subtopic.topic
+        group_id = request.GET.get('group')
+
+        groups = StudentGroup.objects.all().order_by('name')
+
+        if group_id:
+            group = get_object_or_404(StudentGroup, pk=group_id)
+            students = list(group.students.all().order_by('last_name', 'first_name'))
+        else:
+            group = None
+            students = list(Student.objects.all().order_by('last_name', 'first_name'))
+
+        group_param = f'?group={group.pk}' if group else ''
+
+        marks = Mark.objects.filter(
+            participation__student__in=students,
+        ).select_related('participation__student', 'participation__event')
+
+        all_task_ids = set()
+        for mark in marks:
+            if mark.task_scores:
+                all_task_ids.update(mark.task_scores.keys())
+
+        tasks_qs = Task.objects.filter(
+            pk__in=all_task_ids,
+            subtopic=subtopic,
+        )
+        task_map = {str(t.pk): t for t in tasks_qs}
+
+        # Агрегация по ученикам
+        student_agg = defaultdict(lambda: {'points': 0, 'max_points': 0, 'events': set()})
+        task_agg = defaultdict(lambda: {'points': 0, 'max_points': 0, 'count': 0})
+
+        for mark in marks:
+            if not mark.task_scores:
+                continue
+            student_id = mark.participation.student_id
+            event_name = mark.participation.event.name
+            seen = set()
+            for task_id, scores in mark.task_scores.items():
+                if task_id in seen:
+                    continue
+                seen.add(task_id)
+
+                task = task_map.get(task_id)
+                if not task:
+                    continue
+
+                pts = scores.get('points', 0)
+                mx = scores.get('max_points', 0)
+
+                student_agg[student_id]['points'] += pts
+                student_agg[student_id]['max_points'] += mx
+                student_agg[student_id]['events'].add(event_name)
+
+                task_agg[task.id]['points'] += pts
+                task_agg[task.id]['max_points'] += mx
+                task_agg[task.id]['count'] += 1
+
+        # Строки учеников
+        student_rows = []
+        for student in students:
+            data = student_agg.get(student.id)
+            if data and data['max_points'] > 0:
+                pct = round(data['points'] / data['max_points'] * 100)
+                student_rows.append({
+                    'student': student,
+                    'points': data['points'],
+                    'max_points': data['max_points'],
+                    'pct': pct,
+                    'css': _color_class(pct),
+                    'events': sorted(data['events']),
+                    'url': (reverse('reports:heatmap-student',
+                                    args=[topic.pk, student.pk])
+                            + f'?subtopic={subtopic.pk}'
+                            + (f'&group={group.pk}' if group else '')),
+                })
+            else:
+                student_rows.append({
+                    'student': student,
+                    'pct': None,
+                    'css': 'no-data',
+                    'events': [],
+                    'url': None,
+                })
+
+        # Анализ заданий
+        task_rows = []
+        for task in tasks_qs.order_by('difficulty', 'text'):
+            data = task_agg.get(task.id)
+            if data and data['max_points'] > 0:
+                avg_pct = round(data['points'] / data['max_points'] * 100)
+                task_rows.append({
+                    'task': task,
+                    'avg_pct': avg_pct,
+                    'css': _color_class(avg_pct),
+                    'students_count': data['count'],
+                    'total_points': data['points'],
+                    'total_max': data['max_points'],
+                })
+
+        # Общая статистика
+        total_pts = sum(d['points'] for d in student_agg.values())
+        total_max = sum(d['max_points'] for d in student_agg.values())
+        overall_pct = round(total_pts / total_max * 100) if total_max > 0 else None
+        students_with_data = sum(1 for r in student_rows if r['pct'] is not None)
+
+        return render(request, 'reports/heatmap_subtopic.html', {
+            'subtopic': subtopic,
+            'topic': topic,
+            'groups': groups,
+            'selected_group': group,
+            'group_param': group_param,
+            'student_rows': student_rows,
+            'task_rows': task_rows,
+            'overall_pct': overall_pct,
+            'overall_css': _color_class(overall_pct) if overall_pct else 'no-data',
+            'total_students': len(students),
+            'students_with_data': students_with_data,
         })
 
 
@@ -872,8 +1068,7 @@ def _build_topic_data(students, section_filter=''):
     all_task_ids = set()
     for mark in marks:
         if mark.task_scores:
-            for key in mark.task_scores.keys():
-                all_task_ids.add(key)
+            all_task_ids.update(mark.task_scores.keys())
 
     if not all_task_ids:
         return [], [], []
@@ -881,7 +1076,6 @@ def _build_topic_data(students, section_filter=''):
     tasks_qs = Task.objects.filter(pk__in=all_task_ids).select_related('topic', 'subtopic')
     task_map = {str(t.pk): t for t in tasks_qs}
 
-    # Per-mark дедупликация (uuid vs task_uuid)
     agg = defaultdict(lambda: {'points': 0, 'max_points': 0})
 
     for mark in marks:
@@ -889,13 +1083,12 @@ def _build_topic_data(students, section_filter=''):
         if not mark.task_scores:
             continue
         seen = set()
-        for task_id_raw, scores in mark.task_scores.items():
-            clean_id = task_id_raw
-            if clean_id in seen:
+        for task_id, scores in mark.task_scores.items():
+            if task_id in seen:
                 continue
-            seen.add(clean_id)
+            seen.add(task_id)
 
-            task = task_map.get(clean_id)
+            task = task_map.get(task_id)
             if not task or not task.topic:
                 continue
             if section_filter and task.topic.section != section_filter:
@@ -957,8 +1150,7 @@ def _build_subtopic_data(students, topic):
     all_task_ids = set()
     for mark in marks:
         if mark.task_scores:
-            for key in mark.task_scores.keys():
-                all_task_ids.add(key)
+            all_task_ids.update(mark.task_scores.keys())
 
     if not all_task_ids:
         return [], [], []
@@ -975,13 +1167,12 @@ def _build_subtopic_data(students, topic):
         if not mark.task_scores:
             continue
         seen = set()
-        for task_id_raw, scores in mark.task_scores.items():
-            clean_id = task_id_raw
-            if clean_id in seen:
+        for task_id, scores in mark.task_scores.items():
+            if task_id in seen:
                 continue
-            seen.add(clean_id)
+            seen.add(task_id)
 
-            task = task_map.get(clean_id)
+            task = task_map.get(task_id)
             if not task:
                 continue
 

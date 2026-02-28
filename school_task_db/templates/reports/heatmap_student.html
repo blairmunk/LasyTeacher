@@ -2,62 +2,103 @@
 
 {% block title %}{{ student.get_short_name }} — {{ topic.name }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .subtopic-card {
+        transition: all 0.15s;
+        border: 2px solid transparent;
+    }
+    .subtopic-card.selected {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+    }
+    .subtopic-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid px-4">
 
+    <!-- Хлебные крошки -->
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a href="{% url 'reports:heatmap' %}">
+                <a href="{% url 'reports:heatmap' %}{{ group_param }}">
                     <i class="fas fa-th"></i> Тепловая карта
                 </a>
             </li>
             <li class="breadcrumb-item">
-                <a href="{% url 'reports:heatmap-drilldown' topic.pk %}">
+                <a href="{% url 'reports:heatmap-drilldown' topic.pk %}{{ group_param }}">
                     {{ topic.name }}
                 </a>
             </li>
-            <li class="breadcrumb-item active">{{ student.get_short_name }}</li>
+            <li class="breadcrumb-item active">
+                {{ student.get_short_name }}
+                {% if selected_subtopic %}
+                    → {{ selected_subtopic.name }}
+                {% endif %}
+            </li>
         </ol>
     </nav>
 
-    <h2 class="mb-4">
+    <h2 class="mb-2">
         <i class="fas fa-user"></i> {{ student.get_full_name }}
-        <small class="text-muted">{{ topic.section }} → {{ topic.name }}</small>
     </h2>
+    <p class="text-muted mb-4">
+        {{ topic.section }} → {{ topic.name }}
+        {% if selected_subtopic %}
+            → <strong>{{ selected_subtopic.name }}</strong>
+            <a href="{% url 'reports:heatmap-student' topic.pk student.pk %}{{ group_param }}"
+               class="btn btn-sm btn-outline-secondary ms-2">
+                <i class="fas fa-times"></i> Все подтемы
+            </a>
+        {% endif %}
+    </p>
 
-    <!-- Сводка по подтемам -->
+    <!-- Карточки подтем -->
     <h4 class="mb-3">Результаты по подтемам</h4>
     <div class="row mb-4">
         {% for item in subtopic_summary %}
         <div class="col-md-4 col-lg-3 mb-3">
-            <div class="card h-100">
-                <div class="card-body p-3">
-                    <h6 class="card-title mb-2">{{ item.subtopic.name }}</h6>
-                    {% if item.pct is not None %}
-                    <div class="progress mb-2" style="height: 24px;">
-                        <div class="progress-bar
-                            {% if item.pct >= 85 %}bg-success
-                            {% elif item.pct >= 70 %}bg-info
-                            {% elif item.pct >= 45 %}bg-warning
-                            {% else %}bg-danger{% endif %}"
-                            style="width: {{ item.pct }}%;">
-                            {{ item.pct }}%
+            <a href="{% url 'reports:heatmap-student' topic.pk student.pk %}?subtopic={{ item.subtopic.pk }}{{ group_suffix }}"
+               class="text-decoration-none">
+                <div class="card h-100 subtopic-card {% if item.is_selected %}selected{% endif %}">
+                    <div class="card-body p-3">
+                        <h6 class="card-title mb-2 text-dark">{{ item.subtopic.name }}</h6>
+                        {% if item.pct is not None %}
+                        <div class="progress mb-2" style="height: 24px;">
+                            <div class="progress-bar
+                                {% if item.pct >= 85 %}bg-success
+                                {% elif item.pct >= 70 %}bg-info
+                                {% elif item.pct >= 45 %}bg-warning
+                                {% else %}bg-danger{% endif %}"
+                                style="width: {{ item.pct }}%;">
+                                {{ item.pct }}%
+                            </div>
                         </div>
+                        <small class="text-muted">{{ item.points }}/{{ item.max_points }} баллов</small>
+                        {% else %}
+                        <span class="text-muted">Нет данных</span>
+                        {% endif %}
                     </div>
-                    <small class="text-muted">{{ item.points }}/{{ item.max_points }} баллов</small>
-                    {% else %}
-                    <span class="text-muted">Нет данных</span>
-                    {% endif %}
                 </div>
-            </div>
+            </a>
         </div>
         {% endfor %}
     </div>
 
     <!-- Детализация по заданиям -->
     {% if details %}
-    <h4 class="mb-3">Все задания</h4>
+    <h4 class="mb-3">
+        Задания
+        {% if selected_subtopic %}
+            <small class="text-muted">по подтеме «{{ selected_subtopic.name }}»</small>
+        {% endif %}
+        <span class="badge bg-secondary ms-2">{{ details|length }}</span>
+    </h4>
     <div class="table-responsive">
         <table class="table table-sm table-hover">
             <thead class="table-light">
@@ -103,6 +144,12 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i>
+        Нет данных
+        {% if selected_subtopic %}по подтеме «{{ selected_subtopic.name }}»{% endif %}.
     </div>
     {% endif %}
 

@@ -102,16 +102,20 @@
                                 </td>
                                 <td>
                                     {% for link in stat.heatmap_links %}
-                                    <a href="{% url 'reports:heatmap' %}?course={{ link.course_id }}&group={{ link.group_id }}" 
+                                    <a href="{% url 'reports:heatmap-course' link.course_id %}?group={{ link.group_id }}" 
                                     class="btn btn-outline-primary btn-sm mb-1"
                                     title="Тепловая карта: {{ link.group_name }} — {{ link.course_name }}">
                                         <i class="fas fa-th"></i> {{ link.course_name|truncatechars:20 }}
                                     </a>
                                     {% endfor %}
                                     {% if not stat.heatmap_links %}
-                                    <small class="text-muted">Нет курсов</small>
+                                    <a href="{% url 'reports:heatmap' %}?group={{ stat.group_id }}"
+                                       class="btn btn-outline-secondary btn-sm">
+                                        <i class="fas fa-th"></i> Общая
+                                    </a>
                                     {% endif %}
                                 </td>
+
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -146,27 +150,24 @@
     <div class="card">
         <div class="card-header"><h5 class="mb-0">Детальные отчёты</h5></div>
         <div class="card-body">
-            <div class="row">
-                <div class="col-md-3">
-                    <a href="{% url 'reports:heatmap' %}" class="btn btn-outline-danger w-100 mb-2">
-                        <i class="fas fa-th"></i> Тепловая карта
-                    </a>
-                </div>
-                <div class="col-md-3">
-                    <a href="{% url 'reports:student-performance' %}" class="btn btn-outline-primary w-100 mb-2">
-                        <i class="fas fa-user-graduate"></i> Успеваемость
-                    </a>
-                </div>
-                <div class="col-md-3">
-                    <a href="{% url 'reports:work-analysis' %}" class="btn btn-outline-success w-100 mb-2">
-                        <i class="fas fa-chart-bar"></i> Анализ работ
-                    </a>
-                </div>
-                <div class="col-md-3">
-                    <a href="{% url 'reports:events-status' %}" class="btn btn-outline-info w-100 mb-2">
-                        <i class="fas fa-calendar-check"></i> Статусы событий
-                    </a>
-                </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'reports:heatmap' %}" class="btn btn-outline-danger">
+                    <i class="fas fa-th"></i> Тепловая карта
+                </a>
+                {% for course in courses %}
+                <a href="{% url 'reports:heatmap-course' course.pk %}" class="btn btn-outline-dark">
+                    <i class="fas fa-book"></i> {{ course.name }}
+                </a>
+                {% endfor %}
+                <a href="{% url 'reports:student-performance' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-user-graduate"></i> Успеваемость
+                </a>
+                <a href="{% url 'reports:work-analysis' %}" class="btn btn-outline-success">
+                    <i class="fas fa-chart-bar"></i> Анализ работ
+                </a>
+                <a href="{% url 'reports:events-status' %}" class="btn btn-outline-info">
+                    <i class="fas fa-calendar-check"></i> Статусы событий
+                </a>
             </div>
         </div>
     </div>

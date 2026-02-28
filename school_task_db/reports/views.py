@@ -193,228 +193,12 @@ class ReportsDashboardView(TemplateView):
         context['work_type_stats'] = list(work_type_stats)
         
         # Доступные курсы и классы для heatmap
-        context['courses'] = Course.objects.all()
+        #context['courses'] = Course.objects.all()
+        context['courses'] = Course.objects.filter(is_active=True).order_by('grade_level', 'name')
         context['student_groups'] = StudentGroup.objects.all()
         
         return context
 
-
-class HeatmapLegacyView(TemplateView):
-    """Тепловая карта успеваемости (старая версия, на основе Course)"""
-    template_name = 'reports/heatmap.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        
-        from students.models import StudentGroup
-        from curriculum.models import Course
-        
-        # Параметры из GET
-        course_id = self.request.GET.get('course', '')
-        group_id = self.request.GET.get('group', '')
-        
-        # Все курсы — всегда показываем
-        all_courses = Course.objects.all()
-        context['courses'] = all_courses
-        context['selected_course'] = course_id
-        context['selected_group'] = group_id
-        
-        # Группы: если курс выбран — только привязанные, иначе все
-        selected_course_obj = None
-        if course_id:
-            try:
-                selected_course_obj = Course.objects.get(pk=course_id)
-                linked_groups = selected_course_obj.student_groups.all()
-                if linked_groups.exists():
-                    context['student_groups'] = linked_groups
-                else:
-                    context['student_groups'] = StudentGroup.objects.all()
-            except (Course.DoesNotExist, ValueError):
-                context['student_groups'] = StudentGroup.objects.all()
-        else:
-            context['student_groups'] = StudentGroup.objects.all()
-        
-        # Если оба параметра выбраны — строим карту
-        if course_id and group_id:
-            try:
-                course = selected_course_obj or Course.objects.get(pk=course_id)
-                group = StudentGroup.objects.get(pk=group_id)
-                context['course'] = course
-                context['group'] = group
-                
-                heatmap_data = self._build_heatmap(course, group)
-                context['heatmap_data'] = heatmap_data
-                
-                if heatmap_data['students'] and heatmap_data['groups']:
-                    chart = plotly_utils.heatmap_config(
-                        students=heatmap_data['students'],
-                        groups=heatmap_data['groups'],
-                        matrix=heatmap_data['matrix'],
-                        title=f'Успеваемость: {group.name} — {course.name}',
-                    )
-                    context['heatmap_json'] = plotly_utils.to_json(chart)
-                    context['stats'] = self._calc_stats(heatmap_data)
-                else:
-                    context['error'] = 'Нет данных для построения карты'
-                
-            except (Course.DoesNotExist, StudentGroup.DoesNotExist, ValueError) as e:
-                context['error'] = f'Курс или класс не найден: {e}'
-        
-        return context
-    
-    def _build_heatmap(self, course, group):
-        """Построение матрицы оценок: студенты × группы аналогов"""
-        from events.models import Event, Mark
-        from works.models import WorkAnalogGroup
-        from curriculum.models import CourseAssignment
-        
-        # Ученики класса
-        students = list(
-            group.students.all().order_by('last_name', 'first_name')
-        )
-        
-        # Работы курса
-        course_work_ids = list(
-            CourseAssignment.objects.filter(
-                course=course
-            ).values_list('work_id', flat=True)
-        )
-        
-        # Группы аналогов из работ курса
-        work_ag_links = WorkAnalogGroup.objects.filter(
-            work_id__in=course_work_ids
-        ).select_related('analog_group').order_by('analog_group__name')
-        
-        ag_dict = {}
-        ag_to_works = {}
-        for wag in work_ag_links:
-            ag = wag.analog_group
-            if ag.id not in ag_dict:
-                ag_dict[ag.id] = ag
-                ag_to_works[ag.id] = set()
-            ag_to_works[ag.id].add(wag.work_id)
-        
-        analog_groups = list(ag_dict.values())
-        
-        # События курса
-        events = Event.objects.filter(
-            work_id__in=course_work_ids,
-            course=course,
-        )
-        
-        # Все оценки
-        student_ids = [s.id for s in students]
-        marks = Mark.objects.filter(
-            participation__event__in=events,
-            participation__student_id__in=student_ids,
-            score__isnull=False,
-        ).select_related('participation', 'participation__event')
-        
-        sw_scores = {}
-        for mark in marks:
-            key = (
-                mark.participation.student_id,
-                mark.participation.event.work_id
-            )
-            if key not in sw_scores:
-                sw_scores[key] = []
-            sw_scores[key].append(mark.score)
-        
-        # Матрица
-        matrix = []
-        for student in students:
-            row = []
-            for ag in analog_groups:
-                work_ids = ag_to_works.get(ag.id, set())
-                scores = []
-                for work_id in work_ids:
-                    key = (student.id, work_id)
-                    if key in sw_scores:
-                        scores.extend(sw_scores[key])
-                
-                if scores:
-                    row.append(round(sum(scores) / len(scores), 2))
-                else:
-                    row.append(None)
-            matrix.append(row)
-        
-        short_names = [
-            f'{s.last_name} {s.first_name[0]}.' for s in students
-        ]
-        group_names = [ag.name for ag in analog_groups]
-        
-        return {
-            'students': short_names,
-            'student_objects': students,
-            'groups': group_names,
-            'group_objects': analog_groups,
-            'matrix': matrix,
-        }
-    
-    def _calc_stats(self, heatmap_data):
-        """Статистика по тепловой карте"""
-        matrix = heatmap_data['matrix']
-        students = heatmap_data['students']
-        groups = heatmap_data['groups']
-        
-        student_avgs = []
-        for i, row in enumerate(matrix):
-            vals = [v for v in row if v is not None]
-            avg = sum(vals) / len(vals) if vals else None
-            student_avgs.append({
-                'name': students[i],
-                'avg': round(avg, 2) if avg else None,
-                'count': len(vals),
-            })
-        
-        group_avgs = []
-        for j, gname in enumerate(groups):
-            vals = [
-                matrix[i][j] for i in range(len(students))
-                if matrix[i][j] is not None
-            ]
-            avg = sum(vals) / len(vals) if vals else None
-            group_avgs.append({
-                'name': gname,
-                'avg': round(avg, 2) if avg else None,
-                'count': len(vals),
-            })
-        
-        problem_zones = []
-        excellent_zones = []
-        for i, row in enumerate(matrix):
-            for j, val in enumerate(row):
-                if val is not None and val < 3:
-                    problem_zones.append({
-                        'student': students[i],
-                        'group': groups[j],
-                        'score': val,
-                    })
-                if val is not None and val >= 4.5:
-                    excellent_zones.append({
-                        'student': students[i],
-                        'group': groups[j],
-                        'score': val,
-                    })
-        
-        student_avgs.sort(key=lambda x: x['avg'] or 0, reverse=True)
-        group_avgs.sort(key=lambda x: x['avg'] or 0)
-        
-        all_vals = [v for row in matrix for v in row if v is not None]
-        overall_avg = round(
-            sum(all_vals) / len(all_vals), 2
-        ) if all_vals else 0
-        
-        return {
-            'student_avgs': student_avgs,
-            'group_avgs': group_avgs,
-            'problem_zones': problem_zones[:10],
-            'excellent_zones': excellent_zones[:10],
-            'overall_avg': overall_avg,
-            'total_cells': len(students) * len(groups),
-            'filled_cells': len(all_vals),
-            'empty_cells': len(students) * len(groups) - len(all_vals),
-        }
 
 class StudentPerformanceView(TemplateView):
     """Отчет по успеваемости учеников"""
@@ -693,6 +477,110 @@ class HeatmapView(View):
             'total_students': len(students),
             'total_topics': len(columns),
             'has_data': bool(rows and columns),
+        })
+
+class HeatmapCourseView(View):
+    """Тепловая карта по курсу: ученики × темы курса"""
+
+    def get(self, request, course_pk):
+        from curriculum.models import Course, CourseAssignment
+
+        course = get_object_or_404(Course, pk=course_pk)
+        group_id = request.GET.get('group')
+        transpose = request.GET.get('transpose') == '1'
+
+        # Группы курса
+        course_groups = course.student_groups.all().order_by('name')
+
+        if group_id:
+            group = get_object_or_404(StudentGroup, pk=group_id)
+            students = list(group.students.all().order_by('last_name', 'first_name'))
+        elif course_groups.exists():
+            students = list(
+                Student.objects.filter(
+                    studentgroup__in=course_groups
+                ).distinct().order_by('last_name', 'first_name')
+            )
+            group = None
+        else:
+            students = list(Student.objects.all().order_by('last_name', 'first_name'))
+            group = None
+
+        if not students:
+            return render(request, 'reports/heatmap_course.html', {
+                'course': course,
+                'groups': course_groups,
+                'selected_group': group,
+                'has_data': False,
+                'is_transposed': transpose,
+            })
+
+        # Темы курса: через CourseAssignment → Work → Variant → Task → Topic
+        course_works = [ca.work for ca in CourseAssignment.objects.filter(
+            course=course).select_related('work')]
+
+        columns, rows, col_averages = _build_topic_data_for_course(
+            students, course_works)
+        group_param = f'?group={group.pk}' if group else ''
+
+        if not transpose:
+            grid_row_header = 'Ученик'
+            grid_rows = [{
+                'label': row['student'].get_short_name(),
+                'url': reverse('students:detail', args=[row['student'].pk]),
+                'cells': row['cells'],
+                'avg': row['avg'],
+                'avg_css': row['avg_css'],
+            } for row in rows]
+            grid_col_headers = [{
+                'label': t.name,
+                'title': f'{t.section} → {t.name}',
+            } for t in columns]
+            grid_col_averages = col_averages
+        else:
+            grid_row_header = 'Тема'
+            grid_rows = []
+            for i, topic in enumerate(columns):
+                cells = [rows[j]['cells'][i] for j in range(len(rows))]
+                url = reverse('reports:heatmap-drilldown', args=[topic.pk]) + group_param
+                grid_rows.append({
+                    'label': topic.name,
+                    'url': url,
+                    'cells': cells,
+                    'avg': col_averages[i]['pct'],
+                    'avg_css': col_averages[i]['css'],
+                })
+            grid_col_headers = [{
+                'label': row['student'].get_short_name(),
+                'title': row['student'].get_full_name(),
+            } for row in rows]
+            grid_col_averages = [{'pct': row['avg'], 'css': row['avg_css']} for row in rows]
+
+        toggle_params = request.GET.copy()
+        if transpose:
+            toggle_params.pop('transpose', None)
+        else:
+            toggle_params['transpose'] = '1'
+        toggle_url = f'{request.path}?{toggle_params.urlencode()}'
+
+        # Plotly: динамика по работам курса
+        timeline_json = _build_course_timeline(course_works, students)
+
+        return render(request, 'reports/heatmap_course.html', {
+            'course': course,
+            'groups': course_groups,
+            'selected_group': group,
+            'group_param': group_param,
+            'is_transposed': transpose,
+            'toggle_url': toggle_url,
+            'grid_row_header': grid_row_header,
+            'grid_rows': grid_rows,
+            'grid_col_headers': grid_col_headers,
+            'grid_col_averages': grid_col_averages,
+            'total_students': len(students),
+            'total_topics': len(columns),
+            'has_data': bool(rows and columns),
+            'timeline_json': timeline_json,
         })
 
 
@@ -1224,6 +1112,175 @@ def _build_subtopic_data(students, topic):
         })
 
     return columns, rows, col_averages
+
+def _build_topic_data_for_course(students, course_works):
+    """Агрегация: ученики × темы, но только по работам курса"""
+    from works.models import Variant
+
+    # Задания из вариантов работ курса
+    work_ids = [w.id for w in course_works]
+    variant_ids = Variant.objects.filter(work_id__in=work_ids).values_list('id', flat=True)
+
+    # Все task_ids из вариантов
+    course_task_ids = set()
+    for variant in Variant.objects.filter(work_id__in=work_ids).prefetch_related('tasks'):
+        for task in variant.tasks.all():
+            course_task_ids.add(str(task.pk))
+
+    marks = Mark.objects.filter(
+        participation__student__in=students,
+        participation__event__work_id__in=work_ids,
+    ).select_related('participation__student')
+
+    all_task_ids = set()
+    for mark in marks:
+        if mark.task_scores:
+            all_task_ids.update(mark.task_scores.keys())
+
+    # Фильтруем только задания курса
+    relevant_task_ids = all_task_ids & course_task_ids if course_task_ids else all_task_ids
+
+    if not relevant_task_ids:
+        return [], [], []
+
+    tasks_qs = Task.objects.filter(pk__in=relevant_task_ids).select_related('topic', 'subtopic')
+    task_map = {str(t.pk): t for t in tasks_qs}
+
+    agg = defaultdict(lambda: {'points': 0, 'max_points': 0})
+
+    for mark in marks:
+        student_id = mark.participation.student_id
+        if not mark.task_scores:
+            continue
+        seen = set()
+        for task_id, scores in mark.task_scores.items():
+            if task_id in seen:
+                continue
+            seen.add(task_id)
+
+            task = task_map.get(task_id)
+            if not task or not task.topic:
+                continue
+
+            key = (student_id, task.topic_id)
+            agg[key]['points'] += scores.get('points', 0)
+            agg[key]['max_points'] += scores.get('max_points', 0)
+
+    topic_ids = set(tid for (_, tid) in agg.keys())
+    columns = list(
+        Topic.objects.filter(pk__in=topic_ids).order_by('section', 'order', 'name')
+    )
+
+    rows = []
+    for student in students:
+        cells = []
+        total_pts = 0
+        total_max = 0
+        for topic in columns:
+            data = agg.get((student.id, topic.id))
+            if data and data['max_points'] > 0:
+                pct = round(data['points'] / data['max_points'] * 100)
+                total_pts += data['points']
+                total_max += data['max_points']
+                cells.append({
+                    'pct': pct, 'points': data['points'],
+                    'max_points': data['max_points'],
+                    'css': _color_class(pct), 'topic': topic,
+                })
+            else:
+                cells.append({'pct': None, 'css': 'no-data', 'topic': topic})
+
+        avg = round(total_pts / total_max * 100) if total_max > 0 else None
+        rows.append({
+            'student': student, 'cells': cells,
+            'avg': avg,
+            'avg_css': _color_class(avg) if avg is not None else 'no-data',
+        })
+
+    col_averages = []
+    for topic in columns:
+        pts = sum(agg.get((s.id, topic.id), {}).get('points', 0) for s in students)
+        mx = sum(agg.get((s.id, topic.id), {}).get('max_points', 0) for s in students)
+        avg = round(pts / mx * 100) if mx > 0 else None
+        col_averages.append({
+            'pct': avg, 'css': _color_class(avg) if avg is not None else 'no-data',
+        })
+
+    return columns, rows, col_averages
+
+
+def _build_course_timeline(course_works, students):
+    """Plotly JSON: средний % по работам курса во времени"""
+    import json
+    from events.models import Event
+
+    work_ids = [w.id for w in course_works]
+    events = Event.objects.filter(
+        work_id__in=work_ids,
+        status='graded',
+    ).order_by('planned_date')
+
+    dates = []
+    averages = []
+    labels = []
+
+    for event in events:
+        marks = Mark.objects.filter(
+            participation__event=event,
+            participation__student__in=students,
+        )
+        if not marks.exists():
+            continue
+
+        total_pts = 0
+        total_max = 0
+        for mark in marks:
+            if not mark.task_scores:
+                continue
+            seen = set()
+            for task_id, scores in mark.task_scores.items():
+                if task_id in seen:
+                    continue
+                seen.add(task_id)
+                total_pts += scores.get('points', 0)
+                total_max += scores.get('max_points', 0)
+
+        if total_max > 0:
+            avg_pct = round(total_pts / total_max * 100)
+            dates.append(event.planned_date.strftime('%Y-%m-%d'))
+            averages.append(avg_pct)
+            labels.append(event.name)
+
+    chart = {
+        'data': [{
+            'x': dates,
+            'y': averages,
+            'text': labels,
+            'mode': 'lines+markers',
+            'type': 'scatter',
+            'name': 'Средний %',
+            'line': {'color': '#0d6efd', 'width': 3},
+            'marker': {'size': 10},
+            'hovertemplate': '%{text}<br>%{y}%<extra></extra>',
+        }],
+        'layout': {
+            'title': {'text': 'Динамика результатов', 'font': {'size': 16}},
+            'xaxis': {'title': 'Дата'},
+            'yaxis': {'title': '%', 'range': [0, 105]},
+            'margin': {'t': 40, 'b': 40, 'l': 50, 'r': 20},
+            'height': 300,
+            'shapes': [
+                {'type': 'line', 'y0': 70, 'y1': 70, 'x0': 0, 'x1': 1,
+                 'xref': 'paper', 'line': {'color': '#28a745', 'dash': 'dash', 'width': 1}},
+                {'type': 'line', 'y0': 45, 'y1': 45, 'x0': 0, 'x1': 1,
+                 'xref': 'paper', 'line': {'color': '#dc3545', 'dash': 'dash', 'width': 1}},
+            ],
+        },
+        'config': {'displayModeBar': False, 'responsive': True},
+    }
+
+    return json.dumps(chart, ensure_ascii=False)
+
 
 
 def _color_class(pct):

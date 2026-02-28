@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course.name }} — тепловая карта{% endblock %}
+
+{% block extra_css %}
+<style>
+    .heatmap-wrapper { overflow-x: auto; max-width: 100%; }
+    .heatmap-table {
+        border-collapse: separate;
+        border-spacing: 2px;
+        font-size: 0.85rem;
+    }
+    .heatmap-table th { padding: 6px 8px; white-space: nowrap; font-weight: 500; }
+    .heatmap-table td {
+        padding: 4px 8px; text-align: center;
+        min-width: 55px; transition: all 0.15s;
+        border-radius: 6px;
+    }
+    .row-label {
+        text-align: left; white-space: nowrap; font-weight: 500;
+        position: sticky; left: 0; background: #fff; z-index: 2;
+        border-right: 2px solid #dee2e6; border-radius: 0 !important;
+    }
+    .heatmap-table thead th {
+        position: sticky; top: 0; background: #f8f9fa; z-index: 3;
+    }
+    .heatmap-table thead th:first-child { z-index: 4; left: 0; }
+
+    td.perfect   { background-color: #1b8a2e; color: #fff; }
+    td.excellent { background-color: #28a745; color: #fff; }
+    td.good      { background-color: #7bc67e; color: #fff; }
+    td.moderate  { background-color: #f0ad4e; color: #fff; }
+    td.warning   { background-color: #ffc107; color: #333; }
+    td.danger    { background-color: #dc3545; color: #fff; }
+    td.no-data   { background-color: #f0f0f0; color: #bbb; }
+
+    td.perfect:hover   { background-color: #156d24; cursor: pointer; }
+    td.excellent:hover { background-color: #218838; cursor: pointer; }
+    td.good:hover      { background-color: #5db961; cursor: pointer; }
+    td.moderate:hover  { background-color: #d9953a; cursor: pointer; }
+    td.warning:hover   { background-color: #e0a800; cursor: pointer; }
+    td.danger:hover    { background-color: #c82333; cursor: pointer; }
+
+    .avg-cell { font-weight: 600; border-left: 2px solid #dee2e6; border-radius: 0 !important; }
+    .col-avg-row td { border-top: 2px solid #dee2e6; font-weight: 600; }
+
+    .col-header-rotated {
+        writing-mode: vertical-lr;
+        text-orientation: mixed;
+        transform: rotate(180deg);
+        max-height: 180px;
+        font-size: 0.8rem;
+        padding: 8px 4px !important;
+    }
+
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 1rem; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; }
+    .legend-color { width: 18px; height: 18px; border-radius: 4px; }
+
+    .course-info {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+
+    <!-- Хлебные крошки -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'reports:dashboard' %}">
+                    <i class="fas fa-chart-line"></i> Отчёты
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'reports:heatmap' %}">Тепловая карта</a>
+            </li>
+            <li class="breadcrumb-item active">{{ course.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Информация о курсе -->
+    <div class="course-info">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-1"><i class="fas fa-book"></i> {{ course.name }}</h2>
+                <p class="mb-0 opacity-75">
+                    {{ course.subject }} · {{ course.grade_level }} класс ·
+                    {{ course.academic_year }} ·
+                    {{ course.hours_per_week }} ч/нед
+                    {% if course.description %}
+                    <br>{{ course.description }}
+                    {% endif %}
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ toggle_url }}"
+                   class="btn btn-sm {% if is_transposed %}btn-light{% else %}btn-outline-light{% endif %}">
+                    <i class="fas fa-retweet"></i>
+                    {% if is_transposed %}Ученики → строки{% else %}Темы → строки{% endif %}
+                </a>
+
+                <form method="get" class="d-flex gap-2 align-items-center">
+                    {% if is_transposed %}<input type="hidden" name="transpose" value="1">{% endif %}
+                    <select name="group" class="form-select form-select-sm" style="width: auto;"
+                            onchange="this.form.submit()">
+                        <option value="">Все классы</option>
+                        {% for g in groups %}
+                        <option value="{{ g.pk }}"
+                            {% if selected_group and selected_group.pk == g.pk %}selected{% endif %}>
+                            {{ g.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if has_data %}
+
+    <!-- Plotly: динамика -->
+    <div class="card mb-4">
+        <div class="card-body p-2">
+            <div id="timeline-chart"></div>
+        </div>
+    </div>
+
+    <!-- Легенда -->
+    <div class="legend">
+        <div class="legend-item"><div class="legend-color" style="background: #1b8a2e;"></div><span>≥95%</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #28a745;"></div><span>85-94%</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #7bc67e;"></div><span>70-84%</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #f0ad4e;"></div><span>60-69%</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #ffc107;"></div><span>45-59%</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #dc3545;"></div><span>&lt;45%</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #f0f0f0;"></div><span>Нет данных</span></div>
+    </div>
+
+    <p class="text-muted mb-2">
+        {{ total_students }} уч. × {{ total_topics }} тем
+        <span class="ms-3">
+            <i class="fas fa-mouse-pointer text-primary"></i>
+            Клик по ячейке → детализация по подтемам
+        </span>
+    </p>
+
+    <!-- Heatmap таблица -->
+    <div class="heatmap-wrapper">
+        <table class="heatmap-table">
+            <thead>
+                <tr>
+                    <th class="row-label">{{ grid_row_header }}</th>
+                    {% for col in grid_col_headers %}
+                    <th class="col-header-rotated" title="{{ col.title }}">{{ col.label }}</th>
+                    {% endfor %}
+                    <th class="avg-cell">Ср.</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in grid_rows %}
+                <tr>
+                    <td class="row-label">
+                        <a href="{{ row.url }}" class="text-decoration-none text-dark">{{ row.label }}</a>
+                    </td>
+                    {% for cell in row.cells %}
+                    <td class="{{ cell.css }}"
+                        {% if cell.pct is not None %}
+                        title="{{ cell.topic.name }}: {{ cell.points }}/{{ cell.max_points }} ({{ cell.pct }}%)"
+                        onclick="location.href='{% url 'reports:heatmap-drilldown' cell.topic.pk %}{{ group_param }}'"
+                        {% endif %}>
+                        {% if cell.pct is not None %}{{ cell.pct }}%{% else %}—{% endif %}
+                    </td>
+                    {% endfor %}
+                    <td class="avg-cell {{ row.avg_css }}">
+                        {% if row.avg is not None %}{{ row.avg }}%{% else %}—{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+
+                <tr class="col-avg-row">
+                    <td class="row-label fw-bold">Среднее</td>
+                    {% for ca in grid_col_averages %}
+                    <td class="{{ ca.css }}">{% if ca.pct is not None %}{{ ca.pct }}%{% else %}—{% endif %}</td>
+                    {% endfor %}
+                    <td class="avg-cell"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i>
+        Нет данных по курсу. Убедитесь, что работы курса назначены и проверены.
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if has_data %}
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>
+    const timelineConfig = {{ timeline_json|safe }};
+    Plotly.newPlot('timeline-chart', timelineConfig.data, timelineConfig.layout, timelineConfig.config);
+</script>
+{% endif %}
+{% endblock %}

@@ -74,6 +74,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if options['clear']:
+            from curriculum.models import Course, CourseAssignment
+            CourseAssignment.objects.all().delete()
+            Course.objects.all().delete()
             Mark.objects.all().delete()
             EventParticipation.objects.all().delete()
             Event.objects.all().delete()
@@ -90,6 +93,7 @@ class Command(BaseCommand):
             students = self._create_students(groups)
             tasks = self._create_tasks()
             works = self._create_works(tasks)
+            course = self._create_course(works, groups)
             self._create_events(works, students, groups)
 
         self.stdout.write(self.style.SUCCESS('\n🎉 Тестовые данные загружены!'))
@@ -293,6 +297,49 @@ class Command(BaseCommand):
 
         self.stdout.write(f'📋 Работ: {len(works)}')
         return works
+
+    def _create_course(self, works, groups):
+        """Создание курса и привязка работ"""
+        from curriculum.models import Course, CourseAssignment
+        from datetime import date
+
+        course, created = Course.objects.get_or_create(
+            name='Физика 9 класс',
+            subject='Физика',
+            grade_level=9,
+            academic_year='2025-2026',
+            defaults={
+                'description': 'Курс физики для 9 класса. Механика, силы, тепловые явления.',
+                'start_date': date(2025, 9, 1),
+                'end_date': date(2026, 5, 25),
+                'total_hours': 68,
+                'hours_per_week': 2,
+                'is_active': True,
+            }
+        )
+
+        # Привязываем классы
+        for group in groups.values():
+            course.student_groups.add(group)
+
+        # Привязываем работы
+        for i, work in enumerate(works, 1):
+            CourseAssignment.objects.get_or_create(
+                course=course,
+                work=work,
+                defaults={
+                    'order': i,
+                    'weight': 2.0 if 'КР' in work.name else 1.0,
+                }
+            )
+
+        if created:
+            self.stdout.write(f'📚 Курс: {course.name} ({len(works)} работ, {len(groups)} классов)')
+        else:
+            self.stdout.write(f'📚 Курс: {course.name} (уже существует)')
+
+        return course
+
 
 
     def _create_events(self, works, students, groups):

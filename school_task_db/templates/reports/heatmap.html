@@ -1,307 +1,263 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
-{% block title %}Тепловая карта успеваемости{% endblock %}
+{% block title %}Тепловая карта{% endblock %}
+
+{% block extra_css %}
+<style>
+    .heatmap-wrapper {
+        overflow-x: auto;
+        max-width: 100%;
+    }
+    .heatmap-table {
+        border-collapse: separate;
+        border-spacing: 2px;
+        font-size: 0.85rem;
+    }
+    .heatmap-table th {
+        padding: 6px 8px;
+        white-space: nowrap;
+        font-weight: 500;
+    }
+    .heatmap-table td {
+        padding: 4px 8px;
+        text-align: center;
+        min-width: 55px;
+        border-radius: 4px;
+        transition: all 0.15s;
+    }
+    .heatmap-table .row-label {
+        text-align: left;
+        white-space: nowrap;
+        font-weight: 500;
+        position: sticky;
+        left: 0;
+        background: #fff;
+        z-index: 2;
+        border-right: 2px solid #dee2e6;
+        border-radius: 0;
+    }
+    .heatmap-table thead th {
+        position: sticky;
+        top: 0;
+        background: #f8f9fa;
+        z-index: 3;
+    }
+    .heatmap-table thead th:first-child {
+        z-index: 4;
+        left: 0;
+    }
+
+    /* 6 цветовых уровней */
+    td.perfect   { background-color: #1b8a2e; color: #fff; }
+    td.excellent { background-color: #28a745; color: #fff; }
+    td.good      { background-color: #7bc67e; color: #fff; }
+    td.moderate  { background-color: #f0ad4e; color: #fff; }
+    td.warning   { background-color: #ffc107; color: #333; }
+    td.danger    { background-color: #dc3545; color: #fff; }
+    td.no-data   { background-color: #f0f0f0; color: #bbb; }
+
+    td.perfect:hover   { background-color: #156d24; cursor: pointer; }
+    td.excellent:hover { background-color: #218838; cursor: pointer; }
+    td.good:hover      { background-color: #5db961; cursor: pointer; }
+    td.moderate:hover  { background-color: #d9953a; cursor: pointer; }
+    td.warning:hover   { background-color: #e0a800; cursor: pointer; }
+    td.danger:hover    { background-color: #c82333; cursor: pointer; }
+
+    .avg-cell {
+        font-weight: 600;
+        border-left: 2px solid #dee2e6;
+        border-radius: 0 !important;
+    }
+    .col-avg-row td {
+        border-top: 2px solid #dee2e6;
+        font-weight: 600;
+    }
+
+    .col-header-rotated {
+        writing-mode: vertical-lr;
+        text-orientation: mixed;
+        transform: rotate(180deg);
+        max-height: 180px;
+        font-size: 0.8rem;
+        padding: 8px 4px !important;
+    }
+
+    .legend {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.82rem;
+    }
+    .legend-color {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+    }
+
+    .filter-bar {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="fas fa-th"></i> Тепловая карта успеваемости</h2>
-        <a href="{% url 'reports:dashboard' %}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> К дашборду
-        </a>
+<div class="container-fluid px-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2><i class="fas fa-th"></i> Тепловая карта</h2>
+        <div class="d-flex gap-2">
+            <a href="{{ toggle_url }}"
+               class="btn btn-sm {% if is_transposed %}btn-primary{% else %}btn-outline-primary{% endif %}"
+               title="{% if is_transposed %}Ученики в строках{% else %}Темы в строках{% endif %}">
+                <i class="fas fa-retweet"></i>
+                {% if is_transposed %}Ученики → строки{% else %}Темы → строки{% endif %}
+            </a>
+            <a href="{% url 'reports:dashboard' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i> К отчётам
+            </a>
+        </div>
     </div>
 
     <!-- Фильтры -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="get" class="row g-3 align-items-end">
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">Курс</label>
-                    <select name="course" class="form-select" id="course-select" required>
-                        <option value="">Выберите курс...</option>
-                        {% for c in courses %}
-                        <option value="{{ c.pk }}" 
-                                {% if selected_course == c.pk|stringformat:"s" %}selected{% endif %}>
-                            {{ c.name }} ({{ c.academic_year }})
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">Класс</label>
-                    <select name="group" class="form-select" id="group-select" required>
-                        <option value="">
-                            {% if selected_course %}Выберите класс...{% else %}Сначала выберите курс{% endif %}
-                        </option>
-                        {% for g in student_groups %}
-                        <option value="{{ g.pk }}" 
-                                {% if selected_group == g.pk|stringformat:"s" %}selected{% endif %}>
-                            {{ g.name }} ({{ g.students.count }} уч.)
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-chart-bar"></i> Построить карту
-                    </button>
-                </div>
-            </form>
-        </div>
+    <div class="filter-bar">
+        <form method="get" class="d-flex gap-2 align-items-center flex-wrap">
+            {% if is_transposed %}<input type="hidden" name="transpose" value="1">{% endif %}
+            <label class="form-label mb-0 fw-bold">Класс:</label>
+            <select name="group" class="form-select form-select-sm" style="width: auto;"
+                    onchange="this.form.submit()">
+                <option value="">Все</option>
+                {% for g in groups %}
+                <option value="{{ g.pk }}"
+                    {% if selected_group and selected_group.pk == g.pk %}selected{% endif %}>
+                    {{ g.name }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <label class="form-label mb-0 fw-bold ms-3">Раздел:</label>
+            <select name="section" class="form-select form-select-sm" style="width: auto;"
+                    onchange="this.form.submit()">
+                <option value="">Все</option>
+                {% for s in sections %}
+                <option value="{{ s }}"
+                    {% if selected_section == s %}selected{% endif %}>
+                    {{ s }}
+                </option>
+                {% endfor %}
+            </select>
+        </form>
     </div>
 
-    {% if error %}
-    <div class="alert alert-danger">
-        <i class="fas fa-exclamation-circle"></i> {{ error }}
-    </div>
-    {% endif %}
-
-    {% if heatmap_json %}
-    <!-- Тепловая карта -->
-    <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">
-                <i class="fas fa-th"></i> 
-                {{ group.name }} — {{ course.name }}
-            </h5>
-            <div>
-                <button onclick="downloadHeatmap()" class="btn btn-outline-secondary btn-sm">
-                    <i class="fas fa-download"></i> PNG
-                </button>
-                <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
-                    <i class="fas fa-print"></i> Печать
-                </button>
-            </div>
-        </div>
-        <div class="card-body p-0" style="overflow-x: auto;">
-            <div id="heatmap-chart" style="width: 100%; min-width: 600px;"></div>
-        </div>
-    </div>
-    
     <!-- Легенда -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="d-flex justify-content-center gap-4">
-                <span><span style="display:inline-block;width:20px;height:20px;background:#dc3545;border-radius:3px;vertical-align:middle;"></span> 2 — Неудовл.</span>
-                <span><span style="display:inline-block;width:20px;height:20px;background:#ffc107;border-radius:3px;vertical-align:middle;"></span> 3 — Удовл.</span>
-                <span><span style="display:inline-block;width:20px;height:20px;background:#28a745;border-radius:3px;vertical-align:middle;"></span> 4 — Хорошо</span>
-                <span><span style="display:inline-block;width:20px;height:20px;background:#0d6efd;border-radius:3px;vertical-align:middle;"></span> 5 — Отлично</span>
-            </div>
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color" style="background: #1b8a2e;"></div>
+            <span>≥95%</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #28a745;"></div>
+            <span>85-94%</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #7bc67e;"></div>
+            <span>70-84%</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #f0ad4e;"></div>
+            <span>60-69%</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ffc107;"></div>
+            <span>45-59%</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #dc3545;"></div>
+            <span>&lt;45%</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #f0f0f0;"></div>
+            <span>Нет данных</span>
         </div>
     </div>
 
-    <!-- Сводная статистика -->
-    {% if stats %}
-    <div class="row mb-4">
-        <!-- Общие показатели -->
-        <div class="col-md-3">
-            <div class="card text-center">
-                <div class="card-body">
-                    <div class="fs-2 fw-bold 
-                        {% if stats.overall_avg >= 4 %}text-success
-                        {% elif stats.overall_avg >= 3 %}text-warning
-                        {% else %}text-danger{% endif %}">
-                        {{ stats.overall_avg }}
-                    </div>
-                    <small class="text-muted">Средний балл</small>
-                    <div class="mt-2">
-                        <small class="text-muted">
-                            {{ stats.filled_cells }}/{{ stats.total_cells }} ячеек
-                            {% if stats.empty_cells > 0 %}
-                            ({{ stats.empty_cells }} пустых)
-                            {% endif %}
-                        </small>
-                    </div>
-                </div>
-            </div>
-        </div>
+    {% if has_data %}
+    <p class="text-muted mb-2">
+        {{ total_students }} уч. × {{ total_topics }} тем
+        <span class="ms-3">
+            <i class="fas fa-mouse-pointer text-primary"></i>
+            Клик по ячейке → детализация по подтемам
+        </span>
+    </p>
 
-        <!-- Проблемные темы -->
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-header py-2">
-                    <h6 class="mb-0 text-danger">
-                        <i class="fas fa-exclamation-triangle"></i> Сложные темы
-                    </h6>
-                </div>
-                <div class="card-body p-0">
-                    <ul class="list-group list-group-flush">
-                        {% for g in stats.group_avgs|slice:":3" %}
-                        <li class="list-group-item py-1 d-flex justify-content-between">
-                            <small class="text-truncate" style="max-width:150px;">{{ g.name }}</small>
-                            <span class="badge {% if g.avg < 3 %}bg-danger{% elif g.avg < 3.5 %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
-                                {{ g.avg }}
-                            </span>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        </div>
+    <!-- Таблица -->
+    <div class="heatmap-wrapper">
+        <table class="heatmap-table">
+            <thead>
+                <tr>
+                    <th class="row-label">{{ grid_row_header }}</th>
+                    {% for col in grid_col_headers %}
+                    <th class="col-header-rotated" title="{{ col.title }}">
+                        {{ col.label }}
+                    </th>
+                    {% endfor %}
+                    <th class="avg-cell">Ср.</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in grid_rows %}
+                <tr>
+                    <td class="row-label">
+                        <a href="{{ row.url }}" class="text-decoration-none text-dark">
+                            {{ row.label }}
+                        </a>
+                    </td>
+                    {% for cell in row.cells %}
+                    <td class="{{ cell.css }}"
+                        {% if cell.pct is not None %}
+                        title="{{ cell.topic.name }}: {{ cell.points }}/{{ cell.max_points }} ({{ cell.pct }}%)"
+                        onclick="location.href='{% url 'reports:heatmap-drilldown' cell.topic.pk %}{% if selected_group %}?group={{ selected_group.pk }}{% endif %}'"
+                        {% else %}
+                        title="{{ cell.topic.name }}: нет данных"
+                        {% endif %}>
+                        {% if cell.pct is not None %}{{ cell.pct }}%{% else %}—{% endif %}
+                    </td>
+                    {% endfor %}
+                    <td class="avg-cell {{ row.avg_css }}">
+                        {% if row.avg is not None %}{{ row.avg }}%{% else %}—{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
 
-        <!-- Проблемные ученики -->
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-header py-2">
-                    <h6 class="mb-0 text-warning">
-                        <i class="fas fa-user-times"></i> Нужна помощь
-                    </h6>
-                </div>
-                <div class="card-body p-0">
-                    <ul class="list-group list-group-flush">
-                        {% for zone in stats.problem_zones|slice:":5" %}
-                        <li class="list-group-item py-1 d-flex justify-content-between">
-                            <small>{{ zone.student }} → {{ zone.group|truncatechars:15 }}</small>
-                            <span class="badge bg-danger">{{ zone.score }}</span>
-                        </li>
-                        {% endfor %}
-                        {% if not stats.problem_zones %}
-                        <li class="list-group-item py-1 text-success">
-                            <small>✅ Нет проблемных зон</small>
-                        </li>
-                        {% endif %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- Отличники -->
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-header py-2">
-                    <h6 class="mb-0 text-success">
-                        <i class="fas fa-star"></i> Лучшие результаты
-                    </h6>
-                </div>
-                <div class="card-body p-0">
-                    <ul class="list-group list-group-flush">
-                        {% for zone in stats.excellent_zones|slice:":5" %}
-                        <li class="list-group-item py-1 d-flex justify-content-between">
-                            <small>{{ zone.student }} → {{ zone.group|truncatechars:15 }}</small>
-                            <span class="badge bg-primary">{{ zone.score }}</span>
-                        </li>
-                        {% endfor %}
-                        {% if not stats.excellent_zones %}
-                        <li class="list-group-item py-1 text-muted">
-                            <small>Нет оценок ≥ 4.5</small>
-                        </li>
-                        {% endif %}
-                    </ul>
-                </div>
-            </div>
-        </div>
+                <tr class="col-avg-row">
+                    <td class="row-label fw-bold">Среднее</td>
+                    {% for ca in grid_col_averages %}
+                    <td class="{{ ca.css }}">
+                        {% if ca.pct is not None %}{{ ca.pct }}%{% else %}—{% endif %}
+                    </td>
+                    {% endfor %}
+                    <td class="avg-cell"></td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
-    <!-- Рейтинг учеников -->
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h6 class="mb-0"><i class="fas fa-sort-amount-down"></i> Рейтинг учеников</h6>
-                </div>
-                <div class="card-body p-0">
-                    <table class="table table-sm mb-0">
-                        <thead><tr><th>#</th><th>Ученик</th><th>Ср. балл</th><th>Работ</th></tr></thead>
-                        <tbody>
-                            {% for s in stats.student_avgs %}
-                            <tr>
-                                <td class="text-muted">{{ forloop.counter }}</td>
-                                <td>{{ s.name }}</td>
-                                <td>
-                                    {% if s.avg %}
-                                    <span class="badge {% if s.avg >= 4 %}bg-success{% elif s.avg >= 3 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
-                                        {{ s.avg }}
-                                    </span>
-                                    {% else %}
-                                    <span class="text-muted">—</span>
-                                    {% endif %}
-                                </td>
-                                <td class="text-muted">{{ s.count }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h6 class="mb-0"><i class="fas fa-book"></i> Средний балл по темам</h6>
-                </div>
-                <div class="card-body p-0">
-                    <table class="table table-sm mb-0">
-                        <thead><tr><th>#</th><th>Тема</th><th>Ср. балл</th><th>Оценок</th></tr></thead>
-                        <tbody>
-                            {% for g in stats.group_avgs %}
-                            <tr>
-                                <td class="text-muted">{{ forloop.counter }}</td>
-                                <td>{{ g.name }}</td>
-                                <td>
-                                    {% if g.avg %}
-                                    <span class="badge {% if g.avg >= 4 %}bg-success{% elif g.avg >= 3 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
-                                        {{ g.avg }}
-                                    </span>
-                                    {% else %}
-                                    <span class="text-muted">—</span>
-                                    {% endif %}
-                                </td>
-                                <td class="text-muted">{{ g.count }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i>
+        Нет данных для построения карты. Убедитесь, что есть проверенные работы
+        с заполненными баллами по заданиям.
     </div>
     {% endif %}
 
-    {% elif course and group %}
-    <div class="alert alert-warning">
-        <i class="fas fa-info-circle"></i> 
-        Нет данных для построения карты. Убедитесь, что проведены события.
-    </div>
-    {% endif %}
 </div>
-
-{% endblock %}
-
-{% block extra_js %}
-<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
-<script>
-// Динамическая фильтрация групп по курсу
-document.querySelector('select[name="course"]').addEventListener('change', function() {
-    if (this.value) {
-        // Перезагружаем страницу с выбранным курсом для фильтрации групп
-        const url = new URL(window.location);
-        url.searchParams.set('course', this.value);
-        url.searchParams.delete('group');
-        window.location = url;
-    }
-});
-{% if heatmap_json %}
-const heatmapConfig = {{ heatmap_json|safe }};
-
-Plotly.newPlot(
-    'heatmap-chart',
-    heatmapConfig.data,
-    heatmapConfig.layout,
-    heatmapConfig.config
-);
-
-function downloadHeatmap() {
-    Plotly.downloadImage('heatmap-chart', {
-        format: 'png', width: 1200,
-        height: heatmapConfig.layout.height,
-        filename: 'heatmap_{{ group.name }}_{{ course.name }}'
-    });
-}
-
-function printHeatmap() {
-    window.print();
-}
-{% endif %}
-</script>
 {% endblock %}

@@ -1,12 +1,20 @@
 # reports/views.py
 
 import json
+from django.urls import reverse
 from django.shortcuts import render
+from django.shortcuts import get_object_or_404
+from django.views import View
 from django.views.generic import TemplateView
 from django.db.models import Count, Avg, Q
 from datetime import datetime, timedelta
 
 from . import plotly_utils
+
+from students.models import Student, StudentGroup
+from tasks.models import Task
+from events.models import Mark, EventParticipation
+from curriculum.models import Topic, SubTopic
 
 
 class ReportsDashboardView(TemplateView):
@@ -191,8 +199,8 @@ class ReportsDashboardView(TemplateView):
         return context
 
 
-class HeatmapView(TemplateView):
-    """Тепловая карта успеваемости"""
+class HeatmapLegacyView(TemplateView):
+    """Тепловая карта успеваемости (старая версия, на основе Course)"""
     template_name = 'reports/heatmap.html'
     
     def get_context_data(self, **kwargs):
@@ -589,3 +597,456 @@ class EventsStatusView(TemplateView):
         context['participation_stats'] = list(participation_stats)
         
         return context
+
+
+# ============================================================
+# HEATMAP
+# ============================================================
+
+from collections import defaultdict
+
+
+class HeatmapView(View):
+    """Тепловая карта: ученики × темы (с транспонированием)"""
+
+    def get(self, request):
+        group_id = request.GET.get('group')
+        section = request.GET.get('section', '')
+        transpose = request.GET.get('transpose') == '1'
+
+        groups = StudentGroup.objects.all().order_by('name')
+
+        if group_id:
+            group = get_object_or_404(StudentGroup, pk=group_id)
+            students = list(group.students.all().order_by('last_name', 'first_name'))
+        else:
+            group = None
+            students = list(Student.objects.all().order_by('last_name', 'first_name'))
+
+        sections = list(
+            Topic.objects.filter(subject='Физика')
+            .values_list('section', flat=True)
+            .distinct().order_by('section')
+        )
+
+        if not students:
+            return render(request, 'reports/heatmap.html', {
+                'groups': groups, 'selected_group': group,
+                'sections': sections, 'selected_section': section,
+                'has_data': False, 'is_transposed': transpose,
+            })
+
+        columns, rows, col_averages = _build_topic_data(students, section)
+
+        if not transpose:
+            grid_row_header = 'Ученик'
+            grid_rows = [{
+                'label': row['student'].get_short_name(),
+                'url': reverse('students:detail', args=[row['student'].pk]),
+                'cells': row['cells'],
+                'avg': row['avg'],
+                'avg_css': row['avg_css'],
+            } for row in rows]
+            grid_col_headers = [{
+                'label': t.name,
+                'title': f'{t.section} → {t.name}',
+            } for t in columns]
+            grid_col_averages = col_averages
+        else:
+            grid_row_header = 'Тема'
+            grid_rows = []
+            for i, topic in enumerate(columns):
+                cells = [rows[j]['cells'][i] for j in range(len(rows))]
+                url = reverse('reports:heatmap-drilldown', args=[topic.pk])
+                if group:
+                    url += f'?group={group.pk}'
+                grid_rows.append({
+                    'label': topic.name,
+                    'url': url,
+                    'cells': cells,
+                    'avg': col_averages[i]['pct'],
+                    'avg_css': col_averages[i]['css'],
+                })
+            grid_col_headers = [{
+                'label': row['student'].get_short_name(),
+                'title': row['student'].get_full_name(),
+            } for row in rows]
+            grid_col_averages = [{'pct': row['avg'], 'css': row['avg_css']} for row in rows]
+
+        toggle_params = request.GET.copy()
+        if transpose:
+            toggle_params.pop('transpose', None)
+        else:
+            toggle_params['transpose'] = '1'
+        toggle_url = f'?{toggle_params.urlencode()}' if toggle_params else '?'
+
+        return render(request, 'reports/heatmap.html', {
+            'groups': groups,
+            'selected_group': group,
+            'sections': sections,
+            'selected_section': section,
+            'is_transposed': transpose,
+            'toggle_url': toggle_url,
+            'grid_row_header': grid_row_header,
+            'grid_rows': grid_rows,
+            'grid_col_headers': grid_col_headers,
+            'grid_col_averages': grid_col_averages,
+            'total_students': len(students),
+            'total_topics': len(columns),
+            'has_data': bool(rows and columns),
+        })
+
+
+class HeatmapDrilldownView(View):
+    """Drill-down: ученики × подтемы одной темы (с транспонированием)"""
+
+    def get(self, request, topic_pk):
+        topic = get_object_or_404(Topic, pk=topic_pk)
+        group_id = request.GET.get('group')
+        transpose = request.GET.get('transpose') == '1'
+
+        groups = StudentGroup.objects.all().order_by('name')
+
+        if group_id:
+            group = get_object_or_404(StudentGroup, pk=group_id)
+            students = list(group.students.all().order_by('last_name', 'first_name'))
+        else:
+            group = None
+            students = list(Student.objects.all().order_by('last_name', 'first_name'))
+
+        columns, rows, col_averages = _build_subtopic_data(students, topic)
+
+        if not transpose:
+            grid_row_header = 'Ученик'
+            grid_rows = [{
+                'label': row['student'].get_short_name(),
+                'url': reverse('reports:heatmap-student', args=[topic.pk, row['student'].pk]),
+                'cells': row['cells'],
+                'avg': row['avg'],
+                'avg_css': row['avg_css'],
+            } for row in rows]
+            grid_col_headers = [{
+                'label': sub.name,
+                'title': sub.name,
+            } for sub in columns]
+            grid_col_averages = col_averages
+        else:
+            grid_row_header = 'Подтема'
+            grid_rows = []
+            for i, sub in enumerate(columns):
+                cells = [rows[j]['cells'][i] for j in range(len(rows))]
+                grid_rows.append({
+                    'label': sub.name,
+                    'url': '#',
+                    'cells': cells,
+                    'avg': col_averages[i]['pct'],
+                    'avg_css': col_averages[i]['css'],
+                })
+            grid_col_headers = [{
+                'label': row['student'].get_short_name(),
+                'title': row['student'].get_full_name(),
+            } for row in rows]
+            grid_col_averages = [{'pct': row['avg'], 'css': row['avg_css']} for row in rows]
+
+        toggle_params = request.GET.copy()
+        if transpose:
+            toggle_params.pop('transpose', None)
+        else:
+            toggle_params['transpose'] = '1'
+        toggle_url = f'{request.path}?{toggle_params.urlencode()}'
+
+        return render(request, 'reports/heatmap_drilldown.html', {
+            'topic': topic,
+            'groups': groups,
+            'selected_group': group,
+            'is_transposed': transpose,
+            'toggle_url': toggle_url,
+            'grid_row_header': grid_row_header,
+            'grid_rows': grid_rows,
+            'grid_col_headers': grid_col_headers,
+            'grid_col_averages': grid_col_averages,
+            'has_data': bool(rows and columns),
+        })
+
+
+class HeatmapStudentView(View):
+    """Детальный вид: один ученик × подтемы одной темы + список работ"""
+
+    def get(self, request, topic_pk, student_pk):
+        topic = get_object_or_404(Topic, pk=topic_pk)
+        student = get_object_or_404(Student, pk=student_pk)
+
+        marks = Mark.objects.filter(
+            participation__student=student,
+        ).select_related(
+            'participation__event',
+            'participation__variant',
+        )
+
+        all_task_ids = set()
+        for mark in marks:
+            if mark.task_scores:
+                for key in mark.task_scores.keys():
+                    all_task_ids.add(key)
+
+        tasks_qs = Task.objects.filter(
+            pk__in=all_task_ids,
+            topic=topic,
+        ).select_related('subtopic')
+        task_map = {str(t.pk): t for t in tasks_qs}
+
+        # Детализация: per-mark дедупликация (uuid/task_uuid)
+        details = []
+        for mark in marks:
+            student_id = mark.participation.student_id
+            if not mark.task_scores:
+                continue
+            event = mark.participation.event
+            for task_id, scores in mark.task_scores.items():
+                task = task_map.get(task_id)
+                if not task or not task.topic:
+                    continue
+
+                pts = scores.get('points', 0)
+                mx = scores.get('max_points', 0)
+                pct = round(pts / mx * 100) if mx > 0 else 0
+                details.append({
+                    'event': event,
+                    'task': task,
+                    'subtopic': task.subtopic,
+                    'points': pts,
+                    'max_points': mx,
+                    'pct': pct,
+                    'css': _color_class(pct),
+                })
+
+        details.sort(key=lambda d: (
+            d['subtopic'].name if d['subtopic'] else '',
+            d['event'].planned_date,
+        ))
+
+        # Агрегация по подтемам
+        sub_agg = defaultdict(lambda: {'points': 0, 'max_points': 0})
+        for d in details:
+            if d['subtopic']:
+                sub_agg[d['subtopic'].id]['points'] += d['points']
+                sub_agg[d['subtopic'].id]['max_points'] += d['max_points']
+
+        subtopic_summary = []
+        for sub in SubTopic.objects.filter(topic=topic).order_by('order'):
+            data = sub_agg.get(sub.id)
+            if data and data['max_points'] > 0:
+                pct = round(data['points'] / data['max_points'] * 100)
+                subtopic_summary.append({
+                    'subtopic': sub,
+                    'points': data['points'],
+                    'max_points': data['max_points'],
+                    'pct': pct,
+                    'css': _color_class(pct),
+                })
+            else:
+                subtopic_summary.append({
+                    'subtopic': sub,
+                    'pct': None,
+                    'css': 'no-data',
+                })
+
+        return render(request, 'reports/heatmap_student.html', {
+            'topic': topic,
+            'student': student,
+            'details': details,
+            'subtopic_summary': subtopic_summary,
+        })
+
+
+# ============================================================
+# Общие функции
+# ============================================================
+
+def _build_topic_data(students, section_filter=''):
+    """Агрегация: ученики × темы"""
+    marks = Mark.objects.filter(
+        participation__student__in=students,
+    ).select_related('participation__student')
+
+    all_task_ids = set()
+    for mark in marks:
+        if mark.task_scores:
+            for key in mark.task_scores.keys():
+                all_task_ids.add(key)
+
+    if not all_task_ids:
+        return [], [], []
+
+    tasks_qs = Task.objects.filter(pk__in=all_task_ids).select_related('topic', 'subtopic')
+    task_map = {str(t.pk): t for t in tasks_qs}
+
+    # Per-mark дедупликация (uuid vs task_uuid)
+    agg = defaultdict(lambda: {'points': 0, 'max_points': 0})
+
+    for mark in marks:
+        student_id = mark.participation.student_id
+        if not mark.task_scores:
+            continue
+        seen = set()
+        for task_id_raw, scores in mark.task_scores.items():
+            clean_id = task_id_raw
+            if clean_id in seen:
+                continue
+            seen.add(clean_id)
+
+            task = task_map.get(clean_id)
+            if not task or not task.topic:
+                continue
+            if section_filter and task.topic.section != section_filter:
+                continue
+
+            key = (student_id, task.topic_id)
+            agg[key]['points'] += scores.get('points', 0)
+            agg[key]['max_points'] += scores.get('max_points', 0)
+
+    topic_ids = set(tid for (_, tid) in agg.keys())
+    columns = list(
+        Topic.objects.filter(pk__in=topic_ids).order_by('section', 'order', 'name')
+    )
+
+    rows = []
+    for student in students:
+        cells = []
+        total_pts = 0
+        total_max = 0
+        for topic in columns:
+            data = agg.get((student.id, topic.id))
+            if data and data['max_points'] > 0:
+                pct = round(data['points'] / data['max_points'] * 100)
+                total_pts += data['points']
+                total_max += data['max_points']
+                cells.append({
+                    'pct': pct, 'points': data['points'],
+                    'max_points': data['max_points'],
+                    'css': _color_class(pct), 'topic': topic,
+                })
+            else:
+                cells.append({'pct': None, 'css': 'no-data', 'topic': topic})
+
+        avg = round(total_pts / total_max * 100) if total_max > 0 else None
+        rows.append({
+            'student': student, 'cells': cells,
+            'avg': avg,
+            'avg_css': _color_class(avg) if avg is not None else 'no-data',
+        })
+
+    col_averages = []
+    for topic in columns:
+        pts = sum(agg.get((s.id, topic.id), {}).get('points', 0) for s in students)
+        mx = sum(agg.get((s.id, topic.id), {}).get('max_points', 0) for s in students)
+        avg = round(pts / mx * 100) if mx > 0 else None
+        col_averages.append({
+            'pct': avg, 'css': _color_class(avg) if avg is not None else 'no-data',
+        })
+
+    return columns, rows, col_averages
+
+
+def _build_subtopic_data(students, topic):
+    """Агрегация: ученики × подтемы одной темы"""
+    marks = Mark.objects.filter(
+        participation__student__in=students,
+    ).select_related('participation__student')
+
+    all_task_ids = set()
+    for mark in marks:
+        if mark.task_scores:
+            for key in mark.task_scores.keys():
+                all_task_ids.add(key)
+
+    if not all_task_ids:
+        return [], [], []
+
+    tasks_qs = Task.objects.filter(
+        pk__in=all_task_ids, topic=topic,
+    ).select_related('subtopic')
+    task_map = {str(t.pk): t for t in tasks_qs}
+
+    agg = defaultdict(lambda: {'points': 0, 'max_points': 0})
+
+    for mark in marks:
+        student_id = mark.participation.student_id
+        if not mark.task_scores:
+            continue
+        seen = set()
+        for task_id_raw, scores in mark.task_scores.items():
+            clean_id = task_id_raw
+            if clean_id in seen:
+                continue
+            seen.add(clean_id)
+
+            task = task_map.get(clean_id)
+            if not task:
+                continue
+
+            col_key = task.subtopic_id if task.subtopic_id else f'topic_{task.topic_id}'
+            key = (student_id, col_key)
+            agg[key]['points'] += scores.get('points', 0)
+            agg[key]['max_points'] += scores.get('max_points', 0)
+
+    subtopic_ids = set()
+    for (_, col_key) in agg.keys():
+        if not str(col_key).startswith('topic_'):
+            subtopic_ids.add(col_key)
+
+    columns = list(SubTopic.objects.filter(pk__in=subtopic_ids).order_by('order', 'name'))
+
+    rows = []
+    for student in students:
+        cells = []
+        total_pts = 0
+        total_max = 0
+        for sub in columns:
+            data = agg.get((student.id, sub.id))
+            if data and data['max_points'] > 0:
+                pct = round(data['points'] / data['max_points'] * 100)
+                total_pts += data['points']
+                total_max += data['max_points']
+                cells.append({
+                    'pct': pct, 'points': data['points'],
+                    'max_points': data['max_points'],
+                    'css': _color_class(pct), 'subtopic': sub,
+                })
+            else:
+                cells.append({'pct': None, 'css': 'no-data', 'subtopic': sub})
+
+        avg = round(total_pts / total_max * 100) if total_max > 0 else None
+        rows.append({
+            'student': student, 'cells': cells,
+            'avg': avg,
+            'avg_css': _color_class(avg) if avg is not None else 'no-data',
+        })
+
+    col_averages = []
+    for sub in columns:
+        pts = sum(agg.get((s.id, sub.id), {}).get('points', 0) for s in students)
+        mx = sum(agg.get((s.id, sub.id), {}).get('max_points', 0) for s in students)
+        avg = round(pts / mx * 100) if mx > 0 else None
+        col_averages.append({
+            'pct': avg, 'css': _color_class(avg) if avg is not None else 'no-data',
+        })
+
+    return columns, rows, col_averages
+
+
+def _color_class(pct):
+    if pct is None:
+        return 'no-data'
+    if pct >= 95:
+        return 'perfect'
+    if pct >= 85:
+        return 'excellent'
+    if pct >= 70:
+        return 'good'
+    if pct >= 60:
+        return 'moderate'
+    if pct >= 45:
+        return 'warning'
+    return 'danger'
+

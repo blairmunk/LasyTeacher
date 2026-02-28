@@ -250,9 +250,7 @@ class ParticipationReviewView(TemplateView):
         for i, task in enumerate(variant_tasks):
             task_uuid = str(task.id)
             # Поддержка обоих форматов ключей
-            task_data_old = existing_scores.get(task_uuid, {})
-            task_data_new = existing_scores.get(f'task_{task_uuid}', {})
-            task_data = task_data_new or task_data_old
+            task_data = existing_scores.get(task_uuid, {})
 
             tasks_with_scores.append({
                 'task': task,
@@ -380,7 +378,6 @@ class ParticipationReviewView(TemplateView):
                     'comment': comment_val,
                 }
                 task_scores[task_uuid] = score_data
-                task_scores[f'task_{task_uuid}'] = score_data
 
         mark.task_scores = task_scores
         mark.save()

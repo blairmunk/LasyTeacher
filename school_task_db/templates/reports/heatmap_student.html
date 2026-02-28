@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}{{ student.get_short_name }} — {{ topic.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'reports:heatmap' %}">
+                    <i class="fas fa-th"></i> Тепловая карта
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'reports:heatmap-drilldown' topic.pk %}">
+                    {{ topic.name }}
+                </a>
+            </li>
+            <li class="breadcrumb-item active">{{ student.get_short_name }}</li>
+        </ol>
+    </nav>
+
+    <h2 class="mb-4">
+        <i class="fas fa-user"></i> {{ student.get_full_name }}
+        <small class="text-muted">{{ topic.section }} → {{ topic.name }}</small>
+    </h2>
+
+    <!-- Сводка по подтемам -->
+    <h4 class="mb-3">Результаты по подтемам</h4>
+    <div class="row mb-4">
+        {% for item in subtopic_summary %}
+        <div class="col-md-4 col-lg-3 mb-3">
+            <div class="card h-100">
+                <div class="card-body p-3">
+                    <h6 class="card-title mb-2">{{ item.subtopic.name }}</h6>
+                    {% if item.pct is not None %}
+                    <div class="progress mb-2" style="height: 24px;">
+                        <div class="progress-bar
+                            {% if item.pct >= 85 %}bg-success
+                            {% elif item.pct >= 70 %}bg-info
+                            {% elif item.pct >= 45 %}bg-warning
+                            {% else %}bg-danger{% endif %}"
+                            style="width: {{ item.pct }}%;">
+                            {{ item.pct }}%
+                        </div>
+                    </div>
+                    <small class="text-muted">{{ item.points }}/{{ item.max_points }} баллов</small>
+                    {% else %}
+                    <span class="text-muted">Нет данных</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Детализация по заданиям -->
+    {% if details %}
+    <h4 class="mb-3">Все задания</h4>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Событие</th>
+                    <th>Подтема</th>
+                    <th>Задание</th>
+                    <th class="text-center">Баллы</th>
+                    <th class="text-center">%</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in details %}
+                <tr>
+                    <td>
+                        <a href="{% url 'events:detail' d.event.pk %}">
+                            {{ d.event.name }}
+                        </a>
+                    </td>
+                    <td>
+                        {% if d.subtopic %}
+                            {{ d.subtopic.name }}
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'tasks:detail' d.task.pk %}">
+                            {{ d.task.text|truncatechars:60 }}
+                        </a>
+                    </td>
+                    <td class="text-center">{{ d.points }}/{{ d.max_points }}</td>
+                    <td class="text-center">
+                        <span class="badge
+                            {% if d.pct >= 85 %}bg-success
+                            {% elif d.pct >= 70 %}bg-info
+                            {% elif d.pct >= 45 %}bg-warning
+                            {% else %}bg-danger{% endif %}">
+                            {{ d.pct }}%
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

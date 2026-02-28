@@ -106,37 +106,53 @@ class Command(BaseCommand):
     def _create_students(self, groups):
         students = {'9А': [], '9Б': []}
 
-        for group_name, group in groups.items():
-            used = set()
+        # 9А — первая половина имён
+        group_a = groups['9А']
+        for i in range(10):
+            ln = LAST_NAMES_M[i]
+            fn = FIRST_NAMES_M[i]
+            mn = MIDDLE_NAMES_M[i % len(MIDDLE_NAMES_M)]
+            student, _ = Student.objects.get_or_create(
+                last_name=ln, first_name=fn,
+                defaults={'middle_name': mn}
+            )
+            group_a.students.add(student)
+            students['9А'].append(student)
 
-            for i in range(10):
-                ln = LAST_NAMES_M[i % len(LAST_NAMES_M)]
-                fn = FIRST_NAMES_M[i % len(FIRST_NAMES_M)]
-                mn = MIDDLE_NAMES_M[i % len(MIDDLE_NAMES_M)]
-                key = f'{ln}_{fn}_{group_name}'
-                if key in used:
-                    ln = LAST_NAMES_M[(i + 7) % len(LAST_NAMES_M)]
-                    key = f'{ln}_{fn}_{group_name}'
-                used.add(key)
+        for i in range(5):
+            ln = LAST_NAMES_F[i]
+            fn = FIRST_NAMES_F[i]
+            mn = MIDDLE_NAMES_F[i % len(MIDDLE_NAMES_F)]
+            student, _ = Student.objects.get_or_create(
+                last_name=ln, first_name=fn,
+                defaults={'middle_name': mn}
+            )
+            group_a.students.add(student)
+            students['9А'].append(student)
 
-                student, _ = Student.objects.get_or_create(
-                    last_name=ln, first_name=fn,
-                    defaults={'middle_name': mn}
-                )
-                group.students.add(student)
-                students[group_name].append(student)
+        # 9Б — вторая половина + изменённые имена
+        group_b = groups['9Б']
+        for i in range(10):
+            ln = LAST_NAMES_M[14 - i]  # Обратный порядок
+            fn = FIRST_NAMES_M[(i + 5) % len(FIRST_NAMES_M)]  # Сдвиг
+            mn = MIDDLE_NAMES_M[(i + 3) % len(MIDDLE_NAMES_M)]
+            student, _ = Student.objects.get_or_create(
+                last_name=ln, first_name=fn,
+                defaults={'middle_name': mn}
+            )
+            group_b.students.add(student)
+            students['9Б'].append(student)
 
-            for i in range(5):
-                ln = LAST_NAMES_F[i % len(LAST_NAMES_F)]
-                fn = FIRST_NAMES_F[i % len(FIRST_NAMES_F)]
-                mn = MIDDLE_NAMES_F[i % len(MIDDLE_NAMES_F)]
-
-                student, _ = Student.objects.get_or_create(
-                    last_name=ln, first_name=fn,
-                    defaults={'middle_name': mn}
-                )
-                group.students.add(student)
-                students[group_name].append(student)
+        for i in range(5):
+            ln = LAST_NAMES_F[9 - i]  # Обратный порядок
+            fn = FIRST_NAMES_F[(i + 3) % len(FIRST_NAMES_F)]  # Сдвиг
+            mn = MIDDLE_NAMES_F[(i + 2) % len(MIDDLE_NAMES_F)]
+            student, _ = Student.objects.get_or_create(
+                last_name=ln, first_name=fn,
+                defaults={'middle_name': mn}
+            )
+            group_b.students.add(student)
+            students['9Б'].append(student)
 
         total = sum(len(v) for v in students.values())
         self.stdout.write(f'🧑‍🎓 Учеников: {total}')

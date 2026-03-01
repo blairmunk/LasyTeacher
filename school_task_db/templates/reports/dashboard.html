@@ -3,85 +3,116 @@
 {% block title %}Отчёты и аналитика{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <h2><i class="fas fa-chart-line"></i> Панель отчётов</h2>
-    
-    <!-- Основная статистика -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h3>{{ total_students }}</h3>
-                    <p class="mb-0">Учеников</p>
+<div class="container-fluid px-4">
+    <h2 class="mb-4"><i class="fas fa-chart-line"></i> Панель отчётов</h2>
+
+    <!-- Ряд 1: карточки статистики -->
+    <div class="row mb-4 g-3">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="fs-1 text-primary fw-bold">{{ total_students }}</div>
+                    <div class="text-muted small">Учеников</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h3>{{ total_events }}</h3>
-                    <p class="mb-0">Событий</p>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="fs-1 text-success fw-bold">{{ total_events }}</div>
+                    <div class="text-muted small">Событий</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <h3>{{ total_marks }}</h3>
-                    <p class="mb-0">Оценок</p>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="fs-1 text-info fw-bold">{{ total_marks }}</div>
+                    <div class="text-muted small">Оценок</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-white">
-                <div class="card-body">
-                    <h3>{{ average_score|floatformat:1 }}</h3>
-                    <p class="mb-0">Средняя оценка</p>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="fs-1 text-warning fw-bold">{{ total_courses }}</div>
+                    <div class="text-muted small">Курсов</div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Grafiki -->
-    <div class="row mb-4">
+
+    <!-- Ряд 2: Gauge + Donut + Оценки -->
+    <div class="row mb-4 g-3">
         <div class="col-md-4">
-            <div class="card">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-2">
+                    <div id="gauge-chart"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-2">
+                    <div id="donut-chart"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-2">
                     <div id="score-chart"></div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card">
+    </div>
+
+    <!-- Ряд 3: Активность + Box-plot -->
+    <div class="row mb-4 g-3">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-2">
                     <div id="activity-chart"></div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-2">
+                    <div id="box-plot-chart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ряд 4: Сравнение классов (график) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
                 <div class="card-body p-2">
                     <div id="class-chart"></div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Таблица классов + последние события -->
-    <div class="row mb-4">
+
+    <!-- Ряд 5: Таблица классов + Последние события -->
+    <div class="row mb-4 g-3">
         <div class="col-md-8">
-            <div class="card">
-                <div class="card-header"><h5 class="mb-0">Статистика по классам</h5></div>
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="fas fa-users"></i> Статистика по классам</h5>
+                </div>
                 <div class="card-body p-0">
-                    <table class="table table-striped mb-0">
-                        <thead>
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
                             <tr>
                                 <th>Класс</th>
                                 <th>Учеников</th>
                                 <th>Участий</th>
                                 <th>% выполн.</th>
                                 <th>Ср. оценка</th>
-                                <th></th>
+                                <th>Действия</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -91,31 +122,39 @@
                                 <td>{{ stat.students_count }}</td>
                                 <td>{{ stat.completed_participations }}/{{ stat.total_participations }}</td>
                                 <td>
-                                    <span class="badge bg-{% if stat.completion_rate >= 80 %}success{% elif stat.completion_rate >= 60 %}warning{% else %}danger{% endif %}">
-                                        {{ stat.completion_rate }}%
-                                    </span>
+                                    <div class="progress" style="height: 20px; min-width: 80px;">
+                                        <div class="progress-bar
+                                            {% if stat.completion_rate >= 80 %}bg-success
+                                            {% elif stat.completion_rate >= 60 %}bg-warning
+                                            {% else %}bg-danger{% endif %}"
+                                            style="width: {{ stat.completion_rate }}%">
+                                            {{ stat.completion_rate }}%
+                                        </div>
+                                    </div>
                                 </td>
                                 <td>
-                                    <span class="badge bg-{% if stat.average_score >= 4 %}success{% elif stat.average_score >= 3 %}warning{% else %}danger{% endif %}">
+                                    <span class="badge
+                                        {% if stat.average_score >= 4 %}bg-success
+                                        {% elif stat.average_score >= 3 %}bg-warning text-dark
+                                        {% else %}bg-danger{% endif %}
+                                        fs-6">
                                         {{ stat.average_score }}
                                     </span>
                                 </td>
                                 <td>
-                                    {% for link in stat.heatmap_links %}
-                                    <a href="{% url 'reports:heatmap-course' link.course_id %}?group={{ link.group_id }}" 
-                                    class="btn btn-outline-primary btn-sm mb-1"
-                                    title="Тепловая карта: {{ link.group_name }} — {{ link.course_name }}">
-                                        <i class="fas fa-th"></i> {{ link.course_name|truncatechars:20 }}
-                                    </a>
-                                    {% endfor %}
-                                    {% if not stat.heatmap_links %}
-                                    <a href="{% url 'reports:heatmap' %}?group={{ stat.group_id }}"
-                                       class="btn btn-outline-secondary btn-sm">
-                                        <i class="fas fa-th"></i> Общая
-                                    </a>
-                                    {% endif %}
+                                    <div class="btn-group btn-group-sm">
+                                        {% for link in stat.heatmap_links %}
+                                        <a href="{% url 'reports:journal' link.course_id link.group_id %}"
+                                           class="btn btn-outline-warning" title="Журнал">
+                                            <i class="fas fa-book-open"></i>
+                                        </a>
+                                        <a href="{% url 'reports:heatmap-course' link.course_id %}?group={{ link.group_id }}"
+                                           class="btn btn-outline-danger" title="Тепловая карта">
+                                            <i class="fas fa-th"></i>
+                                        </a>
+                                        {% endfor %}
+                                    </div>
                                 </td>
-
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -123,48 +162,61 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-4">
-            <div class="card">
-                <div class="card-header"><h5 class="mb-0">Последние события</h5></div>
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="fas fa-clock"></i> Последние события</h5>
+                </div>
                 <div class="card-body p-0">
                     {% for event in recent_events %}
-                    <div class="border-bottom px-3 py-2">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <small class="fw-bold">{{ event.name }}</small><br>
-                                <small class="text-muted">{{ event.planned_date|date:"d.m.Y" }}</small>
-                            </div>
-                            <span class="badge bg-{% if event.status == 'graded' %}success{% elif event.status == 'completed' %}info{% else %}secondary{% endif %} align-self-center">
-                                {{ event.get_status_display }}
-                            </span>
+                    <div class="border-bottom px-3 py-2 d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-bold small">{{ event.name|truncatechars:30 }}</div>
+                            <small class="text-muted">{{ event.planned_date|date:"d.m.Y" }}</small>
                         </div>
+                        <span class="badge
+                            {% if event.status == 'graded' %}bg-success
+                            {% elif event.status == 'completed' %}bg-info
+                            {% elif event.status == 'planned' %}bg-secondary
+                            {% elif event.status == 'reviewing' %}bg-warning text-dark
+                            {% else %}bg-dark{% endif %}">
+                            {{ event.get_status_display }}
+                        </span>
                     </div>
+                    {% empty %}
+                    <div class="p-3 text-muted text-center">Нет событий</div>
                     {% endfor %}
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Ссылки на отчёты -->
     {% include "reports/_reports_nav.html" %}
-
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 <script>
-// Распределение оценок
-const scoreConfig = {{ score_chart_json|safe }};
-Plotly.newPlot('score-chart', scoreConfig.data, scoreConfig.layout, scoreConfig.config);
+    function renderChart(id, json) {
+        if (json && json.data && json.data.length > 0) {
+            Plotly.newPlot(id, json.data, json.layout, json.config || {});
+        }
+    }
 
-// Активность
-const activityConfig = {{ activity_chart_json|safe }};
-Plotly.newPlot('activity-chart', activityConfig.data, activityConfig.layout, activityConfig.config);
+    renderChart('gauge-chart', {{ gauge_json|safe }});
+    renderChart('donut-chart', {{ donut_json|safe }});
+    renderChart('score-chart', {{ score_chart_json|safe }});
+    renderChart('activity-chart', {{ activity_chart_json|safe }});
+    renderChart('box-plot-chart', {{ box_plot_json|safe }});
+    renderChart('class-chart', {{ class_chart_json|safe }});
 
-// Классы
-const classConfig = {{ class_chart_json|safe }};
-Plotly.newPlot('class-chart', classConfig.data, classConfig.layout, classConfig.config);
+    // Адаптивность при ресайзе
+    window.addEventListener('resize', function() {
+        document.querySelectorAll('.js-plotly-plot').forEach(function(el) {
+            Plotly.Plots.resize(el);
+        });
+    });
 </script>
 {% endblock %}

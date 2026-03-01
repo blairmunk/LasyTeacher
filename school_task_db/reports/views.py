@@ -113,11 +113,6 @@ class ReportsDashboardView(TemplateView):
         ):
             score_counts[item['score']] = item['count']
 
-        context['score_distribution'] = list(
-            marks.exclude(score__isnull=True).values('score').annotate(
-                count=Count('score')
-            ).order_by('score')
-        )
         context['score_chart_json'] = plotly_utils.to_json(
             plotly_utils.score_distribution_config(score_counts)
         )
@@ -220,40 +215,65 @@ class ReportsDashboardView(TemplateView):
             )
         )
 
-        # Топ учеников
-        top_students = students.annotate(
-            completed_works=Count(
-                'eventparticipation',
-                filter=Q(
-                    eventparticipation__status__in=['completed', 'graded'],
-                    eventparticipation__event__in=events,
-                )
-            )
-        ).order_by('-completed_works')[:10]
-        context['top_students'] = top_students
-
         # Последние события
         recent_events = events.select_related(
             'work', 'course'
         ).order_by('-planned_date')[:10]
         context['recent_events'] = recent_events
 
-        # События требующие внимания
-        events_need_attention = events.filter(
-            Q(status='reviewing') |
-            Q(status='completed',
-              planned_date__lt=current_date - timedelta(days=7))
-        ).select_related('work')[:5]
-        context['events_need_attention'] = events_need_attention
-
-        # Типы работ
-        work_type_stats = Work.objects.values('work_type').annotate(
-            count=Count('id'), avg_duration=Avg('duration')
-        ).order_by('-count')
-        context['work_type_stats'] = list(work_type_stats)
-
         context['courses'] = courses.order_by('grade_level', 'name')
-        context['student_groups'] = groups
+
+
+        # Gauge — средний балл
+        avg = context.get('average_score', 0) or 0
+        context['gauge_json'] = plotly_utils.to_json(
+            plotly_utils.gauge_config(avg, title='Средний балл')
+        )
+
+        # Donut — статусы событий
+        status_labels = []
+        status_values = []
+        status_colors = []
+        status_map = {
+            'planned': ('Запланировано', 'rgba(23, 162, 184, 0.75)'),
+            'in_progress': ('Выполняется', 'rgba(111, 66, 193, 0.75)'),
+            'completed': ('Завершено', 'rgba(40, 167, 69, 0.75)'),
+            'reviewing': ('На проверке', 'rgba(255, 193, 7, 0.75)'),
+            'graded': ('Проверено', 'rgba(13, 110, 253, 0.75)'),
+            'closed': ('Закрыто', 'rgba(108, 117, 125, 0.75)'),
+        }
+        for status_code, (label, color) in status_map.items():
+            count = events.filter(status=status_code).count()
+            if count > 0:
+                status_labels.append(label)
+                status_values.append(count)
+                status_colors.append(color)
+
+        context['donut_json'] = plotly_utils.to_json(
+            plotly_utils.donut_config(
+                status_labels, status_values,
+                title='Статусы событий',
+                colors=status_colors
+            )
+        )
+
+        # Box-plot — распределение оценок по работам
+        from works.models import Work
+        box_data = {}
+        for event in events.select_related('work'):
+            work_name = event.work.name if event.work else 'Без работы'
+            short_name = work_name[:20]
+            event_marks = marks.filter(
+                participation__event=event,
+                score__isnull=False
+            ).values_list('score', flat=True)
+            scores_list = list(event_marks)
+            if scores_list:
+                box_data[short_name] = scores_list
+
+        context['box_plot_json'] = plotly_utils.to_json(
+            plotly_utils.box_plot_config(box_data, title='Распределение по работам')
+        )
 
         context.update(_get_nav_context('dashboard', year=year))
 

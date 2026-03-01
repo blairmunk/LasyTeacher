@@ -62,36 +62,54 @@
 
                     <div id="formset-container">
                         {% for f in formset %}
-                        <div class="formset-row border rounded p-3 mb-3 {% if f.DELETE.value %}d-none{% endif %}"
+                        <div class="formset-row border rounded p-3 mb-2 {% if f.DELETE.value %}d-none{% endif %}"
                              data-index="{{ forloop.counter0 }}">
                             {% if f.non_field_errors %}
                             <div class="alert alert-danger py-1">{{ f.non_field_errors }}</div>
                             {% endif %}
 
-                            <div class="row align-items-end">
-                                <div class="col-md-1 mb-2">
-                                    <label class="form-label">№</label>
-                                    {{ f.order }}
+                            <div class="row align-items-center">
+                                <!-- Стрелки -->
+                                <div class="col-auto pe-0">
+                                    <div class="d-flex flex-column gap-1">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1 btn-move-up"
+                                                title="Переместить вверх">
+                                            <i class="fas fa-chevron-up"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1 btn-move-down"
+                                                title="Переместить вниз">
+                                            <i class="fas fa-chevron-down"></i>
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="col-md-6 mb-2">
-                                    <label class="form-label">Группа аналогов</label>
+                                <!-- Номер -->
+                                <div class="col-auto">
+                                    <span class="badge bg-primary fs-6 row-number">{{ forloop.counter }}</span>
+                                    <input type="hidden" name="workanaloggroup_set-{{ forloop.counter0 }}-order"
+                                           id="id_workanaloggroup_set-{{ forloop.counter0 }}-order"
+                                           value="{{ forloop.counter }}" class="order-field">
+                                </div>
+                                <!-- Группа аналогов -->
+                                <div class="col">
                                     {{ f.analog_group }}
                                     {% if f.analog_group.errors %}
                                     <div class="text-danger small">{{ f.analog_group.errors }}</div>
                                     {% endif %}
                                 </div>
-                                <div class="col-md-2 mb-2">
-                                    <label class="form-label">Кол-во</label>
-                                    {{ f.count }}
+                                <!-- Кол-во -->
+                                <div class="col-auto">
+                                    <div class="input-group" style="width: 130px">
+                                        <span class="input-group-text">×</span>
+                                        {{ f.count }}
+                                    </div>
                                 </div>
-                                <div class="col-md-2 mb-2 text-end">
+                                <!-- Удалить -->
+                                <div class="col-auto">
                                     <button type="button" class="btn btn-outline-danger btn-sm btn-remove-row"
                                             title="Удалить группу">
-                                        <i class="fas fa-trash"></i> Удалить
+                                        <i class="fas fa-trash"></i>
                                     </button>
-                                    <div class="d-none">
-                                        {{ f.DELETE }}
-                                    </div>
+                                    <div class="d-none">{{ f.DELETE }}</div>
                                 </div>
                             </div>
                             {{ f.id }}
@@ -106,12 +124,14 @@
 
                     <div class="alert alert-info small mt-3 mb-0">
                         <i class="fas fa-info-circle"></i>
-                        <strong>№</strong> — порядок задания в работе.
-                        <strong>Кол-во</strong> — сколько заданий из группы включить в каждый вариант.
+                        Используйте <i class="fas fa-chevron-up"></i><i class="fas fa-chevron-down"></i>
+                        для изменения порядка.
+                        <strong>×</strong> — сколько заданий из группы включить в каждый вариант.
                     </div>
                 </div>
             </div>
             {% endif %}
+
 
             <div class="d-flex gap-2 mb-4">
                 <button type="submit" class="btn btn-primary btn-lg">
@@ -156,78 +176,170 @@
 
     if (!container || !addBtn || !totalForms) return;
 
-    // Шаблон новой строки
-    function getEmptyRow(index) {
-        // Берём options из первого select (или создаём пустой)
-        let options = '<option value="">---------</option>';
-        const existingSelect = container.querySelector('select[name$="-analog_group"]');
-        if (existingSelect) {
-            options = existingSelect.innerHTML;
-        }
+    // Собираем options из существующего select
+    let selectOptions = '<option value="" selected>---------</option>';
+    const existingSelect = container.querySelector('select[name$="-analog_group"]');
+    if (existingSelect) {
+        selectOptions = existingSelect.innerHTML.replace(/ selected/g, '');
+        selectOptions = selectOptions.replace('value="">', 'value="" selected>');
+    }
 
-        return `
-        <div class="formset-row border rounded p-3 mb-3" data-index="${index}">
-            <div class="row align-items-end">
-                <div class="col-md-1 mb-2">
-                    <label class="form-label">№</label>
-                    <input type="number" name="workanaloggroup_set-${index}-order"
-                           id="id_workanaloggroup_set-${index}-order"
-                           class="form-control" min="0" style="width: 80px" value="${index + 1}">
+    // === Перенумерация всех видимых строк ===
+    function renumberRows() {
+        const visibleRows = container.querySelectorAll('.formset-row:not(.d-none)');
+        visibleRows.forEach((row, i) => {
+            const num = i + 1;
+            const badge = row.querySelector('.row-number');
+            const orderField = row.querySelector('.order-field');
+            if (badge) badge.textContent = num;
+            if (orderField) orderField.value = num;
+        });
+        updateArrowStates();
+        updateEmptyMessage();
+    }
+
+    // === Отключаем ↑ у первого и ↓ у последнего ===
+    function updateArrowStates() {
+        const visibleRows = Array.from(
+            container.querySelectorAll('.formset-row:not(.d-none)')
+        );
+        visibleRows.forEach((row, i) => {
+            const upBtn = row.querySelector('.btn-move-up');
+            const downBtn = row.querySelector('.btn-move-down');
+            if (upBtn) {
+                upBtn.disabled = (i === 0);
+                upBtn.classList.toggle('invisible', i === 0);
+            }
+            if (downBtn) {
+                downBtn.disabled = (i === visibleRows.length - 1);
+                downBtn.classList.toggle('invisible', i === visibleRows.length - 1);
+            }
+        });
+    }
+
+    // === Перемещение строки вверх ===
+    container.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-move-up');
+        if (!btn || btn.disabled) return;
+
+        const row = btn.closest('.formset-row');
+        // Находим предыдущую видимую строку
+        let prev = row.previousElementSibling;
+        while (prev && prev.classList.contains('d-none')) {
+            prev = prev.previousElementSibling;
+        }
+        if (prev && prev.classList.contains('formset-row')) {
+            // Анимация
+            row.style.transition = 'transform 0.2s';
+            prev.style.transition = 'transform 0.2s';
+            const rowH = row.offsetHeight + 8; // margin
+            row.style.transform = 'translateY(-' + rowH + 'px)';
+            prev.style.transform = 'translateY(' + rowH + 'px)';
+
+            setTimeout(() => {
+                row.style.transition = '';
+                row.style.transform = '';
+                prev.style.transition = '';
+                prev.style.transform = '';
+                container.insertBefore(row, prev);
+                renumberRows();
+            }, 200);
+        }
+    });
+
+    // === Перемещение строки вниз ===
+    container.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-move-down');
+        if (!btn || btn.disabled) return;
+
+        const row = btn.closest('.formset-row');
+        let next = row.nextElementSibling;
+        while (next && next.classList.contains('d-none')) {
+            next = next.nextElementSibling;
+        }
+        if (next && next.classList.contains('formset-row')) {
+            const rowH = row.offsetHeight + 8;
+            row.style.transition = 'transform 0.2s';
+            next.style.transition = 'transform 0.2s';
+            row.style.transform = 'translateY(' + rowH + 'px)';
+            next.style.transform = 'translateY(-' + rowH + 'px)';
+
+            setTimeout(() => {
+                row.style.transition = '';
+                row.style.transform = '';
+                next.style.transition = '';
+                next.style.transform = '';
+                container.insertBefore(next, row);
+                renumberRows();
+            }, 200);
+        }
+    });
+
+    // === Добавить строку ===
+    addBtn.addEventListener('click', function() {
+        const index = parseInt(totalForms.value);
+        const html = `
+        <div class="formset-row border rounded p-3 mb-2" data-index="${index}">
+            <div class="row align-items-center">
+                <div class="col-auto pe-0">
+                    <div class="d-flex flex-column gap-1">
+                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1 btn-move-up">
+                            <i class="fas fa-chevron-up"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1 btn-move-down">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="col-md-6 mb-2">
-                    <label class="form-label">Группа аналогов</label>
+                <div class="col-auto">
+                    <span class="badge bg-primary fs-6 row-number">?</span>
+                    <input type="hidden" name="workanaloggroup_set-${index}-order"
+                           class="order-field" value="0">
+                </div>
+                <div class="col">
                     <select name="workanaloggroup_set-${index}-analog_group"
-                            id="id_workanaloggroup_set-${index}-analog_group"
-                            class="form-select">
-                        ${options}
-                    </select>
+                            class="form-select">${selectOptions}</select>
                 </div>
-                <div class="col-md-2 mb-2">
-                    <label class="form-label">Кол-во</label>
-                    <input type="number" name="workanaloggroup_set-${index}-count"
-                           id="id_workanaloggroup_set-${index}-count"
-                           class="form-control" min="1" style="width: 80px" value="1">
+                <div class="col-auto">
+                    <div class="input-group" style="width: 130px">
+                        <span class="input-group-text">×</span>
+                        <input type="number" name="workanaloggroup_set-${index}-count"
+                               class="form-control" min="1" style="width: 80px" value="1">
+                    </div>
                 </div>
-                <div class="col-md-2 mb-2 text-end">
+                <div class="col-auto">
                     <button type="button" class="btn btn-outline-danger btn-sm btn-remove-row">
-                        <i class="fas fa-trash"></i> Удалить
+                        <i class="fas fa-trash"></i>
                     </button>
                     <div class="d-none">
-                        <input type="checkbox" name="workanaloggroup_set-${index}-DELETE"
-                               id="id_workanaloggroup_set-${index}-DELETE">
+                        <input type="checkbox" name="workanaloggroup_set-${index}-DELETE">
                     </div>
                 </div>
             </div>
-            <input type="hidden" name="workanaloggroup_set-${index}-id" id="id_workanaloggroup_set-${index}-id">
+            <input type="hidden" name="workanaloggroup_set-${index}-id">
         </div>`;
-    }
 
-    // Добавить строку
-    addBtn.addEventListener('click', function() {
-        const index = parseInt(totalForms.value);
-        container.insertAdjacentHTML('beforeend', getEmptyRow(index));
+        container.insertAdjacentHTML('beforeend', html);
         totalForms.value = index + 1;
-        updateEmptyMessage();
+        renumberRows();
+
+        const newRow = container.querySelector('.formset-row:last-child');
+        newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        newRow.style.transition = 'background-color 0.5s';
+        newRow.style.backgroundColor = '#d4edda';
+        setTimeout(() => { newRow.style.backgroundColor = ''; }, 1500);
     });
 
-    // Удалить строку (делегирование)
+    // === Удалить строку ===
     container.addEventListener('click', function(e) {
         const btn = e.target.closest('.btn-remove-row');
         if (!btn) return;
 
         const row = btn.closest('.formset-row');
         const deleteCheckbox = row.querySelector('input[name$="-DELETE"]');
-        const idField = row.querySelector('input[name$="-id"]');
-
-        if (idField && idField.value) {
-            // Существующая запись — помечаем на удаление
-            deleteCheckbox.checked = true;
-            row.classList.add('d-none');
-        } else {
-            // Новая строка — просто удаляем из DOM
-            row.remove();
-        }
-        updateEmptyMessage();
+        if (deleteCheckbox) deleteCheckbox.checked = true;
+        row.classList.add('d-none');
+        renumberRows();
     });
 
     function updateEmptyMessage() {
@@ -237,7 +349,10 @@
         }
     }
 
-    updateEmptyMessage();
+    // Инициализация
+    renumberRows();
 })();
 </script>
 {% endblock %}
+
+

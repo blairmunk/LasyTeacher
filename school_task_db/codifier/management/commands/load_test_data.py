@@ -22,8 +22,8 @@ from django.utils import timezone
 from curriculum.models import Topic, SubTopic
 from students.models import Student, StudentGroup
 from tasks.models import Task
-from task_groups.models import TaskGroup
-from works.models import Work, Variant, VariantTask
+from task_groups.models import AnalogGroup, TaskGroup
+from works.models import Work, Variant, VariantTask, WorkAnalogGroup
 from events.models import Event, EventParticipation, Mark
 
 
@@ -81,23 +81,29 @@ class Command(BaseCommand):
             Mark.objects.all().delete()
             EventParticipation.objects.all().delete()
             Event.objects.all().delete()
+            VariantTask.objects.all().delete()
             Variant.objects.all().delete()
+            WorkAnalogGroup.objects.all().delete()
             Work.objects.all().delete()
             TaskGroup.objects.all().delete()
+            AnalogGroup.objects.all().delete()
             Task.objects.all().delete()
             Student.objects.all().delete()
             StudentGroup.objects.all().delete()
             AcademicYear.objects.all().delete()
             self.stdout.write(self.style.WARNING('🗑  Все данные удалены'))
 
+
         with transaction.atomic():
             year = self._create_academic_year()
             groups = self._create_groups(year)
             students = self._create_students(groups)
             tasks = self._create_tasks()
-            works = self._create_works(tasks)
+            analog_groups = self._create_analog_groups(tasks)
+            works = self._create_works(tasks, analog_groups)
             course = self._create_course(works, groups, year)
             self._create_events(works, students, groups, course)
+
 
         self.stdout.write(self.style.SUCCESS('\n🎉 Тестовые данные загружены!'))
 
@@ -234,28 +240,61 @@ class Command(BaseCommand):
         self.stdout.write(f'📝 Заданий: {len(tasks)}')
         return tasks
 
-    def _create_works(self, tasks):
+    def _create_analog_groups(self, tasks):
+        """Группируем задания по subtopic → AnalogGroup + TaskGroup"""
+        subtopic_map = {}
+        for task in tasks:
+            if not task.subtopic:
+                continue
+            key = task.subtopic_id
+            if key not in subtopic_map:
+                subtopic_map[key] = {
+                    'subtopic': task.subtopic,
+                    'topic': task.topic,
+                    'tasks': [],
+                }
+            subtopic_map[key]['tasks'].append(task)
+
+        created = 0
+        for key, data in subtopic_map.items():
+            group, was_created = AnalogGroup.objects.get_or_create(
+                name=f"{data['topic'].name}: {data['subtopic'].name}",
+                defaults={
+                    'description': f"Задания по теме «{data['subtopic'].name}»"
+                },
+            )
+            if was_created:
+                created += 1
+
+            for task in data['tasks']:
+                TaskGroup.objects.get_or_create(task=task, group=group)
+
+        self.stdout.write(f'🔗 Групп аналогов: {created}')
+        return subtopic_map
+
+
+    def _create_works(self, tasks, analog_groups):
         if not tasks:
             return []
 
         works_config = [
             {
                 'name': 'КР №1: Механическое движение',
-                'work_type': 'control',
+                'work_type': 'test',
                 'topic_names': ['Механическое движение', 'Равноускоренное движение'],
                 'tasks_per_variant': 8,
                 'num_variants': 2,
             },
             {
                 'name': 'СР: Силы в природе',
-                'work_type': 'independent',
+                'work_type': 'quiz',
                 'topic_names': ['Силы в природе', 'Законы Ньютона'],
                 'tasks_per_variant': 5,
                 'num_variants': 2,
             },
             {
                 'name': 'КР №2: Тепловые явления',
-                'work_type': 'control',
+                'work_type': 'test',
                 'topic_names': [
                     'Внутренняя энергия и теплопередача',
                     'Количество теплоты',
@@ -269,64 +308,53 @@ class Command(BaseCommand):
         works = []
 
         for config in works_config:
-            available = list(
-                Task.objects.filter(
-                    topic__name__in=config['topic_names'],
-                ).order_by('?')
-            )
+            # Находим группы аналогов для этих тем
+            groups = AnalogGroup.objects.filter(
+                taskgroup__task__topic__name__in=config['topic_names']
+            ).distinct()
 
-            if len(available) < config['tasks_per_variant']:
+            available_groups = list(groups)
+
+            if not available_groups:
                 self.stdout.write(self.style.WARNING(
-                    f'  ⚠️  {config["name"]}: мало заданий '
-                    f'({len(available)} < {config["tasks_per_variant"]})'
+                    f'  ⚠️  {config["name"]}: нет групп аналогов для тем'
                 ))
                 continue
 
             work, created = Work.objects.get_or_create(
                 name=config['name'],
-                defaults={
-                    'work_type': config['work_type'],
-                }
+                defaults={'work_type': config['work_type']},
             )
 
             if not created:
-                work.variant_counter = config['num_variants']
-                work.save(update_fields=['variant_counter'])
-
                 works.append(work)
                 continue
 
-            random.shuffle(available)
+            # Выбираем группы для спецификации
+            if len(available_groups) >= config['tasks_per_variant']:
+                selected_groups = random.sample(
+                    available_groups, config['tasks_per_variant']
+                )
+            else:
+                selected_groups = available_groups
 
-            for v_num in range(1, config['num_variants'] + 1):
-                variant = Variant.objects.create(
+            # Создаём спецификацию работы (WorkAnalogGroup)
+            for order, group in enumerate(selected_groups, 1):
+                WorkAnalogGroup.objects.create(
                     work=work,
-                    number=v_num,
+                    analog_group=group,
+                    count=1,
+                    order=order,
                 )
 
-                start = (v_num - 1) * config['tasks_per_variant']
-                end = start + config['tasks_per_variant']
-                variant_tasks = available[start:end]
+            # Генерируем варианты через штатный метод
+            variants = work.generate_variants(count=config['num_variants'])
 
-                if len(variant_tasks) < config['tasks_per_variant']:
-                    extra = random.sample(
-                        available,
-                        config['tasks_per_variant'] - len(variant_tasks)
-                    )
-                    variant_tasks.extend(extra)
-
-                for order, task in enumerate(variant_tasks, 1):
-                    VariantTask.objects.create(
-                        variant=variant,
-                        task=task,
-                        order=order,
-                    )
-
-
+            tasks_count = variants[0].tasks.count() if variants else 0
             works.append(work)
             self.stdout.write(
-                f'  📄 {config["name"]}: {config["num_variants"]} вар. '
-                f'× {config["tasks_per_variant"]} заданий'
+                f'  📄 {config["name"]}: {len(variants)} вар. '
+                f'× {tasks_count} заданий ({len(selected_groups)} групп)'
             )
 
         self.stdout.write(f'📋 Работ: {len(works)}')

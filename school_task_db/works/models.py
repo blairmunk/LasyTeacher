@@ -115,10 +115,10 @@ class Work(BaseModel):
 
     @property
     def max_points(self):
-        """Максимальный балл работы (из первого варианта)"""
+        """Максимальный балл работы (сумма difficulty из первого варианта)"""
         first_variant = self.variant_set.first()
         if first_variant:
-            return sum(t.max_points or 0 for t in first_variant.tasks.all())
+            return sum(t.difficulty or 0 for t in first_variant.tasks.all())
         return 0
 
 

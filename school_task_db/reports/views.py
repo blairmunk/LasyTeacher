@@ -16,13 +16,56 @@ from tasks.models import Task
 from events.models import Mark, EventParticipation
 from curriculum.models import Topic, SubTopic
 
-def _get_nav_context(active_report='', active_course_pk=None):
+def _get_nav_context(active_report='', active_course_pk=None, year=None):
     """Общий контекст для навигации по отчётам"""
     from curriculum.models import Course
+    qs = Course.objects.filter(is_active=True)
+    if year:
+        qs = qs.filter(year=year)
     return {
         'active_report': active_report,
         'active_course_pk': active_course_pk,
-        'courses': Course.objects.filter(is_active=True).order_by('grade_level', 'name'),
+        'courses': qs.order_by('grade_level', 'name'),
+    }
+
+
+def _year_qs(request):
+    """Возвращает dict с отфильтрованными по году querysets"""
+    from students.models import Student, StudentGroup
+    from events.models import Event, EventParticipation, Mark
+    from works.models import Work
+    from curriculum.models import Course
+
+    year = getattr(request, 'current_year', None)
+
+    if year:
+        groups = StudentGroup.objects.filter(academic_year=year)
+        date_range = (year.start_date, year.end_date)
+        events = Event.objects.filter(planned_date__range=date_range)
+        students = Student.objects.filter(studentgroup__academic_year=year).distinct()
+        courses = Course.objects.filter(year=year, is_active=True)
+        marks = Mark.objects.filter(
+            participation__event__planned_date__range=date_range
+        )
+        participations = EventParticipation.objects.filter(
+            event__planned_date__range=date_range
+        )
+    else:
+        groups = StudentGroup.objects.all()
+        events = Event.objects.all()
+        students = Student.objects.all()
+        courses = Course.objects.filter(is_active=True)
+        marks = Mark.objects.all()
+        participations = EventParticipation.objects.all()
+
+    return {
+        'year': year,
+        'groups': groups,
+        'events': events,
+        'students': students,
+        'courses': courses,
+        'marks': marks,
+        'participations': participations,
     }
 
 
@@ -32,22 +75,27 @@ class ReportsDashboardView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         current_date = datetime.now()
-        
-        from students.models import Student, StudentGroup
-        from events.models import Event, EventParticipation, Mark
+
         from works.models import Work
-        from curriculum.models import Course
-        
+
+        qs = _year_qs(self.request)
+        year = qs['year']
+        events = qs['events']
+        marks = qs['marks']
+        groups = qs['groups']
+        students = qs['students']
+        courses = qs['courses']
+        participations = qs['participations']
+
         # Основная статистика
         context.update({
-            'total_students': Student.objects.count(),
-            'total_events': Event.objects.count(),
+            'total_students': students.count(),
+            'total_events': events.count(),
             'total_works': Work.objects.count(),
-            'total_courses': Course.objects.count(),
+            'total_courses': courses.count(),
         })
-        
+
         # Статистика по отметкам
-        marks = Mark.objects.all()
         context.update({
             'total_marks': marks.count(),
             'average_score': marks.aggregate(
@@ -57,14 +105,14 @@ class ReportsDashboardView(TemplateView):
                 checked_at__gte=current_date - timedelta(days=30)
             ).count(),
         })
-        
+
         # Распределение оценок — Plotly
         score_counts = {}
         for item in marks.exclude(score__isnull=True).values('score').annotate(
             count=Count('score')
         ):
             score_counts[item['score']] = item['count']
-        
+
         context['score_distribution'] = list(
             marks.exclude(score__isnull=True).values('score').annotate(
                 count=Count('score')
@@ -73,27 +121,27 @@ class ReportsDashboardView(TemplateView):
         context['score_chart_json'] = plotly_utils.to_json(
             plotly_utils.score_distribution_config(score_counts)
         )
-        
+
         # Статистика по событиям
         context.update({
-            'events_planned': Event.objects.filter(status='planned').count(),
-            'events_completed': Event.objects.filter(status='completed').count(),
-            'events_graded': Event.objects.filter(status='graded').count(),
+            'events_planned': events.filter(status='planned').count(),
+            'events_completed': events.filter(status='completed').count(),
+            'events_graded': events.filter(status='graded').count(),
         })
-        
+
         # Активность по месяцам — Plotly
         monthly_labels = []
         monthly_values = []
         for i in range(6):
             month_start = current_date.replace(day=1) - timedelta(days=30 * i)
             month_end = month_start + timedelta(days=31)
-            count = EventParticipation.objects.filter(
+            count = participations.filter(
                 event__planned_date__range=[month_start, month_end],
                 status__in=['completed', 'graded']
             ).count()
             monthly_labels.append(month_start.strftime('%b %Y'))
             monthly_values.append(count)
-        
+
         monthly_labels.reverse()
         monthly_values.reverse()
         context['activity_chart_json'] = plotly_utils.to_json(
@@ -102,36 +150,38 @@ class ReportsDashboardView(TemplateView):
                 title='Активность по месяцам'
             )
         )
-        
+
         # Статистика по классам — Plotly
         class_stats = []
         class_names = []
         class_avg_scores = []
         class_completion = []
-        
-        for student_group in StudentGroup.objects.all():
+
+        for student_group in groups:
             students_ids = list(
                 student_group.students.values_list('id', flat=True)
             )
-            participations = EventParticipation.objects.filter(
+            grp_participations = participations.filter(
                 student__id__in=students_ids
             )
-            completed = participations.filter(
+            completed = grp_participations.filter(
                 status__in=['completed', 'graded']
             )
-            class_marks = Mark.objects.filter(
+            class_marks = marks.filter(
                 participation__student__id__in=students_ids,
                 score__isnull=False
             )
             avg_score = class_marks.aggregate(avg=Avg('score'))['avg'] or 0
             completion_rate = round(
-                (completed.count() / participations.count() * 100)
-                if participations.count() > 0 else 0, 1
+                (completed.count() / grp_participations.count() * 100)
+                if grp_participations.count() > 0 else 0, 1
             )
-            
+
             # Ссылки на heatmap — только для привязанных курсов
             heatmap_links = []
             linked_courses = student_group.courses.all()
+            if year:
+                linked_courses = linked_courses.filter(year=year)
             for c in linked_courses:
                 heatmap_links.append({
                     'course_id': str(c.pk),
@@ -139,11 +189,11 @@ class ReportsDashboardView(TemplateView):
                     'group_id': str(student_group.pk),
                     'group_name': student_group.name,
                 })
-            
+
             stat = {
                 'name': student_group.name,
                 'students_count': student_group.students.count(),
-                'total_participations': participations.count(),
+                'total_participations': grp_participations.count(),
                 'completed_participations': completed.count(),
                 'average_score': round(avg_score, 2) if avg_score else 0,
                 'completion_rate': completion_rate,
@@ -154,7 +204,7 @@ class ReportsDashboardView(TemplateView):
             class_names.append(student_group.name)
             class_avg_scores.append(round(avg_score, 2))
             class_completion.append(completion_rate)
-        
+
         context['class_stats'] = class_stats
 
         context['class_chart_json'] = plotly_utils.to_json(
@@ -169,44 +219,43 @@ class ReportsDashboardView(TemplateView):
                 title='Сравнение классов'
             )
         )
-        
+
         # Топ учеников
-        top_students = Student.objects.annotate(
+        top_students = students.annotate(
             completed_works=Count(
                 'eventparticipation',
                 filter=Q(
-                    eventparticipation__status__in=['completed', 'graded']
+                    eventparticipation__status__in=['completed', 'graded'],
+                    eventparticipation__event__in=events,
                 )
             )
         ).order_by('-completed_works')[:10]
         context['top_students'] = top_students
-        
+
         # Последние события
-        recent_events = Event.objects.select_related(
+        recent_events = events.select_related(
             'work', 'course'
         ).order_by('-planned_date')[:10]
         context['recent_events'] = recent_events
-        
+
         # События требующие внимания
-        events_need_attention = Event.objects.filter(
+        events_need_attention = events.filter(
             Q(status='reviewing') |
             Q(status='completed',
               planned_date__lt=current_date - timedelta(days=7))
         ).select_related('work')[:5]
         context['events_need_attention'] = events_need_attention
-        
+
         # Типы работ
         work_type_stats = Work.objects.values('work_type').annotate(
             count=Count('id'), avg_duration=Avg('duration')
         ).order_by('-count')
         context['work_type_stats'] = list(work_type_stats)
-        
-        # Доступные курсы и классы для heatmap
-        #context['courses'] = Course.objects.all()
-        context['courses'] = Course.objects.filter(is_active=True).order_by('grade_level', 'name')
-        context['student_groups'] = StudentGroup.objects.all()
-        
-        context.update(_get_nav_context('dashboard'))
+
+        context['courses'] = courses.order_by('grade_level', 'name')
+        context['student_groups'] = groups
+
+        context.update(_get_nav_context('dashboard', year=year))
 
         return context
 
@@ -221,25 +270,28 @@ class StudentPerformanceView(TemplateView):
         from students.models import Student, StudentGroup
         from events.models import Mark, EventParticipation
 
-        groups = StudentGroup.objects.all().order_by('name')
+        qs = _year_qs(self.request)
+        year = qs['year']
+
+        groups = qs['groups'].order_by('name')
         group_id = self.request.GET.get('group')
 
         if group_id:
-            group = StudentGroup.objects.filter(pk=group_id).first()
-            students = group.students.all() if group else Student.objects.all()
+            group = groups.filter(pk=group_id).first()
+            students = group.students.all() if group else qs['students']
         else:
             group = None
-            students = Student.objects.all()
+            students = qs['students']
 
         students = students.order_by('last_name', 'first_name')
 
         students_stats = []
         for student in students:
-            participations = student.eventparticipation_set.all()
+            participations = qs['participations'].filter(student=student)
             completed = participations.filter(
                 status__in=['completed', 'graded']
             )
-            marks = Mark.objects.filter(participation__student=student)
+            marks = qs['marks'].filter(participation__student=student)
             avg_score = marks.aggregate(avg=Avg('score'))['avg'] or 0
 
             # Средний % по task_scores
@@ -288,60 +340,63 @@ class StudentPerformanceView(TemplateView):
             ),
         }
 
-        context.update(_get_nav_context('student-performance'))
+        context.update(_get_nav_context('student-performance', year=year))
         return context
 
 class WorkAnalysisView(TemplateView):
     """Анализ работ и их результатов"""
     template_name = 'reports/work_analysis.html'
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
+
         from works.models import Work
         from events.models import Event, Mark
-        
+
+        qs = _year_qs(self.request)
+        year = qs['year']
+        events = qs['events']
+        marks = qs['marks']
+
         works_analysis = []
-        easy_works_count = 0
-        hard_works_count = 0
-        total_marks_all = 0
-        
         for work in Work.objects.all():
-            work_events = Event.objects.filter(work=work)
-            work_marks = Mark.objects.filter(
-                participation__event__work=work, score__isnull=False
+            work_events = events.filter(work=work)
+            work_marks = marks.filter(
+                participation__event__work=work,
+                score__isnull=False
             )
-            avg_score = work_marks.aggregate(
-                avg=Avg('score')
-            )['avg'] or 0
-            avg_percentage = work_marks.aggregate(
-                avg=Avg('points')
-            )['avg'] or 0
-            score_dist = work_marks.values('score').annotate(
-                count=Count('score')
-            ).order_by('score')
-            difficulty = self.assess_difficulty(avg_score, avg_percentage)
-            
+
+            if work_events.count() == 0:
+                continue
+
+            avg_score = work_marks.aggregate(avg=Avg('score'))['avg'] or 0
+
+            # Средний % по task_scores
+            total_pts = 0
+            total_max = 0
+            for mark in work_marks:
+                if mark.task_scores:
+                    for scores in mark.task_scores.values():
+                        total_pts += scores.get('points', 0)
+                        total_max += scores.get('max_points', 0)
+            avg_pct = round(total_pts / total_max * 100) if total_max > 0 else 0
+
+            score_distribution = list(
+                work_marks.values('score').annotate(
+                    count=Count('id')
+                ).order_by('score')
+            )
+
             works_analysis.append({
                 'work': work,
                 'events_count': work_events.count(),
                 'total_marks': work_marks.count(),
-                'average_score': round(avg_score, 2) if avg_score else 0,
-                'average_percentage': round(
-                    avg_percentage, 1
-                ) if avg_percentage else 0,
-                'score_distribution': list(score_dist),
-                'difficulty_assessment': difficulty,
+                'average_score': round(avg_score, 2),
+                'average_percentage': avg_pct,
+                'score_distribution': score_distribution,
+                'difficulty_assessment': self._assess_difficulty(avg_pct),
             })
-            
-            if difficulty == "Лёгкая":
-                easy_works_count += 1
-            elif difficulty in ["Сложная", "Очень сложная"]:
-                hard_works_count += 1
-            total_marks_all += work_marks.count()
-        
-        works_analysis.sort(key=lambda x: x['average_score'])
-        
+
         context['works_analysis'] = works_analysis
         context['summary_stats'] = {
             'total_works': len(works_analysis),
@@ -353,16 +408,16 @@ class WorkAnalysisView(TemplateView):
             ) if works_analysis else 0,
         }
 
-        context.update(_get_nav_context('work-analysis'))
-
+        context.update(_get_nav_context('work-analysis', year=year))
         return context
-    
-    def assess_difficulty(self, avg_score, avg_percentage):
-        if avg_score >= 4.5:
-            return "Лёгкая"
-        elif avg_score >= 3.5:
+
+    @staticmethod
+    def _assess_difficulty(avg_pct):
+        if avg_pct >= 85:
+            return "Легкая"
+        elif avg_pct >= 70:
             return "Средняя"
-        elif avg_score >= 2.5:
+        elif avg_pct >= 50:
             return "Сложная"
         else:
             return "Очень сложная"
@@ -374,40 +429,45 @@ class EventsStatusView(TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
+
         from events.models import Event, EventParticipation
-        
-        events_by_status = Event.objects.values('status').annotate(
+
+        qs = _year_qs(self.request)
+        year = qs['year']
+        events = qs['events']
+
+        events_by_status = events.values('status').annotate(
             count=Count('id')
         ).order_by('status')
         context['events_by_status'] = list(events_by_status)
-        
+
         current_date = datetime.now()
-        
+
         context.update({
-            'overdue_events': Event.objects.filter(
+            'overdue_events': events.filter(
                 status='planned',
                 planned_date__lt=current_date - timedelta(days=1)
             ).select_related('work'),
-            'long_reviewing': Event.objects.filter(
+            'long_reviewing': events.filter(
                 status='reviewing',
                 actual_end__lt=current_date - timedelta(days=7)
             ).select_related('work'),
-            'completed_unchecked': Event.objects.filter(
+            'completed_unchecked': events.filter(
                 status='completed',
                 actual_end__lt=current_date - timedelta(days=3)
             ).select_related('work'),
         })
-        
-        participation_stats = EventParticipation.objects.values(
+
+        participation_stats = qs['participations'].values(
             'status'
         ).annotate(count=Count('id')).order_by('status')
         context['participation_stats'] = list(participation_stats)
 
-        context['all_events'] = Event.objects.select_related('work').order_by('-planned_date')
-        context.update(_get_nav_context('events-status'))
-        
+        context['all_events'] = events.select_related('work').order_by('-planned_date')
+        context.update(_get_nav_context('events-status', year=year))
+
         return context
+
 
 
 # ============================================================

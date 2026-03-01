@@ -37,7 +37,7 @@
         </div>
 
         <h4 class="d-print-none">Задания варианта</h4>
-        {% for task in variant.tasks.all %}
+        {% for task in variant.ordered_tasks %}
         <div class="card mb-4">
             <div class="card-header d-print-none">
                 <div class="d-flex justify-content-between">

@@ -22,10 +22,9 @@ class AnalogGroup(BaseModel):
         """Возвращает одно задание из группы для предварительного просмотра"""
         return self.taskgroup_set.first().task if self.taskgroup_set.exists() else None
 
+
 class TaskGroup(BaseModel):
     """Промежуточная модель для связи заданий и групп"""
-    from tasks.models import Task  # Импорт внутри модели
-    
     task = models.ForeignKey('tasks.Task', on_delete=models.CASCADE, verbose_name='Задание')
     group = models.ForeignKey(AnalogGroup, on_delete=models.CASCADE, verbose_name='Группа')
     

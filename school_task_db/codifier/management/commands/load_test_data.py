@@ -23,7 +23,7 @@ from curriculum.models import Topic, SubTopic
 from students.models import Student, StudentGroup
 from tasks.models import Task
 from task_groups.models import TaskGroup
-from works.models import Work, Variant
+from works.models import Work, Variant, VariantTask
 from events.models import Event, EventParticipation, Mark
 
 
@@ -312,7 +312,13 @@ class Command(BaseCommand):
                     )
                     variant_tasks.extend(extra)
 
-                variant.tasks.set(variant_tasks)
+                for order, task in enumerate(variant_tasks, 1):
+                    VariantTask.objects.create(
+                        variant=variant,
+                        task=task,
+                        order=order,
+                    )
+
 
             works.append(work)
             self.stdout.write(

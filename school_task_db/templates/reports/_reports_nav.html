@@ -10,6 +10,10 @@
                class="btn btn-sm {% if active_report == 'dashboard' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">
                 <i class="fas fa-tachometer-alt"></i> Обзор
             </a>
+            <a href="{% url 'reports:journal-select' %}"
+               class="btn btn-sm {% if active_report == 'journal' %}btn-warning text-dark{% else %}btn-outline-warning{% endif %}">
+                <i class="fas fa-book-open"></i> Журнал
+            </a>
             <a href="{% url 'reports:heatmap' %}"
                class="btn btn-sm {% if active_report == 'heatmap' %}btn-danger{% else %}btn-outline-danger{% endif %}">
                 <i class="fas fa-th"></i> Тепловая карта

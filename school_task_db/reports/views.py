@@ -1392,3 +1392,203 @@ def _color_class(pct):
         return 'warning'
     return 'danger'
 
+class JournalSelectView(TemplateView):
+    """Выбор курса и класса для журнала"""
+    template_name = 'reports/journal_select.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from curriculum.models import Course
+        from students.models import StudentGroup
+        from events.models import Event
+
+        year = getattr(self.request, 'current_year', None)
+        qs = _year_qs(self.request)
+
+        courses = qs['courses'].order_by('grade_level', 'name')
+        groups = qs['groups'].order_by('name')
+
+        # Собираем пары курс-класс, у которых есть события
+        journal_links = []
+        for course in courses:
+            for group in course.student_groups.all():
+                if group in groups:
+                    event_count = Event.objects.filter(
+                        course=course,
+                        eventparticipation__student__in=group.students.all()
+                    ).distinct().count()
+                    journal_links.append({
+                        'course': course,
+                        'group': group,
+                        'event_count': event_count,
+                    })
+
+        context['journal_links'] = journal_links
+        context['courses'] = courses
+        context['groups'] = groups
+        context.update(_get_nav_context('journal', year=year))
+        return context
+
+
+class JournalView(TemplateView):
+    """Классный журнал — ученики × события"""
+    template_name = 'reports/journal.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        from curriculum.models import Course
+        from students.models import StudentGroup
+        from events.models import Event, EventParticipation, Mark
+
+        course = get_object_or_404(Course, pk=kwargs['course_pk'])
+        group = get_object_or_404(StudentGroup, pk=kwargs['group_pk'])
+
+        students = group.students.all().order_by('last_name', 'first_name')
+        student_ids = list(students.values_list('id', flat=True))
+
+        # События этого курса, где есть ученики из класса
+        events = Event.objects.filter(
+            course=course,
+            eventparticipation__student__in=student_ids
+        ).distinct().select_related('work').order_by('planned_date')
+
+        # Все участия и оценки — два запроса вместо N×M
+        participations = EventParticipation.objects.filter(
+            event__in=events,
+            student__in=student_ids
+        ).select_related('student', 'event', 'variant')
+
+        marks = Mark.objects.filter(
+            participation__in=participations
+        ).select_related('participation')
+
+        # Lookup: (student_id, event_id) → participation
+        part_lookup = {}
+        for p in participations:
+            part_lookup[(p.student_id, p.event_id)] = p
+
+        # Lookup: participation_id → mark
+        mark_lookup = {}
+        for m in marks:
+            mark_lookup[m.participation_id] = m
+
+        # Строим строки журнала
+        rows = []
+        for student in students:
+            cells = []
+            total_score = 0
+            score_count = 0
+            debts = 0
+
+            for event in events:
+                participation = part_lookup.get((student.id, event.id))
+                mark = mark_lookup.get(participation.id) if participation else None
+
+                cell = {
+                    'event': event,
+                    'participation': participation,
+                    'mark': mark,
+                    'score': None,
+                    'status': 'missing',
+                    'css_class': '',
+                    'display': '',
+                    'variant': participation.variant if participation else None,
+                }
+
+                if participation:
+                    if participation.status == 'absent':
+                        cell['status'] = 'absent'
+                        cell['display'] = 'Н'
+                        cell['css_class'] = 'journal-absent'
+                        debts += 1
+                    elif mark and mark.score is not None:
+                        cell['status'] = 'graded'
+                        cell['score'] = mark.score
+                        cell['display'] = str(mark.score)
+                        total_score += mark.score
+                        score_count += 1
+                        if mark.score >= 5:
+                            cell['css_class'] = 'journal-5'
+                        elif mark.score == 4:
+                            cell['css_class'] = 'journal-4'
+                        elif mark.score == 3:
+                            cell['css_class'] = 'journal-3'
+                        else:
+                            cell['css_class'] = 'journal-2'
+                    elif participation.status in ('assigned', 'started'):
+                        cell['status'] = 'in_progress'
+                        cell['display'] = '…'
+                        cell['css_class'] = 'journal-progress'
+                    elif participation.status == 'completed':
+                        cell['status'] = 'completed'
+                        cell['display'] = '✓'
+                        cell['css_class'] = 'journal-completed'
+                    else:
+                        cell['status'] = 'assigned'
+                        cell['display'] = '–'
+                else:
+                    # Нет участия — долг
+                    cell['status'] = 'missing'
+                    cell['display'] = ''
+                    cell['css_class'] = 'journal-missing'
+                    debts += 1
+
+                cells.append(cell)
+
+            avg_score = round(total_score / score_count, 1) if score_count > 0 else None
+
+            rows.append({
+                'student': student,
+                'cells': cells,
+                'avg_score': avg_score,
+                'score_count': score_count,
+                'debts': debts,
+            })
+
+        # Фильтр «только долги»
+        show_debts_only = self.request.GET.get('debts') == '1'
+        all_rows = rows
+        if show_debts_only:
+            rows = [r for r in rows if r['debts'] > 0]
+
+        # Итоговая статистика по столбцам (событиям)
+        event_stats = []
+        for event in events:
+            graded = 0
+            absent = 0
+            missing = 0
+            total = 0
+            for row in all_rows:
+                for cell in row['cells']:
+                    if cell['event'].id == event.id:
+                        total += 1
+                        if cell['status'] == 'graded':
+                            graded += 1
+                        elif cell['status'] == 'absent':
+                            absent += 1
+                        elif cell['status'] == 'missing':
+                            missing += 1
+            event_stats.append({
+                'event': event,
+                'graded': graded,
+                'absent': absent,
+                'missing': missing,
+                'total': total,
+            })
+
+        context.update({
+            'course': course,
+            'group': group,
+            'events': events,
+            'event_stats': event_stats,
+            'rows': rows,
+            'all_rows_count': len(all_rows),
+            'show_debts_only': show_debts_only,
+            'total_debts': sum(r['debts'] for r in all_rows),
+            'students_with_debts': sum(1 for r in all_rows if r['debts'] > 0),
+        })
+
+        year = getattr(self.request, 'current_year', None)
+        context.update(_get_nav_context('journal', year=year))
+        return context

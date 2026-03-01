@@ -13,4 +13,6 @@ urlpatterns = [
     path('students/', views.StudentPerformanceView.as_view(), name='student-performance'),
     path('works/', views.WorkAnalysisView.as_view(), name='work-analysis'),
     path('events/', views.EventsStatusView.as_view(), name='events-status'),
+    path('journal/', views.JournalSelectView.as_view(), name='journal-select'),
+    path('journal/<uuid:course_pk>/<uuid:group_pk>/', views.JournalView.as_view(), name='journal'),
 ]

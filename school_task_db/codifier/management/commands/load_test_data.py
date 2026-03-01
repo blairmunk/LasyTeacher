@@ -97,7 +97,7 @@ class Command(BaseCommand):
             tasks = self._create_tasks()
             works = self._create_works(tasks)
             course = self._create_course(works, groups, year)
-            self._create_events(works, students, groups)
+            self._create_events(works, students, groups, course)
 
         self.stdout.write(self.style.SUCCESS('\n🎉 Тестовые данные загружены!'))
 
@@ -367,7 +367,7 @@ class Command(BaseCommand):
 
 
 
-    def _create_events(self, works, students, groups):
+    def _create_events(self, works, students, groups, course):
         if not works:
             return
 
@@ -423,6 +423,7 @@ class Command(BaseCommand):
                 name=config['name'],
                 defaults={
                     'work': work,
+                    'course': course,          # ← ДОБАВИТЬ
                     'planned_date': config['date'],
                     'status': 'graded',
                     'location': random.choice(['Каб. 301', 'Каб. 215', 'Каб. 108']),

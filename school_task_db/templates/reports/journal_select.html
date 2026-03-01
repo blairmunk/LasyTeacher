@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Журнал — выбор{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h2 class="mb-4"><i class="fas fa-book-open"></i> Классный журнал</h2>
+
+    {% if journal_links %}
+    <div class="row">
+        {% for link in journal_links %}
+        <div class="col-md-4 col-sm-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ link.course.name }}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">{{ link.group.name }}</h6>
+                    <p class="card-text">
+                        <span class="badge bg-primary">{{ link.event_count }} событий</span>
+                        <span class="badge bg-secondary">{{ link.group.students.count }} учеников</span>
+                    </p>
+                    <a href="{% url 'reports:journal' link.course.pk link.group.pk %}"
+                       class="btn btn-primary">
+                        <i class="fas fa-book-open"></i> Открыть журнал
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i>
+        Нет курсов с событиями для текущего учебного года.
+    </div>
+    {% endif %}
+
+    {% include "reports/_reports_nav.html" %}
+</div>
+{% endblock %}

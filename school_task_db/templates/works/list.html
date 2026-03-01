@@ -18,7 +18,7 @@
                 <h5 class="card-title">{{ work.name }}</h5>
                 <p class="card-text">
                     <i class="fas fa-clock"></i> {{ work.duration }} минут<br>
-                    <i class="fas fa-copy"></i> Вариантов: {{ work.variant_counter }}
+                    <i class="fas fa-copy"></i> Вариантов: {{ work.variant_set.count }}
                 </p>
                 <p class="card-text">
                     <small class="text-muted">Создано: {{ work.created_at|date:"d.m.Y H:i" }}</small>

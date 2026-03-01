@@ -290,6 +290,9 @@ class Command(BaseCommand):
             )
 
             if not created:
+                work.variant_counter = config['num_variants']
+                work.save(update_fields=['variant_counter'])
+
                 works.append(work)
                 continue
 

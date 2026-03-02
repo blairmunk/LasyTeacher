@@ -10,4 +10,8 @@ urlpatterns = [
     path('<pk:pk>/update/', views.AnalogGroupUpdateView.as_view(), name='update'),
     path('<pk:group_id>/add-tasks/', views.add_tasks_to_group, name='add-tasks'),
     path('<pk:group_id>/remove-task/<pk:task_id>/', views.remove_task_from_group, name='remove-task'),
+
+    # Bulk actions
+    path('ajax/bulk-create-work/', views.bulk_create_work_from_groups, name='bulk-create-work'),
+    path('ajax/bulk-delete/', views.bulk_delete_groups, name='bulk-delete'),
 ]

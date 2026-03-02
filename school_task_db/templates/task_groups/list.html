@@ -2,36 +2,221 @@
 
 {% block title %}Группы аналогов{% endblock %}
 
+{% block extra_css %}
+<style>
+    .group-card { transition: all 0.2s; cursor: default; }
+    .group-card.selected { border-color: #0d6efd !important; background-color: #f0f7ff; }
+    .group-card .card-check { position: absolute; top: 10px; right: 10px; z-index: 2; }
+    .group-card .card-check input { width: 20px; height: 20px; cursor: pointer; }
+
+    .bulk-bar {
+        position: fixed; bottom: -100px; left: 0; right: 0;
+        background: #1a1a2e; color: white;
+        padding: 12px 20px; z-index: 1050;
+        transition: bottom 0.3s ease;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+    }
+    .bulk-bar.visible { bottom: 0; }
+
+    .filter-panel { background: #f8f9fa; border-radius: 8px; padding: 16px; }
+    .count-badge { font-size: 1.1rem; font-weight: 700; }
+    .sample-preview { font-size: 0.85rem; color: #6c757d; max-height: 60px; overflow: hidden; }
+
+    /* Настройка количества в bulk bar */
+    .group-count-input {
+        width: 55px; text-align: center;
+        border: 1px solid rgba(255,255,255,0.3);
+        background: rgba(255,255,255,0.1);
+        color: white; border-radius: 4px;
+        padding: 2px 4px; font-size: 13px;
+    }
+    .selected-groups-list {
+        max-height: 200px; overflow-y: auto;
+        font-size: 13px;
+    }
+    .selected-groups-list .sg-row {
+        display: flex; justify-content: space-between;
+        align-items: center; padding: 4px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    body { padding-bottom: 80px; }
+
+    /* Отступ снизу, чтобы bulk bar не перекрывал пагинацию */
+    #groups-container + nav {
+        padding-bottom: 180px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Группы аналогичных заданий</h2>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-0">Группы аналогов</h2>
+        <small class="text-muted">
+            Всего: {{ total_groups }} · Пустых: {{ empty_groups }} · Связей: {{ total_tasks_in_groups }}
+        </small>
+    </div>
     <a href="{% url 'task_groups:create' %}" class="btn btn-primary">
         <i class="fas fa-plus"></i> Создать группу
     </a>
 </div>
 
-<div class="row">
+<!-- Панель фильтров -->
+<div class="filter-panel mb-3">
+    <form method="get" id="filter-form">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Поиск</label>
+                <input type="text" name="search" class="form-control form-control-sm"
+                       placeholder="Название, описание..." value="{{ search_query }}">
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Тема</label>
+                <select name="topic" class="form-select form-select-sm" id="filter-topic">
+                    <option value="">Все темы</option>
+                    {% for topic in topics %}
+                    <option value="{{ topic.pk }}"
+                        {% if current_topic == topic.pk|slugify %}selected{% endif %}>
+                        {{ topic.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Подтема</label>
+                <select name="subtopic" class="form-select form-select-sm" id="filter-subtopic">
+                    <option value="">Все подтемы</option>
+                    {% for sub in subtopics %}
+                    <option value="{{ sub.pk }}"
+                        {% if current_subtopic == sub.pk|slugify %}selected{% endif %}>
+                        {{ sub.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label small mb-1">Сложность</label>
+                <select name="difficulty" class="form-select form-select-sm">
+                    <option value="">Все</option>
+                    {% for val, label in difficulties %}
+                    <option value="{{ val }}" {% if current_difficulty == val|slugify %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label small mb-1">Мин.</label>
+                <input type="number" name="min_tasks" class="form-control form-control-sm"
+                       placeholder="от" min="0" value="{{ min_tasks }}">
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label small mb-1">Макс.</label>
+                <input type="number" name="max_tasks" class="form-control form-control-sm"
+                       placeholder="до" min="0" value="{{ max_tasks }}">
+            </div>
+
+            <div class="col-md-auto">
+                <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="fas fa-filter"></i>
+                </button>
+                <a href="{% url 'task_groups:list' %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-2 mt-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Состояние</label>
+                <select name="group_filter" class="form-select form-select-sm">
+                    <option value="">Все</option>
+                    <option value="empty" {% if current_group_filter == 'empty' %}selected{% endif %}>
+                        🔴 Пустые
+                    </option>
+                    <option value="nonempty" {% if current_group_filter == 'nonempty' %}selected{% endif %}>
+                        🟢 С заданиями
+                    </option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Сортировка</label>
+                <select name="sort" class="form-select form-select-sm">
+                    <option value="name" {% if current_sort == 'name' %}selected{% endif %}>По имени</option>
+                    <option value="tasks_desc" {% if current_sort == 'tasks_desc' %}selected{% endif %}>Задания ↓</option>
+                    <option value="tasks_asc" {% if current_sort == 'tasks_asc' %}selected{% endif %}>Задания ↑</option>
+                    <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Новые</option>
+                </select>
+            </div>
+
+            <div class="col-md-auto ms-auto">
+                <button type="button" class="btn btn-sm btn-outline-info" id="select-all-btn">
+                    <i class="fas fa-check-double"></i> Выбрать все
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary d-none" id="deselect-all-btn">
+                    <i class="fas fa-times"></i> Снять
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Список групп -->
+<div class="row" id="groups-container">
     {% for group in analog_groups %}
-    <div class="col-md-6 mb-3">
-        <div class="card">
+    <div class="col-md-6 col-lg-4 mb-3">
+        <div class="card group-card position-relative h-100"
+             data-group-id="{{ group.pk }}"
+             data-group-name="{{ group.name }}"
+             data-task-count="{{ group.task_count }}">
             <div class="card-body">
-                <h5 class="card-title">{{ group.name }}</h5>
-                <p class="card-text">{{ group.description|truncatewords:20|default:"Описание отсутствует" }}</p>
-                <p class="card-text">
+                <div class="card-check">
+                    <input type="checkbox" class="form-check-input group-checkbox"
+                           value="{{ group.pk }}" title="Выбрать группу">
+                </div>
+
+                <div class="d-flex justify-content-between align-items-start pe-4 mb-1">
+                    <h6 class="card-title mb-0">{{ group.name }}</h6>
+                </div>
+
+                {% if group.description %}
+                <small class="text-muted d-block mb-2">{{ group.description|truncatewords:15 }}</small>
+                {% endif %}
+
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge {% if group.task_count > 0 %}bg-success{% else %}bg-danger{% endif %} count-badge">
+                        {{ group.task_count }}
+                    </span>
                     <small class="text-muted">
-                        <i class="fas fa-tasks"></i> Заданий: {{ group.taskgroup_set.count }}
+                        {% if group.task_count == 0 %}заданий (пустая)
+                        {% elif group.task_count == 1 %}задание
+                        {% elif group.task_count < 5 %}задания
+                        {% else %}заданий{% endif %}
                     </small>
-                </p>
-                
-                <div class="btn-group" role="group">
-                    <a href="{% url 'task_groups:detail' group.pk %}" class="btn btn-primary">
-                        <i class="fas fa-eye"></i> Подробнее
+                </div>
+
+                {% with sample=group.get_sample_task %}
+                {% if sample %}
+                <div class="sample-preview">
+                    <i class="fas fa-eye text-muted"></i>
+                    {{ sample.text|truncatewords:20 }}
+                </div>
+                {% endif %}
+                {% endwith %}
+
+                <div class="mt-2 btn-group btn-group-sm">
+                    <a href="{% url 'task_groups:detail' group.pk %}" class="btn btn-outline-primary">
+                        <i class="fas fa-list"></i> Задания
                     </a>
                     <a href="{% url 'task_groups:update' group.pk %}" class="btn btn-outline-secondary">
-                        <i class="fas fa-edit"></i> Редактировать
-                    </a>
-                    <a href="{% url 'task_groups:add-tasks' group.pk %}" class="btn btn-outline-success">
-                        <i class="fas fa-plus"></i> Добавить задания
+                        <i class="fas fa-edit"></i>
                     </a>
                 </div>
             </div>
@@ -40,9 +225,394 @@
     {% empty %}
     <div class="col-12">
         <div class="alert alert-info">
-            Групп аналогов пока нет. <a href="{% url 'task_groups:create' %}">Создать первую группу</a>
+            Групп не найдено. <a href="{% url 'task_groups:create' %}">Создать группу</a>
+            или <a href="{% url 'task_groups:list' %}">сбросить фильтры</a>.
         </div>
     </div>
     {% endfor %}
 </div>
+
+<!-- Пагинация -->
+{% if is_paginated %}
+<nav>
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}">Назад</a>
+        </li>
+        {% endif %}
+        <li class="page-item active">
+            <span class="page-link">{{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+        </li>
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}">Вперёд</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+<!-- Bulk Action Bar -->
+<div class="bulk-bar" id="bulk-bar">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+                <i class="fas fa-layer-group"></i>
+                Выбрано: <strong id="selected-count">0</strong> групп
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary btn-sm" id="btn-create-work"
+                        data-bs-toggle="modal" data-bs-target="#createWorkModal">
+                    <i class="fas fa-file-alt"></i> Создать работу
+                </button>
+                <button class="btn btn-danger btn-sm" id="btn-delete-groups">
+                    <i class="fas fa-trash"></i> Удалить
+                </button>
+                <button class="btn btn-outline-light btn-sm" id="btn-clear-selection">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Список выбранных групп с настройкой количества -->
+        <div class="selected-groups-list" id="selected-groups-list"></div>
+    </div>
+</div>
+
+<!-- Modal: Создать работу -->
+<div class="modal fade" id="createWorkModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-file-alt"></i> Создать работу из групп</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <label class="form-label">Название работы</label>
+                        <input type="text" class="form-control" id="new-work-name"
+                               placeholder="Напр.: КР №3: Электромагнитные явления">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Тип работы</label>
+                        <select class="form-select" id="new-work-type">
+                            <option value="test">Контрольная работа</option>
+                            <option value="quiz">Самостоятельная работа</option>
+                            <option value="homework">Домашняя работа</option>
+                            <option value="exam">Экзамен</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Спецификация -->
+                <h6 class="mb-2">Спецификация</h6>
+                <table class="table table-sm table-bordered" id="spec-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:50px">№</th>
+                            <th>Группа аналогов</th>
+                            <th style="width:80px">Заданий</th>
+                            <th style="width:100px">В группе</th>
+                        </tr>
+                    </thead>
+                    <tbody id="spec-body"></tbody>
+                </table>
+
+                <!-- Автогенерация -->
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="auto-generate" checked>
+                    <label class="form-check-label" for="auto-generate">
+                        Автоматически сгенерировать варианты
+                    </label>
+                </div>
+                <div id="variant-count-wrapper">
+                    <label class="form-label small">Количество вариантов</label>
+                    <input type="number" class="form-control form-control-sm" id="variant-count"
+                           min="1" max="10" value="2" style="width:100px">
+                </div>
+
+                <div class="alert alert-info small mt-3 mb-0">
+                    <i class="fas fa-info-circle"></i>
+                    Будет создана работа со спецификацией. Если включена автогенерация —
+                    варианты будут созданы из случайных заданий каждой группы.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="confirm-create-work">
+                    <i class="fas fa-rocket"></i> Создать и перейти
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    var bulkBar = document.getElementById('bulk-bar');
+    var selectedCount = document.getElementById('selected-count');
+    var selectAllBtn = document.getElementById('select-all-btn');
+    var deselectAllBtn = document.getElementById('deselect-all-btn');
+    var sgList = document.getElementById('selected-groups-list');
+    var csrfToken = '{{ csrf_token }}';
+
+    // Хранилище: { id: { name, count, taskCount, order } }
+    var selectedGroups = {};
+    try {
+        selectedGroups = JSON.parse(sessionStorage.getItem('selectedGroups') || '{}');
+    } catch(e) { selectedGroups = {}; }
+
+    function save() {
+        sessionStorage.setItem('selectedGroups', JSON.stringify(selectedGroups));
+    }
+
+    function getCount() {
+        return Object.keys(selectedGroups).length;
+    }
+
+    function updateUI() {
+        var count = getCount();
+        selectedCount.textContent = count;
+        bulkBar.classList.toggle('visible', count > 0);
+        selectAllBtn.classList.toggle('d-none', count > 0);
+        deselectAllBtn.classList.toggle('d-none', count === 0);
+
+        // Обновляем чекбоксы
+        document.querySelectorAll('.group-checkbox').forEach(function(cb) {
+            var sel = cb.value in selectedGroups;
+            cb.checked = sel;
+            cb.closest('.group-card').classList.toggle('selected', sel);
+        });
+
+        // Список в bulk bar
+        var html = '';
+        var i = 1;
+        for (var id in selectedGroups) {
+            var g = selectedGroups[id];
+            g.order = i;
+            html += '<div class="sg-row">'
+                + '<span>' + i + '. ' + g.name + ' <small class="opacity-50">(' + g.taskCount + ' зад.)</small></span>'
+                + '<span>× <input type="number" class="group-count-input" data-id="' + id + '" '
+                + 'min="1" max="' + g.taskCount + '" value="' + (g.count || 1) + '"></span>'
+                + '</div>';
+            i++;
+        }
+        sgList.innerHTML = html;
+    }
+
+    // Чекбокс
+    document.addEventListener('change', function(e) {
+        if (!e.target.classList.contains('group-checkbox')) return;
+        var card = e.target.closest('.group-card');
+        var id = e.target.value;
+        if (e.target.checked) {
+            selectedGroups[id] = {
+                name: card.dataset.groupName,
+                taskCount: parseInt(card.dataset.taskCount) || 0,
+                count: 1,
+                order: getCount() + 1
+            };
+        } else {
+            delete selectedGroups[id];
+        }
+        save(); updateUI();
+    });
+
+    // Количество в bulk bar
+    document.addEventListener('input', function(e) {
+        if (!e.target.classList.contains('group-count-input')) return;
+        var id = e.target.dataset.id;
+        if (selectedGroups[id]) {
+            selectedGroups[id].count = parseInt(e.target.value) || 1;
+            save();
+        }
+    });
+
+    // Выбрать все
+    selectAllBtn.addEventListener('click', function() {
+        document.querySelectorAll('.group-checkbox').forEach(function(cb) {
+            if (!(cb.value in selectedGroups)) {
+                var card = cb.closest('.group-card');
+                selectedGroups[cb.value] = {
+                    name: card.dataset.groupName,
+                    taskCount: parseInt(card.dataset.taskCount) || 0,
+                    count: 1, order: getCount() + 1
+                };
+            }
+        });
+        save(); updateUI();
+    });
+
+    // Снять все
+    deselectAllBtn.addEventListener('click', function() {
+        selectedGroups = {}; save(); updateUI();
+    });
+
+    document.getElementById('btn-clear-selection').addEventListener('click', function() {
+        selectedGroups = {}; save(); updateUI();
+    });
+
+    // === API ===
+    function bulkAction(url, body) {
+        return fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+            body: JSON.stringify(body),
+        }).then(function(r) { return r.json(); });
+    }
+
+    function showToast(message, type) {
+        var colors = { success: '#198754', error: '#dc3545', info: '#0dcaf0' };
+        var container = document.getElementById('gen-toast-box');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'gen-toast-box';
+            container.setAttribute('style', 'position:fixed;top:20px;right:20px;z-index:99999;max-width:380px;pointer-events:none;');
+            document.body.appendChild(container);
+        }
+        var el = document.createElement('div');
+        el.setAttribute('style',
+            'pointer-events:auto;background:#fff;border-radius:8px;padding:12px 16px;margin-bottom:8px;'
+            + 'box-shadow:0 4px 20px rgba(0,0,0,0.15);display:flex;align-items:center;gap:10px;'
+            + 'border-left:4px solid ' + (colors[type] || colors.info) + ';font-size:14px;'
+        );
+        el.innerHTML = '<div style="flex:1">' + message + '</div>'
+            + '<span style="cursor:pointer;opacity:0.5" onclick="this.parentElement.remove()">×</span>';
+        container.appendChild(el);
+        setTimeout(function() { el.remove(); }, 5000);
+    }
+
+    // Модалка — заполняем таблицу спецификации
+    var createWorkModal = document.getElementById('createWorkModal');
+    if (createWorkModal) {
+        createWorkModal.addEventListener('show.bs.modal', function() {
+            var tbody = document.getElementById('spec-body');
+            var html = '';
+            var i = 1;
+            for (var id in selectedGroups) {
+                var g = selectedGroups[id];
+                html += '<tr>'
+                    + '<td>' + i + '</td>'
+                    + '<td>' + g.name + '</td>'
+                    + '<td><input type="number" class="form-control form-control-sm spec-count" '
+                    + 'data-id="' + id + '" min="1" max="' + g.taskCount + '" value="' + (g.count || 1) + '"></td>'
+                    + '<td class="text-center"><span class="badge bg-secondary">' + g.taskCount + '</span></td>'
+                    + '</tr>';
+                i++;
+            }
+            tbody.innerHTML = html;
+        });
+    }
+
+    // Синхронизация count в модалке → selectedGroups
+    document.addEventListener('input', function(e) {
+        if (!e.target.classList.contains('spec-count')) return;
+        var id = e.target.dataset.id;
+        if (selectedGroups[id]) {
+            selectedGroups[id].count = parseInt(e.target.value) || 1;
+            save(); updateUI();
+        }
+    });
+
+    // Toggle variant count
+    var autoGenCb = document.getElementById('auto-generate');
+    var vcWrapper = document.getElementById('variant-count-wrapper');
+    if (autoGenCb && vcWrapper) {
+        autoGenCb.addEventListener('change', function() {
+            vcWrapper.style.display = this.checked ? '' : 'none';
+        });
+    }
+
+    // Создать работу
+    document.getElementById('confirm-create-work').addEventListener('click', function() {
+        var name = document.getElementById('new-work-name').value.trim();
+        var workType = document.getElementById('new-work-type').value;
+        var autoGen = document.getElementById('auto-generate').checked;
+        var varCount = parseInt(document.getElementById('variant-count').value) || 2;
+
+        if (!name) { alert('Введите название работы'); return; }
+        if (getCount() === 0) { alert('Не выбрано ни одной группы'); return; }
+
+        var groups = [];
+        var order = 1;
+        for (var id in selectedGroups) {
+            groups.push({
+                id: id,
+                order: order++,
+                count: selectedGroups[id].count || 1
+            });
+        }
+
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Создание...';
+
+        var btn = this;
+        bulkAction('{% url "task_groups:bulk-create-work" %}', {
+            groups: groups,
+            work_name: name,
+            work_type: workType,
+            auto_generate: autoGen,
+            variant_count: varCount,
+        }).then(function(data) {
+            if (data.success) {
+                selectedGroups = {};
+                save();
+                showToast(data.message, 'success');
+                if (data.warning) showToast(data.warning, 'error');
+                setTimeout(function() {
+                    window.location.href = data.redirect_url;
+                }, 500);
+            } else {
+                alert(data.error);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-rocket"></i> Создать и перейти';
+            }
+        }).catch(function(err) {
+            alert('Ошибка: ' + err);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-rocket"></i> Создать и перейти';
+        });
+    });
+
+    // Удалить группы
+    document.getElementById('btn-delete-groups').addEventListener('click', function() {
+        if (!confirm('Удалить ' + getCount() + ' групп? Задания не будут удалены.')) return;
+        var ids = Object.keys(selectedGroups);
+        this.disabled = true;
+        bulkAction('{% url "task_groups:bulk-delete" %}', { group_ids: ids })
+            .then(function(data) {
+                if (data.success) {
+                    selectedGroups = {};
+                    save();
+                    showToast(data.message, 'success');
+                    setTimeout(function() { location.reload(); }, 800);
+                } else { alert(data.error); }
+            });
+    });
+
+    // AJAX подтемы
+    var topicSel = document.getElementById('filter-topic');
+    var subSel = document.getElementById('filter-subtopic');
+    if (topicSel) {
+        topicSel.addEventListener('change', function() {
+            subSel.innerHTML = '<option value="">Все подтемы</option>';
+            if (!this.value) return;
+            fetch('{% url "tasks:ajax-load-subtopics" %}?topic_id=' + this.value)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    data.subtopics.forEach(function(s) {
+                        var opt = document.createElement('option');
+                        opt.value = s.id; opt.textContent = s.name;
+                        subSel.appendChild(opt);
+                    });
+                });
+        });
+    }
+
+    updateUI();
+})();
+</script>
 {% endblock %}

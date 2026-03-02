@@ -29,6 +29,8 @@
     }
     .group-indicator.has-group { background: #198754; }
     .group-indicator.no-group { background: #dc3545; }
+    /* Отступ снизу чтобы bulk bar не перекрывал пагинацию */
+    #tasks-container + nav { padding-bottom: 80px; }
 </style>
 {% endblock %}
 

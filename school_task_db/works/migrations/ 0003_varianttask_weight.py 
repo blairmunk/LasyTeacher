@@ -1,0 +1,19 @@
+from django.db import migrations, models
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('works', '0002_varianttask_through'),
+    ]
+
+    operations = [
+        migrations.AddField(
+            model_name='varianttask',
+            name='weight',
+            field=models.PositiveIntegerField(
+                default=1,
+                help_text='Вес для нормировки баллов. По умолчанию = difficulty задачи',
+                verbose_name='Вес задания'
+            ),
+        ),
+    ]

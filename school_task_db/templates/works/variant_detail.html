@@ -45,6 +45,12 @@
                     <div>
                         <span class="badge bg-primary">{{ task.get_task_type_display }}</span>
                         <span class="badge bg-secondary">{{ task.get_difficulty_display }}</span>
+                        <span class="task-weight badge bg-info ms-2">
+                            Вес: {{ task.varianttask_set.first.weight|default:1 }}
+                        </span>
+                        <span class="task-max-points badge bg-success ms-1">
+                            Макс: {{ task.varianttask_set.first.weight|default:1 }} балл.
+                        </span>
                     </div>
                 </div>
                 <small class="text-muted">{{ task.topic }}</small>

@@ -60,7 +60,7 @@ class WorkHtmlGenerator(BaseHtmlGenerator):
         }
     
     def _prepare_variant_context(self, variant):
-        """Подготавливает контекст для одного варианта с обработкой формул"""
+        """ОБНОВЛЕНО: Подготавливает контекст для одного варианта с обработкой формул и weight из VariantTask"""
         print(f"🔍 HTML: Обрабатываем вариант {variant.number}")
         
         tasks = variant.tasks.all().order_by('id')
@@ -195,6 +195,28 @@ class WorkHtmlGenerator(BaseHtmlGenerator):
                 'formula_warnings': task_warnings,
             }
             
+            # ИЗМЕНЕНО: Получаем VariantTask для доступа к weight
+            try:
+                from works.models import VariantTask
+                variant_task = VariantTask.objects.filter(
+                    variant=variant, 
+                    task=task
+                ).first()
+                
+                if variant_task:
+                    task_data['weight'] = variant_task.weight
+                    task_data['max_points_primary'] = variant_task.weight
+                    print(f"🔍 HTML: Задание {task.id} weight={variant_task.weight}")
+                else:
+                    print(f"⚠️ HTML: VariantTask не найден для задания {task.id}, используем weight=1")
+                    task_data['weight'] = 1
+                    task_data['max_points_primary'] = 1
+                    
+            except Exception as e:
+                print(f"⚠️ HTML: Не удалось получить weight для задания {task.id}: {e}")
+                task_data['weight'] = 1
+                task_data['max_points_primary'] = 1
+            
             # Добавляем дополнительные поля
             task_data.update(additional_fields)
             
@@ -219,10 +241,15 @@ class WorkHtmlGenerator(BaseHtmlGenerator):
             variant_errors.extend(task_errors)
             variant_warnings.extend(task_warnings)
         
+        # ИЗМЕНЕНО: Добавляем total_weight в возвращаемые данные
+        total_weight = sum(t['weight'] for t in prepared_tasks)
+        print(f"🔍 HTML: Вариант {variant.number}: общий вес = {total_weight}")
+        
         return {
             'variant': variant,
             'tasks': prepared_tasks,
             'total_tasks': len(prepared_tasks),
+            'total_weight': total_weight,  # НОВОЕ
             'errors': variant_errors,
             'warnings': variant_warnings,
         }

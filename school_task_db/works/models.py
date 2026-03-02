@@ -33,7 +33,7 @@ class Work(BaseModel):
         return reverse('works:detail', kwargs={'pk': self.pk})
 
     def generate_variants(self, count=1):
-        """Генерация вариантов на основе спецификации работы (WorkAnalogGroup)"""
+        """Генерация вариантов с заполнением weight"""
         variants = []
         for i in range(count):
             self.variant_counter += 1
@@ -59,7 +59,8 @@ class Work(BaseModel):
                     VariantTask.objects.create(
                         variant=variant,
                         task=task,
-                        order=task_order
+                        order=task_order,
+                        weight=task.difficulty or 1
                     )
                     task_order += 1
 
@@ -167,18 +168,42 @@ class Variant(BaseModel):
 
 
 class VariantTask(BaseModel):
-    """Задание в варианте с порядковым номером"""
-    variant = models.ForeignKey(Variant, on_delete=models.CASCADE,
-                                verbose_name='Вариант')
-    task = models.ForeignKey('tasks.Task', on_delete=models.CASCADE,
-                             verbose_name='Задание')
-    order = models.PositiveIntegerField('Номер задания в варианте', default=0)
-
+    """Задание в варианте с порядковым номером и весом"""
+    variant = models.ForeignKey(
+        Variant, 
+        on_delete=models.CASCADE,
+        verbose_name='Вариант'
+    )
+    task = models.ForeignKey(
+        'tasks.Task', 
+        on_delete=models.CASCADE,
+        verbose_name='Задание'
+    )
+    order = models.PositiveIntegerField(
+        'Номер задания в варианте', 
+        default=0
+    )
+    weight = models.PositiveIntegerField(
+        'Вес задания',
+        default=1,
+        help_text='Вес для нормировки баллов. По умолчанию = difficulty задачи'
+    )
+    
     class Meta:
         verbose_name = 'Задание в варианте'
         verbose_name_plural = 'Задания в варианте'
         ordering = ['order']
         unique_together = ['variant', 'task']
-
+    
     def __str__(self):
-        return f"Вариант {self.variant.number} — #{self.order} {self.task}"
+        return f"Вариант {self.variant.number} — #{self.order} {self.task} (вес={self.weight})"
+    
+    def get_max_points(self, scale='primary'):
+        """Расчёт макс. балла по шкале"""
+        if scale == 'primary':
+            return self.weight
+        else:  # 100-балльная
+            total_weight = self.variant.varianttask_set.aggregate(
+                models.Sum('weight')
+            )['weight__sum']
+            return round((self.weight / total_weight) * 100, 1)

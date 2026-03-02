@@ -163,22 +163,35 @@ class DocumentGenerator {
     displayResults(files) {
         if (!files || files.length === 0) return;
 
-        // Найти или создать контейнер результатов
         let resultsContainer = document.getElementById('generation-results');
         if (!resultsContainer) {
             resultsContainer = document.createElement('div');
             resultsContainer.id = 'generation-results';
             resultsContainer.className = 'mt-4';
             
-            // Вставляем после блока генерации
-            const genBlock = document.querySelector('.document-generation-block');
-            genBlock.parentNode.insertBefore(resultsContainer, genBlock.nextSibling);
+            // Ищем блок генерации по нескольким селекторам
+            const genBlock = document.querySelector('.document-generation-block')
+                || document.querySelector('[data-generation-block]')
+                || document.querySelector('.card-header h5 .fa-file-export')?.closest('.card');
+            
+            if (genBlock) {
+                genBlock.parentNode.insertBefore(resultsContainer, genBlock.nextSibling);
+            } else {
+                // Fallback: вставляем в начало контента
+                const container = document.querySelector('.container-fluid')
+                    || document.querySelector('.container')
+                    || document.querySelector('main');
+                if (container) {
+                    container.appendChild(resultsContainer);
+                } else {
+                    document.body.appendChild(resultsContainer);
+                }
+            }
         }
 
-        // Создаем HTML с файлами
         let html = `
-            <div class="card">
-                <div class="card-header">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
                     <h6 class="mb-0"><i class="fas fa-file-download"></i> Созданные документы</h6>
                 </div>
                 <div class="card-body">
@@ -209,6 +222,7 @@ class DocumentGenerator {
 
         resultsContainer.innerHTML = html;
     }
+
 
     getFileIcon(filename) {
         const extension = filename.split('.').pop().toLowerCase();

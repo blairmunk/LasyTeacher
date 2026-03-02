@@ -3,98 +3,240 @@
 
 {% block title %}Список заданий{% endblock %}
 
+{% block extra_css %}
+<style>
+    .task-card { transition: all 0.2s; cursor: default; }
+    .task-card.selected { border-color: #0d6efd !important; background-color: #f0f7ff; }
+    .task-card .card-check { position: absolute; top: 10px; right: 10px; z-index: 2; }
+    .task-card .card-check input { width: 20px; height: 20px; cursor: pointer; }
+    .task-card .card-body { position: relative; }
+
+    .bulk-bar {
+        position: fixed; bottom: -80px; left: 0; right: 0;
+        background: #1a1a2e; color: white;
+        padding: 12px 20px; z-index: 1050;
+        transition: bottom 0.3s ease;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+    }
+    .bulk-bar.visible { bottom: 0; }
+
+    .filter-panel { background: #f8f9fa; border-radius: 8px; padding: 16px; }
+    .filter-badge { font-size: 0.75rem; }
+
+    .group-indicator {
+        display: inline-block; width: 8px; height: 8px;
+        border-radius: 50%; margin-right: 4px;
+    }
+    .group-indicator.has-group { background: #198754; }
+    .group-indicator.no-group { background: #dc3545; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Задания</h2>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-0">Задания</h2>
+        <small class="text-muted">
+            Всего: {{ total_tasks }} · Без группы: {{ ungrouped_count }}
+        </small>
+    </div>
     <a href="{% url 'tasks:create' %}" class="btn btn-primary">
         <i class="fas fa-plus"></i> Добавить задание
     </a>
 </div>
 
-<div class="row mb-3">
-    <div class="col-md-6">
-        <form method="get" class="d-flex">
-            <input type="text" name="search" class="form-control me-2" 
-                   placeholder="Поиск заданий..." value="{{ request.GET.search }}">
-            <button type="submit" class="btn btn-outline-secondary">
-                <i class="fas fa-search"></i>
-            </button>
-        </form>
-    </div>
-    
-    <!-- НОВОЕ: Фильтр по статусу формул -->
-    <div class="col-md-6 d-flex justify-content-end">
-        <div class="btn-group" role="group" aria-label="Фильтр формул">
-            <a href="?{% if search_query %}search={{ search_query }}&{% endif %}math_filter=all" 
-            class="btn btn-outline-secondary {% if current_filter == 'all' %}active{% endif %}">
-                Все
-            </a>
-            <a href="?{% if search_query %}search={{ search_query }}&{% endif %}math_filter=with_math" 
-            class="btn btn-outline-success {% if current_filter == 'with_math' %}active{% endif %}">
-                С формулами
-            </a>
-            <a href="?{% if search_query %}search={{ search_query }}&{% endif %}math_filter=with_errors" 
-            class="btn btn-outline-danger {% if current_filter == 'with_errors' %}active{% endif %}">
-                С ошибками
-            </a>
+<!-- Панель фильтров -->
+<div class="filter-panel mb-3">
+    <form method="get" id="filter-form">
+        <div class="row g-2 align-items-end">
+            <!-- Поиск -->
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Поиск</label>
+                <input type="text" name="search" class="form-control form-control-sm"
+                       placeholder="Текст, ответ, тема..." value="{{ search_query }}">
+            </div>
+
+            <!-- Тема -->
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Тема</label>
+                <select name="topic" class="form-select form-select-sm" id="filter-topic">
+                    <option value="">Все темы</option>
+                    {% for topic in topics %}
+                    <option value="{{ topic.pk }}"
+                        {% if current_topic == topic.pk|slugify %}selected{% endif %}>
+                        {{ topic.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Подтема (динамическая) -->
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Подтема</label>
+                <select name="subtopic" class="form-select form-select-sm" id="filter-subtopic">
+                    <option value="">Все подтемы</option>
+                    {% for sub in subtopics %}
+                    <option value="{{ sub.pk }}"
+                        {% if current_subtopic == sub.pk|slugify %}selected{% endif %}>
+                        {{ sub.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Тип задания -->
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Тип</label>
+                <select name="task_type" class="form-select form-select-sm">
+                    <option value="">Все типы</option>
+                    {% for code, label in task_types %}
+                    <option value="{{ code }}" {% if current_task_type == code %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Сложность -->
+            <div class="col-md-1">
+                <label class="form-label small mb-1">Сложность</label>
+                <select name="difficulty" class="form-select form-select-sm">
+                    <option value="">Все</option>
+                    {% for val, label in difficulties %}
+                    <option value="{{ val }}" {% if current_difficulty == val|slugify %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Применить -->
+            <div class="col-md-auto">
+                <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="fas fa-filter"></i> Применить
+                </button>
+                <a href="{% url 'tasks:list' %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
         </div>
-    </div>
+
+        <!-- Вторая строка фильтров -->
+        <div class="row g-2 mt-2 align-items-end">
+            <!-- Группа аналогов -->
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Группа аналогов</label>
+                <select name="analog_group" class="form-select form-select-sm">
+                    <option value="">Все группы</option>
+                    {% for ag in analog_groups %}
+                    <option value="{{ ag.pk }}"
+                        {% if current_analog_group == ag.pk|slugify %}selected{% endif %}>
+                        {{ ag.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Принадлежность к группе -->
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Группировка</label>
+                <select name="group_filter" class="form-select form-select-sm">
+                    <option value="">Все</option>
+                    <option value="no_group" {% if current_group_filter == 'no_group' %}selected{% endif %}>
+                        🔴 Без группы
+                    </option>
+                    <option value="has_group" {% if current_group_filter == 'has_group' %}selected{% endif %}>
+                        🟢 В группе
+                    </option>
+                </select>
+            </div>
+
+            <!-- Формулы -->
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Формулы</label>
+                <div class="btn-group btn-group-sm w-100">
+                    <input type="radio" class="btn-check" name="math_filter" value="all"
+                           id="mf-all" {% if current_filter == 'all' %}checked{% endif %}>
+                    <label class="btn btn-outline-secondary" for="mf-all">Все</label>
+
+                    <input type="radio" class="btn-check" name="math_filter" value="with_math"
+                           id="mf-math" {% if current_filter == 'with_math' %}checked{% endif %}>
+                    <label class="btn btn-outline-success" for="mf-math">С формулами</label>
+
+                    <input type="radio" class="btn-check" name="math_filter" value="with_errors"
+                           id="mf-err" {% if current_filter == 'with_errors' %}checked{% endif %}>
+                    <label class="btn btn-outline-danger" for="mf-err">С ошибками</label>
+                </div>
+            </div>
+
+            <!-- Выделение -->
+            <div class="col-md-auto ms-auto">
+                <button type="button" class="btn btn-sm btn-outline-info" id="select-all-btn">
+                    <i class="fas fa-check-double"></i> Выбрать все
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary d-none" id="deselect-all-btn">
+                    <i class="fas fa-times"></i> Снять
+                </button>
+            </div>
+        </div>
+    </form>
 </div>
 
-<div class="row">
+<!-- Список заданий -->
+<div class="row" id="tasks-container">
     {% for task in tasks %}
     <div class="col-md-6 mb-3">
-        <div class="card 
-            {% if task.text|has_math_errors %}border-danger{% elif task.text|has_math_warnings %}border-warning{% endif %}">
+        <div class="card task-card position-relative
+            {% if task.text|has_math_errors %}border-danger{% elif task.text|has_math_warnings %}border-warning{% endif %}"
+             data-task-id="{{ task.pk }}">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <h6 class="card-title">{{ task.topic }}</h6>
+                <!-- Чекбокс -->
+                <div class="card-check">
+                    <input type="checkbox" class="form-check-input task-checkbox"
+                           value="{{ task.pk }}" title="Выбрать задание">
+                </div>
+
+                <div class="d-flex justify-content-between align-items-start pe-4">
+                    <h6 class="card-title mb-1">
+                        <!-- Индикатор группы -->
+                        <span class="group-indicator {% if task.has_group %}has-group{% else %}no-group{% endif %}"
+                              title="{% if task.has_group %}В группе ({{ task.group_count }}){% else %}Без группы{% endif %}"></span>
+                        {{ task.topic }}
+                    </h6>
                     <small class="uuid-badge">{{ task.get_display_id }}</small>
                 </div>
-                
-                <p class="card-text">{{ task.text|render_math|truncatewords:20 }}</p>
-                
+
+                {% if task.subtopic %}
+                <small class="text-muted d-block mb-1">{{ task.subtopic.name }}</small>
+                {% endif %}
+
+                <p class="card-text small mb-2">{{ task.text|render_math|truncatewords:20 }}</p>
+
                 <div class="mb-2">
                     <span class="badge bg-primary">{{ task.get_task_type_display }}</span>
                     <span class="badge bg-secondary">{{ task.get_difficulty_display }}</span>
                     {% if task.images.exists %}
-                        <span class="badge bg-info">{{ task.images.count }} изображ.</span>
+                    <span class="badge bg-info">{{ task.images.count }} изобр.</span>
                     {% endif %}
-                    <!-- ОБНОВЛЕНО: Индикатор математических формул с ошибками -->
+                    {% if task.has_group %}
+                    <span class="badge bg-success filter-badge">
+                        <i class="fas fa-layer-group"></i> {{ task.group_count }}
+                    </span>
+                    {% endif %}
                     {% math_indicator task.text %}
                 </div>
-                
-                <!-- НОВОЕ: Краткое превью ошибок -->
+
                 {% if task.text|has_math_errors %}
                 <div class="alert alert-danger alert-sm py-1 mb-2">
-                    <small><strong>Ошибки в формулах:</strong> {{ task.text|math_errors|length }} шт.</small>
-                </div>
-                {% elif task.text|has_math_warnings %}
-                <div class="alert alert-warning alert-sm py-1 mb-2">
-                    <small><strong>Предупреждения:</strong> {{ task.text|math_warnings|length }} шт.</small>
+                    <small><strong>Ошибки в формулах:</strong> {{ task.text|math_errors|length }}</small>
                 </div>
                 {% endif %}
-                
-                {% if task.images.exists %}
-                    {% with task.images.first as first_image %}
-                    <div class="mb-2">
-                        {% if first_image.safe_url %}
-                            <img src="{{ first_image.safe_url }}" class="img-thumbnail" 
-                                style="max-width: 80px; max-height: 60px; object-fit: cover;" alt="Превью">
-                        {% else %}
-                            <span class="badge bg-warning text-dark">
-                                <i class="fas fa-exclamation-triangle"></i> нет файла
-                            </span>
-                        {% endif %}
-                    </div>
-                    {% endwith %}
-                {% endif %}
-                
-                <div class="btn-group" role="group">
-                    <a href="{% url 'tasks:detail' task.pk %}" class="btn btn-sm btn-outline-primary">
+
+                <div class="btn-group btn-group-sm">
+                    <a href="{% url 'tasks:detail' task.pk %}" class="btn btn-outline-primary">
                         Подробнее
                     </a>
-                    <a href="{% url 'tasks:update' task.pk %}" class="btn btn-sm btn-outline-secondary">
+                    <a href="{% url 'tasks:update' task.pk %}" class="btn btn-outline-secondary">
                         Редактировать
                     </a>
                 </div>
@@ -104,38 +246,413 @@
     {% empty %}
     <div class="col-12">
         <div class="alert alert-info">
-            Заданий пока нет. <a href="{% url 'tasks:create' %}">Создать первое задание</a>
+            Заданий не найдено. <a href="{% url 'tasks:create' %}">Создать задание</a>
+            или <a href="{% url 'tasks:list' %}">сбросить фильтры</a>.
         </div>
     </div>
     {% endfor %}
 </div>
 
-<!-- Пагинация с сохранением фильтров -->
+<!-- Пагинация -->
 {% if is_paginated %}
-<nav aria-label="Навигация по страницам">
+<nav>
     <ul class="pagination justify-content-center">
         {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if current_filter != 'all' %}&math_filter={{ current_filter }}{% endif %}">Первая</a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_filter != 'all' %}&math_filter={{ current_filter }}{% endif %}">Назад</a>
-            </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}">Назад</a>
+        </li>
         {% endif %}
-        
         <li class="page-item active">
             <span class="page-link">{{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
         </li>
-        
         {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_filter != 'all' %}&math_filter={{ current_filter }}{% endif %}">Вперед</a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_filter != 'all' %}&math_filter={{ current_filter }}{% endif %}">Последняя</a>
-            </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}">Вперёд</a>
+        </li>
         {% endif %}
     </ul>
 </nav>
 {% endif %}
+
+<!-- Bulk Action Bar -->
+<div class="bulk-bar" id="bulk-bar">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+        <div>
+            <i class="fas fa-check-square"></i>
+            Выбрано: <strong id="selected-count">0</strong> заданий
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-success btn-sm" id="btn-create-group"
+                    data-bs-toggle="modal" data-bs-target="#createGroupModal">
+                <i class="fas fa-plus-circle"></i> Новая группа
+            </button>
+            <button class="btn btn-info btn-sm" id="btn-add-to-group"
+                    data-bs-toggle="modal" data-bs-target="#addToGroupModal">
+                <i class="fas fa-folder-plus"></i> В существующую
+            </button>
+            <button class="btn btn-primary btn-sm" id="btn-create-work"
+                    data-bs-toggle="modal" data-bs-target="#createWorkModal">
+                <i class="fas fa-file-alt"></i> Создать работу
+            </button>
+            <button class="btn btn-warning btn-sm" id="btn-remove-from-groups">
+                <i class="fas fa-unlink"></i> Убрать из групп
+            </button>
+            <button class="btn btn-outline-light btn-sm" id="btn-clear-selection">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Создать группу -->
+<div class="modal fade" id="createGroupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Создать группу аналогов</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Название группы</label>
+                    <input type="text" class="form-control" id="new-group-name"
+                           placeholder="Напр.: Механическое движение: Скорость">
+                </div>
+                <p class="text-muted small">
+                    Будет создана группа и в неё добавлены
+                    <strong id="modal-create-count">0</strong> выбранных заданий.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-success" id="confirm-create-group">
+                    <i class="fas fa-plus-circle"></i> Создать
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Добавить в группу -->
+<div class="modal fade" id="addToGroupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Добавить в группу</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Выберите группу</label>
+                    <select class="form-select" id="existing-group-select">
+                        <option value="">-- Выберите группу --</option>
+                        {% for ag in analog_groups %}
+                        <option value="{{ ag.pk }}">{{ ag.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <p class="text-muted small">
+                    <strong id="modal-add-count">0</strong> заданий будут добавлены в выбранную группу.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-info" id="confirm-add-to-group">
+                    <i class="fas fa-folder-plus"></i> Добавить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Создать работу из заданий -->
+<div class="modal fade" id="createWorkModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-file-alt"></i> Создать работу из заданий</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Название работы</label>
+                    <input type="text" class="form-control" id="new-work-name"
+                           placeholder="Напр.: КР №3: Электромагнитные явления">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Тип работы</label>
+                    <select class="form-select" id="new-work-type">
+                        <option value="test">Контрольная работа</option>
+                        <option value="quiz">Самостоятельная работа</option>
+                        <option value="homework">Домашняя работа</option>
+                        <option value="exam">Экзамен</option>
+                    </select>
+                </div>
+                <div class="alert alert-info small mb-0">
+                    <i class="fas fa-info-circle"></i>
+                    Будет создана работа с <strong id="modal-work-count">0</strong> заданиями (1 вариант).
+                    <br>После создания вы перейдёте на страницу работы, где можно:
+                    <ul class="mb-0 mt-1">
+                        <li>Подтянуть группы аналогов из варианта</li>
+                        <li>Сгенерировать дополнительные варианты</li>
+                        <li>Распечатать или скачать PDF</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="confirm-create-work">
+                    <i class="fas fa-rocket"></i> Создать и перейти
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const bulkBar = document.getElementById('bulk-bar');
+    const selectedCount = document.getElementById('selected-count');
+    const selectAllBtn = document.getElementById('select-all-btn');
+    const deselectAllBtn = document.getElementById('deselect-all-btn');
+    const csrfToken = '{{ csrf_token }}';
+
+    // Хранилище выбранных ID (сохраняется между страницами)
+    let selectedIds = new Set(
+        JSON.parse(sessionStorage.getItem('selectedTaskIds') || '[]')
+    );
+
+    function saveSelection() {
+        sessionStorage.setItem('selectedTaskIds', JSON.stringify([...selectedIds]));
+    }
+
+    function updateUI() {
+        const count = selectedIds.size;
+        selectedCount.textContent = count;
+        bulkBar.classList.toggle('visible', count > 0);
+        selectAllBtn.classList.toggle('d-none', count > 0);
+        deselectAllBtn.classList.toggle('d-none', count === 0);
+
+        // Обновляем модалки
+        const mc = document.getElementById('modal-create-count');
+        const ma = document.getElementById('modal-add-count');
+        const mw = document.getElementById('modal-work-count');
+        if (mc) mc.textContent = count;
+        if (ma) ma.textContent = count;
+        if (mw) mw.textContent = count;
+
+        // Обновляем чекбоксы на странице
+        document.querySelectorAll('.task-checkbox').forEach(cb => {
+            const isSelected = selectedIds.has(cb.value);
+            cb.checked = isSelected;
+            cb.closest('.task-card').classList.toggle('selected', isSelected);
+        });
+
+
+
+    }
+
+    // Клик по чекбоксу
+    document.addEventListener('change', function(e) {
+        if (!e.target.classList.contains('task-checkbox')) return;
+        const id = e.target.value;
+        if (e.target.checked) {
+            selectedIds.add(id);
+        } else {
+            selectedIds.delete(id);
+        }
+        saveSelection();
+        updateUI();
+    });
+
+    // Клик по карточке (кроме кнопок/ссылок)
+    document.addEventListener('click', function(e) {
+        const card = e.target.closest('.task-card');
+        if (!card) return;
+        if (e.target.closest('a, button, input, .btn')) return;
+
+        const cb = card.querySelector('.task-checkbox');
+        if (cb) {
+            cb.checked = !cb.checked;
+            cb.dispatchEvent(new Event('change'));
+        }
+    });
+
+    // Выбрать все на странице
+    selectAllBtn.addEventListener('click', function() {
+        document.querySelectorAll('.task-checkbox').forEach(cb => {
+            selectedIds.add(cb.value);
+        });
+        saveSelection();
+        updateUI();
+    });
+
+    // Снять все
+    deselectAllBtn.addEventListener('click', function() {
+        selectedIds.clear();
+        saveSelection();
+        updateUI();
+    });
+
+    // Очистить выделение
+    document.getElementById('btn-clear-selection').addEventListener('click', function() {
+        selectedIds.clear();
+        saveSelection();
+        updateUI();
+    });
+
+    // === API helper ===
+    function bulkAction(url, body) {
+        return fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify(body),
+        }).then(r => r.json());
+    }
+
+    // Создать группу
+    document.getElementById('confirm-create-group').addEventListener('click', function() {
+        const name = document.getElementById('new-group-name').value.trim();
+        if (!name) { alert('Введите название группы'); return; }
+
+        this.disabled = true;
+        bulkAction('{% url "tasks:bulk-create-group" %}', {
+            task_ids: [...selectedIds],
+            group_name: name,
+        }).then(data => {
+            if (data.success) {
+                selectedIds.clear();
+                saveSelection();
+                bootstrap.Modal.getInstance(document.getElementById('createGroupModal')).hide();
+                showToast(data.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                alert(data.error);
+            }
+        }).finally(() => { this.disabled = false; });
+    });
+
+    // Добавить в группу
+    document.getElementById('confirm-add-to-group').addEventListener('click', function() {
+        const groupId = document.getElementById('existing-group-select').value;
+        if (!groupId) { alert('Выберите группу'); return; }
+
+        this.disabled = true;
+        bulkAction('{% url "tasks:bulk-add-to-group" %}', {
+            task_ids: [...selectedIds],
+            group_id: groupId,
+        }).then(data => {
+            if (data.success) {
+                selectedIds.clear();
+                saveSelection();
+                bootstrap.Modal.getInstance(document.getElementById('addToGroupModal')).hide();
+                showToast(data.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                alert(data.error);
+            }
+        }).finally(() => { this.disabled = false; });
+    });
+
+    // Убрать из групп
+    document.getElementById('btn-remove-from-groups').addEventListener('click', function() {
+        if (!confirm('Убрать ' + selectedIds.size + ' заданий из всех групп?')) return;
+
+        this.disabled = true;
+        bulkAction('{% url "tasks:bulk-remove-from-groups" %}', {
+            task_ids: [...selectedIds],
+        }).then(data => {
+            if (data.success) {
+                selectedIds.clear();
+                saveSelection();
+                showToast(data.message, 'warning');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                alert(data.error);
+            }
+        }).finally(() => { this.disabled = false; });
+    });
+
+
+    // Создать работу из заданий
+    document.getElementById('confirm-create-work').addEventListener('click', function() {
+        const name = document.getElementById('new-work-name').value.trim();
+        const workType = document.getElementById('new-work-type').value;
+        if (!name) { alert('Введите название работы'); return; }
+
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Создание...';
+
+        bulkAction('{% url "tasks:bulk-create-work" %}', {
+            task_ids: [...selectedIds],
+            work_name: name,
+            work_type: workType,
+        }).then(data => {
+            if (data.success) {
+                selectedIds.clear();
+                saveSelection();
+                showToast(data.message, 'success');
+                // Переходим на страницу работы
+                setTimeout(() => {
+                    window.location.href = data.redirect_url;
+                }, 500);
+            } else {
+                alert(data.error);
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-rocket"></i> Создать и перейти';
+            }
+        }).catch(err => {
+            alert('Ошибка: ' + err);
+            this.disabled = false;
+            this.innerHTML = '<i class="fas fa-rocket"></i> Создать и перейти';
+        });
+    });
+
+
+    // Динамическая загрузка подтем
+    const topicSelect = document.getElementById('filter-topic');
+    const subtopicSelect = document.getElementById('filter-subtopic');
+
+    if (topicSelect) {
+        topicSelect.addEventListener('change', function() {
+            const topicId = this.value;
+            subtopicSelect.innerHTML = '<option value="">Все подтемы</option>';
+
+            if (!topicId) return;
+
+            fetch('{% url "tasks:ajax-load-subtopics" %}?topic_id=' + topicId)
+                .then(r => r.json())
+                .then(data => {
+                    data.subtopics.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.id;
+                        opt.textContent = s.name;
+                        subtopicSelect.appendChild(opt);
+                    });
+                });
+        });
+    }
+
+    // Toast уведомления
+    function showToast(message, type) {
+        const toast = document.createElement('div');
+        toast.className = 'position-fixed top-0 end-0 p-3';
+        toast.style.zIndex = '9999';
+        toast.innerHTML = '<div class="alert alert-' + (type || 'info') + ' alert-dismissible shadow">' +
+            message + '<button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()"></button></div>';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+    }
+
+    // Инициализация
+    updateUI();
+})();
+</script>
 {% endblock %}

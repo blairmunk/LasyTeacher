@@ -355,12 +355,28 @@
     <div class="container mt-4">
         {% if messages %}
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show auto-dismiss" role="alert"
+                     style="margin-bottom: 0;">
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             {% endfor %}
+            <script>
+                // Автоудаление Django messages через 3 секунды
+                document.querySelectorAll('.alert.auto-dismiss').forEach(function(el) {
+                    setTimeout(function() {
+                        el.style.transition = 'opacity 0.5s, max-height 0.5s, padding 0.5s, margin 0.5s';
+                        el.style.opacity = '0';
+                        el.style.maxHeight = '0';
+                        el.style.padding = '0';
+                        el.style.margin = '0';
+                        el.style.overflow = 'hidden';
+                        setTimeout(function() { el.remove(); }, 500);
+                    }, 3000);
+                });
+            </script>
         {% endif %}
+
 
         {% block content %}
         {% endblock %}
@@ -368,7 +384,9 @@
 
     <!-- Подключение веб-генератора документов -->
     {% load static %}
-    <script src="{% static 'js/document_generation.js' %}"></script>
+        {% block generation_js %}
+        <script src="{% static 'js/document_generation.js' %}"></script>
+        {% endblock %}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     {% block extra_js %}{% endblock %}
 </body>

@@ -121,7 +121,7 @@
             </div>
 
             <!-- Генерация документов -->
-            <div class="card border-0 shadow-sm mb-4">
+            <div class="card border-0 shadow-sm mb-4 document-generation-block">
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="fas fa-file-export"></i> Генерация документов</h5>
                 </div>
@@ -273,71 +273,160 @@
 </div>
 {% endblock %}
 
+{% block generation_js %}{% endblock %}
+
 {% block extra_js %}
 <script>
-// Генерация документов (быстрые кнопки)
-document.querySelectorAll('.btn-generate-doc').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const workId = this.dataset.workId;
-        const type = this.dataset.type;
-        const withAnswers = this.dataset.withAnswers === '1';
+(function() {
+    // === Toast — отдельный контейнер прямо в body ===
+    var toastBox = document.createElement('div');
+    toastBox.id = 'gen-toast-box';
+    toastBox.setAttribute('style',
+        'position:fixed;top:20px;right:20px;z-index:99999;max-width:380px;pointer-events:none;'
+    );
+    document.body.appendChild(toastBox);
 
-        this.disabled = true;
-        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Генерация...';
+    function showToast(message, type) {
+        var colors = { success: '#198754', error: '#dc3545', info: '#0dcaf0' };
+        var icons = { success: 'fa-check-circle', error: 'fa-times-circle', info: 'fa-info-circle' };
+        var el = document.createElement('div');
+        el.setAttribute('style',
+            'pointer-events:auto;background:#fff;border-radius:8px;padding:12px 16px;margin-bottom:8px;'
+            + 'box-shadow:0 4px 20px rgba(0,0,0,0.15);display:flex;align-items:center;gap:10px;'
+            + 'border-left:4px solid ' + (colors[type] || colors.info) + ';'
+            + 'animation:genToastIn 0.3s ease;font-size:14px;'
+        );
+        el.innerHTML = '<i class="fas ' + (icons[type] || icons.info) + '" style="color:'
+            + (colors[type] || colors.info) + ';font-size:18px"></i>'
+            + '<div style="flex:1">' + message + '</div>'
+            + '<span style="cursor:pointer;opacity:0.5;font-size:18px" onclick="this.parentElement.remove()">×</span>';
+        toastBox.appendChild(el);
+        setTimeout(function() { el.remove(); }, 6000);
+    }
 
-        fetch(`/works/ajax/generate/${workId}/`, {
+    // CSS анимация
+    var style = document.createElement('style');
+    style.textContent = '@keyframes genToastIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}';
+    document.head.appendChild(style);
+
+    // === Результаты ===
+    function displayResults(files) {
+        if (!files || files.length === 0) return;
+        var el = document.getElementById('generation-results');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'generation-results';
+            el.className = 'mt-3';
+            var cardBody = document.querySelector('.document-generation-block .card-body');
+            if (cardBody) cardBody.appendChild(el);
+        }
+
+        var html = '<div class="border rounded p-3 bg-light">'
+            + '<h6 class="mb-2"><i class="fas fa-file-download"></i> Созданные документы</h6>'
+            + '<div class="list-group list-group-flush">';
+        files.forEach(function(f) {
+            var icon = 'fa-file';
+            if (f.name.endsWith('.pdf')) icon = 'fa-file-pdf text-danger';
+            else if (f.name.endsWith('.html')) icon = 'fa-file-code text-info';
+            else if (f.name.endsWith('.tex')) icon = 'fa-file-alt text-success';
+            html += '<div class="list-group-item d-flex justify-content-between align-items-center px-2">'
+                + '<div><i class="fas ' + icon + ' me-2"></i><strong>' + f.name + '</strong>'
+                + ' <small class="text-muted">(' + f.size + ')</small></div>'
+                + '<a href="' + f.download_url + '" class="btn btn-sm btn-outline-primary" target="_blank">'
+                + '<i class="fas fa-download"></i> Скачать</a></div>';
+        });
+        html += '</div></div>';
+        el.innerHTML = html;
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // === Генерация с таймаутом и защитой от зависания ===
+    function generateDoc(btn, params) {
+        // Фиксируем ширину кнопки до замены содержимого
+        if (!btn.dataset.origHtml) {
+            btn.dataset.origHtml = btn.innerHTML;
+            btn.dataset.origWidth = btn.offsetWidth + 'px';
+        }
+        btn.style.minWidth = btn.dataset.origWidth;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        btn.disabled = true;
+
+        var formData = new FormData();
+        for (var key in params) {
+            formData.append(key, params[key]);
+        }
+
+        var csrfEl = document.querySelector('[name=csrfmiddlewaretoken]');
+        var csrfVal = csrfEl ? csrfEl.value : '{{ csrf_token }}';
+
+        var controller = new AbortController();
+        var timeoutId = setTimeout(function() { controller.abort(); }, 60000);
+
+        fetch('/works/ajax/generate/{{ work.id }}/', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value
-                    || '{{ csrf_token }}'
-            },
-            body: JSON.stringify({
-                generator_type: type,
-                with_answers: withAnswers,
-                format: 'A4',
-                variant_selection: 'all'
-            })
+            headers: { 'X-CSRFToken': csrfVal },
+            body: formData,
+            signal: controller.signal
         })
-        .then(r => r.json())
-        .then(data => {
-            if (data.download_url) {
-                window.open(data.download_url, '_blank');
-            } else if (data.error) {
-                alert('Ошибка: ' + data.error);
+        .then(function(response) {
+            if (!response.ok) throw new Error('Сервер вернул ' + response.status);
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.success) {
+                showToast(data.message, 'success');
+                displayResults(data.files);
+            } else {
+                showToast(data.error || 'Неизвестная ошибка', 'error');
             }
         })
-        .catch(err => alert('Ошибка: ' + err))
-        .finally(() => {
-            this.disabled = false;
-            this.innerHTML = this.getAttribute('data-original-html') || this.innerHTML;
-            location.reload();
+        .catch(function(err) {
+            if (err.name === 'AbortError') {
+                showToast('Таймаут: генерация заняла больше 60 сек', 'error');
+            } else {
+                showToast('Ошибка: ' + err.message, 'error');
+            }
+        })
+        .finally(function() {
+            clearTimeout(timeoutId);
+            btn.innerHTML = btn.dataset.origHtml || 'Генерация';
+            btn.disabled = false;
+            btn.style.minWidth = '';
+        });
+    }
+
+    // === Быстрые кнопки ===
+    document.querySelectorAll('.btn-generate-doc').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (this.disabled) return; // Защита от двойного клика
+            generateDoc(this, {
+                generator_type: this.dataset.type,
+                with_answers: this.dataset.withAnswers || '0',
+                format: 'A4',
+                variant_selection: 'all'
+            });
         });
     });
-});
 
-// Расширенная генерация
-const advForm = document.getElementById('advanced-generation-form');
-if (advForm) {
-    advForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        const workId = formData.get('work_id');
-
-        fetch(`/works/ajax/generate/${workId}/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
-            },
-            body: JSON.stringify(Object.fromEntries(formData))
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.download_url) window.open(data.download_url, '_blank');
-            else if (data.error) alert('Ошибка: ' + data.error);
-        })
-        .catch(err => alert('Ошибка: ' + err));
-    });
-}
+    // === Расширенная форма ===
+    var advForm = document.getElementById('advanced-generation-form');
+    if (advForm) {
+        advForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn.disabled) return;
+            var params = {};
+            new FormData(this).forEach(function(val, key) {
+                if (key !== 'csrfmiddlewaretoken' && key !== 'work_id') {
+                    params[key] = val;
+                }
+            });
+            generateDoc(submitBtn, params);
+        });
+    }
+})();
 </script>
 {% endblock %}
+
+

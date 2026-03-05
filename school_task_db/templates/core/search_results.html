@@ -26,9 +26,23 @@
     <!-- Итого -->
     <div class="alert {% if total_found %}alert-success{% else %}alert-warning{% endif %} mb-4">
         {% if total_found %}
-            <i class="fas fa-check-circle"></i> Найдено <strong>{{ total_found }}</strong> результатов по запросу «<strong>{{ query }}</strong>»
+            <i class="fas fa-check-circle"></i>
+            Найдено <strong>{{ found_text }}</strong> по запросу «<strong>{{ query }}</strong>»
+            {% if search_mode == 'uuid' %}
+                <span class="badge bg-info ms-2">UUID-поиск</span>
+            {% elif search_mode == 'text' %}
+                <span class="badge bg-secondary ms-2">Текстовый поиск</span>
+            {% elif search_mode == 'uuid+text' %}
+                <span class="badge bg-info ms-2">UUID: 0</span>
+                <span class="badge bg-secondary ms-2">+ текстовый</span>
+            {% endif %}
         {% else %}
-            <i class="fas fa-search"></i> По запросу «<strong>{{ query }}</strong>» ничего не найдено
+            <i class="fas fa-search"></i>
+            По запросу «<strong>{{ query }}</strong>» ничего не найдено.
+            <br><small class="text-muted">
+                Попробуйте: UUID (например <code>#A7B3</code>), название темы, текст задания.
+                <br>Для точного поиска используйте несколько ключевых слов: <code>Звук вариант</code>
+            </small>
         {% endif %}
     </div>
 

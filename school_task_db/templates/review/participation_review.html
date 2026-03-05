@@ -72,15 +72,23 @@
                             <span class="badge bg-secondary ms-2">{{ td.task.topic.name }}</span>
                             {% endif %}
                             <span class="badge bg-info ms-1">сл. {{ td.task.difficulty }}</span>
+                            <span class="badge bg-primary">
+                                Макс: {{ td.max_points }} балл.
+                            </span>
                         </div>
+                        <!-- ИЗМЕНЕНО: Упрощенный ввод баллов с max атрибутом -->
                         <div class="d-flex align-items-center gap-2">
-                            <input type="number" name="task_{{ td.task.id }}"
+                            <input type="number" 
+                                   name="task_{{ td.task.id }}" 
                                    class="form-control form-control-sm task-points"
-                                   style="width: 60px;" value="{{ td.points }}" min="0" max="10">
-                            <span class="text-muted">/</span>
-                            <input type="number" name="task_{{ td.task.id }}_max"
-                                   class="form-control form-control-sm task-max-points"
-                                   style="width: 60px;" value="{{ td.max_points }}" min="1" max="20">
+                                   style="width: 70px;" 
+                                   value="{{ td.points }}" 
+                                   min="0" 
+                                   max="{{ td.max_points }}"
+                                   onchange="calculateTotal()">
+                            <input type="hidden" 
+                                   name="task_{{ td.task.id }}_max" 
+                                   value="{{ td.max_points }}">
                         </div>
                     </div>
                     <div class="card-body">
@@ -96,10 +104,15 @@
                             <div class="small mt-1 ps-3">{{ td.task.short_solution }}</div>
                         </details>
                         {% endif %}
-                        <input type="text" name="task_{{ td.task.id }}_comment"
-                               class="form-control form-control-sm mt-2"
-                               placeholder="Комментарий к заданию..."
-                               value="{{ td.comment }}">
+                        <!-- ИЗМЕНЕНО: Поле комментария с label для улучшения UX -->
+                        <div class="mt-2">
+                            <label class="form-label small fw-bold mb-1">Комментарий к заданию:</label>
+                            <input type="text" 
+                                   name="task_{{ td.task.id }}_comment" 
+                                   class="form-control form-control-sm"
+                                   placeholder="Комментарий к заданию..."
+                                   value="{{ td.comment }}">
+                        </div>
                     </div>
                 </div>
                 {% endfor %}
@@ -110,7 +123,7 @@
                 {% endif %}
             </div>
 
-            <!-- Правая колонка: итоги -->
+            <!-- Правая колонка: итоги (без изменений) -->
             <div class="col-md-4">
                 <!-- Итоговая оценка -->
                 <div class="card mb-3 sticky-top" style="top: 80px; z-index: 10;">
@@ -228,18 +241,25 @@
 {% block extra_js %}
 <script>
 // Пересчёт баллов при изменении заданий
-document.querySelectorAll('.task-points, .task-max-points').forEach(input => {
-    input.addEventListener('input', updateTotals);
+document.querySelectorAll('.task-points').forEach(input => {
+    input.addEventListener('input', calculateTotal);
 });
 
-function updateTotals() {
+// ИЗМЕНЕНО: Функция calculateTotal для работы с новой структурой
+function calculateTotal() {
     let pts = 0, maxPts = 0;
-    document.querySelectorAll('.task-points').forEach(el => {
-        pts += parseInt(el.value) || 0;
+    
+    document.querySelectorAll('.task-points').forEach(input => {
+        pts += parseInt(input.value) || 0;
+        
+        // Получаем max_points из соответствующего hidden-поля
+        const taskId = input.name.replace('task_', '');
+        const maxInput = document.querySelector(`input[name="task_${taskId}_max"]`);
+        if (maxInput) {
+            maxPts += parseInt(maxInput.value) || 0;
+        }
     });
-    document.querySelectorAll('.task-max-points').forEach(el => {
-        maxPts += parseInt(el.value) || 0;
-    });
+    
     document.getElementById('points').value = pts;
     document.getElementById('max_points').value = maxPts;
     updateScoreRecommendation(pts, maxPts);
@@ -290,7 +310,7 @@ document.addEventListener('keydown', e => {
 
 // Рендер формул MathJax
 document.addEventListener('DOMContentLoaded', () => {
-    updateTotals();
+    calculateTotal();
     if (window.MathJax) {
         MathJax.typesetPromise();
     }

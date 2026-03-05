@@ -12,6 +12,8 @@ urlpatterns = [
     path('<pk:work_id>/sync-groups/', views.sync_analog_groups, name='sync-groups'),
     path('variants/', views.VariantListView.as_view(), name='variant-list'),
     path('variants/<pk:pk>/', views.VariantDetailView.as_view(), name='variant-detail'),
+
+    # Генерация документов
     path('download/<str:file_type>/<str:filename>/', views_generation.download_generated_file, name='download_generated_file'),
     path('ajax/generate/<pk:work_id>/', views_generation.generate_work_ajax, name='generate_work_ajax'),
     path('ajax/generate/variant/<pk:variant_id>/', views_generation.generate_variant_ajax, name='generate_variant_ajax'),

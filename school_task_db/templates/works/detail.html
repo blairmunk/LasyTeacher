@@ -41,8 +41,8 @@
                             <small class="text-muted">групп заданий</small>
                         </div>
                         <div class="col-md-3">
-                            <div class="fs-3 fw-bold text-warning">{{ work.max_points }}</div>
-                            <small class="text-muted">макс. баллов</small>
+                            <div class="fs-3 fw-bold text-warning">{{ work.effective_max_score }}</div>
+                            <small class="text-muted">макс. баллов{% if not work.max_score %} (Σ весов){% endif %}</small>
                         </div>
                     </div>
                 </div>
@@ -61,29 +61,38 @@
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th style="width: 60px">№</th>
+                                <th style="width: 50px">№</th>
                                 <th>Группа аналогов</th>
-                                <th style="width: 120px">Кол-во заданий</th>
-                                <th style="width: 120px">Доступно</th>
+                                <th style="width: 80px" class="text-center">Кол-во</th>
+                                <th style="width: 70px" class="text-center">Вес</th>
+                                <th style="width: 90px" class="text-center">Баллы</th>
+                                <th style="width: 80px" class="text-center">Доступно</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for wg in analog_groups %}
+                            {% for item in spec_preview %}
                             <tr>
-                                <td><span class="badge bg-secondary">{{ wg.order }}</span></td>
+                                <td><span class="badge bg-secondary">{{ item.wg.order }}</span></td>
                                 <td>
-                                    <a href="{% url 'task_groups:detail' wg.analog_group.pk %}">
-                                        {{ wg.analog_group.name }}
+                                    <a href="{% url 'task_groups:detail' item.wg.analog_group.pk %}">
+                                        {{ item.wg.analog_group.name }}
                                     </a>
                                 </td>
-                                <td>
-                                    <span class="fw-bold">{{ wg.count }}</span>
+                                <td class="text-center fw-bold">{{ item.wg.count }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-info">{{ item.wg.weight }}</span>
                                 </td>
-                                <td>
-                                    {% with available=wg.analog_group.taskgroup_set.count %}
-                                    <span class="{% if available < wg.count %}text-danger fw-bold{% else %}text-success{% endif %}">
+                                <td class="text-center">
+                                    <span class="fw-bold text-primary">{{ item.per_task }}</span>
+                                    {% if item.wg.count > 1 %}
+                                    <small class="text-muted">×{{ item.wg.count }}={{ item.total_points }}</small>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% with available=item.wg.analog_group.taskgroup_set.count %}
+                                    <span class="{% if available < item.wg.count %}text-danger fw-bold{% else %}text-success{% endif %}">
                                         {{ available }}
-                                        {% if available < wg.count %}
+                                        {% if available < item.wg.count %}
                                         <i class="fas fa-exclamation-triangle" title="Мало заданий!"></i>
                                         {% endif %}
                                     </span>
@@ -92,6 +101,13 @@
                             </tr>
                             {% endfor %}
                         </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="4" class="text-end fw-bold">Итого:</td>
+                                <td class="text-center fw-bold text-primary">{{ work.effective_max_score }}</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
                     </table>
                     {% else %}
                     <div class="p-4 text-center">

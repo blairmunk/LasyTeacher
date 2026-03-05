@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
-from django.db.models import Q, Count, Exists, OuterRef, Subquery
+from django.db.models import Q, Count, Avg, Exists, OuterRef, Subquery
 
 from .models import AnalogGroup, TaskGroup
 from .forms import AnalogGroupForm
@@ -20,6 +20,7 @@ class AnalogGroupListView(ListView):
     def get_queryset(self):
         queryset = AnalogGroup.objects.annotate(
             task_count=Count('taskgroup'),
+            avg_difficulty=Avg('taskgroup__task__difficulty'),
         ).order_by('name')
 
         # Аннотируем тему первого задания для фильтрации
@@ -237,6 +238,7 @@ def bulk_create_work_from_groups(request):
     groups_data = body.get('groups', [])
     work_name = body.get('work_name', '').strip()
     work_type = body.get('work_type', 'test')
+    max_score = body.get('max_score', 0)
     auto_generate = body.get('auto_generate', False)
     variant_count = body.get('variant_count', 2)
 
@@ -255,17 +257,34 @@ def bulk_create_work_from_groups(request):
     work = Work.objects.create(
         name=work_name,
         work_type=work_type,
+        max_score=max(0, int(max_score)),
     )
 
-    # Создаём спецификацию (WorkAnalogGroup)
+    # Создаём спецификацию (WorkAnalogGroup) с весом
     for i, gdata in enumerate(groups_data, 1):
         order = gdata.get('order', i)
         count = gdata.get('count', 1)
+        weight = gdata.get('weight', 1)
+
+        # Автозаполнение веса из сложности первого задания группы
+        if weight <= 0:
+            ag = AnalogGroup.objects.filter(pk=gdata['id']).first()
+            if ag:
+                from task_groups.models import TaskGroup
+                first_tg = TaskGroup.objects.filter(group=ag).select_related('task').first()
+                if first_tg and first_tg.task.difficulty:
+                    weight = first_tg.task.difficulty
+                else:
+                    weight = 1
+            else:
+                weight = 1
+
         WorkAnalogGroup.objects.create(
             work=work,
             analog_group_id=gdata['id'],
             order=order,
             count=count,
+            weight=max(1, int(weight)),
         )
 
     result = {
@@ -286,6 +305,7 @@ def bulk_create_work_from_groups(request):
             result['warning'] = f'Работа создана, но генерация вариантов не удалась: {str(e)}'
 
     return JsonResponse(result)
+
 
 
 @require_POST

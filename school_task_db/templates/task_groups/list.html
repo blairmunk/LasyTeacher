@@ -175,7 +175,8 @@
         <div class="card group-card position-relative h-100"
              data-group-id="{{ group.pk }}"
              data-group-name="{{ group.name }}"
-             data-task-count="{{ group.task_count }}">
+             data-task-count="{{ group.task_count }}"
+             data-difficulty="{{ group.avg_difficulty|floatformat:0|default:'1' }}">
             <div class="card-body">
                 <div class="card-check">
                     <input type="checkbox" class="form-check-input group-checkbox"
@@ -312,12 +313,28 @@
                         <tr>
                             <th style="width:50px">№</th>
                             <th>Группа аналогов</th>
-                            <th style="width:80px">Заданий</th>
-                            <th style="width:100px">В группе</th>
+                            <th style="width:80px" class="text-center">Заданий</th>
+                            <th style="width:70px" class="text-center">Вес</th>
+                            <th style="width:80px" class="text-center">В группе</th>
                         </tr>
                     </thead>
                     <tbody id="spec-body"></tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="5">
+                                <div class="d-flex align-items-center gap-3">
+                                    <label class="form-label mb-0 small fw-bold">Макс. балл:</label>
+                                    <input type="number" class="form-control form-control-sm" id="new-work-max-score"
+                                           value="0" min="0" max="1000" style="width:90px"
+                                           title="0 = сумма весов (без нормировки)">
+                                    <small class="text-muted">0 = сумма весов</small>
+                                    <span class="ms-auto small" id="spec-points-preview"></span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tfoot>
                 </table>
+
 
                 <!-- Автогенерация -->
                 <div class="form-check mb-2">
@@ -412,6 +429,8 @@
             selectedGroups[id] = {
                 name: card.dataset.groupName,
                 taskCount: parseInt(card.dataset.taskCount) || 0,
+                difficulty: parseInt(card.dataset.difficulty) || 1,
+                weight: parseInt(card.dataset.difficulty) || 1,
                 count: 1,
                 order: getCount() + 1
             };
@@ -439,6 +458,8 @@
                 selectedGroups[cb.value] = {
                     name: card.dataset.groupName,
                     taskCount: parseInt(card.dataset.taskCount) || 0,
+                    difficulty: parseInt(card.dataset.difficulty) || 1,
+                    weight: parseInt(card.dataset.difficulty) || 1,
                     count: 1, order: getCount() + 1
                 };
             }
@@ -494,28 +515,80 @@
             var i = 1;
             for (var id in selectedGroups) {
                 var g = selectedGroups[id];
+                // Автозаполнение веса из difficulty (хранится в selectedGroups)
+                var defaultWeight = g.weight || g.difficulty || 1;
                 html += '<tr>'
                     + '<td>' + i + '</td>'
                     + '<td>' + g.name + '</td>'
-                    + '<td><input type="number" class="form-control form-control-sm spec-count" '
+                    + '<td class="text-center"><input type="number" class="form-control form-control-sm spec-count" '
                     + 'data-id="' + id + '" min="1" max="' + g.taskCount + '" value="' + (g.count || 1) + '"></td>'
+                    + '<td class="text-center"><input type="number" class="form-control form-control-sm spec-weight" '
+                    + 'data-id="' + id + '" min="1" max="100" value="' + defaultWeight + '"></td>'
                     + '<td class="text-center"><span class="badge bg-secondary">' + g.taskCount + '</span></td>'
                     + '</tr>';
                 i++;
             }
             tbody.innerHTML = html;
+            updateSpecPreview();
         });
     }
 
-    // Синхронизация count в модалке → selectedGroups
+    // Превью баллов в модалке
+    function updateSpecPreview() {
+        var maxScore = parseInt(document.getElementById('new-work-max-score').value) || 0;
+        var countInputs = document.querySelectorAll('.spec-count');
+        var weightInputs = document.querySelectorAll('.spec-weight');
+        var slots = [];
+
+        weightInputs.forEach(function(wInp) {
+            var id = wInp.dataset.id;
+            var cInp = document.querySelector('.spec-count[data-id="' + id + '"]');
+            var count = parseInt(cInp ? cInp.value : 1) || 1;
+            var weight = parseInt(wInp.value) || 1;
+            for (var j = 0; j < count; j++) slots.push(weight);
+        });
+
+        var totalWeight = slots.reduce(function(a, b) { return a + b; }, 0);
+        var preview = document.getElementById('spec-points-preview');
+        if (!preview || slots.length === 0) return;
+
+        if (maxScore <= 0) {
+            // Без нормировки
+            preview.innerHTML = '<strong>Σ = ' + totalWeight + ' балл.</strong> (сумма весов)';
+        } else {
+            // С нормировкой
+            preview.innerHTML = '<strong>Σ = ' + maxScore + ' балл.</strong> (нормировка)';
+        }
+    }
+
+    // Слушаем изменения в модалке
     document.addEventListener('input', function(e) {
-        if (!e.target.classList.contains('spec-count')) return;
-        var id = e.target.dataset.id;
-        if (selectedGroups[id]) {
-            selectedGroups[id].count = parseInt(e.target.value) || 1;
-            save(); updateUI();
+        if (e.target.classList.contains('spec-weight') || e.target.id === 'new-work-max-score') {
+            updateSpecPreview();
         }
     });
+
+
+    // Синхронизация count и weight в модалке → selectedGroups
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('spec-count')) {
+            var id = e.target.dataset.id;
+            if (selectedGroups[id]) {
+                selectedGroups[id].count = parseInt(e.target.value) || 1;
+                save(); updateUI();
+            }
+            updateSpecPreview();
+        }
+        if (e.target.classList.contains('spec-weight')) {
+            var id = e.target.dataset.id;
+            if (selectedGroups[id]) {
+                selectedGroups[id].weight = parseInt(e.target.value) || 1;
+                save();
+            }
+            updateSpecPreview();
+        }
+    });
+
 
     // Toggle variant count
     var autoGenCb = document.getElementById('auto-generate');
@@ -542,9 +615,12 @@
             groups.push({
                 id: id,
                 order: order++,
-                count: selectedGroups[id].count || 1
+                count: selectedGroups[id].count || 1,
+                weight: selectedGroups[id].weight || 1
             });
         }
+        var maxScore = parseInt(document.getElementById('new-work-max-score').value) || 0;
+
 
         this.disabled = true;
         this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Создание...';
@@ -554,6 +630,7 @@
             groups: groups,
             work_name: name,
             work_type: workType,
+            max_score: maxScore,
             auto_generate: autoGen,
             variant_count: varCount,
         }).then(function(data) {

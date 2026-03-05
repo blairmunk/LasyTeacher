@@ -1,141 +1,173 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ variant.work.name }} - Вариант {{ variant.number }}{% endblock %}
+{% block title %}{{ variant.display_name }} - Вариант {{ variant.number }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .task-number-badge {
+        width: 36px; height: 36px;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 50%; background: #0d6efd; color: white;
+        font-weight: 700; font-size: 1rem; flex-shrink: 0;
+    }
+
+    .points-badge {
+        background: #e8f4fd;
+        color: #0d6efd;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.95rem;
+    }
+
+    .difficulty-dots span {
+        display: inline-block; width: 10px; height: 10px;
+        border-radius: 50%; margin-right: 2px;
+    }
+    .difficulty-dots .filled { background: #ffc107; }
+    .difficulty-dots .empty { background: #dee2e6; }
+
+    .variant-info-bar {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 8px; padding: 16px 20px;
+    }
+
+    .orphan-warning {
+        background: #fff3cd; border: 1px solid #ffc107;
+        border-radius: 8px; padding: 12px 16px;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2>{{ variant.work.name }}</h2>
-                <h4 class="text-muted">Вариант {{ variant.number }}</h4>
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">{{ variant.display_name }}</h2>
+            <h4 class="text-muted">Вариант {{ variant.number }}</h4>
+        </div>
+        <div>
+            {% if variant.work %}
+            <a href="{% url 'works:detail' variant.work.pk %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> К работе
+            </a>
+            {% endif %}
+            <a href="{% url 'works:variant-list' %}" class="btn btn-secondary">
+                <i class="fas fa-list"></i> Все варианты
+            </a>
+        </div>
+    </div>
+
+    {% if not variant.work %}
+    <div class="orphan-warning mb-4">
+        <i class="fas fa-exclamation-triangle text-warning"></i>
+        <strong>Работа удалена.</strong> Вариант существует автономно.
+        Данные сохранены из снимка: «{{ variant.work_name_snapshot }}».
+    </div>
+    {% endif %}
+
+    <!-- Инфо-карточка -->
+    <div class="variant-info-bar mb-4">
+        <div class="row">
+            <div class="col-md-3">
+                <small class="text-muted d-block">Время</small>
+                <strong>{{ variant.display_duration }} мин</strong>
             </div>
-            <div>
-                <button onclick="window.print()" class="btn btn-info">
-                    <i class="fas fa-print"></i> Печать
-                </button>
-                <a href="{% url 'works:variant-list' %}" class="btn btn-secondary">
-                    <i class="fas fa-list"></i> К списку вариантов
-                </a>
+            <div class="col-md-3">
+                <small class="text-muted d-block">Заданий</small>
+                <strong>{{ variant_tasks.count }}</strong>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted d-block">Макс. баллов</small>
+                <strong>{{ total_max_points }} из {{ variant.display_max_score }}</strong>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted d-block">Создан</small>
+                <strong>{{ variant.created_at|date:"d.m.Y H:i" }}</strong>
             </div>
         </div>
+    </div>
 
-        <div class="card mb-4 d-print-none">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <strong>Время выполнения:</strong> {{ variant.work.duration }} минут
-                    </div>
-                    <div class="col-md-4">
-                        <strong>Заданий в варианте:</strong> {{ variant.tasks.count }}
-                    </div>
-                    <div class="col-md-4">
-                        <strong>Создан:</strong> {{ variant.created_at|date:"d.m.Y H:i" }}
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- Задания варианта -->
+    <h4 class="mb-3">Задания варианта</h4>
 
-        <h4 class="d-print-none">Задания варианта</h4>
-        {% for task in variant.ordered_tasks %}
-        <div class="card mb-4">
-            <div class="card-header d-print-none">
-                <div class="d-flex justify-content-between">
-                    <h5>Задание {{ forloop.counter }}</h5>
+    {% for vt in variant_tasks %}
+    {% with task=vt.task %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="task-number-badge">{{ vt.order }}</div>
                     <div>
                         <span class="badge bg-primary">{{ task.get_task_type_display }}</span>
-                        <span class="badge bg-secondary">{{ task.get_difficulty_display }}</span>
+                        <span class="difficulty-dots ms-1" title="Сложность: {{ task.difficulty }}">
+                            {% for i in "123" %}
+                                <span class="{% if forloop.counter <= task.difficulty %}filled{% else %}empty{% endif %}"></span>
+                            {% endfor %}
+                        </span>
                     </div>
                 </div>
-                <small class="text-muted">{{ task.topic }}</small>
+                <div class="points-badge">
+                    {{ vt.max_points }} балл.
+                </div>
             </div>
-            <div class="card-body">
-                <div class="d-none d-print-block mb-3">
-                    <div class="d-flex justify-content-between">
-                        <strong>{{ forloop.counter }}. {{ task.topic }}</strong>
-                        <span class="uuid-print">{{ task.get_short_uuid }}</span>
+            <small class="text-muted">{{ task.topic }}</small>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <div class="task-content">
+                    <div class="task-text-with-images">
+                        {% for image in task.images.all %}
+                            {% if image.position == 'right_40' or image.position == 'right_20' %}
+                                <div class="task-image {{ image.get_css_class }}">
+                                    {% if image.safe_url %}
+                                        <img src="{{ image.safe_url }}" alt="{{ image.caption|default:'Изображение к заданию' }}" />
+                                    {% else %}
+                                        <div class="border border-danger rounded p-2 text-center text-danger small">
+                                            <i class="fas fa-image"></i><br>Файл отсутствует
+                                        </div>
+                                    {% endif %}
+                                    {% if image.caption %}<div class="task-image-caption">{{ image.caption }}</div>{% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+
+                        {{ task.text|linebreaks }}
+
+                        {% for image in task.images.all %}
+                            {% if image.position == 'bottom_100' or image.position == 'bottom_70' or not image.position %}
+                                <div class="task-image {{ image.get_css_class }}">
+                                    {% if image.safe_url %}
+                                        <img src="{{ image.safe_url }}" alt="{{ image.caption|default:'Изображение к заданию' }}" />
+                                    {% else %}
+                                        <div class="border border-warning rounded p-3 text-center">
+                                            <i class="fas fa-exclamation-triangle text-warning"></i><br>
+                                            <span class="text-muted small">Файл изображения отсутствует</span>
+                                        </div>
+                                    {% endif %}
+                                    {% if image.caption %}<div class="task-image-caption">{{ image.caption }}</div>{% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
                     </div>
+                    <div style="clear: both;"></div>
                 </div>
-                
+            </div>
+
+            <div>
                 <div class="mb-3">
-                    <div class="task-content">
-                        <div class="task-text-with-images">
-                            <!-- ИЗОБРАЖЕНИЯ СПРАВА -->
-                            {% for image in task.images.all %}
-                                {% if image.position == 'right_40' or image.position == 'right_20' %}
-                                    <div class="task-image {{ image.get_css_class }}">
-                                        {% if image.safe_url %}
-                                            <img src="{{ image.safe_url }}" alt="{{ image.caption|default:'Изображение к заданию' }}" />
-                                        {% else %}
-                                            <div class="border border-danger rounded p-2 text-center text-danger small">
-                                                <i class="fas fa-image"></i><br>
-                                                Файл отсутствует
-                                            </div>
-                                        {% endif %}
-                                        {% if image.caption %}
-                                            <div class="task-image-caption">{{ image.caption }}</div>
-                                        {% endif %}
-                                    </div>
-                                {% endif %}
-                            {% endfor %}
-                            
-                            {{ task.text|linebreaks }}
-                            
-                            <!-- ИЗОБРАЖЕНИЯ СНИЗУ + БЕЗ ПОЗИЦИИ -->
-                            {% for image in task.images.all %}
-                                {% if image.position == 'bottom_100' or image.position == 'bottom_70' or not image.position %}
-                                    <div class="task-image {{ image.get_css_class }}">
-                                        {% if image.safe_url %}
-                                            <img src="{{ image.safe_url }}" alt="{{ image.caption|default:'Изображение к заданию' }}" />
-                                        {% else %}
-                                            <div class="border border-warning rounded p-3 text-center">
-                                                <i class="fas fa-exclamation-triangle text-warning"></i><br>
-                                                <span class="text-muted small">Файл изображения отсутствует</span>
-                                                {% if image.image.name %}
-                                                    <br><code class="small">{{ image.image.name }}</code>
-                                                {% endif %}
-                                            </div>
-                                        {% endif %}
-                                        {% if image.caption %}
-                                            <div class="task-image-caption">{{ image.caption }}</div>
-                                        {% endif %}
-                                        <!-- Предупреждение о позиции — только на экране, не при печати -->
-                                        {% if not image.position %}
-                                            <div class="position-warning d-print-none">
-                                                <small class="text-warning">
-                                                    <i class="fas fa-exclamation-triangle"></i> 
-                                                    Позиция не задана (по умолчанию: снизу 70%)
-                                                </small>
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                {% endif %}
-                            {% endfor %}
-                        </div>
-                        <div style="clear: both;"></div>
-                    </div>
+                    <strong>Ответ:</strong>
+                    <div class="mt-2 p-3 bg-success text-white border rounded">{{ task.answer|linebreaks }}</div>
                 </div>
-                
-                <div class="d-print-none">
-                    <div class="mb-3">
-                        <strong>Ответ:</strong>
-                        <div class="mt-2 p-3 bg-success text-white border rounded">
-                            {{ task.answer|linebreaks }}
-                        </div>
-                    </div>
-                    
-                    <a href="{% url 'tasks:detail' task.pk %}" class="btn btn-sm btn-outline-primary">
-                        Подробнее о задании
-                    </a>
-                </div>
+                <a href="{% url 'tasks:detail' task.pk %}" class="btn btn-sm btn-outline-primary">Подробнее</a>
             </div>
         </div>
-        {% empty %}
-        <div class="alert alert-warning">
-            В варианте нет заданий.
-        </div>
-        {% endfor %}
     </div>
+    {% endwith %}
+    {% empty %}
+    <div class="alert alert-warning">В варианте нет заданий.</div>
+    {% endfor %}
+
     <div class="uuid-code">
         Вариант: {{ variant.get_medium_uuid }} | Работа: {{ variant.work.get_short_uuid }}
     </div>

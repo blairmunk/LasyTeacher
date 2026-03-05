@@ -51,6 +51,8 @@ class WorkHtmlGenerator(BaseHtmlGenerator):
             'variants': all_variants_data,
             'total_variants': len(all_variants_data),
             'with_answers': getattr(self, '_with_answers', False),
+            'max_score': getattr(work, 'max_score', 100),
+
             
             # Информация об ошибках формул
             'has_formula_errors': len(document_errors) > 0,
@@ -60,7 +62,7 @@ class WorkHtmlGenerator(BaseHtmlGenerator):
         }
     
     def _prepare_variant_context(self, variant):
-        """Подготавливает контекст для одного варианта с обработкой формул"""
+        """ОБНОВЛЕНО: Подготавливает контекст для одного варианта с обработкой формул и weight из VariantTask"""
         print(f"🔍 HTML: Обрабатываем вариант {variant.number}")
         
         tasks = variant.tasks.all().order_by('id')
@@ -195,6 +197,31 @@ class WorkHtmlGenerator(BaseHtmlGenerator):
                 'formula_warnings': task_warnings,
             }
             
+            # ИЗМЕНЕНО: Получаем VariantTask для доступа к weight
+            try:
+                from works.models import VariantTask
+                variant_task = VariantTask.objects.filter(
+                    variant=variant, 
+                    task=task
+                ).first()
+                
+                if variant_task:
+                    task_data['weight'] = variant_task.weight
+                    task_data['max_points_primary'] = variant_task.weight
+                    task_data['max_points'] = variant_task.max_points  # None если не заморожено
+                    print(f"🔍 HTML: Задание {task.id} weight={variant_task.weight}")
+                else:
+                    print(f"⚠️ HTML: VariantTask не найден для задания {task.id}, используем weight=1")
+                    task_data['weight'] = 1
+                    task_data['max_points_primary'] = 1
+                    task_data['max_points'] = None
+                    
+            except Exception as e:
+                print(f"⚠️ HTML: Не удалось получить weight для задания {task.id}: {e}")
+                task_data['weight'] = 1
+                task_data['max_points_primary'] = 1
+                task_data['max_points'] = None
+            
             # Добавляем дополнительные поля
             task_data.update(additional_fields)
             
@@ -219,13 +246,24 @@ class WorkHtmlGenerator(BaseHtmlGenerator):
             variant_errors.extend(task_errors)
             variant_warnings.extend(task_warnings)
         
+        total_weight = sum(t['weight'] for t in prepared_tasks)
+
+        # Рассчитываем display_points для шаблона
+        from works.utils import calc_display_points
+        max_score = getattr(variant.work, 'max_score', 100) or 100
+        calc_display_points(prepared_tasks, max_score)
+
         return {
             'variant': variant,
             'tasks': prepared_tasks,
             'total_tasks': len(prepared_tasks),
+            'total_weight': total_weight,
+            'max_score': max_score,
+            'is_frozen': variant.is_points_frozen,
             'errors': variant_errors,
             'warnings': variant_warnings,
         }
+
     
     def generate_with_answers(self, work):
         """Генерирует HTML работу с ответами"""

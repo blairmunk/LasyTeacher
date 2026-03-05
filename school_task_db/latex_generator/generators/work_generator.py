@@ -63,6 +63,7 @@ class WorkLatexGenerator(BaseLatexGenerator):
             'variants': all_variants_data,
             'total_variants': len(all_variants_data),
             'with_answers': getattr(self, '_with_answers', False),
+            'max_score': getattr(work, 'max_score', 100),
             
             # НОВОЕ: Формат страницы для LaTeX
             'page_format': page_format,
@@ -77,7 +78,7 @@ class WorkLatexGenerator(BaseLatexGenerator):
 
     
     def _prepare_variant_context(self, variant):
-        """ОБНОВЛЕНО: Подготовка контекста с поддержкой 4 типов контента"""
+        """ОБНОВЛЕНО: Подготовка контекста с поддержкой 4 типов контента и weight из VariantTask"""
         print(f"🔍 DEBUG: Обрабатываем вариант {variant.number}")
         
         # Получаем конфигурацию контента
@@ -118,7 +119,7 @@ class WorkLatexGenerator(BaseLatexGenerator):
             
             # Обрабатываем дополнительные поля если есть
             additional_fields = {}
-        # Ответы - включаем если любой тип ответов запрошен
+            # Ответы - включаем если любой тип ответов запрошен
             if include_answers:
                 additional_fields['answer'] = answer_processed['content']
             else:
@@ -223,6 +224,28 @@ class WorkLatexGenerator(BaseLatexGenerator):
                 'formula_warnings': task_warnings,
             }
             
+            # ИЗМЕНЕНО: Получаем VariantTask для доступа к weight
+            try:
+                from works.models import VariantTask
+                variant_task = VariantTask.objects.filter(
+                    variant=variant, 
+                    task=task
+                ).first()
+                
+                if variant_task:
+                    task_data['weight'] = variant_task.weight
+                    task_data['max_points_primary'] = variant_task.weight
+                    task_data['max_points'] = variant_task.max_points  # None если не заморожено
+                else:
+                    task_data['weight'] = 1
+                    task_data['max_points_primary'] = 1
+                    task_data['max_points'] = None
+                    
+            except Exception as e:
+                task_data['weight'] = 1
+                task_data['max_points_primary'] = 1
+                task_data['max_points'] = None
+            
             # Добавляем дополнительные поля
             task_data.update(additional_fields)
             
@@ -248,13 +271,24 @@ class WorkLatexGenerator(BaseLatexGenerator):
             variant_errors.extend(task_errors)
             variant_warnings.extend(task_warnings)
         
+        total_weight = sum(t['weight'] for t in prepared_tasks)
+
+        # Рассчитываем display_points для шаблона
+        from works.utils import calc_display_points
+        max_score = getattr(variant.work, 'max_score', 100) or 100
+        calc_display_points(prepared_tasks, max_score)
+
         return {
             'variant': variant,
             'tasks': prepared_tasks,
             'total_tasks': len(prepared_tasks),
+            'total_weight': total_weight,
+            'max_score': max_score,
+            'is_frozen': variant.is_points_frozen,
             'errors': variant_errors,
             'warnings': variant_warnings,
         }
+
     
     def generate(self, work, output_format='pdf'):
         """Генерация с полной обработкой ошибок"""

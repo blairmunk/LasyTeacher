@@ -223,43 +223,56 @@ class ParticipationReviewView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         participation_id = kwargs.get('pk')
-
         participation = get_object_or_404(
             EventParticipation.objects.select_related(
                 'student', 'variant', 'event', 'event__work'
             ),
             pk=participation_id
         )
-
-        # Получаем или создаём оценку
+        
+        # Получаем задания варианта
         variant_tasks = list(
             participation.variant.tasks.all().select_related('topic')
         ) if participation.variant else []
-
+        
+        # НОВОЕ: Получаем VariantTask для доступа к weight
+        from works.models import VariantTask
+        variant_task_map = {
+            vt.task_id: vt 
+            for vt in VariantTask.objects.filter(
+                variant=participation.variant
+            )
+        }
+        
         mark, created = Mark.objects.get_or_create(
             participation=participation,
             defaults={
-                'max_points': len(variant_tasks) * 5,
+                # НОВОЕ: max_points из суммы weight
+                'max_points': sum(
+                    vt.weight for vt in variant_task_map.values()
+                )
             }
         )
-
+        
         # Подготовка данных заданий с баллами
         tasks_with_scores = []
         existing_scores = mark.task_scores or {}
-
         for i, task in enumerate(variant_tasks):
             task_uuid = str(task.id)
-            # Поддержка обоих форматов ключей
+            vt = variant_task_map.get(task.id)
             task_data = existing_scores.get(task_uuid, {})
-
             tasks_with_scores.append({
                 'task': task,
                 'number': i + 1,
                 'points': task_data.get('points', 0),
-                'max_points': task_data.get('max_points', 5),
+                # НОВОЕ: max_points из weight
+                'max_points': task_data.get(
+                    'max_points', 
+                    vt.weight if vt else 5
+                ),
                 'comment': task_data.get('comment', ''),
             })
-
+        
         context.update({
             'participation': participation,
             'mark': mark,
@@ -367,18 +380,17 @@ class ParticipationReviewView(TemplateView):
         task_scores = {}
         for key, value in request.POST.items():
             if key.startswith('task_') and '_max' not in key and '_comment' not in key:
-                task_uuid = key[5:]  # убираем "task_"
+                task_uuid = key[5:]
                 points_val = int(value) if value else 0
                 max_val = int(request.POST.get(f'task_{task_uuid}_max', 5))
                 comment_val = request.POST.get(f'task_{task_uuid}_comment', '')
-
                 score_data = {
                     'points': points_val,
                     'max_points': max_val,
                     'comment': comment_val,
                 }
                 task_scores[task_uuid] = score_data
-
+        
         mark.task_scores = task_scores
         mark.save()
 

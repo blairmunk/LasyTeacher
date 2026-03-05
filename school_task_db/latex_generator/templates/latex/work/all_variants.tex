@@ -80,7 +80,7 @@
 
 % Задания варианта
 {% for task_data in variant_data.tasks %}
-\section*{Задание {{ task_data.number }}}
+\section*{Задание {{ task_data.number }} \hfill {\normalfont\normalsize ({{ task_data.display_points }} балл.)}}
 
 % Используем предварительно сгенерированный LaTeX код с minipage
 {{ task_data.latex_content|safe }}

@@ -63,6 +63,7 @@ class WorkLatexGenerator(BaseLatexGenerator):
             'variants': all_variants_data,
             'total_variants': len(all_variants_data),
             'with_answers': getattr(self, '_with_answers', False),
+            'max_score': getattr(work, 'max_score', 100),
             
             # НОВОЕ: Формат страницы для LaTeX
             'page_format': page_format,
@@ -234,16 +235,16 @@ class WorkLatexGenerator(BaseLatexGenerator):
                 if variant_task:
                     task_data['weight'] = variant_task.weight
                     task_data['max_points_primary'] = variant_task.weight
-                    print(f"🔍 Задание {task.id}: weight={variant_task.weight}")
+                    task_data['max_points'] = variant_task.max_points  # None если не заморожено
                 else:
-                    print(f"⚠️ VariantTask не найден для задания {task.id}, используем weight=1")
                     task_data['weight'] = 1
                     task_data['max_points_primary'] = 1
+                    task_data['max_points'] = None
                     
             except Exception as e:
-                print(f"⚠️ Не удалось получить weight для задания {task.id}: {e}")
                 task_data['weight'] = 1
                 task_data['max_points_primary'] = 1
+                task_data['max_points'] = None
             
             # Добавляем дополнительные поля
             task_data.update(additional_fields)
@@ -272,14 +273,22 @@ class WorkLatexGenerator(BaseLatexGenerator):
         
         total_weight = sum(t['weight'] for t in prepared_tasks)
 
+        # Рассчитываем display_points для шаблона
+        from works.utils import calc_display_points
+        max_score = getattr(variant.work, 'max_score', 100) or 100
+        calc_display_points(prepared_tasks, max_score)
+
         return {
             'variant': variant,
             'tasks': prepared_tasks,
             'total_tasks': len(prepared_tasks),
-            'total_weight': total_weight,  # НОВОЕ: сумма весов для 100-балльной шкалы
+            'total_weight': total_weight,
+            'max_score': max_score,
+            'is_frozen': variant.is_points_frozen,
             'errors': variant_errors,
             'warnings': variant_warnings,
         }
+
     
     def generate(self, work, output_format='pdf'):
         """Генерация с полной обработкой ошибок"""

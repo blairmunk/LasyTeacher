@@ -61,9 +61,13 @@
         <!-- Задания варианта -->
         {% for task_data in variant_data.tasks %}
         <div class="task">
-            <div class="task-number">
-                Задание {{ task_data.number }}
+            <div class="task-number" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Задание {{ task_data.number }}</span>
+                {% if task_data.display_points %}
+                <span style="font-weight: normal; font-size: 0.9em; color: #555;">({{ task_data.display_points }} балл.)</span>
+                {% endif %}
             </div>
+
 
             <!-- Содержимое задания с изображениями или без -->
             <div class="task-content">

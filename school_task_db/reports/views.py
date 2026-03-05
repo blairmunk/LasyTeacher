@@ -1612,3 +1612,179 @@ class JournalView(TemplateView):
         year = getattr(self.request, 'current_year', None)
         context.update(_get_nav_context('journal', year=year))
         return context
+
+# ============================================================
+# ТЕХНИЧЕСКИЕ ОТЧЁТЫ (здоровье базы заданий)
+# ============================================================
+
+class TaskDBHealthView(TemplateView):
+    """Здоровье базы заданий"""
+    template_name = 'reports/db_health.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        from works.models import Work, Variant, VariantTask, WorkAnalogGroup
+        from task_groups.models import AnalogGroup, TaskGroup
+
+        # === Общая статистика ===
+        total_tasks = Task.objects.count()
+        total_groups_qs = AnalogGroup.objects.annotate(
+            task_count=Count('taskgroup')
+        )
+        total_works = Work.objects.count()
+        total_variants = Variant.objects.count()
+
+        context['stats'] = {
+            'total_tasks': total_tasks,
+            'total_groups': total_groups_qs.count(),
+            'total_works': total_works,
+            'total_variants': total_variants,
+        }
+
+        # === Варианты-сироты ===
+        orphan_variants = Variant.objects.filter(work__isnull=True)
+        context['orphan_variants'] = {
+            'count': orphan_variants.count(),
+            'items': orphan_variants.order_by('-created_at')[:10],
+        }
+
+        # === Пустые группы ===
+        empty_groups = total_groups_qs.filter(task_count=0)
+        context['empty_groups'] = {
+            'count': empty_groups.count(),
+            'items': empty_groups.order_by('name')[:20],
+        }
+
+        # === Группы с недостаточным покрытием ===
+        coverage_issues = []
+        for wag in WorkAnalogGroup.objects.select_related(
+            'work', 'analog_group'
+        ).annotate(
+            available=Count('analog_group__taskgroup')
+        ):
+            if wag.available < wag.count:
+                coverage_issues.append({
+                    'work': wag.work,
+                    'group': wag.analog_group,
+                    'needed': wag.count,
+                    'available': wag.available,
+                    'deficit': wag.count - wag.available,
+                })
+        context['coverage_issues'] = {
+            'count': len(coverage_issues),
+            'items': coverage_issues[:20],
+        }
+
+        # === Распределение сложности ===
+        difficulty_dist = []
+        for item in Task.objects.values('difficulty').annotate(
+            count=Count('id')
+        ).order_by('difficulty'):
+            d = item['difficulty'] or 0
+            cnt = item['count']
+            pct = round(cnt / total_tasks * 100, 1) if total_tasks else 0
+            difficulty_dist.append({
+                'difficulty': d,
+                'count': cnt,
+                'pct': pct,
+            })
+        context['difficulty_dist'] = difficulty_dist
+
+        # === Задания без группы ===
+        tasks_in_groups = set(
+            TaskGroup.objects.values_list('task_id', flat=True)
+        )
+        ungrouped_count = Task.objects.exclude(id__in=tasks_in_groups).count()
+        context['ungrouped_tasks'] = {
+            'count': ungrouped_count,
+            'pct': round(ungrouped_count / total_tasks * 100, 1) if total_tasks else 0,
+        }
+
+        # === Хрупкие группы (1 задание) ===
+        fragile_groups = total_groups_qs.filter(task_count=1)
+        context['fragile_groups'] = {
+            'count': fragile_groups.count(),
+            'items': fragile_groups.order_by('name')[:20],
+        }
+
+        # === Работы без вариантов ===
+        works_no_variants = Work.objects.annotate(
+            variant_count=Count('variant')
+        ).filter(variant_count=0)
+        context['works_no_variants'] = {
+            'count': works_no_variants.count(),
+            'items': works_no_variants[:10],
+        }
+
+        # === Работы без спецификации ===
+        works_no_spec = Work.objects.annotate(
+            spec_count=Count('workanaloggroup')
+        ).filter(spec_count=0)
+        context['works_no_spec'] = {
+            'count': works_no_spec.count(),
+            'items': works_no_spec[:10],
+        }
+
+        # === Распределение по типу задания ===
+        type_dist = list(
+            Task.objects.values('task_type').annotate(
+                count=Count('id')
+            ).order_by('-count')
+        )
+        # Подставляем human-readable названия
+        type_labels = dict(Task.TASK_TYPE_CHOICES) if hasattr(Task, 'TASK_TYPE_CHOICES') else {}
+        for item in type_dist:
+            item['pct'] = round(item['count'] / total_tasks * 100, 1) if total_tasks else 0
+            item['label'] = type_labels.get(item['task_type'], item['task_type'] or '—')
+        context['type_dist'] = type_dist
+
+        # === Самые «популярные» задания (в наибольшем кол-ве вариантов) ===
+        most_used = Task.objects.annotate(
+            variant_count=Count('varianttask')
+        ).filter(variant_count__gt=0).order_by('-variant_count')[:10]
+        context['most_used_tasks'] = most_used
+
+        # === Распределение размера групп ===
+        group_sizes = list(
+            total_groups_qs.values('task_count').annotate(
+                group_count=Count('id')
+            ).order_by('task_count')
+        )
+        context['group_sizes'] = group_sizes
+
+        # === Общий «индекс здоровья» ===
+        issues = (
+            context['orphan_variants']['count']
+            + context['empty_groups']['count']
+            + context['coverage_issues']['count']
+            + context['ungrouped_tasks']['count']
+            + context['fragile_groups']['count']
+            + context['works_no_variants']['count']
+            + context['works_no_spec']['count']
+        )
+        if issues == 0:
+            health = {'label': 'Отлично', 'color': 'success', 'icon': 'check-circle'}
+        elif issues <= 5:
+            health = {'label': 'Хорошо', 'color': 'info', 'icon': 'info-circle'}
+        elif issues <= 15:
+            health = {'label': 'Есть замечания', 'color': 'warning', 'icon': 'exclamation-triangle'}
+        else:
+            health = {'label': 'Требует внимания', 'color': 'danger', 'icon': 'exclamation-circle'}
+        health['issues'] = issues
+        
+        # Склонение
+        if 11 <= issues % 100 <= 19:
+            health['issues_text'] = f'{issues} замечаний'
+        elif issues % 10 == 1:
+            health['issues_text'] = f'{issues} замечание'
+        elif 2 <= issues % 10 <= 4:
+            health['issues_text'] = f'{issues} замечания'
+        else:
+            health['issues_text'] = f'{issues} замечаний'
+        
+        context['health'] = health
+
+
+        context.update(_get_nav_context('db-health'))
+        return context

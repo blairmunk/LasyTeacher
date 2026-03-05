@@ -1,0 +1,417 @@
+{% extends 'base.html' %}
+
+{% block title %}Здоровье базы заданий{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-heartbeat"></i> Здоровье базы заданий</h2>
+        <div class="d-flex align-items-center gap-3">
+            <div class="badge bg-{{ health.color }} fs-5 px-3 py-2">
+                <i class="fas fa-{{ health.icon }}"></i>
+                {{ health.label }}
+                {% if health.issues %}<small>({{ health.issues_text }})</small>{% endif %}
+            </div>
+            <a href="{% url 'reports:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Дашборд
+            </a>
+        </div>
+    </div>
+
+    <!-- Статистика -->
+    <div class="row mb-4 g-3">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100 text-center">
+                <div class="card-body">
+                    <div class="fs-1 fw-bold text-primary">{{ stats.total_tasks }}</div>
+                    <small class="text-muted">Заданий</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100 text-center">
+                <div class="card-body">
+                    <div class="fs-1 fw-bold text-success">{{ stats.total_groups }}</div>
+                    <small class="text-muted">Групп аналогов</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100 text-center">
+                <div class="card-body">
+                    <div class="fs-1 fw-bold text-info">{{ stats.total_works }}</div>
+                    <small class="text-muted">Работ</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100 text-center">
+                <div class="card-body">
+                    <div class="fs-1 fw-bold text-warning">{{ stats.total_variants }}</div>
+                    <small class="text-muted">Вариантов</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Проблемы: ряд 1 -->
+    <div class="row g-3 mb-4">
+        <!-- Варианты-сироты -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 {% if orphan_variants.count %}border-start border-warning border-3{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h6 class="mb-2"><i class="fas fa-unlink text-warning"></i> Варианты-сироты</h6>
+                        <span class="badge {% if orphan_variants.count %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                            {{ orphan_variants.count }}
+                        </span>
+                    </div>
+                    <p class="text-muted small mb-2">Варианты без привязки к работе</p>
+                    {% if orphan_variants.items %}
+                    <ul class="list-unstyled small mb-0">
+                        {% for v in orphan_variants.items %}
+                        <li class="mb-1">
+                            <a href="{% url 'works:variant-detail' v.pk %}">
+                                <code>#{{ v.get_short_uuid }}</code>
+                            </a>
+                            {{ v.work_name_snapshot|truncatechars:25 }}
+                            <span class="text-muted">— В{{ v.number }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% if orphan_variants.count > 10 %}
+                    <a href="{% url 'works:orphan-variants' %}" class="small">Все {{ orphan_variants.count }} →</a>
+                    {% endif %}
+                    {% else %}
+                    <div class="text-success small"><i class="fas fa-check"></i> Нет сирот</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Пустые группы -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 {% if empty_groups.count %}border-start border-danger border-3{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h6 class="mb-2"><i class="fas fa-inbox text-danger"></i> Пустые группы</h6>
+                        <span class="badge {% if empty_groups.count %}bg-danger{% else %}bg-success{% endif %}">
+                            {{ empty_groups.count }}
+                        </span>
+                    </div>
+                    <p class="text-muted small mb-2">Группы без заданий</p>
+                    {% if empty_groups.items %}
+                    <ul class="list-unstyled small mb-0">
+                        {% for g in empty_groups.items %}
+                        <li class="mb-1">
+                            <a href="{% url 'task_groups:detail' g.pk %}">{{ g.name|truncatechars:35 }}</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="text-success small"><i class="fas fa-check"></i> Все группы заполнены</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Хрупкие группы (1 задание) -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 {% if fragile_groups.count %}border-start border-info border-3{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h6 class="mb-2"><i class="fas fa-snowflake text-info"></i> Хрупкие группы</h6>
+                        <span class="badge {% if fragile_groups.count %}bg-info{% else %}bg-success{% endif %}">
+                            {{ fragile_groups.count }}
+                        </span>
+                    </div>
+                    <p class="text-muted small mb-2">Всего 1 задание — нет вариативности</p>
+                    {% if fragile_groups.items %}
+                    <ul class="list-unstyled small mb-0">
+                        {% for g in fragile_groups.items %}
+                        <li class="mb-1">
+                            <a href="{% url 'task_groups:detail' g.pk %}">{{ g.name|truncatechars:35 }}</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="text-success small"><i class="fas fa-check"></i> Все группы имеют ≥2 задания</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Проблемы: ряд 2 -->
+    <div class="row g-3 mb-4">
+        <!-- Дефицит покрытия -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100 {% if coverage_issues.count %}border-start border-danger border-3{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h6 class="mb-2"><i class="fas fa-exclamation-triangle text-danger"></i> Дефицит покрытия</h6>
+                        <span class="badge {% if coverage_issues.count %}bg-danger{% else %}bg-success{% endif %}">
+                            {{ coverage_issues.count }}
+                        </span>
+                    </div>
+                    <p class="text-muted small mb-2">Спецификация требует больше заданий, чем есть в группе</p>
+                    {% if coverage_issues.items %}
+                    <div class="table-responsive">
+                        <table class="table table-sm small mb-0">
+                            <thead><tr><th>Работа</th><th>Группа</th><th>Нужно</th><th>Есть</th><th>Дефицит</th></tr></thead>
+                            <tbody>
+                                {% for item in coverage_issues.items %}
+                                <tr>
+                                    <td><a href="{% url 'works:detail' item.work.pk %}">{{ item.work.name|truncatechars:20 }}</a></td>
+                                    <td><a href="{% url 'task_groups:detail' item.group.pk %}">{{ item.group.name|truncatechars:20 }}</a></td>
+                                    <td>{{ item.needed }}</td>
+                                    <td class="text-danger fw-bold">{{ item.available }}</td>
+                                    <td><span class="badge bg-danger">−{{ item.deficit }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-success small"><i class="fas fa-check"></i> Все спецификации обеспечены</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Задания без группы + работы -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 {% if ungrouped_tasks.count %}border-start border-warning border-3{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h6 class="mb-2"><i class="fas fa-puzzle-piece text-warning"></i> Без группы</h6>
+                        <span class="badge {% if ungrouped_tasks.count %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                            {{ ungrouped_tasks.count }}
+                        </span>
+                    </div>
+                    <p class="text-muted small mb-2">Задания не в группе аналогов</p>
+                    {% if ungrouped_tasks.count %}
+                    <div class="fs-3 fw-bold text-warning">{{ ungrouped_tasks.pct }}%</div>
+                    <small class="text-muted">от общего числа</small>
+                    {% else %}
+                    <div class="text-success small"><i class="fas fa-check"></i> Все задания сгруппированы</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="mb-3"><i class="fas fa-file-alt text-secondary"></i> Работы</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="text-muted">Без вариантов:</small>
+                        <span class="badge {% if works_no_variants.count %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                            {{ works_no_variants.count }}
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">Без спецификации:</small>
+                        <span class="badge {% if works_no_spec.count %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                            {{ works_no_spec.count }}
+                        </span>
+                    </div>
+                    {% if works_no_spec.items %}
+                    <hr class="my-2">
+                    <ul class="list-unstyled small mb-0">
+                        {% for w in works_no_spec.items %}
+                        <li><a href="{% url 'works:update' w.pk %}">{{ w.name|truncatechars:25 }}</a></li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Аналитика: ряд 3 -->
+    <h4 class="mb-3"><i class="fas fa-chart-bar"></i> Аналитика</h4>
+    <div class="row g-3 mb-4">
+        <!-- Сложность по уровням -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6><i class="fas fa-signal text-warning"></i> Распределение по сложности</h6>
+                    <table class="table table-sm mb-0 mt-2">
+                        <thead class="table-light"><tr><th>Уровень</th><th class="text-end">Кол-во</th><th class="text-end">Доля</th><th style="width:100px"></th></tr></thead>
+                        <tbody>
+                            {% for item in difficulty_dist %}
+                            <tr>
+                                <td>
+                                    {% for i in "12345" %}
+                                    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:1px;
+                                        {% if forloop.counter <= item.difficulty %}background:#ffc107{% else %}background:#dee2e6{% endif %}"></span>
+                                    {% endfor %}
+                                </td>
+                                <td class="text-end fw-bold">{{ item.count }}</td>
+                                <td class="text-end">{{ item.pct }}%</td>
+                                <td>
+                                    <div class="progress" style="height:8px;">
+                                        <div class="progress-bar
+                                            {% if item.difficulty <= 1 %}bg-success
+                                            {% elif item.difficulty <= 2 %}bg-info
+                                            {% elif item.difficulty <= 3 %}bg-warning
+                                            {% elif item.difficulty <= 4 %}bg-orange
+                                            {% else %}bg-danger{% endif %}"
+                                            style="width:{{ item.pct }}%"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Типы заданий -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6><i class="fas fa-tags text-primary"></i> Типы заданий</h6>
+                    <table class="table table-sm mb-0 mt-2">
+                        <thead class="table-light"><tr><th>Тип</th><th class="text-end">Кол-во</th><th class="text-end">Доля</th></tr></thead>
+                        <tbody>
+                            {% for item in type_dist %}
+                            <tr>
+                                <td>{{ item.label }}</td>
+                                <td class="text-end fw-bold">{{ item.count }}</td>
+                                <td class="text-end">{{ item.pct }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Размеры групп -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6><i class="fas fa-layer-group text-success"></i> Размеры групп</h6>
+                    <table class="table table-sm mb-0 mt-2">
+                        <thead class="table-light"><tr><th>Заданий в группе</th><th class="text-end">Таких групп</th></tr></thead>
+                        <tbody>
+                            {% for item in group_sizes %}
+                            <tr>
+                                <td>
+                                    {% if item.task_count == 0 %}
+                                        <span class="text-danger">0 (пустая)</span>
+                                    {% elif item.task_count == 1 %}
+                                        <span class="text-warning">1 (хрупкая)</span>
+                                    {% else %}
+                                        {{ item.task_count }}
+                                    {% endif %}
+                                </td>
+                                <td class="text-end fw-bold">{{ item.group_count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Самые используемые задания -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6><i class="fas fa-fire text-danger"></i> Самые используемые задания</h6>
+                    <p class="text-muted small mb-2">Задания, появляющиеся в наибольшем числе вариантов</p>
+                    {% if most_used_tasks %}
+                    <table class="table table-sm small mb-0">
+                        <thead class="table-light"><tr><th>UUID</th><th>Текст</th><th class="text-end">Вариантов</th></tr></thead>
+                        <tbody>
+                            {% for task in most_used_tasks %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'tasks:detail' task.pk %}">
+                                        <code>#{{ task.get_short_uuid }}</code>
+                                    </a>
+                                </td>
+                                <td>{{ task.text|truncatewords:8 }}</td>
+                                <td class="text-end fw-bold">{{ task.variant_count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="text-muted small">Нет данных</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Сводка -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6><i class="fas fa-clipboard-list text-secondary"></i> Сводка проблем</h6>
+                    <table class="table table-sm mb-0 mt-2">
+                        <tbody>
+                            <tr>
+                                <td><i class="fas fa-unlink text-warning"></i> Варианты-сироты</td>
+                                <td class="text-end">
+                                    <span class="badge {% if orphan_variants.count %}bg-warning text-dark{% else %}bg-success{% endif %}">{{ orphan_variants.count }}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-inbox text-danger"></i> Пустые группы</td>
+                                <td class="text-end">
+                                    <span class="badge {% if empty_groups.count %}bg-danger{% else %}bg-success{% endif %}">{{ empty_groups.count }}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-snowflake text-info"></i> Хрупкие группы (1 задание)</td>
+                                <td class="text-end">
+                                    <span class="badge {% if fragile_groups.count %}bg-info{% else %}bg-success{% endif %}">{{ fragile_groups.count }}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-exclamation-triangle text-danger"></i> Дефицит покрытия</td>
+                                <td class="text-end">
+                                    <span class="badge {% if coverage_issues.count %}bg-danger{% else %}bg-success{% endif %}">{{ coverage_issues.count }}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-puzzle-piece text-warning"></i> Задания без группы</td>
+                                <td class="text-end">
+                                    <span class="badge {% if ungrouped_tasks.count %}bg-warning text-dark{% else %}bg-success{% endif %}">{{ ungrouped_tasks.count }}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-file-alt text-secondary"></i> Работы без вариантов</td>
+                                <td class="text-end">
+                                    <span class="badge {% if works_no_variants.count %}bg-warning text-dark{% else %}bg-success{% endif %}">{{ works_no_variants.count }}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-file-alt text-secondary"></i> Работы без спецификации</td>
+                                <td class="text-end">
+                                    <span class="badge {% if works_no_spec.count %}bg-warning text-dark{% else %}bg-success{% endif %}">{{ works_no_spec.count }}</span>
+                                </td>
+                            </tr>
+                            <tr class="table-light fw-bold">
+                                <td>Всего замечаний</td>
+                                <td class="text-end">
+                                    <span class="badge bg-{{ health.color }} fs-6">{{ health.issues }}</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include "reports/_reports_nav.html" %}
+</div>
+{% endblock %}

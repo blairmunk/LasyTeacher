@@ -30,6 +30,12 @@
                class="btn btn-sm {% if active_report == 'events-status' %}btn-info{% else %}btn-outline-info{% endif %}">
                 <i class="fas fa-calendar-check"></i> События
             </a>
+            <span class="border-start ps-2 ms-1"></span>
+            <a href="{% url 'reports:db-health' %}"
+               class="btn btn-sm {% if active_report == 'db-health' %}btn-dark{% else %}btn-outline-dark{% endif %}">
+                <i class="fas fa-heartbeat"></i> Здоровье базы
+            </a>
+
 
             {% if courses %}
             <span class="border-start ps-2 ms-1"></span>

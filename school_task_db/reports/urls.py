@@ -15,4 +15,5 @@ urlpatterns = [
     path('events/', views.EventsStatusView.as_view(), name='events-status'),
     path('journal/', views.JournalSelectView.as_view(), name='journal-select'),
     path('journal/<uuid:course_pk>/<uuid:group_pk>/', views.JournalView.as_view(), name='journal'),
+    path('db-health/', views.TaskDBHealthView.as_view(), name='db-health'),
 ]

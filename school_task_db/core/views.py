@@ -2,73 +2,95 @@ from django.shortcuts import render
 from django.views.generic import TemplateView
 from .utils import search_by_uuid
 
+
 class IndexView(TemplateView):
     template_name = 'core/index.html'
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # Безопасные импорты внутри метода
         try:
             from tasks.models import Task
-            tasks_count = Task.objects.count()
+            context['tasks_count'] = Task.objects.count()
         except ImportError:
-            tasks_count = 0
-            
+            context['tasks_count'] = 0
+
         try:
-            from works.models import Work
-            works_count = Work.objects.count()
+            from works.models import Work, Variant
+            context['works_count'] = Work.objects.count()
+            context['variants_count'] = Variant.objects.count()
+            context['orphan_variants_count'] = Variant.objects.filter(work__isnull=True).count()
         except ImportError:
-            works_count = 0
-            
+            context['works_count'] = 0
+            context['variants_count'] = 0
+            context['orphan_variants_count'] = 0
+
         try:
             from students.models import Student
-            students_count = Student.objects.count()
+            context['students_count'] = Student.objects.count()
         except ImportError:
-            students_count = 0
-            
+            context['students_count'] = 0
+
         try:
             from events.models import Event
-            events_count = Event.objects.count()
+            context['events_count'] = Event.objects.count()
         except ImportError:
-            events_count = 0    
-        
-        
-        # Статистика
-        context.update({
-            'tasks_count': Task.objects.count(),
-            'works_count': Work.objects.count(),
-            'students_count': Student.objects.count(),
-            'events_count': Event.objects.count(),
-        })
-        
-        # Поиск по UUID
-        search_query = self.request.GET.get('uuid_search')
-        if search_query:
-            context['search_results'] = {
-                'tasks': search_by_uuid(Task, search_query)[:5],
-                'works': search_by_uuid(Work, search_query)[:5],
-                'variants': search_by_uuid(Variant, search_query)[:5],
-            }
-        
+            context['events_count'] = 0
+
+        try:
+            from task_groups.models import AnalogGroup
+            context['groups_count'] = AnalogGroup.objects.count()
+        except ImportError:
+            context['groups_count'] = 0
+
         return context
 
+
 def global_search(request):
-    """Глобальный поиск по UUID"""
-    from tasks.models import Task      # Добавить импорты
+    """Глобальный поиск по UUID и тексту"""
+    from tasks.models import Task
     from works.models import Work, Variant
-    
-    query = request.GET.get('q', '')
+    from task_groups.models import AnalogGroup
+    from django.db.models import Q, Count
+
+    query = request.GET.get('q', '').strip()
     results = {}
-    
+    total_found = 0
+
     if query:
-        results = {
-            'tasks': search_by_uuid(Task, query),
-            'works': search_by_uuid(Work, query), 
-            'variants': search_by_uuid(Variant, query),
-        }
-    
+        clean = query.replace('#', '').strip()
+
+        # UUID-поиск (3+ символов)
+        if len(clean) >= 3:
+            results['tasks'] = search_by_uuid(Task, clean)
+            results['works'] = search_by_uuid(Work, clean)
+            results['variants'] = search_by_uuid(Variant, clean)
+            results['groups'] = search_by_uuid(AnalogGroup, clean)
+
+        # Текстовый поиск — если UUID не дал результатов
+        if not any(qs.exists() for qs in results.values() if hasattr(qs, 'exists')):
+            results['tasks'] = Task.objects.filter(
+                Q(text__icontains=query) | Q(answer__icontains=query)
+            )[:20]
+            results['works'] = Work.objects.filter(
+                Q(name__icontains=query)
+            )[:20]
+            results['variants'] = Variant.objects.filter(
+                Q(work_name_snapshot__icontains=query)
+            )[:20]
+            results['groups'] = AnalogGroup.objects.annotate(
+                task_count=Count('taskgroup')
+            ).filter(
+                Q(name__icontains=query)
+            )[:20]
+
+        total_found = sum(
+            qs.count() if hasattr(qs, 'count') else 0
+            for qs in results.values()
+        )
+
     return render(request, 'core/search_results.html', {
         'query': query,
-        'results': results
+        'results': results,
+        'total_found': total_found,
     })

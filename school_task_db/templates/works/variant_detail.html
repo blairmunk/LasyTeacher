@@ -109,7 +109,7 @@
                     <div>
                         <span class="badge bg-primary">{{ task.get_task_type_display }}</span>
                         <span class="difficulty-dots ms-1" title="Сложность: {{ task.difficulty }}">
-                            {% for i in "123" %}
+                            {% for i in "12345" %}
                                 <span class="{% if forloop.counter <= task.difficulty %}filled{% else %}empty{% endif %}"></span>
                             {% endfor %}
                         </span>

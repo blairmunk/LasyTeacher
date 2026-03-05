@@ -9,11 +9,7 @@
 <div class="row">
     <div class="col-md-8">
         <h2>
-            {% if object %}
-                Редактирование работы: {{ object.name }}
-            {% else %}
-                Создание новой работы
-            {% endif %}
+            {% if object %}Редактирование: {{ object.name }}{% else %}Создание новой работы{% endif %}
         </h2>
 
         <form method="post">
@@ -25,21 +21,24 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-5 mb-3">
                             <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
                             {{ form.name }}
-                            {% if form.name.errors %}
-                            <div class="text-danger small">{{ form.name.errors }}</div>
-                            {% endif %}
+                            {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors }}</div>{% endif %}
                         </div>
                         <div class="col-md-3 mb-3">
                             <label for="{{ form.work_type.id_for_label }}" class="form-label">{{ form.work_type.label }}</label>
                             {{ form.work_type }}
                         </div>
-                        <div class="col-md-3 mb-3">
+                        <div class="col-md-2 mb-3">
                             <label for="{{ form.duration.id_for_label }}" class="form-label">{{ form.duration.label }}</label>
                             {{ form.duration }}
                             <div class="form-text">минут</div>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label for="{{ form.max_score.id_for_label }}" class="form-label">{{ form.max_score.label }}</label>
+                            {{ form.max_score }}
+                            <div class="form-text">баллов</div>
                         </div>
                     </div>
                 </div>
@@ -56,6 +55,15 @@
                 <div class="card-body">
                     {{ formset.management_form }}
 
+                    <!-- Опции для JS (при создании с нуля) -->
+                    <select id="analog-group-master-options" class="d-none">
+                        <option value="">---------</option>
+                        {% for ag in analog_group_options %}
+                        <option value="{{ ag.pk }}">{{ ag.name }}</option>
+                        {% endfor %}
+                    </select>
+
+
                     {% if formset.non_form_errors %}
                     <div class="alert alert-danger">{{ formset.non_form_errors }}</div>
                     {% endif %}
@@ -68,18 +76,12 @@
                             <div class="alert alert-danger py-1">{{ f.non_field_errors }}</div>
                             {% endif %}
 
-                            <div class="row align-items-center">
+                            <div class="row align-items-center gx-2">
                                 <!-- Стрелки -->
                                 <div class="col-auto pe-0">
                                     <div class="d-flex flex-column gap-1">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1 btn-move-up"
-                                                title="Переместить вверх">
-                                            <i class="fas fa-chevron-up"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1 btn-move-down"
-                                                title="Переместить вниз">
-                                            <i class="fas fa-chevron-down"></i>
-                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1 btn-move-up"><i class="fas fa-chevron-up"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1 btn-move-down"><i class="fas fa-chevron-down"></i></button>
                                     </div>
                                 </div>
                                 <!-- Номер -->
@@ -92,23 +94,25 @@
                                 <!-- Группа аналогов -->
                                 <div class="col">
                                     {{ f.analog_group }}
-                                    {% if f.analog_group.errors %}
-                                    <div class="text-danger small">{{ f.analog_group.errors }}</div>
-                                    {% endif %}
+                                    {% if f.analog_group.errors %}<div class="text-danger small">{{ f.analog_group.errors }}</div>{% endif %}
                                 </div>
                                 <!-- Кол-во -->
                                 <div class="col-auto">
-                                    <div class="input-group" style="width: 130px">
-                                        <span class="input-group-text">×</span>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <span class="text-muted small">×</span>
                                         {{ f.count }}
+                                    </div>
+                                </div>
+                                <!-- Вес -->
+                                <div class="col-auto">
+                                    <div class="d-flex align-items-center gap-1">
+                                        <i class="fas fa-weight-hanging text-muted small"></i>
+                                        {{ f.weight }}
                                     </div>
                                 </div>
                                 <!-- Удалить -->
                                 <div class="col-auto">
-                                    <button type="button" class="btn btn-outline-danger btn-sm btn-remove-row"
-                                            title="Удалить группу">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm btn-remove-row"><i class="fas fa-trash"></i></button>
                                     <div class="d-none">{{ f.DELETE }}</div>
                                 </div>
                             </div>
@@ -122,21 +126,24 @@
                         <p>Нет групп заданий. Нажмите «Добавить группу».</p>
                     </div>
 
-                    <div class="alert alert-info small mt-3 mb-0">
+                    <!-- Превью баллов -->
+                    <div id="points-preview" class="alert alert-info small mt-3 mb-0" style="display:none;">
+                        <i class="fas fa-calculator"></i> <span id="preview-text"></span>
+                    </div>
+
+                    <div class="alert alert-light small mt-2 mb-0 border">
                         <i class="fas fa-info-circle"></i>
-                        Используйте <i class="fas fa-chevron-up"></i><i class="fas fa-chevron-down"></i>
-                        для изменения порядка.
-                        <strong>×</strong> — сколько заданий из группы включить в каждый вариант.
+                        <strong>×</strong> — кол-во заданий из группы.
+                        <strong><i class="fas fa-weight-hanging"></i></strong> — вес (чем больше, тем больше баллов).
+                        Баллы рассчитываются пропорционально весам при генерации.
                     </div>
                 </div>
             </div>
             {% endif %}
 
-
             <div class="d-flex gap-2 mb-4">
                 <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="fas fa-save"></i>
-                    {% if object %}Обновить{% else %}Создать{% endif %}
+                    <i class="fas fa-save"></i> {% if object %}Обновить{% else %}Создать{% endif %}
                 </button>
                 <a href="{% url 'works:list' %}" class="btn btn-secondary btn-lg">
                     <i class="fas fa-times"></i> Отмена
@@ -155,11 +162,15 @@
                 <p><strong>Спецификация</strong> — это чертёж работы:</p>
                 <ol>
                     <li>Добавьте группы аналогичных заданий</li>
-                    <li>Укажите порядковый номер (№) каждой группы</li>
-                    <li>Укажите сколько заданий из группы включить</li>
+                    <li>Укажите кол-во заданий из каждой группы</li>
+                    <li>Укажите вес (сложность/значимость)</li>
+                    <li>Задайте макс. балл (шкалу)</li>
                     <li>Сохраните и генерируйте варианты</li>
                 </ol>
-                <p class="text-muted">При генерации варианта из каждой группы случайно выбирается указанное кол-во заданий.</p>
+                <p class="text-muted">
+                    <strong>Пример:</strong> группы с весами 2, 5, 3 при шкале 100
+                    → баллы 20, 50, 30.
+                </p>
             </div>
         </div>
     </div>
@@ -176,15 +187,93 @@
 
     if (!container || !addBtn || !totalForms) return;
 
-    // Собираем options из существующего select
-    let selectOptions = '<option value="" selected>---------</option>';
-    const existingSelect = container.querySelector('select[name$="-analog_group"]');
-    if (existingSelect) {
-        selectOptions = existingSelect.innerHTML.replace(/ selected/g, '');
+    let selectOptions = '';
+    const masterSelect = document.getElementById('analog-group-master-options');
+    if (masterSelect) {
+        // Берём из мастер-списка (всегда есть все группы)
+        selectOptions = masterSelect.innerHTML;
+        selectOptions = selectOptions.replace(/ selected/g, '');
         selectOptions = selectOptions.replace('value="">', 'value="" selected>');
+    } else {
+        // Фолбэк: копируем из первого существующего select
+        const existingSelect = container.querySelector('select[name$="-analog_group"]');
+        if (existingSelect) {
+            selectOptions = existingSelect.innerHTML.replace(/ selected/g, '');
+            selectOptions = selectOptions.replace('value="">', 'value="" selected>');
+        } else {
+            selectOptions = '<option value="" selected>---------</option>';
+        }
     }
 
-    // === Перенумерация всех видимых строк ===
+
+    // === Превью баллов ===
+    function updatePointsPreview() {
+        var previewDiv = document.getElementById('points-preview');
+        var previewText = document.getElementById('preview-text');
+        if (!previewDiv || !previewText) return;
+
+        var maxScoreRaw = document.getElementById('{{ form.max_score.id_for_label }}').value;
+        var maxScore = parseInt(maxScoreRaw) || 0;
+
+        var rows = container.querySelectorAll('.formset-row:not(.d-none)');
+        if (rows.length === 0) { previewDiv.style.display = 'none'; return; }
+
+        var slots = [];
+        rows.forEach(function(row) {
+            var countInput = row.querySelector('input[name$="-count"]');
+            var weightInput = row.querySelector('input[name$="-weight"]');
+            var count = parseInt(countInput ? countInput.value : 1) || 1;
+            var weight = parseInt(weightInput ? weightInput.value : 1) || 1;
+            for (var i = 0; i < count; i++) slots.push({weight: weight, row: row});
+        });
+
+        var totalWeight = slots.reduce(function(s, x) { return s + x.weight; }, 0);
+        if (slots.length === 0) { previewDiv.style.display = 'none'; return; }
+
+        // Если max_score=0 — без нормировки, баллы = вес напрямую
+        var scale = maxScore > 0 ? maxScore : totalWeight;
+
+        var raw, floors;
+        if (maxScore <= 0) {
+            // Без нормировки
+            floors = slots.map(function(x) { return x.weight; });
+        } else {
+            // С нормировкой
+            raw = slots.map(function(x) { return x.weight / totalWeight * scale; });
+            floors = raw.map(function(p) { return Math.floor(p); });
+            var remainder = scale - floors.reduce(function(a, b) { return a + b; }, 0);
+            var fracs = raw.map(function(p, i) { return {i: i, f: p - Math.floor(p)}; });
+            fracs.sort(function(a, b) { return b.f - a.f; });
+            for (var i = 0; i < remainder; i++) floors[fracs[i].i]++;
+        }
+
+        // Группируем обратно по строкам
+        var parts = [];
+        var idx = 0;
+        rows.forEach(function(row) {
+            var countInput = row.querySelector('input[name$="-count"]');
+            var count = parseInt(countInput ? countInput.value : 1) || 1;
+            var groupTotal = 0;
+            var perTask = floors[idx] || 0;
+            for (var j = 0; j < count; j++) { groupTotal += (floors[idx] || 0); idx++; }
+            var badge = row.querySelector('.row-number');
+            var num = badge ? badge.textContent : '?';
+            parts.push('№' + num + ': ' + perTask + '×' + count + '=' + groupTotal);
+        });
+
+        var modeLabel = maxScore > 0 ? 'Шкала ' + scale : 'Σ весов';
+        previewText.innerHTML = '<strong>' + modeLabel + ':</strong> '
+            + parts.join(' | ')
+            + ' | <strong>Σ = ' + scale + ' балл.</strong>';
+        previewDiv.style.display = '';
+    }
+
+
+    // Слушаем изменения
+    container.addEventListener('input', updatePointsPreview);
+    var maxScoreInput = document.getElementById('{{ form.max_score.id_for_label }}');
+    if (maxScoreInput) maxScoreInput.addEventListener('input', updatePointsPreview);
+
     function renumberRows() {
         const visibleRows = container.querySelectorAll('.formset-row:not(.d-none)');
         visibleRows.forEach((row, i) => {
@@ -196,163 +285,125 @@
         });
         updateArrowStates();
         updateEmptyMessage();
+        updatePointsPreview();
     }
 
-    // === Отключаем ↑ у первого и ↓ у последнего ===
     function updateArrowStates() {
-        const visibleRows = Array.from(
-            container.querySelectorAll('.formset-row:not(.d-none)')
-        );
+        const visibleRows = Array.from(container.querySelectorAll('.formset-row:not(.d-none)'));
         visibleRows.forEach((row, i) => {
             const upBtn = row.querySelector('.btn-move-up');
             const downBtn = row.querySelector('.btn-move-down');
-            if (upBtn) {
-                upBtn.disabled = (i === 0);
-                upBtn.classList.toggle('invisible', i === 0);
-            }
-            if (downBtn) {
-                downBtn.disabled = (i === visibleRows.length - 1);
-                downBtn.classList.toggle('invisible', i === visibleRows.length - 1);
-            }
+            if (upBtn) { upBtn.disabled = (i === 0); upBtn.classList.toggle('invisible', i === 0); }
+            if (downBtn) { downBtn.disabled = (i === visibleRows.length - 1); downBtn.classList.toggle('invisible', i === visibleRows.length - 1); }
         });
     }
 
-    // === Перемещение строки вверх ===
     container.addEventListener('click', function(e) {
         const btn = e.target.closest('.btn-move-up');
         if (!btn || btn.disabled) return;
-
         const row = btn.closest('.formset-row');
-        // Находим предыдущую видимую строку
         let prev = row.previousElementSibling;
-        while (prev && prev.classList.contains('d-none')) {
-            prev = prev.previousElementSibling;
-        }
+        while (prev && prev.classList.contains('d-none')) prev = prev.previousElementSibling;
         if (prev && prev.classList.contains('formset-row')) {
-            // Анимация
-            row.style.transition = 'transform 0.2s';
-            prev.style.transition = 'transform 0.2s';
-            const rowH = row.offsetHeight + 8; // margin
-            row.style.transform = 'translateY(-' + rowH + 'px)';
-            prev.style.transform = 'translateY(' + rowH + 'px)';
-
-            setTimeout(() => {
-                row.style.transition = '';
-                row.style.transform = '';
-                prev.style.transition = '';
-                prev.style.transform = '';
-                container.insertBefore(row, prev);
-                renumberRows();
-            }, 200);
+            const rowH = row.offsetHeight + 8;
+            row.style.transition = 'transform 0.2s'; prev.style.transition = 'transform 0.2s';
+            row.style.transform = 'translateY(-' + rowH + 'px)'; prev.style.transform = 'translateY(' + rowH + 'px)';
+            setTimeout(() => { row.style.transition = ''; row.style.transform = ''; prev.style.transition = ''; prev.style.transform = ''; container.insertBefore(row, prev); renumberRows(); }, 200);
         }
     });
 
-    // === Перемещение строки вниз ===
     container.addEventListener('click', function(e) {
         const btn = e.target.closest('.btn-move-down');
         if (!btn || btn.disabled) return;
-
         const row = btn.closest('.formset-row');
         let next = row.nextElementSibling;
-        while (next && next.classList.contains('d-none')) {
-            next = next.nextElementSibling;
-        }
+        while (next && next.classList.contains('d-none')) next = next.nextElementSibling;
         if (next && next.classList.contains('formset-row')) {
             const rowH = row.offsetHeight + 8;
-            row.style.transition = 'transform 0.2s';
-            next.style.transition = 'transform 0.2s';
-            row.style.transform = 'translateY(' + rowH + 'px)';
-            next.style.transform = 'translateY(-' + rowH + 'px)';
-
-            setTimeout(() => {
-                row.style.transition = '';
-                row.style.transform = '';
-                next.style.transition = '';
-                next.style.transform = '';
-                container.insertBefore(next, row);
-                renumberRows();
-            }, 200);
+            row.style.transition = 'transform 0.2s'; next.style.transition = 'transform 0.2s';
+            row.style.transform = 'translateY(' + rowH + 'px)'; next.style.transform = 'translateY(-' + rowH + 'px)';
+            setTimeout(() => { row.style.transition = ''; row.style.transform = ''; next.style.transition = ''; next.style.transform = ''; container.insertBefore(next, row); renumberRows(); }, 200);
         }
     });
 
-    // === Добавить строку ===
-    addBtn.addEventListener('click', function() {
-        const index = parseInt(totalForms.value);
-        const html = `
-        <div class="formset-row border rounded p-3 mb-2" data-index="${index}">
-            <div class="row align-items-center">
-                <div class="col-auto pe-0">
-                    <div class="d-flex flex-column gap-1">
-                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1 btn-move-up">
-                            <i class="fas fa-chevron-up"></i>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1 btn-move-down">
-                            <i class="fas fa-chevron-down"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="col-auto">
-                    <span class="badge bg-primary fs-6 row-number">?</span>
-                    <input type="hidden" name="workanaloggroup_set-${index}-order"
-                           class="order-field" value="0">
-                </div>
-                <div class="col">
-                    <select name="workanaloggroup_set-${index}-analog_group"
-                            class="form-select">${selectOptions}</select>
-                </div>
-                <div class="col-auto">
-                    <div class="input-group" style="width: 130px">
-                        <span class="input-group-text">×</span>
-                        <input type="number" name="workanaloggroup_set-${index}-count"
-                               class="form-control" min="1" style="width: 80px" value="1">
-                    </div>
-                </div>
-                <div class="col-auto">
-                    <button type="button" class="btn btn-outline-danger btn-sm btn-remove-row">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                    <div class="d-none">
-                        <input type="checkbox" name="workanaloggroup_set-${index}-DELETE">
-                    </div>
-                </div>
-            </div>
-            <input type="hidden" name="workanaloggroup_set-${index}-id">
-        </div>`;
-
-        container.insertAdjacentHTML('beforeend', html);
-        totalForms.value = index + 1;
-        renumberRows();
-
-        const newRow = container.querySelector('.formset-row:last-child');
-        newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        newRow.style.transition = 'background-color 0.5s';
-        newRow.style.backgroundColor = '#d4edda';
-        setTimeout(() => { newRow.style.backgroundColor = ''; }, 1500);
-    });
-
-    // === Удалить строку ===
+    // Удаление строки
     container.addEventListener('click', function(e) {
         const btn = e.target.closest('.btn-remove-row');
         if (!btn) return;
-
         const row = btn.closest('.formset-row');
         const deleteCheckbox = row.querySelector('input[name$="-DELETE"]');
-        if (deleteCheckbox) deleteCheckbox.checked = true;
-        row.classList.add('d-none');
+        if (deleteCheckbox) {
+            deleteCheckbox.checked = true;
+            row.classList.add('d-none');
+        } else {
+            row.remove();
+            totalForms.value = container.querySelectorAll('.formset-row').length;
+        }
         renumberRows();
     });
 
     function updateEmptyMessage() {
-        const visible = container.querySelectorAll('.formset-row:not(.d-none)');
+        const visibleRows = container.querySelectorAll('.formset-row:not(.d-none)');
         if (emptyMsg) {
-            emptyMsg.classList.toggle('d-none', visible.length > 0);
+            emptyMsg.classList.toggle('d-none', visibleRows.length > 0);
         }
     }
 
+    // Добавление новой строки
+    addBtn.addEventListener('click', function() {
+        const idx = parseInt(totalForms.value);
+        const prefix = 'workanaloggroup_set-' + idx;
+
+        const rowHtml = `
+        <div class="formset-row border rounded p-3 mb-2" data-index="${idx}">
+            <div class="row align-items-center gx-2">
+                <div class="col-auto pe-0">
+                    <div class="d-flex flex-column gap-1">
+                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1 btn-move-up"><i class="fas fa-chevron-up"></i></button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1 btn-move-down"><i class="fas fa-chevron-down"></i></button>
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <span class="badge bg-primary fs-6 row-number">${idx + 1}</span>
+                    <input type="hidden" name="${prefix}-order" id="id_${prefix}-order" value="${idx + 1}" class="order-field">
+                </div>
+                <div class="col">
+                    <select name="${prefix}-analog_group" id="id_${prefix}-analog_group" class="form-select">
+                        ${selectOptions}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <div class="d-flex align-items-center gap-1">
+                        <span class="text-muted small">×</span>
+                        <input type="number" name="${prefix}-count" id="id_${prefix}-count"
+                               value="1" min="1" class="form-control" style="width: 80px">
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <div class="d-flex align-items-center gap-1">
+                        <i class="fas fa-weight-hanging text-muted small"></i>
+                        <input type="number" name="${prefix}-weight" id="id_${prefix}-weight"
+                               value="1" min="1" class="form-control" style="width: 70px">
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <button type="button" class="btn btn-outline-danger btn-sm btn-remove-row"><i class="fas fa-trash"></i></button>
+                    <div class="d-none">
+                        <input type="checkbox" name="${prefix}-DELETE" id="id_${prefix}-DELETE">
+                    </div>
+                </div>
+            </div>
+        </div>`;
+
+        container.insertAdjacentHTML('beforeend', rowHtml);
+        totalForms.value = idx + 1;
+        renumberRows();
+    });
+
     // Инициализация
     renumberRows();
+    updatePointsPreview();
 })();
 </script>
 {% endblock %}
-
 

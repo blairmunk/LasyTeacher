@@ -43,8 +43,16 @@
 <div class="container-fluid px-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="mb-1">{{ variant.display_name }}</h2>
-            <h4 class="text-muted">Вариант {{ variant.number }}</h4>
+            <h2 class="mb-1">
+                {{ variant.display_name }}
+                <span class="badge bg-secondary fs-6 ms-2" title="UUID: {{ variant.id }}"
+                      style="font-family:monospace; cursor:help;">
+                    #{{ variant.get_short_uuid }}
+                </span>
+            </h2>
+            <h4 class="text-muted">
+                Вариант {{ variant.number }}
+            </h4>
         </div>
         <div>
             {% if variant.work %}
@@ -107,8 +115,14 @@
                         </span>
                     </div>
                 </div>
-                <div class="points-badge">
-                    {{ vt.max_points }} балл.
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-secondary" style="font-family:monospace; font-size:0.75rem; cursor:help;"
+                          title="UUID задания: {{ task.id }}">
+                        #{{ task.get_short_uuid }}
+                    </span>
+                    <span class="points-badge">
+                        {{ vt.max_points }} балл.
+                    </span>
                 </div>
             </div>
             <small class="text-muted">{{ task.topic }}</small>

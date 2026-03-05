@@ -18,4 +18,5 @@ urlpatterns = [
     path('ajax/generate/<pk:work_id>/', views_generation.generate_work_ajax, name='generate_work_ajax'),
     path('ajax/generate/variant/<pk:variant_id>/', views_generation.generate_variant_ajax, name='generate_variant_ajax'),
     path('ajax/generation-status/', views_generation.generation_status_ajax, name='generation_status_ajax'),
+    path('variants/orphans/', views.OrphanVariantListView.as_view(), name='orphan-variants'),
 ]

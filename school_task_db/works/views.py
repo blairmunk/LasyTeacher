@@ -139,3 +139,19 @@ class VariantDetailView(DetailView):
         ).order_by('order')
         context['total_max_points'] = self.object.total_max_points
         return context
+
+class OrphanVariantListView(ListView):
+    """Варианты без привязки к работе (сироты)"""
+    model = Variant
+    template_name = 'works/orphan_variants.html'
+    context_object_name = 'variants'
+    paginate_by = 20
+
+    def get_queryset(self):
+        return Variant.objects.filter(work__isnull=True).order_by('-created_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['total_orphans'] = Variant.objects.filter(work__isnull=True).count()
+        return context
+

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Варианты-сироты{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-unlink text-warning"></i> Варианты-сироты</h2>
+            <p class="text-muted mb-0">Варианты, не привязанные к работе (работа удалена или отвязана)</p>
+        </div>
+        <div>
+            <span class="badge bg-warning fs-5">{{ total_orphans }}</span>
+            <a href="{% url 'works:variant-list' %}" class="btn btn-secondary ms-2">
+                <i class="fas fa-list"></i> Все варианты
+            </a>
+        </div>
+    </div>
+
+    {% if variants %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>UUID</th>
+                    <th>Название (снимок)</th>
+                    <th>Вариант</th>
+                    <th>Заданий</th>
+                    <th>Макс. балл</th>
+                    <th>Создан</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for variant in variants %}
+                <tr>
+                    <td>
+                        <span class="badge bg-secondary" style="font-family:monospace;">
+                            #{{ variant.get_short_uuid }}
+                        </span>
+                    </td>
+                    <td>{{ variant.work_name_snapshot|default:"—" }}</td>
+                    <td><strong>{{ variant.number }}</strong></td>
+                    <td>{{ variant.varianttask_set.count }}</td>
+                    <td>{{ variant.total_max_points }}</td>
+                    <td>{{ variant.created_at|date:"d.m.Y H:i" }}</td>
+                    <td>
+                        <a href="{% url 'works:variant-detail' variant.pk %}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% include 'includes/pagination.html' with page_obj=page_obj %}
+
+    {% else %}
+    <div class="alert alert-success">
+        <i class="fas fa-check-circle"></i> Нет вариантов-сирот. Все варианты привязаны к работам.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

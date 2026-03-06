@@ -549,7 +549,7 @@
         const cb = card.querySelector('.task-checkbox');
         if (cb) {
             cb.checked = !cb.checked;
-            cb.dispatchEvent(new Event('change'));
+            cb.dispatchEvent(new Event('change', { bubbles: true }));
         }
     });
 

@@ -419,7 +419,7 @@ def download_sample_json(request):
                 "cognitive_level": "apply",
                 "grade": 7,
                 "year": 2024,
-                "is_verified": true,
+                "is_verified": True,
                 "teacher_notes": "Базовое задание, дети справляются хорошо",
                 "source": {
                     "name": "Перышкин А.В. Физика. 8 класс",
@@ -444,7 +444,7 @@ def download_sample_json(request):
                 "task_type": "task",
                 "cognitive_level": "apply",
                 "grade": 6,
-                "is_verified": false,
+                "is_verified": False,
                 "topic": {
                     "name": "Обыкновенные дроби",
                     "subject": "Математика",
@@ -476,7 +476,7 @@ def export_tasks_ajax(request):
     
     tasks_qs = Task.objects.select_related(
         'topic', 'subtopic', 'source'
-    ).prefetch_related('images', 'task_groups__group')
+    ).prefetch_related('images', 'taskgroup_set__group')
     
     if topic_id:
         tasks_qs = tasks_qs.filter(topic_id=topic_id)
@@ -547,7 +547,7 @@ def export_tasks_ajax(request):
                 }
         
         # Группы аналогов (через TaskGroup M2M)
-        for task_group in task.task_groups.all():
+        for task_group in task.taskgroup_set.all():
             group = task_group.group
             group_uuid = str(group.id)
             task_dict['groups'].append(group_uuid)

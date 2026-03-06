@@ -78,13 +78,13 @@
                 </div>
 
                 <!-- Статус проверки -->
-                <div class="d-flex align-items-center gap-3 mt-2">
+                <div class="d-flex align-items-center gap-3 mt-2 mb-3">
                     {% if task.is_verified %}
                     <span class="badge bg-success">
                         <i class="fas fa-check-circle"></i> Проверено
                     </span>
                     {% else %}
-                    <span class="badge bg-outline-secondary border text-muted">
+                    <span class="badge border text-muted">
                         <i class="fas fa-clock"></i> Не проверено
                     </span>
                     {% endif %}
@@ -166,14 +166,6 @@
                     <div class="border p-3 bg-success text-white">
                         {{ task.answer|render_math|linebreaks }}
                     </div>
-                    {% if task.teacher_notes %}
-                    <div class="mt-4">
-                        <h5><i class="fas fa-sticky-note text-warning"></i> Заметки учителя</h5>
-                        <div class="p-3 bg-light border rounded">
-                            {{ task.teacher_notes|linebreaks }}
-                        </div>
-                    </div>
-                    {% endif %}
                     {% show_formula_errors task.answer %}
                 </div>
 
@@ -214,6 +206,15 @@
                         {{ task.instruction|render_math|linebreaks }}
                     </div>
                     {% show_formula_errors task.instruction %}
+                </div>
+                {% endif %}
+
+                {% if task.teacher_notes %}
+                <div class="mb-4">
+                    <h5><i class="fas fa-sticky-note text-warning"></i> Заметки учителя</h5>
+                    <div class="border p-3 bg-light rounded">
+                        {{ task.teacher_notes|linebreaks }}
+                    </div>
                 </div>
                 {% endif %}
 

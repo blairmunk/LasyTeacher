@@ -260,6 +260,27 @@
                 <small class="text-muted d-block mb-1">{{ task.subtopic.name }}</small>
                 {% endif %}
 
+                {% if task.is_verified or task.source or task.grade %}
+                <div class="d-flex gap-1 mb-1 flex-wrap">
+                    {% if task.is_verified %}
+                    <span class="badge bg-success" style="font-size:0.65rem;">
+                        <i class="fas fa-check"></i> ✓
+                    </span>
+                    {% endif %}
+                    {% if task.source %}
+                    <span class="badge bg-secondary" style="font-size:0.65rem;" title="{{ task.source }}">
+                        <i class="fas fa-book"></i> {{ task.source.short_name|default:task.source.name|truncatechars:15 }}
+                    </span>
+                    {% endif %}
+                    {% if task.grade %}
+                    <span class="badge bg-info" style="font-size:0.65rem;">
+                        {{ task.grade }} кл.
+                    </span>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+
                 <p class="card-text small mb-2">{{ task.text|render_math|truncatewords:20 }}</p>
 
                 <div class="mb-2">

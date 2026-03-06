@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
 from task_groups.models import AnalogGroup
 from .models import Work, Variant, VariantTask, WorkAnalogGroup
@@ -155,3 +155,42 @@ class OrphanVariantListView(ListView):
         context['total_orphans'] = Variant.objects.filter(work__isnull=True).count()
         return context
 
+class VariantDeleteView(DeleteView):
+    model = Variant
+    template_name = 'works/variant_confirm_delete.html'
+
+    def get_success_url(self):
+        from django.urls import reverse
+        if self.object.work:
+            return reverse('works:detail', kwargs={'pk': self.object.work.pk})
+        return reverse('works:variant-list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['variant'] = self.object
+        context['task_count'] = self.object.varianttask_set.count()
+        return context
+
+
+def bulk_delete_variants(request, work_id):
+    """Удаление нескольких вариантов работы"""
+    from django.http import JsonResponse
+
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST only'}, status=405)
+
+    work = get_object_or_404(Work, pk=work_id)
+    variant_ids = request.POST.getlist('variant_ids')
+
+    if not variant_ids:
+        return JsonResponse({'error': 'Не выбраны варианты'}, status=400)
+
+    deleted_count = Variant.objects.filter(
+        pk__in=variant_ids, work=work
+    ).delete()[0]
+
+    return JsonResponse({
+        'success': True,
+        'deleted': deleted_count,
+        'remaining': work.variant_set.count(),
+    })

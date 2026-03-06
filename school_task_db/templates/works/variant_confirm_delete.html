@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Удалить вариант{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-trash-alt"></i> Удалить вариант?</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <strong>Внимание!</strong> Это действие необратимо. Все задания варианта будут отвязаны.
+                    </div>
+
+                    <table class="table table-sm mb-3">
+                        <tr>
+                            <td class="text-muted">Вариант:</td>
+                            <td><strong>{{ variant.display_name }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">UUID:</td>
+                            <td><code>#{{ variant.get_short_uuid }}</code></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Работа:</td>
+                            <td>{{ variant.work.name|default:"— сирота —" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Заданий:</td>
+                            <td>{{ task_count }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Макс. балл:</td>
+                            <td>{{ variant.total_max_points }}</td>
+                        </tr>
+                    </table>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Да, удалить
+                            </button>
+                            {% if variant.work %}
+                            <a href="{% url 'works:detail' variant.work.pk %}" class="btn btn-secondary">
+                                Отмена
+                            </a>
+                            {% else %}
+                            <a href="{% url 'works:variant-list' %}" class="btn btn-secondary">
+                                Отмена
+                            </a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

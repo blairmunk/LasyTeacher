@@ -206,36 +206,74 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
 
-                    <!-- Контент -->
+                    <!-- Задания -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button"
                            data-bs-toggle="dropdown">
-                            <i class="fas fa-pencil-alt"></i> Контент
+                            <i class="fas fa-tasks"></i> Задания
                         </a>
                         <ul class="dropdown-menu">
                             <li>
                                 <a class="dropdown-item" href="{% url 'tasks:list' %}">
-                                    <i class="fas fa-tasks text-primary"></i> Задания
+                                    <i class="fas fa-list text-primary"></i> Все задания
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="{% url 'task_groups:list' %}">
-                                    <i class="fas fa-layer-group text-info"></i> Группы заданий
+                                <a class="dropdown-item" href="{% url 'tasks:create' %}">
+                                    <i class="fas fa-plus text-success"></i> Создать задание
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <a class="dropdown-item" href="{% url 'works:list' %}">
-                                    <i class="fas fa-file-alt text-success"></i> Работы
+                                <a class="dropdown-item" href="{% url 'task_groups:list' %}">
+                                    <i class="fas fa-layer-group text-info"></i> Группы аналогов
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'tasks:source-list' %}">
+                                    <i class="fas fa-book text-secondary"></i> Источники
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" href="{% url 'codifier:list' %}">
-                                    <i class="fas fa-book text-warning"></i> Кодификатор
+                                    <i class="fas fa-sitemap text-warning"></i> Кодификатор
                                 </a>
                             </li>
                         </ul>
                     </li>
+
+                    <!-- Работы -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button"
+                           data-bs-toggle="dropdown">
+                            <i class="fas fa-file-alt"></i> Работы
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'works:list' %}">
+                                    <i class="fas fa-list text-primary"></i> Все работы
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'works:create' %}">
+                                    <i class="fas fa-plus text-success"></i> Создать работу
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'works:variant-list' %}">
+                                    <i class="fas fa-copy text-info"></i> Все варианты
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-warning" href="{% url 'works:orphan-variants' %}">
+                                    <i class="fas fa-unlink"></i> Варианты-сироты
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
 
                     <!-- Ученики -->
                     <li class="nav-item dropdown">

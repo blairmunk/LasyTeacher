@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Источники{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-book"></i> Источники заданий</h2>
+        <a href="{% url 'tasks:source-create' %}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Добавить источник
+        </a>
+    </div>
+
+    {% if sources %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Название</th>
+                    <th>Тип</th>
+                    <th>Автор</th>
+                    <th>Год</th>
+                    <th class="text-center">Заданий</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for source in sources %}
+                <tr>
+                    <td>
+                        <strong>{{ source.name }}</strong>
+                        {% if source.short_name %}
+                            <br><small class="text-muted">{{ source.short_name }}</small>
+                        {% endif %}
+                    </td>
+                    <td><span class="badge bg-secondary">{{ source.get_source_type_display }}</span></td>
+                    <td>{{ source.author|default:"—" }}</td>
+                    <td>{{ source.year|default:"—" }}</td>
+                    <td class="text-center">
+                        <span class="badge bg-primary">{{ source.task_count }}</span>
+                    </td>
+                    <td>
+                        {% if source.url %}
+                        <a href="{{ source.url }}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Открыть ссылку">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Нет источников.
+        <a href="{% url 'tasks:source-create' %}">Добавить первый</a>.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

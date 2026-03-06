@@ -8,8 +8,8 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_POST
 
-from .forms import TaskForm, TaskImageFormSet
-from .models import Task, TaskImage
+from .models import Task, TaskImage, Source
+from .forms import TaskForm, TaskImageFormSet, SourceForm
 from .utils import math_status_cache
 from curriculum.models import Topic, SubTopic
 from task_groups.models import AnalogGroup, TaskGroup
@@ -83,12 +83,44 @@ class TaskListView(ListView):
             task_ids_with_errors = math_status_cache.get_tasks_with_errors_ids()
             queryset = queryset.filter(id__in=task_ids_with_errors)
 
+        # Фильтр по источнику
+        source_id = self.request.GET.get('source')
+        if source_id == 'none':
+            queryset = queryset.filter(source__isnull=True)
+        elif source_id:
+            queryset = queryset.filter(source_id=source_id)
+
+        # Фильтр по классу
+        grade = self.request.GET.get('grade')
+        if grade == 'none':
+            queryset = queryset.filter(grade__isnull=True)
+        elif grade:
+            try:
+                queryset = queryset.filter(grade=int(grade))
+            except (ValueError, TypeError):
+                pass
+
+        # Фильтр по проверке
+        verified = self.request.GET.get('verified')
+        if verified == '1':
+            queryset = queryset.filter(is_verified=True)
+        elif verified == '0':
+            queryset = queryset.filter(is_verified=False)
+
+
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['topics'] = Topic.objects.all().order_by('section', 'name')
         context['analog_groups'] = AnalogGroup.objects.all().order_by('name')
+        context['sources'] = Source.objects.all()
+        context['current_source'] = self.request.GET.get('source', '')
+        context['current_grade'] = self.request.GET.get('grade', '')
+        context['current_verified'] = self.request.GET.get('verified', '')
+        context['grade_choices'] = [(i, f'{i} класс') for i in range(7, 12)]
+
+
 
 
         # Подтемы для выбранной темы
@@ -480,3 +512,35 @@ def refresh_math_cache(request):
         })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+class SourceListView(ListView):
+    model = Source
+    template_name = 'tasks/source_list.html'
+    context_object_name = 'sources'
+    paginate_by = 20
+
+    def get_queryset(self):
+        from django.db.models import Count
+        return Source.objects.annotate(
+            task_count=Count('task')
+        ).order_by('name')
+
+
+class SourceCreateView(CreateView):
+    model = Source
+    form_class = SourceForm
+    template_name = 'tasks/source_form.html'
+
+    def get_success_url(self):
+        from django.urls import reverse
+        # Если открыто в popup — закрываем
+        if self.request.GET.get('popup'):
+            return reverse('tasks:source-created-popup', kwargs={'pk': self.object.pk})
+        return reverse('tasks:source-list')
+
+    def form_valid(self, form):
+        from django.contrib import messages
+        response = super().form_valid(form)
+        messages.success(self.request, f'Источник «{self.object}» создан!')
+        return response
+

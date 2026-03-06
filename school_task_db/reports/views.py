@@ -1752,6 +1752,26 @@ class TaskDBHealthView(TemplateView):
             ).order_by('task_count')
         )
         context['group_sizes'] = group_sizes
+        # === Непроверенные задания ===
+        unverified_count = Task.objects.filter(is_verified=False).count()
+        context['unverified_tasks'] = {
+            'count': unverified_count,
+            'pct': round(unverified_count / total_tasks * 100, 1) if total_tasks else 0,
+        }
+
+        # === Задания без источника ===
+        no_source_count = Task.objects.filter(source__isnull=True).count()
+        context['no_source_tasks'] = {
+            'count': no_source_count,
+            'pct': round(no_source_count / total_tasks * 100, 1) if total_tasks else 0,
+        }
+
+        # === Задания без класса ===
+        no_grade_count = Task.objects.filter(grade__isnull=True).count()
+        context['no_grade_tasks'] = {
+            'count': no_grade_count,
+            'pct': round(no_grade_count / total_tasks * 100, 1) if total_tasks else 0,
+        }
 
         # === Общий «индекс здоровья» ===
         issues = (

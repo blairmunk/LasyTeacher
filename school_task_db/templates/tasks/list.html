@@ -181,6 +181,54 @@
                 </button>
             </div>
         </div>
+        <!-- Ряд 3: источник, класс, проверка -->
+        <div class="row mt-2">
+            <div class="col-md-4">
+                <select name="source" class="form-select form-select-sm"
+                        onchange="this.form.submit()">
+                    <option value="">📚 Все источники</option>
+                    <option value="none" {% if current_source == 'none' %}selected{% endif %}>
+                        Без источника
+                    </option>
+                    {% for src in sources %}
+                    <option value="{{ src.pk }}" {% if current_source == src.pk|slugify %}selected{% endif %}>
+                        {{ src }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="grade" class="form-select form-select-sm"
+                        onchange="this.form.submit()">
+                    <option value="">🎓 Все классы</option>
+                    <option value="none" {% if current_grade == 'none' %}selected{% endif %}>
+                        Без класса
+                    </option>
+                    {% for val, label in grade_choices %}
+                    <option value="{{ val }}" {% if current_grade == val|slugify %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="verified" class="form-select form-select-sm"
+                        onchange="this.form.submit()">
+                    <option value="">✅ Все (проверка)</option>
+                    <option value="1" {% if current_verified == '1' %}selected{% endif %}>
+                        ✅ Проверенные
+                    </option>
+                    <option value="0" {% if current_verified == '0' %}selected{% endif %}>
+                        ❌ Не проверенные
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'tasks:source-list' %}" class="btn btn-sm btn-outline-secondary w-100">
+                    <i class="fas fa-book"></i> Источники
+                </a>
+            </div>
+        </div>
     </form>
 </div>
 

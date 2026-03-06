@@ -9,6 +9,52 @@ def task_image_upload_path(instance, filename):
     return f'task_images/task_{instance.task.id}/{filename}'
 
 
+class Source(BaseModel):
+    """Источник задания — книга, сайт, сборник"""
+    SOURCE_TYPE_CHOICES = [
+        ('textbook', 'Учебник'),
+        ('problem_book', 'Задачник'),
+        ('exam', 'ЕГЭ/ОГЭ'),
+        ('olympiad', 'Олимпиада'),
+        ('website', 'Сайт'),
+        ('original', 'Авторское'),
+        ('other', 'Другое'),
+    ]
+
+    name = models.CharField('Название', max_length=300,
+                             help_text='Например: Перышкин А.В. Физика. 8 класс')
+    short_name = models.CharField('Краткое название', max_length=100, blank=True,
+                                   help_text='Например: Перышкин-8')
+    source_type = models.CharField('Тип источника', max_length=50,
+                                    choices=SOURCE_TYPE_CHOICES, default='textbook')
+    author = models.CharField('Автор', max_length=200, blank=True)
+    year = models.PositiveIntegerField('Год издания', null=True, blank=True)
+    url = models.URLField('Ссылка', blank=True,
+                           help_text='URL сайта или онлайн-ресурса')
+    isbn = models.CharField('ISBN', max_length=20, blank=True)
+    notes = models.TextField('Примечания', blank=True)
+
+    class Meta:
+        verbose_name = 'Источник'
+        verbose_name_plural = 'Источники'
+        ordering = ['name']
+
+    def __str__(self):
+        if self.short_name:
+            return self.short_name
+        return self.name
+
+    @property
+    def display_name(self):
+        parts = []
+        if self.author:
+            parts.append(self.author)
+        parts.append(self.name)
+        if self.year:
+            parts.append(f'({self.year})')
+        return ' — '.join(parts) if len(parts) > 1 else parts[0]
+
+
 class Task(BaseModel):
     """Задание"""
     TASK_TYPES = [
@@ -63,6 +109,38 @@ class Task(BaseModel):
     ], default='understand')
     
     estimated_time = models.PositiveIntegerField('Время выполнения (мин)', null=True, blank=True)
+
+    # === Источник ===
+    source = models.ForeignKey(
+        'Source', on_delete=models.SET_NULL,
+        null=True, blank=True, verbose_name='Источник',
+        help_text='Книга, сайт, сборник, откуда взято задание'
+    )
+    source_detail = models.CharField(
+        'Детали источника', max_length=200, blank=True,
+        help_text='Стр. 45, №12 / Вариант 3, задание 5'
+    )
+
+    # === Метаданные ===
+    grade = models.PositiveIntegerField(
+        'Класс', null=True, blank=True,
+        help_text='Рекомендуемый класс (7–11)',
+        choices=[(i, f'{i} класс') for i in range(7, 12)]
+    )
+    year = models.PositiveIntegerField(
+        'Год задания', null=True, blank=True,
+        help_text='Год составления/публикации (ЕГЭ 2024, олимпиада 2023)'
+    )
+
+    # === Качество ===
+    is_verified = models.BooleanField(
+        'Проверено', default=False,
+        help_text='Задание вычитано, ответ проверен'
+    )
+    teacher_notes = models.TextField(
+        'Заметки учителя', blank=True,
+        help_text='Личные пометки: особенности, типичные ошибки учеников'
+    )
     
     class Meta:
         verbose_name = 'Задание'

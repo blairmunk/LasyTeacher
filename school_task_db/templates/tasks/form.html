@@ -144,6 +144,84 @@
                 </div>
             </div>
 
+            <!-- Источник и метаданные -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <a class="text-decoration-none" data-bs-toggle="collapse" href="#sourceBlock">
+                            <i class="fas fa-book"></i> Источник и метаданные
+                            <small class="text-muted">(необязательно)</small>
+                        </a>
+                    </h5>
+                </div>
+                <div class="collapse {% if form.source.value or form.grade.value or form.is_verified.value %}show{% endif %}" id="sourceBlock">
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.source.id_for_label }}" class="form-label">
+                                    <i class="fas fa-book-open"></i> {{ form.source.label }}
+                                </label>
+                                <div class="input-group">
+                                    {{ form.source }}
+                                    <a href="{% url 'tasks:source-create' %}" class="btn btn-outline-success" title="Добавить источник" target="_blank">
+                                        <i class="fas fa-plus"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.source_detail.id_for_label }}" class="form-label">
+                                    {{ form.source_detail.label }}
+                                </label>
+                                {{ form.source_detail }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label for="{{ form.grade.id_for_label }}" class="form-label">
+                                    <i class="fas fa-graduation-cap"></i> {{ form.grade.label }}
+                                </label>
+                                {{ form.grade }}
+                            </div>
+                            <div class="col-md-3">
+                                <label for="{{ form.year.id_for_label }}" class="form-label">
+                                    <i class="fas fa-calendar"></i> {{ form.year.label }}
+                                </label>
+                                {{ form.year }}
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <div class="form-check mb-3">
+                                    {{ form.is_verified }}
+                                    <label class="form-check-label" for="{{ form.is_verified.id_for_label }}">
+                                        <i class="fas fa-check-circle text-success"></i> {{ form.is_verified.label }}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <div class="mb-3">
+                                    <label for="{{ form.estimated_time.id_for_label }}" class="form-label">
+                                        <i class="fas fa-clock"></i> {{ form.estimated_time.label }}
+                                    </label>
+                                    {{ form.estimated_time }}
+                                    <div class="form-text">минут</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <label for="{{ form.teacher_notes.id_for_label }}" class="form-label">
+                                    <i class="fas fa-sticky-note"></i> {{ form.teacher_notes.label }}
+                                </label>
+                                {{ form.teacher_notes }}
+                                <div class="form-text">Личные пометки, типичные ошибки учеников</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
             <!-- Изображения -->
             {% if image_formset %}
             <div class="card mb-4">

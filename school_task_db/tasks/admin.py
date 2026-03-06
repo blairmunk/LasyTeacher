@@ -1,4 +1,5 @@
 from django.contrib import admin
+from .models import Source
 from django import forms
 from .models import Task, TaskImage
 from curriculum.models import Topic, SubTopic
@@ -32,6 +33,12 @@ class TaskAdminForm(forms.ModelForm):
             raise forms.ValidationError('Выбранная подтема не принадлежит выбранной теме')
         
         return cleaned_data
+
+@admin.register(Source)
+class SourceAdmin(admin.ModelAdmin):
+    list_display = ['short_name', 'name', 'source_type', 'author', 'year']
+    list_filter = ['source_type', 'year']
+    search_fields = ['name', 'short_name', 'author']
 
 class TaskImageInline(admin.TabularInline):
     model = TaskImage
@@ -101,3 +108,4 @@ class TaskImageAdmin(admin.ModelAdmin):
     list_display = ['task', 'position', 'caption', 'order', 'created_at']
     list_filter = ['position', 'created_at']
     search_fields = ['task__text', 'caption']
+

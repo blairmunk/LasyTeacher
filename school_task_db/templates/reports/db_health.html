@@ -412,6 +412,54 @@
         </div>
     </div>
 
+    <!-- Качество данных -->
+    <h4 class="mb-3"><i class="fas fa-clipboard-check"></i> Качество данных</h4>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="fs-1 fw-bold {% if unverified_tasks.pct > 50 %}text-danger{% elif unverified_tasks.pct > 20 %}text-warning{% else %}text-success{% endif %}">
+                        {{ unverified_tasks.pct }}%
+                    </div>
+                    <small class="text-muted">Не проверено</small>
+                    <div class="progress mt-2" style="height:6px;">
+                        <div class="progress-bar bg-success" style="width:{% widthratio unverified_tasks.count stats.total_tasks 100 %}%"></div>
+                    </div>
+                    <small class="text-muted">{{ unverified_tasks.count }} из {{ stats.total_tasks }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="fs-1 fw-bold {% if no_source_tasks.pct > 50 %}text-danger{% elif no_source_tasks.pct > 20 %}text-warning{% else %}text-success{% endif %}">
+                        {{ no_source_tasks.pct }}%
+                    </div>
+                    <small class="text-muted">Без источника</small>
+                    <div class="progress mt-2" style="height:6px;">
+                        <div class="progress-bar bg-warning" style="width:{% widthratio no_source_tasks.count stats.total_tasks 100 %}%"></div>
+                    </div>
+                    <small class="text-muted">{{ no_source_tasks.count }} из {{ stats.total_tasks }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="fs-1 fw-bold {% if no_grade_tasks.pct > 50 %}text-danger{% elif no_grade_tasks.pct > 20 %}text-warning{% else %}text-success{% endif %}">
+                        {{ no_grade_tasks.pct }}%
+                    </div>
+                    <small class="text-muted">Без класса</small>
+                    <div class="progress mt-2" style="height:6px;">
+                        <div class="progress-bar bg-info" style="width:{% widthratio no_grade_tasks.count stats.total_tasks 100 %}%"></div>
+                    </div>
+                    <small class="text-muted">{{ no_grade_tasks.count }} из {{ stats.total_tasks }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     {% include "reports/_reports_nav.html" %}
 </div>
 {% endblock %}

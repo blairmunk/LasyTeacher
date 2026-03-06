@@ -5,10 +5,14 @@ app_name = 'tasks'
 
 urlpatterns = [
     path('', views.TaskListView.as_view(), name='list'),
-    path('<pk:pk>/', views.TaskDetailView.as_view(), name='detail'),
     path('create/', views.TaskCreateView.as_view(), name='create'),
+    path('<pk:pk>/', views.TaskDetailView.as_view(), name='detail'),
     path('<pk:pk>/update/', views.TaskUpdateView.as_view(), name='update'),
     path('<pk:pk>/delete/', views.TaskDeleteView.as_view(), name='delete'),
+
+    # Источники
+    path('sources/', views.SourceListView.as_view(), name='source-list'),
+    path('sources/create/', views.SourceCreateView.as_view(), name='source-create'),
 
     # AJAX endpoints
     path('ajax/load-subtopics/', views.load_subtopics, name='ajax-load-subtopics'),

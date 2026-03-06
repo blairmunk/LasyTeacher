@@ -255,14 +255,29 @@ class TaskImporter(BaseImporter):
         return task
     
     def _find_or_create_topic(self, topic_data):
-        topic = self._find_topic(topic_data)   # ← ищет
+        """Поиск или создание темы"""
+        topic = self._find_topic(topic_data)
         if topic:
             return topic
-        
-        if self.create_missing and isinstance(topic_data, dict):  # ← создаёт
-            topic = Topic.objects.create(...)
-            self.log_success(f"Создана тема: {topic.name}")  # ← правильный метод!
-            return topic
+
+        # Создание новой темы если разрешено
+        if self.create_missing and isinstance(topic_data, dict):
+            try:
+                topic = Topic.objects.create(
+                    name=topic_data['name'],
+                    subject=topic_data.get('subject', 'Не указан'),
+                    grade_level=topic_data.get('grade_level'),
+                    section=topic_data.get('section', ''),
+                    description=topic_data.get('description', ''),
+                    order=topic_data.get('order', 1)
+                )
+                self.log_success(f"Создана тема: {topic.name}")
+                return topic
+            except Exception as e:
+                self.log_error(f"Ошибка создания темы: {e}", e)
+
+        return None
+
 
             
         # Создание новой темы если разрешено

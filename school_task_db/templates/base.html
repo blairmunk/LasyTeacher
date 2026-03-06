@@ -316,11 +316,41 @@
                     </li>
 
                     <!-- Отчёты -->
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'reports:dashboard' %}">
-                            <i class="fas fa-chart-bar"></i> Отчёты
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button"
+                           data-bs-toggle="dropdown">
+                            <i class="fas fa-chart-line"></i> Отчёты
                         </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'reports:dashboard' %}">
+                                    <i class="fas fa-tachometer-alt text-primary"></i> Дашборд
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'reports:db-health' %}">
+                                    <i class="fas fa-heartbeat text-danger"></i> Здоровье базы
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'reports:student-performance' %}">
+                                    <i class="fas fa-user-graduate text-info"></i> Успеваемость
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'reports:work-analysis' %}">
+                                    <i class="fas fa-chart-bar text-success"></i> Анализ работ
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'reports:heatmap' %}">
+                                    <i class="fas fa-th text-warning"></i> Тепловая карта
+                                </a>
+                            </li>
+                        </ul>
                     </li>
+
 
                     <!-- Данные -->
                     <li class="nav-item dropdown">

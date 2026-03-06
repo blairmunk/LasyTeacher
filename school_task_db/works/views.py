@@ -167,9 +167,50 @@ class VariantDeleteView(DeleteView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['variant'] = self.object
-        context['task_count'] = self.object.varianttask_set.count()
+        variant = self.object
+        context['variant'] = variant
+        context['task_count'] = variant.varianttask_set.count()
+
+        # Проверяем: есть ли оценки/участия за этот вариант
+        try:
+            from events.models import EventParticipation
+            participations = EventParticipation.objects.filter(variant=variant)
+            context['has_grades'] = participations.exists()
+            context['grade_count'] = participations.count()
+        except ImportError:
+            context['has_grades'] = False
+            context['grade_count'] = 0
+
         return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        # Проверяем: есть ли оценки
+        try:
+            from events.models import EventParticipation
+            has_grades = EventParticipation.objects.filter(variant=self.object).exists()
+        except ImportError:
+            has_grades = False
+
+        action = request.POST.get('action', 'delete')
+
+        if has_grades and action == 'delete':
+            # Нельзя удалить — есть оценки, предлагаем отвязать
+            from django.contrib import messages
+            messages.error(request, 'Невозможно удалить: за вариант есть оценки. Используйте «Отвязать».')
+            return self.get(request, *args, **kwargs)
+
+        if action == 'detach':
+            # Отвязываем от работы (сирота)
+            self.object.work = None
+            self.object.save()
+            from django.contrib import messages
+            messages.success(request, f'Вариант #{self.object.get_short_uuid()} отвязан от работы (стал сиротой).')
+            return redirect(self.get_success_url())
+
+        # Обычное удаление
+        return super().post(request, *args, **kwargs)
 
 
 def bulk_delete_variants(request, work_id):

@@ -105,7 +105,7 @@ class EventParticipation(BaseModel):
     """Участие ученика в событии (промежуточная модель)"""
     event = models.ForeignKey(Event, on_delete=models.CASCADE, verbose_name='Событие')
     student = models.ForeignKey('students.Student', on_delete=models.CASCADE, verbose_name='Ученик')
-    variant = models.ForeignKey('works.Variant', on_delete=models.CASCADE, 
+    variant = models.ForeignKey('works.Variant', on_delete=models.PROTECT,
                                null=True, blank=True, verbose_name='Назначенный вариант')
     
     # Статус участия

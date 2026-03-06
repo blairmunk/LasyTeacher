@@ -11,10 +11,6 @@
                     <h5 class="mb-0"><i class="fas fa-trash-alt"></i> Удалить вариант?</h5>
                 </div>
                 <div class="card-body">
-                    <div class="alert alert-warning">
-                        <strong>Внимание!</strong> Это действие необратимо. Все задания варианта будут отвязаны.
-                    </div>
-
                     <table class="table table-sm mb-3">
                         <tr>
                             <td class="text-muted">Вариант:</td>
@@ -38,11 +34,20 @@
                         </tr>
                     </table>
 
+                    {% if has_grades %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>За этот вариант есть {{ grade_count }} оценок!</strong><br>
+                        Удаление невозможно. Вы можете <strong>отвязать</strong> вариант от работы —
+                        он станет «сиротой», но оценки сохранятся.
+                    </div>
+
                     <form method="post">
                         {% csrf_token %}
+                        <input type="hidden" name="action" value="detach">
                         <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-danger">
-                                <i class="fas fa-trash"></i> Да, удалить
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-unlink"></i> Отвязать от работы
                             </button>
                             {% if variant.work %}
                             <a href="{% url 'works:detail' variant.work.pk %}" class="btn btn-secondary">
@@ -55,6 +60,35 @@
                             {% endif %}
                         </div>
                     </form>
+
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-info-circle"></i>
+                        Оценок за этот вариант нет. Можно удалить безопасно.
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete">
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Удалить навсегда
+                            </button>
+                            {% if variant.work %}
+                            <button type="submit" name="action" value="detach" class="btn btn-outline-warning">
+                                <i class="fas fa-unlink"></i> Или отвязать
+                            </button>
+                            <a href="{% url 'works:detail' variant.work.pk %}" class="btn btn-secondary">
+                                Отмена
+                            </a>
+                            {% else %}
+                            <a href="{% url 'works:variant-list' %}" class="btn btn-secondary">
+                                Отмена
+                            </a>
+                            {% endif %}
+                        </div>
+                    </form>
+                    {% endif %}
                 </div>
             </div>
         </div>

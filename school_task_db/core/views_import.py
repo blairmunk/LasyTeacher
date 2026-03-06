@@ -370,9 +370,19 @@ def _build_summary_message(log):
 def download_sample_json(request):
     """Скачать пример JSON-файла в формате, который ожидает TaskImporter"""
     sample = {
-        "version": "1.0",
-        "description": "Пример файла для импорта заданий",
-        
+        "version": "1.1",
+        "description": "Пример файла для импорта заданий (v1.1 — с источниками и метаданными)",
+
+        "sources": [
+            {
+                "name": "Перышкин А.В. Физика. 8 класс",
+                "short_name": "Перышкин-8",
+                "source_type": "textbook",
+                "author": "Перышкин А.В.",
+                "year": 2020
+            }
+        ],
+
         "analog_groups": [
             {
                 "id": "770e8400-e29b-41d4-a716-446655440001",
@@ -385,7 +395,7 @@ def download_sample_json(request):
                 "description": "Сложение обыкновенных дробей с разными знаменателями"
             }
         ],
-        
+
         "topics": [
             {
                 "name": "Линейные уравнения",
@@ -393,27 +403,29 @@ def download_sample_json(request):
                 "grade_level": 7,
                 "section": "Алгебра",
                 "description": "Решение линейных уравнений"
-            },
-            {
-                "name": "Обыкновенные дроби",
-                "subject": "Математика",
-                "grade_level": 6,
-                "section": "Арифметика",
-                "description": "Действия с обыкновенными дробями"
             }
         ],
-        
+
         "tasks": [
             {
                 "id": "550e8400-e29b-41d4-a716-446655440001",
                 "text": "Решите уравнение: $2x + 5 = 15$",
                 "answer": "$x = 5$",
                 "short_solution": "$2x = 10$, $x = 5$",
-                "full_solution": "Перенесём 5 в правую часть:\n$$2x = 15 - 5$$\n$$2x = 10$$\nРазделим на 2:\n$$x = 5$$",
+                "full_solution": "Перенесём 5 в правую часть:\n$$2x = 15 - 5 = 10$$\nРазделим на 2: $x = 5$",
                 "hint": "Перенесите число в правую часть",
                 "difficulty": 1,
                 "task_type": "task",
                 "cognitive_level": "apply",
+                "grade": 7,
+                "year": 2024,
+                "is_verified": true,
+                "teacher_notes": "Базовое задание, дети справляются хорошо",
+                "source": {
+                    "name": "Перышкин А.В. Физика. 8 класс",
+                    "short_name": "Перышкин-8"
+                },
+                "source_detail": "Стр. 45, №12",
                 "topic": {
                     "name": "Линейные уравнения",
                     "subject": "Математика",
@@ -431,6 +443,8 @@ def download_sample_json(request):
                 "difficulty": 1,
                 "task_type": "task",
                 "cognitive_level": "apply",
+                "grade": 6,
+                "is_verified": false,
                 "topic": {
                     "name": "Обыкновенные дроби",
                     "subject": "Математика",
@@ -441,7 +455,7 @@ def download_sample_json(request):
                 ]
             }
         ],
-        
+
         "task_images": []
     }
     
@@ -461,7 +475,7 @@ def export_tasks_ajax(request):
     grade = request.GET.get('grade')
     
     tasks_qs = Task.objects.select_related(
-        'topic', 'subtopic'
+        'topic', 'subtopic', 'source'
     ).prefetch_related('images', 'task_groups__group')
     
     if topic_id:
@@ -493,8 +507,26 @@ def export_tasks_ajax(request):
             'content_element': getattr(task, 'content_element', ''),
             'requirement_element': getattr(task, 'requirement_element', ''),
             'estimated_time': getattr(task, 'estimated_time', None),
+            # Новые поля
+            'grade': task.grade,
+            'year': task.year,
+            'is_verified': task.is_verified,
+            'teacher_notes': task.teacher_notes or '',
+            'source_detail': task.source_detail or '',
+            'source': None,
             'groups': [],
         }
+
+        # Источник
+        if task.source:
+            task_dict['source'] = {
+                'name': task.source.name,
+                'short_name': task.source.short_name or '',
+                'source_type': task.source.source_type,
+                'author': task.source.author or '',
+                'year': task.source.year,
+            }
+
         
         # Тема
         if task.topic:
@@ -548,11 +580,27 @@ def export_tasks_ajax(request):
         
         tasks_data.append(task_dict)
     
+    # Собираем уникальные источники
+    all_sources = {}
+    for task in tasks_qs:
+        if task.source and str(task.source.id) not in all_sources:
+            all_sources[str(task.source.id)] = {
+                'id': str(task.source.id),
+                'name': task.source.name,
+                'short_name': task.source.short_name or '',
+                'source_type': task.source.source_type,
+                'author': task.source.author or '',
+                'year': task.source.year,
+                'url': task.source.url or '',
+                'isbn': task.source.isbn or '',
+            }
+
     export_data = {
-        'version': '1.0',
+        'version': '1.1',
         'export_date': time.strftime('%Y-%m-%d'),
         'analog_groups': list(all_groups.values()),
         'topics': list(all_topics.values()),
+        'sources': list(all_sources.values()),
         'tasks': tasks_data,
         'task_images': images_data,
     }

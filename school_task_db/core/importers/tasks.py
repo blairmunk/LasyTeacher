@@ -6,7 +6,7 @@ from typing import Dict, List, Any, Optional
 from django.db import transaction
 
 from .base import BaseImporter, ImportContext
-from tasks.models import Task, TaskImage
+from tasks.models import Task, TaskImage, Source
 from task_groups.models import AnalogGroup, TaskGroup
 from curriculum.models import Topic, SubTopic
 
@@ -26,6 +26,10 @@ class TaskImporter(BaseImporter):
         
         with transaction.atomic():
             print("🚀 ИМПОРТ ЗАДАНИЙ:")
+
+            # ЭТАП 0: Импорт источников
+            if 'sources' in json_data:
+                self._import_sources(json_data['sources'])
             
             # ЭТАП 1: Импорт групп аналогов
             if 'analog_groups' in json_data:
@@ -66,6 +70,18 @@ class TaskImporter(BaseImporter):
         
         return self.context
     
+    def _import_sources(self, sources_data: List[Dict[str, Any]]):
+        """Импорт источников"""
+        print("📚 Импорт источников...")
+
+        for source_data in sources_data:
+            try:
+                source = self._find_or_create_source(source_data)
+                if source:
+                    self.log_info(f"Источник: {source}")
+            except Exception as e:
+                self.log_error(f"Ошибка импорта источника: {e}", e)
+
     def _import_analog_groups(self, groups_data: List[Dict[str, Any]]):
         """Импорт групп аналогов"""
         print("📋 Импорт групп аналогов...")
@@ -148,6 +164,51 @@ class TaskImporter(BaseImporter):
                 task_preview = task_data.get('text', 'Unknown')[:30]
                 self.log_error(f"Ошибка импорта задания '{task_preview}': {e}", e)
     
+    def _find_or_create_source(self, source_data) -> Optional['Source']:
+        """Поиск или создание источника"""
+        if not source_data:
+            return None
+
+        # Строка — ищем по имени
+        if isinstance(source_data, str):
+            return Source.objects.filter(name=source_data).first() or \
+                   Source.objects.filter(short_name=source_data).first()
+
+        if not isinstance(source_data, dict):
+            return None
+
+        # Поиск по short_name (приоритетно)
+        if source_data.get('short_name'):
+            existing = Source.objects.filter(short_name=source_data['short_name']).first()
+            if existing:
+                return existing
+
+        # Поиск по name
+        if source_data.get('name'):
+            existing = Source.objects.filter(name=source_data['name']).first()
+            if existing:
+                return existing
+
+        # Создание нового источника
+        if self.create_missing and source_data.get('name'):
+            try:
+                source = Source.objects.create(
+                    name=source_data['name'],
+                    short_name=source_data.get('short_name', ''),
+                    source_type=source_data.get('source_type', 'other'),
+                    author=source_data.get('author', ''),
+                    year=source_data.get('year'),
+                    url=source_data.get('url', ''),
+                    isbn=source_data.get('isbn', ''),
+                )
+                self.log_success(f"Создан источник: {source}")
+                return source
+            except Exception as e:
+                self.log_error(f"Ошибка создания источника: {e}", e)
+
+        return None
+
+
     def _create_task(self, task_uuid: str, task_data: Dict[str, Any]) -> Optional[Task]:
         """Создание нового задания"""
         
@@ -162,6 +223,9 @@ class TaskImporter(BaseImporter):
         if 'subtopic' in task_data:
             subtopic = self._find_or_create_subtopic(task_data['subtopic'], topic)
         
+        # Поиск источника
+        source = self._find_or_create_source(task_data.get('source'))
+
         # Создание задания
         task = Task.objects.create(
             id=task_uuid,
@@ -178,7 +242,14 @@ class TaskImporter(BaseImporter):
             task_type=task_data.get('task_type', 'theoretical'),
             difficulty=task_data.get('difficulty', 3),
             cognitive_level=task_data.get('cognitive_level', 'understand'),
-            estimated_time=task_data.get('estimated_time')
+            estimated_time=task_data.get('estimated_time'),
+            # Новые поля
+            source=source,
+            source_detail=task_data.get('source_detail', ''),
+            grade=task_data.get('grade'),
+            year=task_data.get('year'),
+            is_verified=task_data.get('is_verified', False),
+            teacher_notes=task_data.get('teacher_notes', ''),
         )
         
         return task
@@ -657,6 +728,22 @@ class TaskImporter(BaseImporter):
                 topic = self._find_or_create_topic(topic_data)
                 if topic:
                     task.topic = topic
+
+            # Обновляем новые поля
+            if 'source' in task_data:
+                source = self._find_or_create_source(task_data['source'])
+                if source:
+                    task.source = source
+            if 'source_detail' in task_data:
+                task.source_detail = task_data['source_detail']
+            if 'grade' in task_data:
+                task.grade = task_data['grade']
+            if 'year' in task_data:
+                task.year = task_data['year']
+            if 'is_verified' in task_data:
+                task.is_verified = task_data['is_verified']
+            if 'teacher_notes' in task_data:
+                task.teacher_notes = task_data['teacher_notes']
             
             task.save()
             self.log_success(f"Обновлено задание: {task.get_short_uuid()}")

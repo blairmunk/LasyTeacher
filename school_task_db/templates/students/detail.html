@@ -11,6 +11,9 @@
                 <i class="fas fa-user-graduate"></i>
                 {{ student.get_full_name }}
             </h2>
+            <a href="{% url 'students:remedial' object.pk %}" class="btn btn-outline-warning">
+                <i class="fas fa-first-aid"></i> Работа над ошибками
+            </a>
             <div class="d-flex gap-2 align-items-center">
                 {% for g in student_groups %}
                 <a href="{% url 'students:group-detail' g.pk %}" class="badge bg-primary fs-6 text-decoration-none">

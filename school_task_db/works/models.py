@@ -13,7 +13,10 @@ class Work(BaseModel):
         ('diagnostic', 'Диагностическая работа'),
         ('homework', 'Домашняя работа'),
         ('practice', 'Практическая работа'),
+        ('remedial', 'Работа над ошибками'),
+        ('individual', 'Индивидуальная работа'),
     ]
+
 
     name = models.CharField('Название работы', max_length=200)
     duration = models.PositiveIntegerField('Время выполнения (минуты)', default=45)
@@ -219,6 +222,25 @@ class Variant(BaseModel):
     max_score_snapshot = models.PositiveIntegerField('Макс. балл (снимок)', default=100)
     duration_snapshot = models.PositiveIntegerField('Время (снимок)', default=45)
 
+    # Тип варианта и персонализация
+    VARIANT_TYPE_CHOICES = [
+        ('regular', 'Обычный'),
+        ('remedial', 'Работа над ошибками'),
+        ('individual', 'Индивидуальный'),
+    ]
+    variant_type = models.CharField('Тип варианта', max_length=20,
+                                    choices=VARIANT_TYPE_CHOICES, default='regular')
+    assigned_student = models.ForeignKey(
+        'students.Student', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='assigned_variants',
+        verbose_name='Назначен ученику'
+    )
+    source_work = models.ForeignKey(
+        'Work', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='remedial_variants',
+        verbose_name='Работа-источник ошибок'
+    )
+
     class Meta:
         verbose_name = 'Вариант'
         verbose_name_plural = 'Варианты'
@@ -235,7 +257,16 @@ class Variant(BaseModel):
     def display_name(self):
         if self.work:
             return self.work.name
-        return self.work_name_snapshot or "Удалённая работа"
+        if self.work_name_snapshot:
+            return self.work_name_snapshot
+        if self.variant_type == 'remedial':
+            student_name = self.assigned_student.get_short_name() if self.assigned_student else '?'
+            return f"Работа над ошибками — {student_name}"
+        if self.variant_type == 'individual':
+            student_name = self.assigned_student.get_short_name() if self.assigned_student else '?'
+            return f"Индивидуальная — {student_name}"
+        return "Вариант без работы"
+
 
     @property
     def display_max_score(self):

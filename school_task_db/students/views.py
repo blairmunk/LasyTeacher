@@ -1,10 +1,14 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.db.models import Avg, Count, F, Q
 
-from .models import Student, StudentGroup
+from tasks.models import Task
+from works.models import Work, Variant, VariantTask
+from task_groups.models import AnalogGroup, TaskGroup
+
+from .models import Student, StudentGroup, StudentTaskLog
 from .forms import StudentForm, StudentGroupForm
 
 
@@ -381,3 +385,157 @@ class StudentGroupUpdateView(UpdateView):
     def form_valid(self, form):
         messages.success(self.request, 'Класс успешно обновлен!')
         return super().form_valid(form)
+
+class RemedialWorkView(DetailView):
+    """Работа над ошибками: анализ + генерация варианта"""
+    model = Student
+    template_name = 'students/remedial.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        student = self.object
+
+        task_logs = StudentTaskLog.objects.filter(student=student)
+        if not task_logs.exists():
+            context['no_data'] = True
+            return context
+
+        # 1. Группы с ошибками: avg < 70%
+        weak_groups = task_logs.exclude(
+            analog_group__isnull=True
+        ).values(
+            'analog_group', 'analog_group__name'
+        ).annotate(
+            total=Count('id'),
+            correct=Count('id', filter=Q(is_correct=True)),
+            wrong=Count('id', filter=Q(is_correct=False)),
+            avg_pct=Avg('percentage'),
+        ).filter(avg_pct__lt=70).order_by('avg_pct')
+
+        # 2. Все задания, которые ученик уже выполнял
+        done_task_ids = set(
+            task_logs.values_list('task_id', flat=True)
+        )
+
+        # 3. Для каждой слабой группы — доступные невыполненные задания
+        remedial_groups = []
+        total_available = 0
+
+        for wg in weak_groups:
+            group_id = wg['analog_group']
+            group = AnalogGroup.objects.get(pk=group_id)
+
+            # Задания из группы, которые ученик ещё не делал
+            group_task_ids = set(
+                TaskGroup.objects.filter(group=group).values_list('task_id', flat=True)
+            )
+            available_ids = group_task_ids - done_task_ids
+            available_tasks = Task.objects.filter(id__in=available_ids)
+
+            remedial_groups.append({
+                'group': group,
+                'avg_pct': round(wg['avg_pct'] or 0, 1),
+                'total_done': wg['total'],
+                'correct': wg['correct'],
+                'wrong': wg['wrong'],
+                'available_count': len(available_ids),
+                'available_tasks': available_tasks[:5],  # Превью
+                'group_total': len(group_task_ids),
+            })
+            total_available += len(available_ids)
+
+        # 4. Слабые темы (без группы)
+        weak_topics = task_logs.exclude(
+            topic__isnull=True
+        ).values(
+            'topic', 'topic__name'
+        ).annotate(
+            total=Count('id'),
+            correct=Count('id', filter=Q(is_correct=True)),
+            avg_pct=Avg('percentage'),
+        ).filter(avg_pct__lt=70).order_by('avg_pct')[:10]
+
+        context['remedial_groups'] = remedial_groups
+        context['weak_topics'] = weak_topics
+        context['total_available'] = total_available
+        context['done_count'] = len(done_task_ids)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        student = self.object
+
+        # Параметры
+        max_tasks = int(request.POST.get('max_tasks', 10))
+        selected_groups = request.POST.getlist('groups')
+
+        task_logs = StudentTaskLog.objects.filter(student=student)
+        done_task_ids = set(task_logs.values_list('task_id', flat=True))
+
+        # Собираем задания
+        tasks_to_add = []
+
+        if selected_groups:
+            group_ids = selected_groups
+        else:
+            # Все слабые группы
+            group_ids = task_logs.exclude(
+                analog_group__isnull=True
+            ).values('analog_group').annotate(
+                avg_pct=Avg('percentage')
+            ).filter(avg_pct__lt=70).values_list('analog_group', flat=True)
+
+        for group_id in group_ids:
+            if len(tasks_to_add) >= max_tasks:
+                break
+
+            group_task_ids = set(
+                TaskGroup.objects.filter(group_id=group_id).values_list('task_id', flat=True)
+            )
+            available_ids = list(group_task_ids - done_task_ids)
+
+            if available_ids:
+                import random
+                random.shuffle(available_ids)
+                # Берём 1-2 задания из каждой группы
+                take = min(2, max_tasks - len(tasks_to_add), len(available_ids))
+                tasks_to_add.extend(available_ids[:take])
+
+        if not tasks_to_add:
+            messages.warning(request, 'Нет доступных заданий для работы над ошибками.')
+            return redirect('students:detail', pk=student.pk)
+
+        # Собираем задания как список объектов
+        tasks_list = list(Task.objects.filter(id__in=tasks_to_add))
+        if not tasks_list:
+            messages.warning(request, 'Нет доступных заданий для работы над ошибками.')
+            return redirect('students:detail', pk=student.pk)
+
+        # Суммарный балл = сумма сложностей
+        total_score = sum(t.difficulty or 1 for t in tasks_list)
+
+        variant = Variant.objects.create(
+            work=None,
+            number=1,
+            work_name_snapshot=f'Работа над ошибками — {student.get_short_name()}',
+            max_score_snapshot=total_score,
+            variant_type='remedial',
+            assigned_student=student,
+        )
+
+        for i, task in enumerate(tasks_list, 1):
+            VariantTask.objects.create(
+                variant=variant,
+                task=task,
+                order=i,
+                weight=float(task.difficulty or 1),
+                max_points=task.difficulty or 1,
+            )
+
+        messages.success(
+            request,
+            f'Создан вариант «Работа над ошибками» для {student.get_short_name()}: '
+            f'{len(tasks_list)} заданий, макс. балл: {total_score}'
+        )
+        return redirect('works:variant-detail', pk=variant.pk)
+

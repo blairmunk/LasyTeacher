@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}Работа над ошибками — {{ object.get_short_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-first-aid"></i> Работа над ошибками</h2>
+            <p class="text-muted mb-0">
+                {{ object.get_full_name }}
+                · Выполнено заданий: {{ done_count }}
+                · Доступно новых: {{ total_available }}
+            </p>
+        </div>
+        <a href="{% url 'students:detail' object.pk %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> К ученику
+        </a>
+    </div>
+
+    {% if no_data %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i>
+        У ученика пока нет выполненных заданий. Работа над ошибками невозможна.
+    </div>
+    {% else %}
+
+    <!-- Слабые группы -->
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">
+                <i class="fas fa-exclamation-triangle text-warning"></i>
+                Слабые группы заданий (< 70%)
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if remedial_groups %}
+            <form method="post" id="remedialForm">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label">Максимум заданий:</label>
+                    <select name="max_tasks" class="form-select" style="width:auto; display:inline-block;">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="15">15</option>
+                        <option value="20">20</option>
+                    </select>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:40px;">
+                                    <input type="checkbox" id="selectAll" checked
+                                           onchange="document.querySelectorAll('.group-cb').forEach(c=>c.checked=this.checked)">
+                                </th>
+                                <th>Группа</th>
+                                <th class="text-center">Результат</th>
+                                <th class="text-center">Avg %</th>
+                                <th class="text-center">Доступно</th>
+                                <th>Превью заданий</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for rg in remedial_groups %}
+                            <tr>
+                                <td>
+                                    {% if rg.available_count > 0 %}
+                                    <input type="checkbox" name="groups" value="{{ rg.group.pk }}"
+                                           class="group-cb" checked>
+                                    {% else %}
+                                    <input type="checkbox" disabled class="text-muted">
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ rg.group.name }}</strong>
+                                    <br><small class="text-muted">{{ rg.group_total }} заданий в группе</small>
+                                </td>
+                                <td class="text-center">
+                                    <span class="text-success">{{ rg.correct }} ✓</span>
+                                    <span class="text-danger ms-1">{{ rg.wrong }} ✗</span>
+                                    <small class="text-muted"> / {{ rg.total_done }}</small>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-{% if rg.avg_pct < 30 %}danger{% elif rg.avg_pct < 55 %}warning text-dark{% else %}info{% endif %}"
+                                          style="min-width:50px;">
+                                        {{ rg.avg_pct }}%
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    {% if rg.available_count > 0 %}
+                                    <span class="badge bg-success">{{ rg.available_count }}</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">0</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% for task in rg.available_tasks %}
+                                    <small class="d-block text-truncate" style="max-width:300px;"
+                                           title="{{ task.text|striptags }}">
+                                        {{ task.text|striptags|truncatechars:50 }}
+                                    </small>
+                                    {% empty %}
+                                    <small class="text-muted">Все задания уже решены</small>
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if total_available > 0 %}
+                <button type="submit" class="btn btn-success btn-lg">
+                    <i class="fas fa-magic"></i> Сгенерировать вариант
+                </button>
+                <small class="text-muted ms-2">
+                    Будет создан вариант-сирота с новыми заданиями из выбранных групп
+                </small>
+                {% else %}
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-check-circle"></i>
+                    Все задания из слабых групп уже были выполнены. Добавьте новые задания в группы!
+                </div>
+                {% endif %}
+            </form>
+            {% else %}
+            <div class="alert alert-success">
+                <i class="fas fa-trophy"></i>
+                Нет слабых групп — все результаты выше 70%!
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Слабые темы -->
+    {% if weak_topics %}
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="fas fa-book text-danger"></i> Слабые темы</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="list-group list-group-flush">
+                {% for wt in weak_topics %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ wt.topic__name }}</strong>
+                        <small class="text-muted ms-2">{{ wt.correct }}/{{ wt.total }} верно</small>
+                    </div>
+                    <span class="badge bg-{% if wt.avg_pct < 30 %}danger{% elif wt.avg_pct < 55 %}warning text-dark{% else %}info{% endif %}">
+                        {{ wt.avg_pct|floatformat:0 }}%
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% endif %}
+</div>
+{% endblock %}

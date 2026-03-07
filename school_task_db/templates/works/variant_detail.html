@@ -59,6 +59,10 @@
             <a href="{% url 'works:detail' variant.work.pk %}" class="btn btn-outline-primary">
                 <i class="fas fa-arrow-left"></i> К работе
             </a>
+            {% elif variant.assigned_student %}
+            <a href="{% url 'students:detail' variant.assigned_student.pk %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> К ученику
+            </a>
             {% endif %}
             <a href="{% url 'works:variant-list' %}" class="btn btn-secondary">
                 <i class="fas fa-list"></i> Все варианты
@@ -70,11 +74,52 @@
     </div>
 
     {% if not variant.work %}
+    {% if variant.variant_type == 'remedial' %}
+    <div class="alert alert-info mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas fa-first-aid text-primary"></i>
+                <strong>Работа над ошибками</strong>
+                {% if variant.assigned_student %}
+                — {{ variant.assigned_student.get_full_name }}
+                    <a href="{% url 'students:detail' variant.assigned_student.pk %}"
+                       class="text-decoration-none ms-1">
+                        <i class="fas fa-external-link-alt"></i>
+                    </a>
+                {% endif %}
+                {% if variant.source_work %}
+                <br><small class="text-muted">
+                    Источник: {{ variant.source_work.name }}
+                </small>
+                {% endif %}
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-primary" onclick="window.print()">
+                    <i class="fas fa-print"></i> Печать
+                </button>
+            </div>
+        </div>
+    </div>
+    {% elif variant.variant_type == 'individual' %}
+    <div class="alert alert-info mb-4">
+        <i class="fas fa-user"></i>
+        <strong>Индивидуальный вариант</strong>
+        {% if variant.assigned_student %}
+        — {{ variant.assigned_student.get_full_name }}
+        {% endif %}
+        <button class="btn btn-sm btn-outline-primary ms-3" onclick="window.print()">
+            <i class="fas fa-print"></i> Печать
+        </button>
+    </div>
+    {% elif not variant.work %}
     <div class="orphan-warning mb-4">
         <i class="fas fa-exclamation-triangle text-warning"></i>
-        <strong>Работа удалена.</strong> Вариант существует автономно.
-        Данные сохранены из снимка: «{{ variant.work_name_snapshot }}».
+        <strong>Вариант-сирота.</strong> Не привязан к работе.
+        <button class="btn btn-sm btn-outline-secondary ms-3" onclick="window.print()">
+            <i class="fas fa-print"></i> Печать
+        </button>
     </div>
+    {% endif %}
     {% endif %}
 
     <!-- Инфо-карточка -->
@@ -186,7 +231,16 @@
     {% endfor %}
 
     <div class="uuid-code">
-        Вариант: {{ variant.get_medium_uuid }} | Работа: {{ variant.work.get_short_uuid }}
+        Вариант: {{ variant.get_medium_uuid }}
+        {% if variant.work %}
+        | Работа: {{ variant.work.get_short_uuid }}
+        {% elif variant.assigned_student %}
+        | Ученик: {{ variant.assigned_student.get_short_name }}
+        {% endif %}
+        {% if variant.variant_type != 'regular' %}
+        | Тип: {{ variant.get_variant_type_display }}
+        {% endif %}
     </div>
+
 </div>
 {% endblock %}

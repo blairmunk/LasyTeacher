@@ -13,4 +13,6 @@ urlpatterns = [
     path('student_groups/<uuid:pk>/', views.StudentGroupDetailView.as_view(), name='group-detail'),
     path('student_groups/create/', views.StudentGroupCreateView.as_view(), name='group-create'),
     path('student_groups/<uuid:pk>/update/', views.StudentGroupUpdateView.as_view(), name='group-update'),
+    path('<pk>/remedial/', views.RemedialWorkView.as_view(), name='remedial'),
+
 ]

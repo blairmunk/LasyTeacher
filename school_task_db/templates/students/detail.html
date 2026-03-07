@@ -123,6 +123,182 @@
     </div>
     {% endif %}
 
+    <!-- Прогресс по заданиям (GitHub-style) -->
+    {% if task_log_stats %}
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="mb-0">
+                <i class="fas fa-th"></i> Прогресс по заданиям
+                <small class="text-muted fw-normal">
+                    {{ task_log_stats.total }} выполнено · {{ task_log_stats.correct }} верно
+                    · avg {{ task_log_stats.avg_pct }}%
+                </small>
+            </h5>
+            <div class="d-flex align-items-center gap-1">
+                <small class="text-muted me-1">Хуже</small>
+                <span class="hm-legend" style="background:#ebedf0;"></span>
+                <span class="hm-legend" style="background:#ef9a9a;"></span>
+                <span class="hm-legend" style="background:#ffe082;"></span>
+                <span class="hm-legend" style="background:#a5d6a7;"></span>
+                <span class="hm-legend" style="background:#2e7d32;"></span>
+                <small class="text-muted ms-1">Лучше</small>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Tabs -->
+            <ul class="nav nav-tabs" id="heatmapTabs">
+                <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="tab" href="#tab-groups">
+                        <i class="fas fa-layer-group"></i> Группы
+                        <span class="badge bg-secondary ms-1">{{ heatmap_groups|length }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#tab-topics">
+                        <i class="fas fa-book"></i> Темы
+                        <span class="badge bg-secondary ms-1">{{ heatmap_topics|length }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#tab-difficulty">
+                        <i class="fas fa-signal"></i> Сложность
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#tab-tasklog">
+                        <i class="fas fa-history"></i> История
+                        <span class="badge bg-secondary ms-1">{{ task_log_stats.total }}</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content pt-3">
+                <!-- Tab: По группам -->
+                <div class="tab-pane active" id="tab-groups">
+                    <div class="heatmap-grid">
+                        {% for cell in heatmap_groups %}
+                        <div class="heatmap-tile level-{{ cell.level }}"
+                             title="{{ cell.name }}: {{ cell.avg_pct }}% ({{ cell.correct }}/{{ cell.total }})">
+                            <div class="tile-name">{{ cell.name|truncatechars:22 }}</div>
+                            <div class="tile-pct">{{ cell.avg_pct }}%</div>
+                            <div class="tile-bar">
+                                <div class="tile-bar-fill" style="width:{{ cell.avg_pct }}%"></div>
+                            </div>
+                            <div class="tile-count">{{ cell.correct }}/{{ cell.total }} верно</div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">Нет данных по группам аналогов</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Tab: По темам -->
+                <div class="tab-pane" id="tab-topics">
+                    <div class="heatmap-grid">
+                        {% for cell in heatmap_topics %}
+                        <div class="heatmap-tile level-{{ cell.level }}"
+                             title="{{ cell.name }}: {{ cell.avg_pct }}% ({{ cell.correct }}/{{ cell.total }})">
+                            <div class="tile-name">{{ cell.name|truncatechars:22 }}</div>
+                            <div class="tile-pct">{{ cell.avg_pct }}%</div>
+                            <div class="tile-bar">
+                                <div class="tile-bar-fill" style="width:{{ cell.avg_pct }}%"></div>
+                            </div>
+                            <div class="tile-count">{{ cell.correct }}/{{ cell.total }} верно</div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">Нет данных по темам</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Tab: По сложности -->
+                <div class="tab-pane" id="tab-difficulty">
+                    <div class="heatmap-grid">
+                        {% for cell in heatmap_difficulty %}
+                        <div class="heatmap-tile level-{{ cell.level }}"
+                             title="{{ cell.name }}: {{ cell.avg_pct }}% ({{ cell.correct }}/{{ cell.total }})">
+                            <div class="tile-name">{{ cell.name }}</div>
+                            <div class="tile-pct">{{ cell.avg_pct }}%</div>
+                            <div class="tile-bar">
+                                <div class="tile-bar-fill" style="width:{{ cell.avg_pct }}%"></div>
+                            </div>
+                            <div class="tile-count">{{ cell.correct }}/{{ cell.total }} верно</div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">Нет данных</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Tab: История заданий -->
+                <div class="tab-pane" id="tab-tasklog">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Событие</th>
+                                    <th>Задание</th>
+                                    <th>Группа</th>
+                                    <th class="text-center">Баллы</th>
+                                    <th class="text-center">%</th>
+                                    <th class="text-center">Рез.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in recent_task_log %}
+                                <tr>
+                                    <td><small>{{ log.completed_at|date:"d.m.Y" }}</small></td>
+                                    <td>
+                                        <small>{{ log.event.name|default:"—"|truncatechars:25 }}</small>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'tasks:detail' log.task.pk %}"
+                                           class="text-decoration-none">
+                                            <small>{{ log.task.text|striptags|truncatechars:40 }}</small>
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ log.analog_group.name|default:"—"|truncatechars:20 }}
+                                        </small>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if log.points is not None %}
+                                        <small>{{ log.points|floatformat:0 }}/{{ log.max_points|floatformat:0 }}</small>
+                                        {% else %}
+                                        <small class="text-muted">—</small>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if log.percentage is not None %}
+                                        <span class="badge bg-{% if log.percentage >= 80 %}success{% elif log.percentage >= 55 %}warning text-dark{% elif log.percentage >= 30 %}danger{% else %}danger{% endif %}"
+                                              style="min-width:42px;">
+                                            {{ log.percentage|floatformat:0 }}%
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if log.is_correct %}
+                                        <i class="fas fa-check-circle text-success"></i>
+                                        {% elif log.is_correct == False %}
+                                        <i class="fas fa-times-circle text-danger"></i>
+                                        {% else %}
+                                        <i class="fas fa-minus-circle text-muted"></i>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+
     <!-- Сильные/слабые темы -->
     {% if group_scores %}
     <div class="row mb-4">

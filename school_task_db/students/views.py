@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib import messages
 from django.urls import reverse_lazy
-from django.db.models import Avg, Count, Q
+from django.db.models import Avg, Count, F, Q
 
 from .models import Student, StudentGroup
 from .forms import StudentForm, StudentGroupForm
@@ -184,6 +184,100 @@ class StudentDetailView(DetailView):
                     score_counts, title='Распределение оценок'
                 )
             )
+
+        # === StudentTaskLog: детализация по заданиям ===
+        from .models import StudentTaskLog
+
+        task_logs = StudentTaskLog.objects.filter(student=student)
+        log_count = task_logs.count()
+
+        if log_count > 0:
+            log_agg = task_logs.aggregate(
+                avg_pct=Avg('percentage'),
+                correct=Count('id', filter=Q(is_correct=True)),
+                wrong=Count('id', filter=Q(is_correct=False)),
+            )
+            context['task_log_stats'] = {
+                'total': log_count,
+                'correct': log_agg['correct'],
+                'wrong': log_agg['wrong'],
+                'avg_pct': round(log_agg['avg_pct'] or 0, 1),
+            }
+
+            def _build_cells(qs):
+                cells = []
+                for row in qs:
+                    pct = row['avg_pct'] or 0
+                    if pct == 0:
+                        level = 0
+                    elif pct < 30:
+                        level = 1
+                    elif pct < 55:
+                        level = 2
+                    elif pct < 80:
+                        level = 3
+                    else:
+                        level = 4
+                    cells.append({
+                        'name': row['name'],
+                        'total': row['total'],
+                        'correct': row['correct'],
+                        'avg_pct': round(pct, 1),
+                        'level': level,
+                    })
+                return cells
+
+            # По группам аналогов
+            group_qs = task_logs.exclude(
+                analog_group__isnull=True
+            ).values(
+                name=F('analog_group__name')
+            ).annotate(
+                total=Count('id'),
+                correct=Count('id', filter=Q(is_correct=True)),
+                avg_pct=Avg('percentage'),
+            ).order_by('-avg_pct')
+            context['heatmap_groups'] = _build_cells(group_qs)
+
+            # По темам
+            topic_qs = task_logs.exclude(
+                topic__isnull=True
+            ).values(
+                name=F('topic__name')
+            ).annotate(
+                total=Count('id'),
+                correct=Count('id', filter=Q(is_correct=True)),
+                avg_pct=Avg('percentage'),
+            ).order_by('-avg_pct')
+            context['heatmap_topics'] = _build_cells(topic_qs)
+
+            # По сложности
+            diff_qs = task_logs.exclude(
+                difficulty__isnull=True
+            ).values(
+                'difficulty'
+            ).annotate(
+                total=Count('id'),
+                correct=Count('id', filter=Q(is_correct=True)),
+                avg_pct=Avg('percentage'),
+            ).order_by('difficulty')
+            diff_cells = []
+            for row in diff_qs:
+                pct = row['avg_pct'] or 0
+                level = 0 if pct == 0 else 1 if pct < 30 else 2 if pct < 55 else 3 if pct < 80 else 4
+                diff_cells.append({
+                    'name': f"Сложность {row['difficulty']}",
+                    'total': row['total'],
+                    'correct': row['correct'],
+                    'avg_pct': round(pct, 1),
+                    'level': level,
+                })
+            context['heatmap_difficulty'] = diff_cells
+
+            # История заданий (последние 50)
+            context['recent_task_log'] = task_logs.select_related(
+                'task', 'event', 'topic', 'analog_group'
+            ).order_by('-completed_at')[:50]
 
         return context
 

@@ -191,6 +191,73 @@
                 color: #666 !important;
             }
         }
+
+        /* === Heatmap tiles === */
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 8px;
+        }
+        .heatmap-tile {
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+            min-height: 72px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            cursor: default;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .heatmap-tile:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .tile-name {
+            font-size: 0.72rem;
+            font-weight: 600;
+            line-height: 1.2;
+            margin-bottom: 2px;
+        }
+        .tile-pct {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        .tile-bar {
+            height: 4px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+            margin: 3px 0;
+            overflow: hidden;
+        }
+        .tile-bar-fill {
+            height: 100%;
+            background: rgba(255,255,255,0.7);
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+        .tile-count {
+            font-size: 0.62rem;
+            opacity: 0.8;
+        }
+
+        /* Color levels (traffic light) */
+        .level-0 { background: #ebedf0; color: #656d76; }
+        .level-0 .tile-bar { background: rgba(0,0,0,0.1); }
+        .level-0 .tile-bar-fill { background: rgba(0,0,0,0.2); }
+        .level-1 { background: #ef9a9a; color: #b71c1c; }
+        .level-2 { background: #ffe082; color: #e65100; }
+        .level-3 { background: #a5d6a7; color: #1b5e20; }
+        .level-4 { background: #2e7d32; color: #ffffff; }
+
+        /* Legend squares */
+        .hm-legend {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
     </style>
     {% block extra_css %}{% endblock %}
 </head>

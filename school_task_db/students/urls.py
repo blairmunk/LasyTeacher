@@ -1,4 +1,5 @@
 from django.urls import path
+from django.views import View
 from . import views
 
 app_name = 'students'
@@ -14,5 +15,6 @@ urlpatterns = [
     path('student_groups/create/', views.StudentGroupCreateView.as_view(), name='group-create'),
     path('student_groups/<uuid:pk>/update/', views.StudentGroupUpdateView.as_view(), name='group-update'),
     path('<pk>/remedial/', views.RemedialWorkView.as_view(), name='remedial'),
+    path('remedial-wizard/', views.RemedialWizardView.as_view(), name='remedial-wizard'),
 
 ]

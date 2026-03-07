@@ -3,6 +3,9 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.db.models import Avg, Count, F, Q
+from django.views import View
+from django.shortcuts import get_object_or_404
+
 
 from tasks.models import Task
 from works.models import Work, Variant, VariantTask
@@ -539,3 +542,247 @@ class RemedialWorkView(DetailView):
         )
         return redirect('works:variant-detail', pk=variant.pk)
 
+class RemedialWizardView(View):
+    """Wizard: работа над ошибками для класса"""
+
+    def get(self, request):
+        """Step 1: выбор класса и параметров"""
+        groups = StudentGroup.objects.select_related('academic_year').order_by('name')
+
+        # Лимиты
+        LIMIT_CHOICES = [
+            ('tasks', 'По количеству заданий'),
+            ('weight', 'По суммарному весу (≈ сложность)'),
+            ('time', 'По времени выполнения (мин)'),
+        ]
+
+        context = {
+            'groups': groups,
+            'limit_choices': LIMIT_CHOICES,
+        }
+        return render(request, 'students/remedial_wizard_step1.html', context)
+
+    def post(self, request):
+        step = request.POST.get('step', '2')
+
+        if step == '2':
+            return self._step2_preview(request)
+        elif step == '3':
+            return self._step3_create(request)
+
+        return redirect('students:remedial-wizard')
+
+    def _step2_preview(self, request):
+        """Step 2: анализ и превью"""
+        group_id = request.POST.get('group_id')
+        threshold = int(request.POST.get('threshold', 70))
+        limit_type = request.POST.get('limit_type', 'tasks')
+        limit_value = int(request.POST.get('limit_value', 10))
+        work_name = request.POST.get('work_name', 'Работа над ошибками')
+
+        group = get_object_or_404(StudentGroup, pk=group_id)
+        students = group.get_active_students()
+
+        preview = []
+        for student in students:
+            task_logs = StudentTaskLog.objects.filter(student=student)
+            if not task_logs.exists():
+                preview.append({
+                    'student': student,
+                    'weak_groups': 0,
+                    'tasks_count': 0,
+                    'total_weight': 0,
+                    'est_time': 0,
+                    'available': False,
+                    'reason': 'Нет данных',
+                })
+                continue
+
+            done_task_ids = set(task_logs.values_list('task_id', flat=True))
+
+            # Слабые группы
+            weak_group_ids = list(
+                task_logs.exclude(analog_group__isnull=True)
+                .values('analog_group')
+                .annotate(avg_pct=Avg('percentage'))
+                .filter(avg_pct__lt=threshold)
+                .values_list('analog_group', flat=True)
+            )
+
+            # Собираем задания
+            candidate_tasks = []
+            for gid in weak_group_ids:
+                group_task_ids = set(
+                    TaskGroup.objects.filter(group_id=gid).values_list('task_id', flat=True)
+                )
+                available_ids = group_task_ids - done_task_ids
+                if available_ids:
+                    tasks_qs = Task.objects.filter(id__in=available_ids).values(
+                        'id', 'difficulty', 'estimated_time'
+                    )
+                    for t in tasks_qs:
+                        candidate_tasks.append({
+                            'id': t['id'],
+                            'difficulty': t['difficulty'] or 1,
+                            'estimated_time': t['estimated_time'] or 0,
+                            'group_id': gid,
+                        })
+
+            # Отбираем по лимиту
+            import random
+            random.shuffle(candidate_tasks)
+            selected = []
+            running_total = 0
+
+            for ct in candidate_tasks:
+                if limit_type == 'tasks' and len(selected) >= limit_value:
+                    break
+                elif limit_type == 'weight' and running_total >= limit_value:
+                    break
+                elif limit_type == 'time' and running_total >= limit_value:
+                    break
+
+                selected.append(ct)
+                if limit_type == 'tasks':
+                    running_total = len(selected)
+                elif limit_type == 'weight':
+                    running_total += ct['difficulty']
+                elif limit_type == 'time':
+                    running_total += ct['estimated_time'] or ct['difficulty'] * 3
+
+            total_weight = sum(t['difficulty'] for t in selected)
+            est_time = sum((t['estimated_time'] or t['difficulty'] * 3) for t in selected)
+
+            preview.append({
+                'student': student,
+                'weak_groups': len(weak_group_ids),
+                'tasks_count': len(selected),
+                'total_weight': total_weight,
+                'est_time': est_time,
+                'available': len(selected) > 0,
+                'reason': '' if selected else 'Нет слабых групп или все задания решены',
+                'task_ids': [t['id'] for t in selected],
+            })
+
+        context = {
+            'group': group,
+            'preview': preview,
+            'threshold': threshold,
+            'limit_type': limit_type,
+            'limit_value': limit_value,
+            'work_name': work_name,
+            'students_with_tasks': sum(1 for p in preview if p['available']),
+            'total_tasks': sum(p['tasks_count'] for p in preview),
+        }
+        return render(request, 'students/remedial_wizard_step2.html', context)
+
+    def _step3_create(self, request):
+        """Step 3: создание Work + Variants + Event"""
+        from events.models import Event, EventParticipation
+
+        group_id = request.POST.get('group_id')
+        work_name = request.POST.get('work_name', 'Работа над ошибками')
+        create_event = request.POST.get('create_event') == '1'
+        event_date = request.POST.get('event_date', '')
+
+        group = get_object_or_404(StudentGroup, pk=group_id)
+        selected_students = request.POST.getlist('selected_students')
+
+        if not selected_students:
+            messages.warning(request, 'Не выбрано ни одного ученика.')
+            return redirect('students:remedial-wizard')
+
+        # Собираем task_ids для каждого ученика
+        student_tasks = {}
+        for student_id in selected_students:
+            task_ids_str = request.POST.get(f'task_ids_{student_id}', '')
+            if task_ids_str:
+                student_tasks[student_id] = task_ids_str.split(',')
+
+        if not student_tasks:
+            messages.warning(request, 'Нет заданий для выбранных учеников.')
+            return redirect('students:remedial-wizard')
+
+        # Создаём Work
+        max_weight = max(
+            sum(
+                (Task.objects.get(pk=tid).difficulty or 1) for tid in tids
+            ) for tids in student_tasks.values()
+        ) if student_tasks else 0
+
+        work = Work.objects.create(
+            name=work_name,
+            work_type='remedial',
+            max_score=max_weight,
+            variant_counter=len(student_tasks),
+        )
+
+        # Создаём Event (если нужно)
+        event = None
+        if create_event:
+            import datetime
+            from django.utils import timezone as tz
+
+            if event_date:
+                try:
+                    date_obj = datetime.datetime.strptime(event_date, '%Y-%m-%d').date()
+                except ValueError:
+                    date_obj = tz.now().date()
+            else:
+                date_obj = tz.now().date()
+
+            event = Event.objects.create(
+                name=work_name,
+                work=work,
+                planned_date=tz.make_aware(
+                    datetime.datetime.combine(date_obj, datetime.time(9, 0))
+                ),
+                status='planned',
+                description=f'Работа над ошибками для {group.name}',
+            )
+
+
+        # Создаём варианты
+        variants_created = 0
+        for i, (student_id, task_ids) in enumerate(student_tasks.items(), 1):
+            student = Student.objects.get(pk=student_id)
+            tasks_list = list(Task.objects.filter(id__in=task_ids))
+            total_score = sum(t.difficulty or 1 for t in tasks_list)
+
+            variant = Variant.objects.create(
+                work=work,
+                number=i,
+                work_name_snapshot=work_name,
+                max_score_snapshot=total_score,
+                variant_type='remedial',
+                assigned_student=student,
+            )
+
+            for j, task in enumerate(tasks_list, 1):
+                VariantTask.objects.create(
+                    variant=variant,
+                    task=task,
+                    order=j,
+                    weight=float(task.difficulty or 1),
+                    max_points=task.difficulty or 1,
+                )
+
+            # EventParticipation
+            if event:
+                EventParticipation.objects.create(
+                    event=event,
+                    student=student,
+                    variant=variant,
+                    status='assigned',
+                )
+
+            variants_created += 1
+
+        msg = f'Создана работа «{work_name}» с {variants_created} вариантами.'
+        if event:
+            msg += f' Событие на {event_date} создано.'
+        messages.success(request, msg)
+
+        if event:
+            return redirect('events:detail', pk=event.pk)
+        return redirect('works:detail', pk=work.pk)

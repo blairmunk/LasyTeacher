@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'html_generator',      # HTML генератор
     'pdf_generator',       # PDF генератор
     'codifier',            # Кодификатор заданий
+    'site_settings',       # Настройки
 ]
 
 # Настройки для PDF генерации

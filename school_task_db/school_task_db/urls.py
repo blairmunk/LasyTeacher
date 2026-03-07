@@ -21,6 +21,7 @@ urlpatterns = [
     path('curriculum/', include('curriculum.urls')), # Учебные курсы
     path('review/', include('review.urls')), # Модуль проверки заданий
     path('codifier/', include('codifier.urls')), # Кодификатор заданий
+    path('settings/', include('site_settings.urls')), # Настройки сайта
 ]
 
 if settings.DEBUG:

@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block title %}Настройки{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2><i class="fas fa-cog"></i> Настройки</h2>
+
+            {% if messages %}
+            {% for msg in messages %}
+            <div class="alert alert-{{ msg.tags }} alert-dismissible fade show">
+                {{ msg }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- Школа -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="fas fa-school"></i> Школа и учитель</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label">{{ form.school_name.label }}</label>
+                                {{ form.school_name }}
+                                <div class="form-text">{{ form.school_name.help_text }}</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">{{ form.current_academic_year.label }}</label>
+                                {{ form.current_academic_year }}
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.teacher_name.label }}</label>
+                                {{ form.teacher_name }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.default_subject.label }}</label>
+                                {{ form.default_subject }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.logo.label }}</label>
+                            {{ form.logo }}
+                            <div class="form-text">{{ form.logo.help_text }}</div>
+                            {% if object.logo %}
+                            <div class="mt-2">
+                                <img src="{{ object.logo.url }}" alt="Логотип" style="max-height:60px;">
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Генерация -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="fas fa-sliders-h"></i> Генерация работ</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="form-label">{{ form.points_scale.label }}</label>
+                                {{ form.points_scale }}
+                                <div class="form-text">{{ form.points_scale.help_text }}</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">{{ form.default_variants_count.label }}</label>
+                                {{ form.default_variants_count }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PDF -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="fas fa-file-pdf"></i> Настройки PDF</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="form-label">{{ form.pdf_font_size.label }}</label>
+                                {{ form.pdf_font_size }}
+                                <div class="form-text">{{ form.pdf_font_size.help_text }}</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">{{ form.pdf_margin_top.label }}</label>
+                                {{ form.pdf_margin_top }}
+                                <div class="form-text">{{ form.pdf_margin_top.help_text }}</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">{{ form.pdf_margin_bottom.label }}</label>
+                                {{ form.pdf_margin_bottom }}
+                                <div class="form-text">{{ form.pdf_margin_bottom.help_text }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-save"></i> Сохранить настройки
+                </button>
+            </form>
+
+            <!-- Справочники -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-book"></i> Справочники</h5>
+                </div>
+                <div class="card-body">
+                    <a href="/admin/" class="btn btn-outline-secondary">
+                        <i class="fas fa-list"></i> Управление справочниками (через админку)
+                    </a>
+                    <a href="{% url 'tasks:source-list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-book-open"></i> Источники заданий
+                    </a>
+                    <a href="{% url 'codifier:list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-sitemap"></i> Кодификатор
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

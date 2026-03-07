@@ -56,7 +56,13 @@
     <div class="variant-section">
         <div class="variant-title">
             Вариант {{ variant_data.variant.number }}
+            {% if variant_data.student_name %}
+            <div style="font-size: 0.7em; font-weight: normal; margin-top: 4px; color: #333;">
+                {{ variant_data.student_name }}
+            </div>
+            {% endif %}
         </div>
+
 
         <!-- Задания варианта -->
         {% for task_data in variant_data.tasks %}

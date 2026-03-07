@@ -25,7 +25,7 @@ class WorkHtmlGenerator(BaseHtmlGenerator):
     def prepare_context(self, work) -> Dict[str, Any]:
         """Подготавливает контекст для работы с обработкой формул"""
         
-        variants = work.variant_set.all().order_by('number')
+        variants = work.variant_set.select_related('assigned_student').order_by('number')
         
         # Подготавливаем данные для каждого варианта
         all_variants_data = []
@@ -64,6 +64,16 @@ class WorkHtmlGenerator(BaseHtmlGenerator):
     def _prepare_variant_context(self, variant):
         """ОБНОВЛЕНО: Подготавливает контекст для одного варианта с обработкой формул и weight из VariantTask"""
         print(f"🔍 HTML: Обрабатываем вариант {variant.number}")
+
+        # ФИО ученика для персональных вариантов
+        student_name = ''
+        print(f"📛 variant.assigned_student = {getattr(variant, 'assigned_student', 'NO ATTR')}")
+        if hasattr(variant, 'assigned_student') and variant.assigned_student:
+            student_name = variant.assigned_student.get_full_name()
+            print(f"📛 student_name = '{student_name}'")
+
+
+
         
         tasks = variant.tasks.all().order_by('id')
         
@@ -255,6 +265,7 @@ class WorkHtmlGenerator(BaseHtmlGenerator):
 
         return {
             'variant': variant,
+            'student_name': student_name,
             'tasks': prepared_tasks,
             'total_tasks': len(prepared_tasks),
             'total_weight': total_weight,

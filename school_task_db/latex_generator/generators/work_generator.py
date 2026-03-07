@@ -35,7 +35,7 @@ class WorkLatexGenerator(BaseLatexGenerator):
     def prepare_context(self, work) -> Dict[str, Any]:
         """Подготавливает контекст для работы с обработкой формул"""
         
-        variants = work.variant_set.all().order_by('number')
+        variants = work.variant_set.select_related('assigned_student').order_by('number')
         
         # Подготавливаем данные для каждого варианта
         all_variants_data = []
@@ -80,6 +80,15 @@ class WorkLatexGenerator(BaseLatexGenerator):
     def _prepare_variant_context(self, variant):
         """ОБНОВЛЕНО: Подготовка контекста с поддержкой 4 типов контента и weight из VariantTask"""
         print(f"🔍 DEBUG: Обрабатываем вариант {variant.number}")
+
+        # ФИО ученика для персональных вариантов
+        student_name = ''
+        print(f"📛 variant.assigned_student = {getattr(variant, 'assigned_student', 'NO ATTR')}")
+        if hasattr(variant, 'assigned_student') and variant.assigned_student:
+            student_name = variant.assigned_student.get_full_name()
+            print(f"📛 student_name = '{student_name}'")
+
+
         
         # Получаем конфигурацию контента
         content_config = getattr(self, '_content_config', {})
@@ -280,6 +289,7 @@ class WorkLatexGenerator(BaseLatexGenerator):
 
         return {
             'variant': variant,
+            'student_name': student_name,
             'tasks': prepared_tasks,
             'total_tasks': len(prepared_tasks),
             'total_weight': total_weight,
@@ -288,6 +298,7 @@ class WorkLatexGenerator(BaseLatexGenerator):
             'errors': variant_errors,
             'warnings': variant_warnings,
         }
+
 
     
     def generate(self, work, output_format='pdf'):

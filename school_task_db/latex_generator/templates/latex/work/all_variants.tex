@@ -74,7 +74,12 @@
 % Заголовок варианта
 \begin{center}
     {\Large\bfseries Вариант {{ variant_data.variant.number }} }
+    {% if variant_data.student_name %}
+    \\[0.3cm]
+    {\large {{ variant_data.student_name }} }
+    {% endif %}
 \end{center}
+
 
 \vspace{0.8cm}
 

@@ -94,9 +94,14 @@
                 {% endif %}
             </div>
             <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-primary" onclick="window.print()">
-                    <i class="fas fa-print"></i> Печать
-                </button>
+                <form method="post" action="{% url 'works:create-work-from-orphans' %}" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="variant_ids" value="{{ variant.pk }}">
+                    <input type="hidden" name="work_name" value="{{ variant.display_name }}">
+                    <button type="submit" class="btn btn-sm btn-success">
+                        <i class="fas fa-plus-circle"></i> Создать работу → PDF
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -107,17 +112,28 @@
         {% if variant.assigned_student %}
         — {{ variant.assigned_student.get_full_name }}
         {% endif %}
-        <button class="btn btn-sm btn-outline-primary ms-3" onclick="window.print()">
-            <i class="fas fa-print"></i> Печать
-        </button>
+        <form method="post" action="{% url 'works:create-work-from-orphans' %}" class="d-inline ms-3">
+            {% csrf_token %}
+            <input type="hidden" name="variant_ids" value="{{ variant.pk }}">
+            <input type="hidden" name="work_name" value="{{ variant.display_name }}">
+            <button type="submit" class="btn btn-sm btn-success">
+                <i class="fas fa-plus-circle"></i> Создать работу → PDF
+            </button>
+        </form>
+
     </div>
     {% elif not variant.work %}
     <div class="orphan-warning mb-4">
         <i class="fas fa-exclamation-triangle text-warning"></i>
         <strong>Вариант-сирота.</strong> Не привязан к работе.
-        <button class="btn btn-sm btn-outline-secondary ms-3" onclick="window.print()">
-            <i class="fas fa-print"></i> Печать
-        </button>
+        <form method="post" action="{% url 'works:create-work-from-orphans' %}" class="d-inline ms-3">
+            {% csrf_token %}
+            <input type="hidden" name="variant_ids" value="{{ variant.pk }}">
+            <input type="hidden" name="work_name" value="{{ variant.display_name }}">
+            <button type="submit" class="btn btn-sm btn-success">
+                <i class="fas fa-plus-circle"></i> Создать работу → PDF
+            </button>
+        </form>
     </div>
     {% endif %}
     {% endif %}

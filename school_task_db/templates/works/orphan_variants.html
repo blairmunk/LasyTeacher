@@ -7,60 +7,133 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2><i class="fas fa-unlink text-warning"></i> Варианты-сироты</h2>
-            <p class="text-muted mb-0">Варианты, не привязанные к работе (работа удалена или отвязана)</p>
+            <p class="text-muted mb-0">Варианты, не привязанные к работе</p>
         </div>
-        <div>
-            <span class="badge bg-warning fs-5">{{ total_orphans }}</span>
-            <a href="{% url 'works:variant-list' %}" class="btn btn-secondary ms-2">
+        <div class="d-flex gap-2">
+            <span class="badge bg-warning fs-5 align-self-center">{{ total_orphans }}</span>
+            <a href="{% url 'works:variant-list' %}" class="btn btn-secondary">
                 <i class="fas fa-list"></i> Все варианты
             </a>
         </div>
     </div>
 
     {% if variants %}
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead class="table-light">
-                <tr>
-                    <th>UUID</th>
-                    <th>Название (снимок)</th>
-                    <th>Вариант</th>
-                    <th>Заданий</th>
-                    <th>Макс. балл</th>
-                    <th>Создан</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for variant in variants %}
-                <tr>
-                    <td>
-                        <span class="badge bg-secondary" style="font-family:monospace;">
-                            #{{ variant.get_short_uuid }}
-                        </span>
-                    </td>
-                    <td>{{ variant.work_name_snapshot|default:"—" }}</td>
-                    <td><strong>{{ variant.number }}</strong></td>
-                    <td>{{ variant.varianttask_set.count }}</td>
-                    <td>{{ variant.total_max_points }}</td>
-                    <td>{{ variant.created_at|date:"d.m.Y H:i" }}</td>
-                    <td>
-                        <a href="{% url 'works:variant-detail' variant.pk %}" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+    <form method="post" action="{% url 'works:create-work-from-orphans' %}" id="orphanForm">
+        {% csrf_token %}
+
+        <!-- Bulk actions -->
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body py-2 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="selectAll"
+                               onchange="document.querySelectorAll('.orphan-cb').forEach(c=>c.checked=this.checked)">
+                        <label class="form-check-label" for="selectAll">Выбрать все</label>
+                    </div>
+                    <span class="text-muted" id="selectedCount">0 выбрано</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <input type="text" name="work_name" class="form-control form-control-sm"
+                           placeholder="Название работы..." style="width:250px;"
+                           value="Работа над ошибками">
+                    <button type="submit" class="btn btn-sm btn-success" id="createWorkBtn" disabled>
+                        <i class="fas fa-plus-circle"></i> Создать работу из выбранных
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:40px;"></th>
+                        <th>UUID</th>
+                        <th>Название</th>
+                        <th>Тип</th>
+                        <th>Ученик</th>
+                        <th>Заданий</th>
+                        <th>Макс. балл</th>
+                        <th>Создан</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for variant in variants %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" name="variant_ids" value="{{ variant.pk }}"
+                                   class="form-check-input orphan-cb">
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary" style="font-family:monospace;">
+                                #{{ variant.get_short_uuid }}
+                            </span>
+                        </td>
+                        <td>{{ variant.display_name|truncatechars:40 }}</td>
+                        <td>
+                            {% if variant.variant_type == 'remedial' %}
+                            <span class="badge bg-info">
+                                <i class="fas fa-first-aid"></i> Ошибки
+                            </span>
+                            {% elif variant.variant_type == 'individual' %}
+                            <span class="badge bg-primary">
+                                <i class="fas fa-user"></i> Индив.
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary">Обычный</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if variant.assigned_student %}
+                            <a href="{% url 'students:detail' variant.assigned_student.pk %}"
+                               class="text-decoration-none">
+                                {{ variant.assigned_student.get_short_name }}
+                            </a>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ variant.varianttask_set.count }}</td>
+                        <td>{{ variant.total_max_points }}</td>
+                        <td><small>{{ variant.created_at|date:"d.m.Y H:i" }}</small></td>
+                        <td>
+                            <a href="{% url 'works:variant-detail' variant.pk %}"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </form>
 
     {% include 'includes/pagination.html' with page_obj=page_obj %}
 
     {% else %}
     <div class="alert alert-success">
-        <i class="fas fa-check-circle"></i> Нет вариантов-сирот. Все варианты привязаны к работам.
+        <i class="fas fa-check-circle"></i> Нет вариантов-сирот.
     </div>
     {% endif %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cbs = document.querySelectorAll('.orphan-cb');
+    const countEl = document.getElementById('selectedCount');
+    const btn = document.getElementById('createWorkBtn');
+
+    function updateCount() {
+        const checked = document.querySelectorAll('.orphan-cb:checked').length;
+        countEl.textContent = checked + ' выбрано';
+        btn.disabled = checked === 0;
+    }
+    cbs.forEach(cb => cb.addEventListener('change', updateCount));
+    document.getElementById('selectAll')?.addEventListener('change', function() {
+        setTimeout(updateCount, 10);
+    });
+});
+</script>
 {% endblock %}

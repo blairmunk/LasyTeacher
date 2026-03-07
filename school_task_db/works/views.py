@@ -1,10 +1,12 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.decorators.http import require_http_methods
 
 from task_groups.models import AnalogGroup
 from .models import Work, Variant, VariantTask, WorkAnalogGroup
 from .forms import WorkForm, WorkAnalogGroupFormSet, VariantGenerationForm
+
 
 
 class WorkListView(ListView):
@@ -235,3 +237,55 @@ def bulk_delete_variants(request, work_id):
         'deleted': deleted_count,
         'remaining': work.variant_set.count(),
     })
+
+@require_http_methods(["POST"])
+def create_work_from_orphans(request):
+    """Создать работу из выбранных вариантов-сирот"""
+    variant_ids = request.POST.getlist('variant_ids')
+    work_name = request.POST.get('work_name', 'Работа над ошибками').strip()
+
+    if not variant_ids:
+        messages.warning(request, 'Не выбрано ни одного варианта.')
+        return redirect('works:orphan-variants')
+
+    variants = Variant.objects.filter(pk__in=variant_ids, work__isnull=True)
+    if not variants.exists():
+        messages.error(request, 'Выбранные варианты не найдены или уже привязаны.')
+        return redirect('works:orphan-variants')
+
+    # Определяем тип работы
+    has_remedial = variants.filter(variant_type='remedial').exists()
+    has_individual = variants.filter(variant_type='individual').exists()
+    if has_remedial:
+        work_type = 'remedial'
+    elif has_individual:
+        work_type = 'individual'
+    else:
+        work_type = 'test'
+
+    # Макс. балл = максимум из вариантов
+    max_scores = [v.total_max_points for v in variants]
+    max_score = max(max_scores) if max_scores else 0
+
+    # Создаём работу
+    work = Work.objects.create(
+        name=work_name or 'Работа над ошибками',
+        work_type=work_type,
+        max_score=max_score,
+        variant_counter=variants.count(),
+    )
+
+    # Привязываем варианты
+    for i, variant in enumerate(variants.order_by('created_at'), 1):
+        variant.work = work
+        variant.number = i
+        variant.work_name_snapshot = work.name
+        variant.max_score_snapshot = max_score
+        variant.save()
+
+    messages.success(
+        request,
+        f'Создана работа «{work.name}» с {variants.count()} вариантами. '
+        f'Теперь можно генерировать PDF!'
+    )
+    return redirect('works:detail', pk=work.pk)

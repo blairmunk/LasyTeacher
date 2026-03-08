@@ -3,8 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <title>Работа над ошибками — {{ student.get_short_name }}</title>
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+    window.MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']],
+            packages: {'[+]': ['ams', 'newcommand', 'configMacros']}
+        },
+        svg: {
+            fontCache: 'global'
+        },
+        startup: {
+            ready: () => {
+                MathJax.startup.defaultReady();
+                MathJax.startup.promise.then(() => {
+                    window.mathJaxDone = true;
+                    document.body.setAttribute('data-mathjax-done', 'true');
+                    console.log('✅ MathJax готов');
+                });
+            }
+        }
+    };
+    </script>
+    <script id="MathJax-script" async
+            src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
     <style>
         body { font-family: 'Times New Roman', serif; max-width: 210mm; margin: 0 auto; padding: 20mm; }
         h1 { text-align: center; font-size: 22pt; margin-bottom: 0.3cm; }

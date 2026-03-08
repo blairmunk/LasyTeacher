@@ -73,120 +73,33 @@
         </div>
     </div>
 
-    {% if not variant.work %}
     {% if variant.variant_type == 'remedial' %}
     <div class="alert alert-info mb-4">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <i class="fas fa-first-aid text-primary"></i>
-                <strong>Работа над ошибками</strong>
-                {% if variant.assigned_student %}
-                — {{ variant.assigned_student.get_full_name }}
-                    <a href="{% url 'students:detail' variant.assigned_student.pk %}"
-                       class="text-decoration-none ms-1">
-                        <i class="fas fa-external-link-alt"></i>
-                    </a>
-                {% endif %}
+        <div>
+            <i class="fas fa-first-aid text-primary"></i>
+            <strong>Работа над ошибками</strong>
+            {% if variant.assigned_student %}
+            — {{ variant.assigned_student.get_full_name }}
+                <a href="{% url 'students:detail' variant.assigned_student.pk %}"
+                   class="text-decoration-none ms-1">
+                    <i class="fas fa-external-link-alt"></i>
+                </a>
+            {% endif %}
+            {% if variant.source_work %}
+            <br><small class="text-muted">
+                Источник: {{ variant.source_work.name }}
+            </small>
+            {% endif %}
+
+            <div class="mt-2 d-flex gap-2 flex-wrap">
                 {% if variant.source_work %}
-                <br><small class="text-muted">
-                    Источник: {{ variant.source_work.name }}
-                </small>
-                {% endif %}
-                {% if variant.variant_type == 'remedial' and variant.source_work %}
                 <a href="{% url 'students:remedial-solutions' variant.pk %}"
-                   class="btn btn-info btn-sm mt-2">
+                   class="btn btn-info btn-sm">
                     <i class="fas fa-search"></i> Разбор ошибок с решениями
                 </a>
                 {% endif %}
-                {% if variant.variant_type == 'remedial' and variant.source_work %}
 
-                <!-- Генерация рабочего листа -->
-                <div class="card mt-3">
-                    <div class="card-header bg-success bg-opacity-10">
-                        <h6 class="mb-0"><i class="fas fa-print text-success"></i> Генерация рабочего листа</h6>
-                    </div>
-                    <div class="card-body">
-                        <form id="remedialGenerateForm">
-                            {% csrf_token %}
-                            <div class="row g-2 align-items-end">
-                                <div class="col-auto">
-                                    <label class="form-label">Формат</label>
-                                    <select name="generator_type" class="form-select form-select-sm">
-                                        <option value="pdf">PDF (Playwright)</option>
-                                        <option value="latex">LaTeX → PDF</option>
-                                        <option value="html">HTML</option>
-                                    </select>
-                                </div>
-                                <div class="col-auto">
-                                    <label class="form-label">Контент</label>
-                                    <select name="answer_type" class="form-select form-select-sm">
-                                        <option value="with_short_solutions">С краткими решениями</option>
-                                        <option value="with_full_solutions">С полными решениями</option>
-                                        <option value="with_answers">Только ответы</option>
-                                        <option value="tasks_only">Без решений</option>
-                                    </select>
-                                </div>
-                                <div class="col-auto">
-                                    <label class="form-label">Размер</label>
-                                    <select name="format" class="form-select form-select-sm">
-                                        <option value="A4">A4</option>
-                                        <option value="A5">A5</option>
-                                    </select>
-                                </div>
-                                <div class="col-auto">
-                                    <button type="submit" class="btn btn-success btn-sm" id="btnGenerateRemedial">
-                                        <i class="fas fa-file-pdf"></i> Сгенерировать
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                        <div id="remedialGenerateResult" class="mt-2"></div>
-                    </div>
-                </div>
-
-                <script>
-                document.getElementById('remedialGenerateForm').addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const btn = document.getElementById('btnGenerateRemedial');
-                    const result = document.getElementById('remedialGenerateResult');
-                    btn.disabled = true;
-                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Генерация...';
-                    result.innerHTML = '';
-
-                    const formData = new FormData(this);
-                    fetch("{% url 'works:generate-remedial-sheet' variant.pk %}", {
-                        method: 'POST',
-                        body: formData,
-                    })
-                    .then(r => r.json())
-                    .then(data => {
-                        btn.disabled = false;
-                        btn.innerHTML = '<i class="fas fa-file-pdf"></i> Сгенерировать';
-                        if (data.status === 'success') {
-                            let html = '<div class="alert alert-success py-1">';
-                            html += '<i class="fas fa-check"></i> ' + data.message + '<br>';
-                            data.files.forEach(f => {
-                                html += `<a href="${f.url}" class="btn btn-sm btn-outline-primary mt-1" download>`;
-                                html += `<i class="fas fa-download"></i> ${f.filename}</a> `;
-                            });
-                            html += '</div>';
-                            result.innerHTML = html;
-                        } else {
-                            result.innerHTML = `<div class="alert alert-danger py-1">${data.message}</div>`;
-                        }
-                    })
-                    .catch(err => {
-                        btn.disabled = false;
-                        btn.innerHTML = '<i class="fas fa-file-pdf"></i> Сгенерировать';
-                        result.innerHTML = `<div class="alert alert-danger py-1">Ошибка: ${err}</div>`;
-                    });
-                });
-                </script>
-                {% endif %}
-
-
-            </div>
-            <div class="d-flex gap-2">
+                {% if not variant.work %}
                 <form method="post" action="{% url 'works:create-work-from-orphans' %}" class="d-inline">
                     {% csrf_token %}
                     <input type="hidden" name="variant_ids" value="{{ variant.pk }}">
@@ -195,9 +108,96 @@
                         <i class="fas fa-plus-circle"></i> Создать работу → PDF
                     </button>
                 </form>
+                {% endif %}
             </div>
         </div>
     </div>
+
+    {% if variant.source_work %}
+    <!-- Генерация рабочего листа -->
+    <div class="card mb-4">
+        <div class="card-header bg-success bg-opacity-10">
+            <h6 class="mb-0"><i class="fas fa-print text-success"></i> Генерация рабочего листа</h6>
+        </div>
+        <div class="card-body">
+            <form id="remedialGenerateForm">
+                {% csrf_token %}
+                <div class="row g-2 align-items-end">
+                    <div class="col-auto">
+                        <label class="form-label">Формат</label>
+                        <select name="generator_type" class="form-select form-select-sm">
+                            <option value="pdf">PDF (Playwright)</option>
+                            <option value="latex">LaTeX → PDF</option>
+                            <option value="html">HTML</option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <label class="form-label">Контент</label>
+                        <select name="answer_type" class="form-select form-select-sm">
+                            <option value="with_short_solutions">С краткими решениями</option>
+                            <option value="with_full_solutions">С полными решениями</option>
+                            <option value="with_answers">Только ответы</option>
+                            <option value="tasks_only">Без решений</option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <label class="form-label">Размер</label>
+                        <select name="format" class="form-select form-select-sm">
+                            <option value="A4">A4</option>
+                            <option value="A5">A5</option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-success btn-sm" id="btnGenerateRemedial">
+                            <i class="fas fa-file-pdf"></i> Сгенерировать
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <div id="remedialGenerateResult" class="mt-2"></div>
+        </div>
+    </div>
+
+    <script>
+    document.getElementById('remedialGenerateForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnGenerateRemedial');
+        const result = document.getElementById('remedialGenerateResult');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Генерация...';
+        result.innerHTML = '';
+
+        const formData = new FormData(this);
+        fetch("{% url 'works:generate-remedial-sheet' variant.pk %}", {
+            method: 'POST',
+            body: formData,
+        })
+        .then(r => r.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-file-pdf"></i> Сгенерировать';
+            if (data.status === 'success') {
+                let html = '<div class="alert alert-success py-1">';
+                html += '<i class="fas fa-check"></i> ' + data.message + '<br>';
+                data.files.forEach(f => {
+                    html += `<a href="${f.url}" class="btn btn-sm btn-outline-primary mt-1" download>`;
+                    html += `<i class="fas fa-download"></i> ${f.filename}</a> `;
+                });
+                html += '</div>';
+                result.innerHTML = html;
+            } else {
+                result.innerHTML = `<div class="alert alert-danger py-1">${data.message}</div>`;
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-file-pdf"></i> Сгенерировать';
+            result.innerHTML = `<div class="alert alert-danger py-1">Ошибка: ${err}</div>`;
+        });
+    });
+    </script>
+    {% endif %}
+
     {% elif variant.variant_type == 'individual' %}
     <div class="alert alert-info mb-4">
         <i class="fas fa-user"></i>
@@ -205,6 +205,7 @@
         {% if variant.assigned_student %}
         — {{ variant.assigned_student.get_full_name }}
         {% endif %}
+        {% if not variant.work %}
         <form method="post" action="{% url 'works:create-work-from-orphans' %}" class="d-inline ms-3">
             {% csrf_token %}
             <input type="hidden" name="variant_ids" value="{{ variant.pk }}">
@@ -213,8 +214,9 @@
                 <i class="fas fa-plus-circle"></i> Создать работу → PDF
             </button>
         </form>
-
+        {% endif %}
     </div>
+
     {% elif not variant.work %}
     <div class="orphan-warning mb-4">
         <i class="fas fa-exclamation-triangle text-warning"></i>
@@ -229,7 +231,7 @@
         </form>
     </div>
     {% endif %}
-    {% endif %}
+
 
     <!-- Инфо-карточка -->
     <div class="variant-info-bar mb-4">

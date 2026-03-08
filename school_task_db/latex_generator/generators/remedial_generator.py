@@ -230,7 +230,10 @@ class RemedialSheetLatexGenerator(BaseLatexGenerator):
 
     def generate_for_variant(self, variant, output_format='pdf',
                               content_config=None):
-        """Точка входа: генерация для конкретного варианта."""
+        """Точка входа: генерация для конкретного варианта.
+        
+        Вся логика render + compile в базовом классе.
+        """
         self._variant = variant
         self._content_config = content_config or {
             'include_short_solutions': True,
@@ -239,35 +242,5 @@ class RemedialSheetLatexGenerator(BaseLatexGenerator):
         }
 
         work = variant.work
-        return self.generate(work, output_format)
-
-    def generate(self, work, output_format='pdf'):
-        """Генерация с обработкой ошибок."""
-        try:
-            files = super().generate(work, output_format)
-
-            if output_format == 'pdf':
-                context = self.prepare_context(work)
-                latex_content = self.render_template(context)
-
-                output_dir = Path(self.output_dir)
-                output_dir.mkdir(parents=True, exist_ok=True)
-
-                tex_path = output_dir / self.get_output_filename(work)
-                tex_path.write_text(latex_content, encoding='utf-8')
-
-                try:
-                    result = latex_compiler.compile_latex(
-                        str(tex_path), output_dir=str(output_dir)
-                    )
-                    if result.get('pdf_path'):
-                        return [result['pdf_path']]
-                except LaTeXCompilationError as e:
-                    logger.error(f'Ошибка компиляции LaTeX: {e}')
-                    return [str(tex_path)]
-
-            return files
-
-        except Exception as e:
-            logger.error(f'Ошибка генерации remedial sheet: {e}')
-            raise
+        # Базовый generate(): prepare_context → render_to_string → .tex → compile_latex_to_pdf
+        return super().generate(work, output_format)

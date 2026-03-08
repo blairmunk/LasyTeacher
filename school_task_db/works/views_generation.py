@@ -292,7 +292,7 @@ def generate_remedial_sheet_ajax(request, variant_id):
         download_urls = []
         for f in files:
             filename = Path(f).name
-            url = reverse('works:download-generated', kwargs={
+            url = reverse('works:download_generated_file', kwargs={
                 'file_type': file_type,
                 'filename': filename
             })
@@ -313,12 +313,15 @@ def generate_remedial_sheet_ajax(request, variant_id):
 
 
 def _generate_remedial_latex(variant, content_config, pdf_format='A4'):
+    """LaTeX → PDF (нативная компиляция)."""
     from latex_generator.generators.remedial_generator import RemedialSheetLatexGenerator
 
+    content_config['page_format'] = pdf_format
     generator = RemedialSheetLatexGenerator(output_dir='web_latex_output')
     return generator.generate_for_variant(
-        variant, output_format='tex', content_config=content_config
+        variant, output_format='pdf', content_config=content_config
     )
+
 
 
 def _generate_remedial_html(variant, content_config):

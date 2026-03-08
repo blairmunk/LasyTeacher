@@ -44,6 +44,10 @@ cat > templates/students/remedial_from_event.html << 'EOF'
                             <input type="checkbox" name="selected_students"
                                    value="{{ a.student.pk }}"
                                    class="form-check-input student-cb" checked>
+                            {% elif a.status == 'needs_attention' %}
+                            <input type="checkbox" name="selected_students"
+                                   value="{{ a.student.pk }}"
+                                   class="form-check-input student-cb">
                             {% elif a.score_pct != None %}
                             <input type="checkbox" name="selected_students"
                                    value="{{ a.student.pk }}"
@@ -83,7 +87,9 @@ cat > templates/students/remedial_from_event.html << 'EOF'
                         </td>
                         <td>
                             {% if a.status == 'weak' %}
-                            <span class="badge bg-warning text-dark">Нужна работа</span>
+                            <span class="badge bg-danger">Нужна работа</span>
+                            {% elif a.status == 'needs_attention' %}
+                            <span class="badge bg-warning text-dark">Внимание</span>
                             {% elif a.status == 'ok' %}
                             <span class="badge bg-success">OK</span>
                             {% else %}

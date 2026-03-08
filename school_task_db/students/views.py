@@ -958,8 +958,27 @@ class RemedialFromEventView(View):
                 if isinstance(data, dict):
                     t_pts = data.get('points', 0)
                     t_max = data.get('max_points', 1)
-                    if t_max > 0 and (t_pts / t_max) < 0.7:
-                        weak_tasks.append(task_id)
+                    if t_max > 0:
+                        t_pct = t_pts / t_max
+                        # Для заданий с max ≤ 2: слабое только если 0 баллов
+                        # Для остальных: слабое если < 50%
+                        if t_max <= 2:
+                            is_weak = (t_pts == 0)
+                        else:
+                            is_weak = (t_pct < 0.5)
+                        if is_weak:
+                            weak_tasks.append(task_id)
+
+
+            # Статус: учитываем и оценку и процент
+            if mark.score and mark.score <= 2:
+                status = 'weak'
+            elif score_pct < 50:
+                status = 'weak'
+            elif score_pct < 70 or (mark.score and mark.score <= 3 and len(weak_tasks) > 0):
+                status = 'needs_attention'
+            else:
+                status = 'ok'
 
             analysis.append({
                 'student': ep.student,
@@ -970,14 +989,15 @@ class RemedialFromEventView(View):
                 'mark_score': mark.score,
                 'weak_tasks_count': len(weak_tasks),
                 'weak_tasks': weak_tasks,
-                'status': 'ok' if score_pct >= 70 else 'weak',
+                'status': status,
             })
+
 
         context = {
             'event': event,
             'work': work,
             'analysis': analysis,
-            'weak_students': sum(1 for a in analysis if a.get('status') == 'weak'),
+                        'weak_students': sum(1 for a in analysis if a.get('status') in ('weak', 'needs_attention')),
         }
         return render(request, 'students/remedial_from_event.html', context)
 

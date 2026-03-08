@@ -27,6 +27,12 @@
             </a>
             {% endif %}
 
+            {% if event.work %}
+            <a href="{% url 'works:detail' event.work.pk %}#generation" class="btn btn-outline-success btn-sm">
+                <i class="fas fa-print"></i> Печать работы
+            </a>
+            {% endif %}
+
             <a href="{% url 'events:update' event.pk %}" class="btn btn-outline-primary btn-sm">
                 <i class="fas fa-edit"></i> Редактировать
             </a>

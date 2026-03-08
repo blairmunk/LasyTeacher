@@ -22,6 +22,9 @@ urlpatterns = [
     path('ajax/generate/variant/<pk:variant_id>/', views_generation.generate_variant_ajax, name='generate_variant_ajax'),
     path('ajax/generation-status/', views_generation.generation_status_ajax, name='generation_status_ajax'),
     path('create-from-orphans/', views.create_work_from_orphans, name='create-work-from-orphans'),
+    path('ajax/generate/remedial/<uuid:variant_id>/',
+         views_generation.generate_remedial_sheet_ajax,
+         name='generate-remedial-sheet'),
 
 ]
 

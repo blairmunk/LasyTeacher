@@ -1,0 +1,138 @@
+\documentclass[12pt,{{ page_format|lower }}]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian]{babel}
+\usepackage[{{ page_geometry }}]{geometry}
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+
+% Цвета для статусов
+\definecolor{failcolor}{RGB}{248, 215, 218}
+\definecolor{partialcolor}{RGB}{255, 243, 205}
+\definecolor{okcolor}{RGB}{212, 237, 218}
+
+% Настройка отступов
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+% Колонтитулы
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{Работа над ошибками}
+\fancyhead[R]{\thepage}
+\fancyfoot[C]{ {{ student_name }} }
+
+\begin{document}
+
+% ═══════════════════════════════════════════════
+%  ЗАГОЛОВОК
+% ═══════════════════════════════════════════════
+\begin{center}
+    {\LARGE\bfseries Работа над ошибками}\\[0.5cm]
+    {\large Ученик: \textbf{ {{ student_name }} } }\\[0.3cm]
+    {% if source_work_name %}
+    {\normalsize Исходная работа: {{ source_work_name }} }\\[0.2cm]
+    {% endif %}
+    {% if mark_score %}
+    {\normalsize Оценка: \textbf{ {{ mark_score }} } \hspace{1cm}
+    Баллы: {{ mark_points }}/{{ mark_max_points }} }\\[0.2cm]
+    {% endif %}
+    {\small \today}
+\end{center}
+
+\vspace{0.5cm}
+\hrule
+\vspace{0.5cm}
+
+% ═══════════════════════════════════════════════
+%  СЕКЦИЯ 1: РАЗБОР ОШИБОК
+% ═══════════════════════════════════════════════
+{% if original_tasks %}
+{\Large\bfseries Часть 1. Разбор ошибок}
+
+\vspace{0.3cm}
+{\small\textit{Внимательно разберите задания, в которых были допущены ошибки.
+Изучите правильное решение.}}
+\vspace{0.3cm}
+
+{% for task in original_tasks %}
+
+% --- Задание {{ task.number }} ---
+{% if task.status == 'fail' %}
+\begin{tcolorbox}[colback=failcolor, colframe=red!50!black, title={Задание {{ task.number }} — НЕ РЕШЕНО ({{ task.points }}/{{ task.max_points }} б.) {% if task.group_name %}\hfill {\small {{ task.group_name }} }{% endif %}}]
+{% elif task.status == 'partial' %}
+\begin{tcolorbox}[colback=partialcolor, colframe=orange!50!black, title={Задание {{ task.number }} — ЧАСТИЧНО ({{ task.points }}/{{ task.max_points }} б.) {% if task.group_name %}\hfill {\small {{ task.group_name }} }{% endif %}}]
+{% else %}
+\begin{tcolorbox}[colback=okcolor, colframe=green!50!black, title={Задание {{ task.number }} — ВЕРНО ({{ task.points }}/{{ task.max_points }} б.) {% if task.group_name %}\hfill {\small {{ task.group_name }} }{% endif %}}]
+{% endif %}
+
+\textbf{Условие:}
+
+{{ task.latex_content|safe }}
+
+\vspace{0.3cm}
+\textbf{Ответ:} {{ task.answer|safe }}
+
+{% if show_solutions and task.short_solution %}
+\vspace{0.3cm}
+\textbf{Краткое решение:}
+
+{{ task.short_solution|safe }}
+{% endif %}
+
+{% if show_full_solutions and task.full_solution %}
+\vspace{0.3cm}
+\textbf{Полное решение:}
+
+{{ task.full_solution|safe }}
+{% endif %}
+
+\end{tcolorbox}
+
+\vspace{0.3cm}
+
+{% endfor %}
+
+\newpage
+{% endif %}
+
+% ═══════════════════════════════════════════════
+%  СЕКЦИЯ 2: ТРЕНИРОВКА
+% ═══════════════════════════════════════════════
+{\Large\bfseries Часть 2. Тренировочные задания}
+
+\vspace{0.3cm}
+{\small\textit{Решите следующие задания на те же темы, где были допущены ошибки.
+Покажите ход решения.}}
+\vspace{0.5cm}
+
+{% for task in new_tasks %}
+\section*{Задание {{ task.number }} \hfill {\normalfont\normalsize ({{ task.max_points|floatformat:0 }} балл.)}}
+
+{{ task.latex_content|safe }}
+
+\vspace{2cm}
+
+{% endfor %}
+
+% ═══════════════════════════════════════════════
+%  ОТВЕТЫ (опционально)
+% ═══════════════════════════════════════════════
+{% if show_answers_for_new %}
+\newpage
+\section*{\centering ОТВЕТЫ К ТРЕНИРОВОЧНЫМ ЗАДАНИЯМ}
+
+\begin{enumerate}
+{% for task in new_tasks %}
+\item {{ task.answer|safe }}
+{% endfor %}
+\end{enumerate}
+{% endif %}
+
+\end{document}

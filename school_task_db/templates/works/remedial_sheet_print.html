@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Работа над ошибками — {{ student.get_short_name }}</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body { font-family: 'Times New Roman', serif; max-width: 210mm; margin: 0 auto; padding: 20mm; }
+        h1 { text-align: center; font-size: 22pt; margin-bottom: 0.3cm; }
+        .meta { text-align: center; color: #555; margin-bottom: 1cm; }
+        .section-title { font-size: 16pt; font-weight: bold; margin: 1cm 0 0.5cm; border-bottom: 2px solid #333; padding-bottom: 4px; }
+
+        .task-box { border: 1px solid #ccc; border-radius: 6px; padding: 12px; margin: 10px 0; page-break-inside: avoid; }
+        .task-box.fail { border-color: #dc3545; background: #fff5f5; }
+        .task-box.partial { border-color: #ffc107; background: #fffdf5; }
+        .task-box.ok { border-color: #28a745; background: #f5fff7; }
+
+        .task-header { font-weight: bold; margin-bottom: 8px; display: flex; justify-content: space-between; }
+        .task-status { padding: 2px 8px; border-radius: 4px; font-size: 0.85em; }
+        .task-status.fail { background: #dc3545; color: white; }
+        .task-status.partial { background: #ffc107; color: #333; }
+        .task-status.ok { background: #28a745; color: white; }
+
+        .answer { margin-top: 8px; padding: 8px; background: #e8f5e9; border-radius: 4px; }
+        .solution { margin-top: 8px; padding: 8px; background: #e3f2fd; border-radius: 4px; }
+
+        .practice-task { border: 1px solid #17a2b8; border-radius: 6px; padding: 12px; margin: 10px 0; page-break-inside: avoid; }
+        .practice-header { font-weight: bold; color: #17a2b8; margin-bottom: 8px; }
+        .workspace { height: 6cm; border-bottom: 1px dashed #ccc; margin-top: 10px; }
+
+        .answers-section { margin-top: 2cm; padding-top: 1cm; border-top: 2px solid #333; }
+
+        @media print {
+            body { padding: 15mm; }
+            .no-print { display: none; }
+            .task-box { break-inside: avoid; }
+            .practice-task { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+<h1>Работа над ошибками</h1>
+<div class="meta">
+    <strong>{{ student.get_full_name }}</strong><br>
+    {% if source_work %}Исходная работа: {{ source_work.name }}<br>{% endif %}
+    {% if mark %}Оценка: <strong>{{ mark.score }}</strong> · {{ mark.points }}/{{ mark.max_points }} баллов{% endif %}
+</div>
+
+<!-- ═══ СЕКЦИЯ 1: РАЗБОР ОШИБОК ═══ -->
+{% if original_tasks %}
+<div class="section-title">Часть 1. Разбор ошибок</div>
+<p style="color: #666; font-style: italic;">
+    Внимательно разберите задания, в которых были допущены ошибки. Изучите правильное решение.
+</p>
+
+{% for item in original_tasks %}
+<div class="task-box {{ item.status }}">
+    <div class="task-header">
+        <span>
+            Задание {{ item.order }}
+            {% if item.group_name %}<small style="color:#888">· {{ item.group_name }}</small>{% endif %}
+        </span>
+        <span class="task-status {{ item.status }}">
+            {% if item.status == 'fail' %}Не решено ({{ item.points }}/{{ item.max_points }})
+            {% elif item.status == 'partial' %}Частично ({{ item.points }}/{{ item.max_points }})
+            {% else %}Верно ({{ item.points }}/{{ item.max_points }})
+            {% endif %}
+        </span>
+    </div>
+
+    <div><strong>Условие:</strong></div>
+    <div>{{ item.task.text|linebreaksbr }}</div>
+
+    <div class="answer">
+        <strong>Ответ:</strong> {{ item.task.answer|linebreaksbr }}
+    </div>
+
+    {% if show_solutions and item.task.short_solution %}
+    <div class="solution">
+        <strong>Краткое решение:</strong><br>
+        {{ item.task.short_solution|linebreaksbr }}
+    </div>
+    {% endif %}
+
+    {% if show_full_solutions and item.task.full_solution %}
+    <div class="solution">
+        <strong>Полное решение:</strong><br>
+        {{ item.task.full_solution|linebreaksbr }}
+    </div>
+    {% endif %}
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- ═══ СЕКЦИЯ 2: ТРЕНИРОВКА ═══ -->
+<div class="section-title">Часть 2. Тренировочные задания</div>
+<p style="color: #666; font-style: italic;">
+    Решите следующие задания на те же темы. Покажите ход решения.
+</p>
+
+{% for vt in new_tasks %}
+<div class="practice-task">
+    <div class="practice-header">
+        Задание {{ vt.order }}
+        <span style="float:right; color:#888">{{ vt.max_points|floatformat:0 }} балл.</span>
+    </div>
+    <div>{{ vt.task.text|linebreaksbr }}</div>
+    <div class="workspace"></div>
+</div>
+{% endfor %}
+
+<!-- ═══ ОТВЕТЫ ═══ -->
+{% if show_answers %}
+<div class="answers-section">
+    <h3>Ответы к тренировочным заданиям</h3>
+    <ol>
+    {% for vt in new_tasks %}
+        <li>{{ vt.task.answer|linebreaksbr }}</li>
+    {% endfor %}
+    </ol>
+</div>
+{% endif %}
+
+</body>
+</html>

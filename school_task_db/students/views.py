@@ -5,6 +5,8 @@ from django.urls import reverse_lazy
 from django.db.models import Avg, Count, F, Q
 from django.views import View
 from django.shortcuts import get_object_or_404
+from django.utils import timezone as tz
+from django.db.models import Count
 
 
 from tasks.models import Task
@@ -36,6 +38,8 @@ class StudentDetailView(DetailView):
         from events.models import EventParticipation, Mark
         from works.models import WorkAnalogGroup
         from reports import plotly_utils
+        from students.models import StudentTaskLog
+
 
         # Класс ученика
         groups = StudentGroup.objects.filter(students=student)
@@ -97,6 +101,19 @@ class StudentDetailView(DetailView):
             (total_participations - absent_count) / total_participations * 100, 1
         ) if total_participations > 0 else 100
 
+        # Уровень ученика (по логам заданий)
+        # Уровень ученика
+        overall_pct = StudentTaskLog.objects.filter(
+            student=student
+        ).aggregate(avg=Avg('percentage'))['avg'] or 0
+
+        if overall_pct < 50:
+            student_level = ('weak', 'Слабый', 'danger')
+        elif overall_pct < 80:
+            student_level = ('medium', 'Средний', 'warning')
+        else:
+            student_level = ('strong', 'Сильный', 'success')
+
         context['stats'] = {
             'total_works': total_participations,
             'graded_works': total_marks,
@@ -104,7 +121,12 @@ class StudentDetailView(DetailView):
             'avg_score': avg_score,
             'attendance_rate': attendance_rate,
             'score_counts': score_counts,
+            'student_level': student_level[0],
+            'student_level_label': student_level[1],
+            'student_level_color': student_level[2],
+            'overall_avg': round(overall_pct, 1),
         }
+
 
         # --- Мини-heatmap: группы аналогов ---
         group_scores = self._build_group_scores(student)
@@ -1017,42 +1039,131 @@ class RemedialFromEventView(View):
             messages.warning(request, 'Не выбрано ни одного ученика.')
             return redirect('students:remedial-from-event', event_pk=event.pk)
 
-        # Для каждого ученика собираем задания из слабых групп
+        # ═══ КЛЮЧЕВОЕ: группы аналогов из этой работы ═══
+        from works.models import VariantTask
+
+        # Все задания работы (для определения групп)
+        all_work_task_ids = set(
+            VariantTask.objects.filter(variant__work=work)
+            .values_list('task_id', flat=True)
+        )
+        # Группы аналогов, задействованные в работе
+        work_group_ids = set(
+            TaskGroup.objects.filter(task_id__in=all_work_task_ids)
+            .values_list('group_id', flat=True)
+        )
+
         variants_created = 0
         tasks_data = {}
 
         for student_id in selected_students:
             student = Student.objects.get(pk=student_id)
-            done_task_ids = set(
-                StudentTaskLog.objects.filter(student=student)
-                .values_list('task_id', flat=True)
-            )
 
-            # Слабые группы этого ученика
-            weak_group_ids = list(
-                StudentTaskLog.objects.filter(student=student)
-                .exclude(analog_group__isnull=True)
-                .values('analog_group')
-                .annotate(avg_pct=Avg('percentage'))
-                .filter(avg_pct__lt=70)
-                .values_list('analog_group', flat=True)
-            )
+            # Находим participation и mark
+            ep = EventParticipation.objects.filter(
+                event=event, student=student
+            ).first()
+            if not ep:
+                continue
 
+            mark = Mark.objects.filter(participation=ep).first()
+
+            # Задания из КОНКРЕТНОГО варианта этого ученика
+            student_variant_task_ids = set()
+            if ep.variant:
+                student_variant_task_ids = set(
+                    VariantTask.objects.filter(variant=ep.variant)
+                    .values_list('task_id', flat=True)
+                )
+
+            # Определяем слабые задания из КР (по task_scores)
+            weak_task_ids = set()
+            if mark and mark.task_scores:
+                for task_id_str, data in mark.task_scores.items():
+                    if isinstance(data, dict):
+                        t_pts = data.get('points', 0)
+                        t_max = data.get('max_points', 1)
+                        if t_max > 0:
+                            if t_max <= 2:
+                                is_weak = (t_pts == 0)
+                            else:
+                                is_weak = (t_pts / t_max < 0.5)
+                            if is_weak:
+                                weak_task_ids.add(task_id_str)
+
+            # Группы слабых заданий (пересечение с группами работы)
+            if weak_task_ids:
+                weak_group_ids = set(
+                    TaskGroup.objects.filter(
+                        task_id__in=weak_task_ids,
+                        group_id__in=work_group_ids,
+                    ).values_list('group_id', flat=True)
+                )
+            else:
+                # Нет task_scores → берём все группы работы
+                weak_group_ids = work_group_ids
+
+            # Определяем уровень по оценке
+            if mark and mark.score:
+                if mark.score <= 2:
+                    target_diff_max = 3  # попроще
+                elif mark.score == 3:
+                    target_diff_max = 4  # стандарт
+                else:
+                    target_diff_max = 6  # всё
+            else:
+                target_diff_max = 3
+
+            # Подбираем замены из ТЕХ ЖЕ групп
             candidate_tasks = []
             for gid in weak_group_ids:
                 group_task_ids = set(
                     TaskGroup.objects.filter(group_id=gid)
                     .values_list('task_id', flat=True)
                 )
-                available_ids = group_task_ids - done_task_ids
-                if available_ids:
-                    for t in Task.objects.filter(id__in=available_ids).values(
+
+                # Исключаем ТОЛЬКО задания из варианта этого ученика
+                # (НЕ из всех вариантов и НЕ из логов — для remedial повтор OK)
+                available_ids = group_task_ids - student_variant_task_ids
+
+                if not available_ids:
+                    continue
+
+                # Сначала пробуем по целевой сложности
+                tasks_qs = list(Task.objects.filter(
+                    id__in=available_ids,
+                    difficulty__lte=target_diff_max,
+                ).order_by('difficulty').values(
+                    'id', 'difficulty', 'estimated_time'
+                )[:1])
+
+                # Fallback: если нет — берём любые из группы
+                if not tasks_qs:
+                    tasks_qs = list(Task.objects.filter(
+                        id__in=available_ids,
+                    ).order_by('difficulty').values(
                         'id', 'difficulty', 'estimated_time'
-                    )[:3]:  # макс 3 задания на группу
-                        candidate_tasks.append(t)
+                    )[:1])
+
+                for t in tasks_qs:
+                    candidate_tasks.append(t)
 
             if candidate_tasks:
-                tasks_data[student_id] = [t['id'] for t in candidate_tasks[:10]]
+                # Убираем дубли, макс 10
+                seen = set()
+                unique = []
+                for t in candidate_tasks:
+                    if t['id'] not in seen:
+                        seen.add(t['id'])
+                        unique.append(t)
+                # Лимит = кол-во заданий в оригинальной КР
+                kr_task_count = VariantTask.objects.filter(
+                    variant__work=work
+                ).values('variant').annotate(
+                    cnt=Count('id')
+                ).order_by('cnt').values_list('cnt', flat=True).first() or 5
+
+                tasks_data[student_id] = [t['id'] for t in unique[:kr_task_count]]
 
         if not tasks_data:
             messages.warning(request, 'Нет доступных заданий для выбранных учеников.')
@@ -1074,12 +1185,10 @@ class RemedialFromEventView(View):
         # Event (опционально)
         new_event = None
         if create_event:
-            import datetime
-            from django.utils import timezone as tz
-
+            import datetime as dt
             if event_date:
                 try:
-                    date_obj = datetime.datetime.strptime(event_date, '%Y-%m-%d').date()
+                    date_obj = dt.datetime.strptime(event_date, '%Y-%m-%d').date()
                 except ValueError:
                     date_obj = tz.now().date()
             else:
@@ -1089,7 +1198,7 @@ class RemedialFromEventView(View):
                 name=work_name,
                 work=remedial_work,
                 planned_date=tz.make_aware(
-                    datetime.datetime.combine(date_obj, datetime.time(9, 0))
+                    dt.datetime.combine(date_obj, dt.time(9, 0))
                 ),
                 status='planned',
                 course=event.course,
@@ -1139,4 +1248,87 @@ class RemedialFromEventView(View):
 
         messages.success(request, msg)
         return redirect('works:detail', pk=remedial_work.pk)
+
+class RemedialSolutionsView(View):
+    """Страница решений: показывает оригинальные задания КР + их решения"""
+
+    def get(self, request, variant_pk):
+        from works.models import Variant, VariantTask
+
+        variant = get_object_or_404(Variant, pk=variant_pk)
+
+        if not variant.source_work:
+            messages.error(request, 'У этого варианта нет исходной работы.')
+            return redirect('works:detail', pk=variant.work.pk)
+
+        student = variant.assigned_student
+        source_work = variant.source_work
+
+        # Находим оригинальный вариант ученика
+        from events.models import EventParticipation
+        original_ep = EventParticipation.objects.filter(
+            event__work=source_work,
+            student=student,
+        ).select_related('variant').first()
+
+        original_tasks = []
+        if original_ep and original_ep.variant:
+            orig_vts = VariantTask.objects.filter(
+                variant=original_ep.variant
+            ).select_related('task', 'task__topic').order_by('order')
+
+            # Получаем task_scores
+            from events.models import Mark
+            mark = Mark.objects.filter(participation=original_ep).first()
+            task_scores = mark.task_scores if mark else {}
+
+            for vt in orig_vts:
+                task = vt.task
+                tid = str(task.pk)
+                score_data = task_scores.get(tid, {})
+                pts = score_data.get('points', '—')
+                max_pts = score_data.get('max_points', '—')
+
+                # Определяем статус
+                if isinstance(pts, (int, float)) and isinstance(max_pts, (int, float)) and max_pts > 0:
+                    pct = pts / max_pts * 100
+                    if pct >= 70:
+                        status = 'ok'
+                    elif pct > 0:
+                        status = 'partial'
+                    else:
+                        status = 'fail'
+                else:
+                    pct = 0
+                    status = 'unknown'
+
+                # Группа аналогов задания
+                from task_groups.models import TaskGroup as TG
+                group = TG.objects.filter(task=task).first()
+                group_name = group.group.name if group else ''
+
+                original_tasks.append({
+                    'task': task,
+                    'order': vt.order,
+                    'points': pts,
+                    'max_points': max_pts,
+                    'pct': round(pct, 1),
+                    'status': status,
+                    'group_name': group_name,
+                })
+
+        # Новые задания (из remedial варианта)
+        new_vts = VariantTask.objects.filter(
+            variant=variant
+        ).select_related('task').order_by('order')
+
+        context = {
+            'variant': variant,
+            'student': student,
+            'source_work': source_work,
+            'original_tasks': original_tasks,
+            'new_tasks': new_vts,
+            'mark': mark if original_ep else None,
+        }
+        return render(request, 'students/remedial_solutions.html', context)
 

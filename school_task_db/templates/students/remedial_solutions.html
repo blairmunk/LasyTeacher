@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Разбор ошибок — {{ student.get_short_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-search text-info"></i> Разбор ошибок</h2>
+            <p class="text-muted mb-0">
+                Ученик: <strong>{{ student.get_full_name }}</strong>
+                · Исходная работа: <strong>{{ source_work.name }}</strong>
+                {% if mark %}
+                · Оценка: <span class="badge bg-{% if mark.score >= 4 %}success{% elif mark.score == 3 %}warning{% else %}danger{% endif %}">{{ mark.score }}</span>
+                · {{ mark.points }}/{{ mark.max_points }} баллов
+                {% endif %}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'works:detail' variant.work.pk %}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i> К работе над ошибками
+            </a>
+            <button onclick="window.print()" class="btn btn-outline-success btn-sm">
+                <i class="fas fa-print"></i> Печать
+            </button>
+        </div>
+    </div>
+
+    <!-- Оригинальные задания с решениями -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">
+                <i class="fas fa-file-alt text-primary"></i>
+                Задания из КР с решениями
+            </h5>
+        </div>
+        <div class="card-body">
+            {% for item in original_tasks %}
+            <div class="border rounded p-3 mb-3 {% if item.status == 'fail' %}border-danger bg-danger bg-opacity-10{% elif item.status == 'partial' %}border-warning bg-warning bg-opacity-10{% else %}border-success bg-success bg-opacity-10{% endif %}">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="mb-0">
+                        Задание {{ item.order }}
+                        {% if item.group_name %}
+                        <small class="text-muted">· {{ item.group_name }}</small>
+                        {% endif %}
+                    </h6>
+                    <div>
+                        {% if item.status == 'fail' %}
+                        <span class="badge bg-danger">{{ item.points }}/{{ item.max_points }} — не решено</span>
+                        {% elif item.status == 'partial' %}
+                        <span class="badge bg-warning text-dark">{{ item.points }}/{{ item.max_points }} — частично</span>
+                        {% else %}
+                        <span class="badge bg-success">{{ item.points }}/{{ item.max_points }} — верно</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    <strong>Условие:</strong>
+                    <div class="ms-3">{{ item.task.text|linebreaksbr }}</div>
+                </div>
+
+                <div class="mb-2">
+                    <strong>Ответ:</strong>
+                    <div class="ms-3 text-success fw-bold">{{ item.task.answer|linebreaksbr }}</div>
+                </div>
+
+                {% if item.task.short_solution %}
+                <div class="mb-2">
+                    <strong>Краткое решение:</strong>
+                    <div class="ms-3">{{ item.task.short_solution|linebreaksbr }}</div>
+                </div>
+                {% endif %}
+
+                {% if item.task.full_solution %}
+                <details class="mb-1">
+                    <summary class="text-primary" style="cursor:pointer">
+                        <strong>Полное решение</strong>
+                    </summary>
+                    <div class="ms-3 mt-2 p-2 bg-white rounded">
+                        {{ item.task.full_solution|linebreaksbr }}
+                    </div>
+                </details>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p class="text-muted">Не удалось найти оригинальный вариант ученика.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Новые задания для тренировки -->
+    <div class="card">
+        <div class="card-header bg-info bg-opacity-10">
+            <h5 class="mb-0">
+                <i class="fas fa-dumbbell text-info"></i>
+                Задания для тренировки (из аналогичных групп)
+            </h5>
+        </div>
+        <div class="card-body">
+            {% for vt in new_tasks %}
+            <div class="border rounded p-3 mb-3">
+                <h6>Задание {{ vt.order }}
+                    <span class="badge bg-secondary">{{ vt.max_points }} балл.</span>
+                </h6>
+                <div>{{ vt.task.text|linebreaksbr }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

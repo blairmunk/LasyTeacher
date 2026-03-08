@@ -92,6 +92,13 @@
                     Источник: {{ variant.source_work.name }}
                 </small>
                 {% endif %}
+                {% if variant.variant_type == 'remedial' and variant.source_work %}
+                <a href="{% url 'students:remedial-solutions' variant.pk %}"
+                   class="btn btn-info btn-sm mt-2">
+                    <i class="fas fa-search"></i> Разбор ошибок с решениями
+                </a>
+                {% endif %}
+
             </div>
             <div class="d-flex gap-2">
                 <form method="post" action="{% url 'works:create-work-from-orphans' %}" class="d-inline">

@@ -17,6 +17,9 @@ urlpatterns = [
     path('<pk>/remedial/', views.RemedialWorkView.as_view(), name='remedial'),
     path('remedial-wizard/', views.RemedialWizardView.as_view(), name='remedial-wizard'),
     path('remedial-from-event/<uuid:event_pk>/', views.RemedialFromEventView.as_view(), name='remedial-from-event'),
+    path('remedial-solutions/<uuid:variant_pk>/',
+         views.RemedialSolutionsView.as_view(),
+         name='remedial-solutions'),
 
 
 ]

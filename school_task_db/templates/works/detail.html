@@ -268,6 +268,12 @@
                             <a href="{% url 'works:variant-detail' variant.pk %}" class="btn btn-sm btn-outline-primary">
                                 <i class="fas fa-eye"></i>
                             </a>
+                            {% if variant.variant_type == 'remedial' and variant.assigned_student %}
+                            <a href="{% url 'students:remedial-solutions' variant.pk %}"
+                                class="btn btn-sm btn-outline-info" title="Разбор ошибок">
+                                <i class="fas fa-search"></i>
+                            </a>
+                            {% endif %}
                             <a href="{% url 'works:variant-delete' variant.pk %}" class="text-danger opacity-50"
                                title="Удалить вариант" style="font-size:0.85rem;"
                                onmouseover="this.classList.remove('opacity-50')"

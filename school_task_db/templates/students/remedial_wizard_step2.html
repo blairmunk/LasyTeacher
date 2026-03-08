@@ -41,6 +41,8 @@
                                    onchange="document.querySelectorAll('.student-cb:not(:disabled)').forEach(c=>c.checked=this.checked)">
                         </th>
                         <th>Ученик</th>
+                        <th class="text-center">Уровень</th>
+                        <th class="text-center">Avg</th>
                         <th class="text-center">Слабых групп</th>
                         <th class="text-center">Заданий</th>
                         <th class="text-center">Вес</th>
@@ -65,6 +67,22 @@
                             <a href="{% url 'students:detail' p.student.pk %}" class="text-decoration-none">
                                 <strong>{{ p.student.get_full_name }}</strong>
                             </a>
+                        </td>
+                        <td class="text-center">
+                            {% if p.student_level == 'weak' %}
+                            <span class="badge bg-danger">Слабый</span>
+                            {% elif p.student_level == 'medium' %}
+                            <span class="badge bg-warning text-dark">Средний</span>
+                            {% elif p.student_level == 'strong' %}
+                            <span class="badge bg-success">Сильный</span>
+                            {% else %}
+                            <span class="badge bg-secondary">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if p.overall_avg %}
+                            <strong>{{ p.overall_avg }}%</strong>
+                            {% else %}—{% endif %}
                         </td>
                         <td class="text-center">
                             {% if p.weak_groups > 0 %}

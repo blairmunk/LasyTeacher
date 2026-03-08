@@ -1,0 +1,140 @@
+cat > templates/students/remedial_from_event.html << 'EOF'
+{% extends 'base.html' %}
+
+{% block title %}Работа над ошибками — {{ event.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="mb-4">
+        <h2>
+            <i class="fas fa-first-aid text-info"></i>
+            Работа над ошибками
+        </h2>
+        <p class="text-muted">
+            По результатам: <a href="{% url 'events:detail' event.pk %}">{{ event.name }}</a>
+            {% if work %} · Работа: <strong>{{ work.name }}</strong>{% endif %}
+            · Слабых учеников: <span class="badge bg-warning text-dark">{{ weak_students }}</span>
+        </p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="table-responsive mb-4">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:40px;">
+                            <input type="checkbox" id="selectAll" checked
+                                   onchange="document.querySelectorAll('.student-cb:not(:disabled)').forEach(c=>c.checked=this.checked)">
+                        </th>
+                        <th>Ученик</th>
+                        <th class="text-center">Оценка</th>
+                        <th class="text-center">Баллы</th>
+                        <th class="text-center">%</th>
+                        <th class="text-center">Слабых заданий</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in analysis %}
+                    <tr class="{% if a.status == 'weak' %}table-warning{% elif a.status == 'Не проверено' %}table-light{% endif %}">
+                        <td>
+                            {% if a.status == 'weak' %}
+                            <input type="checkbox" name="selected_students"
+                                   value="{{ a.student.pk }}"
+                                   class="form-check-input student-cb" checked>
+                            {% elif a.score_pct != None %}
+                            <input type="checkbox" name="selected_students"
+                                   value="{{ a.student.pk }}"
+                                   class="form-check-input student-cb">
+                            {% else %}
+                            <input type="checkbox" class="form-check-input" disabled>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'students:detail' a.student.pk %}" class="text-decoration-none">
+                                <strong>{{ a.student.get_full_name }}</strong>
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            {% if a.mark_score %}
+                            <span class="badge {% if a.mark_score >= 4 %}bg-success{% elif a.mark_score == 3 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                {{ a.mark_score }}
+                            </span>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if a.points != None %}
+                            {{ a.points }}/{{ a.max_points }}
+                            {% else %}—{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if a.score_pct != None %}
+                            <strong class="{% if a.score_pct < 50 %}text-danger{% elif a.score_pct < 70 %}text-warning{% else %}text-success{% endif %}">
+                                {{ a.score_pct }}%
+                            </strong>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if a.weak_tasks_count %}
+                            <span class="badge bg-danger">{{ a.weak_tasks_count }}</span>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>
+                            {% if a.status == 'weak' %}
+                            <span class="badge bg-warning text-dark">Нужна работа</span>
+                            {% elif a.status == 'ok' %}
+                            <span class="badge bg-success">OK</span>
+                            {% else %}
+                            <small class="text-muted">{{ a.status }}</small>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Настройки -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label class="form-label">Название работы</label>
+                        <input type="text" name="work_name" class="form-control"
+                               value="Работа над ошибками — {{ work.name }}">
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-check mt-4">
+                            <input type="checkbox" name="create_event" value="1"
+                                   class="form-check-input" id="createEvent" checked>
+                            <label class="form-check-label" for="createEvent">
+                                Создать событие
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Дата</label>
+                        <input type="date" name="event_date" class="form-control"
+                               value="{% now 'Y-m-d' %}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-3">
+            <a href="{% url 'events:detail' event.pk %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> К событию
+            </a>
+            {% if weak_students > 0 %}
+            <button type="submit" class="btn btn-success btn-lg">
+                <i class="fas fa-rocket"></i>
+                Создать работу над ошибками
+            </button>
+            {% endif %}
+        </div>
+    </form>
+</div>
+{% endblock %}
+EOF

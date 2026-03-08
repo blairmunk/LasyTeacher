@@ -13,6 +13,8 @@ from task_groups.models import AnalogGroup, TaskGroup
 
 from .models import Student, StudentGroup, StudentTaskLog
 from .forms import StudentForm, StudentGroupForm
+from events.models import Event, EventParticipation
+
 
 
 class StudentListView(ListView):
@@ -573,7 +575,7 @@ class RemedialWizardView(View):
         return redirect('students:remedial-wizard')
 
     def _step2_preview(self, request):
-        """Step 2: анализ и превью"""
+        """Step 2: анализ и превью с дифференциацией по уровню"""
         group_id = request.POST.get('group_id')
         threshold = int(request.POST.get('threshold', 70))
         limit_type = request.POST.get('limit_type', 'tasks')
@@ -589,6 +591,9 @@ class RemedialWizardView(View):
             if not task_logs.exists():
                 preview.append({
                     'student': student,
+                    'student_level': 'unknown',
+                    'student_level_label': '—',
+                    'overall_avg': 0,
                     'weak_groups': 0,
                     'tasks_count': 0,
                     'total_weight': 0,
@@ -600,7 +605,18 @@ class RemedialWizardView(View):
 
             done_task_ids = set(task_logs.values_list('task_id', flat=True))
 
-            # Слабые группы
+            # Общий средний % ученика
+            overall_avg = task_logs.aggregate(avg=Avg('percentage'))['avg'] or 0
+
+            # Определяем уровень
+            if overall_avg < 50:
+                student_level = 'weak'
+            elif overall_avg < 80:
+                student_level = 'medium'
+            else:
+                student_level = 'strong'
+
+            # Слабые группы (ниже порога)
             weak_group_ids = list(
                 task_logs.exclude(analog_group__isnull=True)
                 .values('analog_group')
@@ -609,26 +625,128 @@ class RemedialWizardView(View):
                 .values_list('analog_group', flat=True)
             )
 
-            # Собираем задания
+            # Все группы ученика
+            all_group_ids = list(
+                task_logs.exclude(analog_group__isnull=True)
+                .values_list('analog_group', flat=True)
+                .distinct()
+            )
+
+            # === ДИФФЕРЕНЦИРОВАННЫЙ ПОДБОР ===
             candidate_tasks = []
-            for gid in weak_group_ids:
-                group_task_ids = set(
-                    TaskGroup.objects.filter(group_id=gid).values_list('task_id', flat=True)
-                )
-                available_ids = group_task_ids - done_task_ids
-                if available_ids:
-                    tasks_qs = Task.objects.filter(id__in=available_ids).values(
-                        'id', 'difficulty', 'estimated_time'
+
+            if student_level == 'weak':
+                # Слабый: из слабых групп задания ≤ номинальной сложности (закрепление)
+                for gid in weak_group_ids:
+                    try:
+                        group_obj = AnalogGroup.objects.get(pk=gid)
+                        group_diff = group_obj.effective_difficulty
+                    except AnalogGroup.DoesNotExist:
+                        group_diff = 3
+
+                    group_task_ids = set(
+                        TaskGroup.objects.filter(group_id=gid)
+                        .values_list('task_id', flat=True)
                     )
+                    available_ids = group_task_ids - done_task_ids
+                    if available_ids:
+                        tasks_qs = Task.objects.filter(
+                            id__in=available_ids,
+                            difficulty__lte=group_diff
+                        ).values('id', 'difficulty', 'estimated_time')
+                        for t in tasks_qs:
+                            candidate_tasks.append({
+                                'id': t['id'],
+                                'difficulty': t['difficulty'] or 1,
+                                'estimated_time': t['estimated_time'] or 0,
+                                'group_id': gid,
+                            })
+
+            elif student_level == 'medium':
+                # Средний: из слабых групп задания ≈ номинальной сложности
+                for gid in weak_group_ids:
+                    try:
+                        group_obj = AnalogGroup.objects.get(pk=gid)
+                        group_diff = group_obj.effective_difficulty
+                    except AnalogGroup.DoesNotExist:
+                        group_diff = 3
+
+                    group_task_ids = set(
+                        TaskGroup.objects.filter(group_id=gid)
+                        .values_list('task_id', flat=True)
+                    )
+                    available_ids = group_task_ids - done_task_ids
+                    if available_ids:
+                        # Точная сложность
+                        tasks_qs = Task.objects.filter(
+                            id__in=available_ids,
+                            difficulty=group_diff
+                        ).values('id', 'difficulty', 'estimated_time')
+                        found = list(tasks_qs)
+
+                        # Fallback: ±1
+                        if not found:
+                            tasks_qs = Task.objects.filter(
+                                id__in=available_ids,
+                                difficulty__gte=max(1, group_diff - 1),
+                                difficulty__lte=group_diff + 1,
+                            ).values('id', 'difficulty', 'estimated_time')
+                            found = list(tasks_qs)
+
+                        for t in found:
+                            candidate_tasks.append({
+                                'id': t['id'],
+                                'difficulty': t['difficulty'] or 1,
+                                'estimated_time': t['estimated_time'] or 0,
+                                'group_id': gid,
+                            })
+
+            else:
+                # Сильный: из ВСЕХ групп задания ВЫШЕ номинальной сложности
+                for gid in all_group_ids:
+                    try:
+                        group_obj = AnalogGroup.objects.get(pk=gid)
+                        group_diff = group_obj.effective_difficulty
+                    except AnalogGroup.DoesNotExist:
+                        group_diff = 3
+
+                    group_task_ids = set(
+                        TaskGroup.objects.filter(group_id=gid)
+                        .values_list('task_id', flat=True)
+                    )
+                    available_ids = group_task_ids - done_task_ids
+                    if available_ids:
+                        tasks_qs = Task.objects.filter(
+                            id__in=available_ids,
+                            difficulty__gt=group_diff
+                        ).values('id', 'difficulty', 'estimated_time')
+                        for t in tasks_qs:
+                            candidate_tasks.append({
+                                'id': t['id'],
+                                'difficulty': t['difficulty'] or 1,
+                                'estimated_time': t['estimated_time'] or 0,
+                                'group_id': gid,
+                            })
+
+                # Fallback: сложность ≥ 4 из любых групп
+                if not candidate_tasks:
+                    all_group_task_ids = set(
+                        TaskGroup.objects.filter(group_id__in=all_group_ids)
+                        .values_list('task_id', flat=True)
+                    )
+                    tasks_qs = Task.objects.filter(
+                        id__in=all_group_task_ids - done_task_ids,
+                        difficulty__gte=4
+                    ).values('id', 'difficulty', 'estimated_time')
                     for t in tasks_qs:
                         candidate_tasks.append({
                             'id': t['id'],
                             'difficulty': t['difficulty'] or 1,
                             'estimated_time': t['estimated_time'] or 0,
-                            'group_id': gid,
+                            'group_id': None,
                         })
 
-            # Отбираем по лимиту
+            # === ОТБОР ПО ЛИМИТУ ===
             import random
             random.shuffle(candidate_tasks)
             selected = []
@@ -653,8 +771,17 @@ class RemedialWizardView(View):
             total_weight = sum(t['difficulty'] for t in selected)
             est_time = sum((t['estimated_time'] or t['difficulty'] * 3) for t in selected)
 
+            level_labels = {
+                'weak': 'Слабый',
+                'medium': 'Средний',
+                'strong': 'Сильный',
+            }
+
             preview.append({
                 'student': student,
+                'student_level': student_level,
+                'student_level_label': level_labels[student_level],
+                'overall_avg': round(overall_avg, 1),
                 'weak_groups': len(weak_group_ids),
                 'tasks_count': len(selected),
                 'total_weight': total_weight,
@@ -786,3 +913,210 @@ class RemedialWizardView(View):
         if event:
             return redirect('events:detail', pk=event.pk)
         return redirect('works:detail', pk=work.pk)
+
+class RemedialFromEventView(View):
+    """Работа над ошибками для конкретного события/работы"""
+
+    def get(self, request, event_pk):
+        """Показываем анализ: кто плохо написал"""
+        from events.models import Event, EventParticipation
+        from events.models import Mark
+
+
+        event = get_object_or_404(Event, pk=event_pk)
+        work = event.work
+        if not work:
+            messages.error(request, 'У события нет привязанной работы.')
+            return redirect('events:detail', pk=event.pk)
+
+        participations = EventParticipation.objects.filter(
+            event=event
+        ).select_related('student', 'variant')
+
+        analysis = []
+        for ep in participations:
+            marks = Mark.objects.filter(participation=ep)
+            if not marks.exists():
+                analysis.append({
+                    'student': ep.student,
+                    'variant': ep.variant,
+                    'score_pct': None,
+                    'weak_tasks': [],
+                    'status': 'Не проверено',
+                })
+                continue
+
+            mark = marks.first()
+            max_pts = float(mark.max_points) if mark.max_points else 0
+            pts = float(mark.points) if mark.points else 0
+            score_pct = round(pts / max_pts * 100, 1) if max_pts > 0 else 0
+
+            # Анализ по заданиям (из task_scores JSON)
+            weak_tasks = []
+            task_scores = mark.task_scores or {}
+            for task_id, data in task_scores.items():
+                if isinstance(data, dict):
+                    t_pts = data.get('points', 0)
+                    t_max = data.get('max_points', 1)
+                    if t_max > 0 and (t_pts / t_max) < 0.7:
+                        weak_tasks.append(task_id)
+
+            analysis.append({
+                'student': ep.student,
+                'variant': ep.variant,
+                'score_pct': score_pct,
+                'points': pts,
+                'max_points': max_pts,
+                'mark_score': mark.score,
+                'weak_tasks_count': len(weak_tasks),
+                'weak_tasks': weak_tasks,
+                'status': 'ok' if score_pct >= 70 else 'weak',
+            })
+
+        context = {
+            'event': event,
+            'work': work,
+            'analysis': analysis,
+            'weak_students': sum(1 for a in analysis if a.get('status') == 'weak'),
+        }
+        return render(request, 'students/remedial_from_event.html', context)
+
+    def post(self, request, event_pk):
+        """Создаём работу над ошибками из результатов события"""
+        from events.models import Event, EventParticipation, Mark
+
+        event = get_object_or_404(Event, pk=event_pk)
+        work = event.work
+        selected_students = request.POST.getlist('selected_students')
+        work_name = request.POST.get('work_name',
+                                     f'Работа над ошибками — {work.name}')
+        create_event = request.POST.get('create_event') == '1'
+        event_date = request.POST.get('event_date', '')
+
+        if not selected_students:
+            messages.warning(request, 'Не выбрано ни одного ученика.')
+            return redirect('students:remedial-from-event', event_pk=event.pk)
+
+        # Для каждого ученика собираем задания из слабых групп
+        variants_created = 0
+        tasks_data = {}
+
+        for student_id in selected_students:
+            student = Student.objects.get(pk=student_id)
+            done_task_ids = set(
+                StudentTaskLog.objects.filter(student=student)
+                .values_list('task_id', flat=True)
+            )
+
+            # Слабые группы этого ученика
+            weak_group_ids = list(
+                StudentTaskLog.objects.filter(student=student)
+                .exclude(analog_group__isnull=True)
+                .values('analog_group')
+                .annotate(avg_pct=Avg('percentage'))
+                .filter(avg_pct__lt=70)
+                .values_list('analog_group', flat=True)
+            )
+
+            candidate_tasks = []
+            for gid in weak_group_ids:
+                group_task_ids = set(
+                    TaskGroup.objects.filter(group_id=gid)
+                    .values_list('task_id', flat=True)
+                )
+                available_ids = group_task_ids - done_task_ids
+                if available_ids:
+                    for t in Task.objects.filter(id__in=available_ids).values(
+                        'id', 'difficulty', 'estimated_time'
+                    )[:3]:  # макс 3 задания на группу
+                        candidate_tasks.append(t)
+
+            if candidate_tasks:
+                tasks_data[student_id] = [t['id'] for t in candidate_tasks[:10]]
+
+        if not tasks_data:
+            messages.warning(request, 'Нет доступных заданий для выбранных учеников.')
+            return redirect('students:remedial-from-event', event_pk=event.pk)
+
+        # Создаём Work
+        max_weight = max(
+            sum(Task.objects.get(pk=tid).difficulty or 1 for tid in tids)
+            for tids in tasks_data.values()
+        )
+
+        remedial_work = Work.objects.create(
+            name=work_name,
+            work_type='remedial',
+            max_score=max_weight,
+            variant_counter=len(tasks_data),
+        )
+
+        # Event (опционально)
+        new_event = None
+        if create_event:
+            import datetime
+            from django.utils import timezone as tz
+
+            if event_date:
+                try:
+                    date_obj = datetime.datetime.strptime(event_date, '%Y-%m-%d').date()
+                except ValueError:
+                    date_obj = tz.now().date()
+            else:
+                date_obj = tz.now().date()
+
+            new_event = Event.objects.create(
+                name=work_name,
+                work=remedial_work,
+                planned_date=tz.make_aware(
+                    datetime.datetime.combine(date_obj, datetime.time(9, 0))
+                ),
+                status='planned',
+                course=event.course,
+                description=f'Работа над ошибками по: {work.name}',
+            )
+
+        # Варианты
+        for i, (student_id, task_ids) in enumerate(tasks_data.items(), 1):
+            student = Student.objects.get(pk=student_id)
+            tasks_list = list(Task.objects.filter(id__in=task_ids))
+            total_score = sum(t.difficulty or 1 for t in tasks_list)
+
+            variant = Variant.objects.create(
+                work=remedial_work,
+                number=i,
+                work_name_snapshot=work_name,
+                max_score_snapshot=total_score,
+                variant_type='remedial',
+                assigned_student=student,
+                source_work=work,
+            )
+
+            for j, task in enumerate(tasks_list, 1):
+                VariantTask.objects.create(
+                    variant=variant,
+                    task=task,
+                    order=j,
+                    weight=float(task.difficulty or 1),
+                    max_points=task.difficulty or 1,
+                )
+
+            if new_event:
+                EventParticipation.objects.create(
+                    event=new_event,
+                    student=student,
+                    variant=variant,
+                    status='assigned',
+                )
+
+            variants_created += 1
+
+        msg = f'Создана работа «{work_name}» с {variants_created} вариантами.'
+        if new_event:
+            msg += f' Событие создано.'
+            messages.success(request, msg)
+            return redirect('events:detail', pk=new_event.pk)
+
+        messages.success(request, msg)
+        return redirect('works:detail', pk=remedial_work.pk)
+

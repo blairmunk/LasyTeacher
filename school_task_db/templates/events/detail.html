@@ -20,6 +20,13 @@
                 <i class="fas fa-clipboard-check"></i> К проверке
             </a>
             {% endif %}
+            
+            {% if event.work and event.status == 'graded' or event.status == 'closed' or event.status == 'reviewing' %}
+            <a href="{% url 'students:remedial-from-event' event.pk %}" class="btn btn-info btn-sm">
+                <i class="fas fa-first-aid"></i> Работа над ошибками
+            </a>
+            {% endif %}
+
             <a href="{% url 'events:update' event.pk %}" class="btn btn-outline-primary btn-sm">
                 <i class="fas fa-edit"></i> Редактировать
             </a>

@@ -1,9 +1,8 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import TemplateView, DetailView
 from django.contrib import messages
-from django.db.models import Q, Count, Avg
+from django.db.models import Q, Count
 from django.http import JsonResponse
-from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from events.models import Event, EventParticipation, Mark
@@ -319,35 +318,11 @@ class ParticipationReviewView(TemplateView):
     def post(self, request, pk):
         """Сохранение результатов проверки"""
         participation = get_object_or_404(EventParticipation, pk=pk)
-        mark, _ = Mark.objects.get_or_create(participation=participation)
-
-        # Оценка
-        score = request.POST.get('score')
-        if score:
-            mark.score = int(score)
-
-        # Баллы
-        points = request.POST.get('points')
-        if points:
-            mark.points = int(points)
-        max_points = request.POST.get('max_points')
-        if max_points:
-            mark.max_points = int(max_points)
-
-        # Комментарии
-        mark.teacher_comment = request.POST.get('teacher_comment', '')
-        mark.mistakes_analysis = request.POST.get('mistakes_analysis', '')
-
-        mark.checked_at = timezone.now()
-        mark.checked_by = (
-            request.user.get_full_name()
-            if request.user.is_authenticated
-            else 'Учитель'
-        )
 
         # === Загрузка скана работы ===
+        uploaded_file = None
         if 'work_scan' in request.FILES:
-            uploaded_file = request.FILES['work_scan']
+            candidate_file = request.FILES['work_scan']
 
             # Валидация
             max_size = 10 * 1024 * 1024  # 10 МБ
@@ -358,23 +333,20 @@ class ParticipationReviewView(TemplateView):
                 'image/webp',
             ]
 
-            if uploaded_file.size > max_size:
+            if candidate_file.size > max_size:
                 messages.warning(
                     request,
-                    f'⚠️ Файл слишком большой ({uploaded_file.size // 1024 // 1024} МБ). '
+                    f'⚠️ Файл слишком большой ({candidate_file.size // 1024 // 1024} МБ). '
                     f'Максимум 10 МБ.'
                 )
-            elif uploaded_file.content_type not in allowed_types:
+            elif candidate_file.content_type not in allowed_types:
                 messages.warning(
                     request,
-                    f'⚠️ Неподдерживаемый формат: {uploaded_file.content_type}. '
+                    f'⚠️ Неподдерживаемый формат: {candidate_file.content_type}. '
                     f'Допустимы: PDF, JPEG, PNG, WebP.'
                 )
             else:
-                # Удаляем старый файл если есть
-                if mark.work_scan:
-                    mark.work_scan.delete(save=False)
-                mark.work_scan = uploaded_file
+                uploaded_file = candidate_file
 
         # Детализация по заданиям
         task_scores = {}
@@ -390,36 +362,45 @@ class ParticipationReviewView(TemplateView):
                     'comment': comment_val,
                 }
                 task_scores[task_uuid] = score_data
-        
-        mark.task_scores = task_scores
-        mark.save()
 
-        # Обновляем статус участия
-        participation.status = 'graded'
-        participation.graded_at = timezone.now()
-        participation.save()
+        from core_logic.use_cases.grade_student_work import GradeStudentWorkRequest
+        from infrastructure.container import container
 
-        # Синхронизация статуса события
-        event = participation.event
-        all_active = event.eventparticipation_set.exclude(status='absent')
-        all_graded = all_active.filter(status='graded')
+        def _int_or_none(value):
+            return int(value) if value not in (None, '') else None
 
-        if all_active.count() > 0 and all_active.count() == all_graded.count():
-            event.status = 'graded'
-            event.save()
-        elif event.status not in ('reviewing', 'graded'):
-            event.status = 'reviewing'
-            event.save()
-
-        # Имя ученика
-        student = participation.student
-        student_name = f'{student.last_name} {student.first_name}'
+        result = container.grade_student_work_use_case().execute(
+            GradeStudentWorkRequest(
+                participation_id=str(participation.pk),
+                score=_int_or_none(request.POST.get('score')),
+                points=_int_or_none(request.POST.get('points')),
+                max_points=_int_or_none(request.POST.get('max_points')),
+                teacher_comment=request.POST.get('teacher_comment', ''),
+                mistakes_analysis=request.POST.get('mistakes_analysis', ''),
+                recommendations=request.POST.get('recommendations', ''),
+                checked_by_display_name=(
+                    request.user.get_full_name()
+                    if request.user.is_authenticated
+                    else ''
+                ),
+                checked_by_username=(
+                    request.user.username
+                    if request.user.is_authenticated
+                    else ''
+                ),
+                work_scan=uploaded_file,
+                task_scores=task_scores,
+            )
+        )
 
         # Сообщение об успехе
         scan_msg = ''
-        if 'work_scan' in request.FILES and mark.work_scan:
+        if uploaded_file is not None:
             scan_msg = ' + скан загружен'
-        messages.success(request, f'Работа {student_name} проверена (оценка: {mark.score}){scan_msg}')
+        messages.success(
+            request,
+            f'Работа {result.student_name} проверена (оценка: {result.score}){scan_msg}',
+        )
 
         # Навигация
         if 'save_and_next' in request.POST:

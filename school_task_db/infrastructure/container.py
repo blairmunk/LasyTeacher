@@ -1,10 +1,12 @@
 """Small dependency container for application use cases."""
 
 from core_logic.services.analytics_service import StudentAnalyticsService
+from core_logic.services.grading_service import GradingService
 from core_logic.services.remedial_service import RemedialService
 from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
 )
+from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.get_remedial_event_preview import (
     GetRemedialEventPreviewUseCase,
 )
@@ -58,6 +60,9 @@ class Container:
     def analytics_service(self):
         return StudentAnalyticsService()
 
+    def grading_service(self):
+        return GradingService()
+
     def create_remedial_from_event_use_case(self):
         return CreateRemedialFromEventUseCase(
             remedial_service=self.remedial_service(),
@@ -75,6 +80,12 @@ class Container:
         return GetStudentProfileUseCase(
             student_repo=self.student_repo,
             analytics_service=self.analytics_service(),
+        )
+
+    def grade_student_work_use_case(self):
+        return GradeStudentWorkUseCase(
+            event_repo=self.event_repo,
+            grading_service=self.grading_service(),
         )
 
 

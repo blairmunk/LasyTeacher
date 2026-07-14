@@ -308,12 +308,32 @@ def grade_participation(request, participation_id):
     if request.method == 'POST':
         form = MarkForm(request.POST, request.FILES, instance=mark)
         if form.is_valid():
-            mark = form.save(commit=False)
-            mark.checked_by = request.user.get_full_name() or request.user.username
-            mark.save()
+            from core_logic.use_cases.grade_student_work import GradeStudentWorkRequest
+            from infrastructure.container import container
 
-            participation.status = 'graded'
-            participation.save()
+            data = form.cleaned_data
+            container.grade_student_work_use_case().execute(
+                GradeStudentWorkRequest(
+                    participation_id=str(participation.pk),
+                    score=data.get('score'),
+                    points=data.get('points'),
+                    max_points=data.get('max_points'),
+                    teacher_comment=data.get('teacher_comment', ''),
+                    mistakes_analysis=data.get('mistakes_analysis', ''),
+                    recommendations=data.get('recommendations', ''),
+                    checked_by_display_name=(
+                        request.user.get_full_name()
+                        if hasattr(request.user, 'get_full_name')
+                        else ''
+                    ),
+                    checked_by_username=getattr(request.user, 'username', ''),
+                    work_scan=data.get('work_scan'),
+                    is_retake=data.get('is_retake', False),
+                    is_excellent=data.get('is_excellent', False),
+                    needs_attention=data.get('needs_attention', False),
+                    sync_event_status=False,
+                )
+            )
 
             messages.success(request, 'Работа успешно оценена')
             return redirect('events:review-works')
@@ -387,4 +407,3 @@ def change_status(request, event_id):
         )
 
     return redirect('events:detail', pk=event.pk)
-

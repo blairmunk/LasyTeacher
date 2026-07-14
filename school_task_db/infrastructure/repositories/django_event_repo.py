@@ -4,6 +4,7 @@ import datetime as dt
 from typing import Optional
 
 from django.utils import timezone
+from django.db import transaction
 
 from core_logic.entities.event import (
     EventEntity,
@@ -12,11 +13,20 @@ from core_logic.entities.event import (
     StudentSummary,
     VariantSummary,
 )
-from core_logic.interfaces.event_repo import CreateEventParams, IEventRepository
+from core_logic.interfaces.event_repo import (
+    CreateEventParams,
+    GradeParticipationParams,
+    GradeParticipationResult,
+    IEventRepository,
+)
+from core_logic.services.grading_service import GradingService
 from events.models import Event, EventParticipation, Mark
 
 
 class DjangoEventRepository(IEventRepository):
+    def __init__(self, grading_service=None):
+        self.grading_service = grading_service or GradingService()
+
     def get_by_id(self, event_id: str) -> Optional[EventEntity]:
         event = Event.objects.select_related('work', 'course').filter(
             pk=event_id
@@ -117,6 +127,65 @@ class DjangoEventRepository(IEventRepository):
             status='assigned',
         )
         return str(participation.pk)
+
+    def grade_participation(
+        self,
+        params: GradeParticipationParams,
+    ) -> GradeParticipationResult:
+        with transaction.atomic():
+            participation = EventParticipation.objects.select_related(
+                'student',
+                'event',
+            ).get(pk=params.participation_id)
+            mark, _ = Mark.objects.get_or_create(participation=participation)
+
+            mark.score = params.score
+            mark.points = params.points
+            mark.max_points = params.max_points
+            mark.teacher_comment = params.teacher_comment
+            mark.mistakes_analysis = params.mistakes_analysis
+            mark.recommendations = params.recommendations
+            mark.checked_at = timezone.now()
+            mark.checked_by = params.checked_by
+            mark.is_retake = params.is_retake
+            mark.is_excellent = params.is_excellent
+            mark.needs_attention = params.needs_attention
+            if params.task_scores is not None:
+                mark.task_scores = params.task_scores
+            if params.work_scan is not None:
+                if mark.work_scan:
+                    mark.work_scan.delete(save=False)
+                mark.work_scan = params.work_scan
+            mark.save()
+
+            participation.status = 'graded'
+            participation.graded_at = timezone.now()
+            participation.save()
+
+            event = participation.event
+            if params.sync_event_status:
+                active_count = event.eventparticipation_set.exclude(
+                    status='absent',
+                ).count()
+                graded_count = event.eventparticipation_set.exclude(
+                    status='absent',
+                ).filter(status='graded').count()
+                event.status = self.grading_service.next_event_status(
+                    current_status=event.status,
+                    active_participants=active_count,
+                    graded_participants=graded_count,
+                )
+                event.save()
+
+            student = participation.student
+            return GradeParticipationResult(
+                mark_id=str(mark.pk),
+                participation_id=str(participation.pk),
+                event_id=str(event.pk),
+                student_name=f'{student.last_name} {student.first_name}',
+                score=mark.score,
+                event_status=event.status,
+            )
 
     @staticmethod
     def _parse_planned_date(date_value: Optional[str]):

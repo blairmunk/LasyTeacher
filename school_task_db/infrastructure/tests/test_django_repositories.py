@@ -2,6 +2,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from core_logic.services.remedial_service import RemedialService
+from core_logic.interfaces.event_repo import GradeParticipationParams
 from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
     RemedialFromEventRequest,
@@ -12,7 +13,7 @@ from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
-from students.models import Student, StudentGroup
+from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
 from works.models import Variant, VariantTask, Work, WorkAnalogGroup
@@ -217,3 +218,51 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(variant_task.task, self.replacement)
         self.assertEqual(variant_task.max_points, self.replacement.difficulty)
         self.assertEqual(variant_task.weight, self.replacement.difficulty)
+
+    def test_event_repository_grades_participation_and_syncs_review_state(self):
+        self.event.status = 'completed'
+        self.event.save()
+        self.participation.status = 'completed'
+        self.participation.save()
+
+        result = DjangoEventRepository().grade_participation(
+            GradeParticipationParams(
+                participation_id=str(self.participation.pk),
+                score=4,
+                points=6,
+                max_points=7,
+                teacher_comment='Хорошая работа',
+                checked_by='teacher',
+                task_scores={
+                    str(self.original_weak.pk): {
+                        'points': 1,
+                        'max_points': 2,
+                        'comment': 'Повторить',
+                    },
+                },
+            )
+        )
+
+        self.mark.refresh_from_db()
+        self.participation.refresh_from_db()
+        self.event.refresh_from_db()
+        weak_log = StudentTaskLog.objects.get(
+            student=self.student,
+            task=self.original_weak,
+            event=self.event,
+        )
+
+        self.assertEqual(result.score, 4)
+        self.assertEqual(result.student_name, 'Петров Пётр')
+        self.assertEqual(self.mark.score, 4)
+        self.assertEqual(self.mark.points, 6)
+        self.assertEqual(self.mark.max_points, 7)
+        self.assertEqual(self.mark.teacher_comment, 'Хорошая работа')
+        self.assertEqual(self.mark.checked_by, 'teacher')
+        self.assertIsNotNone(self.mark.checked_at)
+        self.assertEqual(self.participation.status, 'graded')
+        self.assertIsNotNone(self.participation.graded_at)
+        self.assertEqual(self.event.status, 'graded')
+        self.assertEqual(weak_log.points, 1)
+        self.assertEqual(weak_log.max_points, 2)
+        self.assertEqual(weak_log.comment, 'Повторить')

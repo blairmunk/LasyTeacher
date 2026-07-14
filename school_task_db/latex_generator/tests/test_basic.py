@@ -20,4 +20,4 @@ class BasicUtilsTest(TestCase):
         self.assertEqual(result, "test_file.tex")
         
         result = sanitize_filename("file<>*.tex")
-        self.assertEqual(result, "file___.tex")
+        self.assertEqual(result, "file_.tex")

@@ -1,0 +1,189 @@
+from django.test import TestCase
+from django.utils import timezone
+
+from core_logic.services.remedial_service import RemedialService
+from core_logic.use_cases.create_remedial_from_event import (
+    CreateRemedialFromEventUseCase,
+    RemedialFromEventRequest,
+)
+from curriculum.models import Topic
+from events.models import Event, EventParticipation, Mark
+from infrastructure.repositories.django_event_repo import DjangoEventRepository
+from infrastructure.repositories.django_student_repo import DjangoStudentRepository
+from infrastructure.repositories.django_task_repo import DjangoTaskRepository
+from infrastructure.repositories.django_work_repo import DjangoWorkRepository
+from students.models import Student
+from task_groups.models import AnalogGroup, TaskGroup
+from tasks.models import Task
+from works.models import Variant, VariantTask, Work
+
+
+class DjangoRemedialRepositoryTests(TestCase):
+    def setUp(self):
+        self.topic = Topic.objects.create(
+            name='Динамика',
+            subject='Физика',
+            section='Механика',
+            grade_level=9,
+        )
+        self.student = Student.objects.create(
+            last_name='Петров',
+            first_name='Пётр',
+        )
+        self.source_work = Work.objects.create(
+            name='Контрольная по динамике',
+            work_type='test',
+            max_score=7,
+        )
+        self.source_variant = Variant.objects.create(
+            work=self.source_work,
+            number=1,
+            work_name_snapshot=self.source_work.name,
+            max_score_snapshot=7,
+        )
+        self.event = Event.objects.create(
+            name='КР 9Б',
+            work=self.source_work,
+            planned_date=timezone.now(),
+            status='graded',
+        )
+        self.participation = EventParticipation.objects.create(
+            event=self.event,
+            student=self.student,
+            variant=self.source_variant,
+            status='graded',
+        )
+
+        self.original_weak = self._task('Исходное слабое', difficulty=2)
+        self.original_ok = self._task('Исходное сильное', difficulty=5)
+        self.replacement = self._task('Замена', difficulty=3)
+        self.too_hard = self._task('Сложная замена', difficulty=6)
+
+        self.weak_group = AnalogGroup.objects.create(name='Законы Ньютона')
+        self.ok_group = AnalogGroup.objects.create(name='Импульс')
+        TaskGroup.objects.create(task=self.original_weak, group=self.weak_group)
+        TaskGroup.objects.create(task=self.replacement, group=self.weak_group)
+        TaskGroup.objects.create(task=self.too_hard, group=self.weak_group)
+        TaskGroup.objects.create(task=self.original_ok, group=self.ok_group)
+
+        VariantTask.objects.create(
+            variant=self.source_variant,
+            task=self.original_weak,
+            order=1,
+            max_points=2,
+            weight=2,
+        )
+        VariantTask.objects.create(
+            variant=self.source_variant,
+            task=self.original_ok,
+            order=2,
+            max_points=5,
+            weight=5,
+        )
+        Mark.objects.create(
+            participation=self.participation,
+            score=2,
+            points=5,
+            max_points=7,
+            task_scores={
+                str(self.original_weak.pk): {'points': 0, 'max_points': 2},
+                str(self.original_ok.pk): {'points': 5, 'max_points': 5},
+            },
+        )
+
+    def _task(self, text, difficulty):
+        return Task.objects.create(
+            text=text,
+            answer='Ответ',
+            topic=self.topic,
+            task_type='computational',
+            difficulty=difficulty,
+        )
+
+    def test_repositories_feed_the_pure_remedial_service(self):
+        service = RemedialService(
+            student_repo=DjangoStudentRepository(),
+            task_repo=DjangoTaskRepository(),
+            work_repo=DjangoWorkRepository(),
+        )
+
+        selection = service.select_tasks_for_student(
+            student_id=str(self.student.pk),
+            event_id=str(self.event.pk),
+            source_work_id=str(self.source_work.pk),
+            mark_score=2,
+        )
+
+        self.assertEqual(selection.student_id, str(self.student.pk))
+        self.assertEqual(selection.task_ids, [str(self.replacement.pk)])
+        self.assertEqual(selection.weak_group_ids, {str(self.weak_group.pk)})
+        self.assertEqual(selection.target_difficulty, 3)
+
+    def test_student_repository_returns_task_level_mark_results(self):
+        results = DjangoStudentRepository().get_task_results_for_event(
+            student_id=str(self.student.pk),
+            event_id=str(self.event.pk),
+        )
+        result_by_task = {result.task_id: result for result in results}
+
+        weak_result = result_by_task[str(self.original_weak.pk)]
+        self.assertEqual(weak_result.points, 0)
+        self.assertEqual(weak_result.max_points, 2)
+        self.assertEqual(weak_result.group_id, str(self.weak_group.pk))
+        self.assertEqual(weak_result.group_name, self.weak_group.name)
+
+    def test_create_remedial_use_case_creates_django_objects(self):
+        student_repo = DjangoStudentRepository()
+        task_repo = DjangoTaskRepository()
+        work_repo = DjangoWorkRepository()
+        event_repo = DjangoEventRepository()
+        service = RemedialService(
+            student_repo=student_repo,
+            task_repo=task_repo,
+            work_repo=work_repo,
+        )
+        use_case = CreateRemedialFromEventUseCase(
+            remedial_service=service,
+            task_repo=task_repo,
+            work_repo=work_repo,
+            event_repo=event_repo,
+        )
+
+        result = use_case.execute(
+            RemedialFromEventRequest(
+                event_id=str(self.event.pk),
+                selected_student_ids=[str(self.student.pk)],
+                work_name='Работа над ошибками 9Б',
+                create_event=True,
+                event_date='2026-03-10',
+            )
+        )
+
+        self.assertTrue(result.success)
+        remedial_work = Work.objects.get(pk=result.work_id)
+        remedial_variant = Variant.objects.get(
+            work=remedial_work,
+            assigned_student=self.student,
+            variant_type='remedial',
+        )
+        remedial_event = Event.objects.get(pk=result.event_id)
+        participation = EventParticipation.objects.get(
+            event=remedial_event,
+            student=self.student,
+        )
+
+        self.assertEqual(remedial_work.name, 'Работа над ошибками 9Б')
+        self.assertEqual(remedial_work.work_type, 'remedial')
+        self.assertEqual(remedial_work.max_score, self.replacement.difficulty)
+        self.assertEqual(remedial_work.variant_counter, 1)
+        self.assertEqual(remedial_variant.source_work, self.source_work)
+        self.assertEqual(remedial_variant.max_score_snapshot, self.replacement.difficulty)
+        self.assertEqual(remedial_event.status, 'planned')
+        self.assertEqual(remedial_event.description, f'Работа над ошибками по: {self.source_work.name}')
+        self.assertEqual(participation.variant, remedial_variant)
+        self.assertEqual(participation.status, 'assigned')
+
+        variant_task = VariantTask.objects.get(variant=remedial_variant)
+        self.assertEqual(variant_task.task, self.replacement)
+        self.assertEqual(variant_task.max_points, self.replacement.difficulty)
+        self.assertEqual(variant_task.weight, self.replacement.difficulty)

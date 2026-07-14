@@ -1,0 +1,70 @@
+"""Small dependency container for application use cases."""
+
+from core_logic.services.remedial_service import RemedialService
+from core_logic.use_cases.create_remedial_from_event import (
+    CreateRemedialFromEventUseCase,
+)
+from core_logic.use_cases.get_remedial_event_preview import (
+    GetRemedialEventPreviewUseCase,
+)
+from infrastructure.repositories.django_event_repo import DjangoEventRepository
+from infrastructure.repositories.django_student_repo import DjangoStudentRepository
+from infrastructure.repositories.django_task_repo import DjangoTaskRepository
+from infrastructure.repositories.django_work_repo import DjangoWorkRepository
+
+
+class Container:
+    """Wires pure use cases to Django infrastructure adapters."""
+
+    def __init__(self):
+        self._student_repo = None
+        self._task_repo = None
+        self._work_repo = None
+        self._event_repo = None
+
+    @property
+    def student_repo(self):
+        if self._student_repo is None:
+            self._student_repo = DjangoStudentRepository()
+        return self._student_repo
+
+    @property
+    def task_repo(self):
+        if self._task_repo is None:
+            self._task_repo = DjangoTaskRepository()
+        return self._task_repo
+
+    @property
+    def work_repo(self):
+        if self._work_repo is None:
+            self._work_repo = DjangoWorkRepository()
+        return self._work_repo
+
+    @property
+    def event_repo(self):
+        if self._event_repo is None:
+            self._event_repo = DjangoEventRepository()
+        return self._event_repo
+
+    def remedial_service(self):
+        return RemedialService(
+            student_repo=self.student_repo,
+            task_repo=self.task_repo,
+            work_repo=self.work_repo,
+        )
+
+    def create_remedial_from_event_use_case(self):
+        return CreateRemedialFromEventUseCase(
+            remedial_service=self.remedial_service(),
+            task_repo=self.task_repo,
+            work_repo=self.work_repo,
+            event_repo=self.event_repo,
+        )
+
+    def get_remedial_event_preview_use_case(self):
+        return GetRemedialEventPreviewUseCase(
+            event_repo=self.event_repo,
+        )
+
+
+container = Container()

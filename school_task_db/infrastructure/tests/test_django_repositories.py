@@ -12,10 +12,10 @@ from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
-from students.models import Student
+from students.models import Student, StudentGroup
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
-from works.models import Variant, VariantTask, Work
+from works.models import Variant, VariantTask, Work, WorkAnalogGroup
 
 
 class DjangoRemedialRepositoryTests(TestCase):
@@ -30,6 +30,8 @@ class DjangoRemedialRepositoryTests(TestCase):
             last_name='Петров',
             first_name='Пётр',
         )
+        self.group = StudentGroup.objects.create(name='9Б')
+        self.group.students.add(self.student)
         self.source_work = Work.objects.create(
             name='Контрольная по динамике',
             work_type='test',
@@ -61,6 +63,12 @@ class DjangoRemedialRepositoryTests(TestCase):
 
         self.weak_group = AnalogGroup.objects.create(name='Законы Ньютона')
         self.ok_group = AnalogGroup.objects.create(name='Импульс')
+        WorkAnalogGroup.objects.create(
+            work=self.source_work,
+            analog_group=self.weak_group,
+            order=1,
+            weight=2,
+        )
         TaskGroup.objects.create(task=self.original_weak, group=self.weak_group)
         TaskGroup.objects.create(task=self.replacement, group=self.weak_group)
         TaskGroup.objects.create(task=self.too_hard, group=self.weak_group)
@@ -80,7 +88,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             max_points=5,
             weight=5,
         )
-        Mark.objects.create(
+        self.mark = Mark.objects.create(
             participation=self.participation,
             score=2,
             points=5,
@@ -131,6 +139,28 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(weak_result.max_points, 2)
         self.assertEqual(weak_result.group_id, str(self.weak_group.pk))
         self.assertEqual(weak_result.group_name, self.weak_group.name)
+
+    def test_student_repository_returns_profile_data(self):
+        repo = DjangoStudentRepository()
+
+        groups = repo.get_student_groups(str(self.student.pk))
+        participations = repo.get_profile_participations(str(self.student.pk))
+        task_logs = repo.get_task_logs(str(self.student.pk))
+        work_groups = repo.get_work_group_refs([str(self.source_work.pk)])
+
+        self.assertEqual(groups[0].name, '9Б')
+        self.assertEqual(participations[0].event.name, self.event.name)
+        self.assertEqual(participations[0].work.name, self.source_work.name)
+        self.assertEqual(participations[0].work.get_work_type_display(), 'Контрольная работа')
+        self.assertEqual(participations[0].mark.points, 5)
+        self.assertEqual(participations[0].score, 2)
+        self.assertEqual(participations[0].variant_number, 1)
+        task_logs_by_id = {log.task.pk: log for log in task_logs}
+        weak_log = task_logs_by_id[str(self.original_weak.pk)]
+        self.assertEqual(weak_log.task.name, self.original_weak.text)
+        self.assertEqual(weak_log.analog_group.name, self.weak_group.name)
+        self.assertEqual(weak_log.percentage, 0)
+        self.assertEqual(work_groups[0].group_name, self.weak_group.name)
 
     def test_create_remedial_use_case_creates_django_objects(self):
         student_repo = DjangoStudentRepository()

@@ -35,112 +35,28 @@ class StudentDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         student = self.object
 
-        from events.models import EventParticipation, Mark
-        from works.models import WorkAnalogGroup
+        from infrastructure.container import container
         from reports import plotly_utils
-        from students.models import StudentTaskLog
+        profile = container.get_student_profile_use_case().execute(str(student.pk))
 
+        context['student_groups'] = profile.student_groups
+        context['participations_data'] = profile.participations_data
+        context['stats'] = profile.stats
+        context['group_scores'] = profile.group_scores
+        context['task_log_stats'] = profile.task_log_stats
+        context['heatmap_groups'] = profile.heatmap_groups
+        context['heatmap_topics'] = profile.heatmap_topics
+        context['heatmap_difficulty'] = profile.heatmap_difficulty
+        context['recent_task_log'] = profile.recent_task_log
 
-        # Класс ученика
-        groups = StudentGroup.objects.filter(students=student)
-        context['student_groups'] = groups
-
-        # Все участия с оценками
-        participations = EventParticipation.objects.filter(
-            student=student
-        ).select_related(
-            'event', 'event__work', 'event__course', 'variant'
-        ).order_by('-event__planned_date')
-
-        # Собираем данные по каждому участию
-        participations_data = []
-        scores_timeline = []  # для графика динамики
-        total_marks = 0
-        total_score_sum = 0
-        absent_count = 0
-        score_counts = {2: 0, 3: 0, 4: 0, 5: 0}
-
-        for p in participations:
-            mark = Mark.objects.filter(participation=p).first()
-            is_absent = p.status == 'absent'
-
-            if is_absent:
-                absent_count += 1
-
-            score = None
-            if mark and mark.score:
-                score = mark.score
-                total_marks += 1
-                total_score_sum += score
-                if score in score_counts:
-                    score_counts[score] += 1
-
-                if p.event.planned_date:
-                    scores_timeline.append({
-                        'date': p.event.planned_date.strftime('%d.%m.%Y'),
-                        'score': score,
-                        'work': p.event.work.name if p.event.work else p.event.name,
-                    })
-
-            participations_data.append({
-                'participation': p,
-                'event': p.event,
-                'work': p.event.work,
-                'mark': mark,
-                'score': score,
-                'is_absent': is_absent,
-                'variant_number': p.variant.number if p.variant else None,
-            })
-
-        context['participations_data'] = participations_data
-
-        # Общая статистика
-        avg_score = round(total_score_sum / total_marks, 2) if total_marks > 0 else 0
-        total_participations = len(participations_data)
-        attendance_rate = round(
-            (total_participations - absent_count) / total_participations * 100, 1
-        ) if total_participations > 0 else 100
-
-        # Уровень ученика (по логам заданий)
-        # Уровень ученика
-        overall_pct = StudentTaskLog.objects.filter(
-            student=student
-        ).aggregate(avg=Avg('percentage'))['avg'] or 0
-
-        if overall_pct < 50:
-            student_level = ('weak', 'Слабый', 'danger')
-        elif overall_pct < 80:
-            student_level = ('medium', 'Средний', 'warning')
-        else:
-            student_level = ('strong', 'Сильный', 'success')
-
-        context['stats'] = {
-            'total_works': total_participations,
-            'graded_works': total_marks,
-            'absent_count': absent_count,
-            'avg_score': avg_score,
-            'attendance_rate': attendance_rate,
-            'score_counts': score_counts,
-            'student_level': student_level[0],
-            'student_level_label': student_level[1],
-            'student_level_color': student_level[2],
-            'overall_avg': round(overall_pct, 1),
-        }
-
-
-        # --- Мини-heatmap: группы аналогов ---
-        group_scores = self._build_group_scores(student)
-        context['group_scores'] = group_scores
-
-        if group_scores:
+        if profile.group_scores:
             # Для Plotly мини-heatmap
-            group_names = [g['name'] for g in group_scores]
-            group_avgs = [g['avg'] for g in group_scores]
+            group_names = [g['name'] for g in profile.group_scores]
 
             heatmap_chart = plotly_utils.heatmap_config(
                 students=[student.get_short_name()],
                 groups=group_names,
-                matrix=[[g['avg'] for g in group_scores]],
+                matrix=[[g['avg'] for g in profile.group_scores]],
                 title='Успеваемость по темам',
             )
             # Уменьшаем высоту для мини-версии
@@ -151,12 +67,12 @@ class StudentDetailView(DetailView):
             context['mini_heatmap_json'] = plotly_utils.to_json(heatmap_chart)
 
         # --- График динамики ---
-        if scores_timeline:
-            scores_timeline.reverse()
-            dates = [s['date'] for s in scores_timeline]
-            scores_vals = [s['score'] for s in scores_timeline]
+        if profile.scores_timeline:
+            scores_timeline = list(reversed(profile.scores_timeline))
+            dates = [s.date for s in scores_timeline]
+            scores_vals = [s.score for s in scores_timeline]
             hover_texts = [
-                f"{s['work']}<br>Оценка: <b>{s['score']}</b>"
+                f"{s.work}<br>Оценка: <b>{s.score}</b>"
                 for s in scores_timeline
             ]
 
@@ -197,7 +113,8 @@ class StudentDetailView(DetailView):
                     'shapes': [{
                         'type': 'line',
                         'x0': dates[0], 'x1': dates[-1],
-                        'y0': avg_score, 'y1': avg_score,
+                        'y0': profile.stats['avg_score'],
+                        'y1': profile.stats['avg_score'],
                         'line': {
                             'color': 'rgba(255,0,0,0.3)',
                             'width': 1, 'dash': 'dash'
@@ -209,155 +126,15 @@ class StudentDetailView(DetailView):
             context['dynamics_chart_json'] = plotly_utils.to_json(dynamics_chart)
 
         # --- Распределение оценок ---
-        if total_marks > 0:
+        if profile.stats['graded_works'] > 0:
             context['score_chart_json'] = plotly_utils.to_json(
                 plotly_utils.score_distribution_config(
-                    score_counts, title='Распределение оценок'
+                    profile.stats['score_counts'],
+                    title='Распределение оценок',
                 )
             )
 
-        # === StudentTaskLog: детализация по заданиям ===
-        from .models import StudentTaskLog
-
-        task_logs = StudentTaskLog.objects.filter(student=student)
-        log_count = task_logs.count()
-
-        if log_count > 0:
-            log_agg = task_logs.aggregate(
-                avg_pct=Avg('percentage'),
-                correct=Count('id', filter=Q(is_correct=True)),
-                wrong=Count('id', filter=Q(is_correct=False)),
-            )
-            context['task_log_stats'] = {
-                'total': log_count,
-                'correct': log_agg['correct'],
-                'wrong': log_agg['wrong'],
-                'avg_pct': round(log_agg['avg_pct'] or 0, 1),
-            }
-
-            def _build_cells(qs):
-                cells = []
-                for row in qs:
-                    pct = row['avg_pct'] or 0
-                    if pct == 0:
-                        level = 0
-                    elif pct < 30:
-                        level = 1
-                    elif pct < 55:
-                        level = 2
-                    elif pct < 80:
-                        level = 3
-                    else:
-                        level = 4
-                    cells.append({
-                        'name': row['name'],
-                        'total': row['total'],
-                        'correct': row['correct'],
-                        'avg_pct': round(pct, 1),
-                        'level': level,
-                    })
-                return cells
-
-            # По группам аналогов
-            group_qs = task_logs.exclude(
-                analog_group__isnull=True
-            ).values(
-                name=F('analog_group__name')
-            ).annotate(
-                total=Count('id'),
-                correct=Count('id', filter=Q(is_correct=True)),
-                avg_pct=Avg('percentage'),
-            ).order_by('-avg_pct')
-            context['heatmap_groups'] = _build_cells(group_qs)
-
-            # По темам
-            topic_qs = task_logs.exclude(
-                topic__isnull=True
-            ).values(
-                name=F('topic__name')
-            ).annotate(
-                total=Count('id'),
-                correct=Count('id', filter=Q(is_correct=True)),
-                avg_pct=Avg('percentage'),
-            ).order_by('-avg_pct')
-            context['heatmap_topics'] = _build_cells(topic_qs)
-
-            # По сложности
-            diff_qs = task_logs.exclude(
-                difficulty__isnull=True
-            ).values(
-                'difficulty'
-            ).annotate(
-                total=Count('id'),
-                correct=Count('id', filter=Q(is_correct=True)),
-                avg_pct=Avg('percentage'),
-            ).order_by('difficulty')
-            diff_cells = []
-            for row in diff_qs:
-                pct = row['avg_pct'] or 0
-                level = 0 if pct == 0 else 1 if pct < 30 else 2 if pct < 55 else 3 if pct < 80 else 4
-                diff_cells.append({
-                    'name': f"Сложность {row['difficulty']}",
-                    'total': row['total'],
-                    'correct': row['correct'],
-                    'avg_pct': round(pct, 1),
-                    'level': level,
-                })
-            context['heatmap_difficulty'] = diff_cells
-
-            # История заданий (последние 50)
-            context['recent_task_log'] = task_logs.select_related(
-                'task', 'event', 'topic', 'analog_group'
-            ).order_by('-completed_at')[:50]
-
         return context
-
-    def _build_group_scores(self, student):
-        """Средний балл по группам аналогов"""
-        from events.models import EventParticipation, Mark
-        from works.models import WorkAnalogGroup
-
-        marks = Mark.objects.filter(
-            participation__student=student,
-            score__isnull=False,
-        ).select_related('participation__event')
-
-        # work_id → [scores]
-        work_scores = {}
-        for mark in marks:
-            work_id = mark.participation.event.work_id
-            if work_id:
-                if work_id not in work_scores:
-                    work_scores[work_id] = []
-                work_scores[work_id].append(mark.score)
-
-        # Группы аналогов → средний балл
-        ag_scores = {}
-        for wag in WorkAnalogGroup.objects.filter(
-            work_id__in=work_scores.keys()
-        ).select_related('analog_group'):
-            ag = wag.analog_group
-            if ag.id not in ag_scores:
-                ag_scores[ag.id] = {
-                    'name': ag.name,
-                    'scores': [],
-                }
-            ag_scores[ag.id]['scores'].extend(work_scores[wag.work_id])
-
-        result = []
-        for ag_id, data in ag_scores.items():
-            scores = data['scores']
-            avg = round(sum(scores) / len(scores), 2) if scores else None
-            result.append({
-                'name': data['name'],
-                'avg': avg,
-                'count': len(scores),
-                'min': min(scores) if scores else None,
-                'max': max(scores) if scores else None,
-            })
-
-        result.sort(key=lambda x: x['avg'] or 0)
-        return result
 
 
 class StudentCreateView(CreateView):

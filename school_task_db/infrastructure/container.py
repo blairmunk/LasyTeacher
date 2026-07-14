@@ -1,5 +1,6 @@
 """Small dependency container for application use cases."""
 
+from core_logic.services.analytics_service import StudentAnalyticsService
 from core_logic.services.remedial_service import RemedialService
 from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
@@ -7,6 +8,7 @@ from core_logic.use_cases.create_remedial_from_event import (
 from core_logic.use_cases.get_remedial_event_preview import (
     GetRemedialEventPreviewUseCase,
 )
+from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
@@ -53,6 +55,9 @@ class Container:
             work_repo=self.work_repo,
         )
 
+    def analytics_service(self):
+        return StudentAnalyticsService()
+
     def create_remedial_from_event_use_case(self):
         return CreateRemedialFromEventUseCase(
             remedial_service=self.remedial_service(),
@@ -64,6 +69,12 @@ class Container:
     def get_remedial_event_preview_use_case(self):
         return GetRemedialEventPreviewUseCase(
             event_repo=self.event_repo,
+        )
+
+    def get_student_profile_use_case(self):
+        return GetStudentProfileUseCase(
+            student_repo=self.student_repo,
+            analytics_service=self.analytics_service(),
         )
 
 

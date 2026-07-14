@@ -6,6 +6,7 @@ from core_logic.use_cases.create_remedial_from_event import (
 from core_logic.use_cases.get_remedial_event_preview import (
     GetRemedialEventPreviewUseCase,
 )
+from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
 from infrastructure.container import Container
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
@@ -19,9 +20,11 @@ class ContainerTests(SimpleTestCase):
 
         use_case = container.create_remedial_from_event_use_case()
         preview_use_case = container.get_remedial_event_preview_use_case()
+        profile_use_case = container.get_student_profile_use_case()
 
         self.assertIsInstance(use_case, CreateRemedialFromEventUseCase)
         self.assertIsInstance(preview_use_case, GetRemedialEventPreviewUseCase)
+        self.assertIsInstance(profile_use_case, GetStudentProfileUseCase)
         self.assertIsInstance(container.student_repo, DjangoStudentRepository)
         self.assertIsInstance(container.task_repo, DjangoTaskRepository)
         self.assertIsInstance(container.work_repo, DjangoWorkRepository)

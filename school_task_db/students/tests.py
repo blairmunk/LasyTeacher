@@ -4,10 +4,10 @@ from django.utils import timezone
 
 from curriculum.models import Topic
 from events.models import Event, EventParticipation, Mark
-from students.models import Student
+from students.models import Student, StudentGroup
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
-from works.models import Variant, VariantTask, Work
+from works.models import Variant, VariantTask, Work, WorkAnalogGroup
 
 
 class RemedialFromEventViewTests(TestCase):
@@ -55,6 +55,12 @@ class RemedialFromEventViewTests(TestCase):
 
         self.weak_group = AnalogGroup.objects.create(name='Скорость')
         self.other_group = AnalogGroup.objects.create(name='Графики')
+        WorkAnalogGroup.objects.create(
+            work=self.source_work,
+            analog_group=self.weak_group,
+            order=1,
+            weight=2,
+        )
         TaskGroup.objects.create(task=self.weak_original, group=self.weak_group)
         TaskGroup.objects.create(task=self.replacement_easy, group=self.weak_group)
         TaskGroup.objects.create(task=self.replacement_hard, group=self.weak_group)
@@ -178,3 +184,24 @@ class RemedialFromEventViewTests(TestCase):
             fetch_redirect_response=False,
         )
         self.assertFalse(Work.objects.filter(name='Не должна создаться').exists())
+
+    def test_student_detail_uses_profile_context_from_clean_use_case(self):
+        group = StudentGroup.objects.create(name='9А')
+        group.students.add(self.student)
+
+        response = self.client.get(reverse('students:detail', args=[self.student.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['student'], self.student)
+        self.assertEqual(response.context['student_groups'][0].name, '9А')
+        self.assertEqual(response.context['stats']['total_works'], 1)
+        self.assertEqual(response.context['stats']['graded_works'], 1)
+        self.assertEqual(response.context['stats']['avg_score'], 2)
+        self.assertEqual(response.context['stats']['student_level'], 'medium')
+        self.assertEqual(response.context['task_log_stats']['total'], 2)
+        heatmap_group_names = {
+            row['name'] for row in response.context['heatmap_groups']
+        }
+        self.assertIn('Скорость', heatmap_group_names)
+        self.assertEqual(response.context['group_scores'][0]['name'], 'Скорость')
+        self.assertEqual(response.context['participations_data'][0].score, 2)

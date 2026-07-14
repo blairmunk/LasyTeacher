@@ -269,6 +269,21 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(weak_log.max_points, 2)
         self.assertEqual(weak_log.comment, 'Повторить')
 
+    def test_event_repository_returns_list_and_detail_page_data(self):
+        repo = DjangoEventRepository()
+
+        events = repo.get_list_events()
+        participations = repo.get_detail_participations(str(self.event.pk))
+        available_variants = repo.get_available_variants(str(self.event.pk))
+        event_by_id = {str(event.pk): event for event in events}
+
+        self.assertIn(str(self.event.pk), event_by_id)
+        self.assertEqual(event_by_id[str(self.event.pk)].participant_count, 1)
+        self.assertEqual(participations[0].student.last_name, self.student.last_name)
+        self.assertEqual(participations[0].variant.number, 1)
+        self.assertEqual(participations[0].mark_obj.score, 2)
+        self.assertEqual(available_variants[0].number, 1)
+
     def test_review_repository_returns_participation_review_data(self):
         ReviewComment.objects.create(
             text='Аккуратнее с единицами',

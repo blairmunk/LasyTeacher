@@ -1,7 +1,7 @@
 """Event-related domain entities."""
 
-from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, NamedTuple, Optional
 
 
 def _same_pk(left_id: str, other: Any) -> bool:
@@ -82,3 +82,73 @@ class ParticipationMarkData:
     points: Optional[float] = None
     max_points: Optional[float] = None
     task_scores: Dict[str, dict] = None
+
+
+@dataclass(frozen=True)
+class EventStatusStep:
+    code: str
+    label: str
+    color: str
+    current: bool
+    passed: bool
+
+
+class EventStatusTransition(NamedTuple):
+    new_status: str
+    label: str
+    color: str
+    icon: str
+
+
+@dataclass(frozen=True)
+class EventListData:
+    events: List[Any] = field(default_factory=list)
+    planned_events: List[Any] = field(default_factory=list)
+    active_events: List[Any] = field(default_factory=list)
+    graded_events: List[Any] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class EventStudentRef:
+    pk: str
+    last_name: str
+    first_name: str
+    middle_name: str = ''
+
+
+@dataclass(frozen=True)
+class EventVariantRef:
+    pk: str
+    number: int
+
+
+@dataclass(frozen=True)
+class EventWorkScanRef:
+    url: str
+
+
+@dataclass(frozen=True)
+class EventMarkRef:
+    score: Optional[int] = None
+    work_scan: Optional[EventWorkScanRef] = None
+
+
+@dataclass(frozen=True)
+class EventParticipationRow:
+    pk: str
+    status: str
+    student: EventStudentRef
+    variant: Optional[EventVariantRef] = None
+    mark_obj: Optional[EventMarkRef] = None
+
+
+@dataclass(frozen=True)
+class EventDetailData:
+    participations: List[EventParticipationRow]
+    some_variants_assigned: bool
+    all_variants_assigned: bool
+    can_review: bool
+    status_color: str
+    status_steps: List[EventStatusStep]
+    available_variants: List[EventVariantRef]
+    status_transitions: List[EventStatusTransition]

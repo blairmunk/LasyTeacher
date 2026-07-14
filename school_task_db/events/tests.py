@@ -103,3 +103,28 @@ class GradeParticipationViewTests(TestCase):
         )
         self.assertEqual(self.participation.status, 'graded')
         self.assertEqual(self.event.status, 'completed')
+
+    def test_event_list_uses_clean_context_categories(self):
+        response = self.client.get(reverse('events:list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['events']), 1)
+        self.assertEqual(len(response.context['active_events']), 1)
+        self.assertEqual(response.context['active_events'][0], self.event)
+        self.assertEqual(response.context['events'][0].participant_count, 1)
+
+    def test_event_detail_uses_clean_context_data(self):
+        response = self.client.get(reverse('events:detail', args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['event'], self.event)
+        self.assertTrue(response.context['some_variants_assigned'])
+        self.assertTrue(response.context['all_variants_assigned'])
+        self.assertTrue(response.context['can_review'])
+        self.assertEqual(response.context['status_color'], 'info')
+        self.assertEqual(response.context['status_steps'][2].code, 'completed')
+        self.assertEqual(response.context['status_transitions'][0].new_status, 'reviewing')
+        self.assertEqual(response.context['participations'][0].student.last_name, 'Петров')
+        self.assertEqual(response.context['participations'][0].variant.number, 1)
+        self.assertEqual(response.context['participations'][0].mark_obj.score, None)
+        self.assertEqual(response.context['available_variants'][0].number, 1)

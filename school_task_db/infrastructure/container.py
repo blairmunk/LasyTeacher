@@ -1,6 +1,7 @@
 """Small dependency container for application use cases."""
 
 from core_logic.services.analytics_service import StudentAnalyticsService
+from core_logic.services.event_service import EventService
 from core_logic.services.grading_service import GradingService
 from core_logic.services.remedial_service import RemedialService
 from core_logic.services.review_service import ReviewService
@@ -12,6 +13,8 @@ from core_logic.use_cases.get_participation_review import (
     GetParticipationReviewUseCase,
 )
 from core_logic.use_cases.get_event_review import GetEventReviewUseCase
+from core_logic.use_cases.get_event_detail import GetEventDetailUseCase
+from core_logic.use_cases.get_event_list import GetEventListUseCase
 from core_logic.use_cases.get_remedial_event_preview import (
     GetRemedialEventPreviewUseCase,
 )
@@ -77,6 +80,9 @@ class Container:
     def grading_service(self):
         return GradingService()
 
+    def event_service(self):
+        return EventService()
+
     def review_service(self):
         return ReviewService()
 
@@ -121,6 +127,18 @@ class Container:
         return GetEventReviewUseCase(
             review_repo=self.review_repo,
             review_service=self.review_service(),
+        )
+
+    def get_event_list_use_case(self):
+        return GetEventListUseCase(
+            event_repo=self.event_repo,
+            event_service=self.event_service(),
+        )
+
+    def get_event_detail_use_case(self):
+        return GetEventDetailUseCase(
+            event_repo=self.event_repo,
+            event_service=self.event_service(),
         )
 
 

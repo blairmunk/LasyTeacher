@@ -8,6 +8,8 @@ from core_logic.use_cases.get_participation_review import (
     GetParticipationReviewUseCase,
 )
 from core_logic.use_cases.get_event_review import GetEventReviewUseCase
+from core_logic.use_cases.get_event_detail import GetEventDetailUseCase
+from core_logic.use_cases.get_event_list import GetEventListUseCase
 from core_logic.use_cases.get_remedial_event_preview import (
     GetRemedialEventPreviewUseCase,
 )
@@ -32,6 +34,8 @@ class ContainerTests(SimpleTestCase):
         review_use_case = container.get_participation_review_use_case()
         dashboard_use_case = container.get_review_dashboard_use_case()
         event_review_use_case = container.get_event_review_use_case()
+        event_list_use_case = container.get_event_list_use_case()
+        event_detail_use_case = container.get_event_detail_use_case()
 
         self.assertIsInstance(use_case, CreateRemedialFromEventUseCase)
         self.assertIsInstance(preview_use_case, GetRemedialEventPreviewUseCase)
@@ -40,6 +44,8 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(review_use_case, GetParticipationReviewUseCase)
         self.assertIsInstance(dashboard_use_case, GetReviewDashboardUseCase)
         self.assertIsInstance(event_review_use_case, GetEventReviewUseCase)
+        self.assertIsInstance(event_list_use_case, GetEventListUseCase)
+        self.assertIsInstance(event_detail_use_case, GetEventDetailUseCase)
         self.assertIsInstance(container.student_repo, DjangoStudentRepository)
         self.assertIsInstance(container.task_repo, DjangoTaskRepository)
         self.assertIsInstance(container.work_repo, DjangoWorkRepository)

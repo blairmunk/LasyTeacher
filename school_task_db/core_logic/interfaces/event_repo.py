@@ -5,7 +5,9 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from core_logic.entities.event import (
+    EventParticipationRow,
     EventEntity,
+    EventVariantRef,
     MarkEntity,
     ParticipationMarkData,
 )
@@ -49,6 +51,18 @@ class GradeParticipationResult:
 
 
 class IEventRepository(ABC):
+    @abstractmethod
+    def get_list_events(self) -> List[object]:
+        """Return events for the list page."""
+
+    @abstractmethod
+    def get_detail_participations(self, event_id: str) -> List[EventParticipationRow]:
+        """Return event detail participation rows."""
+
+    @abstractmethod
+    def get_available_variants(self, event_id: str) -> List[EventVariantRef]:
+        """Return variants available for inline assignment."""
+
     @abstractmethod
     def get_by_id(self, event_id: str) -> Optional[EventEntity]:
         """Return an event by ID."""

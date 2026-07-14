@@ -3,11 +3,17 @@
 import datetime as dt
 from typing import Optional
 
-from django.utils import timezone
 from django.db import transaction
+from django.db.models import Count
+from django.utils import timezone
 
 from core_logic.entities.event import (
     EventEntity,
+    EventMarkRef,
+    EventParticipationRow,
+    EventStudentRef,
+    EventVariantRef,
+    EventWorkScanRef,
     MarkEntity,
     ParticipationMarkData,
     StudentSummary,
@@ -21,11 +27,73 @@ from core_logic.interfaces.event_repo import (
 )
 from core_logic.services.grading_service import GradingService
 from events.models import Event, EventParticipation, Mark
+from works.models import Variant
 
 
 class DjangoEventRepository(IEventRepository):
     def __init__(self, grading_service=None):
         self.grading_service = grading_service or GradingService()
+
+    def get_list_events(self):
+        return list(
+            Event.objects.select_related(
+                'work',
+                'course',
+            ).annotate(
+                participant_count=Count('eventparticipation'),
+            ).order_by('-planned_date')
+        )
+
+    def get_detail_participations(self, event_id: str):
+        participations = EventParticipation.objects.filter(
+            event_id=event_id,
+        ).select_related(
+            'student',
+            'variant',
+        ).order_by('student__last_name', 'student__first_name')
+
+        marks = {
+            mark.participation_id: mark
+            for mark in Mark.objects.filter(
+                participation_id__in=[p.pk for p in participations]
+            )
+        }
+
+        rows = []
+        for participation in participations:
+            mark = marks.get(participation.pk)
+            rows.append(
+                EventParticipationRow(
+                    pk=str(participation.pk),
+                    status=participation.status,
+                    student=EventStudentRef(
+                        pk=str(participation.student.pk),
+                        last_name=participation.student.last_name,
+                        first_name=participation.student.first_name,
+                        middle_name=participation.student.middle_name,
+                    ),
+                    variant=(
+                        EventVariantRef(
+                            pk=str(participation.variant.pk),
+                            number=participation.variant.number,
+                        )
+                        if participation.variant
+                        else None
+                    ),
+                    mark_obj=self._event_mark_ref(mark) if mark else None,
+                )
+            )
+        return rows
+
+    def get_available_variants(self, event_id: str):
+        event = Event.objects.select_related('work').filter(pk=event_id).first()
+        if not event or not event.work_id:
+            return []
+
+        return [
+            EventVariantRef(pk=str(variant.pk), number=variant.number)
+            for variant in Variant.objects.filter(work=event.work).order_by('number')
+        ]
 
     def get_by_id(self, event_id: str) -> Optional[EventEntity]:
         event = Event.objects.select_related('work', 'course').filter(
@@ -186,6 +254,12 @@ class DjangoEventRepository(IEventRepository):
                 score=mark.score,
                 event_status=event.status,
             )
+
+    def _event_mark_ref(self, mark: Mark) -> EventMarkRef:
+        work_scan = None
+        if mark.work_scan:
+            work_scan = EventWorkScanRef(url=mark.work_scan.url)
+        return EventMarkRef(score=mark.score, work_scan=work_scan)
 
     @staticmethod
     def _parse_planned_date(date_value: Optional[str]):

@@ -3,7 +3,6 @@ from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.urls import reverse_lazy
 from django.db import transaction
-from django.db.models import Count
 from .models import Event, EventParticipation, Mark
 from .forms import EventForm, StudentSelectionForm, MarkForm, VariantAssignmentForm
 
@@ -15,19 +14,21 @@ class EventListView(ListView):
     ordering = ['-planned_date']
 
     def get_queryset(self):
-        return Event.objects.select_related(
-            'work', 'course'
-        ).annotate(
-            participant_count=Count('eventparticipation')
-        ).order_by('-planned_date')
+        from infrastructure.container import container
+
+        self._event_list_data = container.get_event_list_use_case().execute()
+        return self._event_list_data.events
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        events = context['events']
+        event_list = getattr(self, '_event_list_data', None)
+        if event_list is None:
+            from infrastructure.container import container
+            event_list = container.get_event_list_use_case().execute()
 
-        context['planned_events'] = [e for e in events if e.status in ('planned', 'in_progress')]
-        context['active_events'] = [e for e in events if e.status in ('completed', 'reviewing')]
-        context['graded_events'] = [e for e in events if e.status == 'graded']
+        context['planned_events'] = event_list.planned_events
+        context['active_events'] = event_list.active_events
+        context['graded_events'] = event_list.graded_events
 
         return context
 
@@ -38,105 +39,24 @@ class EventDetailView(DetailView):
     template_name = 'events/detail.html'
     context_object_name = 'event'
 
-    STATUS_FLOW = [
-        ('planned', 'Запланировано', 'secondary'),
-        ('in_progress', 'Выполняется', 'primary'),
-        ('completed', 'Завершено', 'info'),
-        ('reviewing', 'На проверке', 'warning'),
-        ('graded', 'Проверено', 'success'),
-        ('closed', 'Закрыто', 'dark'),
-    ]
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         event = self.object
+        from infrastructure.container import container
 
-        participations = EventParticipation.objects.filter(
-            event=event
-        ).select_related(
-            'student', 'variant'
-        ).order_by('student__last_name', 'student__first_name')
-
-        for p in participations:
-            try:
-                p.mark_obj = Mark.objects.get(participation=p)
-            except Mark.DoesNotExist:
-                p.mark_obj = None
-
-        context['participations'] = participations
-
-        # Варианты
-        active_participations = participations.exclude(status='absent')
-        has_participants = active_participations.exists()
-        some_variants_assigned = active_participations.filter(variant__isnull=False).exists()
-        all_variants_assigned = has_participants and not active_participations.filter(
-            variant__isnull=True
-        ).exists()
-
-        context['some_variants_assigned'] = some_variants_assigned
-        context['all_variants_assigned'] = all_variants_assigned
-
-        # Можно ли проверять — только после завершения
-        can_review = (
-            has_participants
-            and some_variants_assigned
-            and event.status in ('completed', 'reviewing', 'graded')
+        detail = container.get_event_detail_use_case().execute(
+            event_id=str(event.pk),
+            status=event.status,
+            has_work=event.work_id is not None,
         )
-        context['can_review'] = can_review
-
-        # Цвет статуса
-        status_colors = dict((s[0], s[2]) for s in self.STATUS_FLOW)
-        context['status_color'] = status_colors.get(event.status, 'secondary')
-
-        # Прогресс-бар статусов
-        status_steps = []
-        current_found = False
-        for code, label, color in self.STATUS_FLOW:
-            is_current = code == event.status
-            if is_current:
-                current_found = True
-            passed = not current_found  # все до текущего — пройдены
-            step_color = color if (passed or is_current) else 'light'
-            status_steps.append({
-                'code': code,
-                'label': label,
-                'color': step_color,
-                'current': is_current,
-                'passed': passed,
-            })
-        context['status_steps'] = status_steps
-
-        # Доступные варианты для inline-назначения
-        if event.work:
-            from works.models import Variant
-            context['available_variants'] = Variant.objects.filter(
-                work=event.work
-            ).order_by('number')
-        else:
-            context['available_variants'] = []
-
-        # Доступные переходы статуса
-        TRANSITIONS = {
-            'planned': [
-                ('completed', 'Отметить как завершённое', 'info', 'fa-check'),
-            ],
-            'in_progress': [
-                ('completed', 'Завершить', 'info', 'fa-check'),
-            ],
-            'completed': [
-                ('reviewing', 'Начать проверку', 'warning', 'fa-clipboard-check'),
-            ],
-            'reviewing': [
-                ('graded', 'Завершить проверку', 'success', 'fa-check-circle'),
-            ],
-            'graded': [
-                ('closed', 'Закрыть событие', 'dark', 'fa-lock'),
-            ],
-            'closed': [
-                ('graded', 'Вернуть на проверку', 'warning', 'fa-undo'),
-            ],
-        }
-        context['status_transitions'] = TRANSITIONS.get(event.status, [])
+        context['participations'] = detail.participations
+        context['some_variants_assigned'] = detail.some_variants_assigned
+        context['all_variants_assigned'] = detail.all_variants_assigned
+        context['can_review'] = detail.can_review
+        context['status_color'] = detail.status_color
+        context['status_steps'] = detail.status_steps
+        context['available_variants'] = detail.available_variants
+        context['status_transitions'] = detail.status_transitions
 
         return context
 

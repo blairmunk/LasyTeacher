@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
 from events.models import Event, EventParticipation, Mark
-from .models import ReviewSession, ReviewComment
+from .models import ReviewSession
 
 
 class ReviewDashboardView(TemplateView):
@@ -222,95 +222,22 @@ class ParticipationReviewView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         participation_id = kwargs.get('pk')
-        participation = get_object_or_404(
-            EventParticipation.objects.select_related(
-                'student', 'variant', 'event', 'event__work'
-            ),
-            pk=participation_id
-        )
-        
-        # Получаем задания варианта
-        variant_tasks = list(
-            participation.variant.tasks.all().select_related('topic')
-        ) if participation.variant else []
-        
-        # НОВОЕ: Получаем VariantTask для доступа к weight
-        from works.models import VariantTask
-        variant_task_map = {
-            vt.task_id: vt 
-            for vt in VariantTask.objects.filter(
-                variant=participation.variant
-            )
-        }
-        
-        mark, created = Mark.objects.get_or_create(
-            participation=participation,
-            defaults={
-                # НОВОЕ: max_points из суммы weight
-                'max_points': sum(
-                    vt.weight for vt in variant_task_map.values()
-                )
-            }
-        )
-        
-        # Подготовка данных заданий с баллами
-        tasks_with_scores = []
-        existing_scores = mark.task_scores or {}
-        for i, task in enumerate(variant_tasks):
-            task_uuid = str(task.id)
-            vt = variant_task_map.get(task.id)
-            task_data = existing_scores.get(task_uuid, {})
-            tasks_with_scores.append({
-                'task': task,
-                'number': i + 1,
-                'points': task_data.get('points', 0),
-                # НОВОЕ: max_points из weight
-                'max_points': task_data.get(
-                    'max_points', 
-                    vt.weight if vt else 5
-                ),
-                'comment': task_data.get('comment', ''),
-            })
-        
-        context.update({
-            'participation': participation,
-            'mark': mark,
-            'tasks_with_scores': tasks_with_scores,
-            'typical_comments': ReviewComment.objects.filter(
-                is_active=True
-            ).order_by('-usage_count')[:10],
-        })
+        from infrastructure.container import container
 
-        # Навигация между работами (пропускаем отсутствующих)
-        all_participations = list(
-            participation.event.eventparticipation_set.exclude(
-                status='absent'
-            ).select_related('student').order_by(
-                'student__last_name', 'student__first_name'
-            )
+        review_data = container.get_participation_review_use_case().execute(
+            str(participation_id),
         )
-
-        try:
-            current_index = next(
-                i for i, p in enumerate(all_participations) if p.pk == participation.pk
-            )
-        except StopIteration:
-            current_index = 0
-
-        total = len(all_participations)
 
         context.update({
-            'previous_participation': (
-                all_participations[current_index - 1] if current_index > 0 else None
-            ),
-            'next_participation': (
-                all_participations[current_index + 1] if current_index < total - 1 else None
-            ),
-            'current_position': current_index + 1,
-            'total_positions': total,
-            'navigation_progress': round(
-                (current_index + 1) / total * 100, 1
-            ) if total > 0 else 0,
+            'participation': review_data.participation,
+            'mark': review_data.mark,
+            'tasks_with_scores': review_data.tasks_with_scores,
+            'typical_comments': review_data.typical_comments,
+            'previous_participation': review_data.previous_participation,
+            'next_participation': review_data.next_participation,
+            'current_position': review_data.current_position,
+            'total_positions': review_data.total_positions,
+            'navigation_progress': review_data.navigation_progress,
         })
 
         return context

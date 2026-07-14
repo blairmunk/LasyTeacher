@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from curriculum.models import Topic
 from events.models import Event, EventParticipation, Mark
+from review.models import ReviewComment
 from students.models import Student, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
@@ -65,6 +66,44 @@ class ParticipationReviewViewTests(TestCase):
             variant=self.variant,
             status='completed',
         )
+        self.next_student = Student.objects.create(
+            last_name='Сидоров',
+            first_name='Сидор',
+        )
+        self.next_participation = EventParticipation.objects.create(
+            event=self.event,
+            student=self.next_student,
+            variant=self.variant,
+            status='completed',
+        )
+
+    def test_get_uses_participation_review_context_from_clean_use_case(self):
+        ReviewComment.objects.create(
+            text='Проверь оформление',
+            category='suggestion',
+            usage_count=5,
+        )
+
+        response = self.client.get(
+            reverse('review:participation-review', args=[self.participation.pk])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['participation'].pk, str(self.participation.pk))
+        self.assertEqual(response.context['participation'].student.last_name, 'Иванов')
+        self.assertEqual(response.context['mark'].max_points, 2)
+        self.assertEqual(len(response.context['tasks_with_scores']), 1)
+        self.assertEqual(response.context['tasks_with_scores'][0].task.text, 'Найти скорость')
+        self.assertEqual(response.context['tasks_with_scores'][0].max_points, 2)
+        self.assertEqual(response.context['typical_comments'][0].text, 'Проверь оформление')
+        self.assertIsNone(response.context['previous_participation'])
+        self.assertEqual(
+            response.context['next_participation'].pk,
+            str(self.next_participation.pk),
+        )
+        self.assertEqual(response.context['current_position'], 1)
+        self.assertEqual(response.context['total_positions'], 2)
+        self.assertEqual(response.context['navigation_progress'], 50)
 
     def test_post_grades_participation_through_use_case(self):
         response = self.client.post(
@@ -105,5 +144,5 @@ class ParticipationReviewViewTests(TestCase):
             {str(self.task.pk): {'points': 2, 'max_points': 2, 'comment': 'Верно'}},
         )
         self.assertEqual(self.participation.status, 'graded')
-        self.assertEqual(self.event.status, 'graded')
+        self.assertEqual(self.event.status, 'reviewing')
         self.assertEqual(task_log.percentage, 100)

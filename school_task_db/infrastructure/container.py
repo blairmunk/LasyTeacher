@@ -3,15 +3,20 @@
 from core_logic.services.analytics_service import StudentAnalyticsService
 from core_logic.services.grading_service import GradingService
 from core_logic.services.remedial_service import RemedialService
+from core_logic.services.review_service import ReviewService
 from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
 )
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
+from core_logic.use_cases.get_participation_review import (
+    GetParticipationReviewUseCase,
+)
 from core_logic.use_cases.get_remedial_event_preview import (
     GetRemedialEventPreviewUseCase,
 )
 from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
+from infrastructure.repositories.django_review_repo import DjangoReviewRepository
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
@@ -25,6 +30,7 @@ class Container:
         self._task_repo = None
         self._work_repo = None
         self._event_repo = None
+        self._review_repo = None
 
     @property
     def student_repo(self):
@@ -50,6 +56,12 @@ class Container:
             self._event_repo = DjangoEventRepository()
         return self._event_repo
 
+    @property
+    def review_repo(self):
+        if self._review_repo is None:
+            self._review_repo = DjangoReviewRepository()
+        return self._review_repo
+
     def remedial_service(self):
         return RemedialService(
             student_repo=self.student_repo,
@@ -62,6 +74,9 @@ class Container:
 
     def grading_service(self):
         return GradingService()
+
+    def review_service(self):
+        return ReviewService()
 
     def create_remedial_from_event_use_case(self):
         return CreateRemedialFromEventUseCase(
@@ -86,6 +101,12 @@ class Container:
         return GradeStudentWorkUseCase(
             event_repo=self.event_repo,
             grading_service=self.grading_service(),
+        )
+
+    def get_participation_review_use_case(self):
+        return GetParticipationReviewUseCase(
+            review_repo=self.review_repo,
+            review_service=self.review_service(),
         )
 
 

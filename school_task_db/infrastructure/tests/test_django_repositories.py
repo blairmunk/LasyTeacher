@@ -10,6 +10,7 @@ from core_logic.use_cases.create_remedial_from_event import (
 from curriculum.models import Topic
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
+from infrastructure.repositories.django_review_repo import DjangoReviewRepository
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
@@ -17,6 +18,7 @@ from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
 from works.models import Variant, VariantTask, Work, WorkAnalogGroup
+from review.models import ReviewComment
 
 
 class DjangoRemedialRepositoryTests(TestCase):
@@ -266,3 +268,28 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(weak_log.points, 1)
         self.assertEqual(weak_log.max_points, 2)
         self.assertEqual(weak_log.comment, 'Повторить')
+
+    def test_review_repository_returns_participation_review_data(self):
+        ReviewComment.objects.create(
+            text='Аккуратнее с единицами',
+            category='suggestion',
+            usage_count=3,
+        )
+        repo = DjangoReviewRepository()
+
+        participation = repo.get_participation(str(self.participation.pk))
+        variant_tasks = repo.get_variant_tasks(str(self.participation.pk))
+        mark = repo.get_or_create_mark(str(self.participation.pk), default_max_points=7)
+        navigation = repo.get_review_participations(str(self.event.pk))
+        comments = repo.get_typical_comments()
+
+        self.assertEqual(participation.student.last_name, 'Петров')
+        self.assertEqual(participation.event.name, self.event.name)
+        self.assertEqual(participation.variant.number, 1)
+        self.assertEqual(variant_tasks[0].task.text, self.original_weak.text)
+        self.assertEqual(variant_tasks[0].task.topic.name, self.topic.name)
+        self.assertEqual(variant_tasks[0].weight, 2)
+        self.assertEqual(mark.score, 2)
+        self.assertEqual(mark.task_scores[str(self.original_weak.pk)]['points'], 0)
+        self.assertEqual(navigation[0].pk, str(self.participation.pk))
+        self.assertEqual(comments[0].text, 'Аккуратнее с единицами')

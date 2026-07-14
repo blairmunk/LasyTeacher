@@ -210,3 +210,5 @@ web_latex_output
 # Media files (загружаются пользователями)
 media/
 
+# Local planning notes
+Инструкции/

@@ -1,7 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import TemplateView, DetailView
 from django.contrib import messages
-from django.db.models import Q, Count
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
@@ -16,83 +15,15 @@ class ReviewDashboardView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        events = Event.objects.annotate(
-            total_participants=Count('eventparticipation'),
-            graded_participants=Count(
-                'eventparticipation',
-                filter=Q(eventparticipation__status='graded')
-            ),
-            absent_participants=Count(
-                'eventparticipation',
-                filter=Q(eventparticipation__status='absent')
-            ),
-        ).filter(
-            total_participants__gt=0
-        ).select_related('work', 'course').order_by('-planned_date')
+        from infrastructure.container import container
 
-        needs_review = []
-        in_progress = []
-        fully_graded = []
-
-        for event in events:
-            active = event.total_participants - event.absent_participants
-            graded = event.graded_participants
-
-            if active > 0:
-                progress = round(graded / active * 100, 1)
-            else:
-                progress = 100.0
-
-            event_data = {
-                'event': event,
-                'total_participants': event.total_participants,
-                'active_participants': active,
-                'graded_participants': graded,
-                'absent_participants': event.absent_participants,
-                'progress_percentage': progress,
-                'remaining': active - graded,
-            }
-
-            # Логика категоризации:
-            # 1. Event.status принудительно влияет на категорию
-            # 2. Прогресс участников — вторичный фактор
-            
-            event_status = getattr(event, 'status', '')
-            
-            if event_status in ('planned', 'in_progress'):
-                # Событие ещё не проведено — ожидает
-                needs_review.append(event_data)
-            elif event_status == 'reviewing':
-                # Статус "на проверке" — всегда в процессе,
-                # даже если все участники уже оценены
-                in_progress.append(event_data)
-            elif event_status == 'completed':
-                # Проведено, но не проверено
-                if graded == 0:
-                    needs_review.append(event_data)
-                else:
-                    in_progress.append(event_data)
-            elif event_status == 'graded':
-                # Полностью проверено
-                if progress >= 100:
-                    fully_graded.append(event_data)
-                else:
-                    # Статус graded, но не все проверены — коллизия
-                    in_progress.append(event_data)
-            else:
-                # Без статуса — определяем по прогрессу
-                if progress >= 100:
-                    fully_graded.append(event_data)
-                elif graded > 0:
-                    in_progress.append(event_data)
-                else:
-                    needs_review.append(event_data)
+        dashboard = container.get_review_dashboard_use_case().execute()
 
         context.update({
-            'needs_review': needs_review,
-            'in_progress': in_progress,
-            'fully_graded': fully_graded,
-            'total_events': len(needs_review) + len(in_progress) + len(fully_graded),
+            'needs_review': dashboard.needs_review,
+            'in_progress': dashboard.in_progress,
+            'fully_graded': dashboard.fully_graded,
+            'total_events': dashboard.total_events,
         })
 
         if self.request.user.is_authenticated:
@@ -113,89 +44,24 @@ class EventReviewView(DetailView):
         context = super().get_context_data(**kwargs)
         event = self.object
 
-        participations = event.eventparticipation_set.select_related(
-            'student', 'variant'
-        ).order_by('student__last_name', 'student__first_name')
+        from infrastructure.container import container
 
-        # Проверяем готовность
-        total_count = participations.count()
-        has_participants = total_count > 0
-        variants_assigned = participations.filter(variant__isnull=False).exists()
-        all_variants_assigned = has_participants and not participations.filter(
-            variant__isnull=True
-        ).exclude(status='absent').exists()
-
-        context['has_participants'] = has_participants
-        context['variants_assigned'] = variants_assigned
-        context['all_variants_assigned'] = all_variants_assigned
-
-        # Блокировка: нет учеников или нет вариантов
-        if not has_participants:
-            context['blocked'] = True
-            context['block_reason'] = 'no_participants'
-            return context
-
-        if not variants_assigned:
-            context['blocked'] = True
-            context['block_reason'] = 'no_variants'
-            return context
-
-        context['blocked'] = False
-
-        # Доступные варианты для inline-назначения
-        if event.work:
-            from works.models import Variant
-            context['available_variants'] = Variant.objects.filter(
-                work=event.work
-            ).order_by('number')
-        else:
-            context['available_variants'] = []
-
-
-        participations_data = []
-        graded_count = 0
-        absent_count = 0
-        scores = []
-
-        for p in participations:
-            mark = Mark.objects.filter(participation=p).first()
-            has_mark = mark is not None and mark.score is not None
-            is_absent = p.status == 'absent'
-
-            if has_mark:
-                graded_count += 1
-                scores.append(mark.score)
-            if is_absent:
-                absent_count += 1
-
-            participations_data.append({
-                'participation': p,
-                'mark': mark,
-                'has_mark': has_mark,
-                'is_absent': is_absent,
-                'student': p.student,
-                'variant': p.variant,
-            })
-
-        active_participants = len(participations_data) - absent_count
-        progress = round(
-            graded_count / active_participants * 100, 1
-        ) if active_participants > 0 else 100
-
-        score_dist = {2: 0, 3: 0, 4: 0, 5: 0}
-        for s in scores:
-            if s in score_dist:
-                score_dist[s] += 1
-
+        review_data = container.get_event_review_use_case().execute(str(event.pk))
         context.update({
-            'participations_data': participations_data,
-            'total_participants': len(participations_data),
-            'active_participants': active_participants,
-            'graded_participants': graded_count,
-            'absent_participants': absent_count,
-            'progress_percentage': progress,
-            'avg_score': round(sum(scores) / len(scores), 2) if scores else 0,
-            'score_distribution': score_dist,
+            'has_participants': review_data.has_participants,
+            'variants_assigned': review_data.variants_assigned,
+            'all_variants_assigned': review_data.all_variants_assigned,
+            'blocked': review_data.blocked,
+            'block_reason': review_data.block_reason,
+            'available_variants': review_data.available_variants,
+            'participations_data': review_data.participations_data,
+            'total_participants': review_data.total_participants,
+            'active_participants': review_data.active_participants,
+            'graded_participants': review_data.graded_participants,
+            'absent_participants': review_data.absent_participants,
+            'progress_percentage': review_data.progress_percentage,
+            'avg_score': review_data.avg_score,
+            'score_distribution': review_data.score_distribution,
         })
 
         if self.request.user.is_authenticated:
@@ -203,12 +69,12 @@ class EventReviewView(DetailView):
                 reviewer=self.request.user,
                 event=event,
                 defaults={
-                    'total_participations': active_participants,
-                    'checked_participations': graded_count,
+                    'total_participations': review_data.active_participants,
+                    'checked_participations': review_data.graded_participants,
                 }
             )
-            session.total_participations = active_participants
-            session.checked_participations = graded_count
+            session.total_participations = review_data.active_participants
+            session.checked_participations = review_data.graded_participants
             session.save()
             context['review_session'] = session
 

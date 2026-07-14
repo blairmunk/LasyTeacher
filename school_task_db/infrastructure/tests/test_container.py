@@ -7,9 +7,11 @@ from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.get_participation_review import (
     GetParticipationReviewUseCase,
 )
+from core_logic.use_cases.get_event_review import GetEventReviewUseCase
 from core_logic.use_cases.get_remedial_event_preview import (
     GetRemedialEventPreviewUseCase,
 )
+from core_logic.use_cases.get_review_dashboard import GetReviewDashboardUseCase
 from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
 from infrastructure.container import Container
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
@@ -28,12 +30,16 @@ class ContainerTests(SimpleTestCase):
         profile_use_case = container.get_student_profile_use_case()
         grade_use_case = container.grade_student_work_use_case()
         review_use_case = container.get_participation_review_use_case()
+        dashboard_use_case = container.get_review_dashboard_use_case()
+        event_review_use_case = container.get_event_review_use_case()
 
         self.assertIsInstance(use_case, CreateRemedialFromEventUseCase)
         self.assertIsInstance(preview_use_case, GetRemedialEventPreviewUseCase)
         self.assertIsInstance(profile_use_case, GetStudentProfileUseCase)
         self.assertIsInstance(grade_use_case, GradeStudentWorkUseCase)
         self.assertIsInstance(review_use_case, GetParticipationReviewUseCase)
+        self.assertIsInstance(dashboard_use_case, GetReviewDashboardUseCase)
+        self.assertIsInstance(event_review_use_case, GetEventReviewUseCase)
         self.assertIsInstance(container.student_repo, DjangoStudentRepository)
         self.assertIsInstance(container.task_repo, DjangoTaskRepository)
         self.assertIsInstance(container.work_repo, DjangoWorkRepository)

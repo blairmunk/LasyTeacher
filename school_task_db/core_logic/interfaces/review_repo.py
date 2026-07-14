@@ -4,14 +4,32 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from core_logic.entities.review import (
+    EventReviewParticipationRow,
     ReviewCommentRef,
+    ReviewEventProgress,
     ReviewMarkRef,
     ReviewParticipationRef,
+    ReviewVariantRef,
     ReviewVariantTaskRef,
 )
 
 
 class IReviewRepository(ABC):
+    @abstractmethod
+    def get_dashboard_events(self) -> List[ReviewEventProgress]:
+        """Return event progress rows for the review dashboard."""
+
+    @abstractmethod
+    def get_event_review_participations(
+        self,
+        event_id: str,
+    ) -> List[EventReviewParticipationRow]:
+        """Return participation rows for event review."""
+
+    @abstractmethod
+    def get_available_variants(self, event_id: str) -> List[ReviewVariantRef]:
+        """Return variants that can be assigned during event review."""
+
     @abstractmethod
     def get_participation(self, participation_id: str) -> ReviewParticipationRef:
         """Return participation details for the review screen."""

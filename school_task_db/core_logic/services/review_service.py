@@ -4,7 +4,12 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from core_logic.entities.review import (
+    EventReviewData,
+    EventReviewParticipationRow,
+    ReviewDashboardData,
+    ReviewEventProgress,
     ReviewParticipationRef,
+    ReviewVariantRef,
     ReviewTaskScoreRow,
     ReviewVariantTaskRef,
 )
@@ -20,6 +25,113 @@ class ReviewNavigation:
 
 
 class ReviewService:
+    def build_dashboard(
+        self,
+        events: List[ReviewEventProgress],
+    ) -> ReviewDashboardData:
+        needs_review = []
+        in_progress = []
+        fully_graded = []
+
+        for event_data in events:
+            status = event_data.event.status
+            if status in ('planned', 'in_progress'):
+                needs_review.append(event_data)
+            elif status == 'reviewing':
+                in_progress.append(event_data)
+            elif status == 'completed':
+                if event_data.graded_participants == 0:
+                    needs_review.append(event_data)
+                else:
+                    in_progress.append(event_data)
+            elif status == 'graded':
+                if event_data.progress_percentage >= 100:
+                    fully_graded.append(event_data)
+                else:
+                    in_progress.append(event_data)
+            else:
+                if event_data.progress_percentage >= 100:
+                    fully_graded.append(event_data)
+                elif event_data.graded_participants > 0:
+                    in_progress.append(event_data)
+                else:
+                    needs_review.append(event_data)
+
+        return ReviewDashboardData(
+            needs_review=needs_review,
+            in_progress=in_progress,
+            fully_graded=fully_graded,
+            total_events=len(needs_review) + len(in_progress) + len(fully_graded),
+        )
+
+    def build_event_review(
+        self,
+        participations: List[EventReviewParticipationRow],
+        available_variants: List[ReviewVariantRef],
+    ) -> EventReviewData:
+        total_participants = len(participations)
+        has_participants = total_participants > 0
+        variants_assigned = any(row.variant is not None for row in participations)
+        all_variants_assigned = (
+            has_participants
+            and all(row.variant is not None for row in participations if not row.is_absent)
+        )
+
+        if not has_participants:
+            return self._blocked_event_review(
+                block_reason='no_participants',
+                participations=participations,
+                available_variants=available_variants,
+                has_participants=False,
+                variants_assigned=False,
+                all_variants_assigned=False,
+            )
+
+        if not variants_assigned:
+            return self._blocked_event_review(
+                block_reason='no_variants',
+                participations=participations,
+                available_variants=available_variants,
+                has_participants=True,
+                variants_assigned=False,
+                all_variants_assigned=False,
+            )
+
+        absent_count = sum(1 for row in participations if row.is_absent)
+        scores = [
+            row.mark.score
+            for row in participations
+            if row.has_mark and row.mark and row.mark.score is not None
+        ]
+        active_participants = total_participants - absent_count
+        graded_count = len(scores)
+        progress = (
+            round(graded_count / active_participants * 100, 1)
+            if active_participants > 0
+            else 100
+        )
+        score_distribution = {2: 0, 3: 0, 4: 0, 5: 0}
+        for score in scores:
+            if score in score_distribution:
+                score_distribution[score] += 1
+
+        return EventReviewData(
+            has_participants=has_participants,
+            variants_assigned=variants_assigned,
+            all_variants_assigned=all_variants_assigned,
+            blocked=False,
+            block_reason='',
+            available_variants=available_variants,
+            participations_data=participations,
+            total_participants=total_participants,
+            active_participants=active_participants,
+            graded_participants=graded_count,
+            absent_participants=absent_count,
+            progress_percentage=progress,
+            avg_score=round(sum(scores) / len(scores), 2) if scores else 0,
+            score_distribution=score_distribution,
+        )
+
     def build_task_score_rows(
         self,
         variant_tasks: List[ReviewVariantTaskRef],
@@ -73,4 +185,30 @@ class ReviewService:
                 if total > 0
                 else 0
             ),
+        )
+
+    def _blocked_event_review(
+        self,
+        block_reason: str,
+        participations: List[EventReviewParticipationRow],
+        available_variants: List[ReviewVariantRef],
+        has_participants: bool,
+        variants_assigned: bool,
+        all_variants_assigned: bool,
+    ) -> EventReviewData:
+        return EventReviewData(
+            has_participants=has_participants,
+            variants_assigned=variants_assigned,
+            all_variants_assigned=all_variants_assigned,
+            blocked=True,
+            block_reason=block_reason,
+            available_variants=available_variants,
+            participations_data=participations,
+            total_participants=len(participations),
+            active_participants=0,
+            graded_participants=0,
+            absent_participants=0,
+            progress_percentage=0,
+            avg_score=0,
+            score_distribution={2: 0, 3: 0, 4: 0, 5: 0},
         )

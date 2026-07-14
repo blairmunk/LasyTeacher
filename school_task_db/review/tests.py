@@ -105,6 +105,32 @@ class ParticipationReviewViewTests(TestCase):
         self.assertEqual(response.context['total_positions'], 2)
         self.assertEqual(response.context['navigation_progress'], 50)
 
+    def test_dashboard_uses_review_summary_from_clean_use_case(self):
+        response = self.client.get(reverse('review:dashboard'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['total_events'], 1)
+        self.assertEqual(len(response.context['needs_review']), 1)
+        self.assertEqual(response.context['needs_review'][0].event.name, 'КР 9А')
+        self.assertEqual(response.context['needs_review'][0].active_participants, 2)
+        self.assertEqual(response.context['needs_review'][0].remaining, 2)
+
+    def test_event_review_uses_event_review_context_from_clean_use_case(self):
+        response = self.client.get(reverse('review:event-review', args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['blocked'])
+        self.assertTrue(response.context['has_participants'])
+        self.assertTrue(response.context['variants_assigned'])
+        self.assertTrue(response.context['all_variants_assigned'])
+        self.assertEqual(response.context['total_participants'], 2)
+        self.assertEqual(response.context['active_participants'], 2)
+        self.assertEqual(response.context['graded_participants'], 0)
+        self.assertEqual(response.context['progress_percentage'], 0)
+        self.assertEqual(len(response.context['participations_data']), 2)
+        self.assertEqual(response.context['participations_data'][0].variant.tasks.count, 1)
+        self.assertEqual(response.context['available_variants'][0].number, 1)
+
     def test_post_grades_participation_through_use_case(self):
         response = self.client.post(
             reverse('review:participation-review', args=[self.participation.pk]),

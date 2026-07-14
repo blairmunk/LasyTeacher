@@ -2,9 +2,14 @@
 
 from typing import List
 
+from django.db.models import Count, Q
+
 from core_logic.entities.review import (
+    EventReviewParticipationRow,
     ReviewCommentRef,
+    ReviewCourseRef,
     ReviewEventRef,
+    ReviewEventProgress,
     ReviewMarkRef,
     ReviewParticipationRef,
     ReviewStudentRef,
@@ -12,15 +17,115 @@ from core_logic.entities.review import (
     ReviewTopicRef,
     ReviewVariantRef,
     ReviewVariantTaskRef,
+    ReviewWorkRef,
     ReviewWorkScanRef,
 )
 from core_logic.interfaces.review_repo import IReviewRepository
-from events.models import EventParticipation, Mark
+from events.models import Event, EventParticipation, Mark
 from review.models import ReviewComment
-from works.models import VariantTask
+from works.models import Variant, VariantTask
 
 
 class DjangoReviewRepository(IReviewRepository):
+    def get_dashboard_events(self) -> List[ReviewEventProgress]:
+        events = Event.objects.annotate(
+            total_participants=Count('eventparticipation'),
+            graded_participants=Count(
+                'eventparticipation',
+                filter=Q(eventparticipation__status='graded'),
+            ),
+            absent_participants=Count(
+                'eventparticipation',
+                filter=Q(eventparticipation__status='absent'),
+            ),
+        ).filter(
+            total_participants__gt=0,
+        ).select_related(
+            'work',
+            'course',
+        ).order_by('-planned_date')
+
+        result = []
+        for event in events:
+            active = event.total_participants - event.absent_participants
+            progress = (
+                round(event.graded_participants / active * 100, 1)
+                if active > 0
+                else 100.0
+            )
+            result.append(
+                ReviewEventProgress(
+                    event=self._event_ref(event),
+                    total_participants=event.total_participants,
+                    graded_participants=event.graded_participants,
+                    absent_participants=event.absent_participants,
+                    active_participants=active,
+                    progress_percentage=progress,
+                    remaining=active - event.graded_participants,
+                )
+            )
+        return result
+
+    def get_event_review_participations(
+        self,
+        event_id: str,
+    ) -> List[EventReviewParticipationRow]:
+        participations = EventParticipation.objects.filter(
+            event_id=event_id,
+        ).select_related(
+            'student',
+            'variant',
+            'event',
+        ).order_by('student__last_name', 'student__first_name')
+
+        marks = {
+            mark.participation_id: mark
+            for mark in Mark.objects.filter(
+                participation_id__in=[p.pk for p in participations]
+            )
+        }
+        task_counts = self._variant_task_counts(
+            [p.variant_id for p in participations if p.variant_id]
+        )
+
+        result = []
+        for participation in participations:
+            mark = marks.get(participation.pk)
+            mark_ref = self._mark_ref(mark) if mark else None
+            result.append(
+                EventReviewParticipationRow(
+                    participation=self._participation_ref(
+                        participation,
+                        task_counts=task_counts,
+                    ),
+                    mark=mark_ref,
+                    has_mark=mark is not None and mark.score is not None,
+                    is_absent=participation.status == 'absent',
+                    student=self._student_ref(participation.student),
+                    variant=(
+                        self._variant_ref(
+                            participation.variant,
+                            task_counts=task_counts,
+                        )
+                        if participation.variant
+                        else None
+                    ),
+                )
+            )
+        return result
+
+    def get_available_variants(self, event_id: str) -> List[ReviewVariantRef]:
+        event = Event.objects.select_related('work').filter(pk=event_id).first()
+        if not event or not event.work_id:
+            return []
+
+        variants = Variant.objects.filter(work=event.work).order_by('number')
+        task_counts = self._variant_task_counts([variant.pk for variant in variants])
+        return [
+            self._variant_ref(variant, task_counts=task_counts)
+            for variant in variants
+        ]
+
     def get_participation(self, participation_id: str) -> ReviewParticipationRef:
         participation = EventParticipation.objects.select_related(
             'student',
@@ -90,7 +195,13 @@ class DjangoReviewRepository(IReviewRepository):
             'student__last_name',
             'student__first_name',
         )
-        return [self._participation_ref(participation) for participation in participations]
+        task_counts = self._variant_task_counts(
+            [p.variant_id for p in participations if p.variant_id]
+        )
+        return [
+            self._participation_ref(participation, task_counts=task_counts)
+            for participation in participations
+        ]
 
     def get_typical_comments(self, limit: int = 10) -> List[ReviewCommentRef]:
         return [
@@ -100,30 +211,61 @@ class DjangoReviewRepository(IReviewRepository):
             ).order_by('-usage_count')[:limit]
         ]
 
-    def _participation_ref(self, participation) -> ReviewParticipationRef:
+    def _participation_ref(self, participation, task_counts=None) -> ReviewParticipationRef:
         student = participation.student
         event = participation.event
         variant = participation.variant
         return ReviewParticipationRef(
             pk=str(participation.pk),
-            student=ReviewStudentRef(
-                pk=str(student.pk),
-                last_name=student.last_name,
-                first_name=student.first_name,
-                middle_name=student.middle_name,
-            ),
-            event=ReviewEventRef(
-                pk=str(event.pk),
-                name=event.name,
-            ),
+            student=self._student_ref(student),
+            event=self._event_ref(event),
             variant=(
-                ReviewVariantRef(
-                    pk=str(variant.pk),
-                    number=variant.number,
-                )
+                self._variant_ref(variant, task_counts=task_counts)
                 if variant
                 else None
             ),
+        )
+
+    def _event_ref(self, event) -> ReviewEventRef:
+        return ReviewEventRef(
+            pk=str(event.pk),
+            name=event.name,
+            planned_date=event.planned_date,
+            status=event.status,
+            work=(
+                ReviewWorkRef(
+                    pk=str(event.work.pk),
+                    name=event.work.name,
+                    work_type=event.work.work_type,
+                    work_type_display=event.work.get_work_type_display(),
+                )
+                if event.work_id
+                else None
+            ),
+            course=(
+                ReviewCourseRef(
+                    pk=str(event.course.pk),
+                    name=event.course.name,
+                )
+                if event.course_id
+                else None
+            ),
+        )
+
+    def _student_ref(self, student) -> ReviewStudentRef:
+        return ReviewStudentRef(
+            pk=str(student.pk),
+            last_name=student.last_name,
+            first_name=student.first_name,
+            middle_name=student.middle_name,
+        )
+
+    def _variant_ref(self, variant, task_counts=None) -> ReviewVariantRef:
+        task_counts = task_counts or {}
+        return ReviewVariantRef(
+            pk=str(variant.pk),
+            number=variant.number,
+            tasks_count=task_counts.get(variant.pk, 0),
         )
 
     def _mark_ref(self, mark: Mark) -> ReviewMarkRef:
@@ -143,3 +285,13 @@ class DjangoReviewRepository(IReviewRepository):
             work_scan=work_scan,
             task_scores=mark.task_scores or {},
         )
+
+    def _variant_task_counts(self, variant_ids) -> dict:
+        variant_ids = [variant_id for variant_id in variant_ids if variant_id]
+        if not variant_ids:
+            return {}
+
+        rows = VariantTask.objects.filter(
+            variant_id__in=variant_ids,
+        ).values('variant_id').annotate(total=Count('id'))
+        return {row['variant_id']: row['total'] for row in rows}

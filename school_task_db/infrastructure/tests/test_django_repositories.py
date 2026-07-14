@@ -293,3 +293,26 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(mark.task_scores[str(self.original_weak.pk)]['points'], 0)
         self.assertEqual(navigation[0].pk, str(self.participation.pk))
         self.assertEqual(comments[0].text, 'Аккуратнее с единицами')
+
+    def test_review_repository_returns_dashboard_and_event_review_data(self):
+        repo = DjangoReviewRepository()
+
+        dashboard_events = repo.get_dashboard_events()
+        event_rows = repo.get_event_review_participations(str(self.event.pk))
+        available_variants = repo.get_available_variants(str(self.event.pk))
+
+        dashboard_by_id = {row.event.pk: row for row in dashboard_events}
+        dashboard_row = dashboard_by_id[str(self.event.pk)]
+        event_row = event_rows[0]
+
+        self.assertEqual(dashboard_row.event.name, self.event.name)
+        self.assertEqual(dashboard_row.event.work.name, self.source_work.name)
+        self.assertEqual(dashboard_row.total_participants, 1)
+        self.assertEqual(dashboard_row.active_participants, 1)
+        self.assertEqual(dashboard_row.graded_participants, 1)
+        self.assertEqual(dashboard_row.progress_percentage, 100)
+        self.assertEqual(event_row.student.last_name, self.student.last_name)
+        self.assertEqual(event_row.variant.tasks.count, 2)
+        self.assertTrue(event_row.has_mark)
+        self.assertEqual(event_row.mark.score, 2)
+        self.assertEqual(available_variants[0].number, 1)

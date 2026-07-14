@@ -1,6 +1,7 @@
 """Review screen domain DTOs."""
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Dict, List, Optional
 
 
@@ -22,12 +23,43 @@ class ReviewStudentRef:
 class ReviewEventRef:
     pk: str
     name: str
+    planned_date: Optional[datetime] = None
+    status: str = ''
+    work: Optional['ReviewWorkRef'] = None
+    course: Optional['ReviewCourseRef'] = None
+
+
+@dataclass(frozen=True)
+class ReviewWorkRef:
+    pk: str
+    name: str
+    work_type: str = ''
+    work_type_display: str = ''
+
+    def get_work_type_display(self) -> str:
+        return self.work_type_display or self.work_type
+
+
+@dataclass(frozen=True)
+class ReviewCourseRef:
+    pk: str
+    name: str
+
+
+@dataclass(frozen=True)
+class ReviewVariantTaskCount:
+    count: int
 
 
 @dataclass(frozen=True)
 class ReviewVariantRef:
     pk: str
     number: int
+    tasks_count: int = 0
+
+    @property
+    def tasks(self) -> ReviewVariantTaskCount:
+        return ReviewVariantTaskCount(count=self.tasks_count)
 
 
 @dataclass(frozen=True)
@@ -93,6 +125,53 @@ class ReviewTaskScoreRow:
 @dataclass(frozen=True)
 class ReviewCommentRef:
     text: str
+
+
+@dataclass(frozen=True)
+class ReviewEventProgress:
+    event: ReviewEventRef
+    total_participants: int
+    graded_participants: int
+    absent_participants: int
+    active_participants: int
+    progress_percentage: float
+    remaining: int
+
+
+@dataclass(frozen=True)
+class ReviewDashboardData:
+    needs_review: List[ReviewEventProgress]
+    in_progress: List[ReviewEventProgress]
+    fully_graded: List[ReviewEventProgress]
+    total_events: int
+
+
+@dataclass(frozen=True)
+class EventReviewParticipationRow:
+    participation: ReviewParticipationRef
+    mark: Optional[ReviewMarkRef]
+    has_mark: bool
+    is_absent: bool
+    student: ReviewStudentRef
+    variant: Optional[ReviewVariantRef]
+
+
+@dataclass(frozen=True)
+class EventReviewData:
+    has_participants: bool
+    variants_assigned: bool
+    all_variants_assigned: bool
+    blocked: bool
+    block_reason: str
+    available_variants: List[ReviewVariantRef]
+    participations_data: List[EventReviewParticipationRow]
+    total_participants: int
+    active_participants: int
+    graded_participants: int
+    absent_participants: int
+    progress_percentage: float
+    avg_score: float
+    score_distribution: Dict[int, int]
 
 
 @dataclass(frozen=True)

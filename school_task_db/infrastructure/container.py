@@ -11,9 +11,11 @@ from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.get_participation_review import (
     GetParticipationReviewUseCase,
 )
+from core_logic.use_cases.get_event_review import GetEventReviewUseCase
 from core_logic.use_cases.get_remedial_event_preview import (
     GetRemedialEventPreviewUseCase,
 )
+from core_logic.use_cases.get_review_dashboard import GetReviewDashboardUseCase
 from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
@@ -105,6 +107,18 @@ class Container:
 
     def get_participation_review_use_case(self):
         return GetParticipationReviewUseCase(
+            review_repo=self.review_repo,
+            review_service=self.review_service(),
+        )
+
+    def get_review_dashboard_use_case(self):
+        return GetReviewDashboardUseCase(
+            review_repo=self.review_repo,
+            review_service=self.review_service(),
+        )
+
+    def get_event_review_use_case(self):
+        return GetEventReviewUseCase(
             review_repo=self.review_repo,
             review_service=self.review_service(),
         )

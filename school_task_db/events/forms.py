@@ -1,11 +1,22 @@
+import datetime as dt
+
 from django import forms
 from django.forms import inlineformset_factory
+from django.utils import timezone
 from .models import Event, EventParticipation, Mark
 from students.models import Student, StudentGroup
 from works.models import Variant
 
 class EventForm(forms.ModelForm):
     """Форма для создания события"""
+    planned_date = forms.DateField(
+        label='Дата',
+        input_formats=['%Y-%m-%d', '%Y-%m-%dT%H:%M'],
+        widget=forms.DateInput(
+            format='%Y-%m-%d',
+            attrs={'class': 'form-control', 'type': 'date'},
+        ),
+    )
     
     # Поля для добавления участников при создании
     student_group = forms.ModelChoiceField(
@@ -34,12 +45,26 @@ class EventForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'work': forms.Select(attrs={'class': 'form-select'}),
-            'planned_date': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
             'course': forms.Select(attrs={'class': 'form-select'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'location': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.is_bound and self.instance and self.instance.planned_date:
+            self.initial['planned_date'] = timezone.localtime(
+                self.instance.planned_date,
+            ).date()
+
+    def clean_planned_date(self):
+        planned_date = self.cleaned_data['planned_date']
+        planned_datetime = dt.datetime.combine(
+            planned_date,
+            dt.time(hour=9, minute=0),
+        )
+        return timezone.make_aware(planned_datetime)
 
 class EventParticipationForm(forms.ModelForm):
     """Форма для участия в событии"""

@@ -2,9 +2,24 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.urls import reverse_lazy
-from django.db import transaction
 from .models import Event, EventParticipation, Mark
 from .forms import EventForm, StudentSelectionForm, MarkForm, VariantAssignmentForm
+
+
+def _selected_student_ids(cleaned_data):
+    students = []
+    if cleaned_data.get('student_group'):
+        students.extend(cleaned_data['student_group'].students.all())
+    if cleaned_data.get('individual_students'):
+        students.extend(cleaned_data['individual_students'])
+    return [str(student.pk) for student in students]
+
+
+def _next_or_event_detail(request, event):
+    next_url = request.POST.get('next', '')
+    if next_url:
+        return redirect(next_url)
+    return redirect('events:detail', pk=event.pk)
 
 
 class EventListView(ListView):
@@ -76,27 +91,22 @@ class EventCreateView(CreateView):
         response = super().form_valid(form)
         event = self.object
 
-        # Добавляем участников
-        students = []
-        if form.cleaned_data.get('student_group'):
-            students.extend(form.cleaned_data['student_group'].students.all())
-        if form.cleaned_data.get('individual_students'):
-            students.extend(form.cleaned_data['individual_students'])
+        from core_logic.use_cases.add_event_participants import (
+            AddEventParticipantsRequest,
+        )
+        from infrastructure.container import container
 
-        created_count = 0
-        with transaction.atomic():
-            for student in students:
-                _, created = EventParticipation.objects.get_or_create(
-                    event=event, student=student,
-                    defaults={'status': 'assigned'}
-                )
-                if created:
-                    created_count += 1
+        result = container.add_event_participants_use_case().execute(
+            AddEventParticipantsRequest(
+                event_id=str(event.pk),
+                student_ids=_selected_student_ids(form.cleaned_data),
+            )
+        )
 
-        if created_count:
+        if result.created_count:
             messages.success(
                 self.request,
-                f'Событие создано, добавлено {created_count} учеников'
+                f'Событие создано, добавлено {result.created_count} учеников'
             )
         else:
             messages.success(self.request, 'Событие создано')
@@ -135,34 +145,24 @@ def add_participants(request, event_id):
     if request.method == 'POST':
         form = StudentSelectionForm(request.POST)
         if form.is_valid():
-            with transaction.atomic():
-                students = []
+            from core_logic.use_cases.add_event_participants import (
+                AddEventParticipantsRequest,
+            )
+            from infrastructure.container import container
 
-                if form.cleaned_data['student_group']:
-                    students.extend(form.cleaned_data['student_group'].students.all())
+            result = container.add_event_participants_use_case().execute(
+                AddEventParticipantsRequest(
+                    event_id=str(event.pk),
+                    student_ids=_selected_student_ids(form.cleaned_data),
+                )
+            )
 
-                if form.cleaned_data['individual_students']:
-                    students.extend(form.cleaned_data['individual_students'])
+            if result.created_count > 0:
+                messages.success(request, f'✅ Добавлено {result.created_count} учеников')
+            else:
+                messages.info(request, 'Все выбранные ученики уже добавлены')
 
-                created_count = 0
-                for student in students:
-                    participation, created = EventParticipation.objects.get_or_create(
-                        event=event,
-                        student=student,
-                        defaults={'status': 'assigned'}
-                    )
-                    if created:
-                        created_count += 1
-
-                if created_count > 0:
-                    messages.success(request, f'✅ Добавлено {created_count} учеников')
-                else:
-                    messages.info(request, 'Все выбранные ученики уже добавлены')
-
-                next_url = request.POST.get('next', '')
-                if next_url:
-                    return redirect(next_url)
-                return redirect('events:detail', pk=event.pk)
+            return _next_or_event_detail(request, event)
 
     else:
         form = StudentSelectionForm()
@@ -181,18 +181,25 @@ def assign_variants(request, event_id):
     if request.method == 'POST':
         form = VariantAssignmentForm(event, request.POST)
         if form.is_valid():
-            with transaction.atomic():
-                participations = EventParticipation.objects.filter(event=event)
+            from core_logic.use_cases.assign_event_variants import (
+                AssignEventVariantsRequest,
+            )
+            from infrastructure.container import container
 
-                for participation in participations:
-                    field_name = f'variant_{participation.id}'
-                    variant = form.cleaned_data.get(field_name)
-                    if variant:
-                        participation.variant = variant
-                        participation.save()
+            assignments = {}
+            for field_name, variant in form.cleaned_data.items():
+                if not field_name.startswith('variant_') or not variant:
+                    continue
+                assignments[field_name.removeprefix('variant_')] = str(variant.pk)
 
-                messages.success(request, 'Варианты успешно назначены')
-                return redirect('events:detail', pk=event.pk)
+            container.assign_event_variants_use_case().execute(
+                AssignEventVariantsRequest(
+                    event_id=str(event.pk),
+                    assignments=assignments,
+                )
+            )
+            messages.success(request, 'Варианты успешно назначены')
+            return redirect('events:detail', pk=event.pk)
     else:
         form = VariantAssignmentForm(event)
 
@@ -272,58 +279,53 @@ from django.views.decorators.http import require_POST
 def assign_single_variant(request, event_id):
     """Inline-назначение варианта одному участнику"""
     event = get_object_or_404(Event, pk=event_id)
-    participation_id = request.POST.get('participation_id')
-    variant_id = request.POST.get('variant_id')
+    from core_logic.use_cases.assign_single_event_variant import (
+        AssignSingleEventVariantRequest,
+    )
+    from infrastructure.container import container
 
-    if participation_id and variant_id:
-        from works.models import Variant
-        participation = get_object_or_404(
-            EventParticipation, pk=participation_id, event=event
+    result = container.assign_single_event_variant_use_case().execute(
+        AssignSingleEventVariantRequest(
+            event_id=str(event.pk),
+            participation_id=request.POST.get('participation_id'),
+            variant_id=request.POST.get('variant_id'),
         )
-        variant = get_object_or_404(Variant, pk=variant_id)
-        participation.variant = variant
-        participation.save()
+    )
+
+    if result.success:
+        assignment = result.assignment
         messages.success(
             request,
-            f'Вариант {variant.number} → {participation.student.last_name} {participation.student.first_name}'
+            f'Вариант {assignment.variant_number} → {assignment.student_name}'
         )
     else:
         messages.error(request, 'Не указан вариант или участник')
 
-    # Возврат туда, откуда пришли
-    next_url = request.POST.get('next', '')
-    if next_url:
-        return redirect(next_url)
-    return redirect('events:detail', pk=event.pk)
+    return _next_or_event_detail(request, event)
 
 
 @require_POST
 def change_status(request, event_id):
     """Смена статуса события"""
     event = get_object_or_404(Event, pk=event_id)
-    new_status = request.POST.get('new_status', '')
+    from core_logic.use_cases.change_event_status import (
+        ChangeEventStatusRequest,
+    )
+    from infrastructure.container import container
 
-    # Разрешённые переходы
-    allowed_transitions = {
-        'planned': ['in_progress', 'completed'],
-        'in_progress': ['completed'],
-        'completed': ['reviewing', 'graded'],
-        'reviewing': ['graded', 'completed'],
-        'graded': ['closed', 'reviewing'],
-        'closed': ['graded'],
-    }
+    result = container.change_event_status_use_case().execute(
+        ChangeEventStatusRequest(
+            event_id=str(event.pk),
+            new_status=request.POST.get('new_status', ''),
+        )
+    )
 
-    current = event.status
-    allowed = allowed_transitions.get(current, [])
-
-    if new_status in allowed:
-        event.status = new_status
-        event.save()
-        messages.success(request, f'Статус изменён: {event.get_status_display()}')
+    if result.success:
+        messages.success(request, f'Статус изменён: {result.new_status_label}')
     else:
         messages.error(
             request,
-            f'Недопустимый переход: {current} → {new_status}'
+            f'Недопустимый переход: {result.current_status} → {result.new_status}'
         )
 
     return redirect('events:detail', pk=event.pk)

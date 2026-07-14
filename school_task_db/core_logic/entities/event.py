@@ -134,6 +134,17 @@ class EventMarkRef:
 
 
 @dataclass(frozen=True)
+class EventVariantAssignmentResult:
+    variant_number: int
+    student_last_name: str
+    student_first_name: str
+
+    @property
+    def student_name(self) -> str:
+        return f'{self.student_last_name} {self.student_first_name}'.strip()
+
+
+@dataclass(frozen=True)
 class EventParticipationRow:
     pk: str
     status: str

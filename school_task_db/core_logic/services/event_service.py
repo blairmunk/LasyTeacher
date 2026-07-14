@@ -43,6 +43,15 @@ class EventService:
         ],
     }
 
+    ALLOWED_STATUS_TRANSITIONS = {
+        'planned': ['in_progress', 'completed'],
+        'in_progress': ['completed'],
+        'completed': ['reviewing', 'graded'],
+        'reviewing': ['graded', 'completed'],
+        'graded': ['closed', 'reviewing'],
+        'closed': ['graded'],
+    }
+
     def build_list_data(self, events: List[object]) -> EventListData:
         return EventListData(
             events=events,
@@ -106,6 +115,18 @@ class EventService:
             code: color
             for code, _, color in self.STATUS_FLOW
         }.get(status, 'secondary')
+
+    def status_label(self, status: str) -> str:
+        return {
+            code: label
+            for code, label, _ in self.STATUS_FLOW
+        }.get(status, status)
+
+    def can_change_status(self, current_status: str, new_status: str) -> bool:
+        return new_status in self.ALLOWED_STATUS_TRANSITIONS.get(
+            current_status,
+            [],
+        )
 
     def status_steps(self, status: str) -> List[EventStatusStep]:
         steps = []

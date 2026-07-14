@@ -1,5 +1,11 @@
 from django.test import SimpleTestCase
 
+from core_logic.use_cases.add_event_participants import AddEventParticipantsUseCase
+from core_logic.use_cases.assign_event_variants import AssignEventVariantsUseCase
+from core_logic.use_cases.assign_single_event_variant import (
+    AssignSingleEventVariantUseCase,
+)
+from core_logic.use_cases.change_event_status import ChangeEventStatusUseCase
 from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
 )
@@ -36,6 +42,12 @@ class ContainerTests(SimpleTestCase):
         event_review_use_case = container.get_event_review_use_case()
         event_list_use_case = container.get_event_list_use_case()
         event_detail_use_case = container.get_event_detail_use_case()
+        add_participants_use_case = container.add_event_participants_use_case()
+        assign_variants_use_case = container.assign_event_variants_use_case()
+        assign_single_variant_use_case = (
+            container.assign_single_event_variant_use_case()
+        )
+        change_status_use_case = container.change_event_status_use_case()
 
         self.assertIsInstance(use_case, CreateRemedialFromEventUseCase)
         self.assertIsInstance(preview_use_case, GetRemedialEventPreviewUseCase)
@@ -46,6 +58,13 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(event_review_use_case, GetEventReviewUseCase)
         self.assertIsInstance(event_list_use_case, GetEventListUseCase)
         self.assertIsInstance(event_detail_use_case, GetEventDetailUseCase)
+        self.assertIsInstance(add_participants_use_case, AddEventParticipantsUseCase)
+        self.assertIsInstance(assign_variants_use_case, AssignEventVariantsUseCase)
+        self.assertIsInstance(
+            assign_single_variant_use_case,
+            AssignSingleEventVariantUseCase,
+        )
+        self.assertIsInstance(change_status_use_case, ChangeEventStatusUseCase)
         self.assertIsInstance(container.student_repo, DjangoStudentRepository)
         self.assertIsInstance(container.task_repo, DjangoTaskRepository)
         self.assertIsInstance(container.work_repo, DjangoWorkRepository)

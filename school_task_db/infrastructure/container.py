@@ -5,6 +5,12 @@ from core_logic.services.event_service import EventService
 from core_logic.services.grading_service import GradingService
 from core_logic.services.remedial_service import RemedialService
 from core_logic.services.review_service import ReviewService
+from core_logic.use_cases.add_event_participants import AddEventParticipantsUseCase
+from core_logic.use_cases.assign_event_variants import AssignEventVariantsUseCase
+from core_logic.use_cases.assign_single_event_variant import (
+    AssignSingleEventVariantUseCase,
+)
+from core_logic.use_cases.change_event_status import ChangeEventStatusUseCase
 from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
 )
@@ -137,6 +143,27 @@ class Container:
 
     def get_event_detail_use_case(self):
         return GetEventDetailUseCase(
+            event_repo=self.event_repo,
+            event_service=self.event_service(),
+        )
+
+    def add_event_participants_use_case(self):
+        return AddEventParticipantsUseCase(
+            event_repo=self.event_repo,
+        )
+
+    def assign_event_variants_use_case(self):
+        return AssignEventVariantsUseCase(
+            event_repo=self.event_repo,
+        )
+
+    def assign_single_event_variant_use_case(self):
+        return AssignSingleEventVariantUseCase(
+            event_repo=self.event_repo,
+        )
+
+    def change_event_status_use_case(self):
+        return ChangeEventStatusUseCase(
             event_repo=self.event_repo,
             event_service=self.event_service(),
         )

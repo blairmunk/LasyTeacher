@@ -284,6 +284,51 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(participations[0].mark_obj.score, 2)
         self.assertEqual(available_variants[0].number, 1)
 
+    def test_event_repository_mutates_participants_variants_and_status(self):
+        repo = DjangoEventRepository()
+        second_student = Student.objects.create(
+            last_name='Сидоров',
+            first_name='Сидор',
+        )
+        second_variant = Variant.objects.create(
+            work=self.source_work,
+            number=2,
+            work_name_snapshot=self.source_work.name,
+        )
+
+        created_count = repo.add_participants(
+            event_id=str(self.event.pk),
+            student_ids=[str(self.student.pk), str(second_student.pk)],
+        )
+        second_participation = EventParticipation.objects.get(
+            event=self.event,
+            student=second_student,
+        )
+        assigned_count = repo.assign_variants(
+            event_id=str(self.event.pk),
+            assignments={str(second_participation.pk): str(second_variant.pk)},
+        )
+        single_assignment = repo.assign_variant(
+            event_id=str(self.event.pk),
+            participation_id=str(self.participation.pk),
+            variant_id=str(second_variant.pk),
+        )
+        status = repo.get_event_status(str(self.event.pk))
+        repo.set_event_status(str(self.event.pk), 'reviewing')
+
+        self.participation.refresh_from_db()
+        second_participation.refresh_from_db()
+        self.event.refresh_from_db()
+
+        self.assertEqual(created_count, 1)
+        self.assertEqual(assigned_count, 1)
+        self.assertEqual(second_participation.variant, second_variant)
+        self.assertEqual(self.participation.variant, second_variant)
+        self.assertEqual(single_assignment.variant_number, 2)
+        self.assertEqual(single_assignment.student_name, 'Петров Пётр')
+        self.assertEqual(status, 'graded')
+        self.assertEqual(self.event.status, 'reviewing')
+
     def test_review_repository_returns_participation_review_data(self):
         ReviewComment.objects.create(
             text='Аккуратнее с единицами',

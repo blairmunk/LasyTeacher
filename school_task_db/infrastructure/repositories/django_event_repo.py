@@ -1,7 +1,7 @@
 """Django implementation of the event repository."""
 
 import datetime as dt
-from typing import Optional
+from typing import Dict, List, Optional
 
 from django.db import transaction
 from django.db.models import Count
@@ -12,6 +12,7 @@ from core_logic.entities.event import (
     EventMarkRef,
     EventParticipationRow,
     EventStudentRef,
+    EventVariantAssignmentResult,
     EventVariantRef,
     EventWorkScanRef,
     MarkEntity,
@@ -94,6 +95,68 @@ class DjangoEventRepository(IEventRepository):
             EventVariantRef(pk=str(variant.pk), number=variant.number)
             for variant in Variant.objects.filter(work=event.work).order_by('number')
         ]
+
+    def get_event_status(self, event_id: str) -> Optional[str]:
+        return Event.objects.filter(pk=event_id).values_list(
+            'status',
+            flat=True,
+        ).first()
+
+    def add_participants(self, event_id: str, student_ids: List[str]) -> int:
+        created_count = 0
+        with transaction.atomic():
+            for student_id in student_ids:
+                _, created = EventParticipation.objects.get_or_create(
+                    event_id=event_id,
+                    student_id=student_id,
+                    defaults={'status': 'assigned'},
+                )
+                if created:
+                    created_count += 1
+        return created_count
+
+    def assign_variants(
+        self,
+        event_id: str,
+        assignments: Dict[str, str],
+    ) -> int:
+        assigned_count = 0
+        with transaction.atomic():
+            participations = EventParticipation.objects.filter(
+                event_id=event_id,
+                pk__in=assignments.keys(),
+            )
+            for participation in participations:
+                variant_id = assignments.get(str(participation.pk))
+                if not variant_id:
+                    continue
+                participation.variant_id = variant_id
+                participation.save()
+                assigned_count += 1
+        return assigned_count
+
+    def assign_variant(
+        self,
+        event_id: str,
+        participation_id: str,
+        variant_id: str,
+    ) -> EventVariantAssignmentResult:
+        participation = EventParticipation.objects.select_related(
+            'student',
+        ).get(pk=participation_id, event_id=event_id)
+        variant = Variant.objects.get(pk=variant_id)
+
+        participation.variant = variant
+        participation.save()
+
+        return EventVariantAssignmentResult(
+            variant_number=variant.number,
+            student_last_name=participation.student.last_name,
+            student_first_name=participation.student.first_name,
+        )
+
+    def set_event_status(self, event_id: str, status: str) -> None:
+        Event.objects.filter(pk=event_id).update(status=status)
 
     def get_by_id(self, event_id: str) -> Optional[EventEntity]:
         event = Event.objects.select_related('work', 'course').filter(

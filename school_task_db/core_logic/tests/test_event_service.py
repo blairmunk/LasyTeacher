@@ -54,3 +54,11 @@ class EventServiceTests(TestCase):
         self.assertEqual(detail.status_steps[2].code, 'completed')
         self.assertTrue(detail.status_steps[2].current)
         self.assertEqual(detail.status_transitions[0].new_status, 'reviewing')
+
+    def test_status_transition_rules_and_labels_are_pure(self):
+        service = EventService()
+
+        self.assertTrue(service.can_change_status('completed', 'reviewing'))
+        self.assertFalse(service.can_change_status('completed', 'closed'))
+        self.assertEqual(service.status_label('reviewing'), 'На проверке')
+        self.assertEqual(service.status_label('unknown'), 'unknown')

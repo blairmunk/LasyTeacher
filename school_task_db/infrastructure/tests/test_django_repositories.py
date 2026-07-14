@@ -376,3 +376,25 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertTrue(event_row.has_mark)
         self.assertEqual(event_row.mark.score, 2)
         self.assertEqual(available_variants[0].number, 1)
+
+    def test_review_repository_finalizes_event_and_toggles_absent(self):
+        repo = DjangoReviewRepository()
+        self.event.status = 'reviewing'
+        self.event.save()
+        self.participation.status = 'completed'
+        self.participation.save()
+
+        event_ref = repo.finalize_event(str(self.event.pk))
+        absent_result = repo.toggle_absent(str(self.participation.pk))
+        present_result = repo.toggle_absent(str(self.participation.pk))
+
+        self.event.refresh_from_db()
+        self.participation.refresh_from_db()
+
+        self.assertEqual(event_ref.pk, str(self.event.pk))
+        self.assertEqual(event_ref.name, self.event.name)
+        self.assertEqual(self.event.status, 'graded')
+        self.assertTrue(absent_result.is_absent)
+        self.assertEqual(absent_result.student_last_name, self.student.last_name)
+        self.assertFalse(present_result.is_absent)
+        self.assertEqual(self.participation.status, 'assigned')

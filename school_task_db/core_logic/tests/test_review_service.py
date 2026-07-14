@@ -15,6 +15,15 @@ from core_logic.services.review_service import ReviewService
 
 
 class ReviewServiceTests(TestCase):
+    def test_calculate_score_uses_review_thresholds(self):
+        service = ReviewService()
+
+        self.assertEqual(service.calculate_score(9, 10).score, 5)
+        self.assertEqual(service.calculate_score(7, 10).score, 4)
+        self.assertEqual(service.calculate_score(5, 10).score, 3)
+        self.assertEqual(service.calculate_score(4, 10).score, 2)
+        self.assertEqual(service.calculate_score(1, 0).percentage, 0)
+
     def test_build_dashboard_categorizes_events_by_status_and_progress(self):
         service = ReviewService()
 

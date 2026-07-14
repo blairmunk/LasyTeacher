@@ -114,6 +114,21 @@ class ReviewMarkRef:
 
 
 @dataclass(frozen=True)
+class ReviewScoreCalculation:
+    score: int
+    percentage: float
+
+
+@dataclass(frozen=True)
+class ReviewParticipationStatusChange:
+    participation_id: str
+    event_id: str
+    student_last_name: str
+    status: str
+    is_absent: bool
+
+
+@dataclass(frozen=True)
 class ReviewTaskScoreRow:
     task: ReviewTaskRef
     number: int

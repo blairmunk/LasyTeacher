@@ -172,3 +172,53 @@ class ParticipationReviewViewTests(TestCase):
         self.assertEqual(self.participation.status, 'graded')
         self.assertEqual(self.event.status, 'reviewing')
         self.assertEqual(task_log.percentage, 100)
+
+    def test_ajax_calculate_score_uses_clean_use_case(self):
+        response = self.client.get(
+            reverse('review:ajax-calculate-score'),
+            {'points': '8', 'max_points': '10'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {'score': 4, 'percentage': 80.0},
+        )
+
+    def test_ajax_calculate_score_tolerates_empty_values(self):
+        response = self.client.get(
+            reverse('review:ajax-calculate-score'),
+            {'points': '', 'max_points': ''},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {'score': 2, 'percentage': 0},
+        )
+
+    def test_finalize_event_uses_clean_use_case(self):
+        response = self.client.post(
+            reverse('review:finalize-event', args=[self.event.pk])
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('review:event-review', args=[self.event.pk]),
+            fetch_redirect_response=False,
+        )
+        self.event.refresh_from_db()
+        self.assertEqual(self.event.status, 'graded')
+
+    def test_toggle_absent_uses_clean_use_case(self):
+        response = self.client.post(
+            reverse('review:toggle-absent', args=[self.participation.pk])
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('review:event-review', args=[self.event.pk]),
+            fetch_redirect_response=False,
+        )
+        self.participation.refresh_from_db()
+        self.assertEqual(self.participation.status, 'absent')

@@ -9,6 +9,7 @@ from core_logic.entities.review import (
     ReviewDashboardData,
     ReviewEventProgress,
     ReviewParticipationRef,
+    ReviewScoreCalculation,
     ReviewVariantRef,
     ReviewTaskScoreRow,
     ReviewVariantTaskRef,
@@ -25,6 +26,23 @@ class ReviewNavigation:
 
 
 class ReviewService:
+    def calculate_score(self, points: int, max_points: int) -> ReviewScoreCalculation:
+        percentage = (points / max_points) * 100 if max_points > 0 else 0
+
+        if percentage >= 85:
+            score = 5
+        elif percentage >= 70:
+            score = 4
+        elif percentage >= 50:
+            score = 3
+        else:
+            score = 2
+
+        return ReviewScoreCalculation(
+            score=score,
+            percentage=round(percentage, 1),
+        )
+
     def build_dashboard(
         self,
         events: List[ReviewEventProgress],

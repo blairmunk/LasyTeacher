@@ -10,10 +10,12 @@ from core_logic.use_cases.assign_event_variants import AssignEventVariantsUseCas
 from core_logic.use_cases.assign_single_event_variant import (
     AssignSingleEventVariantUseCase,
 )
+from core_logic.use_cases.calculate_review_score import CalculateReviewScoreUseCase
 from core_logic.use_cases.change_event_status import ChangeEventStatusUseCase
 from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
 )
+from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.get_participation_review import (
     GetParticipationReviewUseCase,
@@ -26,6 +28,9 @@ from core_logic.use_cases.get_remedial_event_preview import (
 )
 from core_logic.use_cases.get_review_dashboard import GetReviewDashboardUseCase
 from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
+from core_logic.use_cases.toggle_participation_absent import (
+    ToggleParticipationAbsentUseCase,
+)
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
@@ -166,6 +171,21 @@ class Container:
         return ChangeEventStatusUseCase(
             event_repo=self.event_repo,
             event_service=self.event_service(),
+        )
+
+    def calculate_review_score_use_case(self):
+        return CalculateReviewScoreUseCase(
+            review_service=self.review_service(),
+        )
+
+    def finalize_review_event_use_case(self):
+        return FinalizeReviewEventUseCase(
+            review_repo=self.review_repo,
+        )
+
+    def toggle_participation_absent_use_case(self):
+        return ToggleParticipationAbsentUseCase(
+            review_repo=self.review_repo,
         )
 
 

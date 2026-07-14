@@ -12,6 +12,7 @@ from core_logic.entities.review import (
     ReviewEventProgress,
     ReviewMarkRef,
     ReviewParticipationRef,
+    ReviewParticipationStatusChange,
     ReviewStudentRef,
     ReviewTaskRef,
     ReviewTopicRef,
@@ -210,6 +211,34 @@ class DjangoReviewRepository(IReviewRepository):
                 is_active=True,
             ).order_by('-usage_count')[:limit]
         ]
+
+    def finalize_event(self, event_id: str) -> ReviewEventRef:
+        event = Event.objects.select_related('work', 'course').get(pk=event_id)
+        event.status = 'graded'
+        event.save()
+        return self._event_ref(event)
+
+    def toggle_absent(self, participation_id: str) -> ReviewParticipationStatusChange:
+        participation = EventParticipation.objects.select_related(
+            'student',
+            'event',
+        ).get(pk=participation_id)
+
+        if participation.status == 'absent':
+            participation.status = 'assigned'
+            is_absent = False
+        else:
+            participation.status = 'absent'
+            is_absent = True
+        participation.save()
+
+        return ReviewParticipationStatusChange(
+            participation_id=str(participation.pk),
+            event_id=str(participation.event.pk),
+            student_last_name=participation.student.last_name,
+            status=participation.status,
+            is_absent=is_absent,
+        )
 
     def _participation_ref(self, participation, task_counts=None) -> ReviewParticipationRef:
         student = participation.student

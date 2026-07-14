@@ -5,10 +5,12 @@ from core_logic.use_cases.assign_event_variants import AssignEventVariantsUseCas
 from core_logic.use_cases.assign_single_event_variant import (
     AssignSingleEventVariantUseCase,
 )
+from core_logic.use_cases.calculate_review_score import CalculateReviewScoreUseCase
 from core_logic.use_cases.change_event_status import ChangeEventStatusUseCase
 from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
 )
+from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.get_participation_review import (
     GetParticipationReviewUseCase,
@@ -21,6 +23,9 @@ from core_logic.use_cases.get_remedial_event_preview import (
 )
 from core_logic.use_cases.get_review_dashboard import GetReviewDashboardUseCase
 from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
+from core_logic.use_cases.toggle_participation_absent import (
+    ToggleParticipationAbsentUseCase,
+)
 from infrastructure.container import Container
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
@@ -48,6 +53,9 @@ class ContainerTests(SimpleTestCase):
             container.assign_single_event_variant_use_case()
         )
         change_status_use_case = container.change_event_status_use_case()
+        calculate_score_use_case = container.calculate_review_score_use_case()
+        finalize_event_use_case = container.finalize_review_event_use_case()
+        toggle_absent_use_case = container.toggle_participation_absent_use_case()
 
         self.assertIsInstance(use_case, CreateRemedialFromEventUseCase)
         self.assertIsInstance(preview_use_case, GetRemedialEventPreviewUseCase)
@@ -65,6 +73,9 @@ class ContainerTests(SimpleTestCase):
             AssignSingleEventVariantUseCase,
         )
         self.assertIsInstance(change_status_use_case, ChangeEventStatusUseCase)
+        self.assertIsInstance(calculate_score_use_case, CalculateReviewScoreUseCase)
+        self.assertIsInstance(finalize_event_use_case, FinalizeReviewEventUseCase)
+        self.assertIsInstance(toggle_absent_use_case, ToggleParticipationAbsentUseCase)
         self.assertIsInstance(container.student_repo, DjangoStudentRepository)
         self.assertIsInstance(container.task_repo, DjangoTaskRepository)
         self.assertIsInstance(container.work_repo, DjangoWorkRepository)

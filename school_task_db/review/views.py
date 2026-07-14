@@ -234,23 +234,20 @@ class ParticipationReviewView(TemplateView):
 
 def ajax_calculate_score(request):
     """AJAX расчёт оценки по баллам"""
-    points = int(request.GET.get('points', 0))
-    max_points = int(request.GET.get('max_points', 1))
+    from core_logic.use_cases.calculate_review_score import (
+        CalculateReviewScoreRequest,
+    )
+    from infrastructure.container import container
 
-    percentage = (points / max_points) * 100 if max_points > 0 else 0
-
-    if percentage >= 85:
-        score = 5
-    elif percentage >= 70:
-        score = 4
-    elif percentage >= 50:
-        score = 3
-    else:
-        score = 2
-
+    result = container.calculate_review_score_use_case().execute(
+        CalculateReviewScoreRequest(
+            points=request.GET.get('points', 0),
+            max_points=request.GET.get('max_points', 1),
+        )
+    )
     return JsonResponse({
-        'score': score,
-        'percentage': round(percentage, 1)
+        'score': result.score,
+        'percentage': result.percentage,
     })
 
 from django.views.decorators.http import require_POST
@@ -258,27 +255,35 @@ from django.views.decorators.http import require_POST
 @require_POST
 def finalize_event(request, pk):
     """Завершить проверку события — установить статус graded"""
-    event = get_object_or_404(Event, pk=pk)
-    event.status = 'graded'
-    event.save()
+    from core_logic.use_cases.finalize_review_event import (
+        FinalizeReviewEventRequest,
+    )
+    from infrastructure.container import container
+
+    event = container.finalize_review_event_use_case().execute(
+        FinalizeReviewEventRequest(event_id=str(pk))
+    )
     messages.success(request, f'✅ Проверка завершена: {event.name}')
     return redirect('review:event-review', pk=event.pk)
 
 @require_POST
 def toggle_absent(request, pk):
     """Переключить статус отсутствия"""
-    participation = get_object_or_404(EventParticipation, pk=pk)
+    from core_logic.use_cases.toggle_participation_absent import (
+        ToggleParticipationAbsentRequest,
+    )
+    from infrastructure.container import container
 
-    if participation.status == 'absent':
-        participation.status = 'assigned'
-        messages.info(request, f'{participation.student.last_name} — статус снят')
+    result = container.toggle_participation_absent_use_case().execute(
+        ToggleParticipationAbsentRequest(participation_id=str(pk))
+    )
+
+    if result.is_absent:
+        messages.warning(request, f'{result.student_last_name} — отсутствовал')
     else:
-        participation.status = 'absent'
-        messages.warning(request, f'{participation.student.last_name} — отсутствовал')
-
-    participation.save()
+        messages.info(request, f'{result.student_last_name} — статус снят')
 
     next_url = request.POST.get('next', '')
     if next_url:
         return redirect(next_url)
-    return redirect('review:event-review', pk=participation.event.pk)
+    return redirect('review:event-review', pk=result.event_id)

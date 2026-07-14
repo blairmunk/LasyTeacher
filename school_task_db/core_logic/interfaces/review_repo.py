@@ -7,7 +7,9 @@ from core_logic.entities.review import (
     EventReviewParticipationRow,
     ReviewCommentRef,
     ReviewEventProgress,
+    ReviewEventRef,
     ReviewMarkRef,
+    ReviewParticipationStatusChange,
     ReviewParticipationRef,
     ReviewVariantRef,
     ReviewVariantTaskRef,
@@ -53,3 +55,11 @@ class IReviewRepository(ABC):
     @abstractmethod
     def get_typical_comments(self, limit: int = 10) -> List[ReviewCommentRef]:
         """Return active quick comments for the review form."""
+
+    @abstractmethod
+    def finalize_event(self, event_id: str) -> ReviewEventRef:
+        """Mark an event as fully graded and return event details."""
+
+    @abstractmethod
+    def toggle_absent(self, participation_id: str) -> ReviewParticipationStatusChange:
+        """Toggle absent status for a participation."""

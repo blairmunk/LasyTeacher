@@ -83,6 +83,9 @@ class StudentGroupRef:
     pk: str
     name: str
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @dataclass(frozen=True)
 class StudentParticipationProfile:

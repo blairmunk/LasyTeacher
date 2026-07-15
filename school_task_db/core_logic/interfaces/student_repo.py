@@ -28,6 +28,10 @@ class IStudentRepository(ABC):
         """Return groups/classes containing the student."""
 
     @abstractmethod
+    def get_all_student_groups(self) -> List[StudentGroupRef]:
+        """Return all student groups/classes for selection controls."""
+
+    @abstractmethod
     def get_profile_participations(
         self,
         student_id: str,

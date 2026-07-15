@@ -77,6 +77,14 @@ class DjangoStudentRepository(IStudentRepository):
             ).order_by('name')
         ]
 
+    def get_all_student_groups(self) -> List[StudentGroupRef]:
+        return [
+            StudentGroupRef(pk=str(group.pk), name=str(group))
+            for group in StudentGroup.objects.select_related(
+                'academic_year',
+            ).order_by('name')
+        ]
+
     def get_profile_participations(
         self,
         student_id: str,

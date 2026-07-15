@@ -43,6 +43,9 @@ from core_logic.use_cases.get_remedial_event_preview import (
 from core_logic.use_cases.get_remedial_wizard_preview import (
     GetRemedialWizardPreviewUseCase,
 )
+from core_logic.use_cases.get_remedial_wizard_start import (
+    GetRemedialWizardStartUseCase,
+)
 from core_logic.use_cases.get_recent_review_sessions import (
     GetRecentReviewSessionsUseCase,
 )
@@ -89,6 +92,7 @@ class ContainerTests(SimpleTestCase):
         wizard_create_use_case = container.create_remedial_wizard_work_use_case()
         preview_use_case = container.get_remedial_event_preview_use_case()
         wizard_preview_use_case = container.get_remedial_wizard_preview_use_case()
+        wizard_start_use_case = container.get_remedial_wizard_start_use_case()
         profile_use_case = container.get_student_profile_use_case()
         student_remedial_use_case = container.get_student_remedial_work_use_case()
         create_student_remedial_use_case = (
@@ -142,6 +146,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             wizard_preview_use_case,
             GetRemedialWizardPreviewUseCase,
+        )
+        self.assertIsInstance(
+            wizard_start_use_case,
+            GetRemedialWizardStartUseCase,
         )
         self.assertIsInstance(profile_use_case, GetStudentProfileUseCase)
         self.assertIsInstance(

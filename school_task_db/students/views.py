@@ -234,18 +234,13 @@ class RemedialWizardView(View):
 
     def get(self, request):
         """Step 1: выбор класса и параметров"""
-        groups = StudentGroup.objects.select_related('academic_year').order_by('name')
+        from infrastructure.container import container
 
-        # Лимиты
-        LIMIT_CHOICES = [
-            ('tasks', 'По количеству заданий'),
-            ('weight', 'По суммарному весу (≈ сложность)'),
-            ('time', 'По времени выполнения (мин)'),
-        ]
+        start_data = container.get_remedial_wizard_start_use_case().execute()
 
         context = {
-            'groups': groups,
-            'limit_choices': LIMIT_CHOICES,
+            'groups': start_data.groups,
+            'limit_choices': start_data.limit_choices,
         }
         return render(request, 'students/remedial_wizard_step1.html', context)
 

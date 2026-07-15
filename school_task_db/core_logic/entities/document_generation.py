@@ -22,6 +22,7 @@ class DocumentGenerationResult:
     generator_type: str
     file_type: str = ''
     files: List[GeneratedDocumentFile] = field(default_factory=list)
+    source_name: str = ''
 
     @property
     def success(self) -> bool:

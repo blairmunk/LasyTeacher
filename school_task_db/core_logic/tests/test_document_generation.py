@@ -60,9 +60,15 @@ class FakeDocumentGenerationService:
 
 
 class FakeWorkRepository:
-    def __init__(self, variant_type='remedial'):
+    def __init__(self, variant_type='remedial', work_name='Контрольная'):
         self.variant_type = variant_type
         self.variant_type_request = None
+        self.work_name = work_name
+        self.work_name_request = None
+
+    def get_work_name(self, work_id):
+        self.work_name_request = work_id
+        return self.work_name
 
     def get_variant_type(self, variant_id):
         self.variant_type_request = variant_id
@@ -72,8 +78,10 @@ class FakeWorkRepository:
 class DocumentGenerationUseCaseTests(TestCase):
     def test_generate_work_document_rejects_unsupported_generator(self):
         service = FakeDocumentGenerationService()
+        work_repo = FakeWorkRepository()
         use_case = GenerateWorkDocumentUseCase(
             document_generation_service=service,
+            work_repo=work_repo,
         )
 
         result = use_case.execute(
@@ -86,12 +94,16 @@ class DocumentGenerationUseCaseTests(TestCase):
         self.assertFalse(result.success)
         self.assertEqual(result.status, 'unsupported_generator')
         self.assertEqual(result.generator_type, 'docx')
+        self.assertEqual(result.source_name, 'Контрольная')
+        self.assertEqual(work_repo.work_name_request, 'work-1')
         self.assertIsNone(service.work_request)
 
     def test_generate_work_document_delegates_to_service(self):
         service = FakeDocumentGenerationService()
+        work_repo = FakeWorkRepository()
         use_case = GenerateWorkDocumentUseCase(
             document_generation_service=service,
+            work_repo=work_repo,
         )
         options = WorkGenerationOptions(generator_type='html')
 
@@ -103,7 +115,27 @@ class DocumentGenerationUseCaseTests(TestCase):
         self.assertEqual(result.file_type, 'html')
         self.assertEqual(result.files[0].filename, 'work.html')
         self.assertEqual(result.files[0].size_kb, 1.0)
+        self.assertEqual(result.source_name, 'Контрольная')
+        self.assertEqual(work_repo.work_name_request, 'work-1')
         self.assertEqual(service.work_request, ('work-1', options))
+
+    def test_generate_work_document_handles_missing_work(self):
+        service = FakeDocumentGenerationService()
+        use_case = GenerateWorkDocumentUseCase(
+            document_generation_service=service,
+            work_repo=FakeWorkRepository(work_name=None),
+        )
+
+        result = use_case.execute(
+            GenerateWorkDocumentRequest(
+                work_id='missing-work',
+                options=WorkGenerationOptions(generator_type='html'),
+            )
+        )
+
+        self.assertFalse(result.success)
+        self.assertEqual(result.status, 'not_found')
+        self.assertIsNone(service.work_request)
 
     def test_generate_remedial_sheet_document_delegates_to_service(self):
         service = FakeDocumentGenerationService()

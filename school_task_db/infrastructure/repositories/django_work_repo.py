@@ -35,6 +35,9 @@ class DjangoWorkRepository(IWorkRepository):
 
         return AnalogGroup.objects.all()
 
+    def get_work_name(self, work_id: str):
+        return Work.objects.filter(pk=work_id).values_list('name', flat=True).first()
+
     def get_detail_variants(self, work_id: str):
         return Variant.objects.filter(work_id=work_id)
 

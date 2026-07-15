@@ -525,6 +525,17 @@ class WorkDetailViewTests(TestCase):
             },
         )
 
+    def test_generate_work_ajax_returns_404_for_missing_work(self):
+        response = self.client.post(
+            reverse(
+                'works:generate_work_ajax',
+                args=['00000000-0000-0000-0000-000000000000'],
+            ),
+            {'generator_type': 'html'},
+        )
+
+        self.assertEqual(response.status_code, 404)
+
     def test_download_generated_file_uses_document_service(self):
         with patch(
             'infrastructure.services.document_generation_service.'

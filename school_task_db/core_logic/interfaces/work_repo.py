@@ -54,6 +54,10 @@ class IWorkRepository(ABC):
         """Return analog group options for the work form page."""
 
     @abstractmethod
+    def get_work_name(self, work_id: str) -> Optional[str]:
+        """Return a work name, or None when the work does not exist."""
+
+    @abstractmethod
     def get_detail_variants(self, work_id: str) -> Any:
         """Return variants for the work detail page."""
 

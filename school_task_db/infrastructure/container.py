@@ -392,6 +392,7 @@ class Container:
     def generate_work_document_use_case(self):
         return GenerateWorkDocumentUseCase(
             document_generation_service=self.document_generation_service,
+            work_repo=self.work_repo,
         )
 
     def generate_remedial_sheet_document_use_case(self):

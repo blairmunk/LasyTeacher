@@ -2,7 +2,6 @@
 
 import logging
 from django.http import JsonResponse, HttpResponse, Http404
-from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_http_methods
 from django.urls import reverse
 
@@ -18,8 +17,6 @@ from core_logic.use_cases.generate_remedial_sheet_document import (
 )
 from core_logic.use_cases.generate_work_document import GenerateWorkDocumentRequest
 
-from .models import Work
-
 logger = logging.getLogger(__name__)
 
 @require_http_methods(["POST"])
@@ -27,13 +24,12 @@ def generate_work_ajax(request, work_id):
     """Ajax генерация документов с поддержкой hints/instructions"""
     from infrastructure.container import container
 
-    work = get_object_or_404(Work, id=work_id)
-    
+    generator_type = request.POST.get('generator_type', 'pdf')
     try:
         options = build_work_generation_options(request.POST)
         generator_type = options.generator_type
 
-        logger.info(f"🌐 Веб-генерация {generator_type} для работы {work.id}: {work.name}")
+        logger.info(f"🌐 Веб-генерация {generator_type} для работы {work_id}")
         logger.info(f"   Тип контента: {options.answer_type}")
         logger.info(
             "   Дополнительно: hints=%s, instructions=%s",
@@ -42,8 +38,10 @@ def generate_work_ajax(request, work_id):
         )
 
         result = container.generate_work_document_use_case().execute(
-            GenerateWorkDocumentRequest(work_id=str(work.pk), options=options),
+            GenerateWorkDocumentRequest(work_id=str(work_id), options=options),
         )
+        if result.status == 'not_found':
+            raise Http404("Работа не найдена")
         if result.status == 'unsupported_generator':
             return JsonResponse({
                 'success': False, 
@@ -74,8 +72,10 @@ def generate_work_ajax(request, work_id):
             'total_files': len(files_info)
         })
         
+    except Http404:
+        raise
     except Exception as e:
-        logger.error(f"Ошибка веб-генерации {generator_type} для работы {work.id}: {e}")
+        logger.error(f"Ошибка веб-генерации {generator_type} для работы {work_id}: {e}")
         return JsonResponse({
             'success': False,
             'error': str(e)
@@ -181,6 +181,8 @@ def generate_remedial_sheet_ajax(request, variant_id):
             'message': f'Рабочий лист сгенерирован ({generator_type.upper()})'
         })
 
+    except Http404:
+        raise
     except Exception as e:
         logger.error(f'Ошибка генерации remedial sheet: {e}', exc_info=True)
         return JsonResponse({

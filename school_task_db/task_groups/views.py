@@ -281,19 +281,23 @@ def bulk_create_work_from_groups(request):
 def bulk_delete_groups(request):
     """Удалить выбранные группы"""
     import json
+    from core_logic.use_cases.delete_task_groups import DeleteTaskGroupsRequest
+    from infrastructure.container import container
+
     try:
         body = json.loads(request.body)
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Невалидный JSON'}, status=400)
 
-    group_ids = body.get('group_ids', [])
-    if not group_ids:
-        return JsonResponse({'error': 'Не выбрано ни одной группы'}, status=400)
+    result = container.delete_task_groups_use_case().execute(
+        DeleteTaskGroupsRequest(group_ids=body.get('group_ids', [])),
+    )
 
-    deleted, _ = AnalogGroup.objects.filter(pk__in=group_ids).delete()
+    if not result.success:
+        return JsonResponse({'error': result.message}, status=400)
 
     return JsonResponse({
         'success': True,
-        'deleted': deleted,
-        'message': f'Удалено {deleted} групп',
+        'deleted': result.deleted_count,
+        'message': result.message,
     })

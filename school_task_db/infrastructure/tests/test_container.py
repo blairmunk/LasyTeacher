@@ -23,6 +23,7 @@ from core_logic.use_cases.create_work_from_orphans import (
 from core_logic.use_cases.create_work_from_groups import (
     CreateWorkFromGroupsUseCase,
 )
+from core_logic.use_cases.delete_task_groups import DeleteTaskGroupsUseCase
 from core_logic.use_cases.delete_variant import DeleteVariantUseCase
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
 from core_logic.use_cases.generate_work_variants import GenerateWorkVariantsUseCase
@@ -147,6 +148,7 @@ class ContainerTests(SimpleTestCase):
         create_from_groups_use_case = container.create_work_from_groups_use_case()
         variant_delete_info_use_case = container.get_variant_delete_info_use_case()
         delete_variant_use_case = container.delete_variant_use_case()
+        delete_task_groups_use_case = container.delete_task_groups_use_case()
         bulk_delete_variants_use_case = container.bulk_delete_variants_use_case()
         generated_file_use_case = container.get_generated_document_file_use_case()
 
@@ -221,6 +223,7 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(create_from_groups_use_case, CreateWorkFromGroupsUseCase)
         self.assertIsInstance(variant_delete_info_use_case, GetVariantDeleteInfoUseCase)
         self.assertIsInstance(delete_variant_use_case, DeleteVariantUseCase)
+        self.assertIsInstance(delete_task_groups_use_case, DeleteTaskGroupsUseCase)
         self.assertIsInstance(bulk_delete_variants_use_case, BulkDeleteVariantsUseCase)
         self.assertIsInstance(generated_file_use_case, GetGeneratedDocumentFileUseCase)
         self.assertIsInstance(container.student_repo, DjangoStudentRepository)

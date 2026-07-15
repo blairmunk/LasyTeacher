@@ -77,3 +77,29 @@ class TaskGroupBulkActionTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'error': 'Некоторые группы не найдены'})
+
+    def test_bulk_delete_groups_uses_clean_use_case(self):
+        second_group = AnalogGroup.objects.create(name='Ускорение')
+
+        response = self.client.post(
+            reverse('task_groups:bulk-delete'),
+            data=json.dumps({
+                'group_ids': [str(self.group.pk), str(second_group.pk)],
+            }),
+            content_type='application/json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['deleted'], 2)
+        self.assertFalse(AnalogGroup.objects.filter(pk=self.group.pk).exists())
+        self.assertFalse(AnalogGroup.objects.filter(pk=second_group.pk).exists())
+
+    def test_bulk_delete_groups_rejects_empty_selection(self):
+        response = self.client.post(
+            reverse('task_groups:bulk-delete'),
+            data=json.dumps({'group_ids': []}),
+            content_type='application/json',
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'error': 'Не выбрано ни одной группы'})

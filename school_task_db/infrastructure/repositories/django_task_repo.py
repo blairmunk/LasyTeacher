@@ -52,6 +52,17 @@ class DjangoTaskRepository(ITaskRepository):
             return task_group.task.difficulty
         return 1
 
+    def delete_groups(self, group_ids: List[str]) -> int:
+        if not group_ids:
+            return 0
+
+        from task_groups.models import AnalogGroup
+
+        groups = AnalogGroup.objects.filter(pk__in=group_ids)
+        deleted_count = groups.count()
+        groups.delete()
+        return deleted_count
+
     def get_tasks_in_group(self, group_id: str) -> Set[str]:
         return {
             str(task_id)

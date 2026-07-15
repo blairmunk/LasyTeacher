@@ -24,6 +24,10 @@ class ITaskRepository(ABC):
         """Return the first task difficulty for an analog group, or 1."""
 
     @abstractmethod
+    def delete_groups(self, group_ids: List[str]) -> int:
+        """Delete analog groups by IDs and return deleted object count."""
+
+    @abstractmethod
     def get_tasks_in_group(self, group_id: str) -> Set[str]:
         """Return all task IDs in an analog group."""
 

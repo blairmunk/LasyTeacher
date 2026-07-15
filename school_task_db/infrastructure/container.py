@@ -5,6 +5,7 @@ from core_logic.services.event_service import EventService
 from core_logic.services.grading_service import GradingService
 from core_logic.services.remedial_service import RemedialService
 from core_logic.services.review_service import ReviewService
+from core_logic.services.work_service import WorkService
 from core_logic.use_cases.add_event_participants import AddEventParticipantsUseCase
 from core_logic.use_cases.assign_event_variants import AssignEventVariantsUseCase
 from core_logic.use_cases.assign_single_event_variant import (
@@ -34,6 +35,7 @@ from core_logic.use_cases.get_review_save_navigation import (
     GetReviewSaveNavigationUseCase,
 )
 from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
+from core_logic.use_cases.get_work_detail import GetWorkDetailUseCase
 from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionUseCase,
 )
@@ -107,6 +109,9 @@ class Container:
 
     def review_service(self):
         return ReviewService()
+
+    def work_service(self):
+        return WorkService()
 
     def create_remedial_from_event_use_case(self):
         return CreateRemedialFromEventUseCase(
@@ -222,6 +227,12 @@ class Container:
     def sync_review_session_use_case(self):
         return SyncReviewSessionUseCase(
             review_repo=self.review_repo,
+        )
+
+    def get_work_detail_use_case(self):
+        return GetWorkDetailUseCase(
+            work_repo=self.work_repo,
+            work_service=self.work_service(),
         )
 
 

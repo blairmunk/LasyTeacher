@@ -222,6 +222,18 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(variant_task.max_points, self.replacement.difficulty)
         self.assertEqual(variant_task.weight, self.replacement.difficulty)
 
+    def test_work_repository_returns_detail_page_data(self):
+        repo = DjangoWorkRepository()
+
+        variants = repo.get_detail_variants(str(self.source_work.pk))
+        analog_groups = repo.get_detail_analog_groups(str(self.source_work.pk))
+        spec_preview = repo.get_spec_preview(str(self.source_work.pk))
+
+        self.assertEqual(variants.count(), 1)
+        self.assertEqual(analog_groups[0].analog_group.name, self.weak_group.name)
+        self.assertEqual(spec_preview[0]['wg'].analog_group, self.weak_group)
+        self.assertEqual(spec_preview[0]['total_points'], 7)
+
     def test_event_repository_grades_participation_and_syncs_review_state(self):
         self.event.status = 'completed'
         self.event.save()

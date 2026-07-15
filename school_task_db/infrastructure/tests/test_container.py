@@ -29,6 +29,7 @@ from core_logic.use_cases.get_review_save_navigation import (
     GetReviewSaveNavigationUseCase,
 )
 from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
+from core_logic.use_cases.get_work_detail import GetWorkDetailUseCase
 from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionUseCase,
 )
@@ -74,6 +75,7 @@ class ContainerTests(SimpleTestCase):
         save_navigation_use_case = container.get_review_save_navigation_use_case()
         recent_sessions_use_case = container.get_recent_review_sessions_use_case()
         sync_session_use_case = container.sync_review_session_use_case()
+        work_detail_use_case = container.get_work_detail_use_case()
 
         self.assertIsInstance(use_case, CreateRemedialFromEventUseCase)
         self.assertIsInstance(preview_use_case, GetRemedialEventPreviewUseCase)
@@ -102,6 +104,7 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(save_navigation_use_case, GetReviewSaveNavigationUseCase)
         self.assertIsInstance(recent_sessions_use_case, GetRecentReviewSessionsUseCase)
         self.assertIsInstance(sync_session_use_case, SyncReviewSessionUseCase)
+        self.assertIsInstance(work_detail_use_case, GetWorkDetailUseCase)
         self.assertIsInstance(container.student_repo, DjangoStudentRepository)
         self.assertIsInstance(container.task_repo, DjangoTaskRepository)
         self.assertIsInstance(container.work_repo, DjangoWorkRepository)

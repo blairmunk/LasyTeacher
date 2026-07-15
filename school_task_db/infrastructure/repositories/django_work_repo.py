@@ -9,10 +9,26 @@ from core_logic.interfaces.work_repo import (
 )
 from events.models import EventParticipation
 from tasks.models import Task
-from works.models import Variant, VariantTask, Work
+from works.models import Variant, VariantTask, Work, WorkAnalogGroup
 
 
 class DjangoWorkRepository(IWorkRepository):
+    def get_detail_variants(self, work_id: str):
+        return Variant.objects.filter(work_id=work_id)
+
+    def get_detail_analog_groups(self, work_id: str):
+        return list(
+            WorkAnalogGroup.objects.filter(
+                work_id=work_id,
+            ).select_related(
+                'analog_group',
+            ).order_by('order', 'pk')
+        )
+
+    def get_spec_preview(self, work_id: str):
+        work = Work.objects.get(pk=work_id)
+        return work.get_spec_preview()
+
     def get_variant_task_ids(self, work_id: str) -> Set[str]:
         return {
             str(task_id)
@@ -80,4 +96,3 @@ class DjangoWorkRepository(IWorkRepository):
             )
 
         return str(variant.pk)
-

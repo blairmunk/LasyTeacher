@@ -23,15 +23,13 @@ class WorkDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['variants'] = Variant.objects.filter(work=self.object)
-        context['analog_groups'] = WorkAnalogGroup.objects.filter(
-            work=self.object
-        ).select_related('analog_group').order_by('order', 'pk')
-        context['spec_preview'] = self.object.get_spec_preview()
+        from infrastructure.container import container
 
-        has_variants = context['variants'].exists()
-        has_groups = context['analog_groups'].exists()
-        context['show_sync_button'] = has_variants and not has_groups
+        detail = container.get_work_detail_use_case().execute(str(self.object.pk))
+        context['variants'] = detail.variants
+        context['analog_groups'] = detail.analog_groups
+        context['spec_preview'] = detail.spec_preview
+        context['show_sync_button'] = detail.show_sync_button
         return context
 
 

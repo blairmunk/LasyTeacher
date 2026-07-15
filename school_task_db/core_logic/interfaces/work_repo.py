@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Optional, Set
+from typing import Any, List, Optional, Set
 
 
 @dataclass(frozen=True)
@@ -26,6 +26,18 @@ class CreateVariantParams:
 
 
 class IWorkRepository(ABC):
+    @abstractmethod
+    def get_detail_variants(self, work_id: str) -> Any:
+        """Return variants for the work detail page."""
+
+    @abstractmethod
+    def get_detail_analog_groups(self, work_id: str) -> List[Any]:
+        """Return analog groups for the work detail page."""
+
+    @abstractmethod
+    def get_spec_preview(self, work_id: str) -> List[Any]:
+        """Return points specification preview for the work detail page."""
+
     @abstractmethod
     def get_variant_task_ids(self, work_id: str) -> Set[str]:
         """Return task IDs used in all variants of a work."""

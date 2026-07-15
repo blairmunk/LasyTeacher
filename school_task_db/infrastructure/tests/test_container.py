@@ -11,6 +11,9 @@ from core_logic.use_cases.change_event_status import ChangeEventStatusUseCase
 from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
 )
+from core_logic.use_cases.create_remedial_wizard_work import (
+    CreateRemedialWizardWorkUseCase,
+)
 from core_logic.use_cases.create_student_remedial_variant import (
     CreateStudentRemedialVariantUseCase,
 )
@@ -80,6 +83,7 @@ class ContainerTests(SimpleTestCase):
         container = Container()
 
         use_case = container.create_remedial_from_event_use_case()
+        wizard_create_use_case = container.create_remedial_wizard_work_use_case()
         preview_use_case = container.get_remedial_event_preview_use_case()
         wizard_preview_use_case = container.get_remedial_wizard_preview_use_case()
         profile_use_case = container.get_student_profile_use_case()
@@ -127,6 +131,7 @@ class ContainerTests(SimpleTestCase):
         generated_file_use_case = container.get_generated_document_file_use_case()
 
         self.assertIsInstance(use_case, CreateRemedialFromEventUseCase)
+        self.assertIsInstance(wizard_create_use_case, CreateRemedialWizardWorkUseCase)
         self.assertIsInstance(preview_use_case, GetRemedialEventPreviewUseCase)
         self.assertIsInstance(
             wizard_preview_use_case,

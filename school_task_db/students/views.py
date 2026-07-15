@@ -1,23 +1,12 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.http import Http404
-from django.db.models import Avg, Count, F, Q
 from django.views import View
-from django.shortcuts import get_object_or_404
-from django.utils import timezone as tz
-from django.db.models import Count
 
-
-from tasks.models import Task
-from works.models import Work, Variant, VariantTask
-from task_groups.models import AnalogGroup, TaskGroup
-
-from .models import Student, StudentGroup, StudentTaskLog
+from .models import Student, StudentGroup
 from .forms import StudentForm, StudentGroupForm
-from events.models import Event, EventParticipation
-
 
 
 class StudentListView(ListView):
@@ -309,114 +298,44 @@ class RemedialWizardView(View):
 
     def _step3_create(self, request):
         """Step 3: создание Work + Variants + Event"""
-        from events.models import Event, EventParticipation
+        from core_logic.use_cases.create_remedial_wizard_work import (
+            CreateRemedialWizardWorkRequest,
+        )
+        from infrastructure.container import container
 
         group_id = request.POST.get('group_id')
         work_name = request.POST.get('work_name', 'Работа над ошибками')
         create_event = request.POST.get('create_event') == '1'
         event_date = request.POST.get('event_date', '')
 
-        group = get_object_or_404(StudentGroup, pk=group_id)
         selected_students = request.POST.getlist('selected_students')
-
-        if not selected_students:
-            messages.warning(request, 'Не выбрано ни одного ученика.')
-            return redirect('students:remedial-wizard')
-
-        # Собираем task_ids для каждого ученика
         student_tasks = {}
         for student_id in selected_students:
             task_ids_str = request.POST.get(f'task_ids_{student_id}', '')
             if task_ids_str:
                 student_tasks[student_id] = task_ids_str.split(',')
 
-        if not student_tasks:
-            messages.warning(request, 'Нет заданий для выбранных учеников.')
-            return redirect('students:remedial-wizard')
-
-        # Создаём Work
-        max_weight = max(
-            sum(
-                (Task.objects.get(pk=tid).difficulty or 1) for tid in tids
-            ) for tids in student_tasks.values()
-        ) if student_tasks else 0
-
-        work = Work.objects.create(
-            name=work_name,
-            work_type='remedial',
-            max_score=max_weight,
-            variant_counter=len(student_tasks),
+        result = container.create_remedial_wizard_work_use_case().execute(
+            CreateRemedialWizardWorkRequest(
+                group_id=group_id,
+                selected_student_ids=selected_students,
+                student_task_ids=student_tasks,
+                work_name=work_name,
+                create_event=create_event,
+                event_date=event_date,
+            )
         )
 
-        # Создаём Event (если нужно)
-        event = None
-        if create_event:
-            import datetime
-            from django.utils import timezone as tz
+        if not result.success:
+            if result.status == 'group_not_found':
+                raise Http404("Класс не найден")
+            messages.warning(request, result.message)
+            return redirect('students:remedial-wizard')
 
-            if event_date:
-                try:
-                    date_obj = datetime.datetime.strptime(event_date, '%Y-%m-%d').date()
-                except ValueError:
-                    date_obj = tz.now().date()
-            else:
-                date_obj = tz.now().date()
-
-            event = Event.objects.create(
-                name=work_name,
-                work=work,
-                planned_date=tz.make_aware(
-                    datetime.datetime.combine(date_obj, datetime.time(9, 0))
-                ),
-                status='planned',
-                description=f'Работа над ошибками для {group.name}',
-            )
-
-
-        # Создаём варианты
-        variants_created = 0
-        for i, (student_id, task_ids) in enumerate(student_tasks.items(), 1):
-            student = Student.objects.get(pk=student_id)
-            tasks_list = list(Task.objects.filter(id__in=task_ids))
-            total_score = sum(t.difficulty or 1 for t in tasks_list)
-
-            variant = Variant.objects.create(
-                work=work,
-                number=i,
-                work_name_snapshot=work_name,
-                max_score_snapshot=total_score,
-                variant_type='remedial',
-                assigned_student=student,
-            )
-
-            for j, task in enumerate(tasks_list, 1):
-                VariantTask.objects.create(
-                    variant=variant,
-                    task=task,
-                    order=j,
-                    weight=float(task.difficulty or 1),
-                    max_points=task.difficulty or 1,
-                )
-
-            # EventParticipation
-            if event:
-                EventParticipation.objects.create(
-                    event=event,
-                    student=student,
-                    variant=variant,
-                    status='assigned',
-                )
-
-            variants_created += 1
-
-        msg = f'Создана работа «{work_name}» с {variants_created} вариантами.'
-        if event:
-            msg += f' Событие на {event_date} создано.'
-        messages.success(request, msg)
-
-        if event:
-            return redirect('events:detail', pk=event.pk)
-        return redirect('works:detail', pk=work.pk)
+        messages.success(request, result.message)
+        if result.event_id:
+            return redirect('events:detail', pk=result.event_id)
+        return redirect('works:detail', pk=result.work_id)
 
 class RemedialFromEventView(View):
     """Работа над ошибками для конкретного события/работы"""

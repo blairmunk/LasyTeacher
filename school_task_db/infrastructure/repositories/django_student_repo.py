@@ -251,6 +251,10 @@ class DjangoStudentRepository(IStudentRepository):
     def get_student_short_name(self, student_id: str) -> str:
         return Student.objects.get(pk=student_id).get_short_name()
 
+    def get_group_name(self, group_id: str):
+        group = StudentGroup.objects.filter(pk=group_id).first()
+        return group.name if group else None
+
     def select_student_remedial_task_ids(
         self,
         student_id: str,

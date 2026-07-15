@@ -1,7 +1,7 @@
 """Student repository interface."""
 
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Optional
 
 from core_logic.entities.student import (
     RemedialWizardPreviewData,
@@ -48,6 +48,10 @@ class IStudentRepository(ABC):
     @abstractmethod
     def get_student_short_name(self, student_id: str) -> str:
         """Return student's short display name."""
+
+    @abstractmethod
+    def get_group_name(self, group_id: str) -> Optional[str]:
+        """Return a student group name."""
 
     @abstractmethod
     def select_student_remedial_task_ids(

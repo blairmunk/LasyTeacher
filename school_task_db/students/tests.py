@@ -260,6 +260,44 @@ class RemedialFromEventViewTests(TestCase):
         self.assertEqual(preview[0]['student_level'], 'medium')
         self.assertEqual(preview[0]['tasks_count'], 1)
 
+    def test_remedial_wizard_step3_creates_work_variants_and_event(self):
+        group = StudentGroup.objects.create(name='9А')
+        group.students.add(self.student)
+
+        response = self.client.post(
+            reverse('students:remedial-wizard'),
+            {
+                'step': '3',
+                'group_id': str(group.pk),
+                'work_name': 'Работа над ошибками 9А',
+                'create_event': '1',
+                'event_date': '2026-03-10',
+                'selected_students': [str(self.student.pk)],
+                f'task_ids_{self.student.pk}': (
+                    f'{self.replacement_easy.pk},{self.replacement_hard.pk}'
+                ),
+            },
+        )
+
+        work = Work.objects.get(name='Работа над ошибками 9А')
+        event = Event.objects.get(work=work)
+        variant = Variant.objects.get(work=work, assigned_student=self.student)
+        participation = EventParticipation.objects.get(event=event)
+
+        self.assertRedirects(
+            response,
+            reverse('events:detail', args=[event.pk]),
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(work.work_type, 'remedial')
+        self.assertEqual(work.max_score, 9)
+        self.assertEqual(work.variant_counter, 1)
+        self.assertEqual(event.description, 'Работа над ошибками для 9А')
+        self.assertEqual(variant.variant_type, 'remedial')
+        self.assertEqual(variant.max_score_snapshot, 9)
+        self.assertEqual(participation.student, self.student)
+        self.assertEqual(participation.variant, variant)
+
     def test_remedial_solutions_open_for_orphan_remedial_variant(self):
         remedial_variant = Variant.objects.create(
             work=None,

@@ -30,6 +30,7 @@ from core_logic.use_cases.get_participation_review import (
 from core_logic.use_cases.get_event_review import GetEventReviewUseCase
 from core_logic.use_cases.get_event_detail import GetEventDetailUseCase
 from core_logic.use_cases.get_event_list import GetEventListUseCase
+from core_logic.use_cases.get_orphan_variant_list import GetOrphanVariantListUseCase
 from core_logic.use_cases.get_remedial_event_preview import (
     GetRemedialEventPreviewUseCase,
 )
@@ -246,6 +247,11 @@ class Container:
 
     def get_variant_detail_use_case(self):
         return GetVariantDetailUseCase(
+            work_repo=self.work_repo,
+        )
+
+    def get_orphan_variant_list_use_case(self):
+        return GetOrphanVariantListUseCase(
             work_repo=self.work_repo,
         )
 

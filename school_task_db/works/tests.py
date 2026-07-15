@@ -223,6 +223,19 @@ class WorkDetailViewTests(TestCase):
         self.assertEqual(response.context['variant_tasks'][0].task, task)
         self.assertEqual(response.context['total_max_points'], 2)
 
+    def test_orphan_variant_list_view_uses_clean_context_data(self):
+        orphan = Variant.objects.create(
+            work=None,
+            number=10,
+            work_name_snapshot='Сирота',
+        )
+
+        response = self.client.get(reverse('works:orphan-variants'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['total_orphans'], 1)
+        self.assertEqual(list(response.context['variants']), [orphan])
+
     def test_variant_delete_context_uses_clean_use_case(self):
         student = Student.objects.create(last_name='Петров', first_name='Пётр')
         event = Event.objects.create(

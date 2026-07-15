@@ -24,6 +24,7 @@ from core_logic.use_cases.get_participation_review import (
 from core_logic.use_cases.get_event_review import GetEventReviewUseCase
 from core_logic.use_cases.get_event_detail import GetEventDetailUseCase
 from core_logic.use_cases.get_event_list import GetEventListUseCase
+from core_logic.use_cases.get_orphan_variant_list import GetOrphanVariantListUseCase
 from core_logic.use_cases.get_remedial_event_preview import (
     GetRemedialEventPreviewUseCase,
 )
@@ -86,6 +87,7 @@ class ContainerTests(SimpleTestCase):
         sync_session_use_case = container.sync_review_session_use_case()
         work_detail_use_case = container.get_work_detail_use_case()
         variant_detail_use_case = container.get_variant_detail_use_case()
+        orphan_variant_list_use_case = container.get_orphan_variant_list_use_case()
         sync_work_groups_use_case = container.sync_work_analog_groups_use_case()
         generate_variants_use_case = container.generate_work_variants_use_case()
         create_from_orphans_use_case = container.create_work_from_orphans_use_case()
@@ -122,6 +124,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(sync_session_use_case, SyncReviewSessionUseCase)
         self.assertIsInstance(work_detail_use_case, GetWorkDetailUseCase)
         self.assertIsInstance(variant_detail_use_case, GetVariantDetailUseCase)
+        self.assertIsInstance(
+            orphan_variant_list_use_case,
+            GetOrphanVariantListUseCase,
+        )
         self.assertIsInstance(sync_work_groups_use_case, SyncWorkAnalogGroupsUseCase)
         self.assertIsInstance(generate_variants_use_case, GenerateWorkVariantsUseCase)
         self.assertIsInstance(create_from_orphans_use_case, CreateWorkFromOrphansUseCase)

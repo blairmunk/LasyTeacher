@@ -22,6 +22,7 @@ from core_logic.use_cases.generate_work_variants import (
 )
 from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUseCase
 from core_logic.use_cases.get_variant_detail import GetVariantDetailUseCase
+from core_logic.use_cases.get_orphan_variant_list import GetOrphanVariantListUseCase
 from core_logic.use_cases.get_work_detail import GetWorkDetailUseCase
 from core_logic.use_cases.sync_work_analog_groups import (
     SyncWorkAnalogGroupsRequest,
@@ -41,6 +42,8 @@ class FakeWorkRepository:
         self.spec_preview = spec_preview or []
         self.variant_detail_tasks = []
         self.variant_total_max_points = 0
+        self.orphan_variants = FakeQuerySet()
+        self.orphan_variant_count = 0
         self.synced_work_id = None
         self.generated_variants_request = None
         self.orphan_variant_refs = []
@@ -66,6 +69,12 @@ class FakeWorkRepository:
 
     def get_variant_total_max_points(self, variant_id):
         return self.variant_total_max_points
+
+    def get_orphan_variants(self):
+        return self.orphan_variants
+
+    def count_orphan_variants(self):
+        return self.orphan_variant_count
 
     def sync_analog_groups_from_variants(self, work_id):
         self.synced_work_id = work_id
@@ -159,6 +168,17 @@ class WorkDetailTests(TestCase):
 
         self.assertEqual(result.variant_tasks, ['variant-task-1'])
         self.assertEqual(result.total_max_points, 7)
+
+    def test_get_orphan_variant_list_use_case_builds_list_context_data(self):
+        repo = FakeWorkRepository()
+        repo.orphan_variants = FakeQuerySet(['variant-1'])
+        repo.orphan_variant_count = 1
+        use_case = GetOrphanVariantListUseCase(work_repo=repo)
+
+        result = use_case.execute()
+
+        self.assertEqual(result.variants, ['variant-1'])
+        self.assertEqual(result.total_orphans, 1)
 
     def test_sync_work_analog_groups_use_case_delegates_to_repository(self):
         repo = FakeWorkRepository()

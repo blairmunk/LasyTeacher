@@ -57,6 +57,14 @@ class IWorkRepository(ABC):
         """Return total max points for a variant."""
 
     @abstractmethod
+    def get_orphan_variants(self) -> Any:
+        """Return orphan variants for the orphan list page."""
+
+    @abstractmethod
+    def count_orphan_variants(self) -> int:
+        """Return orphan variant count."""
+
+    @abstractmethod
     def sync_analog_groups_from_variants(self, work_id: str) -> int:
         """Sync work analog groups from existing variants and return created count."""
 

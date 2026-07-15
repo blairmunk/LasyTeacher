@@ -250,6 +250,20 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(variant_tasks[0].task, self.original_weak)
         self.assertEqual(total_max_points, 7)
 
+    def test_work_repository_returns_orphan_variant_list_data(self):
+        orphan = Variant.objects.create(
+            work=None,
+            number=7,
+            work_name_snapshot='Сирота',
+        )
+        repo = DjangoWorkRepository()
+
+        variants = repo.get_orphan_variants()
+        total_orphans = repo.count_orphan_variants()
+
+        self.assertEqual(total_orphans, 1)
+        self.assertEqual(list(variants), [orphan])
+
     def test_work_repository_syncs_analog_groups_from_variants(self):
         WorkAnalogGroup.objects.filter(work=self.source_work).delete()
         repo = DjangoWorkRepository()

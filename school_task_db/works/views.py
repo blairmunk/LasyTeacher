@@ -4,7 +4,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.views.decorators.http import require_http_methods
 
 from task_groups.models import AnalogGroup
-from .models import Work, Variant, VariantTask, WorkAnalogGroup
+from .models import Work, Variant
 from .forms import WorkForm, WorkAnalogGroupFormSet, VariantGenerationForm
 
 
@@ -173,23 +173,26 @@ class OrphanVariantListView(ListView):
     context_object_name = 'variants'
     paginate_by = 20
 
+    def _get_orphan_list_data(self):
+        if not hasattr(self, '_orphan_list_data'):
+            from infrastructure.container import container
+
+            self._orphan_list_data = (
+                container.get_orphan_variant_list_use_case().execute()
+            )
+        return self._orphan_list_data
+
     def get_queryset(self):
-        return Variant.objects.filter(work__isnull=True).order_by('-created_at')
+        return self._get_orphan_list_data().variants
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['total_orphans'] = Variant.objects.filter(work__isnull=True).count()
+        context['total_orphans'] = self._get_orphan_list_data().total_orphans
         return context
 
 class VariantDeleteView(DeleteView):
     model = Variant
     template_name = 'works/variant_confirm_delete.html'
-
-    def get_success_url(self):
-        from django.urls import reverse
-        if self.object.work:
-            return reverse('works:detail', kwargs={'pk': self.object.work.pk})
-        return reverse('works:variant-list')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

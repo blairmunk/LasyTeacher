@@ -46,6 +46,12 @@ class DjangoWorkRepository(IWorkRepository):
         variant = Variant.objects.get(pk=variant_id)
         return variant.total_max_points
 
+    def get_orphan_variants(self):
+        return Variant.objects.filter(work__isnull=True).order_by('-created_at')
+
+    def count_orphan_variants(self) -> int:
+        return Variant.objects.filter(work__isnull=True).count()
+
     def sync_analog_groups_from_variants(self, work_id: str) -> int:
         work = Work.objects.get(pk=work_id)
         return work.sync_analog_groups_from_variants()

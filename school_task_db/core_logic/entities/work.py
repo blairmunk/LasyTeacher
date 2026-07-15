@@ -19,6 +19,12 @@ class VariantDetailData:
 
 
 @dataclass(frozen=True)
+class OrphanVariantListData:
+    variants: Any
+    total_orphans: int = 0
+
+
+@dataclass(frozen=True)
 class SyncWorkAnalogGroupsResult:
     created_count: int
 

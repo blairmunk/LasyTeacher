@@ -123,3 +123,16 @@ class StudentRemedialWorkData:
     weak_topics: Any = None
     total_available: int = 0
     done_count: int = 0
+
+
+@dataclass(frozen=True)
+class RemedialWizardPreviewData:
+    status: str = 'ready'
+    group: Any = None
+    preview: List[dict] = field(default_factory=list)
+    threshold: int = 70
+    limit_type: str = 'tasks'
+    limit_value: int = 10
+    work_name: str = 'Работа над ошибками'
+    students_with_tasks: int = 0
+    total_tasks: int = 0

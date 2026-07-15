@@ -233,6 +233,33 @@ class RemedialFromEventViewTests(TestCase):
             {self.replacement_easy, self.replacement_hard},
         )
 
+    def test_remedial_wizard_step2_uses_clean_preview_context(self):
+        group = StudentGroup.objects.create(name='9А')
+        group.students.add(self.student)
+
+        response = self.client.post(
+            reverse('students:remedial-wizard'),
+            {
+                'step': '2',
+                'group_id': str(group.pk),
+                'threshold': '70',
+                'limit_type': 'tasks',
+                'limit_value': '10',
+                'work_name': 'Работа над ошибками 9А',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['group'], group)
+        self.assertEqual(response.context['work_name'], 'Работа над ошибками 9А')
+        self.assertEqual(response.context['students_with_tasks'], 1)
+        self.assertEqual(response.context['total_tasks'], 1)
+        preview = response.context['preview']
+        self.assertEqual(len(preview), 1)
+        self.assertEqual(preview[0]['student'], self.student)
+        self.assertEqual(preview[0]['student_level'], 'medium')
+        self.assertEqual(preview[0]['tasks_count'], 1)
+
     def test_remedial_solutions_open_for_orphan_remedial_variant(self):
         remedial_variant = Variant.objects.create(
             work=None,

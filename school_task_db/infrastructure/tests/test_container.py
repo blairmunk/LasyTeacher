@@ -34,6 +34,9 @@ from core_logic.use_cases.get_orphan_variant_list import GetOrphanVariantListUse
 from core_logic.use_cases.get_remedial_event_preview import (
     GetRemedialEventPreviewUseCase,
 )
+from core_logic.use_cases.get_remedial_wizard_preview import (
+    GetRemedialWizardPreviewUseCase,
+)
 from core_logic.use_cases.get_recent_review_sessions import (
     GetRecentReviewSessionsUseCase,
 )
@@ -78,6 +81,7 @@ class ContainerTests(SimpleTestCase):
 
         use_case = container.create_remedial_from_event_use_case()
         preview_use_case = container.get_remedial_event_preview_use_case()
+        wizard_preview_use_case = container.get_remedial_wizard_preview_use_case()
         profile_use_case = container.get_student_profile_use_case()
         student_remedial_use_case = container.get_student_remedial_work_use_case()
         create_student_remedial_use_case = (
@@ -124,6 +128,10 @@ class ContainerTests(SimpleTestCase):
 
         self.assertIsInstance(use_case, CreateRemedialFromEventUseCase)
         self.assertIsInstance(preview_use_case, GetRemedialEventPreviewUseCase)
+        self.assertIsInstance(
+            wizard_preview_use_case,
+            GetRemedialWizardPreviewUseCase,
+        )
         self.assertIsInstance(profile_use_case, GetStudentProfileUseCase)
         self.assertIsInstance(
             student_remedial_use_case,

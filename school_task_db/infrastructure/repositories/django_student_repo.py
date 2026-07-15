@@ -9,6 +9,7 @@ from core_logic.entities.student import (
     EventRef,
     MarkRef,
     ObjectRef,
+    RemedialWizardPreviewData,
     StudentGroupRef,
     StudentParticipationProfile,
     StudentRemedialWorkData,
@@ -291,6 +292,245 @@ class DjangoStudentRepository(IStudentRepository):
                 tasks_to_add.extend(str(task_id) for task_id in available_ids[:take])
 
         return tasks_to_add
+
+    def get_remedial_wizard_preview_data(
+        self,
+        group_id: str,
+        threshold: int,
+        limit_type: str,
+        limit_value: int,
+        work_name: str,
+    ) -> RemedialWizardPreviewData:
+        group = StudentGroup.objects.filter(pk=group_id).first()
+        if not group:
+            return RemedialWizardPreviewData(status='not_found')
+
+        preview = []
+        for student in group.get_active_students():
+            task_logs = StudentTaskLog.objects.filter(student=student)
+            if not task_logs.exists():
+                preview.append({
+                    'student': student,
+                    'student_level': 'unknown',
+                    'student_level_label': '—',
+                    'overall_avg': 0,
+                    'weak_groups': 0,
+                    'tasks_count': 0,
+                    'total_weight': 0,
+                    'est_time': 0,
+                    'available': False,
+                    'reason': 'Нет данных',
+                })
+                continue
+
+            done_task_ids = set(task_logs.values_list('task_id', flat=True))
+            overall_avg = task_logs.aggregate(avg=Avg('percentage'))['avg'] or 0
+
+            if overall_avg < 50:
+                student_level = 'weak'
+            elif overall_avg < 80:
+                student_level = 'medium'
+            else:
+                student_level = 'strong'
+
+            weak_group_ids = list(
+                task_logs.exclude(
+                    analog_group__isnull=True,
+                ).values(
+                    'analog_group',
+                ).annotate(
+                    avg_pct=Avg('percentage'),
+                ).filter(
+                    avg_pct__lt=threshold,
+                ).values_list('analog_group', flat=True)
+            )
+
+            all_group_ids = list(
+                task_logs.exclude(
+                    analog_group__isnull=True,
+                ).values_list(
+                    'analog_group',
+                    flat=True,
+                ).distinct()
+            )
+
+            candidate_tasks = self._wizard_candidate_tasks(
+                student_level=student_level,
+                weak_group_ids=weak_group_ids,
+                all_group_ids=all_group_ids,
+                done_task_ids=done_task_ids,
+            )
+            selected = self._wizard_selected_tasks(
+                candidate_tasks=candidate_tasks,
+                limit_type=limit_type,
+                limit_value=limit_value,
+            )
+            total_weight = sum(task['difficulty'] for task in selected)
+            est_time = sum(
+                task['estimated_time'] or task['difficulty'] * 3
+                for task in selected
+            )
+            level_labels = {
+                'weak': 'Слабый',
+                'medium': 'Средний',
+                'strong': 'Сильный',
+            }
+
+            preview.append({
+                'student': student,
+                'student_level': student_level,
+                'student_level_label': level_labels[student_level],
+                'overall_avg': round(overall_avg, 1),
+                'weak_groups': len(weak_group_ids),
+                'tasks_count': len(selected),
+                'total_weight': total_weight,
+                'est_time': est_time,
+                'available': len(selected) > 0,
+                'reason': (
+                    ''
+                    if selected
+                    else 'Нет слабых групп или все задания решены'
+                ),
+                'task_ids': [task['id'] for task in selected],
+            })
+
+        return RemedialWizardPreviewData(
+            group=group,
+            preview=preview,
+            threshold=threshold,
+            limit_type=limit_type,
+            limit_value=limit_value,
+            work_name=work_name,
+            students_with_tasks=sum(1 for row in preview if row['available']),
+            total_tasks=sum(row['tasks_count'] for row in preview),
+        )
+
+    def _wizard_candidate_tasks(
+        self,
+        student_level,
+        weak_group_ids,
+        all_group_ids,
+        done_task_ids,
+    ):
+        candidate_tasks = []
+
+        if student_level == 'weak':
+            for group_id in weak_group_ids:
+                group_diff = self._group_effective_difficulty(group_id)
+                candidate_tasks.extend(
+                    self._tasks_for_group(
+                        group_id=group_id,
+                        done_task_ids=done_task_ids,
+                        difficulty_filter={'difficulty__lte': group_diff},
+                    )
+                )
+        elif student_level == 'medium':
+            for group_id in weak_group_ids:
+                group_diff = self._group_effective_difficulty(group_id)
+                found = self._tasks_for_group(
+                    group_id=group_id,
+                    done_task_ids=done_task_ids,
+                    difficulty_filter={'difficulty': group_diff},
+                )
+                if not found:
+                    found = self._tasks_for_group(
+                        group_id=group_id,
+                        done_task_ids=done_task_ids,
+                        difficulty_filter={
+                            'difficulty__gte': max(1, group_diff - 1),
+                            'difficulty__lte': group_diff + 1,
+                        },
+                    )
+                candidate_tasks.extend(found)
+        else:
+            for group_id in all_group_ids:
+                group_diff = self._group_effective_difficulty(group_id)
+                candidate_tasks.extend(
+                    self._tasks_for_group(
+                        group_id=group_id,
+                        done_task_ids=done_task_ids,
+                        difficulty_filter={'difficulty__gt': group_diff},
+                    )
+                )
+
+            if not candidate_tasks:
+                all_group_task_ids = set(
+                    TaskGroup.objects.filter(
+                        group_id__in=all_group_ids,
+                    ).values_list(
+                        'task_id',
+                        flat=True,
+                    )
+                )
+                tasks = Task.objects.filter(
+                    id__in=all_group_task_ids - done_task_ids,
+                    difficulty__gte=4,
+                ).values('id', 'difficulty', 'estimated_time')
+                candidate_tasks.extend(
+                    self._wizard_task_rows(tasks, group_id=None)
+                )
+
+        return candidate_tasks
+
+    def _tasks_for_group(self, group_id, done_task_ids, difficulty_filter):
+        group_task_ids = set(
+            TaskGroup.objects.filter(group_id=group_id).values_list(
+                'task_id',
+                flat=True,
+            )
+        )
+        available_ids = group_task_ids - done_task_ids
+        if not available_ids:
+            return []
+
+        tasks = Task.objects.filter(
+            id__in=available_ids,
+            **difficulty_filter,
+        ).values('id', 'difficulty', 'estimated_time')
+        return self._wizard_task_rows(tasks, group_id=group_id)
+
+    def _wizard_task_rows(self, tasks, group_id):
+        return [
+            {
+                'id': task['id'],
+                'difficulty': task['difficulty'] or 1,
+                'estimated_time': task['estimated_time'] or 0,
+                'group_id': group_id,
+            }
+            for task in tasks
+        ]
+
+    def _group_effective_difficulty(self, group_id):
+        try:
+            return AnalogGroup.objects.get(pk=group_id).effective_difficulty
+        except AnalogGroup.DoesNotExist:
+            return 3
+
+    def _wizard_selected_tasks(self, candidate_tasks, limit_type, limit_value):
+        random.shuffle(candidate_tasks)
+        selected = []
+        running_total = 0
+
+        for candidate_task in candidate_tasks:
+            if limit_type == 'tasks' and len(selected) >= limit_value:
+                break
+            if limit_type == 'weight' and running_total >= limit_value:
+                break
+            if limit_type == 'time' and running_total >= limit_value:
+                break
+
+            selected.append(candidate_task)
+            if limit_type == 'tasks':
+                running_total = len(selected)
+            elif limit_type == 'weight':
+                running_total += candidate_task['difficulty']
+            elif limit_type == 'time':
+                running_total += (
+                    candidate_task['estimated_time']
+                    or candidate_task['difficulty'] * 3
+                )
+
+        return selected
 
     def get_work_group_refs(self, work_ids: List[str]) -> List[WorkGroupRef]:
         if not work_ids:

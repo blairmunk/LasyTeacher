@@ -50,6 +50,9 @@ from core_logic.use_cases.get_remedial_sheet_data import (
 from core_logic.use_cases.get_recent_review_sessions import (
     GetRecentReviewSessionsUseCase,
 )
+from core_logic.use_cases.get_remedial_wizard_preview import (
+    GetRemedialWizardPreviewUseCase,
+)
 from core_logic.use_cases.get_review_dashboard import GetReviewDashboardUseCase
 from core_logic.use_cases.get_review_save_navigation import (
     GetReviewSaveNavigationUseCase,
@@ -185,6 +188,11 @@ class Container:
     def get_remedial_event_preview_use_case(self):
         return GetRemedialEventPreviewUseCase(
             event_repo=self.event_repo,
+        )
+
+    def get_remedial_wizard_preview_use_case(self):
+        return GetRemedialWizardPreviewUseCase(
+            student_repo=self.student_repo,
         )
 
     def get_student_profile_use_case(self):

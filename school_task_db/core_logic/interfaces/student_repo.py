@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from core_logic.entities.student import (
+    RemedialWizardPreviewData,
     StudentRemedialWorkData,
     StudentGroupRef,
     StudentParticipationProfile,
@@ -56,6 +57,17 @@ class IStudentRepository(ABC):
         selected_group_ids: List[str],
     ) -> List[str]:
         """Return task IDs for a single-student remedial variant."""
+
+    @abstractmethod
+    def get_remedial_wizard_preview_data(
+        self,
+        group_id: str,
+        threshold: int,
+        limit_type: str,
+        limit_value: int,
+        work_name: str,
+    ) -> RemedialWizardPreviewData:
+        """Return preview data for class remedial wizard step 2."""
 
     @abstractmethod
     def get_work_group_refs(self, work_ids: List[str]) -> List[WorkGroupRef]:

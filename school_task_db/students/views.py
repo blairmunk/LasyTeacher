@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib import messages
 from django.urls import reverse_lazy
+from django.http import Http404
 from django.db.models import Avg, Count, F, Q
 from django.views import View
 from django.shortcuts import get_object_or_404
@@ -271,230 +272,38 @@ class RemedialWizardView(View):
 
     def _step2_preview(self, request):
         """Step 2: анализ и превью с дифференциацией по уровню"""
+        from core_logic.use_cases.get_remedial_wizard_preview import (
+            RemedialWizardPreviewRequest,
+        )
+        from infrastructure.container import container
+
         group_id = request.POST.get('group_id')
         threshold = int(request.POST.get('threshold', 70))
         limit_type = request.POST.get('limit_type', 'tasks')
         limit_value = int(request.POST.get('limit_value', 10))
         work_name = request.POST.get('work_name', 'Работа над ошибками')
 
-        group = get_object_or_404(StudentGroup, pk=group_id)
-        students = group.get_active_students()
-
-        preview = []
-        for student in students:
-            task_logs = StudentTaskLog.objects.filter(student=student)
-            if not task_logs.exists():
-                preview.append({
-                    'student': student,
-                    'student_level': 'unknown',
-                    'student_level_label': '—',
-                    'overall_avg': 0,
-                    'weak_groups': 0,
-                    'tasks_count': 0,
-                    'total_weight': 0,
-                    'est_time': 0,
-                    'available': False,
-                    'reason': 'Нет данных',
-                })
-                continue
-
-            done_task_ids = set(task_logs.values_list('task_id', flat=True))
-
-            # Общий средний % ученика
-            overall_avg = task_logs.aggregate(avg=Avg('percentage'))['avg'] or 0
-
-            # Определяем уровень
-            if overall_avg < 50:
-                student_level = 'weak'
-            elif overall_avg < 80:
-                student_level = 'medium'
-            else:
-                student_level = 'strong'
-
-            # Слабые группы (ниже порога)
-            weak_group_ids = list(
-                task_logs.exclude(analog_group__isnull=True)
-                .values('analog_group')
-                .annotate(avg_pct=Avg('percentage'))
-                .filter(avg_pct__lt=threshold)
-                .values_list('analog_group', flat=True)
+        preview_data = container.get_remedial_wizard_preview_use_case().execute(
+            RemedialWizardPreviewRequest(
+                group_id=group_id,
+                threshold=threshold,
+                limit_type=limit_type,
+                limit_value=limit_value,
+                work_name=work_name,
             )
-
-            # Все группы ученика
-            all_group_ids = list(
-                task_logs.exclude(analog_group__isnull=True)
-                .values_list('analog_group', flat=True)
-                .distinct()
-            )
-
-            # === ДИФФЕРЕНЦИРОВАННЫЙ ПОДБОР ===
-            candidate_tasks = []
-
-            if student_level == 'weak':
-                # Слабый: из слабых групп задания ≤ номинальной сложности (закрепление)
-                for gid in weak_group_ids:
-                    try:
-                        group_obj = AnalogGroup.objects.get(pk=gid)
-                        group_diff = group_obj.effective_difficulty
-                    except AnalogGroup.DoesNotExist:
-                        group_diff = 3
-
-                    group_task_ids = set(
-                        TaskGroup.objects.filter(group_id=gid)
-                        .values_list('task_id', flat=True)
-                    )
-                    available_ids = group_task_ids - done_task_ids
-                    if available_ids:
-                        tasks_qs = Task.objects.filter(
-                            id__in=available_ids,
-                            difficulty__lte=group_diff
-                        ).values('id', 'difficulty', 'estimated_time')
-                        for t in tasks_qs:
-                            candidate_tasks.append({
-                                'id': t['id'],
-                                'difficulty': t['difficulty'] or 1,
-                                'estimated_time': t['estimated_time'] or 0,
-                                'group_id': gid,
-                            })
-
-            elif student_level == 'medium':
-                # Средний: из слабых групп задания ≈ номинальной сложности
-                for gid in weak_group_ids:
-                    try:
-                        group_obj = AnalogGroup.objects.get(pk=gid)
-                        group_diff = group_obj.effective_difficulty
-                    except AnalogGroup.DoesNotExist:
-                        group_diff = 3
-
-                    group_task_ids = set(
-                        TaskGroup.objects.filter(group_id=gid)
-                        .values_list('task_id', flat=True)
-                    )
-                    available_ids = group_task_ids - done_task_ids
-                    if available_ids:
-                        # Точная сложность
-                        tasks_qs = Task.objects.filter(
-                            id__in=available_ids,
-                            difficulty=group_diff
-                        ).values('id', 'difficulty', 'estimated_time')
-                        found = list(tasks_qs)
-
-                        # Fallback: ±1
-                        if not found:
-                            tasks_qs = Task.objects.filter(
-                                id__in=available_ids,
-                                difficulty__gte=max(1, group_diff - 1),
-                                difficulty__lte=group_diff + 1,
-                            ).values('id', 'difficulty', 'estimated_time')
-                            found = list(tasks_qs)
-
-                        for t in found:
-                            candidate_tasks.append({
-                                'id': t['id'],
-                                'difficulty': t['difficulty'] or 1,
-                                'estimated_time': t['estimated_time'] or 0,
-                                'group_id': gid,
-                            })
-
-            else:
-                # Сильный: из ВСЕХ групп задания ВЫШЕ номинальной сложности
-                for gid in all_group_ids:
-                    try:
-                        group_obj = AnalogGroup.objects.get(pk=gid)
-                        group_diff = group_obj.effective_difficulty
-                    except AnalogGroup.DoesNotExist:
-                        group_diff = 3
-
-                    group_task_ids = set(
-                        TaskGroup.objects.filter(group_id=gid)
-                        .values_list('task_id', flat=True)
-                    )
-                    available_ids = group_task_ids - done_task_ids
-                    if available_ids:
-                        tasks_qs = Task.objects.filter(
-                            id__in=available_ids,
-                            difficulty__gt=group_diff
-                        ).values('id', 'difficulty', 'estimated_time')
-                        for t in tasks_qs:
-                            candidate_tasks.append({
-                                'id': t['id'],
-                                'difficulty': t['difficulty'] or 1,
-                                'estimated_time': t['estimated_time'] or 0,
-                                'group_id': gid,
-                            })
-
-                # Fallback: сложность ≥ 4 из любых групп
-                if not candidate_tasks:
-                    all_group_task_ids = set(
-                        TaskGroup.objects.filter(group_id__in=all_group_ids)
-                        .values_list('task_id', flat=True)
-                    )
-                    tasks_qs = Task.objects.filter(
-                        id__in=all_group_task_ids - done_task_ids,
-                        difficulty__gte=4
-                    ).values('id', 'difficulty', 'estimated_time')
-                    for t in tasks_qs:
-                        candidate_tasks.append({
-                            'id': t['id'],
-                            'difficulty': t['difficulty'] or 1,
-                            'estimated_time': t['estimated_time'] or 0,
-                            'group_id': None,
-                        })
-
-            # === ОТБОР ПО ЛИМИТУ ===
-            import random
-            random.shuffle(candidate_tasks)
-            selected = []
-            running_total = 0
-
-            for ct in candidate_tasks:
-                if limit_type == 'tasks' and len(selected) >= limit_value:
-                    break
-                elif limit_type == 'weight' and running_total >= limit_value:
-                    break
-                elif limit_type == 'time' and running_total >= limit_value:
-                    break
-
-                selected.append(ct)
-                if limit_type == 'tasks':
-                    running_total = len(selected)
-                elif limit_type == 'weight':
-                    running_total += ct['difficulty']
-                elif limit_type == 'time':
-                    running_total += ct['estimated_time'] or ct['difficulty'] * 3
-
-            total_weight = sum(t['difficulty'] for t in selected)
-            est_time = sum((t['estimated_time'] or t['difficulty'] * 3) for t in selected)
-
-            level_labels = {
-                'weak': 'Слабый',
-                'medium': 'Средний',
-                'strong': 'Сильный',
-            }
-
-            preview.append({
-                'student': student,
-                'student_level': student_level,
-                'student_level_label': level_labels[student_level],
-                'overall_avg': round(overall_avg, 1),
-                'weak_groups': len(weak_group_ids),
-                'tasks_count': len(selected),
-                'total_weight': total_weight,
-                'est_time': est_time,
-                'available': len(selected) > 0,
-                'reason': '' if selected else 'Нет слабых групп или все задания решены',
-                'task_ids': [t['id'] for t in selected],
-            })
+        )
+        if preview_data.status == 'not_found':
+            raise Http404("Класс не найден")
 
         context = {
-            'group': group,
-            'preview': preview,
-            'threshold': threshold,
-            'limit_type': limit_type,
-            'limit_value': limit_value,
-            'work_name': work_name,
-            'students_with_tasks': sum(1 for p in preview if p['available']),
-            'total_tasks': sum(p['tasks_count'] for p in preview),
+            'group': preview_data.group,
+            'preview': preview_data.preview,
+            'threshold': preview_data.threshold,
+            'limit_type': preview_data.limit_type,
+            'limit_value': preview_data.limit_value,
+            'work_name': preview_data.work_name,
+            'students_with_tasks': preview_data.students_with_tasks,
+            'total_tasks': preview_data.total_tasks,
         }
         return render(request, 'students/remedial_wizard_step2.html', context)
 

@@ -4,7 +4,12 @@ from typing import List, Set
 
 from django.db.models import Count, Exists, OuterRef, Q
 
-from core_logic.entities.task import TaskEntity, TaskListFilters
+from core_logic.entities.task import (
+    ReferenceElementOption,
+    SelectOption,
+    TaskEntity,
+    TaskListFilters,
+)
 from core_logic.interfaces.task_repo import ITaskRepository
 from curriculum.models import SubTopic, Topic
 from task_groups.models import AnalogGroup, TaskGroup
@@ -78,6 +83,17 @@ class DjangoTaskRepository(ITaskRepository):
 
         return queryset
 
+    def get_detail_tasks(self):
+        return Task.objects.select_related(
+            'topic',
+            'subtopic',
+        ).prefetch_related('images')
+
+    def get_task_detail_groups(self, task_id: str):
+        return TaskGroup.objects.filter(
+            task_id=task_id,
+        ).select_related('group')
+
     def get_list_topics(self):
         return Topic.objects.all().order_by('section', 'name')
 
@@ -92,6 +108,35 @@ class DjangoTaskRepository(ITaskRepository):
             return SubTopic.objects.none()
 
         return SubTopic.objects.filter(topic_id=topic_id).order_by('order', 'name')
+
+    def get_subtopic_options(self, topic_id: str) -> List[SelectOption]:
+        if not topic_id:
+            return []
+
+        try:
+            topic = Topic.objects.get(pk=topic_id)
+        except (Topic.DoesNotExist, ValueError):
+            return []
+
+        return [
+            SelectOption(id=str(subtopic.id), name=subtopic.name)
+            for subtopic in topic.subtopics.all().order_by('order', 'name')
+        ]
+
+    def get_reference_element_options(
+        self,
+        subject: str,
+        category: str,
+    ) -> List[ReferenceElementOption]:
+        try:
+            from references.helpers import get_subject_reference_choices
+        except ImportError:
+            return []
+
+        return [
+            ReferenceElementOption(code=code, name=name)
+            for code, name in get_subject_reference_choices(subject, category)
+        ]
 
     def get_task_type_choices(self):
         try:

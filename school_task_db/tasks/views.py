@@ -6,12 +6,14 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
 from core_logic.entities.task import TaskListFilters
+from core_logic.use_cases.get_task_reference_options import (
+    CodifierElementsResult,
+    SubtopicOptionsResult,
+)
 from infrastructure.container import container
 from .models import Task, Source
 from .forms import TaskForm, TaskImageFormSet, SourceForm
 from .utils import math_status_cache
-from curriculum.models import Topic
-from task_groups.models import TaskGroup
 
 
 class TaskListView(ListView):
@@ -83,14 +85,14 @@ class TaskDetailView(DetailView):
     context_object_name = 'task'
 
     def get_queryset(self):
-        return Task.objects.select_related('topic', 'subtopic').prefetch_related('images')
+        return container.get_task_detail_use_case().get_queryset()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Группы, в которых состоит задание
-        context['task_groups'] = TaskGroup.objects.filter(
-            task=self.object
-        ).select_related('group')
+        detail_data = container.get_task_detail_use_case().execute(
+            task_id=str(self.object.pk),
+        )
+        context['task_groups'] = detail_data.task_groups
         return context
 
 
@@ -194,41 +196,37 @@ class TaskDeleteView(DeleteView):
 
 def load_subtopics(request):
     """AJAX для загрузки подтем при выборе темы"""
-    topic_id = request.GET.get('topic_id')
-    if not topic_id:
-        return JsonResponse({'subtopics': []})
-
-    try:
-        topic = Topic.objects.get(pk=topic_id)
-        subtopics = topic.subtopics.all().order_by('order', 'name')
-        data = {
-            'subtopics': [
-                {'id': str(s.id), 'name': s.name} for s in subtopics
-            ]
-        }
-    except Topic.DoesNotExist:
-        data = {'subtopics': []}
-
-    return JsonResponse(data)
+    result = container.get_subtopic_options_use_case().execute(
+        topic_id=request.GET.get('topic_id', ''),
+    )
+    return JsonResponse(_subtopic_options_payload(result))
 
 
 def load_codifier_elements(request):
     """AJAX для загрузки элементов кодификатора"""
-    subject = request.GET.get('subject')
-    category = request.GET.get('category')
+    result = container.get_codifier_elements_use_case().execute(
+        subject=request.GET.get('subject', ''),
+        category=request.GET.get('category', ''),
+    )
+    return JsonResponse(_codifier_elements_payload(result))
 
-    try:
-        from references.helpers import get_subject_reference_choices
-        choices = get_subject_reference_choices(subject, category)
-        data = {
-            'elements': [
-                {'code': code, 'name': name} for code, name in choices
-            ]
-        }
-    except ImportError:
-        data = {'elements': []}
 
-    return JsonResponse(data)
+def _subtopic_options_payload(result: SubtopicOptionsResult):
+    return {
+        'subtopics': [
+            {'id': option.id, 'name': option.name}
+            for option in result.subtopics
+        ],
+    }
+
+
+def _codifier_elements_payload(result: CodifierElementsResult):
+    return {
+        'elements': [
+            {'code': element.code, 'name': element.name}
+            for element in result.elements
+        ],
+    }
 
 
 # === Bulk actions ===

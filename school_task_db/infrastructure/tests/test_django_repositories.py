@@ -14,7 +14,7 @@ from core_logic.use_cases.create_work_from_orphans import (
     CreateWorkFromOrphansRequest,
     CreateWorkFromOrphansUseCase,
 )
-from curriculum.models import Topic
+from curriculum.models import SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
@@ -70,6 +70,11 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.original_ok = self._task('Исходное сильное', difficulty=5)
         self.replacement = self._task('Замена', difficulty=3)
         self.too_hard = self._task('Сложная замена', difficulty=6)
+        self.subtopic = SubTopic.objects.create(
+            topic=self.topic,
+            name='Второй закон Ньютона',
+            order=1,
+        )
 
         self.weak_group = AnalogGroup.objects.create(name='Законы Ньютона')
         self.ok_group = AnalogGroup.objects.create(name='Импульс')
@@ -193,6 +198,22 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(list(repo.get_subtopics_for_topic('')), [])
         self.assertIn(self.topic, list(repo.get_list_topics()))
         self.assertIn(self.weak_group, list(repo.get_list_analog_groups()))
+
+    def test_task_repository_returns_detail_and_reference_data(self):
+        repo = DjangoTaskRepository()
+
+        detail_tasks = repo.get_detail_tasks()
+        task_groups = repo.get_task_detail_groups(str(self.original_weak.pk))
+        subtopics = repo.get_subtopic_options(str(self.topic.pk))
+        missing_subtopics = repo.get_subtopic_options(
+            '00000000-0000-0000-0000-000000000000',
+        )
+
+        self.assertIn(self.original_weak, list(detail_tasks))
+        self.assertEqual(task_groups[0].group, self.weak_group)
+        self.assertEqual(subtopics[0].id, str(self.subtopic.pk))
+        self.assertEqual(subtopics[0].name, self.subtopic.name)
+        self.assertEqual(missing_subtopics, [])
 
     def test_create_remedial_use_case_creates_django_objects(self):
         student_repo = DjangoStudentRepository()

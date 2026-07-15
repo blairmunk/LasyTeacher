@@ -3,13 +3,26 @@
 from abc import ABC, abstractmethod
 from typing import Any, List, Optional, Set, Tuple
 
-from core_logic.entities.task import TaskEntity, TaskListFilters
+from core_logic.entities.task import (
+    ReferenceElementOption,
+    SelectOption,
+    TaskEntity,
+    TaskListFilters,
+)
 
 
 class ITaskRepository(ABC):
     @abstractmethod
     def get_list_tasks(self, filters: TaskListFilters) -> Any:
         """Return tasks for the task list page."""
+
+    @abstractmethod
+    def get_detail_tasks(self) -> Any:
+        """Return tasks for the task detail page lookup."""
+
+    @abstractmethod
+    def get_task_detail_groups(self, task_id: str) -> Any:
+        """Return analog groups for one task detail page."""
 
     @abstractmethod
     def get_list_topics(self) -> Any:
@@ -26,6 +39,18 @@ class ITaskRepository(ABC):
     @abstractmethod
     def get_subtopics_for_topic(self, topic_id: str) -> Any:
         """Return subtopic options for a topic."""
+
+    @abstractmethod
+    def get_subtopic_options(self, topic_id: str) -> List[SelectOption]:
+        """Return subtopic select options for a topic."""
+
+    @abstractmethod
+    def get_reference_element_options(
+        self,
+        subject: str,
+        category: str,
+    ) -> List[ReferenceElementOption]:
+        """Return codifier reference element options."""
 
     @abstractmethod
     def get_task_type_choices(self) -> List[Tuple[str, str]]:

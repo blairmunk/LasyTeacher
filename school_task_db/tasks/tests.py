@@ -3,7 +3,7 @@ import json
 from django.test import TestCase
 from django.urls import reverse
 
-from curriculum.models import Topic
+from curriculum.models import SubTopic, Topic
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
 from works.models import Variant, VariantTask, Work
@@ -32,6 +32,11 @@ class TaskBulkGroupAjaxTests(TestCase):
             difficulty=3,
         )
         self.group = AnalogGroup.objects.create(name='Существующая группа')
+        self.subtopic = SubTopic.objects.create(
+            topic=self.topic,
+            name='Равноускоренное движение',
+            order=1,
+        )
 
     def post_json(self, url_name, payload):
         return self.client.post(
@@ -155,3 +160,39 @@ class TaskBulkGroupAjaxTests(TestCase):
         self.assertIn(self.group, list(response.context['analog_groups']))
         self.assertEqual(response.context['current_topic'], str(self.topic.pk))
         self.assertEqual(response.context['current_group_filter'], 'has_group')
+
+    def test_task_detail_uses_group_context(self):
+        TaskGroup.objects.create(task=self.first_task, group=self.group)
+
+        response = self.client.get(
+            reverse('tasks:detail', kwargs={'pk': self.first_task.pk}),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['task'], self.first_task)
+        self.assertEqual(response.context['task_groups'][0].group, self.group)
+
+    def test_load_subtopics_returns_topic_options(self):
+        response = self.client.get(
+            reverse('tasks:ajax-load-subtopics'),
+            {'topic_id': str(self.topic.pk)},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                'subtopics': [
+                    {'id': str(self.subtopic.pk), 'name': self.subtopic.name},
+                ],
+            },
+        )
+
+    def test_load_subtopics_returns_empty_for_missing_topic(self):
+        response = self.client.get(
+            reverse('tasks:ajax-load-subtopics'),
+            {'topic_id': '00000000-0000-0000-0000-000000000000'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'subtopics': []})

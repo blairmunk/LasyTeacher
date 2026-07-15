@@ -87,7 +87,12 @@ from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
 from core_logic.use_cases.get_student_remedial_work import (
     GetStudentRemedialWorkUseCase,
 )
+from core_logic.use_cases.get_task_detail import GetTaskDetailUseCase
 from core_logic.use_cases.get_task_list import GetTaskListUseCase
+from core_logic.use_cases.get_task_reference_options import (
+    GetCodifierElementsUseCase,
+    GetSubtopicOptionsUseCase,
+)
 from core_logic.use_cases.get_variant_detail import GetVariantDetailUseCase
 from core_logic.use_cases.get_variant_generation_placeholder import (
     GetVariantGenerationPlaceholderUseCase,
@@ -248,6 +253,21 @@ class Container:
 
     def get_task_list_use_case(self):
         return GetTaskListUseCase(
+            task_repo=self.task_repo,
+        )
+
+    def get_task_detail_use_case(self):
+        return GetTaskDetailUseCase(
+            task_repo=self.task_repo,
+        )
+
+    def get_subtopic_options_use_case(self):
+        return GetSubtopicOptionsUseCase(
+            task_repo=self.task_repo,
+        )
+
+    def get_codifier_elements_use_case(self):
+        return GetCodifierElementsUseCase(
             task_repo=self.task_repo,
         )
 

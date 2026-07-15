@@ -40,3 +40,20 @@ class TaskListData:
     total_tasks: int
     ungrouped_count: int
     cache_stats: Any = None
+
+
+@dataclass(frozen=True)
+class TaskDetailData:
+    task_groups: Any
+
+
+@dataclass(frozen=True)
+class SelectOption:
+    id: str
+    name: str
+
+
+@dataclass(frozen=True)
+class ReferenceElementOption:
+    code: str
+    name: str

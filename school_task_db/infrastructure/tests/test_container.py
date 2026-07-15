@@ -74,7 +74,12 @@ from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
 from core_logic.use_cases.get_student_remedial_work import (
     GetStudentRemedialWorkUseCase,
 )
+from core_logic.use_cases.get_task_detail import GetTaskDetailUseCase
 from core_logic.use_cases.get_task_list import GetTaskListUseCase
+from core_logic.use_cases.get_task_reference_options import (
+    GetCodifierElementsUseCase,
+    GetSubtopicOptionsUseCase,
+)
 from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUseCase
 from core_logic.use_cases.get_variant_detail import GetVariantDetailUseCase
 from core_logic.use_cases.get_variant_generation_placeholder import (
@@ -113,6 +118,9 @@ class ContainerTests(SimpleTestCase):
         wizard_start_use_case = container.get_remedial_wizard_start_use_case()
         profile_use_case = container.get_student_profile_use_case()
         task_list_use_case = container.get_task_list_use_case()
+        task_detail_use_case = container.get_task_detail_use_case()
+        subtopic_options_use_case = container.get_subtopic_options_use_case()
+        codifier_elements_use_case = container.get_codifier_elements_use_case()
         student_remedial_use_case = container.get_student_remedial_work_use_case()
         create_student_remedial_use_case = (
             container.create_student_remedial_variant_use_case()
@@ -189,6 +197,9 @@ class ContainerTests(SimpleTestCase):
         )
         self.assertIsInstance(profile_use_case, GetStudentProfileUseCase)
         self.assertIsInstance(task_list_use_case, GetTaskListUseCase)
+        self.assertIsInstance(task_detail_use_case, GetTaskDetailUseCase)
+        self.assertIsInstance(subtopic_options_use_case, GetSubtopicOptionsUseCase)
+        self.assertIsInstance(codifier_elements_use_case, GetCodifierElementsUseCase)
         self.assertIsInstance(
             student_remedial_use_case,
             GetStudentRemedialWorkUseCase,

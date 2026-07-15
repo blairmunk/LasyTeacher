@@ -7,7 +7,6 @@ from .models import Work, Variant
 from .forms import WorkForm, VariantGenerationForm
 
 
-
 class WorkListView(ListView):
     model = Work
     template_name = 'works/list.html'
@@ -77,7 +76,6 @@ class WorkCreateView(CreateView):
             return self.render_to_response(self.get_context_data(form=form))
 
 
-
 class WorkUpdateView(UpdateView):
     model = Work
     form_class = WorkForm
@@ -119,7 +117,6 @@ class WorkUpdateView(UpdateView):
             return response
         else:
             return self.render_to_response(self.get_context_data(form=form))
-
 
 
 def generate_variants(request, work_id):
@@ -203,8 +200,10 @@ class VariantDetailView(DetailView):
         context['total_max_points'] = detail.total_max_points
         return context
 
+
 class OrphanVariantListView(ListView):
     """Варианты без привязки к работе (сироты)"""
+
     model = Variant
     template_name = 'works/orphan_variants.html'
     context_object_name = 'variants'
@@ -226,6 +225,7 @@ class OrphanVariantListView(ListView):
         context = super().get_context_data(**kwargs)
         context['total_orphans'] = self._get_orphan_list_data().total_orphans
         return context
+
 
 class VariantDeleteView(DeleteView):
     model = Variant
@@ -261,11 +261,17 @@ class VariantDeleteView(DeleteView):
         )
 
         if result.status == 'blocked_has_participations':
-            messages.error(request, 'Невозможно удалить: за вариант есть оценки. Используйте «Отвязать».')
+            messages.error(
+                request,
+                'Невозможно удалить: за вариант есть оценки. Используйте «Отвязать».',
+            )
             return self.get(request, *args, **kwargs)
 
         if result.status == 'detached':
-            messages.success(request, f'Вариант #{result.variant_short_id} отвязан от работы (стал сиротой).')
+            messages.success(
+                request,
+                f'Вариант #{result.variant_short_id} отвязан от работы (стал сиротой).',
+            )
             return redirect('works:variant-list')
 
         if result.redirect_work_id:
@@ -301,6 +307,7 @@ def bulk_delete_variants(request, work_id):
         'deleted': result.deleted_count,
         'remaining': result.remaining_count,
     })
+
 
 @require_http_methods(["POST"])
 def create_work_from_orphans(request):

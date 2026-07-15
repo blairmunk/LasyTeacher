@@ -36,6 +36,7 @@ from core_logic.use_cases.get_review_save_navigation import (
 )
 from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
 from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUseCase
+from core_logic.use_cases.get_variant_detail import GetVariantDetailUseCase
 from core_logic.use_cases.get_work_detail import GetWorkDetailUseCase
 from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionUseCase,
@@ -84,6 +85,7 @@ class ContainerTests(SimpleTestCase):
         recent_sessions_use_case = container.get_recent_review_sessions_use_case()
         sync_session_use_case = container.sync_review_session_use_case()
         work_detail_use_case = container.get_work_detail_use_case()
+        variant_detail_use_case = container.get_variant_detail_use_case()
         sync_work_groups_use_case = container.sync_work_analog_groups_use_case()
         generate_variants_use_case = container.generate_work_variants_use_case()
         create_from_orphans_use_case = container.create_work_from_orphans_use_case()
@@ -119,6 +121,7 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(recent_sessions_use_case, GetRecentReviewSessionsUseCase)
         self.assertIsInstance(sync_session_use_case, SyncReviewSessionUseCase)
         self.assertIsInstance(work_detail_use_case, GetWorkDetailUseCase)
+        self.assertIsInstance(variant_detail_use_case, GetVariantDetailUseCase)
         self.assertIsInstance(sync_work_groups_use_case, SyncWorkAnalogGroupsUseCase)
         self.assertIsInstance(generate_variants_use_case, GenerateWorkVariantsUseCase)
         self.assertIsInstance(create_from_orphans_use_case, CreateWorkFromOrphansUseCase)

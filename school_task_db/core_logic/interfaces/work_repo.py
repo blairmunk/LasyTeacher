@@ -49,6 +49,14 @@ class IWorkRepository(ABC):
         """Return points specification preview for the work detail page."""
 
     @abstractmethod
+    def get_variant_detail_tasks(self, variant_id: str) -> Any:
+        """Return ordered tasks for the variant detail page."""
+
+    @abstractmethod
+    def get_variant_total_max_points(self, variant_id: str) -> int:
+        """Return total max points for a variant."""
+
+    @abstractmethod
     def sync_analog_groups_from_variants(self, work_id: str) -> int:
         """Sync work analog groups from existing variants and return created count."""
 

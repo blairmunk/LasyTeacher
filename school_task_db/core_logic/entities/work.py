@@ -13,6 +13,12 @@ class WorkDetailData:
 
 
 @dataclass(frozen=True)
+class VariantDetailData:
+    variant_tasks: Any
+    total_max_points: int = 0
+
+
+@dataclass(frozen=True)
 class SyncWorkAnalogGroupsResult:
     created_count: int
 

@@ -198,6 +198,31 @@ class WorkDetailViewTests(TestCase):
         self.assertEqual(first_orphan.number, 1)
         self.assertEqual(second_orphan.number, 2)
 
+    def test_variant_detail_view_uses_clean_context_data(self):
+        task = Task.objects.create(
+            text='Задание',
+            answer='Ответ',
+            topic=self.topic,
+            task_type='computational',
+            difficulty=2,
+        )
+        VariantTask.objects.create(
+            variant=self.variant,
+            task=task,
+            order=1,
+            max_points=2,
+            weight=2,
+        )
+
+        response = self.client.get(
+            reverse('works:variant-detail', args=[self.variant.pk])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['variant_tasks'].count(), 1)
+        self.assertEqual(response.context['variant_tasks'][0].task, task)
+        self.assertEqual(response.context['total_max_points'], 2)
+
     def test_variant_delete_context_uses_clean_use_case(self):
         student = Student.objects.create(last_name='Петров', first_name='Пётр')
         event = Event.objects.create(

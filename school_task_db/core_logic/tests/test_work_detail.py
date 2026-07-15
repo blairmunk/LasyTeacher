@@ -21,6 +21,7 @@ from core_logic.use_cases.generate_work_variants import (
     GenerateWorkVariantsUseCase,
 )
 from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUseCase
+from core_logic.use_cases.get_variant_detail import GetVariantDetailUseCase
 from core_logic.use_cases.get_work_detail import GetWorkDetailUseCase
 from core_logic.use_cases.sync_work_analog_groups import (
     SyncWorkAnalogGroupsRequest,
@@ -38,6 +39,8 @@ class FakeWorkRepository:
         self.variants = FakeQuerySet(variants or [])
         self.analog_groups = analog_groups or []
         self.spec_preview = spec_preview or []
+        self.variant_detail_tasks = []
+        self.variant_total_max_points = 0
         self.synced_work_id = None
         self.generated_variants_request = None
         self.orphan_variant_refs = []
@@ -57,6 +60,12 @@ class FakeWorkRepository:
 
     def get_spec_preview(self, work_id):
         return self.spec_preview
+
+    def get_variant_detail_tasks(self, variant_id):
+        return self.variant_detail_tasks
+
+    def get_variant_total_max_points(self, variant_id):
+        return self.variant_total_max_points
 
     def sync_analog_groups_from_variants(self, work_id):
         self.synced_work_id = work_id
@@ -139,6 +148,17 @@ class WorkDetailTests(TestCase):
         self.assertEqual(result.variants, ['variant-1'])
         self.assertEqual(result.spec_preview, ['spec-1'])
         self.assertTrue(result.show_sync_button)
+
+    def test_get_variant_detail_use_case_builds_detail_context_data(self):
+        repo = FakeWorkRepository()
+        repo.variant_detail_tasks = ['variant-task-1']
+        repo.variant_total_max_points = 7
+        use_case = GetVariantDetailUseCase(work_repo=repo)
+
+        result = use_case.execute('variant-1')
+
+        self.assertEqual(result.variant_tasks, ['variant-task-1'])
+        self.assertEqual(result.total_max_points, 7)
 
     def test_sync_work_analog_groups_use_case_delegates_to_repository(self):
         repo = FakeWorkRepository()

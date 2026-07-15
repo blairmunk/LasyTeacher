@@ -157,10 +157,13 @@ class VariantDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['variant_tasks'] = self.object.varianttask_set.select_related(
-            'task', 'task__topic', 'task__subtopic'
-        ).order_by('order')
-        context['total_max_points'] = self.object.total_max_points
+        from infrastructure.container import container
+
+        detail = container.get_variant_detail_use_case().execute(
+            str(self.object.pk),
+        )
+        context['variant_tasks'] = detail.variant_tasks
+        context['total_max_points'] = detail.total_max_points
         return context
 
 class OrphanVariantListView(ListView):

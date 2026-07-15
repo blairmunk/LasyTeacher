@@ -33,6 +33,19 @@ class DjangoWorkRepository(IWorkRepository):
         work = Work.objects.get(pk=work_id)
         return work.get_spec_preview()
 
+    def get_variant_detail_tasks(self, variant_id: str):
+        return VariantTask.objects.filter(
+            variant_id=variant_id,
+        ).select_related(
+            'task',
+            'task__topic',
+            'task__subtopic',
+        ).order_by('order')
+
+    def get_variant_total_max_points(self, variant_id: str) -> int:
+        variant = Variant.objects.get(pk=variant_id)
+        return variant.total_max_points
+
     def sync_analog_groups_from_variants(self, work_id: str) -> int:
         work = Work.objects.get(pk=work_id)
         return work.sync_analog_groups_from_variants()

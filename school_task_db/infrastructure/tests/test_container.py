@@ -22,10 +22,17 @@ from core_logic.use_cases.get_remedial_event_preview import (
     GetRemedialEventPreviewUseCase,
 )
 from core_logic.use_cases.get_review_dashboard import GetReviewDashboardUseCase
+from core_logic.use_cases.get_review_save_navigation import (
+    GetReviewSaveNavigationUseCase,
+)
 from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
+from core_logic.use_cases.prepare_participation_review_submission import (
+    PrepareParticipationReviewSubmissionUseCase,
+)
 from core_logic.use_cases.toggle_participation_absent import (
     ToggleParticipationAbsentUseCase,
 )
+from core_logic.use_cases.validate_review_work_scan import ValidateReviewWorkScanUseCase
 from infrastructure.container import Container
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
@@ -56,6 +63,11 @@ class ContainerTests(SimpleTestCase):
         calculate_score_use_case = container.calculate_review_score_use_case()
         finalize_event_use_case = container.finalize_review_event_use_case()
         toggle_absent_use_case = container.toggle_participation_absent_use_case()
+        prepare_submission_use_case = (
+            container.prepare_participation_review_submission_use_case()
+        )
+        validate_scan_use_case = container.validate_review_work_scan_use_case()
+        save_navigation_use_case = container.get_review_save_navigation_use_case()
 
         self.assertIsInstance(use_case, CreateRemedialFromEventUseCase)
         self.assertIsInstance(preview_use_case, GetRemedialEventPreviewUseCase)
@@ -76,6 +88,12 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(calculate_score_use_case, CalculateReviewScoreUseCase)
         self.assertIsInstance(finalize_event_use_case, FinalizeReviewEventUseCase)
         self.assertIsInstance(toggle_absent_use_case, ToggleParticipationAbsentUseCase)
+        self.assertIsInstance(
+            prepare_submission_use_case,
+            PrepareParticipationReviewSubmissionUseCase,
+        )
+        self.assertIsInstance(validate_scan_use_case, ValidateReviewWorkScanUseCase)
+        self.assertIsInstance(save_navigation_use_case, GetReviewSaveNavigationUseCase)
         self.assertIsInstance(container.student_repo, DjangoStudentRepository)
         self.assertIsInstance(container.task_repo, DjangoTaskRepository)
         self.assertIsInstance(container.work_repo, DjangoWorkRepository)

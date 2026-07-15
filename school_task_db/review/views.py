@@ -1,10 +1,10 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import redirect
 from django.views.generic import TemplateView, DetailView
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
-from events.models import Event, EventParticipation, Mark
+from events.models import Event
 from .models import ReviewSession
 
 
@@ -110,67 +110,46 @@ class ParticipationReviewView(TemplateView):
 
     def post(self, request, pk):
         """Сохранение результатов проверки"""
-        participation = get_object_or_404(EventParticipation, pk=pk)
+        from core_logic.use_cases.get_review_save_navigation import (
+            GetReviewSaveNavigationRequest,
+        )
+        from core_logic.use_cases.grade_student_work import GradeStudentWorkRequest
+        from core_logic.use_cases.prepare_participation_review_submission import (
+            PrepareParticipationReviewSubmissionRequest,
+        )
+        from core_logic.use_cases.validate_review_work_scan import (
+            ValidateReviewWorkScanRequest,
+        )
+        from infrastructure.container import container
 
-        # === Загрузка скана работы ===
+        participation_id = str(pk)
+        submission = container.prepare_participation_review_submission_use_case().execute(
+            PrepareParticipationReviewSubmissionRequest(data=request.POST),
+        )
+
         uploaded_file = None
         if 'work_scan' in request.FILES:
             candidate_file = request.FILES['work_scan']
-
-            # Валидация
-            max_size = 10 * 1024 * 1024  # 10 МБ
-            allowed_types = [
-                'application/pdf',
-                'image/jpeg',
-                'image/png',
-                'image/webp',
-            ]
-
-            if candidate_file.size > max_size:
-                messages.warning(
-                    request,
-                    f'⚠️ Файл слишком большой ({candidate_file.size // 1024 // 1024} МБ). '
-                    f'Максимум 10 МБ.'
+            file_validation = container.validate_review_work_scan_use_case().execute(
+                ValidateReviewWorkScanRequest(
+                    size=candidate_file.size,
+                    content_type=candidate_file.content_type,
                 )
-            elif candidate_file.content_type not in allowed_types:
-                messages.warning(
-                    request,
-                    f'⚠️ Неподдерживаемый формат: {candidate_file.content_type}. '
-                    f'Допустимы: PDF, JPEG, PNG, WebP.'
-                )
-            else:
+            )
+            if file_validation.accepted:
                 uploaded_file = candidate_file
-
-        # Детализация по заданиям
-        task_scores = {}
-        for key, value in request.POST.items():
-            if key.startswith('task_') and '_max' not in key and '_comment' not in key:
-                task_uuid = key[5:]
-                points_val = int(value) if value else 0
-                max_val = int(request.POST.get(f'task_{task_uuid}_max', 5))
-                comment_val = request.POST.get(f'task_{task_uuid}_comment', '')
-                score_data = {
-                    'points': points_val,
-                    'max_points': max_val,
-                    'comment': comment_val,
-                }
-                task_scores[task_uuid] = score_data
-
-        from core_logic.use_cases.grade_student_work import GradeStudentWorkRequest
-        from infrastructure.container import container
-
-        def _int_or_none(value):
-            return int(value) if value not in (None, '') else None
+            else:
+                messages.warning(request, file_validation.warning)
 
         result = container.grade_student_work_use_case().execute(
             GradeStudentWorkRequest(
-                participation_id=str(participation.pk),
-                score=_int_or_none(request.POST.get('score')),
-                points=_int_or_none(request.POST.get('points')),
-                max_points=_int_or_none(request.POST.get('max_points')),
-                teacher_comment=request.POST.get('teacher_comment', ''),
-                mistakes_analysis=request.POST.get('mistakes_analysis', ''),
-                recommendations=request.POST.get('recommendations', ''),
+                participation_id=participation_id,
+                score=submission.score,
+                points=submission.points,
+                max_points=submission.max_points,
+                teacher_comment=submission.teacher_comment,
+                mistakes_analysis=submission.mistakes_analysis,
+                recommendations=submission.recommendations,
                 checked_by_display_name=(
                     request.user.get_full_name()
                     if request.user.is_authenticated
@@ -182,11 +161,10 @@ class ParticipationReviewView(TemplateView):
                     else ''
                 ),
                 work_scan=uploaded_file,
-                task_scores=task_scores,
+                task_scores=submission.task_scores,
             )
         )
 
-        # Сообщение об успехе
         scan_msg = ''
         if uploaded_file is not None:
             scan_msg = ' + скан загружен'
@@ -195,40 +173,20 @@ class ParticipationReviewView(TemplateView):
             f'Работа {result.student_name} проверена (оценка: {result.score}){scan_msg}',
         )
 
-        # Навигация
         if 'save_and_next' in request.POST:
-            all_participations = list(
-                participation.event.eventparticipation_set.exclude(
-                    status='absent'
-                ).order_by('student__last_name', 'student__first_name')
+            navigation = container.get_review_save_navigation_use_case().execute(
+                GetReviewSaveNavigationRequest(participation_id=participation_id),
             )
-            try:
-                current_index = next(
-                    i for i, p in enumerate(all_participations)
-                    if p.pk == participation.pk
+            if navigation.next_participation:
+                return redirect(
+                    'review:participation-review',
+                    pk=navigation.next_participation.pk,
                 )
-            except StopIteration:
-                current_index = -1
-
-            next_p = None
-            for i in range(current_index + 1, len(all_participations)):
-                p = all_participations[i]
-                if not Mark.objects.filter(
-                    participation=p, score__isnull=False
-                ).exists():
-                    next_p = p
-                    break
-
-            if next_p is None and current_index + 1 < len(all_participations):
-                next_p = all_participations[current_index + 1]
-
-            if next_p:
-                return redirect('review:participation-review', pk=next_p.pk)
-            else:
+            if navigation.all_checked:
                 messages.info(request, '✅ Все работы проверены!')
-                return redirect('review:event-review', pk=participation.event.pk)
+            return redirect('review:event-review', pk=navigation.event_id)
 
-        return redirect('review:event-review', pk=participation.event.pk)
+        return redirect('review:event-review', pk=result.event_id)
 
 
 

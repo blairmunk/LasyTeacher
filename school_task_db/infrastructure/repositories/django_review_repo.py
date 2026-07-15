@@ -13,6 +13,7 @@ from core_logic.entities.review import (
     ReviewMarkRef,
     ReviewParticipationRef,
     ReviewParticipationStatusChange,
+    ReviewSaveNavigation,
     ReviewStudentRef,
     ReviewTaskRef,
     ReviewTopicRef,
@@ -240,6 +241,43 @@ class DjangoReviewRepository(IReviewRepository):
             is_absent=is_absent,
         )
 
+    def get_save_navigation(self, participation_id: str) -> ReviewSaveNavigation:
+        participation = EventParticipation.objects.select_related('event').get(
+            pk=participation_id,
+        )
+        participations = list(
+            EventParticipation.objects.filter(
+                event=participation.event,
+            ).exclude(
+                status='absent',
+            ).select_related(
+                'student',
+                'event',
+                'variant',
+            ).order_by('student__last_name', 'student__first_name')
+        )
+
+        current_index = self._participation_index(
+            participations=participations,
+            participation_id=participation_id,
+        )
+        next_participation = self._next_ungraded_participation(
+            participations=participations,
+            current_index=current_index,
+        )
+        if next_participation is None and current_index + 1 < len(participations):
+            next_participation = participations[current_index + 1]
+
+        return ReviewSaveNavigation(
+            event_id=str(participation.event.pk),
+            next_participation=(
+                self._participation_ref(next_participation)
+                if next_participation
+                else None
+            ),
+            all_checked=next_participation is None,
+        )
+
     def _participation_ref(self, participation, task_counts=None) -> ReviewParticipationRef:
         student = participation.student
         event = participation.event
@@ -324,3 +362,36 @@ class DjangoReviewRepository(IReviewRepository):
             variant_id__in=variant_ids,
         ).values('variant_id').annotate(total=Count('id'))
         return {row['variant_id']: row['total'] for row in rows}
+
+    @staticmethod
+    def _participation_index(participations, participation_id: str) -> int:
+        try:
+            return next(
+                index
+                for index, participation in enumerate(participations)
+                if str(participation.pk) == str(participation_id)
+            )
+        except StopIteration:
+            return -1
+
+    @staticmethod
+    def _next_ungraded_participation(participations, current_index: int):
+        if current_index < 0:
+            start_index = 0
+        else:
+            start_index = current_index + 1
+
+        participation_ids = [
+            participation.pk
+            for participation in participations[start_index:]
+        ]
+        graded_ids = set(
+            Mark.objects.filter(
+                participation_id__in=participation_ids,
+                score__isnull=False,
+            ).values_list('participation_id', flat=True)
+        )
+        for participation in participations[start_index:]:
+            if participation.pk not in graded_ids:
+                return participation
+        return None

@@ -129,6 +129,30 @@ class ReviewParticipationStatusChange:
 
 
 @dataclass(frozen=True)
+class ReviewFileValidationResult:
+    accepted: bool
+    warning: str = ''
+
+
+@dataclass(frozen=True)
+class ReviewSubmissionData:
+    score: Optional[int]
+    points: Optional[int]
+    max_points: Optional[int]
+    teacher_comment: str
+    mistakes_analysis: str
+    recommendations: str
+    task_scores: Dict[str, dict]
+
+
+@dataclass(frozen=True)
+class ReviewSaveNavigation:
+    event_id: str
+    next_participation: Optional[ReviewParticipationRef] = None
+    all_checked: bool = False
+
+
+@dataclass(frozen=True)
 class ReviewTaskScoreRow:
     task: ReviewTaskRef
     number: int

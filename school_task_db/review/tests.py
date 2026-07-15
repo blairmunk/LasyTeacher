@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -172,6 +173,48 @@ class ParticipationReviewViewTests(TestCase):
         self.assertEqual(self.participation.status, 'graded')
         self.assertEqual(self.event.status, 'reviewing')
         self.assertEqual(task_log.percentage, 100)
+
+    def test_post_save_and_next_uses_clean_navigation(self):
+        response = self.client.post(
+            reverse('review:participation-review', args=[self.participation.pk]),
+            {
+                'score': '4',
+                'points': '2',
+                'max_points': '2',
+                f'task_{self.task.pk}': '2',
+                f'task_{self.task.pk}_max': '2',
+                'save_and_next': '1',
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('review:participation-review', args=[self.next_participation.pk]),
+            fetch_redirect_response=False,
+        )
+
+    def test_post_rejects_invalid_scan_through_clean_validation(self):
+        response = self.client.post(
+            reverse('review:participation-review', args=[self.participation.pk]),
+            {
+                'score': '4',
+                'points': '2',
+                'max_points': '2',
+                'work_scan': SimpleUploadedFile(
+                    'scan.txt',
+                    b'not a supported scan',
+                    content_type='text/plain',
+                ),
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('review:event-review', args=[self.event.pk]),
+            fetch_redirect_response=False,
+        )
+        mark = Mark.objects.get(participation=self.participation)
+        self.assertFalse(mark.work_scan)
 
     def test_ajax_calculate_score_uses_clean_use_case(self):
         response = self.client.get(

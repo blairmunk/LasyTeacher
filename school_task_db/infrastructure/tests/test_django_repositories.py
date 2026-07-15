@@ -398,3 +398,32 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(absent_result.student_last_name, self.student.last_name)
         self.assertFalse(present_result.is_absent)
         self.assertEqual(self.participation.status, 'assigned')
+
+    def test_review_repository_returns_save_navigation(self):
+        repo = DjangoReviewRepository()
+        second_student = Student.objects.create(
+            last_name='Сидоров',
+            first_name='Сидор',
+        )
+        second_participation = EventParticipation.objects.create(
+            event=self.event,
+            student=second_student,
+            variant=self.source_variant,
+            status='completed',
+        )
+
+        navigation = repo.get_save_navigation(str(self.participation.pk))
+        Mark.objects.create(participation=second_participation, score=5)
+        all_checked_navigation = repo.get_save_navigation(
+            str(second_participation.pk),
+        )
+
+        self.assertEqual(navigation.event_id, str(self.event.pk))
+        self.assertEqual(
+            navigation.next_participation.pk,
+            str(second_participation.pk),
+        )
+        self.assertFalse(navigation.all_checked)
+        self.assertEqual(all_checked_navigation.event_id, str(self.event.pk))
+        self.assertIsNone(all_checked_navigation.next_participation)
+        self.assertTrue(all_checked_navigation.all_checked)

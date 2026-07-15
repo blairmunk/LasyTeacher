@@ -1,15 +1,17 @@
 """Pure helpers for the participation review screen."""
 
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Mapping, List, Optional
 
 from core_logic.entities.review import (
     EventReviewData,
     EventReviewParticipationRow,
     ReviewDashboardData,
     ReviewEventProgress,
+    ReviewFileValidationResult,
     ReviewParticipationRef,
     ReviewScoreCalculation,
+    ReviewSubmissionData,
     ReviewVariantRef,
     ReviewTaskScoreRow,
     ReviewVariantTaskRef,
@@ -26,6 +28,14 @@ class ReviewNavigation:
 
 
 class ReviewService:
+    MAX_WORK_SCAN_SIZE = 10 * 1024 * 1024
+    ALLOWED_WORK_SCAN_TYPES = {
+        'application/pdf',
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+    }
+
     def calculate_score(self, points: int, max_points: int) -> ReviewScoreCalculation:
         percentage = (points / max_points) * 100 if max_points > 0 else 0
 
@@ -42,6 +52,58 @@ class ReviewService:
             score=score,
             percentage=round(percentage, 1),
         )
+
+    def parse_submission(self, data: Mapping[str, object]) -> ReviewSubmissionData:
+        task_scores = {}
+        for key, value in data.items():
+            if not key.startswith('task_'):
+                continue
+            if '_max' in key or '_comment' in key:
+                continue
+
+            task_id = key[5:]
+            task_scores[task_id] = {
+                'points': self._int_or_default(value, 0),
+                'max_points': self._int_or_default(
+                    data.get(f'task_{task_id}_max'),
+                    5,
+                ),
+                'comment': data.get(f'task_{task_id}_comment', ''),
+            }
+
+        return ReviewSubmissionData(
+            score=self._int_or_none(data.get('score')),
+            points=self._int_or_none(data.get('points')),
+            max_points=self._int_or_none(data.get('max_points')),
+            teacher_comment=data.get('teacher_comment', ''),
+            mistakes_analysis=data.get('mistakes_analysis', ''),
+            recommendations=data.get('recommendations', ''),
+            task_scores=task_scores,
+        )
+
+    def validate_work_scan(
+        self,
+        size: int,
+        content_type: str,
+    ) -> ReviewFileValidationResult:
+        if size > self.MAX_WORK_SCAN_SIZE:
+            return ReviewFileValidationResult(
+                accepted=False,
+                warning=(
+                    f'⚠️ Файл слишком большой ({size // 1024 // 1024} МБ). '
+                    'Максимум 10 МБ.'
+                ),
+            )
+        if content_type not in self.ALLOWED_WORK_SCAN_TYPES:
+            return ReviewFileValidationResult(
+                accepted=False,
+                warning=(
+                    f'⚠️ Неподдерживаемый формат: {content_type}. '
+                    'Допустимы: PDF, JPEG, PNG, WebP.'
+                ),
+            )
+
+        return ReviewFileValidationResult(accepted=True)
 
     def build_dashboard(
         self,
@@ -204,6 +266,22 @@ class ReviewService:
                 else 0
             ),
         )
+
+    @staticmethod
+    def _int_or_none(value) -> Optional[int]:
+        if value in (None, ''):
+            return None
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _int_or_default(value, default: int) -> int:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return default
 
     def _blocked_event_review(
         self,

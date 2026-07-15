@@ -24,6 +24,77 @@ class ReviewServiceTests(TestCase):
         self.assertEqual(service.calculate_score(4, 10).score, 2)
         self.assertEqual(service.calculate_score(1, 0).percentage, 0)
 
+    def test_parse_submission_returns_grade_fields_and_task_scores(self):
+        service = ReviewService()
+
+        submission = service.parse_submission({
+            'score': '4',
+            'points': '7',
+            'max_points': '10',
+            'teacher_comment': 'Хорошо',
+            'mistakes_analysis': 'Повторить формулы',
+            'recommendations': 'Решить ещё',
+            'task_task-1': '2',
+            'task_task-1_max': '3',
+            'task_task-1_comment': 'Верно',
+        })
+
+        self.assertEqual(submission.score, 4)
+        self.assertEqual(submission.points, 7)
+        self.assertEqual(submission.max_points, 10)
+        self.assertEqual(submission.teacher_comment, 'Хорошо')
+        self.assertEqual(
+            submission.task_scores,
+            {
+                'task-1': {
+                    'points': 2,
+                    'max_points': 3,
+                    'comment': 'Верно',
+                }
+            },
+        )
+
+    def test_parse_submission_tolerates_empty_numbers(self):
+        submission = ReviewService().parse_submission({
+            'score': '',
+            'points': '',
+            'max_points': 'bad',
+            'task_task-1': '',
+            'task_task-1_max': 'bad',
+        })
+
+        self.assertIsNone(submission.score)
+        self.assertIsNone(submission.points)
+        self.assertIsNone(submission.max_points)
+        self.assertEqual(submission.task_scores['task-1']['points'], 0)
+        self.assertEqual(submission.task_scores['task-1']['max_points'], 5)
+
+    def test_validate_work_scan_accepts_supported_files(self):
+        validation = ReviewService().validate_work_scan(
+            size=1024,
+            content_type='application/pdf',
+        )
+
+        self.assertTrue(validation.accepted)
+        self.assertEqual(validation.warning, '')
+
+    def test_validate_work_scan_rejects_large_or_unsupported_files(self):
+        service = ReviewService()
+
+        large = service.validate_work_scan(
+            size=11 * 1024 * 1024,
+            content_type='application/pdf',
+        )
+        unsupported = service.validate_work_scan(
+            size=1024,
+            content_type='text/plain',
+        )
+
+        self.assertFalse(large.accepted)
+        self.assertIn('Файл слишком большой', large.warning)
+        self.assertFalse(unsupported.accepted)
+        self.assertIn('Неподдерживаемый формат', unsupported.warning)
+
     def test_build_dashboard_categorizes_events_by_status_and_progress(self):
         service = ReviewService()
 

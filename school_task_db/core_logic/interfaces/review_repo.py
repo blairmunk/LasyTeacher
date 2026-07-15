@@ -11,6 +11,7 @@ from core_logic.entities.review import (
     ReviewMarkRef,
     ReviewParticipationStatusChange,
     ReviewParticipationRef,
+    ReviewSaveNavigation,
     ReviewVariantRef,
     ReviewVariantTaskRef,
 )
@@ -63,3 +64,7 @@ class IReviewRepository(ABC):
     @abstractmethod
     def toggle_absent(self, participation_id: str) -> ReviewParticipationStatusChange:
         """Toggle absent status for a participation."""
+
+    @abstractmethod
+    def get_save_navigation(self, participation_id: str) -> ReviewSaveNavigation:
+        """Return where the review screen should go after save-and-next."""

@@ -27,10 +27,17 @@ from core_logic.use_cases.get_remedial_event_preview import (
     GetRemedialEventPreviewUseCase,
 )
 from core_logic.use_cases.get_review_dashboard import GetReviewDashboardUseCase
+from core_logic.use_cases.get_review_save_navigation import (
+    GetReviewSaveNavigationUseCase,
+)
 from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
+from core_logic.use_cases.prepare_participation_review_submission import (
+    PrepareParticipationReviewSubmissionUseCase,
+)
 from core_logic.use_cases.toggle_participation_absent import (
     ToggleParticipationAbsentUseCase,
 )
+from core_logic.use_cases.validate_review_work_scan import ValidateReviewWorkScanUseCase
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
@@ -185,6 +192,21 @@ class Container:
 
     def toggle_participation_absent_use_case(self):
         return ToggleParticipationAbsentUseCase(
+            review_repo=self.review_repo,
+        )
+
+    def prepare_participation_review_submission_use_case(self):
+        return PrepareParticipationReviewSubmissionUseCase(
+            review_service=self.review_service(),
+        )
+
+    def validate_review_work_scan_use_case(self):
+        return ValidateReviewWorkScanUseCase(
+            review_service=self.review_service(),
+        )
+
+    def get_review_save_navigation_use_case(self):
+        return GetReviewSaveNavigationUseCase(
             review_repo=self.review_repo,
         )
 

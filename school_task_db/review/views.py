@@ -5,7 +5,6 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
 from events.models import Event
-from .models import ReviewSession
 
 
 class ReviewDashboardView(TemplateView):
@@ -27,9 +26,17 @@ class ReviewDashboardView(TemplateView):
         })
 
         if self.request.user.is_authenticated:
-            context['recent_sessions'] = ReviewSession.objects.filter(
-                reviewer=self.request.user
-            ).select_related('event', 'event__work').order_by('-started_at')[:5]
+            from core_logic.use_cases.get_recent_review_sessions import (
+                GetRecentReviewSessionsRequest,
+            )
+
+            context['recent_sessions'] = (
+                container.get_recent_review_sessions_use_case().execute(
+                    GetRecentReviewSessionsRequest(
+                        reviewer_id=str(self.request.user.pk),
+                    )
+                )
+            )
 
         return context
 
@@ -65,18 +72,20 @@ class EventReviewView(DetailView):
         })
 
         if self.request.user.is_authenticated:
-            session, _ = ReviewSession.objects.get_or_create(
-                reviewer=self.request.user,
-                event=event,
-                defaults={
-                    'total_participations': review_data.active_participants,
-                    'checked_participations': review_data.graded_participants,
-                }
+            from core_logic.use_cases.sync_review_session import (
+                SyncReviewSessionRequest,
             )
-            session.total_participations = review_data.active_participants
-            session.checked_participations = review_data.graded_participants
-            session.save()
-            context['review_session'] = session
+
+            context['review_session'] = (
+                container.sync_review_session_use_case().execute(
+                    SyncReviewSessionRequest(
+                        reviewer_id=str(self.request.user.pk),
+                        event_id=str(event.pk),
+                        total_participations=review_data.active_participants,
+                        checked_participations=review_data.graded_participants,
+                    )
+                )
+            )
 
         return context
 

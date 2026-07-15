@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.test import TestCase
 from django.utils import timezone
 
@@ -18,7 +19,7 @@ from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
 from works.models import Variant, VariantTask, Work, WorkAnalogGroup
-from review.models import ReviewComment
+from review.models import ReviewComment, ReviewSession
 
 
 class DjangoRemedialRepositoryTests(TestCase):
@@ -427,3 +428,33 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(all_checked_navigation.event_id, str(self.event.pk))
         self.assertIsNone(all_checked_navigation.next_participation)
         self.assertTrue(all_checked_navigation.all_checked)
+
+    def test_review_repository_syncs_and_returns_review_sessions(self):
+        repo = DjangoReviewRepository()
+        reviewer = User.objects.create_user(username='teacher')
+
+        session_ref = repo.sync_review_session(
+            reviewer_id=str(reviewer.pk),
+            event_id=str(self.event.pk),
+            total_participations=3,
+            checked_participations=1,
+        )
+        updated_ref = repo.sync_review_session(
+            reviewer_id=str(reviewer.pk),
+            event_id=str(self.event.pk),
+            total_participations=3,
+            checked_participations=2,
+        )
+        recent_sessions = repo.get_recent_sessions(str(reviewer.pk))
+        session = ReviewSession.objects.get(
+            reviewer=reviewer,
+            event=self.event,
+        )
+
+        self.assertEqual(session_ref.event.name, self.event.name)
+        self.assertEqual(updated_ref.checked_participations, 2)
+        self.assertEqual(updated_ref.progress_percentage, 66.7)
+        self.assertEqual(len(recent_sessions), 1)
+        self.assertEqual(recent_sessions[0].pk, str(session.pk))
+        self.assertEqual(session.total_participations, 3)
+        self.assertEqual(session.checked_participations, 2)

@@ -12,6 +12,7 @@ from core_logic.entities.review import (
     ReviewParticipationStatusChange,
     ReviewParticipationRef,
     ReviewSaveNavigation,
+    ReviewSessionRef,
     ReviewVariantRef,
     ReviewVariantTaskRef,
 )
@@ -68,3 +69,21 @@ class IReviewRepository(ABC):
     @abstractmethod
     def get_save_navigation(self, participation_id: str) -> ReviewSaveNavigation:
         """Return where the review screen should go after save-and-next."""
+
+    @abstractmethod
+    def get_recent_sessions(
+        self,
+        reviewer_id: str,
+        limit: int = 5,
+    ) -> List[ReviewSessionRef]:
+        """Return recent review sessions for a reviewer."""
+
+    @abstractmethod
+    def sync_review_session(
+        self,
+        reviewer_id: str,
+        event_id: str,
+        total_participations: int,
+        checked_participations: int,
+    ) -> ReviewSessionRef:
+        """Create or update a review session progress row."""

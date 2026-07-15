@@ -26,6 +26,9 @@ from core_logic.use_cases.get_event_list import GetEventListUseCase
 from core_logic.use_cases.get_remedial_event_preview import (
     GetRemedialEventPreviewUseCase,
 )
+from core_logic.use_cases.get_recent_review_sessions import (
+    GetRecentReviewSessionsUseCase,
+)
 from core_logic.use_cases.get_review_dashboard import GetReviewDashboardUseCase
 from core_logic.use_cases.get_review_save_navigation import (
     GetReviewSaveNavigationUseCase,
@@ -34,6 +37,7 @@ from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
 from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionUseCase,
 )
+from core_logic.use_cases.sync_review_session import SyncReviewSessionUseCase
 from core_logic.use_cases.toggle_participation_absent import (
     ToggleParticipationAbsentUseCase,
 )
@@ -207,6 +211,16 @@ class Container:
 
     def get_review_save_navigation_use_case(self):
         return GetReviewSaveNavigationUseCase(
+            review_repo=self.review_repo,
+        )
+
+    def get_recent_review_sessions_use_case(self):
+        return GetRecentReviewSessionsUseCase(
+            review_repo=self.review_repo,
+        )
+
+    def sync_review_session_use_case(self):
+        return SyncReviewSessionUseCase(
             review_repo=self.review_repo,
         )
 

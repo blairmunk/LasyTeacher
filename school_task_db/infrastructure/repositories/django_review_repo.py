@@ -14,6 +14,7 @@ from core_logic.entities.review import (
     ReviewParticipationRef,
     ReviewParticipationStatusChange,
     ReviewSaveNavigation,
+    ReviewSessionRef,
     ReviewStudentRef,
     ReviewTaskRef,
     ReviewTopicRef,
@@ -24,7 +25,7 @@ from core_logic.entities.review import (
 )
 from core_logic.interfaces.review_repo import IReviewRepository
 from events.models import Event, EventParticipation, Mark
-from review.models import ReviewComment
+from review.models import ReviewComment, ReviewSession
 from works.models import Variant, VariantTask
 
 
@@ -278,6 +279,44 @@ class DjangoReviewRepository(IReviewRepository):
             all_checked=next_participation is None,
         )
 
+    def get_recent_sessions(
+        self,
+        reviewer_id: str,
+        limit: int = 5,
+    ) -> List[ReviewSessionRef]:
+        sessions = ReviewSession.objects.filter(
+            reviewer_id=reviewer_id,
+        ).select_related(
+            'event',
+            'event__work',
+            'event__course',
+        ).order_by('-started_at')[:limit]
+        return [self._session_ref(session) for session in sessions]
+
+    def sync_review_session(
+        self,
+        reviewer_id: str,
+        event_id: str,
+        total_participations: int,
+        checked_participations: int,
+    ) -> ReviewSessionRef:
+        session, _ = ReviewSession.objects.select_related(
+            'event',
+            'event__work',
+            'event__course',
+        ).get_or_create(
+            reviewer_id=reviewer_id,
+            event_id=event_id,
+            defaults={
+                'total_participations': total_participations,
+                'checked_participations': checked_participations,
+            },
+        )
+        session.total_participations = total_participations
+        session.checked_participations = checked_participations
+        session.save()
+        return self._session_ref(session)
+
     def _participation_ref(self, participation, task_counts=None) -> ReviewParticipationRef:
         student = participation.student
         event = participation.event
@@ -351,6 +390,16 @@ class DjangoReviewRepository(IReviewRepository):
             teacher_comment=mark.teacher_comment,
             work_scan=work_scan,
             task_scores=mark.task_scores or {},
+        )
+
+    def _session_ref(self, session: ReviewSession) -> ReviewSessionRef:
+        return ReviewSessionRef(
+            pk=str(session.pk),
+            event=self._event_ref(session.event),
+            total_participations=session.total_participations,
+            checked_participations=session.checked_participations,
+            started_at=session.started_at,
+            finished_at=session.finished_at,
         )
 
     def _variant_task_counts(self, variant_ids) -> dict:

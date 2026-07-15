@@ -21,6 +21,9 @@ from core_logic.use_cases.get_event_list import GetEventListUseCase
 from core_logic.use_cases.get_remedial_event_preview import (
     GetRemedialEventPreviewUseCase,
 )
+from core_logic.use_cases.get_recent_review_sessions import (
+    GetRecentReviewSessionsUseCase,
+)
 from core_logic.use_cases.get_review_dashboard import GetReviewDashboardUseCase
 from core_logic.use_cases.get_review_save_navigation import (
     GetReviewSaveNavigationUseCase,
@@ -29,6 +32,7 @@ from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
 from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionUseCase,
 )
+from core_logic.use_cases.sync_review_session import SyncReviewSessionUseCase
 from core_logic.use_cases.toggle_participation_absent import (
     ToggleParticipationAbsentUseCase,
 )
@@ -68,6 +72,8 @@ class ContainerTests(SimpleTestCase):
         )
         validate_scan_use_case = container.validate_review_work_scan_use_case()
         save_navigation_use_case = container.get_review_save_navigation_use_case()
+        recent_sessions_use_case = container.get_recent_review_sessions_use_case()
+        sync_session_use_case = container.sync_review_session_use_case()
 
         self.assertIsInstance(use_case, CreateRemedialFromEventUseCase)
         self.assertIsInstance(preview_use_case, GetRemedialEventPreviewUseCase)
@@ -94,6 +100,8 @@ class ContainerTests(SimpleTestCase):
         )
         self.assertIsInstance(validate_scan_use_case, ValidateReviewWorkScanUseCase)
         self.assertIsInstance(save_navigation_use_case, GetReviewSaveNavigationUseCase)
+        self.assertIsInstance(recent_sessions_use_case, GetRecentReviewSessionsUseCase)
+        self.assertIsInstance(sync_session_use_case, SyncReviewSessionUseCase)
         self.assertIsInstance(container.student_repo, DjangoStudentRepository)
         self.assertIsInstance(container.task_repo, DjangoTaskRepository)
         self.assertIsInstance(container.work_repo, DjangoWorkRepository)

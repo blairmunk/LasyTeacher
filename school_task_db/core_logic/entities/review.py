@@ -186,6 +186,29 @@ class ReviewDashboardData:
 
 
 @dataclass(frozen=True)
+class ReviewSessionRef:
+    pk: str
+    event: ReviewEventRef
+    total_participations: int
+    checked_participations: int
+    started_at: datetime
+    finished_at: Optional[datetime] = None
+
+    @property
+    def progress_percentage(self) -> float:
+        if self.total_participations == 0:
+            return 0
+        return round(
+            self.checked_participations / self.total_participations * 100,
+            1,
+        )
+
+    @property
+    def is_completed(self) -> bool:
+        return self.finished_at is not None
+
+
+@dataclass(frozen=True)
 class EventReviewParticipationRow:
     participation: ReviewParticipationRef
     mark: Optional[ReviewMarkRef]

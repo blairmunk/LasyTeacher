@@ -4,6 +4,7 @@ from core_logic.entities.review import (
     ReviewEventRef,
     ReviewParticipationStatusChange,
     ReviewSaveNavigation,
+    ReviewSessionRef,
 )
 from core_logic.services.review_service import ReviewService
 from core_logic.use_cases.calculate_review_score import (
@@ -18,9 +19,17 @@ from core_logic.use_cases.get_review_save_navigation import (
     GetReviewSaveNavigationRequest,
     GetReviewSaveNavigationUseCase,
 )
+from core_logic.use_cases.get_recent_review_sessions import (
+    GetRecentReviewSessionsRequest,
+    GetRecentReviewSessionsUseCase,
+)
 from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionRequest,
     PrepareParticipationReviewSubmissionUseCase,
+)
+from core_logic.use_cases.sync_review_session import (
+    SyncReviewSessionRequest,
+    SyncReviewSessionUseCase,
 )
 from core_logic.use_cases.toggle_participation_absent import (
     ToggleParticipationAbsentRequest,
@@ -37,6 +46,8 @@ class FakeReviewActionRepository:
         self.finalized_event_id = None
         self.toggled_participation_id = None
         self.navigation_participation_id = None
+        self.recent_sessions_reviewer_id = None
+        self.synced_session = None
 
     def finalize_event(self, event_id):
         self.finalized_event_id = event_id
@@ -55,6 +66,39 @@ class FakeReviewActionRepository:
     def get_save_navigation(self, participation_id):
         self.navigation_participation_id = participation_id
         return ReviewSaveNavigation(event_id='event-1', all_checked=True)
+
+    def get_recent_sessions(self, reviewer_id, limit=5):
+        self.recent_sessions_reviewer_id = reviewer_id
+        return [
+            ReviewSessionRef(
+                pk='session-1',
+                event=ReviewEventRef(pk='event-1', name='КР 9А'),
+                total_participations=2,
+                checked_participations=1,
+                started_at=None,
+            )
+        ]
+
+    def sync_review_session(
+        self,
+        reviewer_id,
+        event_id,
+        total_participations,
+        checked_participations,
+    ):
+        self.synced_session = (
+            reviewer_id,
+            event_id,
+            total_participations,
+            checked_participations,
+        )
+        return ReviewSessionRef(
+            pk='session-1',
+            event=ReviewEventRef(pk=event_id, name='КР 9А'),
+            total_participations=total_participations,
+            checked_participations=checked_participations,
+            started_at=None,
+        )
 
 
 class ReviewActionUseCaseTests(TestCase):
@@ -135,3 +179,30 @@ class ReviewActionUseCaseTests(TestCase):
 
         self.assertTrue(result.all_checked)
         self.assertEqual(repo.navigation_participation_id, 'participation-1')
+
+    def test_get_recent_review_sessions_delegates_to_repository(self):
+        repo = FakeReviewActionRepository()
+        use_case = GetRecentReviewSessionsUseCase(review_repo=repo)
+
+        result = use_case.execute(
+            GetRecentReviewSessionsRequest(reviewer_id='user-1')
+        )
+
+        self.assertEqual(result[0].event.name, 'КР 9А')
+        self.assertEqual(repo.recent_sessions_reviewer_id, 'user-1')
+
+    def test_sync_review_session_delegates_to_repository(self):
+        repo = FakeReviewActionRepository()
+        use_case = SyncReviewSessionUseCase(review_repo=repo)
+
+        result = use_case.execute(
+            SyncReviewSessionRequest(
+                reviewer_id='user-1',
+                event_id='event-1',
+                total_participations=3,
+                checked_participations=2,
+            )
+        )
+
+        self.assertEqual(result.progress_percentage, 66.7)
+        self.assertEqual(repo.synced_session, ('user-1', 'event-1', 3, 2))

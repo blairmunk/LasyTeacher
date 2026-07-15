@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from curriculum.models import Topic
 from events.models import Event, EventParticipation, Mark
-from review.models import ReviewComment
+from review.models import ReviewComment, ReviewSession
 from students.models import Student, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
@@ -107,6 +107,13 @@ class ParticipationReviewViewTests(TestCase):
         self.assertEqual(response.context['navigation_progress'], 50)
 
     def test_dashboard_uses_review_summary_from_clean_use_case(self):
+        ReviewSession.objects.create(
+            reviewer=self.user,
+            event=self.event,
+            total_participations=2,
+            checked_participations=1,
+        )
+
         response = self.client.get(reverse('review:dashboard'))
 
         self.assertEqual(response.status_code, 200)
@@ -115,6 +122,9 @@ class ParticipationReviewViewTests(TestCase):
         self.assertEqual(response.context['needs_review'][0].event.name, 'КР 9А')
         self.assertEqual(response.context['needs_review'][0].active_participants, 2)
         self.assertEqual(response.context['needs_review'][0].remaining, 2)
+        self.assertEqual(len(response.context['recent_sessions']), 1)
+        self.assertEqual(response.context['recent_sessions'][0].event.name, 'КР 9А')
+        self.assertEqual(response.context['recent_sessions'][0].progress_percentage, 50)
 
     def test_event_review_uses_event_review_context_from_clean_use_case(self):
         response = self.client.get(reverse('review:event-review', args=[self.event.pk]))
@@ -131,6 +141,17 @@ class ParticipationReviewViewTests(TestCase):
         self.assertEqual(len(response.context['participations_data']), 2)
         self.assertEqual(response.context['participations_data'][0].variant.tasks.count, 1)
         self.assertEqual(response.context['available_variants'][0].number, 1)
+        self.assertEqual(response.context['review_session'].event.name, 'КР 9А')
+        self.assertEqual(response.context['review_session'].total_participations, 2)
+        self.assertEqual(response.context['review_session'].checked_participations, 0)
+        self.assertTrue(
+            ReviewSession.objects.filter(
+                reviewer=self.user,
+                event=self.event,
+                total_participations=2,
+                checked_participations=0,
+            ).exists()
+        )
 
     def test_post_grades_participation_through_use_case(self):
         response = self.client.post(

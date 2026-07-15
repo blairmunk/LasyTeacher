@@ -122,15 +122,17 @@ def generation_status_ajax(request):
 @require_http_methods(["POST"])
 def generate_variant_ajax(request, variant_id):
     """Ajax генерация документов для конкретного варианта"""
-    variant = get_object_or_404(Variant, id=variant_id)
-    work = variant.work
+    from infrastructure.container import container
     
-    # Аналогичная логика, но для одного варианта
-    # TODO: Реализовать генерацию одного варианта
+    result = container.get_variant_generation_placeholder_use_case().execute(
+        str(variant_id),
+    )
+    if result.status == 'not_found':
+        raise Http404("Вариант не найден")
     
     return JsonResponse({
         'success': True,
-        'message': f'Вариант {variant.number} работы "{work.name}" будет добавлен в следующей версии',
+        'message': result.message,
         'files': []
     })
 

@@ -7,6 +7,7 @@ from typing import Any, List, Optional, Set
 from core_logic.entities.work import (
     OrphanVariantRef,
     RemedialSheetData,
+    VariantGenerationInfo,
     VariantDeleteInfo,
 )
 
@@ -71,6 +72,13 @@ class IWorkRepository(ABC):
     @abstractmethod
     def get_variant_total_max_points(self, variant_id: str) -> int:
         """Return total max points for a variant."""
+
+    @abstractmethod
+    def get_variant_generation_info(
+        self,
+        variant_id: str,
+    ) -> Optional[VariantGenerationInfo]:
+        """Return variant info for variant document generation."""
 
     @abstractmethod
     def get_remedial_sheet_data(self, variant_id: str) -> RemedialSheetData:

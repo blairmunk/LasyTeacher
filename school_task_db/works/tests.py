@@ -554,6 +554,44 @@ class WorkDetailViewTests(TestCase):
             filename='work.html',
         )
 
+    def test_generate_variant_ajax_uses_clean_placeholder(self):
+        response = self.client.post(
+            reverse('works:generate_variant_ajax', args=[self.variant.pk])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                'success': True,
+                'message': (
+                    'Вариант 1 работы "Контрольная" '
+                    'будет добавлен в следующей версии'
+                ),
+                'files': [],
+            },
+        )
+
+    def test_generate_variant_ajax_handles_orphan_variant(self):
+        orphan = Variant.objects.create(
+            work=None,
+            number=7,
+            work_name_snapshot='Индивидуальная подборка',
+        )
+
+        response = self.client.post(
+            reverse('works:generate_variant_ajax', args=[orphan.pk])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()['message'],
+            (
+                'Вариант 7 работы "Индивидуальная подборка" '
+                'будет добавлен в следующей версии'
+            ),
+        )
+
     def test_django_work_repo_builds_remedial_sheet_data(self):
         student = Student.objects.create(last_name='Петров', first_name='Пётр')
         source_work = Work.objects.create(name='Исходная работа')

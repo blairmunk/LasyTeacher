@@ -9,6 +9,7 @@ from core_logic.entities.work import (
     RemedialOriginalTaskRow,
     RemedialSheetData,
     VariantDeleteInfo,
+    VariantGenerationInfo,
 )
 from core_logic.interfaces.work_repo import (
     AttachVariantsToWorkParams,
@@ -62,6 +63,23 @@ class DjangoWorkRepository(IWorkRepository):
     def get_variant_total_max_points(self, variant_id: str) -> int:
         variant = Variant.objects.get(pk=variant_id)
         return variant.total_max_points
+
+    def get_variant_generation_info(self, variant_id: str):
+        variant = Variant.objects.select_related('work').filter(
+            pk=variant_id,
+        ).first()
+        if not variant:
+            return None
+
+        work_name = (
+            variant.work.name
+            if variant.work
+            else variant.work_name_snapshot or 'Без работы'
+        )
+        return VariantGenerationInfo(
+            number=variant.number,
+            work_name=work_name,
+        )
 
     def get_remedial_sheet_data(self, variant_id: str) -> RemedialSheetData:
         variant = Variant.objects.select_related(

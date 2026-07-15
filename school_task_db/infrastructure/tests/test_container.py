@@ -41,6 +41,9 @@ from core_logic.use_cases.get_review_save_navigation import (
 from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
 from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUseCase
 from core_logic.use_cases.get_variant_detail import GetVariantDetailUseCase
+from core_logic.use_cases.get_variant_generation_placeholder import (
+    GetVariantGenerationPlaceholderUseCase,
+)
 from core_logic.use_cases.get_variant_list import GetVariantListUseCase
 from core_logic.use_cases.get_work_detail import GetWorkDetailUseCase
 from core_logic.use_cases.get_work_form_data import GetWorkFormDataUseCase
@@ -96,6 +99,9 @@ class ContainerTests(SimpleTestCase):
         work_form_data_use_case = container.get_work_form_data_use_case()
         work_list_use_case = container.get_work_list_use_case()
         variant_detail_use_case = container.get_variant_detail_use_case()
+        variant_generation_use_case = (
+            container.get_variant_generation_placeholder_use_case()
+        )
         variant_list_use_case = container.get_variant_list_use_case()
         orphan_variant_list_use_case = container.get_orphan_variant_list_use_case()
         sync_work_groups_use_case = container.sync_work_analog_groups_use_case()
@@ -137,6 +143,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(work_form_data_use_case, GetWorkFormDataUseCase)
         self.assertIsInstance(work_list_use_case, GetWorkListUseCase)
         self.assertIsInstance(variant_detail_use_case, GetVariantDetailUseCase)
+        self.assertIsInstance(
+            variant_generation_use_case,
+            GetVariantGenerationPlaceholderUseCase,
+        )
         self.assertIsInstance(variant_list_use_case, GetVariantListUseCase)
         self.assertIsInstance(
             orphan_variant_list_use_case,

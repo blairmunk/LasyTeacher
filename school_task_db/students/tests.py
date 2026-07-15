@@ -185,6 +185,71 @@ class RemedialFromEventViewTests(TestCase):
         )
         self.assertFalse(Work.objects.filter(name='Не должна создаться').exists())
 
+    def test_remedial_solutions_open_for_orphan_remedial_variant(self):
+        remedial_variant = Variant.objects.create(
+            work=None,
+            number=1,
+            work_name_snapshot='Работа над ошибками',
+            max_score_snapshot=3,
+            variant_type='remedial',
+            assigned_student=self.student,
+            source_work=self.source_work,
+        )
+        VariantTask.objects.create(
+            variant=remedial_variant,
+            task=self.replacement_easy,
+            order=1,
+            max_points=3,
+            weight=3,
+        )
+
+        response = self.client.get(
+            reverse('students:remedial-solutions', args=[remedial_variant.pk])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['variant'], remedial_variant)
+        self.assertEqual(response.context['student'], self.student)
+        self.assertContains(response, 'К варианту')
+
+    def test_remedial_solutions_redirect_orphan_without_source_work_to_variant(self):
+        orphan_variant = Variant.objects.create(
+            work=None,
+            number=1,
+            work_name_snapshot='Сирота',
+            variant_type='remedial',
+            assigned_student=self.student,
+        )
+
+        response = self.client.get(
+            reverse('students:remedial-solutions', args=[orphan_variant.pk])
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('works:variant-detail', args=[orphan_variant.pk]),
+            fetch_redirect_response=False,
+        )
+
+    def test_remedial_solutions_requires_assigned_student(self):
+        remedial_variant = Variant.objects.create(
+            work=None,
+            number=1,
+            work_name_snapshot='Без ученика',
+            variant_type='remedial',
+            source_work=self.source_work,
+        )
+
+        response = self.client.get(
+            reverse('students:remedial-solutions', args=[remedial_variant.pk])
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('works:variant-detail', args=[remedial_variant.pk]),
+            fetch_redirect_response=False,
+        )
+
     def test_student_detail_uses_profile_context_from_clean_use_case(self):
         group = StudentGroup.objects.create(name='9А')
         group.students.add(self.student)

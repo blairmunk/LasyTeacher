@@ -770,9 +770,18 @@ class RemedialSolutionsView(View):
 
         if not variant.source_work:
             messages.error(request, 'У этого варианта нет исходной работы.')
-            return redirect('works:detail', pk=variant.work.pk)
+            if variant.work:
+                return redirect('works:detail', pk=variant.work.pk)
+            return redirect('works:variant-detail', pk=variant.pk)
 
         student = variant.assigned_student
+        if not student:
+            messages.error(
+                request,
+                'Для разбора ошибок нужно знать ученика, которому назначен вариант.',
+            )
+            return redirect('works:variant-detail', pk=variant.pk)
+
         source_work = variant.source_work
 
         # Находим оригинальный вариант ученика

@@ -7,6 +7,7 @@ from django.template.loader import render_to_string
 
 from core_logic.entities.document_generation import (
     GeneratedDocument,
+    GeneratedDocumentFile,
     GeneratedFile,
     GeneratedFileResult,
 )
@@ -30,7 +31,7 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         content_config = options.content_config
 
         if generator_type == 'latex':
-            return GeneratedDocument(
+            return self._document_from_paths(
                 file_type='latex',
                 file_paths=self._generate_latex_work(
                     work,
@@ -39,11 +40,11 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
                 ),
             )
         if generator_type == 'html':
-            return GeneratedDocument(
+            return self._document_from_paths(
                 file_type='html',
                 file_paths=self._generate_html_work(work, content_config),
             )
-        return GeneratedDocument(
+        return self._document_from_paths(
             file_type='pdf',
             file_paths=self._generate_pdf_work(
                 work,
@@ -62,7 +63,7 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         generator_type = options.generator_type
 
         if generator_type == 'latex':
-            return GeneratedDocument(
+            return self._document_from_paths(
                 file_type='latex',
                 file_paths=self._generate_remedial_latex(
                     variant,
@@ -71,14 +72,14 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
                 ),
             )
         if generator_type == 'html':
-            return GeneratedDocument(
+            return self._document_from_paths(
                 file_type='html',
                 file_paths=self._generate_remedial_html(
                     variant,
                     content_config,
                 ),
             )
-        return GeneratedDocument(
+        return self._document_from_paths(
             file_type='pdf',
             file_paths=self._generate_remedial_pdf(
                 variant,
@@ -115,6 +116,20 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
             )
         except OSError:
             return GeneratedFileResult(status='read_error')
+
+    def _document_from_paths(self, file_type: str, file_paths):
+        files = []
+        for file_path in file_paths:
+            path = Path(file_path)
+            if path.exists():
+                files.append(
+                    GeneratedDocumentFile(
+                        filename=path.name,
+                        size_kb=path.stat().st_size / 1024,
+                    )
+                )
+
+        return GeneratedDocument(file_type=file_type, files=files)
 
     def _generate_latex_work(self, work, content_config, pdf_format='A4'):
         from latex_generator.generators.work_generator import WorkLatexGenerator

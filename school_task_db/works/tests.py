@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from core_logic.entities.document_generation import (
     GeneratedDocument,
+    GeneratedDocumentFile,
     GeneratedFile,
     GeneratedFileResult,
 )
@@ -492,7 +493,7 @@ class WorkDetailViewTests(TestCase):
         with patch(
             'infrastructure.services.document_generation_service.'
             'DjangoDocumentGenerationService.generate_work',
-            return_value=GeneratedDocument(file_type='html', file_paths=[]),
+            return_value=GeneratedDocument(file_type='html', files=[]),
         ) as generate_work:
             response = self.client.post(
                 reverse('works:generate_work_ajax', args=[self.work.pk]),

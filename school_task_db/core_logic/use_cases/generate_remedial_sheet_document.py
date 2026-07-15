@@ -25,10 +25,10 @@ class GenerateRemedialSheetDocumentUseCase:
             request.variant_id,
             request.options,
         )
-        status = 'generated' if document.file_paths else 'empty'
+        status = 'generated' if document.files else 'empty'
         return DocumentGenerationResult(
             status=status,
             generator_type=request.options.generator_type,
             file_type=document.file_type,
-            file_paths=document.file_paths,
+            files=document.files,
         )

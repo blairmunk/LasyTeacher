@@ -5,9 +5,15 @@ from typing import List, Optional
 
 
 @dataclass(frozen=True)
+class GeneratedDocumentFile:
+    filename: str
+    size_kb: float
+
+
+@dataclass(frozen=True)
 class GeneratedDocument:
     file_type: str
-    file_paths: List[str] = field(default_factory=list)
+    files: List[GeneratedDocumentFile] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -15,7 +21,7 @@ class DocumentGenerationResult:
     status: str
     generator_type: str
     file_type: str = ''
-    file_paths: List[str] = field(default_factory=list)
+    files: List[GeneratedDocumentFile] = field(default_factory=list)
 
     @property
     def success(self) -> bool:

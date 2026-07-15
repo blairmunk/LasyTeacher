@@ -1,7 +1,6 @@
 """Views для генерации документов через веб-интерфейс"""
 
 import logging
-from pathlib import Path
 from django.http import JsonResponse, HttpResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_http_methods
@@ -53,18 +52,15 @@ def generate_work_ajax(request, work_id):
         
         # Подготавливаем информацию о файлах для frontend
         files_info = []
-        for file_path in result.file_paths:
-            path = Path(file_path)
-            if path.exists():
-                file_size = path.stat().st_size / 1024  # KB
-                files_info.append({
-                    'name': path.name,
-                    'size': f'{file_size:.1f} KB',
-                    'download_url': reverse('works:download_generated_file', kwargs={
-                        'file_type': generator_type,
-                        'filename': path.name
-                    })
+        for file_info in result.files:
+            files_info.append({
+                'name': file_info.filename,
+                'size': f'{file_info.size_kb:.1f} KB',
+                'download_url': reverse('works:download_generated_file', kwargs={
+                    'file_type': result.file_type,
+                    'filename': file_info.filename,
                 })
+            })
         
         success_message = (
             f'{options.file_type_label} документ создан '
@@ -164,20 +160,19 @@ def generate_remedial_sheet_ajax(request, variant_id):
             ),
         )
 
-        if not result.file_paths:
+        if not result.files:
             return JsonResponse({
                 'status': 'error',
                 'message': 'Файлы не были сгенерированы'
             }, status=500)
 
         download_urls = []
-        for f in result.file_paths:
-            filename = Path(f).name
+        for file_info in result.files:
             url = reverse('works:download_generated_file', kwargs={
                 'file_type': result.file_type,
-                'filename': filename
+                'filename': file_info.filename
             })
-            download_urls.append({'filename': filename, 'url': url})
+            download_urls.append({'filename': file_info.filename, 'url': url})
 
         return JsonResponse({
             'status': 'success',

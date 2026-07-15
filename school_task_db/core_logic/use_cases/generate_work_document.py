@@ -39,5 +39,5 @@ class GenerateWorkDocumentUseCase:
             status='generated',
             generator_type=generator_type,
             file_type=document.file_type,
-            file_paths=document.file_paths,
+            files=document.files,
         )

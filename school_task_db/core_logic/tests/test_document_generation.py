@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from core_logic.entities.document_generation import (
     GeneratedDocument,
+    GeneratedDocumentFile,
     GeneratedFile,
     GeneratedFileResult,
 )
@@ -29,11 +30,11 @@ class FakeDocumentGenerationService:
         self.remedial_request = None
         self.work_document = GeneratedDocument(
             file_type='html',
-            file_paths=['work.html'],
+            files=[GeneratedDocumentFile(filename='work.html', size_kb=1.0)],
         )
         self.remedial_document = GeneratedDocument(
             file_type='pdf',
-            file_paths=['remedial.pdf'],
+            files=[GeneratedDocumentFile(filename='remedial.pdf', size_kb=2.0)],
         )
         self.file_request = None
         self.file_result = GeneratedFileResult(
@@ -90,7 +91,8 @@ class DocumentGenerationUseCaseTests(TestCase):
 
         self.assertTrue(result.success)
         self.assertEqual(result.file_type, 'html')
-        self.assertEqual(result.file_paths, ['work.html'])
+        self.assertEqual(result.files[0].filename, 'work.html')
+        self.assertEqual(result.files[0].size_kb, 1.0)
         self.assertEqual(service.work_request, ('work-1', options))
 
     def test_generate_remedial_sheet_document_delegates_to_service(self):
@@ -109,7 +111,8 @@ class DocumentGenerationUseCaseTests(TestCase):
 
         self.assertTrue(result.success)
         self.assertEqual(result.file_type, 'pdf')
-        self.assertEqual(result.file_paths, ['remedial.pdf'])
+        self.assertEqual(result.files[0].filename, 'remedial.pdf')
+        self.assertEqual(result.files[0].size_kb, 2.0)
         self.assertEqual(service.remedial_request, ('variant-1', options))
 
     def test_generate_remedial_sheet_document_handles_empty_files(self):

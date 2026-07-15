@@ -1,7 +1,6 @@
 """Generate document files for a work."""
 
 from dataclasses import dataclass
-from typing import Any
 
 from core_logic.entities.document_generation import DocumentGenerationResult
 from core_logic.interfaces.document_generation import IDocumentGenerationService
@@ -13,7 +12,7 @@ SUPPORTED_WORK_GENERATOR_TYPES = {'latex', 'html', 'pdf'}
 
 @dataclass(frozen=True)
 class GenerateWorkDocumentRequest:
-    work: Any
+    work_id: str
     options: WorkGenerationOptions
 
 
@@ -33,7 +32,7 @@ class GenerateWorkDocumentUseCase:
             )
 
         document = self.document_generation_service.generate_work(
-            request.work,
+            request.work_id,
             request.options,
         )
         return DocumentGenerationResult(

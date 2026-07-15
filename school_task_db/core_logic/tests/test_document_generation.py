@@ -28,12 +28,12 @@ class FakeDocumentGenerationService:
             file_paths=['remedial.pdf'],
         )
 
-    def generate_work(self, work, options):
-        self.work_request = (work, options)
+    def generate_work(self, work_id, options):
+        self.work_request = (work_id, options)
         return self.work_document
 
-    def generate_remedial_sheet(self, variant, options):
-        self.remedial_request = (variant, options)
+    def generate_remedial_sheet(self, variant_id, options):
+        self.remedial_request = (variant_id, options)
         return self.remedial_document
 
 
@@ -46,7 +46,7 @@ class DocumentGenerationUseCaseTests(TestCase):
 
         result = use_case.execute(
             GenerateWorkDocumentRequest(
-                work='work',
+                work_id='work-1',
                 options=WorkGenerationOptions(generator_type='docx'),
             )
         )
@@ -64,13 +64,13 @@ class DocumentGenerationUseCaseTests(TestCase):
         options = WorkGenerationOptions(generator_type='html')
 
         result = use_case.execute(
-            GenerateWorkDocumentRequest(work='work', options=options)
+            GenerateWorkDocumentRequest(work_id='work-1', options=options)
         )
 
         self.assertTrue(result.success)
         self.assertEqual(result.file_type, 'html')
         self.assertEqual(result.file_paths, ['work.html'])
-        self.assertEqual(service.work_request, ('work', options))
+        self.assertEqual(service.work_request, ('work-1', options))
 
     def test_generate_remedial_sheet_document_delegates_to_service(self):
         service = FakeDocumentGenerationService()
@@ -81,7 +81,7 @@ class DocumentGenerationUseCaseTests(TestCase):
 
         result = use_case.execute(
             GenerateRemedialSheetDocumentRequest(
-                variant='variant',
+                variant_id='variant-1',
                 options=options,
             )
         )
@@ -89,7 +89,7 @@ class DocumentGenerationUseCaseTests(TestCase):
         self.assertTrue(result.success)
         self.assertEqual(result.file_type, 'pdf')
         self.assertEqual(result.file_paths, ['remedial.pdf'])
-        self.assertEqual(service.remedial_request, ('variant', options))
+        self.assertEqual(service.remedial_request, ('variant-1', options))
 
     def test_generate_remedial_sheet_document_handles_empty_files(self):
         service = FakeDocumentGenerationService()
@@ -100,7 +100,7 @@ class DocumentGenerationUseCaseTests(TestCase):
 
         result = use_case.execute(
             GenerateRemedialSheetDocumentRequest(
-                variant='variant',
+                variant_id='variant-1',
                 options=RemedialSheetGenerationOptions(),
             )
         )

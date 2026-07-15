@@ -41,7 +41,7 @@ def generate_work_ajax(request, work_id):
         )
 
         result = container.generate_work_document_use_case().execute(
-            GenerateWorkDocumentRequest(work=work, options=options),
+            GenerateWorkDocumentRequest(work_id=str(work.pk), options=options),
         )
         if result.status == 'unsupported_generator':
             return JsonResponse({
@@ -163,7 +163,10 @@ def generate_remedial_sheet_ajax(request, variant_id):
         logger.info(f"Генерация remedial sheet для варианта {variant.id}")
 
         result = container.generate_remedial_sheet_document_use_case().execute(
-            GenerateRemedialSheetDocumentRequest(variant=variant, options=options),
+            GenerateRemedialSheetDocumentRequest(
+                variant_id=str(variant.pk),
+                options=options,
+            ),
         )
 
         if not result.file_paths:

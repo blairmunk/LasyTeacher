@@ -6,13 +6,15 @@ from django.template.loader import render_to_string
 
 from core_logic.entities.document_generation import GeneratedDocument
 from core_logic.interfaces.document_generation import IDocumentGenerationService
+from works.models import Variant, Work
 
 
 class DjangoDocumentGenerationService(IDocumentGenerationService):
     def __init__(self, get_remedial_sheet_data_use_case):
         self.get_remedial_sheet_data_use_case = get_remedial_sheet_data_use_case
 
-    def generate_work(self, work, options) -> GeneratedDocument:
+    def generate_work(self, work_id: str, options) -> GeneratedDocument:
+        work = Work.objects.get(pk=work_id)
         generator_type = options.generator_type
         content_config = options.content_config
 
@@ -39,7 +41,12 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
             ),
         )
 
-    def generate_remedial_sheet(self, variant, options) -> GeneratedDocument:
+    def generate_remedial_sheet(
+        self,
+        variant_id: str,
+        options,
+    ) -> GeneratedDocument:
+        variant = Variant.objects.get(pk=variant_id)
         content_config = options.content_config
         generator_type = options.generator_type
 

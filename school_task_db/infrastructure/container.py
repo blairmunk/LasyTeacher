@@ -23,6 +23,10 @@ from core_logic.use_cases.create_work_from_orphans import (
 from core_logic.use_cases.delete_variant import DeleteVariantUseCase
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
 from core_logic.use_cases.generate_work_variants import GenerateWorkVariantsUseCase
+from core_logic.use_cases.generate_remedial_sheet_document import (
+    GenerateRemedialSheetDocumentUseCase,
+)
+from core_logic.use_cases.generate_work_document import GenerateWorkDocumentUseCase
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.get_participation_review import (
     GetParticipationReviewUseCase,
@@ -65,6 +69,9 @@ from infrastructure.repositories.django_review_repo import DjangoReviewRepositor
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
+from infrastructure.services.document_generation_service import (
+    DjangoDocumentGenerationService,
+)
 from infrastructure.forms.work_forms import WorkFormAdapter
 
 
@@ -78,6 +85,7 @@ class Container:
         self._event_repo = None
         self._review_repo = None
         self._work_form_adapter = None
+        self._document_generation_service = None
 
     @property
     def student_repo(self):
@@ -114,6 +122,16 @@ class Container:
         if self._work_form_adapter is None:
             self._work_form_adapter = WorkFormAdapter()
         return self._work_form_adapter
+
+    @property
+    def document_generation_service(self):
+        if self._document_generation_service is None:
+            self._document_generation_service = DjangoDocumentGenerationService(
+                get_remedial_sheet_data_use_case=(
+                    self.get_remedial_sheet_data_use_case()
+                ),
+            )
+        return self._document_generation_service
 
     def remedial_service(self):
         return RemedialService(
@@ -297,6 +315,16 @@ class Container:
     def generate_work_variants_use_case(self):
         return GenerateWorkVariantsUseCase(
             work_repo=self.work_repo,
+        )
+
+    def generate_work_document_use_case(self):
+        return GenerateWorkDocumentUseCase(
+            document_generation_service=self.document_generation_service,
+        )
+
+    def generate_remedial_sheet_document_use_case(self):
+        return GenerateRemedialSheetDocumentUseCase(
+            document_generation_service=self.document_generation_service,
         )
 
     def create_work_from_orphans_use_case(self):

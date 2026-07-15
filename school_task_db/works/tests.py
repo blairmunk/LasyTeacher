@@ -4,6 +4,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from core_logic.entities.document_generation import GeneratedDocument
 from curriculum.models import Topic
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
@@ -485,9 +486,10 @@ class WorkDetailViewTests(TestCase):
 
     def test_generate_work_ajax_uses_clean_content_config(self):
         with patch(
-            'works.views_generation.generate_html_work',
-            return_value=[],
-        ) as generate_html:
+            'infrastructure.services.document_generation_service.'
+            'DjangoDocumentGenerationService.generate_work',
+            return_value=GeneratedDocument(file_type='html', file_paths=[]),
+        ) as generate_work:
             response = self.client.post(
                 reverse('works:generate_work_ajax', args=[self.work.pk]),
                 {
@@ -504,9 +506,10 @@ class WorkDetailViewTests(TestCase):
             response.json()['message'],
             'HTML документ создан (с полными решениями + подсказки + инструкции)',
         )
-        generate_html.assert_called_once()
+        generate_work.assert_called_once()
+        options = generate_work.call_args.args[1]
         self.assertEqual(
-            generate_html.call_args.args[1],
+            options.content_config,
             {
                 'include_answers': True,
                 'include_short_solutions': True,

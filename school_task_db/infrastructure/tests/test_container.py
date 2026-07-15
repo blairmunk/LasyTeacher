@@ -5,6 +5,7 @@ from core_logic.use_cases.assign_event_variants import AssignEventVariantsUseCas
 from core_logic.use_cases.assign_single_event_variant import (
     AssignSingleEventVariantUseCase,
 )
+from core_logic.use_cases.bulk_delete_variants import BulkDeleteVariantsUseCase
 from core_logic.use_cases.calculate_review_score import CalculateReviewScoreUseCase
 from core_logic.use_cases.change_event_status import ChangeEventStatusUseCase
 from core_logic.use_cases.create_remedial_from_event import (
@@ -88,6 +89,7 @@ class ContainerTests(SimpleTestCase):
         create_from_orphans_use_case = container.create_work_from_orphans_use_case()
         variant_delete_info_use_case = container.get_variant_delete_info_use_case()
         delete_variant_use_case = container.delete_variant_use_case()
+        bulk_delete_variants_use_case = container.bulk_delete_variants_use_case()
 
         self.assertIsInstance(use_case, CreateRemedialFromEventUseCase)
         self.assertIsInstance(preview_use_case, GetRemedialEventPreviewUseCase)
@@ -122,6 +124,7 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(create_from_orphans_use_case, CreateWorkFromOrphansUseCase)
         self.assertIsInstance(variant_delete_info_use_case, GetVariantDeleteInfoUseCase)
         self.assertIsInstance(delete_variant_use_case, DeleteVariantUseCase)
+        self.assertIsInstance(bulk_delete_variants_use_case, BulkDeleteVariantsUseCase)
         self.assertIsInstance(container.student_repo, DjangoStudentRepository)
         self.assertIsInstance(container.task_repo, DjangoTaskRepository)
         self.assertIsInstance(container.work_repo, DjangoWorkRepository)

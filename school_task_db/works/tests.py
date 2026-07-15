@@ -300,3 +300,54 @@ class WorkDetailViewTests(TestCase):
             fetch_redirect_response=False,
         )
         self.assertFalse(Variant.objects.filter(pk=variant_id).exists())
+
+    def test_bulk_delete_variants_view_uses_clean_use_case(self):
+        first_variant = Variant.objects.create(
+            work=self.work,
+            number=2,
+            work_name_snapshot=self.work.name,
+        )
+        second_variant = Variant.objects.create(
+            work=self.work,
+            number=3,
+            work_name_snapshot=self.work.name,
+        )
+        other_work = Work.objects.create(name='Другая работа')
+        other_variant = Variant.objects.create(
+            work=other_work,
+            number=1,
+            work_name_snapshot=other_work.name,
+        )
+
+        response = self.client.post(
+            reverse('works:bulk-delete-variants', args=[self.work.pk]),
+            {
+                'variant_ids': [
+                    str(first_variant.pk),
+                    str(second_variant.pk),
+                    str(other_variant.pk),
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                'success': True,
+                'deleted': 2,
+                'remaining': 1,
+            },
+        )
+        self.assertFalse(Variant.objects.filter(pk=first_variant.pk).exists())
+        self.assertFalse(Variant.objects.filter(pk=second_variant.pk).exists())
+        self.assertTrue(Variant.objects.filter(pk=other_variant.pk).exists())
+
+    def test_bulk_delete_variants_view_rejects_empty_selection(self):
+        response = self.client.post(
+            reverse('works:bulk-delete-variants', args=[self.work.pk]),
+            {},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'error': 'Не выбраны варианты'})

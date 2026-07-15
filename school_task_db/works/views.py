@@ -237,20 +237,26 @@ def bulk_delete_variants(request, work_id):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST only'}, status=405)
 
-    work = get_object_or_404(Work, pk=work_id)
     variant_ids = request.POST.getlist('variant_ids')
+    from core_logic.use_cases.bulk_delete_variants import (
+        BulkDeleteVariantsRequest,
+    )
+    from infrastructure.container import container
 
-    if not variant_ids:
+    result = container.bulk_delete_variants_use_case().execute(
+        BulkDeleteVariantsRequest(
+            work_id=str(work_id),
+            variant_ids=variant_ids,
+        )
+    )
+
+    if result.status == 'empty_selection':
         return JsonResponse({'error': 'Не выбраны варианты'}, status=400)
-
-    deleted_count = Variant.objects.filter(
-        pk__in=variant_ids, work=work
-    ).delete()[0]
 
     return JsonResponse({
         'success': True,
-        'deleted': deleted_count,
-        'remaining': work.variant_set.count(),
+        'deleted': result.deleted_count,
+        'remaining': result.remaining_count,
     })
 
 @require_http_methods(["POST"])

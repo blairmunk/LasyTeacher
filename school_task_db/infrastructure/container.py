@@ -11,6 +11,7 @@ from core_logic.use_cases.assign_event_variants import AssignEventVariantsUseCas
 from core_logic.use_cases.assign_single_event_variant import (
     AssignSingleEventVariantUseCase,
 )
+from core_logic.use_cases.bulk_delete_variants import BulkDeleteVariantsUseCase
 from core_logic.use_cases.calculate_review_score import CalculateReviewScoreUseCase
 from core_logic.use_cases.change_event_status import ChangeEventStatusUseCase
 from core_logic.use_cases.create_remedial_from_event import (
@@ -264,6 +265,11 @@ class Container:
 
     def delete_variant_use_case(self):
         return DeleteVariantUseCase(
+            work_repo=self.work_repo,
+        )
+
+    def bulk_delete_variants_use_case(self):
+        return BulkDeleteVariantsUseCase(
             work_repo=self.work_repo,
         )
 

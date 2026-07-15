@@ -77,6 +77,14 @@ class IWorkRepository(ABC):
         """Delete a variant and return its previous work ID, if any."""
 
     @abstractmethod
+    def bulk_delete_work_variants(self, work_id: str, variant_ids: List[str]) -> int:
+        """Delete selected variants of a work and return deleted object count."""
+
+    @abstractmethod
+    def count_work_variants(self, work_id: str) -> int:
+        """Return variant count for a work."""
+
+    @abstractmethod
     def get_variant_task_ids(self, work_id: str) -> Set[str]:
         """Return task IDs used in all variants of a work."""
 

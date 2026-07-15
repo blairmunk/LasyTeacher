@@ -100,6 +100,15 @@ class DjangoWorkRepository(IWorkRepository):
         variant.delete()
         return work_id
 
+    def bulk_delete_work_variants(self, work_id: str, variant_ids: List[str]) -> int:
+        return Variant.objects.filter(
+            pk__in=variant_ids,
+            work_id=work_id,
+        ).delete()[0]
+
+    def count_work_variants(self, work_id: str) -> int:
+        return Variant.objects.filter(work_id=work_id).count()
+
     def get_variant_task_ids(self, work_id: str) -> Set[str]:
         return {
             str(task_id)

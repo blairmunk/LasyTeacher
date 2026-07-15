@@ -3,6 +3,10 @@ from unittest import TestCase
 from core_logic.entities.work import OrphanVariantRef, VariantDeleteInfo
 from core_logic.interfaces.work_repo import CreateWorkParams
 from core_logic.services.work_service import WorkService
+from core_logic.use_cases.bulk_delete_variants import (
+    BulkDeleteVariantsRequest,
+    BulkDeleteVariantsUseCase,
+)
 from core_logic.use_cases.create_work_from_orphans import (
     CreateWorkFromOrphansRequest,
     CreateWorkFromOrphansUseCase,
@@ -42,6 +46,8 @@ class FakeWorkRepository:
         self.variant_delete_info = VariantDeleteInfo(task_count=0)
         self.detached_variant_id = None
         self.deleted_variant_id = None
+        self.bulk_deleted_request = None
+        self.remaining_variant_count = 0
 
     def get_detail_variants(self, work_id):
         return self.variants
@@ -86,6 +92,13 @@ class FakeWorkRepository:
     def delete_variant(self, variant_id):
         self.deleted_variant_id = variant_id
         return 'work-1'
+
+    def bulk_delete_work_variants(self, work_id, variant_ids):
+        self.bulk_deleted_request = (work_id, variant_ids)
+        return len(variant_ids)
+
+    def count_work_variants(self, work_id):
+        return self.remaining_variant_count
 
 
 class WorkDetailTests(TestCase):
@@ -258,3 +271,34 @@ class WorkDetailTests(TestCase):
         self.assertEqual(result.status, 'deleted')
         self.assertEqual(result.redirect_work_id, 'work-1')
         self.assertEqual(repo.deleted_variant_id, 'variant-1')
+
+    def test_bulk_delete_variants_use_case_deletes_selected_variants(self):
+        repo = FakeWorkRepository()
+        repo.remaining_variant_count = 4
+        use_case = BulkDeleteVariantsUseCase(work_repo=repo)
+
+        result = use_case.execute(
+            BulkDeleteVariantsRequest(
+                work_id='work-1',
+                variant_ids=['variant-1', 'variant-2'],
+            )
+        )
+
+        self.assertEqual(result.status, 'deleted')
+        self.assertEqual(result.deleted_count, 2)
+        self.assertEqual(result.remaining_count, 4)
+        self.assertEqual(
+            repo.bulk_deleted_request,
+            ('work-1', ['variant-1', 'variant-2']),
+        )
+
+    def test_bulk_delete_variants_use_case_handles_empty_selection(self):
+        repo = FakeWorkRepository()
+        use_case = BulkDeleteVariantsUseCase(work_repo=repo)
+
+        result = use_case.execute(
+            BulkDeleteVariantsRequest(work_id='work-1', variant_ids=[])
+        )
+
+        self.assertEqual(result.status, 'empty_selection')
+        self.assertIsNone(repo.bulk_deleted_request)

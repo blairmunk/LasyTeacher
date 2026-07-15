@@ -53,3 +53,10 @@ class DeleteVariantResult:
     redirect_work_id: str = ''
     variant_short_id: str = ''
     participation_count: int = 0
+
+
+@dataclass(frozen=True)
+class BulkDeleteVariantsResult:
+    status: str
+    deleted_count: int = 0
+    remaining_count: int = 0

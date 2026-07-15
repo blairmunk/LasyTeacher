@@ -353,6 +353,40 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(work_id, str(self.source_work.pk))
         self.assertFalse(Variant.objects.filter(pk=variant_id).exists())
 
+    def test_work_repository_bulk_deletes_only_selected_work_variants(self):
+        other_work = Work.objects.create(name='Другая работа')
+        first_variant = Variant.objects.create(
+            work=self.source_work,
+            number=10,
+            work_name_snapshot=self.source_work.name,
+        )
+        second_variant = Variant.objects.create(
+            work=self.source_work,
+            number=11,
+            work_name_snapshot=self.source_work.name,
+        )
+        other_variant = Variant.objects.create(
+            work=other_work,
+            number=1,
+            work_name_snapshot=other_work.name,
+        )
+        repo = DjangoWorkRepository()
+
+        deleted_count = repo.bulk_delete_work_variants(
+            work_id=str(self.source_work.pk),
+            variant_ids=[
+                str(first_variant.pk),
+                str(second_variant.pk),
+                str(other_variant.pk),
+            ],
+        )
+
+        self.assertEqual(deleted_count, 2)
+        self.assertFalse(Variant.objects.filter(pk=first_variant.pk).exists())
+        self.assertFalse(Variant.objects.filter(pk=second_variant.pk).exists())
+        self.assertTrue(Variant.objects.filter(pk=other_variant.pk).exists())
+        self.assertEqual(repo.count_work_variants(str(self.source_work.pk)), 1)
+
     def test_event_repository_grades_participation_and_syncs_review_state(self):
         self.event.status = 'completed'
         self.event.save()

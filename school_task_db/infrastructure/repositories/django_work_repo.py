@@ -29,6 +29,10 @@ class DjangoWorkRepository(IWorkRepository):
         work = Work.objects.get(pk=work_id)
         return work.get_spec_preview()
 
+    def sync_analog_groups_from_variants(self, work_id: str) -> int:
+        work = Work.objects.get(pk=work_id)
+        return work.sync_analog_groups_from_variants()
+
     def get_variant_task_ids(self, work_id: str) -> Set[str]:
         return {
             str(task_id)

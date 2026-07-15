@@ -67,3 +67,34 @@ class WorkDetailViewTests(TestCase):
         self.assertEqual(len(response.context['analog_groups']), 1)
         self.assertEqual(response.context['spec_preview'][0]['wg'].analog_group, group)
         self.assertFalse(response.context['show_sync_button'])
+
+    def test_sync_analog_groups_view_uses_clean_use_case(self):
+        group = AnalogGroup.objects.create(name='Кинематика')
+        task = Task.objects.create(
+            text='Задание',
+            answer='Ответ',
+            topic=self.topic,
+            task_type='computational',
+            difficulty=2,
+        )
+        TaskGroup.objects.create(task=task, group=group)
+        VariantTask.objects.create(
+            variant=self.variant,
+            task=task,
+            order=1,
+            max_points=5,
+            weight=2,
+        )
+
+        response = self.client.post(
+            reverse('works:sync-groups', args=[self.work.pk])
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('works:detail', args=[self.work.pk]),
+            fetch_redirect_response=False,
+        )
+        groups = WorkAnalogGroup.objects.filter(work=self.work)
+        self.assertEqual(groups.count(), 1)
+        self.assertEqual(groups[0].analog_group, group)

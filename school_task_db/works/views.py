@@ -112,9 +112,19 @@ def generate_variants(request, work_id):
 def sync_analog_groups(request, work_id):
     work = get_object_or_404(Work, pk=work_id)
     if request.method == 'POST':
-        created = work.sync_analog_groups_from_variants()
-        if created > 0:
-            messages.success(request, f'Создано {created} групп заданий из вариантов.')
+        from core_logic.use_cases.sync_work_analog_groups import (
+            SyncWorkAnalogGroupsRequest,
+        )
+        from infrastructure.container import container
+
+        result = container.sync_work_analog_groups_use_case().execute(
+            SyncWorkAnalogGroupsRequest(work_id=str(work.pk)),
+        )
+        if result.created_count > 0:
+            messages.success(
+                request,
+                f'Создано {result.created_count} групп заданий из вариантов.',
+            )
         else:
             messages.info(request, 'Группы заданий уже соответствуют вариантам.')
     return redirect('works:detail', pk=work.pk)

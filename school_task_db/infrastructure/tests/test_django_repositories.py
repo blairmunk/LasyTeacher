@@ -234,6 +234,20 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(spec_preview[0]['wg'].analog_group, self.weak_group)
         self.assertEqual(spec_preview[0]['total_points'], 7)
 
+    def test_work_repository_syncs_analog_groups_from_variants(self):
+        WorkAnalogGroup.objects.filter(work=self.source_work).delete()
+        repo = DjangoWorkRepository()
+
+        created_count = repo.sync_analog_groups_from_variants(str(self.source_work.pk))
+        groups = WorkAnalogGroup.objects.filter(work=self.source_work)
+
+        self.assertEqual(created_count, 2)
+        self.assertEqual(groups.count(), 2)
+        self.assertEqual(
+            {group.analog_group for group in groups},
+            {self.weak_group, self.ok_group},
+        )
+
     def test_event_repository_grades_participation_and_syncs_review_state(self):
         self.event.status = 'completed'
         self.event.save()

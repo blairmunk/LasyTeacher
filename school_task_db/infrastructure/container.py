@@ -40,6 +40,7 @@ from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionUseCase,
 )
 from core_logic.use_cases.sync_review_session import SyncReviewSessionUseCase
+from core_logic.use_cases.sync_work_analog_groups import SyncWorkAnalogGroupsUseCase
 from core_logic.use_cases.toggle_participation_absent import (
     ToggleParticipationAbsentUseCase,
 )
@@ -233,6 +234,11 @@ class Container:
         return GetWorkDetailUseCase(
             work_repo=self.work_repo,
             work_service=self.work_service(),
+        )
+
+    def sync_work_analog_groups_use_case(self):
+        return SyncWorkAnalogGroupsUseCase(
+            work_repo=self.work_repo,
         )
 
 

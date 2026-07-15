@@ -15,6 +15,11 @@ class WorkListView(ListView):
     context_object_name = 'works'
     paginate_by = 20
 
+    def get_queryset(self):
+        from infrastructure.container import container
+
+        return container.get_work_list_use_case().execute().works
+
 
 class WorkDetailView(DetailView):
     model = Work

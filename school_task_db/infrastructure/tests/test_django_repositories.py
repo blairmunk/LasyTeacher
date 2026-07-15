@@ -238,6 +238,13 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(spec_preview[0]['wg'].analog_group, self.weak_group)
         self.assertEqual(spec_preview[0]['total_points'], 7)
 
+    def test_work_repository_returns_list_page_data(self):
+        repo = DjangoWorkRepository()
+
+        works = repo.get_list_works()
+
+        self.assertEqual(list(works), [self.source_work])
+
     def test_work_repository_returns_variant_detail_page_data(self):
         repo = DjangoWorkRepository()
 

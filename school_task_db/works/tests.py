@@ -39,6 +39,12 @@ class WorkDetailViewTests(TestCase):
         self.assertEqual(response.context['spec_preview'], [])
         self.assertTrue(response.context['show_sync_button'])
 
+    def test_list_uses_clean_context_data(self):
+        response = self.client.get(reverse('works:list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context['works']), [self.work])
+
     def test_detail_uses_clean_context_data_with_spec_preview(self):
         group = AnalogGroup.objects.create(name='Кинематика')
         task = Task.objects.create(

@@ -13,6 +13,11 @@ class WorkDetailData:
 
 
 @dataclass(frozen=True)
+class WorkListData:
+    works: Any
+
+
+@dataclass(frozen=True)
 class VariantDetailData:
     variant_tasks: Any
     total_max_points: int = 0

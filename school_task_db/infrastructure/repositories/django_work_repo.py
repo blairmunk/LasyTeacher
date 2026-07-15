@@ -17,6 +17,9 @@ from works.models import Variant, VariantTask, Work, WorkAnalogGroup
 
 
 class DjangoWorkRepository(IWorkRepository):
+    def get_list_works(self):
+        return Work.objects.all()
+
     def get_detail_variants(self, work_id: str):
         return Variant.objects.filter(work_id=work_id)
 

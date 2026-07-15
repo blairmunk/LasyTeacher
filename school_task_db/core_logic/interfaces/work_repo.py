@@ -37,6 +37,10 @@ class AttachVariantsToWorkParams:
 
 class IWorkRepository(ABC):
     @abstractmethod
+    def get_list_works(self) -> Any:
+        """Return works for the work list page."""
+
+    @abstractmethod
     def get_detail_variants(self, work_id: str) -> Any:
         """Return variants for the work detail page."""
 

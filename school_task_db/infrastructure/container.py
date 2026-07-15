@@ -44,6 +44,7 @@ from core_logic.use_cases.get_review_save_navigation import (
 from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
 from core_logic.use_cases.get_variant_detail import GetVariantDetailUseCase
 from core_logic.use_cases.get_work_detail import GetWorkDetailUseCase
+from core_logic.use_cases.get_work_list import GetWorkListUseCase
 from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUseCase
 from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionUseCase,
@@ -243,6 +244,11 @@ class Container:
         return GetWorkDetailUseCase(
             work_repo=self.work_repo,
             work_service=self.work_service(),
+        )
+
+    def get_work_list_use_case(self):
+        return GetWorkListUseCase(
+            work_repo=self.work_repo,
         )
 
     def get_variant_detail_use_case(self):

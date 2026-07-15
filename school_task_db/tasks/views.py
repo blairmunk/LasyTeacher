@@ -13,7 +13,6 @@ from core_logic.use_cases.get_task_reference_options import (
 from infrastructure.container import container
 from .models import Task, Source
 from .forms import TaskForm, TaskImageFormSet, SourceForm
-from .utils import math_status_cache
 
 
 class TaskListView(ListView):
@@ -364,14 +363,14 @@ def refresh_math_cache(request):
         return JsonResponse({'error': 'Доступ запрещен'}, status=403)
 
     try:
-        stats = math_status_cache.refresh_cache()
+        result = container.refresh_task_math_cache_use_case().execute()
         return JsonResponse({
             'success': True,
-            'message': 'Кэш успешно обновлен',
+            'message': result.message,
             'stats': {
-                'with_math': len(stats['with_math']),
-                'with_errors': len(stats['with_errors']),
-                'with_warnings': len(stats['with_warnings']),
+                'with_math': result.with_math_count,
+                'with_errors': result.with_errors_count,
+                'with_warnings': result.with_warnings_count,
             }
         })
     except Exception as e:
@@ -384,10 +383,7 @@ class SourceListView(ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        from django.db.models import Count
-        return Source.objects.annotate(
-            task_count=Count('task')
-        ).order_by('name')
+        return container.get_source_list_use_case().execute().sources
 
 
 class SourceCreateView(CreateView):

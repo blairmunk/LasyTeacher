@@ -80,6 +80,7 @@ from core_logic.use_cases.get_task_reference_options import (
     GetCodifierElementsUseCase,
     GetSubtopicOptionsUseCase,
 )
+from core_logic.use_cases.get_source_list import GetSourceListUseCase
 from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUseCase
 from core_logic.use_cases.get_variant_detail import GetVariantDetailUseCase
 from core_logic.use_cases.get_variant_generation_placeholder import (
@@ -92,6 +93,7 @@ from core_logic.use_cases.get_work_list import GetWorkListUseCase
 from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionUseCase,
 )
+from core_logic.use_cases.refresh_task_math_cache import RefreshTaskMathCacheUseCase
 from core_logic.use_cases.sync_review_session import SyncReviewSessionUseCase
 from core_logic.use_cases.sync_work_analog_groups import SyncWorkAnalogGroupsUseCase
 from core_logic.use_cases.toggle_participation_absent import (
@@ -121,6 +123,8 @@ class ContainerTests(SimpleTestCase):
         task_detail_use_case = container.get_task_detail_use_case()
         subtopic_options_use_case = container.get_subtopic_options_use_case()
         codifier_elements_use_case = container.get_codifier_elements_use_case()
+        source_list_use_case = container.get_source_list_use_case()
+        refresh_math_cache_use_case = container.refresh_task_math_cache_use_case()
         student_remedial_use_case = container.get_student_remedial_work_use_case()
         create_student_remedial_use_case = (
             container.create_student_remedial_variant_use_case()
@@ -200,6 +204,11 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(task_detail_use_case, GetTaskDetailUseCase)
         self.assertIsInstance(subtopic_options_use_case, GetSubtopicOptionsUseCase)
         self.assertIsInstance(codifier_elements_use_case, GetCodifierElementsUseCase)
+        self.assertIsInstance(source_list_use_case, GetSourceListUseCase)
+        self.assertIsInstance(
+            refresh_math_cache_use_case,
+            RefreshTaskMathCacheUseCase,
+        )
         self.assertIsInstance(
             student_remedial_use_case,
             GetStudentRemedialWorkUseCase,

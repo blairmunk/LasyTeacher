@@ -23,7 +23,7 @@ from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
-from tasks.models import Task
+from tasks.models import Source, Task
 from works.models import Variant, VariantTask, Work, WorkAnalogGroup
 from review.models import ReviewComment, ReviewSession
 
@@ -214,6 +214,17 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(subtopics[0].id, str(self.subtopic.pk))
         self.assertEqual(subtopics[0].name, self.subtopic.name)
         self.assertEqual(missing_subtopics, [])
+
+    def test_task_repository_returns_source_list_with_task_count(self):
+        source = Source.objects.create(name='Сборник задач')
+        self.original_weak.source = source
+        self.original_weak.save()
+        repo = DjangoTaskRepository()
+
+        sources = list(repo.get_source_list_sources())
+
+        self.assertEqual(sources, [source])
+        self.assertEqual(sources[0].task_count, 1)
 
     def test_create_remedial_use_case_creates_django_objects(self):
         student_repo = DjangoStudentRepository()

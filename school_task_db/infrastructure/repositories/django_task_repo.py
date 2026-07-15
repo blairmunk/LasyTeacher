@@ -103,6 +103,11 @@ class DjangoTaskRepository(ITaskRepository):
     def get_list_sources(self):
         return Source.objects.all()
 
+    def get_source_list_sources(self):
+        return Source.objects.annotate(
+            task_count=Count('task'),
+        ).order_by('name')
+
     def get_subtopics_for_topic(self, topic_id: str):
         if not topic_id:
             return SubTopic.objects.none()
@@ -161,6 +166,9 @@ class DjangoTaskRepository(ITaskRepository):
 
     def get_math_cache_stats(self):
         return math_status_cache.get_cache_stats()
+
+    def refresh_math_cache(self) -> dict:
+        return math_status_cache.refresh_cache()
 
     def get_by_ids(self, task_ids: Set[str]) -> List[TaskEntity]:
         if not task_ids:

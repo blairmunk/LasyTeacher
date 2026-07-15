@@ -105,6 +105,8 @@ from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUse
 from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionUseCase,
 )
+from core_logic.use_cases.get_source_list import GetSourceListUseCase
+from core_logic.use_cases.refresh_task_math_cache import RefreshTaskMathCacheUseCase
 from core_logic.use_cases.sync_review_session import SyncReviewSessionUseCase
 from core_logic.use_cases.sync_work_analog_groups import SyncWorkAnalogGroupsUseCase
 from core_logic.use_cases.toggle_participation_absent import (
@@ -268,6 +270,16 @@ class Container:
 
     def get_codifier_elements_use_case(self):
         return GetCodifierElementsUseCase(
+            task_repo=self.task_repo,
+        )
+
+    def get_source_list_use_case(self):
+        return GetSourceListUseCase(
+            task_repo=self.task_repo,
+        )
+
+    def refresh_task_math_cache_use_case(self):
+        return RefreshTaskMathCacheUseCase(
             task_repo=self.task_repo,
         )
 

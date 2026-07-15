@@ -1,11 +1,12 @@
 import json
 
+from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
 from curriculum.models import SubTopic, Topic
 from task_groups.models import AnalogGroup, TaskGroup
-from tasks.models import Task
+from tasks.models import Source, Task
 from works.models import Variant, VariantTask, Work
 
 
@@ -196,3 +197,36 @@ class TaskBulkGroupAjaxTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {'subtopics': []})
+
+    def test_source_list_returns_sources_with_task_count(self):
+        source = Source.objects.create(name='Задачник')
+        self.first_task.source = source
+        self.first_task.save()
+
+        response = self.client.get(reverse('tasks:source-list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context['sources']), [source])
+        self.assertEqual(response.context['sources'][0].task_count, 1)
+
+    def test_refresh_math_cache_forbids_non_staff(self):
+        response = self.client.get(reverse('tasks:refresh_math_cache'))
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json(), {'error': 'Доступ запрещен'})
+
+    def test_refresh_math_cache_returns_stats_for_staff(self):
+        staff = User.objects.create_user(
+            username='staff',
+            password='pass',
+            is_staff=True,
+        )
+        self.client.force_login(staff)
+
+        response = self.client.get(reverse('tasks:refresh_math_cache'))
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+        self.assertEqual(data['message'], 'Кэш успешно обновлен')
+        self.assertIn('with_math', data['stats'])

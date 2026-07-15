@@ -57,3 +57,21 @@ class SelectOption:
 class ReferenceElementOption:
     code: str
     name: str
+
+
+@dataclass(frozen=True)
+class SourceListData:
+    sources: Any
+
+
+@dataclass(frozen=True)
+class MathCacheRefreshResult:
+    status: str
+    with_math_count: int = 0
+    with_errors_count: int = 0
+    with_warnings_count: int = 0
+    message: str = ''
+
+    @property
+    def success(self) -> bool:
+        return self.status == 'refreshed'

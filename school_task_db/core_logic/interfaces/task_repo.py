@@ -37,6 +37,10 @@ class ITaskRepository(ABC):
         """Return source options for the task list page."""
 
     @abstractmethod
+    def get_source_list_sources(self) -> Any:
+        """Return sources for the source list page."""
+
+    @abstractmethod
     def get_subtopics_for_topic(self, topic_id: str) -> Any:
         """Return subtopic options for a topic."""
 
@@ -67,6 +71,10 @@ class ITaskRepository(ABC):
     @abstractmethod
     def get_math_cache_stats(self) -> Any:
         """Return math cache stats for task administration UI."""
+
+    @abstractmethod
+    def refresh_math_cache(self) -> dict:
+        """Refresh task math cache and return grouped task IDs."""
 
     @abstractmethod
     def get_by_ids(self, task_ids: Set[str]) -> List[TaskEntity]:

@@ -11,6 +11,9 @@ from core_logic.use_cases.get_event_list import GetEventListUseCase
 from core_logic.use_cases.get_event_participant_selection import (
     GetEventParticipantSelectionUseCase,
 )
+from core_logic.use_cases.get_event_variant_assignment import (
+    GetEventVariantAssignmentUseCase,
+)
 
 
 class FakeEventRepository:
@@ -83,3 +86,13 @@ class EventListAndDetailUseCaseTests(TestCase):
             result.current_participants[0].student.first_name,
             'Иван',
         )
+
+    def test_event_variant_assignment_returns_participations_and_variants(self):
+        use_case = GetEventVariantAssignmentUseCase(
+            event_repo=FakeEventRepository(),
+        )
+
+        result = use_case.execute(event_id='event-1')
+
+        self.assertEqual(result.participations[0].pk, 'p1')
+        self.assertEqual(result.variants[0].pk, 'v1')

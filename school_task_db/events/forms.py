@@ -5,7 +5,6 @@ from django.forms import inlineformset_factory
 from django.utils import timezone
 from .models import Event, EventParticipation, Mark
 from students.models import Student, StudentGroup
-from works.models import Variant
 
 class EventForm(forms.ModelForm):
     """Форма для создания события"""
@@ -134,20 +133,23 @@ class MarkForm(forms.ModelForm):
 
 class VariantAssignmentForm(forms.Form):
     """Форма для назначения вариантов участникам"""
-    def __init__(self, event, *args, **kwargs):
+    def __init__(self, assignment_data, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
-        # Получаем участников события
-        participations = EventParticipation.objects.filter(event=event)
-        variants = Variant.objects.filter(work=event.work)
-        
-        for participation in participations:
-            field_name = f'variant_{participation.id}'
-            self.fields[field_name] = forms.ModelChoiceField(
-                queryset=variants,
+
+        choices = [
+            (variant.pk, f'Вариант {variant.number}')
+            for variant in assignment_data.variants
+        ]
+        for participation in assignment_data.participations:
+            field_name = f'variant_{participation.pk}'
+            self.fields[field_name] = forms.ChoiceField(
+                choices=[('', '---------'), *choices],
                 required=False,
-                label=participation.student.get_full_name(),
-                initial=participation.variant,
+                label=(
+                    f'{participation.student.last_name} '
+                    f'{participation.student.first_name}'
+                ),
+                initial=participation.variant.pk if participation.variant else '',
                 widget=forms.Select(attrs={'class': 'form-select'})
             )
 

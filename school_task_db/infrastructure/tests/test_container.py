@@ -33,6 +33,9 @@ from core_logic.use_cases.get_event_list import GetEventListUseCase
 from core_logic.use_cases.get_event_participant_selection import (
     GetEventParticipantSelectionUseCase,
 )
+from core_logic.use_cases.get_event_variant_assignment import (
+    GetEventVariantAssignmentUseCase,
+)
 from core_logic.use_cases.get_generated_document_file import (
     GetGeneratedDocumentFileUseCase,
 )
@@ -107,6 +110,9 @@ class ContainerTests(SimpleTestCase):
         participant_selection_use_case = (
             container.get_event_participant_selection_use_case()
         )
+        variant_assignment_use_case = (
+            container.get_event_variant_assignment_use_case()
+        )
         add_participants_use_case = container.add_event_participants_use_case()
         assign_variants_use_case = container.assign_event_variants_use_case()
         assign_single_variant_use_case = (
@@ -169,6 +175,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             participant_selection_use_case,
             GetEventParticipantSelectionUseCase,
+        )
+        self.assertIsInstance(
+            variant_assignment_use_case,
+            GetEventVariantAssignmentUseCase,
         )
         self.assertIsInstance(add_participants_use_case, AddEventParticipantsUseCase)
         self.assertIsInstance(assign_variants_use_case, AssignEventVariantsUseCase)

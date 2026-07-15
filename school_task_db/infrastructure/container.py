@@ -43,6 +43,9 @@ from core_logic.use_cases.get_event_list import GetEventListUseCase
 from core_logic.use_cases.get_event_participant_selection import (
     GetEventParticipantSelectionUseCase,
 )
+from core_logic.use_cases.get_event_variant_assignment import (
+    GetEventVariantAssignmentUseCase,
+)
 from core_logic.use_cases.get_generated_document_file import (
     GetGeneratedDocumentFileUseCase,
 )
@@ -266,6 +269,11 @@ class Container:
 
     def get_event_participant_selection_use_case(self):
         return GetEventParticipantSelectionUseCase(
+            event_repo=self.event_repo,
+        )
+
+    def get_event_variant_assignment_use_case(self):
+        return GetEventVariantAssignmentUseCase(
             event_repo=self.event_repo,
         )
 

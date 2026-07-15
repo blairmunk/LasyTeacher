@@ -257,6 +257,21 @@ class GradeParticipationViewTests(TestCase):
         self.participation.refresh_from_db()
         self.assertEqual(self.participation.variant, second_variant)
 
+    def test_assign_variants_view_uses_clean_assignment_form_data(self):
+        second_variant = Variant.objects.create(
+            work=self.work,
+            number=2,
+            work_name_snapshot=self.work.name,
+        )
+
+        response = self.client.get(
+            reverse('events:assign-variants', args=[self.event.pk])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        field = response.context['form'].fields[f'variant_{self.participation.pk}']
+        self.assertIn((str(second_variant.pk), 'Вариант 2'), field.choices)
+
     def test_assign_single_variant_view_uses_clean_use_case(self):
         second_variant = Variant.objects.create(
             work=self.work,

@@ -177,20 +177,24 @@ def add_participants(request, event_id):
 def assign_variants(request, event_id):
     """Назначение вариантов участникам"""
     event = get_object_or_404(Event, pk=event_id)
+    from infrastructure.container import container
+
+    assignment_data = container.get_event_variant_assignment_use_case().execute(
+        str(event.pk),
+    )
 
     if request.method == 'POST':
-        form = VariantAssignmentForm(event, request.POST)
+        form = VariantAssignmentForm(assignment_data, request.POST)
         if form.is_valid():
             from core_logic.use_cases.assign_event_variants import (
                 AssignEventVariantsRequest,
             )
-            from infrastructure.container import container
 
             assignments = {}
-            for field_name, variant in form.cleaned_data.items():
-                if not field_name.startswith('variant_') or not variant:
+            for field_name, variant_id in form.cleaned_data.items():
+                if not field_name.startswith('variant_') or not variant_id:
                     continue
-                assignments[field_name.removeprefix('variant_')] = str(variant.pk)
+                assignments[field_name.removeprefix('variant_')] = variant_id
 
             container.assign_event_variants_use_case().execute(
                 AssignEventVariantsRequest(
@@ -201,7 +205,7 @@ def assign_variants(request, event_id):
             messages.success(request, 'Варианты успешно назначены')
             return redirect('events:detail', pk=event.pk)
     else:
-        form = VariantAssignmentForm(event)
+        form = VariantAssignmentForm(assignment_data)
 
     return render(request, 'events/assign_variants.html', {
         'event': event,

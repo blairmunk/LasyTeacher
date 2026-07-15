@@ -764,7 +764,8 @@ class RemedialSolutionsView(View):
     """Страница решений: показывает оригинальные задания КР + их решения"""
 
     def get(self, request, variant_pk):
-        from works.models import Variant, VariantTask
+        from infrastructure.container import container
+        from works.models import Variant
 
         variant = get_object_or_404(Variant, pk=variant_pk)
 
@@ -782,72 +783,16 @@ class RemedialSolutionsView(View):
             )
             return redirect('works:variant-detail', pk=variant.pk)
 
-        source_work = variant.source_work
-
-        # Находим оригинальный вариант ученика
-        from events.models import EventParticipation
-        original_ep = EventParticipation.objects.filter(
-            event__work=source_work,
-            student=student,
-        ).select_related('variant').first()
-
-        original_tasks = []
-        if original_ep and original_ep.variant:
-            orig_vts = VariantTask.objects.filter(
-                variant=original_ep.variant
-            ).select_related('task', 'task__topic').order_by('order')
-
-            # Получаем task_scores
-            from events.models import Mark
-            mark = Mark.objects.filter(participation=original_ep).first()
-            task_scores = mark.task_scores if mark else {}
-
-            for vt in orig_vts:
-                task = vt.task
-                tid = str(task.pk)
-                score_data = task_scores.get(tid, {})
-                pts = score_data.get('points', '—')
-                max_pts = score_data.get('max_points', '—')
-
-                # Определяем статус
-                if isinstance(pts, (int, float)) and isinstance(max_pts, (int, float)) and max_pts > 0:
-                    pct = pts / max_pts * 100
-                    if pct >= 70:
-                        status = 'ok'
-                    elif pct > 0:
-                        status = 'partial'
-                    else:
-                        status = 'fail'
-                else:
-                    pct = 0
-                    status = 'unknown'
-
-                # Группа аналогов задания
-                from task_groups.models import TaskGroup as TG
-                group = TG.objects.filter(task=task).first()
-                group_name = group.group.name if group else ''
-
-                original_tasks.append({
-                    'task': task,
-                    'order': vt.order,
-                    'points': pts,
-                    'max_points': max_pts,
-                    'pct': round(pct, 1),
-                    'status': status,
-                    'group_name': group_name,
-                })
-
-        # Новые задания (из remedial варианта)
-        new_vts = VariantTask.objects.filter(
-            variant=variant
-        ).select_related('task').order_by('order')
+        sheet_data = container.get_remedial_sheet_data_use_case().execute(
+            str(variant.pk),
+        )
 
         context = {
-            'variant': variant,
-            'student': student,
-            'source_work': source_work,
-            'original_tasks': original_tasks,
-            'new_tasks': new_vts,
-            'mark': mark if original_ep else None,
+            'variant': sheet_data.variant,
+            'student': sheet_data.student,
+            'source_work': sheet_data.source_work,
+            'original_tasks': sheet_data.original_tasks,
+            'new_tasks': sheet_data.new_tasks,
+            'mark': sheet_data.mark,
         }
         return render(request, 'students/remedial_solutions.html', context)

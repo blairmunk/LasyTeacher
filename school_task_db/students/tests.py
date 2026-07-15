@@ -210,6 +210,12 @@ class RemedialFromEventViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['variant'], remedial_variant)
         self.assertEqual(response.context['student'], self.student)
+        self.assertEqual(response.context['source_work'], self.source_work)
+        self.assertEqual(response.context['new_tasks'].count(), 1)
+        self.assertEqual(len(response.context['original_tasks']), 2)
+        self.assertEqual(response.context['original_tasks'][0].status, 'fail')
+        self.assertEqual(response.context['original_tasks'][0].group_name, 'Скорость')
+        self.assertEqual(response.context['original_tasks'][1].status, 'ok')
         self.assertContains(response, 'К варианту')
 
     def test_remedial_solutions_redirect_orphan_without_source_work_to_variant(self):

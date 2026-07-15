@@ -1,11 +1,20 @@
+import json
+
 from django.shortcuts import redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib import messages
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
 from core_logic.entities.task import TaskListFilters
+from core_logic.use_cases.bulk_change_task_groups import (
+    BulkAddTasksToGroupRequest,
+    BulkCreateGroupFromTasksRequest,
+    BulkRemoveTasksFromGroupsRequest,
+)
+from core_logic.use_cases.delete_task import DeleteTaskRequest
+from core_logic.use_cases.create_work_from_tasks import CreateWorkFromTasksRequest
 from core_logic.use_cases.get_task_reference_options import (
     CodifierElementsResult,
     SubtopicOptionsResult,
@@ -191,9 +200,14 @@ class TaskDeleteView(DeleteView):
     context_object_name = 'task'
     success_url = reverse_lazy('tasks:list')
 
-    def delete(self, request, *args, **kwargs):
-        messages.success(request, 'Задание успешно удалено!')
-        return super().delete(request, *args, **kwargs)
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        result = container.delete_task_use_case().execute(
+            DeleteTaskRequest(task_id=str(self.object.pk)),
+        )
+        if result.success:
+            messages.success(request, result.message)
+        return redirect(self.get_success_url())
 
 
 # === AJAX endpoints ===
@@ -238,12 +252,6 @@ def _codifier_elements_payload(result: CodifierElementsResult):
 @require_POST
 def bulk_create_group(request):
     """Создать новую группу аналогов из выбранных заданий"""
-    import json
-    from core_logic.use_cases.bulk_change_task_groups import (
-        BulkCreateGroupFromTasksRequest,
-    )
-    from infrastructure.container import container
-
     try:
         body = json.loads(request.body)
     except json.JSONDecodeError:
@@ -271,12 +279,6 @@ def bulk_create_group(request):
 @require_POST
 def bulk_add_to_group(request):
     """Добавить выбранные задания в существующую группу"""
-    import json
-    from core_logic.use_cases.bulk_change_task_groups import (
-        BulkAddTasksToGroupRequest,
-    )
-    from infrastructure.container import container
-
     try:
         body = json.loads(request.body)
     except json.JSONDecodeError:
@@ -303,12 +305,6 @@ def bulk_add_to_group(request):
 @require_POST
 def bulk_remove_from_groups(request):
     """Удалить выбранные задания из всех групп"""
-    import json
-    from core_logic.use_cases.bulk_change_task_groups import (
-        BulkRemoveTasksFromGroupsRequest,
-    )
-    from infrastructure.container import container
-
     try:
         body = json.loads(request.body)
     except json.JSONDecodeError:
@@ -327,15 +323,10 @@ def bulk_remove_from_groups(request):
         'message': result.message,
     })
 
+
 @require_POST
 def bulk_create_work(request):
     """Создать работу с вариантом из выбранных заданий"""
-    import json
-    from core_logic.use_cases.create_work_from_tasks import (
-        CreateWorkFromTasksRequest,
-    )
-    from infrastructure.container import container
-
     try:
         body = json.loads(request.body)
     except json.JSONDecodeError:
@@ -381,6 +372,7 @@ def refresh_math_cache(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+
 class SourceListView(ListView):
     model = Source
     template_name = 'tasks/source_list.html'
@@ -397,14 +389,12 @@ class SourceCreateView(CreateView):
     template_name = 'tasks/source_form.html'
 
     def get_success_url(self):
-        from django.urls import reverse
         # Если открыто в popup — закрываем
         if self.request.GET.get('popup'):
             return reverse('tasks:source-created-popup', kwargs={'pk': self.object.pk})
         return reverse('tasks:source-list')
 
     def form_valid(self, form):
-        from django.contrib import messages
-        response = super().form_valid(form)
+        self.object = container.task_form_adapter.save_source_form(form)
         messages.success(self.request, f'Источник «{self.object}» создан!')
-        return response
+        return redirect(self.get_success_url())

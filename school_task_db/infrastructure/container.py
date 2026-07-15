@@ -41,6 +41,7 @@ from core_logic.use_cases.create_work_from_groups import (
 from core_logic.use_cases.create_work_from_tasks import CreateWorkFromTasksUseCase
 from core_logic.use_cases.delete_variant import DeleteVariantUseCase
 from core_logic.use_cases.delete_task_groups import DeleteTaskGroupsUseCase
+from core_logic.use_cases.delete_task import DeleteTaskUseCase
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
 from core_logic.use_cases.generate_work_variants import GenerateWorkVariantsUseCase
 from core_logic.use_cases.generate_remedial_sheet_document import (
@@ -495,6 +496,11 @@ class Container:
 
     def delete_task_groups_use_case(self):
         return DeleteTaskGroupsUseCase(
+            task_repo=self.task_repo,
+        )
+
+    def delete_task_use_case(self):
+        return DeleteTaskUseCase(
             task_repo=self.task_repo,
         )
 

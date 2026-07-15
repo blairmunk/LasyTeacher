@@ -226,6 +226,15 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(sources, [source])
         self.assertEqual(sources[0].task_count, 1)
 
+    def test_task_repository_deletes_task(self):
+        repo = DjangoTaskRepository()
+        task_id = str(self.too_hard.pk)
+
+        deleted_count = repo.delete_task(task_id)
+
+        self.assertEqual(deleted_count, 1)
+        self.assertFalse(Task.objects.filter(pk=task_id).exists())
+
     def test_create_remedial_use_case_creates_django_objects(self):
         student_repo = DjangoStudentRepository()
         task_repo = DjangoTaskRepository()

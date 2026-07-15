@@ -285,3 +285,34 @@ class TaskBulkGroupAjaxTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, self.first_task.get_absolute_url())
         self.assertEqual(self.first_task.text, 'Обновлённое задание')
+
+    def test_delete_task_removes_task(self):
+        task_id = self.first_task.pk
+
+        response = self.client.post(
+            reverse('tasks:delete', kwargs={'pk': task_id}),
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('tasks:list'))
+        self.assertFalse(Task.objects.filter(pk=task_id).exists())
+
+    def test_create_source_saves_source(self):
+        response = self.client.post(
+            reverse('tasks:source-create'),
+            data={
+                'name': 'Новый источник',
+                'short_name': 'НИ',
+                'source_type': 'problem_book',
+                'author': '',
+                'year': '',
+                'url': '',
+                'isbn': '',
+                'notes': '',
+            },
+        )
+
+        source = Source.objects.get(name='Новый источник')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('tasks:source-list'))
+        self.assertEqual(source.short_name, 'НИ')

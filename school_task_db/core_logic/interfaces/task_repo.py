@@ -121,6 +121,10 @@ class ITaskRepository(ABC):
         """Remove selected tasks from all analog groups and return deleted count."""
 
     @abstractmethod
+    def delete_task(self, task_id: str) -> int:
+        """Delete one task and return deleted object count."""
+
+    @abstractmethod
     def delete_groups(self, group_ids: List[str]) -> int:
         """Delete analog groups by IDs and return deleted object count."""
 

@@ -253,6 +253,12 @@ class DjangoTaskRepository(ITaskRepository):
 
         return TaskGroup.objects.filter(task_id__in=task_ids).delete()[0]
 
+    def delete_task(self, task_id: str) -> int:
+        tasks = Task.objects.filter(pk=task_id)
+        deleted_count = tasks.count()
+        tasks.delete()
+        return deleted_count
+
     def delete_groups(self, group_ids: List[str]) -> int:
         if not group_ids:
             return 0

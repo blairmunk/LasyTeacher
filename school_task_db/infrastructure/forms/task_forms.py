@@ -47,3 +47,6 @@ class TaskFormAdapter:
             created_images=len([image for image in saved_images if image.pk]),
             deleted_images=len(image_formset.deleted_objects),
         )
+
+    def save_source_form(self, form):
+        return form.save()

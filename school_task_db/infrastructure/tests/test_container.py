@@ -34,6 +34,7 @@ from core_logic.use_cases.create_work_from_groups import (
 )
 from core_logic.use_cases.create_work_from_tasks import CreateWorkFromTasksUseCase
 from core_logic.use_cases.delete_task_groups import DeleteTaskGroupsUseCase
+from core_logic.use_cases.delete_task import DeleteTaskUseCase
 from core_logic.use_cases.delete_variant import DeleteVariantUseCase
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
 from core_logic.use_cases.generate_work_variants import GenerateWorkVariantsUseCase
@@ -175,6 +176,7 @@ class ContainerTests(SimpleTestCase):
         variant_delete_info_use_case = container.get_variant_delete_info_use_case()
         delete_variant_use_case = container.delete_variant_use_case()
         delete_task_groups_use_case = container.delete_task_groups_use_case()
+        delete_task_use_case = container.delete_task_use_case()
         add_tasks_to_group_use_case = container.add_tasks_to_group_use_case()
         remove_task_from_group_use_case = container.remove_task_from_group_use_case()
         bulk_create_group_use_case = (
@@ -271,6 +273,7 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(variant_delete_info_use_case, GetVariantDeleteInfoUseCase)
         self.assertIsInstance(delete_variant_use_case, DeleteVariantUseCase)
         self.assertIsInstance(delete_task_groups_use_case, DeleteTaskGroupsUseCase)
+        self.assertIsInstance(delete_task_use_case, DeleteTaskUseCase)
         self.assertIsInstance(add_tasks_to_group_use_case, AddTasksToGroupUseCase)
         self.assertIsInstance(
             remove_task_from_group_use_case,

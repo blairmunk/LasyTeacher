@@ -98,3 +98,40 @@ class WorkDetailViewTests(TestCase):
         groups = WorkAnalogGroup.objects.filter(work=self.work)
         self.assertEqual(groups.count(), 1)
         self.assertEqual(groups[0].analog_group, group)
+
+    def test_generate_variants_view_uses_clean_use_case(self):
+        group = AnalogGroup.objects.create(name='Кинематика')
+        task = Task.objects.create(
+            text='Задание',
+            answer='Ответ',
+            topic=self.topic,
+            task_type='computational',
+            difficulty=2,
+        )
+        TaskGroup.objects.create(task=task, group=group)
+        WorkAnalogGroup.objects.create(
+            work=self.work,
+            analog_group=group,
+            count=1,
+            weight=2,
+            order=1,
+        )
+        Variant.objects.filter(work=self.work).delete()
+        self.work.variant_counter = 0
+        self.work.save()
+
+        response = self.client.post(
+            reverse('works:generate-variants', args=[self.work.pk]),
+            {'count': '2'},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('works:detail', args=[self.work.pk]),
+            fetch_redirect_response=False,
+        )
+        self.work.refresh_from_db()
+        variants = Variant.objects.filter(work=self.work)
+        self.assertEqual(variants.count(), 2)
+        self.assertEqual(self.work.variant_counter, 2)
+        self.assertEqual(variants.first().varianttask_set.count(), 1)

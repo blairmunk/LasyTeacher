@@ -11,6 +11,7 @@ from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
 )
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
+from core_logic.use_cases.generate_work_variants import GenerateWorkVariantsUseCase
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.get_participation_review import (
     GetParticipationReviewUseCase,
@@ -78,6 +79,7 @@ class ContainerTests(SimpleTestCase):
         sync_session_use_case = container.sync_review_session_use_case()
         work_detail_use_case = container.get_work_detail_use_case()
         sync_work_groups_use_case = container.sync_work_analog_groups_use_case()
+        generate_variants_use_case = container.generate_work_variants_use_case()
 
         self.assertIsInstance(use_case, CreateRemedialFromEventUseCase)
         self.assertIsInstance(preview_use_case, GetRemedialEventPreviewUseCase)
@@ -108,6 +110,7 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(sync_session_use_case, SyncReviewSessionUseCase)
         self.assertIsInstance(work_detail_use_case, GetWorkDetailUseCase)
         self.assertIsInstance(sync_work_groups_use_case, SyncWorkAnalogGroupsUseCase)
+        self.assertIsInstance(generate_variants_use_case, GenerateWorkVariantsUseCase)
         self.assertIsInstance(container.student_repo, DjangoStudentRepository)
         self.assertIsInstance(container.task_repo, DjangoTaskRepository)
         self.assertIsInstance(container.work_repo, DjangoWorkRepository)

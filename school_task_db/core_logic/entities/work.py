@@ -15,3 +15,8 @@ class WorkDetailData:
 @dataclass(frozen=True)
 class SyncWorkAnalogGroupsResult:
     created_count: int
+
+
+@dataclass(frozen=True)
+class GenerateWorkVariantsResult:
+    created_count: int

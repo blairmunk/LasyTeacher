@@ -1,6 +1,10 @@
 from unittest import TestCase
 
 from core_logic.services.work_service import WorkService
+from core_logic.use_cases.generate_work_variants import (
+    GenerateWorkVariantsRequest,
+    GenerateWorkVariantsUseCase,
+)
 from core_logic.use_cases.get_work_detail import GetWorkDetailUseCase
 from core_logic.use_cases.sync_work_analog_groups import (
     SyncWorkAnalogGroupsRequest,
@@ -19,6 +23,7 @@ class FakeWorkRepository:
         self.analog_groups = analog_groups or []
         self.spec_preview = spec_preview or []
         self.synced_work_id = None
+        self.generated_variants_request = None
 
     def get_detail_variants(self, work_id):
         return self.variants
@@ -32,6 +37,10 @@ class FakeWorkRepository:
     def sync_analog_groups_from_variants(self, work_id):
         self.synced_work_id = work_id
         return 2
+
+    def generate_variants(self, work_id, count):
+        self.generated_variants_request = (work_id, count)
+        return count
 
 
 class WorkDetailTests(TestCase):
@@ -81,3 +90,14 @@ class WorkDetailTests(TestCase):
 
         self.assertEqual(result.created_count, 2)
         self.assertEqual(repo.synced_work_id, 'work-1')
+
+    def test_generate_work_variants_use_case_delegates_to_repository(self):
+        repo = FakeWorkRepository()
+        use_case = GenerateWorkVariantsUseCase(work_repo=repo)
+
+        result = use_case.execute(
+            GenerateWorkVariantsRequest(work_id='work-1', count=3)
+        )
+
+        self.assertEqual(result.created_count, 3)
+        self.assertEqual(repo.generated_variants_request, ('work-1', 3))

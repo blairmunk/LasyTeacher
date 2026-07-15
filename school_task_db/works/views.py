@@ -97,8 +97,21 @@ def generate_variants(request, work_id):
         if form.is_valid():
             count = form.cleaned_data['count']
             try:
-                variants = work.generate_variants(count)
-                messages.success(request, f'Успешно создано {len(variants)} вариантов!')
+                from core_logic.use_cases.generate_work_variants import (
+                    GenerateWorkVariantsRequest,
+                )
+                from infrastructure.container import container
+
+                result = container.generate_work_variants_use_case().execute(
+                    GenerateWorkVariantsRequest(
+                        work_id=str(work.pk),
+                        count=count,
+                    )
+                )
+                messages.success(
+                    request,
+                    f'Успешно создано {result.created_count} вариантов!',
+                )
                 return redirect('works:detail', pk=work.pk)
             except Exception as e:
                 messages.error(request, f'Ошибка при создании вариантов: {str(e)}')

@@ -17,6 +17,7 @@ from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
 )
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
+from core_logic.use_cases.generate_work_variants import GenerateWorkVariantsUseCase
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.get_participation_review import (
     GetParticipationReviewUseCase,
@@ -238,6 +239,11 @@ class Container:
 
     def sync_work_analog_groups_use_case(self):
         return SyncWorkAnalogGroupsUseCase(
+            work_repo=self.work_repo,
+        )
+
+    def generate_work_variants_use_case(self):
+        return GenerateWorkVariantsUseCase(
             work_repo=self.work_repo,
         )
 

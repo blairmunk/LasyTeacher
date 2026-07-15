@@ -43,6 +43,10 @@ class IWorkRepository(ABC):
         """Sync work analog groups from existing variants and return created count."""
 
     @abstractmethod
+    def generate_variants(self, work_id: str, count: int) -> int:
+        """Generate variants for a work and return created count."""
+
+    @abstractmethod
     def get_variant_task_ids(self, work_id: str) -> Set[str]:
         """Return task IDs used in all variants of a work."""
 

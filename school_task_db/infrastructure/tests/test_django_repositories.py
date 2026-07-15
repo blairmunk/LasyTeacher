@@ -248,6 +248,23 @@ class DjangoRemedialRepositoryTests(TestCase):
             {self.weak_group, self.ok_group},
         )
 
+    def test_work_repository_generates_variants(self):
+        repo = DjangoWorkRepository()
+        existing_count = Variant.objects.filter(work=self.source_work).count()
+        existing_counter = self.source_work.variant_counter
+
+        created_count = repo.generate_variants(str(self.source_work.pk), count=2)
+
+        self.source_work.refresh_from_db()
+        variants = Variant.objects.filter(work=self.source_work)
+        self.assertEqual(created_count, 2)
+        self.assertEqual(variants.count(), existing_count + 2)
+        self.assertEqual(self.source_work.variant_counter, existing_counter + 2)
+        self.assertEqual(
+            variants.order_by('-number').first().varianttask_set.count(),
+            1,
+        )
+
     def test_event_repository_grades_participation_and_syncs_review_state(self):
         self.event.status = 'completed'
         self.event.save()

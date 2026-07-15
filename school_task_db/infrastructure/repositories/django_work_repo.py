@@ -13,6 +13,7 @@ from core_logic.entities.work import (
 )
 from core_logic.interfaces.work_repo import (
     AttachVariantsToWorkParams,
+    CreateWorkAnalogGroupParams,
     CreateVariantParams,
     CreateWorkParams,
     IWorkRepository,
@@ -289,6 +290,15 @@ class DjangoWorkRepository(IWorkRepository):
             variant_counter=params.variant_counter,
         )
         return str(work.pk)
+
+    def create_work_analog_group(self, params: CreateWorkAnalogGroupParams) -> None:
+        WorkAnalogGroup.objects.create(
+            work_id=params.work_id,
+            analog_group_id=params.analog_group_id,
+            order=params.order,
+            count=params.count,
+            weight=params.weight,
+        )
 
     def create_variant_with_tasks(self, params: CreateVariantParams) -> str:
         variant = Variant.objects.create(

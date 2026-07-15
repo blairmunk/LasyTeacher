@@ -26,6 +26,9 @@ from core_logic.use_cases.create_remedial_wizard_work import (
 from core_logic.use_cases.create_work_from_orphans import (
     CreateWorkFromOrphansUseCase,
 )
+from core_logic.use_cases.create_work_from_groups import (
+    CreateWorkFromGroupsUseCase,
+)
 from core_logic.use_cases.delete_variant import DeleteVariantUseCase
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
 from core_logic.use_cases.generate_work_variants import GenerateWorkVariantsUseCase
@@ -408,6 +411,12 @@ class Container:
 
     def create_work_from_orphans_use_case(self):
         return CreateWorkFromOrphansUseCase(
+            work_repo=self.work_repo,
+        )
+
+    def create_work_from_groups_use_case(self):
+        return CreateWorkFromGroupsUseCase(
+            task_repo=self.task_repo,
             work_repo=self.work_repo,
         )
 

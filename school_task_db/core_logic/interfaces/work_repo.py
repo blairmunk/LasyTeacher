@@ -40,6 +40,15 @@ class AttachVariantsToWorkParams:
     max_score_snapshot: int
 
 
+@dataclass(frozen=True)
+class CreateWorkAnalogGroupParams:
+    work_id: str
+    analog_group_id: str
+    order: int
+    count: int
+    weight: int
+
+
 class IWorkRepository(ABC):
     @abstractmethod
     def get_list_works(self) -> Any:
@@ -152,6 +161,10 @@ class IWorkRepository(ABC):
     @abstractmethod
     def create_work(self, params: CreateWorkParams) -> str:
         """Create a work and return its ID."""
+
+    @abstractmethod
+    def create_work_analog_group(self, params: CreateWorkAnalogGroupParams) -> None:
+        """Create one work analog-group specification row."""
 
     @abstractmethod
     def create_variant_with_tasks(self, params: CreateVariantParams) -> str:

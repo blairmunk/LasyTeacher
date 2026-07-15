@@ -228,7 +228,11 @@ def remove_task_from_group(request, group_id, task_id):
 def bulk_create_work_from_groups(request):
     """Создать работу из выбранных групп аналогов"""
     import json
-    from works.models import Work, WorkAnalogGroup
+    from core_logic.use_cases.create_work_from_groups import (
+        CreateWorkFromGroupsRequest,
+        GroupSpecRequest,
+    )
+    from infrastructure.container import container
 
     try:
         body = json.loads(request.body)
@@ -236,75 +240,40 @@ def bulk_create_work_from_groups(request):
         return JsonResponse({'error': 'Невалидный JSON'}, status=400)
 
     groups_data = body.get('groups', [])
-    work_name = body.get('work_name', '').strip()
-    work_type = body.get('work_type', 'test')
-    max_score = body.get('max_score', 0)
-    auto_generate = body.get('auto_generate', False)
-    variant_count = body.get('variant_count', 2)
-
-    if not groups_data:
-        return JsonResponse({'error': 'Не выбрано ни одной группы'}, status=400)
-    if not work_name:
-        return JsonResponse({'error': 'Название работы не указано'}, status=400)
-
-    # Проверяем существование групп
-    group_ids = [g['id'] for g in groups_data]
-    existing_groups = AnalogGroup.objects.filter(pk__in=group_ids)
-    if existing_groups.count() != len(group_ids):
-        return JsonResponse({'error': 'Некоторые группы не найдены'}, status=400)
-
-    # Создаём работу
-    work = Work.objects.create(
-        name=work_name,
-        work_type=work_type,
-        max_score=max(0, int(max_score)),
+    result = container.create_work_from_groups_use_case().execute(
+        CreateWorkFromGroupsRequest(
+            groups=[
+                GroupSpecRequest(
+                    id=str(group_data.get('id', '')),
+                    order=int(group_data.get('order', index)),
+                    count=int(group_data.get('count', 1)),
+                    weight=int(group_data.get('weight', 1)),
+                )
+                for index, group_data in enumerate(groups_data, 1)
+            ],
+            work_name=body.get('work_name', ''),
+            work_type=body.get('work_type', 'test'),
+            max_score=int(body.get('max_score', 0)),
+            auto_generate=body.get('auto_generate', False),
+            variant_count=int(body.get('variant_count', 2)),
+        )
     )
 
-    # Создаём спецификацию (WorkAnalogGroup) с весом
-    for i, gdata in enumerate(groups_data, 1):
-        order = gdata.get('order', i)
-        count = gdata.get('count', 1)
-        weight = gdata.get('weight', 1)
+    if not result.success:
+        return JsonResponse({'error': result.message}, status=400)
 
-        # Автозаполнение веса из сложности первого задания группы
-        if weight <= 0:
-            ag = AnalogGroup.objects.filter(pk=gdata['id']).first()
-            if ag:
-                from task_groups.models import TaskGroup
-                first_tg = TaskGroup.objects.filter(group=ag).select_related('task').first()
-                if first_tg and first_tg.task.difficulty:
-                    weight = first_tg.task.difficulty
-                else:
-                    weight = 1
-            else:
-                weight = 1
-
-        WorkAnalogGroup.objects.create(
-            work=work,
-            analog_group_id=gdata['id'],
-            order=order,
-            count=count,
-            weight=max(1, int(weight)),
-        )
-
-    result = {
+    response = {
         'success': True,
-        'work_id': str(work.pk),
-        'redirect_url': f'/works/{work.pk}/',
-        'message': f'Создана работа «{work_name}» со спецификацией из {len(groups_data)} групп',
+        'work_id': result.work_id,
+        'redirect_url': f'/works/{result.work_id}/',
+        'message': result.message,
     }
+    if result.variants_generated:
+        response['variants_generated'] = result.variants_generated
+    if result.warning:
+        response['warning'] = result.warning
 
-    # Автогенерация вариантов
-    if auto_generate:
-        try:
-            variant_count = min(int(variant_count), 10)
-            work.generate_variants(variant_count)
-            result['message'] += f' и {variant_count} вариантами'
-            result['variants_generated'] = variant_count
-        except Exception as e:
-            result['warning'] = f'Работа создана, но генерация вариантов не удалась: {str(e)}'
-
-    return JsonResponse(result)
+    return JsonResponse(response)
 
 
 

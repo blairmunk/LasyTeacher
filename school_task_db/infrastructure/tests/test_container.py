@@ -20,6 +20,9 @@ from core_logic.use_cases.create_student_remedial_variant import (
 from core_logic.use_cases.create_work_from_orphans import (
     CreateWorkFromOrphansUseCase,
 )
+from core_logic.use_cases.create_work_from_groups import (
+    CreateWorkFromGroupsUseCase,
+)
 from core_logic.use_cases.delete_variant import DeleteVariantUseCase
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
 from core_logic.use_cases.generate_work_variants import GenerateWorkVariantsUseCase
@@ -141,6 +144,7 @@ class ContainerTests(SimpleTestCase):
         sync_work_groups_use_case = container.sync_work_analog_groups_use_case()
         generate_variants_use_case = container.generate_work_variants_use_case()
         create_from_orphans_use_case = container.create_work_from_orphans_use_case()
+        create_from_groups_use_case = container.create_work_from_groups_use_case()
         variant_delete_info_use_case = container.get_variant_delete_info_use_case()
         delete_variant_use_case = container.delete_variant_use_case()
         bulk_delete_variants_use_case = container.bulk_delete_variants_use_case()
@@ -214,6 +218,7 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(sync_work_groups_use_case, SyncWorkAnalogGroupsUseCase)
         self.assertIsInstance(generate_variants_use_case, GenerateWorkVariantsUseCase)
         self.assertIsInstance(create_from_orphans_use_case, CreateWorkFromOrphansUseCase)
+        self.assertIsInstance(create_from_groups_use_case, CreateWorkFromGroupsUseCase)
         self.assertIsInstance(variant_delete_info_use_case, GetVariantDeleteInfoUseCase)
         self.assertIsInstance(delete_variant_use_case, DeleteVariantUseCase)
         self.assertIsInstance(bulk_delete_variants_use_case, BulkDeleteVariantsUseCase)

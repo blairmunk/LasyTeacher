@@ -106,6 +106,7 @@ from infrastructure.repositories.django_review_repo import DjangoReviewRepositor
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
+from infrastructure.forms.task_forms import TaskFormAdapter
 from infrastructure.forms.work_forms import WorkFormAdapter
 
 
@@ -294,4 +295,5 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(container.work_repo, DjangoWorkRepository)
         self.assertIsInstance(container.event_repo, DjangoEventRepository)
         self.assertIsInstance(container.review_repo, DjangoReviewRepository)
+        self.assertIsInstance(container.task_form_adapter, TaskFormAdapter)
         self.assertIsInstance(container.work_form_adapter, WorkFormAdapter)

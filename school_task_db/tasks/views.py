@@ -12,7 +12,7 @@ from core_logic.use_cases.get_task_reference_options import (
 )
 from infrastructure.container import container
 from .models import Task, Source
-from .forms import TaskForm, TaskImageFormSet, SourceForm
+from .forms import TaskForm, SourceForm
 
 
 class TaskListView(ListView):
@@ -103,13 +103,14 @@ class TaskCreateView(CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if self.request.POST:
-            context['image_formset'] = TaskImageFormSet(
+            context['image_formset'] = container.task_form_adapter.build_image_formset(
                 self.request.POST,
                 self.request.FILES,
-                prefix='images'
             )
         else:
-            context['image_formset'] = TaskImageFormSet(prefix='images')
+            context['image_formset'] = (
+                container.task_form_adapter.build_image_formset()
+            )
         return context
 
     def form_valid(self, form):
@@ -117,18 +118,18 @@ class TaskCreateView(CreateView):
         image_formset = context['image_formset']
 
         if image_formset.is_valid():
-            self.object = form.save()
-            image_formset.instance = self.object
-            image_formset.save()
-
-            created_images = len([
-                img for img in image_formset.forms
-                if img.instance.pk and not img.cleaned_data.get('DELETE', False)
-            ])
+            result = container.task_form_adapter.save_created_task_with_images(
+                form,
+                image_formset,
+            )
+            self.object = result.task
 
             messages.success(self.request, 'Задание успешно создано!')
-            if created_images > 0:
-                messages.info(self.request, f'Добавлено изображений: {created_images}')
+            if result.created_images > 0:
+                messages.info(
+                    self.request,
+                    f'Добавлено изображений: {result.created_images}',
+                )
 
             return redirect(self.object.get_absolute_url())
         else:
@@ -144,16 +145,14 @@ class TaskUpdateView(UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if self.request.POST:
-            context['image_formset'] = TaskImageFormSet(
+            context['image_formset'] = container.task_form_adapter.build_image_formset(
                 self.request.POST,
                 self.request.FILES,
                 instance=self.object,
-                prefix='images'
             )
         else:
-            context['image_formset'] = TaskImageFormSet(
+            context['image_formset'] = container.task_form_adapter.build_image_formset(
                 instance=self.object,
-                prefix='images'
             )
         return context
 
@@ -162,17 +161,23 @@ class TaskUpdateView(UpdateView):
         image_formset = context['image_formset']
 
         if image_formset.is_valid():
-            self.object = form.save()
-            saved_images = image_formset.save()
-
-            created_images = len([img for img in saved_images if img.pk])
-            deleted_count = len(image_formset.deleted_objects)
+            result = container.task_form_adapter.save_updated_task_with_images(
+                form,
+                image_formset,
+            )
+            self.object = result.task
 
             messages.success(self.request, 'Задание успешно обновлено!')
-            if created_images > 0:
-                messages.info(self.request, f'Добавлено изображений: {created_images}')
-            if deleted_count > 0:
-                messages.info(self.request, f'Удалено изображений: {deleted_count}')
+            if result.created_images > 0:
+                messages.info(
+                    self.request,
+                    f'Добавлено изображений: {result.created_images}',
+                )
+            if result.deleted_images > 0:
+                messages.info(
+                    self.request,
+                    f'Удалено изображений: {result.deleted_images}',
+                )
 
             return redirect(self.object.get_absolute_url())
         else:

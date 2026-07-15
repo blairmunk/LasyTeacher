@@ -122,6 +122,7 @@ from infrastructure.services.document_generation_service import (
     DjangoDocumentGenerationService,
 )
 from infrastructure.forms.work_forms import WorkFormAdapter
+from infrastructure.forms.task_forms import TaskFormAdapter
 
 
 class Container:
@@ -134,6 +135,7 @@ class Container:
         self._event_repo = None
         self._review_repo = None
         self._work_form_adapter = None
+        self._task_form_adapter = None
         self._document_generation_service = None
 
     @property
@@ -171,6 +173,12 @@ class Container:
         if self._work_form_adapter is None:
             self._work_form_adapter = WorkFormAdapter()
         return self._work_form_adapter
+
+    @property
+    def task_form_adapter(self):
+        if self._task_form_adapter is None:
+            self._task_form_adapter = TaskFormAdapter()
+        return self._task_form_adapter
 
     @property
     def document_generation_service(self):

@@ -46,6 +46,35 @@ class TaskBulkGroupAjaxTests(TestCase):
             content_type='application/json',
         )
 
+    def task_form_data(self, **overrides):
+        data = {
+            'text': 'Новое задание',
+            'answer': 'Ответ',
+            'topic': str(self.topic.pk),
+            'subtopic': '',
+            'task_type': 'computational',
+            'difficulty': '2',
+            'cognitive_level': 'understand',
+            'content_element': '',
+            'requirement_element': '',
+            'short_solution': '',
+            'full_solution': '',
+            'hint': '',
+            'instruction': '',
+            'estimated_time': '',
+            'source': '',
+            'source_detail': '',
+            'grade': '',
+            'year': '',
+            'teacher_notes': '',
+            'images-TOTAL_FORMS': '0',
+            'images-INITIAL_FORMS': '0',
+            'images-MIN_NUM_FORMS': '0',
+            'images-MAX_NUM_FORMS': '10',
+        }
+        data.update(overrides)
+        return data
+
     def test_bulk_create_group_creates_group_with_selected_tasks(self):
         response = self.post_json(
             'bulk-create-group',
@@ -230,3 +259,29 @@ class TaskBulkGroupAjaxTests(TestCase):
         self.assertTrue(data['success'])
         self.assertEqual(data['message'], 'Кэш успешно обновлен')
         self.assertIn('with_math', data['stats'])
+
+    def test_create_task_saves_task_with_empty_image_formset(self):
+        response = self.client.post(
+            reverse('tasks:create'),
+            data=self.task_form_data(text='Созданное задание'),
+        )
+
+        created_task = Task.objects.get(text='Созданное задание')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, created_task.get_absolute_url())
+        self.assertEqual(created_task.topic, self.topic)
+
+    def test_update_task_saves_task_with_empty_image_formset(self):
+        response = self.client.post(
+            reverse('tasks:update', kwargs={'pk': self.first_task.pk}),
+            data=self.task_form_data(
+                text='Обновлённое задание',
+                answer=self.first_task.answer,
+                difficulty=str(self.first_task.difficulty),
+            ),
+        )
+
+        self.first_task.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, self.first_task.get_absolute_url())
+        self.assertEqual(self.first_task.text, 'Обновлённое задание')

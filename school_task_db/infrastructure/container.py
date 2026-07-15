@@ -17,6 +17,9 @@ from core_logic.use_cases.change_event_status import ChangeEventStatusUseCase
 from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
 )
+from core_logic.use_cases.create_student_remedial_variant import (
+    CreateStudentRemedialVariantUseCase,
+)
 from core_logic.use_cases.create_work_from_orphans import (
     CreateWorkFromOrphansUseCase,
 )
@@ -170,6 +173,13 @@ class Container:
             task_repo=self.task_repo,
             work_repo=self.work_repo,
             event_repo=self.event_repo,
+        )
+
+    def create_student_remedial_variant_use_case(self):
+        return CreateStudentRemedialVariantUseCase(
+            student_repo=self.student_repo,
+            task_repo=self.task_repo,
+            work_repo=self.work_repo,
         )
 
     def get_remedial_event_preview_use_case(self):

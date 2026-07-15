@@ -1,5 +1,6 @@
 """Django implementation of the student repository."""
 
+import random
 from typing import List
 
 from django.db.models import Avg, Count, Q
@@ -20,6 +21,7 @@ from core_logic.interfaces.student_repo import IStudentRepository
 from events.models import EventParticipation, Mark
 from task_groups.models import AnalogGroup, TaskGroup
 from students.models import StudentGroup, StudentTaskLog
+from students.models import Student
 from tasks.models import Task
 from works.models import WorkAnalogGroup
 
@@ -244,6 +246,51 @@ class DjangoStudentRepository(IStudentRepository):
             total_available=total_available,
             done_count=len(done_task_ids),
         )
+
+    def get_student_short_name(self, student_id: str) -> str:
+        return Student.objects.get(pk=student_id).get_short_name()
+
+    def select_student_remedial_task_ids(
+        self,
+        student_id: str,
+        max_tasks: int,
+        selected_group_ids: List[str],
+    ) -> List[str]:
+        task_logs = StudentTaskLog.objects.filter(student_id=student_id)
+        done_task_ids = set(task_logs.values_list('task_id', flat=True))
+        tasks_to_add = []
+
+        if selected_group_ids:
+            group_ids = selected_group_ids
+        else:
+            group_ids = task_logs.exclude(
+                analog_group__isnull=True,
+            ).values(
+                'analog_group',
+            ).annotate(
+                avg_pct=Avg('percentage'),
+            ).filter(
+                avg_pct__lt=70,
+            ).values_list('analog_group', flat=True)
+
+        for group_id in group_ids:
+            if len(tasks_to_add) >= max_tasks:
+                break
+
+            group_task_ids = set(
+                TaskGroup.objects.filter(group_id=group_id).values_list(
+                    'task_id',
+                    flat=True,
+                )
+            )
+            available_ids = list(group_task_ids - done_task_ids)
+
+            if available_ids:
+                random.shuffle(available_ids)
+                take = min(2, max_tasks - len(tasks_to_add), len(available_ids))
+                tasks_to_add.extend(str(task_id) for task_id in available_ids[:take])
+
+        return tasks_to_add
 
     def get_work_group_refs(self, work_ids: List[str]) -> List[WorkGroupRef]:
         if not work_ids:

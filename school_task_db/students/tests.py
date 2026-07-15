@@ -205,6 +205,34 @@ class RemedialFromEventViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context['no_data'])
 
+    def test_student_remedial_post_creates_orphan_variant(self):
+        response = self.client.post(
+            reverse('students:remedial', args=[self.student.pk]),
+            {
+                'max_tasks': '5',
+                'groups': [str(self.weak_group.pk)],
+            },
+        )
+
+        variant = Variant.objects.get(
+            work__isnull=True,
+            assigned_student=self.student,
+            variant_type='remedial',
+        )
+        self.assertRedirects(
+            response,
+            reverse('works:variant-detail', args=[variant.pk]),
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(variant.work_name_snapshot, 'Работа над ошибками — Иванов И.')
+        self.assertEqual(variant.max_score_snapshot, 9)
+        variant_tasks = VariantTask.objects.filter(variant=variant)
+        self.assertEqual(variant_tasks.count(), 2)
+        self.assertEqual(
+            {variant_task.task for variant_task in variant_tasks},
+            {self.replacement_easy, self.replacement_hard},
+        )
+
     def test_remedial_solutions_open_for_orphan_remedial_variant(self):
         remedial_variant = Variant.objects.create(
             work=None,

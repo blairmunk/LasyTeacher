@@ -216,80 +216,28 @@ class RemedialWorkView(DetailView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         student = self.object
+        from core_logic.use_cases.create_student_remedial_variant import (
+            CreateStudentRemedialVariantRequest,
+        )
+        from infrastructure.container import container
 
-        # Параметры
         max_tasks = int(request.POST.get('max_tasks', 10))
         selected_groups = request.POST.getlist('groups')
 
-        task_logs = StudentTaskLog.objects.filter(student=student)
-        done_task_ids = set(task_logs.values_list('task_id', flat=True))
-
-        # Собираем задания
-        tasks_to_add = []
-
-        if selected_groups:
-            group_ids = selected_groups
-        else:
-            # Все слабые группы
-            group_ids = task_logs.exclude(
-                analog_group__isnull=True
-            ).values('analog_group').annotate(
-                avg_pct=Avg('percentage')
-            ).filter(avg_pct__lt=70).values_list('analog_group', flat=True)
-
-        for group_id in group_ids:
-            if len(tasks_to_add) >= max_tasks:
-                break
-
-            group_task_ids = set(
-                TaskGroup.objects.filter(group_id=group_id).values_list('task_id', flat=True)
+        result = container.create_student_remedial_variant_use_case().execute(
+            CreateStudentRemedialVariantRequest(
+                student_id=str(student.pk),
+                max_tasks=max_tasks,
+                selected_group_ids=selected_groups,
             )
-            available_ids = list(group_task_ids - done_task_ids)
-
-            if available_ids:
-                import random
-                random.shuffle(available_ids)
-                # Берём 1-2 задания из каждой группы
-                take = min(2, max_tasks - len(tasks_to_add), len(available_ids))
-                tasks_to_add.extend(available_ids[:take])
-
-        if not tasks_to_add:
-            messages.warning(request, 'Нет доступных заданий для работы над ошибками.')
-            return redirect('students:detail', pk=student.pk)
-
-        # Собираем задания как список объектов
-        tasks_list = list(Task.objects.filter(id__in=tasks_to_add))
-        if not tasks_list:
-            messages.warning(request, 'Нет доступных заданий для работы над ошибками.')
-            return redirect('students:detail', pk=student.pk)
-
-        # Суммарный балл = сумма сложностей
-        total_score = sum(t.difficulty or 1 for t in tasks_list)
-
-        variant = Variant.objects.create(
-            work=None,
-            number=1,
-            work_name_snapshot=f'Работа над ошибками — {student.get_short_name()}',
-            max_score_snapshot=total_score,
-            variant_type='remedial',
-            assigned_student=student,
         )
 
-        for i, task in enumerate(tasks_list, 1):
-            VariantTask.objects.create(
-                variant=variant,
-                task=task,
-                order=i,
-                weight=float(task.difficulty or 1),
-                max_points=task.difficulty or 1,
-            )
+        if not result.success:
+            messages.warning(request, result.message)
+            return redirect('students:detail', pk=student.pk)
 
-        messages.success(
-            request,
-            f'Создан вариант «Работа над ошибками» для {student.get_short_name()}: '
-            f'{len(tasks_list)} заданий, макс. балл: {total_score}'
-        )
-        return redirect('works:variant-detail', pk=variant.pk)
+        messages.success(request, result.message)
+        return redirect('works:variant-detail', pk=result.variant_id)
 
 class RemedialWizardView(View):
     """Wizard: работа над ошибками для класса"""

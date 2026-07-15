@@ -45,5 +45,18 @@ class IStudentRepository(ABC):
         """Return data for a student's remedial work page."""
 
     @abstractmethod
+    def get_student_short_name(self, student_id: str) -> str:
+        """Return student's short display name."""
+
+    @abstractmethod
+    def select_student_remedial_task_ids(
+        self,
+        student_id: str,
+        max_tasks: int,
+        selected_group_ids: List[str],
+    ) -> List[str]:
+        """Return task IDs for a single-student remedial variant."""
+
+    @abstractmethod
     def get_work_group_refs(self, work_ids: List[str]) -> List[WorkGroupRef]:
         """Return analog groups used by works."""

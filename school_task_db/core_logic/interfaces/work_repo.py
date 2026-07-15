@@ -22,7 +22,7 @@ class CreateWorkParams:
 
 @dataclass(frozen=True)
 class CreateVariantParams:
-    work_id: str
+    work_id: Optional[str]
     number: int
     student_id: str
     task_ids: List[str]

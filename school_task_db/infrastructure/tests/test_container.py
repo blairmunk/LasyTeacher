@@ -11,6 +11,9 @@ from core_logic.use_cases.change_event_status import ChangeEventStatusUseCase
 from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
 )
+from core_logic.use_cases.create_student_remedial_variant import (
+    CreateStudentRemedialVariantUseCase,
+)
 from core_logic.use_cases.create_work_from_orphans import (
     CreateWorkFromOrphansUseCase,
 )
@@ -77,6 +80,9 @@ class ContainerTests(SimpleTestCase):
         preview_use_case = container.get_remedial_event_preview_use_case()
         profile_use_case = container.get_student_profile_use_case()
         student_remedial_use_case = container.get_student_remedial_work_use_case()
+        create_student_remedial_use_case = (
+            container.create_student_remedial_variant_use_case()
+        )
         grade_use_case = container.grade_student_work_use_case()
         review_use_case = container.get_participation_review_use_case()
         dashboard_use_case = container.get_review_dashboard_use_case()
@@ -122,6 +128,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             student_remedial_use_case,
             GetStudentRemedialWorkUseCase,
+        )
+        self.assertIsInstance(
+            create_student_remedial_use_case,
+            CreateStudentRemedialVariantUseCase,
         )
         self.assertIsInstance(grade_use_case, GradeStudentWorkUseCase)
         self.assertIsInstance(review_use_case, GetParticipationReviewUseCase)

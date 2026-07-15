@@ -64,6 +64,9 @@ class RemedialSheetData:
     mark: Any
     original_tasks: List[RemedialOriginalTaskRow] = field(default_factory=list)
     new_tasks: Any = None
+    status: str = 'ready'
+    message: str = ''
+    redirect_work_id: str = ''
 
 
 @dataclass(frozen=True)

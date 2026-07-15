@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404, render, redirect
+from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib import messages
 from django.urls import reverse_lazy
@@ -384,27 +384,20 @@ class RemedialSolutionsView(View):
 
     def get(self, request, variant_pk):
         from infrastructure.container import container
-        from works.models import Variant
-
-        variant = get_object_or_404(Variant, pk=variant_pk)
-
-        if not variant.source_work:
-            messages.error(request, 'У этого варианта нет исходной работы.')
-            if variant.work:
-                return redirect('works:detail', pk=variant.work.pk)
-            return redirect('works:variant-detail', pk=variant.pk)
-
-        student = variant.assigned_student
-        if not student:
-            messages.error(
-                request,
-                'Для разбора ошибок нужно знать ученика, которому назначен вариант.',
-            )
-            return redirect('works:variant-detail', pk=variant.pk)
 
         sheet_data = container.get_remedial_sheet_data_use_case().execute(
-            str(variant.pk),
+            str(variant_pk),
         )
+        if sheet_data.status == 'not_found':
+            raise Http404(sheet_data.message)
+        if sheet_data.status == 'missing_source':
+            messages.error(request, sheet_data.message)
+            if sheet_data.redirect_work_id:
+                return redirect('works:detail', pk=sheet_data.redirect_work_id)
+            return redirect('works:variant-detail', pk=variant_pk)
+        if sheet_data.status == 'missing_student':
+            messages.error(request, sheet_data.message)
+            return redirect('works:variant-detail', pk=variant_pk)
 
         context = {
             'variant': sheet_data.variant,

@@ -49,6 +49,15 @@ class FakeQuerySet(list):
         return bool(self)
 
 
+class FakeVariant:
+    def __init__(self, work=None):
+        self.work = work
+
+
+class FakeWork:
+    pk = 'work-1'
+
+
 class FakeWorkRepository:
     def __init__(self, variants=None, analog_groups=None, spec_preview=None):
         self.variants = FakeQuerySet(variants or [])
@@ -87,6 +96,8 @@ class FakeWorkRepository:
         self.variant_generation_id = None
         self.work_name = 'Контрольная'
         self.work_name_request = None
+        self.variant_type = 'remedial'
+        self.variant_type_request = None
 
     def get_detail_variants(self, work_id):
         return self.variants
@@ -115,6 +126,10 @@ class FakeWorkRepository:
 
     def get_variant_total_max_points(self, variant_id):
         return self.variant_total_max_points
+
+    def get_variant_type(self, variant_id):
+        self.variant_type_request = variant_id
+        return self.variant_type
 
     def get_variant_generation_info(self, variant_id):
         self.variant_generation_id = variant_id
@@ -278,8 +293,50 @@ class WorkDetailTests(TestCase):
 
         result = use_case.execute('variant-1')
 
+        self.assertEqual(repo.variant_type_request, 'variant-1')
         self.assertEqual(repo.remedial_sheet_variant_id, 'variant-1')
         self.assertEqual(result, repo.remedial_sheet_data)
+
+    def test_get_remedial_sheet_data_use_case_handles_missing_variant(self):
+        repo = FakeWorkRepository()
+        repo.variant_type = None
+        use_case = GetRemedialSheetDataUseCase(work_repo=repo)
+
+        result = use_case.execute('missing')
+
+        self.assertEqual(result.status, 'not_found')
+        self.assertIsNone(result.variant)
+        self.assertIsNone(repo.remedial_sheet_variant_id)
+
+    def test_get_remedial_sheet_data_use_case_handles_missing_source(self):
+        repo = FakeWorkRepository()
+        repo.remedial_sheet_data = RemedialSheetData(
+            variant=FakeVariant(work=FakeWork()),
+            student='student',
+            source_work=None,
+            mark=None,
+        )
+        use_case = GetRemedialSheetDataUseCase(work_repo=repo)
+
+        result = use_case.execute('variant-1')
+
+        self.assertEqual(result.status, 'missing_source')
+        self.assertEqual(result.redirect_work_id, 'work-1')
+
+    def test_get_remedial_sheet_data_use_case_handles_missing_student(self):
+        repo = FakeWorkRepository()
+        repo.remedial_sheet_data = RemedialSheetData(
+            variant=FakeVariant(),
+            student=None,
+            source_work='source-work',
+            mark=None,
+        )
+        use_case = GetRemedialSheetDataUseCase(work_repo=repo)
+
+        result = use_case.execute('variant-1')
+
+        self.assertEqual(result.status, 'missing_student')
+        self.assertIn('ученика', result.message)
 
     def test_get_orphan_variant_list_use_case_builds_list_context_data(self):
         repo = FakeWorkRepository()

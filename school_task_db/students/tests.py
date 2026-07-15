@@ -361,6 +361,16 @@ class RemedialFromEventViewTests(TestCase):
             fetch_redirect_response=False,
         )
 
+    def test_remedial_solutions_returns_404_for_missing_variant(self):
+        response = self.client.get(
+            reverse(
+                'students:remedial-solutions',
+                args=['00000000-0000-0000-0000-000000000000'],
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
+
     def test_remedial_solutions_requires_assigned_student(self):
         remedial_variant = Variant.objects.create(
             work=None,

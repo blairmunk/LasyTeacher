@@ -210,24 +210,12 @@ def assign_variants(request, event_id):
 
 
 def review_works(request):
-    """Страница проверки работ"""
-    events_to_review = Event.objects.filter(
-        status__in=['completed', 'reviewing']
-    ).select_related('work', 'course')
-
-    participations_to_review = EventParticipation.objects.filter(
-        event__in=events_to_review,
-        status='completed'
-    ).select_related('student', 'event', 'variant')
-
-    return render(request, 'events/review_works.html', {
-        'events': events_to_review,
-        'participations': participations_to_review
-    })
+    """Backward-compatible entry point for the current review dashboard."""
+    return redirect('review:dashboard')
 
 
 def grade_participation(request, participation_id):
-    """Оценивание конкретного участия"""
+    """Legacy grading endpoint kept for old links."""
     participation = get_object_or_404(EventParticipation, pk=participation_id)
 
     mark, created = Mark.objects.get_or_create(participation=participation)
@@ -263,15 +251,9 @@ def grade_participation(request, participation_id):
             )
 
             messages.success(request, 'Работа успешно оценена')
-            return redirect('events:review-works')
+            return redirect('review:dashboard')
     else:
-        form = MarkForm(instance=mark)
-
-    return render(request, 'events/grade_participation.html', {
-        'participation': participation,
-        'mark': mark,
-        'form': form
-    })
+        return redirect('review:participation-review', pk=participation.pk)
 
 from django.views.decorators.http import require_POST
 

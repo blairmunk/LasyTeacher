@@ -84,7 +84,7 @@ class GradeParticipationViewTests(TestCase):
 
         self.assertRedirects(
             response,
-            reverse('events:review-works'),
+            reverse('review:dashboard'),
             fetch_redirect_response=False,
         )
 
@@ -105,6 +105,26 @@ class GradeParticipationViewTests(TestCase):
         )
         self.assertEqual(self.participation.status, 'graded')
         self.assertEqual(self.event.status, 'completed')
+
+    def test_review_works_legacy_route_redirects_to_review_dashboard(self):
+        response = self.client.get(reverse('events:review-works'))
+
+        self.assertRedirects(
+            response,
+            reverse('review:dashboard'),
+            fetch_redirect_response=False,
+        )
+
+    def test_grade_participation_get_redirects_to_current_review_screen(self):
+        response = self.client.get(
+            reverse('events:grade-participation', args=[self.participation.pk])
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('review:participation-review', args=[self.participation.pk]),
+            fetch_redirect_response=False,
+        )
 
     def test_event_list_uses_clean_context_categories(self):
         response = self.client.get(reverse('events:list'))

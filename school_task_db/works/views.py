@@ -3,9 +3,8 @@ from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.views.decorators.http import require_http_methods
 
-from task_groups.models import AnalogGroup
 from .models import Work, Variant
-from .forms import WorkForm, WorkAnalogGroupFormSet, VariantGenerationForm
+from .forms import WorkForm, VariantGenerationForm
 
 
 
@@ -45,11 +44,20 @@ class WorkCreateView(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        from infrastructure.container import container
+
         if self.request.POST:
-            context['formset'] = WorkAnalogGroupFormSet(self.request.POST)
+            context['formset'] = (
+                container.work_form_adapter.build_analog_group_formset(
+                    data=self.request.POST,
+                )
+            )
         else:
-            context['formset'] = WorkAnalogGroupFormSet()
-        context['analog_group_options'] = AnalogGroup.objects.all()
+            context['formset'] = (
+                container.work_form_adapter.build_analog_group_formset()
+            )
+        form_data = container.get_work_form_data_use_case().execute()
+        context['analog_group_options'] = form_data.analog_group_options
         return context
 
     def form_valid(self, form):
@@ -57,8 +65,12 @@ class WorkCreateView(CreateView):
         formset = context['formset']
         if formset.is_valid():
             response = super().form_valid(form)
-            formset.instance = self.object
-            formset.save()
+            from infrastructure.container import container
+
+            container.work_form_adapter.save_analog_group_formset(
+                formset=formset,
+                work=self.object,
+            )
             messages.success(self.request, 'Работа успешно создана!')
             return response
         else:
@@ -73,13 +85,23 @@ class WorkUpdateView(UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        from infrastructure.container import container
+
         if self.request.POST:
-            context['formset'] = WorkAnalogGroupFormSet(
-                self.request.POST, instance=self.object
+            context['formset'] = (
+                container.work_form_adapter.build_analog_group_formset(
+                    data=self.request.POST,
+                    instance=self.object,
+                )
             )
         else:
-            context['formset'] = WorkAnalogGroupFormSet(instance=self.object)
-        context['analog_group_options'] = AnalogGroup.objects.all()
+            context['formset'] = (
+                container.work_form_adapter.build_analog_group_formset(
+                    instance=self.object,
+                )
+            )
+        form_data = container.get_work_form_data_use_case().execute()
+        context['analog_group_options'] = form_data.analog_group_options
         return context
 
     def form_valid(self, form):
@@ -87,7 +109,12 @@ class WorkUpdateView(UpdateView):
         formset = context['formset']
         if formset.is_valid():
             response = super().form_valid(form)
-            formset.save()
+            from infrastructure.container import container
+
+            container.work_form_adapter.save_analog_group_formset(
+                formset=formset,
+                work=self.object,
+            )
             messages.success(self.request, 'Работа успешно обновлена!')
             return response
         else:

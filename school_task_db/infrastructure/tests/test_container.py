@@ -39,6 +39,7 @@ from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
 from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUseCase
 from core_logic.use_cases.get_variant_detail import GetVariantDetailUseCase
 from core_logic.use_cases.get_work_detail import GetWorkDetailUseCase
+from core_logic.use_cases.get_work_form_data import GetWorkFormDataUseCase
 from core_logic.use_cases.get_work_list import GetWorkListUseCase
 from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionUseCase,
@@ -55,6 +56,7 @@ from infrastructure.repositories.django_review_repo import DjangoReviewRepositor
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
+from infrastructure.forms.work_forms import WorkFormAdapter
 
 
 class ContainerTests(SimpleTestCase):
@@ -87,6 +89,7 @@ class ContainerTests(SimpleTestCase):
         recent_sessions_use_case = container.get_recent_review_sessions_use_case()
         sync_session_use_case = container.sync_review_session_use_case()
         work_detail_use_case = container.get_work_detail_use_case()
+        work_form_data_use_case = container.get_work_form_data_use_case()
         work_list_use_case = container.get_work_list_use_case()
         variant_detail_use_case = container.get_variant_detail_use_case()
         orphan_variant_list_use_case = container.get_orphan_variant_list_use_case()
@@ -125,6 +128,7 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(recent_sessions_use_case, GetRecentReviewSessionsUseCase)
         self.assertIsInstance(sync_session_use_case, SyncReviewSessionUseCase)
         self.assertIsInstance(work_detail_use_case, GetWorkDetailUseCase)
+        self.assertIsInstance(work_form_data_use_case, GetWorkFormDataUseCase)
         self.assertIsInstance(work_list_use_case, GetWorkListUseCase)
         self.assertIsInstance(variant_detail_use_case, GetVariantDetailUseCase)
         self.assertIsInstance(
@@ -142,3 +146,4 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(container.work_repo, DjangoWorkRepository)
         self.assertIsInstance(container.event_repo, DjangoEventRepository)
         self.assertIsInstance(container.review_repo, DjangoReviewRepository)
+        self.assertIsInstance(container.work_form_adapter, WorkFormAdapter)

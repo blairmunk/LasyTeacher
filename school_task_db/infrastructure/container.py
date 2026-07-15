@@ -44,6 +44,7 @@ from core_logic.use_cases.get_review_save_navigation import (
 from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
 from core_logic.use_cases.get_variant_detail import GetVariantDetailUseCase
 from core_logic.use_cases.get_work_detail import GetWorkDetailUseCase
+from core_logic.use_cases.get_work_form_data import GetWorkFormDataUseCase
 from core_logic.use_cases.get_work_list import GetWorkListUseCase
 from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUseCase
 from core_logic.use_cases.prepare_participation_review_submission import (
@@ -60,6 +61,7 @@ from infrastructure.repositories.django_review_repo import DjangoReviewRepositor
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
+from infrastructure.forms.work_forms import WorkFormAdapter
 
 
 class Container:
@@ -71,6 +73,7 @@ class Container:
         self._work_repo = None
         self._event_repo = None
         self._review_repo = None
+        self._work_form_adapter = None
 
     @property
     def student_repo(self):
@@ -101,6 +104,12 @@ class Container:
         if self._review_repo is None:
             self._review_repo = DjangoReviewRepository()
         return self._review_repo
+
+    @property
+    def work_form_adapter(self):
+        if self._work_form_adapter is None:
+            self._work_form_adapter = WorkFormAdapter()
+        return self._work_form_adapter
 
     def remedial_service(self):
         return RemedialService(
@@ -248,6 +257,11 @@ class Container:
 
     def get_work_list_use_case(self):
         return GetWorkListUseCase(
+            work_repo=self.work_repo,
+        )
+
+    def get_work_form_data_use_case(self):
+        return GetWorkFormDataUseCase(
             work_repo=self.work_repo,
         )
 

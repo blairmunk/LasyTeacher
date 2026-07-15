@@ -45,6 +45,84 @@ class WorkDetailViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(list(response.context['works']), [self.work])
 
+    def test_create_view_saves_work_and_specification_formset(self):
+        group = AnalogGroup.objects.create(name='Кинематика')
+
+        response = self.client.post(
+            reverse('works:create'),
+            {
+                'name': 'Новая работа',
+                'work_type': 'test',
+                'duration': '45',
+                'max_score': '10',
+                'workanaloggroup_set-TOTAL_FORMS': '1',
+                'workanaloggroup_set-INITIAL_FORMS': '0',
+                'workanaloggroup_set-MIN_NUM_FORMS': '0',
+                'workanaloggroup_set-MAX_NUM_FORMS': '1000',
+                'workanaloggroup_set-0-analog_group': str(group.pk),
+                'workanaloggroup_set-0-count': '2',
+                'workanaloggroup_set-0-order': '1',
+                'workanaloggroup_set-0-weight': '3',
+            },
+        )
+
+        work = Work.objects.get(name='Новая работа')
+        self.assertRedirects(
+            response,
+            reverse('works:detail', args=[work.pk]),
+            fetch_redirect_response=False,
+        )
+        spec = WorkAnalogGroup.objects.get(work=work)
+        self.assertEqual(spec.analog_group, group)
+        self.assertEqual(spec.count, 2)
+        self.assertEqual(spec.order, 1)
+        self.assertEqual(spec.weight, 3)
+
+    def test_update_view_saves_work_and_specification_formset(self):
+        old_group = AnalogGroup.objects.create(name='Старая группа')
+        new_group = AnalogGroup.objects.create(name='Новая группа')
+        spec = WorkAnalogGroup.objects.create(
+            work=self.work,
+            analog_group=old_group,
+            count=1,
+            order=1,
+            weight=1,
+        )
+
+        response = self.client.post(
+            reverse('works:update', args=[self.work.pk]),
+            {
+                'name': 'Обновлённая работа',
+                'work_type': 'quiz',
+                'duration': '30',
+                'max_score': '12',
+                'workanaloggroup_set-TOTAL_FORMS': '1',
+                'workanaloggroup_set-INITIAL_FORMS': '1',
+                'workanaloggroup_set-MIN_NUM_FORMS': '0',
+                'workanaloggroup_set-MAX_NUM_FORMS': '1000',
+                'workanaloggroup_set-0-id': str(spec.pk),
+                'workanaloggroup_set-0-analog_group': str(new_group.pk),
+                'workanaloggroup_set-0-count': '3',
+                'workanaloggroup_set-0-order': '1',
+                'workanaloggroup_set-0-weight': '4',
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('works:detail', args=[self.work.pk]),
+            fetch_redirect_response=False,
+        )
+        self.work.refresh_from_db()
+        spec.refresh_from_db()
+        self.assertEqual(self.work.name, 'Обновлённая работа')
+        self.assertEqual(self.work.work_type, 'quiz')
+        self.assertEqual(self.work.duration, 30)
+        self.assertEqual(self.work.max_score, 12)
+        self.assertEqual(spec.analog_group, new_group)
+        self.assertEqual(spec.count, 3)
+        self.assertEqual(spec.weight, 4)
+
     def test_detail_uses_clean_context_data_with_spec_preview(self):
         group = AnalogGroup.objects.create(name='Кинематика')
         task = Task.objects.create(

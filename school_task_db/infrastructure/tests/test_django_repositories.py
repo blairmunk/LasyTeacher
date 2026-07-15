@@ -245,6 +245,16 @@ class DjangoRemedialRepositoryTests(TestCase):
 
         self.assertEqual(list(works), [self.source_work])
 
+    def test_work_repository_returns_form_analog_group_options(self):
+        repo = DjangoWorkRepository()
+
+        analog_group_options = repo.get_work_form_analog_group_options()
+
+        self.assertEqual(
+            {group.name for group in analog_group_options},
+            {self.weak_group.name, self.ok_group.name},
+        )
+
     def test_work_repository_returns_variant_detail_page_data(self):
         repo = DjangoWorkRepository()
 

@@ -41,6 +41,10 @@ class IWorkRepository(ABC):
         """Return works for the work list page."""
 
     @abstractmethod
+    def get_work_form_analog_group_options(self) -> Any:
+        """Return analog group options for the work form page."""
+
+    @abstractmethod
     def get_detail_variants(self, work_id: str) -> Any:
         """Return variants for the work detail page."""
 

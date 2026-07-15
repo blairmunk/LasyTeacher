@@ -20,6 +20,11 @@ class DjangoWorkRepository(IWorkRepository):
     def get_list_works(self):
         return Work.objects.all()
 
+    def get_work_form_analog_group_options(self):
+        from task_groups.models import AnalogGroup
+
+        return AnalogGroup.objects.all()
+
     def get_detail_variants(self, work_id: str):
         return Variant.objects.filter(work_id=work_id)
 

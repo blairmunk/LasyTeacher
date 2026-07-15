@@ -20,3 +20,18 @@ class SyncWorkAnalogGroupsResult:
 @dataclass(frozen=True)
 class GenerateWorkVariantsResult:
     created_count: int
+
+
+@dataclass(frozen=True)
+class OrphanVariantRef:
+    pk: str
+    variant_type: str
+    total_max_points: int
+
+
+@dataclass(frozen=True)
+class CreateWorkFromOrphansResult:
+    status: str
+    work_id: str = ''
+    work_name: str = ''
+    variant_count: int = 0

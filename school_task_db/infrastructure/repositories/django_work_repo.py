@@ -1,8 +1,12 @@
 """Django implementation of the work repository."""
 
-from typing import Set
+from typing import List, Set
 
+from django.db import transaction
+
+from core_logic.entities.work import OrphanVariantRef
 from core_logic.interfaces.work_repo import (
+    AttachVariantsToWorkParams,
     CreateVariantParams,
     CreateWorkParams,
     IWorkRepository,
@@ -36,6 +40,44 @@ class DjangoWorkRepository(IWorkRepository):
     def generate_variants(self, work_id: str, count: int) -> int:
         work = Work.objects.get(pk=work_id)
         return len(work.generate_variants(count=count))
+
+    def get_orphan_variant_refs(
+        self,
+        variant_ids: List[str],
+    ) -> List[OrphanVariantRef]:
+        return [
+            OrphanVariantRef(
+                pk=str(variant.pk),
+                variant_type=variant.variant_type,
+                total_max_points=variant.total_max_points,
+            )
+            for variant in Variant.objects.filter(
+                pk__in=variant_ids,
+                work__isnull=True,
+            ).order_by('created_at')
+        ]
+
+    def attach_variants_to_work(self, params: AttachVariantsToWorkParams) -> int:
+        with transaction.atomic():
+            variants = list(
+                Variant.objects.select_for_update().filter(
+                    pk__in=params.variant_ids,
+                    work__isnull=True,
+                ).order_by('created_at')
+            )
+            variant_by_id = {str(variant.pk): variant for variant in variants}
+            attached_count = 0
+            for number, variant_id in enumerate(params.variant_ids, 1):
+                variant = variant_by_id.get(variant_id)
+                if not variant:
+                    continue
+                variant.work_id = params.work_id
+                variant.number = number
+                variant.work_name_snapshot = params.work_name_snapshot
+                variant.max_score_snapshot = params.max_score_snapshot
+                variant.save()
+                attached_count += 1
+        return attached_count
 
     def get_variant_task_ids(self, work_id: str) -> Set[str]:
         return {

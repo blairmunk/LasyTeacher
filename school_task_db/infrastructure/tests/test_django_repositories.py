@@ -8,6 +8,10 @@ from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
     RemedialFromEventRequest,
 )
+from core_logic.use_cases.create_work_from_orphans import (
+    CreateWorkFromOrphansRequest,
+    CreateWorkFromOrphansUseCase,
+)
 from curriculum.models import Topic
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
@@ -264,6 +268,58 @@ class DjangoRemedialRepositoryTests(TestCase):
             variants.order_by('-number').first().varianttask_set.count(),
             1,
         )
+
+    def test_work_repository_creates_work_from_orphan_variants(self):
+        first_orphan = Variant.objects.create(
+            work=None,
+            number=7,
+            work_name_snapshot='Старая сирота',
+            variant_type='regular',
+        )
+        second_orphan = Variant.objects.create(
+            work=None,
+            number=8,
+            work_name_snapshot='Вторая сирота',
+            variant_type='remedial',
+        )
+        VariantTask.objects.create(
+            variant=first_orphan,
+            task=self.original_weak,
+            order=1,
+            max_points=4,
+            weight=4,
+        )
+        VariantTask.objects.create(
+            variant=second_orphan,
+            task=self.original_ok,
+            order=1,
+            max_points=6,
+            weight=6,
+        )
+        use_case = CreateWorkFromOrphansUseCase(work_repo=DjangoWorkRepository())
+
+        result = use_case.execute(
+            CreateWorkFromOrphansRequest(
+                variant_ids=[str(second_orphan.pk), str(first_orphan.pk)],
+                work_name='  Работа из сирот  ',
+            )
+        )
+
+        self.assertEqual(result.status, 'created')
+        work = Work.objects.get(pk=result.work_id)
+        first_orphan.refresh_from_db()
+        second_orphan.refresh_from_db()
+
+        self.assertEqual(work.name, 'Работа из сирот')
+        self.assertEqual(work.work_type, 'remedial')
+        self.assertEqual(work.max_score, 6)
+        self.assertEqual(work.variant_counter, 2)
+        self.assertEqual(first_orphan.work, work)
+        self.assertEqual(second_orphan.work, work)
+        self.assertEqual(first_orphan.number, 1)
+        self.assertEqual(second_orphan.number, 2)
+        self.assertEqual(first_orphan.max_score_snapshot, 6)
+        self.assertEqual(second_orphan.work_name_snapshot, work.name)
 
     def test_event_repository_grades_participation_and_syncs_review_state(self):
         self.event.status = 'completed'

@@ -16,6 +16,9 @@ from core_logic.use_cases.change_event_status import ChangeEventStatusUseCase
 from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
 )
+from core_logic.use_cases.create_work_from_orphans import (
+    CreateWorkFromOrphansUseCase,
+)
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
 from core_logic.use_cases.generate_work_variants import GenerateWorkVariantsUseCase
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
@@ -244,6 +247,11 @@ class Container:
 
     def generate_work_variants_use_case(self):
         return GenerateWorkVariantsUseCase(
+            work_repo=self.work_repo,
+        )
+
+    def create_work_from_orphans_use_case(self):
+        return CreateWorkFromOrphansUseCase(
             work_repo=self.work_repo,
         )
 

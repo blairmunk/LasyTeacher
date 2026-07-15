@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, List, Optional, Set
 
+from core_logic.entities.work import OrphanVariantRef
+
 
 @dataclass(frozen=True)
 class CreateWorkParams:
@@ -23,6 +25,14 @@ class CreateVariantParams:
     max_score_snapshot: int
     source_work_id: Optional[str] = None
     variant_type: str = 'remedial'
+
+
+@dataclass(frozen=True)
+class AttachVariantsToWorkParams:
+    work_id: str
+    variant_ids: List[str]
+    work_name_snapshot: str
+    max_score_snapshot: int
 
 
 class IWorkRepository(ABC):
@@ -45,6 +55,14 @@ class IWorkRepository(ABC):
     @abstractmethod
     def generate_variants(self, work_id: str, count: int) -> int:
         """Generate variants for a work and return created count."""
+
+    @abstractmethod
+    def get_orphan_variant_refs(self, variant_ids: List[str]) -> List[OrphanVariantRef]:
+        """Return selected orphan variant refs ordered for attaching to work."""
+
+    @abstractmethod
+    def attach_variants_to_work(self, params: AttachVariantsToWorkParams) -> int:
+        """Attach variants to a work and return attached count."""
 
     @abstractmethod
     def get_variant_task_ids(self, work_id: str) -> Set[str]:

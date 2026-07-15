@@ -135,3 +135,62 @@ class WorkDetailViewTests(TestCase):
         self.assertEqual(variants.count(), 2)
         self.assertEqual(self.work.variant_counter, 2)
         self.assertEqual(variants.first().varianttask_set.count(), 1)
+
+    def test_create_work_from_orphans_view_uses_clean_use_case(self):
+        first_orphan = Variant.objects.create(
+            work=None,
+            number=10,
+            work_name_snapshot='Сирота 1',
+            variant_type='individual',
+        )
+        second_orphan = Variant.objects.create(
+            work=None,
+            number=11,
+            work_name_snapshot='Сирота 2',
+            variant_type='regular',
+        )
+        task = Task.objects.create(
+            text='Задание для сироты',
+            answer='Ответ',
+            topic=self.topic,
+            task_type='computational',
+            difficulty=4,
+        )
+        VariantTask.objects.create(
+            variant=first_orphan,
+            task=task,
+            order=1,
+            max_points=4,
+            weight=4,
+        )
+        VariantTask.objects.create(
+            variant=second_orphan,
+            task=task,
+            order=1,
+            max_points=2,
+            weight=2,
+        )
+
+        response = self.client.post(
+            reverse('works:create-work-from-orphans'),
+            {
+                'variant_ids': [str(first_orphan.pk), str(second_orphan.pk)],
+                'work_name': '  Индивидуальная подборка  ',
+            },
+        )
+
+        work = Work.objects.get(name='Индивидуальная подборка')
+        self.assertRedirects(
+            response,
+            reverse('works:detail', args=[work.pk]),
+            fetch_redirect_response=False,
+        )
+        first_orphan.refresh_from_db()
+        second_orphan.refresh_from_db()
+        self.assertEqual(work.work_type, 'individual')
+        self.assertEqual(work.max_score, 4)
+        self.assertEqual(work.variant_counter, 2)
+        self.assertEqual(first_orphan.work, work)
+        self.assertEqual(second_orphan.work, work)
+        self.assertEqual(first_orphan.number, 1)
+        self.assertEqual(second_orphan.number, 2)

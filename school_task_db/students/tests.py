@@ -185,6 +185,26 @@ class RemedialFromEventViewTests(TestCase):
         )
         self.assertFalse(Work.objects.filter(name='Не должна создаться').exists())
 
+    def test_student_remedial_page_uses_clean_context_data(self):
+        response = self.client.get(reverse('students:remedial', args=[self.student.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['done_count'], 2)
+        self.assertEqual(response.context['total_available'], 2)
+        remedial_groups = response.context['remedial_groups']
+        self.assertEqual(len(remedial_groups), 1)
+        self.assertEqual(remedial_groups[0]['group'], self.weak_group)
+        self.assertEqual(remedial_groups[0]['available_count'], 2)
+        self.assertEqual(remedial_groups[0]['avg_pct'], 0.0)
+
+    def test_student_remedial_page_handles_student_without_task_logs(self):
+        student = Student.objects.create(last_name='Без', first_name='Истории')
+
+        response = self.client.get(reverse('students:remedial', args=[student.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['no_data'])
+
     def test_remedial_solutions_open_for_orphan_remedial_variant(self):
         remedial_variant = Variant.objects.create(
             work=None,

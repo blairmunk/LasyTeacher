@@ -2,12 +2,15 @@
 
 from typing import List
 
+from django.db.models import Avg, Count, Q
+
 from core_logic.entities.student import (
     EventRef,
     MarkRef,
     ObjectRef,
     StudentGroupRef,
     StudentParticipationProfile,
+    StudentRemedialWorkData,
     StudentTaskLogProfile,
     TaskResult,
     WorkGroupRef,
@@ -15,8 +18,9 @@ from core_logic.entities.student import (
 )
 from core_logic.interfaces.student_repo import IStudentRepository
 from events.models import EventParticipation, Mark
-from task_groups.models import TaskGroup
+from task_groups.models import AnalogGroup, TaskGroup
 from students.models import StudentGroup, StudentTaskLog
+from tasks.models import Task
 from works.models import WorkAnalogGroup
 
 
@@ -170,6 +174,76 @@ class DjangoStudentRepository(IStudentRepository):
             )
             for log in logs
         ]
+
+    def get_student_remedial_work_data(
+        self,
+        student_id: str,
+    ) -> StudentRemedialWorkData:
+        task_logs = StudentTaskLog.objects.filter(student_id=student_id)
+        if not task_logs.exists():
+            return StudentRemedialWorkData(no_data=True)
+
+        weak_groups = task_logs.exclude(
+            analog_group__isnull=True,
+        ).values(
+            'analog_group',
+            'analog_group__name',
+        ).annotate(
+            total=Count('id'),
+            correct=Count('id', filter=Q(is_correct=True)),
+            wrong=Count('id', filter=Q(is_correct=False)),
+            avg_pct=Avg('percentage'),
+        ).filter(
+            avg_pct__lt=70,
+        ).order_by('avg_pct')
+
+        done_task_ids = set(task_logs.values_list('task_id', flat=True))
+        remedial_groups = []
+        total_available = 0
+
+        for weak_group in weak_groups:
+            group_id = weak_group['analog_group']
+            group = AnalogGroup.objects.get(pk=group_id)
+            group_task_ids = set(
+                TaskGroup.objects.filter(group=group).values_list(
+                    'task_id',
+                    flat=True,
+                )
+            )
+            available_ids = group_task_ids - done_task_ids
+            available_tasks = Task.objects.filter(id__in=available_ids)
+
+            remedial_groups.append({
+                'group': group,
+                'avg_pct': round(weak_group['avg_pct'] or 0, 1),
+                'total_done': weak_group['total'],
+                'correct': weak_group['correct'],
+                'wrong': weak_group['wrong'],
+                'available_count': len(available_ids),
+                'available_tasks': available_tasks[:5],
+                'group_total': len(group_task_ids),
+            })
+            total_available += len(available_ids)
+
+        weak_topics = task_logs.exclude(
+            topic__isnull=True,
+        ).values(
+            'topic',
+            'topic__name',
+        ).annotate(
+            total=Count('id'),
+            correct=Count('id', filter=Q(is_correct=True)),
+            avg_pct=Avg('percentage'),
+        ).filter(
+            avg_pct__lt=70,
+        ).order_by('avg_pct')[:10]
+
+        return StudentRemedialWorkData(
+            remedial_groups=remedial_groups,
+            weak_topics=weak_topics,
+            total_available=total_available,
+            done_count=len(done_task_ids),
+        )
 
     def get_work_group_refs(self, work_ids: List[str]) -> List[WorkGroupRef]:
         if not work_ids:

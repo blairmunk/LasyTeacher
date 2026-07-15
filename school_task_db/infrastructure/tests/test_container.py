@@ -39,6 +39,9 @@ from core_logic.use_cases.get_review_save_navigation import (
     GetReviewSaveNavigationUseCase,
 )
 from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
+from core_logic.use_cases.get_student_remedial_work import (
+    GetStudentRemedialWorkUseCase,
+)
 from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUseCase
 from core_logic.use_cases.get_variant_detail import GetVariantDetailUseCase
 from core_logic.use_cases.get_variant_generation_placeholder import (
@@ -73,6 +76,7 @@ class ContainerTests(SimpleTestCase):
         use_case = container.create_remedial_from_event_use_case()
         preview_use_case = container.get_remedial_event_preview_use_case()
         profile_use_case = container.get_student_profile_use_case()
+        student_remedial_use_case = container.get_student_remedial_work_use_case()
         grade_use_case = container.grade_student_work_use_case()
         review_use_case = container.get_participation_review_use_case()
         dashboard_use_case = container.get_review_dashboard_use_case()
@@ -115,6 +119,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(use_case, CreateRemedialFromEventUseCase)
         self.assertIsInstance(preview_use_case, GetRemedialEventPreviewUseCase)
         self.assertIsInstance(profile_use_case, GetStudentProfileUseCase)
+        self.assertIsInstance(
+            student_remedial_use_case,
+            GetStudentRemedialWorkUseCase,
+        )
         self.assertIsInstance(grade_use_case, GradeStudentWorkUseCase)
         self.assertIsInstance(review_use_case, GetParticipationReviewUseCase)
         self.assertIsInstance(dashboard_use_case, GetReviewDashboardUseCase)

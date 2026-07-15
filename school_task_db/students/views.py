@@ -198,71 +198,19 @@ class RemedialWorkView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         student = self.object
+        from infrastructure.container import container
 
-        task_logs = StudentTaskLog.objects.filter(student=student)
-        if not task_logs.exists():
+        remedial_data = container.get_student_remedial_work_use_case().execute(
+            str(student.pk),
+        )
+        if remedial_data.no_data:
             context['no_data'] = True
             return context
 
-        # 1. Группы с ошибками: avg < 70%
-        weak_groups = task_logs.exclude(
-            analog_group__isnull=True
-        ).values(
-            'analog_group', 'analog_group__name'
-        ).annotate(
-            total=Count('id'),
-            correct=Count('id', filter=Q(is_correct=True)),
-            wrong=Count('id', filter=Q(is_correct=False)),
-            avg_pct=Avg('percentage'),
-        ).filter(avg_pct__lt=70).order_by('avg_pct')
-
-        # 2. Все задания, которые ученик уже выполнял
-        done_task_ids = set(
-            task_logs.values_list('task_id', flat=True)
-        )
-
-        # 3. Для каждой слабой группы — доступные невыполненные задания
-        remedial_groups = []
-        total_available = 0
-
-        for wg in weak_groups:
-            group_id = wg['analog_group']
-            group = AnalogGroup.objects.get(pk=group_id)
-
-            # Задания из группы, которые ученик ещё не делал
-            group_task_ids = set(
-                TaskGroup.objects.filter(group=group).values_list('task_id', flat=True)
-            )
-            available_ids = group_task_ids - done_task_ids
-            available_tasks = Task.objects.filter(id__in=available_ids)
-
-            remedial_groups.append({
-                'group': group,
-                'avg_pct': round(wg['avg_pct'] or 0, 1),
-                'total_done': wg['total'],
-                'correct': wg['correct'],
-                'wrong': wg['wrong'],
-                'available_count': len(available_ids),
-                'available_tasks': available_tasks[:5],  # Превью
-                'group_total': len(group_task_ids),
-            })
-            total_available += len(available_ids)
-
-        # 4. Слабые темы (без группы)
-        weak_topics = task_logs.exclude(
-            topic__isnull=True
-        ).values(
-            'topic', 'topic__name'
-        ).annotate(
-            total=Count('id'),
-            correct=Count('id', filter=Q(is_correct=True)),
-            avg_pct=Avg('percentage'),
-        ).filter(avg_pct__lt=70).order_by('avg_pct')[:10]
-
-        context['remedial_groups'] = remedial_groups
-        context['weak_topics'] = weak_topics
-        context['total_available'] = total_available
-        context['done_count'] = len(done_task_ids)
+        context['remedial_groups'] = remedial_data.remedial_groups
+        context['weak_topics'] = remedial_data.weak_topics
+        context['total_available'] = remedial_data.total_available
+        context['done_count'] = remedial_data.done_count
         return context
 
     def post(self, request, *args, **kwargs):

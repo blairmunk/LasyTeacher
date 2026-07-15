@@ -1,9 +1,9 @@
 """Student-related domain entities."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import Any, List, Optional
 
 
 class StudentLevel(Enum):
@@ -114,3 +114,12 @@ class WorkGroupRef:
     work_id: str
     group_id: str
     group_name: str
+
+
+@dataclass(frozen=True)
+class StudentRemedialWorkData:
+    no_data: bool = False
+    remedial_groups: List[dict] = field(default_factory=list)
+    weak_topics: Any = None
+    total_available: int = 0
+    done_count: int = 0

@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from core_logic.entities.student import (
+    StudentRemedialWorkData,
     StudentGroupRef,
     StudentParticipationProfile,
     StudentTaskLogProfile,
@@ -35,6 +36,13 @@ class IStudentRepository(ABC):
     @abstractmethod
     def get_task_logs(self, student_id: str) -> List[StudentTaskLogProfile]:
         """Return task-level learning history for a student."""
+
+    @abstractmethod
+    def get_student_remedial_work_data(
+        self,
+        student_id: str,
+    ) -> StudentRemedialWorkData:
+        """Return data for a student's remedial work page."""
 
     @abstractmethod
     def get_work_group_refs(self, work_ids: List[str]) -> List[WorkGroupRef]:

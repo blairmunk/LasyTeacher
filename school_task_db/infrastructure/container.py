@@ -52,6 +52,9 @@ from core_logic.use_cases.get_review_save_navigation import (
     GetReviewSaveNavigationUseCase,
 )
 from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
+from core_logic.use_cases.get_student_remedial_work import (
+    GetStudentRemedialWorkUseCase,
+)
 from core_logic.use_cases.get_variant_detail import GetVariantDetailUseCase
 from core_logic.use_cases.get_variant_generation_placeholder import (
     GetVariantGenerationPlaceholderUseCase,
@@ -178,6 +181,11 @@ class Container:
         return GetStudentProfileUseCase(
             student_repo=self.student_repo,
             analytics_service=self.analytics_service(),
+        )
+
+    def get_student_remedial_work_use_case(self):
+        return GetStudentRemedialWorkUseCase(
+            student_repo=self.student_repo,
         )
 
     def grade_student_work_use_case(self):

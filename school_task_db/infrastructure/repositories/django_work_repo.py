@@ -13,9 +13,11 @@ from core_logic.entities.work import (
 )
 from core_logic.interfaces.work_repo import (
     AttachVariantsToWorkParams,
+    CreatedWorkVariantRef,
     CreateWorkAnalogGroupParams,
     CreateVariantParams,
     CreateWorkParams,
+    CreateWorkWithVariantFromTasksParams,
     IWorkRepository,
 )
 from events.models import EventParticipation, Mark
@@ -329,3 +331,46 @@ class DjangoWorkRepository(IWorkRepository):
             )
 
         return str(variant.pk)
+
+    def create_work_with_variant_from_tasks(
+        self,
+        params: CreateWorkWithVariantFromTasksParams,
+    ) -> CreatedWorkVariantRef:
+        with transaction.atomic():
+            tasks = Task.objects.filter(pk__in=params.task_ids)
+            task_map = {str(task.pk): task for task in tasks}
+            ordered_tasks = [
+                task_map[task_id]
+                for task_id in params.task_ids
+                if task_id in task_map
+            ]
+            if not ordered_tasks:
+                return CreatedWorkVariantRef(
+                    work_id='',
+                    variant_id='',
+                    tasks_count=0,
+                )
+
+            work = Work.objects.create(
+                name=params.name,
+                work_type=params.work_type,
+            )
+            variant = Variant.objects.create(
+                work=work,
+                number=1,
+            )
+            work.variant_counter = 1
+            work.save(update_fields=['variant_counter'])
+
+            for order, task in enumerate(ordered_tasks, 1):
+                VariantTask.objects.create(
+                    variant=variant,
+                    task=task,
+                    order=order,
+                )
+
+        return CreatedWorkVariantRef(
+            work_id=str(work.pk),
+            variant_id=str(variant.pk),
+            tasks_count=len(ordered_tasks),
+        )

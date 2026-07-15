@@ -6,6 +6,7 @@ from django.urls import reverse
 from curriculum.models import Topic
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
+from works.models import Variant, VariantTask, Work
 
 
 class TaskBulkGroupAjaxTests(TestCase):
@@ -101,4 +102,34 @@ class TaskBulkGroupAjaxTests(TestCase):
         )
         self.assertTrue(
             TaskGroup.objects.filter(task=self.second_task, group=self.group).exists()
+        )
+
+    def test_bulk_create_work_creates_work_with_first_variant(self):
+        response = self.post_json(
+            'bulk-create-work',
+            {
+                'task_ids': [str(self.second_task.pk), str(self.first_task.pk)],
+                'work_name': '  Проверочная  ',
+                'work_type': 'quiz',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        work = Work.objects.get(pk=data['work_id'])
+        variant = Variant.objects.get(pk=data['variant_id'])
+        variant_tasks = list(
+            VariantTask.objects.filter(variant=variant).order_by('order')
+        )
+
+        self.assertTrue(data['success'])
+        self.assertEqual(data['tasks_count'], 2)
+        self.assertEqual(data['redirect_url'], f'/works/{work.pk}/')
+        self.assertEqual(work.name, 'Проверочная')
+        self.assertEqual(work.work_type, 'quiz')
+        self.assertEqual(work.variant_counter, 1)
+        self.assertEqual(variant.work, work)
+        self.assertEqual(
+            [variant_task.task for variant_task in variant_tasks],
+            [self.second_task, self.first_task],
         )

@@ -4,6 +4,7 @@ from django.utils import timezone
 
 from core_logic.services.remedial_service import RemedialService
 from core_logic.interfaces.event_repo import GradeParticipationParams
+from core_logic.interfaces.work_repo import CreateWorkWithVariantFromTasksParams
 from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
     RemedialFromEventRequest,
@@ -401,6 +402,46 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(second_orphan.number, 2)
         self.assertEqual(first_orphan.max_score_snapshot, 6)
         self.assertEqual(second_orphan.work_name_snapshot, work.name)
+
+    def test_work_repository_creates_work_with_variant_from_tasks(self):
+        repo = DjangoWorkRepository()
+
+        created = repo.create_work_with_variant_from_tasks(
+            CreateWorkWithVariantFromTasksParams(
+                name='Работа из выбранных задач',
+                work_type='quiz',
+                task_ids=[
+                    str(self.original_ok.pk),
+                    '00000000-0000-0000-0000-000000000000',
+                    str(self.original_weak.pk),
+                ],
+            )
+        )
+
+        work = Work.objects.get(pk=created.work_id)
+        variant = Variant.objects.get(pk=created.variant_id)
+        variant_tasks = list(
+            VariantTask.objects.filter(variant=variant).order_by('order')
+        )
+
+        self.assertEqual(created.tasks_count, 2)
+        self.assertEqual(work.name, 'Работа из выбранных задач')
+        self.assertEqual(work.work_type, 'quiz')
+        self.assertEqual(work.variant_counter, 1)
+        self.assertEqual(variant.work, work)
+        self.assertEqual(variant.number, 1)
+        self.assertEqual(
+            [variant_task.task for variant_task in variant_tasks],
+            [self.original_ok, self.original_weak],
+        )
+        self.assertEqual(
+            [variant_task.order for variant_task in variant_tasks],
+            [1, 2],
+        )
+        self.assertEqual(
+            [variant_task.max_points for variant_task in variant_tasks],
+            [0, 0],
+        )
 
     def test_work_repository_returns_variant_delete_info(self):
         repo = DjangoWorkRepository()

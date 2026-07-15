@@ -424,59 +424,34 @@ def bulk_remove_from_groups(request):
 def bulk_create_work(request):
     """Создать работу с вариантом из выбранных заданий"""
     import json
-    from works.models import Work, Variant, VariantTask
+    from core_logic.use_cases.create_work_from_tasks import (
+        CreateWorkFromTasksRequest,
+    )
+    from infrastructure.container import container
 
     try:
         body = json.loads(request.body)
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Невалидный JSON'}, status=400)
 
-    task_ids = body.get('task_ids', [])
-    work_name = body.get('work_name', '').strip()
-    work_type = body.get('work_type', 'test')
-
-    if not task_ids:
-        return JsonResponse({'error': 'Не выбрано ни одного задания'}, status=400)
-    if not work_name:
-        return JsonResponse({'error': 'Название работы не указано'}, status=400)
-
-    tasks = Task.objects.filter(pk__in=task_ids)
-    if not tasks.exists():
-        return JsonResponse({'error': 'Задания не найдены'}, status=400)
-
-    # Сохраняем порядок как в task_ids
-    task_map = {str(t.pk): t for t in tasks}
-    ordered_tasks = [task_map[tid] for tid in task_ids if tid in task_map]
-
-    # Создаём работу
-    work = Work.objects.create(
-        name=work_name,
-        work_type=work_type,
-    )
-
-    # Создаём вариант
-    variant = Variant.objects.create(
-        work=work,
-        number=1,
-    )
-    work.variant_counter = 1
-    work.save(update_fields=['variant_counter'])
-
-    # Добавляем задания в порядке выбора
-    for order, task in enumerate(ordered_tasks, 1):
-        VariantTask.objects.create(
-            variant=variant,
-            task=task,
-            order=order,
+    result = container.create_work_from_tasks_use_case().execute(
+        CreateWorkFromTasksRequest(
+            task_ids=body.get('task_ids', []),
+            work_name=body.get('work_name', ''),
+            work_type=body.get('work_type', 'test'),
         )
+    )
+
+    if not result.success:
+        return JsonResponse({'error': result.message}, status=400)
 
     return JsonResponse({
         'success': True,
-        'work_id': str(work.pk),
-        'variant_id': str(variant.pk),
-        'tasks_count': len(ordered_tasks),
-        'redirect_url': f'/works/{work.pk}/',
-        'message': f'Создана работа «{work_name}» с {len(ordered_tasks)} заданиями',
+        'work_id': result.work_id,
+        'variant_id': result.variant_id,
+        'tasks_count': result.tasks_count,
+        'redirect_url': f'/works/{result.work_id}/',
+        'message': result.message,
     })
 
 

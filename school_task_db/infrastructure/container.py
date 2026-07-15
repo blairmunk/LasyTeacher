@@ -38,6 +38,7 @@ from core_logic.use_cases.create_work_from_orphans import (
 from core_logic.use_cases.create_work_from_groups import (
     CreateWorkFromGroupsUseCase,
 )
+from core_logic.use_cases.create_work_from_tasks import CreateWorkFromTasksUseCase
 from core_logic.use_cases.delete_variant import DeleteVariantUseCase
 from core_logic.use_cases.delete_task_groups import DeleteTaskGroupsUseCase
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
@@ -426,6 +427,12 @@ class Container:
 
     def create_work_from_groups_use_case(self):
         return CreateWorkFromGroupsUseCase(
+            task_repo=self.task_repo,
+            work_repo=self.work_repo,
+        )
+
+    def create_work_from_tasks_use_case(self):
+        return CreateWorkFromTasksUseCase(
             task_repo=self.task_repo,
             work_repo=self.work_repo,
         )

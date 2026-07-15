@@ -49,6 +49,20 @@ class CreateWorkAnalogGroupParams:
     weight: int
 
 
+@dataclass(frozen=True)
+class CreateWorkWithVariantFromTasksParams:
+    name: str
+    work_type: str
+    task_ids: List[str]
+
+
+@dataclass(frozen=True)
+class CreatedWorkVariantRef:
+    work_id: str
+    variant_id: str
+    tasks_count: int
+
+
 class IWorkRepository(ABC):
     @abstractmethod
     def get_list_works(self) -> Any:
@@ -169,3 +183,10 @@ class IWorkRepository(ABC):
     @abstractmethod
     def create_variant_with_tasks(self, params: CreateVariantParams) -> str:
         """Create a variant with VariantTask rows and return the variant ID."""
+
+    @abstractmethod
+    def create_work_with_variant_from_tasks(
+        self,
+        params: CreateWorkWithVariantFromTasksParams,
+    ) -> CreatedWorkVariantRef:
+        """Create a work and its first variant from selected tasks."""

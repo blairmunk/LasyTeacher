@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.urls import reverse_lazy
-from .models import Event, EventParticipation, Mark
+from .models import Event, EventParticipation
 from .forms import EventForm, StudentSelectionForm, MarkForm, VariantAssignmentForm
 
 
@@ -218,10 +218,8 @@ def grade_participation(request, participation_id):
     """Legacy grading endpoint kept for old links."""
     participation = get_object_or_404(EventParticipation, pk=participation_id)
 
-    mark, created = Mark.objects.get_or_create(participation=participation)
-
     if request.method == 'POST':
-        form = MarkForm(request.POST, request.FILES, instance=mark)
+        form = MarkForm(request.POST, request.FILES)
         if form.is_valid():
             from core_logic.use_cases.grade_student_work import GradeStudentWorkRequest
             from infrastructure.container import container

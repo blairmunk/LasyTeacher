@@ -126,6 +126,25 @@ class GradeParticipationViewTests(TestCase):
             fetch_redirect_response=False,
         )
 
+    def test_grade_participation_get_does_not_create_empty_mark(self):
+        participation = EventParticipation.objects.create(
+            event=self.event,
+            student=Student.objects.create(last_name='Смирнов', first_name='Семён'),
+            variant=self.variant,
+            status='completed',
+        )
+
+        response = self.client.get(
+            reverse('events:grade-participation', args=[participation.pk])
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('review:participation-review', args=[participation.pk]),
+            fetch_redirect_response=False,
+        )
+        self.assertFalse(Mark.objects.filter(participation=participation).exists())
+
     def test_event_list_uses_clean_context_categories(self):
         response = self.client.get(reverse('events:list'))
 

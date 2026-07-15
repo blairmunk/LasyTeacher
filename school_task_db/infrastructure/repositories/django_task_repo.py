@@ -4,7 +4,7 @@ from typing import List, Set
 
 from core_logic.entities.task import TaskEntity
 from core_logic.interfaces.task_repo import ITaskRepository
-from task_groups.models import TaskGroup
+from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
 
 
@@ -40,8 +40,6 @@ class DjangoTaskRepository(ITaskRepository):
         if not group_ids:
             return 0
 
-        from task_groups.models import AnalogGroup
-
         return AnalogGroup.objects.filter(pk__in=group_ids).count()
 
     def get_first_task_difficulty_for_group(self, group_id: str) -> int:
@@ -52,11 +50,32 @@ class DjangoTaskRepository(ITaskRepository):
             return task_group.task.difficulty
         return 1
 
+    def get_analog_group_name(self, group_id: str):
+        return AnalogGroup.objects.filter(pk=group_id).values_list(
+            'name',
+            flat=True,
+        ).first()
+
+    def add_tasks_to_group(self, group_id: str, task_ids: List[str]) -> int:
+        created_count = 0
+        for task in Task.objects.filter(pk__in=task_ids):
+            _, created = TaskGroup.objects.get_or_create(
+                task=task,
+                group_id=group_id,
+            )
+            if created:
+                created_count += 1
+        return created_count
+
+    def remove_task_from_group(self, group_id: str, task_id: str) -> int:
+        return TaskGroup.objects.filter(
+            group_id=group_id,
+            task_id=task_id,
+        ).delete()[0]
+
     def delete_groups(self, group_ids: List[str]) -> int:
         if not group_ids:
             return 0
-
-        from task_groups.models import AnalogGroup
 
         groups = AnalogGroup.objects.filter(pk__in=group_ids)
         deleted_count = groups.count()

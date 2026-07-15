@@ -103,3 +103,43 @@ class TaskGroupBulkActionTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'error': 'Не выбрано ни одной группы'})
+
+    def test_add_tasks_to_group_post_uses_clean_use_case(self):
+        second_task = Task.objects.create(
+            text='Вторая задача',
+            answer='Ответ',
+            topic=self.topic,
+            task_type='computational',
+            difficulty=3,
+        )
+
+        response = self.client.post(
+            reverse('task_groups:add-tasks', args=[self.group.pk]),
+            {'selected_tasks': [str(second_task.pk)]},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('task_groups:detail', args=[self.group.pk]),
+            fetch_redirect_response=False,
+        )
+        self.assertTrue(
+            TaskGroup.objects.filter(group=self.group, task=second_task).exists()
+        )
+
+    def test_remove_task_from_group_post_uses_clean_use_case(self):
+        response = self.client.post(
+            reverse(
+                'task_groups:remove-task',
+                args=[self.group.pk, self.task.pk],
+            )
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('task_groups:detail', args=[self.group.pk]),
+            fetch_redirect_response=False,
+        )
+        self.assertFalse(
+            TaskGroup.objects.filter(group=self.group, task=self.task).exists()
+        )

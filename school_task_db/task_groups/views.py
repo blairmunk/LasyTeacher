@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.views.decorators.http import require_POST
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from django.db.models import Q, Count, Avg, Exists, OuterRef, Subquery
 
 from .models import AnalogGroup, TaskGroup
@@ -182,17 +182,29 @@ class AnalogGroupUpdateView(UpdateView):
 
 def add_tasks_to_group(request, group_id):
     """Добавление заданий в группу аналогов"""
-    group = get_object_or_404(AnalogGroup, pk=group_id)
-
     if request.method == 'POST':
-        task_ids = request.POST.getlist('selected_tasks')
-        if task_ids:
-            tasks = Task.objects.filter(id__in=task_ids)
-            for task in tasks:
-                TaskGroup.objects.get_or_create(task=task, group=group)
-            messages.success(request, f'Добавлено {len(tasks)} заданий в группу "{group.name}"')
-        return redirect('task_groups:detail', pk=group.pk)
+        from core_logic.use_cases.change_task_group_membership import (
+            AddTasksToGroupRequest,
+        )
+        from infrastructure.container import container
 
+        result = container.add_tasks_to_group_use_case().execute(
+            AddTasksToGroupRequest(
+                group_id=str(group_id),
+                task_ids=request.POST.getlist('selected_tasks'),
+            )
+        )
+        if result.status == 'not_found':
+            raise Http404("Группа не найдена")
+        if result.created_count:
+            messages.success(
+                request,
+                f'Добавлено {result.created_count} заданий '
+                f'в группу "{result.group_name}"',
+            )
+        return redirect('task_groups:detail', pk=group_id)
+
+    group = get_object_or_404(AnalogGroup, pk=group_id)
     existing_task_ids = TaskGroup.objects.filter(group=group).values_list('task_id', flat=True)
     available_tasks = Task.objects.exclude(id__in=existing_task_ids).order_by('-created_at')
 
@@ -213,13 +225,23 @@ def add_tasks_to_group(request, group_id):
 
 def remove_task_from_group(request, group_id, task_id):
     """Удаление задания из группы аналогов"""
-    group = get_object_or_404(AnalogGroup, pk=group_id)
-
     if request.method == 'POST':
-        TaskGroup.objects.filter(group=group, task_id=task_id).delete()
-        messages.success(request, f'Задание удалено из группы "{group.name}"')
+        from core_logic.use_cases.change_task_group_membership import (
+            RemoveTaskFromGroupRequest,
+        )
+        from infrastructure.container import container
 
-    return redirect('task_groups:detail', pk=group.pk)
+        result = container.remove_task_from_group_use_case().execute(
+            RemoveTaskFromGroupRequest(
+                group_id=str(group_id),
+                task_id=str(task_id),
+            )
+        )
+        if result.status == 'not_found':
+            raise Http404("Группа не найдена")
+        messages.success(request, f'Задание удалено из группы "{result.group_name}"')
+
+    return redirect('task_groups:detail', pk=group_id)
 
 
 # === Bulk actions ===

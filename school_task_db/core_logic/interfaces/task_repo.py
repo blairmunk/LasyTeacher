@@ -1,7 +1,7 @@
 """Task repository interface."""
 
 from abc import ABC, abstractmethod
-from typing import List, Set
+from typing import List, Optional, Set
 
 from core_logic.entities.task import TaskEntity
 
@@ -22,6 +22,18 @@ class ITaskRepository(ABC):
     @abstractmethod
     def get_first_task_difficulty_for_group(self, group_id: str) -> int:
         """Return the first task difficulty for an analog group, or 1."""
+
+    @abstractmethod
+    def get_analog_group_name(self, group_id: str) -> Optional[str]:
+        """Return an analog-group name, or None when it does not exist."""
+
+    @abstractmethod
+    def add_tasks_to_group(self, group_id: str, task_ids: List[str]) -> int:
+        """Add tasks to an analog group and return created membership count."""
+
+    @abstractmethod
+    def remove_task_from_group(self, group_id: str, task_id: str) -> int:
+        """Remove one task from an analog group and return deleted row count."""
 
     @abstractmethod
     def delete_groups(self, group_ids: List[str]) -> int:

@@ -8,6 +8,10 @@ from core_logic.use_cases.assign_single_event_variant import (
 from core_logic.use_cases.bulk_delete_variants import BulkDeleteVariantsUseCase
 from core_logic.use_cases.calculate_review_score import CalculateReviewScoreUseCase
 from core_logic.use_cases.change_event_status import ChangeEventStatusUseCase
+from core_logic.use_cases.change_task_group_membership import (
+    AddTasksToGroupUseCase,
+    RemoveTaskFromGroupUseCase,
+)
 from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
 )
@@ -149,6 +153,8 @@ class ContainerTests(SimpleTestCase):
         variant_delete_info_use_case = container.get_variant_delete_info_use_case()
         delete_variant_use_case = container.delete_variant_use_case()
         delete_task_groups_use_case = container.delete_task_groups_use_case()
+        add_tasks_to_group_use_case = container.add_tasks_to_group_use_case()
+        remove_task_from_group_use_case = container.remove_task_from_group_use_case()
         bulk_delete_variants_use_case = container.bulk_delete_variants_use_case()
         generated_file_use_case = container.get_generated_document_file_use_case()
 
@@ -224,6 +230,11 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(variant_delete_info_use_case, GetVariantDeleteInfoUseCase)
         self.assertIsInstance(delete_variant_use_case, DeleteVariantUseCase)
         self.assertIsInstance(delete_task_groups_use_case, DeleteTaskGroupsUseCase)
+        self.assertIsInstance(add_tasks_to_group_use_case, AddTasksToGroupUseCase)
+        self.assertIsInstance(
+            remove_task_from_group_use_case,
+            RemoveTaskFromGroupUseCase,
+        )
         self.assertIsInstance(bulk_delete_variants_use_case, BulkDeleteVariantsUseCase)
         self.assertIsInstance(generated_file_use_case, GetGeneratedDocumentFileUseCase)
         self.assertIsInstance(container.student_repo, DjangoStudentRepository)

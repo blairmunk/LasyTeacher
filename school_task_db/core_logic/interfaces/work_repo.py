@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, List, Optional, Set
 
-from core_logic.entities.work import OrphanVariantRef
+from core_logic.entities.work import OrphanVariantRef, VariantDeleteInfo
 
 
 @dataclass(frozen=True)
@@ -63,6 +63,18 @@ class IWorkRepository(ABC):
     @abstractmethod
     def attach_variants_to_work(self, params: AttachVariantsToWorkParams) -> int:
         """Attach variants to a work and return attached count."""
+
+    @abstractmethod
+    def get_variant_delete_info(self, variant_id: str) -> VariantDeleteInfo:
+        """Return delete screen information for a variant."""
+
+    @abstractmethod
+    def detach_variant_from_work(self, variant_id: str) -> str:
+        """Detach a variant from its work and return the variant short ID."""
+
+    @abstractmethod
+    def delete_variant(self, variant_id: str) -> str:
+        """Delete a variant and return its previous work ID, if any."""
 
     @abstractmethod
     def get_variant_task_ids(self, work_id: str) -> Set[str]:

@@ -35,3 +35,21 @@ class CreateWorkFromOrphansResult:
     work_id: str = ''
     work_name: str = ''
     variant_count: int = 0
+
+
+@dataclass(frozen=True)
+class VariantDeleteInfo:
+    task_count: int
+    participation_count: int = 0
+
+    @property
+    def has_participations(self) -> bool:
+        return self.participation_count > 0
+
+
+@dataclass(frozen=True)
+class DeleteVariantResult:
+    status: str
+    redirect_work_id: str = ''
+    variant_short_id: str = ''
+    participation_count: int = 0

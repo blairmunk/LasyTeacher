@@ -1,7 +1,10 @@
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from curriculum.models import Topic
+from events.models import Event, EventParticipation
+from students.models import Student
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
 from works.models import Variant, VariantTask, Work, WorkAnalogGroup
@@ -194,3 +197,106 @@ class WorkDetailViewTests(TestCase):
         self.assertEqual(second_orphan.work, work)
         self.assertEqual(first_orphan.number, 1)
         self.assertEqual(second_orphan.number, 2)
+
+    def test_variant_delete_context_uses_clean_use_case(self):
+        student = Student.objects.create(last_name='Петров', first_name='Пётр')
+        event = Event.objects.create(
+            name='КР',
+            work=self.work,
+            planned_date=timezone.now(),
+            status='graded',
+        )
+        EventParticipation.objects.create(
+            event=event,
+            student=student,
+            variant=self.variant,
+            status='graded',
+        )
+        VariantTask.objects.create(
+            variant=self.variant,
+            task=Task.objects.create(
+                text='Задание',
+                answer='Ответ',
+                topic=self.topic,
+                task_type='computational',
+                difficulty=2,
+            ),
+            order=1,
+            max_points=2,
+            weight=2,
+        )
+
+        response = self.client.get(
+            reverse('works:variant-delete', args=[self.variant.pk])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['task_count'], 1)
+        self.assertTrue(response.context['has_grades'])
+        self.assertEqual(response.context['grade_count'], 1)
+
+    def test_variant_delete_view_blocks_delete_when_variant_has_participations(self):
+        student = Student.objects.create(last_name='Петров', first_name='Пётр')
+        event = Event.objects.create(
+            name='КР',
+            work=self.work,
+            planned_date=timezone.now(),
+            status='graded',
+        )
+        EventParticipation.objects.create(
+            event=event,
+            student=student,
+            variant=self.variant,
+            status='graded',
+        )
+
+        response = self.client.post(
+            reverse('works:variant-delete', args=[self.variant.pk]),
+            {'action': 'delete'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(Variant.objects.filter(pk=self.variant.pk).exists())
+
+    def test_variant_delete_view_detaches_variant_with_participations(self):
+        student = Student.objects.create(last_name='Петров', first_name='Пётр')
+        event = Event.objects.create(
+            name='КР',
+            work=self.work,
+            planned_date=timezone.now(),
+            status='graded',
+        )
+        EventParticipation.objects.create(
+            event=event,
+            student=student,
+            variant=self.variant,
+            status='graded',
+        )
+
+        response = self.client.post(
+            reverse('works:variant-delete', args=[self.variant.pk]),
+            {'action': 'detach'},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('works:variant-list'),
+            fetch_redirect_response=False,
+        )
+        self.variant.refresh_from_db()
+        self.assertIsNone(self.variant.work)
+
+    def test_variant_delete_view_deletes_variant_without_participations(self):
+        variant_id = self.variant.pk
+
+        response = self.client.post(
+            reverse('works:variant-delete', args=[variant_id]),
+            {'action': 'delete'},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('works:detail', args=[self.work.pk]),
+            fetch_redirect_response=False,
+        )
+        self.assertFalse(Variant.objects.filter(pk=variant_id).exists())

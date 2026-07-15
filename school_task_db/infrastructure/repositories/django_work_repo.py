@@ -4,7 +4,7 @@ from typing import List, Set
 
 from django.db import transaction
 
-from core_logic.entities.work import OrphanVariantRef
+from core_logic.entities.work import OrphanVariantRef, VariantDeleteInfo
 from core_logic.interfaces.work_repo import (
     AttachVariantsToWorkParams,
     CreateVariantParams,
@@ -78,6 +78,27 @@ class DjangoWorkRepository(IWorkRepository):
                 variant.save()
                 attached_count += 1
         return attached_count
+
+    def get_variant_delete_info(self, variant_id: str) -> VariantDeleteInfo:
+        return VariantDeleteInfo(
+            task_count=VariantTask.objects.filter(variant_id=variant_id).count(),
+            participation_count=EventParticipation.objects.filter(
+                variant_id=variant_id,
+            ).count(),
+        )
+
+    def detach_variant_from_work(self, variant_id: str) -> str:
+        variant = Variant.objects.get(pk=variant_id)
+        variant_short_id = variant.get_short_uuid()
+        variant.work = None
+        variant.save()
+        return variant_short_id
+
+    def delete_variant(self, variant_id: str) -> str:
+        variant = Variant.objects.get(pk=variant_id)
+        work_id = str(variant.work_id or '')
+        variant.delete()
+        return work_id
 
     def get_variant_task_ids(self, work_id: str) -> Set[str]:
         return {

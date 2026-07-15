@@ -13,6 +13,7 @@ from core_logic.use_cases.create_remedial_from_event import (
 from core_logic.use_cases.create_work_from_orphans import (
     CreateWorkFromOrphansUseCase,
 )
+from core_logic.use_cases.delete_variant import DeleteVariantUseCase
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
 from core_logic.use_cases.generate_work_variants import GenerateWorkVariantsUseCase
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
@@ -33,6 +34,7 @@ from core_logic.use_cases.get_review_save_navigation import (
     GetReviewSaveNavigationUseCase,
 )
 from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
+from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUseCase
 from core_logic.use_cases.get_work_detail import GetWorkDetailUseCase
 from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionUseCase,
@@ -84,6 +86,8 @@ class ContainerTests(SimpleTestCase):
         sync_work_groups_use_case = container.sync_work_analog_groups_use_case()
         generate_variants_use_case = container.generate_work_variants_use_case()
         create_from_orphans_use_case = container.create_work_from_orphans_use_case()
+        variant_delete_info_use_case = container.get_variant_delete_info_use_case()
+        delete_variant_use_case = container.delete_variant_use_case()
 
         self.assertIsInstance(use_case, CreateRemedialFromEventUseCase)
         self.assertIsInstance(preview_use_case, GetRemedialEventPreviewUseCase)
@@ -116,6 +120,8 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(sync_work_groups_use_case, SyncWorkAnalogGroupsUseCase)
         self.assertIsInstance(generate_variants_use_case, GenerateWorkVariantsUseCase)
         self.assertIsInstance(create_from_orphans_use_case, CreateWorkFromOrphansUseCase)
+        self.assertIsInstance(variant_delete_info_use_case, GetVariantDeleteInfoUseCase)
+        self.assertIsInstance(delete_variant_use_case, DeleteVariantUseCase)
         self.assertIsInstance(container.student_repo, DjangoStudentRepository)
         self.assertIsInstance(container.task_repo, DjangoTaskRepository)
         self.assertIsInstance(container.work_repo, DjangoWorkRepository)

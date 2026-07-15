@@ -191,49 +191,43 @@ class VariantDeleteView(DeleteView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         variant = self.object
-        context['variant'] = variant
-        context['task_count'] = variant.varianttask_set.count()
+        from infrastructure.container import container
 
-        # Проверяем: есть ли оценки/участия за этот вариант
-        try:
-            from events.models import EventParticipation
-            participations = EventParticipation.objects.filter(variant=variant)
-            context['has_grades'] = participations.exists()
-            context['grade_count'] = participations.count()
-        except ImportError:
-            context['has_grades'] = False
-            context['grade_count'] = 0
+        delete_info = container.get_variant_delete_info_use_case().execute(
+            str(variant.pk),
+        )
+        context['variant'] = variant
+        context['task_count'] = delete_info.task_count
+        context['has_grades'] = delete_info.has_participations
+        context['grade_count'] = delete_info.participation_count
 
         return context
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
 
-        # Проверяем: есть ли оценки
-        try:
-            from events.models import EventParticipation
-            has_grades = EventParticipation.objects.filter(variant=self.object).exists()
-        except ImportError:
-            has_grades = False
-
         action = request.POST.get('action', 'delete')
+        from core_logic.use_cases.delete_variant import DeleteVariantRequest
+        from infrastructure.container import container
 
-        if has_grades and action == 'delete':
-            # Нельзя удалить — есть оценки, предлагаем отвязать
-            from django.contrib import messages
+        result = container.delete_variant_use_case().execute(
+            DeleteVariantRequest(
+                variant_id=str(self.object.pk),
+                action=action,
+            )
+        )
+
+        if result.status == 'blocked_has_participations':
             messages.error(request, 'Невозможно удалить: за вариант есть оценки. Используйте «Отвязать».')
             return self.get(request, *args, **kwargs)
 
-        if action == 'detach':
-            # Отвязываем от работы (сирота)
-            self.object.work = None
-            self.object.save()
-            from django.contrib import messages
-            messages.success(request, f'Вариант #{self.object.get_short_uuid()} отвязан от работы (стал сиротой).')
-            return redirect(self.get_success_url())
+        if result.status == 'detached':
+            messages.success(request, f'Вариант #{result.variant_short_id} отвязан от работы (стал сиротой).')
+            return redirect('works:variant-list')
 
-        # Обычное удаление
-        return super().post(request, *args, **kwargs)
+        if result.redirect_work_id:
+            return redirect('works:detail', pk=result.redirect_work_id)
+        return redirect('works:variant-list')
 
 
 def bulk_delete_variants(request, work_id):

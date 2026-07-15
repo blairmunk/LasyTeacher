@@ -321,6 +321,38 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(first_orphan.max_score_snapshot, 6)
         self.assertEqual(second_orphan.work_name_snapshot, work.name)
 
+    def test_work_repository_returns_variant_delete_info(self):
+        repo = DjangoWorkRepository()
+
+        info = repo.get_variant_delete_info(str(self.source_variant.pk))
+
+        self.assertEqual(info.task_count, 2)
+        self.assertEqual(info.participation_count, 1)
+        self.assertTrue(info.has_participations)
+
+    def test_work_repository_detaches_variant_from_work(self):
+        repo = DjangoWorkRepository()
+
+        short_id = repo.detach_variant_from_work(str(self.source_variant.pk))
+
+        self.source_variant.refresh_from_db()
+        self.assertEqual(short_id, self.source_variant.get_short_uuid())
+        self.assertIsNone(self.source_variant.work)
+
+    def test_work_repository_deletes_variant_and_returns_previous_work_id(self):
+        variant = Variant.objects.create(
+            work=self.source_work,
+            number=99,
+            work_name_snapshot=self.source_work.name,
+        )
+        variant_id = str(variant.pk)
+        repo = DjangoWorkRepository()
+
+        work_id = repo.delete_variant(variant_id)
+
+        self.assertEqual(work_id, str(self.source_work.pk))
+        self.assertFalse(Variant.objects.filter(pk=variant_id).exists())
+
     def test_event_repository_grades_participation_and_syncs_review_state(self):
         self.event.status = 'completed'
         self.event.save()

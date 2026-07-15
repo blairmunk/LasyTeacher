@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from core_logic.entities.work import OrphanVariantRef
+from core_logic.entities.work import OrphanVariantRef, VariantDeleteInfo
 from core_logic.interfaces.work_repo import CreateWorkParams
 from core_logic.services.work_service import WorkService
 from core_logic.use_cases.create_work_from_orphans import (
@@ -8,10 +8,15 @@ from core_logic.use_cases.create_work_from_orphans import (
     CreateWorkFromOrphansUseCase,
     DEFAULT_ORPHAN_WORK_NAME,
 )
+from core_logic.use_cases.delete_variant import (
+    DeleteVariantRequest,
+    DeleteVariantUseCase,
+)
 from core_logic.use_cases.generate_work_variants import (
     GenerateWorkVariantsRequest,
     GenerateWorkVariantsUseCase,
 )
+from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUseCase
 from core_logic.use_cases.get_work_detail import GetWorkDetailUseCase
 from core_logic.use_cases.sync_work_analog_groups import (
     SyncWorkAnalogGroupsRequest,
@@ -34,6 +39,9 @@ class FakeWorkRepository:
         self.orphan_variant_refs = []
         self.created_work_params = None
         self.attached_variants_params = None
+        self.variant_delete_info = VariantDeleteInfo(task_count=0)
+        self.detached_variant_id = None
+        self.deleted_variant_id = None
 
     def get_detail_variants(self, work_id):
         return self.variants
@@ -67,6 +75,17 @@ class FakeWorkRepository:
     def create_work(self, params: CreateWorkParams):
         self.created_work_params = params
         return 'created-work'
+
+    def get_variant_delete_info(self, variant_id):
+        return self.variant_delete_info
+
+    def detach_variant_from_work(self, variant_id):
+        self.detached_variant_id = variant_id
+        return 'ABCD'
+
+    def delete_variant(self, variant_id):
+        self.deleted_variant_id = variant_id
+        return 'work-1'
 
 
 class WorkDetailTests(TestCase):
@@ -186,3 +205,56 @@ class WorkDetailTests(TestCase):
         self.assertEqual(result.status, 'created')
         self.assertEqual(result.work_name, DEFAULT_ORPHAN_WORK_NAME)
         self.assertEqual(repo.created_work_params.work_type, 'test')
+
+    def test_get_variant_delete_info_use_case_delegates_to_repository(self):
+        repo = FakeWorkRepository()
+        repo.variant_delete_info = VariantDeleteInfo(
+            task_count=3,
+            participation_count=1,
+        )
+        use_case = GetVariantDeleteInfoUseCase(work_repo=repo)
+
+        result = use_case.execute('variant-1')
+
+        self.assertEqual(result.task_count, 3)
+        self.assertTrue(result.has_participations)
+
+    def test_delete_variant_use_case_blocks_delete_when_variant_has_participations(self):
+        repo = FakeWorkRepository()
+        repo.variant_delete_info = VariantDeleteInfo(
+            task_count=2,
+            participation_count=1,
+        )
+        use_case = DeleteVariantUseCase(work_repo=repo)
+
+        result = use_case.execute(
+            DeleteVariantRequest(variant_id='variant-1', action='delete')
+        )
+
+        self.assertEqual(result.status, 'blocked_has_participations')
+        self.assertEqual(result.participation_count, 1)
+        self.assertIsNone(repo.deleted_variant_id)
+
+    def test_delete_variant_use_case_detaches_variant(self):
+        repo = FakeWorkRepository()
+        use_case = DeleteVariantUseCase(work_repo=repo)
+
+        result = use_case.execute(
+            DeleteVariantRequest(variant_id='variant-1', action='detach')
+        )
+
+        self.assertEqual(result.status, 'detached')
+        self.assertEqual(result.variant_short_id, 'ABCD')
+        self.assertEqual(repo.detached_variant_id, 'variant-1')
+
+    def test_delete_variant_use_case_deletes_variant_without_participations(self):
+        repo = FakeWorkRepository()
+        use_case = DeleteVariantUseCase(work_repo=repo)
+
+        result = use_case.execute(
+            DeleteVariantRequest(variant_id='variant-1', action='delete')
+        )
+
+        self.assertEqual(result.status, 'deleted')
+        self.assertEqual(result.redirect_work_id, 'work-1')
+        self.assertEqual(repo.deleted_variant_id, 'variant-1')

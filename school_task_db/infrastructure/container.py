@@ -19,6 +19,7 @@ from core_logic.use_cases.create_remedial_from_event import (
 from core_logic.use_cases.create_work_from_orphans import (
     CreateWorkFromOrphansUseCase,
 )
+from core_logic.use_cases.delete_variant import DeleteVariantUseCase
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
 from core_logic.use_cases.generate_work_variants import GenerateWorkVariantsUseCase
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
@@ -40,6 +41,7 @@ from core_logic.use_cases.get_review_save_navigation import (
 )
 from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
 from core_logic.use_cases.get_work_detail import GetWorkDetailUseCase
+from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUseCase
 from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionUseCase,
 )
@@ -252,6 +254,16 @@ class Container:
 
     def create_work_from_orphans_use_case(self):
         return CreateWorkFromOrphansUseCase(
+            work_repo=self.work_repo,
+        )
+
+    def get_variant_delete_info_use_case(self):
+        return GetVariantDeleteInfoUseCase(
+            work_repo=self.work_repo,
+        )
+
+    def delete_variant_use_case(self):
+        return DeleteVariantUseCase(
             work_repo=self.work_repo,
         )
 

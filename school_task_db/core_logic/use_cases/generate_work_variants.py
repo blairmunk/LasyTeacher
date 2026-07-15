@@ -20,6 +20,12 @@ class GenerateWorkVariantsUseCase:
         self,
         request: GenerateWorkVariantsRequest,
     ) -> GenerateWorkVariantsResult:
+        if self.work_repo.get_work_name(request.work_id) is None:
+            return GenerateWorkVariantsResult(
+                created_count=0,
+                status='not_found',
+            )
+
         return GenerateWorkVariantsResult(
             created_count=self.work_repo.generate_variants(
                 work_id=request.work_id,

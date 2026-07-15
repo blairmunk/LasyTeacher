@@ -75,11 +75,13 @@ class OrphanVariantListData:
 @dataclass(frozen=True)
 class SyncWorkAnalogGroupsResult:
     created_count: int
+    status: str = 'synced'
 
 
 @dataclass(frozen=True)
 class GenerateWorkVariantsResult:
     created_count: int
+    status: str = 'generated'
 
 
 @dataclass(frozen=True)

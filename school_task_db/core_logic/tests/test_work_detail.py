@@ -85,6 +85,8 @@ class FakeWorkRepository:
             work_name='Контрольная',
         )
         self.variant_generation_id = None
+        self.work_name = 'Контрольная'
+        self.work_name_request = None
 
     def get_detail_variants(self, work_id):
         return self.variants
@@ -97,6 +99,10 @@ class FakeWorkRepository:
 
     def get_work_form_analog_group_options(self):
         return self.work_form_analog_group_options
+
+    def get_work_name(self, work_id):
+        self.work_name_request = work_id
+        return self.work_name
 
     def get_detail_analog_groups(self, work_id):
         return self.analog_groups
@@ -292,8 +298,21 @@ class WorkDetailTests(TestCase):
 
         result = use_case.execute(SyncWorkAnalogGroupsRequest(work_id='work-1'))
 
+        self.assertEqual(result.status, 'synced')
         self.assertEqual(result.created_count, 2)
+        self.assertEqual(repo.work_name_request, 'work-1')
         self.assertEqual(repo.synced_work_id, 'work-1')
+
+    def test_sync_work_analog_groups_use_case_handles_missing_work(self):
+        repo = FakeWorkRepository()
+        repo.work_name = None
+        use_case = SyncWorkAnalogGroupsUseCase(work_repo=repo)
+
+        result = use_case.execute(SyncWorkAnalogGroupsRequest(work_id='missing'))
+
+        self.assertEqual(result.status, 'not_found')
+        self.assertEqual(result.created_count, 0)
+        self.assertIsNone(repo.synced_work_id)
 
     def test_generate_work_variants_use_case_delegates_to_repository(self):
         repo = FakeWorkRepository()
@@ -303,8 +322,23 @@ class WorkDetailTests(TestCase):
             GenerateWorkVariantsRequest(work_id='work-1', count=3)
         )
 
+        self.assertEqual(result.status, 'generated')
         self.assertEqual(result.created_count, 3)
+        self.assertEqual(repo.work_name_request, 'work-1')
         self.assertEqual(repo.generated_variants_request, ('work-1', 3))
+
+    def test_generate_work_variants_use_case_handles_missing_work(self):
+        repo = FakeWorkRepository()
+        repo.work_name = None
+        use_case = GenerateWorkVariantsUseCase(work_repo=repo)
+
+        result = use_case.execute(
+            GenerateWorkVariantsRequest(work_id='missing', count=3)
+        )
+
+        self.assertEqual(result.status, 'not_found')
+        self.assertEqual(result.created_count, 0)
+        self.assertIsNone(repo.generated_variants_request)
 
     def test_create_work_from_orphans_use_case_creates_work_and_attaches_variants(self):
         repo = FakeWorkRepository()

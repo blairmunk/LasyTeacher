@@ -19,6 +19,12 @@ class SyncWorkAnalogGroupsUseCase:
         self,
         request: SyncWorkAnalogGroupsRequest,
     ) -> SyncWorkAnalogGroupsResult:
+        if self.work_repo.get_work_name(request.work_id) is None:
+            return SyncWorkAnalogGroupsResult(
+                created_count=0,
+                status='not_found',
+            )
+
         return SyncWorkAnalogGroupsResult(
             created_count=self.work_repo.sync_analog_groups_from_variants(
                 request.work_id,

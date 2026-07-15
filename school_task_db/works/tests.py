@@ -201,6 +201,16 @@ class WorkDetailViewTests(TestCase):
         self.assertEqual(groups.count(), 1)
         self.assertEqual(groups[0].analog_group, group)
 
+    def test_sync_analog_groups_view_returns_404_for_missing_work(self):
+        response = self.client.post(
+            reverse(
+                'works:sync-groups',
+                args=['00000000-0000-0000-0000-000000000000'],
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
+
     def test_generate_variants_view_uses_clean_use_case(self):
         group = AnalogGroup.objects.create(name='Кинематика')
         task = Task.objects.create(
@@ -237,6 +247,17 @@ class WorkDetailViewTests(TestCase):
         self.assertEqual(variants.count(), 2)
         self.assertEqual(self.work.variant_counter, 2)
         self.assertEqual(variants.first().varianttask_set.count(), 1)
+
+    def test_generate_variants_view_returns_404_for_missing_work(self):
+        response = self.client.post(
+            reverse(
+                'works:generate-variants',
+                args=['00000000-0000-0000-0000-000000000000'],
+            ),
+            {'count': '2'},
+        )
+
+        self.assertEqual(response.status_code, 404)
 
     def test_create_work_from_orphans_view_uses_clean_use_case(self):
         first_orphan = Variant.objects.create(

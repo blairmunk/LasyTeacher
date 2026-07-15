@@ -133,3 +133,25 @@ class TaskBulkGroupAjaxTests(TestCase):
             [variant_task.task for variant_task in variant_tasks],
             [self.second_task, self.first_task],
         )
+
+    def test_task_list_uses_filters_and_context_data(self):
+        TaskGroup.objects.create(task=self.first_task, group=self.group)
+
+        response = self.client.get(
+            reverse('tasks:list'),
+            {
+                'search': 'Первое',
+                'topic': str(self.topic.pk),
+                'group_filter': 'has_group',
+                'analog_group': str(self.group.pk),
+                'verified': '0',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context['tasks']), [self.first_task])
+        self.assertEqual(response.context['total_tasks'], 2)
+        self.assertEqual(response.context['ungrouped_count'], 1)
+        self.assertIn(self.group, list(response.context['analog_groups']))
+        self.assertEqual(response.context['current_topic'], str(self.topic.pk))
+        self.assertEqual(response.context['current_group_filter'], 'has_group')

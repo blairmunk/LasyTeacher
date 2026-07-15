@@ -5,6 +5,7 @@ from django.utils import timezone
 from core_logic.services.remedial_service import RemedialService
 from core_logic.interfaces.event_repo import GradeParticipationParams
 from core_logic.interfaces.work_repo import CreateWorkWithVariantFromTasksParams
+from core_logic.entities.task import TaskListFilters
 from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
     RemedialFromEventRequest,
@@ -170,6 +171,28 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(weak_log.analog_group.name, self.weak_group.name)
         self.assertEqual(weak_log.percentage, 0)
         self.assertEqual(work_groups[0].group_name, self.weak_group.name)
+
+    def test_task_repository_returns_filtered_task_list_data(self):
+        repo = DjangoTaskRepository()
+
+        grouped_tasks = repo.get_list_tasks(
+            TaskListFilters(
+                search='слабое',
+                topic_id=str(self.topic.pk),
+                group_filter='has_group',
+                analog_group_id=str(self.weak_group.pk),
+                verified='0',
+            )
+        )
+        ungrouped_tasks = repo.get_list_tasks(TaskListFilters(group_filter='no_group'))
+
+        self.assertEqual(list(grouped_tasks), [self.original_weak])
+        self.assertEqual(list(ungrouped_tasks), [])
+        self.assertEqual(repo.count_tasks(), 4)
+        self.assertEqual(repo.count_ungrouped_tasks(), 0)
+        self.assertEqual(list(repo.get_subtopics_for_topic('')), [])
+        self.assertIn(self.topic, list(repo.get_list_topics()))
+        self.assertIn(self.weak_group, list(repo.get_list_analog_groups()))
 
     def test_create_remedial_use_case_creates_django_objects(self):
         student_repo = DjangoStudentRepository()

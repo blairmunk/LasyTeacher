@@ -1,19 +1,17 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib import messages
 from django.urls import reverse_lazy
-from django.db.models import Q, Count, Exists, OuterRef
 from django.http import JsonResponse
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_POST
 
-from .models import Task, TaskImage, Source
+from core_logic.entities.task import TaskListFilters
+from infrastructure.container import container
+from .models import Task, Source
 from .forms import TaskForm, TaskImageFormSet, SourceForm
 from .utils import math_status_cache
-from curriculum.models import Topic, SubTopic
-from task_groups.models import AnalogGroup, TaskGroup
-from document_generator.utils.formula_utils import formula_processor
+from curriculum.models import Topic
+from task_groups.models import TaskGroup
 
 
 class TaskListView(ListView):
@@ -22,133 +20,42 @@ class TaskListView(ListView):
     context_object_name = 'tasks'
     paginate_by = 20
 
-    def get_queryset(self):
-        queryset = Task.objects.select_related('topic', 'subtopic').order_by('-created_at')
-
-        # Аннотируем: есть ли у задания группа
-        queryset = queryset.annotate(
-            group_count=Count('taskgroup'),
-            has_group=Exists(
-                TaskGroup.objects.filter(task=OuterRef('pk'))
-            ),
-        )
-
-        # Поиск
-        search = self.request.GET.get('search')
-        if search:
-            queryset = queryset.filter(
-                Q(text__icontains=search) |
-                Q(answer__icontains=search) |
-                Q(topic__name__icontains=search)
+    def _get_list_data(self):
+        if not hasattr(self, '_task_list_data'):
+            self._task_list_data = container.get_task_list_use_case().execute(
+                TaskListFilters(
+                    search=self.request.GET.get('search', ''),
+                    topic_id=self.request.GET.get('topic', ''),
+                    subtopic_id=self.request.GET.get('subtopic', ''),
+                    task_type=self.request.GET.get('task_type', ''),
+                    difficulty=self.request.GET.get('difficulty', ''),
+                    group_filter=self.request.GET.get('group_filter', ''),
+                    analog_group_id=self.request.GET.get('analog_group', ''),
+                    math_filter=self.request.GET.get('math_filter', 'all'),
+                    source_id=self.request.GET.get('source', ''),
+                    grade=self.request.GET.get('grade', ''),
+                    verified=self.request.GET.get('verified', ''),
+                ),
+                include_cache_stats=self.request.user.is_staff,
             )
+        return self._task_list_data
 
-        # Фильтр по теме
-        topic_id = self.request.GET.get('topic')
-        if topic_id:
-            queryset = queryset.filter(topic_id=topic_id)
-
-        # Фильтр по подтеме
-        subtopic_id = self.request.GET.get('subtopic')
-        if subtopic_id:
-            queryset = queryset.filter(subtopic_id=subtopic_id)
-
-        # Фильтр по типу
-        task_type = self.request.GET.get('task_type')
-        if task_type:
-            queryset = queryset.filter(task_type=task_type)
-
-        # Фильтр по сложности
-        difficulty = self.request.GET.get('difficulty')
-        if difficulty:
-            queryset = queryset.filter(difficulty=int(difficulty))
-
-        # Фильтр по принадлежности к группе
-        group_filter = self.request.GET.get('group_filter')
-        if group_filter == 'no_group':
-            queryset = queryset.filter(has_group=False)
-        elif group_filter == 'has_group':
-            queryset = queryset.filter(has_group=True)
-
-        # Фильтр по конкретной группе аналогов
-        analog_group_id = self.request.GET.get('analog_group')
-        if analog_group_id:
-            queryset = queryset.filter(taskgroup__group_id=analog_group_id)
-
-        # Фильтр по формулам
-        math_filter = self.request.GET.get('math_filter')
-        if math_filter == 'with_math':
-            task_ids_with_math = math_status_cache.get_tasks_with_math_ids()
-            queryset = queryset.filter(id__in=task_ids_with_math)
-        elif math_filter == 'with_errors':
-            task_ids_with_errors = math_status_cache.get_tasks_with_errors_ids()
-            queryset = queryset.filter(id__in=task_ids_with_errors)
-
-        # Фильтр по источнику
-        source_id = self.request.GET.get('source')
-        if source_id == 'none':
-            queryset = queryset.filter(source__isnull=True)
-        elif source_id:
-            queryset = queryset.filter(source_id=source_id)
-
-        # Фильтр по классу
-        grade = self.request.GET.get('grade')
-        if grade == 'none':
-            queryset = queryset.filter(grade__isnull=True)
-        elif grade:
-            try:
-                queryset = queryset.filter(grade=int(grade))
-            except (ValueError, TypeError):
-                pass
-
-        # Фильтр по проверке
-        verified = self.request.GET.get('verified')
-        if verified == '1':
-            queryset = queryset.filter(is_verified=True)
-        elif verified == '0':
-            queryset = queryset.filter(is_verified=False)
-
-
-        return queryset
+    def get_queryset(self):
+        return self._get_list_data().tasks
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['topics'] = Topic.objects.all().order_by('section', 'name')
-        context['analog_groups'] = AnalogGroup.objects.all().order_by('name')
-        context['sources'] = Source.objects.all()
+        list_data = self._get_list_data()
+        context['topics'] = list_data.topics
+        context['analog_groups'] = list_data.analog_groups
+        context['sources'] = list_data.sources
         context['current_source'] = self.request.GET.get('source', '')
         context['current_grade'] = self.request.GET.get('grade', '')
         context['current_verified'] = self.request.GET.get('verified', '')
-        context['grade_choices'] = [(i, f'{i} класс') for i in range(7, 12)]
-
-
-
-
-        # Подтемы для выбранной темы
-        topic_id = self.request.GET.get('topic')
-        if topic_id:
-            context['subtopics'] = SubTopic.objects.filter(
-                topic_id=topic_id
-            ).order_by('order', 'name')
-        else:
-            context['subtopics'] = SubTopic.objects.none()
-
-        # Типы заданий
-        try:
-            from references.helpers import get_task_type_choices
-            context['task_types'] = get_task_type_choices()
-        except ImportError:
-            context['task_types'] = [
-                ('computational', 'Расчётная задача'),
-                ('qualitative', 'Качественная задача'),
-                ('theoretical', 'Теоретический вопрос'),
-                ('test', 'Тест'),
-            ]
-
-        context['difficulties'] = [
-            (1, 'Базовый'),
-            (2, 'Повышенный'),
-            (3, 'Высокий'),
-        ]
+        context['grade_choices'] = list_data.grade_choices
+        context['subtopics'] = list_data.subtopics
+        context['task_types'] = list_data.task_types
+        context['difficulties'] = list_data.difficulties
 
         # Текущие фильтры
         context['current_filter'] = self.request.GET.get('math_filter', 'all')
@@ -161,13 +68,11 @@ class TaskListView(ListView):
         context['current_analog_group'] = self.request.GET.get('analog_group', '')
 
         # Статистика
-        context['total_tasks'] = Task.objects.count()
-        context['ungrouped_count'] = Task.objects.filter(
-            ~Exists(TaskGroup.objects.filter(task=OuterRef('pk')))
-        ).count()
+        context['total_tasks'] = list_data.total_tasks
+        context['ungrouped_count'] = list_data.ungrouped_count
 
-        if self.request.user.is_staff:
-            context['cache_stats'] = math_status_cache.get_cache_stats()
+        if list_data.cache_stats is not None:
+            context['cache_stats'] = list_data.cache_stats
 
         return context
 

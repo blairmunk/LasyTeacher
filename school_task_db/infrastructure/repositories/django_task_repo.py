@@ -2,13 +2,121 @@
 
 from typing import List, Set
 
-from core_logic.entities.task import TaskEntity
+from django.db.models import Count, Exists, OuterRef, Q
+
+from core_logic.entities.task import TaskEntity, TaskListFilters
 from core_logic.interfaces.task_repo import ITaskRepository
+from curriculum.models import SubTopic, Topic
 from task_groups.models import AnalogGroup, TaskGroup
-from tasks.models import Task
+from tasks.models import Source, Task
+from tasks.utils import math_status_cache
 
 
 class DjangoTaskRepository(ITaskRepository):
+    def get_list_tasks(self, filters: TaskListFilters):
+        queryset = Task.objects.select_related('topic', 'subtopic').order_by(
+            '-created_at',
+        )
+        queryset = queryset.annotate(
+            group_count=Count('taskgroup'),
+            has_group=Exists(TaskGroup.objects.filter(task=OuterRef('pk'))),
+        )
+
+        if filters.search:
+            queryset = queryset.filter(
+                Q(text__icontains=filters.search)
+                | Q(answer__icontains=filters.search)
+                | Q(topic__name__icontains=filters.search)
+            )
+
+        if filters.topic_id:
+            queryset = queryset.filter(topic_id=filters.topic_id)
+        if filters.subtopic_id:
+            queryset = queryset.filter(subtopic_id=filters.subtopic_id)
+        if filters.task_type:
+            queryset = queryset.filter(task_type=filters.task_type)
+        if filters.difficulty:
+            try:
+                queryset = queryset.filter(difficulty=int(filters.difficulty))
+            except (ValueError, TypeError):
+                pass
+
+        if filters.group_filter == 'no_group':
+            queryset = queryset.filter(has_group=False)
+        elif filters.group_filter == 'has_group':
+            queryset = queryset.filter(has_group=True)
+
+        if filters.analog_group_id:
+            queryset = queryset.filter(taskgroup__group_id=filters.analog_group_id)
+
+        if filters.math_filter == 'with_math':
+            queryset = queryset.filter(
+                id__in=math_status_cache.get_tasks_with_math_ids(),
+            )
+        elif filters.math_filter == 'with_errors':
+            queryset = queryset.filter(
+                id__in=math_status_cache.get_tasks_with_errors_ids(),
+            )
+
+        if filters.source_id == 'none':
+            queryset = queryset.filter(source__isnull=True)
+        elif filters.source_id:
+            queryset = queryset.filter(source_id=filters.source_id)
+
+        if filters.grade == 'none':
+            queryset = queryset.filter(grade__isnull=True)
+        elif filters.grade:
+            try:
+                queryset = queryset.filter(grade=int(filters.grade))
+            except (ValueError, TypeError):
+                pass
+
+        if filters.verified == '1':
+            queryset = queryset.filter(is_verified=True)
+        elif filters.verified == '0':
+            queryset = queryset.filter(is_verified=False)
+
+        return queryset
+
+    def get_list_topics(self):
+        return Topic.objects.all().order_by('section', 'name')
+
+    def get_list_analog_groups(self):
+        return AnalogGroup.objects.all().order_by('name')
+
+    def get_list_sources(self):
+        return Source.objects.all()
+
+    def get_subtopics_for_topic(self, topic_id: str):
+        if not topic_id:
+            return SubTopic.objects.none()
+
+        return SubTopic.objects.filter(topic_id=topic_id).order_by('order', 'name')
+
+    def get_task_type_choices(self):
+        try:
+            from references.helpers import get_task_type_choices
+
+            return get_task_type_choices()
+        except ImportError:
+            return [
+                ('computational', 'Расчётная задача'),
+                ('qualitative', 'Качественная задача'),
+                ('theoretical', 'Теоретический вопрос'),
+                ('test', 'Тест'),
+            ]
+
+    def count_tasks(self) -> int:
+        return Task.objects.count()
+
+    def count_ungrouped_tasks(self) -> int:
+        return Task.objects.filter(
+            ~Exists(TaskGroup.objects.filter(task=OuterRef('pk')))
+        ).count()
+
+    def get_math_cache_stats(self):
+        return math_status_cache.get_cache_stats()
+
     def get_by_ids(self, task_ids: Set[str]) -> List[TaskEntity]:
         if not task_ids:
             return []

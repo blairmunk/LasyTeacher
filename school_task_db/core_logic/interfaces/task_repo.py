@@ -1,12 +1,48 @@
 """Task repository interface."""
 
 from abc import ABC, abstractmethod
-from typing import List, Optional, Set
+from typing import Any, List, Optional, Set, Tuple
 
-from core_logic.entities.task import TaskEntity
+from core_logic.entities.task import TaskEntity, TaskListFilters
 
 
 class ITaskRepository(ABC):
+    @abstractmethod
+    def get_list_tasks(self, filters: TaskListFilters) -> Any:
+        """Return tasks for the task list page."""
+
+    @abstractmethod
+    def get_list_topics(self) -> Any:
+        """Return topic options for the task list page."""
+
+    @abstractmethod
+    def get_list_analog_groups(self) -> Any:
+        """Return analog-group options for the task list page."""
+
+    @abstractmethod
+    def get_list_sources(self) -> Any:
+        """Return source options for the task list page."""
+
+    @abstractmethod
+    def get_subtopics_for_topic(self, topic_id: str) -> Any:
+        """Return subtopic options for a topic."""
+
+    @abstractmethod
+    def get_task_type_choices(self) -> List[Tuple[str, str]]:
+        """Return task type choices."""
+
+    @abstractmethod
+    def count_tasks(self) -> int:
+        """Return total task count."""
+
+    @abstractmethod
+    def count_ungrouped_tasks(self) -> int:
+        """Return task count without analog groups."""
+
+    @abstractmethod
+    def get_math_cache_stats(self) -> Any:
+        """Return math cache stats for task administration UI."""
+
     @abstractmethod
     def get_by_ids(self, task_ids: Set[str]) -> List[TaskEntity]:
         """Return tasks by IDs."""

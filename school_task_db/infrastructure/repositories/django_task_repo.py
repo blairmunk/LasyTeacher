@@ -36,11 +36,24 @@ class DjangoTaskRepository(ITaskRepository):
             ).values_list('group_id', flat=True)
         }
 
+    def count_existing_task_ids(self, task_ids: Set[str]) -> int:
+        if not task_ids:
+            return 0
+
+        return Task.objects.filter(pk__in=task_ids).count()
+
     def count_existing_group_ids(self, group_ids: Set[str]) -> int:
         if not group_ids:
             return 0
 
         return AnalogGroup.objects.filter(pk__in=group_ids).count()
+
+    def analog_group_name_exists(self, name: str) -> bool:
+        return AnalogGroup.objects.filter(name=name).exists()
+
+    def create_analog_group(self, name: str, description: str = '') -> str:
+        group = AnalogGroup.objects.create(name=name, description=description)
+        return str(group.pk)
 
     def get_first_task_difficulty_for_group(self, group_id: str) -> int:
         task_group = TaskGroup.objects.filter(
@@ -72,6 +85,12 @@ class DjangoTaskRepository(ITaskRepository):
             group_id=group_id,
             task_id=task_id,
         ).delete()[0]
+
+    def remove_tasks_from_all_groups(self, task_ids: List[str]) -> int:
+        if not task_ids:
+            return 0
+
+        return TaskGroup.objects.filter(task_id__in=task_ids).delete()[0]
 
     def delete_groups(self, group_ids: List[str]) -> int:
         if not group_ids:

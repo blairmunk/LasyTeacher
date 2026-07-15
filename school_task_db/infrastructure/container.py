@@ -12,6 +12,11 @@ from core_logic.use_cases.assign_single_event_variant import (
     AssignSingleEventVariantUseCase,
 )
 from core_logic.use_cases.bulk_delete_variants import BulkDeleteVariantsUseCase
+from core_logic.use_cases.bulk_change_task_groups import (
+    BulkAddTasksToGroupUseCase,
+    BulkCreateGroupFromTasksUseCase,
+    BulkRemoveTasksFromGroupsUseCase,
+)
 from core_logic.use_cases.calculate_review_score import CalculateReviewScoreUseCase
 from core_logic.use_cases.change_event_status import ChangeEventStatusUseCase
 from core_logic.use_cases.change_task_group_membership import (
@@ -447,6 +452,21 @@ class Container:
 
     def remove_task_from_group_use_case(self):
         return RemoveTaskFromGroupUseCase(
+            task_repo=self.task_repo,
+        )
+
+    def bulk_create_group_from_tasks_use_case(self):
+        return BulkCreateGroupFromTasksUseCase(
+            task_repo=self.task_repo,
+        )
+
+    def bulk_add_tasks_to_group_use_case(self):
+        return BulkAddTasksToGroupUseCase(
+            task_repo=self.task_repo,
+        )
+
+    def bulk_remove_tasks_from_groups_use_case(self):
+        return BulkRemoveTasksFromGroupsUseCase(
             task_repo=self.task_repo,
         )
 

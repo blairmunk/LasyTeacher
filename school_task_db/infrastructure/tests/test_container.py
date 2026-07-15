@@ -6,6 +6,11 @@ from core_logic.use_cases.assign_single_event_variant import (
     AssignSingleEventVariantUseCase,
 )
 from core_logic.use_cases.bulk_delete_variants import BulkDeleteVariantsUseCase
+from core_logic.use_cases.bulk_change_task_groups import (
+    BulkAddTasksToGroupUseCase,
+    BulkCreateGroupFromTasksUseCase,
+    BulkRemoveTasksFromGroupsUseCase,
+)
 from core_logic.use_cases.calculate_review_score import CalculateReviewScoreUseCase
 from core_logic.use_cases.change_event_status import ChangeEventStatusUseCase
 from core_logic.use_cases.change_task_group_membership import (
@@ -155,6 +160,15 @@ class ContainerTests(SimpleTestCase):
         delete_task_groups_use_case = container.delete_task_groups_use_case()
         add_tasks_to_group_use_case = container.add_tasks_to_group_use_case()
         remove_task_from_group_use_case = container.remove_task_from_group_use_case()
+        bulk_create_group_use_case = (
+            container.bulk_create_group_from_tasks_use_case()
+        )
+        bulk_add_tasks_to_group_use_case = (
+            container.bulk_add_tasks_to_group_use_case()
+        )
+        bulk_remove_tasks_from_groups_use_case = (
+            container.bulk_remove_tasks_from_groups_use_case()
+        )
         bulk_delete_variants_use_case = container.bulk_delete_variants_use_case()
         generated_file_use_case = container.get_generated_document_file_use_case()
 
@@ -234,6 +248,18 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             remove_task_from_group_use_case,
             RemoveTaskFromGroupUseCase,
+        )
+        self.assertIsInstance(
+            bulk_create_group_use_case,
+            BulkCreateGroupFromTasksUseCase,
+        )
+        self.assertIsInstance(
+            bulk_add_tasks_to_group_use_case,
+            BulkAddTasksToGroupUseCase,
+        )
+        self.assertIsInstance(
+            bulk_remove_tasks_from_groups_use_case,
+            BulkRemoveTasksFromGroupsUseCase,
         )
         self.assertIsInstance(bulk_delete_variants_use_case, BulkDeleteVariantsUseCase)
         self.assertIsInstance(generated_file_use_case, GetGeneratedDocumentFileUseCase)

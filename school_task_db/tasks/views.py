@@ -332,44 +332,32 @@ def load_codifier_elements(request):
 def bulk_create_group(request):
     """Создать новую группу аналогов из выбранных заданий"""
     import json
+    from core_logic.use_cases.bulk_change_task_groups import (
+        BulkCreateGroupFromTasksRequest,
+    )
+    from infrastructure.container import container
+
     try:
         body = json.loads(request.body)
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Невалидный JSON'}, status=400)
 
-    task_ids = body.get('task_ids', [])
-    group_name = body.get('group_name', '').strip()
-
-    if not task_ids:
-        return JsonResponse({'error': 'Не выбрано ни одного задания'}, status=400)
-    if not group_name:
-        return JsonResponse({'error': 'Название группы не указано'}, status=400)
-
-    # Проверяем уникальность имени
-    if AnalogGroup.objects.filter(name=group_name).exists():
-        return JsonResponse({'error': 'Группа с таким названием уже существует'}, status=400)
-
-    tasks = Task.objects.filter(pk__in=task_ids)
-    if not tasks.exists():
-        return JsonResponse({'error': 'Задания не найдены'}, status=400)
-
-    group = AnalogGroup.objects.create(
-        name=group_name,
-        description='Создана из выбранных заданий',
+    result = container.bulk_create_group_from_tasks_use_case().execute(
+        BulkCreateGroupFromTasksRequest(
+            task_ids=body.get('task_ids', []),
+            group_name=body.get('group_name', ''),
+        )
     )
 
-    created = 0
-    for task in tasks:
-        _, was_created = TaskGroup.objects.get_or_create(task=task, group=group)
-        if was_created:
-            created += 1
+    if not result.success:
+        return JsonResponse({'error': result.message}, status=400)
 
     return JsonResponse({
         'success': True,
-        'group_id': str(group.pk),
-        'group_name': group.name,
-        'added': created,
-        'message': f'Создана группа «{group.name}» с {created} заданиями',
+        'group_id': result.group_id,
+        'group_name': result.group_name,
+        'added': result.added_count,
+        'message': result.message,
     })
 
 
@@ -377,39 +365,31 @@ def bulk_create_group(request):
 def bulk_add_to_group(request):
     """Добавить выбранные задания в существующую группу"""
     import json
+    from core_logic.use_cases.bulk_change_task_groups import (
+        BulkAddTasksToGroupRequest,
+    )
+    from infrastructure.container import container
+
     try:
         body = json.loads(request.body)
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Невалидный JSON'}, status=400)
 
-    task_ids = body.get('task_ids', [])
-    group_id = body.get('group_id')
+    result = container.bulk_add_tasks_to_group_use_case().execute(
+        BulkAddTasksToGroupRequest(
+            task_ids=body.get('task_ids', []),
+            group_id=body.get('group_id', ''),
+        )
+    )
 
-    if not task_ids:
-        return JsonResponse({'error': 'Не выбрано ни одного задания'}, status=400)
-    if not group_id:
-        return JsonResponse({'error': 'Группа не указана'}, status=400)
-
-    group = AnalogGroup.objects.filter(pk=group_id).first()
-    if not group:
-        return JsonResponse({'error': 'Группа не найдена'}, status=400)
-
-    tasks = Task.objects.filter(pk__in=task_ids)
-    added = 0
-    skipped = 0
-    for task in tasks:
-        _, was_created = TaskGroup.objects.get_or_create(task=task, group=group)
-        if was_created:
-            added += 1
-        else:
-            skipped += 1
+    if not result.success:
+        return JsonResponse({'error': result.message}, status=400)
 
     return JsonResponse({
         'success': True,
-        'added': added,
-        'skipped': skipped,
-        'message': f'Добавлено {added} заданий в «{group.name}»'
-                   + (f' (пропущено {skipped} — уже в группе)' if skipped else ''),
+        'added': result.added_count,
+        'skipped': result.skipped_count,
+        'message': result.message,
     })
 
 
@@ -417,21 +397,27 @@ def bulk_add_to_group(request):
 def bulk_remove_from_groups(request):
     """Удалить выбранные задания из всех групп"""
     import json
+    from core_logic.use_cases.bulk_change_task_groups import (
+        BulkRemoveTasksFromGroupsRequest,
+    )
+    from infrastructure.container import container
+
     try:
         body = json.loads(request.body)
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Невалидный JSON'}, status=400)
 
-    task_ids = body.get('task_ids', [])
-    if not task_ids:
-        return JsonResponse({'error': 'Не выбрано ни одного задания'}, status=400)
+    result = container.bulk_remove_tasks_from_groups_use_case().execute(
+        BulkRemoveTasksFromGroupsRequest(task_ids=body.get('task_ids', [])),
+    )
 
-    deleted, _ = TaskGroup.objects.filter(task_id__in=task_ids).delete()
+    if not result.success:
+        return JsonResponse({'error': result.message}, status=400)
 
     return JsonResponse({
         'success': True,
-        'removed': deleted,
-        'message': f'Удалено {deleted} связей с группами',
+        'removed': result.removed_count,
+        'message': result.message,
     })
 
 @require_POST
@@ -543,4 +529,3 @@ class SourceCreateView(CreateView):
         response = super().form_valid(form)
         messages.success(self.request, f'Источник «{self.object}» создан!')
         return response
-

@@ -302,6 +302,37 @@ class DjangoRemedialRepositoryTests(TestCase):
             {self.weak_group, self.ok_group},
         )
 
+    def test_task_repository_mutates_bulk_group_memberships(self):
+        repo = DjangoTaskRepository()
+        new_group_id = repo.create_analog_group(
+            name='Новая группа',
+            description='Описание',
+        )
+
+        self.assertTrue(repo.analog_group_name_exists('Новая группа'))
+        self.assertEqual(repo.count_existing_task_ids({str(self.original_weak.pk)}), 1)
+
+        created_count = repo.add_tasks_to_group(
+            new_group_id,
+            [str(self.original_weak.pk), str(self.replacement.pk)],
+        )
+        duplicate_count = repo.add_tasks_to_group(
+            new_group_id,
+            [str(self.original_weak.pk)],
+        )
+        removed_count = repo.remove_tasks_from_all_groups(
+            [str(self.original_weak.pk), str(self.replacement.pk)]
+        )
+
+        self.assertEqual(created_count, 2)
+        self.assertEqual(duplicate_count, 0)
+        self.assertEqual(removed_count, 4)
+        self.assertFalse(
+            TaskGroup.objects.filter(
+                task_id__in=[self.original_weak.pk, self.replacement.pk],
+            ).exists()
+        )
+
     def test_work_repository_generates_variants(self):
         repo = DjangoWorkRepository()
         existing_count = Variant.objects.filter(work=self.source_work).count()

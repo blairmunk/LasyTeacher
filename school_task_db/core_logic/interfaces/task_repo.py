@@ -16,8 +16,20 @@ class ITaskRepository(ABC):
         """Return analog-group IDs containing the given tasks."""
 
     @abstractmethod
+    def count_existing_task_ids(self, task_ids: Set[str]) -> int:
+        """Return how many tasks from the given IDs exist."""
+
+    @abstractmethod
     def count_existing_group_ids(self, group_ids: Set[str]) -> int:
         """Return how many analog groups from the given IDs exist."""
+
+    @abstractmethod
+    def analog_group_name_exists(self, name: str) -> bool:
+        """Return whether an analog group with the given name exists."""
+
+    @abstractmethod
+    def create_analog_group(self, name: str, description: str = '') -> str:
+        """Create an analog group and return its ID."""
 
     @abstractmethod
     def get_first_task_difficulty_for_group(self, group_id: str) -> int:
@@ -34,6 +46,10 @@ class ITaskRepository(ABC):
     @abstractmethod
     def remove_task_from_group(self, group_id: str, task_id: str) -> int:
         """Remove one task from an analog group and return deleted row count."""
+
+    @abstractmethod
+    def remove_tasks_from_all_groups(self, task_ids: List[str]) -> int:
+        """Remove selected tasks from all analog groups and return deleted count."""
 
     @abstractmethod
     def delete_groups(self, group_ids: List[str]) -> int:

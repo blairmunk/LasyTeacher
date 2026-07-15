@@ -1,6 +1,14 @@
 from unittest import TestCase
 
-from core_logic.entities.document_generation import GeneratedDocument
+from core_logic.entities.document_generation import (
+    GeneratedDocument,
+    GeneratedFile,
+    GeneratedFileResult,
+)
+from core_logic.use_cases.get_generated_document_file import (
+    GetGeneratedDocumentFileRequest,
+    GetGeneratedDocumentFileUseCase,
+)
 from core_logic.use_cases.generate_remedial_sheet_document import (
     GenerateRemedialSheetDocumentRequest,
     GenerateRemedialSheetDocumentUseCase,
@@ -27,6 +35,15 @@ class FakeDocumentGenerationService:
             file_type='pdf',
             file_paths=['remedial.pdf'],
         )
+        self.file_request = None
+        self.file_result = GeneratedFileResult(
+            status='ready',
+            file=GeneratedFile(
+                filename='work.html',
+                content=b'html',
+                content_type='text/html',
+            ),
+        )
 
     def generate_work(self, work_id, options):
         self.work_request = (work_id, options)
@@ -35,6 +52,10 @@ class FakeDocumentGenerationService:
     def generate_remedial_sheet(self, variant_id, options):
         self.remedial_request = (variant_id, options)
         return self.remedial_document
+
+    def get_generated_file(self, file_type, filename):
+        self.file_request = (file_type, filename)
+        return self.file_result
 
 
 class DocumentGenerationUseCaseTests(TestCase):
@@ -107,3 +128,20 @@ class DocumentGenerationUseCaseTests(TestCase):
 
         self.assertFalse(result.success)
         self.assertEqual(result.status, 'empty')
+
+    def test_get_generated_document_file_delegates_to_service(self):
+        service = FakeDocumentGenerationService()
+        use_case = GetGeneratedDocumentFileUseCase(
+            document_generation_service=service,
+        )
+
+        result = use_case.execute(
+            GetGeneratedDocumentFileRequest(
+                file_type='html',
+                filename='work.html',
+            )
+        )
+
+        self.assertTrue(result.success)
+        self.assertEqual(result.file.content, b'html')
+        self.assertEqual(service.file_request, ('html', 'work.html'))

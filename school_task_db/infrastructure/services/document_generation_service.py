@@ -1,15 +1,26 @@
 """Django document generation service."""
 
+import mimetypes
 from pathlib import Path
 
 from django.template.loader import render_to_string
 
-from core_logic.entities.document_generation import GeneratedDocument
+from core_logic.entities.document_generation import (
+    GeneratedDocument,
+    GeneratedFile,
+    GeneratedFileResult,
+)
 from core_logic.interfaces.document_generation import IDocumentGenerationService
 from works.models import Variant, Work
 
 
 class DjangoDocumentGenerationService(IDocumentGenerationService):
+    type_to_output_dir = {
+        'latex': 'web_latex_output',
+        'html': 'web_html_output',
+        'pdf': 'web_pdf_output',
+    }
+
     def __init__(self, get_remedial_sheet_data_use_case):
         self.get_remedial_sheet_data_use_case = get_remedial_sheet_data_use_case
 
@@ -75,6 +86,35 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
                 options.pdf_format,
             ),
         )
+
+    def get_generated_file(
+        self,
+        file_type: str,
+        filename: str,
+    ) -> GeneratedFileResult:
+        output_dir = self.type_to_output_dir.get(file_type)
+        if not output_dir:
+            return GeneratedFileResult(status='unsupported_type')
+
+        file_path = Path(output_dir) / filename
+        if not file_path.exists():
+            return GeneratedFileResult(status='not_found')
+
+        content_type, _ = mimetypes.guess_type(str(file_path))
+        if not content_type:
+            content_type = 'application/octet-stream'
+
+        try:
+            return GeneratedFileResult(
+                status='ready',
+                file=GeneratedFile(
+                    filename=filename,
+                    content=file_path.read_bytes(),
+                    content_type=content_type,
+                ),
+            )
+        except OSError:
+            return GeneratedFileResult(status='read_error')
 
     def _generate_latex_work(self, work, content_config, pdf_format='A4'):
         from latex_generator.generators.work_generator import WorkLatexGenerator

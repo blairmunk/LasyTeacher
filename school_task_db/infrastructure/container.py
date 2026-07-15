@@ -34,6 +34,9 @@ from core_logic.use_cases.get_participation_review import (
 from core_logic.use_cases.get_event_review import GetEventReviewUseCase
 from core_logic.use_cases.get_event_detail import GetEventDetailUseCase
 from core_logic.use_cases.get_event_list import GetEventListUseCase
+from core_logic.use_cases.get_generated_document_file import (
+    GetGeneratedDocumentFileUseCase,
+)
 from core_logic.use_cases.get_orphan_variant_list import GetOrphanVariantListUseCase
 from core_logic.use_cases.get_remedial_event_preview import (
     GetRemedialEventPreviewUseCase,
@@ -324,6 +327,11 @@ class Container:
 
     def generate_remedial_sheet_document_use_case(self):
         return GenerateRemedialSheetDocumentUseCase(
+            document_generation_service=self.document_generation_service,
+        )
+
+    def get_generated_document_file_use_case(self):
+        return GetGeneratedDocumentFileUseCase(
             document_generation_service=self.document_generation_service,
         )
 

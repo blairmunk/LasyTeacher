@@ -4,7 +4,11 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from core_logic.entities.document_generation import GeneratedDocument
+from core_logic.entities.document_generation import (
+    GeneratedDocument,
+    GeneratedFile,
+    GeneratedFileResult,
+)
 from curriculum.models import Topic
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
@@ -518,6 +522,35 @@ class WorkDetailViewTests(TestCase):
                 'include_hints': True,
                 'include_instructions': True,
             },
+        )
+
+    def test_download_generated_file_uses_document_service(self):
+        with patch(
+            'infrastructure.services.document_generation_service.'
+            'DjangoDocumentGenerationService.get_generated_file',
+            return_value=GeneratedFileResult(
+                status='ready',
+                file=GeneratedFile(
+                    filename='work.html',
+                    content=b'<html></html>',
+                    content_type='text/html',
+                ),
+            ),
+        ) as get_generated_file:
+            response = self.client.get(
+                reverse('works:download_generated_file', args=['html', 'work.html'])
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b'<html></html>')
+        self.assertEqual(response['Content-Type'], 'text/html')
+        self.assertEqual(
+            response['Content-Disposition'],
+            'attachment; filename="work.html"',
+        )
+        get_generated_file.assert_called_once_with(
+            file_type='html',
+            filename='work.html',
         )
 
     def test_django_work_repo_builds_remedial_sheet_data(self):

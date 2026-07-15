@@ -6,11 +6,13 @@ from django.http import JsonResponse, HttpResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_http_methods
 from django.urls import reverse
-import mimetypes
 
 from core_logic.value_objects.content_config import (
     build_remedial_sheet_generation_options,
     build_work_generation_options,
+)
+from core_logic.use_cases.get_generated_document_file import (
+    GetGeneratedDocumentFileRequest,
 )
 from core_logic.use_cases.generate_remedial_sheet_document import (
     GenerateRemedialSheetDocumentRequest,
@@ -86,37 +88,30 @@ def generate_work_ajax(request, work_id):
 @require_http_methods(["GET"])
 def download_generated_file(request, file_type, filename):
     """Скачивание сгенерированного файла"""
-    
-    # Определяем директорию по типу файла
-    type_to_dir = {
-        'latex': 'web_latex_output',
-        'html': 'web_html_output', 
-        'pdf': 'web_pdf_output'
-    }
-    
-    output_dir = type_to_dir.get(file_type)
-    if not output_dir:
+    from infrastructure.container import container
+
+    result = container.get_generated_document_file_use_case().execute(
+        GetGeneratedDocumentFileRequest(
+            file_type=file_type,
+            filename=filename,
+        ),
+    )
+
+    if result.status == 'unsupported_type':
         raise Http404("Неподдерживаемый тип файла")
-    
-    file_path = Path(output_dir) / filename
-    
-    if not file_path.exists():
+    if result.status == 'not_found':
         raise Http404("Файл не найден")
-    
-    # Определяем MIME тип
-    content_type, _ = mimetypes.guess_type(str(file_path))
-    if not content_type:
-        content_type = 'application/octet-stream'
-    
-    # Читаем и возвращаем файл
-    try:
-        with open(file_path, 'rb') as f:
-            response = HttpResponse(f.read(), content_type=content_type)
-            response['Content-Disposition'] = f'attachment; filename="{filename}"'
-            return response
-    except Exception as e:
-        logger.error(f"Ошибка скачивания файла {file_path}: {e}")
+    if not result.file:
         raise Http404("Ошибка чтения файла")
+
+    response = HttpResponse(
+        result.file.content,
+        content_type=result.file.content_type,
+    )
+    response['Content-Disposition'] = (
+        f'attachment; filename="{result.file.filename}"'
+    )
+    return response
 
 @require_http_methods(["GET"])
 def generation_status_ajax(request):

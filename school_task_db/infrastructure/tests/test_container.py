@@ -24,6 +24,9 @@ from core_logic.use_cases.get_participation_review import (
 from core_logic.use_cases.get_event_review import GetEventReviewUseCase
 from core_logic.use_cases.get_event_detail import GetEventDetailUseCase
 from core_logic.use_cases.get_event_list import GetEventListUseCase
+from core_logic.use_cases.get_generated_document_file import (
+    GetGeneratedDocumentFileUseCase,
+)
 from core_logic.use_cases.get_orphan_variant_list import GetOrphanVariantListUseCase
 from core_logic.use_cases.get_remedial_event_preview import (
     GetRemedialEventPreviewUseCase,
@@ -101,6 +104,7 @@ class ContainerTests(SimpleTestCase):
         variant_delete_info_use_case = container.get_variant_delete_info_use_case()
         delete_variant_use_case = container.delete_variant_use_case()
         bulk_delete_variants_use_case = container.bulk_delete_variants_use_case()
+        generated_file_use_case = container.get_generated_document_file_use_case()
 
         self.assertIsInstance(use_case, CreateRemedialFromEventUseCase)
         self.assertIsInstance(preview_use_case, GetRemedialEventPreviewUseCase)
@@ -144,6 +148,7 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(variant_delete_info_use_case, GetVariantDeleteInfoUseCase)
         self.assertIsInstance(delete_variant_use_case, DeleteVariantUseCase)
         self.assertIsInstance(bulk_delete_variants_use_case, BulkDeleteVariantsUseCase)
+        self.assertIsInstance(generated_file_use_case, GetGeneratedDocumentFileUseCase)
         self.assertIsInstance(container.student_repo, DjangoStudentRepository)
         self.assertIsInstance(container.task_repo, DjangoTaskRepository)
         self.assertIsInstance(container.work_repo, DjangoWorkRepository)

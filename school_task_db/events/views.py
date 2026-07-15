@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.urls import reverse_lazy
+from django.http import Http404
 from .models import Event, EventParticipation
 from .forms import EventForm, StudentSelectionForm, MarkForm, VariantAssignmentForm
 
@@ -19,7 +20,8 @@ def _next_or_event_detail(request, event):
     next_url = request.POST.get('next', '')
     if next_url:
         return redirect(next_url)
-    return redirect('events:detail', pk=event.pk)
+    event_id = getattr(event, 'pk', event)
+    return redirect('events:detail', pk=event_id)
 
 
 class EventListView(ListView):
@@ -262,7 +264,6 @@ from django.views.decorators.http import require_POST
 @require_POST
 def assign_single_variant(request, event_id):
     """Inline-назначение варианта одному участнику"""
-    event = get_object_or_404(Event, pk=event_id)
     from core_logic.use_cases.assign_single_event_variant import (
         AssignSingleEventVariantRequest,
     )
@@ -270,7 +271,7 @@ def assign_single_variant(request, event_id):
 
     result = container.assign_single_event_variant_use_case().execute(
         AssignSingleEventVariantRequest(
-            event_id=str(event.pk),
+            event_id=str(event_id),
             participation_id=request.POST.get('participation_id'),
             variant_id=request.POST.get('variant_id'),
         )
@@ -282,16 +283,17 @@ def assign_single_variant(request, event_id):
             request,
             f'Вариант {assignment.variant_number} → {assignment.student_name}'
         )
+    elif result.error == 'not_found':
+        raise Http404("Событие не найдено")
     else:
         messages.error(request, 'Не указан вариант или участник')
 
-    return _next_or_event_detail(request, event)
+    return _next_or_event_detail(request, event_id)
 
 
 @require_POST
 def change_status(request, event_id):
     """Смена статуса события"""
-    event = get_object_or_404(Event, pk=event_id)
     from core_logic.use_cases.change_event_status import (
         ChangeEventStatusRequest,
     )
@@ -299,17 +301,19 @@ def change_status(request, event_id):
 
     result = container.change_event_status_use_case().execute(
         ChangeEventStatusRequest(
-            event_id=str(event.pk),
+            event_id=str(event_id),
             new_status=request.POST.get('new_status', ''),
         )
     )
 
     if result.success:
         messages.success(request, f'Статус изменён: {result.new_status_label}')
+    elif not result.current_status:
+        raise Http404("Событие не найдено")
     else:
         messages.error(
             request,
             f'Недопустимый переход: {result.current_status} → {result.new_status}'
         )
 
-    return redirect('events:detail', pk=event.pk)
+    return redirect('events:detail', pk=event_id)

@@ -96,6 +96,23 @@ class EventMutationUseCaseTests(TestCase):
         self.assertEqual(result.error, 'missing_selection')
         self.assertIsNone(repo.single_assignment)
 
+    def test_assign_single_variant_handles_missing_event(self):
+        repo = FakeMutationEventRepository()
+        repo.status = None
+        use_case = AssignSingleEventVariantUseCase(event_repo=repo)
+
+        result = use_case.execute(
+            AssignSingleEventVariantRequest(
+                event_id='missing',
+                participation_id='p1',
+                variant_id='v1',
+            )
+        )
+
+        self.assertFalse(result.success)
+        self.assertEqual(result.error, 'not_found')
+        self.assertIsNone(repo.single_assignment)
+
     def test_assign_single_variant_returns_feedback_data(self):
         repo = FakeMutationEventRepository()
         use_case = AssignSingleEventVariantUseCase(event_repo=repo)

@@ -295,6 +295,20 @@ class GradeParticipationViewTests(TestCase):
         self.participation.refresh_from_db()
         self.assertEqual(self.participation.variant, second_variant)
 
+    def test_assign_single_variant_view_returns_404_for_missing_event(self):
+        response = self.client.post(
+            reverse(
+                'events:assign-single-variant',
+                args=['00000000-0000-0000-0000-000000000000'],
+            ),
+            {
+                'participation_id': str(self.participation.pk),
+                'variant_id': str(self.variant.pk),
+            },
+        )
+
+        self.assertEqual(response.status_code, 404)
+
     def test_change_status_view_uses_clean_use_case(self):
         response = self.client.post(
             reverse('events:change-status', args=[self.event.pk]),
@@ -310,6 +324,19 @@ class GradeParticipationViewTests(TestCase):
         )
         self.event.refresh_from_db()
         self.assertEqual(self.event.status, 'reviewing')
+
+    def test_change_status_view_returns_404_for_missing_event(self):
+        response = self.client.post(
+            reverse(
+                'events:change-status',
+                args=['00000000-0000-0000-0000-000000000000'],
+            ),
+            {
+                'new_status': 'reviewing',
+            },
+        )
+
+        self.assertEqual(response.status_code, 404)
 
     def test_event_update_form_shows_existing_date_without_time_input(self):
         self.event.planned_date = timezone.make_aware(

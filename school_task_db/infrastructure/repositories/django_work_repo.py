@@ -64,6 +64,13 @@ class DjangoWorkRepository(IWorkRepository):
         variant = Variant.objects.get(pk=variant_id)
         return variant.total_max_points
 
+    def get_variant_type(self, variant_id: str):
+        return (
+            Variant.objects.filter(pk=variant_id)
+            .values_list('variant_type', flat=True)
+            .first()
+        )
+
     def get_variant_generation_info(self, variant_id: str):
         variant = Variant.objects.select_related('work').filter(
             pk=variant_id,

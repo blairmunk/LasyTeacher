@@ -74,6 +74,10 @@ class IWorkRepository(ABC):
         """Return total max points for a variant."""
 
     @abstractmethod
+    def get_variant_type(self, variant_id: str) -> Optional[str]:
+        """Return variant type, or None when the variant does not exist."""
+
+    @abstractmethod
     def get_variant_generation_info(
         self,
         variant_id: str,

@@ -59,6 +59,16 @@ class FakeDocumentGenerationService:
         return self.file_result
 
 
+class FakeWorkRepository:
+    def __init__(self, variant_type='remedial'):
+        self.variant_type = variant_type
+        self.variant_type_request = None
+
+    def get_variant_type(self, variant_id):
+        self.variant_type_request = variant_id
+        return self.variant_type
+
+
 class DocumentGenerationUseCaseTests(TestCase):
     def test_generate_work_document_rejects_unsupported_generator(self):
         service = FakeDocumentGenerationService()
@@ -97,8 +107,10 @@ class DocumentGenerationUseCaseTests(TestCase):
 
     def test_generate_remedial_sheet_document_delegates_to_service(self):
         service = FakeDocumentGenerationService()
+        work_repo = FakeWorkRepository()
         use_case = GenerateRemedialSheetDocumentUseCase(
             document_generation_service=service,
+            work_repo=work_repo,
         )
         options = RemedialSheetGenerationOptions(generator_type='pdf')
 
@@ -113,6 +125,7 @@ class DocumentGenerationUseCaseTests(TestCase):
         self.assertEqual(result.file_type, 'pdf')
         self.assertEqual(result.files[0].filename, 'remedial.pdf')
         self.assertEqual(result.files[0].size_kb, 2.0)
+        self.assertEqual(work_repo.variant_type_request, 'variant-1')
         self.assertEqual(service.remedial_request, ('variant-1', options))
 
     def test_generate_remedial_sheet_document_handles_empty_files(self):
@@ -120,6 +133,7 @@ class DocumentGenerationUseCaseTests(TestCase):
         service.remedial_document = GeneratedDocument(file_type='pdf')
         use_case = GenerateRemedialSheetDocumentUseCase(
             document_generation_service=service,
+            work_repo=FakeWorkRepository(),
         )
 
         result = use_case.execute(
@@ -131,6 +145,42 @@ class DocumentGenerationUseCaseTests(TestCase):
 
         self.assertFalse(result.success)
         self.assertEqual(result.status, 'empty')
+
+    def test_generate_remedial_sheet_document_rejects_non_remedial_variant(self):
+        service = FakeDocumentGenerationService()
+        use_case = GenerateRemedialSheetDocumentUseCase(
+            document_generation_service=service,
+            work_repo=FakeWorkRepository(variant_type='regular'),
+        )
+
+        result = use_case.execute(
+            GenerateRemedialSheetDocumentRequest(
+                variant_id='variant-1',
+                options=RemedialSheetGenerationOptions(),
+            )
+        )
+
+        self.assertFalse(result.success)
+        self.assertEqual(result.status, 'not_remedial')
+        self.assertIsNone(service.remedial_request)
+
+    def test_generate_remedial_sheet_document_handles_missing_variant(self):
+        service = FakeDocumentGenerationService()
+        use_case = GenerateRemedialSheetDocumentUseCase(
+            document_generation_service=service,
+            work_repo=FakeWorkRepository(variant_type=None),
+        )
+
+        result = use_case.execute(
+            GenerateRemedialSheetDocumentRequest(
+                variant_id='variant-1',
+                options=RemedialSheetGenerationOptions(),
+            )
+        )
+
+        self.assertFalse(result.success)
+        self.assertEqual(result.status, 'not_found')
+        self.assertIsNone(service.remedial_request)
 
     def test_get_generated_document_file_delegates_to_service(self):
         service = FakeDocumentGenerationService()

@@ -592,6 +592,74 @@ class WorkDetailViewTests(TestCase):
             ),
         )
 
+    def test_generate_remedial_sheet_ajax_uses_clean_use_case(self):
+        remedial_variant = Variant.objects.create(
+            work=self.work,
+            number=2,
+            work_name_snapshot=self.work.name,
+            variant_type='remedial',
+        )
+
+        with patch(
+            'infrastructure.services.document_generation_service.'
+            'DjangoDocumentGenerationService.generate_remedial_sheet',
+            return_value=GeneratedDocument(
+                file_type='pdf',
+                files=[
+                    GeneratedDocumentFile(
+                        filename='remedial.pdf',
+                        size_kb=2.0,
+                    )
+                ],
+            ),
+        ) as generate_sheet:
+            response = self.client.post(
+                reverse(
+                    'works:generate-remedial-sheet',
+                    args=[remedial_variant.pk],
+                ),
+                {'generator_type': 'pdf'},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['status'], 'success')
+        self.assertEqual(
+            response.json()['files'],
+            [
+                {
+                    'filename': 'remedial.pdf',
+                    'url': reverse(
+                        'works:download_generated_file',
+                        args=['pdf', 'remedial.pdf'],
+                    ),
+                }
+            ],
+        )
+        generate_sheet.assert_called_once()
+
+    def test_generate_remedial_sheet_ajax_rejects_regular_variant(self):
+        with patch(
+            'infrastructure.services.document_generation_service.'
+            'DjangoDocumentGenerationService.generate_remedial_sheet',
+        ) as generate_sheet:
+            response = self.client.post(
+                reverse(
+                    'works:generate-remedial-sheet',
+                    args=[self.variant.pk],
+                ),
+                {'generator_type': 'pdf'},
+            )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                'status': 'error',
+                'message': 'Этот вариант не является работой над ошибками',
+            },
+        )
+        generate_sheet.assert_not_called()
+
     def test_django_work_repo_builds_remedial_sheet_data(self):
         student = Student.objects.create(last_name='Петров', first_name='Пётр')
         source_work = Work.objects.create(name='Исходная работа')

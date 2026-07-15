@@ -18,7 +18,7 @@ from core_logic.use_cases.generate_remedial_sheet_document import (
 )
 from core_logic.use_cases.generate_work_document import GenerateWorkDocumentRequest
 
-from .models import Work, Variant
+from .models import Work
 
 logger = logging.getLogger(__name__)
 
@@ -141,28 +141,27 @@ def generate_remedial_sheet_ajax(request, variant_id):
     """Ajax генерация рабочего листа «Работа над ошибками»"""
     from infrastructure.container import container
 
-    variant = get_object_or_404(Variant, id=variant_id)
-
-    if variant.variant_type != 'remedial':
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Этот вариант не является работой над ошибками'
-        }, status=400)
-
     try:
         options = build_remedial_sheet_generation_options(request.POST)
         generator_type = options.generator_type
 
-        logger.info(f"Генерация remedial sheet для варианта {variant.id}")
+        logger.info(f"Генерация remedial sheet для варианта {variant_id}")
 
         result = container.generate_remedial_sheet_document_use_case().execute(
             GenerateRemedialSheetDocumentRequest(
-                variant_id=str(variant.pk),
+                variant_id=str(variant_id),
                 options=options,
             ),
         )
 
-        if not result.files:
+        if result.status == 'not_found':
+            raise Http404("Вариант не найден")
+        if result.status == 'not_remedial':
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Этот вариант не является работой над ошибками'
+            }, status=400)
+        if result.status == 'empty':
             return JsonResponse({
                 'status': 'error',
                 'message': 'Файлы не были сгенерированы'

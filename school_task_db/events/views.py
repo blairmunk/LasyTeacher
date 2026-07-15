@@ -137,10 +137,11 @@ class EventUpdateView(UpdateView):
 def add_participants(request, event_id):
     """Добавление участников в событие"""
     event = get_object_or_404(Event, pk=event_id)
+    from infrastructure.container import container
 
-    current_participants = EventParticipation.objects.filter(
-        event=event
-    ).select_related('student').order_by('student__last_name')
+    selection_data = container.get_event_participant_selection_use_case().execute(
+        str(event.pk),
+    )
 
     if request.method == 'POST':
         form = StudentSelectionForm(request.POST)
@@ -148,7 +149,6 @@ def add_participants(request, event_id):
             from core_logic.use_cases.add_event_participants import (
                 AddEventParticipantsRequest,
             )
-            from infrastructure.container import container
 
             result = container.add_event_participants_use_case().execute(
                 AddEventParticipantsRequest(
@@ -170,7 +170,7 @@ def add_participants(request, event_id):
     return render(request, 'events/add_participants.html', {
         'event': event,
         'form': form,
-        'current_participants': current_participants,
+        'current_participants': selection_data.current_participants,
     })
 
 

@@ -1,0 +1,22 @@
+"""Build participant-selection page data for an event."""
+
+from dataclasses import dataclass
+from typing import List
+
+from core_logic.entities.event import EventParticipationRow
+from core_logic.interfaces.event_repo import IEventRepository
+
+
+@dataclass(frozen=True)
+class EventParticipantSelectionData:
+    current_participants: List[EventParticipationRow]
+
+
+class GetEventParticipantSelectionUseCase:
+    def __init__(self, event_repo: IEventRepository):
+        self.event_repo = event_repo
+
+    def execute(self, event_id: str) -> EventParticipantSelectionData:
+        return EventParticipantSelectionData(
+            current_participants=self.event_repo.get_detail_participations(event_id),
+        )

@@ -8,6 +8,9 @@ from core_logic.entities.event import (
 from core_logic.services.event_service import EventService
 from core_logic.use_cases.get_event_detail import GetEventDetailUseCase
 from core_logic.use_cases.get_event_list import GetEventListUseCase
+from core_logic.use_cases.get_event_participant_selection import (
+    GetEventParticipantSelectionUseCase,
+)
 
 
 class FakeEventRepository:
@@ -67,3 +70,16 @@ class EventListAndDetailUseCaseTests(TestCase):
         self.assertTrue(result.can_review)
         self.assertEqual(result.participations[0].student.last_name, 'Иванов')
         self.assertEqual(result.available_variants[0].number, 1)
+
+    def test_event_participant_selection_returns_current_participants(self):
+        use_case = GetEventParticipantSelectionUseCase(
+            event_repo=FakeEventRepository(),
+        )
+
+        result = use_case.execute(event_id='event-1')
+
+        self.assertEqual(len(result.current_participants), 1)
+        self.assertEqual(
+            result.current_participants[0].student.first_name,
+            'Иван',
+        )

@@ -206,6 +206,16 @@ class GradeParticipationViewTests(TestCase):
             ).exists()
         )
 
+    def test_add_participants_view_uses_clean_selection_context(self):
+        response = self.client.get(
+            reverse('events:add-participants', args=[self.event.pk])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        current_participants = response.context['current_participants']
+        self.assertEqual(len(current_participants), 1)
+        self.assertEqual(current_participants[0].student.last_name, 'Петров')
+
     def test_assign_variants_view_uses_clean_use_case(self):
         second_variant = Variant.objects.create(
             work=self.work,

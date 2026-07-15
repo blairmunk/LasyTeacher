@@ -40,6 +40,9 @@ from core_logic.use_cases.get_participation_review import (
 from core_logic.use_cases.get_event_review import GetEventReviewUseCase
 from core_logic.use_cases.get_event_detail import GetEventDetailUseCase
 from core_logic.use_cases.get_event_list import GetEventListUseCase
+from core_logic.use_cases.get_event_participant_selection import (
+    GetEventParticipantSelectionUseCase,
+)
 from core_logic.use_cases.get_generated_document_file import (
     GetGeneratedDocumentFileUseCase,
 )
@@ -251,6 +254,11 @@ class Container:
         return GetEventDetailUseCase(
             event_repo=self.event_repo,
             event_service=self.event_service(),
+        )
+
+    def get_event_participant_selection_use_case(self):
+        return GetEventParticipantSelectionUseCase(
+            event_repo=self.event_repo,
         )
 
     def add_event_participants_use_case(self):

@@ -181,6 +181,11 @@ class VariantListView(ListView):
     context_object_name = 'variants'
     paginate_by = 20
 
+    def get_queryset(self):
+        from infrastructure.container import container
+
+        return container.get_variant_list_use_case().execute().variants
+
 
 class VariantDetailView(DetailView):
     model = Variant

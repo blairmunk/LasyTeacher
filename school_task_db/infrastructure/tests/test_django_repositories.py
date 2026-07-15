@@ -245,6 +245,13 @@ class DjangoRemedialRepositoryTests(TestCase):
 
         self.assertEqual(list(works), [self.source_work])
 
+    def test_work_repository_returns_variant_list_page_data(self):
+        repo = DjangoWorkRepository()
+
+        variants = repo.get_list_variants()
+
+        self.assertEqual(list(variants), [self.source_variant])
+
     def test_work_repository_returns_form_analog_group_options(self):
         repo = DjangoWorkRepository()
 

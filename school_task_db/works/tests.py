@@ -45,6 +45,12 @@ class WorkDetailViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(list(response.context['works']), [self.work])
 
+    def test_variant_list_uses_clean_context_data(self):
+        response = self.client.get(reverse('works:variant-list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context['variants']), [self.variant])
+
     def test_create_view_saves_work_and_specification_formset(self):
         group = AnalogGroup.objects.create(name='Кинематика')
 

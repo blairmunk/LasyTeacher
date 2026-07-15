@@ -18,6 +18,11 @@ class WorkListData:
 
 
 @dataclass(frozen=True)
+class VariantListData:
+    variants: Any
+
+
+@dataclass(frozen=True)
 class WorkFormData:
     analog_group_options: Any
 

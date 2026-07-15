@@ -22,6 +22,7 @@ from core_logic.use_cases.generate_work_variants import (
 )
 from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUseCase
 from core_logic.use_cases.get_variant_detail import GetVariantDetailUseCase
+from core_logic.use_cases.get_variant_list import GetVariantListUseCase
 from core_logic.use_cases.get_orphan_variant_list import GetOrphanVariantListUseCase
 from core_logic.use_cases.get_work_detail import GetWorkDetailUseCase
 from core_logic.use_cases.get_work_form_data import GetWorkFormDataUseCase
@@ -40,6 +41,7 @@ class FakeQuerySet(list):
 class FakeWorkRepository:
     def __init__(self, variants=None, analog_groups=None, spec_preview=None):
         self.variants = FakeQuerySet(variants or [])
+        self.list_variants = FakeQuerySet()
         self.works = FakeQuerySet()
         self.work_form_analog_group_options = []
         self.analog_groups = analog_groups or []
@@ -64,6 +66,9 @@ class FakeWorkRepository:
 
     def get_list_works(self):
         return self.works
+
+    def get_list_variants(self):
+        return self.list_variants
 
     def get_work_form_analog_group_options(self):
         return self.work_form_analog_group_options
@@ -176,6 +181,15 @@ class WorkDetailTests(TestCase):
         result = use_case.execute()
 
         self.assertEqual(result.works, ['work-1'])
+
+    def test_get_variant_list_use_case_builds_list_context_data(self):
+        repo = FakeWorkRepository()
+        repo.list_variants = FakeQuerySet(['variant-1'])
+        use_case = GetVariantListUseCase(work_repo=repo)
+
+        result = use_case.execute()
+
+        self.assertEqual(result.variants, ['variant-1'])
 
     def test_get_work_form_data_use_case_builds_form_context_data(self):
         repo = FakeWorkRepository()

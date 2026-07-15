@@ -1,6 +1,10 @@
 from unittest import TestCase
 
-from core_logic.entities.work import OrphanVariantRef, VariantDeleteInfo
+from core_logic.entities.work import (
+    OrphanVariantRef,
+    RemedialSheetData,
+    VariantDeleteInfo,
+)
 from core_logic.interfaces.work_repo import CreateWorkParams
 from core_logic.services.work_service import WorkService
 from core_logic.use_cases.bulk_delete_variants import (
@@ -24,6 +28,9 @@ from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUse
 from core_logic.use_cases.get_variant_detail import GetVariantDetailUseCase
 from core_logic.use_cases.get_variant_list import GetVariantListUseCase
 from core_logic.use_cases.get_orphan_variant_list import GetOrphanVariantListUseCase
+from core_logic.use_cases.get_remedial_sheet_data import (
+    GetRemedialSheetDataUseCase,
+)
 from core_logic.use_cases.get_work_detail import GetWorkDetailUseCase
 from core_logic.use_cases.get_work_form_data import GetWorkFormDataUseCase
 from core_logic.use_cases.get_work_list import GetWorkListUseCase
@@ -60,6 +67,15 @@ class FakeWorkRepository:
         self.deleted_variant_id = None
         self.bulk_deleted_request = None
         self.remaining_variant_count = 0
+        self.remedial_sheet_data = RemedialSheetData(
+            variant='remedial-variant',
+            student='student',
+            source_work='source-work',
+            mark='mark',
+            original_tasks=['original-task'],
+            new_tasks=['new-task'],
+        )
+        self.remedial_sheet_variant_id = None
 
     def get_detail_variants(self, work_id):
         return self.variants
@@ -84,6 +100,10 @@ class FakeWorkRepository:
 
     def get_variant_total_max_points(self, variant_id):
         return self.variant_total_max_points
+
+    def get_remedial_sheet_data(self, variant_id):
+        self.remedial_sheet_variant_id = variant_id
+        return self.remedial_sheet_data
 
     def get_orphan_variants(self):
         return self.orphan_variants
@@ -210,6 +230,15 @@ class WorkDetailTests(TestCase):
 
         self.assertEqual(result.variant_tasks, ['variant-task-1'])
         self.assertEqual(result.total_max_points, 7)
+
+    def test_get_remedial_sheet_data_use_case_returns_repository_data(self):
+        repo = FakeWorkRepository()
+        use_case = GetRemedialSheetDataUseCase(work_repo=repo)
+
+        result = use_case.execute('variant-1')
+
+        self.assertEqual(repo.remedial_sheet_variant_id, 'variant-1')
+        self.assertEqual(result, repo.remedial_sheet_data)
 
     def test_get_orphan_variant_list_use_case_builds_list_context_data(self):
         repo = FakeWorkRepository()

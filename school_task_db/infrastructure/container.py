@@ -34,6 +34,9 @@ from core_logic.use_cases.get_orphan_variant_list import GetOrphanVariantListUse
 from core_logic.use_cases.get_remedial_event_preview import (
     GetRemedialEventPreviewUseCase,
 )
+from core_logic.use_cases.get_remedial_sheet_data import (
+    GetRemedialSheetDataUseCase,
+)
 from core_logic.use_cases.get_recent_review_sessions import (
     GetRecentReviewSessionsUseCase,
 )
@@ -278,6 +281,11 @@ class Container:
 
     def get_orphan_variant_list_use_case(self):
         return GetOrphanVariantListUseCase(
+            work_repo=self.work_repo,
+        )
+
+    def get_remedial_sheet_data_use_case(self):
+        return GetRemedialSheetDataUseCase(
             work_repo=self.work_repo,
         )
 

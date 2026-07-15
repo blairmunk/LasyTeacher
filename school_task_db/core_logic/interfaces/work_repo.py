@@ -4,7 +4,11 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, List, Optional, Set
 
-from core_logic.entities.work import OrphanVariantRef, VariantDeleteInfo
+from core_logic.entities.work import (
+    OrphanVariantRef,
+    RemedialSheetData,
+    VariantDeleteInfo,
+)
 
 
 @dataclass(frozen=True)
@@ -67,6 +71,10 @@ class IWorkRepository(ABC):
     @abstractmethod
     def get_variant_total_max_points(self, variant_id: str) -> int:
         """Return total max points for a variant."""
+
+    @abstractmethod
+    def get_remedial_sheet_data(self, variant_id: str) -> RemedialSheetData:
+        """Return data for rendering a remedial sheet."""
 
     @abstractmethod
     def get_orphan_variants(self) -> Any:

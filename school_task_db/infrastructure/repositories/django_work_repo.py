@@ -4,14 +4,20 @@ from typing import List, Set
 
 from django.db import transaction
 
-from core_logic.entities.work import OrphanVariantRef, VariantDeleteInfo
+from core_logic.entities.work import (
+    OrphanVariantRef,
+    RemedialOriginalTaskRow,
+    RemedialSheetData,
+    VariantDeleteInfo,
+)
 from core_logic.interfaces.work_repo import (
     AttachVariantsToWorkParams,
     CreateVariantParams,
     CreateWorkParams,
     IWorkRepository,
 )
-from events.models import EventParticipation
+from events.models import EventParticipation, Mark
+from task_groups.models import TaskGroup
 from tasks.models import Task
 from works.models import Variant, VariantTask, Work, WorkAnalogGroup
 
@@ -56,6 +62,85 @@ class DjangoWorkRepository(IWorkRepository):
     def get_variant_total_max_points(self, variant_id: str) -> int:
         variant = Variant.objects.get(pk=variant_id)
         return variant.total_max_points
+
+    def get_remedial_sheet_data(self, variant_id: str) -> RemedialSheetData:
+        variant = Variant.objects.select_related(
+            'assigned_student',
+            'source_work',
+        ).get(pk=variant_id)
+        student = variant.assigned_student
+        source_work = variant.source_work
+        mark = None
+        original_tasks = []
+
+        if source_work and student:
+            original_ep = EventParticipation.objects.filter(
+                event__work=source_work,
+                student=student,
+            ).select_related('variant').first()
+
+            if original_ep:
+                mark = Mark.objects.filter(participation=original_ep).first()
+                task_scores = mark.task_scores if mark else {}
+
+                if original_ep.variant:
+                    original_variant_tasks = VariantTask.objects.filter(
+                        variant=original_ep.variant,
+                    ).select_related('task').order_by('order')
+
+                    for variant_task in original_variant_tasks:
+                        task = variant_task.task
+                        score_data = task_scores.get(str(task.pk), {})
+                        points = score_data.get('points', None)
+                        max_points = score_data.get('max_points', None)
+                        pct, status = self._score_status(points, max_points)
+                        task_group = TaskGroup.objects.filter(task=task).first()
+
+                        original_tasks.append(
+                            RemedialOriginalTaskRow(
+                                task=task,
+                                order=variant_task.order,
+                                points=points,
+                                max_points=max_points,
+                                pct=pct,
+                                status=status,
+                                group_name=(
+                                    task_group.group.name
+                                    if task_group
+                                    else ''
+                                ),
+                            )
+                        )
+
+        new_tasks = VariantTask.objects.filter(
+            variant=variant,
+        ).select_related('task').order_by('order')
+
+        return RemedialSheetData(
+            variant=variant,
+            student=student,
+            source_work=source_work,
+            mark=mark,
+            original_tasks=original_tasks,
+            new_tasks=new_tasks,
+        )
+
+    def _score_status(self, points, max_points):
+        if (
+            isinstance(points, (int, float))
+            and isinstance(max_points, (int, float))
+            and max_points > 0
+        ):
+            pct = points / max_points * 100
+            if pct >= 70:
+                status = 'ok'
+            elif pct > 0:
+                status = 'partial'
+            else:
+                status = 'fail'
+            return round(pct, 1), status
+
+        return 0, 'unknown'
 
     def get_orphan_variants(self):
         return Variant.objects.filter(work__isnull=True).order_by('-created_at')

@@ -12,6 +12,11 @@ from django.urls import reverse
 from django.conf import settings
 import mimetypes
 
+from core_logic.value_objects.content_config import (
+    build_remedial_sheet_generation_options,
+    build_work_generation_options,
+)
+
 from .models import Work, Variant
 from tasks.models import Task
 
@@ -23,46 +28,28 @@ def generate_work_ajax(request, work_id):
     work = get_object_or_404(Work, id=work_id)
     
     try:
-        # Базовые параметры
-        generator_type = request.POST.get('generator_type', 'pdf')
-        pdf_format = request.POST.get('format', 'A4')
-        
-        # Тип контента
-        answer_type = request.POST.get('answer_type', 'tasks_only')
-        if request.POST.get('with_answers', '0') == '1' and answer_type == 'tasks_only':
-            answer_type = 'with_answers'
-        
-        # НОВОЕ: дополнительный контент
-        include_hints = request.POST.get('include_hints', '0') == '1'
-        include_instructions = request.POST.get('include_instructions', '0') == '1'
-        
+        options = build_work_generation_options(request.POST)
+        generator_type = options.generator_type
+        pdf_format = options.pdf_format
+        content_config = options.content_config
+
         logger.info(f"🌐 Веб-генерация {generator_type} для работы {work.id}: {work.name}")
-        logger.info(f"   Тип контента: {answer_type}")
-        logger.info(f"   Дополнительно: hints={include_hints}, instructions={include_instructions}")
-        
-        # ОБНОВЛЕННАЯ конфигурация контента
-        content_config = {
-            'include_answers': answer_type in ['with_answers', 'with_short_solutions', 'with_full_solutions'],
-            'include_short_solutions': answer_type in ['with_short_solutions', 'with_full_solutions'],
-            'include_full_solutions': answer_type == 'with_full_solutions',
-            'answer_type': answer_type,
-            # НОВОЕ: опциональный контент
-            'include_hints': include_hints,
-            'include_instructions': include_instructions
-        }
+        logger.info(f"   Тип контента: {options.answer_type}")
+        logger.info(
+            "   Дополнительно: hints=%s, instructions=%s",
+            options.include_hints,
+            options.include_instructions,
+        )
         
         # Выбираем генератор и запускаем
         if generator_type == 'latex':
             files = generate_latex_work(work, content_config, pdf_format)
-            file_type = 'LaTeX'
             
         elif generator_type == 'html':
             files = generate_html_work(work, content_config)
-            file_type = 'HTML'
             
         elif generator_type == 'pdf':
             files = generate_pdf_work(work, content_config, pdf_format)
-            file_type = 'PDF'
             
         else:
             return JsonResponse({
@@ -85,29 +72,10 @@ def generate_work_ajax(request, work_id):
                     })
                 })
         
-        # Красивое сообщение об успехе
-        content_descriptions = {
-            'tasks_only': 'только задания',
-            'with_answers': 'с ответами',
-            'with_short_solutions': 'с краткими решениями',
-            'with_full_solutions': 'с полными решениями'
-        }
-        
-        base_description = content_descriptions[answer_type]
-        
-        # Добавляем информацию о дополнительном контенте
-        additional_content = []
-        if include_hints:
-            additional_content.append('подсказки')
-        if include_instructions:
-            additional_content.append('инструкции')
-            
-        if additional_content:
-            full_description = f"{base_description} + {' + '.join(additional_content)}"
-        else:
-            full_description = base_description
-        
-        success_message = f'{file_type} документ создан ({full_description})'
+        success_message = (
+            f'{options.file_type_label} документ создан '
+            f'({options.content_description})'
+        )
         
         return JsonResponse({
             'success': True,
@@ -260,16 +228,10 @@ def generate_remedial_sheet_ajax(request, variant_id):
         }, status=400)
 
     try:
-        generator_type = request.POST.get('generator_type', 'pdf')
-        pdf_format = request.POST.get('format', 'A4')
-        answer_type = request.POST.get('answer_type', 'with_short_solutions')
-
-        content_config = {
-            'include_answers': answer_type in ['with_answers', 'with_short_solutions', 'with_full_solutions'],
-            'include_short_solutions': answer_type in ['with_short_solutions', 'with_full_solutions'],
-            'include_full_solutions': answer_type == 'with_full_solutions',
-            'page_format': pdf_format,
-        }
+        options = build_remedial_sheet_generation_options(request.POST)
+        generator_type = options.generator_type
+        pdf_format = options.pdf_format
+        content_config = options.content_config
 
         logger.info(f"Генерация remedial sheet для варианта {variant.id}")
 
@@ -329,66 +291,19 @@ def _generate_remedial_html(variant, content_config):
     Пока fallback на рендер Django-шаблона.
     """
     from django.template.loader import render_to_string
-    from events.models import EventParticipation, Mark
-    from works.models import VariantTask
-    from task_groups.models import TaskGroup
+    from infrastructure.container import container
 
-    student = variant.assigned_student
-    source_work = variant.source_work
-
-    # Собираем данные (аналогично LaTeX генератору)
-    original_tasks = []
-    mark = None
-
-    if source_work and student:
-        original_ep = EventParticipation.objects.filter(
-            event__work=source_work, student=student
-        ).select_related('variant').first()
-
-        if original_ep:
-            mark = Mark.objects.filter(participation=original_ep).first()
-            task_scores = mark.task_scores if mark else {}
-
-            if original_ep.variant:
-                for vt in VariantTask.objects.filter(
-                    variant=original_ep.variant
-                ).select_related('task').order_by('order'):
-                    task = vt.task
-                    tid = str(task.pk)
-                    sd = task_scores.get(tid, {})
-                    pts = sd.get('points', None)
-                    mx = sd.get('max_points', None)
-
-                    if isinstance(pts, (int, float)) and isinstance(mx, (int, float)) and mx > 0:
-                        pct = pts / mx * 100
-                        status = 'ok' if pct >= 70 else ('partial' if pct > 0 else 'fail')
-                    else:
-                        pct = 0
-                        status = 'unknown'
-
-                    tg = TaskGroup.objects.filter(task=task).first()
-
-                    original_tasks.append({
-                        'task': task,
-                        'order': vt.order,
-                        'points': pts,
-                        'max_points': mx,
-                        'pct': round(pct, 1),
-                        'status': status,
-                        'group_name': tg.group.name if tg else '',
-                    })
-
-    new_vts = VariantTask.objects.filter(
-        variant=variant
-    ).select_related('task').order_by('order')
+    sheet_data = container.get_remedial_sheet_data_use_case().execute(
+        str(variant.pk),
+    )
 
     html_content = render_to_string('works/remedial_sheet_print.html', {
-        'variant': variant,
-        'student': student,
-        'source_work': source_work,
-        'mark': mark,
-        'original_tasks': original_tasks,
-        'new_tasks': new_vts,
+        'variant': sheet_data.variant,
+        'student': sheet_data.student,
+        'source_work': sheet_data.source_work,
+        'mark': sheet_data.mark,
+        'original_tasks': sheet_data.original_tasks,
+        'new_tasks': sheet_data.new_tasks,
         'show_solutions': content_config.get('include_short_solutions', True),
         'show_full_solutions': content_config.get('include_full_solutions', False),
         'show_answers': content_config.get('include_answers', False),
@@ -397,7 +312,11 @@ def _generate_remedial_html(variant, content_config):
     output_dir = Path('web_html_output')
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    student_name = student.get_short_name() if student else 'unknown'
+    student_name = (
+        sheet_data.student.get_short_name()
+        if sheet_data.student
+        else 'unknown'
+    )
     filename = f'remedial_{student_name}.html'
     filepath = output_dir / filename
     filepath.write_text(html_content, encoding='utf-8')

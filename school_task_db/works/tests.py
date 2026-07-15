@@ -1,9 +1,12 @@
+from unittest.mock import patch
+
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from curriculum.models import Topic
-from events.models import Event, EventParticipation
+from events.models import Event, EventParticipation, Mark
+from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from students.models import Student
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
@@ -479,3 +482,127 @@ class WorkDetailViewTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'error': 'Не выбраны варианты'})
+
+    def test_generate_work_ajax_uses_clean_content_config(self):
+        with patch(
+            'works.views_generation.generate_html_work',
+            return_value=[],
+        ) as generate_html:
+            response = self.client.post(
+                reverse('works:generate_work_ajax', args=[self.work.pk]),
+                {
+                    'generator_type': 'html',
+                    'format': 'A5',
+                    'answer_type': 'with_full_solutions',
+                    'include_hints': '1',
+                    'include_instructions': '1',
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()['message'],
+            'HTML документ создан (с полными решениями + подсказки + инструкции)',
+        )
+        generate_html.assert_called_once()
+        self.assertEqual(
+            generate_html.call_args.args[1],
+            {
+                'include_answers': True,
+                'include_short_solutions': True,
+                'include_full_solutions': True,
+                'answer_type': 'with_full_solutions',
+                'include_hints': True,
+                'include_instructions': True,
+            },
+        )
+
+    def test_django_work_repo_builds_remedial_sheet_data(self):
+        student = Student.objects.create(last_name='Петров', first_name='Пётр')
+        source_work = Work.objects.create(name='Исходная работа')
+        remedial_work = Work.objects.create(name='Работа над ошибками')
+        original_variant = Variant.objects.create(
+            work=source_work,
+            number=1,
+            work_name_snapshot=source_work.name,
+        )
+        remedial_variant = Variant.objects.create(
+            work=remedial_work,
+            number=1,
+            work_name_snapshot=remedial_work.name,
+            variant_type='remedial',
+            assigned_student=student,
+            source_work=source_work,
+        )
+        group = AnalogGroup.objects.create(name='Движение')
+        task = Task.objects.create(
+            text='Исходное задание',
+            answer='Ответ',
+            topic=self.topic,
+            task_type='computational',
+            difficulty=2,
+        )
+        new_task = Task.objects.create(
+            text='Новое задание',
+            answer='Новый ответ',
+            topic=self.topic,
+            task_type='computational',
+            difficulty=2,
+        )
+        TaskGroup.objects.create(task=task, group=group)
+        VariantTask.objects.create(
+            variant=original_variant,
+            task=task,
+            order=1,
+            max_points=5,
+            weight=5,
+        )
+        VariantTask.objects.create(
+            variant=remedial_variant,
+            task=new_task,
+            order=1,
+            max_points=2,
+            weight=2,
+        )
+        event = Event.objects.create(
+            name='КР',
+            work=source_work,
+            planned_date=timezone.now(),
+            status='graded',
+        )
+        participation = EventParticipation.objects.create(
+            event=event,
+            student=student,
+            variant=original_variant,
+            status='graded',
+        )
+        mark = Mark.objects.create(
+            participation=participation,
+            score=3,
+            points=2,
+            max_points=5,
+            task_scores={
+                str(task.pk): {
+                    'points': 2,
+                    'max_points': 5,
+                },
+            },
+        )
+
+        sheet_data = DjangoWorkRepository().get_remedial_sheet_data(
+            str(remedial_variant.pk),
+        )
+
+        self.assertEqual(sheet_data.variant, remedial_variant)
+        self.assertEqual(sheet_data.student, student)
+        self.assertEqual(sheet_data.source_work, source_work)
+        self.assertEqual(sheet_data.mark, mark)
+        self.assertEqual(sheet_data.new_tasks.count(), 1)
+        self.assertEqual(len(sheet_data.original_tasks), 1)
+        original_task = sheet_data.original_tasks[0]
+        self.assertEqual(original_task.task, task)
+        self.assertEqual(original_task.points, 2)
+        self.assertEqual(original_task.max_points, 5)
+        self.assertEqual(original_task.pct, 40.0)
+        self.assertEqual(original_task.status, 'partial')
+        self.assertEqual(original_task.group_name, 'Движение')

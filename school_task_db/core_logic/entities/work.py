@@ -34,6 +34,27 @@ class VariantDetailData:
 
 
 @dataclass(frozen=True)
+class RemedialOriginalTaskRow:
+    task: Any
+    order: int
+    points: Any
+    max_points: Any
+    pct: float
+    status: str
+    group_name: str = ''
+
+
+@dataclass(frozen=True)
+class RemedialSheetData:
+    variant: Any
+    student: Any
+    source_work: Any
+    mark: Any
+    original_tasks: List[RemedialOriginalTaskRow] = field(default_factory=list)
+    new_tasks: Any = None
+
+
+@dataclass(frozen=True)
 class OrphanVariantListData:
     variants: Any
     total_orphans: int = 0

@@ -410,3 +410,18 @@ class RemedialFromEventViewTests(TestCase):
         self.assertIn('Скорость', heatmap_group_names)
         self.assertEqual(response.context['group_scores'][0]['name'], 'Скорость')
         self.assertEqual(response.context['participations_data'][0].score, 2)
+
+    def test_student_list_uses_clean_list_context(self):
+        response = self.client.get(reverse('students:list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context['students']), [self.student])
+
+    def test_student_group_list_uses_clean_list_context(self):
+        group = StudentGroup.objects.create(name='9А')
+        group.students.add(self.student)
+
+        response = self.client.get(reverse('students:group-list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context['student_groups']), [group])

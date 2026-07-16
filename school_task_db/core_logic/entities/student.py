@@ -120,6 +120,16 @@ class WorkGroupRef:
 
 
 @dataclass(frozen=True)
+class StudentListData:
+    students: Any
+
+
+@dataclass(frozen=True)
+class StudentGroupListData:
+    student_groups: Any
+
+
+@dataclass(frozen=True)
 class StudentRemedialWorkData:
     no_data: bool = False
     remedial_groups: List[dict] = field(default_factory=list)

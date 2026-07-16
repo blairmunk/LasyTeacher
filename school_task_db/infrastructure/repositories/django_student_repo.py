@@ -28,6 +28,16 @@ from works.models import WorkAnalogGroup
 
 
 class DjangoStudentRepository(IStudentRepository):
+    def get_list_students(self):
+        return Student.objects.all()
+
+    def get_list_student_groups(self):
+        return StudentGroup.objects.select_related(
+            'academic_year',
+        ).prefetch_related(
+            'students',
+        )
+
     def get_task_results_for_event(
         self,
         student_id: str,

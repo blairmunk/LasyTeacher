@@ -177,6 +177,15 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(weak_log.percentage, 0)
         self.assertEqual(work_groups[0].group_name, self.weak_group.name)
 
+    def test_student_repository_returns_list_page_data(self):
+        repo = DjangoStudentRepository()
+
+        students = repo.get_list_students()
+        student_groups = repo.get_list_student_groups()
+
+        self.assertEqual(list(students), [self.student])
+        self.assertEqual(list(student_groups), [self.group])
+
     def test_task_repository_returns_filtered_task_list_data(self):
         repo = DjangoTaskRepository()
 

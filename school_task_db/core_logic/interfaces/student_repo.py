@@ -1,7 +1,7 @@
 """Student repository interface."""
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from core_logic.entities.student import (
     RemedialWizardPreviewData,
@@ -15,6 +15,14 @@ from core_logic.entities.student import (
 
 
 class IStudentRepository(ABC):
+    @abstractmethod
+    def get_list_students(self) -> Any:
+        """Return students for the student list page."""
+
+    @abstractmethod
+    def get_list_student_groups(self) -> Any:
+        """Return student groups/classes for the group list page."""
+
     @abstractmethod
     def get_task_results_for_event(
         self,

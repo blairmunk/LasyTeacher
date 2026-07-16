@@ -5,6 +5,7 @@ from django.urls import reverse_lazy
 from django.http import Http404
 from django.views import View
 
+from infrastructure.container import container
 from .models import Student, StudentGroup
 from .forms import StudentForm, StudentGroupForm
 
@@ -14,6 +15,9 @@ class StudentListView(ListView):
     template_name = 'students/list.html'
     context_object_name = 'students'
     paginate_by = 50
+
+    def get_queryset(self):
+        return container.get_student_list_use_case().execute().students
 
 
 class StudentDetailView(DetailView):
@@ -153,6 +157,9 @@ class StudentGroupListView(ListView):
     model = StudentGroup
     template_name = 'students/group_list.html'
     context_object_name = 'student_groups'
+
+    def get_queryset(self):
+        return container.get_student_group_list_use_case().execute().student_groups
 
 
 class StudentGroupDetailView(DetailView):

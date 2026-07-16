@@ -38,6 +38,16 @@ class DjangoStudentRepository(IStudentRepository):
             'students',
         )
 
+    def get_detail_students(self):
+        return Student.objects.all()
+
+    def get_detail_student_groups(self):
+        return StudentGroup.objects.select_related(
+            'academic_year',
+        ).prefetch_related(
+            'students',
+        )
+
     def get_task_results_for_event(
         self,
         student_id: str,

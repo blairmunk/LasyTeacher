@@ -71,6 +71,8 @@ from core_logic.use_cases.get_review_dashboard import GetReviewDashboardUseCase
 from core_logic.use_cases.get_review_save_navigation import (
     GetReviewSaveNavigationUseCase,
 )
+from core_logic.use_cases.get_student_detail import GetStudentDetailUseCase
+from core_logic.use_cases.get_student_group_detail import GetStudentGroupDetailUseCase
 from core_logic.use_cases.get_student_group_list import GetStudentGroupListUseCase
 from core_logic.use_cases.get_student_list import GetStudentListUseCase
 from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
@@ -129,6 +131,8 @@ class ContainerTests(SimpleTestCase):
         codifier_elements_use_case = container.get_codifier_elements_use_case()
         source_list_use_case = container.get_source_list_use_case()
         refresh_math_cache_use_case = container.refresh_task_math_cache_use_case()
+        student_detail_use_case = container.get_student_detail_use_case()
+        student_group_detail_use_case = container.get_student_group_detail_use_case()
         student_list_use_case = container.get_student_list_use_case()
         student_group_list_use_case = container.get_student_group_list_use_case()
         student_remedial_use_case = container.get_student_remedial_work_use_case()
@@ -215,6 +219,11 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             refresh_math_cache_use_case,
             RefreshTaskMathCacheUseCase,
+        )
+        self.assertIsInstance(student_detail_use_case, GetStudentDetailUseCase)
+        self.assertIsInstance(
+            student_group_detail_use_case,
+            GetStudentGroupDetailUseCase,
         )
         self.assertIsInstance(student_list_use_case, GetStudentListUseCase)
         self.assertIsInstance(

@@ -84,6 +84,8 @@ from core_logic.use_cases.get_review_dashboard import GetReviewDashboardUseCase
 from core_logic.use_cases.get_review_save_navigation import (
     GetReviewSaveNavigationUseCase,
 )
+from core_logic.use_cases.get_student_detail import GetStudentDetailUseCase
+from core_logic.use_cases.get_student_group_detail import GetStudentGroupDetailUseCase
 from core_logic.use_cases.get_student_group_list import GetStudentGroupListUseCase
 from core_logic.use_cases.get_student_list import GetStudentListUseCase
 from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
@@ -257,6 +259,16 @@ class Container:
         return GetStudentProfileUseCase(
             student_repo=self.student_repo,
             analytics_service=self.analytics_service(),
+        )
+
+    def get_student_detail_use_case(self):
+        return GetStudentDetailUseCase(
+            student_repo=self.student_repo,
+        )
+
+    def get_student_group_detail_use_case(self):
+        return GetStudentGroupDetailUseCase(
+            student_repo=self.student_repo,
         )
 
     def get_student_list_use_case(self):

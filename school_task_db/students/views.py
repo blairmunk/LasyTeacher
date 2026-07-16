@@ -25,6 +25,9 @@ class StudentDetailView(DetailView):
     template_name = 'students/detail.html'
     context_object_name = 'student'
 
+    def get_queryset(self):
+        return container.get_student_detail_use_case().get_queryset()
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         student = self.object
@@ -166,6 +169,9 @@ class StudentGroupDetailView(DetailView):
     model = StudentGroup
     template_name = 'students/group_detail.html'
     context_object_name = 'studentgroup'
+
+    def get_queryset(self):
+        return container.get_student_group_detail_use_case().get_queryset()
 
 
 class StudentGroupCreateView(CreateView):

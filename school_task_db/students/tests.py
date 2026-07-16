@@ -425,3 +425,12 @@ class RemedialFromEventViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(list(response.context['student_groups']), [group])
+
+    def test_student_group_detail_uses_clean_detail_queryset(self):
+        group = StudentGroup.objects.create(name='9А')
+        group.students.add(self.student)
+
+        response = self.client.get(reverse('students:group-detail', args=[group.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['studentgroup'], group)

@@ -3,12 +3,13 @@ from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.views.decorators.http import require_POST
 from django.http import Http404, JsonResponse
-from django.db.models import Q, Count, Avg, Exists, OuterRef, Subquery
+from django.db.models import Q
 
+from core_logic.entities.task import TaskGroupListFilters
+from infrastructure.container import container
 from .models import AnalogGroup, TaskGroup
 from .forms import AnalogGroupForm
 from tasks.models import Task
-from curriculum.models import Topic, SubTopic
 
 
 class AnalogGroupListView(ListView):
@@ -17,115 +18,33 @@ class AnalogGroupListView(ListView):
     context_object_name = 'analog_groups'
     paginate_by = 20
 
-    def get_queryset(self):
-        queryset = AnalogGroup.objects.annotate(
-            task_count=Count('taskgroup'),
-            avg_difficulty=Avg('taskgroup__task__difficulty'),
-        ).order_by('name')
-
-        # Аннотируем тему первого задания для фильтрации
-        first_task_topic = Subquery(
-            TaskGroup.objects.filter(
-                group=OuterRef('pk')
-            ).select_related('task').values('task__topic')[:1]
-        )
-        first_task_subtopic = Subquery(
-            TaskGroup.objects.filter(
-                group=OuterRef('pk')
-            ).select_related('task').values('task__subtopic')[:1]
-        )
-        queryset = queryset.annotate(
-            first_topic_id=first_task_topic,
-            first_subtopic_id=first_task_subtopic,
-        )
-
-        # Поиск
-        search = self.request.GET.get('search')
-        if search:
-            queryset = queryset.filter(
-                Q(name__icontains=search) |
-                Q(description__icontains=search)
+    def _get_list_data(self):
+        if not hasattr(self, '_task_group_list_data'):
+            self._task_group_list_data = (
+                container.get_task_group_list_use_case().execute(
+                    TaskGroupListFilters(
+                        search=self.request.GET.get('search', ''),
+                        topic_id=self.request.GET.get('topic', ''),
+                        subtopic_id=self.request.GET.get('subtopic', ''),
+                        difficulty=self.request.GET.get('difficulty', ''),
+                        group_filter=self.request.GET.get('group_filter', ''),
+                        sort=self.request.GET.get('sort', 'name'),
+                        min_tasks=self.request.GET.get('min_tasks', ''),
+                        max_tasks=self.request.GET.get('max_tasks', ''),
+                    )
+                )
             )
+        return self._task_group_list_data
 
-        # Фильтр по теме
-        topic_id = self.request.GET.get('topic')
-        if topic_id:
-            task_ids_in_topic = Task.objects.filter(
-                topic_id=topic_id
-            ).values_list('pk', flat=True)
-            group_ids = TaskGroup.objects.filter(
-                task_id__in=task_ids_in_topic
-            ).values_list('group_id', flat=True).distinct()
-            queryset = queryset.filter(pk__in=group_ids)
-
-        # Фильтр по подтеме
-        subtopic_id = self.request.GET.get('subtopic')
-        if subtopic_id:
-            task_ids_in_sub = Task.objects.filter(
-                subtopic_id=subtopic_id
-            ).values_list('pk', flat=True)
-            group_ids = TaskGroup.objects.filter(
-                task_id__in=task_ids_in_sub
-            ).values_list('group_id', flat=True).distinct()
-            queryset = queryset.filter(pk__in=group_ids)
-
-        # Фильтр по количеству заданий
-        min_tasks = self.request.GET.get('min_tasks')
-        if min_tasks:
-            queryset = queryset.filter(task_count__gte=int(min_tasks))
-
-        max_tasks = self.request.GET.get('max_tasks')
-        if max_tasks:
-            queryset = queryset.filter(task_count__lte=int(max_tasks))
-
-        # Фильтр: пустые / непустые
-        group_filter = self.request.GET.get('group_filter')
-        if group_filter == 'empty':
-            queryset = queryset.filter(task_count=0)
-        elif group_filter == 'nonempty':
-            queryset = queryset.filter(task_count__gt=0)
-
-        # Фильтр по сложности (есть задания этой сложности)
-        difficulty = self.request.GET.get('difficulty')
-        if difficulty:
-            task_ids = Task.objects.filter(
-                difficulty=int(difficulty)
-            ).values_list('pk', flat=True)
-            group_ids = TaskGroup.objects.filter(
-                task_id__in=task_ids
-            ).values_list('group_id', flat=True).distinct()
-            queryset = queryset.filter(pk__in=group_ids)
-
-        # Сортировка
-        sort = self.request.GET.get('sort', 'name')
-        if sort == 'tasks_desc':
-            queryset = queryset.order_by('-task_count', 'name')
-        elif sort == 'tasks_asc':
-            queryset = queryset.order_by('task_count', 'name')
-        elif sort == 'newest':
-            queryset = queryset.order_by('-created_at')
-        else:
-            queryset = queryset.order_by('name')
-
-        return queryset
+    def get_queryset(self):
+        return self._get_list_data().analog_groups
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['topics'] = Topic.objects.all().order_by('section', 'name')
-
-        topic_id = self.request.GET.get('topic')
-        if topic_id:
-            context['subtopics'] = SubTopic.objects.filter(
-                topic_id=topic_id
-            ).order_by('order', 'name')
-        else:
-            context['subtopics'] = SubTopic.objects.none()
-
-        context['difficulties'] = [
-            (1, 'Базовый'),
-            (2, 'Повышенный'),
-            (3, 'Высокий'),
-        ]
+        list_data = self._get_list_data()
+        context['topics'] = list_data.topics
+        context['subtopics'] = list_data.subtopics
+        context['difficulties'] = list_data.difficulties
 
         # Текущие фильтры
         context['search_query'] = self.request.GET.get('search', '')
@@ -138,11 +57,9 @@ class AnalogGroupListView(ListView):
         context['max_tasks'] = self.request.GET.get('max_tasks', '')
 
         # Статистика
-        context['total_groups'] = AnalogGroup.objects.count()
-        context['empty_groups'] = AnalogGroup.objects.annotate(
-            tc=Count('taskgroup')
-        ).filter(tc=0).count()
-        context['total_tasks_in_groups'] = TaskGroup.objects.count()
+        context['total_groups'] = list_data.total_groups
+        context['empty_groups'] = list_data.empty_groups
+        context['total_tasks_in_groups'] = list_data.total_tasks_in_groups
 
         return context
 

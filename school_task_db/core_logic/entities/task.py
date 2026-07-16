@@ -43,6 +43,29 @@ class TaskListData:
 
 
 @dataclass(frozen=True)
+class TaskGroupListFilters:
+    search: str = ''
+    topic_id: str = ''
+    subtopic_id: str = ''
+    difficulty: str = ''
+    group_filter: str = ''
+    sort: str = 'name'
+    min_tasks: str = ''
+    max_tasks: str = ''
+
+
+@dataclass(frozen=True)
+class TaskGroupListData:
+    analog_groups: Any
+    topics: Any
+    subtopics: Any
+    difficulties: List[Tuple[int, str]]
+    total_groups: int
+    empty_groups: int
+    total_tasks_in_groups: int
+
+
+@dataclass(frozen=True)
 class TaskDetailData:
     task_groups: Any
 

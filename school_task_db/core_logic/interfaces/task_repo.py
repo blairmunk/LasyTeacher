@@ -7,6 +7,7 @@ from core_logic.entities.task import (
     ReferenceElementOption,
     SelectOption,
     TaskEntity,
+    TaskGroupListFilters,
     TaskListFilters,
 )
 
@@ -15,6 +16,10 @@ class ITaskRepository(ABC):
     @abstractmethod
     def get_list_tasks(self, filters: TaskListFilters) -> Any:
         """Return tasks for the task list page."""
+
+    @abstractmethod
+    def get_list_task_groups(self, filters: TaskGroupListFilters) -> Any:
+        """Return analog groups for the analog group list page."""
 
     @abstractmethod
     def get_detail_tasks(self) -> Any:
@@ -31,6 +36,18 @@ class ITaskRepository(ABC):
     @abstractmethod
     def get_list_analog_groups(self) -> Any:
         """Return analog-group options for the task list page."""
+
+    @abstractmethod
+    def count_analog_groups(self) -> int:
+        """Return total analog group count."""
+
+    @abstractmethod
+    def count_empty_analog_groups(self) -> int:
+        """Return analog groups without tasks."""
+
+    @abstractmethod
+    def count_task_group_memberships(self) -> int:
+        """Return total task-to-group memberships."""
 
     @abstractmethod
     def get_list_sources(self) -> Any:

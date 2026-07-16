@@ -80,6 +80,7 @@ from core_logic.use_cases.get_student_remedial_work import (
     GetStudentRemedialWorkUseCase,
 )
 from core_logic.use_cases.get_task_detail import GetTaskDetailUseCase
+from core_logic.use_cases.get_task_group_list import GetTaskGroupListUseCase
 from core_logic.use_cases.get_task_list import GetTaskListUseCase
 from core_logic.use_cases.get_task_reference_options import (
     GetCodifierElementsUseCase,
@@ -145,6 +146,7 @@ class ContainerTests(SimpleTestCase):
         event_review_use_case = container.get_event_review_use_case()
         event_list_use_case = container.get_event_list_use_case()
         event_detail_use_case = container.get_event_detail_use_case()
+        task_group_list_use_case = container.get_task_group_list_use_case()
         participant_selection_use_case = (
             container.get_event_participant_selection_use_case()
         )
@@ -244,6 +246,7 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(event_review_use_case, GetEventReviewUseCase)
         self.assertIsInstance(event_list_use_case, GetEventListUseCase)
         self.assertIsInstance(event_detail_use_case, GetEventDetailUseCase)
+        self.assertIsInstance(task_group_list_use_case, GetTaskGroupListUseCase)
         self.assertIsInstance(
             participant_selection_use_case,
             GetEventParticipantSelectionUseCase,

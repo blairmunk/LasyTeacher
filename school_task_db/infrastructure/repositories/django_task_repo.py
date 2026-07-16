@@ -2,12 +2,13 @@
 
 from typing import List, Set
 
-from django.db.models import Count, Exists, OuterRef, Q
+from django.db.models import Avg, Count, Exists, OuterRef, Q, Subquery
 
 from core_logic.entities.task import (
     ReferenceElementOption,
     SelectOption,
     TaskEntity,
+    TaskGroupListFilters,
     TaskListFilters,
 )
 from core_logic.interfaces.task_repo import ITaskRepository
@@ -18,6 +19,12 @@ from tasks.utils import math_status_cache
 
 
 class DjangoTaskRepository(ITaskRepository):
+    def _parse_int(self, value):
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None
+
     def get_list_tasks(self, filters: TaskListFilters):
         queryset = Task.objects.select_related('topic', 'subtopic').order_by(
             '-created_at',
@@ -83,6 +90,82 @@ class DjangoTaskRepository(ITaskRepository):
 
         return queryset
 
+    def get_list_task_groups(self, filters: TaskGroupListFilters):
+        queryset = AnalogGroup.objects.annotate(
+            task_count=Count('taskgroup'),
+            avg_difficulty=Avg('taskgroup__task__difficulty'),
+        ).order_by('name')
+
+        first_task_topic = Subquery(
+            TaskGroup.objects.filter(
+                group=OuterRef('pk'),
+            ).select_related('task').values('task__topic')[:1]
+        )
+        first_task_subtopic = Subquery(
+            TaskGroup.objects.filter(
+                group=OuterRef('pk'),
+            ).select_related('task').values('task__subtopic')[:1]
+        )
+        queryset = queryset.annotate(
+            first_topic_id=first_task_topic,
+            first_subtopic_id=first_task_subtopic,
+        )
+
+        if filters.search:
+            queryset = queryset.filter(
+                Q(name__icontains=filters.search)
+                | Q(description__icontains=filters.search)
+            )
+
+        if filters.topic_id:
+            task_ids = Task.objects.filter(
+                topic_id=filters.topic_id,
+            ).values_list('pk', flat=True)
+            group_ids = TaskGroup.objects.filter(
+                task_id__in=task_ids,
+            ).values_list('group_id', flat=True).distinct()
+            queryset = queryset.filter(pk__in=group_ids)
+
+        if filters.subtopic_id:
+            task_ids = Task.objects.filter(
+                subtopic_id=filters.subtopic_id,
+            ).values_list('pk', flat=True)
+            group_ids = TaskGroup.objects.filter(
+                task_id__in=task_ids,
+            ).values_list('group_id', flat=True).distinct()
+            queryset = queryset.filter(pk__in=group_ids)
+
+        min_tasks = self._parse_int(filters.min_tasks)
+        if min_tasks is not None:
+            queryset = queryset.filter(task_count__gte=min_tasks)
+
+        max_tasks = self._parse_int(filters.max_tasks)
+        if max_tasks is not None:
+            queryset = queryset.filter(task_count__lte=max_tasks)
+
+        if filters.group_filter == 'empty':
+            queryset = queryset.filter(task_count=0)
+        elif filters.group_filter == 'nonempty':
+            queryset = queryset.filter(task_count__gt=0)
+
+        difficulty = self._parse_int(filters.difficulty)
+        if difficulty is not None:
+            task_ids = Task.objects.filter(
+                difficulty=difficulty,
+            ).values_list('pk', flat=True)
+            group_ids = TaskGroup.objects.filter(
+                task_id__in=task_ids,
+            ).values_list('group_id', flat=True).distinct()
+            queryset = queryset.filter(pk__in=group_ids)
+
+        if filters.sort == 'tasks_desc':
+            return queryset.order_by('-task_count', 'name')
+        if filters.sort == 'tasks_asc':
+            return queryset.order_by('task_count', 'name')
+        if filters.sort == 'newest':
+            return queryset.order_by('-created_at')
+        return queryset.order_by('name')
+
     def get_detail_tasks(self):
         return Task.objects.select_related(
             'topic',
@@ -99,6 +182,17 @@ class DjangoTaskRepository(ITaskRepository):
 
     def get_list_analog_groups(self):
         return AnalogGroup.objects.all().order_by('name')
+
+    def count_analog_groups(self) -> int:
+        return AnalogGroup.objects.count()
+
+    def count_empty_analog_groups(self) -> int:
+        return AnalogGroup.objects.annotate(
+            task_count=Count('taskgroup'),
+        ).filter(task_count=0).count()
+
+    def count_task_group_memberships(self) -> int:
+        return TaskGroup.objects.count()
 
     def get_list_sources(self):
         return Source.objects.all()

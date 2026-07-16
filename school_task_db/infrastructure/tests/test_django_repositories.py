@@ -5,7 +5,7 @@ from django.utils import timezone
 from core_logic.services.remedial_service import RemedialService
 from core_logic.interfaces.event_repo import GradeParticipationParams
 from core_logic.interfaces.work_repo import CreateWorkWithVariantFromTasksParams
-from core_logic.entities.task import TaskListFilters
+from core_logic.entities.task import TaskGroupListFilters, TaskListFilters
 from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
     RemedialFromEventRequest,
@@ -216,6 +216,30 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(list(repo.get_subtopics_for_topic('')), [])
         self.assertIn(self.topic, list(repo.get_list_topics()))
         self.assertIn(self.weak_group, list(repo.get_list_analog_groups()))
+
+    def test_task_repository_returns_filtered_analog_group_list_data(self):
+        repo = DjangoTaskRepository()
+
+        groups = repo.get_list_task_groups(
+            TaskGroupListFilters(
+                search='Ньют',
+                topic_id=str(self.topic.pk),
+                difficulty='2',
+                group_filter='nonempty',
+                sort='tasks_desc',
+                min_tasks='1',
+                max_tasks='3',
+            )
+        )
+        empty_groups = repo.get_list_task_groups(
+            TaskGroupListFilters(group_filter='empty')
+        )
+
+        self.assertEqual(list(groups), [self.weak_group])
+        self.assertEqual(list(empty_groups), [])
+        self.assertEqual(repo.count_analog_groups(), 2)
+        self.assertEqual(repo.count_empty_analog_groups(), 0)
+        self.assertEqual(repo.count_task_group_memberships(), 4)
 
     def test_task_repository_returns_detail_and_reference_data(self):
         repo = DjangoTaskRepository()

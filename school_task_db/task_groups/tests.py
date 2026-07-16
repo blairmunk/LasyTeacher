@@ -58,6 +58,24 @@ class TaskGroupBulkActionTests(TestCase):
         self.assertEqual(spec.weight, 4)
         self.assertEqual(response.json()['work_id'], str(work.pk))
 
+    def test_analog_group_list_uses_clean_list_context(self):
+        response = self.client.get(
+            reverse('task_groups:list'),
+            {
+                'search': 'Скор',
+                'topic': str(self.topic.pk),
+                'difficulty': '4',
+                'group_filter': 'nonempty',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context['analog_groups']), [self.group])
+        self.assertEqual(response.context['topics'][0], self.topic)
+        self.assertEqual(response.context['total_groups'], 1)
+        self.assertEqual(response.context['empty_groups'], 0)
+        self.assertEqual(response.context['total_tasks_in_groups'], 1)
+
     def test_bulk_create_work_from_groups_rejects_missing_groups(self):
         response = self.client.post(
             reverse('task_groups:bulk-create-work'),

@@ -69,11 +69,15 @@ class AnalogGroupDetailView(DetailView):
     template_name = 'task_groups/detail.html'
     context_object_name = 'analoggroup'
 
+    def get_queryset(self):
+        return container.get_task_group_detail_use_case().get_queryset()
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['tasks'] = TaskGroup.objects.filter(
-            group=self.object
-        ).select_related('task', 'task__topic', 'task__subtopic')
+        detail_data = container.get_task_group_detail_use_case().execute(
+            str(self.object.pk),
+        )
+        context['tasks'] = detail_data.tasks
         return context
 
 

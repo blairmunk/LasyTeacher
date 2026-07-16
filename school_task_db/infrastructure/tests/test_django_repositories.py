@@ -241,6 +241,17 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(repo.count_empty_analog_groups(), 0)
         self.assertEqual(repo.count_task_group_memberships(), 4)
 
+    def test_task_repository_returns_analog_group_detail_data(self):
+        repo = DjangoTaskRepository()
+
+        groups = repo.get_detail_task_groups()
+        tasks = repo.get_tasks_for_analog_group(str(self.weak_group.pk))
+
+        self.assertIn(self.weak_group, list(groups))
+        self.assertEqual(tasks.count(), 3)
+        self.assertEqual(tasks[0].group, self.weak_group)
+        self.assertIsNotNone(tasks[0].task.topic)
+
     def test_task_repository_returns_detail_and_reference_data(self):
         repo = DjangoTaskRepository()
 

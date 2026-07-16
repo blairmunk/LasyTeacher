@@ -66,6 +66,11 @@ class TaskGroupListData:
 
 
 @dataclass(frozen=True)
+class TaskGroupDetailData:
+    tasks: Any
+
+
+@dataclass(frozen=True)
 class TaskDetailData:
     task_groups: Any
 

@@ -76,6 +76,13 @@ class TaskGroupBulkActionTests(TestCase):
         self.assertEqual(response.context['empty_groups'], 0)
         self.assertEqual(response.context['total_tasks_in_groups'], 1)
 
+    def test_analog_group_detail_uses_clean_detail_context(self):
+        response = self.client.get(reverse('task_groups:detail', args=[self.group.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['analoggroup'], self.group)
+        self.assertEqual(list(response.context['tasks']), [self.task.taskgroup_set.get()])
+
     def test_bulk_create_work_from_groups_rejects_missing_groups(self):
         response = self.client.post(
             reverse('task_groups:bulk-create-work'),

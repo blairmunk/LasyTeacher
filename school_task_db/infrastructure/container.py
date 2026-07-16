@@ -93,6 +93,7 @@ from core_logic.use_cases.get_student_remedial_work import (
     GetStudentRemedialWorkUseCase,
 )
 from core_logic.use_cases.get_task_detail import GetTaskDetailUseCase
+from core_logic.use_cases.get_task_group_detail import GetTaskGroupDetailUseCase
 from core_logic.use_cases.get_task_group_list import GetTaskGroupListUseCase
 from core_logic.use_cases.get_task_list import GetTaskListUseCase
 from core_logic.use_cases.get_task_reference_options import (
@@ -294,6 +295,11 @@ class Container:
 
     def get_task_group_list_use_case(self):
         return GetTaskGroupListUseCase(
+            task_repo=self.task_repo,
+        )
+
+    def get_task_group_detail_use_case(self):
+        return GetTaskGroupDetailUseCase(
             task_repo=self.task_repo,
         )
 

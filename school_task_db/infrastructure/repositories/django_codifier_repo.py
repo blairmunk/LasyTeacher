@@ -11,11 +11,11 @@ class DjangoCodifierRepository(ICodifierRepository):
             'requirements',
         )
 
-    def get_detail_codifiers(self):
+    def get_codifier(self, codifier_id: str):
         return CodifierSpec.objects.prefetch_related(
             'content_entries',
             'requirements',
-        )
+        ).filter(pk=codifier_id).first()
 
     def get_content_tree(self, codifier_id: str):
         codifier = CodifierSpec.objects.get(pk=codifier_id)

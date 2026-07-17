@@ -533,13 +533,17 @@ class DjangoRemedialRepositoryTests(TestCase):
         repo = DjangoCodifierRepository()
 
         codifiers = repo.get_list_codifiers()
-        detail_codifiers = repo.get_detail_codifiers()
+        loaded_codifier = repo.get_codifier(str(codifier.pk))
+        missing_codifier = repo.get_codifier(
+            '550e8400-e29b-41d4-a716-446655440000',
+        )
         content_tree = repo.get_content_tree(str(codifier.pk))
         requirements = repo.get_requirements(str(codifier.pk))
         coverage = repo.get_coverage(str(codifier.pk))
 
         self.assertEqual(list(codifiers), [codifier])
-        self.assertEqual(list(detail_codifiers), [codifier])
+        self.assertEqual(loaded_codifier, codifier)
+        self.assertIsNone(missing_codifier)
         self.assertEqual(content_tree, [root])
         self.assertEqual(list(requirements), [requirement])
         self.assertEqual(coverage['total'], 1)

@@ -63,3 +63,13 @@ class CodifierViewsTests(TestCase):
         self.assertEqual(list(response.context['requirements']), [self.requirement])
         self.assertEqual(response.context['coverage']['total'], 1)
         self.assertEqual(response.context['coverage']['covered'], 1)
+
+    def test_codifier_detail_returns_404_for_missing_codifier(self):
+        response = self.client.get(
+            reverse(
+                'codifier:spec-detail',
+                args=['550e8400-e29b-41d4-a716-446655440000'],
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)

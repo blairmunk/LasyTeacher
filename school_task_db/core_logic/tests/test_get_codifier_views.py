@@ -7,7 +7,7 @@ from core_logic.use_cases.get_codifier_list import GetCodifierListUseCase
 class FakeCodifierRepository:
     def __init__(self):
         self.codifiers = ['codifier-1']
-        self.detail_codifiers = ['detail-codifier-1']
+        self.codifier = 'codifier-1'
         self.content_tree = ['entry-1']
         self.requirements = ['requirement-1']
         self.coverage = {'total': 2, 'covered': 1, 'pct': 50}
@@ -15,8 +15,8 @@ class FakeCodifierRepository:
     def get_list_codifiers(self):
         return self.codifiers
 
-    def get_detail_codifiers(self):
-        return self.detail_codifiers
+    def get_codifier(self, codifier_id):
+        return self.codifier if codifier_id == self.codifier else None
 
     def get_content_tree(self, codifier_id):
         return self.content_tree
@@ -39,18 +39,24 @@ class GetCodifierListUseCaseTests(TestCase):
 
 
 class GetCodifierDetailUseCaseTests(TestCase):
-    def test_get_queryset_returns_detail_codifiers(self):
-        repo = FakeCodifierRepository()
-        use_case = GetCodifierDetailUseCase(codifier_repo=repo)
-
-        self.assertEqual(use_case.get_queryset(), ['detail-codifier-1'])
-
     def test_execute_returns_codifier_detail_data(self):
         repo = FakeCodifierRepository()
         use_case = GetCodifierDetailUseCase(codifier_repo=repo)
 
         data = use_case.execute('codifier-1')
 
+        self.assertEqual(data.codifier, 'codifier-1')
         self.assertEqual(data.content_tree, ['entry-1'])
         self.assertEqual(data.requirements, ['requirement-1'])
         self.assertEqual(data.coverage, {'total': 2, 'covered': 1, 'pct': 50})
+
+    def test_execute_returns_empty_data_for_missing_codifier(self):
+        repo = FakeCodifierRepository()
+        use_case = GetCodifierDetailUseCase(codifier_repo=repo)
+
+        data = use_case.execute('missing-codifier')
+
+        self.assertIsNone(data.codifier)
+        self.assertEqual(data.content_tree, [])
+        self.assertIsNone(data.requirements)
+        self.assertEqual(data.coverage, {})

@@ -11,6 +11,7 @@ class CodifierListData:
 
 @dataclass(frozen=True)
 class CodifierDetailData:
+    codifier: Any = None
     content_tree: List[Any] = field(default_factory=list)
     requirements: Any = None
     coverage: Dict[str, int] = field(default_factory=dict)

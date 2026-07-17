@@ -10,8 +10,8 @@ class ICodifierRepository(ABC):
         """Return codifiers for the codifier list page."""
 
     @abstractmethod
-    def get_detail_codifiers(self) -> Any:
-        """Return codifiers for the codifier detail page lookup."""
+    def get_codifier(self, codifier_id: str) -> Any:
+        """Return one codifier by id or None."""
 
     @abstractmethod
     def get_content_tree(self, codifier_id: str) -> Any:

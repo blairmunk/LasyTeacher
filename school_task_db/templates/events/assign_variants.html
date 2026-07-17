@@ -7,7 +7,7 @@
 <div class="row">
     <div class="col-md-10">
         <h2>Назначение вариантов</h2>
-        <h4 class="text-muted">{{ event.name }} - {{ event.student_group.name }}</h4>
+        <h4 class="text-muted">{{ event.name }}{% if event.participant_group_names %} - {{ event.participant_group_names }}{% endif %}</h4>
         
         <div class="card mb-4">
             <div class="card-body">
@@ -18,8 +18,8 @@
                         <p><strong>Дата:</strong> {{ event.date|date:"d.m.Y H:i" }}</p>
                     </div>
                     <div class="col-md-6">
-                        <p><strong>Класс:</strong> {{ event.student_group.name }}</p>
-                        <p><strong>Доступно вариантов:</strong> {{ event.work.variant_set.count }}</p>
+                        <p><strong>Класс:</strong> {{ event.participant_group_names|default:"—" }}</p>
+                        <p><strong>Доступно вариантов:</strong> {{ event.work_variant_count }}</p>
                     </div>
                 </div>
             </div>

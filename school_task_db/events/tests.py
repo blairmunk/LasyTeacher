@@ -268,6 +268,8 @@ class GradeParticipationViewTests(TestCase):
         self.assertEqual(self.participation.variant, second_variant)
 
     def test_assign_variants_view_uses_clean_assignment_form_data(self):
+        group = StudentGroup.objects.create(name='9Б')
+        group.students.add(self.student)
         second_variant = Variant.objects.create(
             work=self.work,
             number=2,
@@ -281,6 +283,7 @@ class GradeParticipationViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         field = response.context['form'].fields[f'variant_{self.participation.pk}']
         self.assertIn((str(second_variant.pk), 'Вариант 2'), field.choices)
+        self.assertEqual(response.context['event'].participant_group_names, '9Б')
 
     def test_assign_single_variant_view_uses_clean_use_case(self):
         second_variant = Variant.objects.create(

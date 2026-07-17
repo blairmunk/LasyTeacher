@@ -995,7 +995,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(available_variants[0].number, 1)
         self.assertEqual(event_ref.pk, str(self.event.pk))
         self.assertEqual(event_ref.work.name, self.source_work.name)
-        self.assertEqual(event_ref.work.variant_set.count(), 1)
+        self.assertEqual(event_ref.work_variant_count, 1)
         self.assertEqual(event_ref.date, self.event.planned_date)
         self.assertEqual(participation_ref.pk, str(self.participation.pk))
         self.assertEqual(participation_ref.event_id, str(self.event.pk))

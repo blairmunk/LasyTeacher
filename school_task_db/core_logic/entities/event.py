@@ -96,6 +96,7 @@ class EventEntity:
     work_type: str = ''
     work_type_display: str = ''
     work_variant_count: int = 0
+    participant_group_names: str = ''
 
     @property
     def pk(self) -> str:

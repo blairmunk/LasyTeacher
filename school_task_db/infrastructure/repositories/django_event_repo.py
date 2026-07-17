@@ -32,6 +32,7 @@ from core_logic.interfaces.event_repo import (
 )
 from core_logic.services.grading_service import GradingService
 from events.models import Event, EventParticipation, Mark
+from students.models import StudentGroup
 from works.models import Variant
 
 
@@ -187,6 +188,12 @@ class DjangoEventRepository(IEventRepository):
         if not event:
             return None
 
+        participant_group_names = ', '.join(
+            StudentGroup.objects.filter(
+                students__eventparticipation__event_id=event_id,
+            ).distinct().order_by('name').values_list('name', flat=True)
+        )
+
         return EventEntity(
             id=str(event.pk),
             name=event.name,
@@ -203,6 +210,7 @@ class DjangoEventRepository(IEventRepository):
             work_type=event.work.work_type,
             work_type_display=event.work.get_work_type_display(),
             work_variant_count=event.work.variant_set.count(),
+            participant_group_names=participant_group_names,
         )
 
     def get_participation_ref(self, participation_id: str):

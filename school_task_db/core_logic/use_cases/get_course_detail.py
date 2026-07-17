@@ -1,6 +1,7 @@
 """Build course detail screen data."""
 
 from collections import Counter
+from dataclasses import replace
 
 from core_logic.entities.curriculum import CourseDetailData
 from core_logic.interfaces.curriculum_repo import ICurriculumRepository
@@ -21,18 +22,24 @@ class GetCourseDetailUseCase:
         groups_coverage = Counter()
 
         for assignment in self.curriculum_repo.get_course_assignments(course_id):
-            work = assignment.work
-            work_groups = self.curriculum_repo.get_work_analog_groups(str(work.pk))
-            variants_count = self.curriculum_repo.count_work_variants(str(work.pk))
+            work_groups = self.curriculum_repo.get_work_analog_groups(
+                assignment.work.pk,
+            )
+            variants_count = self.curriculum_repo.count_work_variants(
+                assignment.work.pk,
+            )
 
-            assignment.groups_count = len(work_groups)
-            assignment.tasks_per_variant = sum(group.count for group in work_groups)
-            assignment.variants_count = variants_count
+            assignment = replace(
+                assignment,
+                groups_count=len(work_groups),
+                tasks_per_variant=sum(group.count for group in work_groups),
+                variants_count=variants_count,
+            )
 
             total_variants += variants_count
-            works_by_type[work.get_work_type_display()] += 1
+            works_by_type[assignment.work.work_type_display] += 1
             for work_group in work_groups:
-                groups_coverage[work_group.analog_group.name] += 1
+                groups_coverage[work_group.group_name] += 1
 
             assignments.append(assignment)
 

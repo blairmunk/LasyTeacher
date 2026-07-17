@@ -512,10 +512,14 @@ class DjangoRemedialRepositoryTests(TestCase):
             '550e8400-e29b-41d4-a716-446655440000',
         )
 
-        self.assertEqual(loaded_course, course)
+        self.assertEqual(loaded_course.pk, str(course.pk))
+        self.assertEqual(loaded_course.name, course.name)
+        self.assertEqual(loaded_course.subject, course.subject)
         self.assertIsNone(missing_course)
-        self.assertEqual(list(assignments), [assignment])
-        self.assertEqual(work_groups[0].analog_group, self.weak_group)
+        self.assertEqual(assignments[0].order, assignment.order)
+        self.assertEqual(assignments[0].work.pk, str(self.source_work.pk))
+        self.assertEqual(assignments[0].work.name, self.source_work.name)
+        self.assertEqual(work_groups[0].group_name, self.weak_group.name)
         self.assertEqual(variants_count, 1)
         self.assertEqual(subtopics, [{
             'id': str(subtopic.pk),

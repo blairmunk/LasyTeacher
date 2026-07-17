@@ -63,8 +63,11 @@ class CourseViewsTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['course'], course)
-        self.assertEqual(response.context['assignments'], [assignment])
+        self.assertEqual(response.context['course'].pk, str(course.pk))
+        self.assertEqual(response.context['course'].name, course.name)
+        self.assertEqual(response.context['assignments'][0].order, assignment.order)
+        self.assertEqual(response.context['assignments'][0].work.pk, str(work.pk))
+        self.assertEqual(response.context['assignments'][0].work.name, work.name)
         self.assertEqual(response.context['assignments'][0].groups_count, 1)
         self.assertEqual(response.context['assignments'][0].tasks_per_variant, 2)
         self.assertEqual(response.context['assignments'][0].variants_count, 1)

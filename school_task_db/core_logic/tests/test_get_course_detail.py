@@ -1,42 +1,33 @@
 from unittest import TestCase
 
+from core_logic.entities.curriculum import (
+    CourseDetailAssignment,
+    CourseDetailCourse,
+    CourseDetailWork,
+    CourseDetailWorkGroup,
+)
 from core_logic.use_cases.get_course_detail import GetCourseDetailUseCase
-
-
-class FakeWork:
-    def __init__(self, pk, work_type_display):
-        self.pk = pk
-        self.work_type_display = work_type_display
-
-    def get_work_type_display(self):
-        return self.work_type_display
-
-
-class FakeAssignment:
-    def __init__(self, work):
-        self.work = work
-
-
-class FakeAnalogGroup:
-    def __init__(self, name):
-        self.name = name
-
-
-class FakeWorkGroup:
-    def __init__(self, count, group_name):
-        self.count = count
-        self.analog_group = FakeAnalogGroup(group_name)
 
 
 class FakeCurriculumRepository:
     def __init__(self):
-        self.course = 'course-1'
-        self.work = FakeWork(pk='work-1', work_type_display='Контрольная работа')
-        self.assignments = [FakeAssignment(self.work)]
-        self.work_groups = [FakeWorkGroup(count=2, group_name='Скорость')]
+        self.course = CourseDetailCourse(
+            pk='course-1',
+            name='Физика 9',
+            subject='Физика',
+            grade_level=9,
+        )
+        self.work = CourseDetailWork(
+            pk='work-1',
+            name='Контрольная',
+            work_type='test',
+            work_type_display='Контрольная работа',
+        )
+        self.assignments = [CourseDetailAssignment(order=1, work=self.work, weight=1)]
+        self.work_groups = [CourseDetailWorkGroup(count=2, group_name='Скорость')]
 
     def get_course(self, course_id):
-        return self.course if course_id == self.course else None
+        return self.course if course_id == self.course.pk else None
 
     def get_course_assignments(self, course_id):
         return self.assignments
@@ -55,8 +46,8 @@ class GetCourseDetailUseCaseTests(TestCase):
 
         data = use_case.execute('course-1')
 
-        self.assertEqual(data.course, 'course-1')
-        self.assertEqual(data.assignments, repo.assignments)
+        self.assertEqual(data.course, repo.course)
+        self.assertEqual(data.assignments[0].work, repo.work)
         self.assertEqual(data.assignments[0].groups_count, 1)
         self.assertEqual(data.assignments[0].tasks_per_variant, 2)
         self.assertEqual(data.assignments[0].variants_count, 3)

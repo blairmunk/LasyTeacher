@@ -2,6 +2,7 @@
 
 from django.db.models import Q
 
+from core.models import ImportLog
 from core_logic.interfaces.core_repo import ICoreRepository
 from events.models import Event
 from students.models import Student
@@ -31,6 +32,12 @@ class DjangoCoreRepository(ICoreRepository):
 
     def count_analog_groups(self) -> int:
         return AnalogGroup.objects.count()
+
+    def get_recent_import_logs(self, limit: int):
+        return ImportLog.objects.all()[:limit]
+
+    def get_import_logs(self):
+        return ImportLog.objects.all()
 
     def search_by_uuid(self, query: str):
         return {

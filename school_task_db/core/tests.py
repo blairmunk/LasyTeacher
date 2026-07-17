@@ -2,6 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from core.models import ImportLog
 from curriculum.models import Topic
 from events.models import Event
 from students.models import Student
@@ -88,3 +89,21 @@ class CoreViewsTests(TestCase):
         self.assertEqual(response.context['total_found'], 0)
         self.assertIsNone(response.context['search_mode'])
         self.assertEqual(response.context['found_text'], '')
+
+    def test_import_page_uses_clean_import_page_data(self):
+        for index in range(6):
+            ImportLog.objects.create(filename=f'import-{index}.json')
+
+        response = self.client.get(reverse('core:import'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['recent_imports']), 5)
+
+    def test_import_history_uses_clean_import_history_data(self):
+        first = ImportLog.objects.create(filename='first.json')
+        second = ImportLog.objects.create(filename='second.json')
+
+        response = self.client.get(reverse('core:import-history'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context['imports']), [second, first])

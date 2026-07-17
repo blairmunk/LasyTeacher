@@ -26,3 +26,13 @@ class GlobalSearchData:
     def __post_init__(self):
         if self.results is None:
             object.__setattr__(self, 'results', {})
+
+
+@dataclass(frozen=True)
+class ImportPageData:
+    recent_imports: Any
+
+
+@dataclass(frozen=True)
+class ImportHistoryData:
+    imports: Any

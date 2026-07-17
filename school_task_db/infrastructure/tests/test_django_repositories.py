@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.utils import timezone
 
+from core.models import ImportLog
 from core_logic.services.remedial_service import RemedialService
 from core_logic.interfaces.event_repo import GradeParticipationParams
 from core_logic.interfaces.work_repo import CreateWorkWithVariantFromTasksParams
@@ -308,6 +309,17 @@ class DjangoRemedialRepositoryTests(TestCase):
 
         self.assertEqual(deleted_count, 1)
         self.assertFalse(Task.objects.filter(pk=task_id).exists())
+
+    def test_core_repository_returns_import_logs(self):
+        first = ImportLog.objects.create(filename='first.json')
+        second = ImportLog.objects.create(filename='second.json')
+        repo = DjangoCoreRepository()
+
+        recent_logs = list(repo.get_recent_import_logs(limit=1))
+        import_logs = list(repo.get_import_logs())
+
+        self.assertEqual(recent_logs, [second])
+        self.assertEqual(import_logs, [second, first])
 
     def test_create_remedial_use_case_creates_django_objects(self):
         student_repo = DjangoStudentRepository()

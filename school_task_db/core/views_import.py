@@ -10,6 +10,8 @@ from django.views.decorators.http import require_POST
 
 from .importers.tasks import TaskImporter
 from .models import ImportLog
+from core_logic.use_cases.get_import_views import ImportPageRequest
+from infrastructure.container import container
 
 
 class ImportPageView(View):
@@ -17,8 +19,11 @@ class ImportPageView(View):
     template_name = 'core/import.html'
     
     def get(self, request):
+        data = container.get_import_page_use_case().execute(
+            ImportPageRequest(recent_limit=5),
+        )
         context = {
-            'recent_imports': ImportLog.objects.all()[:5],
+            'recent_imports': data.recent_imports,
         }
         return render(request, self.template_name, context)
 
@@ -29,6 +34,9 @@ class ImportHistoryView(ListView):
     template_name = 'core/import_history.html'
     context_object_name = 'imports'
     paginate_by = 20
+
+    def get_queryset(self):
+        return container.get_import_history_use_case().execute().imports
 
 
 def validate_json_ajax(request):

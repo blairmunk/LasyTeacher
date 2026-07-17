@@ -10,6 +10,7 @@ from core_logic.entities.report import (
     HeatmapCourseTimelineData,
     HeatmapDrilldownOverviewData,
     HeatmapOverviewData,
+    HeatmapStudentDetailData,
     HeatmapSubtopicMatrixData,
     HeatmapTopicMatrixData,
     ReportsDashboardData,
@@ -98,3 +99,12 @@ class IReportRepository(ABC):
         topic_id: Any,
     ) -> HeatmapSubtopicMatrixData:
         """Return student-subtopic heatmap matrix data."""
+
+    @abstractmethod
+    def get_heatmap_student_detail(
+        self,
+        topic_id: Any,
+        student_id: Any,
+        subtopic_id: Any,
+    ) -> HeatmapStudentDetailData:
+        """Return detailed topic heatmap data for one student."""

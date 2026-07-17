@@ -13,6 +13,7 @@ from core_logic.entities.report import (
     HeatmapCourseTimelineData,
     HeatmapDrilldownOverviewData,
     HeatmapOverviewData,
+    HeatmapStudentDetailData,
     HeatmapSubtopicMatrixData,
     HeatmapTopicMatrixData,
     ReportsDashboardData,
@@ -378,6 +379,44 @@ class DjangoReportRepository(IReportRepository):
             col_averages=col_averages,
         )
 
+    def get_heatmap_student_detail(self, topic_id, student_id, subtopic_id=None):
+        topic = get_object_or_404(Topic, pk=topic_id)
+        student = get_object_or_404(Student, pk=student_id)
+        selected_subtopic = None
+        if subtopic_id:
+            selected_subtopic = SubTopic.objects.filter(pk=subtopic_id).first()
+
+        marks = Mark.objects.filter(
+            participation__student=student,
+        ).select_related(
+            'participation__event',
+            'participation__variant',
+        )
+        task_map = self._get_task_map_for_marks(marks, topic)
+        details = self._build_student_heatmap_details(
+            marks,
+            task_map,
+            selected_subtopic,
+        )
+        subtopic_summary = self._build_student_subtopic_summary(
+            marks,
+            task_map,
+            topic,
+            selected_subtopic,
+        )
+
+        return HeatmapStudentDetailData(
+            topic=topic,
+            student=student,
+            selected_subtopic=selected_subtopic,
+            details=details,
+            subtopic_summary=subtopic_summary,
+            courses=Course.objects.filter(is_active=True).order_by(
+                'grade_level',
+                'name',
+            ),
+        )
+
     def get_reports_dashboard(self, year, current_date):
         current_date = current_date or timezone.now()
         events, participations, courses = self._get_event_scope(year)
@@ -741,6 +780,111 @@ class DjangoReportRepository(IReportRepository):
             for task in variant.tasks.all():
                 task_ids.add(str(task.pk))
         return task_ids
+
+    def _get_task_map_for_marks(self, marks, topic):
+        task_ids = set()
+        for mark in marks:
+            if mark.task_scores:
+                task_ids.update(mark.task_scores.keys())
+
+        tasks = Task.objects.filter(
+            pk__in=task_ids,
+            topic=topic,
+        ).select_related('subtopic')
+        return {str(task.pk): task for task in tasks}
+
+    def _build_student_heatmap_details(
+        self,
+        marks,
+        task_map,
+        selected_subtopic,
+    ):
+        details = []
+        for mark in marks:
+            if not mark.task_scores:
+                continue
+            event = mark.participation.event
+            seen = set()
+            for task_id, scores in mark.task_scores.items():
+                if task_id in seen:
+                    continue
+                seen.add(task_id)
+
+                task = task_map.get(task_id)
+                if not task:
+                    continue
+                if selected_subtopic and task.subtopic_id != selected_subtopic.id:
+                    continue
+
+                points = scores.get('points', 0)
+                max_points = scores.get('max_points', 0)
+                pct = round(points / max_points * 100) if max_points > 0 else 0
+                details.append({
+                    'event': event,
+                    'task': task,
+                    'subtopic': task.subtopic,
+                    'points': points,
+                    'max_points': max_points,
+                    'pct': pct,
+                    'css': self._color_class(pct),
+                })
+
+        details.sort(key=lambda detail: (
+            detail['subtopic'].name if detail['subtopic'] else '',
+            detail['event'].planned_date,
+        ))
+        return details
+
+    def _build_student_subtopic_summary(
+        self,
+        marks,
+        task_map,
+        topic,
+        selected_subtopic,
+    ):
+        aggregated = defaultdict(lambda: {'points': 0, 'max_points': 0})
+        for mark in marks:
+            if not mark.task_scores:
+                continue
+            seen = set()
+            for task_id, scores in mark.task_scores.items():
+                if task_id in seen:
+                    continue
+                seen.add(task_id)
+                task = task_map.get(task_id)
+                if not task or not task.subtopic:
+                    continue
+                aggregated[task.subtopic.id]['points'] += scores.get('points', 0)
+                aggregated[task.subtopic.id]['max_points'] += scores.get(
+                    'max_points',
+                    0,
+                )
+
+        summary = []
+        for subtopic in SubTopic.objects.filter(topic=topic).order_by('order'):
+            data = aggregated.get(subtopic.id)
+            is_selected = (
+                selected_subtopic
+                and subtopic.id == selected_subtopic.id
+            )
+            if data and data['max_points'] > 0:
+                pct = round(data['points'] / data['max_points'] * 100)
+                summary.append({
+                    'subtopic': subtopic,
+                    'points': data['points'],
+                    'max_points': data['max_points'],
+                    'pct': pct,
+                    'css': self._color_class(pct),
+                    'is_selected': is_selected,
+                })
+            else:
+                summary.append({
+                    'subtopic': subtopic,
+                    'pct': None,
+                    'css': 'no-data',
+                    'is_selected': is_selected,
+                })
+        return summary
 
     def _build_heatmap_rows(self, students, columns, aggregated):
         rows = []

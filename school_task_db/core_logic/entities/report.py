@@ -117,3 +117,15 @@ class HeatmapSubtopicMatrixData:
     columns: List[Any]
     rows: List[dict]
     col_averages: List[dict]
+
+
+@dataclass(frozen=True)
+class HeatmapStudentDetailData:
+    topic: Any
+    student: Any
+    selected_subtopic: Any
+    details: List[dict]
+    subtopic_summary: List[dict]
+    courses: Any
+    active_report: str = 'heatmap'
+    active_course_pk: Any = None

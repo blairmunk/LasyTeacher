@@ -244,6 +244,63 @@ class ReportsViewsTests(TestCase):
             {'pct': 80, 'css': 'good'},
         ])
 
+    def test_heatmap_student_view_uses_clean_detail_data(self):
+        student = Student.objects.create(last_name='Иванов', first_name='Иван')
+        work = Work.objects.create(name='Контрольная')
+        topic = Topic.objects.create(
+            name='Скорость',
+            subject='Физика',
+            section='Кинематика',
+            grade_level=7,
+        )
+        subtopic = SubTopic.objects.create(
+            topic=topic,
+            name='Средняя скорость',
+            order=1,
+        )
+        task = Task.objects.create(
+            text='Задача',
+            answer='Ответ',
+            topic=topic,
+            subtopic=subtopic,
+            task_type='computational',
+            difficulty=2,
+        )
+        event = Event.objects.create(
+            name='КР',
+            work=work,
+            status='graded',
+            planned_date=timezone.now(),
+        )
+        participation = EventParticipation.objects.create(
+            event=event,
+            student=student,
+            status='graded',
+        )
+        Mark.objects.create(
+            participation=participation,
+            score=4,
+            points=8,
+            max_points=10,
+            task_scores={
+                str(task.pk): {'points': 8, 'max_points': 10},
+            },
+        )
+
+        response = self.client.get(
+            reverse('reports:heatmap-student', args=[topic.pk, student.pk]),
+            {'subtopic': subtopic.pk},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['active_report'], 'heatmap')
+        self.assertEqual(response.context['topic'], topic)
+        self.assertEqual(response.context['student'], student)
+        self.assertEqual(response.context['selected_subtopic'], subtopic)
+        self.assertEqual(response.context['details'][0]['task'], task)
+        self.assertEqual(response.context['details'][0]['pct'], 80)
+        self.assertEqual(response.context['subtopic_summary'][0]['pct'], 80)
+
     def test_dashboard_view_uses_clean_report_data(self):
         now = timezone.now()
         work = Work.objects.create(name='Контрольная')

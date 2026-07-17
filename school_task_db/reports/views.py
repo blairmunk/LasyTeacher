@@ -25,6 +25,9 @@ from core_logic.use_cases.get_heatmap_drilldown_overview import (
     HeatmapDrilldownOverviewRequest,
 )
 from core_logic.use_cases.get_heatmap_overview import HeatmapOverviewRequest
+from core_logic.use_cases.get_heatmap_student_detail import (
+    HeatmapStudentDetailRequest,
+)
 from core_logic.use_cases.get_heatmap_subtopic_matrix import (
     HeatmapSubtopicMatrixRequest,
 )
@@ -600,129 +603,29 @@ class HeatmapStudentView(View):
     """Детальный вид: один ученик × подтемы одной темы"""
 
     def get(self, request, topic_pk, student_pk):
-        topic = get_object_or_404(Topic, pk=topic_pk)
-        student = get_object_or_404(Student, pk=student_pk)
         subtopic_id = request.GET.get('subtopic')
         group_id = request.GET.get('group')
         group_param = f'?group={group_id}' if group_id else ''
-
-        selected_subtopic = None
-        if subtopic_id:
-            selected_subtopic = SubTopic.objects.filter(pk=subtopic_id).first()
-
-        marks = Mark.objects.filter(
-            participation__student=student,
-        ).select_related(
-            'participation__event',
-            'participation__variant',
+        group_suffix = f'&group={group_id}' if group_id else ''
+        detail = container.get_heatmap_student_detail_use_case().execute(
+            HeatmapStudentDetailRequest(
+                topic_id=topic_pk,
+                student_id=student_pk,
+                subtopic_id=subtopic_id,
+            ),
         )
 
-        all_task_ids = set()
-        for mark in marks:
-            if mark.task_scores:
-                all_task_ids.update(mark.task_scores.keys())
-
-        tasks_qs = Task.objects.filter(
-            pk__in=all_task_ids,
-            topic=topic,
-        ).select_related('subtopic')
-        task_map = {str(t.pk): t for t in tasks_qs}
-
-        # Детализация: per-mark дедупликация
-        details = []
-        for mark in marks:
-            if not mark.task_scores:
-                continue
-            event = mark.participation.event
-            seen = set()
-            for task_id, scores in mark.task_scores.items():
-                if task_id in seen:
-                    continue
-                seen.add(task_id)
-
-                task = task_map.get(task_id)
-                if not task:
-                    continue
-                # Фильтр по подтеме
-                if selected_subtopic and task.subtopic_id != selected_subtopic.id:
-                    continue
-
-                pts = scores.get('points', 0)
-                mx = scores.get('max_points', 0)
-                pct = round(pts / mx * 100) if mx > 0 else 0
-                details.append({
-                    'event': event,
-                    'task': task,
-                    'subtopic': task.subtopic,
-                    'points': pts,
-                    'max_points': mx,
-                    'pct': pct,
-                    'css': _color_class(pct),
-                })
-
-        details.sort(key=lambda d: (
-            d['subtopic'].name if d['subtopic'] else '',
-            d['event'].planned_date,
-        ))
-
-        # Агрегация по подтемам (всегда все — для карточек)
-        all_details = []
-        for mark in marks:
-            if not mark.task_scores:
-                continue
-            seen = set()
-            for task_id, scores in mark.task_scores.items():
-                if task_id in seen:
-                    continue
-                seen.add(task_id)
-                task = task_map.get(task_id)
-                if not task:
-                    continue
-                all_details.append({
-                    'subtopic': task.subtopic,
-                    'points': scores.get('points', 0),
-                    'max_points': scores.get('max_points', 0),
-                })
-
-        sub_agg = defaultdict(lambda: {'points': 0, 'max_points': 0})
-        for d in all_details:
-            if d['subtopic']:
-                sub_agg[d['subtopic'].id]['points'] += d['points']
-                sub_agg[d['subtopic'].id]['max_points'] += d['max_points']
-
-        subtopic_summary = []
-        for sub in SubTopic.objects.filter(topic=topic).order_by('order'):
-            data = sub_agg.get(sub.id)
-            is_selected = selected_subtopic and sub.id == selected_subtopic.id
-            if data and data['max_points'] > 0:
-                pct = round(data['points'] / data['max_points'] * 100)
-                subtopic_summary.append({
-                    'subtopic': sub,
-                    'points': data['points'],
-                    'max_points': data['max_points'],
-                    'pct': pct,
-                    'css': _color_class(pct),
-                    'is_selected': is_selected,
-                })
-            else:
-                subtopic_summary.append({
-                    'subtopic': sub,
-                    'pct': None,
-                    'css': 'no-data',
-                    'is_selected': is_selected,
-                })
-
-        group_suffix = f'&group={group_id}' if group_id else ''
-
         return render(request, 'reports/heatmap_student.html', {
-            'topic': topic,
-            'student': student,
-            'details': details,
-            'subtopic_summary': subtopic_summary,
-            'selected_subtopic': selected_subtopic,
+            'topic': detail.topic,
+            'student': detail.student,
+            'details': detail.details,
+            'subtopic_summary': detail.subtopic_summary,
+            'selected_subtopic': detail.selected_subtopic,
             'group_param': group_param,
             'group_suffix': group_suffix,
-            **_get_nav_context('heatmap'),
+            'active_report': detail.active_report,
+            'active_course_pk': detail.active_course_pk,
+            'courses': detail.courses,
         })
 
 

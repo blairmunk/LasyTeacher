@@ -119,6 +119,73 @@ class DjangoReportRepositoryTests(TestCase):
         self.assertEqual(data.rows[0]['cells'][0]['subtopic'], subtopic)
         self.assertEqual(data.col_averages, [{'pct': 80, 'css': 'good'}])
 
+    def test_get_heatmap_student_detail_returns_details_and_summary(self):
+        student = Student.objects.create(last_name='Иванов', first_name='Иван')
+        work = Work.objects.create(name='Контрольная')
+        topic = Topic.objects.create(
+            name='Скорость',
+            subject='Физика',
+            section='Кинематика',
+            grade_level=7,
+        )
+        subtopic = SubTopic.objects.create(
+            topic=topic,
+            name='Средняя скорость',
+            order=1,
+        )
+        other_subtopic = SubTopic.objects.create(
+            topic=topic,
+            name='Путь',
+            order=2,
+        )
+        task = Task.objects.create(
+            text='Задача',
+            answer='Ответ',
+            topic=topic,
+            subtopic=subtopic,
+            task_type='computational',
+            difficulty=2,
+        )
+        event = Event.objects.create(
+            name='КР',
+            work=work,
+            status='graded',
+            planned_date=timezone.now(),
+        )
+        participation = EventParticipation.objects.create(
+            event=event,
+            student=student,
+            status='graded',
+        )
+        Mark.objects.create(
+            participation=participation,
+            score=4,
+            points=8,
+            max_points=10,
+            task_scores={
+                str(task.pk): {'points': 8, 'max_points': 10},
+            },
+        )
+
+        data = DjangoReportRepository().get_heatmap_student_detail(
+            topic_id=topic.pk,
+            student_id=student.pk,
+            subtopic_id=subtopic.pk,
+        )
+
+        self.assertEqual(data.topic, topic)
+        self.assertEqual(data.student, student)
+        self.assertEqual(data.selected_subtopic, subtopic)
+        self.assertEqual(len(data.details), 1)
+        self.assertEqual(data.details[0]['task'], task)
+        self.assertEqual(data.details[0]['pct'], 80)
+        self.assertEqual(data.subtopic_summary[0]['subtopic'], subtopic)
+        self.assertEqual(data.subtopic_summary[0]['pct'], 80)
+        self.assertTrue(data.subtopic_summary[0]['is_selected'])
+        self.assertEqual(data.subtopic_summary[1]['subtopic'], other_subtopic)
+        self.assertIsNone(data.subtopic_summary[1]['pct'])
+        self.assertEqual(data.active_report, 'heatmap')
+
     def test_get_heatmap_course_overview_returns_course_scope(self):
         selected_student = Student.objects.create(
             last_name='Иванов',

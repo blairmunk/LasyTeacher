@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from events.models import Event, EventParticipation
+from events.models import Event, EventParticipation, Mark
 from students.models import Student
 from works.models import Work
 
@@ -37,3 +37,41 @@ class ReportsViewsTests(TestCase):
         self.assertEqual(response.context['participation_stats'], [
             {'status': 'assigned', 'count': 1},
         ])
+
+    def test_work_analysis_view_uses_clean_report_data(self):
+        now = timezone.now()
+        work = Work.objects.create(name='Контрольная')
+        student = Student.objects.create(last_name='Петров', first_name='Пётр')
+        event = Event.objects.create(
+            name='КР',
+            work=work,
+            status='graded',
+            planned_date=now,
+        )
+        participation = EventParticipation.objects.create(
+            event=event,
+            student=student,
+            status='graded',
+        )
+        Mark.objects.create(
+            participation=participation,
+            score=5,
+            points=10,
+            max_points=10,
+            task_scores={
+                '550e8400-e29b-41d4-a716-446655440001': {
+                    'points': 10,
+                    'max_points': 10,
+                },
+            },
+        )
+
+        response = self.client.get(reverse('reports:work-analysis'))
+        work_stat = response.context['works_analysis'][0]
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['active_report'], 'work-analysis')
+        self.assertEqual(work_stat['work'], work)
+        self.assertEqual(work_stat['average_percentage'], 100)
+        self.assertEqual(work_stat['difficulty_assessment'], 'Легкая')
+        self.assertEqual(response.context['summary_stats']['total_works'], 1)

@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from core_logic.use_cases.get_events_status_report import (
     EventsStatusReportRequest,
 )
+from core_logic.use_cases.get_work_analysis_report import WorkAnalysisReportRequest
 from infrastructure.container import container
 from . import plotly_utils
 
@@ -374,78 +375,20 @@ class WorkAnalysisView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        report = container.get_work_analysis_report_use_case().execute(
+            WorkAnalysisReportRequest(
+                year=getattr(self.request, 'current_year', None),
+            ),
+        )
 
-        from works.models import Work
-        from events.models import Event, Mark
-
-        qs = _year_qs(self.request)
-        year = qs['year']
-        events = qs['events']
-        marks = qs['marks']
-
-        works_analysis = []
-        for work in Work.objects.all():
-            work_events = events.filter(work=work)
-            work_marks = marks.filter(
-                participation__event__work=work,
-                score__isnull=False
-            )
-
-            if work_events.count() == 0:
-                continue
-
-            avg_score = work_marks.aggregate(avg=Avg('score'))['avg'] or 0
-
-            # Средний % по task_scores
-            total_pts = 0
-            total_max = 0
-            for mark in work_marks:
-                if mark.task_scores:
-                    for scores in mark.task_scores.values():
-                        total_pts += scores.get('points', 0)
-                        total_max += scores.get('max_points', 0)
-            avg_pct = round(total_pts / total_max * 100) if total_max > 0 else 0
-
-            score_distribution = list(
-                work_marks.values('score').annotate(
-                    count=Count('id')
-                ).order_by('score')
-            )
-
-            works_analysis.append({
-                'work': work,
-                'events_count': work_events.count(),
-                'total_marks': work_marks.count(),
-                'average_score': round(avg_score, 2),
-                'average_percentage': avg_pct,
-                'score_distribution': score_distribution,
-                'difficulty_assessment': self._assess_difficulty(avg_pct),
-            })
-
-        context['works_analysis'] = works_analysis
-        context['summary_stats'] = {
-            'total_works': len(works_analysis),
-            'total_marks': sum(w['total_marks'] for w in works_analysis),
-            'easy_works': sum(1 for w in works_analysis if w['difficulty_assessment'] == 'Легкая'),
-            'hard_works': sum(1 for w in works_analysis if w['difficulty_assessment'] in ('Сложная', 'Очень сложная')),
-            'avg_score': round(
-                sum(w['average_score'] for w in works_analysis) / len(works_analysis), 2
-            ) if works_analysis else 0,
-        }
-
-        context.update(_get_nav_context('work-analysis', year=year))
+        context.update({
+            'works_analysis': report.works_analysis,
+            'summary_stats': report.summary_stats,
+            'active_report': report.active_report,
+            'active_course_pk': report.active_course_pk,
+            'courses': report.courses,
+        })
         return context
-
-    @staticmethod
-    def _assess_difficulty(avg_pct):
-        if avg_pct >= 85:
-            return "Легкая"
-        elif avg_pct >= 70:
-            return "Средняя"
-        elif avg_pct >= 50:
-            return "Сложная"
-        else:
-            return "Очень сложная"
 
 
 class EventsStatusView(TemplateView):

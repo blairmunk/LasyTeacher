@@ -15,3 +15,12 @@ class EventsStatusReportData:
     courses: Any
     active_report: str = 'events-status'
     active_course_pk: Any = None
+
+
+@dataclass(frozen=True)
+class WorkAnalysisReportData:
+    works_analysis: List[dict]
+    summary_stats: dict
+    courses: Any
+    active_report: str = 'work-analysis'
+    active_course_pk: Any = None

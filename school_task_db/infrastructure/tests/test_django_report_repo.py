@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.test import TestCase
 from django.utils import timezone
 
-from events.models import Event, EventParticipation
+from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_report_repo import DjangoReportRepository
 from students.models import Student
 from works.models import Work
@@ -69,3 +69,52 @@ class DjangoReportRepositoryTests(TestCase):
         self.assertEqual(list(data.completed_unchecked), [completed])
         self.assertEqual(list(data.all_events), [planned, completed, reviewing])
         self.assertEqual(data.active_report, 'events-status')
+
+    def test_get_work_analysis_report_returns_work_stats(self):
+        now = timezone.now()
+        work = Work.objects.create(name='Контрольная')
+        student = Student.objects.create(last_name='Петров', first_name='Пётр')
+        event = Event.objects.create(
+            name='КР',
+            work=work,
+            status='graded',
+            planned_date=now,
+        )
+        participation = EventParticipation.objects.create(
+            event=event,
+            student=student,
+            status='graded',
+        )
+        Mark.objects.create(
+            participation=participation,
+            score=4,
+            points=8,
+            max_points=10,
+            task_scores={
+                '550e8400-e29b-41d4-a716-446655440001': {
+                    'points': 3,
+                    'max_points': 5,
+                },
+                '550e8400-e29b-41d4-a716-446655440002': {
+                    'points': 5,
+                    'max_points': 5,
+                },
+            },
+        )
+
+        data = DjangoReportRepository().get_work_analysis_report(year=None)
+        work_stat = data.works_analysis[0]
+
+        self.assertEqual(work_stat['work'], work)
+        self.assertEqual(work_stat['events_count'], 1)
+        self.assertEqual(work_stat['total_marks'], 1)
+        self.assertEqual(work_stat['average_score'], 4)
+        self.assertEqual(work_stat['average_percentage'], 80)
+        self.assertEqual(work_stat['difficulty_assessment'], 'Средняя')
+        self.assertEqual(work_stat['score_distribution'], [
+            {'score': 4, 'count': 1},
+        ])
+        self.assertEqual(data.summary_stats['total_works'], 1)
+        self.assertEqual(data.summary_stats['total_marks'], 1)
+        self.assertEqual(data.summary_stats['avg_score'], 4)
+        self.assertEqual(data.active_report, 'work-analysis')

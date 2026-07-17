@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any
 
-from core_logic.entities.report import EventsStatusReportData
+from core_logic.entities.report import EventsStatusReportData, WorkAnalysisReportData
 
 
 class IReportRepository(ABC):
@@ -15,3 +15,7 @@ class IReportRepository(ABC):
         current_date: datetime,
     ) -> EventsStatusReportData:
         """Return events status report data."""
+
+    @abstractmethod
+    def get_work_analysis_report(self, year: Any) -> WorkAnalysisReportData:
+        """Return work analysis report data."""

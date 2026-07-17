@@ -3,22 +3,53 @@
 from datetime import timedelta
 
 from django.db.models import Avg, Count
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from core_logic.entities.report import (
     EventsStatusReportData,
+    HeatmapOverviewData,
     ReportsDashboardData,
     StudentPerformanceReportData,
     WorkAnalysisReportData,
 )
 from core_logic.interfaces.report_repo import IReportRepository
-from curriculum.models import Course
+from curriculum.models import Course, Topic
 from events.models import Event, EventParticipation, Mark
 from students.models import Student, StudentGroup
 from works.models import Work
 
 
 class DjangoReportRepository(IReportRepository):
+    def get_heatmap_overview(self, group_id):
+        groups = StudentGroup.objects.all().order_by('name')
+        if group_id:
+            selected_group = get_object_or_404(StudentGroup, pk=group_id)
+            students = list(
+                selected_group.students.all().order_by('last_name', 'first_name'),
+            )
+        else:
+            selected_group = None
+            students = list(Student.objects.all().order_by('last_name', 'first_name'))
+
+        sections = list(
+            Topic.objects.filter(subject='Физика')
+            .values_list('section', flat=True)
+            .distinct()
+            .order_by('section'),
+        )
+
+        return HeatmapOverviewData(
+            groups=groups,
+            selected_group=selected_group,
+            students=students,
+            sections=sections,
+            courses=Course.objects.filter(is_active=True).order_by(
+                'grade_level',
+                'name',
+            ),
+        )
+
     def get_reports_dashboard(self, year, current_date):
         current_date = current_date or timezone.now()
         events, participations, courses = self._get_event_scope(year)

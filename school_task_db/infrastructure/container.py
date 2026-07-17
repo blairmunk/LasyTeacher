@@ -57,6 +57,7 @@ from core_logic.use_cases.get_codifier_list import GetCodifierListUseCase
 from core_logic.use_cases.get_course_detail import GetCourseDetailUseCase
 from core_logic.use_cases.get_dashboard_summary import GetDashboardSummaryUseCase
 from core_logic.use_cases.get_global_search import GetGlobalSearchUseCase
+from core_logic.use_cases.get_heatmap_overview import GetHeatmapOverviewUseCase
 from core_logic.use_cases.get_import_views import (
     GetImportHistoryUseCase,
     GetImportPageUseCase,
@@ -509,6 +510,11 @@ class Container:
 
     def get_reports_dashboard_use_case(self):
         return GetReportsDashboardUseCase(
+            report_repo=self.report_repo,
+        )
+
+    def get_heatmap_overview_use_case(self):
+        return GetHeatmapOverviewUseCase(
             report_repo=self.report_repo,
         )
 

@@ -47,6 +47,7 @@ from core_logic.use_cases.get_codifier_list import GetCodifierListUseCase
 from core_logic.use_cases.get_course_detail import GetCourseDetailUseCase
 from core_logic.use_cases.get_dashboard_summary import GetDashboardSummaryUseCase
 from core_logic.use_cases.get_global_search import GetGlobalSearchUseCase
+from core_logic.use_cases.get_heatmap_overview import GetHeatmapOverviewUseCase
 from core_logic.use_cases.get_import_views import (
     GetImportHistoryUseCase,
     GetImportPageUseCase,
@@ -189,6 +190,7 @@ class ContainerTests(SimpleTestCase):
         codifier_detail_use_case = container.get_codifier_detail_use_case()
         dashboard_summary_use_case = container.get_dashboard_summary_use_case()
         global_search_use_case = container.get_global_search_use_case()
+        heatmap_overview_use_case = container.get_heatmap_overview_use_case()
         import_page_use_case = container.get_import_page_use_case()
         import_history_use_case = container.get_import_history_use_case()
         import_validation_use_case = container.validate_task_import_json_use_case()
@@ -313,6 +315,7 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(codifier_detail_use_case, GetCodifierDetailUseCase)
         self.assertIsInstance(dashboard_summary_use_case, GetDashboardSummaryUseCase)
         self.assertIsInstance(global_search_use_case, GetGlobalSearchUseCase)
+        self.assertIsInstance(heatmap_overview_use_case, GetHeatmapOverviewUseCase)
         self.assertIsInstance(import_page_use_case, GetImportPageUseCase)
         self.assertIsInstance(import_history_use_case, GetImportHistoryUseCase)
         self.assertIsInstance(

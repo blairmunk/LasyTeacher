@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.test import TestCase
 from django.utils import timezone
 
-from curriculum.models import Course
+from curriculum.models import Course, Topic
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_report_repo import DjangoReportRepository
 from students.models import Student, StudentGroup
@@ -11,6 +11,49 @@ from works.models import Work
 
 
 class DjangoReportRepositoryTests(TestCase):
+    def test_get_heatmap_overview_returns_groups_students_and_sections(self):
+        selected_student = Student.objects.create(
+            last_name='Иванов',
+            first_name='Иван',
+        )
+        other_student = Student.objects.create(
+            last_name='Петров',
+            first_name='Пётр',
+        )
+        selected_group = StudentGroup.objects.create(name='7А')
+        other_group = StudentGroup.objects.create(name='8Б')
+        selected_group.students.add(selected_student)
+        other_group.students.add(other_student)
+        Topic.objects.create(
+            name='Скорость',
+            subject='Физика',
+            section='Кинематика',
+            grade_level=7,
+        )
+        Topic.objects.create(
+            name='Степень',
+            subject='Математика',
+            section='Алгебра',
+            grade_level=7,
+        )
+        course = Course.objects.create(
+            name='Физика 7',
+            subject='Физика',
+            grade_level=7,
+            is_active=True,
+        )
+
+        data = DjangoReportRepository().get_heatmap_overview(
+            group_id=selected_group.pk,
+        )
+
+        self.assertEqual(list(data.groups), [selected_group, other_group])
+        self.assertEqual(data.selected_group, selected_group)
+        self.assertEqual(data.students, [selected_student])
+        self.assertEqual(data.sections, ['Кинематика'])
+        self.assertEqual(list(data.courses), [course])
+        self.assertEqual(data.active_report, 'heatmap')
+
     def test_get_events_status_report_returns_status_context(self):
         now = timezone.now()
         work = Work.objects.create(name='Контрольная')

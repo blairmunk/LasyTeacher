@@ -62,3 +62,14 @@ class ReportsDashboardData:
     courses: Any
     active_report: str = 'dashboard'
     active_course_pk: Any = None
+
+
+@dataclass(frozen=True)
+class HeatmapOverviewData:
+    groups: Any
+    selected_group: Any
+    students: List[Any]
+    sections: List[str]
+    courses: Any
+    active_report: str = 'heatmap'
+    active_course_pk: Any = None

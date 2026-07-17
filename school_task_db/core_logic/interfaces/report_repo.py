@@ -6,6 +6,7 @@ from typing import Any
 
 from core_logic.entities.report import (
     EventsStatusReportData,
+    HeatmapOverviewData,
     ReportsDashboardData,
     StudentPerformanceReportData,
     WorkAnalysisReportData,
@@ -40,3 +41,7 @@ class IReportRepository(ABC):
         current_date: datetime,
     ) -> ReportsDashboardData:
         """Return dashboard report data."""
+
+    @abstractmethod
+    def get_heatmap_overview(self, group_id: Any) -> HeatmapOverviewData:
+        """Return base heatmap data."""

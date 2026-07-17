@@ -12,6 +12,7 @@ from django.utils import timezone
 from core_logic.use_cases.get_events_status_report import (
     EventsStatusReportRequest,
 )
+from core_logic.use_cases.get_heatmap_overview import HeatmapOverviewRequest
 from core_logic.use_cases.get_reports_dashboard import ReportsDashboardRequest
 from core_logic.use_cases.get_student_performance_report import (
     StudentPerformanceReportRequest,
@@ -264,28 +265,22 @@ class HeatmapView(View):
         group_id = request.GET.get('group')
         section = request.GET.get('section', '')
         transpose = request.GET.get('transpose') == '1'
-
-        groups = StudentGroup.objects.all().order_by('name')
-
-        if group_id:
-            group = get_object_or_404(StudentGroup, pk=group_id)
-            students = list(group.students.all().order_by('last_name', 'first_name'))
-        else:
-            group = None
-            students = list(Student.objects.all().order_by('last_name', 'first_name'))
-
-        sections = list(
-            Topic.objects.filter(subject='Физика')
-            .values_list('section', flat=True)
-            .distinct().order_by('section')
+        overview = container.get_heatmap_overview_use_case().execute(
+            HeatmapOverviewRequest(group_id=group_id),
         )
+
+        groups = overview.groups
+        group = overview.selected_group
+        students = overview.students
 
         if not students:
             return render(request, 'reports/heatmap.html', {
                 'groups': groups, 'selected_group': group,
-                'sections': sections, 'selected_section': section,
+                'sections': overview.sections, 'selected_section': section,
                 'has_data': False, 'is_transposed': transpose,
-                **_get_nav_context('heatmap'),
+                'active_report': overview.active_report,
+                'active_course_pk': overview.active_course_pk,
+                'courses': overview.courses,
             })
 
         columns, rows, col_averages = _build_topic_data(students, section)
@@ -334,7 +329,7 @@ class HeatmapView(View):
         return render(request, 'reports/heatmap.html', {
             'groups': groups,
             'selected_group': group,
-            'sections': sections,
+            'sections': overview.sections,
             'selected_section': section,
             'is_transposed': transpose,
             'toggle_url': toggle_url,
@@ -345,7 +340,9 @@ class HeatmapView(View):
             'total_students': len(students),
             'total_topics': len(columns),
             'has_data': bool(rows and columns),
-            **_get_nav_context('heatmap'),
+            'active_report': overview.active_report,
+            'active_course_pk': overview.active_course_pk,
+            'courses': overview.courses,
         })
 
 class HeatmapCourseView(View):

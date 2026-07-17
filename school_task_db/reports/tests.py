@@ -4,13 +4,36 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from curriculum.models import Course
+from curriculum.models import Course, Topic
 from events.models import Event, EventParticipation, Mark
 from students.models import Student, StudentGroup
 from works.models import Work
 
 
 class ReportsViewsTests(TestCase):
+    def test_heatmap_view_uses_clean_overview_data(self):
+        student = Student.objects.create(last_name='Иванов', first_name='Иван')
+        group = StudentGroup.objects.create(name='7А')
+        group.students.add(student)
+        Topic.objects.create(
+            name='Скорость',
+            subject='Физика',
+            section='Кинематика',
+            grade_level=7,
+        )
+
+        response = self.client.get(
+            reverse('reports:heatmap'),
+            {'group': group.pk, 'section': 'Кинематика'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['active_report'], 'heatmap')
+        self.assertEqual(response.context['selected_group'], group)
+        self.assertEqual(response.context['selected_section'], 'Кинематика')
+        self.assertEqual(response.context['sections'], ['Кинематика'])
+        self.assertFalse(response.context['has_data'])
+
     def test_dashboard_view_uses_clean_report_data(self):
         now = timezone.now()
         work = Work.objects.create(name='Контрольная')

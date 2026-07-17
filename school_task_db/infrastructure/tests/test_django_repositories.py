@@ -310,7 +310,12 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
 
         self.assertEqual(group, self.weak_group)
-        self.assertEqual(list(available_tasks), [self.original_ok])
+        self.assertEqual(available_tasks[0].pk, str(self.original_ok.pk))
+        self.assertEqual(available_tasks[0].text, self.original_ok.text)
+        self.assertEqual(
+            available_tasks[0].task_type_display,
+            self.original_ok.get_task_type_display(),
+        )
         self.assertIsNone(
             repo.get_analog_group('00000000-0000-0000-0000-000000000000')
         )

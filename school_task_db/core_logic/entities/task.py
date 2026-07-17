@@ -147,9 +147,21 @@ class TaskGroupDetailTask:
 @dataclass(frozen=True)
 class AddTasksToGroupData:
     group: Any = None
-    available_tasks: Any = None
+    available_tasks: List["AddTasksToGroupTask"] = None
     search: str = ''
     status: str = 'ready'
+
+
+@dataclass(frozen=True)
+class AddTasksToGroupTask:
+    pk: str
+    topic: str
+    text: str
+    task_type_display: str
+    difficulty_display: str
+    section: str = ''
+    created_at: Any = None
+    image_count: int = 0
 
 
 @dataclass(frozen=True)

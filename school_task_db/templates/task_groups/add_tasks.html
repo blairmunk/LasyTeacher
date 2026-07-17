@@ -32,7 +32,7 @@
             <div class="card">
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Доступные задания ({{ available_tasks.count }})</h5>
+                        <h5 class="mb-0">Доступные задания ({{ available_tasks|length }})</h5>
                         <div>
                             <button type="button" id="selectAll" class="btn btn-sm btn-outline-primary">Выбрать все</button>
                             <button type="button" id="unselectAll" class="btn btn-sm btn-outline-secondary">Снять все</button>
@@ -42,17 +42,17 @@
                 <div class="card-body" style="max-height: 600px; overflow-y: auto;">
                     {% for task in available_tasks %}
                     <div class="form-check mb-3 p-3 border rounded">
-                        <input class="form-check-input task-checkbox" type="checkbox" name="selected_tasks" value="{{ task.id }}" id="task_{{ task.id }}">
-                        <label class="form-check-label w-100" for="task_{{ task.id }}">
+                        <input class="form-check-input task-checkbox" type="checkbox" name="selected_tasks" value="{{ task.pk }}" id="task_{{ task.pk }}">
+                        <label class="form-check-label w-100" for="task_{{ task.pk }}">
                             <div class="row">
                                 <div class="col-md-8">
                                     <h6>{{ task.topic }}</h6>
                                     <p class="text-muted mb-2">{{ task.text|truncatewords:25 }}</p>
                                     <div>
-                                        <span class="badge bg-primary">{{ task.get_task_type_display }}</span>
-                                        <span class="badge bg-secondary">{{ task.get_difficulty_display }}</span>
-                                        {% if task.images.exists %}
-                                            <span class="badge bg-info">{{ task.images.count }} изображ.</span>
+                                        <span class="badge bg-primary">{{ task.task_type_display }}</span>
+                                        <span class="badge bg-secondary">{{ task.difficulty_display }}</span>
+                                        {% if task.image_count %}
+                                            <span class="badge bg-info">{{ task.image_count }} изображ.</span>
                                         {% endif %}
                                     </div>
                                 </div>

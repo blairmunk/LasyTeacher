@@ -113,7 +113,8 @@ class TaskGroupBulkActionTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['group'], self.group)
-        self.assertEqual(list(response.context['available_tasks']), [second_task])
+        self.assertEqual(response.context['available_tasks'][0].pk, str(second_task.pk))
+        self.assertEqual(response.context['available_tasks'][0].text, second_task.text)
         self.assertEqual(response.context['search'], 'Вторая')
 
     def test_bulk_create_work_from_groups_rejects_missing_groups(self):

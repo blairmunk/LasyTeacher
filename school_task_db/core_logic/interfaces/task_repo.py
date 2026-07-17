@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Any, List, Optional, Set, Tuple
 
 from core_logic.entities.task import (
+    AddTasksToGroupTask,
     ReferenceElementOption,
     SelectOption,
     SourceListItem,
@@ -45,7 +46,11 @@ class ITaskRepository(ABC):
         """Return one analog group, or None when it does not exist."""
 
     @abstractmethod
-    def get_available_tasks_for_analog_group(self, group_id: str, search: str) -> Any:
+    def get_available_tasks_for_analog_group(
+        self,
+        group_id: str,
+        search: str,
+    ) -> List[AddTasksToGroupTask]:
         """Return tasks not yet assigned to one analog group."""
 
     @abstractmethod

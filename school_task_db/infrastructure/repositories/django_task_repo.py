@@ -6,6 +6,7 @@ from typing import List, Set
 from django.db.models import Avg, Count, Exists, OuterRef, Q, Subquery
 
 from core_logic.entities.task import (
+    AddTasksToGroupTask,
     ReferenceElementOption,
     SelectOption,
     SourceListItem,
@@ -281,8 +282,8 @@ class DjangoTaskRepository(ITaskRepository):
         tasks = Task.objects.exclude(id__in=existing_task_ids).select_related(
             'topic',
             'subtopic',
-        ).prefetch_related(
-            'images',
+        ).annotate(
+            image_count=Count('images', distinct=True),
         ).order_by('-created_at')
 
         if search:
@@ -291,7 +292,19 @@ class DjangoTaskRepository(ITaskRepository):
                 | Q(topic__name__icontains=search)
             )
 
-        return tasks
+        return [
+            AddTasksToGroupTask(
+                pk=str(task.pk),
+                topic=str(task.topic),
+                text=task.text,
+                task_type_display=task.get_task_type_display(),
+                difficulty_display=task.get_difficulty_display(),
+                section=task.section or '',
+                created_at=task.created_at,
+                image_count=task.image_count,
+            )
+            for task in tasks
+        ]
 
     def get_task(self, task_id: str):
         task = Task.objects.select_related(

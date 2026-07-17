@@ -14,8 +14,10 @@ from core_logic.use_cases.create_work_from_orphans import (
     CreateWorkFromOrphansRequest,
     CreateWorkFromOrphansUseCase,
 )
+from codifier.models import CodifierSpec, ContentEntry, Requirement
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
+from infrastructure.repositories.django_codifier_repo import DjangoCodifierRepository
 from infrastructure.repositories.django_curriculum_repo import (
     DjangoCurriculumRepository,
 )
@@ -403,6 +405,47 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(list(assignments), [assignment])
         self.assertEqual(work_groups[0].analog_group, self.weak_group)
         self.assertEqual(variants_count, 1)
+
+    def test_codifier_repository_returns_list_and_detail_data(self):
+        codifier = CodifierSpec.objects.create(
+            name='ОГЭ 2026 Физика',
+            short_name='ОГЭ 2026',
+            subject='Физика',
+            exam_type='oge',
+            year=2026,
+        )
+        root = ContentEntry.objects.create(
+            codifier=codifier,
+            code='1',
+            name='Механика',
+        )
+        leaf = ContentEntry.objects.create(
+            codifier=codifier,
+            parent=root,
+            code='1.1',
+            name='Динамика',
+            topic=self.topic,
+        )
+        requirement = Requirement.objects.create(
+            codifier=codifier,
+            code='1',
+            name='Знать понятия',
+        )
+        repo = DjangoCodifierRepository()
+
+        codifiers = repo.get_list_codifiers()
+        detail_codifiers = repo.get_detail_codifiers()
+        content_tree = repo.get_content_tree(str(codifier.pk))
+        requirements = repo.get_requirements(str(codifier.pk))
+        coverage = repo.get_coverage(str(codifier.pk))
+
+        self.assertEqual(list(codifiers), [codifier])
+        self.assertEqual(list(detail_codifiers), [codifier])
+        self.assertEqual(content_tree, [root])
+        self.assertEqual(list(requirements), [requirement])
+        self.assertEqual(coverage['total'], 1)
+        self.assertEqual(coverage['covered'], 1)
+        self.assertEqual(leaf.parent, root)
 
     def test_work_repository_returns_variant_list_page_data(self):
         repo = DjangoWorkRepository()

@@ -50,6 +50,8 @@ from core_logic.use_cases.generate_remedial_sheet_document import (
 from core_logic.use_cases.generate_work_document import GenerateWorkDocumentUseCase
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.get_add_tasks_to_group import GetAddTasksToGroupUseCase
+from core_logic.use_cases.get_codifier_detail import GetCodifierDetailUseCase
+from core_logic.use_cases.get_codifier_list import GetCodifierListUseCase
 from core_logic.use_cases.get_course_detail import GetCourseDetailUseCase
 from core_logic.use_cases.get_participation_review import (
     GetParticipationReviewUseCase,
@@ -122,6 +124,7 @@ from core_logic.use_cases.toggle_participation_absent import (
     ToggleParticipationAbsentUseCase,
 )
 from core_logic.use_cases.validate_review_work_scan import ValidateReviewWorkScanUseCase
+from infrastructure.repositories.django_codifier_repo import DjangoCodifierRepository
 from infrastructure.repositories.django_curriculum_repo import DjangoCurriculumRepository
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
@@ -145,6 +148,7 @@ class Container:
         self._event_repo = None
         self._review_repo = None
         self._curriculum_repo = None
+        self._codifier_repo = None
         self._work_form_adapter = None
         self._task_form_adapter = None
         self._document_generation_service = None
@@ -184,6 +188,12 @@ class Container:
         if self._curriculum_repo is None:
             self._curriculum_repo = DjangoCurriculumRepository()
         return self._curriculum_repo
+
+    @property
+    def codifier_repo(self):
+        if self._codifier_repo is None:
+            self._codifier_repo = DjangoCodifierRepository()
+        return self._codifier_repo
 
     @property
     def work_form_adapter(self):
@@ -321,6 +331,16 @@ class Container:
     def get_course_detail_use_case(self):
         return GetCourseDetailUseCase(
             curriculum_repo=self.curriculum_repo,
+        )
+
+    def get_codifier_list_use_case(self):
+        return GetCodifierListUseCase(
+            codifier_repo=self.codifier_repo,
+        )
+
+    def get_codifier_detail_use_case(self):
+        return GetCodifierDetailUseCase(
+            codifier_repo=self.codifier_repo,
         )
 
     def get_task_detail_use_case(self):

@@ -40,6 +40,8 @@ from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCas
 from core_logic.use_cases.generate_work_variants import GenerateWorkVariantsUseCase
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.get_add_tasks_to_group import GetAddTasksToGroupUseCase
+from core_logic.use_cases.get_codifier_detail import GetCodifierDetailUseCase
+from core_logic.use_cases.get_codifier_list import GetCodifierListUseCase
 from core_logic.use_cases.get_course_detail import GetCourseDetailUseCase
 from core_logic.use_cases.get_participation_review import (
     GetParticipationReviewUseCase,
@@ -109,6 +111,7 @@ from core_logic.use_cases.toggle_participation_absent import (
     ToggleParticipationAbsentUseCase,
 )
 from core_logic.use_cases.validate_review_work_scan import ValidateReviewWorkScanUseCase
+from infrastructure.repositories.django_codifier_repo import DjangoCodifierRepository
 from infrastructure.repositories.django_curriculum_repo import (
     DjangoCurriculumRepository,
 )
@@ -156,6 +159,8 @@ class ContainerTests(SimpleTestCase):
         task_group_list_use_case = container.get_task_group_list_use_case()
         add_tasks_form_use_case = container.get_add_tasks_to_group_use_case()
         course_detail_use_case = container.get_course_detail_use_case()
+        codifier_list_use_case = container.get_codifier_list_use_case()
+        codifier_detail_use_case = container.get_codifier_detail_use_case()
         participant_selection_use_case = (
             container.get_event_participant_selection_use_case()
         )
@@ -259,6 +264,8 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(task_group_list_use_case, GetTaskGroupListUseCase)
         self.assertIsInstance(add_tasks_form_use_case, GetAddTasksToGroupUseCase)
         self.assertIsInstance(course_detail_use_case, GetCourseDetailUseCase)
+        self.assertIsInstance(codifier_list_use_case, GetCodifierListUseCase)
+        self.assertIsInstance(codifier_detail_use_case, GetCodifierDetailUseCase)
         self.assertIsInstance(
             participant_selection_use_case,
             GetEventParticipantSelectionUseCase,
@@ -332,5 +339,6 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(container.event_repo, DjangoEventRepository)
         self.assertIsInstance(container.review_repo, DjangoReviewRepository)
         self.assertIsInstance(container.curriculum_repo, DjangoCurriculumRepository)
+        self.assertIsInstance(container.codifier_repo, DjangoCodifierRepository)
         self.assertIsInstance(container.task_form_adapter, TaskFormAdapter)
         self.assertIsInstance(container.work_form_adapter, WorkFormAdapter)

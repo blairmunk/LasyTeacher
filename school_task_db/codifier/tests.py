@@ -58,9 +58,12 @@ class CodifierViewsTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['codifier'], self.codifier)
-        self.assertEqual(response.context['content_tree'], [self.root])
-        self.assertEqual(list(response.context['requirements']), [self.requirement])
+        self.assertEqual(response.context['codifier'].pk, str(self.codifier.pk))
+        self.assertEqual(response.context['codifier'].short_name, self.codifier.short_name)
+        self.assertEqual(response.context['content_tree'][0].code, self.root.code)
+        self.assertEqual(response.context['content_tree'][0].name, self.root.name)
+        self.assertEqual(response.context['requirements'][0].code, self.requirement.code)
+        self.assertEqual(response.context['requirements'][0].name, self.requirement.name)
         self.assertEqual(response.context['coverage']['total'], 1)
         self.assertEqual(response.context['coverage']['covered'], 1)
 

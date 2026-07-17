@@ -12,6 +12,62 @@ class CodifierListData:
 @dataclass(frozen=True)
 class CodifierDetailData:
     codifier: Any = None
-    content_tree: List[Any] = field(default_factory=list)
-    requirements: Any = None
+    content_tree: List["CodifierContentEntry"] = field(default_factory=list)
+    requirements: List["CodifierRequirement"] = field(default_factory=list)
     coverage: Dict[str, int] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class CodifierDetailSpec:
+    pk: str
+    short_name: str
+    name: str
+    content_entries_count: int = 0
+
+
+@dataclass(frozen=True)
+class CodifierObjectRef:
+    name: str = ''
+    short_name: str = ''
+
+
+@dataclass(frozen=True)
+class CodifierSiblingCode:
+    codifier: CodifierObjectRef
+    code: str
+
+
+@dataclass(frozen=True)
+class CodifierContentEntry:
+    code: str
+    name: str
+    topic: Any = None
+    subtopic: Any = None
+    grade_studied: str = ''
+    task_count: int = 0
+    sibling_codes: List[CodifierSiblingCode] = field(default_factory=list)
+    children: List["CodifierContentEntry"] = field(default_factory=list)
+
+    def get_sorted_children(self) -> List["CodifierContentEntry"]:
+        return self.children
+
+    def get_task_count(self) -> int:
+        return self.task_count
+
+    def get_sibling_codes(self) -> List[CodifierSiblingCode]:
+        return self.sibling_codes
+
+
+@dataclass(frozen=True)
+class CodifierRequirement:
+    code: str
+    name: str
+    cognitive_level: str = ''
+    cognitive_level_display: str = ''
+    task_count: int = 0
+
+    def get_cognitive_level_display(self) -> str:
+        return self.cognitive_level_display
+
+    def get_task_count(self) -> int:
+        return self.task_count

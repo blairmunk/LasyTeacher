@@ -58,5 +58,5 @@ class GetCodifierDetailUseCaseTests(TestCase):
 
         self.assertIsNone(data.codifier)
         self.assertEqual(data.content_tree, [])
-        self.assertIsNone(data.requirements)
+        self.assertEqual(data.requirements, [])
         self.assertEqual(data.coverage, {})

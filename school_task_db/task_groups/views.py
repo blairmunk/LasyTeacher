@@ -1,15 +1,14 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.views.decorators.http import require_POST
 from django.http import Http404, JsonResponse
-from django.db.models import Q
 
 from core_logic.entities.task import TaskGroupListFilters
+from core_logic.use_cases.get_add_tasks_to_group import AddTasksToGroupFormRequest
 from infrastructure.container import container
-from .models import AnalogGroup, TaskGroup
+from .models import AnalogGroup
 from .forms import AnalogGroupForm
-from tasks.models import Task
 
 
 class AnalogGroupListView(ListView):
@@ -107,7 +106,6 @@ def add_tasks_to_group(request, group_id):
         from core_logic.use_cases.change_task_group_membership import (
             AddTasksToGroupRequest,
         )
-        from infrastructure.container import container
 
         result = container.add_tasks_to_group_use_case().execute(
             AddTasksToGroupRequest(
@@ -125,21 +123,19 @@ def add_tasks_to_group(request, group_id):
             )
         return redirect('task_groups:detail', pk=group_id)
 
-    group = get_object_or_404(AnalogGroup, pk=group_id)
-    existing_task_ids = TaskGroup.objects.filter(group=group).values_list('task_id', flat=True)
-    available_tasks = Task.objects.exclude(id__in=existing_task_ids).order_by('-created_at')
-
-    search = request.GET.get('search')
-    if search:
-        available_tasks = available_tasks.filter(
-            Q(text__icontains=search) |
-            Q(topic__name__icontains=search)
+    data = container.get_add_tasks_to_group_use_case().execute(
+        AddTasksToGroupFormRequest(
+            group_id=str(group_id),
+            search=request.GET.get('search', ''),
         )
+    )
+    if data.status == 'not_found':
+        raise Http404("Группа не найдена")
 
     context = {
-        'group': group,
-        'available_tasks': available_tasks,
-        'search': search,
+        'group': data.group,
+        'available_tasks': data.available_tasks,
+        'search': data.search,
     }
     return render(request, 'task_groups/add_tasks.html', context)
 

@@ -178,6 +178,31 @@ class DjangoTaskRepository(ITaskRepository):
             'task__subtopic',
         )
 
+    def get_analog_group(self, group_id: str):
+        return AnalogGroup.objects.filter(pk=group_id).first()
+
+    def get_available_tasks_for_analog_group(self, group_id: str, search: str):
+        existing_task_ids = TaskGroup.objects.filter(
+            group_id=group_id,
+        ).values_list(
+            'task_id',
+            flat=True,
+        )
+        tasks = Task.objects.exclude(id__in=existing_task_ids).select_related(
+            'topic',
+            'subtopic',
+        ).prefetch_related(
+            'images',
+        ).order_by('-created_at')
+
+        if search:
+            tasks = tasks.filter(
+                Q(text__icontains=search)
+                | Q(topic__name__icontains=search)
+            )
+
+        return tasks
+
     def get_detail_tasks(self):
         return Task.objects.select_related(
             'topic',

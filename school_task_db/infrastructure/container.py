@@ -49,6 +49,7 @@ from core_logic.use_cases.generate_remedial_sheet_document import (
 )
 from core_logic.use_cases.generate_work_document import GenerateWorkDocumentUseCase
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
+from core_logic.use_cases.get_add_tasks_to_group import GetAddTasksToGroupUseCase
 from core_logic.use_cases.get_participation_review import (
     GetParticipationReviewUseCase,
 )
@@ -300,6 +301,11 @@ class Container:
 
     def get_task_group_detail_use_case(self):
         return GetTaskGroupDetailUseCase(
+            task_repo=self.task_repo,
+        )
+
+    def get_add_tasks_to_group_use_case(self):
+        return GetAddTasksToGroupUseCase(
             task_repo=self.task_repo,
         )
 

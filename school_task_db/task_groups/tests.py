@@ -83,6 +83,25 @@ class TaskGroupBulkActionTests(TestCase):
         self.assertEqual(response.context['analoggroup'], self.group)
         self.assertEqual(list(response.context['tasks']), [self.task.taskgroup_set.get()])
 
+    def test_add_tasks_to_group_get_uses_clean_form_context(self):
+        second_task = Task.objects.create(
+            text='Вторая задача',
+            answer='Ответ',
+            topic=self.topic,
+            task_type='computational',
+            difficulty=3,
+        )
+
+        response = self.client.get(
+            reverse('task_groups:add-tasks', args=[self.group.pk]),
+            {'search': 'Вторая'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['group'], self.group)
+        self.assertEqual(list(response.context['available_tasks']), [second_task])
+        self.assertEqual(response.context['search'], 'Вторая')
+
     def test_bulk_create_work_from_groups_rejects_missing_groups(self):
         response = self.client.post(
             reverse('task_groups:bulk-create-work'),

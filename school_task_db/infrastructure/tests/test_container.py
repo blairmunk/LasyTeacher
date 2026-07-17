@@ -39,6 +39,7 @@ from core_logic.use_cases.delete_variant import DeleteVariantUseCase
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
 from core_logic.use_cases.generate_work_variants import GenerateWorkVariantsUseCase
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
+from core_logic.use_cases.get_add_tasks_to_group import GetAddTasksToGroupUseCase
 from core_logic.use_cases.get_participation_review import (
     GetParticipationReviewUseCase,
 )
@@ -149,6 +150,7 @@ class ContainerTests(SimpleTestCase):
         event_detail_use_case = container.get_event_detail_use_case()
         task_group_detail_use_case = container.get_task_group_detail_use_case()
         task_group_list_use_case = container.get_task_group_list_use_case()
+        add_tasks_form_use_case = container.get_add_tasks_to_group_use_case()
         participant_selection_use_case = (
             container.get_event_participant_selection_use_case()
         )
@@ -250,6 +252,7 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(event_detail_use_case, GetEventDetailUseCase)
         self.assertIsInstance(task_group_detail_use_case, GetTaskGroupDetailUseCase)
         self.assertIsInstance(task_group_list_use_case, GetTaskGroupListUseCase)
+        self.assertIsInstance(add_tasks_form_use_case, GetAddTasksToGroupUseCase)
         self.assertIsInstance(
             participant_selection_use_case,
             GetEventParticipantSelectionUseCase,

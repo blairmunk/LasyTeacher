@@ -71,6 +71,14 @@ class TaskGroupDetailData:
 
 
 @dataclass(frozen=True)
+class AddTasksToGroupData:
+    group: Any = None
+    available_tasks: Any = None
+    search: str = ''
+    status: str = 'ready'
+
+
+@dataclass(frozen=True)
 class TaskDetailData:
     task_groups: Any
 

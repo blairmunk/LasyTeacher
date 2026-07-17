@@ -12,11 +12,15 @@
     <div class="col-md-6 mb-3">
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">{{ variant.work.name }}</h5>
+                <h5 class="card-title">
+                    {% if variant.work %}{{ variant.work.name }}{% else %}Вариант без работы{% endif %}
+                </h5>
                 <h6 class="text-muted">Вариант {{ variant.number }}</h6>
                 <p class="card-text">
-                    <i class="fas fa-tasks"></i> Заданий: {{ variant.tasks.count }}<br>
+                    <i class="fas fa-tasks"></i> Заданий: {{ variant.task_count }}<br>
+                    {% if variant.work %}
                     <i class="fas fa-clock"></i> Время: {{ variant.work.duration }} минут
+                    {% endif %}
                 </p>
                 <p class="card-text">
                     <small class="text-muted">Создан: {{ variant.created_at|date:"d.m.Y H:i" }}</small>

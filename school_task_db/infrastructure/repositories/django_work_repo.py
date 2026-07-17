@@ -3,10 +3,12 @@
 from typing import List, Set
 
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, Sum
 
 from core_logic.entities.work import (
     OrphanVariantRef,
+    OrphanVariantListItem,
+    OrphanVariantStudentRef,
     RemedialOriginalTaskRow,
     RemedialSheetData,
     VariantDeleteInfo,
@@ -17,6 +19,8 @@ from core_logic.entities.work import (
     VariantDetailTaskRow,
     VariantDetailVariant,
     VariantGenerationInfo,
+    VariantListItem,
+    VariantListWorkRef,
     WorkDetailAnalogGroup,
     WorkDetailSpecGroup,
     WorkDetailSpecPreviewItem,
@@ -55,7 +59,28 @@ class DjangoWorkRepository(IWorkRepository):
         ]
 
     def get_list_variants(self):
-        return Variant.objects.all()
+        return [
+            VariantListItem(
+                pk=str(variant.pk),
+                number=variant.number,
+                created_at=variant.created_at,
+                task_count=variant.task_count,
+                work=(
+                    VariantListWorkRef(
+                        pk=str(variant.work.pk),
+                        name=variant.work.name,
+                        duration=variant.work.duration,
+                    )
+                    if variant.work
+                    else None
+                ),
+            )
+            for variant in Variant.objects.select_related(
+                'work',
+            ).annotate(
+                task_count=Count('varianttask'),
+            ).order_by('-created_at')
+        ]
 
     def get_work_form_analog_group_options(self):
         from task_groups.models import AnalogGroup
@@ -334,7 +359,33 @@ class DjangoWorkRepository(IWorkRepository):
         return 0, 'unknown'
 
     def get_orphan_variants(self):
-        return Variant.objects.filter(work__isnull=True).order_by('-created_at')
+        return [
+            OrphanVariantListItem(
+                pk=str(variant.pk),
+                display_name=variant.display_name,
+                short_uuid=variant.get_short_uuid(),
+                variant_type=variant.variant_type,
+                task_count=variant.task_count,
+                total_max_points=variant.total_max_points_value or 0,
+                created_at=variant.created_at,
+                assigned_student=(
+                    OrphanVariantStudentRef(
+                        pk=str(variant.assigned_student.pk),
+                        short_name=variant.assigned_student.get_short_name(),
+                    )
+                    if variant.assigned_student
+                    else None
+                ),
+            )
+            for variant in Variant.objects.filter(
+                work__isnull=True,
+            ).select_related(
+                'assigned_student',
+            ).annotate(
+                task_count=Count('varianttask'),
+                total_max_points_value=Sum('varianttask__max_points'),
+            ).order_by('-created_at')
+        ]
 
     def count_orphan_variants(self) -> int:
         return Variant.objects.filter(work__isnull=True).count()

@@ -67,7 +67,7 @@
                         </td>
                         <td>
                             <span class="badge bg-secondary" style="font-family:monospace;">
-                                #{{ variant.get_short_uuid }}
+                                #{{ variant.short_uuid }}
                             </span>
                         </td>
                         <td>{{ variant.display_name|truncatechars:40 }}</td>
@@ -88,13 +88,13 @@
                             {% if variant.assigned_student %}
                             <a href="{% url 'students:detail' variant.assigned_student.pk %}"
                                class="text-decoration-none">
-                                {{ variant.assigned_student.get_short_name }}
+                                {{ variant.assigned_student.short_name }}
                             </a>
                             {% else %}
                             <span class="text-muted">—</span>
                             {% endif %}
                         </td>
-                        <td>{{ variant.varianttask_set.count }}</td>
+                        <td>{{ variant.task_count }}</td>
                         <td>{{ variant.total_max_points }}</td>
                         <td><small>{{ variant.created_at|date:"d.m.Y H:i" }}</small></td>
                         <td>

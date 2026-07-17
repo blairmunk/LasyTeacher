@@ -192,7 +192,6 @@ def sync_analog_groups(request, work_id):
 
 
 class VariantListView(ListView):
-    model = Variant
     template_name = 'works/variant_list.html'
     context_object_name = 'variants'
     paginate_by = 20
@@ -225,7 +224,6 @@ class VariantDetailView(TemplateView):
 class OrphanVariantListView(ListView):
     """Варианты без привязки к работе (сироты)"""
 
-    model = Variant
     template_name = 'works/orphan_variants.html'
     context_object_name = 'variants'
     paginate_by = 20

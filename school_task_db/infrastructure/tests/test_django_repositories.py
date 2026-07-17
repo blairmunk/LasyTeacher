@@ -637,7 +637,11 @@ class DjangoRemedialRepositoryTests(TestCase):
 
         variants = repo.get_list_variants()
 
-        self.assertEqual(list(variants), [self.source_variant])
+        self.assertEqual(variants[0].pk, str(self.source_variant.pk))
+        self.assertEqual(variants[0].number, self.source_variant.number)
+        self.assertEqual(variants[0].work.name, self.source_work.name)
+        self.assertEqual(variants[0].work.duration, self.source_work.duration)
+        self.assertEqual(variants[0].task_count, 2)
 
     def test_work_repository_returns_form_analog_group_options(self):
         repo = DjangoWorkRepository()
@@ -681,7 +685,11 @@ class DjangoRemedialRepositoryTests(TestCase):
         total_orphans = repo.count_orphan_variants()
 
         self.assertEqual(total_orphans, 1)
-        self.assertEqual(list(variants), [orphan])
+        self.assertEqual(variants[0].pk, str(orphan.pk))
+        self.assertEqual(variants[0].display_name, 'Сирота')
+        self.assertEqual(variants[0].short_uuid, orphan.get_short_uuid())
+        self.assertEqual(variants[0].task_count, 0)
+        self.assertEqual(variants[0].total_max_points, 0)
 
     def test_work_repository_syncs_analog_groups_from_variants(self):
         WorkAnalogGroup.objects.filter(work=self.source_work).delete()

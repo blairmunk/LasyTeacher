@@ -87,7 +87,23 @@ class WorkListItem:
 
 @dataclass(frozen=True)
 class VariantListData:
-    variants: Any
+    variants: List["VariantListItem"]
+
+
+@dataclass(frozen=True)
+class VariantListWorkRef:
+    pk: str
+    name: str
+    duration: int
+
+
+@dataclass(frozen=True)
+class VariantListItem:
+    pk: str
+    number: int
+    created_at: datetime
+    task_count: int = 0
+    work: Optional[VariantListWorkRef] = None
 
 
 @dataclass(frozen=True)
@@ -209,8 +225,26 @@ class RemedialSheetData:
 
 @dataclass(frozen=True)
 class OrphanVariantListData:
-    variants: Any
+    variants: List["OrphanVariantListItem"]
     total_orphans: int = 0
+
+
+@dataclass(frozen=True)
+class OrphanVariantStudentRef:
+    pk: str
+    short_name: str
+
+
+@dataclass(frozen=True)
+class OrphanVariantListItem:
+    pk: str
+    display_name: str
+    short_uuid: str
+    variant_type: str
+    task_count: int
+    total_max_points: int
+    created_at: datetime
+    assigned_student: Optional[OrphanVariantStudentRef] = None
 
 
 @dataclass(frozen=True)

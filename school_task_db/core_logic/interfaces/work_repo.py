@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any, List, Optional, Set
 
 from core_logic.entities.work import (
+    OrphanVariantListItem,
     OrphanVariantRef,
     RemedialSheetData,
     WorkDetailSpecGroup,
@@ -12,6 +13,7 @@ from core_logic.entities.work import (
     WorkDetailVariant,
     WorkDetailWork,
     WorkListItem,
+    VariantListItem,
     VariantGenerationInfo,
     VariantDeleteInfo,
     VariantDetailTaskRow,
@@ -76,7 +78,7 @@ class IWorkRepository(ABC):
         """Return works for the work list page."""
 
     @abstractmethod
-    def get_list_variants(self) -> Any:
+    def get_list_variants(self) -> List[VariantListItem]:
         """Return variants for the variant list page."""
 
     @abstractmethod
@@ -135,7 +137,7 @@ class IWorkRepository(ABC):
         """Return data for rendering a remedial sheet."""
 
     @abstractmethod
-    def get_orphan_variants(self) -> Any:
+    def get_orphan_variants(self) -> List[OrphanVariantListItem]:
         """Return orphan variants for the orphan list page."""
 
     @abstractmethod

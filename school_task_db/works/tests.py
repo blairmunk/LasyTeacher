@@ -69,7 +69,9 @@ class WorkDetailViewTests(TestCase):
         response = self.client.get(reverse('works:variant-list'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(list(response.context['variants']), [self.variant])
+        self.assertEqual(response.context['variants'][0].pk, str(self.variant.pk))
+        self.assertEqual(response.context['variants'][0].number, self.variant.number)
+        self.assertEqual(response.context['variants'][0].task_count, 0)
 
     def test_create_view_saves_work_and_specification_formset(self):
         group = AnalogGroup.objects.create(name='Кинематика')
@@ -403,7 +405,9 @@ class WorkDetailViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['total_orphans'], 1)
-        self.assertEqual(list(response.context['variants']), [orphan])
+        self.assertEqual(response.context['variants'][0].pk, str(orphan.pk))
+        self.assertEqual(response.context['variants'][0].display_name, 'Сирота')
+        self.assertEqual(response.context['variants'][0].task_count, 0)
 
     def test_variant_delete_context_uses_clean_use_case(self):
         student = Student.objects.create(last_name='Петров', first_name='Пётр')

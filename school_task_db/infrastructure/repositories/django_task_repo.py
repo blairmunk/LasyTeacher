@@ -202,11 +202,11 @@ class DjangoTaskRepository(ITaskRepository):
 
         return tasks
 
-    def get_detail_tasks(self):
+    def get_task(self, task_id: str):
         return Task.objects.select_related(
             'topic',
             'subtopic',
-        ).prefetch_related('images')
+        ).prefetch_related('images').filter(pk=task_id).first()
 
     def get_task_detail_groups(self, task_id: str):
         return TaskGroup.objects.filter(

@@ -202,6 +202,16 @@ class TaskBulkGroupAjaxTests(TestCase):
         self.assertEqual(response.context['task'], self.first_task)
         self.assertEqual(response.context['task_groups'][0].group, self.group)
 
+    def test_task_detail_returns_404_for_missing_task(self):
+        response = self.client.get(
+            reverse(
+                'tasks:detail',
+                kwargs={'pk': '550e8400-e29b-41d4-a716-446655440000'},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 404)
+
     def test_load_subtopics_returns_topic_options(self):
         response = self.client.get(
             reverse('tasks:ajax-load-subtopics'),

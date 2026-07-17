@@ -1,10 +1,10 @@
 import json
 
 from django.shortcuts import redirect
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView
 from django.contrib import messages
 from django.urls import reverse, reverse_lazy
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_POST
 
 from core_logic.entities.task import TaskListFilters
@@ -87,19 +87,17 @@ class TaskListView(ListView):
         return context
 
 
-class TaskDetailView(DetailView):
-    model = Task
+class TaskDetailView(TemplateView):
     template_name = 'tasks/detail.html'
-    context_object_name = 'task'
-
-    def get_queryset(self):
-        return container.get_task_detail_use_case().get_queryset()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         detail_data = container.get_task_detail_use_case().execute(
-            task_id=str(self.object.pk),
+            task_id=str(self.kwargs['pk']),
         )
+        if detail_data.task is None:
+            raise Http404('Задание не найдено')
+        context['task'] = detail_data.task
         context['task_groups'] = detail_data.task_groups
         return context
 

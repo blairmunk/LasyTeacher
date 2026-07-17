@@ -10,14 +10,13 @@ from core_logic.use_cases.get_task_reference_options import (
 
 class FakeTaskRepository:
     def __init__(self):
+        self.task = 'task-1'
         self.detail_task_id = None
-        self.detail_queryset_requested = False
         self.subtopic_topic_id = None
         self.reference_request = None
 
-    def get_detail_tasks(self):
-        self.detail_queryset_requested = True
-        return ['task-queryset']
+    def get_task(self, task_id):
+        return self.task if task_id == self.task else None
 
     def get_task_detail_groups(self, task_id):
         self.detail_task_id = task_id
@@ -33,17 +32,25 @@ class FakeTaskRepository:
 
 
 class TaskDetailAndReferenceUseCaseTests(TestCase):
-    def test_detail_use_case_returns_queryset_and_groups(self):
+    def test_detail_use_case_returns_task_and_groups(self):
         repo = FakeTaskRepository()
         use_case = GetTaskDetailUseCase(task_repo=repo)
 
-        queryset = use_case.get_queryset()
         detail = use_case.execute('task-1')
 
-        self.assertEqual(queryset, ['task-queryset'])
-        self.assertTrue(repo.detail_queryset_requested)
+        self.assertEqual(detail.task, 'task-1')
         self.assertEqual(repo.detail_task_id, 'task-1')
         self.assertEqual(detail.task_groups, ['group-1'])
+
+    def test_detail_use_case_returns_empty_data_for_missing_task(self):
+        repo = FakeTaskRepository()
+        use_case = GetTaskDetailUseCase(task_repo=repo)
+
+        detail = use_case.execute('missing-task')
+
+        self.assertIsNone(detail.task)
+        self.assertIsNone(detail.task_groups)
+        self.assertIsNone(repo.detail_task_id)
 
     def test_subtopic_options_rejects_empty_topic(self):
         repo = FakeTaskRepository()

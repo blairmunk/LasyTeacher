@@ -35,8 +35,8 @@ class ITaskRepository(ABC):
         """Return tasks not yet assigned to one analog group."""
 
     @abstractmethod
-    def get_detail_tasks(self) -> Any:
-        """Return tasks for the task detail page lookup."""
+    def get_task(self, task_id: str) -> Any:
+        """Return one task by id, or None when it does not exist."""
 
     @abstractmethod
     def get_task_detail_groups(self, task_id: str) -> Any:

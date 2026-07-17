@@ -285,14 +285,16 @@ class DjangoRemedialRepositoryTests(TestCase):
     def test_task_repository_returns_detail_and_reference_data(self):
         repo = DjangoTaskRepository()
 
-        detail_tasks = repo.get_detail_tasks()
+        detail_task = repo.get_task(str(self.original_weak.pk))
+        missing_task = repo.get_task('00000000-0000-0000-0000-000000000000')
         task_groups = repo.get_task_detail_groups(str(self.original_weak.pk))
         subtopics = repo.get_subtopic_options(str(self.topic.pk))
         missing_subtopics = repo.get_subtopic_options(
             '00000000-0000-0000-0000-000000000000',
         )
 
-        self.assertIn(self.original_weak, list(detail_tasks))
+        self.assertEqual(detail_task, self.original_weak)
+        self.assertIsNone(missing_task)
         self.assertEqual(task_groups[0].group, self.weak_group)
         self.assertEqual(subtopics[0].id, str(self.subtopic.pk))
         self.assertEqual(subtopics[0].name, self.subtopic.name)

@@ -93,7 +93,8 @@ class AddTasksToGroupData:
 
 @dataclass(frozen=True)
 class TaskDetailData:
-    task_groups: Any
+    task: Any = None
+    task_groups: Any = None
 
 
 @dataclass(frozen=True)

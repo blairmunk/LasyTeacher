@@ -13,6 +13,7 @@ from core_logic.entities.student import (
     StudentDetail,
     StudentGroupDetail,
     StudentGroupDetailStudent,
+    StudentGroupListItem,
     StudentGroupRef,
     StudentParticipationProfile,
     StudentRemedialWorkData,
@@ -35,11 +36,20 @@ class DjangoStudentRepository(IStudentRepository):
         return Student.objects.all()
 
     def get_list_student_groups(self):
-        return StudentGroup.objects.select_related(
-            'academic_year',
-        ).prefetch_related(
-            'students',
-        )
+        return [
+            StudentGroupListItem(
+                pk=str(group.pk),
+                name=group.name,
+                short_uuid=group.get_short_uuid(),
+                created_at=group.created_at,
+                students_count=group.students_count,
+            )
+            for group in StudentGroup.objects.select_related(
+                'academic_year',
+            ).annotate(
+                students_count=Count('students'),
+            ).order_by('name')
+        ]
 
     def get_student(self, student_id: str):
         student = Student.objects.filter(pk=student_id).first()

@@ -157,13 +157,15 @@ class StudentUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class StudentGroupListView(ListView):
-    model = StudentGroup
+class StudentGroupListView(TemplateView):
     template_name = 'students/group_list.html'
-    context_object_name = 'student_groups'
 
-    def get_queryset(self):
-        return container.get_student_group_list_use_case().execute().student_groups
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['student_groups'] = (
+            container.get_student_group_list_use_case().execute().student_groups
+        )
+        return context
 
 
 class StudentGroupDetailView(TemplateView):

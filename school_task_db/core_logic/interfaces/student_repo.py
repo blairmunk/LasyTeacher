@@ -7,6 +7,7 @@ from core_logic.entities.student import (
     RemedialWizardPreviewData,
     StudentDetail,
     StudentGroupDetail,
+    StudentGroupListItem,
     StudentRemedialWorkData,
     StudentGroupRef,
     StudentParticipationProfile,
@@ -22,7 +23,7 @@ class IStudentRepository(ABC):
         """Return students for the student list page."""
 
     @abstractmethod
-    def get_list_student_groups(self) -> Any:
+    def get_list_student_groups(self) -> List[StudentGroupListItem]:
         """Return student groups/classes for the group list page."""
 
     @abstractmethod

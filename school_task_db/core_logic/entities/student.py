@@ -143,7 +143,16 @@ class StudentDetailData:
 
 @dataclass(frozen=True)
 class StudentGroupListData:
-    student_groups: Any
+    student_groups: List["StudentGroupListItem"]
+
+
+@dataclass(frozen=True)
+class StudentGroupListItem:
+    pk: str
+    name: str
+    short_uuid: str
+    created_at: datetime
+    students_count: int = 0
 
 
 @dataclass(frozen=True)

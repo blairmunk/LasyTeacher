@@ -195,7 +195,10 @@ class DjangoRemedialRepositoryTests(TestCase):
         student_groups = repo.get_list_student_groups()
 
         self.assertEqual(list(students), [self.student])
-        self.assertEqual(list(student_groups), [self.group])
+        self.assertEqual(student_groups[0].pk, str(self.group.pk))
+        self.assertEqual(student_groups[0].name, self.group.name)
+        self.assertEqual(student_groups[0].short_uuid, self.group.get_short_uuid())
+        self.assertEqual(student_groups[0].students_count, 1)
 
     def test_student_repository_returns_detail_page_objects(self):
         repo = DjangoStudentRepository()

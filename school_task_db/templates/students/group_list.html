@@ -15,9 +15,9 @@
     <div class="col-md-6 mb-3">
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">{{ group.name }} <span class="uuid-badge">{{ group.get_short_uuid }}</span></h5>
+                <h5 class="card-title">{{ group.name }} <span class="uuid-badge">{{ group.short_uuid }}</span></h5>
                 <p class="card-text">
-                    <i class="fas fa-users"></i> Учеников: {{ group.students.count }}
+                    <i class="fas fa-users"></i> Учеников: {{ group.students_count }}
                 </p>
                 <p class="card-text">
                     <small class="text-muted">Создан: {{ group.created_at|date:"d.m.Y H:i" }}</small>

@@ -64,7 +64,7 @@
                                 <div class="fw-bold">{{ task.topic }}</div>
                                 <small class="text-muted">{{ task.text|truncatewords:12 }}</small>
                             </div>
-                            <span class="badge bg-secondary" style="font-family:monospace;">#{{ task.get_short_uuid }}</span>
+                            <span class="badge bg-secondary" style="font-family:monospace;">#{{ task.short_uuid }}</span>
                         </div>
                     </a>
                     {% endfor %}
@@ -88,10 +88,10 @@
                             <div class="me-2">
                                 <div class="fw-bold">{{ work.name }}</div>
                                 <small class="text-muted">
-                                    {{ work.get_work_type_display }} • {{ work.duration }} мин
+                                    {{ work.work_type_display }} • {{ work.duration }} мин
                                 </small>
                             </div>
-                            <span class="badge bg-secondary" style="font-family:monospace;">#{{ work.get_short_uuid }}</span>
+                            <span class="badge bg-secondary" style="font-family:monospace;">#{{ work.short_uuid }}</span>
                         </div>
                     </a>
                     {% endfor %}
@@ -116,14 +116,14 @@
                                 <div class="fw-bold">{{ variant.display_name }}</div>
                                 <small class="text-muted">
                                     Вариант {{ variant.number }} •
-                                    {{ variant.varianttask_set.count }} заданий •
+                                    {{ variant.task_count }} заданий •
                                     {{ variant.total_max_points }} балл.
-                                    {% if not variant.work %}
+                                    {% if not variant.has_work %}
                                         <span class="text-warning"><i class="fas fa-unlink"></i> сирота</span>
                                     {% endif %}
                                 </small>
                             </div>
-                            <span class="badge bg-secondary" style="font-family:monospace;">#{{ variant.get_short_uuid }}</span>
+                            <span class="badge bg-secondary" style="font-family:monospace;">#{{ variant.short_uuid }}</span>
                         </div>
                     </a>
                     {% endfor %}
@@ -147,10 +147,10 @@
                             <div class="me-2">
                                 <div class="fw-bold">{{ group.name }}</div>
                                 <small class="text-muted">
-                                    {{ group.taskgroup_set.count }} заданий
+                                    {{ group.task_count }} заданий
                                 </small>
                             </div>
-                            <span class="badge bg-secondary" style="font-family:monospace;">#{{ group.get_short_uuid }}</span>
+                            <span class="badge bg-secondary" style="font-family:monospace;">#{{ group.short_uuid }}</span>
                         </div>
                     </a>
                     {% endfor %}

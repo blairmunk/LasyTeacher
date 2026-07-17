@@ -3,6 +3,13 @@
 from django.db.models import Q
 
 from core.models import ImportLog
+from core_logic.entities.core import (
+    SearchGroupResult,
+    SearchResultList,
+    SearchTaskResult,
+    SearchVariantResult,
+    SearchWorkResult,
+)
 from core_logic.interfaces.core_repo import ICoreRepository
 from events.models import Event
 from students.models import Student
@@ -41,26 +48,32 @@ class DjangoCoreRepository(ICoreRepository):
 
     def search_by_uuid(self, query: str):
         return {
-            'tasks': self._search_model_by_uuid(
-                Task,
-                query,
-                related_uuid_fields=['topic', 'subtopic'],
+            'tasks': self._task_results(
+                self._search_model_by_uuid(
+                    Task,
+                    query,
+                    related_uuid_fields=['topic', 'subtopic'],
+                )
             ),
-            'works': self._search_model_by_uuid(Work, query),
-            'variants': self._search_model_by_uuid(
-                Variant,
-                query,
-                related_uuid_fields=['work'],
+            'works': self._work_results(self._search_model_by_uuid(Work, query)),
+            'variants': self._variant_results(
+                self._search_model_by_uuid(
+                    Variant,
+                    query,
+                    related_uuid_fields=['work'],
+                )
             ),
-            'groups': self._search_model_by_uuid(AnalogGroup, query),
+            'groups': self._group_results(
+                self._search_model_by_uuid(AnalogGroup, query),
+            ),
         }
 
     def search_by_text(self, words):
         return {
-            'tasks': self._search_tasks_by_text(words),
-            'works': self._search_works_by_text(words),
-            'variants': self._search_variants_by_text(words),
-            'groups': self._search_groups_by_text(words),
+            'tasks': self._task_results(self._search_tasks_by_text(words)),
+            'works': self._work_results(self._search_works_by_text(words)),
+            'variants': self._variant_results(self._search_variants_by_text(words)),
+            'groups': self._group_results(self._search_groups_by_text(words)),
         }
 
     def _search_model_by_uuid(self, model_class, query, related_uuid_fields=None):
@@ -149,3 +162,51 @@ class DjangoCoreRepository(ICoreRepository):
         for word in words:
             group_q &= Q(name__icontains=word)
         return AnalogGroup.objects.filter(group_q)[:20]
+
+    def _task_results(self, tasks):
+        return SearchResultList(
+            SearchTaskResult(
+                pk=str(task.pk),
+                topic=str(task.topic),
+                text=task.text,
+                short_uuid=task.get_short_uuid(),
+            )
+            for task in tasks
+        )
+
+    def _work_results(self, works):
+        return SearchResultList(
+            SearchWorkResult(
+                pk=str(work.pk),
+                name=work.name,
+                work_type_display=work.get_work_type_display(),
+                duration=work.duration,
+                short_uuid=work.get_short_uuid(),
+            )
+            for work in works
+        )
+
+    def _variant_results(self, variants):
+        return SearchResultList(
+            SearchVariantResult(
+                pk=str(variant.pk),
+                display_name=variant.display_name,
+                number=variant.number,
+                task_count=variant.varianttask_set.count(),
+                total_max_points=variant.total_max_points,
+                short_uuid=variant.get_short_uuid(),
+                has_work=variant.work_id is not None,
+            )
+            for variant in variants
+        )
+
+    def _group_results(self, groups):
+        return SearchResultList(
+            SearchGroupResult(
+                pk=str(group.pk),
+                name=group.name,
+                task_count=group.taskgroup_set.count(),
+                short_uuid=group.get_short_uuid(),
+            )
+            for group in groups
+        )

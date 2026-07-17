@@ -78,9 +78,9 @@ class CoreViewsTests(TestCase):
         self.assertEqual(response.context['query'], 'скорость')
         self.assertEqual(response.context['search_mode'], 'text')
         self.assertEqual(response.context['total_found'], 3)
-        self.assertEqual(list(response.context['results']['tasks']), [task])
-        self.assertEqual(list(response.context['results']['works']), [work])
-        self.assertEqual(list(response.context['results']['groups']), [group])
+        self.assertEqual(response.context['results']['tasks'][0].pk, str(task.pk))
+        self.assertEqual(response.context['results']['works'][0].pk, str(work.pk))
+        self.assertEqual(response.context['results']['groups'][0].pk, str(group.pk))
         self.assertEqual(response.context['found_text'], '3 результата')
 
     def test_global_search_empty_query_returns_empty_context(self):

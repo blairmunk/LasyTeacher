@@ -4,6 +4,47 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 
+class SearchResultList(list):
+    def count(self) -> int:
+        return len(self)
+
+
+@dataclass(frozen=True)
+class SearchTaskResult:
+    pk: str
+    topic: str
+    text: str
+    short_uuid: str
+
+
+@dataclass(frozen=True)
+class SearchWorkResult:
+    pk: str
+    name: str
+    work_type_display: str
+    duration: int
+    short_uuid: str
+
+
+@dataclass(frozen=True)
+class SearchVariantResult:
+    pk: str
+    display_name: str
+    number: int
+    task_count: int
+    total_max_points: int
+    short_uuid: str
+    has_work: bool = False
+
+
+@dataclass(frozen=True)
+class SearchGroupResult:
+    pk: str
+    name: str
+    task_count: int
+    short_uuid: str
+
+
 @dataclass(frozen=True)
 class DashboardSummaryData:
     tasks_count: int = 0

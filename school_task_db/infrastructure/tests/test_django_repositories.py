@@ -638,10 +638,12 @@ class DjangoRemedialRepositoryTests(TestCase):
         text_results = repo.search_by_text(['слабое'])
         uuid_results = repo.search_by_uuid(self.source_work.get_short_uuid())
 
-        self.assertEqual(list(text_results['tasks']), [self.original_weak])
+        self.assertEqual(text_results['tasks'][0].pk, str(self.original_weak.pk))
+        self.assertEqual(text_results['tasks'][0].text, self.original_weak.text)
         self.assertEqual(list(text_results['works']), [])
         self.assertEqual(list(text_results['groups']), [])
-        self.assertIn(self.source_work, list(uuid_results['works']))
+        self.assertEqual(uuid_results['works'][0].pk, str(self.source_work.pk))
+        self.assertEqual(uuid_results['works'][0].name, self.source_work.name)
 
     def test_work_repository_returns_variant_list_page_data(self):
         repo = DjangoWorkRepository()

@@ -136,7 +136,30 @@ class StudentGroupListData:
 
 @dataclass(frozen=True)
 class StudentGroupDetailData:
-    student_group: Any = None
+    student_group: Optional["StudentGroupDetail"] = None
+
+
+@dataclass(frozen=True)
+class StudentGroupDetailStudent:
+    pk: str
+    last_name: str
+    first_name: str
+    middle_name: str = ''
+    email: str = ''
+    short_uuid: str = ''
+
+
+@dataclass(frozen=True)
+class StudentGroupDetail:
+    pk: str
+    name: str
+    short_uuid: str
+    created_at: datetime
+    students: List[StudentGroupDetailStudent] = field(default_factory=list)
+
+    @property
+    def students_count(self) -> int:
+        return len(self.students)
 
 
 @dataclass(frozen=True)

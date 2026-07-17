@@ -443,7 +443,13 @@ class RemedialFromEventViewTests(TestCase):
         response = self.client.get(reverse('students:group-detail', args=[group.pk]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['studentgroup'], group)
+        self.assertEqual(response.context['studentgroup'].pk, str(group.pk))
+        self.assertEqual(response.context['studentgroup'].name, group.name)
+        self.assertEqual(response.context['studentgroup'].students_count, 1)
+        self.assertEqual(
+            response.context['studentgroup'].students[0].pk,
+            str(self.student.pk),
+        )
 
     def test_student_group_detail_returns_404_for_missing_group(self):
         response = self.client.get(

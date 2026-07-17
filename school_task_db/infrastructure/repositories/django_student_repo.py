@@ -10,6 +10,8 @@ from core_logic.entities.student import (
     MarkRef,
     ObjectRef,
     RemedialWizardPreviewData,
+    StudentGroupDetail,
+    StudentGroupDetailStudent,
     StudentGroupRef,
     StudentParticipationProfile,
     StudentRemedialWorkData,
@@ -42,11 +44,34 @@ class DjangoStudentRepository(IStudentRepository):
         return Student.objects.filter(pk=student_id).first()
 
     def get_student_group(self, group_id: str):
-        return StudentGroup.objects.select_related(
+        group = StudentGroup.objects.select_related(
             'academic_year',
         ).prefetch_related(
             'students',
         ).filter(pk=group_id).first()
+        if group is None:
+            return None
+
+        return StudentGroupDetail(
+            pk=str(group.pk),
+            name=group.name,
+            short_uuid=group.get_short_uuid(),
+            created_at=group.created_at,
+            students=[
+                StudentGroupDetailStudent(
+                    pk=str(student.pk),
+                    last_name=student.last_name,
+                    first_name=student.first_name,
+                    middle_name=student.middle_name,
+                    email=student.email,
+                    short_uuid=student.get_short_uuid(),
+                )
+                for student in group.students.all().order_by(
+                    'last_name',
+                    'first_name',
+                )
+            ],
+        )
 
     def get_task_results_for_event(
         self,

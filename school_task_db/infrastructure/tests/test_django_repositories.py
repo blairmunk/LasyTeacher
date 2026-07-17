@@ -211,7 +211,10 @@ class DjangoRemedialRepositoryTests(TestCase):
 
         self.assertEqual(student, self.student)
         self.assertIsNone(missing_student)
-        self.assertEqual(student_group, self.group)
+        self.assertEqual(student_group.pk, str(self.group.pk))
+        self.assertEqual(student_group.name, self.group.name)
+        self.assertEqual(student_group.students[0].pk, str(self.student.pk))
+        self.assertEqual(student_group.students[0].last_name, self.student.last_name)
         self.assertIsNone(missing_student_group)
 
     def test_task_repository_returns_filtered_task_list_data(self):

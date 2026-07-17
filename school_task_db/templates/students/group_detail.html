@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Класс {{ studentgroup.name }} <span class="uuid-badge">{{ studentgroup.get_short_uuid }}</span></h2>
+    <h2>Класс {{ studentgroup.name }} <span class="uuid-badge">{{ studentgroup.short_uuid }}</span></h2>
     <div>
         <a href="{% url 'students:remedial-wizard' %}?group_id={{ studentgroup.pk }}"
            class="btn btn-info">
@@ -25,14 +25,14 @@
             <div class="card-body">
                 <h5>Информация о классе</h5>
                 <p><strong>Название:</strong> {{ studentgroup.name }}</p>
-                <p><strong>Количество учеников:</strong> {{ studentgroup.students.count }}</p>
+                <p><strong>Количество учеников:</strong> {{ studentgroup.students_count }}</p>
                 <p><strong>Создан:</strong> {{ studentgroup.created_at|date:"d.m.Y H:i" }}</p>
             </div>
         </div>
 
-        <h4>Ученики в классе ({{ studentgroup.students.count }})</h4>
+        <h4>Ученики в классе ({{ studentgroup.students_count }})</h4>
         
-        {% if studentgroup.students.all %}
+        {% if studentgroup.students %}
         <div class="table-responsive">
             <table class="table table-striped">
                 <thead>
@@ -46,14 +46,14 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for student in studentgroup.students.all %}
+                    {% for student in studentgroup.students %}
                     <tr>
                         <td>{{ forloop.counter }}</td>
                         <td><a href="{% url 'students:detail' student.pk %}" class="text-decoration-none fw-bold">{{ student.last_name }}</a></td>
                         <td>{{ student.first_name }}</td>
                         <td>{{ student.middle_name|default:"—" }}</td>
                         <td>{{ student.email|default:"—" }}</td>
-                        <td><span class="uuid-badge">{{ student.get_short_uuid }}</span></td>
+                        <td><span class="uuid-badge">{{ student.short_uuid }}</span></td>
                     </tr>
                     {% endfor %}
                 </tbody>

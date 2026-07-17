@@ -23,10 +23,6 @@ class ITaskRepository(ABC):
         """Return analog groups for the analog group list page."""
 
     @abstractmethod
-    def get_detail_task_groups(self) -> Any:
-        """Return analog groups for the analog group detail page lookup."""
-
-    @abstractmethod
     def get_tasks_for_analog_group(self, group_id: str) -> Any:
         """Return task memberships for one analog group detail page."""
 

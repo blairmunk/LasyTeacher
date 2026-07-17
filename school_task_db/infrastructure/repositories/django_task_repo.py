@@ -168,9 +168,6 @@ class DjangoTaskRepository(ITaskRepository):
             return queryset.order_by('-created_at')
         return queryset.order_by('name')
 
-    def get_detail_task_groups(self):
-        return AnalogGroup.objects.all()
-
     def get_tasks_for_analog_group(self, group_id: str):
         return TaskGroup.objects.filter(
             group_id=group_id,

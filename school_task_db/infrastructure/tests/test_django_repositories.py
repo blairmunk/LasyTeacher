@@ -255,10 +255,14 @@ class DjangoRemedialRepositoryTests(TestCase):
     def test_task_repository_returns_analog_group_detail_data(self):
         repo = DjangoTaskRepository()
 
-        groups = repo.get_detail_task_groups()
+        group = repo.get_analog_group(str(self.weak_group.pk))
+        missing_group = repo.get_analog_group(
+            '00000000-0000-0000-0000-000000000000',
+        )
         tasks = repo.get_tasks_for_analog_group(str(self.weak_group.pk))
 
-        self.assertIn(self.weak_group, list(groups))
+        self.assertEqual(group, self.weak_group)
+        self.assertIsNone(missing_group)
         self.assertEqual(tasks.count(), 3)
         self.assertEqual(tasks[0].group, self.weak_group)
         self.assertIsNotNone(tasks[0].task.topic)

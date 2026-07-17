@@ -83,6 +83,16 @@ class TaskGroupBulkActionTests(TestCase):
         self.assertEqual(response.context['analoggroup'], self.group)
         self.assertEqual(list(response.context['tasks']), [self.task.taskgroup_set.get()])
 
+    def test_analog_group_detail_returns_404_for_missing_group(self):
+        response = self.client.get(
+            reverse(
+                'task_groups:detail',
+                args=['550e8400-e29b-41d4-a716-446655440000'],
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
+
     def test_add_tasks_to_group_get_uses_clean_form_context(self):
         second_task = Task.objects.create(
             text='Вторая задача',

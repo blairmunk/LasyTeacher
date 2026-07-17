@@ -79,7 +79,8 @@ class TaskGroupListData:
 
 @dataclass(frozen=True)
 class TaskGroupDetailData:
-    tasks: Any
+    group: Any = None
+    tasks: Any = None
 
 
 @dataclass(frozen=True)

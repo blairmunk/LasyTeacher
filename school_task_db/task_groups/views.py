@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.views.generic import ListView, CreateView, UpdateView, TemplateView
 from django.views.decorators.http import require_POST
 from django.http import Http404, JsonResponse
 
@@ -63,19 +63,17 @@ class AnalogGroupListView(ListView):
         return context
 
 
-class AnalogGroupDetailView(DetailView):
-    model = AnalogGroup
+class AnalogGroupDetailView(TemplateView):
     template_name = 'task_groups/detail.html'
-    context_object_name = 'analoggroup'
-
-    def get_queryset(self):
-        return container.get_task_group_detail_use_case().get_queryset()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         detail_data = container.get_task_group_detail_use_case().execute(
-            str(self.object.pk),
+            str(self.kwargs['pk']),
         )
+        if detail_data.group is None:
+            raise Http404('Группа аналогов не найдена')
+        context['analoggroup'] = detail_data.group
         context['tasks'] = detail_data.tasks
         return context
 

@@ -204,18 +204,20 @@ class VariantListView(ListView):
         return container.get_variant_list_use_case().execute().variants
 
 
-class VariantDetailView(DetailView):
-    model = Variant
+class VariantDetailView(TemplateView):
     template_name = 'works/variant_detail.html'
-    context_object_name = 'variant'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         from infrastructure.container import container
 
         detail = container.get_variant_detail_use_case().execute(
-            str(self.object.pk),
+            str(self.kwargs['pk']),
         )
+        if detail.variant is None:
+            raise Http404('Вариант не найден')
+        context['variant'] = detail.variant
+        context['object'] = detail.variant
         context['variant_tasks'] = detail.variant_tasks
         context['total_max_points'] = detail.total_max_points
         return context

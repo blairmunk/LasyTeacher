@@ -13,6 +13,8 @@ from core_logic.entities.work import (
     WorkDetailWork,
     VariantGenerationInfo,
     VariantDeleteInfo,
+    VariantDetailTaskRow,
+    VariantDetailVariant,
 )
 
 
@@ -105,8 +107,12 @@ class IWorkRepository(ABC):
         """Return points specification preview read models for the work detail page."""
 
     @abstractmethod
-    def get_variant_detail_tasks(self, variant_id: str) -> Any:
-        """Return ordered tasks for the variant detail page."""
+    def get_variant_detail(self, variant_id: str) -> Optional[VariantDetailVariant]:
+        """Return one variant detail read model, or None."""
+
+    @abstractmethod
+    def get_variant_detail_tasks(self, variant_id: str) -> List[VariantDetailTaskRow]:
+        """Return ordered task read models for the variant detail page."""
 
     @abstractmethod
     def get_variant_total_max_points(self, variant_id: str) -> int:

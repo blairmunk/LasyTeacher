@@ -374,9 +374,21 @@ class WorkDetailViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['variant_tasks'].count(), 1)
-        self.assertEqual(response.context['variant_tasks'][0].task, task)
+        self.assertEqual(response.context['variant'].pk, str(self.variant.pk))
+        self.assertEqual(len(response.context['variant_tasks']), 1)
+        self.assertEqual(response.context['variant_tasks'][0].task.pk, str(task.pk))
+        self.assertEqual(response.context['variant_tasks'][0].task.text, task.text)
         self.assertEqual(response.context['total_max_points'], 2)
+
+    def test_variant_detail_returns_404_for_missing_variant(self):
+        response = self.client.get(
+            reverse(
+                'works:variant-detail',
+                args=['550e8400-e29b-41d4-a716-446655440000'],
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
 
     def test_orphan_variant_list_view_uses_clean_context_data(self):
         orphan = Variant.objects.create(

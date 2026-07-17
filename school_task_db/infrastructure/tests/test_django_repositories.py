@@ -634,13 +634,21 @@ class DjangoRemedialRepositoryTests(TestCase):
     def test_work_repository_returns_variant_detail_page_data(self):
         repo = DjangoWorkRepository()
 
+        variant = repo.get_variant_detail(str(self.source_variant.pk))
+        missing_variant = repo.get_variant_detail(
+            '550e8400-e29b-41d4-a716-446655440000',
+        )
         variant_tasks = repo.get_variant_detail_tasks(str(self.source_variant.pk))
         total_max_points = repo.get_variant_total_max_points(
             str(self.source_variant.pk),
         )
 
-        self.assertEqual(variant_tasks.count(), 2)
-        self.assertEqual(variant_tasks[0].task, self.original_weak)
+        self.assertEqual(variant.pk, str(self.source_variant.pk))
+        self.assertEqual(variant.display_name, self.source_work.name)
+        self.assertIsNone(missing_variant)
+        self.assertEqual(len(variant_tasks), 2)
+        self.assertEqual(variant_tasks[0].task.pk, str(self.original_weak.pk))
+        self.assertEqual(variant_tasks[0].task.text, self.original_weak.text)
         self.assertEqual(total_max_points, 7)
 
     def test_work_repository_returns_orphan_variant_list_data(self):

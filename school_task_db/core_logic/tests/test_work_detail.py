@@ -4,6 +4,9 @@ from core_logic.entities.work import (
     OrphanVariantRef,
     RemedialSheetData,
     VariantDeleteInfo,
+    VariantDetailTask,
+    VariantDetailTaskRow,
+    VariantDetailVariant,
     VariantGenerationInfo,
     WorkDetailWork,
 )
@@ -68,6 +71,18 @@ class FakeWorkRepository:
         self.analog_groups = analog_groups or []
         self.spec_preview = spec_preview or []
         self.variant_detail_tasks = []
+        self.variant_detail = VariantDetailVariant(
+            pk='variant-1',
+            number=1,
+            display_name='Контрольная',
+            short_uuid='abcd1234',
+            medium_uuid='abcd1234-efgh',
+            variant_type='regular',
+            variant_type_display='Обычный',
+            display_duration=45,
+            display_max_score=7,
+            created_at=None,
+        )
         self.variant_total_max_points = 0
         self.orphan_variants = FakeQuerySet()
         self.orphan_variant_count = 0
@@ -139,6 +154,9 @@ class FakeWorkRepository:
 
     def get_variant_detail_tasks(self, variant_id):
         return self.variant_detail_tasks
+
+    def get_variant_detail(self, variant_id):
+        return self.variant_detail if variant_id == self.variant_detail.pk else None
 
     def get_variant_total_max_points(self, variant_id):
         return self.variant_total_max_points
@@ -285,14 +303,39 @@ class WorkDetailTests(TestCase):
 
     def test_get_variant_detail_use_case_builds_detail_context_data(self):
         repo = FakeWorkRepository()
-        repo.variant_detail_tasks = ['variant-task-1']
+        repo.variant_detail_tasks = [
+            VariantDetailTaskRow(
+                task=VariantDetailTask(
+                    pk='task-1',
+                    id='task-1',
+                    topic='Кинематика',
+                    text='Задача',
+                    answer='Ответ',
+                    task_type_display='Расчётная задача',
+                    difficulty=2,
+                    short_uuid='task1234',
+                ),
+                order=1,
+                max_points=2,
+            )
+        ]
         repo.variant_total_max_points = 7
         use_case = GetVariantDetailUseCase(work_repo=repo)
 
         result = use_case.execute('variant-1')
 
-        self.assertEqual(result.variant_tasks, ['variant-task-1'])
+        self.assertEqual(result.variant, repo.variant_detail)
+        self.assertEqual(result.variant_tasks, repo.variant_detail_tasks)
         self.assertEqual(result.total_max_points, 7)
+
+    def test_get_variant_detail_use_case_returns_empty_data_for_missing_variant(self):
+        repo = FakeWorkRepository()
+        use_case = GetVariantDetailUseCase(work_repo=repo)
+
+        result = use_case.execute('missing-variant')
+
+        self.assertIsNone(result.variant)
+        self.assertEqual(result.variant_tasks, [])
 
     def test_get_variant_generation_placeholder_builds_message(self):
         repo = FakeWorkRepository()

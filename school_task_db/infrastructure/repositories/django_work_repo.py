@@ -9,6 +9,12 @@ from core_logic.entities.work import (
     RemedialOriginalTaskRow,
     RemedialSheetData,
     VariantDeleteInfo,
+    VariantDetailImage,
+    VariantDetailRef,
+    VariantDetailStudentRef,
+    VariantDetailTask,
+    VariantDetailTaskRow,
+    VariantDetailVariant,
     VariantGenerationInfo,
     WorkDetailAnalogGroup,
     WorkDetailSpecGroup,
@@ -120,14 +126,92 @@ class DjangoWorkRepository(IWorkRepository):
             weight=work_group.weight,
         )
 
+    def get_variant_detail(self, variant_id: str):
+        variant = Variant.objects.select_related(
+            'work',
+            'assigned_student',
+            'source_work',
+        ).filter(pk=variant_id).first()
+        if variant is None:
+            return None
+
+        return VariantDetailVariant(
+            pk=str(variant.pk),
+            number=variant.number,
+            display_name=variant.display_name,
+            short_uuid=variant.get_short_uuid(),
+            medium_uuid=variant.get_medium_uuid(),
+            variant_type=variant.variant_type,
+            variant_type_display=variant.get_variant_type_display(),
+            display_duration=variant.display_duration,
+            display_max_score=variant.display_max_score,
+            created_at=variant.created_at,
+            work=(
+                VariantDetailRef(
+                    pk=str(variant.work.pk),
+                    name=variant.work.name,
+                    short_uuid=variant.work.get_short_uuid(),
+                )
+                if variant.work
+                else None
+            ),
+            assigned_student=(
+                VariantDetailStudentRef(
+                    pk=str(variant.assigned_student.pk),
+                    full_name=variant.assigned_student.get_full_name(),
+                    short_name=variant.assigned_student.get_short_name(),
+                )
+                if variant.assigned_student
+                else None
+            ),
+            source_work=(
+                VariantDetailRef(
+                    pk=str(variant.source_work.pk),
+                    name=variant.source_work.name,
+                    short_uuid=variant.source_work.get_short_uuid(),
+                )
+                if variant.source_work
+                else None
+            ),
+        )
+
     def get_variant_detail_tasks(self, variant_id: str):
-        return VariantTask.objects.filter(
+        variant_tasks = VariantTask.objects.filter(
             variant_id=variant_id,
         ).select_related(
             'task',
             'task__topic',
             'task__subtopic',
+        ).prefetch_related(
+            'task__images',
         ).order_by('order')
+
+        return [
+            VariantDetailTaskRow(
+                task=VariantDetailTask(
+                    pk=str(variant_task.task.pk),
+                    id=str(variant_task.task.pk),
+                    topic=str(variant_task.task.topic),
+                    text=variant_task.task.text,
+                    answer=variant_task.task.answer,
+                    task_type_display=variant_task.task.get_task_type_display(),
+                    difficulty=variant_task.task.difficulty,
+                    short_uuid=variant_task.task.get_short_uuid(),
+                    images=[
+                        VariantDetailImage(
+                            caption=image.caption,
+                            position=image.position,
+                            safe_url=image.safe_url,
+                            css_class=image.get_css_class(),
+                        )
+                        for image in variant_task.task.images.all()
+                    ],
+                ),
+                order=variant_task.order,
+                max_points=variant_task.max_points,
+            )
+            for variant_task in variant_tasks
+        ]
 
     def get_variant_total_max_points(self, variant_id: str) -> int:
         variant = Variant.objects.get(pk=variant_id)

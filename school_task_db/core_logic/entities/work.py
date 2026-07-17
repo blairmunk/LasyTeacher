@@ -94,8 +94,72 @@ class VariantGenerationFormData:
 
 @dataclass(frozen=True)
 class VariantDetailData:
-    variant_tasks: Any
+    variant: Optional["VariantDetailVariant"] = None
+    variant_tasks: List["VariantDetailTaskRow"] = field(default_factory=list)
     total_max_points: int = 0
+
+
+@dataclass(frozen=True)
+class VariantDetailRef:
+    pk: str
+    name: str = ''
+    short_uuid: str = ''
+
+
+@dataclass(frozen=True)
+class VariantDetailStudentRef:
+    pk: str
+    full_name: str = ''
+    short_name: str = ''
+
+
+@dataclass(frozen=True)
+class VariantDetailVariant:
+    pk: str
+    number: int
+    display_name: str
+    short_uuid: str
+    medium_uuid: str
+    variant_type: str
+    variant_type_display: str
+    display_duration: int
+    display_max_score: int
+    created_at: datetime
+    work: Optional[VariantDetailRef] = None
+    assigned_student: Optional[VariantDetailStudentRef] = None
+    source_work: Optional[VariantDetailRef] = None
+
+    @property
+    def id(self) -> str:
+        return self.pk
+
+
+@dataclass(frozen=True)
+class VariantDetailImage:
+    caption: str = ''
+    position: str = ''
+    safe_url: Optional[str] = None
+    css_class: str = 'task-image-bottom-70'
+
+
+@dataclass(frozen=True)
+class VariantDetailTask:
+    pk: str
+    id: str
+    topic: str
+    text: str
+    answer: str
+    task_type_display: str
+    difficulty: int
+    short_uuid: str
+    images: List[VariantDetailImage] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class VariantDetailTaskRow:
+    task: VariantDetailTask
+    order: int
+    max_points: int
 
 
 @dataclass(frozen=True)

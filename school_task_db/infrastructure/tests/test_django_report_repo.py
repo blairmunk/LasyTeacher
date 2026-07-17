@@ -3,6 +3,7 @@ from datetime import timedelta
 from django.test import TestCase
 from django.utils import timezone
 
+from curriculum.models import Course
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_report_repo import DjangoReportRepository
 from students.models import Student, StudentGroup
@@ -185,3 +186,68 @@ class DjangoReportRepositoryTests(TestCase):
         self.assertEqual(data.summary_stats['avg_completion_rate'], 100)
         self.assertEqual(data.summary_stats['avg_pct'], 90)
         self.assertEqual(data.active_report, 'student-performance')
+
+    def test_get_reports_dashboard_returns_dashboard_data(self):
+        now = timezone.now()
+        work = Work.objects.create(name='Контрольная')
+        student = Student.objects.create(last_name='Иванов', first_name='Иван')
+        group = StudentGroup.objects.create(name='7А')
+        group.students.add(student)
+        course = Course.objects.create(
+            name='Физика 7',
+            subject='Физика',
+            grade_level=7,
+            is_active=True,
+        )
+        course.student_groups.add(group)
+        event = Event.objects.create(
+            name='КР',
+            work=work,
+            course=course,
+            status='graded',
+            planned_date=now,
+        )
+        participation = EventParticipation.objects.create(
+            event=event,
+            student=student,
+            status='graded',
+        )
+        Mark.objects.create(
+            participation=participation,
+            score=5,
+            points=10,
+            max_points=10,
+            checked_at=now,
+            task_scores={
+                '550e8400-e29b-41d4-a716-446655440001': {
+                    'points': 10,
+                    'max_points': 10,
+                },
+            },
+        )
+
+        data = DjangoReportRepository().get_reports_dashboard(
+            year=None,
+            current_date=now,
+        )
+        class_stat = data.class_stats[0]
+
+        self.assertEqual(data.total_students, 1)
+        self.assertEqual(data.total_events, 1)
+        self.assertEqual(data.total_works, 1)
+        self.assertEqual(data.total_courses, 1)
+        self.assertEqual(data.total_marks, 1)
+        self.assertEqual(data.average_score, 5)
+        self.assertEqual(data.marks_last_month, 1)
+        self.assertEqual(data.score_counts, {5: 1})
+        self.assertEqual(data.events_graded, 1)
+        self.assertEqual(data.event_status_counts, {'graded': 1})
+        self.assertEqual(data.monthly_values[-1], 1)
+        self.assertEqual(class_stat['name'], '7А')
+        self.assertEqual(class_stat['students_count'], 1)
+        self.assertEqual(class_stat['completed_participations'], 1)
+        self.assertEqual(class_stat['completion_rate'], 100)
+        self.assertEqual(class_stat['heatmap_links'][0]['course_name'], 'Физика 7')
+        self.assertEqual(list(data.recent_events), [event])
+        self.assertEqual(data.box_data, {'Контрольная': [5]})
+        self.assertEqual(data.active_report, 'dashboard')

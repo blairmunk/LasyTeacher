@@ -8,11 +8,11 @@ from django.views import View
 from django.views.generic import TemplateView
 from django.db.models import Count, Avg, Q
 from django.utils import timezone
-from datetime import datetime, timedelta
 
 from core_logic.use_cases.get_events_status_report import (
     EventsStatusReportRequest,
 )
+from core_logic.use_cases.get_reports_dashboard import ReportsDashboardRequest
 from core_logic.use_cases.get_student_performance_report import (
     StudentPerformanceReportRequest,
 )
@@ -83,163 +83,61 @@ class ReportsDashboardView(TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        current_date = datetime.now()
-
-        from works.models import Work
-
-        qs = _year_qs(self.request)
-        year = qs['year']
-        events = qs['events']
-        marks = qs['marks']
-        groups = qs['groups']
-        students = qs['students']
-        courses = qs['courses']
-        participations = qs['participations']
-
-        # Основная статистика
-        context.update({
-            'total_students': students.count(),
-            'total_events': events.count(),
-            'total_works': Work.objects.count(),
-            'total_courses': courses.count(),
-        })
-
-        # Статистика по отметкам
-        context.update({
-            'total_marks': marks.count(),
-            'average_score': marks.aggregate(
-                avg_score=Avg('score')
-            )['avg_score'] or 0,
-            'marks_last_month': marks.filter(
-                checked_at__gte=current_date - timedelta(days=30)
-            ).count(),
-        })
-
-        # Распределение оценок — Plotly
-        score_counts = {}
-        for item in marks.exclude(score__isnull=True).values('score').annotate(
-            count=Count('score')
-        ):
-            score_counts[item['score']] = item['count']
-
-        context['score_chart_json'] = plotly_utils.to_json(
-            plotly_utils.score_distribution_config(score_counts)
+        report = container.get_reports_dashboard_use_case().execute(
+            ReportsDashboardRequest(
+                year=getattr(self.request, 'current_year', None),
+                current_date=timezone.now(),
+            ),
         )
 
-        # Статистика по событиям
         context.update({
-            'events_planned': events.filter(status='planned').count(),
-            'events_completed': events.filter(status='completed').count(),
-            'events_graded': events.filter(status='graded').count(),
+            'total_students': report.total_students,
+            'total_events': report.total_events,
+            'total_works': report.total_works,
+            'total_courses': report.total_courses,
+            'total_marks': report.total_marks,
+            'average_score': report.average_score,
+            'marks_last_month': report.marks_last_month,
+            'events_planned': report.events_planned,
+            'events_completed': report.events_completed,
+            'events_graded': report.events_graded,
+            'class_stats': report.class_stats,
+            'recent_events': report.recent_events,
+            'courses': report.courses,
+            'active_report': report.active_report,
+            'active_course_pk': report.active_course_pk,
         })
 
-        # Активность по месяцам — Plotly
-        monthly_labels = []
-        monthly_values = []
-        for i in range(6):
-            month_start = current_date.replace(day=1) - timedelta(days=30 * i)
-            month_end = month_start + timedelta(days=31)
-            count = participations.filter(
-                event__planned_date__range=[month_start, month_end],
-                status__in=['completed', 'graded']
-            ).count()
-            monthly_labels.append(month_start.strftime('%b %Y'))
-            monthly_values.append(count)
-
-        monthly_labels.reverse()
-        monthly_values.reverse()
+        context['score_chart_json'] = plotly_utils.to_json(
+            plotly_utils.score_distribution_config(report.score_counts)
+        )
         context['activity_chart_json'] = plotly_utils.to_json(
             plotly_utils.line_chart_config(
-                monthly_labels, monthly_values,
+                report.monthly_labels,
+                report.monthly_values,
                 title='Активность по месяцам'
             )
         )
-
-        # Статистика по классам — Plotly
-        class_stats = []
-        class_names = []
-        class_avg_scores = []
-        class_completion = []
-
-        for student_group in groups:
-            students_ids = list(
-                student_group.students.values_list('id', flat=True)
-            )
-            grp_participations = participations.filter(
-                student__id__in=students_ids
-            )
-            completed = grp_participations.filter(
-                status__in=['completed', 'graded']
-            )
-            class_marks = marks.filter(
-                participation__student__id__in=students_ids,
-                score__isnull=False
-            )
-            avg_score = class_marks.aggregate(avg=Avg('score'))['avg'] or 0
-            completion_rate = round(
-                (completed.count() / grp_participations.count() * 100)
-                if grp_participations.count() > 0 else 0, 1
-            )
-
-            # Ссылки на heatmap — только для привязанных курсов
-            heatmap_links = []
-            linked_courses = student_group.courses.all()
-            if year:
-                linked_courses = linked_courses.filter(year=year)
-            for c in linked_courses:
-                heatmap_links.append({
-                    'course_id': str(c.pk),
-                    'course_name': c.name,
-                    'group_id': str(student_group.pk),
-                    'group_name': student_group.name,
-                })
-
-            stat = {
-                'name': student_group.name,
-                'students_count': student_group.students.count(),
-                'total_participations': grp_participations.count(),
-                'completed_participations': completed.count(),
-                'average_score': round(avg_score, 2) if avg_score else 0,
-                'completion_rate': completion_rate,
-                'id': str(student_group.id),
-                'heatmap_links': heatmap_links,
-            }
-            class_stats.append(stat)
-            class_names.append(student_group.name)
-            class_avg_scores.append(round(avg_score, 2))
-            class_completion.append(completion_rate)
-
-        context['class_stats'] = class_stats
-
         context['class_chart_json'] = plotly_utils.to_json(
             plotly_utils.multi_bar_config(
-                class_names,
+                report.class_names,
                 {
-                    'Средний балл': class_avg_scores,
+                    'Средний балл': report.class_avg_scores,
                     '% выполнения (÷25)': [
-                        round(c / 25, 2) for c in class_completion
+                        round(c / 25, 2) for c in report.class_completion
                     ],
                 },
                 title='Сравнение классов'
             )
         )
 
-        # Последние события
-        recent_events = events.select_related(
-            'work', 'course'
-        ).order_by('-planned_date')[:10]
-        context['recent_events'] = recent_events
-
-        context['courses'] = courses.order_by('grade_level', 'name')
-
-
-        # Gauge — средний балл
-        avg = context.get('average_score', 0) or 0
         context['gauge_json'] = plotly_utils.to_json(
-            plotly_utils.gauge_config(avg, title='Средний балл')
+            plotly_utils.gauge_config(
+                report.average_score or 0,
+                title='Средний балл',
+            )
         )
 
-        # Donut — статусы событий
         status_labels = []
         status_values = []
         status_colors = []
@@ -252,7 +150,7 @@ class ReportsDashboardView(TemplateView):
             'closed': ('Закрыто', 'rgba(108, 117, 125, 0.75)'),
         }
         for status_code, (label, color) in status_map.items():
-            count = events.filter(status=status_code).count()
+            count = report.event_status_counts.get(status_code, 0)
             if count > 0:
                 status_labels.append(label)
                 status_values.append(count)
@@ -266,25 +164,12 @@ class ReportsDashboardView(TemplateView):
             )
         )
 
-        # Box-plot — распределение оценок по работам
-        from works.models import Work
-        box_data = {}
-        for event in events.select_related('work'):
-            work_name = event.work.name if event.work else 'Без работы'
-            short_name = work_name[:20]
-            event_marks = marks.filter(
-                participation__event=event,
-                score__isnull=False
-            ).values_list('score', flat=True)
-            scores_list = list(event_marks)
-            if scores_list:
-                box_data[short_name] = scores_list
-
         context['box_plot_json'] = plotly_utils.to_json(
-            plotly_utils.box_plot_config(box_data, title='Распределение по работам')
+            plotly_utils.box_plot_config(
+                report.box_data,
+                title='Распределение по работам',
+            )
         )
-
-        context.update(_get_nav_context('dashboard', year=year))
 
         return context
 
@@ -312,6 +197,7 @@ class StudentPerformanceView(TemplateView):
             'courses': report.courses,
         })
         return context
+
 
 class WorkAnalysisView(TemplateView):
     """Анализ работ и их результатов"""

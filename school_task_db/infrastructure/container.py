@@ -126,6 +126,7 @@ from core_logic.use_cases.get_work_list import GetWorkListUseCase
 from core_logic.use_cases.get_work_analysis_report import (
     GetWorkAnalysisReportUseCase,
 )
+from core_logic.use_cases.get_reports_dashboard import GetReportsDashboardUseCase
 from core_logic.use_cases.get_student_performance_report import (
     GetStudentPerformanceReportUseCase,
 )
@@ -503,6 +504,11 @@ class Container:
 
     def get_events_status_report_use_case(self):
         return GetEventsStatusReportUseCase(
+            report_repo=self.report_repo,
+        )
+
+    def get_reports_dashboard_use_case(self):
+        return GetReportsDashboardUseCase(
             report_repo=self.report_repo,
         )
 

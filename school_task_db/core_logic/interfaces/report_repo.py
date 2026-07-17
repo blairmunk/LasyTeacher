@@ -6,6 +6,7 @@ from typing import Any
 
 from core_logic.entities.report import (
     EventsStatusReportData,
+    ReportsDashboardData,
     StudentPerformanceReportData,
     WorkAnalysisReportData,
 )
@@ -31,3 +32,11 @@ class IReportRepository(ABC):
         group_id: Any,
     ) -> StudentPerformanceReportData:
         """Return student performance report data."""
+
+    @abstractmethod
+    def get_reports_dashboard(
+        self,
+        year: Any,
+        current_date: datetime,
+    ) -> ReportsDashboardData:
+        """Return dashboard report data."""

@@ -4,12 +4,63 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from curriculum.models import Course
 from events.models import Event, EventParticipation, Mark
 from students.models import Student, StudentGroup
 from works.models import Work
 
 
 class ReportsViewsTests(TestCase):
+    def test_dashboard_view_uses_clean_report_data(self):
+        now = timezone.now()
+        work = Work.objects.create(name='Контрольная')
+        student = Student.objects.create(last_name='Иванов', first_name='Иван')
+        group = StudentGroup.objects.create(name='7А')
+        group.students.add(student)
+        course = Course.objects.create(
+            name='Физика 7',
+            subject='Физика',
+            grade_level=7,
+            is_active=True,
+        )
+        course.student_groups.add(group)
+        event = Event.objects.create(
+            name='КР',
+            work=work,
+            course=course,
+            status='graded',
+            planned_date=now,
+        )
+        participation = EventParticipation.objects.create(
+            event=event,
+            student=student,
+            status='graded',
+        )
+        Mark.objects.create(
+            participation=participation,
+            score=5,
+            points=10,
+            max_points=10,
+            checked_at=now,
+            task_scores={
+                '550e8400-e29b-41d4-a716-446655440001': {
+                    'points': 10,
+                    'max_points': 10,
+                },
+            },
+        )
+
+        response = self.client.get(reverse('reports:dashboard'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['active_report'], 'dashboard')
+        self.assertEqual(response.context['total_students'], 1)
+        self.assertEqual(response.context['total_events'], 1)
+        self.assertEqual(response.context['total_marks'], 1)
+        self.assertEqual(response.context['class_stats'][0]['name'], '7А')
+        self.assertEqual(list(response.context['recent_events']), [event])
+        self.assertIn('score_chart_json', response.context)
+
     def test_events_status_view_uses_clean_report_data(self):
         now = timezone.now()
         work = Work.objects.create(name='Контрольная')

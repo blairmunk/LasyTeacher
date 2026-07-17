@@ -35,3 +35,30 @@ class StudentPerformanceReportData:
     courses: Any
     active_report: str = 'student-performance'
     active_course_pk: Any = None
+
+
+@dataclass(frozen=True)
+class ReportsDashboardData:
+    total_students: int
+    total_events: int
+    total_works: int
+    total_courses: int
+    total_marks: int
+    average_score: float
+    marks_last_month: int
+    score_counts: dict
+    events_planned: int
+    events_completed: int
+    events_graded: int
+    monthly_labels: List[str]
+    monthly_values: List[int]
+    class_stats: List[dict]
+    class_names: List[str]
+    class_avg_scores: List[float]
+    class_completion: List[float]
+    recent_events: Any
+    event_status_counts: dict
+    box_data: dict
+    courses: Any
+    active_report: str = 'dashboard'
+    active_course_pk: Any = None

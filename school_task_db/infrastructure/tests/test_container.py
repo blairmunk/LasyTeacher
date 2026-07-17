@@ -116,6 +116,7 @@ from core_logic.use_cases.get_work_list import GetWorkListUseCase
 from core_logic.use_cases.get_work_analysis_report import (
     GetWorkAnalysisReportUseCase,
 )
+from core_logic.use_cases.get_reports_dashboard import GetReportsDashboardUseCase
 from core_logic.use_cases.get_student_performance_report import (
     GetStudentPerformanceReportUseCase,
 )
@@ -204,6 +205,7 @@ class ContainerTests(SimpleTestCase):
         events_status_report_use_case = (
             container.get_events_status_report_use_case()
         )
+        reports_dashboard_use_case = container.get_reports_dashboard_use_case()
         work_analysis_report_use_case = (
             container.get_work_analysis_report_use_case()
         )
@@ -332,6 +334,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             events_status_report_use_case,
             GetEventsStatusReportUseCase,
+        )
+        self.assertIsInstance(
+            reports_dashboard_use_case,
+            GetReportsDashboardUseCase,
         )
         self.assertIsInstance(
             work_analysis_report_use_case,

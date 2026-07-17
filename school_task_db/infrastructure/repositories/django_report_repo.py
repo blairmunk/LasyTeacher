@@ -3,9 +3,11 @@
 from datetime import timedelta
 
 from django.db.models import Avg, Count
+from django.utils import timezone
 
 from core_logic.entities.report import (
     EventsStatusReportData,
+    ReportsDashboardData,
     StudentPerformanceReportData,
     WorkAnalysisReportData,
 )
@@ -17,6 +19,59 @@ from works.models import Work
 
 
 class DjangoReportRepository(IReportRepository):
+    def get_reports_dashboard(self, year, current_date):
+        current_date = current_date or timezone.now()
+        events, participations, courses = self._get_event_scope(year)
+        marks = self._get_marks_scope(year)
+        groups, students = self._get_student_scope(year)
+
+        average_score = marks.aggregate(avg_score=Avg('score'))['avg_score'] or 0
+        score_counts = {
+            item['score']: item['count']
+            for item in marks.exclude(score__isnull=True).values('score').annotate(
+                count=Count('score'),
+            )
+        }
+        monthly_labels, monthly_values = self._get_monthly_activity(
+            participations,
+            current_date,
+        )
+        (
+            class_stats,
+            class_names,
+            class_avg_scores,
+            class_completion,
+        ) = self._get_class_stats(groups, participations, marks, year)
+
+        return ReportsDashboardData(
+            total_students=students.count(),
+            total_events=events.count(),
+            total_works=Work.objects.count(),
+            total_courses=courses.count(),
+            total_marks=marks.count(),
+            average_score=average_score,
+            marks_last_month=marks.filter(
+                checked_at__gte=current_date - timedelta(days=30),
+            ).count(),
+            score_counts=score_counts,
+            events_planned=events.filter(status='planned').count(),
+            events_completed=events.filter(status='completed').count(),
+            events_graded=events.filter(status='graded').count(),
+            monthly_labels=monthly_labels,
+            monthly_values=monthly_values,
+            class_stats=class_stats,
+            class_names=class_names,
+            class_avg_scores=class_avg_scores,
+            class_completion=class_completion,
+            recent_events=events.select_related(
+                'work',
+                'course',
+            ).order_by('-planned_date')[:10],
+            event_status_counts=self._get_event_status_counts(events),
+            box_data=self._get_box_data(events, marks),
+            courses=courses.order_by('grade_level', 'name'),
+        )
+
     def get_events_status_report(self, year, current_date):
         events, participations, courses = self._get_event_scope(year)
 
@@ -219,6 +274,104 @@ class DjangoReportRepository(IReportRepository):
                 participation__event__planned_date__range=date_range,
             )
         return Mark.objects.all()
+
+    def _get_monthly_activity(self, participations, current_date):
+        monthly_labels = []
+        monthly_values = []
+        for i in range(6):
+            month_start = current_date.replace(day=1) - timedelta(days=30 * i)
+            month_end = month_start + timedelta(days=31)
+            count = participations.filter(
+                event__planned_date__range=[month_start, month_end],
+                status__in=['completed', 'graded'],
+            ).count()
+            monthly_labels.append(month_start.strftime('%b %Y'))
+            monthly_values.append(count)
+
+        monthly_labels.reverse()
+        monthly_values.reverse()
+        return monthly_labels, monthly_values
+
+    def _get_class_stats(self, groups, participations, marks, year):
+        class_stats = []
+        class_names = []
+        class_avg_scores = []
+        class_completion = []
+
+        for student_group in groups:
+            student_ids = list(student_group.students.values_list('id', flat=True))
+            group_participations = participations.filter(
+                student__id__in=student_ids,
+            )
+            completed = group_participations.filter(
+                status__in=['completed', 'graded'],
+            )
+            class_marks = marks.filter(
+                participation__student__id__in=student_ids,
+                score__isnull=False,
+            )
+            avg_score = class_marks.aggregate(avg=Avg('score'))['avg'] or 0
+            total_participations = group_participations.count()
+            completed_count = completed.count()
+            completion_rate = round(
+                completed_count / total_participations * 100
+                if total_participations > 0 else 0,
+                1,
+            )
+            heatmap_links = self._get_heatmap_links(student_group, year)
+
+            class_stats.append({
+                'name': student_group.name,
+                'students_count': student_group.students.count(),
+                'total_participations': total_participations,
+                'completed_participations': completed_count,
+                'average_score': round(avg_score, 2) if avg_score else 0,
+                'completion_rate': completion_rate,
+                'id': str(student_group.id),
+                'heatmap_links': heatmap_links,
+            })
+            class_names.append(student_group.name)
+            class_avg_scores.append(round(avg_score, 2))
+            class_completion.append(completion_rate)
+
+        return class_stats, class_names, class_avg_scores, class_completion
+
+    def _get_heatmap_links(self, student_group, year):
+        heatmap_links = []
+        linked_courses = student_group.courses.all()
+        if year:
+            linked_courses = linked_courses.filter(year=year)
+        for course in linked_courses:
+            heatmap_links.append({
+                'course_id': str(course.pk),
+                'course_name': course.name,
+                'group_id': str(student_group.pk),
+                'group_name': student_group.name,
+            })
+        return heatmap_links
+
+    def _get_event_status_counts(self, events):
+        return {
+            item['status']: item['count']
+            for item in events.values('status').annotate(
+                count=Count('id'),
+            )
+        }
+
+    def _get_box_data(self, events, marks):
+        box_data = {}
+        for event in events.select_related('work'):
+            work_name = event.work.name if event.work else 'Без работы'
+            short_name = work_name[:20]
+            scores = list(
+                marks.filter(
+                    participation__event=event,
+                    score__isnull=False,
+                ).values_list('score', flat=True),
+            )
+            if scores:
+                box_data[short_name] = scores
+        return box_data
 
     def _average_task_score_percentage(self, marks, default=0):
         total_points = 0

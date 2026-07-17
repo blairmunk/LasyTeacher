@@ -12,6 +12,9 @@ from django.utils import timezone
 from core_logic.use_cases.get_events_status_report import (
     EventsStatusReportRequest,
 )
+from core_logic.use_cases.get_heatmap_course_overview import (
+    HeatmapCourseOverviewRequest,
+)
 from core_logic.use_cases.get_heatmap_overview import HeatmapOverviewRequest
 from core_logic.use_cases.get_heatmap_topic_matrix import (
     HeatmapTopicMatrixRequest,
@@ -360,28 +363,18 @@ class HeatmapCourseView(View):
     """Тепловая карта по курсу: ученики × темы курса"""
 
     def get(self, request, course_pk):
-        from curriculum.models import Course, CourseAssignment
-
-        course = get_object_or_404(Course, pk=course_pk)
         group_id = request.GET.get('group')
         transpose = request.GET.get('transpose') == '1'
-
-        # Группы курса
-        course_groups = course.student_groups.all().order_by('name')
-
-        if group_id:
-            group = get_object_or_404(StudentGroup, pk=group_id)
-            students = list(group.students.all().order_by('last_name', 'first_name'))
-        elif course_groups.exists():
-            students = list(
-                Student.objects.filter(
-                    studentgroup__in=course_groups
-                ).distinct().order_by('last_name', 'first_name')
-            )
-            group = None
-        else:
-            students = list(Student.objects.all().order_by('last_name', 'first_name'))
-            group = None
+        overview = container.get_heatmap_course_overview_use_case().execute(
+            HeatmapCourseOverviewRequest(
+                course_id=course_pk,
+                group_id=group_id,
+            ),
+        )
+        course = overview.course
+        course_groups = overview.groups
+        group = overview.selected_group
+        students = overview.students
 
         if not students:
             return render(request, 'reports/heatmap_course.html', {
@@ -390,15 +383,15 @@ class HeatmapCourseView(View):
                 'selected_group': group,
                 'has_data': False,
                 'is_transposed': transpose,
-                **_get_nav_context('heatmap-course', course.pk),
+                'active_report': overview.active_report,
+                'active_course_pk': overview.active_course_pk,
+                'courses': overview.courses,
             })
 
-        # Темы курса: через CourseAssignment → Work → Variant → Task → Topic
-        course_works = [ca.work for ca in CourseAssignment.objects.filter(
-            course=course).select_related('work')]
-
         columns, rows, col_averages = _build_topic_data_for_course(
-            students, course_works)
+            students,
+            overview.course_works,
+        )
         group_param = f'?group={group.pk}' if group else ''
 
         if not transpose:
@@ -442,7 +435,7 @@ class HeatmapCourseView(View):
         toggle_url = f'{request.path}?{toggle_params.urlencode()}'
 
         # Plotly: динамика по работам курса
-        timeline_json = _build_course_timeline(course_works, students)
+        timeline_json = _build_course_timeline(overview.course_works, students)
 
         return render(request, 'reports/heatmap_course.html', {
             'course': course,
@@ -459,7 +452,9 @@ class HeatmapCourseView(View):
             'total_topics': len(columns),
             'has_data': bool(rows and columns),
             'timeline_json': timeline_json,
-            **_get_nav_context('heatmap-course', course.pk),
+            'active_report': overview.active_report,
+            'active_course_pk': overview.active_course_pk,
+            'courses': overview.courses,
         })
 
 

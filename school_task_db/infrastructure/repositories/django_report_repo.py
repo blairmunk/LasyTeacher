@@ -9,6 +9,7 @@ from django.utils import timezone
 
 from core_logic.entities.report import (
     EventsStatusReportData,
+    HeatmapCourseOverviewData,
     HeatmapOverviewData,
     HeatmapTopicMatrixData,
     ReportsDashboardData,
@@ -16,7 +17,7 @@ from core_logic.entities.report import (
     WorkAnalysisReportData,
 )
 from core_logic.interfaces.report_repo import IReportRepository
-from curriculum.models import Course, Topic
+from curriculum.models import Course, CourseAssignment, Topic
 from events.models import Event, EventParticipation, Mark
 from students.models import Student, StudentGroup
 from tasks.models import Task
@@ -24,6 +25,46 @@ from works.models import Work
 
 
 class DjangoReportRepository(IReportRepository):
+    def get_heatmap_course_overview(self, course_id, group_id):
+        course = get_object_or_404(Course, pk=course_id)
+        course_groups = course.student_groups.all().order_by('name')
+
+        if group_id:
+            selected_group = get_object_or_404(StudentGroup, pk=group_id)
+            students = list(
+                selected_group.students.all().order_by('last_name', 'first_name'),
+            )
+        elif course_groups.exists():
+            students = list(
+                Student.objects.filter(
+                    studentgroup__in=course_groups,
+                ).distinct().order_by('last_name', 'first_name'),
+            )
+            selected_group = None
+        else:
+            students = list(Student.objects.all().order_by('last_name', 'first_name'))
+            selected_group = None
+
+        course_works = [
+            assignment.work
+            for assignment in CourseAssignment.objects.filter(
+                course=course,
+            ).select_related('work')
+        ]
+
+        return HeatmapCourseOverviewData(
+            course=course,
+            groups=course_groups,
+            selected_group=selected_group,
+            students=students,
+            course_works=course_works,
+            courses=Course.objects.filter(is_active=True).order_by(
+                'grade_level',
+                'name',
+            ),
+            active_course_pk=course.pk,
+        )
+
     def get_heatmap_overview(self, group_id):
         groups = StudentGroup.objects.all().order_by('name')
         if group_id:

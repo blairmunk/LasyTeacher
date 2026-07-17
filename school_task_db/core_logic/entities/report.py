@@ -80,3 +80,15 @@ class HeatmapTopicMatrixData:
     columns: List[Any]
     rows: List[dict]
     col_averages: List[dict]
+
+
+@dataclass(frozen=True)
+class HeatmapCourseOverviewData:
+    course: Any
+    groups: Any
+    selected_group: Any
+    students: List[Any]
+    course_works: List[Any]
+    courses: Any
+    active_report: str = 'heatmap-course'
+    active_course_pk: Any = None

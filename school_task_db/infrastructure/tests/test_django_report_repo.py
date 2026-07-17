@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.test import TestCase
 from django.utils import timezone
 
-from curriculum.models import Course, Topic
+from curriculum.models import Course, CourseAssignment, Topic
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_report_repo import DjangoReportRepository
 from students.models import Student, StudentGroup
@@ -12,6 +12,43 @@ from works.models import Work
 
 
 class DjangoReportRepositoryTests(TestCase):
+    def test_get_heatmap_course_overview_returns_course_scope(self):
+        selected_student = Student.objects.create(
+            last_name='Иванов',
+            first_name='Иван',
+        )
+        other_student = Student.objects.create(
+            last_name='Петров',
+            first_name='Пётр',
+        )
+        selected_group = StudentGroup.objects.create(name='7А')
+        other_group = StudentGroup.objects.create(name='8Б')
+        selected_group.students.add(selected_student)
+        other_group.students.add(other_student)
+        course = Course.objects.create(
+            name='Физика 7',
+            subject='Физика',
+            grade_level=7,
+            is_active=True,
+        )
+        course.student_groups.add(selected_group)
+        work = Work.objects.create(name='Контрольная')
+        CourseAssignment.objects.create(course=course, work=work)
+
+        data = DjangoReportRepository().get_heatmap_course_overview(
+            course_id=course.pk,
+            group_id=selected_group.pk,
+        )
+
+        self.assertEqual(data.course, course)
+        self.assertEqual(list(data.groups), [selected_group])
+        self.assertEqual(data.selected_group, selected_group)
+        self.assertEqual(data.students, [selected_student])
+        self.assertEqual(data.course_works, [work])
+        self.assertEqual(list(data.courses), [course])
+        self.assertEqual(data.active_report, 'heatmap-course')
+        self.assertEqual(data.active_course_pk, course.pk)
+
     def test_get_heatmap_overview_returns_groups_students_and_sections(self):
         selected_student = Student.objects.create(
             last_name='Иванов',

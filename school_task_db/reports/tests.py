@@ -88,6 +88,30 @@ class ReportsViewsTests(TestCase):
             {'pct': 80, 'css': 'good'},
         ])
 
+    def test_heatmap_course_view_uses_clean_overview_data(self):
+        student = Student.objects.create(last_name='Иванов', first_name='Иван')
+        group = StudentGroup.objects.create(name='7А')
+        group.students.add(student)
+        course = Course.objects.create(
+            name='Физика 7',
+            subject='Физика',
+            grade_level=7,
+            is_active=True,
+        )
+        course.student_groups.add(group)
+
+        response = self.client.get(
+            reverse('reports:heatmap-course', args=[course.pk]),
+            {'group': group.pk},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['active_report'], 'heatmap-course')
+        self.assertEqual(response.context['active_course_pk'], course.pk)
+        self.assertEqual(response.context['course'], course)
+        self.assertEqual(response.context['selected_group'], group)
+        self.assertFalse(response.context['has_data'])
+
     def test_dashboard_view_uses_clean_report_data(self):
         now = timezone.now()
         work = Work.objects.create(name='Контрольная')

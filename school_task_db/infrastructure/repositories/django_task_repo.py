@@ -10,6 +10,8 @@ from core_logic.entities.task import (
     SelectOption,
     TaskEntity,
     TaskExportFilters,
+    TaskGroupDetailGroup,
+    TaskGroupDetailTask,
     TaskGroupListFilters,
     TaskListFilters,
 )
@@ -168,14 +170,39 @@ class DjangoTaskRepository(ITaskRepository):
             return queryset.order_by('-created_at')
         return queryset.order_by('name')
 
-    def get_tasks_for_analog_group(self, group_id: str):
-        return TaskGroup.objects.filter(
+    def get_analog_group_detail(self, group_id: str):
+        group = AnalogGroup.objects.filter(pk=group_id).first()
+        if group is None:
+            return None
+
+        return TaskGroupDetailGroup(
+            pk=str(group.pk),
+            name=group.name,
+            description=group.description,
+        )
+
+    def get_task_group_detail_tasks(self, group_id: str):
+        task_groups = TaskGroup.objects.filter(
             group_id=group_id,
         ).select_related(
             'task',
             'task__topic',
             'task__subtopic',
+        ).prefetch_related(
+            'task__images',
         )
+
+        return [
+            TaskGroupDetailTask(
+                pk=str(task_group.task.pk),
+                topic=str(task_group.task.topic),
+                text=task_group.task.text,
+                task_type_display=task_group.task.get_task_type_display(),
+                difficulty_display=task_group.task.get_difficulty_display(),
+                image_count=task_group.task.images.count(),
+            )
+            for task_group in task_groups
+        ]
 
     def get_analog_group(self, group_id: str):
         return AnalogGroup.objects.filter(pk=group_id).first()

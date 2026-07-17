@@ -263,17 +263,18 @@ class DjangoRemedialRepositoryTests(TestCase):
     def test_task_repository_returns_analog_group_detail_data(self):
         repo = DjangoTaskRepository()
 
-        group = repo.get_analog_group(str(self.weak_group.pk))
-        missing_group = repo.get_analog_group(
+        group = repo.get_analog_group_detail(str(self.weak_group.pk))
+        missing_group = repo.get_analog_group_detail(
             '00000000-0000-0000-0000-000000000000',
         )
-        tasks = repo.get_tasks_for_analog_group(str(self.weak_group.pk))
+        tasks = repo.get_task_group_detail_tasks(str(self.weak_group.pk))
 
-        self.assertEqual(group, self.weak_group)
+        self.assertEqual(group.pk, str(self.weak_group.pk))
+        self.assertEqual(group.name, self.weak_group.name)
         self.assertIsNone(missing_group)
-        self.assertEqual(tasks.count(), 3)
-        self.assertEqual(tasks[0].group, self.weak_group)
-        self.assertIsNotNone(tasks[0].task.topic)
+        self.assertEqual(len(tasks), 3)
+        self.assertEqual(tasks[0].topic, str(self.topic))
+        self.assertEqual(tasks[0].task_type_display, 'Расчётная задача')
 
     def test_task_repository_returns_add_tasks_form_data(self):
         repo = DjangoTaskRepository()

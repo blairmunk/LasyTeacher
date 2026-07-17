@@ -80,8 +80,10 @@ class TaskGroupBulkActionTests(TestCase):
         response = self.client.get(reverse('task_groups:detail', args=[self.group.pk]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['analoggroup'], self.group)
-        self.assertEqual(list(response.context['tasks']), [self.task.taskgroup_set.get()])
+        self.assertEqual(response.context['analoggroup'].pk, str(self.group.pk))
+        self.assertEqual(response.context['analoggroup'].name, self.group.name)
+        self.assertEqual(response.context['tasks'][0].pk, str(self.task.pk))
+        self.assertEqual(response.context['tasks'][0].text, self.task.text)
 
     def test_analog_group_detail_returns_404_for_missing_group(self):
         response = self.client.get(

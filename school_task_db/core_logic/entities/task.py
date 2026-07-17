@@ -79,8 +79,25 @@ class TaskGroupListData:
 
 @dataclass(frozen=True)
 class TaskGroupDetailData:
-    group: Any = None
-    tasks: Any = None
+    group: Optional["TaskGroupDetailGroup"] = None
+    tasks: List["TaskGroupDetailTask"] = None
+
+
+@dataclass(frozen=True)
+class TaskGroupDetailGroup:
+    pk: str
+    name: str
+    description: str = ''
+
+
+@dataclass(frozen=True)
+class TaskGroupDetailTask:
+    pk: str
+    topic: str
+    text: str
+    task_type_display: str
+    difficulty_display: str
+    image_count: int = 0
 
 
 @dataclass(frozen=True)

@@ -8,6 +8,8 @@ from core_logic.entities.task import (
     SelectOption,
     TaskEntity,
     TaskExportFilters,
+    TaskGroupDetailGroup,
+    TaskGroupDetailTask,
     TaskGroupListFilters,
     TaskListFilters,
 )
@@ -23,8 +25,15 @@ class ITaskRepository(ABC):
         """Return analog groups for the analog group list page."""
 
     @abstractmethod
-    def get_tasks_for_analog_group(self, group_id: str) -> Any:
-        """Return task memberships for one analog group detail page."""
+    def get_analog_group_detail(self, group_id: str) -> Optional[TaskGroupDetailGroup]:
+        """Return one analog group detail read model, or None."""
+
+    @abstractmethod
+    def get_task_group_detail_tasks(
+        self,
+        group_id: str,
+    ) -> List[TaskGroupDetailTask]:
+        """Return task read models for one analog group detail page."""
 
     @abstractmethod
     def get_analog_group(self, group_id: str) -> Any:

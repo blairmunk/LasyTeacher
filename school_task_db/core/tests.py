@@ -136,6 +136,46 @@ class CoreViewsTests(TestCase):
         )
         self.assertIsNone(payload['preview'])
 
+    def test_execute_import_json_ajax_uses_clean_import_use_case(self):
+        upload = SimpleUploadedFile(
+            'tasks.json',
+            json.dumps({
+                'tasks': [
+                    {
+                        'id': '550e8400-e29b-41d4-a716-446655440001',
+                        'text': 'Задача на силу',
+                        'answer': 'Ответ',
+                        'task_type': 'computational',
+                        'difficulty': 2,
+                        'topic': {
+                            'name': 'Динамика',
+                            'subject': 'Физика',
+                            'grade_level': 9,
+                        },
+                    },
+                ],
+            }).encode('utf-8'),
+            content_type='application/json',
+        )
+
+        response = self.client.post(
+            reverse('core:import-execute'),
+            {
+                'json_file': upload,
+                'mode': 'update',
+                'dry_run': 'false',
+                'create_missing': 'true',
+            },
+        )
+        payload = response.json()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(payload['status'], 'success')
+        self.assertEqual(payload['stats']['created'], 1)
+        self.assertEqual(payload['stats']['context_counts']['tasks'], 1)
+        self.assertTrue(Task.objects.filter(text='Задача на силу').exists())
+        self.assertTrue(ImportLog.objects.filter(pk=payload['log_id']).exists())
+
     def test_export_tasks_returns_clean_export_payload(self):
         topic = Topic.objects.create(
             name='Динамика',

@@ -36,6 +36,7 @@ from core_logic.use_cases.create_work_from_tasks import CreateWorkFromTasksUseCa
 from core_logic.use_cases.delete_task_groups import DeleteTaskGroupsUseCase
 from core_logic.use_cases.delete_task import DeleteTaskUseCase
 from core_logic.use_cases.delete_variant import DeleteVariantUseCase
+from core_logic.use_cases.execute_task_import import ExecuteTaskImportUseCase
 from core_logic.use_cases.export_tasks import ExportTasksUseCase
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
 from core_logic.use_cases.generate_work_variants import GenerateWorkVariantsUseCase
@@ -134,6 +135,7 @@ from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from infrastructure.forms.task_forms import TaskFormAdapter
 from infrastructure.forms.work_forms import WorkFormAdapter
+from infrastructure.services.task_import_service import DjangoTaskImportService
 
 
 class ContainerTests(SimpleTestCase):
@@ -177,6 +179,7 @@ class ContainerTests(SimpleTestCase):
         import_page_use_case = container.get_import_page_use_case()
         import_history_use_case = container.get_import_history_use_case()
         import_validation_use_case = container.validate_task_import_json_use_case()
+        execute_import_use_case = container.execute_task_import_use_case()
         export_tasks_use_case = container.export_tasks_use_case()
         participant_selection_use_case = (
             container.get_event_participant_selection_use_case()
@@ -291,6 +294,7 @@ class ContainerTests(SimpleTestCase):
             import_validation_use_case,
             ValidateTaskImportJsonUseCase,
         )
+        self.assertIsInstance(execute_import_use_case, ExecuteTaskImportUseCase)
         self.assertIsInstance(export_tasks_use_case, ExportTasksUseCase)
         self.assertIsInstance(
             participant_selection_use_case,
@@ -369,3 +373,4 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(container.core_repo, DjangoCoreRepository)
         self.assertIsInstance(container.task_form_adapter, TaskFormAdapter)
         self.assertIsInstance(container.work_form_adapter, WorkFormAdapter)
+        self.assertIsInstance(container.task_import_service, DjangoTaskImportService)

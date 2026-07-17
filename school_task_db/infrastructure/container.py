@@ -43,6 +43,7 @@ from core_logic.use_cases.delete_variant import DeleteVariantUseCase
 from core_logic.use_cases.delete_task_groups import DeleteTaskGroupsUseCase
 from core_logic.use_cases.delete_task import DeleteTaskUseCase
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
+from core_logic.use_cases.execute_task_import import ExecuteTaskImportUseCase
 from core_logic.use_cases.export_tasks import ExportTasksUseCase
 from core_logic.use_cases.generate_work_variants import GenerateWorkVariantsUseCase
 from core_logic.use_cases.generate_remedial_sheet_document import (
@@ -145,6 +146,7 @@ from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from infrastructure.services.document_generation_service import (
     DjangoDocumentGenerationService,
 )
+from infrastructure.services.task_import_service import DjangoTaskImportService
 from infrastructure.forms.work_forms import WorkFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
 
@@ -164,6 +166,7 @@ class Container:
         self._work_form_adapter = None
         self._task_form_adapter = None
         self._document_generation_service = None
+        self._task_import_service = None
 
     @property
     def student_repo(self):
@@ -234,6 +237,12 @@ class Container:
                 ),
             )
         return self._document_generation_service
+
+    @property
+    def task_import_service(self):
+        if self._task_import_service is None:
+            self._task_import_service = DjangoTaskImportService()
+        return self._task_import_service
 
     def remedial_service(self):
         return RemedialService(
@@ -383,6 +392,11 @@ class Container:
 
     def validate_task_import_json_use_case(self):
         return ValidateTaskImportJsonUseCase()
+
+    def execute_task_import_use_case(self):
+        return ExecuteTaskImportUseCase(
+            task_import_service=self.task_import_service,
+        )
 
     def export_tasks_use_case(self):
         return ExportTasksUseCase(

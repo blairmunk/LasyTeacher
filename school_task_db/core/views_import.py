@@ -9,8 +9,8 @@ from django.views.generic import ListView
 from django.views.decorators.http import require_POST
 
 from .importers.tasks import TaskImporter
-from .models import ImportLog
 from core_logic.entities.task import TaskExportFilters
+from core_logic.entities.task_import import TaskImportRequest
 from core_logic.use_cases.export_tasks import ExportTasksRequest
 from core_logic.use_cases.get_import_views import ImportPageRequest
 from core_logic.use_cases.validate_task_import_json import (
@@ -35,7 +35,6 @@ class ImportPageView(View):
 
 class ImportHistoryView(ListView):
     """История всех импортов"""
-    model = ImportLog
     template_name = 'core/import_history.html'
     context_object_name = 'imports'
     paginate_by = 20
@@ -130,141 +129,20 @@ def execute_import_ajax(request):
     except (UnicodeDecodeError, json.JSONDecodeError) as e:
         return JsonResponse({'error': f'Ошибка чтения JSON: {str(e)}'}, status=400)
     
-    # Создаём лог
-    log = ImportLog.objects.create(
-        filename=uploaded_file.name,
-        mode=mode,
-        dry_run=dry_run,
-        file_size=uploaded_file.size,
-        status=ImportLog.Status.IMPORTING,
-    )
-    
-    # Импорт
-    start_time = time.time()
-    try:
-        importer = TaskImporter(
+    result = container.execute_task_import_use_case().execute(
+        TaskImportRequest(
+            data=data,
+            filename=uploaded_file.name,
             mode=mode,
             dry_run=dry_run,
-            verbose=True,
             create_missing=create_missing,
-        )
-        importer.validate_mode()
-        context = importer.import_tasks_from_json(data)
-        
-        duration_ms = int((time.time() - start_time) * 1000)
-        
-        # Извлекаем статистику из importer.stats и context
-        stats_created = getattr(importer.stats, 'created', 0)
-        stats_updated = getattr(importer.stats, 'updated', 0)
-        stats_skipped = getattr(importer.stats, 'skipped', 0)
-        stats_errors_list = getattr(importer.stats, 'errors', [])
-        
-        # errors может быть int или list в зависимости от реализации BaseImporter
-        if isinstance(stats_errors_list, list):
-            errors_count = len(stats_errors_list)
-            error_messages = [str(e) for e in stats_errors_list[:50]]
-        elif isinstance(stats_errors_list, int):
-            errors_count = stats_errors_list
-            error_messages = []
-        else:
-            errors_count = 0
-            error_messages = []
-        
-        # Считаем по контексту
-        tasks_in_context = len(getattr(context, 'imported_tasks', {}))
-        groups_in_context = len(getattr(context, 'imported_groups', {}))
-        topics_in_context = len(getattr(context, 'imported_topics', {}))
-        
-        # Получаем context stats
-        context_stats = {}
-        if hasattr(context, 'get_stats_summary'):
-            context_stats = context.get_stats_summary()
-        
-        # Заполняем лог
-        log.tasks_created = stats_created
-        log.tasks_updated = stats_updated
-        log.tasks_skipped = stats_skipped
-        log.groups_created = groups_in_context
-        log.topics_created = topics_in_context
-        log.errors_count = errors_count
-        log.details = {
-            'importer_stats': {
-                'created': stats_created,
-                'updated': stats_updated,
-                'skipped': stats_skipped,
-            },
-            'context_stats': context_stats,
-            'context_counts': {
-                'tasks': tasks_in_context,
-                'groups': groups_in_context,
-                'topics': topics_in_context,
-            },
-        }
-        log.error_messages = error_messages
-        log.duration_ms = duration_ms
-        log.status = (
-            ImportLog.Status.SUCCESS if errors_count == 0
-            else ImportLog.Status.PARTIAL
-        )
-        log.save()
-        
-        return JsonResponse({
-            'status': 'success',
-            'dry_run': dry_run,
-            'log_id': str(log.id),
-            'duration_ms': duration_ms,
-            'stats': {
-                'created': stats_created,
-                'updated': stats_updated,
-                'skipped': stats_skipped,
-                'errors': errors_count,
-                'context': context_stats,
-                'context_counts': {
-                    'tasks': tasks_in_context,
-                    'groups': groups_in_context,
-                    'topics': topics_in_context,
-                },
-            },
-            'message': _build_summary_message(log),
-        })
-        
-    except Exception as e:
-        duration_ms = int((time.time() - start_time) * 1000)
-        log.status = ImportLog.Status.FAILED
-        log.error_messages = [str(e)]
-        log.duration_ms = duration_ms
-        log.save()
-        
-        return JsonResponse({
-            'status': 'error',
-            'log_id': str(log.id),
-            'error': str(e),
-        }, status=500)
-
-
-def _build_summary_message(log):
-    """Формирует человекочитаемый отчёт"""
-    prefix = "🔍 ПРЕВЬЮ (dry-run)" if log.dry_run else "✅ ИМПОРТ ЗАВЕРШЁН"
-    lines = [
-        prefix,
-        f"Файл: {log.filename} ({log.file_size_human})",
-        f"Режим: {log.get_mode_display()}",
-        f"Время: {log.duration_human}",
-        "",
-        "📊 Результаты:",
-        f"  Создано: {log.tasks_created}",
-        f"  Обновлено: {log.tasks_updated}",
-        f"  Пропущено: {log.tasks_skipped}",
-        "",
-        "📦 В контексте:",
-        f"  Групп аналогов: {log.groups_created}",
-        f"  Тем: {log.topics_created}",
-    ]
-    if log.errors_count > 0:
-        lines.append(f"\n❌ Ошибок: {log.errors_count}")
-        for err in (log.error_messages or [])[:5]:
-            lines.append(f"  • {err}")
-    return "\n".join(lines)
+            file_size=uploaded_file.size,
+        ),
+    )
+    return JsonResponse(
+        result.to_response_data(),
+        status=200 if result.success else 500,
+    )
 
 
 def download_sample_json(request):

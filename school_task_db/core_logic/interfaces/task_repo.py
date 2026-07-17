@@ -6,6 +6,7 @@ from typing import Any, List, Optional, Set, Tuple
 from core_logic.entities.task import (
     ReferenceElementOption,
     SelectOption,
+    SourceListItem,
     TaskEntity,
     TaskExportFilters,
     TaskGroupDetailGroup,
@@ -88,7 +89,7 @@ class ITaskRepository(ABC):
         """Return TaskImporter-compatible task export payload."""
 
     @abstractmethod
-    def get_source_list_sources(self) -> Any:
+    def get_source_list_sources(self) -> List[SourceListItem]:
         """Return sources for the source list page."""
 
     @abstractmethod

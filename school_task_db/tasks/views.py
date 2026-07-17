@@ -371,7 +371,6 @@ def refresh_math_cache(request):
 
 
 class SourceListView(ListView):
-    model = Source
     template_name = 'tasks/source_list.html'
     context_object_name = 'sources'
     paginate_by = 20

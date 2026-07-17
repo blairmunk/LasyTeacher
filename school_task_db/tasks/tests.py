@@ -250,7 +250,8 @@ class TaskBulkGroupAjaxTests(TestCase):
         response = self.client.get(reverse('tasks:source-list'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(list(response.context['sources']), [source])
+        self.assertEqual(response.context['sources'][0].pk, str(source.pk))
+        self.assertEqual(response.context['sources'][0].name, source.name)
         self.assertEqual(response.context['sources'][0].task_count, 1)
 
     def test_refresh_math_cache_forbids_non_staff(self):

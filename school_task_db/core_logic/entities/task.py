@@ -221,7 +221,19 @@ class ReferenceElementOption:
 
 @dataclass(frozen=True)
 class SourceListData:
-    sources: Any
+    sources: List["SourceListItem"]
+
+
+@dataclass(frozen=True)
+class SourceListItem:
+    pk: str
+    name: str
+    source_type_display: str
+    short_name: str = ''
+    author: str = ''
+    year: Optional[int] = None
+    url: str = ''
+    task_count: int = 0
 
 
 @dataclass(frozen=True)

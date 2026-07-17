@@ -343,9 +343,11 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.original_weak.save()
         repo = DjangoTaskRepository()
 
-        sources = list(repo.get_source_list_sources())
+        sources = repo.get_source_list_sources()
 
-        self.assertEqual(sources, [source])
+        self.assertEqual(sources[0].pk, str(source.pk))
+        self.assertEqual(sources[0].name, source.name)
+        self.assertEqual(sources[0].source_type_display, source.get_source_type_display())
         self.assertEqual(sources[0].task_count, 1)
 
     def test_task_repository_builds_task_export_payload(self):

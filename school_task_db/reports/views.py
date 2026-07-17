@@ -18,6 +18,9 @@ from core_logic.use_cases.get_heatmap_course_overview import (
 from core_logic.use_cases.get_heatmap_course_topic_matrix import (
     HeatmapCourseTopicMatrixRequest,
 )
+from core_logic.use_cases.get_heatmap_course_timeline import (
+    HeatmapCourseTimelineRequest,
+)
 from core_logic.use_cases.get_heatmap_overview import HeatmapOverviewRequest
 from core_logic.use_cases.get_heatmap_topic_matrix import (
     HeatmapTopicMatrixRequest,
@@ -378,6 +381,8 @@ class HeatmapCourseView(View):
         course_groups = overview.groups
         group = overview.selected_group
         students = overview.students
+        student_ids = [student.pk for student in students]
+        work_ids = [work.pk for work in overview.course_works]
 
         if not students:
             return render(request, 'reports/heatmap_course.html', {
@@ -393,8 +398,8 @@ class HeatmapCourseView(View):
 
         matrix = container.get_heatmap_course_topic_matrix_use_case().execute(
             HeatmapCourseTopicMatrixRequest(
-                student_ids=[student.pk for student in students],
-                work_ids=[work.pk for work in overview.course_works],
+                student_ids=student_ids,
+                work_ids=work_ids,
             ),
         )
         columns = matrix.columns
@@ -442,8 +447,13 @@ class HeatmapCourseView(View):
             toggle_params['transpose'] = '1'
         toggle_url = f'{request.path}?{toggle_params.urlencode()}'
 
-        # Plotly: динамика по работам курса
-        timeline_json = _build_course_timeline(overview.course_works, students)
+        timeline = container.get_heatmap_course_timeline_use_case().execute(
+            HeatmapCourseTimelineRequest(
+                student_ids=student_ids,
+                work_ids=work_ids,
+            ),
+        )
+        timeline_json = _build_course_timeline_json(timeline)
 
         return render(request, 'reports/heatmap_course.html', {
             'course': course,
@@ -916,53 +926,13 @@ def _build_subtopic_data(students, topic):
 
     return columns, rows, col_averages
 
-def _build_course_timeline(course_works, students):
-    """Plotly JSON: средний % по работам курса во времени"""
-    import json
-    from events.models import Event
-
-    work_ids = [w.id for w in course_works]
-    events = Event.objects.filter(
-        work_id__in=work_ids,
-        status='graded',
-    ).order_by('planned_date')
-
-    dates = []
-    averages = []
-    labels = []
-
-    for event in events:
-        marks = Mark.objects.filter(
-            participation__event=event,
-            participation__student__in=students,
-        )
-        if not marks.exists():
-            continue
-
-        total_pts = 0
-        total_max = 0
-        for mark in marks:
-            if not mark.task_scores:
-                continue
-            seen = set()
-            for task_id, scores in mark.task_scores.items():
-                if task_id in seen:
-                    continue
-                seen.add(task_id)
-                total_pts += scores.get('points', 0)
-                total_max += scores.get('max_points', 0)
-
-        if total_max > 0:
-            avg_pct = round(total_pts / total_max * 100)
-            dates.append(event.planned_date.strftime('%Y-%m-%d'))
-            averages.append(avg_pct)
-            labels.append(event.name)
-
+def _build_course_timeline_json(timeline):
+    """Plotly JSON for course result timeline."""
     chart = {
         'data': [{
-            'x': dates,
-            'y': averages,
-            'text': labels,
+            'x': timeline.dates,
+            'y': timeline.averages,
+            'text': timeline.labels,
             'mode': 'lines+markers',
             'type': 'scatter',
             'name': 'Средний %',

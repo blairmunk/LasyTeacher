@@ -92,3 +92,10 @@ class HeatmapCourseOverviewData:
     courses: Any
     active_report: str = 'heatmap-course'
     active_course_pk: Any = None
+
+
+@dataclass(frozen=True)
+class HeatmapCourseTimelineData:
+    dates: List[str]
+    averages: List[int]
+    labels: List[str]

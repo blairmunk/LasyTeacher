@@ -248,6 +248,54 @@ class DjangoReportRepositoryTests(TestCase):
         self.assertEqual(data.rows[0]['cells'][0]['pct'], 80)
         self.assertEqual(data.col_averages, [{'pct': 80, 'css': 'good'}])
 
+    def test_get_heatmap_course_timeline_returns_event_averages(self):
+        now = timezone.now()
+        student = Student.objects.create(last_name='Иванов', first_name='Иван')
+        work = Work.objects.create(name='Работа курса')
+        event = Event.objects.create(
+            name='КР',
+            work=work,
+            status='graded',
+            planned_date=now,
+        )
+        planned_event = Event.objects.create(
+            name='План',
+            work=work,
+            status='planned',
+            planned_date=now + timedelta(days=7),
+        )
+        participation = EventParticipation.objects.create(
+            event=event,
+            student=student,
+            status='graded',
+        )
+        EventParticipation.objects.create(
+            event=planned_event,
+            student=student,
+            status='assigned',
+        )
+        Mark.objects.create(
+            participation=participation,
+            score=4,
+            points=8,
+            max_points=10,
+            task_scores={
+                '550e8400-e29b-41d4-a716-446655440001': {
+                    'points': 8,
+                    'max_points': 10,
+                },
+            },
+        )
+
+        data = DjangoReportRepository().get_heatmap_course_timeline(
+            student_ids=[student.pk],
+            work_ids=[work.pk],
+        )
+
+        self.assertEqual(data.dates, [now.strftime('%Y-%m-%d')])
+        self.assertEqual(data.averages, [80])
+        self.assertEqual(data.labels, ['КР'])
+
     def test_get_events_status_report_returns_status_context(self):
         now = timezone.now()
         work = Work.objects.create(name='Контрольная')

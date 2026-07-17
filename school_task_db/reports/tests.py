@@ -1,3 +1,4 @@
+import json
 from datetime import timedelta
 
 from django.test import TestCase
@@ -179,6 +180,9 @@ class ReportsViewsTests(TestCase):
         self.assertEqual(response.context['grid_col_averages'], [
             {'pct': 80, 'css': 'good'},
         ])
+        timeline = json.loads(response.context['timeline_json'])
+        self.assertEqual(timeline['data'][0]['y'], [80])
+        self.assertEqual(timeline['data'][0]['text'], ['КР'])
 
     def test_dashboard_view_uses_clean_report_data(self):
         now = timezone.now()

@@ -10,6 +10,7 @@ from django.utils import timezone
 from core_logic.entities.report import (
     EventsStatusReportData,
     HeatmapCourseOverviewData,
+    HeatmapCourseTimelineData,
     HeatmapOverviewData,
     HeatmapTopicMatrixData,
     ReportsDashboardData,
@@ -231,6 +232,48 @@ class DjangoReportRepository(IReportRepository):
             columns=columns,
             rows=rows,
             col_averages=col_averages,
+        )
+
+    def get_heatmap_course_timeline(self, student_ids, work_ids):
+        events = Event.objects.filter(
+            work_id__in=work_ids,
+            status='graded',
+        ).order_by('planned_date')
+
+        dates = []
+        averages = []
+        labels = []
+
+        for event in events:
+            marks = Mark.objects.filter(
+                participation__event=event,
+                participation__student_id__in=student_ids,
+            )
+            if not marks.exists():
+                continue
+
+            total_points = 0
+            total_max = 0
+            for mark in marks:
+                if not mark.task_scores:
+                    continue
+                seen = set()
+                for task_id, scores in mark.task_scores.items():
+                    if task_id in seen:
+                        continue
+                    seen.add(task_id)
+                    total_points += scores.get('points', 0)
+                    total_max += scores.get('max_points', 0)
+
+            if total_max > 0:
+                dates.append(event.planned_date.strftime('%Y-%m-%d'))
+                averages.append(round(total_points / total_max * 100))
+                labels.append(event.name)
+
+        return HeatmapCourseTimelineData(
+            dates=dates,
+            averages=averages,
+            labels=labels,
         )
 
     def get_reports_dashboard(self, year, current_date):

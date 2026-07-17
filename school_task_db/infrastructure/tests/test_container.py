@@ -122,6 +122,7 @@ from core_logic.use_cases.get_student_remedial_work import (
     GetStudentRemedialWorkUseCase,
 )
 from core_logic.use_cases.get_task_detail import GetTaskDetailUseCase
+from core_logic.use_cases.get_task_db_health import GetTaskDBHealthUseCase
 from core_logic.use_cases.get_task_group_detail import GetTaskGroupDetailUseCase
 from core_logic.use_cases.get_task_group_list import GetTaskGroupListUseCase
 from core_logic.use_cases.get_task_import_sample import GetTaskImportSampleUseCase
@@ -266,6 +267,7 @@ class ContainerTests(SimpleTestCase):
         )
         journal_select_use_case = container.get_journal_select_use_case()
         journal_use_case = container.get_journal_use_case()
+        task_db_health_use_case = container.get_task_db_health_use_case()
         add_participants_use_case = container.add_event_participants_use_case()
         assign_variants_use_case = container.assign_event_variants_use_case()
         assign_single_variant_use_case = (
@@ -436,6 +438,7 @@ class ContainerTests(SimpleTestCase):
         )
         self.assertIsInstance(journal_select_use_case, GetJournalSelectUseCase)
         self.assertIsInstance(journal_use_case, GetJournalUseCase)
+        self.assertIsInstance(task_db_health_use_case, GetTaskDBHealthUseCase)
         self.assertIsInstance(add_participants_use_case, AddEventParticipantsUseCase)
         self.assertIsInstance(assign_variants_use_case, AssignEventVariantsUseCase)
         self.assertIsInstance(

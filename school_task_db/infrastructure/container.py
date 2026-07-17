@@ -135,6 +135,7 @@ from core_logic.use_cases.get_student_remedial_work import (
     GetStudentRemedialWorkUseCase,
 )
 from core_logic.use_cases.get_task_detail import GetTaskDetailUseCase
+from core_logic.use_cases.get_task_db_health import GetTaskDBHealthUseCase
 from core_logic.use_cases.get_task_group_detail import GetTaskGroupDetailUseCase
 from core_logic.use_cases.get_task_group_list import GetTaskGroupListUseCase
 from core_logic.use_cases.get_task_list import GetTaskListUseCase
@@ -601,6 +602,11 @@ class Container:
 
     def get_journal_use_case(self):
         return GetJournalUseCase(
+            report_repo=self.report_repo,
+        )
+
+    def get_task_db_health_use_case(self):
+        return GetTaskDBHealthUseCase(
             report_repo=self.report_repo,
         )
 

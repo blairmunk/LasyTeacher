@@ -18,6 +18,7 @@ from core_logic.entities.report import (
     JournalSelectData,
     ReportsDashboardData,
     StudentPerformanceReportData,
+    TaskDBHealthData,
     WorkAnalysisReportData,
 )
 
@@ -56,6 +57,10 @@ class IReportRepository(ABC):
         show_debts_only: bool,
     ) -> JournalData:
         """Return class journal data."""
+
+    @abstractmethod
+    def get_task_db_health(self) -> TaskDBHealthData:
+        """Return task database health report data."""
 
     @abstractmethod
     def get_reports_dashboard(

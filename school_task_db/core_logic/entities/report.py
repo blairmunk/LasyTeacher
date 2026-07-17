@@ -63,6 +63,29 @@ class JournalData:
 
 
 @dataclass(frozen=True)
+class TaskDBHealthData:
+    stats: dict
+    orphan_variants: dict
+    empty_groups: dict
+    coverage_issues: dict
+    difficulty_dist: List[dict]
+    ungrouped_tasks: dict
+    fragile_groups: dict
+    works_no_variants: dict
+    works_no_spec: dict
+    type_dist: List[dict]
+    most_used_tasks: Any
+    group_sizes: List[dict]
+    unverified_tasks: dict
+    no_source_tasks: dict
+    no_grade_tasks: dict
+    health: dict
+    courses: Any
+    active_report: str = 'db-health'
+    active_course_pk: Any = None
+
+
+@dataclass(frozen=True)
 class ReportsDashboardData:
     total_students: int
     total_events: int

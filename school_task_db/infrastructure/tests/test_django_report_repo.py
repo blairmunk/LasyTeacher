@@ -7,8 +7,9 @@ from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_report_repo import DjangoReportRepository
 from students.models import Student, StudentGroup
+from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
-from works.models import Variant, VariantTask, Work
+from works.models import Variant, VariantTask, Work, WorkAnalogGroup
 
 
 class DjangoReportRepositoryTests(TestCase):
@@ -849,6 +850,75 @@ class DjangoReportRepositoryTests(TestCase):
             'total': 2,
         }])
         self.assertEqual(data.active_report, 'journal')
+
+    def test_get_task_db_health_returns_database_health_data(self):
+        topic = Topic.objects.create(
+            name='Скорость',
+            subject='Физика',
+            section='Кинематика',
+            grade_level=7,
+        )
+        task = Task.objects.create(
+            text='Задача',
+            answer='Ответ',
+            topic=topic,
+            task_type='computational',
+            difficulty=2,
+            is_verified=False,
+            grade=None,
+        )
+        empty_group = AnalogGroup.objects.create(name='Пустая группа')
+        fragile_group = AnalogGroup.objects.create(name='Хрупкая группа')
+        TaskGroup.objects.create(task=task, group=fragile_group)
+        work_no_spec = Work.objects.create(name='Без спецификации')
+        spec_work = Work.objects.create(name='Со спецификацией')
+        WorkAnalogGroup.objects.create(
+            work=spec_work,
+            analog_group=fragile_group,
+            count=2,
+        )
+        Variant.objects.create(work=None, number=1)
+        course = Course.objects.create(
+            name='Физика 7',
+            subject='Физика',
+            grade_level=7,
+            is_active=True,
+        )
+
+        data = DjangoReportRepository().get_task_db_health()
+
+        self.assertEqual(data.stats, {
+            'total_tasks': 1,
+            'total_groups': 2,
+            'total_works': 2,
+            'total_variants': 1,
+        })
+        self.assertEqual(data.orphan_variants['count'], 1)
+        self.assertEqual(data.empty_groups['count'], 1)
+        self.assertEqual(list(data.empty_groups['items']), [empty_group])
+        self.assertEqual(data.fragile_groups['count'], 1)
+        self.assertEqual(list(data.fragile_groups['items']), [fragile_group])
+        self.assertEqual(data.coverage_issues['items'][0]['work'], spec_work)
+        self.assertEqual(data.coverage_issues['items'][0]['group'], fragile_group)
+        self.assertEqual(data.coverage_issues['items'][0]['needed'], 2)
+        self.assertEqual(data.coverage_issues['items'][0]['available'], 1)
+        self.assertEqual(data.ungrouped_tasks, {'count': 0, 'pct': 0.0})
+        self.assertEqual(data.works_no_variants['count'], 2)
+        self.assertEqual(list(data.works_no_spec['items']), [work_no_spec])
+        self.assertEqual(data.difficulty_dist, [{
+            'difficulty': 2,
+            'count': 1,
+            'pct': 100.0,
+        }])
+        self.assertEqual(data.type_dist[0]['task_type'], 'computational')
+        self.assertEqual(data.type_dist[0]['pct'], 100.0)
+        self.assertEqual(data.unverified_tasks, {'count': 1, 'pct': 100.0})
+        self.assertEqual(data.no_source_tasks, {'count': 1, 'pct': 100.0})
+        self.assertEqual(data.no_grade_tasks, {'count': 1, 'pct': 100.0})
+        self.assertEqual(data.health['issues'], 7)
+        self.assertEqual(data.health['label'], 'Есть замечания')
+        self.assertEqual(list(data.courses), [course])
+        self.assertEqual(data.active_report, 'db-health')
 
     def test_get_reports_dashboard_returns_dashboard_data(self):
         now = timezone.now()

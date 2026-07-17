@@ -8,8 +8,9 @@ from django.utils import timezone
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
 from students.models import Student, StudentGroup
+from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
-from works.models import Variant, VariantTask, Work
+from works.models import Variant, VariantTask, Work, WorkAnalogGroup
 
 
 class ReportsViewsTests(TestCase):
@@ -625,3 +626,46 @@ class ReportsViewsTests(TestCase):
         self.assertEqual(response.context['rows'][0]['cells'][0]['status'], 'missing')
         self.assertEqual(response.context['event_stats'][0]['graded'], 1)
         self.assertEqual(response.context['event_stats'][0]['missing'], 1)
+
+    def test_db_health_view_uses_clean_report_data(self):
+        topic = Topic.objects.create(
+            name='Скорость',
+            subject='Физика',
+            section='Кинематика',
+            grade_level=7,
+        )
+        task = Task.objects.create(
+            text='Задача',
+            answer='Ответ',
+            topic=topic,
+            task_type='computational',
+            difficulty=2,
+            is_verified=False,
+            grade=None,
+        )
+        empty_group = AnalogGroup.objects.create(name='Пустая группа')
+        fragile_group = AnalogGroup.objects.create(name='Хрупкая группа')
+        TaskGroup.objects.create(task=task, group=fragile_group)
+        work_no_spec = Work.objects.create(name='Без спецификации')
+        spec_work = Work.objects.create(name='Со спецификацией')
+        WorkAnalogGroup.objects.create(
+            work=spec_work,
+            analog_group=fragile_group,
+            count=2,
+        )
+        Variant.objects.create(work=None, number=1)
+
+        response = self.client.get(reverse('reports:db-health'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['active_report'], 'db-health')
+        self.assertEqual(response.context['stats']['total_tasks'], 1)
+        self.assertEqual(response.context['stats']['total_groups'], 2)
+        self.assertEqual(response.context['orphan_variants']['count'], 1)
+        self.assertEqual(response.context['empty_groups']['items'][0], empty_group)
+        self.assertEqual(response.context['fragile_groups']['items'][0], fragile_group)
+        self.assertEqual(response.context['coverage_issues']['items'][0]['work'], spec_work)
+        self.assertEqual(response.context['works_no_spec']['items'][0], work_no_spec)
+        self.assertEqual(response.context['unverified_tasks']['pct'], 100.0)
+        self.assertEqual(response.context['health']['issues'], 7)
+        self.assertEqual(response.context['health']['label'], 'Есть замечания')

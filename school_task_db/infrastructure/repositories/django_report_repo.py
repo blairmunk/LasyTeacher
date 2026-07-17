@@ -21,6 +21,7 @@ from core_logic.entities.report import (
     JournalSelectData,
     ReportsDashboardData,
     StudentPerformanceReportData,
+    TaskDBHealthData,
     WorkAnalysisReportData,
 )
 from core_logic.interfaces.report_repo import IReportRepository
@@ -28,7 +29,8 @@ from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
 from students.models import Student, StudentGroup
 from tasks.models import Task
-from works.models import Variant, Work
+from task_groups.models import AnalogGroup, TaskGroup
+from works.models import Variant, Work, WorkAnalogGroup
 
 
 class DjangoReportRepository(IReportRepository):
@@ -103,6 +105,101 @@ class DjangoReportRepository(IReportRepository):
             total_debts=sum(row['debts'] for row in all_rows),
             students_with_debts=sum(1 for row in all_rows if row['debts'] > 0),
             courses=self._get_event_scope(year)[2].order_by('grade_level', 'name'),
+        )
+
+    def get_task_db_health(self):
+        total_tasks = Task.objects.count()
+        total_groups_qs = AnalogGroup.objects.annotate(task_count=Count('taskgroup'))
+        total_works = Work.objects.count()
+        total_variants = Variant.objects.count()
+        orphan_variants = Variant.objects.filter(work__isnull=True)
+        empty_groups = total_groups_qs.filter(task_count=0)
+        coverage_issues = self._build_coverage_issues()
+        tasks_in_groups = set(TaskGroup.objects.values_list('task_id', flat=True))
+        ungrouped_count = Task.objects.exclude(id__in=tasks_in_groups).count()
+        fragile_groups = total_groups_qs.filter(task_count=1)
+        works_no_variants = Work.objects.annotate(
+            variant_count=Count('variant'),
+        ).filter(variant_count=0)
+        works_no_spec = Work.objects.annotate(
+            spec_count=Count('workanaloggroup'),
+        ).filter(spec_count=0)
+        unverified_count = Task.objects.filter(is_verified=False).count()
+        no_source_count = Task.objects.filter(source__isnull=True).count()
+        no_grade_count = Task.objects.filter(grade__isnull=True).count()
+
+        health_source = {
+            'orphan_variants': orphan_variants.count(),
+            'empty_groups': empty_groups.count(),
+            'coverage_issues': len(coverage_issues),
+            'ungrouped_tasks': ungrouped_count,
+            'fragile_groups': fragile_groups.count(),
+            'works_no_variants': works_no_variants.count(),
+            'works_no_spec': works_no_spec.count(),
+        }
+
+        return TaskDBHealthData(
+            stats={
+                'total_tasks': total_tasks,
+                'total_groups': total_groups_qs.count(),
+                'total_works': total_works,
+                'total_variants': total_variants,
+            },
+            orphan_variants={
+                'count': orphan_variants.count(),
+                'items': orphan_variants.order_by('-created_at')[:10],
+            },
+            empty_groups={
+                'count': empty_groups.count(),
+                'items': empty_groups.order_by('name')[:20],
+            },
+            coverage_issues={
+                'count': len(coverage_issues),
+                'items': coverage_issues[:20],
+            },
+            difficulty_dist=self._build_difficulty_distribution(total_tasks),
+            ungrouped_tasks={
+                'count': ungrouped_count,
+                'pct': self._pct(ungrouped_count, total_tasks),
+            },
+            fragile_groups={
+                'count': fragile_groups.count(),
+                'items': fragile_groups.order_by('name')[:20],
+            },
+            works_no_variants={
+                'count': works_no_variants.count(),
+                'items': works_no_variants[:10],
+            },
+            works_no_spec={
+                'count': works_no_spec.count(),
+                'items': works_no_spec[:10],
+            },
+            type_dist=self._build_task_type_distribution(total_tasks),
+            most_used_tasks=Task.objects.annotate(
+                variant_count=Count('varianttask'),
+            ).filter(variant_count__gt=0).order_by('-variant_count')[:10],
+            group_sizes=list(
+                total_groups_qs.values('task_count').annotate(
+                    group_count=Count('id'),
+                ).order_by('task_count'),
+            ),
+            unverified_tasks={
+                'count': unverified_count,
+                'pct': self._pct(unverified_count, total_tasks),
+            },
+            no_source_tasks={
+                'count': no_source_count,
+                'pct': self._pct(no_source_count, total_tasks),
+            },
+            no_grade_tasks={
+                'count': no_grade_count,
+                'pct': self._pct(no_grade_count, total_tasks),
+            },
+            health=self._build_health_summary(health_source),
+            courses=Course.objects.filter(is_active=True).order_by(
+                'grade_level',
+                'name',
+            ),
         )
 
     def get_heatmap_drilldown_overview(self, topic_id, group_id):
@@ -1305,6 +1402,100 @@ class DjangoReportRepository(IReportRepository):
                 'total': total,
             })
         return event_stats
+
+    def _build_coverage_issues(self):
+        coverage_issues = []
+        for work_group in WorkAnalogGroup.objects.select_related(
+            'work',
+            'analog_group',
+        ).annotate(
+            available=Count('analog_group__taskgroup'),
+        ):
+            if work_group.available < work_group.count:
+                coverage_issues.append({
+                    'work': work_group.work,
+                    'group': work_group.analog_group,
+                    'needed': work_group.count,
+                    'available': work_group.available,
+                    'deficit': work_group.count - work_group.available,
+                })
+        return coverage_issues
+
+    def _build_difficulty_distribution(self, total_tasks):
+        distribution = []
+        for item in Task.objects.values('difficulty').annotate(
+            count=Count('id'),
+        ).order_by('difficulty'):
+            difficulty = item['difficulty'] or 0
+            count = item['count']
+            distribution.append({
+                'difficulty': difficulty,
+                'count': count,
+                'pct': self._pct(count, total_tasks),
+            })
+        return distribution
+
+    def _build_task_type_distribution(self, total_tasks):
+        distribution = list(
+            Task.objects.values('task_type').annotate(
+                count=Count('id'),
+            ).order_by('-count'),
+        )
+        type_labels = (
+            dict(Task.TASK_TYPE_CHOICES)
+            if hasattr(Task, 'TASK_TYPE_CHOICES')
+            else {}
+        )
+        for item in distribution:
+            item['pct'] = self._pct(item['count'], total_tasks)
+            item['label'] = type_labels.get(
+                item['task_type'],
+                item['task_type'] or '—',
+            )
+        return distribution
+
+    def _build_health_summary(self, source):
+        issues = sum(source.values())
+        if issues == 0:
+            health = {
+                'label': 'Отлично',
+                'color': 'success',
+                'icon': 'check-circle',
+            }
+        elif issues <= 5:
+            health = {
+                'label': 'Хорошо',
+                'color': 'info',
+                'icon': 'info-circle',
+            }
+        elif issues <= 15:
+            health = {
+                'label': 'Есть замечания',
+                'color': 'warning',
+                'icon': 'exclamation-triangle',
+            }
+        else:
+            health = {
+                'label': 'Требует внимания',
+                'color': 'danger',
+                'icon': 'exclamation-circle',
+            }
+
+        health['issues'] = issues
+        health['issues_text'] = self._issues_text(issues)
+        return health
+
+    def _issues_text(self, issues):
+        if 11 <= issues % 100 <= 19:
+            return f'{issues} замечаний'
+        if issues % 10 == 1:
+            return f'{issues} замечание'
+        if 2 <= issues % 10 <= 4:
+            return f'{issues} замечания'
+        return f'{issues} замечаний'
+
+    def _pct(self, value, total):
+        return round(value / total * 100, 1) if total else 0
 
     def _color_class(self, pct):
         if pct is None:

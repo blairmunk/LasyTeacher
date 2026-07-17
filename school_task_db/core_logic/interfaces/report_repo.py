@@ -7,6 +7,7 @@ from typing import Any
 from core_logic.entities.report import (
     EventsStatusReportData,
     HeatmapOverviewData,
+    HeatmapTopicMatrixData,
     ReportsDashboardData,
     StudentPerformanceReportData,
     WorkAnalysisReportData,
@@ -45,3 +46,11 @@ class IReportRepository(ABC):
     @abstractmethod
     def get_heatmap_overview(self, group_id: Any) -> HeatmapOverviewData:
         """Return base heatmap data."""
+
+    @abstractmethod
+    def get_heatmap_topic_matrix(
+        self,
+        student_ids: list,
+        section_filter: str,
+    ) -> HeatmapTopicMatrixData:
+        """Return student-topic heatmap matrix data."""

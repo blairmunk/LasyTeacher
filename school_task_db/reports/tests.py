@@ -7,6 +7,7 @@ from django.utils import timezone
 from curriculum.models import Course, Topic
 from events.models import Event, EventParticipation, Mark
 from students.models import Student, StudentGroup
+from tasks.models import Task
 from works.models import Work
 
 
@@ -33,6 +34,59 @@ class ReportsViewsTests(TestCase):
         self.assertEqual(response.context['selected_section'], 'Кинематика')
         self.assertEqual(response.context['sections'], ['Кинематика'])
         self.assertFalse(response.context['has_data'])
+
+    def test_heatmap_view_uses_clean_topic_matrix_data(self):
+        student = Student.objects.create(last_name='Иванов', first_name='Иван')
+        group = StudentGroup.objects.create(name='7А')
+        group.students.add(student)
+        work = Work.objects.create(name='Контрольная')
+        topic = Topic.objects.create(
+            name='Скорость',
+            subject='Физика',
+            section='Кинематика',
+            grade_level=7,
+        )
+        task = Task.objects.create(
+            text='Задача',
+            answer='Ответ',
+            topic=topic,
+            task_type='computational',
+            difficulty=2,
+        )
+        event = Event.objects.create(
+            name='КР',
+            work=work,
+            status='graded',
+            planned_date=timezone.now(),
+        )
+        participation = EventParticipation.objects.create(
+            event=event,
+            student=student,
+            status='graded',
+        )
+        Mark.objects.create(
+            participation=participation,
+            score=4,
+            points=8,
+            max_points=10,
+            task_scores={
+                str(task.pk): {'points': 8, 'max_points': 10},
+            },
+        )
+
+        response = self.client.get(
+            reverse('reports:heatmap'),
+            {'group': group.pk, 'section': 'Кинематика'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['has_data'])
+        self.assertEqual(response.context['total_students'], 1)
+        self.assertEqual(response.context['total_topics'], 1)
+        self.assertEqual(response.context['grid_rows'][0]['avg'], 80)
+        self.assertEqual(response.context['grid_col_averages'], [
+            {'pct': 80, 'css': 'good'},
+        ])
 
     def test_dashboard_view_uses_clean_report_data(self):
         now = timezone.now()

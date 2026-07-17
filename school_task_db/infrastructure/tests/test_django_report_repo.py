@@ -7,6 +7,7 @@ from curriculum.models import Course, Topic
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_report_repo import DjangoReportRepository
 from students.models import Student, StudentGroup
+from tasks.models import Task
 from works.models import Work
 
 
@@ -53,6 +54,71 @@ class DjangoReportRepositoryTests(TestCase):
         self.assertEqual(data.sections, ['Кинематика'])
         self.assertEqual(list(data.courses), [course])
         self.assertEqual(data.active_report, 'heatmap')
+
+    def test_get_heatmap_topic_matrix_returns_topic_scores(self):
+        student = Student.objects.create(last_name='Иванов', first_name='Иван')
+        work = Work.objects.create(name='Контрольная')
+        topic = Topic.objects.create(
+            name='Скорость',
+            subject='Физика',
+            section='Кинематика',
+            grade_level=7,
+        )
+        other_topic = Topic.objects.create(
+            name='Сила',
+            subject='Физика',
+            section='Динамика',
+            grade_level=7,
+        )
+        task = Task.objects.create(
+            text='Задача 1',
+            answer='Ответ',
+            topic=topic,
+            task_type='computational',
+            difficulty=2,
+        )
+        other_task = Task.objects.create(
+            text='Задача 2',
+            answer='Ответ',
+            topic=other_topic,
+            task_type='computational',
+            difficulty=2,
+        )
+        event = Event.objects.create(
+            name='КР',
+            work=work,
+            status='graded',
+            planned_date=timezone.now(),
+        )
+        participation = EventParticipation.objects.create(
+            event=event,
+            student=student,
+            status='graded',
+        )
+        Mark.objects.create(
+            participation=participation,
+            score=4,
+            points=8,
+            max_points=10,
+            task_scores={
+                str(task.pk): {'points': 8, 'max_points': 10},
+                str(other_task.pk): {'points': 2, 'max_points': 10},
+            },
+        )
+
+        data = DjangoReportRepository().get_heatmap_topic_matrix(
+            student_ids=[student.pk],
+            section_filter='Кинематика',
+        )
+
+        self.assertEqual(data.columns, [topic])
+        self.assertEqual(len(data.rows), 1)
+        self.assertEqual(data.rows[0]['student'], student)
+        self.assertEqual(data.rows[0]['avg'], 80)
+        self.assertEqual(data.rows[0]['avg_css'], 'good')
+        self.assertEqual(data.rows[0]['cells'][0]['pct'], 80)
+        self.assertEqual(data.rows[0]['cells'][0]['css'], 'good')
+        self.assertEqual(data.col_averages, [{'pct': 80, 'css': 'good'}])
 
     def test_get_events_status_report_returns_status_context(self):
         now = timezone.now()

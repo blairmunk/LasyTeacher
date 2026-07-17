@@ -1,5 +1,6 @@
 """Django implementation of report repository."""
 
+from collections import defaultdict
 from datetime import timedelta
 
 from django.db.models import Avg, Count
@@ -9,6 +10,7 @@ from django.utils import timezone
 from core_logic.entities.report import (
     EventsStatusReportData,
     HeatmapOverviewData,
+    HeatmapTopicMatrixData,
     ReportsDashboardData,
     StudentPerformanceReportData,
     WorkAnalysisReportData,
@@ -17,6 +19,7 @@ from core_logic.interfaces.report_repo import IReportRepository
 from curriculum.models import Course, Topic
 from events.models import Event, EventParticipation, Mark
 from students.models import Student, StudentGroup
+from tasks.models import Task
 from works.models import Work
 
 
@@ -48,6 +51,73 @@ class DjangoReportRepository(IReportRepository):
                 'grade_level',
                 'name',
             ),
+        )
+
+    def get_heatmap_topic_matrix(self, student_ids, section_filter=''):
+        students = list(
+            Student.objects.filter(pk__in=student_ids).order_by(
+                'last_name',
+                'first_name',
+            ),
+        )
+        marks = Mark.objects.filter(
+            participation__student__in=students,
+        ).select_related('participation__student')
+
+        all_task_ids = set()
+        for mark in marks:
+            if mark.task_scores:
+                all_task_ids.update(mark.task_scores.keys())
+
+        if not all_task_ids:
+            return HeatmapTopicMatrixData(columns=[], rows=[], col_averages=[])
+
+        tasks_qs = Task.objects.filter(pk__in=all_task_ids).select_related(
+            'topic',
+            'subtopic',
+        )
+        task_map = {str(task.pk): task for task in tasks_qs}
+        aggregated = defaultdict(lambda: {'points': 0, 'max_points': 0})
+
+        for mark in marks:
+            student_id = mark.participation.student_id
+            if not mark.task_scores:
+                continue
+            seen = set()
+            for task_id, scores in mark.task_scores.items():
+                if task_id in seen:
+                    continue
+                seen.add(task_id)
+
+                task = task_map.get(task_id)
+                if not task or not task.topic:
+                    continue
+                if section_filter and task.topic.section != section_filter:
+                    continue
+
+                key = (student_id, task.topic_id)
+                aggregated[key]['points'] += scores.get('points', 0)
+                aggregated[key]['max_points'] += scores.get('max_points', 0)
+
+        topic_ids = {topic_id for _, topic_id in aggregated.keys()}
+        columns = list(
+            Topic.objects.filter(pk__in=topic_ids).order_by(
+                'section',
+                'order',
+                'name',
+            ),
+        )
+        rows = self._build_heatmap_rows(students, columns, aggregated)
+        col_averages = self._build_heatmap_col_averages(
+            students,
+            columns,
+            aggregated,
+        )
+
+        return HeatmapTopicMatrixData(
+            columns=columns,
+            rows=rows,
+            col_averages=col_averages,
         )
 
     def get_reports_dashboard(self, year, current_date):
@@ -403,6 +473,74 @@ class DjangoReportRepository(IReportRepository):
             if scores:
                 box_data[short_name] = scores
         return box_data
+
+    def _build_heatmap_rows(self, students, columns, aggregated):
+        rows = []
+        for student in students:
+            cells = []
+            total_points = 0
+            total_max = 0
+            for topic in columns:
+                data = aggregated.get((student.id, topic.id))
+                if data and data['max_points'] > 0:
+                    pct = round(data['points'] / data['max_points'] * 100)
+                    total_points += data['points']
+                    total_max += data['max_points']
+                    cells.append({
+                        'pct': pct,
+                        'points': data['points'],
+                        'max_points': data['max_points'],
+                        'css': self._color_class(pct),
+                        'topic': topic,
+                    })
+                else:
+                    cells.append({
+                        'pct': None,
+                        'css': 'no-data',
+                        'topic': topic,
+                    })
+
+            avg = round(total_points / total_max * 100) if total_max > 0 else None
+            rows.append({
+                'student': student,
+                'cells': cells,
+                'avg': avg,
+                'avg_css': self._color_class(avg) if avg is not None else 'no-data',
+            })
+        return rows
+
+    def _build_heatmap_col_averages(self, students, columns, aggregated):
+        col_averages = []
+        for topic in columns:
+            points = sum(
+                aggregated.get((student.id, topic.id), {}).get('points', 0)
+                for student in students
+            )
+            max_points = sum(
+                aggregated.get((student.id, topic.id), {}).get('max_points', 0)
+                for student in students
+            )
+            avg = round(points / max_points * 100) if max_points > 0 else None
+            col_averages.append({
+                'pct': avg,
+                'css': self._color_class(avg) if avg is not None else 'no-data',
+            })
+        return col_averages
+
+    def _color_class(self, pct):
+        if pct is None:
+            return 'no-data'
+        if pct >= 95:
+            return 'perfect'
+        if pct >= 85:
+            return 'excellent'
+        if pct >= 70:
+            return 'good'
+        if pct >= 60:
+            return 'moderate'
+        if pct >= 45:
+            return 'warning'
+        return 'danger'
 
     def _average_task_score_percentage(self, marks, default=0):
         total_points = 0

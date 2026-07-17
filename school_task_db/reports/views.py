@@ -13,6 +13,9 @@ from core_logic.use_cases.get_events_status_report import (
     EventsStatusReportRequest,
 )
 from core_logic.use_cases.get_heatmap_overview import HeatmapOverviewRequest
+from core_logic.use_cases.get_heatmap_topic_matrix import (
+    HeatmapTopicMatrixRequest,
+)
 from core_logic.use_cases.get_reports_dashboard import ReportsDashboardRequest
 from core_logic.use_cases.get_student_performance_report import (
     StudentPerformanceReportRequest,
@@ -283,7 +286,15 @@ class HeatmapView(View):
                 'courses': overview.courses,
             })
 
-        columns, rows, col_averages = _build_topic_data(students, section)
+        matrix = container.get_heatmap_topic_matrix_use_case().execute(
+            HeatmapTopicMatrixRequest(
+                student_ids=[student.pk for student in students],
+                section_filter=section,
+            ),
+        )
+        columns = matrix.columns
+        rows = matrix.rows
+        col_averages = matrix.col_averages
         group_param = f'?group={group.pk}' if group else ''
 
         if not transpose:
@@ -817,88 +828,6 @@ class HeatmapSubtopicView(View):
 # ============================================================
 # Общие функции
 # ============================================================
-
-def _build_topic_data(students, section_filter=''):
-    """Агрегация: ученики × темы"""
-    marks = Mark.objects.filter(
-        participation__student__in=students,
-    ).select_related('participation__student')
-
-    all_task_ids = set()
-    for mark in marks:
-        if mark.task_scores:
-            all_task_ids.update(mark.task_scores.keys())
-
-    if not all_task_ids:
-        return [], [], []
-
-    tasks_qs = Task.objects.filter(pk__in=all_task_ids).select_related('topic', 'subtopic')
-    task_map = {str(t.pk): t for t in tasks_qs}
-
-    agg = defaultdict(lambda: {'points': 0, 'max_points': 0})
-
-    for mark in marks:
-        student_id = mark.participation.student_id
-        if not mark.task_scores:
-            continue
-        seen = set()
-        for task_id, scores in mark.task_scores.items():
-            if task_id in seen:
-                continue
-            seen.add(task_id)
-
-            task = task_map.get(task_id)
-            if not task or not task.topic:
-                continue
-            if section_filter and task.topic.section != section_filter:
-                continue
-
-            key = (student_id, task.topic_id)
-            agg[key]['points'] += scores.get('points', 0)
-            agg[key]['max_points'] += scores.get('max_points', 0)
-
-    topic_ids = set(tid for (_, tid) in agg.keys())
-    columns = list(
-        Topic.objects.filter(pk__in=topic_ids).order_by('section', 'order', 'name')
-    )
-
-    rows = []
-    for student in students:
-        cells = []
-        total_pts = 0
-        total_max = 0
-        for topic in columns:
-            data = agg.get((student.id, topic.id))
-            if data and data['max_points'] > 0:
-                pct = round(data['points'] / data['max_points'] * 100)
-                total_pts += data['points']
-                total_max += data['max_points']
-                cells.append({
-                    'pct': pct, 'points': data['points'],
-                    'max_points': data['max_points'],
-                    'css': _color_class(pct), 'topic': topic,
-                })
-            else:
-                cells.append({'pct': None, 'css': 'no-data', 'topic': topic})
-
-        avg = round(total_pts / total_max * 100) if total_max > 0 else None
-        rows.append({
-            'student': student, 'cells': cells,
-            'avg': avg,
-            'avg_css': _color_class(avg) if avg is not None else 'no-data',
-        })
-
-    col_averages = []
-    for topic in columns:
-        pts = sum(agg.get((s.id, topic.id), {}).get('points', 0) for s in students)
-        mx = sum(agg.get((s.id, topic.id), {}).get('max_points', 0) for s in students)
-        avg = round(pts / mx * 100) if mx > 0 else None
-        col_averages.append({
-            'pct': avg, 'css': _color_class(avg) if avg is not None else 'no-data',
-        })
-
-    return columns, rows, col_averages
-
 
 def _build_subtopic_data(students, topic):
     """Агрегация: ученики × подтемы одной темы"""

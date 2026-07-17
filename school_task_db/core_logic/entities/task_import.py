@@ -15,6 +15,21 @@ class TaskImportRequest:
 
 
 @dataclass(frozen=True)
+class TaskImportPreviewRequest:
+    data: Dict[str, Any]
+
+
+@dataclass(frozen=True)
+class TaskImportPreviewResult:
+    preview: Dict[str, Any] = None
+    warning: str = ''
+
+    @property
+    def success(self) -> bool:
+        return not self.warning
+
+
+@dataclass(frozen=True)
 class TaskImportResult:
     status: str
     dry_run: bool = False

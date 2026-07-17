@@ -4,11 +4,47 @@ import time
 
 from core.importers.tasks import TaskImporter
 from core.models import ImportLog
-from core_logic.entities.task_import import TaskImportRequest, TaskImportResult
+from core_logic.entities.task_import import (
+    TaskImportPreviewRequest,
+    TaskImportPreviewResult,
+    TaskImportRequest,
+    TaskImportResult,
+)
 from core_logic.interfaces.task_import import ITaskImportService
 
 
 class DjangoTaskImportService(ITaskImportService):
+    def preview_import(
+        self,
+        request: TaskImportPreviewRequest,
+    ) -> TaskImportPreviewResult:
+        try:
+            importer = TaskImporter(
+                mode='update',
+                dry_run=True,
+                verbose=False,
+                create_missing=True,
+            )
+            importer.validate_mode()
+            context = importer.import_tasks_from_json(request.data)
+
+            context_stats = {}
+            if hasattr(context, 'get_stats_summary'):
+                context_stats = context.get_stats_summary()
+
+            return TaskImportPreviewResult(
+                preview={
+                    'total_created': getattr(importer.stats, 'created', 0),
+                    'total_updated': getattr(importer.stats, 'updated', 0),
+                    'context': context_stats,
+                    'tasks_in_context': len(getattr(context, 'imported_tasks', {})),
+                    'groups_in_context': len(getattr(context, 'imported_groups', {})),
+                    'topics_in_context': len(getattr(context, 'imported_topics', {})),
+                },
+            )
+        except Exception as exc:
+            return TaskImportPreviewResult(warning=f'Ошибка dry-run: {str(exc)}')
+
     def execute_import(self, request: TaskImportRequest) -> TaskImportResult:
         log = ImportLog.objects.create(
             filename=request.filename,

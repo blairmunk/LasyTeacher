@@ -136,6 +136,40 @@ class CoreViewsTests(TestCase):
         )
         self.assertIsNone(payload['preview'])
 
+    def test_validate_import_json_ajax_uses_clean_preview_data(self):
+        upload = SimpleUploadedFile(
+            'tasks.json',
+            json.dumps({
+                'tasks': [
+                    {
+                        'id': '550e8400-e29b-41d4-a716-446655440001',
+                        'text': 'Задача на силу',
+                        'answer': 'Ответ',
+                        'task_type': 'computational',
+                        'difficulty': 2,
+                        'topic': {
+                            'name': 'Динамика',
+                            'subject': 'Физика',
+                            'grade_level': 9,
+                        },
+                    },
+                ],
+            }).encode('utf-8'),
+            content_type='application/json',
+        )
+
+        response = self.client.post(
+            reverse('core:import-validate'),
+            {'json_file': upload},
+        )
+        payload = response.json()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(payload['validation']['is_valid'])
+        self.assertEqual(payload['preview']['total_created'], 0)
+        self.assertEqual(payload['preview']['tasks_in_context'], 0)
+        self.assertFalse(Task.objects.filter(text='Задача на силу').exists())
+
     def test_execute_import_json_ajax_uses_clean_import_use_case(self):
         upload = SimpleUploadedFile(
             'tasks.json',

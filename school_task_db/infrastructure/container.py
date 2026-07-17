@@ -125,6 +125,7 @@ from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionUseCase,
 )
 from core_logic.use_cases.get_source_list import GetSourceListUseCase
+from core_logic.use_cases.preview_task_import import PreviewTaskImportUseCase
 from core_logic.use_cases.refresh_task_math_cache import RefreshTaskMathCacheUseCase
 from core_logic.use_cases.sync_review_session import SyncReviewSessionUseCase
 from core_logic.use_cases.sync_work_analog_groups import SyncWorkAnalogGroupsUseCase
@@ -395,6 +396,11 @@ class Container:
 
     def execute_task_import_use_case(self):
         return ExecuteTaskImportUseCase(
+            task_import_service=self.task_import_service,
+        )
+
+    def preview_task_import_use_case(self):
+        return PreviewTaskImportUseCase(
             task_import_service=self.task_import_service,
         )
 

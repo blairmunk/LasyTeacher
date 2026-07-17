@@ -1,13 +1,40 @@
 from django.test import TestCase
 
 from core.models import ImportLog
-from core_logic.entities.task_import import TaskImportRequest
+from core_logic.entities.task_import import TaskImportPreviewRequest, TaskImportRequest
 from curriculum.models import Topic
 from infrastructure.services.task_import_service import DjangoTaskImportService
 from tasks.models import Task
 
 
 class DjangoTaskImportServiceTests(TestCase):
+    def test_preview_import_returns_dry_run_context_without_creating_tasks(self):
+        request = TaskImportPreviewRequest(
+            data={
+                'tasks': [
+                    {
+                        'id': '550e8400-e29b-41d4-a716-446655440001',
+                        'text': 'Задача на силу',
+                        'answer': 'Ответ',
+                        'task_type': 'computational',
+                        'difficulty': 2,
+                        'topic': {
+                            'name': 'Динамика',
+                            'subject': 'Физика',
+                            'grade_level': 9,
+                        },
+                    },
+                ],
+            },
+        )
+
+        result = DjangoTaskImportService().preview_import(request)
+
+        self.assertTrue(result.success)
+        self.assertEqual(result.preview['total_created'], 0)
+        self.assertEqual(result.preview['tasks_in_context'], 0)
+        self.assertFalse(Task.objects.filter(text='Задача на силу').exists())
+
     def test_execute_import_creates_log_and_tasks(self):
         request = TaskImportRequest(
             data={

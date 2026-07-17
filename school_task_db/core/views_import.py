@@ -8,9 +8,11 @@ from django.views import View
 from django.views.generic import ListView
 from django.views.decorators.http import require_POST
 
-from .importers.tasks import TaskImporter
 from core_logic.entities.task import TaskExportFilters
-from core_logic.entities.task_import import TaskImportRequest
+from core_logic.entities.task_import import (
+    TaskImportPreviewRequest,
+    TaskImportRequest,
+)
 from core_logic.use_cases.export_tasks import ExportTasksRequest
 from core_logic.use_cases.get_import_views import ImportPageRequest
 from core_logic.use_cases.validate_task_import_json import (
@@ -79,31 +81,12 @@ def validate_json_ajax(request):
     # Dry-run через существующий импортёр
     preview = None
     if validation['is_valid']:
-        try:
-            importer = TaskImporter(
-                mode='update',
-                dry_run=True,
-                verbose=False,
-                create_missing=True,
-            )
-            importer.validate_mode()
-            context = importer.import_tasks_from_json(data)
-            
-            # Извлекаем статистику из контекста
-            context_stats = {}
-            if hasattr(context, 'get_stats_summary'):
-                context_stats = context.get_stats_summary()
-            
-            preview = {
-                'total_created': getattr(importer.stats, 'created', 0),
-                'total_updated': getattr(importer.stats, 'updated', 0),
-                'context': context_stats,
-                'tasks_in_context': len(getattr(context, 'imported_tasks', {})),
-                'groups_in_context': len(getattr(context, 'imported_groups', {})),
-                'topics_in_context': len(getattr(context, 'imported_topics', {})),
-            }
-        except Exception as e:
-            validation['warnings'].append(f'Ошибка dry-run: {str(e)}')
+        preview_result = container.preview_task_import_use_case().execute(
+            TaskImportPreviewRequest(data=data),
+        )
+        preview = preview_result.preview
+        if not preview_result.success:
+            validation['warnings'].append(preview_result.warning)
     
     return JsonResponse({
         'filename': uploaded_file.name,

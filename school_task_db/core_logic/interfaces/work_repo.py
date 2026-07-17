@@ -11,6 +11,7 @@ from core_logic.entities.work import (
     WorkDetailSpecPreviewItem,
     WorkDetailVariant,
     WorkDetailWork,
+    WorkListItem,
     VariantGenerationInfo,
     VariantDeleteInfo,
     VariantDetailTaskRow,
@@ -71,7 +72,7 @@ class CreatedWorkVariantRef:
 
 class IWorkRepository(ABC):
     @abstractmethod
-    def get_list_works(self) -> Any:
+    def get_list_works(self) -> List[WorkListItem]:
         """Return works for the work list page."""
 
     @abstractmethod

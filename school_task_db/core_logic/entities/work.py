@@ -73,7 +73,16 @@ class WorkDetailVariant:
 
 @dataclass(frozen=True)
 class WorkListData:
-    works: Any
+    works: List["WorkListItem"]
+
+
+@dataclass(frozen=True)
+class WorkListItem:
+    pk: str
+    name: str
+    duration: int
+    created_at: datetime
+    variant_count: int = 0
 
 
 @dataclass(frozen=True)

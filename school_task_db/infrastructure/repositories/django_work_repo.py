@@ -3,6 +3,7 @@
 from typing import List, Set
 
 from django.db import transaction
+from django.db.models import Count
 
 from core_logic.entities.work import (
     OrphanVariantRef,
@@ -21,6 +22,7 @@ from core_logic.entities.work import (
     WorkDetailSpecPreviewItem,
     WorkDetailVariant,
     WorkDetailWork,
+    WorkListItem,
 )
 from core_logic.interfaces.work_repo import (
     AttachVariantsToWorkParams,
@@ -39,7 +41,18 @@ from works.models import Variant, VariantTask, Work, WorkAnalogGroup
 
 class DjangoWorkRepository(IWorkRepository):
     def get_list_works(self):
-        return Work.objects.all()
+        return [
+            WorkListItem(
+                pk=str(work.pk),
+                name=work.name,
+                duration=work.duration,
+                created_at=work.created_at,
+                variant_count=work.variant_count,
+            )
+            for work in Work.objects.annotate(
+                variant_count=Count('variant'),
+            ).order_by('-created_at')
+        ]
 
     def get_list_variants(self):
         return Variant.objects.all()

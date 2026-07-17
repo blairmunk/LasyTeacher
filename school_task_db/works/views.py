@@ -8,16 +8,15 @@ from .models import Work, Variant
 from .forms import WorkForm, VariantGenerationForm
 
 
-class WorkListView(ListView):
-    model = Work
+class WorkListView(TemplateView):
     template_name = 'works/list.html'
-    context_object_name = 'works'
-    paginate_by = 20
 
-    def get_queryset(self):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         from infrastructure.container import container
 
-        return container.get_work_list_use_case().execute().works
+        context['works'] = container.get_work_list_use_case().execute().works
+        return context
 
 
 class WorkDetailView(TemplateView):

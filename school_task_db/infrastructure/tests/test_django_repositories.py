@@ -494,7 +494,10 @@ class DjangoRemedialRepositoryTests(TestCase):
             '550e8400-e29b-41d4-a716-446655440000',
         )
 
-        self.assertEqual(list(works), [self.source_work])
+        self.assertEqual(works[0].pk, str(self.source_work.pk))
+        self.assertEqual(works[0].name, self.source_work.name)
+        self.assertEqual(works[0].duration, self.source_work.duration)
+        self.assertEqual(works[0].variant_count, 1)
         self.assertEqual(work, self.source_work)
         self.assertIsNone(missing_work)
 

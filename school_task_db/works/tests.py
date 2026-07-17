@@ -61,7 +61,9 @@ class WorkDetailViewTests(TestCase):
         response = self.client.get(reverse('works:list'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(list(response.context['works']), [self.work])
+        self.assertEqual(response.context['works'][0].pk, str(self.work.pk))
+        self.assertEqual(response.context['works'][0].name, self.work.name)
+        self.assertEqual(response.context['works'][0].variant_count, 1)
 
     def test_variant_list_uses_clean_context_data(self):
         response = self.client.get(reverse('works:variant-list'))

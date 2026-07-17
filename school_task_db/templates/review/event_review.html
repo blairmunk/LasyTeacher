@@ -152,7 +152,7 @@
                         <td>
                             {% if data.variant %}
                             <span class="badge bg-secondary">В-{{ data.variant.number }}</span>
-                            <small class="text-muted">({{ data.variant.tasks.count }} зад.)</small>
+                            <small class="text-muted">({{ data.variant.tasks_count }} зад.)</small>
                             {% elif available_variants %}
                             <form method="post" action="{% url 'events:assign-single-variant' event.pk %}"
                                   class="d-inline-flex gap-1 align-items-center">

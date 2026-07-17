@@ -469,7 +469,10 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
         repo = DjangoCurriculumRepository()
 
-        courses = repo.get_detail_courses()
+        loaded_course = repo.get_course(str(course.pk))
+        missing_course = repo.get_course(
+            '550e8400-e29b-41d4-a716-446655440000',
+        )
         assignments = repo.get_course_assignments(str(course.pk))
         work_groups = repo.get_work_analog_groups(str(self.source_work.pk))
         variants_count = repo.count_work_variants(str(self.source_work.pk))
@@ -490,7 +493,8 @@ class DjangoRemedialRepositoryTests(TestCase):
             '550e8400-e29b-41d4-a716-446655440000',
         )
 
-        self.assertEqual(list(courses), [course])
+        self.assertEqual(loaded_course, course)
+        self.assertIsNone(missing_course)
         self.assertEqual(list(assignments), [assignment])
         self.assertEqual(work_groups[0].analog_group, self.weak_group)
         self.assertEqual(variants_count, 1)

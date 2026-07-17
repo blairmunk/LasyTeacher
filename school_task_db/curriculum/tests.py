@@ -72,6 +72,16 @@ class CourseViewsTests(TestCase):
         self.assertEqual(response.context['works_by_type'], {'Контрольная работа': 1})
         self.assertEqual(response.context['groups_coverage'], {'Скорость': 1})
 
+    def test_course_detail_returns_404_for_missing_course(self):
+        response = self.client.get(
+            reverse(
+                'curriculum:course-detail',
+                args=['550e8400-e29b-41d4-a716-446655440000'],
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
+
     def test_topic_subtopics_api_returns_subtopics(self):
         topic = Topic.objects.create(
             name='Кинематика',

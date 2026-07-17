@@ -10,10 +10,11 @@ class GetCourseDetailUseCase:
     def __init__(self, curriculum_repo: ICurriculumRepository):
         self.curriculum_repo = curriculum_repo
 
-    def get_queryset(self):
-        return self.curriculum_repo.get_detail_courses()
-
     def execute(self, course_id: str) -> CourseDetailData:
+        course = self.curriculum_repo.get_course(course_id)
+        if course is None:
+            return CourseDetailData()
+
         assignments = []
         total_variants = 0
         works_by_type = Counter()
@@ -36,6 +37,7 @@ class GetCourseDetailUseCase:
             assignments.append(assignment)
 
         return CourseDetailData(
+            course=course,
             assignments=assignments,
             total_variants=total_variants,
             works_by_type=dict(works_by_type),

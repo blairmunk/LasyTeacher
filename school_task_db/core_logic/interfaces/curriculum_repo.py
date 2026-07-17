@@ -6,8 +6,8 @@ from typing import Any
 
 class ICurriculumRepository(ABC):
     @abstractmethod
-    def get_detail_courses(self) -> Any:
-        """Return courses for the course detail page lookup."""
+    def get_course(self, course_id: str) -> Any:
+        """Return one course by id or None."""
 
     @abstractmethod
     def get_course_assignments(self, course_id: str) -> Any:

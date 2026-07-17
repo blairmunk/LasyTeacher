@@ -30,13 +30,13 @@ class FakeWorkGroup:
 
 class FakeCurriculumRepository:
     def __init__(self):
-        self.detail_courses = ['course-1']
+        self.course = 'course-1'
         self.work = FakeWork(pk='work-1', work_type_display='Контрольная работа')
         self.assignments = [FakeAssignment(self.work)]
         self.work_groups = [FakeWorkGroup(count=2, group_name='Скорость')]
 
-    def get_detail_courses(self):
-        return self.detail_courses
+    def get_course(self, course_id):
+        return self.course if course_id == self.course else None
 
     def get_course_assignments(self, course_id):
         return self.assignments
@@ -49,18 +49,13 @@ class FakeCurriculumRepository:
 
 
 class GetCourseDetailUseCaseTests(TestCase):
-    def test_get_queryset_returns_course_detail_queryset(self):
-        repo = FakeCurriculumRepository()
-        use_case = GetCourseDetailUseCase(curriculum_repo=repo)
-
-        self.assertEqual(use_case.get_queryset(), ['course-1'])
-
     def test_execute_builds_course_detail_data(self):
         repo = FakeCurriculumRepository()
         use_case = GetCourseDetailUseCase(curriculum_repo=repo)
 
         data = use_case.execute('course-1')
 
+        self.assertEqual(data.course, 'course-1')
         self.assertEqual(data.assignments, repo.assignments)
         self.assertEqual(data.assignments[0].groups_count, 1)
         self.assertEqual(data.assignments[0].tasks_per_variant, 2)
@@ -68,3 +63,13 @@ class GetCourseDetailUseCaseTests(TestCase):
         self.assertEqual(data.total_variants, 3)
         self.assertEqual(data.works_by_type, {'Контрольная работа': 1})
         self.assertEqual(data.groups_coverage, {'Скорость': 1})
+
+    def test_execute_returns_empty_data_for_missing_course(self):
+        repo = FakeCurriculumRepository()
+        use_case = GetCourseDetailUseCase(curriculum_repo=repo)
+
+        data = use_case.execute('missing-course')
+
+        self.assertIsNone(data.course)
+        self.assertEqual(data.assignments, [])
+        self.assertEqual(data.total_variants, 0)

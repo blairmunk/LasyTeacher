@@ -6,8 +6,8 @@ from works.models import Variant, WorkAnalogGroup
 
 
 class DjangoCurriculumRepository(ICurriculumRepository):
-    def get_detail_courses(self):
-        return Course.objects.all()
+    def get_course(self, course_id: str):
+        return Course.objects.filter(pk=course_id).first()
 
     def get_course_assignments(self, course_id: str):
         return CourseAssignment.objects.filter(

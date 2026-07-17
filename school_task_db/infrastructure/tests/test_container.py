@@ -94,6 +94,7 @@ from core_logic.use_cases.get_student_remedial_work import (
 from core_logic.use_cases.get_task_detail import GetTaskDetailUseCase
 from core_logic.use_cases.get_task_group_detail import GetTaskGroupDetailUseCase
 from core_logic.use_cases.get_task_group_list import GetTaskGroupListUseCase
+from core_logic.use_cases.get_task_import_sample import GetTaskImportSampleUseCase
 from core_logic.use_cases.get_task_list import GetTaskListUseCase
 from core_logic.use_cases.get_task_reference_options import (
     GetCodifierElementsUseCase,
@@ -182,6 +183,7 @@ class ContainerTests(SimpleTestCase):
         import_validation_use_case = container.validate_task_import_json_use_case()
         execute_import_use_case = container.execute_task_import_use_case()
         preview_import_use_case = container.preview_task_import_use_case()
+        sample_import_use_case = container.get_task_import_sample_use_case()
         export_tasks_use_case = container.export_tasks_use_case()
         participant_selection_use_case = (
             container.get_event_participant_selection_use_case()
@@ -298,6 +300,7 @@ class ContainerTests(SimpleTestCase):
         )
         self.assertIsInstance(execute_import_use_case, ExecuteTaskImportUseCase)
         self.assertIsInstance(preview_import_use_case, PreviewTaskImportUseCase)
+        self.assertIsInstance(sample_import_use_case, GetTaskImportSampleUseCase)
         self.assertIsInstance(export_tasks_use_case, ExportTasksUseCase)
         self.assertIsInstance(
             participant_selection_use_case,

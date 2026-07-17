@@ -210,6 +210,20 @@ class CoreViewsTests(TestCase):
         self.assertTrue(Task.objects.filter(text='Задача на силу').exists())
         self.assertTrue(ImportLog.objects.filter(pk=payload['log_id']).exists())
 
+    def test_download_sample_json_uses_clean_sample_data(self):
+        response = self.client.get(reverse('core:import-sample'))
+        payload = json.loads(response.content.decode('utf-8'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json; charset=utf-8')
+        self.assertEqual(
+            response['Content-Disposition'],
+            'attachment; filename="sample_import.json"',
+        )
+        self.assertEqual(payload['version'], '1.1')
+        self.assertEqual(len(payload['tasks']), 2)
+        self.assertEqual(payload['task_images'], [])
+
     def test_export_tasks_returns_clean_export_payload(self):
         topic = Topic.objects.create(
             name='Динамика',

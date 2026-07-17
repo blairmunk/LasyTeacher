@@ -30,6 +30,12 @@ class TaskImportPreviewResult:
 
 
 @dataclass(frozen=True)
+class TaskImportSampleData:
+    filename: str
+    payload: Dict[str, Any]
+
+
+@dataclass(frozen=True)
 class TaskImportResult:
     status: str
     dry_run: bool = False

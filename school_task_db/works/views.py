@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.http import Http404
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
@@ -121,6 +121,8 @@ class WorkUpdateView(UpdateView):
 
 
 def generate_variants(request, work_id):
+    from infrastructure.container import container
+
     if request.method == 'POST':
         form = VariantGenerationForm(request.POST)
         if form.is_valid():
@@ -129,8 +131,6 @@ def generate_variants(request, work_id):
                 from core_logic.use_cases.generate_work_variants import (
                     GenerateWorkVariantsRequest,
                 )
-                from infrastructure.container import container
-
                 result = container.generate_work_variants_use_case().execute(
                     GenerateWorkVariantsRequest(
                         work_id=str(work_id),
@@ -150,18 +150,23 @@ def generate_variants(request, work_id):
                 messages.error(request, f'Ошибка при создании вариантов: {str(e)}')
     else:
         form = VariantGenerationForm()
-    work = get_object_or_404(Work, pk=work_id)
+    form_data = container.get_variant_generation_form_use_case().execute(
+        str(work_id),
+    )
+    if form_data.status == 'not_found':
+        raise Http404("Работа не найдена")
     return render(request, 'works/generate_variants.html', {
-        'work': work, 'form': form,
+        'work': form_data.work, 'form': form,
     })
 
 
 def sync_analog_groups(request, work_id):
+    from infrastructure.container import container
+
     if request.method == 'POST':
         from core_logic.use_cases.sync_work_analog_groups import (
             SyncWorkAnalogGroupsRequest,
         )
-        from infrastructure.container import container
 
         result = container.sync_work_analog_groups_use_case().execute(
             SyncWorkAnalogGroupsRequest(work_id=str(work_id)),
@@ -177,7 +182,11 @@ def sync_analog_groups(request, work_id):
             messages.info(request, 'Группы заданий уже соответствуют вариантам.')
         return redirect('works:detail', pk=work_id)
 
-    get_object_or_404(Work, pk=work_id)
+    form_data = container.get_variant_generation_form_use_case().execute(
+        str(work_id),
+    )
+    if form_data.status == 'not_found':
+        raise Http404("Работа не найдена")
     return redirect('works:detail', pk=work_id)
 
 

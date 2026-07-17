@@ -447,8 +447,14 @@ class DjangoRemedialRepositoryTests(TestCase):
         repo = DjangoWorkRepository()
 
         works = repo.get_list_works()
+        work = repo.get_work_generation_target(str(self.source_work.pk))
+        missing_work = repo.get_work_generation_target(
+            '550e8400-e29b-41d4-a716-446655440000',
+        )
 
         self.assertEqual(list(works), [self.source_work])
+        self.assertEqual(work, self.source_work)
+        self.assertIsNone(missing_work)
 
     def test_curriculum_repository_returns_course_detail_data(self):
         course = Course.objects.create(

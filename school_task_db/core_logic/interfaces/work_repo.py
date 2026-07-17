@@ -81,6 +81,10 @@ class IWorkRepository(ABC):
         """Return a work name, or None when the work does not exist."""
 
     @abstractmethod
+    def get_work_generation_target(self, work_id: str) -> Any:
+        """Return a work for the variant generation form."""
+
+    @abstractmethod
     def get_detail_variants(self, work_id: str) -> Any:
         """Return variants for the work detail page."""
 

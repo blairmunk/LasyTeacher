@@ -28,6 +28,12 @@ class WorkFormData:
 
 
 @dataclass(frozen=True)
+class VariantGenerationFormData:
+    work: Any
+    status: str = 'ready'
+
+
+@dataclass(frozen=True)
 class VariantDetailData:
     variant_tasks: Any
     total_max_points: int = 0

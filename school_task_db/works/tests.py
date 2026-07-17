@@ -248,6 +248,25 @@ class WorkDetailViewTests(TestCase):
         self.assertEqual(self.work.variant_counter, 2)
         self.assertEqual(variants.first().varianttask_set.count(), 1)
 
+    def test_generate_variants_view_uses_clean_form_data(self):
+        response = self.client.get(
+            reverse('works:generate-variants', args=[self.work.pk]),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['work'], self.work)
+        self.assertIn('form', response.context)
+
+    def test_generate_variants_view_returns_404_for_missing_work_on_get(self):
+        response = self.client.get(
+            reverse(
+                'works:generate-variants',
+                args=['00000000-0000-0000-0000-000000000000'],
+            ),
+        )
+
+        self.assertEqual(response.status_code, 404)
+
     def test_generate_variants_view_returns_404_for_missing_work(self):
         response = self.client.post(
             reverse(

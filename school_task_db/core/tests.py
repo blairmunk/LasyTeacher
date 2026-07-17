@@ -1,3 +1,6 @@
+import json
+
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -107,3 +110,28 @@ class CoreViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(list(response.context['imports']), [second, first])
+
+    def test_validate_import_json_ajax_uses_clean_validation_data(self):
+        upload = SimpleUploadedFile(
+            'tasks.json',
+            json.dumps({'tasks': [{'id': 'bad-uuid', 'text': ''}]}).encode('utf-8'),
+            content_type='application/json',
+        )
+
+        response = self.client.post(
+            reverse('core:import-validate'),
+            {'json_file': upload},
+        )
+        payload = response.json()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(payload['filename'], 'tasks.json')
+        self.assertFalse(payload['validation']['is_valid'])
+        self.assertEqual(
+            payload['validation']['errors'],
+            [
+                'Задание #1: некорректный UUID "bad-uuid"',
+                'Задание #1: отсутствует text',
+            ],
+        )
+        self.assertIsNone(payload['preview'])

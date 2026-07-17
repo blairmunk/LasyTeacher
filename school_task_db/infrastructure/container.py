@@ -129,6 +129,9 @@ from core_logic.use_cases.sync_work_analog_groups import SyncWorkAnalogGroupsUse
 from core_logic.use_cases.toggle_participation_absent import (
     ToggleParticipationAbsentUseCase,
 )
+from core_logic.use_cases.validate_task_import_json import (
+    ValidateTaskImportJsonUseCase,
+)
 from core_logic.use_cases.validate_review_work_scan import ValidateReviewWorkScanUseCase
 from infrastructure.repositories.django_codifier_repo import DjangoCodifierRepository
 from infrastructure.repositories.django_core_repo import DjangoCoreRepository
@@ -376,6 +379,9 @@ class Container:
         return GetImportHistoryUseCase(
             core_repo=self.core_repo,
         )
+
+    def validate_task_import_json_use_case(self):
+        return ValidateTaskImportJsonUseCase()
 
     def get_task_detail_use_case(self):
         return GetTaskDetailUseCase(

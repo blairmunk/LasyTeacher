@@ -116,6 +116,9 @@ from core_logic.use_cases.sync_work_analog_groups import SyncWorkAnalogGroupsUse
 from core_logic.use_cases.toggle_participation_absent import (
     ToggleParticipationAbsentUseCase,
 )
+from core_logic.use_cases.validate_task_import_json import (
+    ValidateTaskImportJsonUseCase,
+)
 from core_logic.use_cases.validate_review_work_scan import ValidateReviewWorkScanUseCase
 from infrastructure.repositories.django_codifier_repo import DjangoCodifierRepository
 from infrastructure.repositories.django_core_repo import DjangoCoreRepository
@@ -172,6 +175,7 @@ class ContainerTests(SimpleTestCase):
         global_search_use_case = container.get_global_search_use_case()
         import_page_use_case = container.get_import_page_use_case()
         import_history_use_case = container.get_import_history_use_case()
+        import_validation_use_case = container.validate_task_import_json_use_case()
         participant_selection_use_case = (
             container.get_event_participant_selection_use_case()
         )
@@ -281,6 +285,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(global_search_use_case, GetGlobalSearchUseCase)
         self.assertIsInstance(import_page_use_case, GetImportPageUseCase)
         self.assertIsInstance(import_history_use_case, GetImportHistoryUseCase)
+        self.assertIsInstance(
+            import_validation_use_case,
+            ValidateTaskImportJsonUseCase,
+        )
         self.assertIsInstance(
             participant_selection_use_case,
             GetEventParticipantSelectionUseCase,

@@ -1,7 +1,7 @@
 """Core app screen DTOs."""
 
-from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
 
 
 @dataclass(frozen=True)
@@ -36,3 +36,19 @@ class ImportPageData:
 @dataclass(frozen=True)
 class ImportHistoryData:
     imports: Any
+
+
+@dataclass(frozen=True)
+class ImportJsonValidationData:
+    is_valid: bool = True
+    errors: List[str] = field(default_factory=list)
+    warnings: List[str] = field(default_factory=list)
+    summary: Dict[str, int] = field(default_factory=dict)
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            'is_valid': self.is_valid,
+            'errors': self.errors,
+            'warnings': self.warnings,
+            'summary': self.summary,
+        }

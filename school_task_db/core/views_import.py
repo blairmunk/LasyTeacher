@@ -11,6 +11,9 @@ from django.views.decorators.http import require_POST
 from .importers.tasks import TaskImporter
 from .models import ImportLog
 from core_logic.use_cases.get_import_views import ImportPageRequest
+from core_logic.use_cases.validate_task_import_json import (
+    ValidateTaskImportJsonRequest,
+)
 from infrastructure.container import container
 
 
@@ -66,7 +69,11 @@ def validate_json_ajax(request):
         }, status=400)
     
     # Структурная валидация
-    validation = _validate_structure(data)
+    validation = (
+        container.validate_task_import_json_use_case()
+        .execute(ValidateTaskImportJsonRequest(data=data))
+        .to_dict()
+    )
     
     # Dry-run через существующий импортёр
     preview = None
@@ -103,123 +110,6 @@ def validate_json_ajax(request):
         'validation': validation,
         'preview': preview,
     })
-
-
-def _validate_structure(data):
-    """Проверка структуры JSON"""
-    result = {
-        'is_valid': True,
-        'errors': [],
-        'warnings': [],
-        'summary': {},
-    }
-    
-    # Проверка корневых полей
-    if not isinstance(data, dict):
-        result['is_valid'] = False
-        result['errors'].append('Корневой элемент должен быть объектом {}')
-        return result
-    
-    if 'tasks' not in data:
-        result['is_valid'] = False
-        result['errors'].append('Отсутствует обязательное поле "tasks"')
-        return result
-    
-    tasks = data['tasks']
-    if not isinstance(tasks, list):
-        result['is_valid'] = False
-        result['errors'].append('"tasks" должен быть массивом')
-        return result
-    
-    if len(tasks) == 0:
-        result['warnings'].append('Массив "tasks" пуст')
-    
-    # Проверка верхнеуровневых данных
-    groups_data = data.get('analog_groups', [])
-    topics_data = data.get('topics', [])
-    images_data = data.get('task_images', [])
-    
-    # Проверка каждого задания
-    tasks_ok = 0
-    tasks_errors = 0
-    uuids_seen = set()
-    
-    for i, task in enumerate(tasks):
-        task_errors = []
-        
-        if not isinstance(task, dict):
-            task_errors.append(f'Задание #{i+1}: должно быть объектом')
-        else:
-            # UUID (поле 'id')
-            task_uuid = task.get('id')
-            if not task_uuid:
-                task_errors.append(f'Задание #{i+1}: отсутствует id (UUID)')
-            elif task_uuid in uuids_seen:
-                task_errors.append(f'Задание #{i+1}: дублирующийся id {task_uuid}')
-            else:
-                # Валидация формата UUID
-                try:
-                    import uuid
-                    uuid.UUID(task_uuid)
-                    uuids_seen.add(task_uuid)
-                except ValueError:
-                    task_errors.append(f'Задание #{i+1}: некорректный UUID "{task_uuid}"')
-            
-            # Текст
-            if not task.get('text'):
-                task_errors.append(f'Задание #{i+1}: отсутствует text')
-            
-            # Предупреждения
-            if not task.get('answer'):
-                result['warnings'].append(f'Задание #{i+1}: нет ответа')
-            if not task.get('topic'):
-                result['warnings'].append(f'Задание #{i+1}: нет темы')
-            if not task.get('groups') and not task.get('group_name'):
-                result['warnings'].append(f'Задание #{i+1}: нет привязки к группе')
-        
-        if task_errors:
-            result['errors'].extend(task_errors)
-            tasks_errors += 1
-        else:
-            tasks_ok += 1
-    
-    # Проверка групп аналогов
-    group_uuids = set()
-    for i, group in enumerate(groups_data):
-        if not isinstance(group, dict):
-            result['errors'].append(f'Группа #{i+1}: должна быть объектом')
-            continue
-        if not group.get('id'):
-            result['errors'].append(f'Группа #{i+1}: отсутствует id (UUID)')
-        else:
-            group_uuids.add(group['id'])
-        if not group.get('name'):
-            result['errors'].append(f'Группа #{i+1}: отсутствует name')
-    
-    # Проверка ссылок задач на группы
-    for i, task in enumerate(tasks):
-        if isinstance(task, dict):
-            for group_uuid in task.get('groups', []):
-                if group_uuid not in group_uuids:
-                    result['warnings'].append(
-                        f'Задание #{i+1}: ссылка на группу {group_uuid[-8:]}... '
-                        f'не найдена в analog_groups (будет искать в БД)'
-                    )
-    
-    if tasks_errors > 0:
-        result['is_valid'] = False
-    
-    result['summary'] = {
-        'tasks_total': len(tasks),
-        'tasks_valid': tasks_ok,
-        'tasks_errors': tasks_errors,
-        'groups_total': len(groups_data),
-        'topics_total': len(topics_data),
-        'images_total': len(images_data),
-    }
-    
-    return result
-
 
 @require_POST
 def execute_import_ajax(request):

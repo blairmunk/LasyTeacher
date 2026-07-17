@@ -8,7 +8,9 @@ from core_logic.entities.report import (
     EventsStatusReportData,
     HeatmapCourseOverviewData,
     HeatmapCourseTimelineData,
+    HeatmapDrilldownOverviewData,
     HeatmapOverviewData,
+    HeatmapSubtopicMatrixData,
     HeatmapTopicMatrixData,
     ReportsDashboardData,
     StudentPerformanceReportData,
@@ -80,3 +82,19 @@ class IReportRepository(ABC):
         work_ids: list,
     ) -> HeatmapCourseTimelineData:
         """Return course timeline chart source data."""
+
+    @abstractmethod
+    def get_heatmap_drilldown_overview(
+        self,
+        topic_id: Any,
+        group_id: Any,
+    ) -> HeatmapDrilldownOverviewData:
+        """Return base topic drilldown heatmap data."""
+
+    @abstractmethod
+    def get_heatmap_subtopic_matrix(
+        self,
+        student_ids: list,
+        topic_id: Any,
+    ) -> HeatmapSubtopicMatrixData:
+        """Return student-subtopic heatmap matrix data."""

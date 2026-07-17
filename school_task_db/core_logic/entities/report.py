@@ -99,3 +99,21 @@ class HeatmapCourseTimelineData:
     dates: List[str]
     averages: List[int]
     labels: List[str]
+
+
+@dataclass(frozen=True)
+class HeatmapDrilldownOverviewData:
+    topic: Any
+    groups: Any
+    selected_group: Any
+    students: List[Any]
+    courses: Any
+    active_report: str = 'heatmap'
+    active_course_pk: Any = None
+
+
+@dataclass(frozen=True)
+class HeatmapSubtopicMatrixData:
+    columns: List[Any]
+    rows: List[dict]
+    col_averages: List[dict]

@@ -21,7 +21,13 @@ from core_logic.use_cases.get_heatmap_course_topic_matrix import (
 from core_logic.use_cases.get_heatmap_course_timeline import (
     HeatmapCourseTimelineRequest,
 )
+from core_logic.use_cases.get_heatmap_drilldown_overview import (
+    HeatmapDrilldownOverviewRequest,
+)
 from core_logic.use_cases.get_heatmap_overview import HeatmapOverviewRequest
+from core_logic.use_cases.get_heatmap_subtopic_matrix import (
+    HeatmapSubtopicMatrixRequest,
+)
 from core_logic.use_cases.get_heatmap_topic_matrix import (
     HeatmapTopicMatrixRequest,
 )
@@ -480,20 +486,28 @@ class HeatmapDrilldownView(View):
     """Drill-down: ученики x подтемы одной темы"""
 
     def get(self, request, topic_pk):
-        topic = get_object_or_404(Topic, pk=topic_pk)
         group_id = request.GET.get('group')
         transpose = request.GET.get('transpose') == '1'
+        overview = container.get_heatmap_drilldown_overview_use_case().execute(
+            HeatmapDrilldownOverviewRequest(
+                topic_id=topic_pk,
+                group_id=group_id,
+            ),
+        )
 
-        groups = StudentGroup.objects.all().order_by('name')
-
-        if group_id:
-            group = get_object_or_404(StudentGroup, pk=group_id)
-            students = list(group.students.all().order_by('last_name', 'first_name'))
-        else:
-            group = None
-            students = list(Student.objects.all().order_by('last_name', 'first_name'))
-
-        columns, rows, col_averages = _build_subtopic_data(students, topic)
+        topic = overview.topic
+        groups = overview.groups
+        group = overview.selected_group
+        students = overview.students
+        matrix = container.get_heatmap_subtopic_matrix_use_case().execute(
+            HeatmapSubtopicMatrixRequest(
+                student_ids=[student.pk for student in students],
+                topic_id=topic_pk,
+            ),
+        )
+        columns = matrix.columns
+        rows = matrix.rows
+        col_averages = matrix.col_averages
         group_param = f'?group={group.pk}' if group else ''
         group_suffix = f'&group={group.pk}' if group else ''
 
@@ -576,7 +590,9 @@ class HeatmapDrilldownView(View):
             'grid_col_headers': grid_col_headers,
             'grid_col_averages': grid_col_averages,
             'has_data': bool(rows and columns),
-            **_get_nav_context('heatmap'),
+            'active_report': overview.active_report,
+            'active_course_pk': overview.active_course_pk,
+            'courses': overview.courses,
         })
 
 
@@ -841,90 +857,6 @@ class HeatmapSubtopicView(View):
 # ============================================================
 # Общие функции
 # ============================================================
-
-def _build_subtopic_data(students, topic):
-    """Агрегация: ученики × подтемы одной темы"""
-    marks = Mark.objects.filter(
-        participation__student__in=students,
-    ).select_related('participation__student')
-
-    all_task_ids = set()
-    for mark in marks:
-        if mark.task_scores:
-            all_task_ids.update(mark.task_scores.keys())
-
-    if not all_task_ids:
-        return [], [], []
-
-    tasks_qs = Task.objects.filter(
-        pk__in=all_task_ids, topic=topic,
-    ).select_related('subtopic')
-    task_map = {str(t.pk): t for t in tasks_qs}
-
-    agg = defaultdict(lambda: {'points': 0, 'max_points': 0})
-
-    for mark in marks:
-        student_id = mark.participation.student_id
-        if not mark.task_scores:
-            continue
-        seen = set()
-        for task_id, scores in mark.task_scores.items():
-            if task_id in seen:
-                continue
-            seen.add(task_id)
-
-            task = task_map.get(task_id)
-            if not task:
-                continue
-
-            col_key = task.subtopic_id if task.subtopic_id else f'topic_{task.topic_id}'
-            key = (student_id, col_key)
-            agg[key]['points'] += scores.get('points', 0)
-            agg[key]['max_points'] += scores.get('max_points', 0)
-
-    subtopic_ids = set()
-    for (_, col_key) in agg.keys():
-        if not str(col_key).startswith('topic_'):
-            subtopic_ids.add(col_key)
-
-    columns = list(SubTopic.objects.filter(pk__in=subtopic_ids).order_by('order', 'name'))
-
-    rows = []
-    for student in students:
-        cells = []
-        total_pts = 0
-        total_max = 0
-        for sub in columns:
-            data = agg.get((student.id, sub.id))
-            if data and data['max_points'] > 0:
-                pct = round(data['points'] / data['max_points'] * 100)
-                total_pts += data['points']
-                total_max += data['max_points']
-                cells.append({
-                    'pct': pct, 'points': data['points'],
-                    'max_points': data['max_points'],
-                    'css': _color_class(pct), 'subtopic': sub,
-                })
-            else:
-                cells.append({'pct': None, 'css': 'no-data', 'subtopic': sub})
-
-        avg = round(total_pts / total_max * 100) if total_max > 0 else None
-        rows.append({
-            'student': student, 'cells': cells,
-            'avg': avg,
-            'avg_css': _color_class(avg) if avg is not None else 'no-data',
-        })
-
-    col_averages = []
-    for sub in columns:
-        pts = sum(agg.get((s.id, sub.id), {}).get('points', 0) for s in students)
-        mx = sum(agg.get((s.id, sub.id), {}).get('max_points', 0) for s in students)
-        avg = round(pts / mx * 100) if mx > 0 else None
-        col_averages.append({
-            'pct': avg, 'css': _color_class(avg) if avg is not None else 'no-data',
-        })
-
-    return columns, rows, col_averages
 
 def _build_course_timeline_json(timeline):
     """Plotly JSON for course result timeline."""

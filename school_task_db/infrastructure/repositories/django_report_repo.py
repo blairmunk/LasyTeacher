@@ -11,14 +11,16 @@ from core_logic.entities.report import (
     EventsStatusReportData,
     HeatmapCourseOverviewData,
     HeatmapCourseTimelineData,
+    HeatmapDrilldownOverviewData,
     HeatmapOverviewData,
+    HeatmapSubtopicMatrixData,
     HeatmapTopicMatrixData,
     ReportsDashboardData,
     StudentPerformanceReportData,
     WorkAnalysisReportData,
 )
 from core_logic.interfaces.report_repo import IReportRepository
-from curriculum.models import Course, CourseAssignment, Topic
+from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
 from students.models import Student, StudentGroup
 from tasks.models import Task
@@ -26,6 +28,29 @@ from works.models import Variant, Work
 
 
 class DjangoReportRepository(IReportRepository):
+    def get_heatmap_drilldown_overview(self, topic_id, group_id):
+        topic = get_object_or_404(Topic, pk=topic_id)
+        groups = StudentGroup.objects.all().order_by('name')
+        if group_id:
+            selected_group = get_object_or_404(StudentGroup, pk=group_id)
+            students = list(
+                selected_group.students.all().order_by('last_name', 'first_name'),
+            )
+        else:
+            selected_group = None
+            students = list(Student.objects.all().order_by('last_name', 'first_name'))
+
+        return HeatmapDrilldownOverviewData(
+            topic=topic,
+            groups=groups,
+            selected_group=selected_group,
+            students=students,
+            courses=Course.objects.filter(is_active=True).order_by(
+                'grade_level',
+                'name',
+            ),
+        )
+
     def get_heatmap_course_overview(self, course_id, group_id):
         course = get_object_or_404(Course, pk=course_id)
         course_groups = course.student_groups.all().order_by('name')
@@ -274,6 +299,83 @@ class DjangoReportRepository(IReportRepository):
             dates=dates,
             averages=averages,
             labels=labels,
+        )
+
+    def get_heatmap_subtopic_matrix(self, student_ids, topic_id):
+        topic = get_object_or_404(Topic, pk=topic_id)
+        students = list(
+            Student.objects.filter(pk__in=student_ids).order_by(
+                'last_name',
+                'first_name',
+            ),
+        )
+        marks = Mark.objects.filter(
+            participation__student__in=students,
+        ).select_related('participation__student')
+
+        all_task_ids = set()
+        for mark in marks:
+            if mark.task_scores:
+                all_task_ids.update(mark.task_scores.keys())
+
+        if not all_task_ids:
+            return HeatmapSubtopicMatrixData(
+                columns=[],
+                rows=[],
+                col_averages=[],
+            )
+
+        tasks_qs = Task.objects.filter(
+            pk__in=all_task_ids,
+            topic=topic,
+        ).select_related('subtopic')
+        task_map = {str(task.pk): task for task in tasks_qs}
+        aggregated = defaultdict(lambda: {'points': 0, 'max_points': 0})
+
+        for mark in marks:
+            student_id = mark.participation.student_id
+            if not mark.task_scores:
+                continue
+            seen = set()
+            for task_id, scores in mark.task_scores.items():
+                if task_id in seen:
+                    continue
+                seen.add(task_id)
+
+                task = task_map.get(task_id)
+                if not task:
+                    continue
+
+                col_key = (
+                    task.subtopic_id
+                    if task.subtopic_id
+                    else f'topic_{task.topic_id}'
+                )
+                key = (student_id, col_key)
+                aggregated[key]['points'] += scores.get('points', 0)
+                aggregated[key]['max_points'] += scores.get('max_points', 0)
+
+        subtopic_ids = {
+            col_key for _, col_key in aggregated.keys()
+            if not str(col_key).startswith('topic_')
+        }
+        columns = list(
+            SubTopic.objects.filter(pk__in=subtopic_ids).order_by(
+                'order',
+                'name',
+            ),
+        )
+        rows = self._build_subtopic_heatmap_rows(students, columns, aggregated)
+        col_averages = self._build_subtopic_heatmap_col_averages(
+            students,
+            columns,
+            aggregated,
+        )
+
+        return HeatmapSubtopicMatrixData(
+            columns=columns,
+            rows=rows,
+            col_averages=col_averages,
         )
 
     def get_reports_dashboard(self, year, current_date):
@@ -684,6 +786,59 @@ class DjangoReportRepository(IReportRepository):
             )
             max_points = sum(
                 aggregated.get((student.id, topic.id), {}).get('max_points', 0)
+                for student in students
+            )
+            avg = round(points / max_points * 100) if max_points > 0 else None
+            col_averages.append({
+                'pct': avg,
+                'css': self._color_class(avg) if avg is not None else 'no-data',
+            })
+        return col_averages
+
+    def _build_subtopic_heatmap_rows(self, students, columns, aggregated):
+        rows = []
+        for student in students:
+            cells = []
+            total_points = 0
+            total_max = 0
+            for subtopic in columns:
+                data = aggregated.get((student.id, subtopic.id))
+                if data and data['max_points'] > 0:
+                    pct = round(data['points'] / data['max_points'] * 100)
+                    total_points += data['points']
+                    total_max += data['max_points']
+                    cells.append({
+                        'pct': pct,
+                        'points': data['points'],
+                        'max_points': data['max_points'],
+                        'css': self._color_class(pct),
+                        'subtopic': subtopic,
+                    })
+                else:
+                    cells.append({
+                        'pct': None,
+                        'css': 'no-data',
+                        'subtopic': subtopic,
+                    })
+
+            avg = round(total_points / total_max * 100) if total_max > 0 else None
+            rows.append({
+                'student': student,
+                'cells': cells,
+                'avg': avg,
+                'avg_css': self._color_class(avg) if avg is not None else 'no-data',
+            })
+        return rows
+
+    def _build_subtopic_heatmap_col_averages(self, students, columns, aggregated):
+        col_averages = []
+        for subtopic in columns:
+            points = sum(
+                aggregated.get((student.id, subtopic.id), {}).get('points', 0)
+                for student in students
+            )
+            max_points = sum(
+                aggregated.get((student.id, subtopic.id), {}).get('max_points', 0)
                 for student in students
             )
             avg = round(points / max_points * 100) if max_points > 0 else None

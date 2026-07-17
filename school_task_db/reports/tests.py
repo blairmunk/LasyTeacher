@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from curriculum.models import Course, CourseAssignment, Topic
+from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
 from students.models import Student, StudentGroup
 from tasks.models import Task
@@ -183,6 +183,66 @@ class ReportsViewsTests(TestCase):
         timeline = json.loads(response.context['timeline_json'])
         self.assertEqual(timeline['data'][0]['y'], [80])
         self.assertEqual(timeline['data'][0]['text'], ['КР'])
+
+    def test_heatmap_drilldown_view_uses_clean_subtopic_matrix_data(self):
+        student = Student.objects.create(last_name='Иванов', first_name='Иван')
+        group = StudentGroup.objects.create(name='7А')
+        group.students.add(student)
+        work = Work.objects.create(name='Контрольная')
+        topic = Topic.objects.create(
+            name='Скорость',
+            subject='Физика',
+            section='Кинематика',
+            grade_level=7,
+        )
+        subtopic = SubTopic.objects.create(
+            topic=topic,
+            name='Средняя скорость',
+            order=1,
+        )
+        task = Task.objects.create(
+            text='Задача',
+            answer='Ответ',
+            topic=topic,
+            subtopic=subtopic,
+            task_type='computational',
+            difficulty=2,
+        )
+        event = Event.objects.create(
+            name='КР',
+            work=work,
+            status='graded',
+            planned_date=timezone.now(),
+        )
+        participation = EventParticipation.objects.create(
+            event=event,
+            student=student,
+            status='graded',
+        )
+        Mark.objects.create(
+            participation=participation,
+            score=4,
+            points=8,
+            max_points=10,
+            task_scores={
+                str(task.pk): {'points': 8, 'max_points': 10},
+            },
+        )
+
+        response = self.client.get(
+            reverse('reports:heatmap-drilldown', args=[topic.pk]),
+            {'group': group.pk},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['active_report'], 'heatmap')
+        self.assertEqual(response.context['topic'], topic)
+        self.assertEqual(response.context['selected_group'], group)
+        self.assertTrue(response.context['has_data'])
+        self.assertEqual(response.context['grid_rows'][0]['avg'], 80)
+        self.assertEqual(response.context['grid_col_averages'], [
+            {'pct': 80, 'css': 'good'},
+        ])
 
     def test_dashboard_view_uses_clean_report_data(self):
         now = timezone.now()

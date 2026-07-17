@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.test import TestCase
 from django.utils import timezone
 
-from curriculum.models import Course, CourseAssignment, Topic
+from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_report_repo import DjangoReportRepository
 from students.models import Student, StudentGroup
@@ -12,6 +12,113 @@ from works.models import Variant, VariantTask, Work
 
 
 class DjangoReportRepositoryTests(TestCase):
+    def test_get_heatmap_drilldown_overview_returns_topic_scope(self):
+        selected_student = Student.objects.create(
+            last_name='Иванов',
+            first_name='Иван',
+        )
+        other_student = Student.objects.create(
+            last_name='Петров',
+            first_name='Пётр',
+        )
+        selected_group = StudentGroup.objects.create(name='7А')
+        other_group = StudentGroup.objects.create(name='8Б')
+        selected_group.students.add(selected_student)
+        other_group.students.add(other_student)
+        topic = Topic.objects.create(
+            name='Скорость',
+            subject='Физика',
+            section='Кинематика',
+            grade_level=7,
+        )
+        course = Course.objects.create(
+            name='Физика 7',
+            subject='Физика',
+            grade_level=7,
+            is_active=True,
+        )
+
+        data = DjangoReportRepository().get_heatmap_drilldown_overview(
+            topic_id=topic.pk,
+            group_id=selected_group.pk,
+        )
+
+        self.assertEqual(data.topic, topic)
+        self.assertEqual(list(data.groups), [selected_group, other_group])
+        self.assertEqual(data.selected_group, selected_group)
+        self.assertEqual(data.students, [selected_student])
+        self.assertEqual(list(data.courses), [course])
+        self.assertEqual(data.active_report, 'heatmap')
+
+    def test_get_heatmap_subtopic_matrix_returns_subtopic_scores(self):
+        student = Student.objects.create(last_name='Иванов', first_name='Иван')
+        work = Work.objects.create(name='Контрольная')
+        topic = Topic.objects.create(
+            name='Скорость',
+            subject='Физика',
+            section='Кинематика',
+            grade_level=7,
+        )
+        subtopic = SubTopic.objects.create(
+            topic=topic,
+            name='Средняя скорость',
+            order=1,
+        )
+        other_subtopic = SubTopic.objects.create(
+            topic=topic,
+            name='Путь',
+            order=2,
+        )
+        task = Task.objects.create(
+            text='Задача 1',
+            answer='Ответ',
+            topic=topic,
+            subtopic=subtopic,
+            task_type='computational',
+            difficulty=2,
+        )
+        other_task = Task.objects.create(
+            text='Задача 2',
+            answer='Ответ',
+            topic=topic,
+            subtopic=other_subtopic,
+            task_type='computational',
+            difficulty=2,
+        )
+        event = Event.objects.create(
+            name='КР',
+            work=work,
+            status='graded',
+            planned_date=timezone.now(),
+        )
+        participation = EventParticipation.objects.create(
+            event=event,
+            student=student,
+            status='graded',
+        )
+        Mark.objects.create(
+            participation=participation,
+            score=4,
+            points=8,
+            max_points=10,
+            task_scores={
+                str(task.pk): {'points': 8, 'max_points': 10},
+            },
+        )
+
+        data = DjangoReportRepository().get_heatmap_subtopic_matrix(
+            student_ids=[student.pk],
+            topic_id=topic.pk,
+        )
+
+        self.assertEqual(data.columns, [subtopic])
+        self.assertEqual(len(data.rows), 1)
+        self.assertEqual(data.rows[0]['student'], student)
+        self.assertEqual(data.rows[0]['avg'], 80)
+        self.assertEqual(data.rows[0]['cells'][0]['pct'], 80)
+        self.assertEqual(data.rows[0]['cells'][0]['subtopic'], subtopic)
+        self.assertEqual(data.col_averages, [{'pct': 80, 'css': 'good'}])
+
     def test_get_heatmap_course_overview_returns_course_scope(self):
         selected_student = Student.objects.create(
             last_name='Иванов',

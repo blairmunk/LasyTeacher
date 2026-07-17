@@ -56,7 +56,13 @@ from core_logic.use_cases.get_heatmap_course_topic_matrix import (
 from core_logic.use_cases.get_heatmap_course_timeline import (
     GetHeatmapCourseTimelineUseCase,
 )
+from core_logic.use_cases.get_heatmap_drilldown_overview import (
+    GetHeatmapDrilldownOverviewUseCase,
+)
 from core_logic.use_cases.get_heatmap_overview import GetHeatmapOverviewUseCase
+from core_logic.use_cases.get_heatmap_subtopic_matrix import (
+    GetHeatmapSubtopicMatrixUseCase,
+)
 from core_logic.use_cases.get_heatmap_topic_matrix import (
     GetHeatmapTopicMatrixUseCase,
 )
@@ -211,7 +217,13 @@ class ContainerTests(SimpleTestCase):
         heatmap_course_timeline_use_case = (
             container.get_heatmap_course_timeline_use_case()
         )
+        heatmap_drilldown_overview_use_case = (
+            container.get_heatmap_drilldown_overview_use_case()
+        )
         heatmap_overview_use_case = container.get_heatmap_overview_use_case()
+        heatmap_subtopic_matrix_use_case = (
+            container.get_heatmap_subtopic_matrix_use_case()
+        )
         heatmap_topic_matrix_use_case = (
             container.get_heatmap_topic_matrix_use_case()
         )
@@ -351,7 +363,15 @@ class ContainerTests(SimpleTestCase):
             heatmap_course_timeline_use_case,
             GetHeatmapCourseTimelineUseCase,
         )
+        self.assertIsInstance(
+            heatmap_drilldown_overview_use_case,
+            GetHeatmapDrilldownOverviewUseCase,
+        )
         self.assertIsInstance(heatmap_overview_use_case, GetHeatmapOverviewUseCase)
+        self.assertIsInstance(
+            heatmap_subtopic_matrix_use_case,
+            GetHeatmapSubtopicMatrixUseCase,
+        )
         self.assertIsInstance(
             heatmap_topic_matrix_use_case,
             GetHeatmapTopicMatrixUseCase,

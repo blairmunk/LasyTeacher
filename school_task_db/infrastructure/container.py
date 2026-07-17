@@ -66,7 +66,13 @@ from core_logic.use_cases.get_heatmap_course_topic_matrix import (
 from core_logic.use_cases.get_heatmap_course_timeline import (
     GetHeatmapCourseTimelineUseCase,
 )
+from core_logic.use_cases.get_heatmap_drilldown_overview import (
+    GetHeatmapDrilldownOverviewUseCase,
+)
 from core_logic.use_cases.get_heatmap_overview import GetHeatmapOverviewUseCase
+from core_logic.use_cases.get_heatmap_subtopic_matrix import (
+    GetHeatmapSubtopicMatrixUseCase,
+)
 from core_logic.use_cases.get_heatmap_topic_matrix import (
     GetHeatmapTopicMatrixUseCase,
 )
@@ -542,6 +548,16 @@ class Container:
 
     def get_heatmap_course_timeline_use_case(self):
         return GetHeatmapCourseTimelineUseCase(
+            report_repo=self.report_repo,
+        )
+
+    def get_heatmap_drilldown_overview_use_case(self):
+        return GetHeatmapDrilldownOverviewUseCase(
+            report_repo=self.report_repo,
+        )
+
+    def get_heatmap_subtopic_matrix_use_case(self):
+        return GetHeatmapSubtopicMatrixUseCase(
             report_repo=self.report_repo,
         )
 

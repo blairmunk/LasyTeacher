@@ -302,9 +302,13 @@ class DjangoRemedialRepositoryTests(TestCase):
             '00000000-0000-0000-0000-000000000000',
         )
 
-        self.assertEqual(detail_task, self.original_weak)
+        self.assertEqual(detail_task.pk, str(self.original_weak.pk))
+        self.assertEqual(detail_task.topic, str(self.topic))
+        self.assertEqual(detail_task.text, self.original_weak.text)
+        self.assertEqual(detail_task.task_type_display, 'Расчётная задача')
         self.assertIsNone(missing_task)
-        self.assertEqual(task_groups[0].group, self.weak_group)
+        self.assertEqual(task_groups[0].pk, str(self.weak_group.pk))
+        self.assertEqual(task_groups[0].name, self.weak_group.name)
         self.assertEqual(subtopics[0].id, str(self.subtopic.pk))
         self.assertEqual(subtopics[0].name, self.subtopic.name)
         self.assertEqual(missing_subtopics, [])

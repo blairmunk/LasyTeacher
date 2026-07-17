@@ -11,6 +11,8 @@ from core_logic.entities.task import (
     TaskGroupDetailGroup,
     TaskGroupDetailTask,
     TaskGroupListFilters,
+    TaskDetailGroup,
+    TaskDetailTask,
     TaskListFilters,
 )
 
@@ -44,12 +46,12 @@ class ITaskRepository(ABC):
         """Return tasks not yet assigned to one analog group."""
 
     @abstractmethod
-    def get_task(self, task_id: str) -> Any:
-        """Return one task by id, or None when it does not exist."""
+    def get_task(self, task_id: str) -> Optional[TaskDetailTask]:
+        """Return one task detail read model, or None when it does not exist."""
 
     @abstractmethod
-    def get_task_detail_groups(self, task_id: str) -> Any:
-        """Return analog groups for one task detail page."""
+    def get_task_detail_groups(self, task_id: str) -> List[TaskDetailGroup]:
+        """Return analog-group read models for one task detail page."""
 
     @abstractmethod
     def get_list_topics(self) -> Any:

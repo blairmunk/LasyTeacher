@@ -110,8 +110,57 @@ class AddTasksToGroupData:
 
 @dataclass(frozen=True)
 class TaskDetailData:
-    task: Any = None
-    task_groups: Any = None
+    task: Optional["TaskDetailTask"] = None
+    task_groups: List["TaskDetailGroup"] = None
+
+
+@dataclass(frozen=True)
+class TaskDetailSource:
+    name: str
+    url: str = ''
+
+    def __str__(self) -> str:
+        return self.name
+
+
+@dataclass(frozen=True)
+class TaskDetailImage:
+    caption: str = ''
+    position: str = ''
+    safe_url: Optional[str] = None
+    image_name: str = ''
+    css_class: str = 'task-image-bottom-70'
+
+
+@dataclass(frozen=True)
+class TaskDetailTask:
+    pk: str
+    topic: str
+    section: str
+    text: str
+    answer: str
+    task_type_display: str
+    difficulty_display: str
+    short_uuid: str
+    subtopic: str = ''
+    short_solution: str = ''
+    full_solution: str = ''
+    hint: str = ''
+    instruction: str = ''
+    source: Optional[TaskDetailSource] = None
+    source_detail: str = ''
+    grade: Optional[int] = None
+    year: Optional[int] = None
+    is_verified: bool = False
+    estimated_time: Optional[int] = None
+    teacher_notes: str = ''
+    images: List[TaskDetailImage] = None
+
+
+@dataclass(frozen=True)
+class TaskDetailGroup:
+    pk: str
+    name: str
 
 
 @dataclass(frozen=True)

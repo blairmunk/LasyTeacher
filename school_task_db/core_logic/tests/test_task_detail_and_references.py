@@ -1,6 +1,11 @@
 from unittest import TestCase
 
-from core_logic.entities.task import ReferenceElementOption, SelectOption
+from core_logic.entities.task import (
+    ReferenceElementOption,
+    SelectOption,
+    TaskDetailGroup,
+    TaskDetailTask,
+)
 from core_logic.use_cases.get_task_detail import GetTaskDetailUseCase
 from core_logic.use_cases.get_task_reference_options import (
     GetCodifierElementsUseCase,
@@ -10,17 +15,28 @@ from core_logic.use_cases.get_task_reference_options import (
 
 class FakeTaskRepository:
     def __init__(self):
-        self.task = 'task-1'
+        self.task = TaskDetailTask(
+            pk='task-1',
+            topic='Кинематика',
+            section='Механика',
+            text='Задача',
+            answer='Ответ',
+            task_type_display='Расчётная задача',
+            difficulty_display='Базовый',
+            short_uuid='abcd1234',
+            images=[],
+        )
+        self.groups = [TaskDetailGroup(pk='group-1', name='Скорость')]
         self.detail_task_id = None
         self.subtopic_topic_id = None
         self.reference_request = None
 
     def get_task(self, task_id):
-        return self.task if task_id == self.task else None
+        return self.task if task_id == self.task.pk else None
 
     def get_task_detail_groups(self, task_id):
         self.detail_task_id = task_id
-        return ['group-1']
+        return self.groups
 
     def get_subtopic_options(self, topic_id):
         self.subtopic_topic_id = topic_id
@@ -38,9 +54,9 @@ class TaskDetailAndReferenceUseCaseTests(TestCase):
 
         detail = use_case.execute('task-1')
 
-        self.assertEqual(detail.task, 'task-1')
+        self.assertEqual(detail.task, repo.task)
         self.assertEqual(repo.detail_task_id, 'task-1')
-        self.assertEqual(detail.task_groups, ['group-1'])
+        self.assertEqual(detail.task_groups, repo.groups)
 
     def test_detail_use_case_returns_empty_data_for_missing_task(self):
         repo = FakeTaskRepository()

@@ -13,6 +13,10 @@ from core_logic.entities.task import (
     TaskGroupDetailGroup,
     TaskGroupDetailTask,
     TaskGroupListFilters,
+    TaskDetailGroup,
+    TaskDetailImage,
+    TaskDetailSource,
+    TaskDetailTask,
     TaskListFilters,
 )
 from core_logic.interfaces.task_repo import ITaskRepository
@@ -230,15 +234,65 @@ class DjangoTaskRepository(ITaskRepository):
         return tasks
 
     def get_task(self, task_id: str):
-        return Task.objects.select_related(
+        task = Task.objects.select_related(
             'topic',
             'subtopic',
+            'source',
         ).prefetch_related('images').filter(pk=task_id).first()
+        if task is None:
+            return None
+
+        source = None
+        if task.source:
+            source = TaskDetailSource(
+                name=str(task.source),
+                url=task.source.url,
+            )
+
+        return TaskDetailTask(
+            pk=str(task.pk),
+            topic=str(task.topic),
+            section=task.section or '',
+            text=task.text,
+            answer=task.answer,
+            task_type_display=task.get_task_type_display(),
+            difficulty_display=task.get_difficulty_display(),
+            short_uuid=task.get_short_uuid(),
+            subtopic=str(task.subtopic) if task.subtopic else '',
+            short_solution=task.short_solution,
+            full_solution=task.full_solution,
+            hint=task.hint,
+            instruction=task.instruction,
+            source=source,
+            source_detail=task.source_detail,
+            grade=task.grade,
+            year=task.year,
+            is_verified=task.is_verified,
+            estimated_time=task.estimated_time,
+            teacher_notes=task.teacher_notes,
+            images=[
+                TaskDetailImage(
+                    caption=image.caption,
+                    position=image.position,
+                    safe_url=image.safe_url,
+                    image_name=image.image.name if image.image else '',
+                    css_class=image.get_css_class(),
+                )
+                for image in task.images.all()
+            ],
+        )
 
     def get_task_detail_groups(self, task_id: str):
-        return TaskGroup.objects.filter(
+        task_groups = TaskGroup.objects.filter(
             task_id=task_id,
         ).select_related('group')
+        return [
+            TaskDetailGroup(
+                pk=str(task_group.group.pk),
+                name=task_group.group.name,
+            )
+            for task_group in task_groups
+        ]
 
     def get_list_topics(self):
         return Topic.objects.all().order_by('section', 'name')

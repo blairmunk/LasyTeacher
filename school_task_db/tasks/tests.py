@@ -199,8 +199,10 @@ class TaskBulkGroupAjaxTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['task'], self.first_task)
-        self.assertEqual(response.context['task_groups'][0].group, self.group)
+        self.assertEqual(response.context['task'].pk, str(self.first_task.pk))
+        self.assertEqual(response.context['task'].text, self.first_task.text)
+        self.assertEqual(response.context['task_groups'][0].pk, str(self.group.pk))
+        self.assertEqual(response.context['task_groups'][0].name, self.group.name)
 
     def test_task_detail_returns_404_for_missing_task(self):
         response = self.client.get(

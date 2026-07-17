@@ -467,11 +467,33 @@ class DjangoRemedialRepositoryTests(TestCase):
         assignments = repo.get_course_assignments(str(course.pk))
         work_groups = repo.get_work_analog_groups(str(self.source_work.pk))
         variants_count = repo.count_work_variants(str(self.source_work.pk))
+        topic = Topic.objects.create(
+            name='Кинематика',
+            subject='Физика',
+            section='Механика',
+            grade_level=9,
+        )
+        subtopic = SubTopic.objects.create(
+            topic=topic,
+            name='Средняя скорость',
+            description='Описание',
+            order=1,
+        )
+        subtopics = repo.get_topic_subtopics(str(topic.pk))
+        missing_subtopics = repo.get_topic_subtopics(
+            '550e8400-e29b-41d4-a716-446655440000',
+        )
 
         self.assertEqual(list(courses), [course])
         self.assertEqual(list(assignments), [assignment])
         self.assertEqual(work_groups[0].analog_group, self.weak_group)
         self.assertEqual(variants_count, 1)
+        self.assertEqual(subtopics, [{
+            'id': str(subtopic.pk),
+            'name': 'Средняя скорость',
+            'description': 'Описание',
+        }])
+        self.assertEqual(missing_subtopics, [])
 
     def test_codifier_repository_returns_list_and_detail_data(self):
         codifier = CodifierSpec.objects.create(

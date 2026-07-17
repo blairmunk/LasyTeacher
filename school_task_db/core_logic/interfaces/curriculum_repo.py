@@ -20,3 +20,7 @@ class ICurriculumRepository(ABC):
     @abstractmethod
     def count_work_variants(self, work_id: str) -> int:
         """Return variant count for one work."""
+
+    @abstractmethod
+    def get_topic_subtopics(self, topic_id: str) -> list:
+        """Return serialized subtopics for one topic."""

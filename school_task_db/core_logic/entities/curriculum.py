@@ -10,3 +10,8 @@ class CourseDetailData:
     total_variants: int = 0
     works_by_type: Dict[str, int] = field(default_factory=dict)
     groups_coverage: Dict[str, int] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class TopicSubtopicsData:
+    subtopics: List[dict] = field(default_factory=list)

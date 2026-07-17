@@ -2,6 +2,7 @@ from django.views.generic import ListView, DetailView
 from django.http import JsonResponse
 
 from .models import Topic, Course
+from core_logic.use_cases.get_topic_subtopics import TopicSubtopicsRequest
 from infrastructure.container import container
 
 class TopicListView(ListView):
@@ -41,17 +42,7 @@ class CourseDetailView(DetailView):
 
 def topic_subtopics_api(request, topic_id):
     """API для получения подтем определенной темы"""
-    try:
-        topic = Topic.objects.get(pk=topic_id)
-        subtopics = topic.subtopics.all().order_by('order')
-        data = [
-            {
-                'id': subtopic.id,
-                'name': subtopic.name,
-                'description': subtopic.description
-            }
-            for subtopic in subtopics
-        ]
-        return JsonResponse({'subtopics': data})
-    except Topic.DoesNotExist:
-        return JsonResponse({'subtopics': []})
+    data = container.get_topic_subtopics_use_case().execute(
+        TopicSubtopicsRequest(topic_id=topic_id),
+    )
+    return JsonResponse({'subtopics': data.subtopics})

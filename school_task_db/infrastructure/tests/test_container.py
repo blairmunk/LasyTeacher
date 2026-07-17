@@ -131,6 +131,7 @@ from core_logic.use_cases.get_task_reference_options import (
     GetCodifierElementsUseCase,
     GetSubtopicOptionsUseCase,
 )
+from core_logic.use_cases.get_topic_subtopics import GetTopicSubtopicsUseCase
 from core_logic.use_cases.get_source_list import GetSourceListUseCase
 from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUseCase
 from core_logic.use_cases.get_variant_detail import GetVariantDetailUseCase
@@ -213,6 +214,7 @@ class ContainerTests(SimpleTestCase):
         task_group_list_use_case = container.get_task_group_list_use_case()
         add_tasks_form_use_case = container.get_add_tasks_to_group_use_case()
         course_detail_use_case = container.get_course_detail_use_case()
+        topic_subtopics_use_case = container.get_topic_subtopics_use_case()
         codifier_list_use_case = container.get_codifier_list_use_case()
         codifier_detail_use_case = container.get_codifier_detail_use_case()
         dashboard_summary_use_case = container.get_dashboard_summary_use_case()
@@ -365,6 +367,7 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(task_group_list_use_case, GetTaskGroupListUseCase)
         self.assertIsInstance(add_tasks_form_use_case, GetAddTasksToGroupUseCase)
         self.assertIsInstance(course_detail_use_case, GetCourseDetailUseCase)
+        self.assertIsInstance(topic_subtopics_use_case, GetTopicSubtopicsUseCase)
         self.assertIsInstance(codifier_list_use_case, GetCodifierListUseCase)
         self.assertIsInstance(codifier_detail_use_case, GetCodifierDetailUseCase)
         self.assertIsInstance(dashboard_summary_use_case, GetDashboardSummaryUseCase)

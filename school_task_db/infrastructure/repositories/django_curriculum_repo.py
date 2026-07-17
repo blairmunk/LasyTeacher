@@ -1,7 +1,7 @@
 """Django implementation of the curriculum repository."""
 
 from core_logic.interfaces.curriculum_repo import ICurriculumRepository
-from curriculum.models import Course, CourseAssignment
+from curriculum.models import Course, CourseAssignment, Topic
 from works.models import Variant, WorkAnalogGroup
 
 
@@ -27,3 +27,16 @@ class DjangoCurriculumRepository(ICurriculumRepository):
 
     def count_work_variants(self, work_id: str) -> int:
         return Variant.objects.filter(work_id=work_id).count()
+
+    def get_topic_subtopics(self, topic_id: str) -> list:
+        topic = Topic.objects.filter(pk=topic_id).first()
+        if not topic:
+            return []
+        return [
+            {
+                'id': str(subtopic.pk),
+                'name': subtopic.name,
+                'description': subtopic.description,
+            }
+            for subtopic in topic.subtopics.all().order_by('order')
+        ]

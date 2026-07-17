@@ -743,6 +743,113 @@ class DjangoReportRepositoryTests(TestCase):
         self.assertEqual(data.summary_stats['avg_pct'], 90)
         self.assertEqual(data.active_report, 'student-performance')
 
+    def test_get_journal_select_returns_course_group_links(self):
+        student = Student.objects.create(last_name='Иванов', first_name='Иван')
+        group = StudentGroup.objects.create(name='7А')
+        group.students.add(student)
+        course = Course.objects.create(
+            name='Физика 7',
+            subject='Физика',
+            grade_level=7,
+            is_active=True,
+        )
+        course.student_groups.add(group)
+        work = Work.objects.create(name='Контрольная')
+        event = Event.objects.create(
+            name='КР',
+            work=work,
+            course=course,
+            status='planned',
+            planned_date=timezone.now(),
+        )
+        EventParticipation.objects.create(
+            event=event,
+            student=student,
+            status='assigned',
+        )
+
+        data = DjangoReportRepository().get_journal_select(year=None)
+
+        self.assertEqual(list(data.groups), [group])
+        self.assertEqual(list(data.courses), [course])
+        self.assertEqual(data.journal_links, [{
+            'course': course,
+            'group': group,
+            'event_count': 1,
+        }])
+        self.assertEqual(data.active_report, 'journal')
+
+    def test_get_journal_returns_rows_stats_and_debt_filter(self):
+        now = timezone.now()
+        work = Work.objects.create(name='Контрольная')
+        course = Course.objects.create(
+            name='Физика 7',
+            subject='Физика',
+            grade_level=7,
+            is_active=True,
+        )
+        graded_student = Student.objects.create(
+            last_name='Иванов',
+            first_name='Иван',
+        )
+        missing_student = Student.objects.create(
+            last_name='Петров',
+            first_name='Пётр',
+        )
+        group = StudentGroup.objects.create(name='7А')
+        group.students.add(graded_student, missing_student)
+        event = Event.objects.create(
+            name='КР',
+            work=work,
+            course=course,
+            status='graded',
+            planned_date=now,
+        )
+        participation = EventParticipation.objects.create(
+            event=event,
+            student=graded_student,
+            status='graded',
+        )
+        Mark.objects.create(
+            participation=participation,
+            score=4,
+            points=8,
+            max_points=10,
+            task_scores={
+                '550e8400-e29b-41d4-a716-446655440001': {
+                    'points': 8,
+                    'max_points': 10,
+                },
+            },
+        )
+
+        data = DjangoReportRepository().get_journal(
+            course_id=course.pk,
+            group_id=group.pk,
+            year=None,
+            show_debts_only=True,
+        )
+
+        self.assertEqual(data.course, course)
+        self.assertEqual(data.group, group)
+        self.assertEqual(list(data.events), [event])
+        self.assertEqual(data.all_rows_count, 2)
+        self.assertTrue(data.show_debts_only)
+        self.assertEqual(data.total_debts, 1)
+        self.assertEqual(data.students_with_debts, 1)
+        self.assertEqual(len(data.rows), 1)
+        self.assertEqual(data.rows[0]['student'], missing_student)
+        self.assertEqual(data.rows[0]['cells'][0]['status'], 'missing')
+        self.assertEqual(data.rows[0]['cells'][0]['css_class'], 'journal-missing')
+        self.assertEqual(data.event_stats, [{
+            'event': event,
+            'graded': 1,
+            'absent': 0,
+            'missing': 1,
+            'total': 2,
+        }])
+        self.assertEqual(data.active_report, 'journal')
+
     def test_get_reports_dashboard_returns_dashboard_data(self):
         now = timezone.now()
         work = Work.objects.create(name='Контрольная')

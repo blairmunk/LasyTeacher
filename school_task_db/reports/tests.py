@@ -524,3 +524,104 @@ class ReportsViewsTests(TestCase):
         self.assertEqual(student_stat['average_pct'], 70)
         self.assertEqual(student_stat['completion_rate'], 100)
         self.assertEqual(response.context['summary_stats']['total_students'], 1)
+
+    def test_journal_select_view_uses_clean_report_data(self):
+        student = Student.objects.create(last_name='Иванов', first_name='Иван')
+        group = StudentGroup.objects.create(name='7А')
+        group.students.add(student)
+        course = Course.objects.create(
+            name='Физика 7',
+            subject='Физика',
+            grade_level=7,
+            is_active=True,
+        )
+        course.student_groups.add(group)
+        work = Work.objects.create(name='Контрольная')
+        event = Event.objects.create(
+            name='КР',
+            work=work,
+            course=course,
+            status='planned',
+            planned_date=timezone.now(),
+        )
+        EventParticipation.objects.create(
+            event=event,
+            student=student,
+            status='assigned',
+        )
+
+        response = self.client.get(reverse('reports:journal-select'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['active_report'], 'journal')
+        self.assertEqual(list(response.context['courses']), [course])
+        self.assertEqual(list(response.context['groups']), [group])
+        self.assertEqual(response.context['journal_links'], [{
+            'course': course,
+            'group': group,
+            'event_count': 1,
+        }])
+
+    def test_journal_view_uses_clean_report_data(self):
+        now = timezone.now()
+        work = Work.objects.create(name='Контрольная')
+        course = Course.objects.create(
+            name='Физика 7',
+            subject='Физика',
+            grade_level=7,
+            is_active=True,
+        )
+        graded_student = Student.objects.create(
+            last_name='Иванов',
+            first_name='Иван',
+        )
+        missing_student = Student.objects.create(
+            last_name='Петров',
+            first_name='Пётр',
+        )
+        group = StudentGroup.objects.create(name='7А')
+        group.students.add(graded_student, missing_student)
+        event = Event.objects.create(
+            name='КР',
+            work=work,
+            course=course,
+            status='graded',
+            planned_date=now,
+        )
+        participation = EventParticipation.objects.create(
+            event=event,
+            student=graded_student,
+            status='graded',
+        )
+        Mark.objects.create(
+            participation=participation,
+            score=4,
+            points=8,
+            max_points=10,
+            task_scores={
+                '550e8400-e29b-41d4-a716-446655440001': {
+                    'points': 8,
+                    'max_points': 10,
+                },
+            },
+        )
+
+        response = self.client.get(
+            reverse('reports:journal', args=[course.pk, group.pk]),
+            {'debts': '1'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['active_report'], 'journal')
+        self.assertEqual(response.context['course'], course)
+        self.assertEqual(response.context['group'], group)
+        self.assertEqual(list(response.context['events']), [event])
+        self.assertTrue(response.context['show_debts_only'])
+        self.assertEqual(response.context['all_rows_count'], 2)
+        self.assertEqual(response.context['total_debts'], 1)
+        self.assertEqual(response.context['students_with_debts'], 1)
+        self.assertEqual(len(response.context['rows']), 1)
+        self.assertEqual(response.context['rows'][0]['student'], missing_student)
+        self.assertEqual(response.context['rows'][0]['cells'][0]['status'], 'missing')
+        self.assertEqual(response.context['event_stats'][0]['graded'], 1)
+        self.assertEqual(response.context['event_stats'][0]['missing'], 1)

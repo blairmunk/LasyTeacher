@@ -86,6 +86,8 @@ from core_logic.use_cases.get_import_views import (
     GetImportHistoryUseCase,
     GetImportPageUseCase,
 )
+from core_logic.use_cases.get_journal import GetJournalUseCase
+from core_logic.use_cases.get_journal_select import GetJournalSelectUseCase
 from core_logic.use_cases.get_participation_review import (
     GetParticipationReviewUseCase,
 )
@@ -589,6 +591,16 @@ class Container:
 
     def get_student_performance_report_use_case(self):
         return GetStudentPerformanceReportUseCase(
+            report_repo=self.report_repo,
+        )
+
+    def get_journal_select_use_case(self):
+        return GetJournalSelectUseCase(
+            report_repo=self.report_repo,
+        )
+
+    def get_journal_use_case(self):
+        return GetJournalUseCase(
             report_repo=self.report_repo,
         )
 

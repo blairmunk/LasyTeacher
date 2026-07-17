@@ -76,6 +76,8 @@ from core_logic.use_cases.get_import_views import (
     GetImportHistoryUseCase,
     GetImportPageUseCase,
 )
+from core_logic.use_cases.get_journal import GetJournalUseCase
+from core_logic.use_cases.get_journal_select import GetJournalSelectUseCase
 from core_logic.use_cases.get_participation_review import (
     GetParticipationReviewUseCase,
 )
@@ -262,6 +264,8 @@ class ContainerTests(SimpleTestCase):
         student_performance_report_use_case = (
             container.get_student_performance_report_use_case()
         )
+        journal_select_use_case = container.get_journal_select_use_case()
+        journal_use_case = container.get_journal_use_case()
         add_participants_use_case = container.add_event_participants_use_case()
         assign_variants_use_case = container.assign_event_variants_use_case()
         assign_single_variant_use_case = (
@@ -430,6 +434,8 @@ class ContainerTests(SimpleTestCase):
             student_performance_report_use_case,
             GetStudentPerformanceReportUseCase,
         )
+        self.assertIsInstance(journal_select_use_case, GetJournalSelectUseCase)
+        self.assertIsInstance(journal_use_case, GetJournalUseCase)
         self.assertIsInstance(add_participants_use_case, AddEventParticipantsUseCase)
         self.assertIsInstance(assign_variants_use_case, AssignEventVariantsUseCase)
         self.assertIsInstance(

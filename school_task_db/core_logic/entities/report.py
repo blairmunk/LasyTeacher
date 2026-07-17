@@ -38,6 +38,31 @@ class StudentPerformanceReportData:
 
 
 @dataclass(frozen=True)
+class JournalSelectData:
+    journal_links: List[dict]
+    groups: Any
+    courses: Any
+    active_report: str = 'journal'
+    active_course_pk: Any = None
+
+
+@dataclass(frozen=True)
+class JournalData:
+    course: Any
+    group: Any
+    events: Any
+    event_stats: List[dict]
+    rows: List[dict]
+    all_rows_count: int
+    show_debts_only: bool
+    total_debts: int
+    students_with_debts: int
+    courses: Any
+    active_report: str = 'journal'
+    active_course_pk: Any = None
+
+
+@dataclass(frozen=True)
 class ReportsDashboardData:
     total_students: int
     total_events: int

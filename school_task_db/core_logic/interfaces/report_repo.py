@@ -14,6 +14,8 @@ from core_logic.entities.report import (
     HeatmapSubtopicDetailData,
     HeatmapSubtopicMatrixData,
     HeatmapTopicMatrixData,
+    JournalData,
+    JournalSelectData,
     ReportsDashboardData,
     StudentPerformanceReportData,
     WorkAnalysisReportData,
@@ -40,6 +42,20 @@ class IReportRepository(ABC):
         group_id: Any,
     ) -> StudentPerformanceReportData:
         """Return student performance report data."""
+
+    @abstractmethod
+    def get_journal_select(self, year: Any) -> JournalSelectData:
+        """Return course-group pairs available for journal view."""
+
+    @abstractmethod
+    def get_journal(
+        self,
+        course_id: Any,
+        group_id: Any,
+        year: Any,
+        show_debts_only: bool,
+    ) -> JournalData:
+        """Return class journal data."""
 
     @abstractmethod
     def get_reports_dashboard(

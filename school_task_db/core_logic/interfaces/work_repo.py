@@ -7,6 +7,10 @@ from typing import Any, List, Optional, Set
 from core_logic.entities.work import (
     OrphanVariantRef,
     RemedialSheetData,
+    WorkDetailSpecGroup,
+    WorkDetailSpecPreviewItem,
+    WorkDetailVariant,
+    WorkDetailWork,
     VariantGenerationInfo,
     VariantDeleteInfo,
 )
@@ -85,16 +89,20 @@ class IWorkRepository(ABC):
         """Return a work for the variant generation form."""
 
     @abstractmethod
-    def get_detail_variants(self, work_id: str) -> Any:
-        """Return variants for the work detail page."""
+    def get_work_detail(self, work_id: str) -> Optional[WorkDetailWork]:
+        """Return one work detail read model, or None."""
 
     @abstractmethod
-    def get_detail_analog_groups(self, work_id: str) -> List[Any]:
-        """Return analog groups for the work detail page."""
+    def get_detail_variants(self, work_id: str) -> List[WorkDetailVariant]:
+        """Return variant read models for the work detail page."""
 
     @abstractmethod
-    def get_spec_preview(self, work_id: str) -> List[Any]:
-        """Return points specification preview for the work detail page."""
+    def get_detail_analog_groups(self, work_id: str) -> List[WorkDetailSpecGroup]:
+        """Return work specification read models for the work detail page."""
+
+    @abstractmethod
+    def get_spec_preview(self, work_id: str) -> List[WorkDetailSpecPreviewItem]:
+        """Return points specification preview read models for the work detail page."""
 
     @abstractmethod
     def get_variant_detail_tasks(self, variant_id: str) -> Any:

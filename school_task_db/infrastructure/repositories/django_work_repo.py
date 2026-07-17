@@ -10,6 +10,11 @@ from core_logic.entities.work import (
     RemedialSheetData,
     VariantDeleteInfo,
     VariantGenerationInfo,
+    WorkDetailAnalogGroup,
+    WorkDetailSpecGroup,
+    WorkDetailSpecPreviewItem,
+    WorkDetailVariant,
+    WorkDetailWork,
 )
 from core_logic.interfaces.work_repo import (
     AttachVariantsToWorkParams,
@@ -44,21 +49,76 @@ class DjangoWorkRepository(IWorkRepository):
     def get_work_generation_target(self, work_id: str):
         return Work.objects.filter(pk=work_id).first()
 
+    def get_work_detail(self, work_id: str):
+        work = Work.objects.filter(pk=work_id).first()
+        if work is None:
+            return None
+
+        return WorkDetailWork(
+            pk=str(work.pk),
+            name=work.name,
+            work_type=work.work_type,
+            work_type_display=work.get_work_type_display(),
+            duration=work.duration,
+            max_score=work.max_score,
+            effective_max_score=work.effective_max_score,
+            variant_count=Variant.objects.filter(work_id=work_id).count(),
+            created_at=work.created_at,
+            updated_at=work.updated_at,
+        )
+
     def get_detail_variants(self, work_id: str):
-        return Variant.objects.filter(work_id=work_id)
+        return [
+            WorkDetailVariant(
+                pk=str(variant.pk),
+                number=variant.number,
+                short_uuid=variant.get_short_uuid(),
+                task_count=variant.tasks.count(),
+                total_max_points=variant.total_max_points,
+                created_at=variant.created_at,
+                variant_type=variant.variant_type,
+                has_assigned_student=bool(variant.assigned_student_id),
+            )
+            for variant in Variant.objects.filter(work_id=work_id)
+        ]
 
     def get_detail_analog_groups(self, work_id: str):
-        return list(
-            WorkAnalogGroup.objects.filter(
+        return [
+            self._build_work_detail_spec_group(work_group)
+            for work_group in WorkAnalogGroup.objects.filter(
                 work_id=work_id,
             ).select_related(
                 'analog_group',
             ).order_by('order', 'pk')
-        )
+        ]
 
     def get_spec_preview(self, work_id: str):
         work = Work.objects.get(pk=work_id)
-        return work.get_spec_preview()
+        return [
+            WorkDetailSpecPreviewItem(
+                wg=self._build_work_detail_spec_group(item['wg']),
+                per_task=item['per_task'],
+                total_points=item['total_points'],
+                available_count=TaskGroup.objects.filter(
+                    group=item['wg'].analog_group,
+                ).count(),
+            )
+            for item in work.get_spec_preview()
+        ]
+
+    def _build_work_detail_spec_group(self, work_group):
+        return WorkDetailSpecGroup(
+            order=work_group.order,
+            analog_group=WorkDetailAnalogGroup(
+                pk=str(work_group.analog_group.pk),
+                name=work_group.analog_group.name,
+                task_count=TaskGroup.objects.filter(
+                    group=work_group.analog_group,
+                ).count(),
+            ),
+            count=work_group.count,
+            weight=work_group.weight,
+        )
 
     def get_variant_detail_tasks(self, variant_id: str):
         return VariantTask.objects.filter(

@@ -453,14 +453,22 @@ class DjangoRemedialRepositoryTests(TestCase):
     def test_work_repository_returns_detail_page_data(self):
         repo = DjangoWorkRepository()
 
+        work = repo.get_work_detail(str(self.source_work.pk))
+        missing_work = repo.get_work_detail(
+            '550e8400-e29b-41d4-a716-446655440000',
+        )
         variants = repo.get_detail_variants(str(self.source_work.pk))
         analog_groups = repo.get_detail_analog_groups(str(self.source_work.pk))
         spec_preview = repo.get_spec_preview(str(self.source_work.pk))
 
-        self.assertEqual(variants.count(), 1)
+        self.assertEqual(work.pk, str(self.source_work.pk))
+        self.assertEqual(work.name, self.source_work.name)
+        self.assertIsNone(missing_work)
+        self.assertEqual(len(variants), 1)
+        self.assertEqual(variants[0].pk, str(self.source_variant.pk))
         self.assertEqual(analog_groups[0].analog_group.name, self.weak_group.name)
-        self.assertEqual(spec_preview[0]['wg'].analog_group, self.weak_group)
-        self.assertEqual(spec_preview[0]['total_points'], 7)
+        self.assertEqual(spec_preview[0].wg.analog_group.name, self.weak_group.name)
+        self.assertEqual(spec_preview[0].total_points, 7)
 
     def test_work_repository_returns_list_page_data(self):
         repo = DjangoWorkRepository()

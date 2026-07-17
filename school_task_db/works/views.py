@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.http import Http404
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.views.decorators.http import require_http_methods
 
 from .models import Work, Variant
@@ -20,16 +20,18 @@ class WorkListView(ListView):
         return container.get_work_list_use_case().execute().works
 
 
-class WorkDetailView(DetailView):
-    model = Work
+class WorkDetailView(TemplateView):
     template_name = 'works/detail.html'
-    context_object_name = 'work'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         from infrastructure.container import container
 
-        detail = container.get_work_detail_use_case().execute(str(self.object.pk))
+        detail = container.get_work_detail_use_case().execute(str(self.kwargs['pk']))
+        if detail.work is None:
+            raise Http404('Работа не найдена')
+        context['work'] = detail.work
+        context['object'] = detail.work
         context['variants'] = detail.variants
         context['analog_groups'] = detail.analog_groups
         context['spec_preview'] = detail.spec_preview

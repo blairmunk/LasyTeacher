@@ -43,10 +43,19 @@ class WorkDetailViewTests(TestCase):
         response = self.client.get(reverse('works:detail', args=[self.work.pk]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['variants'].count(), 1)
+        self.assertEqual(response.context['work'].pk, str(self.work.pk))
+        self.assertEqual(response.context['work'].name, self.work.name)
+        self.assertEqual(len(response.context['variants']), 1)
         self.assertEqual(response.context['analog_groups'], [])
         self.assertEqual(response.context['spec_preview'], [])
         self.assertTrue(response.context['show_sync_button'])
+
+    def test_detail_returns_404_for_missing_work(self):
+        response = self.client.get(
+            reverse('works:detail', args=['550e8400-e29b-41d4-a716-446655440000'])
+        )
+
+        self.assertEqual(response.status_code, 404)
 
     def test_list_uses_clean_context_data(self):
         response = self.client.get(reverse('works:list'))
@@ -167,7 +176,14 @@ class WorkDetailViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context['analog_groups']), 1)
-        self.assertEqual(response.context['spec_preview'][0]['wg'].analog_group, group)
+        self.assertEqual(
+            response.context['spec_preview'][0].wg.analog_group.pk,
+            str(group.pk),
+        )
+        self.assertEqual(
+            response.context['spec_preview'][0].wg.analog_group.name,
+            group.name,
+        )
         self.assertFalse(response.context['show_sync_button'])
 
     def test_sync_analog_groups_view_uses_clean_use_case(self):

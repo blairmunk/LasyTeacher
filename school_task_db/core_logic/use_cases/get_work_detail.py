@@ -15,11 +15,16 @@ class GetWorkDetailUseCase:
         self.work_service = work_service
 
     def execute(self, work_id: str) -> WorkDetailData:
+        work = self.work_repo.get_work_detail(work_id)
+        if work is None:
+            return WorkDetailData()
+
         variants = self.work_repo.get_detail_variants(work_id)
         analog_groups = self.work_repo.get_detail_analog_groups(work_id)
         spec_preview = self.work_repo.get_spec_preview(work_id)
 
         return WorkDetailData(
+            work=work,
             variants=variants,
             analog_groups=analog_groups,
             spec_preview=spec_preview,

@@ -7,7 +7,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="mb-1">{{ work.name }}</h2>
-            <span class="badge bg-secondary">{{ work.get_work_type_display }}</span>
+            <span class="badge bg-secondary">{{ work.work_type_display }}</span>
         </div>
         <div class="btn-group">
             <a href="{% url 'works:update' work.pk %}" class="btn btn-outline-primary">
@@ -33,7 +33,7 @@
                             <small class="text-muted">минут</small>
                         </div>
                         <div class="col-md-3">
-                            <div class="fs-3 fw-bold text-success">{{ work.variant_set.count }}</div>
+                            <div class="fs-3 fw-bold text-success">{{ work.variant_count }}</div>
                             <small class="text-muted">вариантов</small>
                         </div>
                         <div class="col-md-3">
@@ -89,14 +89,12 @@
                                     {% endif %}
                                 </td>
                                 <td class="text-center">
-                                    {% with available=item.wg.analog_group.taskgroup_set.count %}
-                                    <span class="{% if available < item.wg.count %}text-danger fw-bold{% else %}text-success{% endif %}">
-                                        {{ available }}
-                                        {% if available < item.wg.count %}
+                                    <span class="{% if item.available_count < item.wg.count %}text-danger fw-bold{% else %}text-success{% endif %}">
+                                        {{ item.available_count }}
+                                        {% if item.available_count < item.wg.count %}
                                         <i class="fas fa-exclamation-triangle" title="Мало заданий!"></i>
                                         {% endif %}
                                     </span>
-                                    {% endwith %}
                                 </td>
                             </tr>
                             {% endfor %}
@@ -199,8 +197,8 @@
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Варианты</label>
                                         <select name="variant_selection" class="form-select">
-                                            <option value="all">Все ({{ work.variant_set.count }} шт.)</option>
-                                            {% for variant in work.variant_set.all %}
+                                            <option value="all">Все ({{ variants|length }} шт.)</option>
+                                            {% for variant in variants %}
                                             <option value="{{ variant.id }}">Вариант {{ variant.number }}</option>
                                             {% endfor %}
                                         </select>
@@ -248,7 +246,7 @@
         <div class="col-md-4">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white">
-                    <h5 class="mb-0"><i class="fas fa-copy"></i> Варианты ({{ variants.count }})</h5>
+                    <h5 class="mb-0"><i class="fas fa-copy"></i> Варианты ({{ variants|length }})</h5>
                 </div>
                 <div class="card-body p-0">
                     {% for variant in variants %}
@@ -256,10 +254,10 @@
                         <div>
                             <h6 class="mb-0">
                                 Вариант {{ variant.number }}
-                                <small class="text-muted ms-1" style="font-family:monospace;">#{{ variant.get_short_uuid }}</small>
+                                <small class="text-muted ms-1" style="font-family:monospace;">#{{ variant.short_uuid }}</small>
                             </h6>
                             <small class="text-muted">
-                                <i class="fas fa-tasks"></i> {{ variant.tasks.count }} заданий
+                                <i class="fas fa-tasks"></i> {{ variant.task_count }} заданий
                                 · {{ variant.total_max_points }} балл.
                                 · {{ variant.created_at|date:"d.m.Y" }}
                             </small>
@@ -268,7 +266,7 @@
                             <a href="{% url 'works:variant-detail' variant.pk %}" class="btn btn-sm btn-outline-primary">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            {% if variant.variant_type == 'remedial' and variant.assigned_student %}
+                            {% if variant.variant_type == 'remedial' and variant.has_assigned_student %}
                             <a href="{% url 'students:remedial-solutions' variant.pk %}"
                                 class="btn btn-sm btn-outline-info" title="Разбор ошибок">
                                 <i class="fas fa-search"></i>
@@ -462,5 +460,4 @@
 })();
 </script>
 {% endblock %}
-
 

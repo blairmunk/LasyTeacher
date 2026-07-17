@@ -5,6 +5,7 @@ from core_logic.entities.work import (
     RemedialSheetData,
     VariantDeleteInfo,
     VariantGenerationInfo,
+    WorkDetailWork,
 )
 from core_logic.interfaces.work_repo import CreateWorkParams
 from core_logic.services.work_service import WorkService
@@ -98,6 +99,21 @@ class FakeWorkRepository:
         self.work_name_request = None
         self.variant_type = 'remedial'
         self.variant_type_request = None
+        self.work_detail = WorkDetailWork(
+            pk='work-1',
+            name='Контрольная',
+            work_type='test',
+            work_type_display='Контрольная работа',
+            duration=45,
+            max_score=0,
+            effective_max_score=0,
+            variant_count=0,
+            created_at=None,
+            updated_at=None,
+        )
+
+    def get_work_detail(self, work_id):
+        return self.work_detail if work_id == self.work_detail.pk else None
 
     def get_detail_variants(self, work_id):
         return self.variants
@@ -223,9 +239,22 @@ class WorkDetailTests(TestCase):
 
         result = use_case.execute('work-1')
 
+        self.assertEqual(result.work.name, 'Контрольная')
         self.assertEqual(result.variants, ['variant-1'])
         self.assertEqual(result.spec_preview, ['spec-1'])
         self.assertTrue(result.show_sync_button)
+
+    def test_get_work_detail_use_case_returns_empty_data_for_missing_work(self):
+        repo = FakeWorkRepository()
+        use_case = GetWorkDetailUseCase(
+            work_repo=repo,
+            work_service=WorkService(),
+        )
+
+        result = use_case.execute('missing-work')
+
+        self.assertIsNone(result.work)
+        self.assertEqual(result.variants, [])
 
     def test_get_work_list_use_case_builds_list_context_data(self):
         repo = FakeWorkRepository()

@@ -1,15 +1,74 @@
 """Work screen DTOs."""
 
 from dataclasses import dataclass, field
-from typing import Any, List
+from datetime import datetime
+from typing import Any, List, Optional
 
 
 @dataclass(frozen=True)
 class WorkDetailData:
-    variants: Any
-    analog_groups: List[Any] = field(default_factory=list)
-    spec_preview: List[Any] = field(default_factory=list)
+    work: Optional["WorkDetailWork"] = None
+    variants: List["WorkDetailVariant"] = field(default_factory=list)
+    analog_groups: List["WorkDetailSpecGroup"] = field(default_factory=list)
+    spec_preview: List["WorkDetailSpecPreviewItem"] = field(default_factory=list)
     show_sync_button: bool = False
+
+
+@dataclass(frozen=True)
+class WorkDetailWork:
+    pk: str
+    name: str
+    work_type: str
+    work_type_display: str
+    duration: int
+    max_score: int
+    effective_max_score: int
+    variant_count: int
+    created_at: datetime
+    updated_at: datetime
+
+    @property
+    def id(self) -> str:
+        return self.pk
+
+
+@dataclass(frozen=True)
+class WorkDetailAnalogGroup:
+    pk: str
+    name: str
+    task_count: int = 0
+
+
+@dataclass(frozen=True)
+class WorkDetailSpecGroup:
+    order: int
+    analog_group: WorkDetailAnalogGroup
+    count: int
+    weight: int
+
+
+@dataclass(frozen=True)
+class WorkDetailSpecPreviewItem:
+    wg: WorkDetailSpecGroup
+    per_task: int
+    total_points: int
+    available_count: int = 0
+
+
+@dataclass(frozen=True)
+class WorkDetailVariant:
+    pk: str
+    number: int
+    short_uuid: str
+    task_count: int
+    total_max_points: int
+    created_at: datetime
+    variant_type: str
+    has_assigned_student: bool = False
+
+    @property
+    def id(self) -> str:
+        return self.pk
 
 
 @dataclass(frozen=True)

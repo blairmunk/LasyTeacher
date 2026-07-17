@@ -125,8 +125,20 @@ class StudentListData:
 
 
 @dataclass(frozen=True)
+class StudentDetail:
+    pk: str
+    first_name: str
+    last_name: str
+    middle_name: str = ''
+    email: str = ''
+    short_uuid: str = ''
+    full_name: str = ''
+    short_name: str = ''
+
+
+@dataclass(frozen=True)
 class StudentDetailData:
-    student: Any = None
+    student: Optional[StudentDetail] = None
 
 
 @dataclass(frozen=True)

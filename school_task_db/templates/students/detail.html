@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ student.get_full_name }}{% endblock %}
+{% block title %}{{ student.full_name }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -9,7 +9,7 @@
         <div>
             <h2 class="mb-1">
                 <i class="fas fa-user-graduate"></i>
-                {{ student.get_full_name }}
+                {{ student.full_name }}
             </h2>
             <a href="{% url 'students:remedial' object.pk %}" class="btn btn-outline-warning">
                 <i class="fas fa-first-aid"></i> Работа над ошибками
@@ -23,7 +23,7 @@
                 {% if student.email %}
                 <span class="text-muted"><i class="fas fa-envelope"></i> {{ student.email }}</span>
                 {% endif %}
-                <span class="uuid-badge">{{ student.get_short_uuid }}</span>
+                <span class="uuid-badge">{{ student.short_uuid }}</span>
             </div>
         </div>
         <div>
@@ -411,7 +411,7 @@
                         <td>
                             {% if data.work %}
                             <span class="badge bg-{% if data.work.work_type == 'test' %}danger{% elif data.work.work_type == 'exam' %}dark{% elif data.work.work_type == 'quiz' %}primary{% elif data.work.work_type == 'diagnostic' %}info{% else %}secondary{% endif %} badge-sm">
-                                {{ data.work.get_work_type_display }}
+                                {{ data.work.work_type_display }}
                             </span>
                             {% endif %}
                         </td>

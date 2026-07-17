@@ -209,7 +209,13 @@ class DjangoRemedialRepositoryTests(TestCase):
             '00000000-0000-0000-0000-000000000000',
         )
 
-        self.assertEqual(student, self.student)
+        self.assertEqual(student.pk, str(self.student.pk))
+        self.assertEqual(student.first_name, self.student.first_name)
+        self.assertEqual(student.last_name, self.student.last_name)
+        self.assertEqual(student.email, self.student.email)
+        self.assertEqual(student.short_uuid, self.student.get_short_uuid())
+        self.assertEqual(student.full_name, self.student.get_full_name())
+        self.assertEqual(student.short_name, self.student.get_short_name())
         self.assertIsNone(missing_student)
         self.assertEqual(student_group.pk, str(self.group.pk))
         self.assertEqual(student_group.name, self.group.name)

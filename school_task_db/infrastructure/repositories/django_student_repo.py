@@ -10,6 +10,7 @@ from core_logic.entities.student import (
     MarkRef,
     ObjectRef,
     RemedialWizardPreviewData,
+    StudentDetail,
     StudentGroupDetail,
     StudentGroupDetailStudent,
     StudentGroupRef,
@@ -41,7 +42,20 @@ class DjangoStudentRepository(IStudentRepository):
         )
 
     def get_student(self, student_id: str):
-        return Student.objects.filter(pk=student_id).first()
+        student = Student.objects.filter(pk=student_id).first()
+        if student is None:
+            return None
+
+        return StudentDetail(
+            pk=str(student.pk),
+            first_name=student.first_name,
+            last_name=student.last_name,
+            middle_name=student.middle_name,
+            email=student.email,
+            short_uuid=student.get_short_uuid(),
+            full_name=student.get_full_name(),
+            short_name=student.get_short_name(),
+        )
 
     def get_student_group(self, group_id: str):
         group = StudentGroup.objects.select_related(

@@ -5,6 +5,7 @@ from typing import Any, List, Optional
 
 from core_logic.entities.student import (
     RemedialWizardPreviewData,
+    StudentDetail,
     StudentGroupDetail,
     StudentRemedialWorkData,
     StudentGroupRef,
@@ -25,8 +26,8 @@ class IStudentRepository(ABC):
         """Return student groups/classes for the group list page."""
 
     @abstractmethod
-    def get_student(self, student_id: str) -> Any:
-        """Return one student by id, or None when it does not exist."""
+    def get_student(self, student_id: str) -> Optional[StudentDetail]:
+        """Return one student detail read model, or None."""
 
     @abstractmethod
     def get_student_group(self, group_id: str) -> Optional[StudentGroupDetail]:

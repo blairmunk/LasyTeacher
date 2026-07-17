@@ -397,7 +397,11 @@ class RemedialFromEventViewTests(TestCase):
         response = self.client.get(reverse('students:detail', args=[self.student.pk]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['student'], self.student)
+        self.assertEqual(response.context['student'].pk, str(self.student.pk))
+        self.assertEqual(
+            response.context['student'].full_name,
+            self.student.get_full_name(),
+        )
         self.assertEqual(response.context['student_groups'][0].name, '9А')
         self.assertEqual(response.context['stats']['total_works'], 1)
         self.assertEqual(response.context['stats']['graded_works'], 1)

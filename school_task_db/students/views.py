@@ -52,7 +52,7 @@ class StudentDetailView(TemplateView):
             group_names = [g['name'] for g in profile.group_scores]
 
             heatmap_chart = plotly_utils.heatmap_config(
-                students=[student.get_short_name()],
+                students=[student.short_name],
                 groups=group_names,
                 matrix=[[g['avg'] for g in profile.group_scores]],
                 title='Успеваемость по темам',

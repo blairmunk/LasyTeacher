@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from core_logic.entities.student import StudentGroupDetail
+from core_logic.entities.student import StudentDetail, StudentGroupDetail
 from core_logic.use_cases.get_student_detail import GetStudentDetailUseCase
 from core_logic.use_cases.get_student_group_detail import (
     GetStudentGroupDetailUseCase,
@@ -9,7 +9,14 @@ from core_logic.use_cases.get_student_group_detail import (
 
 class FakeStudentRepository:
     def __init__(self):
-        self.student = 'student-1'
+        self.student = StudentDetail(
+            pk='student-1',
+            first_name='Иван',
+            last_name='Петров',
+            short_uuid='abcd1234',
+            full_name='Петров Иван',
+            short_name='Петров И.',
+        )
         self.student_group = StudentGroupDetail(
             pk='group-1',
             name='9А',
@@ -18,7 +25,7 @@ class FakeStudentRepository:
         )
 
     def get_student(self, student_id):
-        return self.student if student_id == self.student else None
+        return self.student if student_id == self.student.pk else None
 
     def get_student_group(self, group_id):
         return self.student_group if group_id == self.student_group.pk else None
@@ -31,7 +38,7 @@ class GetStudentDetailUseCaseTests(TestCase):
 
         data = use_case.execute('student-1')
 
-        self.assertEqual(data.student, 'student-1')
+        self.assertEqual(data.student, repo.student)
 
     def test_execute_returns_empty_data_for_missing_student(self):
         repo = FakeStudentRepository()

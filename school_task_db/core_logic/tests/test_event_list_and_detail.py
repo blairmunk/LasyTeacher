@@ -1,7 +1,9 @@
 from unittest import TestCase
 
 from core_logic.entities.event import (
+    EventEntity,
     EventParticipationRow,
+    EventParticipationRef,
     EventStudentRef,
     EventVariantRef,
 )
@@ -10,6 +12,9 @@ from core_logic.use_cases.get_event_detail import GetEventDetailUseCase
 from core_logic.use_cases.get_event_list import GetEventListUseCase
 from core_logic.use_cases.get_event_participant_selection import (
     GetEventParticipantSelectionUseCase,
+)
+from core_logic.use_cases.get_event_participation_ref import (
+    GetEventParticipationRefUseCase,
 )
 from core_logic.use_cases.get_event_variant_assignment import (
     GetEventVariantAssignmentUseCase,
@@ -43,6 +48,21 @@ class FakeEventRepository:
 
     def get_available_variants(self, event_id):
         return [EventVariantRef(pk='v1', number=1)]
+
+    def get_by_id(self, event_id):
+        if event_id == 'missing':
+            return None
+        return EventEntity(
+            id=event_id,
+            name='КР',
+            work_id='work-1',
+            work_name='Контрольная',
+        )
+
+    def get_participation_ref(self, participation_id):
+        if participation_id == 'missing':
+            return None
+        return EventParticipationRef(id=participation_id, event_id='event-1')
 
 
 class EventListAndDetailUseCaseTests(TestCase):
@@ -81,11 +101,22 @@ class EventListAndDetailUseCaseTests(TestCase):
 
         result = use_case.execute(event_id='event-1')
 
+        self.assertEqual(result.event.name, 'КР')
         self.assertEqual(len(result.current_participants), 1)
         self.assertEqual(
             result.current_participants[0].student.first_name,
             'Иван',
         )
+
+    def test_event_participant_selection_returns_not_found_status(self):
+        use_case = GetEventParticipantSelectionUseCase(
+            event_repo=FakeEventRepository(),
+        )
+
+        result = use_case.execute(event_id='missing')
+
+        self.assertEqual(result.status, 'not_found')
+        self.assertEqual(result.current_participants, [])
 
     def test_event_variant_assignment_returns_participations_and_variants(self):
         use_case = GetEventVariantAssignmentUseCase(
@@ -94,5 +125,26 @@ class EventListAndDetailUseCaseTests(TestCase):
 
         result = use_case.execute(event_id='event-1')
 
+        self.assertEqual(result.event.name, 'КР')
         self.assertEqual(result.participations[0].pk, 'p1')
         self.assertEqual(result.variants[0].pk, 'v1')
+
+    def test_event_participation_ref_returns_reference(self):
+        use_case = GetEventParticipationRefUseCase(
+            event_repo=FakeEventRepository(),
+        )
+
+        result = use_case.execute(participation_id='p1')
+
+        self.assertEqual(result.participation.pk, 'p1')
+        self.assertEqual(result.participation.event_id, 'event-1')
+
+    def test_event_participation_ref_returns_not_found_status(self):
+        use_case = GetEventParticipationRefUseCase(
+            event_repo=FakeEventRepository(),
+        )
+
+        result = use_case.execute(participation_id='missing')
+
+        self.assertEqual(result.status, 'not_found')
+        self.assertIsNone(result.participation)

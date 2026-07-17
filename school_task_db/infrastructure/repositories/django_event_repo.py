@@ -10,6 +10,7 @@ from django.utils import timezone
 from core_logic.entities.event import (
     EventEntity,
     EventMarkRef,
+    EventParticipationRef,
     EventParticipationRow,
     EventStudentRef,
     EventVariantAssignmentResult,
@@ -171,6 +172,19 @@ class DjangoEventRepository(IEventRepository):
             work_id=str(event.work_id),
             work_name=event.work.name,
             course_id=str(event.course_id) if event.course_id else None,
+            planned_date=event.planned_date,
+            work_variant_count=event.work.variant_set.count(),
+        )
+
+    def get_participation_ref(self, participation_id: str):
+        participation = EventParticipation.objects.filter(
+            pk=participation_id,
+        ).first()
+        if not participation:
+            return None
+        return EventParticipationRef(
+            id=str(participation.pk),
+            event_id=str(participation.event_id),
         )
 
     def get_student_mark(

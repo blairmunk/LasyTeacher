@@ -97,6 +97,9 @@ from core_logic.use_cases.get_event_list import GetEventListUseCase
 from core_logic.use_cases.get_event_participant_selection import (
     GetEventParticipantSelectionUseCase,
 )
+from core_logic.use_cases.get_event_participation_ref import (
+    GetEventParticipationRefUseCase,
+)
 from core_logic.use_cases.get_event_variant_assignment import (
     GetEventVariantAssignmentUseCase,
 )
@@ -531,6 +534,11 @@ class Container:
 
     def get_event_participant_selection_use_case(self):
         return GetEventParticipantSelectionUseCase(
+            event_repo=self.event_repo,
+        )
+
+    def get_event_participation_ref_use_case(self):
+        return GetEventParticipationRefUseCase(
             event_repo=self.event_repo,
         )
 

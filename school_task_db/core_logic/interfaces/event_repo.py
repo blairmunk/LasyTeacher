@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 from core_logic.entities.event import (
     EventParticipationRow,
     EventEntity,
+    EventParticipationRef,
     EventVariantAssignmentResult,
     EventVariantRef,
     MarkEntity,
@@ -96,6 +97,13 @@ class IEventRepository(ABC):
     @abstractmethod
     def get_by_id(self, event_id: str) -> Optional[EventEntity]:
         """Return an event by ID."""
+
+    @abstractmethod
+    def get_participation_ref(
+        self,
+        participation_id: str,
+    ) -> Optional[EventParticipationRef]:
+        """Return a lightweight participation reference by ID."""
 
     @abstractmethod
     def get_student_mark(

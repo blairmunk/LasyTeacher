@@ -13,10 +13,18 @@ def _same_pk(left_id: str, other: Any) -> bool:
 class WorkSummary:
     id: str
     name: str
+    variant_count: int = 0
 
     @property
     def pk(self) -> str:
         return self.id
+
+    @property
+    def variant_set(self):
+        return self
+
+    def count(self) -> int:
+        return self.variant_count
 
     def __eq__(self, other):
         return _same_pk(self.id, other)
@@ -58,6 +66,33 @@ class EventEntity:
     work_id: str
     work_name: str
     course_id: Optional[str] = None
+    planned_date: Any = None
+    work_variant_count: int = 0
+
+    @property
+    def pk(self) -> str:
+        return self.id
+
+    @property
+    def work(self):
+        return WorkSummary(
+            id=self.work_id,
+            name=self.work_name,
+            variant_count=self.work_variant_count,
+        )
+
+    @property
+    def date(self):
+        return self.planned_date
+
+    def __eq__(self, other):
+        return _same_pk(self.id, other)
+
+
+@dataclass(frozen=True)
+class EventParticipationRef:
+    id: str
+    event_id: str
 
     @property
     def pk(self) -> str:

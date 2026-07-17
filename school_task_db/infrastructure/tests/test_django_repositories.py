@@ -887,6 +887,8 @@ class DjangoRemedialRepositoryTests(TestCase):
         events = repo.get_list_events()
         participations = repo.get_detail_participations(str(self.event.pk))
         available_variants = repo.get_available_variants(str(self.event.pk))
+        event_ref = repo.get_by_id(str(self.event.pk))
+        participation_ref = repo.get_participation_ref(str(self.participation.pk))
         event_by_id = {str(event.pk): event for event in events}
 
         self.assertIn(str(self.event.pk), event_by_id)
@@ -895,6 +897,12 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(participations[0].variant.number, 1)
         self.assertEqual(participations[0].mark_obj.score, 2)
         self.assertEqual(available_variants[0].number, 1)
+        self.assertEqual(event_ref.pk, str(self.event.pk))
+        self.assertEqual(event_ref.work.name, self.source_work.name)
+        self.assertEqual(event_ref.work.variant_set.count(), 1)
+        self.assertEqual(event_ref.date, self.event.planned_date)
+        self.assertEqual(participation_ref.pk, str(self.participation.pk))
+        self.assertEqual(participation_ref.event_id, str(self.event.pk))
 
     def test_event_repository_mutates_participants_variants_and_status(self):
         repo = DjangoEventRepository()

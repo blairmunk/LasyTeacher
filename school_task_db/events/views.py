@@ -1,9 +1,9 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.urls import reverse_lazy
 from django.http import Http404
-from .models import Event, EventParticipation
+from .models import Event
 from .forms import EventForm, StudentSelectionForm, MarkForm, VariantAssignmentForm
 
 
@@ -138,12 +138,14 @@ class EventUpdateView(UpdateView):
 
 def add_participants(request, event_id):
     """Добавление участников в событие"""
-    event = get_object_or_404(Event, pk=event_id)
     from infrastructure.container import container
 
     selection_data = container.get_event_participant_selection_use_case().execute(
-        str(event.pk),
+        str(event_id),
     )
+    if selection_data.status == 'not_found':
+        raise Http404("Событие не найдено")
+    event = selection_data.event
 
     if request.method == 'POST':
         form = StudentSelectionForm(request.POST)
@@ -154,7 +156,7 @@ def add_participants(request, event_id):
 
             result = container.add_event_participants_use_case().execute(
                 AddEventParticipantsRequest(
-                    event_id=str(event.pk),
+                    event_id=str(event_id),
                     student_ids=_selected_student_ids(form.cleaned_data),
                 )
             )
@@ -178,12 +180,14 @@ def add_participants(request, event_id):
 
 def assign_variants(request, event_id):
     """Назначение вариантов участникам"""
-    event = get_object_or_404(Event, pk=event_id)
     from infrastructure.container import container
 
     assignment_data = container.get_event_variant_assignment_use_case().execute(
-        str(event.pk),
+        str(event_id),
     )
+    if assignment_data.status == 'not_found':
+        raise Http404("Событие не найдено")
+    event = assignment_data.event
 
     if request.method == 'POST':
         form = VariantAssignmentForm(assignment_data, request.POST)
@@ -200,12 +204,12 @@ def assign_variants(request, event_id):
 
             container.assign_event_variants_use_case().execute(
                 AssignEventVariantsRequest(
-                    event_id=str(event.pk),
+                    event_id=str(event_id),
                     assignments=assignments,
                 )
             )
             messages.success(request, 'Варианты успешно назначены')
-            return redirect('events:detail', pk=event.pk)
+            return redirect('events:detail', pk=event_id)
     else:
         form = VariantAssignmentForm(assignment_data)
 
@@ -222,13 +226,19 @@ def review_works(request):
 
 def grade_participation(request, participation_id):
     """Legacy grading endpoint kept for old links."""
-    participation = get_object_or_404(EventParticipation, pk=participation_id)
+    from infrastructure.container import container
+
+    participation_data = container.get_event_participation_ref_use_case().execute(
+        str(participation_id),
+    )
+    if participation_data.status == 'not_found':
+        raise Http404("Участие не найдено")
+    participation = participation_data.participation
 
     if request.method == 'POST':
         form = MarkForm(request.POST, request.FILES)
         if form.is_valid():
             from core_logic.use_cases.grade_student_work import GradeStudentWorkRequest
-            from infrastructure.container import container
 
             data = form.cleaned_data
             container.grade_student_work_use_case().execute(

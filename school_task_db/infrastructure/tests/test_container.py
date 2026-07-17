@@ -87,6 +87,9 @@ from core_logic.use_cases.get_event_list import GetEventListUseCase
 from core_logic.use_cases.get_event_participant_selection import (
     GetEventParticipantSelectionUseCase,
 )
+from core_logic.use_cases.get_event_participation_ref import (
+    GetEventParticipationRefUseCase,
+)
 from core_logic.use_cases.get_event_variant_assignment import (
     GetEventVariantAssignmentUseCase,
 )
@@ -257,6 +260,7 @@ class ContainerTests(SimpleTestCase):
         participant_selection_use_case = (
             container.get_event_participant_selection_use_case()
         )
+        participation_ref_use_case = container.get_event_participation_ref_use_case()
         variant_assignment_use_case = (
             container.get_event_variant_assignment_use_case()
         )
@@ -424,6 +428,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             participant_selection_use_case,
             GetEventParticipantSelectionUseCase,
+        )
+        self.assertIsInstance(
+            participation_ref_use_case,
+            GetEventParticipationRefUseCase,
         )
         self.assertIsInstance(
             variant_assignment_use_case,

@@ -1,9 +1,8 @@
 from django.views.generic import ListView, DetailView
-from django.db.models import Count, Sum
-from collections import Counter  # ← добавь эту строку
+from django.http import JsonResponse
 
-from .models import Topic, SubTopic, Course, CourseAssignment
-from works.models import WorkAnalogGroup, Variant
+from .models import Topic, Course
+from infrastructure.container import container
 
 class TopicListView(ListView):
     model = Topic
@@ -27,45 +26,16 @@ class CourseDetailView(DetailView):
     template_name = 'curriculum/course_detail.html'
     context_object_name = 'course'
 
+    def get_queryset(self):
+        return container.get_course_detail_use_case().get_queryset()
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        course = self.object
-
-        # Получаем все назначения с аннотациями
-        assignments = []
-        total_variants = 0
-        works_by_type = Counter()
-        groups_coverage = Counter()
-
-        for ca in course.courseassignment_set.select_related('work').order_by('order'):
-            work = ca.work
-
-            # Считаем группы и задания на вариант
-            work_groups = WorkAnalogGroup.objects.filter(work=work)
-            groups_count = work_groups.count()
-            tasks_per_variant = sum(wg.count for wg in work_groups)
-
-            # Считаем варианты
-            variants_count = Variant.objects.filter(work=work).count()
-            total_variants += variants_count
-
-            # Статистика по типам
-            works_by_type[work.get_work_type_display()] += 1
-
-            # Покрытие групп
-            for wg in work_groups:
-                groups_coverage[wg.analog_group.name] += 1
-
-            # Добавляем аннотации прямо на объект
-            ca.groups_count = groups_count
-            ca.tasks_per_variant = tasks_per_variant
-            ca.variants_count = variants_count
-            assignments.append(ca)
-
-        context['assignments'] = assignments
-        context['total_variants'] = total_variants
-        context['works_by_type'] = dict(works_by_type)
-        context['groups_coverage'] = dict(groups_coverage.most_common())
+        detail = container.get_course_detail_use_case().execute(str(self.object.pk))
+        context['assignments'] = detail.assignments
+        context['total_variants'] = detail.total_variants
+        context['works_by_type'] = detail.works_by_type
+        context['groups_coverage'] = detail.groups_coverage
 
         return context
 

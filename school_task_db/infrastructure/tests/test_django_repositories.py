@@ -14,8 +14,11 @@ from core_logic.use_cases.create_work_from_orphans import (
     CreateWorkFromOrphansRequest,
     CreateWorkFromOrphansUseCase,
 )
-from curriculum.models import SubTopic, Topic
+from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
+from infrastructure.repositories.django_curriculum_repo import (
+    DjangoCurriculumRepository,
+)
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
@@ -377,6 +380,29 @@ class DjangoRemedialRepositoryTests(TestCase):
         works = repo.get_list_works()
 
         self.assertEqual(list(works), [self.source_work])
+
+    def test_curriculum_repository_returns_course_detail_data(self):
+        course = Course.objects.create(
+            name='Физика 9',
+            subject='Физика',
+            grade_level=9,
+        )
+        assignment = CourseAssignment.objects.create(
+            course=course,
+            work=self.source_work,
+            order=1,
+        )
+        repo = DjangoCurriculumRepository()
+
+        courses = repo.get_detail_courses()
+        assignments = repo.get_course_assignments(str(course.pk))
+        work_groups = repo.get_work_analog_groups(str(self.source_work.pk))
+        variants_count = repo.count_work_variants(str(self.source_work.pk))
+
+        self.assertEqual(list(courses), [course])
+        self.assertEqual(list(assignments), [assignment])
+        self.assertEqual(work_groups[0].analog_group, self.weak_group)
+        self.assertEqual(variants_count, 1)
 
     def test_work_repository_returns_variant_list_page_data(self):
         repo = DjangoWorkRepository()

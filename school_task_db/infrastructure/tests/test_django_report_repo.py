@@ -5,7 +5,7 @@ from django.utils import timezone
 
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_report_repo import DjangoReportRepository
-from students.models import Student
+from students.models import Student, StudentGroup
 from works.models import Work
 
 
@@ -118,3 +118,70 @@ class DjangoReportRepositoryTests(TestCase):
         self.assertEqual(data.summary_stats['total_marks'], 1)
         self.assertEqual(data.summary_stats['avg_score'], 4)
         self.assertEqual(data.active_report, 'work-analysis')
+
+    def test_get_student_performance_report_returns_group_stats(self):
+        now = timezone.now()
+        work = Work.objects.create(name='Контрольная')
+        selected_student = Student.objects.create(
+            last_name='Петров',
+            first_name='Пётр',
+        )
+        other_student = Student.objects.create(
+            last_name='Сидоров',
+            first_name='Сидор',
+        )
+        selected_group = StudentGroup.objects.create(name='7А')
+        other_group = StudentGroup.objects.create(name='8Б')
+        selected_group.students.add(selected_student)
+        other_group.students.add(other_student)
+        event = Event.objects.create(
+            name='КР',
+            work=work,
+            status='graded',
+            planned_date=now,
+        )
+        selected_participation = EventParticipation.objects.create(
+            event=event,
+            student=selected_student,
+            status='graded',
+        )
+        EventParticipation.objects.create(
+            event=event,
+            student=other_student,
+            status='assigned',
+        )
+        Mark.objects.create(
+            participation=selected_participation,
+            score=5,
+            points=9,
+            max_points=10,
+            task_scores={
+                '550e8400-e29b-41d4-a716-446655440001': {
+                    'points': 9,
+                    'max_points': 10,
+                },
+            },
+        )
+
+        data = DjangoReportRepository().get_student_performance_report(
+            year=None,
+            group_id=selected_group.pk,
+        )
+        stat = data.students_stats[0]
+
+        self.assertEqual(data.selected_group, selected_group)
+        self.assertEqual(data.groups.count(), 2)
+        self.assertEqual(len(data.students_stats), 1)
+        self.assertEqual(stat['student'], selected_student)
+        self.assertEqual(stat['total_participations'], 1)
+        self.assertEqual(stat['completed_participations'], 1)
+        self.assertEqual(stat['completion_rate'], 100)
+        self.assertEqual(stat['total_marks'], 1)
+        self.assertEqual(stat['average_score'], 5)
+        self.assertEqual(stat['average_pct'], 90)
+        self.assertEqual(data.summary_stats['total_students'], 1)
+        self.assertEqual(data.summary_stats['high_performers'], 1)
+        self.assertEqual(data.summary_stats['need_attention'], 0)
+        self.assertEqual(data.summary_stats['avg_completion_rate'], 100)
+        self.assertEqual(data.summary_stats['avg_pct'], 90)
+        self.assertEqual(data.active_report, 'student-performance')

@@ -4,7 +4,11 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any
 
-from core_logic.entities.report import EventsStatusReportData, WorkAnalysisReportData
+from core_logic.entities.report import (
+    EventsStatusReportData,
+    StudentPerformanceReportData,
+    WorkAnalysisReportData,
+)
 
 
 class IReportRepository(ABC):
@@ -19,3 +23,11 @@ class IReportRepository(ABC):
     @abstractmethod
     def get_work_analysis_report(self, year: Any) -> WorkAnalysisReportData:
         """Return work analysis report data."""
+
+    @abstractmethod
+    def get_student_performance_report(
+        self,
+        year: Any,
+        group_id: Any,
+    ) -> StudentPerformanceReportData:
+        """Return student performance report data."""

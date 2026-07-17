@@ -13,6 +13,9 @@ from datetime import datetime, timedelta
 from core_logic.use_cases.get_events_status_report import (
     EventsStatusReportRequest,
 )
+from core_logic.use_cases.get_student_performance_report import (
+    StudentPerformanceReportRequest,
+)
 from core_logic.use_cases.get_work_analysis_report import WorkAnalysisReportRequest
 from infrastructure.container import container
 from . import plotly_utils
@@ -292,81 +295,22 @@ class StudentPerformanceView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        from students.models import Student, StudentGroup
-        from events.models import Mark, EventParticipation
-
-        qs = _year_qs(self.request)
-        year = qs['year']
-
-        groups = qs['groups'].order_by('name')
-        group_id = self.request.GET.get('group')
-
-        if group_id:
-            group = groups.filter(pk=group_id).first()
-            students = group.students.all() if group else qs['students']
-        else:
-            group = None
-            students = qs['students']
-
-        students = students.order_by('last_name', 'first_name')
-
-        students_stats = []
-        for student in students:
-            participations = qs['participations'].filter(student=student)
-            completed = participations.filter(
-                status__in=['completed', 'graded']
-            )
-            marks = qs['marks'].filter(participation__student=student)
-            avg_score = marks.aggregate(avg=Avg('score'))['avg'] or 0
-
-            # Средний % по task_scores
-            total_pts = 0
-            total_max = 0
-            for mark in marks:
-                if mark.task_scores:
-                    for scores in mark.task_scores.values():
-                        total_pts += scores.get('points', 0)
-                        total_max += scores.get('max_points', 0)
-            avg_pct = round(total_pts / total_max * 100) if total_max > 0 else None
-
-            completion_rate = round(
-                (completed.count() / participations.count() * 100)
-                if participations.count() > 0 else 0, 1
-            )
-
-            stat = {
-                'student': student,
-                'total_participations': participations.count(),
-                'completed_participations': completed.count(),
-                'completion_rate': completion_rate,
-                'total_marks': marks.count(),
-                'average_score': round(avg_score, 2) if avg_score else 0,
-                'average_pct': avg_pct,
-                'last_activity': participations.order_by(
-                    '-created_at'
-                ).first(),
-            }
-            if participations.count() > 0:
-                students_stats.append(stat)
-
-        context['students_stats'] = students_stats
-        context['groups'] = groups
-        context['selected_group'] = group
-        context['summary_stats'] = {
-            'total_students': len(students_stats),
-            'high_performers': sum(1 for s in students_stats if (s['average_pct'] or 0) >= 85),
-            'need_attention': sum(1 for s in students_stats if s['average_pct'] is not None and s['average_pct'] < 45),
-            'avg_completion_rate': round(
-                sum(s['completion_rate'] for s in students_stats) / len(students_stats), 1
-            ) if students_stats else 0,
-            'avg_pct': round(
-                sum(s['average_pct'] for s in students_stats if s['average_pct'] is not None) /
-                max(sum(1 for s in students_stats if s['average_pct'] is not None), 1)
+        report = container.get_student_performance_report_use_case().execute(
+            StudentPerformanceReportRequest(
+                year=getattr(self.request, 'current_year', None),
+                group_id=self.request.GET.get('group'),
             ),
-        }
+        )
 
-        context.update(_get_nav_context('student-performance', year=year))
+        context.update({
+            'students_stats': report.students_stats,
+            'groups': report.groups,
+            'selected_group': report.selected_group,
+            'summary_stats': report.summary_stats,
+            'active_report': report.active_report,
+            'active_course_pk': report.active_course_pk,
+            'courses': report.courses,
+        })
         return context
 
 class WorkAnalysisView(TemplateView):

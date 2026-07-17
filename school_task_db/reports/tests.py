@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from events.models import Event, EventParticipation, Mark
-from students.models import Student
+from students.models import Student, StudentGroup
 from works.models import Work
 
 
@@ -75,3 +75,47 @@ class ReportsViewsTests(TestCase):
         self.assertEqual(work_stat['average_percentage'], 100)
         self.assertEqual(work_stat['difficulty_assessment'], 'Легкая')
         self.assertEqual(response.context['summary_stats']['total_works'], 1)
+
+    def test_student_performance_view_uses_clean_report_data(self):
+        now = timezone.now()
+        work = Work.objects.create(name='Контрольная')
+        student = Student.objects.create(last_name='Смирнов', first_name='Семён')
+        group = StudentGroup.objects.create(name='9А')
+        group.students.add(student)
+        event = Event.objects.create(
+            name='КР',
+            work=work,
+            status='graded',
+            planned_date=now,
+        )
+        participation = EventParticipation.objects.create(
+            event=event,
+            student=student,
+            status='graded',
+        )
+        Mark.objects.create(
+            participation=participation,
+            score=4,
+            points=7,
+            max_points=10,
+            task_scores={
+                '550e8400-e29b-41d4-a716-446655440001': {
+                    'points': 7,
+                    'max_points': 10,
+                },
+            },
+        )
+
+        response = self.client.get(
+            reverse('reports:student-performance'),
+            {'group': group.pk},
+        )
+        student_stat = response.context['students_stats'][0]
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['active_report'], 'student-performance')
+        self.assertEqual(response.context['selected_group'], group)
+        self.assertEqual(student_stat['student'], student)
+        self.assertEqual(student_stat['average_pct'], 70)
+        self.assertEqual(student_stat['completion_rate'], 100)
+        self.assertEqual(response.context['summary_stats']['total_students'], 1)

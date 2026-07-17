@@ -4,10 +4,15 @@ from datetime import timedelta
 
 from django.db.models import Avg, Count
 
-from core_logic.entities.report import EventsStatusReportData, WorkAnalysisReportData
+from core_logic.entities.report import (
+    EventsStatusReportData,
+    StudentPerformanceReportData,
+    WorkAnalysisReportData,
+)
 from core_logic.interfaces.report_repo import IReportRepository
 from curriculum.models import Course
 from events.models import Event, EventParticipation, Mark
+from students.models import Student, StudentGroup
 from works.models import Work
 
 
@@ -100,6 +105,88 @@ class DjangoReportRepository(IReportRepository):
             courses=courses.order_by('grade_level', 'name'),
         )
 
+    def get_student_performance_report(self, year, group_id):
+        _, participations, courses = self._get_event_scope(year)
+        marks = self._get_marks_scope(year)
+        groups, students = self._get_student_scope(year)
+        groups = groups.order_by('name')
+
+        selected_group = None
+        if group_id:
+            selected_group = groups.filter(pk=group_id).first()
+            if selected_group:
+                students = selected_group.students.all()
+
+        students_stats = []
+        for student in students.order_by('last_name', 'first_name'):
+            student_participations = participations.filter(student=student)
+            total_participations = student_participations.count()
+            if total_participations == 0:
+                continue
+
+            completed_count = student_participations.filter(
+                status__in=['completed', 'graded'],
+            ).count()
+            student_marks = marks.filter(participation__student=student)
+            avg_score = student_marks.aggregate(avg=Avg('score'))['avg'] or 0
+            avg_pct = self._average_task_score_percentage(
+                student_marks,
+                default=None,
+            )
+            completion_rate = round(
+                completed_count / total_participations * 100,
+                1,
+            )
+
+            students_stats.append({
+                'student': student,
+                'total_participations': total_participations,
+                'completed_participations': completed_count,
+                'completion_rate': completion_rate,
+                'total_marks': student_marks.count(),
+                'average_score': round(avg_score, 2) if avg_score else 0,
+                'average_pct': avg_pct,
+                'last_activity': student_participations.order_by(
+                    '-created_at',
+                ).first(),
+            })
+
+        return StudentPerformanceReportData(
+            students_stats=students_stats,
+            groups=groups,
+            selected_group=selected_group,
+            summary_stats={
+                'total_students': len(students_stats),
+                'high_performers': sum(
+                    1 for stat in students_stats
+                    if (stat['average_pct'] or 0) >= 85
+                ),
+                'need_attention': sum(
+                    1 for stat in students_stats
+                    if stat['average_pct'] is not None
+                    and stat['average_pct'] < 45
+                ),
+                'avg_completion_rate': round(
+                    sum(stat['completion_rate'] for stat in students_stats)
+                    / len(students_stats),
+                    1,
+                ) if students_stats else 0,
+                'avg_pct': round(
+                    sum(
+                        stat['average_pct'] for stat in students_stats
+                        if stat['average_pct'] is not None
+                    ) / max(
+                        sum(
+                            1 for stat in students_stats
+                            if stat['average_pct'] is not None
+                        ),
+                        1,
+                    ),
+                ),
+            },
+            courses=courses.order_by('grade_level', 'name'),
+        )
+
     def _get_event_scope(self, year):
         if year:
             date_range = (year.start_date, year.end_date)
@@ -115,6 +202,16 @@ class DjangoReportRepository(IReportRepository):
 
         return events, participations, courses
 
+    def _get_student_scope(self, year):
+        if year:
+            return (
+                StudentGroup.objects.filter(academic_year=year),
+                Student.objects.filter(
+                    studentgroup__academic_year=year,
+                ).distinct(),
+            )
+        return StudentGroup.objects.all(), Student.objects.all()
+
     def _get_marks_scope(self, year):
         if year:
             date_range = (year.start_date, year.end_date)
@@ -123,7 +220,7 @@ class DjangoReportRepository(IReportRepository):
             )
         return Mark.objects.all()
 
-    def _average_task_score_percentage(self, marks):
+    def _average_task_score_percentage(self, marks, default=0):
         total_points = 0
         total_max = 0
         for mark in marks:
@@ -132,7 +229,7 @@ class DjangoReportRepository(IReportRepository):
             for scores in mark.task_scores.values():
                 total_points += scores.get('points', 0)
                 total_max += scores.get('max_points', 0)
-        return round(total_points / total_max * 100) if total_max > 0 else 0
+        return round(total_points / total_max * 100) if total_max > 0 else default
 
     def _assess_difficulty(self, avg_pct):
         if avg_pct >= 85:

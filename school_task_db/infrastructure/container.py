@@ -126,6 +126,9 @@ from core_logic.use_cases.get_work_list import GetWorkListUseCase
 from core_logic.use_cases.get_work_analysis_report import (
     GetWorkAnalysisReportUseCase,
 )
+from core_logic.use_cases.get_student_performance_report import (
+    GetStudentPerformanceReportUseCase,
+)
 from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUseCase
 from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionUseCase,
@@ -505,6 +508,11 @@ class Container:
 
     def get_work_analysis_report_use_case(self):
         return GetWorkAnalysisReportUseCase(
+            report_repo=self.report_repo,
+        )
+
+    def get_student_performance_report_use_case(self):
+        return GetStudentPerformanceReportUseCase(
             report_repo=self.report_repo,
         )
 

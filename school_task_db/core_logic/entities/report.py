@@ -24,3 +24,14 @@ class WorkAnalysisReportData:
     courses: Any
     active_report: str = 'work-analysis'
     active_course_pk: Any = None
+
+
+@dataclass(frozen=True)
+class StudentPerformanceReportData:
+    students_stats: List[dict]
+    groups: Any
+    selected_group: Any
+    summary_stats: dict
+    courses: Any
+    active_report: str = 'student-performance'
+    active_course_pk: Any = None

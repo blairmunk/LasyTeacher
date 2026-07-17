@@ -171,8 +171,16 @@ class DjangoEventRepository(IEventRepository):
             name=event.name,
             work_id=str(event.work_id),
             work_name=event.work.name,
+            status=event.status,
+            status_display=event.get_status_display(),
             course_id=str(event.course_id) if event.course_id else None,
+            course_name=event.course.name if event.course else '',
             planned_date=event.planned_date,
+            location=event.location,
+            description=event.description,
+            short_uuid=event.get_short_uuid(),
+            work_type=event.work.work_type,
+            work_type_display=event.work.get_work_type_display(),
             work_variant_count=event.work.variant_set.count(),
         )
 

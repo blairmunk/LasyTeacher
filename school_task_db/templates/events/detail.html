@@ -9,7 +9,7 @@
         <div>
             <h2 class="mb-1">{{ event.name }}</h2>
             <small class="text-muted">
-                {% if event.work %}{{ event.work.get_work_type_display }} • {% endif %}
+                {% if event.work %}{{ event.work.work_type_display }} • {% endif %}
                 {{ event.planned_date|date:"d.m.Y H:i"|default:"дата не указана" }}
                 {% if event.course %} • {{ event.course.name }}{% endif %}
             </small>
@@ -56,7 +56,7 @@
                         </div>
                         <div class="col-md-3">
                             <small class="text-muted d-block">Статус</small>
-                            <span class="badge bg-{{ status_color }}">{{ event.get_status_display }}</span>
+                            <span class="badge bg-{{ status_color }}">{{ event.status_display }}</span>
                         </div>
                         <div class="col-md-3">
                             <small class="text-muted d-block">Кабинет</small>
@@ -64,7 +64,7 @@
                         </div>
                         <div class="col-md-2">
                             <small class="text-muted d-block">UUID</small>
-                            <span class="uuid-badge">{{ event.get_short_uuid }}</span>
+                            <span class="uuid-badge">{{ event.short_uuid }}</span>
                         </div>
                     </div>
 

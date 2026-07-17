@@ -158,7 +158,12 @@ class GradeParticipationViewTests(TestCase):
         response = self.client.get(reverse('events:detail', args=[self.event.pk]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['event'], self.event)
+        self.assertEqual(response.context['event'].pk, str(self.event.pk))
+        self.assertEqual(response.context['event'].name, self.event.name)
+        self.assertEqual(
+            response.context['event'].status_display,
+            self.event.get_status_display(),
+        )
         self.assertTrue(response.context['some_variants_assigned'])
         self.assertTrue(response.context['all_variants_assigned'])
         self.assertTrue(response.context['can_review'])

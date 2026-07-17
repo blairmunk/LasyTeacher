@@ -14,10 +14,15 @@ class GetEventDetailUseCase:
         self.event_repo = event_repo
         self.event_service = event_service
 
-    def execute(self, event_id: str, status: str, has_work: bool) -> EventDetailData:
+    def execute(self, event_id: str) -> EventDetailData:
+        event = self.event_repo.get_by_id(event_id)
+        if event is None:
+            return EventDetailData()
+
         return self.event_service.build_detail_data(
-            status=status,
-            has_work=has_work,
+            event=event,
+            status=event.status,
+            has_work=event.work_id is not None,
             participations=self.event_repo.get_detail_participations(event_id),
             available_variants=self.event_repo.get_available_variants(event_id),
         )

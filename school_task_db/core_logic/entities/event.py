@@ -13,6 +13,8 @@ def _same_pk(left_id: str, other: Any) -> bool:
 class WorkSummary:
     id: str
     name: str
+    work_type: str = ''
+    work_type_display: str = ''
     variant_count: int = 0
 
     @property
@@ -60,13 +62,27 @@ class StudentSummary:
 
 
 @dataclass(frozen=True)
+class CourseSummary:
+    pk: str
+    name: str
+
+
+@dataclass(frozen=True)
 class EventEntity:
     id: str
     name: str
     work_id: str
     work_name: str
+    status: str = ''
+    status_display: str = ''
     course_id: Optional[str] = None
+    course_name: str = ''
     planned_date: Any = None
+    location: str = ''
+    description: str = ''
+    short_uuid: str = ''
+    work_type: str = ''
+    work_type_display: str = ''
     work_variant_count: int = 0
 
     @property
@@ -78,8 +94,16 @@ class EventEntity:
         return WorkSummary(
             id=self.work_id,
             name=self.work_name,
+            work_type=self.work_type,
+            work_type_display=self.work_type_display,
             variant_count=self.work_variant_count,
         )
+
+    @property
+    def course(self):
+        if not self.course_id:
+            return None
+        return CourseSummary(pk=self.course_id, name=self.course_name)
 
     @property
     def date(self):
@@ -190,11 +214,12 @@ class EventParticipationRow:
 
 @dataclass(frozen=True)
 class EventDetailData:
-    participations: List[EventParticipationRow]
-    some_variants_assigned: bool
-    all_variants_assigned: bool
-    can_review: bool
-    status_color: str
-    status_steps: List[EventStatusStep]
-    available_variants: List[EventVariantRef]
-    status_transitions: List[EventStatusTransition]
+    event: Optional[EventEntity] = None
+    participations: List[EventParticipationRow] = field(default_factory=list)
+    some_variants_assigned: bool = False
+    all_variants_assigned: bool = False
+    can_review: bool = False
+    status_color: str = 'secondary'
+    status_steps: List[EventStatusStep] = field(default_factory=list)
+    available_variants: List[EventVariantRef] = field(default_factory=list)
+    status_transitions: List[EventStatusTransition] = field(default_factory=list)

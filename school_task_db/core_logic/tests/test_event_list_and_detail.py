@@ -57,6 +57,11 @@ class FakeEventRepository:
             name='КР',
             work_id='work-1',
             work_name='Контрольная',
+            status='completed',
+            status_display='Завершено',
+            short_uuid='abcd1234',
+            work_type='test',
+            work_type_display='Контрольная работа',
         )
 
     def get_participation_ref(self, participation_id):
@@ -84,15 +89,23 @@ class EventListAndDetailUseCaseTests(TestCase):
             event_service=EventService(),
         )
 
-        result = use_case.execute(
-            event_id='event-1',
-            status='completed',
-            has_work=True,
-        )
+        result = use_case.execute(event_id='event-1')
 
+        self.assertEqual(result.event.name, 'КР')
         self.assertTrue(result.can_review)
         self.assertEqual(result.participations[0].student.last_name, 'Иванов')
         self.assertEqual(result.available_variants[0].number, 1)
+
+    def test_event_detail_use_case_returns_empty_data_for_missing_event(self):
+        use_case = GetEventDetailUseCase(
+            event_repo=FakeEventRepository(),
+            event_service=EventService(),
+        )
+
+        result = use_case.execute(event_id='missing')
+
+        self.assertIsNone(result.event)
+        self.assertEqual(result.participations, [])
 
     def test_event_participant_selection_returns_current_participants(self):
         use_case = GetEventParticipantSelectionUseCase(

@@ -75,6 +75,7 @@ class EventService:
         has_work: bool,
         participations: List[EventParticipationRow],
         available_variants: List[EventVariantRef],
+        event=None,
     ) -> EventDetailData:
         active_participations = [
             participation
@@ -100,6 +101,7 @@ class EventService:
         )
 
         return EventDetailData(
+            event=event,
             participations=participations,
             some_variants_assigned=some_variants_assigned,
             all_variants_assigned=all_variants_assigned,

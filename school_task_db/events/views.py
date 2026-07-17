@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView
 from django.urls import reverse_lazy
 from django.http import Http404
 from .models import Event
@@ -51,21 +51,20 @@ class EventListView(ListView):
 
 
 
-class EventDetailView(DetailView):
-    model = Event
+class EventDetailView(TemplateView):
     template_name = 'events/detail.html'
-    context_object_name = 'event'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        event = self.object
         from infrastructure.container import container
 
         detail = container.get_event_detail_use_case().execute(
-            event_id=str(event.pk),
-            status=event.status,
-            has_work=event.work_id is not None,
+            event_id=str(self.kwargs['pk']),
         )
+        if detail.event is None:
+            raise Http404('Событие не найдено')
+
+        context['event'] = detail.event
         context['participations'] = detail.participations
         context['some_variants_assigned'] = detail.some_variants_assigned
         context['all_variants_assigned'] = detail.all_variants_assigned

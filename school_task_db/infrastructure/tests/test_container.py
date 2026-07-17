@@ -63,6 +63,9 @@ from core_logic.use_cases.get_heatmap_overview import GetHeatmapOverviewUseCase
 from core_logic.use_cases.get_heatmap_student_detail import (
     GetHeatmapStudentDetailUseCase,
 )
+from core_logic.use_cases.get_heatmap_subtopic_detail import (
+    GetHeatmapSubtopicDetailUseCase,
+)
 from core_logic.use_cases.get_heatmap_subtopic_matrix import (
     GetHeatmapSubtopicMatrixUseCase,
 )
@@ -226,6 +229,9 @@ class ContainerTests(SimpleTestCase):
         heatmap_student_detail_use_case = (
             container.get_heatmap_student_detail_use_case()
         )
+        heatmap_subtopic_detail_use_case = (
+            container.get_heatmap_subtopic_detail_use_case()
+        )
         heatmap_overview_use_case = container.get_heatmap_overview_use_case()
         heatmap_subtopic_matrix_use_case = (
             container.get_heatmap_subtopic_matrix_use_case()
@@ -376,6 +382,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             heatmap_student_detail_use_case,
             GetHeatmapStudentDetailUseCase,
+        )
+        self.assertIsInstance(
+            heatmap_subtopic_detail_use_case,
+            GetHeatmapSubtopicDetailUseCase,
         )
         self.assertIsInstance(heatmap_overview_use_case, GetHeatmapOverviewUseCase)
         self.assertIsInstance(

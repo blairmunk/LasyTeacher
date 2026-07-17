@@ -119,6 +119,103 @@ class DjangoReportRepositoryTests(TestCase):
         self.assertEqual(data.rows[0]['cells'][0]['subtopic'], subtopic)
         self.assertEqual(data.col_averages, [{'pct': 80, 'css': 'good'}])
 
+    def test_get_heatmap_subtopic_detail_returns_student_and_task_rows(self):
+        selected_student = Student.objects.create(
+            last_name='Иванов',
+            first_name='Иван',
+        )
+        empty_student = Student.objects.create(
+            last_name='Петров',
+            first_name='Пётр',
+        )
+        other_student = Student.objects.create(
+            last_name='Сидоров',
+            first_name='Сидор',
+        )
+        selected_group = StudentGroup.objects.create(name='7А')
+        other_group = StudentGroup.objects.create(name='8Б')
+        selected_group.students.add(selected_student, empty_student)
+        other_group.students.add(other_student)
+        work = Work.objects.create(name='Контрольная')
+        topic = Topic.objects.create(
+            name='Скорость',
+            subject='Физика',
+            section='Кинематика',
+            grade_level=7,
+        )
+        subtopic = SubTopic.objects.create(
+            topic=topic,
+            name='Средняя скорость',
+            order=1,
+        )
+        other_subtopic = SubTopic.objects.create(
+            topic=topic,
+            name='Путь',
+            order=2,
+        )
+        task = Task.objects.create(
+            text='Задача 1',
+            answer='Ответ',
+            topic=topic,
+            subtopic=subtopic,
+            task_type='computational',
+            difficulty=2,
+        )
+        other_task = Task.objects.create(
+            text='Задача 2',
+            answer='Ответ',
+            topic=topic,
+            subtopic=other_subtopic,
+            task_type='computational',
+            difficulty=2,
+        )
+        event = Event.objects.create(
+            name='КР',
+            work=work,
+            status='graded',
+            planned_date=timezone.now(),
+        )
+        participation = EventParticipation.objects.create(
+            event=event,
+            student=selected_student,
+            status='graded',
+        )
+        Mark.objects.create(
+            participation=participation,
+            score=4,
+            points=10,
+            max_points=20,
+            task_scores={
+                str(task.pk): {'points': 8, 'max_points': 10},
+                str(other_task.pk): {'points': 2, 'max_points': 10},
+            },
+        )
+
+        data = DjangoReportRepository().get_heatmap_subtopic_detail(
+            subtopic_id=subtopic.pk,
+            group_id=selected_group.pk,
+        )
+
+        self.assertEqual(data.subtopic, subtopic)
+        self.assertEqual(data.topic, topic)
+        self.assertEqual(list(data.groups), [selected_group, other_group])
+        self.assertEqual(data.selected_group, selected_group)
+        self.assertEqual(data.total_students, 2)
+        self.assertEqual(data.students_with_data, 1)
+        self.assertEqual(data.overall_pct, 80)
+        self.assertEqual(data.overall_css, 'good')
+        self.assertEqual(data.student_rows[0]['student'], selected_student)
+        self.assertEqual(data.student_rows[0]['points'], 8)
+        self.assertEqual(data.student_rows[0]['max_points'], 10)
+        self.assertEqual(data.student_rows[0]['pct'], 80)
+        self.assertEqual(data.student_rows[0]['events'], ['КР'])
+        self.assertEqual(data.student_rows[1]['student'], empty_student)
+        self.assertIsNone(data.student_rows[1]['pct'])
+        self.assertEqual(data.task_rows[0]['task'], task)
+        self.assertEqual(data.task_rows[0]['avg_pct'], 80)
+        self.assertEqual(data.task_rows[0]['students_count'], 1)
+        self.assertEqual(data.active_report, 'heatmap')
+
     def test_get_heatmap_student_detail_returns_details_and_summary(self):
         student = Student.objects.create(last_name='Иванов', first_name='Иван')
         work = Work.objects.create(name='Контрольная')

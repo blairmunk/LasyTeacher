@@ -73,6 +73,9 @@ from core_logic.use_cases.get_heatmap_overview import GetHeatmapOverviewUseCase
 from core_logic.use_cases.get_heatmap_student_detail import (
     GetHeatmapStudentDetailUseCase,
 )
+from core_logic.use_cases.get_heatmap_subtopic_detail import (
+    GetHeatmapSubtopicDetailUseCase,
+)
 from core_logic.use_cases.get_heatmap_subtopic_matrix import (
     GetHeatmapSubtopicMatrixUseCase,
 )
@@ -561,6 +564,11 @@ class Container:
 
     def get_heatmap_student_detail_use_case(self):
         return GetHeatmapStudentDetailUseCase(
+            report_repo=self.report_repo,
+        )
+
+    def get_heatmap_subtopic_detail_use_case(self):
+        return GetHeatmapSubtopicDetailUseCase(
             report_repo=self.report_repo,
         )
 

@@ -301,6 +301,70 @@ class ReportsViewsTests(TestCase):
         self.assertEqual(response.context['details'][0]['pct'], 80)
         self.assertEqual(response.context['subtopic_summary'][0]['pct'], 80)
 
+    def test_heatmap_subtopic_view_uses_clean_detail_data(self):
+        student = Student.objects.create(last_name='Иванов', first_name='Иван')
+        group = StudentGroup.objects.create(name='7А')
+        group.students.add(student)
+        work = Work.objects.create(name='Контрольная')
+        topic = Topic.objects.create(
+            name='Скорость',
+            subject='Физика',
+            section='Кинематика',
+            grade_level=7,
+        )
+        subtopic = SubTopic.objects.create(
+            topic=topic,
+            name='Средняя скорость',
+            order=1,
+        )
+        task = Task.objects.create(
+            text='Задача',
+            answer='Ответ',
+            topic=topic,
+            subtopic=subtopic,
+            task_type='computational',
+            difficulty=2,
+        )
+        event = Event.objects.create(
+            name='КР',
+            work=work,
+            status='graded',
+            planned_date=timezone.now(),
+        )
+        participation = EventParticipation.objects.create(
+            event=event,
+            student=student,
+            status='graded',
+        )
+        Mark.objects.create(
+            participation=participation,
+            score=4,
+            points=8,
+            max_points=10,
+            task_scores={
+                str(task.pk): {'points': 8, 'max_points': 10},
+            },
+        )
+
+        response = self.client.get(
+            reverse('reports:heatmap-subtopic', args=[subtopic.pk]),
+            {'group': group.pk},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['active_report'], 'heatmap')
+        self.assertEqual(response.context['subtopic'], subtopic)
+        self.assertEqual(response.context['topic'], topic)
+        self.assertEqual(response.context['selected_group'], group)
+        self.assertEqual(response.context['group_param'], f'?group={group.pk}')
+        self.assertEqual(response.context['overall_pct'], 80)
+        self.assertEqual(response.context['students_with_data'], 1)
+        self.assertEqual(response.context['total_students'], 1)
+        self.assertEqual(response.context['student_rows'][0]['pct'], 80)
+        self.assertIn(f'group={group.pk}', response.context['student_rows'][0]['url'])
+        self.assertEqual(response.context['task_rows'][0]['task'], task)
+        self.assertEqual(response.context['task_rows'][0]['avg_pct'], 80)
+
     def test_dashboard_view_uses_clean_report_data(self):
         now = timezone.now()
         work = Work.objects.create(name='Контрольная')

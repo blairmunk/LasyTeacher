@@ -28,6 +28,9 @@ from core_logic.use_cases.get_heatmap_overview import HeatmapOverviewRequest
 from core_logic.use_cases.get_heatmap_student_detail import (
     HeatmapStudentDetailRequest,
 )
+from core_logic.use_cases.get_heatmap_subtopic_detail import (
+    HeatmapSubtopicDetailRequest,
+)
 from core_logic.use_cases.get_heatmap_subtopic_matrix import (
     HeatmapSubtopicMatrixRequest,
 )
@@ -42,10 +45,7 @@ from core_logic.use_cases.get_work_analysis_report import WorkAnalysisReportRequ
 from infrastructure.container import container
 from . import plotly_utils
 
-from students.models import Student, StudentGroup
 from tasks.models import Task
-from events.models import Mark, EventParticipation
-from curriculum.models import Topic, SubTopic
 
 def _get_nav_context(active_report='', active_course_pk=None, year=None):
     """Общий контекст для навигации по отчётам"""
@@ -275,8 +275,6 @@ class EventsStatusView(TemplateView):
 # ============================================================
 # HEATMAP
 # ============================================================
-
-from collections import defaultdict
 
 
 class HeatmapView(View):
@@ -633,127 +631,51 @@ class HeatmapSubtopicView(View):
     """Анализ подтемы: все ученики × задания одной подтемы"""
 
     def get(self, request, subtopic_pk):
-        subtopic = get_object_or_404(SubTopic, pk=subtopic_pk)
-        topic = subtopic.topic
         group_id = request.GET.get('group')
-
-        groups = StudentGroup.objects.all().order_by('name')
-
-        if group_id:
-            group = get_object_or_404(StudentGroup, pk=group_id)
-            students = list(group.students.all().order_by('last_name', 'first_name'))
-        else:
-            group = None
-            students = list(Student.objects.all().order_by('last_name', 'first_name'))
-
-        group_param = f'?group={group.pk}' if group else ''
-
-        marks = Mark.objects.filter(
-            participation__student__in=students,
-        ).select_related('participation__student', 'participation__event')
-
-        all_task_ids = set()
-        for mark in marks:
-            if mark.task_scores:
-                all_task_ids.update(mark.task_scores.keys())
-
-        tasks_qs = Task.objects.filter(
-            pk__in=all_task_ids,
-            subtopic=subtopic,
+        detail = container.get_heatmap_subtopic_detail_use_case().execute(
+            HeatmapSubtopicDetailRequest(
+                subtopic_id=subtopic_pk,
+                group_id=group_id,
+            ),
         )
-        task_map = {str(t.pk): t for t in tasks_qs}
-
-        # Агрегация по ученикам
-        student_agg = defaultdict(lambda: {'points': 0, 'max_points': 0, 'events': set()})
-        task_agg = defaultdict(lambda: {'points': 0, 'max_points': 0, 'count': 0})
-
-        for mark in marks:
-            if not mark.task_scores:
-                continue
-            student_id = mark.participation.student_id
-            event_name = mark.participation.event.name
-            seen = set()
-            for task_id, scores in mark.task_scores.items():
-                if task_id in seen:
-                    continue
-                seen.add(task_id)
-
-                task = task_map.get(task_id)
-                if not task:
-                    continue
-
-                pts = scores.get('points', 0)
-                mx = scores.get('max_points', 0)
-
-                student_agg[student_id]['points'] += pts
-                student_agg[student_id]['max_points'] += mx
-                student_agg[student_id]['events'].add(event_name)
-
-                task_agg[task.id]['points'] += pts
-                task_agg[task.id]['max_points'] += mx
-                task_agg[task.id]['count'] += 1
-
-        # Строки учеников
+        group_param = (
+            f'?group={detail.selected_group.pk}'
+            if detail.selected_group
+            else ''
+        )
+        group_suffix = (
+            f'&group={detail.selected_group.pk}'
+            if detail.selected_group
+            else ''
+        )
         student_rows = []
-        for student in students:
-            data = student_agg.get(student.id)
-            if data and data['max_points'] > 0:
-                pct = round(data['points'] / data['max_points'] * 100)
-                student_rows.append({
-                    'student': student,
-                    'points': data['points'],
-                    'max_points': data['max_points'],
-                    'pct': pct,
-                    'css': _color_class(pct),
-                    'events': sorted(data['events']),
-                    'url': (reverse('reports:heatmap-student',
-                                    args=[topic.pk, student.pk])
-                            + f'?subtopic={subtopic.pk}'
-                            + (f'&group={group.pk}' if group else '')),
-                })
-            else:
-                student_rows.append({
-                    'student': student,
-                    'pct': None,
-                    'css': 'no-data',
-                    'events': [],
-                    'url': None,
-                })
-
-        # Анализ заданий
-        task_rows = []
-        for task in tasks_qs.order_by('difficulty', 'text'):
-            data = task_agg.get(task.id)
-            if data and data['max_points'] > 0:
-                avg_pct = round(data['points'] / data['max_points'] * 100)
-                task_rows.append({
-                    'task': task,
-                    'avg_pct': avg_pct,
-                    'css': _color_class(avg_pct),
-                    'students_count': data['count'],
-                    'total_points': data['points'],
-                    'total_max': data['max_points'],
-                })
-
-        # Общая статистика
-        total_pts = sum(d['points'] for d in student_agg.values())
-        total_max = sum(d['max_points'] for d in student_agg.values())
-        overall_pct = round(total_pts / total_max * 100) if total_max > 0 else None
-        students_with_data = sum(1 for r in student_rows if r['pct'] is not None)
+        for row in detail.student_rows:
+            url = None
+            if row['pct'] is not None:
+                url = (
+                    reverse(
+                        'reports:heatmap-student',
+                        args=[detail.topic.pk, row['student'].pk],
+                    )
+                    + f'?subtopic={detail.subtopic.pk}{group_suffix}'
+                )
+            student_rows.append({**row, 'url': url})
 
         return render(request, 'reports/heatmap_subtopic.html', {
-            'subtopic': subtopic,
-            'topic': topic,
-            'groups': groups,
-            'selected_group': group,
+            'subtopic': detail.subtopic,
+            'topic': detail.topic,
+            'groups': detail.groups,
+            'selected_group': detail.selected_group,
             'group_param': group_param,
             'student_rows': student_rows,
-            'task_rows': task_rows,
-            'overall_pct': overall_pct,
-            'overall_css': _color_class(overall_pct) if overall_pct else 'no-data',
-            'total_students': len(students),
-            'students_with_data': students_with_data,
-            **_get_nav_context('heatmap'),
+            'task_rows': detail.task_rows,
+            'overall_pct': detail.overall_pct,
+            'overall_css': detail.overall_css,
+            'total_students': detail.total_students,
+            'students_with_data': detail.students_with_data,
+            'active_report': detail.active_report,
+            'active_course_pk': detail.active_course_pk,
+            'courses': detail.courses,
         })
 
 

@@ -120,6 +120,23 @@ class HeatmapSubtopicMatrixData:
 
 
 @dataclass(frozen=True)
+class HeatmapSubtopicDetailData:
+    subtopic: Any
+    topic: Any
+    groups: Any
+    selected_group: Any
+    student_rows: List[dict]
+    task_rows: List[dict]
+    overall_pct: Any
+    overall_css: str
+    total_students: int
+    students_with_data: int
+    courses: Any
+    active_report: str = 'heatmap'
+    active_course_pk: Any = None
+
+
+@dataclass(frozen=True)
 class HeatmapStudentDetailData:
     topic: Any
     student: Any

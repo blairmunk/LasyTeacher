@@ -14,6 +14,7 @@ from core_logic.entities.report import (
     HeatmapDrilldownOverviewData,
     HeatmapOverviewData,
     HeatmapStudentDetailData,
+    HeatmapSubtopicDetailData,
     HeatmapSubtopicMatrixData,
     HeatmapTopicMatrixData,
     ReportsDashboardData,
@@ -377,6 +378,91 @@ class DjangoReportRepository(IReportRepository):
             columns=columns,
             rows=rows,
             col_averages=col_averages,
+        )
+
+    def get_heatmap_subtopic_detail(self, subtopic_id, group_id):
+        subtopic = get_object_or_404(SubTopic, pk=subtopic_id)
+        topic = subtopic.topic
+        groups = StudentGroup.objects.all().order_by('name')
+        if group_id:
+            selected_group = get_object_or_404(StudentGroup, pk=group_id)
+            students = list(
+                selected_group.students.all().order_by('last_name', 'first_name'),
+            )
+        else:
+            selected_group = None
+            students = list(Student.objects.all().order_by('last_name', 'first_name'))
+
+        marks = Mark.objects.filter(
+            participation__student__in=students,
+        ).select_related('participation__student', 'participation__event')
+
+        all_task_ids = set()
+        for mark in marks:
+            if mark.task_scores:
+                all_task_ids.update(mark.task_scores.keys())
+
+        tasks_qs = Task.objects.filter(
+            pk__in=all_task_ids,
+            subtopic=subtopic,
+        )
+        task_map = {str(task.pk): task for task in tasks_qs}
+        student_agg = defaultdict(
+            lambda: {'points': 0, 'max_points': 0, 'events': set()},
+        )
+        task_agg = defaultdict(lambda: {'points': 0, 'max_points': 0, 'count': 0})
+
+        for mark in marks:
+            if not mark.task_scores:
+                continue
+            student_id = mark.participation.student_id
+            event_name = mark.participation.event.name
+            seen = set()
+            for task_id, scores in mark.task_scores.items():
+                if task_id in seen:
+                    continue
+                seen.add(task_id)
+
+                task = task_map.get(task_id)
+                if not task:
+                    continue
+
+                points = scores.get('points', 0)
+                max_points = scores.get('max_points', 0)
+                student_agg[student_id]['points'] += points
+                student_agg[student_id]['max_points'] += max_points
+                student_agg[student_id]['events'].add(event_name)
+                task_agg[task.id]['points'] += points
+                task_agg[task.id]['max_points'] += max_points
+                task_agg[task.id]['count'] += 1
+
+        student_rows = self._build_subtopic_detail_student_rows(
+            students,
+            student_agg,
+        )
+        task_rows = self._build_subtopic_detail_task_rows(tasks_qs, task_agg)
+        total_points = sum(data['points'] for data in student_agg.values())
+        total_max = sum(data['max_points'] for data in student_agg.values())
+        overall_pct = round(total_points / total_max * 100) if total_max > 0 else None
+
+        return HeatmapSubtopicDetailData(
+            subtopic=subtopic,
+            topic=topic,
+            groups=groups,
+            selected_group=selected_group,
+            student_rows=student_rows,
+            task_rows=task_rows,
+            overall_pct=overall_pct,
+            overall_css=self._color_class(overall_pct) if overall_pct else 'no-data',
+            total_students=len(students),
+            students_with_data=sum(
+                1 for row in student_rows
+                if row['pct'] is not None
+            ),
+            courses=Course.objects.filter(is_active=True).order_by(
+                'grade_level',
+                'name',
+            ),
         )
 
     def get_heatmap_student_detail(self, topic_id, student_id, subtopic_id=None):
@@ -991,6 +1077,49 @@ class DjangoReportRepository(IReportRepository):
                 'css': self._color_class(avg) if avg is not None else 'no-data',
             })
         return col_averages
+
+    def _build_subtopic_detail_student_rows(
+        self,
+        students,
+        student_agg,
+    ):
+        rows = []
+        for student in students:
+            data = student_agg.get(student.id)
+            if data and data['max_points'] > 0:
+                pct = round(data['points'] / data['max_points'] * 100)
+                rows.append({
+                    'student': student,
+                    'points': data['points'],
+                    'max_points': data['max_points'],
+                    'pct': pct,
+                    'css': self._color_class(pct),
+                    'events': sorted(data['events']),
+                })
+            else:
+                rows.append({
+                    'student': student,
+                    'pct': None,
+                    'css': 'no-data',
+                    'events': [],
+                })
+        return rows
+
+    def _build_subtopic_detail_task_rows(self, tasks_qs, task_agg):
+        rows = []
+        for task in tasks_qs.order_by('difficulty', 'text'):
+            data = task_agg.get(task.id)
+            if data and data['max_points'] > 0:
+                avg_pct = round(data['points'] / data['max_points'] * 100)
+                rows.append({
+                    'task': task,
+                    'avg_pct': avg_pct,
+                    'css': self._color_class(avg_pct),
+                    'students_count': data['count'],
+                    'total_points': data['points'],
+                    'total_max': data['max_points'],
+                })
+        return rows
 
     def _color_class(self, pct):
         if pct is None:

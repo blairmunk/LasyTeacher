@@ -7,6 +7,28 @@ from works.models import Variant, Work, WorkAnalogGroup
 
 
 class CourseViewsTests(TestCase):
+    def test_course_list_page_renders_courses(self):
+        course = Course.objects.create(
+            name='Физика 9',
+            subject='Физика',
+            grade_level=9,
+        )
+
+        response = self.client.get(reverse('curriculum:course-list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context['courses']), [course])
+        self.assertContains(response, 'Физика 9')
+
+    def test_curriculum_index_redirects_to_course_list(self):
+        response = self.client.get('/curriculum/')
+
+        self.assertRedirects(
+            response,
+            reverse('curriculum:course-list'),
+            fetch_redirect_response=False,
+        )
+
     def test_course_detail_uses_clean_detail_context(self):
         course = Course.objects.create(
             name='Физика 9',

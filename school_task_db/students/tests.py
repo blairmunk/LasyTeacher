@@ -267,7 +267,8 @@ class RemedialFromEventViewTests(TestCase):
         self.assertEqual(response.context['total_tasks'], 1)
         preview = response.context['preview']
         self.assertEqual(len(preview), 1)
-        self.assertEqual(preview[0]['student'], self.student)
+        self.assertEqual(preview[0]['student'].pk, str(self.student.pk))
+        self.assertEqual(preview[0]['student'].full_name, self.student.get_full_name())
         self.assertEqual(preview[0]['student_level'], 'medium')
         self.assertEqual(preview[0]['tasks_count'], 1)
 
@@ -333,7 +334,8 @@ class RemedialFromEventViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['variant'], remedial_variant)
-        self.assertEqual(response.context['student'], self.student)
+        self.assertEqual(response.context['student'].pk, str(self.student.pk))
+        self.assertEqual(response.context['student'].short_name, self.student.get_short_name())
         self.assertEqual(response.context['source_work'], self.source_work)
         self.assertEqual(response.context['new_tasks'].count(), 1)
         self.assertEqual(len(response.context['original_tasks']), 2)

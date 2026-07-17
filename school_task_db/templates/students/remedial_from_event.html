@@ -57,7 +57,7 @@
                         </td>
                         <td>
                             <a href="{% url 'students:detail' a.student.pk %}" class="text-decoration-none">
-                                <strong>{{ a.student.get_full_name }}</strong>
+                                <strong>{{ a.student.full_name }}</strong>
                             </a>
                         </td>
                         <td class="text-center">

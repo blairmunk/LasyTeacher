@@ -33,6 +33,18 @@ from works.models import WorkAnalogGroup
 
 
 class DjangoStudentRepository(IStudentRepository):
+    def _student_detail(self, student):
+        return StudentDetail(
+            pk=str(student.pk),
+            first_name=student.first_name,
+            last_name=student.last_name,
+            middle_name=student.middle_name,
+            email=student.email,
+            short_uuid=student.get_short_uuid(),
+            full_name=student.get_full_name(),
+            short_name=student.get_short_name(),
+        )
+
     def get_list_students(self):
         return [
             StudentListItem(
@@ -70,16 +82,7 @@ class DjangoStudentRepository(IStudentRepository):
         if student is None:
             return None
 
-        return StudentDetail(
-            pk=str(student.pk),
-            first_name=student.first_name,
-            last_name=student.last_name,
-            middle_name=student.middle_name,
-            email=student.email,
-            short_uuid=student.get_short_uuid(),
-            full_name=student.get_full_name(),
-            short_name=student.get_short_name(),
-        )
+        return self._student_detail(student)
 
     def get_student_group(self, group_id: str):
         group = StudentGroup.objects.select_related(
@@ -405,7 +408,7 @@ class DjangoStudentRepository(IStudentRepository):
             task_logs = StudentTaskLog.objects.filter(student=student)
             if not task_logs.exists():
                 preview.append({
-                    'student': student,
+                    'student': self._student_detail(student),
                     'student_level': 'unknown',
                     'student_level_label': '—',
                     'overall_avg': 0,
@@ -472,7 +475,7 @@ class DjangoStudentRepository(IStudentRepository):
             }
 
             preview.append({
-                'student': student,
+                'student': self._student_detail(student),
                 'student_level': student_level,
                 'student_level_label': level_labels[student_level],
                 'overall_avg': round(overall_avg, 1),

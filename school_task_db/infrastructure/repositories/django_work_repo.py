@@ -334,7 +334,15 @@ class DjangoWorkRepository(IWorkRepository):
 
         return RemedialSheetData(
             variant=variant,
-            student=student,
+            student=(
+                VariantDetailStudentRef(
+                    pk=str(student.pk),
+                    full_name=student.get_full_name(),
+                    short_name=student.get_short_name(),
+                )
+                if student
+                else None
+            ),
             source_work=source_work,
             mark=mark,
             original_tasks=original_tasks,

@@ -267,6 +267,7 @@ class DjangoEventRepository(IEventRepository):
                     student=StudentSummary(
                         id=str(student.pk),
                         full_name=student.get_full_name(),
+                        short_name=student.get_short_name(),
                     ),
                     variant=(
                         VariantSummary(

@@ -49,6 +49,7 @@ class VariantSummary:
 class StudentSummary:
     id: str
     full_name: str
+    short_name: str = ''
 
     @property
     def pk(self) -> str:

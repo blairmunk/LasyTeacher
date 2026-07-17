@@ -822,7 +822,8 @@ class WorkDetailViewTests(TestCase):
         )
 
         self.assertEqual(sheet_data.variant, remedial_variant)
-        self.assertEqual(sheet_data.student, student)
+        self.assertEqual(sheet_data.student.pk, str(student.pk))
+        self.assertEqual(sheet_data.student.short_name, student.get_short_name())
         self.assertEqual(sheet_data.source_work, source_work)
         self.assertEqual(sheet_data.mark, mark)
         self.assertEqual(sheet_data.new_tasks.count(), 1)

@@ -222,7 +222,7 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         output_dir.mkdir(parents=True, exist_ok=True)
 
         student_name = (
-            sheet_data.student.get_short_name()
+            sheet_data.student.short_name
             if sheet_data.student
             else 'unknown'
         )

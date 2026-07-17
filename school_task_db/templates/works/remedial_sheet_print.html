@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Работа над ошибками — {{ student.get_short_name }}</title>
+    <title>Работа над ошибками — {{ student.short_name }}</title>
     <script>
     window.MathJax = {
         tex: {
@@ -66,7 +66,7 @@
 
 <h1>Работа над ошибками</h1>
 <div class="meta">
-    <strong>{{ student.get_full_name }}</strong><br>
+    <strong>{{ student.full_name }}</strong><br>
     {% if source_work %}Исходная работа: {{ source_work.name }}<br>{% endif %}
     {% if mark %}Оценка: <strong>{{ mark.score }}</strong> · {{ mark.points }}/{{ mark.max_points }} баллов{% endif %}
 </div>

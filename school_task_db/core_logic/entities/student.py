@@ -121,7 +121,17 @@ class WorkGroupRef:
 
 @dataclass(frozen=True)
 class StudentListData:
-    students: Any
+    students: List["StudentListItem"]
+
+
+@dataclass(frozen=True)
+class StudentListItem:
+    pk: str
+    last_name: str
+    first_name: str
+    middle_name: str = ''
+    email: str = ''
+    created_at: Optional[datetime] = None
 
 
 @dataclass(frozen=True)

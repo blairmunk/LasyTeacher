@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.views.generic import ListView, CreateView, UpdateView, TemplateView
+from django.views.generic import CreateView, UpdateView, TemplateView
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.http import Http404
@@ -10,14 +10,13 @@ from .models import Student, StudentGroup
 from .forms import StudentForm, StudentGroupForm
 
 
-class StudentListView(ListView):
-    model = Student
+class StudentListView(TemplateView):
     template_name = 'students/list.html'
-    context_object_name = 'students'
-    paginate_by = 50
 
-    def get_queryset(self):
-        return container.get_student_list_use_case().execute().students
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['students'] = container.get_student_list_use_case().execute().students
+        return context
 
 
 class StudentDetailView(TemplateView):

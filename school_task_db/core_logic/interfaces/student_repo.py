@@ -6,6 +6,7 @@ from typing import Any, List, Optional
 from core_logic.entities.student import (
     RemedialWizardPreviewData,
     StudentDetail,
+    StudentListItem,
     StudentGroupDetail,
     StudentGroupListItem,
     StudentRemedialWorkData,
@@ -19,7 +20,7 @@ from core_logic.entities.student import (
 
 class IStudentRepository(ABC):
     @abstractmethod
-    def get_list_students(self) -> Any:
+    def get_list_students(self) -> List[StudentListItem]:
         """Return students for the student list page."""
 
     @abstractmethod

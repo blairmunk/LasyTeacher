@@ -15,6 +15,7 @@ from core_logic.entities.student import (
     StudentGroupDetailStudent,
     StudentGroupListItem,
     StudentGroupRef,
+    StudentListItem,
     StudentParticipationProfile,
     StudentRemedialWorkData,
     StudentTaskLogProfile,
@@ -33,7 +34,20 @@ from works.models import WorkAnalogGroup
 
 class DjangoStudentRepository(IStudentRepository):
     def get_list_students(self):
-        return Student.objects.all()
+        return [
+            StudentListItem(
+                pk=str(student.pk),
+                last_name=student.last_name,
+                first_name=student.first_name,
+                middle_name=student.middle_name,
+                email=student.email,
+                created_at=student.created_at,
+            )
+            for student in Student.objects.all().order_by(
+                'last_name',
+                'first_name',
+            )
+        ]
 
     def get_list_student_groups(self):
         return [

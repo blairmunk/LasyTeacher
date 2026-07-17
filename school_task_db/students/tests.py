@@ -429,7 +429,11 @@ class RemedialFromEventViewTests(TestCase):
         response = self.client.get(reverse('students:list'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(list(response.context['students']), [self.student])
+        self.assertEqual(response.context['students'][0].pk, str(self.student.pk))
+        self.assertEqual(
+            response.context['students'][0].last_name,
+            self.student.last_name,
+        )
 
     def test_student_group_list_uses_clean_list_context(self):
         group = StudentGroup.objects.create(name='9А')

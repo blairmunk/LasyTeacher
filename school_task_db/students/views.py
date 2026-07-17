@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView
+from django.views.generic import ListView, CreateView, UpdateView, TemplateView
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.http import Http404
@@ -200,19 +200,26 @@ class StudentGroupUpdateView(UpdateView):
         messages.success(self.request, 'Класс успешно обновлен!')
         return super().form_valid(form)
 
-class RemedialWorkView(DetailView):
+class RemedialWorkView(TemplateView):
     """Работа над ошибками: анализ + генерация варианта"""
-    model = Student
     template_name = 'students/remedial.html'
+
+    def _get_student(self):
+        detail = container.get_student_detail_use_case().execute(
+            str(self.kwargs['pk']),
+        )
+        if detail.student is None:
+            raise Http404('Ученик не найден')
+        return detail.student
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        student = self.object
-        from infrastructure.container import container
-
+        student = self._get_student()
         remedial_data = container.get_student_remedial_work_use_case().execute(
             str(student.pk),
         )
+        context['student'] = student
+        context['object'] = student
         if remedial_data.no_data:
             context['no_data'] = True
             return context
@@ -224,12 +231,10 @@ class RemedialWorkView(DetailView):
         return context
 
     def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        student = self.object
+        student = self._get_student()
         from core_logic.use_cases.create_student_remedial_variant import (
             CreateStudentRemedialVariantRequest,
         )
-        from infrastructure.container import container
 
         max_tasks = int(request.POST.get('max_tasks', 10))
         selected_groups = request.POST.getlist('groups')

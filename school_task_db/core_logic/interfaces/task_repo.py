@@ -7,6 +7,7 @@ from core_logic.entities.task import (
     ReferenceElementOption,
     SelectOption,
     TaskEntity,
+    TaskExportFilters,
     TaskGroupListFilters,
     TaskListFilters,
 )
@@ -68,6 +69,14 @@ class ITaskRepository(ABC):
     @abstractmethod
     def get_list_sources(self) -> Any:
         """Return source options for the task list page."""
+
+    @abstractmethod
+    def build_task_export_payload(
+        self,
+        filters: TaskExportFilters,
+        export_date: str,
+    ) -> dict:
+        """Return TaskImporter-compatible task export payload."""
 
     @abstractmethod
     def get_source_list_sources(self) -> Any:

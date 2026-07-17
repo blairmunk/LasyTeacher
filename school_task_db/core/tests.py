@@ -9,8 +9,8 @@ from core.models import ImportLog
 from curriculum.models import Topic
 from events.models import Event
 from students.models import Student
-from task_groups.models import AnalogGroup
-from tasks.models import Task
+from task_groups.models import AnalogGroup, TaskGroup
+from tasks.models import Source, Task
 from works.models import Variant, Work
 
 
@@ -135,3 +135,40 @@ class CoreViewsTests(TestCase):
             ],
         )
         self.assertIsNone(payload['preview'])
+
+    def test_export_tasks_returns_clean_export_payload(self):
+        topic = Topic.objects.create(
+            name='Динамика',
+            subject='Физика',
+            section='Механика',
+            grade_level=9,
+        )
+        source = Source.objects.create(name='Сборник', short_name='Сб.')
+        task = Task.objects.create(
+            text='Задача на силу',
+            answer='Ответ',
+            topic=topic,
+            task_type='computational',
+            difficulty=2,
+            source=source,
+        )
+        group = AnalogGroup.objects.create(name='Силы')
+        TaskGroup.objects.create(task=task, group=group)
+
+        response = self.client.get(
+            reverse('core:export'),
+            {'subject': 'Физика', 'grade': '9'},
+        )
+        payload = json.loads(response.content.decode('utf-8'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json; charset=utf-8')
+        self.assertTrue(
+            response['Content-Disposition'].startswith('attachment; filename="export_'),
+        )
+        self.assertEqual(payload['version'], '1.1')
+        self.assertEqual(len(payload['tasks']), 1)
+        self.assertEqual(payload['tasks'][0]['id'], str(task.pk))
+        self.assertEqual(payload['tasks'][0]['groups'], [str(group.pk)])
+        self.assertEqual(payload['topics'][0]['name'], topic.name)
+        self.assertEqual(payload['sources'][0]['id'], str(source.pk))

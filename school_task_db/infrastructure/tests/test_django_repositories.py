@@ -6,7 +6,11 @@ from core.models import ImportLog
 from core_logic.services.remedial_service import RemedialService
 from core_logic.interfaces.event_repo import GradeParticipationParams
 from core_logic.interfaces.work_repo import CreateWorkWithVariantFromTasksParams
-from core_logic.entities.task import TaskGroupListFilters, TaskListFilters
+from core_logic.entities.task import (
+    TaskExportFilters,
+    TaskGroupListFilters,
+    TaskListFilters,
+)
 from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
     RemedialFromEventRequest,
@@ -300,6 +304,56 @@ class DjangoRemedialRepositoryTests(TestCase):
 
         self.assertEqual(sources, [source])
         self.assertEqual(sources[0].task_count, 1)
+
+    def test_task_repository_builds_task_export_payload(self):
+        source = Source.objects.create(
+            name='Сборник задач',
+            short_name='Сборник',
+            source_type='problem_book',
+            author='Автор',
+            year=2026,
+            url='https://example.test/book',
+            isbn='123',
+        )
+        self.original_weak.source = source
+        self.original_weak.source_detail = 'стр. 1'
+        self.original_weak.save()
+        repo = DjangoTaskRepository()
+
+        payload = repo.build_task_export_payload(
+            filters=TaskExportFilters(topic_id=str(self.topic.pk)),
+            export_date='2026-07-17',
+        )
+        tasks_by_id = {task['id']: task for task in payload['tasks']}
+        weak_task = tasks_by_id[str(self.original_weak.pk)]
+
+        self.assertEqual(payload['version'], '1.1')
+        self.assertEqual(payload['export_date'], '2026-07-17')
+        self.assertEqual(weak_task['text'], self.original_weak.text)
+        self.assertEqual(weak_task['source']['short_name'], 'Сборник')
+        self.assertEqual(weak_task['source_detail'], 'стр. 1')
+        self.assertIn(str(self.weak_group.pk), weak_task['groups'])
+        self.assertIn(
+            {
+                'id': str(self.weak_group.pk),
+                'name': self.weak_group.name,
+                'description': '',
+            },
+            payload['analog_groups'],
+        )
+        self.assertIn(
+            {
+                'id': str(source.pk),
+                'name': source.name,
+                'short_name': source.short_name,
+                'source_type': source.source_type,
+                'author': source.author,
+                'year': source.year,
+                'url': source.url,
+                'isbn': source.isbn,
+            },
+            payload['sources'],
+        )
 
     def test_task_repository_deletes_task(self):
         repo = DjangoTaskRepository()

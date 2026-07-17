@@ -36,6 +36,7 @@ from core_logic.use_cases.create_work_from_tasks import CreateWorkFromTasksUseCa
 from core_logic.use_cases.delete_task_groups import DeleteTaskGroupsUseCase
 from core_logic.use_cases.delete_task import DeleteTaskUseCase
 from core_logic.use_cases.delete_variant import DeleteVariantUseCase
+from core_logic.use_cases.export_tasks import ExportTasksUseCase
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
 from core_logic.use_cases.generate_work_variants import GenerateWorkVariantsUseCase
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
@@ -176,6 +177,7 @@ class ContainerTests(SimpleTestCase):
         import_page_use_case = container.get_import_page_use_case()
         import_history_use_case = container.get_import_history_use_case()
         import_validation_use_case = container.validate_task_import_json_use_case()
+        export_tasks_use_case = container.export_tasks_use_case()
         participant_selection_use_case = (
             container.get_event_participant_selection_use_case()
         )
@@ -289,6 +291,7 @@ class ContainerTests(SimpleTestCase):
             import_validation_use_case,
             ValidateTaskImportJsonUseCase,
         )
+        self.assertIsInstance(export_tasks_use_case, ExportTasksUseCase)
         self.assertIsInstance(
             participant_selection_use_case,
             GetEventParticipantSelectionUseCase,

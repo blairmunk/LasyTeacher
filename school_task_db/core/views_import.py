@@ -10,6 +10,8 @@ from django.views.decorators.http import require_POST
 
 from .importers.tasks import TaskImporter
 from .models import ImportLog
+from core_logic.entities.task import TaskExportFilters
+from core_logic.use_cases.export_tasks import ExportTasksRequest
 from core_logic.use_cases.get_import_views import ImportPageRequest
 from core_logic.use_cases.validate_task_import_json import (
     ValidateTaskImportJsonRequest,
@@ -365,143 +367,17 @@ def download_sample_json(request):
 
 def export_tasks_ajax(request):
     """Экспорт заданий в JSON в формате, совместимом с TaskImporter"""
-    from tasks.models import Task
-    
-    # Фильтры
-    topic_id = request.GET.get('topic')
-    subject = request.GET.get('subject')
-    grade = request.GET.get('grade')
-    
-    tasks_qs = Task.objects.select_related(
-        'topic', 'subtopic', 'source'
-    ).prefetch_related('images', 'taskgroup_set__group')
-    
-    if topic_id:
-        tasks_qs = tasks_qs.filter(topic_id=topic_id)
-    if subject:
-        tasks_qs = tasks_qs.filter(topic__subject=subject)
-    if grade:
-        tasks_qs = tasks_qs.filter(topic__grade_level=grade)
-    
-    # Собираем уникальные группы и темы
-    all_groups = {}
-    all_topics = {}
-    tasks_data = []
-    images_data = []
-    
-    for task in tasks_qs:
-        # Данные задания
-        task_dict = {
-            'id': str(task.id),
-            'text': task.text,
-            'answer': task.answer or '',
-            'short_solution': task.short_solution or '',
-            'full_solution': task.full_solution or '',
-            'hint': task.hint or '',
-            'instruction': task.instruction or '',
-            'difficulty': task.difficulty,
-            'task_type': task.task_type,
-            'cognitive_level': getattr(task, 'cognitive_level', ''),
-            'content_element': getattr(task, 'content_element', ''),
-            'requirement_element': getattr(task, 'requirement_element', ''),
-            'estimated_time': getattr(task, 'estimated_time', None),
-            # Новые поля
-            'grade': task.grade,
-            'year': task.year,
-            'is_verified': task.is_verified,
-            'teacher_notes': task.teacher_notes or '',
-            'source_detail': task.source_detail or '',
-            'source': None,
-            'groups': [],
-        }
-
-        # Источник
-        if task.source:
-            task_dict['source'] = {
-                'name': task.source.name,
-                'short_name': task.source.short_name or '',
-                'source_type': task.source.source_type,
-                'author': task.source.author or '',
-                'year': task.source.year,
-            }
-
-        
-        # Тема
-        if task.topic:
-            task_dict['topic'] = {
-                'name': task.topic.name,
-                'subject': task.topic.subject,
-                'grade_level': task.topic.grade_level,
-                'section': getattr(task.topic, 'section', ''),
-            }
-            topic_key = f"{task.topic.subject}_{task.topic.grade_level}_{task.topic.name}"
-            if topic_key not in all_topics:
-                all_topics[topic_key] = {
-                    'name': task.topic.name,
-                    'subject': task.topic.subject,
-                    'grade_level': task.topic.grade_level,
-                    'section': getattr(task.topic, 'section', ''),
-                    'description': getattr(task.topic, 'description', ''),
-                }
-        
-        # Группы аналогов (через TaskGroup M2M)
-        for task_group in task.taskgroup_set.all():
-            group = task_group.group
-            group_uuid = str(group.id)
-            task_dict['groups'].append(group_uuid)
-            
-            if group_uuid not in all_groups:
-                all_groups[group_uuid] = {
-                    'id': group_uuid,
-                    'name': group.name,
-                    'description': getattr(group, 'description', ''),
-                }
-        
-        # Изображения (base64)
-        for img in task.images.all():
-            if img.has_file:
-                import base64
-                try:
-                    with img.image.open('rb') as f:
-                        b64 = base64.b64encode(f.read()).decode('ascii')
-                    images_data.append({
-                        'id': str(img.id),
-                        'task_id': str(task.id),
-                        'filename': img.image.name.split('/')[-1],
-                        'position': img.position or '',
-                        'caption': img.caption or '',
-                        'order': img.order,
-                        'base64_data': b64,
-                    })
-                except Exception:
-                    pass
-        
-        tasks_data.append(task_dict)
-    
-    # Собираем уникальные источники
-    all_sources = {}
-    for task in tasks_qs:
-        if task.source and str(task.source.id) not in all_sources:
-            all_sources[str(task.source.id)] = {
-                'id': str(task.source.id),
-                'name': task.source.name,
-                'short_name': task.source.short_name or '',
-                'source_type': task.source.source_type,
-                'author': task.source.author or '',
-                'year': task.source.year,
-                'url': task.source.url or '',
-                'isbn': task.source.isbn or '',
-            }
-
-    export_data = {
-        'version': '1.1',
-        'export_date': time.strftime('%Y-%m-%d'),
-        'analog_groups': list(all_groups.values()),
-        'topics': list(all_topics.values()),
-        'sources': list(all_sources.values()),
-        'tasks': tasks_data,
-        'task_images': images_data,
-    }
+    export_date = time.strftime('%Y-%m-%d')
+    export_data = container.export_tasks_use_case().execute(
+        ExportTasksRequest(
+            filters=TaskExportFilters(
+                topic_id=request.GET.get('topic', ''),
+                subject=request.GET.get('subject', ''),
+                grade=request.GET.get('grade', ''),
+            ),
+            export_date=export_date,
+        ),
+    ).payload
     
     content = json.dumps(export_data, ensure_ascii=False, indent=2)
     response = HttpResponse(content, content_type='application/json; charset=utf-8')

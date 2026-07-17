@@ -1,7 +1,7 @@
 """Task-related domain entities."""
 
 from dataclasses import dataclass
-from typing import Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 
 @dataclass(frozen=True)
@@ -40,6 +40,18 @@ class TaskListData:
     total_tasks: int
     ungrouped_count: int
     cache_stats: Any = None
+
+
+@dataclass(frozen=True)
+class TaskExportFilters:
+    topic_id: str = ''
+    subject: str = ''
+    grade: str = ''
+
+
+@dataclass(frozen=True)
+class TaskExportData:
+    payload: Dict[str, Any]
 
 
 @dataclass(frozen=True)

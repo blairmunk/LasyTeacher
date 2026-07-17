@@ -43,6 +43,7 @@ from core_logic.use_cases.delete_variant import DeleteVariantUseCase
 from core_logic.use_cases.delete_task_groups import DeleteTaskGroupsUseCase
 from core_logic.use_cases.delete_task import DeleteTaskUseCase
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
+from core_logic.use_cases.export_tasks import ExportTasksUseCase
 from core_logic.use_cases.generate_work_variants import GenerateWorkVariantsUseCase
 from core_logic.use_cases.generate_remedial_sheet_document import (
     GenerateRemedialSheetDocumentUseCase,
@@ -382,6 +383,11 @@ class Container:
 
     def validate_task_import_json_use_case(self):
         return ValidateTaskImportJsonUseCase()
+
+    def export_tasks_use_case(self):
+        return ExportTasksUseCase(
+            task_repo=self.task_repo,
+        )
 
     def get_task_detail_use_case(self):
         return GetTaskDetailUseCase(

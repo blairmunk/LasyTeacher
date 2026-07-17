@@ -68,6 +68,18 @@ class CourseSummary:
 
 
 @dataclass(frozen=True)
+class EventListItem:
+    pk: str
+    name: str
+    status: str
+    status_display: str
+    planned_date: Any = None
+    participant_count: int = 0
+    work: Optional[WorkSummary] = None
+    course: Optional[CourseSummary] = None
+
+
+@dataclass(frozen=True)
 class EventEntity:
     id: str
     name: str

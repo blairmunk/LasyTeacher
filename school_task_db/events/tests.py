@@ -151,7 +151,12 @@ class GradeParticipationViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context['events']), 1)
         self.assertEqual(len(response.context['active_events']), 1)
-        self.assertEqual(response.context['active_events'][0], self.event)
+        self.assertEqual(response.context['active_events'][0].pk, str(self.event.pk))
+        self.assertEqual(response.context['active_events'][0].name, self.event.name)
+        self.assertEqual(
+            response.context['active_events'][0].status_display,
+            self.event.get_status_display(),
+        )
         self.assertEqual(response.context['events'][0].participant_count, 1)
 
     def test_event_detail_uses_clean_context_data(self):

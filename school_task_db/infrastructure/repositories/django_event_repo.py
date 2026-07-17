@@ -8,7 +8,9 @@ from django.db.models import Count
 from django.utils import timezone
 
 from core_logic.entities.event import (
+    CourseSummary,
     EventEntity,
+    EventListItem,
     EventMarkRef,
     EventParticipationRef,
     EventParticipationRow,
@@ -20,6 +22,7 @@ from core_logic.entities.event import (
     ParticipationMarkData,
     StudentSummary,
     VariantSummary,
+    WorkSummary,
 )
 from core_logic.interfaces.event_repo import (
     CreateEventParams,
@@ -37,14 +40,32 @@ class DjangoEventRepository(IEventRepository):
         self.grading_service = grading_service or GradingService()
 
     def get_list_events(self):
-        return list(
-            Event.objects.select_related(
+        return [
+            EventListItem(
+                pk=str(event.pk),
+                name=event.name,
+                status=event.status,
+                status_display=event.get_status_display(),
+                planned_date=event.planned_date,
+                participant_count=event.participant_count,
+                work=WorkSummary(
+                    id=str(event.work.pk),
+                    name=event.work.name,
+                    work_type=event.work.work_type,
+                    work_type_display=event.work.get_work_type_display(),
+                ) if event.work else None,
+                course=CourseSummary(
+                    pk=str(event.course.pk),
+                    name=event.course.name,
+                ) if event.course else None,
+            )
+            for event in Event.objects.select_related(
                 'work',
                 'course',
             ).annotate(
                 participant_count=Count('eventparticipation'),
             ).order_by('-planned_date')
-        )
+        ]
 
     def get_detail_participations(self, event_id: str):
         participations = EventParticipation.objects.filter(

@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView
+from django.views.generic import CreateView, UpdateView, TemplateView
 from django.urls import reverse_lazy
 from django.http import Http404
 from .models import Event
@@ -24,25 +24,15 @@ def _next_or_event_detail(request, event):
     return redirect('events:detail', pk=event_id)
 
 
-class EventListView(ListView):
-    model = Event
+class EventListView(TemplateView):
     template_name = 'events/list.html'
-    context_object_name = 'events'
-    ordering = ['-planned_date']
-
-    def get_queryset(self):
-        from infrastructure.container import container
-
-        self._event_list_data = container.get_event_list_use_case().execute()
-        return self._event_list_data.events
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        event_list = getattr(self, '_event_list_data', None)
-        if event_list is None:
-            from infrastructure.container import container
-            event_list = container.get_event_list_use_case().execute()
+        from infrastructure.container import container
 
+        event_list = container.get_event_list_use_case().execute()
+        context['events'] = event_list.events
         context['planned_events'] = event_list.planned_events
         context['active_events'] = event_list.active_events
         context['graded_events'] = event_list.graded_events

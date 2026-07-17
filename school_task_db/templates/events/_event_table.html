@@ -45,7 +45,7 @@
             </td>
             <td class="text-center">
                 <span class="badge bg-{% if event.status == 'planned' %}secondary{% elif event.status == 'graded' %}success{% elif event.status == 'reviewing' %}info{% elif event.status == 'completed' %}primary{% else %}warning{% endif %}">
-                    {{ event.get_status_display }}
+                    {{ event.status_display }}
                 </span>
             </td>
             <td class="text-center">

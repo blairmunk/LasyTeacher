@@ -14,15 +14,15 @@
                     <table class="table table-sm mb-3">
                         <tr>
                             <td class="text-muted">Вариант:</td>
-                            <td><strong>{{ variant.display_name }}</strong></td>
+                            <td><strong>{{ delete_info.display_name }}</strong></td>
                         </tr>
                         <tr>
                             <td class="text-muted">UUID:</td>
-                            <td><code>#{{ variant.get_short_uuid }}</code></td>
+                            <td><code>#{{ delete_info.short_uuid }}</code></td>
                         </tr>
                         <tr>
                             <td class="text-muted">Работа:</td>
-                            <td>{{ variant.work.name|default:"— сирота —" }}</td>
+                            <td>{{ delete_info.work_name|default:"— сирота —" }}</td>
                         </tr>
                         <tr>
                             <td class="text-muted">Заданий:</td>
@@ -30,7 +30,7 @@
                         </tr>
                         <tr>
                             <td class="text-muted">Макс. балл:</td>
-                            <td>{{ variant.total_max_points }}</td>
+                            <td>{{ delete_info.total_max_points }}</td>
                         </tr>
                     </table>
 
@@ -49,8 +49,8 @@
                             <button type="submit" class="btn btn-warning">
                                 <i class="fas fa-unlink"></i> Отвязать от работы
                             </button>
-                            {% if variant.work %}
-                            <a href="{% url 'works:detail' variant.work.pk %}" class="btn btn-secondary">
+                            {% if delete_info.has_work %}
+                            <a href="{% url 'works:detail' delete_info.work_id %}" class="btn btn-secondary">
                                 Отмена
                             </a>
                             {% else %}
@@ -74,11 +74,11 @@
                             <button type="submit" class="btn btn-danger">
                                 <i class="fas fa-trash"></i> Удалить навсегда
                             </button>
-                            {% if variant.work %}
+                            {% if delete_info.has_work %}
                             <button type="submit" name="action" value="detach" class="btn btn-outline-warning">
                                 <i class="fas fa-unlink"></i> Или отвязать
                             </button>
-                            <a href="{% url 'works:detail' variant.work.pk %}" class="btn btn-secondary">
+                            <a href="{% url 'works:detail' delete_info.work_id %}" class="btn btn-secondary">
                                 Отмена
                             </a>
                             {% else %}

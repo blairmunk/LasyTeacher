@@ -259,6 +259,7 @@ class VariantDeleteView(DeleteView):
             str(variant.pk),
         )
         context['variant'] = variant
+        context['delete_info'] = delete_info
         context['task_count'] = delete_info.task_count
         context['has_grades'] = delete_info.has_participations
         context['grade_count'] = delete_info.participation_count

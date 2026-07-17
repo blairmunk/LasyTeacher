@@ -442,6 +442,8 @@ class WorkDetailViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['delete_info'].short_uuid, self.variant.get_short_uuid())
+        self.assertEqual(response.context['delete_info'].work_id, str(self.work.pk))
         self.assertEqual(response.context['task_count'], 1)
         self.assertTrue(response.context['has_grades'])
         self.assertEqual(response.context['grade_count'], 1)

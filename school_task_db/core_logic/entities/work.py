@@ -278,10 +278,19 @@ class CreateWorkFromOrphansResult:
 class VariantDeleteInfo:
     task_count: int
     participation_count: int = 0
+    display_name: str = ''
+    short_uuid: str = ''
+    work_id: str = ''
+    work_name: str = ''
+    total_max_points: int = 0
 
     @property
     def has_participations(self) -> bool:
         return self.participation_count > 0
+
+    @property
+    def has_work(self) -> bool:
+        return bool(self.work_id)
 
 
 @dataclass(frozen=True)

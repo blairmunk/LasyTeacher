@@ -445,11 +445,17 @@ class DjangoWorkRepository(IWorkRepository):
         return attached_count
 
     def get_variant_delete_info(self, variant_id: str) -> VariantDeleteInfo:
+        variant = Variant.objects.select_related('work').get(pk=variant_id)
         return VariantDeleteInfo(
             task_count=VariantTask.objects.filter(variant_id=variant_id).count(),
             participation_count=EventParticipation.objects.filter(
                 variant_id=variant_id,
             ).count(),
+            display_name=variant.display_name,
+            short_uuid=variant.get_short_uuid(),
+            work_id=str(variant.work_id or ''),
+            work_name=variant.work.name if variant.work else '',
+            total_max_points=variant.total_max_points,
         )
 
     def detach_variant_from_work(self, variant_id: str) -> str:

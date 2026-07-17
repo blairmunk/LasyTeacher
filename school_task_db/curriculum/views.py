@@ -16,11 +16,14 @@ class TopicDetailView(DetailView):
     template_name = 'curriculum/topic_detail.html'
     context_object_name = 'topic'
 
-class CourseListView(ListView):
-    model = Course
+class CourseListView(TemplateView):
     template_name = 'curriculum/course_list.html'
-    context_object_name = 'courses'
-    paginate_by = 20
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        data = container.get_course_list_use_case().execute()
+        context['courses'] = data.courses
+        return context
 
 class CourseDetailView(TemplateView):
     template_name = 'curriculum/course_detail.html'

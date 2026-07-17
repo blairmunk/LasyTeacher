@@ -7,10 +7,15 @@ from core_logic.entities.curriculum import (
     CourseDetailAssignment,
     CourseDetailCourse,
     CourseDetailWorkGroup,
+    CourseListItem,
 )
 
 
 class ICurriculumRepository(ABC):
+    @abstractmethod
+    def get_courses(self) -> List[CourseListItem]:
+        """Return courses for the course list page."""
+
     @abstractmethod
     def get_course(self, course_id: str) -> Optional[CourseDetailCourse]:
         """Return one course detail read model by id or None."""

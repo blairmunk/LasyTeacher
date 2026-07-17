@@ -1,10 +1,13 @@
 """Django implementation of the curriculum repository."""
 
+from django.db.models import Count
+
 from core_logic.entities.curriculum import (
     CourseDetailAssignment,
     CourseDetailCourse,
     CourseDetailWork,
     CourseDetailWorkGroup,
+    CourseListItem,
 )
 from core_logic.interfaces.curriculum_repo import ICurriculumRepository
 from curriculum.models import Course, CourseAssignment, Topic
@@ -12,6 +15,28 @@ from works.models import Variant, WorkAnalogGroup
 
 
 class DjangoCurriculumRepository(ICurriculumRepository):
+    def get_courses(self):
+        return [
+            CourseListItem(
+                pk=str(course.pk),
+                name=course.name,
+                subject=course.subject,
+                grade_level=course.grade_level,
+                academic_year=str(course.year or course.academic_year),
+                is_active=course.is_active,
+                description=course.description,
+                start_date=course.start_date,
+                end_date=course.end_date,
+                hours_per_week=course.hours_per_week,
+                assignments_count=course.assignments_count,
+            )
+            for course in Course.objects.select_related(
+                'year',
+            ).annotate(
+                assignments_count=Count('courseassignment'),
+            ).order_by('subject', 'grade_level', 'name')
+        ]
+
     def get_course(self, course_id: str):
         course = Course.objects.filter(pk=course_id).first()
         if course is None:
@@ -22,7 +47,7 @@ class DjangoCurriculumRepository(ICurriculumRepository):
             name=course.name,
             subject=course.subject,
             grade_level=course.grade_level,
-            academic_year=str(course.academic_year),
+            academic_year=str(course.year or course.academic_year),
             is_active=course.is_active,
             description=course.description,
             start_date=course.start_date,

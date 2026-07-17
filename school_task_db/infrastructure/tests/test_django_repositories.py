@@ -530,6 +530,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
         repo = DjangoCurriculumRepository()
 
+        courses = repo.get_courses()
         loaded_course = repo.get_course(str(course.pk))
         missing_course = repo.get_course(
             '550e8400-e29b-41d4-a716-446655440000',
@@ -554,6 +555,8 @@ class DjangoRemedialRepositoryTests(TestCase):
             '550e8400-e29b-41d4-a716-446655440000',
         )
 
+        self.assertEqual(courses[0].pk, str(course.pk))
+        self.assertEqual(courses[0].assignments_count, 1)
         self.assertEqual(loaded_course.pk, str(course.pk))
         self.assertEqual(loaded_course.name, course.name)
         self.assertEqual(loaded_course.subject, course.subject)

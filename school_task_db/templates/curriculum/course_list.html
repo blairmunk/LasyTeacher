@@ -35,7 +35,7 @@
                 {% endif %}
 
                 <div class="small text-muted">
-                    <div><i class="fas fa-file-alt"></i> Работ: {{ course.courseassignment_set.count }}</div>
+                    <div><i class="fas fa-file-alt"></i> Работ: {{ course.assignments_count }}</div>
                     {% if course.hours_per_week %}
                     <div><i class="fas fa-clock"></i> {{ course.hours_per_week }} ч/неделю</div>
                     {% endif %}

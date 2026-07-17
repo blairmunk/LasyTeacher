@@ -55,6 +55,7 @@ from core_logic.use_cases.get_add_tasks_to_group import GetAddTasksToGroupUseCas
 from core_logic.use_cases.get_codifier_detail import GetCodifierDetailUseCase
 from core_logic.use_cases.get_codifier_list import GetCodifierListUseCase
 from core_logic.use_cases.get_course_detail import GetCourseDetailUseCase
+from core_logic.use_cases.get_course_list import GetCourseListUseCase
 from core_logic.use_cases.get_dashboard_summary import GetDashboardSummaryUseCase
 from core_logic.use_cases.get_global_search import GetGlobalSearchUseCase
 from core_logic.use_cases.get_heatmap_course_overview import (
@@ -412,6 +413,11 @@ class Container:
 
     def get_course_detail_use_case(self):
         return GetCourseDetailUseCase(
+            curriculum_repo=self.curriculum_repo,
+        )
+
+    def get_course_list_use_case(self):
+        return GetCourseListUseCase(
             curriculum_repo=self.curriculum_repo,
         )
 

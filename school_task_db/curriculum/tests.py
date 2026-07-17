@@ -17,7 +17,8 @@ class CourseViewsTests(TestCase):
         response = self.client.get(reverse('curriculum:course-list'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(list(response.context['courses']), [course])
+        self.assertEqual(response.context['courses'][0].pk, str(course.pk))
+        self.assertEqual(response.context['courses'][0].name, course.name)
         self.assertContains(response, 'Физика 9')
 
     def test_curriculum_index_redirects_to_course_list(self):

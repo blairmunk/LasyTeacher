@@ -53,6 +53,7 @@ from core_logic.use_cases.get_add_tasks_to_group import GetAddTasksToGroupUseCas
 from core_logic.use_cases.get_codifier_detail import GetCodifierDetailUseCase
 from core_logic.use_cases.get_codifier_list import GetCodifierListUseCase
 from core_logic.use_cases.get_course_detail import GetCourseDetailUseCase
+from core_logic.use_cases.get_dashboard_summary import GetDashboardSummaryUseCase
 from core_logic.use_cases.get_participation_review import (
     GetParticipationReviewUseCase,
 )
@@ -125,6 +126,7 @@ from core_logic.use_cases.toggle_participation_absent import (
 )
 from core_logic.use_cases.validate_review_work_scan import ValidateReviewWorkScanUseCase
 from infrastructure.repositories.django_codifier_repo import DjangoCodifierRepository
+from infrastructure.repositories.django_core_repo import DjangoCoreRepository
 from infrastructure.repositories.django_curriculum_repo import DjangoCurriculumRepository
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
@@ -149,6 +151,7 @@ class Container:
         self._review_repo = None
         self._curriculum_repo = None
         self._codifier_repo = None
+        self._core_repo = None
         self._work_form_adapter = None
         self._task_form_adapter = None
         self._document_generation_service = None
@@ -194,6 +197,12 @@ class Container:
         if self._codifier_repo is None:
             self._codifier_repo = DjangoCodifierRepository()
         return self._codifier_repo
+
+    @property
+    def core_repo(self):
+        if self._core_repo is None:
+            self._core_repo = DjangoCoreRepository()
+        return self._core_repo
 
     @property
     def work_form_adapter(self):
@@ -341,6 +350,11 @@ class Container:
     def get_codifier_detail_use_case(self):
         return GetCodifierDetailUseCase(
             codifier_repo=self.codifier_repo,
+        )
+
+    def get_dashboard_summary_use_case(self):
+        return GetDashboardSummaryUseCase(
+            core_repo=self.core_repo,
         )
 
     def get_task_detail_use_case(self):

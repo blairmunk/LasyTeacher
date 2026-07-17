@@ -43,6 +43,7 @@ from core_logic.use_cases.get_add_tasks_to_group import GetAddTasksToGroupUseCas
 from core_logic.use_cases.get_codifier_detail import GetCodifierDetailUseCase
 from core_logic.use_cases.get_codifier_list import GetCodifierListUseCase
 from core_logic.use_cases.get_course_detail import GetCourseDetailUseCase
+from core_logic.use_cases.get_dashboard_summary import GetDashboardSummaryUseCase
 from core_logic.use_cases.get_participation_review import (
     GetParticipationReviewUseCase,
 )
@@ -112,6 +113,7 @@ from core_logic.use_cases.toggle_participation_absent import (
 )
 from core_logic.use_cases.validate_review_work_scan import ValidateReviewWorkScanUseCase
 from infrastructure.repositories.django_codifier_repo import DjangoCodifierRepository
+from infrastructure.repositories.django_core_repo import DjangoCoreRepository
 from infrastructure.repositories.django_curriculum_repo import (
     DjangoCurriculumRepository,
 )
@@ -161,6 +163,7 @@ class ContainerTests(SimpleTestCase):
         course_detail_use_case = container.get_course_detail_use_case()
         codifier_list_use_case = container.get_codifier_list_use_case()
         codifier_detail_use_case = container.get_codifier_detail_use_case()
+        dashboard_summary_use_case = container.get_dashboard_summary_use_case()
         participant_selection_use_case = (
             container.get_event_participant_selection_use_case()
         )
@@ -266,6 +269,7 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(course_detail_use_case, GetCourseDetailUseCase)
         self.assertIsInstance(codifier_list_use_case, GetCodifierListUseCase)
         self.assertIsInstance(codifier_detail_use_case, GetCodifierDetailUseCase)
+        self.assertIsInstance(dashboard_summary_use_case, GetDashboardSummaryUseCase)
         self.assertIsInstance(
             participant_selection_use_case,
             GetEventParticipantSelectionUseCase,
@@ -340,5 +344,6 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(container.review_repo, DjangoReviewRepository)
         self.assertIsInstance(container.curriculum_repo, DjangoCurriculumRepository)
         self.assertIsInstance(container.codifier_repo, DjangoCodifierRepository)
+        self.assertIsInstance(container.core_repo, DjangoCoreRepository)
         self.assertIsInstance(container.task_form_adapter, TaskFormAdapter)
         self.assertIsInstance(container.work_form_adapter, WorkFormAdapter)

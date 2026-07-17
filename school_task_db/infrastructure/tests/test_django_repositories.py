@@ -18,6 +18,7 @@ from codifier.models import CodifierSpec, ContentEntry, Requirement
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_codifier_repo import DjangoCodifierRepository
+from infrastructure.repositories.django_core_repo import DjangoCoreRepository
 from infrastructure.repositories.django_curriculum_repo import (
     DjangoCurriculumRepository,
 )
@@ -446,6 +447,23 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(coverage['total'], 1)
         self.assertEqual(coverage['covered'], 1)
         self.assertEqual(leaf.parent, root)
+
+    def test_core_repository_returns_dashboard_counts(self):
+        orphan = Variant.objects.create(
+            work=None,
+            number=1,
+            work_name_snapshot='Сирота',
+        )
+        repo = DjangoCoreRepository()
+
+        self.assertEqual(repo.count_tasks(), 4)
+        self.assertEqual(repo.count_works(), 1)
+        self.assertEqual(repo.count_variants(), 2)
+        self.assertEqual(repo.count_orphan_variants(), 1)
+        self.assertEqual(repo.count_students(), 1)
+        self.assertEqual(repo.count_events(), 1)
+        self.assertEqual(repo.count_analog_groups(), 2)
+        self.assertIsNotNone(orphan.pk)
 
     def test_work_repository_returns_variant_list_page_data(self):
         repo = DjangoWorkRepository()

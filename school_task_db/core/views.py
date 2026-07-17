@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.views.generic import TemplateView
 from .utils import search_by_uuid, pluralize_results
+from infrastructure.container import container
 
 
 class IndexView(TemplateView):
@@ -8,43 +9,14 @@ class IndexView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        try:
-            from tasks.models import Task
-            context['tasks_count'] = Task.objects.count()
-        except ImportError:
-            context['tasks_count'] = 0
-
-        try:
-            from works.models import Work, Variant
-            context['works_count'] = Work.objects.count()
-            context['variants_count'] = Variant.objects.count()
-            context['orphan_variants_count'] = Variant.objects.filter(
-                work__isnull=True
-            ).count()
-        except ImportError:
-            context['works_count'] = 0
-            context['variants_count'] = 0
-            context['orphan_variants_count'] = 0
-
-        try:
-            from students.models import Student
-            context['students_count'] = Student.objects.count()
-        except ImportError:
-            context['students_count'] = 0
-
-        try:
-            from events.models import Event
-            context['events_count'] = Event.objects.count()
-        except ImportError:
-            context['events_count'] = 0
-
-        try:
-            from task_groups.models import AnalogGroup
-            context['groups_count'] = AnalogGroup.objects.count()
-        except ImportError:
-            context['groups_count'] = 0
-
+        summary = container.get_dashboard_summary_use_case().execute()
+        context['tasks_count'] = summary.tasks_count
+        context['works_count'] = summary.works_count
+        context['variants_count'] = summary.variants_count
+        context['orphan_variants_count'] = summary.orphan_variants_count
+        context['students_count'] = summary.students_count
+        context['events_count'] = summary.events_count
+        context['groups_count'] = summary.groups_count
         return context
 
 

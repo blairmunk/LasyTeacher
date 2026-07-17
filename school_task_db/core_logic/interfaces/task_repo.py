@@ -10,6 +10,7 @@ from core_logic.entities.task import (
     TaskExportFilters,
     TaskGroupDetailGroup,
     TaskGroupDetailTask,
+    TaskGroupListItem,
     TaskGroupListFilters,
     TaskDetailGroup,
     TaskDetailTask,
@@ -24,7 +25,7 @@ class ITaskRepository(ABC):
         """Return tasks for the task list page."""
 
     @abstractmethod
-    def get_list_task_groups(self, filters: TaskGroupListFilters) -> Any:
+    def get_list_task_groups(self, filters: TaskGroupListFilters) -> List[TaskGroupListItem]:
         """Return analog groups for the analog group list page."""
 
     @abstractmethod

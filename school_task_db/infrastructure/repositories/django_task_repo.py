@@ -12,6 +12,7 @@ from core_logic.entities.task import (
     TaskExportFilters,
     TaskGroupDetailGroup,
     TaskGroupDetailTask,
+    TaskGroupListItem,
     TaskGroupListFilters,
     TaskDetailGroup,
     TaskDetailImage,
@@ -153,9 +154,15 @@ class DjangoTaskRepository(ITaskRepository):
                 group=OuterRef('pk'),
             ).select_related('task').values('task__subtopic')[:1]
         )
+        sample_task_text = Subquery(
+            TaskGroup.objects.filter(
+                group=OuterRef('pk'),
+            ).select_related('task').values('task__text')[:1]
+        )
         queryset = queryset.annotate(
             first_topic_id=first_task_topic,
             first_subtopic_id=first_task_subtopic,
+            sample_task_text=sample_task_text,
         )
 
         if filters.search:
@@ -206,12 +213,25 @@ class DjangoTaskRepository(ITaskRepository):
             queryset = queryset.filter(pk__in=group_ids)
 
         if filters.sort == 'tasks_desc':
-            return queryset.order_by('-task_count', 'name')
-        if filters.sort == 'tasks_asc':
-            return queryset.order_by('task_count', 'name')
-        if filters.sort == 'newest':
-            return queryset.order_by('-created_at')
-        return queryset.order_by('name')
+            queryset = queryset.order_by('-task_count', 'name')
+        elif filters.sort == 'tasks_asc':
+            queryset = queryset.order_by('task_count', 'name')
+        elif filters.sort == 'newest':
+            queryset = queryset.order_by('-created_at')
+        else:
+            queryset = queryset.order_by('name')
+
+        return [
+            TaskGroupListItem(
+                pk=str(group.pk),
+                name=group.name,
+                description=group.description,
+                task_count=group.task_count,
+                avg_difficulty=group.avg_difficulty,
+                sample_task_text=group.sample_task_text or '',
+            )
+            for group in queryset
+        ]
 
     def get_analog_group_detail(self, group_id: str):
         group = AnalogGroup.objects.filter(pk=group_id).first()

@@ -12,7 +12,6 @@ from .forms import AnalogGroupForm
 
 
 class AnalogGroupListView(ListView):
-    model = AnalogGroup
     template_name = 'task_groups/list.html'
     context_object_name = 'analog_groups'
     paginate_by = 20

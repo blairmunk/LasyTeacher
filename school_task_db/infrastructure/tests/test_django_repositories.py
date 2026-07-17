@@ -275,7 +275,10 @@ class DjangoRemedialRepositoryTests(TestCase):
             TaskGroupListFilters(group_filter='empty')
         )
 
-        self.assertEqual(list(groups), [self.weak_group])
+        self.assertEqual(groups[0].pk, str(self.weak_group.pk))
+        self.assertEqual(groups[0].name, self.weak_group.name)
+        self.assertEqual(groups[0].task_count, 3)
+        self.assertEqual(groups[0].sample_task_text, self.original_weak.text)
         self.assertEqual(list(empty_groups), [])
         self.assertEqual(repo.count_analog_groups(), 2)
         self.assertEqual(repo.count_empty_analog_groups(), 0)

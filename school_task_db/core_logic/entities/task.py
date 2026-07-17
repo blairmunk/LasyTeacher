@@ -102,13 +102,23 @@ class TaskGroupListFilters:
 
 @dataclass(frozen=True)
 class TaskGroupListData:
-    analog_groups: Any
+    analog_groups: List["TaskGroupListItem"]
     topics: Any
     subtopics: Any
     difficulties: List[Tuple[int, str]]
     total_groups: int
     empty_groups: int
     total_tasks_in_groups: int
+
+
+@dataclass(frozen=True)
+class TaskGroupListItem:
+    pk: str
+    name: str
+    description: str = ''
+    task_count: int = 0
+    avg_difficulty: Optional[float] = None
+    sample_task_text: str = ''
 
 
 @dataclass(frozen=True)

@@ -13,13 +13,14 @@ from core_logic.entities.task import (
     TaskGroupListFilters,
     TaskDetailGroup,
     TaskDetailTask,
+    TaskListItem,
     TaskListFilters,
 )
 
 
 class ITaskRepository(ABC):
     @abstractmethod
-    def get_list_tasks(self, filters: TaskListFilters) -> Any:
+    def get_list_tasks(self, filters: TaskListFilters) -> List[TaskListItem]:
         """Return tasks for the task list page."""
 
     @abstractmethod

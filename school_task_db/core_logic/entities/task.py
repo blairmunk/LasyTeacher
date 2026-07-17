@@ -29,7 +29,7 @@ class TaskListFilters:
 
 @dataclass(frozen=True)
 class TaskListData:
-    tasks: Any
+    tasks: List["TaskListItem"]
     topics: Any
     analog_groups: Any
     sources: Any
@@ -40,6 +40,40 @@ class TaskListData:
     total_tasks: int
     ungrouped_count: int
     cache_stats: Any = None
+
+
+@dataclass(frozen=True)
+class TaskListSourceRef:
+    pk: str
+    name: str
+    short_name: str = ''
+
+    def __str__(self) -> str:
+        return self.short_name or self.name
+
+
+@dataclass(frozen=True)
+class TaskListSubtopicRef:
+    pk: str
+    name: str
+
+
+@dataclass(frozen=True)
+class TaskListItem:
+    pk: str
+    text: str
+    topic_name: str
+    task_type_display: str
+    difficulty_display: str
+    display_id: str
+    created_at: Any
+    subtopic: Optional[TaskListSubtopicRef] = None
+    source: Optional[TaskListSourceRef] = None
+    grade: Optional[int] = None
+    is_verified: bool = False
+    has_group: bool = False
+    group_count: int = 0
+    image_count: int = 0
 
 
 @dataclass(frozen=True)

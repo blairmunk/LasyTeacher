@@ -25,7 +25,6 @@ from .forms import TaskForm, SourceForm
 
 
 class TaskListView(ListView):
-    model = Task
     template_name = 'tasks/list.html'
     context_object_name = 'tasks'
     paginate_by = 20

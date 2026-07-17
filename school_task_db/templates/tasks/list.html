@@ -251,9 +251,9 @@
                         <!-- Индикатор группы -->
                         <span class="group-indicator {% if task.has_group %}has-group{% else %}no-group{% endif %}"
                               title="{% if task.has_group %}В группе ({{ task.group_count }}){% else %}Без группы{% endif %}"></span>
-                        {{ task.topic }}
+                        {{ task.topic_name }}
                     </h6>
-                    <small class="uuid-badge">{{ task.get_display_id }}</small>
+                    <small class="uuid-badge">{{ task.display_id }}</small>
                 </div>
 
                 {% if task.subtopic %}
@@ -284,10 +284,10 @@
                 <p class="card-text small mb-2">{{ task.text|render_math|truncatewords:20 }}</p>
 
                 <div class="mb-2">
-                    <span class="badge bg-primary">{{ task.get_task_type_display }}</span>
-                    <span class="badge bg-secondary">{{ task.get_difficulty_display }}</span>
-                    {% if task.images.exists %}
-                    <span class="badge bg-info">{{ task.images.count }} изобр.</span>
+                    <span class="badge bg-primary">{{ task.task_type_display }}</span>
+                    <span class="badge bg-secondary">{{ task.difficulty_display }}</span>
+                    {% if task.image_count %}
+                    <span class="badge bg-info">{{ task.image_count }} изобр.</span>
                     {% endif %}
                     {% if task.has_group %}
                     <span class="badge bg-success filter-badge">

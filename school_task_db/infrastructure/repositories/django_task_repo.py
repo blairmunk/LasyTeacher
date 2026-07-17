@@ -18,6 +18,9 @@ from core_logic.entities.task import (
     TaskDetailSource,
     TaskDetailTask,
     TaskListFilters,
+    TaskListItem,
+    TaskListSourceRef,
+    TaskListSubtopicRef,
 )
 from core_logic.interfaces.task_repo import ITaskRepository
 from curriculum.models import SubTopic, Topic
@@ -34,11 +37,14 @@ class DjangoTaskRepository(ITaskRepository):
             return None
 
     def get_list_tasks(self, filters: TaskListFilters):
-        queryset = Task.objects.select_related('topic', 'subtopic').order_by(
-            '-created_at',
-        )
+        queryset = Task.objects.select_related(
+            'topic',
+            'subtopic',
+            'source',
+        ).order_by('-created_at')
         queryset = queryset.annotate(
-            group_count=Count('taskgroup'),
+            group_count=Count('taskgroup', distinct=True),
+            image_count=Count('images', distinct=True),
             has_group=Exists(TaskGroup.objects.filter(task=OuterRef('pk'))),
         )
 
@@ -96,7 +102,40 @@ class DjangoTaskRepository(ITaskRepository):
         elif filters.verified == '0':
             queryset = queryset.filter(is_verified=False)
 
-        return queryset
+        return [
+            TaskListItem(
+                pk=str(task.pk),
+                text=task.text,
+                topic_name=task.topic.name,
+                task_type_display=task.get_task_type_display(),
+                difficulty_display=task.get_difficulty_display(),
+                display_id=task.get_display_id(),
+                created_at=task.created_at,
+                subtopic=(
+                    TaskListSubtopicRef(
+                        pk=str(task.subtopic.pk),
+                        name=task.subtopic.name,
+                    )
+                    if task.subtopic
+                    else None
+                ),
+                source=(
+                    TaskListSourceRef(
+                        pk=str(task.source.pk),
+                        name=task.source.name,
+                        short_name=task.source.short_name,
+                    )
+                    if task.source
+                    else None
+                ),
+                grade=task.grade,
+                is_verified=task.is_verified,
+                has_group=task.has_group,
+                group_count=task.group_count,
+                image_count=task.image_count,
+            )
+            for task in queryset
+        ]
 
     def get_list_task_groups(self, filters: TaskGroupListFilters):
         queryset = AnalogGroup.objects.annotate(

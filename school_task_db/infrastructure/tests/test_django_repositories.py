@@ -465,6 +465,17 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(repo.count_analog_groups(), 2)
         self.assertIsNotNone(orphan.pk)
 
+    def test_core_repository_returns_global_search_results(self):
+        repo = DjangoCoreRepository()
+
+        text_results = repo.search_by_text(['слабое'])
+        uuid_results = repo.search_by_uuid(self.source_work.get_short_uuid())
+
+        self.assertEqual(list(text_results['tasks']), [self.original_weak])
+        self.assertEqual(list(text_results['works']), [])
+        self.assertEqual(list(text_results['groups']), [])
+        self.assertIn(self.source_work, list(uuid_results['works']))
+
     def test_work_repository_returns_variant_list_page_data(self):
         repo = DjangoWorkRepository()
 

@@ -44,6 +44,7 @@ from core_logic.use_cases.get_codifier_detail import GetCodifierDetailUseCase
 from core_logic.use_cases.get_codifier_list import GetCodifierListUseCase
 from core_logic.use_cases.get_course_detail import GetCourseDetailUseCase
 from core_logic.use_cases.get_dashboard_summary import GetDashboardSummaryUseCase
+from core_logic.use_cases.get_global_search import GetGlobalSearchUseCase
 from core_logic.use_cases.get_participation_review import (
     GetParticipationReviewUseCase,
 )
@@ -164,6 +165,7 @@ class ContainerTests(SimpleTestCase):
         codifier_list_use_case = container.get_codifier_list_use_case()
         codifier_detail_use_case = container.get_codifier_detail_use_case()
         dashboard_summary_use_case = container.get_dashboard_summary_use_case()
+        global_search_use_case = container.get_global_search_use_case()
         participant_selection_use_case = (
             container.get_event_participant_selection_use_case()
         )
@@ -270,6 +272,7 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(codifier_list_use_case, GetCodifierListUseCase)
         self.assertIsInstance(codifier_detail_use_case, GetCodifierDetailUseCase)
         self.assertIsInstance(dashboard_summary_use_case, GetDashboardSummaryUseCase)
+        self.assertIsInstance(global_search_use_case, GetGlobalSearchUseCase)
         self.assertIsInstance(
             participant_selection_use_case,
             GetEventParticipantSelectionUseCase,

@@ -73,6 +73,9 @@ from core_logic.use_cases.get_event_participant_selection import (
 from core_logic.use_cases.get_event_variant_assignment import (
     GetEventVariantAssignmentUseCase,
 )
+from core_logic.use_cases.get_events_status_report import (
+    GetEventsStatusReportUseCase,
+)
 from core_logic.use_cases.get_generated_document_file import (
     GetGeneratedDocumentFileUseCase,
 )
@@ -142,6 +145,7 @@ from infrastructure.repositories.django_core_repo import DjangoCoreRepository
 from infrastructure.repositories.django_curriculum_repo import DjangoCurriculumRepository
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
+from infrastructure.repositories.django_report_repo import DjangoReportRepository
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
@@ -162,6 +166,7 @@ class Container:
         self._work_repo = None
         self._event_repo = None
         self._review_repo = None
+        self._report_repo = None
         self._curriculum_repo = None
         self._codifier_repo = None
         self._core_repo = None
@@ -199,6 +204,12 @@ class Container:
         if self._review_repo is None:
             self._review_repo = DjangoReviewRepository()
         return self._review_repo
+
+    @property
+    def report_repo(self):
+        if self._report_repo is None:
+            self._report_repo = DjangoReportRepository()
+        return self._report_repo
 
     @property
     def curriculum_repo(self):
@@ -482,6 +493,11 @@ class Container:
     def get_event_variant_assignment_use_case(self):
         return GetEventVariantAssignmentUseCase(
             event_repo=self.event_repo,
+        )
+
+    def get_events_status_report_use_case(self):
+        return GetEventsStatusReportUseCase(
+            report_repo=self.report_repo,
         )
 
     def add_event_participants_use_case(self):

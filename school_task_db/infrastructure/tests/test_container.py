@@ -63,6 +63,9 @@ from core_logic.use_cases.get_event_participant_selection import (
 from core_logic.use_cases.get_event_variant_assignment import (
     GetEventVariantAssignmentUseCase,
 )
+from core_logic.use_cases.get_events_status_report import (
+    GetEventsStatusReportUseCase,
+)
 from core_logic.use_cases.get_generated_document_file import (
     GetGeneratedDocumentFileUseCase,
 )
@@ -132,6 +135,7 @@ from infrastructure.repositories.django_curriculum_repo import (
 from infrastructure.container import Container
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
+from infrastructure.repositories.django_report_repo import DjangoReportRepository
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
@@ -190,6 +194,9 @@ class ContainerTests(SimpleTestCase):
         )
         variant_assignment_use_case = (
             container.get_event_variant_assignment_use_case()
+        )
+        events_status_report_use_case = (
+            container.get_events_status_report_use_case()
         )
         add_participants_use_case = container.add_event_participants_use_case()
         assign_variants_use_case = container.assign_event_variants_use_case()
@@ -310,6 +317,10 @@ class ContainerTests(SimpleTestCase):
             variant_assignment_use_case,
             GetEventVariantAssignmentUseCase,
         )
+        self.assertIsInstance(
+            events_status_report_use_case,
+            GetEventsStatusReportUseCase,
+        )
         self.assertIsInstance(add_participants_use_case, AddEventParticipantsUseCase)
         self.assertIsInstance(assign_variants_use_case, AssignEventVariantsUseCase)
         self.assertIsInstance(
@@ -374,6 +385,7 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(container.work_repo, DjangoWorkRepository)
         self.assertIsInstance(container.event_repo, DjangoEventRepository)
         self.assertIsInstance(container.review_repo, DjangoReviewRepository)
+        self.assertIsInstance(container.report_repo, DjangoReportRepository)
         self.assertIsInstance(container.curriculum_repo, DjangoCurriculumRepository)
         self.assertIsInstance(container.codifier_repo, DjangoCodifierRepository)
         self.assertIsInstance(container.core_repo, DjangoCoreRepository)

@@ -7,8 +7,13 @@ from django.shortcuts import get_object_or_404
 from django.views import View
 from django.views.generic import TemplateView
 from django.db.models import Count, Avg, Q
+from django.utils import timezone
 from datetime import datetime, timedelta
 
+from core_logic.use_cases.get_events_status_report import (
+    EventsStatusReportRequest,
+)
+from infrastructure.container import container
 from . import plotly_utils
 
 from students.models import Student, StudentGroup
@@ -449,42 +454,24 @@ class EventsStatusView(TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        from events.models import Event, EventParticipation
-
-        qs = _year_qs(self.request)
-        year = qs['year']
-        events = qs['events']
-
-        events_by_status = events.values('status').annotate(
-            count=Count('id')
-        ).order_by('status')
-        context['events_by_status'] = list(events_by_status)
-
-        current_date = datetime.now()
+        report = container.get_events_status_report_use_case().execute(
+            EventsStatusReportRequest(
+                year=getattr(self.request, 'current_year', None),
+                current_date=timezone.now(),
+            ),
+        )
 
         context.update({
-            'overdue_events': events.filter(
-                status='planned',
-                planned_date__lt=current_date - timedelta(days=1)
-            ).select_related('work'),
-            'long_reviewing': events.filter(
-                status='reviewing',
-                actual_end__lt=current_date - timedelta(days=7)
-            ).select_related('work'),
-            'completed_unchecked': events.filter(
-                status='completed',
-                actual_end__lt=current_date - timedelta(days=3)
-            ).select_related('work'),
+            'events_by_status': report.events_by_status,
+            'overdue_events': report.overdue_events,
+            'long_reviewing': report.long_reviewing,
+            'completed_unchecked': report.completed_unchecked,
+            'participation_stats': report.participation_stats,
+            'all_events': report.all_events,
+            'active_report': report.active_report,
+            'active_course_pk': report.active_course_pk,
+            'courses': report.courses,
         })
-
-        participation_stats = qs['participations'].values(
-            'status'
-        ).annotate(count=Count('id')).order_by('status')
-        context['participation_stats'] = list(participation_stats)
-
-        context['all_events'] = events.select_related('work').order_by('-planned_date')
-        context.update(_get_nav_context('events-status', year=year))
 
         return context
 

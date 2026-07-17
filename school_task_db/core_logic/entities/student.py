@@ -125,8 +125,18 @@ class StudentListData:
 
 
 @dataclass(frozen=True)
+class StudentDetailData:
+    student: Any = None
+
+
+@dataclass(frozen=True)
 class StudentGroupListData:
     student_groups: Any
+
+
+@dataclass(frozen=True)
+class StudentGroupDetailData:
+    student_group: Any = None
 
 
 @dataclass(frozen=True)

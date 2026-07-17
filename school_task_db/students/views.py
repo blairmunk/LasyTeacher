@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.http import Http404
@@ -20,22 +20,23 @@ class StudentListView(ListView):
         return container.get_student_list_use_case().execute().students
 
 
-class StudentDetailView(DetailView):
-    model = Student
+class StudentDetailView(TemplateView):
     template_name = 'students/detail.html'
-    context_object_name = 'student'
-
-    def get_queryset(self):
-        return container.get_student_detail_use_case().get_queryset()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        student = self.object
+        detail = container.get_student_detail_use_case().execute(
+            str(self.kwargs['pk']),
+        )
+        student = detail.student
+        if student is None:
+            raise Http404('Ученик не найден')
 
-        from infrastructure.container import container
         from reports import plotly_utils
         profile = container.get_student_profile_use_case().execute(str(student.pk))
 
+        context['student'] = student
+        context['object'] = student
         context['student_groups'] = profile.student_groups
         context['participations_data'] = profile.participations_data
         context['stats'] = profile.stats
@@ -165,13 +166,19 @@ class StudentGroupListView(ListView):
         return container.get_student_group_list_use_case().execute().student_groups
 
 
-class StudentGroupDetailView(DetailView):
-    model = StudentGroup
+class StudentGroupDetailView(TemplateView):
     template_name = 'students/group_detail.html'
-    context_object_name = 'studentgroup'
 
-    def get_queryset(self):
-        return container.get_student_group_detail_use_case().get_queryset()
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        detail = container.get_student_group_detail_use_case().execute(
+            str(self.kwargs['pk']),
+        )
+        if detail.student_group is None:
+            raise Http404('Класс не найден')
+        context['studentgroup'] = detail.student_group
+        context['object'] = detail.student_group
+        return context
 
 
 class StudentGroupCreateView(CreateView):

@@ -411,6 +411,16 @@ class RemedialFromEventViewTests(TestCase):
         self.assertEqual(response.context['group_scores'][0]['name'], 'Скорость')
         self.assertEqual(response.context['participations_data'][0].score, 2)
 
+    def test_student_detail_returns_404_for_missing_student(self):
+        response = self.client.get(
+            reverse(
+                'students:detail',
+                args=['550e8400-e29b-41d4-a716-446655440000'],
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
+
     def test_student_list_uses_clean_list_context(self):
         response = self.client.get(reverse('students:list'))
 
@@ -434,3 +444,13 @@ class RemedialFromEventViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['studentgroup'], group)
+
+    def test_student_group_detail_returns_404_for_missing_group(self):
+        response = self.client.get(
+            reverse(
+                'students:group-detail',
+                args=['550e8400-e29b-41d4-a716-446655440000'],
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)

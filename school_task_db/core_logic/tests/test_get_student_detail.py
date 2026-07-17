@@ -8,27 +8,47 @@ from core_logic.use_cases.get_student_group_detail import (
 
 class FakeStudentRepository:
     def __init__(self):
-        self.detail_students = ['student-1']
-        self.detail_student_groups = ['group-1']
+        self.student = 'student-1'
+        self.student_group = 'group-1'
 
-    def get_detail_students(self):
-        return self.detail_students
+    def get_student(self, student_id):
+        return self.student if student_id == self.student else None
 
-    def get_detail_student_groups(self):
-        return self.detail_student_groups
+    def get_student_group(self, group_id):
+        return self.student_group if group_id == self.student_group else None
 
 
 class GetStudentDetailUseCaseTests(TestCase):
-    def test_get_queryset_returns_student_detail_queryset(self):
+    def test_execute_returns_student_detail_data(self):
         repo = FakeStudentRepository()
         use_case = GetStudentDetailUseCase(student_repo=repo)
 
-        self.assertEqual(use_case.get_queryset(), ['student-1'])
+        data = use_case.execute('student-1')
+
+        self.assertEqual(data.student, 'student-1')
+
+    def test_execute_returns_empty_data_for_missing_student(self):
+        repo = FakeStudentRepository()
+        use_case = GetStudentDetailUseCase(student_repo=repo)
+
+        data = use_case.execute('missing-student')
+
+        self.assertIsNone(data.student)
 
 
 class GetStudentGroupDetailUseCaseTests(TestCase):
-    def test_get_queryset_returns_student_group_detail_queryset(self):
+    def test_execute_returns_student_group_detail_data(self):
         repo = FakeStudentRepository()
         use_case = GetStudentGroupDetailUseCase(student_repo=repo)
 
-        self.assertEqual(use_case.get_queryset(), ['group-1'])
+        data = use_case.execute('group-1')
+
+        self.assertEqual(data.student_group, 'group-1')
+
+    def test_execute_returns_empty_data_for_missing_student_group(self):
+        repo = FakeStudentRepository()
+        use_case = GetStudentGroupDetailUseCase(student_repo=repo)
+
+        data = use_case.execute('missing-group')
+
+        self.assertIsNone(data.student_group)

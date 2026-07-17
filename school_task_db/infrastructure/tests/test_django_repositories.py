@@ -197,14 +197,22 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(list(students), [self.student])
         self.assertEqual(list(student_groups), [self.group])
 
-    def test_student_repository_returns_detail_page_querysets(self):
+    def test_student_repository_returns_detail_page_objects(self):
         repo = DjangoStudentRepository()
 
-        students = repo.get_detail_students()
-        student_groups = repo.get_detail_student_groups()
+        student = repo.get_student(str(self.student.pk))
+        missing_student = repo.get_student(
+            '00000000-0000-0000-0000-000000000000',
+        )
+        student_group = repo.get_student_group(str(self.group.pk))
+        missing_student_group = repo.get_student_group(
+            '00000000-0000-0000-0000-000000000000',
+        )
 
-        self.assertEqual(list(students), [self.student])
-        self.assertEqual(list(student_groups), [self.group])
+        self.assertEqual(student, self.student)
+        self.assertIsNone(missing_student)
+        self.assertEqual(student_group, self.group)
+        self.assertIsNone(missing_student_group)
 
     def test_task_repository_returns_filtered_task_list_data(self):
         repo = DjangoTaskRepository()

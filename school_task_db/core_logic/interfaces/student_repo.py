@@ -24,12 +24,12 @@ class IStudentRepository(ABC):
         """Return student groups/classes for the group list page."""
 
     @abstractmethod
-    def get_detail_students(self) -> Any:
-        """Return students for the student detail page."""
+    def get_student(self, student_id: str) -> Any:
+        """Return one student by id, or None when it does not exist."""
 
     @abstractmethod
-    def get_detail_student_groups(self) -> Any:
-        """Return student groups/classes for the group detail page."""
+    def get_student_group(self, group_id: str) -> Any:
+        """Return one student group by id, or None when it does not exist."""
 
     @abstractmethod
     def get_task_results_for_event(

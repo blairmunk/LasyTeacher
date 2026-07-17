@@ -15,6 +15,9 @@ from core_logic.use_cases.get_events_status_report import (
 from core_logic.use_cases.get_heatmap_course_overview import (
     HeatmapCourseOverviewRequest,
 )
+from core_logic.use_cases.get_heatmap_course_topic_matrix import (
+    HeatmapCourseTopicMatrixRequest,
+)
 from core_logic.use_cases.get_heatmap_overview import HeatmapOverviewRequest
 from core_logic.use_cases.get_heatmap_topic_matrix import (
     HeatmapTopicMatrixRequest,
@@ -388,10 +391,15 @@ class HeatmapCourseView(View):
                 'courses': overview.courses,
             })
 
-        columns, rows, col_averages = _build_topic_data_for_course(
-            students,
-            overview.course_works,
+        matrix = container.get_heatmap_course_topic_matrix_use_case().execute(
+            HeatmapCourseTopicMatrixRequest(
+                student_ids=[student.pk for student in students],
+                work_ids=[work.pk for work in overview.course_works],
+            ),
         )
+        columns = matrix.columns
+        rows = matrix.rows
+        col_averages = matrix.col_averages
         group_param = f'?group={group.pk}' if group else ''
 
         if not transpose:
@@ -907,102 +915,6 @@ def _build_subtopic_data(students, topic):
         })
 
     return columns, rows, col_averages
-
-def _build_topic_data_for_course(students, course_works):
-    """Агрегация: ученики × темы, но только по работам курса"""
-    from works.models import Variant
-
-    # Задания из вариантов работ курса
-    work_ids = [w.id for w in course_works]
-    variant_ids = Variant.objects.filter(work_id__in=work_ids).values_list('id', flat=True)
-
-    # Все task_ids из вариантов
-    course_task_ids = set()
-    for variant in Variant.objects.filter(work_id__in=work_ids).prefetch_related('tasks'):
-        for task in variant.tasks.all():
-            course_task_ids.add(str(task.pk))
-
-    marks = Mark.objects.filter(
-        participation__student__in=students,
-        participation__event__work_id__in=work_ids,
-    ).select_related('participation__student')
-
-    all_task_ids = set()
-    for mark in marks:
-        if mark.task_scores:
-            all_task_ids.update(mark.task_scores.keys())
-
-    # Фильтруем только задания курса
-    relevant_task_ids = all_task_ids & course_task_ids if course_task_ids else all_task_ids
-
-    if not relevant_task_ids:
-        return [], [], []
-
-    tasks_qs = Task.objects.filter(pk__in=relevant_task_ids).select_related('topic', 'subtopic')
-    task_map = {str(t.pk): t for t in tasks_qs}
-
-    agg = defaultdict(lambda: {'points': 0, 'max_points': 0})
-
-    for mark in marks:
-        student_id = mark.participation.student_id
-        if not mark.task_scores:
-            continue
-        seen = set()
-        for task_id, scores in mark.task_scores.items():
-            if task_id in seen:
-                continue
-            seen.add(task_id)
-
-            task = task_map.get(task_id)
-            if not task or not task.topic:
-                continue
-
-            key = (student_id, task.topic_id)
-            agg[key]['points'] += scores.get('points', 0)
-            agg[key]['max_points'] += scores.get('max_points', 0)
-
-    topic_ids = set(tid for (_, tid) in agg.keys())
-    columns = list(
-        Topic.objects.filter(pk__in=topic_ids).order_by('section', 'order', 'name')
-    )
-
-    rows = []
-    for student in students:
-        cells = []
-        total_pts = 0
-        total_max = 0
-        for topic in columns:
-            data = agg.get((student.id, topic.id))
-            if data and data['max_points'] > 0:
-                pct = round(data['points'] / data['max_points'] * 100)
-                total_pts += data['points']
-                total_max += data['max_points']
-                cells.append({
-                    'pct': pct, 'points': data['points'],
-                    'max_points': data['max_points'],
-                    'css': _color_class(pct), 'topic': topic,
-                })
-            else:
-                cells.append({'pct': None, 'css': 'no-data', 'topic': topic})
-
-        avg = round(total_pts / total_max * 100) if total_max > 0 else None
-        rows.append({
-            'student': student, 'cells': cells,
-            'avg': avg,
-            'avg_css': _color_class(avg) if avg is not None else 'no-data',
-        })
-
-    col_averages = []
-    for topic in columns:
-        pts = sum(agg.get((s.id, topic.id), {}).get('points', 0) for s in students)
-        mx = sum(agg.get((s.id, topic.id), {}).get('max_points', 0) for s in students)
-        avg = round(pts / mx * 100) if mx > 0 else None
-        col_averages.append({
-            'pct': avg, 'css': _color_class(avg) if avg is not None else 'no-data',
-        })
-
-    return columns, rows, col_averages
-
 
 def _build_course_timeline(course_works, students):
     """Plotly JSON: средний % по работам курса во времени"""

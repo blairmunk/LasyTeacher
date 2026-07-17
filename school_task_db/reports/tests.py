@@ -4,11 +4,11 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from curriculum.models import Course, Topic
+from curriculum.models import Course, CourseAssignment, Topic
 from events.models import Event, EventParticipation, Mark
 from students.models import Student, StudentGroup
 from tasks.models import Task
-from works.models import Work
+from works.models import Variant, VariantTask, Work
 
 
 class ReportsViewsTests(TestCase):
@@ -111,6 +111,74 @@ class ReportsViewsTests(TestCase):
         self.assertEqual(response.context['course'], course)
         self.assertEqual(response.context['selected_group'], group)
         self.assertFalse(response.context['has_data'])
+
+    def test_heatmap_course_view_uses_clean_topic_matrix_data(self):
+        student = Student.objects.create(last_name='Иванов', first_name='Иван')
+        group = StudentGroup.objects.create(name='7А')
+        group.students.add(student)
+        course = Course.objects.create(
+            name='Физика 7',
+            subject='Физика',
+            grade_level=7,
+            is_active=True,
+        )
+        course.student_groups.add(group)
+        work = Work.objects.create(name='Контрольная')
+        CourseAssignment.objects.create(course=course, work=work)
+        topic = Topic.objects.create(
+            name='Скорость',
+            subject='Физика',
+            section='Кинематика',
+            grade_level=7,
+        )
+        task = Task.objects.create(
+            text='Задача',
+            answer='Ответ',
+            topic=topic,
+            task_type='computational',
+            difficulty=2,
+        )
+        variant = Variant.objects.create(work=work, number=1)
+        VariantTask.objects.create(
+            variant=variant,
+            task=task,
+            order=1,
+            max_points=10,
+        )
+        event = Event.objects.create(
+            name='КР',
+            work=work,
+            status='graded',
+            planned_date=timezone.now(),
+        )
+        participation = EventParticipation.objects.create(
+            event=event,
+            student=student,
+            status='graded',
+        )
+        Mark.objects.create(
+            participation=participation,
+            score=4,
+            points=8,
+            max_points=10,
+            task_scores={
+                str(task.pk): {'points': 8, 'max_points': 10},
+            },
+        )
+
+        response = self.client.get(
+            reverse('reports:heatmap-course', args=[course.pk]),
+            {'group': group.pk},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['has_data'])
+        self.assertEqual(response.context['total_students'], 1)
+        self.assertEqual(response.context['total_topics'], 1)
+        self.assertEqual(response.context['grid_rows'][0]['avg'], 80)
+        self.assertEqual(response.context['grid_col_averages'], [
+            {'pct': 80, 'css': 'good'},
+        ])
 
     def test_dashboard_view_uses_clean_report_data(self):
         now = timezone.now()

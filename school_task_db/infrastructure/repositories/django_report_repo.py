@@ -21,7 +21,7 @@ from curriculum.models import Course, CourseAssignment, Topic
 from events.models import Event, EventParticipation, Mark
 from students.models import Student, StudentGroup
 from tasks.models import Task
-from works.models import Work
+from works.models import Variant, Work
 
 
 class DjangoReportRepository(IReportRepository):
@@ -134,6 +134,78 @@ class DjangoReportRepository(IReportRepository):
                 if not task or not task.topic:
                     continue
                 if section_filter and task.topic.section != section_filter:
+                    continue
+
+                key = (student_id, task.topic_id)
+                aggregated[key]['points'] += scores.get('points', 0)
+                aggregated[key]['max_points'] += scores.get('max_points', 0)
+
+        topic_ids = {topic_id for _, topic_id in aggregated.keys()}
+        columns = list(
+            Topic.objects.filter(pk__in=topic_ids).order_by(
+                'section',
+                'order',
+                'name',
+            ),
+        )
+        rows = self._build_heatmap_rows(students, columns, aggregated)
+        col_averages = self._build_heatmap_col_averages(
+            students,
+            columns,
+            aggregated,
+        )
+
+        return HeatmapTopicMatrixData(
+            columns=columns,
+            rows=rows,
+            col_averages=col_averages,
+        )
+
+    def get_heatmap_course_topic_matrix(self, student_ids, work_ids):
+        students = list(
+            Student.objects.filter(pk__in=student_ids).order_by(
+                'last_name',
+                'first_name',
+            ),
+        )
+        course_task_ids = self._get_variant_task_ids(work_ids)
+        marks = Mark.objects.filter(
+            participation__student__in=students,
+            participation__event__work_id__in=work_ids,
+        ).select_related('participation__student')
+
+        all_task_ids = set()
+        for mark in marks:
+            if mark.task_scores:
+                all_task_ids.update(mark.task_scores.keys())
+
+        relevant_task_ids = (
+            all_task_ids & course_task_ids
+            if course_task_ids
+            else all_task_ids
+        )
+        if not relevant_task_ids:
+            return HeatmapTopicMatrixData(columns=[], rows=[], col_averages=[])
+
+        tasks_qs = Task.objects.filter(pk__in=relevant_task_ids).select_related(
+            'topic',
+            'subtopic',
+        )
+        task_map = {str(task.pk): task for task in tasks_qs}
+        aggregated = defaultdict(lambda: {'points': 0, 'max_points': 0})
+
+        for mark in marks:
+            student_id = mark.participation.student_id
+            if not mark.task_scores:
+                continue
+            seen = set()
+            for task_id, scores in mark.task_scores.items():
+                if task_id in seen:
+                    continue
+                seen.add(task_id)
+
+                task = task_map.get(task_id)
+                if not task or not task.topic:
                     continue
 
                 key = (student_id, task.topic_id)
@@ -514,6 +586,16 @@ class DjangoReportRepository(IReportRepository):
             if scores:
                 box_data[short_name] = scores
         return box_data
+
+    def _get_variant_task_ids(self, work_ids):
+        task_ids = set()
+        variants = Variant.objects.filter(
+            work_id__in=work_ids,
+        ).prefetch_related('tasks')
+        for variant in variants:
+            for task in variant.tasks.all():
+                task_ids.add(str(task.pk))
+        return task_ids
 
     def _build_heatmap_rows(self, students, columns, aggregated):
         rows = []

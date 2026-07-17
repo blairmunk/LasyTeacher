@@ -8,7 +8,7 @@ from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_report_repo import DjangoReportRepository
 from students.models import Student, StudentGroup
 from tasks.models import Task
-from works.models import Work
+from works.models import Variant, VariantTask, Work
 
 
 class DjangoReportRepositoryTests(TestCase):
@@ -155,6 +155,97 @@ class DjangoReportRepositoryTests(TestCase):
         self.assertEqual(data.rows[0]['avg_css'], 'good')
         self.assertEqual(data.rows[0]['cells'][0]['pct'], 80)
         self.assertEqual(data.rows[0]['cells'][0]['css'], 'good')
+        self.assertEqual(data.col_averages, [{'pct': 80, 'css': 'good'}])
+
+    def test_get_heatmap_course_topic_matrix_returns_course_scores(self):
+        student = Student.objects.create(last_name='Иванов', first_name='Иван')
+        course_work = Work.objects.create(name='Работа курса')
+        other_work = Work.objects.create(name='Другая работа')
+        topic = Topic.objects.create(
+            name='Скорость',
+            subject='Физика',
+            section='Кинематика',
+            grade_level=7,
+        )
+        other_topic = Topic.objects.create(
+            name='Сила',
+            subject='Физика',
+            section='Динамика',
+            grade_level=7,
+        )
+        task = Task.objects.create(
+            text='Задача курса',
+            answer='Ответ',
+            topic=topic,
+            task_type='computational',
+            difficulty=2,
+        )
+        other_task = Task.objects.create(
+            text='Задача не из курса',
+            answer='Ответ',
+            topic=other_topic,
+            task_type='computational',
+            difficulty=2,
+        )
+        variant = Variant.objects.create(work=course_work, number=1)
+        VariantTask.objects.create(
+            variant=variant,
+            task=task,
+            order=1,
+            max_points=10,
+        )
+        course_event = Event.objects.create(
+            name='КР',
+            work=course_work,
+            status='graded',
+            planned_date=timezone.now(),
+        )
+        other_event = Event.objects.create(
+            name='Другая КР',
+            work=other_work,
+            status='graded',
+            planned_date=timezone.now(),
+        )
+        participation = EventParticipation.objects.create(
+            event=course_event,
+            student=student,
+            status='graded',
+        )
+        other_participation = EventParticipation.objects.create(
+            event=other_event,
+            student=student,
+            status='graded',
+        )
+        Mark.objects.create(
+            participation=participation,
+            score=4,
+            points=8,
+            max_points=10,
+            task_scores={
+                str(task.pk): {'points': 8, 'max_points': 10},
+                str(other_task.pk): {'points': 1, 'max_points': 10},
+            },
+        )
+        Mark.objects.create(
+            participation=other_participation,
+            score=5,
+            points=10,
+            max_points=10,
+            task_scores={
+                str(other_task.pk): {'points': 10, 'max_points': 10},
+            },
+        )
+
+        data = DjangoReportRepository().get_heatmap_course_topic_matrix(
+            student_ids=[student.pk],
+            work_ids=[course_work.pk],
+        )
+
+        self.assertEqual(data.columns, [topic])
+        self.assertEqual(len(data.rows), 1)
+        self.assertEqual(data.rows[0]['student'], student)
+        self.assertEqual(data.rows[0]['avg'], 80)
+        self.assertEqual(data.rows[0]['cells'][0]['pct'], 80)
         self.assertEqual(data.col_averages, [{'pct': 80, 'css': 'good'}])
 
     def test_get_events_status_report_returns_status_context(self):

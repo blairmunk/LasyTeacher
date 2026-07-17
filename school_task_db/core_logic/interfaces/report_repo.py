@@ -63,3 +63,11 @@ class IReportRepository(ABC):
         group_id: Any,
     ) -> HeatmapCourseOverviewData:
         """Return base course heatmap data."""
+
+    @abstractmethod
+    def get_heatmap_course_topic_matrix(
+        self,
+        student_ids: list,
+        work_ids: list,
+    ) -> HeatmapTopicMatrixData:
+        """Return student-topic heatmap matrix data for course works."""

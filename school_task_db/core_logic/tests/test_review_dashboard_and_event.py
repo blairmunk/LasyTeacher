@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+from core_logic.entities.event import EventEntity
 from core_logic.entities.review import (
     EventReviewParticipationRow,
     ReviewEventProgress,
@@ -53,6 +54,19 @@ class FakeReviewRepository:
         return [ReviewVariantRef(pk='v1', number=1)]
 
 
+class FakeEventRepository:
+    def get_by_id(self, event_id):
+        if event_id == 'missing':
+            return None
+        return EventEntity(
+            id=event_id,
+            name='КР',
+            work_id='work-1',
+            work_name='Контрольная',
+            status='completed',
+        )
+
+
 class ReviewDashboardAndEventUseCaseTests(TestCase):
     def test_dashboard_use_case_returns_categorized_events(self):
         use_case = GetReviewDashboardUseCase(
@@ -67,12 +81,26 @@ class ReviewDashboardAndEventUseCaseTests(TestCase):
 
     def test_event_review_use_case_returns_event_review_data(self):
         use_case = GetEventReviewUseCase(
+            event_repo=FakeEventRepository(),
             review_repo=FakeReviewRepository(),
             review_service=ReviewService(),
         )
 
         review = use_case.execute('event-1')
 
+        self.assertEqual(review.event.name, 'КР')
         self.assertFalse(review.blocked)
         self.assertEqual(review.total_participants, 1)
         self.assertEqual(review.available_variants[0].pk, 'v1')
+
+    def test_event_review_use_case_returns_empty_data_for_missing_event(self):
+        use_case = GetEventReviewUseCase(
+            event_repo=FakeEventRepository(),
+            review_repo=FakeReviewRepository(),
+            review_service=ReviewService(),
+        )
+
+        review = use_case.execute('missing')
+
+        self.assertIsNone(review.event)
+        self.assertEqual(review.participations_data, [])

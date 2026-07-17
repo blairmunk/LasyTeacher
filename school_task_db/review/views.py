@@ -1,10 +1,8 @@
 from django.shortcuts import redirect
-from django.views.generic import TemplateView, DetailView
+from django.views.generic import TemplateView
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_POST
-
-from events.models import Event
 
 
 class ReviewDashboardView(TemplateView):
@@ -41,20 +39,23 @@ class ReviewDashboardView(TemplateView):
         return context
 
 
-class EventReviewView(DetailView):
+class EventReviewView(TemplateView):
     """Проверка конкретного события"""
-    model = Event
     template_name = 'review/event_review.html'
-    context_object_name = 'event'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        event = self.object
 
         from infrastructure.container import container
 
-        review_data = container.get_event_review_use_case().execute(str(event.pk))
+        review_data = container.get_event_review_use_case().execute(
+            str(self.kwargs['pk']),
+        )
+        if review_data.event is None:
+            raise Http404('Событие не найдено')
+
         context.update({
+            'event': review_data.event,
             'has_participants': review_data.has_participants,
             'variants_assigned': review_data.variants_assigned,
             'all_variants_assigned': review_data.all_variants_assigned,
@@ -80,7 +81,7 @@ class EventReviewView(DetailView):
                 container.sync_review_session_use_case().execute(
                     SyncReviewSessionRequest(
                         reviewer_id=str(self.request.user.pk),
-                        event_id=str(event.pk),
+                        event_id=str(review_data.event.pk),
                         total_participations=review_data.active_participants,
                         checked_participations=review_data.graded_participants,
                     )

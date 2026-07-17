@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, List, Optional
 
+from core_logic.entities.event import EventEntity
+
 
 @dataclass(frozen=True)
 class ReviewStudentRef:
@@ -220,20 +222,21 @@ class EventReviewParticipationRow:
 
 @dataclass(frozen=True)
 class EventReviewData:
-    has_participants: bool
-    variants_assigned: bool
-    all_variants_assigned: bool
-    blocked: bool
-    block_reason: str
-    available_variants: List[ReviewVariantRef]
-    participations_data: List[EventReviewParticipationRow]
-    total_participants: int
-    active_participants: int
-    graded_participants: int
-    absent_participants: int
-    progress_percentage: float
-    avg_score: float
-    score_distribution: Dict[int, int]
+    event: Optional[EventEntity] = None
+    has_participants: bool = False
+    variants_assigned: bool = False
+    all_variants_assigned: bool = False
+    blocked: bool = False
+    block_reason: str = ''
+    available_variants: List[ReviewVariantRef] = field(default_factory=list)
+    participations_data: List[EventReviewParticipationRow] = field(default_factory=list)
+    total_participants: int = 0
+    active_participants: int = 0
+    graded_participants: int = 0
+    absent_participants: int = 0
+    progress_percentage: float = 0
+    avg_score: float = 0
+    score_distribution: Dict[int, int] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

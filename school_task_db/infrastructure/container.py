@@ -516,6 +516,7 @@ class Container:
 
     def get_event_review_use_case(self):
         return GetEventReviewUseCase(
+            event_repo=self.event_repo,
             review_repo=self.review_repo,
             review_service=self.review_service(),
         )

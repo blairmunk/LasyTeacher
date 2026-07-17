@@ -148,6 +148,7 @@ class ReviewService:
         self,
         participations: List[EventReviewParticipationRow],
         available_variants: List[ReviewVariantRef],
+        event=None,
     ) -> EventReviewData:
         total_participants = len(participations)
         has_participants = total_participants > 0
@@ -165,6 +166,7 @@ class ReviewService:
                 has_participants=False,
                 variants_assigned=False,
                 all_variants_assigned=False,
+                event=event,
             )
 
         if not variants_assigned:
@@ -175,6 +177,7 @@ class ReviewService:
                 has_participants=True,
                 variants_assigned=False,
                 all_variants_assigned=False,
+                event=event,
             )
 
         absent_count = sum(1 for row in participations if row.is_absent)
@@ -196,6 +199,7 @@ class ReviewService:
                 score_distribution[score] += 1
 
         return EventReviewData(
+            event=event,
             has_participants=has_participants,
             variants_assigned=variants_assigned,
             all_variants_assigned=all_variants_assigned,
@@ -291,8 +295,10 @@ class ReviewService:
         has_participants: bool,
         variants_assigned: bool,
         all_variants_assigned: bool,
+        event=None,
     ) -> EventReviewData:
         return EventReviewData(
+            event=event,
             has_participants=has_participants,
             variants_assigned=variants_assigned,
             all_variants_assigned=all_variants_assigned,

@@ -21,6 +21,7 @@ from core_logic.entities.report import (
     JournalSelectData,
     ReportsDashboardData,
     ReportCourseRef,
+    ReportEventRef,
     ReportGroupRef,
     ReportStudentRef,
     ReportTaskRef,
@@ -730,10 +731,10 @@ class DjangoReportRepository(IReportRepository):
             class_names=class_names,
             class_avg_scores=class_avg_scores,
             class_completion=class_completion,
-            recent_events=events.select_related(
-                'work',
-                'course',
-            ).order_by('-planned_date')[:10],
+            recent_events=[
+                self._report_event_ref(event)
+                for event in events.order_by('-planned_date')[:10]
+            ],
             event_status_counts=self._get_event_status_counts(events),
             box_data=self._get_box_data(events, marks),
             courses=courses.order_by('grade_level', 'name'),
@@ -1392,6 +1393,15 @@ class DjangoReportRepository(IReportRepository):
             pk=str(student.pk),
             full_name=student.get_full_name(),
             short_name=student.get_short_name(),
+        )
+
+    def _report_event_ref(self, event):
+        return ReportEventRef(
+            pk=str(event.pk),
+            name=event.name,
+            status=event.status,
+            status_display=event.get_status_display(),
+            planned_date=event.planned_date,
         )
 
     def _journal_score_css(self, score):

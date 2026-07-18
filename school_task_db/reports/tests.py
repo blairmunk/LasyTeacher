@@ -414,7 +414,11 @@ class ReportsViewsTests(TestCase):
         self.assertEqual(response.context['total_events'], 1)
         self.assertEqual(response.context['total_marks'], 1)
         self.assertEqual(response.context['class_stats'][0]['name'], '7А')
-        self.assertEqual(list(response.context['recent_events']), [event])
+        self.assertEqual(response.context['recent_events'][0].pk, str(event.pk))
+        self.assertEqual(
+            response.context['recent_events'][0].status_display,
+            event.get_status_display(),
+        )
         self.assertIn('score_chart_json', response.context)
 
     def test_events_status_view_uses_clean_report_data(self):

@@ -181,7 +181,7 @@
                             {% elif event.status == 'planned' %}bg-secondary
                             {% elif event.status == 'reviewing' %}bg-warning text-dark
                             {% else %}bg-dark{% endif %}">
-                            {{ event.get_status_display }}
+                            {{ event.status_display }}
                         </span>
                     </div>
                     {% empty %}

@@ -33,6 +33,15 @@ class ReportTaskRef:
 
 
 @dataclass(frozen=True)
+class ReportEventRef:
+    pk: str
+    name: str
+    status: str
+    status_display: str
+    planned_date: Any
+
+
+@dataclass(frozen=True)
 class EventsStatusReportData:
     events_by_status: List[dict]
     overdue_events: Any

@@ -1002,6 +1002,12 @@ class DjangoReportRepositoryTests(TestCase):
         self.assertEqual(class_stat['completed_participations'], 1)
         self.assertEqual(class_stat['completion_rate'], 100)
         self.assertEqual(class_stat['heatmap_links'][0]['course_name'], 'Физика 7')
-        self.assertEqual(list(data.recent_events), [event])
+        self.assertEqual(data.recent_events[0].pk, str(event.pk))
+        self.assertEqual(data.recent_events[0].name, 'КР')
+        self.assertEqual(data.recent_events[0].status, 'graded')
+        self.assertEqual(
+            data.recent_events[0].status_display,
+            event.get_status_display(),
+        )
         self.assertEqual(data.box_data, {'Контрольная': [5]})
         self.assertEqual(data.active_report, 'dashboard')

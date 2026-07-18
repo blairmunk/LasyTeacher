@@ -197,6 +197,11 @@ class TaskDeleteView(DeleteView):
     context_object_name = 'task'
     success_url = reverse_lazy('tasks:list')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['cancel_url'] = reverse('tasks:detail', kwargs={'pk': self.object.pk})
+        return context
+
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         result = container.delete_task_use_case().execute(

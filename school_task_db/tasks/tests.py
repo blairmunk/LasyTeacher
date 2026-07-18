@@ -313,6 +313,17 @@ class TaskBulkGroupAjaxTests(TestCase):
         self.assertEqual(response.url, reverse('tasks:list'))
         self.assertFalse(Task.objects.filter(pk=task_id).exists())
 
+    def test_delete_task_confirmation_uses_explicit_cancel_url(self):
+        response = self.client.get(
+            reverse('tasks:delete', kwargs={'pk': self.first_task.pk}),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context['cancel_url'],
+            reverse('tasks:detail', kwargs={'pk': self.first_task.pk}),
+        )
+
     def test_create_source_saves_source(self):
         response = self.client.post(
             reverse('tasks:source-create'),

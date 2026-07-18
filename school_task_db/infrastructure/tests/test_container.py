@@ -46,6 +46,8 @@ from core_logic.use_cases.get_codifier_detail import GetCodifierDetailUseCase
 from core_logic.use_cases.get_codifier_list import GetCodifierListUseCase
 from core_logic.use_cases.get_course_detail import GetCourseDetailUseCase
 from core_logic.use_cases.get_course_list import GetCourseListUseCase
+from core_logic.use_cases.get_topic_detail import GetTopicDetailUseCase
+from core_logic.use_cases.get_topic_list import GetTopicListUseCase
 from core_logic.use_cases.get_dashboard_summary import GetDashboardSummaryUseCase
 from core_logic.use_cases.get_global_search import GetGlobalSearchUseCase
 from core_logic.use_cases.get_heatmap_course_overview import (
@@ -223,6 +225,8 @@ class ContainerTests(SimpleTestCase):
         course_detail_use_case = container.get_course_detail_use_case()
         course_list_use_case = container.get_course_list_use_case()
         topic_subtopics_use_case = container.get_topic_subtopics_use_case()
+        topic_list_use_case = container.get_topic_list_use_case()
+        topic_detail_use_case = container.get_topic_detail_use_case()
         codifier_list_use_case = container.get_codifier_list_use_case()
         codifier_detail_use_case = container.get_codifier_detail_use_case()
         dashboard_summary_use_case = container.get_dashboard_summary_use_case()
@@ -381,6 +385,8 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(course_detail_use_case, GetCourseDetailUseCase)
         self.assertIsInstance(course_list_use_case, GetCourseListUseCase)
         self.assertIsInstance(topic_subtopics_use_case, GetTopicSubtopicsUseCase)
+        self.assertIsInstance(topic_list_use_case, GetTopicListUseCase)
+        self.assertIsInstance(topic_detail_use_case, GetTopicDetailUseCase)
         self.assertIsInstance(codifier_list_use_case, GetCodifierListUseCase)
         self.assertIsInstance(codifier_detail_use_case, GetCodifierDetailUseCase)
         self.assertIsInstance(dashboard_summary_use_case, GetDashboardSummaryUseCase)

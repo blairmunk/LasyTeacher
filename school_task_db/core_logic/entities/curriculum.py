@@ -26,6 +26,52 @@ class CourseListItem:
 
 
 @dataclass(frozen=True)
+class TopicListData:
+    topics: List["TopicListItem"] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class TopicListItem:
+    pk: str
+    name: str
+    subject: str
+    section: str
+    grade_level: int
+    order: int
+    difficulty_level: int
+    difficulty_level_display: str
+    description: str = ''
+    subtopics_count: int = 0
+
+
+@dataclass(frozen=True)
+class TopicDetailData:
+    topic: Optional["TopicDetailTopic"] = None
+    subtopics: List["TopicDetailSubtopic"] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class TopicDetailTopic:
+    pk: str
+    name: str
+    subject: str
+    section: str
+    grade_level: int
+    order: int
+    difficulty_level: int
+    difficulty_level_display: str
+    description: str = ''
+
+
+@dataclass(frozen=True)
+class TopicDetailSubtopic:
+    pk: str
+    name: str
+    description: str = ''
+    order: int = 0
+
+
+@dataclass(frozen=True)
 class CourseDetailData:
     course: Optional["CourseDetailCourse"] = None
     assignments: List["CourseDetailAssignment"] = field(default_factory=list)

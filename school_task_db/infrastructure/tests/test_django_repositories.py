@@ -563,6 +563,12 @@ class DjangoRemedialRepositoryTests(TestCase):
         missing_subtopics = repo.get_topic_subtopics(
             '550e8400-e29b-41d4-a716-446655440000',
         )
+        topics = repo.get_topics()
+        loaded_topic = repo.get_topic(str(topic.pk))
+        topic_detail_subtopics = repo.get_topic_detail_subtopics(str(topic.pk))
+        missing_topic = repo.get_topic(
+            '550e8400-e29b-41d4-a716-446655440000',
+        )
 
         self.assertEqual(courses[0].pk, str(course.pk))
         self.assertEqual(courses[0].assignments_count, 1)
@@ -581,6 +587,13 @@ class DjangoRemedialRepositoryTests(TestCase):
             'description': 'Описание',
         }])
         self.assertEqual(missing_subtopics, [])
+        loaded_list_topic = next(item for item in topics if item.pk == str(topic.pk))
+        self.assertEqual(loaded_list_topic.subtopics_count, 1)
+        self.assertEqual(loaded_topic.pk, str(topic.pk))
+        self.assertEqual(loaded_topic.name, topic.name)
+        self.assertIsNone(missing_topic)
+        self.assertEqual(topic_detail_subtopics[0].pk, str(subtopic.pk))
+        self.assertEqual(topic_detail_subtopics[0].name, subtopic.name)
 
     def test_codifier_repository_returns_list_and_detail_data(self):
         codifier = CodifierSpec.objects.create(

@@ -148,6 +148,8 @@ from core_logic.use_cases.get_task_reference_options import (
     GetSubtopicOptionsUseCase,
 )
 from core_logic.use_cases.get_topic_subtopics import GetTopicSubtopicsUseCase
+from core_logic.use_cases.get_topic_detail import GetTopicDetailUseCase
+from core_logic.use_cases.get_topic_list import GetTopicListUseCase
 from core_logic.use_cases.get_variant_detail import GetVariantDetailUseCase
 from core_logic.use_cases.get_variant_generation_placeholder import (
     GetVariantGenerationPlaceholderUseCase,
@@ -423,6 +425,16 @@ class Container:
 
     def get_topic_subtopics_use_case(self):
         return GetTopicSubtopicsUseCase(
+            curriculum_repo=self.curriculum_repo,
+        )
+
+    def get_topic_list_use_case(self):
+        return GetTopicListUseCase(
+            curriculum_repo=self.curriculum_repo,
+        )
+
+    def get_topic_detail_use_case(self):
+        return GetTopicDetailUseCase(
             curriculum_repo=self.curriculum_repo,
         )
 

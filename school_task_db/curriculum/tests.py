@@ -86,6 +86,53 @@ class CourseViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 404)
 
+    def test_topic_list_page_uses_clean_context_data(self):
+        topic = Topic.objects.create(
+            name='Кинематика',
+            subject='Физика',
+            section='Механика',
+            grade_level=9,
+            description='Движение тел',
+        )
+        topic.subtopics.create(name='Скорость', order=1)
+
+        response = self.client.get(reverse('curriculum:topic-list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['topics'][0].pk, str(topic.pk))
+        self.assertEqual(response.context['topics'][0].name, topic.name)
+        self.assertEqual(response.context['topics'][0].subtopics_count, 1)
+        self.assertContains(response, 'Кинематика')
+
+    def test_topic_detail_page_uses_clean_context_data(self):
+        topic = Topic.objects.create(
+            name='Кинематика',
+            subject='Физика',
+            section='Механика',
+            grade_level=9,
+        )
+        subtopic = topic.subtopics.create(name='Скорость', order=1)
+
+        response = self.client.get(
+            reverse('curriculum:topic-detail', args=[topic.pk])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['topic'].pk, str(topic.pk))
+        self.assertEqual(response.context['topic'].name, topic.name)
+        self.assertEqual(response.context['subtopics'][0].pk, str(subtopic.pk))
+        self.assertEqual(response.context['subtopics'][0].name, subtopic.name)
+
+    def test_topic_detail_returns_404_for_missing_topic(self):
+        response = self.client.get(
+            reverse(
+                'curriculum:topic-detail',
+                args=['550e8400-e29b-41d4-a716-446655440000'],
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
+
     def test_topic_subtopics_api_returns_subtopics(self):
         topic = Topic.objects.create(
             name='Кинематика',

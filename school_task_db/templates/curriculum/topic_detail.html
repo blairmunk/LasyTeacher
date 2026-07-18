@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ topic.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">{{ topic.name }}</h2>
+        <small class="text-muted">
+            {{ topic.subject }} · {{ topic.grade_level }} класс · {{ topic.section }}
+        </small>
+    </div>
+    <a href="{% url 'curriculum:topic-list' %}" class="btn btn-secondary">
+        <i class="fas fa-list"></i> К темам
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="mb-3">
+                    <span class="badge bg-primary">{{ topic.subject }}</span>
+                    <span class="badge bg-secondary">{{ topic.grade_level }} класс</span>
+                    <span class="badge bg-info">{{ topic.section }}</span>
+                    <span class="badge bg-light text-dark">
+                        {{ topic.difficulty_level_display }}
+                    </span>
+                </div>
+
+                {% if topic.description %}
+                <p class="mb-0">{{ topic.description }}</p>
+                {% else %}
+                <p class="text-muted mb-0">Описание темы не заполнено.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <strong>Подтемы</strong>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for subtopic in subtopics %}
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ subtopic.name }}</strong>
+                        <span class="badge bg-secondary">{{ subtopic.order }}</span>
+                    </div>
+                    {% if subtopic.description %}
+                    <div class="text-muted small mt-1">{{ subtopic.description }}</div>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="list-group-item text-muted">
+                    Подтемы пока не созданы.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

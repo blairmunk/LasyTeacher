@@ -14,6 +14,13 @@ from infrastructure.container import container
 from .forms import WorkForm, VariantGenerationForm
 
 
+def _post_lists(post_data):
+    return {
+        key: post_data.getlist(key)
+        for key in post_data
+    }
+
+
 def _work_params_from_form(form, work_id=''):
     return CreateWorkParams(
         work_id=work_id,
@@ -344,15 +351,20 @@ class VariantDeleteView(TemplateView):
         return context
 
     def post(self, request, *args, **kwargs):
-        action = request.POST.get('action', 'delete')
-        from core_logic.use_cases.delete_variant import DeleteVariantRequest
+        from core_logic.use_cases.prepare_work_variant_submission import (
+            PrepareVariantActionSubmissionRequest,
+        )
         from infrastructure.container import container
 
-        result = container.delete_variant_use_case().execute(
-            DeleteVariantRequest(
+        delete_request = container.prepare_delete_variant_submission_use_case().execute(
+            PrepareVariantActionSubmissionRequest(
                 variant_id=str(self.kwargs['pk']),
-                action=action,
+                data=_post_lists(request.POST),
             )
+        )
+
+        result = container.delete_variant_use_case().execute(
+            delete_request,
         )
 
         if result.status == 'not_found':
@@ -384,17 +396,22 @@ def bulk_delete_variants(request, work_id):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST only'}, status=405)
 
-    variant_ids = request.POST.getlist('variant_ids')
-    from core_logic.use_cases.bulk_delete_variants import (
-        BulkDeleteVariantsRequest,
+    from core_logic.use_cases.prepare_work_variant_submission import (
+        PrepareVariantActionSubmissionRequest,
     )
     from infrastructure.container import container
 
-    result = container.bulk_delete_variants_use_case().execute(
-        BulkDeleteVariantsRequest(
-            work_id=str(work_id),
-            variant_ids=variant_ids,
+    bulk_delete_request = (
+        container.prepare_bulk_delete_variants_submission_use_case().execute(
+            PrepareVariantActionSubmissionRequest(
+                work_id=str(work_id),
+                data=_post_lists(request.POST),
+            )
         )
+    )
+
+    result = container.bulk_delete_variants_use_case().execute(
+        bulk_delete_request,
     )
 
     if result.status == 'empty_selection':
@@ -410,19 +427,19 @@ def bulk_delete_variants(request, work_id):
 @require_http_methods(["POST"])
 def create_work_from_orphans(request):
     """Создать работу из выбранных вариантов-сирот"""
-    variant_ids = request.POST.getlist('variant_ids')
-    work_name = request.POST.get('work_name', '')
-
-    from core_logic.use_cases.create_work_from_orphans import (
-        CreateWorkFromOrphansRequest,
+    from core_logic.use_cases.prepare_work_variant_submission import (
+        PrepareVariantActionSubmissionRequest,
     )
     from infrastructure.container import container
 
-    result = container.create_work_from_orphans_use_case().execute(
-        CreateWorkFromOrphansRequest(
-            variant_ids=variant_ids,
-            work_name=work_name,
+    create_request = (
+        container.prepare_create_work_from_orphans_submission_use_case().execute(
+            PrepareVariantActionSubmissionRequest(data=_post_lists(request.POST))
         )
+    )
+
+    result = container.create_work_from_orphans_use_case().execute(
+        create_request,
     )
 
     if result.status == 'empty_selection':

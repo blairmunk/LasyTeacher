@@ -191,6 +191,11 @@ from core_logic.use_cases.prepare_student_remedial_submission import (
 from core_logic.use_cases.prepare_task_group_membership_submission import (
     PrepareAddTasksToGroupSubmissionUseCase,
 )
+from core_logic.use_cases.prepare_work_variant_submission import (
+    PrepareBulkDeleteVariantsSubmissionUseCase,
+    PrepareCreateWorkFromOrphansSubmissionUseCase,
+    PrepareDeleteVariantSubmissionUseCase,
+)
 from core_logic.use_cases.get_source_list import GetSourceListUseCase
 from core_logic.use_cases.get_task_import_sample import GetTaskImportSampleUseCase
 from core_logic.use_cases.preview_task_import import PreviewTaskImportUseCase
@@ -832,6 +837,15 @@ class Container:
 
     def prepare_add_tasks_to_group_submission_use_case(self):
         return PrepareAddTasksToGroupSubmissionUseCase()
+
+    def prepare_delete_variant_submission_use_case(self):
+        return PrepareDeleteVariantSubmissionUseCase()
+
+    def prepare_bulk_delete_variants_submission_use_case(self):
+        return PrepareBulkDeleteVariantsSubmissionUseCase()
+
+    def prepare_create_work_from_orphans_submission_use_case(self):
+        return PrepareCreateWorkFromOrphansSubmissionUseCase()
 
     def validate_review_work_scan_use_case(self):
         return ValidateReviewWorkScanUseCase(

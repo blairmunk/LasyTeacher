@@ -14,7 +14,9 @@ from core_logic.entities.work import (
     WorkDetailWork,
     WorkListItem,
     VariantListItem,
+    VariantGenerationGroup,
     VariantGenerationInfo,
+    VariantGenerationWork,
     VariantDeleteInfo,
     VariantDetailTaskRow,
     VariantDetailVariant,
@@ -90,8 +92,18 @@ class IWorkRepository(ABC):
         """Return a work name, or None when the work does not exist."""
 
     @abstractmethod
-    def get_work_generation_target(self, work_id: str) -> Any:
-        """Return a work for the variant generation form."""
+    def get_work_generation_target(
+        self,
+        work_id: str,
+    ) -> Optional[VariantGenerationWork]:
+        """Return a work read model for the variant generation form."""
+
+    @abstractmethod
+    def get_variant_generation_groups(
+        self,
+        work_id: str,
+    ) -> List[VariantGenerationGroup]:
+        """Return work group specs for the variant generation form."""
 
     @abstractmethod
     def get_work_detail(self, work_id: str) -> Optional[WorkDetailWork]:

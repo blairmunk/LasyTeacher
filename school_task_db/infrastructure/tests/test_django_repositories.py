@@ -506,6 +506,9 @@ class DjangoRemedialRepositoryTests(TestCase):
 
         works = repo.get_list_works()
         work = repo.get_work_generation_target(str(self.source_work.pk))
+        generation_groups = repo.get_variant_generation_groups(
+            str(self.source_work.pk),
+        )
         missing_work = repo.get_work_generation_target(
             '550e8400-e29b-41d4-a716-446655440000',
         )
@@ -514,7 +517,10 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(works[0].name, self.source_work.name)
         self.assertEqual(works[0].duration, self.source_work.duration)
         self.assertEqual(works[0].variant_count, 1)
-        self.assertEqual(work, self.source_work)
+        self.assertEqual(work.pk, str(self.source_work.pk))
+        self.assertEqual(work.variant_counter, self.source_work.variant_counter)
+        self.assertEqual(generation_groups[0].group_name, self.weak_group.name)
+        self.assertEqual(generation_groups[0].available_count, 3)
         self.assertIsNone(missing_work)
 
     def test_curriculum_repository_returns_course_detail_data(self):

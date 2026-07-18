@@ -274,7 +274,9 @@ class WorkDetailViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['work'], self.work)
+        self.assertEqual(response.context['work'].pk, str(self.work.pk))
+        self.assertEqual(response.context['work'].name, self.work.name)
+        self.assertEqual(response.context['work_groups'], [])
         self.assertIn('form', response.context)
 
     def test_generate_variants_view_returns_404_for_missing_work_on_get(self):

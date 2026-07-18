@@ -18,7 +18,9 @@ from core_logic.entities.work import (
     VariantDetailTask,
     VariantDetailTaskRow,
     VariantDetailVariant,
+    VariantGenerationGroup,
     VariantGenerationInfo,
+    VariantGenerationWork,
     VariantListItem,
     VariantListWorkRef,
     WorkDetailAnalogGroup,
@@ -91,7 +93,32 @@ class DjangoWorkRepository(IWorkRepository):
         return Work.objects.filter(pk=work_id).values_list('name', flat=True).first()
 
     def get_work_generation_target(self, work_id: str):
-        return Work.objects.filter(pk=work_id).first()
+        work = Work.objects.filter(pk=work_id).first()
+        if work is None:
+            return None
+
+        return VariantGenerationWork(
+            pk=str(work.pk),
+            name=work.name,
+            duration=work.duration,
+            variant_counter=work.variant_counter,
+        )
+
+    def get_variant_generation_groups(self, work_id: str):
+        return [
+            VariantGenerationGroup(
+                group_name=work_group.analog_group.name,
+                requested_count=work_group.count,
+                available_count=TaskGroup.objects.filter(
+                    group=work_group.analog_group,
+                ).count(),
+            )
+            for work_group in WorkAnalogGroup.objects.filter(
+                work_id=work_id,
+            ).select_related(
+                'analog_group',
+            ).order_by('order', 'pk')
+        ]
 
     def get_work_detail(self, work_id: str):
         work = Work.objects.filter(pk=work_id).first()

@@ -17,9 +17,9 @@
                 
                 <h6>Группы заданий:</h6>
                 <ul>
-                    {% for work_group in work.workanaloggroup_set.all %}
-                    <li>{{ work_group.analog_group.name }} - {{ work_group.count }} заданий 
-                        (доступно: {{ work_group.analog_group.taskgroup_set.count }})</li>
+                    {% for work_group in work_groups %}
+                    <li>{{ work_group.group_name }} - {{ work_group.requested_count }} заданий 
+                        (доступно: {{ work_group.available_count }})</li>
                     {% endfor %}
                 </ul>
             </div>

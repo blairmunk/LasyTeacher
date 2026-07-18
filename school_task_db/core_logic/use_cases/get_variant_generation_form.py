@@ -12,4 +12,7 @@ class GetVariantGenerationFormUseCase:
         work = self.work_repo.get_work_generation_target(str(work_id))
         if not work:
             return VariantGenerationFormData(work=None, status='not_found')
-        return VariantGenerationFormData(work=work)
+        return VariantGenerationFormData(
+            work=work,
+            work_groups=self.work_repo.get_variant_generation_groups(str(work_id)),
+        )

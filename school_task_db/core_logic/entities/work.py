@@ -113,8 +113,24 @@ class WorkFormData:
 
 @dataclass(frozen=True)
 class VariantGenerationFormData:
-    work: Any
+    work: Optional["VariantGenerationWork"] = None
+    work_groups: List["VariantGenerationGroup"] = field(default_factory=list)
     status: str = 'ready'
+
+
+@dataclass(frozen=True)
+class VariantGenerationWork:
+    pk: str
+    name: str
+    duration: int
+    variant_counter: int
+
+
+@dataclass(frozen=True)
+class VariantGenerationGroup:
+    group_name: str
+    requested_count: int
+    available_count: int
 
 
 @dataclass(frozen=True)

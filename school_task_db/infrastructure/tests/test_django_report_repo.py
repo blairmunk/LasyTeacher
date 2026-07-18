@@ -942,16 +942,28 @@ class DjangoReportRepositoryTests(TestCase):
         })
         self.assertEqual(data.orphan_variants['count'], 1)
         self.assertEqual(data.empty_groups['count'], 1)
-        self.assertEqual(list(data.empty_groups['items']), [empty_group])
+        self.assertEqual(data.orphan_variants['items'][0].number, 1)
+        self.assertEqual(
+            data.orphan_variants['items'][0].short_uuid,
+            Variant.objects.get(work__isnull=True).get_short_uuid(),
+        )
+        self.assertEqual(data.empty_groups['items'][0].pk, str(empty_group.pk))
+        self.assertEqual(data.empty_groups['items'][0].name, 'Пустая группа')
         self.assertEqual(data.fragile_groups['count'], 1)
-        self.assertEqual(list(data.fragile_groups['items']), [fragile_group])
-        self.assertEqual(data.coverage_issues['items'][0]['work'], spec_work)
-        self.assertEqual(data.coverage_issues['items'][0]['group'], fragile_group)
+        self.assertEqual(data.fragile_groups['items'][0].pk, str(fragile_group.pk))
+        self.assertEqual(data.fragile_groups['items'][0].name, 'Хрупкая группа')
+        self.assertEqual(data.coverage_issues['items'][0]['work'].pk, str(spec_work.pk))
+        self.assertEqual(data.coverage_issues['items'][0]['work'].name, 'Со спецификацией')
+        self.assertEqual(
+            data.coverage_issues['items'][0]['group'].pk,
+            str(fragile_group.pk),
+        )
         self.assertEqual(data.coverage_issues['items'][0]['needed'], 2)
         self.assertEqual(data.coverage_issues['items'][0]['available'], 1)
         self.assertEqual(data.ungrouped_tasks, {'count': 0, 'pct': 0.0})
         self.assertEqual(data.works_no_variants['count'], 2)
-        self.assertEqual(list(data.works_no_spec['items']), [work_no_spec])
+        self.assertEqual(data.works_no_spec['items'][0].pk, str(work_no_spec.pk))
+        self.assertEqual(data.works_no_spec['items'][0].name, 'Без спецификации')
         self.assertEqual(data.difficulty_dist, [{
             'difficulty': 2,
             'count': 1,

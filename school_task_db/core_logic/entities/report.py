@@ -33,6 +33,28 @@ class ReportTaskRef:
 
 
 @dataclass(frozen=True)
+class ReportTaskUsageRef:
+    pk: str
+    short_uuid: str
+    text: str
+    variant_count: int
+
+
+@dataclass(frozen=True)
+class ReportVariantRef:
+    pk: str
+    short_uuid: str
+    number: int
+    work_name_snapshot: str
+
+
+@dataclass(frozen=True)
+class ReportAnalogGroupRef:
+    pk: str
+    name: str
+
+
+@dataclass(frozen=True)
 class ReportWorkRef:
     pk: str
     name: str

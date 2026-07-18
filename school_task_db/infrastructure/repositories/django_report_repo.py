@@ -20,11 +20,14 @@ from core_logic.entities.report import (
     JournalData,
     JournalSelectData,
     ReportsDashboardData,
+    ReportAnalogGroupRef,
     ReportCourseRef,
     ReportEventRef,
     ReportGroupRef,
     ReportStudentRef,
     ReportTaskRef,
+    ReportTaskUsageRef,
+    ReportVariantRef,
     ReportWorkRef,
     StudentPerformanceReportData,
     TaskDBHealthData,
@@ -174,11 +177,17 @@ class DjangoReportRepository(IReportRepository):
             },
             orphan_variants={
                 'count': orphan_variants.count(),
-                'items': orphan_variants.order_by('-created_at')[:10],
+                'items': [
+                    self._report_variant_ref(variant)
+                    for variant in orphan_variants.order_by('-created_at')[:10]
+                ],
             },
             empty_groups={
                 'count': empty_groups.count(),
-                'items': empty_groups.order_by('name')[:20],
+                'items': [
+                    self._report_analog_group_ref(group)
+                    for group in empty_groups.order_by('name')[:20]
+                ],
             },
             coverage_issues={
                 'count': len(coverage_issues),
@@ -191,20 +200,32 @@ class DjangoReportRepository(IReportRepository):
             },
             fragile_groups={
                 'count': fragile_groups.count(),
-                'items': fragile_groups.order_by('name')[:20],
+                'items': [
+                    self._report_analog_group_ref(group)
+                    for group in fragile_groups.order_by('name')[:20]
+                ],
             },
             works_no_variants={
                 'count': works_no_variants.count(),
-                'items': works_no_variants[:10],
+                'items': [
+                    self._report_work_ref(work)
+                    for work in works_no_variants[:10]
+                ],
             },
             works_no_spec={
                 'count': works_no_spec.count(),
-                'items': works_no_spec[:10],
+                'items': [
+                    self._report_work_ref(work)
+                    for work in works_no_spec[:10]
+                ],
             },
             type_dist=self._build_task_type_distribution(total_tasks),
-            most_used_tasks=Task.objects.annotate(
-                variant_count=Count('varianttask'),
-            ).filter(variant_count__gt=0).order_by('-variant_count')[:10],
+            most_used_tasks=[
+                self._report_task_usage_ref(task)
+                for task in Task.objects.annotate(
+                    variant_count=Count('varianttask'),
+                ).filter(variant_count__gt=0).order_by('-variant_count')[:10]
+            ],
             group_sizes=list(
                 total_groups_qs.values('task_count').annotate(
                     group_count=Count('id'),
@@ -1449,13 +1470,38 @@ class DjangoReportRepository(IReportRepository):
         )
 
     def _report_work_ref(self, work):
+        variant_count = getattr(work, 'variant_count', None)
+        if variant_count is None:
+            variant_count = work.variant_set.count()
         return ReportWorkRef(
             pk=str(work.pk),
             name=work.name,
             work_type=work.work_type,
             work_type_display=work.get_work_type_display(),
             duration=work.duration,
-            variant_count=work.variant_set.count(),
+            variant_count=variant_count,
+        )
+
+    def _report_variant_ref(self, variant):
+        return ReportVariantRef(
+            pk=str(variant.pk),
+            short_uuid=variant.get_short_uuid(),
+            number=variant.number,
+            work_name_snapshot=variant.work_name_snapshot,
+        )
+
+    def _report_analog_group_ref(self, group):
+        return ReportAnalogGroupRef(
+            pk=str(group.pk),
+            name=group.name,
+        )
+
+    def _report_task_usage_ref(self, task):
+        return ReportTaskUsageRef(
+            pk=str(task.pk),
+            short_uuid=task.get_short_uuid(),
+            text=task.text,
+            variant_count=task.variant_count,
         )
 
     def _journal_score_css(self, score):
@@ -1504,8 +1550,8 @@ class DjangoReportRepository(IReportRepository):
         ):
             if work_group.available < work_group.count:
                 coverage_issues.append({
-                    'work': work_group.work,
-                    'group': work_group.analog_group,
+                    'work': self._report_work_ref(work_group.work),
+                    'group': self._report_analog_group_ref(work_group.analog_group),
                     'needed': work_group.count,
                     'available': work_group.available,
                     'deficit': work_group.count - work_group.available,

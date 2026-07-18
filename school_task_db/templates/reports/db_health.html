@@ -72,7 +72,7 @@
                         {% for v in orphan_variants.items %}
                         <li class="mb-1">
                             <a href="{% url 'works:variant-detail' v.pk %}">
-                                <code>#{{ v.get_short_uuid }}</code>
+                                <code>#{{ v.short_uuid }}</code>
                             </a>
                             {{ v.work_name_snapshot|truncatechars:25 }}
                             <span class="text-muted">— В{{ v.number }}</span>
@@ -334,7 +334,7 @@
                             <tr>
                                 <td>
                                     <a href="{% url 'tasks:detail' task.pk %}">
-                                        <code>#{{ task.get_short_uuid }}</code>
+                                        <code>#{{ task.short_uuid }}</code>
                                     </a>
                                 </td>
                                 <td>{{ task.text|truncatewords:8 }}</td>

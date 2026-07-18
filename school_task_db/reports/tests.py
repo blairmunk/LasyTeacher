@@ -671,10 +671,22 @@ class ReportsViewsTests(TestCase):
         self.assertEqual(response.context['stats']['total_tasks'], 1)
         self.assertEqual(response.context['stats']['total_groups'], 2)
         self.assertEqual(response.context['orphan_variants']['count'], 1)
-        self.assertEqual(response.context['empty_groups']['items'][0], empty_group)
-        self.assertEqual(response.context['fragile_groups']['items'][0], fragile_group)
-        self.assertEqual(response.context['coverage_issues']['items'][0]['work'], spec_work)
-        self.assertEqual(response.context['works_no_spec']['items'][0], work_no_spec)
+        self.assertEqual(
+            response.context['empty_groups']['items'][0].pk,
+            str(empty_group.pk),
+        )
+        self.assertEqual(
+            response.context['fragile_groups']['items'][0].pk,
+            str(fragile_group.pk),
+        )
+        self.assertEqual(
+            response.context['coverage_issues']['items'][0]['work'].pk,
+            str(spec_work.pk),
+        )
+        self.assertEqual(
+            response.context['works_no_spec']['items'][0].pk,
+            str(work_no_spec.pk),
+        )
         self.assertEqual(response.context['unverified_tasks']['pct'], 100.0)
         self.assertEqual(response.context['health']['issues'], 7)
         self.assertEqual(response.context['health']['label'], 'Есть замечания')

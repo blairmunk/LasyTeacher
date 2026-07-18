@@ -27,7 +27,7 @@ class GenerateWorkVariantsUseCase:
             )
 
         return GenerateWorkVariantsResult(
-            created_count=self.work_repo.generate_variants(
+            created_count=self.work_repo.compose_variants(
                 work_id=request.work_id,
                 count=request.count,
             )

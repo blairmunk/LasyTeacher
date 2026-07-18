@@ -73,11 +73,14 @@ class WorkFormAdapter:
             )
         return specs
 
-    def generate_variants_request_from_form(self, form, work_id):
+    def compose_variants_request_from_form(self, form, work_id):
         return GenerateWorkVariantsRequest(
             work_id=work_id,
             count=form.cleaned_data['count'],
         )
+
+    def generate_variants_request_from_form(self, form, work_id):
+        return self.compose_variants_request_from_form(form, work_id)
 
     def generate_work_document_request_from_post(self, post_data, work_id):
         return GenerateWorkDocumentRequest(

@@ -163,8 +163,12 @@ class IWorkRepository(ABC):
         """Sync work analog groups from existing variants and return created count."""
 
     @abstractmethod
+    def compose_variants(self, work_id: str, count: int) -> int:
+        """Compose variants for a work and return created count."""
+
     def generate_variants(self, work_id: str, count: int) -> int:
-        """Generate variants for a work and return created count."""
+        """Backward-compatible alias for compose_variants."""
+        return self.compose_variants(work_id, count)
 
     @abstractmethod
     def get_orphan_variant_refs(self, variant_ids: List[str]) -> List[OrphanVariantRef]:

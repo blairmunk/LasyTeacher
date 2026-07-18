@@ -38,9 +38,12 @@ class FakeWorkRepository:
     def create_work_analog_group(self, params: CreateWorkAnalogGroupParams):
         self.created_groups.append(params)
 
-    def generate_variants(self, work_id, count):
+    def compose_variants(self, work_id, count):
         self.generated_variants = (work_id, count)
         return count
+
+    def generate_variants(self, work_id, count):
+        return self.compose_variants(work_id, count)
 
 
 class CreateWorkFromGroupsUseCaseTests(TestCase):

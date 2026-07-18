@@ -107,7 +107,7 @@ class CreateWorkFromGroupsUseCase:
         if request.auto_generate:
             try:
                 variants_generated = min(int(request.variant_count), 10)
-                self.work_repo.generate_variants(work_id, variants_generated)
+                self.work_repo.compose_variants(work_id, variants_generated)
                 message += f' и {variants_generated} вариантами'
             except Exception as error:
                 warning = (

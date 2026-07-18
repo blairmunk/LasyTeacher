@@ -1130,12 +1130,12 @@ class DjangoRemedialRepositoryTests(TestCase):
             ).exists()
         )
 
-    def test_work_repository_generates_variants(self):
+    def test_work_repository_composes_variants(self):
         repo = DjangoWorkRepository()
         existing_count = Variant.objects.filter(work=self.source_work).count()
         existing_counter = self.source_work.variant_counter
 
-        created_count = repo.generate_variants(str(self.source_work.pk), count=2)
+        created_count = repo.compose_variants(str(self.source_work.pk), count=2)
 
         self.source_work.refresh_from_db()
         variants = Variant.objects.filter(work=self.source_work)

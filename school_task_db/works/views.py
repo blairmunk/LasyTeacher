@@ -167,7 +167,7 @@ def compose_variants(request, work_id):
         if form.is_valid():
             try:
                 result = container.generate_work_variants_use_case().execute(
-                    container.work_form_adapter.generate_variants_request_from_form(
+                    container.work_form_adapter.compose_variants_request_from_form(
                         form,
                         work_id=str(work_id),
                     )

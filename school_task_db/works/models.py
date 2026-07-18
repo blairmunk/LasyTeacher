@@ -102,7 +102,7 @@ class Work(BaseModel):
 
         return list(groups.values())
 
-    def generate_variants(self, count=1):
+    def compose_variants(self, count=1):
         """Сборка вариантов: баллы рассчитываются из спецификации"""
         variants = []
         distribution = self._calc_points_distribution()
@@ -149,6 +149,9 @@ class Work(BaseModel):
 
         self.save()
         return variants
+
+    def generate_variants(self, count=1):
+        return self.compose_variants(count=count)
 
     def sync_analog_groups_from_variants(self):
         """Анализирует варианты и создаёт WorkAnalogGroup автоматически."""

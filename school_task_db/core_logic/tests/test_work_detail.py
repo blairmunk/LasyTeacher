@@ -183,9 +183,12 @@ class FakeWorkRepository:
         self.synced_work_id = work_id
         return 2
 
-    def generate_variants(self, work_id, count):
+    def compose_variants(self, work_id, count):
         self.generated_variants_request = (work_id, count)
         return count
+
+    def generate_variants(self, work_id, count):
+        return self.compose_variants(work_id, count)
 
     def get_orphan_variant_refs(self, variant_ids):
         requested_ids = set(variant_ids)

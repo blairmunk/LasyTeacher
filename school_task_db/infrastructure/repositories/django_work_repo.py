@@ -429,9 +429,12 @@ class DjangoWorkRepository(IWorkRepository):
         work = Work.objects.get(pk=work_id)
         return work.sync_analog_groups_from_variants()
 
-    def generate_variants(self, work_id: str, count: int) -> int:
+    def compose_variants(self, work_id: str, count: int) -> int:
         work = Work.objects.get(pk=work_id)
-        return len(work.generate_variants(count=count))
+        return len(work.compose_variants(count=count))
+
+    def generate_variants(self, work_id: str, count: int) -> int:
+        return self.compose_variants(work_id, count)
 
     def get_orphan_variant_refs(
         self,

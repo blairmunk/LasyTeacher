@@ -9,6 +9,13 @@ from infrastructure.container import container
 from .forms import EventForm, StudentSelectionForm, MarkForm, VariantAssignmentForm
 
 
+def _post_lists(post_data):
+    return {
+        key: post_data.getlist(key)
+        for key in post_data
+    }
+
+
 def _event_params_from_form(form, event_id=''):
     course = form.cleaned_data.get('course')
     return CreateEventParams(
@@ -315,17 +322,20 @@ from django.views.decorators.http import require_POST
 @require_POST
 def assign_single_variant(request, event_id):
     """Inline-назначение варианта одному участнику"""
-    from core_logic.use_cases.assign_single_event_variant import (
-        AssignSingleEventVariantRequest,
+    from core_logic.use_cases.prepare_event_action_submission import (
+        PrepareEventActionSubmissionRequest,
     )
     from infrastructure.container import container
 
-    result = container.assign_single_event_variant_use_case().execute(
-        AssignSingleEventVariantRequest(
+    assign_request = container.prepare_assign_single_variant_submission_use_case().execute(
+        PrepareEventActionSubmissionRequest(
             event_id=str(event_id),
-            participation_id=request.POST.get('participation_id'),
-            variant_id=request.POST.get('variant_id'),
+            data=_post_lists(request.POST),
         )
+    )
+
+    result = container.assign_single_event_variant_use_case().execute(
+        assign_request,
     )
 
     if result.success:
@@ -345,16 +355,20 @@ def assign_single_variant(request, event_id):
 @require_POST
 def change_status(request, event_id):
     """Смена статуса события"""
-    from core_logic.use_cases.change_event_status import (
-        ChangeEventStatusRequest,
+    from core_logic.use_cases.prepare_event_action_submission import (
+        PrepareEventActionSubmissionRequest,
     )
     from infrastructure.container import container
 
-    result = container.change_event_status_use_case().execute(
-        ChangeEventStatusRequest(
+    status_request = container.prepare_change_event_status_submission_use_case().execute(
+        PrepareEventActionSubmissionRequest(
             event_id=str(event_id),
-            new_status=request.POST.get('new_status', ''),
+            data=_post_lists(request.POST),
         )
+    )
+
+    result = container.change_event_status_use_case().execute(
+        status_request,
     )
 
     if result.success:

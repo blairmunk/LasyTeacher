@@ -1,19 +1,20 @@
 # codifier/views.py
 
 from django.http import Http404
-from django.views.generic import ListView, TemplateView
+from django.views.generic import TemplateView
 
 from infrastructure.container import container
-from .models import CodifierSpec
 
 
-class CodifierListView(ListView):
-    model = CodifierSpec
+class CodifierListView(TemplateView):
     template_name = 'codifier/list.html'
-    context_object_name = 'codifiers'
 
-    def get_queryset(self):
-        return container.get_codifier_list_use_case().execute().codifiers
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['codifiers'] = (
+            container.get_codifier_list_use_case().execute().codifiers
+        )
+        return context
 
 
 class CodifierDetailView(TemplateView):

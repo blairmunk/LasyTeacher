@@ -643,10 +643,22 @@ class DjangoReportRepositoryTests(TestCase):
         self.assertEqual(status_counts['completed'], 1)
         self.assertEqual(participation_counts['assigned'], 1)
         self.assertEqual(participation_counts['graded'], 1)
-        self.assertEqual(list(data.overdue_events), [planned])
-        self.assertEqual(list(data.long_reviewing), [reviewing])
-        self.assertEqual(list(data.completed_unchecked), [completed])
-        self.assertEqual(list(data.all_events), [planned, completed, reviewing])
+        self.assertEqual(data.overdue_events[0].pk, str(planned.pk))
+        self.assertEqual(data.overdue_events[0].name, 'Просроченная')
+        self.assertEqual(data.overdue_events[0].work.name, 'Контрольная')
+        self.assertEqual(
+            data.overdue_events[0].work.work_type_display,
+            work.get_work_type_display(),
+        )
+        self.assertEqual(data.overdue_events[0].participants_count, 1)
+        self.assertEqual(data.overdue_events[0].graded_count, 0)
+        self.assertEqual(data.overdue_events[0].progress_percentage, 0)
+        self.assertEqual(data.long_reviewing[0].pk, str(reviewing.pk))
+        self.assertEqual(data.completed_unchecked[0].pk, str(completed.pk))
+        self.assertEqual(
+            [event.pk for event in data.all_events],
+            [str(planned.pk), str(completed.pk), str(reviewing.pk)],
+        )
         self.assertEqual(data.active_report, 'events-status')
 
     def test_get_work_analysis_report_returns_work_stats(self):

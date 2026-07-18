@@ -33,12 +33,26 @@ class ReportTaskRef:
 
 
 @dataclass(frozen=True)
+class ReportWorkRef:
+    pk: str
+    name: str
+    work_type_display: str
+    duration: int
+
+
+@dataclass(frozen=True)
 class ReportEventRef:
     pk: str
     name: str
     status: str
     status_display: str
     planned_date: Any
+    actual_end: Any = None
+    location: str = ''
+    work: Any = None
+    participants_count: int = 0
+    graded_count: int = 0
+    progress_percentage: int = 0
 
 
 @dataclass(frozen=True)

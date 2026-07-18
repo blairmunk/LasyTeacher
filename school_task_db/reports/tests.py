@@ -444,7 +444,8 @@ class ReportsViewsTests(TestCase):
         self.assertEqual(response.context['events_by_status'], [
             {'status': 'planned', 'count': 1},
         ])
-        self.assertEqual(list(response.context['overdue_events']), [planned])
+        self.assertEqual(response.context['overdue_events'][0].pk, str(planned.pk))
+        self.assertEqual(response.context['overdue_events'][0].name, 'Просроченная')
         self.assertEqual(response.context['participation_stats'], [
             {'status': 'assigned', 'count': 1},
         ])

@@ -54,15 +54,15 @@
     </div>
 
     <!-- Требуют внимания -->
-    {% if overdue_events.count > 0 or long_reviewing.count > 0 or completed_unchecked.count > 0 %}
+    {% if overdue_events or long_reviewing or completed_unchecked %}
     <div class="row mb-4">
-        {% if overdue_events.count > 0 %}
+        {% if overdue_events %}
         <div class="col-md-4 mb-3">
             <div class="card attention-card danger">
                 <div class="card-header bg-transparent">
                     <h6 class="mb-0 text-danger">
                         <i class="fas fa-exclamation-triangle"></i>
-                        Просрочено ({{ overdue_events.count }})
+                        Просрочено ({{ overdue_events|length }})
                     </h6>
                 </div>
                 <div class="card-body py-2">
@@ -79,13 +79,13 @@
         </div>
         {% endif %}
 
-        {% if long_reviewing.count > 0 %}
+        {% if long_reviewing %}
         <div class="col-md-4 mb-3">
             <div class="card attention-card warning">
                 <div class="card-header bg-transparent">
                     <h6 class="mb-0 text-warning">
                         <i class="fas fa-clock"></i>
-                        Долго на проверке ({{ long_reviewing.count }})
+                        Долго на проверке ({{ long_reviewing|length }})
                     </h6>
                 </div>
                 <div class="card-body py-2">
@@ -104,13 +104,13 @@
         </div>
         {% endif %}
 
-        {% if completed_unchecked.count > 0 %}
+        {% if completed_unchecked %}
         <div class="col-md-4 mb-3">
             <div class="card attention-card info">
                 <div class="card-header bg-transparent">
                     <h6 class="mb-0 text-info">
                         <i class="fas fa-check"></i>
-                        Не проверены ({{ completed_unchecked.count }})
+                        Не проверены ({{ completed_unchecked|length }})
                     </h6>
                 </div>
                 <div class="card-body py-2">
@@ -172,11 +172,11 @@
                                 </a>
                                 <br>
                                 <small class="text-muted">
-                                    {{ event.work.get_work_type_display }} · {{ event.work.duration }} мин
+                                    {{ event.work.work_type_display }} · {{ event.work.duration }} мин
                                 </small>
                             </td>
-                            <td class="text-center">{{ event.get_participants_count }}</td>
-                            <td class="text-center">{{ event.get_graded_count }}</td>
+                            <td class="text-center">{{ event.participants_count }}</td>
+                            <td class="text-center">{{ event.graded_count }}</td>
                             <td class="text-center">
                                 <small>{{ event.planned_date|date:"d.m.Y" }}</small>
                             </td>
@@ -192,16 +192,16 @@
                                     {% elif event.status == 'completed' %}Завершено
                                     {% elif event.status == 'reviewing' %}На проверке
                                     {% elif event.status == 'graded' %}Оценено
-                                    {% else %}{{ event.get_status_display }}{% endif %}
+                                    {% else %}{{ event.status_display }}{% endif %}
                                 </span>
                             </td>
                             <td>
-                                {% with pct=event.get_progress_percentage|floatformat:0 %}
+                                {% with pct=event.progress_percentage|floatformat:0 %}
                                 <div class="progress" style="height: 18px;">
                                     <div class="progress-bar
-                                        {% if event.get_progress_percentage >= 80 %}bg-success
-                                        {% elif event.get_progress_percentage >= 60 %}bg-info
-                                        {% elif event.get_progress_percentage >= 40 %}bg-warning
+                                        {% if event.progress_percentage >= 80 %}bg-success
+                                        {% elif event.progress_percentage >= 60 %}bg-info
+                                        {% elif event.progress_percentage >= 40 %}bg-warning
                                         {% else %}bg-danger{% endif %}"
                                         style="width: {{ pct }}%;">
                                         <small>{{ pct }}%</small>

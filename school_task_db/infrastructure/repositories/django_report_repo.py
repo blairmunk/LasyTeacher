@@ -25,6 +25,7 @@ from core_logic.entities.report import (
     ReportGroupRef,
     ReportStudentRef,
     ReportTaskRef,
+    ReportWorkRef,
     StudentPerformanceReportData,
     TaskDBHealthData,
     WorkAnalysisReportData,
@@ -756,20 +757,32 @@ class DjangoReportRepository(IReportRepository):
 
         return EventsStatusReportData(
             events_by_status=events_by_status,
-            overdue_events=events.filter(
-                status='planned',
-                planned_date__lt=current_date - timedelta(days=1),
-            ).select_related('work'),
-            long_reviewing=events.filter(
-                status='reviewing',
-                actual_end__lt=current_date - timedelta(days=7),
-            ).select_related('work'),
-            completed_unchecked=events.filter(
-                status='completed',
-                actual_end__lt=current_date - timedelta(days=3),
-            ).select_related('work'),
+            overdue_events=[
+                self._report_event_ref(event)
+                for event in events.filter(
+                    status='planned',
+                    planned_date__lt=current_date - timedelta(days=1),
+                ).select_related('work')
+            ],
+            long_reviewing=[
+                self._report_event_ref(event)
+                for event in events.filter(
+                    status='reviewing',
+                    actual_end__lt=current_date - timedelta(days=7),
+                ).select_related('work')
+            ],
+            completed_unchecked=[
+                self._report_event_ref(event)
+                for event in events.filter(
+                    status='completed',
+                    actual_end__lt=current_date - timedelta(days=3),
+                ).select_related('work')
+            ],
             participation_stats=participation_stats,
-            all_events=events.select_related('work').order_by('-planned_date'),
+            all_events=[
+                self._report_event_ref(event)
+                for event in events.select_related('work').order_by('-planned_date')
+            ],
             courses=courses.order_by('grade_level', 'name'),
         )
 
@@ -1402,6 +1415,20 @@ class DjangoReportRepository(IReportRepository):
             status=event.status,
             status_display=event.get_status_display(),
             planned_date=event.planned_date,
+            actual_end=event.actual_end,
+            location=event.location,
+            work=self._report_work_ref(event.work),
+            participants_count=event.get_participants_count(),
+            graded_count=event.get_graded_count(),
+            progress_percentage=event.get_progress_percentage(),
+        )
+
+    def _report_work_ref(self, work):
+        return ReportWorkRef(
+            pk=str(work.pk),
+            name=work.name,
+            work_type_display=work.get_work_type_display(),
+            duration=work.duration,
         )
 
     def _journal_score_css(self, score):

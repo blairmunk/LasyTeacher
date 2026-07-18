@@ -7,7 +7,6 @@ from django.http import Http404, JsonResponse
 
 from core_logic.entities.task import TaskGroupListFilters
 from core_logic.use_cases.get_add_tasks_to_group import AddTasksToGroupFormRequest
-from core_logic.use_cases.save_analog_group import SaveAnalogGroupRequest
 from infrastructure.container import container
 from .forms import AnalogGroupForm
 
@@ -101,10 +100,7 @@ class AnalogGroupCreateView(TemplateView):
             return self.render_to_response(self.get_context_data(form=form))
 
         result = container.create_analog_group_use_case().execute(
-            SaveAnalogGroupRequest(
-                name=form.cleaned_data['name'],
-                description=form.cleaned_data.get('description', ''),
-            )
+            container.task_group_form_adapter.analog_group_params_from_form(form),
         )
         messages.success(request, 'Группа аналогов успешно создана!')
         return redirect('task_groups:detail', pk=result.group_id)
@@ -126,10 +122,7 @@ class AnalogGroupUpdateView(TemplateView):
         group = kwargs.get('object') or self._get_group_data()
         context['object'] = group
         context['form'] = kwargs.get('form') or AnalogGroupForm(
-            initial={
-                'name': group.name,
-                'description': group.description,
-            }
+            initial=container.task_group_form_adapter.analog_group_form_initial(group),
         )
         return context
 
@@ -142,10 +135,9 @@ class AnalogGroupUpdateView(TemplateView):
             )
 
         result = container.update_analog_group_use_case().execute(
-            SaveAnalogGroupRequest(
+            container.task_group_form_adapter.analog_group_params_from_form(
+                form,
                 group_id=str(group.pk),
-                name=form.cleaned_data['name'],
-                description=form.cleaned_data.get('description', ''),
             )
         )
         if result.status == 'not_found':

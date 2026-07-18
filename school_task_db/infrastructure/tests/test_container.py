@@ -40,10 +40,8 @@ from core_logic.use_cases.delete_variant import DeleteVariantUseCase
 from core_logic.use_cases.execute_task_import import ExecuteTaskImportUseCase
 from core_logic.use_cases.export_tasks import ExportTasksUseCase
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
-from core_logic.use_cases.generate_work_variants import (
-    ComposeWorkVariantsUseCase,
-    GenerateWorkVariantsUseCase,
-)
+from core_logic.use_cases.compose_work_variants import ComposeWorkVariantsUseCase
+from core_logic.use_cases.generate_work_variants import GenerateWorkVariantsUseCase
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.get_add_tasks_to_group import GetAddTasksToGroupUseCase
 from core_logic.use_cases.get_codifier_detail import GetCodifierDetailUseCase

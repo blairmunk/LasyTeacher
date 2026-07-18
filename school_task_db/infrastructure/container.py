@@ -46,7 +46,7 @@ from core_logic.use_cases.delete_task import DeleteTaskUseCase
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
 from core_logic.use_cases.execute_task_import import ExecuteTaskImportUseCase
 from core_logic.use_cases.export_tasks import ExportTasksUseCase
-from core_logic.use_cases.generate_work_variants import ComposeWorkVariantsUseCase
+from core_logic.use_cases.compose_work_variants import ComposeWorkVariantsUseCase
 from core_logic.use_cases.generate_remedial_sheet_document import (
     GenerateRemedialSheetDocumentUseCase,
 )

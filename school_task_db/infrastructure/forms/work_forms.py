@@ -10,7 +10,7 @@ from core_logic.use_cases.generate_remedial_sheet_document import (
     GenerateRemedialSheetDocumentRequest,
 )
 from core_logic.use_cases.generate_work_document import GenerateWorkDocumentRequest
-from core_logic.use_cases.generate_work_variants import ComposeWorkVariantsRequest
+from core_logic.use_cases.compose_work_variants import ComposeWorkVariantsRequest
 from core_logic.use_cases.get_generated_document_file import (
     GetGeneratedDocumentFileRequest,
 )

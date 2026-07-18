@@ -25,9 +25,11 @@ from core_logic.use_cases.delete_variant import (
     DeleteVariantRequest,
     DeleteVariantUseCase,
 )
-from core_logic.use_cases.generate_work_variants import (
+from core_logic.use_cases.compose_work_variants import (
     ComposeWorkVariantsRequest,
     ComposeWorkVariantsUseCase,
+)
+from core_logic.use_cases.generate_work_variants import (
     GenerateWorkVariantsRequest,
     GenerateWorkVariantsUseCase,
 )

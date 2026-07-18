@@ -39,6 +39,7 @@ class ReportWorkRef:
     work_type: str
     work_type_display: str
     duration: int
+    variant_count: int = 0
 
 
 @dataclass(frozen=True)

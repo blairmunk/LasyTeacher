@@ -696,7 +696,14 @@ class DjangoReportRepositoryTests(TestCase):
         data = DjangoReportRepository().get_work_analysis_report(year=None)
         work_stat = data.works_analysis[0]
 
-        self.assertEqual(work_stat['work'], work)
+        self.assertEqual(work_stat['work'].pk, str(work.pk))
+        self.assertEqual(work_stat['work'].name, 'Контрольная')
+        self.assertEqual(work_stat['work'].work_type, work.work_type)
+        self.assertEqual(
+            work_stat['work'].work_type_display,
+            work.get_work_type_display(),
+        )
+        self.assertEqual(work_stat['work'].variant_count, 0)
         self.assertEqual(work_stat['events_count'], 1)
         self.assertEqual(work_stat['total_marks'], 1)
         self.assertEqual(work_stat['average_score'], 4)

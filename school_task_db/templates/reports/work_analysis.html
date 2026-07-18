@@ -76,9 +76,9 @@
                         </a>
                     </h5>
                     <div class="d-flex gap-2 mb-1">
-                        <span class="badge bg-secondary">{{ work.work.get_work_type_display }}</span>
+                        <span class="badge bg-secondary">{{ work.work.work_type_display }}</span>
                         <span class="badge bg-light text-dark">{{ work.work.duration }} мин</span>
-                        <span class="badge bg-light text-dark">{{ work.work.variant_set.count }} вар.</span>
+                        <span class="badge bg-light text-dark">{{ work.work.variant_count }} вар.</span>
                     </div>
                     <small class="text-muted">
                         {{ work.events_count }} событий · {{ work.total_marks }} оценок

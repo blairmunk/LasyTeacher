@@ -824,7 +824,7 @@ class DjangoReportRepository(IReportRepository):
             )
 
             works_analysis.append({
-                'work': work,
+                'work': self._report_work_ref(work),
                 'events_count': work_events.count(),
                 'total_marks': work_marks.count(),
                 'average_score': round(avg_score, 2),
@@ -1455,6 +1455,7 @@ class DjangoReportRepository(IReportRepository):
             work_type=work.work_type,
             work_type_display=work.get_work_type_display(),
             duration=work.duration,
+            variant_count=work.variant_set.count(),
         )
 
     def _journal_score_css(self, score):

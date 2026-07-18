@@ -617,7 +617,10 @@ class DjangoRemedialRepositoryTests(TestCase):
         requirements = repo.get_requirements(str(codifier.pk))
         coverage = repo.get_coverage(str(codifier.pk))
 
-        self.assertEqual(list(codifiers), [codifier])
+        self.assertEqual(codifiers[0].pk, str(codifier.pk))
+        self.assertEqual(codifiers[0].short_name, codifier.short_name)
+        self.assertEqual(codifiers[0].content_entries_count, 2)
+        self.assertEqual(codifiers[0].requirements_count, 1)
         self.assertEqual(loaded_codifier.pk, str(codifier.pk))
         self.assertEqual(loaded_codifier.short_name, codifier.short_name)
         self.assertEqual(loaded_codifier.content_entries_count, 2)

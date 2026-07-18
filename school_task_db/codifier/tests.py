@@ -50,7 +50,13 @@ class CodifierViewsTests(TestCase):
         response = self.client.get(reverse('codifier:list'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(list(response.context['codifiers']), [self.codifier])
+        self.assertEqual(response.context['codifiers'][0].pk, str(self.codifier.pk))
+        self.assertEqual(
+            response.context['codifiers'][0].short_name,
+            self.codifier.short_name,
+        )
+        self.assertEqual(response.context['codifiers'][0].content_entries_count, 2)
+        self.assertEqual(response.context['codifiers'][0].requirements_count, 1)
 
     def test_codifier_detail_uses_clean_detail_context(self):
         response = self.client.get(

@@ -3,6 +3,7 @@
 from core_logic.entities.codifier import (
     CodifierContentEntry,
     CodifierDetailSpec,
+    CodifierListItem,
     CodifierObjectRef,
     CodifierRequirement,
     CodifierSiblingCode,
@@ -13,10 +14,21 @@ from codifier.models import CodifierSpec
 
 class DjangoCodifierRepository(ICodifierRepository):
     def get_list_codifiers(self):
-        return CodifierSpec.objects.prefetch_related(
-            'content_entries',
-            'requirements',
-        )
+        return [
+            CodifierListItem(
+                pk=str(codifier.pk),
+                short_name=codifier.short_name,
+                name=codifier.name,
+                exam_type=codifier.exam_type,
+                is_active=codifier.is_active,
+                content_entries_count=codifier.content_entries.count(),
+                requirements_count=codifier.requirements.count(),
+            )
+            for codifier in CodifierSpec.objects.prefetch_related(
+                'content_entries',
+                'requirements',
+            )
+        ]
 
     def get_codifier(self, codifier_id: str):
         codifier = CodifierSpec.objects.prefetch_related(

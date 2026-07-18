@@ -128,7 +128,7 @@
                                     <small>{{ leaf.grade_studied|default:"—" }}</small>
                                 </td>
                                 <td class="text-center">
-                                    {% with count=leaf.get_task_count %}
+                                    {% with count=leaf.task_count %}
                                     {% if count > 0 %}
                                     <span class="badge bg-success">{{ count }}</span>
                                     {% else %}
@@ -169,7 +169,7 @@
                                     <small>{{ child.grade_studied|default:"—" }}</small>
                                 </td>
                                 <td class="text-center">
-                                    {% with count=child.get_task_count %}
+                                    {% with count=child.task_count %}
                                     {% if count > 0 %}
                                     <span class="badge bg-success">{{ count }}</span>
                                     {% else %}
@@ -222,14 +222,14 @@
                                 <td class="text-center">
                                     {% if req.cognitive_level %}
                                     <span class="badge bg-{% if req.cognitive_level == 'know' %}info{% elif req.cognitive_level == 'apply' %}warning{% else %}success{% endif %}">
-                                        {{ req.get_cognitive_level_display }}
+                                        {{ req.cognitive_level_display }}
                                     </span>
                                     {% else %}
                                     <small class="text-muted">—</small>
                                     {% endif %}
                                 </td>
                                 <td class="text-center">
-                                    {% with count=req.get_task_count %}
+                                    {% with count=req.task_count %}
                                     {% if count > 0 %}
                                     <span class="badge bg-success">{{ count }}</span>
                                     {% else %}

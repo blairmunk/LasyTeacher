@@ -10,6 +10,17 @@ class CodifierListData:
 
 
 @dataclass(frozen=True)
+class CodifierListItem:
+    pk: str
+    short_name: str
+    name: str
+    exam_type: str
+    is_active: bool
+    content_entries_count: int = 0
+    requirements_count: int = 0
+
+
+@dataclass(frozen=True)
 class CodifierDetailData:
     codifier: Any = None
     content_tree: List["CodifierContentEntry"] = field(default_factory=list)

@@ -6,6 +6,7 @@ from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.report_forms import ReportFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
 from infrastructure.forms.task_group_forms import TaskGroupFormAdapter
+from infrastructure.forms.work_forms import WorkFormAdapter
 
 
 class CoreFormAdapterTests(SimpleTestCase):
@@ -313,3 +314,41 @@ class TaskGroupFormAdapterTests(SimpleTestCase):
         self.assertEqual(context['current_sort'], 'name')
         self.assertEqual(context['min_tasks'], '')
         self.assertEqual(context['max_tasks'], '')
+
+
+class WorkFormAdapterTests(SimpleTestCase):
+    def test_builds_generate_work_document_request_from_post(self):
+        request = WorkFormAdapter().generate_work_document_request_from_post(
+            QueryDict(
+                'generator_type=html&format=A5&answer_type=with_short_solutions'
+                '&include_hints=1&include_instructions=1',
+            ),
+            work_id='w1',
+        )
+
+        self.assertEqual(request.work_id, 'w1')
+        self.assertEqual(request.options.generator_type, 'html')
+        self.assertEqual(request.options.pdf_format, 'A5')
+        self.assertEqual(request.options.answer_type, 'with_short_solutions')
+        self.assertTrue(request.options.include_hints)
+        self.assertTrue(request.options.include_instructions)
+
+    def test_builds_generate_remedial_sheet_request_from_post(self):
+        request = WorkFormAdapter().generate_remedial_sheet_request_from_post(
+            QueryDict('generator_type=pdf&format=A4&answer_type=with_full_solutions'),
+            variant_id='v1',
+        )
+
+        self.assertEqual(request.variant_id, 'v1')
+        self.assertEqual(request.options.generator_type, 'pdf')
+        self.assertEqual(request.options.pdf_format, 'A4')
+        self.assertEqual(request.options.answer_type, 'with_full_solutions')
+
+    def test_builds_generated_document_file_request(self):
+        request = WorkFormAdapter().generated_document_file_request(
+            'html',
+            'work.html',
+        )
+
+        self.assertEqual(request.file_type, 'html')
+        self.assertEqual(request.filename, 'work.html')

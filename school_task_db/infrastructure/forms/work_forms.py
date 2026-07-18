@@ -4,7 +4,18 @@ from core_logic.interfaces.work_repo import (
     CreateWorkAnalogGroupParams,
     CreateWorkParams,
 )
+from core_logic.use_cases.generate_remedial_sheet_document import (
+    GenerateRemedialSheetDocumentRequest,
+)
+from core_logic.use_cases.generate_work_document import GenerateWorkDocumentRequest
 from core_logic.use_cases.generate_work_variants import GenerateWorkVariantsRequest
+from core_logic.use_cases.get_generated_document_file import (
+    GetGeneratedDocumentFileRequest,
+)
+from core_logic.value_objects.content_config import (
+    build_remedial_sheet_generation_options,
+    build_work_generation_options,
+)
 from works.forms import WorkAnalogGroupFormSet
 from works.models import Work
 
@@ -64,4 +75,22 @@ class WorkFormAdapter:
         return GenerateWorkVariantsRequest(
             work_id=work_id,
             count=form.cleaned_data['count'],
+        )
+
+    def generate_work_document_request_from_post(self, post_data, work_id):
+        return GenerateWorkDocumentRequest(
+            work_id=work_id,
+            options=build_work_generation_options(post_data),
+        )
+
+    def generate_remedial_sheet_request_from_post(self, post_data, variant_id):
+        return GenerateRemedialSheetDocumentRequest(
+            variant_id=variant_id,
+            options=build_remedial_sheet_generation_options(post_data),
+        )
+
+    def generated_document_file_request(self, file_type, filename):
+        return GetGeneratedDocumentFileRequest(
+            file_type=file_type,
+            filename=filename,
         )

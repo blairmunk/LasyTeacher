@@ -5,18 +5,6 @@ from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.http import require_http_methods
 from django.urls import reverse
 
-from core_logic.value_objects.content_config import (
-    build_remedial_sheet_generation_options,
-    build_work_generation_options,
-)
-from core_logic.use_cases.get_generated_document_file import (
-    GetGeneratedDocumentFileRequest,
-)
-from core_logic.use_cases.generate_remedial_sheet_document import (
-    GenerateRemedialSheetDocumentRequest,
-)
-from core_logic.use_cases.generate_work_document import GenerateWorkDocumentRequest
-
 logger = logging.getLogger(__name__)
 
 @require_http_methods(["POST"])
@@ -26,7 +14,13 @@ def generate_work_ajax(request, work_id):
 
     generator_type = request.POST.get('generator_type', 'pdf')
     try:
-        options = build_work_generation_options(request.POST)
+        document_request = (
+            container.work_form_adapter.generate_work_document_request_from_post(
+                request.POST,
+                work_id=str(work_id),
+            )
+        )
+        options = document_request.options
         generator_type = options.generator_type
 
         logger.info(f"🌐 Веб-генерация {generator_type} для работы {work_id}")
@@ -38,7 +32,7 @@ def generate_work_ajax(request, work_id):
         )
 
         result = container.generate_work_document_use_case().execute(
-            GenerateWorkDocumentRequest(work_id=str(work_id), options=options),
+            document_request,
         )
         if result.status == 'not_found':
             raise Http404("Работа не найдена")
@@ -87,9 +81,9 @@ def download_generated_file(request, file_type, filename):
     from infrastructure.container import container
 
     result = container.get_generated_document_file_use_case().execute(
-        GetGeneratedDocumentFileRequest(
-            file_type=file_type,
-            filename=filename,
+        container.work_form_adapter.generated_document_file_request(
+            file_type,
+            filename,
         ),
     )
 
@@ -142,16 +136,19 @@ def generate_remedial_sheet_ajax(request, variant_id):
     from infrastructure.container import container
 
     try:
-        options = build_remedial_sheet_generation_options(request.POST)
+        document_request = (
+            container.work_form_adapter.generate_remedial_sheet_request_from_post(
+                request.POST,
+                variant_id=str(variant_id),
+            )
+        )
+        options = document_request.options
         generator_type = options.generator_type
 
         logger.info(f"Генерация remedial sheet для варианта {variant_id}")
 
         result = container.generate_remedial_sheet_document_use_case().execute(
-            GenerateRemedialSheetDocumentRequest(
-                variant_id=str(variant_id),
-                options=options,
-            ),
+            document_request,
         )
 
         if result.status == 'not_found':

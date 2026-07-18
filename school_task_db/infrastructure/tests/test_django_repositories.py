@@ -11,6 +11,7 @@ from core_logic.interfaces.event_repo import (
     GradeParticipationParams,
 )
 from core_logic.interfaces.work_repo import (
+    CreateWorkAnalogGroupParams,
     CreateWorkParams,
     CreateWorkWithVariantFromTasksParams,
 )
@@ -325,6 +326,44 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(work.work_type, 'quiz')
         self.assertEqual(work.duration, 30)
         self.assertEqual(work.max_score, 12)
+
+    def test_work_repository_replaces_work_analog_groups(self):
+        repo = DjangoWorkRepository()
+        old_group = AnalogGroup.objects.create(name='Старая группа')
+        new_group = AnalogGroup.objects.create(name='Новая группа')
+        WorkAnalogGroup.objects.create(
+            work=self.source_work,
+            analog_group=old_group,
+            order=1,
+            count=1,
+            weight=1,
+        )
+
+        updated = repo.replace_work_analog_groups(
+            work_id=str(self.source_work.pk),
+            specs=[
+                CreateWorkAnalogGroupParams(
+                    work_id=str(self.source_work.pk),
+                    analog_group_id=str(new_group.pk),
+                    order=2,
+                    count=3,
+                    weight=4,
+                )
+            ],
+        )
+        missing_updated = repo.replace_work_analog_groups(
+            work_id='00000000-0000-0000-0000-000000000000',
+            specs=[],
+        )
+
+        specs = list(WorkAnalogGroup.objects.filter(work=self.source_work))
+        self.assertTrue(updated)
+        self.assertFalse(missing_updated)
+        self.assertEqual(len(specs), 1)
+        self.assertEqual(specs[0].analog_group, new_group)
+        self.assertEqual(specs[0].order, 2)
+        self.assertEqual(specs[0].count, 3)
+        self.assertEqual(specs[0].weight, 4)
 
     def test_student_repository_creates_and_updates_student(self):
         repo = DjangoStudentRepository()

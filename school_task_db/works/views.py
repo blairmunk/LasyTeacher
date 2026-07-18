@@ -5,7 +5,11 @@ from django.http import Http404
 from django.views.generic import TemplateView
 from django.views.decorators.http import require_http_methods
 
-from core_logic.interfaces.work_repo import CreateWorkParams
+from core_logic.interfaces.work_repo import (
+    CreateWorkAnalogGroupParams,
+    CreateWorkParams,
+)
+from core_logic.use_cases.save_work import SaveWorkSpecificationRequest
 from infrastructure.container import container
 from .forms import WorkForm, VariantGenerationForm
 
@@ -27,6 +31,28 @@ def _work_form_initial(work):
         'duration': work.duration,
         'max_score': work.max_score,
     }
+
+
+def _work_specs_from_formset(formset, work_id):
+    specs = []
+    for row in formset.cleaned_data:
+        if not row or row.get('DELETE'):
+            continue
+
+        analog_group = row.get('analog_group')
+        if not analog_group:
+            continue
+
+        specs.append(
+            CreateWorkAnalogGroupParams(
+                work_id=work_id,
+                analog_group_id=str(analog_group.pk),
+                order=row.get('order') or 0,
+                count=row.get('count') or 1,
+                weight=row.get('weight') or 1,
+            )
+        )
+    return specs
 
 
 class WorkListView(TemplateView):
@@ -90,9 +116,11 @@ class WorkCreateView(TemplateView):
         result = container.create_work_use_case().execute(
             _work_params_from_form(form),
         )
-        container.work_form_adapter.save_analog_group_formset(
-            formset=formset,
-            work_id=result.work_id,
+        container.save_work_specification_use_case().execute(
+            SaveWorkSpecificationRequest(
+                work_id=result.work_id,
+                specs=_work_specs_from_formset(formset, result.work_id),
+            )
         )
         messages.success(request, 'Работа успешно создана!')
         return redirect('works:detail', pk=result.work_id)
@@ -150,9 +178,11 @@ class WorkUpdateView(TemplateView):
         if result.status == 'not_found':
             raise Http404('Работа не найдена')
 
-        container.work_form_adapter.save_analog_group_formset(
-            formset=formset,
-            work_id=result.work_id,
+        container.save_work_specification_use_case().execute(
+            SaveWorkSpecificationRequest(
+                work_id=result.work_id,
+                specs=_work_specs_from_formset(formset, result.work_id),
+            )
         )
         messages.success(request, 'Работа успешно обновлена!')
         return redirect('works:detail', pk=result.work_id)

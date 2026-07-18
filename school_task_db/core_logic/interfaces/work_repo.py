@@ -220,6 +220,14 @@ class IWorkRepository(ABC):
         """Create one work analog-group specification row."""
 
     @abstractmethod
+    def replace_work_analog_groups(
+        self,
+        work_id: str,
+        specs: List[CreateWorkAnalogGroupParams],
+    ) -> bool:
+        """Replace a work specification and return whether the work was found."""
+
+    @abstractmethod
     def create_variant_with_tasks(self, params: CreateVariantParams) -> str:
         """Create a variant with VariantTask rows and return the variant ID."""
 

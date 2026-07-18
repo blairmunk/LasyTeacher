@@ -16,9 +16,3 @@ class WorkFormAdapter:
         if data is not None:
             return WorkAnalogGroupFormSet(data, instance=instance)
         return WorkAnalogGroupFormSet(instance=instance)
-
-    def save_analog_group_formset(self, formset, work=None, work_id=None):
-        if work is None:
-            work = self._get_work_instance(work_id)
-        formset.instance = work
-        formset.save()

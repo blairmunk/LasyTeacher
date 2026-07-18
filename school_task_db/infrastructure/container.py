@@ -191,7 +191,11 @@ from core_logic.use_cases.save_student import (
 )
 from core_logic.use_cases.save_site_settings import SaveSiteSettingsUseCase
 from core_logic.use_cases.save_task import CreateTaskUseCase, UpdateTaskUseCase
-from core_logic.use_cases.save_work import CreateWorkUseCase, UpdateWorkUseCase
+from core_logic.use_cases.save_work import (
+    CreateWorkUseCase,
+    SaveWorkSpecificationUseCase,
+    UpdateWorkUseCase,
+)
 from core_logic.use_cases.sync_review_session import SyncReviewSessionUseCase
 from core_logic.use_cases.sync_work_analog_groups import SyncWorkAnalogGroupsUseCase
 from core_logic.use_cases.toggle_participation_absent import (
@@ -893,6 +897,11 @@ class Container:
 
     def update_work_use_case(self):
         return UpdateWorkUseCase(
+            work_repo=self.work_repo,
+        )
+
+    def save_work_specification_use_case(self):
+        return SaveWorkSpecificationUseCase(
             work_repo=self.work_repo,
         )
 

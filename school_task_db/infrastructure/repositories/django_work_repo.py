@@ -569,6 +569,28 @@ class DjangoWorkRepository(IWorkRepository):
             weight=params.weight,
         )
 
+    def replace_work_analog_groups(
+        self,
+        work_id: str,
+        specs: List[CreateWorkAnalogGroupParams],
+    ) -> bool:
+        if not Work.objects.filter(pk=work_id).exists():
+            return False
+
+        with transaction.atomic():
+            WorkAnalogGroup.objects.filter(work_id=work_id).delete()
+            WorkAnalogGroup.objects.bulk_create([
+                WorkAnalogGroup(
+                    work_id=work_id,
+                    analog_group_id=spec.analog_group_id,
+                    order=spec.order,
+                    count=spec.count,
+                    weight=spec.weight,
+                )
+                for spec in specs
+            ])
+        return True
+
     def create_variant_with_tasks(self, params: CreateVariantParams) -> str:
         variant = Variant.objects.create(
             work_id=params.work_id,

@@ -142,14 +142,14 @@ class WorkDetailViewTests(TestCase):
             fetch_redirect_response=False,
         )
         self.work.refresh_from_db()
-        spec.refresh_from_db()
+        updated_spec = WorkAnalogGroup.objects.get(work=self.work)
         self.assertEqual(self.work.name, 'Обновлённая работа')
         self.assertEqual(self.work.work_type, 'quiz')
         self.assertEqual(self.work.duration, 30)
         self.assertEqual(self.work.max_score, 12)
-        self.assertEqual(spec.analog_group, new_group)
-        self.assertEqual(spec.count, 3)
-        self.assertEqual(spec.weight, 4)
+        self.assertEqual(updated_spec.analog_group, new_group)
+        self.assertEqual(updated_spec.count, 3)
+        self.assertEqual(updated_spec.weight, 4)
 
     def test_update_view_returns_404_for_missing_work(self):
         response = self.client.get(

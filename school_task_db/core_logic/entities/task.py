@@ -211,6 +211,7 @@ class TaskDetailTask:
     estimated_time: Optional[int] = None
     teacher_notes: str = ''
     images: List[TaskDetailImage] = None
+    created_at: Any = None
 
 
 @dataclass(frozen=True)

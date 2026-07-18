@@ -335,6 +335,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(detail_task.topic, str(self.topic))
         self.assertEqual(detail_task.text, self.original_weak.text)
         self.assertEqual(detail_task.task_type_display, 'Расчётная задача')
+        self.assertEqual(detail_task.created_at, self.original_weak.created_at)
         self.assertIsNone(missing_task)
         self.assertEqual(task_groups[0].pk, str(self.weak_group.pk))
         self.assertEqual(task_groups[0].name, self.weak_group.name)

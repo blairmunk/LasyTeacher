@@ -353,6 +353,7 @@ class DjangoTaskRepository(ITaskRepository):
                 )
                 for image in task.images.all()
             ],
+            created_at=task.created_at,
         )
 
     def get_task_detail_groups(self, task_id: str):

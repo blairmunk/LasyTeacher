@@ -2,9 +2,9 @@ import json
 
 from django.core.paginator import Paginator
 from django.shortcuts import redirect
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView
+from django.views.generic import CreateView, UpdateView, TemplateView
 from django.contrib import messages
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
 from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_POST
 
@@ -194,25 +194,30 @@ class TaskUpdateView(UpdateView):
             return self.form_invalid(form)
 
 
-class TaskDeleteView(DeleteView):
-    model = Task
+class TaskDeleteView(TemplateView):
     template_name = 'tasks/confirm_delete.html'
-    context_object_name = 'task'
-    success_url = reverse_lazy('tasks:list')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['cancel_url'] = reverse('tasks:detail', kwargs={'pk': self.object.pk})
+        detail_data = container.get_task_detail_use_case().execute(
+            task_id=str(self.kwargs['pk']),
+        )
+        if detail_data.task is None:
+            raise Http404('Задание не найдено')
+        context['task'] = detail_data.task
+        context['cancel_url'] = reverse(
+            'tasks:detail',
+            kwargs={'pk': self.kwargs['pk']},
+        )
         return context
 
     def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
         result = container.delete_task_use_case().execute(
-            DeleteTaskRequest(task_id=str(self.object.pk)),
+            DeleteTaskRequest(task_id=str(self.kwargs['pk'])),
         )
         if result.success:
             messages.success(request, result.message)
-        return redirect(self.get_success_url())
+        return redirect(reverse('tasks:list'))
 
 
 # === AJAX endpoints ===

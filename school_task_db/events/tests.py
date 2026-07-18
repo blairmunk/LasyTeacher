@@ -364,6 +364,16 @@ class GradeParticipationViewTests(TestCase):
         self.assertContains(response, 'value="2026-03-10"')
         self.assertNotContains(response, 'type="datetime-local"')
 
+    def test_event_update_returns_404_for_missing_event(self):
+        response = self.client.get(
+            reverse(
+                'events:update',
+                args=['550e8400-e29b-41d4-a716-446655440000'],
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
+
     def test_event_update_accepts_date_only_and_sets_default_time(self):
         response = self.client.post(
             reverse('events:update', args=[self.event.pk]),

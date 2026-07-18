@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.views.generic import CreateView, UpdateView, TemplateView
-from django.urls import reverse_lazy
+from django.views.generic import TemplateView
 from django.http import Http404
 from .models import Event
 from .forms import EventForm, StudentSelectionForm, MarkForm, VariantAssignmentForm
@@ -67,20 +66,22 @@ class EventDetailView(TemplateView):
         return context
 
 
-class EventCreateView(CreateView):
-    model = Event
-    form_class = EventForm
+class EventCreateView(TemplateView):
     template_name = 'events/form.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['form'] = kwargs.get('form') or EventForm()
         context['page_title'] = 'Создание события'
         context['submit_text'] = 'Создать'
         return context
 
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        event = self.object
+    def post(self, request, *args, **kwargs):
+        form = EventForm(request.POST)
+        if not form.is_valid():
+            return self.render_to_response(self.get_context_data(form=form))
+
+        event = form.save()
 
         from core_logic.use_cases.add_event_participants import (
             AddEventParticipantsRequest,
@@ -96,33 +97,44 @@ class EventCreateView(CreateView):
 
         if result.created_count:
             messages.success(
-                self.request,
+                request,
                 f'Событие создано, добавлено {result.created_count} учеников'
             )
         else:
-            messages.success(self.request, 'Событие создано')
+            messages.success(request, 'Событие создано')
 
-        return response
-
-    def get_success_url(self):
-        return reverse_lazy('events:detail', kwargs={'pk': self.object.pk})
+        return redirect('events:detail', pk=event.pk)
 
 
-class EventUpdateView(UpdateView):
-    model = Event
-    form_class = EventForm
+class EventUpdateView(TemplateView):
     template_name = 'events/form.html'
-    success_url = reverse_lazy('events:list')
+
+    def _get_event(self):
+        event = Event.objects.filter(pk=self.kwargs['pk']).first()
+        if event is None:
+            raise Http404('Событие не найдено')
+        return event
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        event = kwargs.get('object') or self._get_event()
+        context['object'] = event
+        context['form'] = kwargs.get('form') or EventForm(instance=event)
         context['page_title'] = 'Редактирование события'
         context['submit_text'] = 'Сохранить'
         return context
 
-    def form_valid(self, form):
-        messages.success(self.request, 'Событие успешно обновлено!')
-        return super().form_valid(form)
+    def post(self, request, *args, **kwargs):
+        event = self._get_event()
+        form = EventForm(request.POST, instance=event)
+        if not form.is_valid():
+            return self.render_to_response(
+                self.get_context_data(form=form, object=event),
+            )
+
+        form.save()
+        messages.success(request, 'Событие успешно обновлено!')
+        return redirect('events:list')
 
 
 def add_participants(request, event_id):

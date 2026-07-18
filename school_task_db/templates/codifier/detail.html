@@ -97,15 +97,15 @@
                                 <td colspan="6"><strong>{{ entry.name }}</strong></td>
                             </tr>
 
-                            {% for child in entry.get_sorted_children %}
-                            {% if child.get_sorted_children %}
+                            {% for child in entry.children %}
+                            {% if child.children %}
                             <!-- Подраздел (level 1, есть дочерние → ЕГЭ) -->
                             <tr class="table-light">
                                 <td class="ps-3"><strong>{{ child.code }}</strong></td>
                                 <td colspan="6"><strong>{{ child.name }}</strong></td>
                             </tr>
 
-                            {% for leaf in child.get_sorted_children %}
+                            {% for leaf in child.children %}
                             <!-- Элемент (level 2) -->
                             <tr>
                                 <td class="ps-4 text-muted">{{ leaf.code }}</td>
@@ -137,7 +137,7 @@
                                     {% endwith %}
                                 </td>
                                 <td>
-                                    {% for sibling in leaf.get_sibling_codes %}
+                                    {% for sibling in leaf.sibling_codes %}
                                     <small class="badge bg-secondary">
                                         {{ sibling.codifier.short_name }} {{ sibling.code }}
                                     </small>
@@ -178,7 +178,7 @@
                                     {% endwith %}
                                 </td>
                                 <td>
-                                    {% for sibling in child.get_sibling_codes %}
+                                    {% for sibling in child.sibling_codes %}
                                     <small class="badge bg-secondary">
                                         {{ sibling.codifier.short_name }} {{ sibling.code }}
                                     </small>

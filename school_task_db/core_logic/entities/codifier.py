@@ -59,15 +59,6 @@ class CodifierContentEntry:
     sibling_codes: List[CodifierSiblingCode] = field(default_factory=list)
     children: List["CodifierContentEntry"] = field(default_factory=list)
 
-    def get_sorted_children(self) -> List["CodifierContentEntry"]:
-        return self.children
-
-    def get_task_count(self) -> int:
-        return self.task_count
-
-    def get_sibling_codes(self) -> List[CodifierSiblingCode]:
-        return self.sibling_codes
-
 
 @dataclass(frozen=True)
 class CodifierRequirement:
@@ -76,9 +67,3 @@ class CodifierRequirement:
     cognitive_level: str = ''
     cognitive_level_display: str = ''
     task_count: int = 0
-
-    def get_cognitive_level_display(self) -> str:
-        return self.cognitive_level_display
-
-    def get_task_count(self) -> int:
-        return self.task_count

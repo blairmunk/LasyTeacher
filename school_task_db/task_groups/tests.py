@@ -27,6 +27,41 @@ class TaskGroupBulkActionTests(TestCase):
         )
         TaskGroup.objects.create(task=self.task, group=self.group)
 
+    def test_create_group_saves_group(self):
+        response = self.client.post(
+            reverse('task_groups:create'),
+            data={
+                'name': 'Динамика',
+                'description': 'Законы Ньютона',
+            },
+        )
+
+        group = AnalogGroup.objects.get(name='Динамика')
+        self.assertRedirects(
+            response,
+            reverse('task_groups:detail', args=[group.pk]),
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(group.description, 'Законы Ньютона')
+
+    def test_update_group_saves_group(self):
+        response = self.client.post(
+            reverse('task_groups:update', args=[self.group.pk]),
+            data={
+                'name': 'Скорость и путь',
+                'description': 'Обновлено',
+            },
+        )
+
+        self.group.refresh_from_db()
+        self.assertRedirects(
+            response,
+            reverse('task_groups:detail', args=[self.group.pk]),
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(self.group.name, 'Скорость и путь')
+        self.assertEqual(self.group.description, 'Обновлено')
+
     def test_bulk_create_work_from_groups_uses_clean_use_case(self):
         response = self.client.post(
             reverse('task_groups:bulk-create-work'),

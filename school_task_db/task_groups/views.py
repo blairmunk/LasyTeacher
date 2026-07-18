@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.views.generic import CreateView, UpdateView, TemplateView
+from django.views.generic import TemplateView
 from django.views.decorators.http import require_POST
 from django.http import Http404, JsonResponse
 
@@ -80,24 +80,51 @@ class AnalogGroupDetailView(TemplateView):
         return context
 
 
-class AnalogGroupCreateView(CreateView):
-    model = AnalogGroup
-    form_class = AnalogGroupForm
+class AnalogGroupCreateView(TemplateView):
     template_name = 'task_groups/form.html'
 
-    def form_valid(self, form):
-        messages.success(self.request, 'Группа аналогов успешно создана!')
-        return super().form_valid(form)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = kwargs.get('form') or AnalogGroupForm()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form = AnalogGroupForm(request.POST)
+        if not form.is_valid():
+            return self.render_to_response(self.get_context_data(form=form))
+
+        group = form.save()
+        messages.success(request, 'Группа аналогов успешно создана!')
+        return redirect('task_groups:detail', pk=group.pk)
 
 
-class AnalogGroupUpdateView(UpdateView):
-    model = AnalogGroup
-    form_class = AnalogGroupForm
+class AnalogGroupUpdateView(TemplateView):
     template_name = 'task_groups/form.html'
 
-    def form_valid(self, form):
-        messages.success(self.request, 'Группа аналогов успешно обновлена!')
-        return super().form_valid(form)
+    def _get_group(self):
+        group = AnalogGroup.objects.filter(pk=self.kwargs['pk']).first()
+        if group is None:
+            raise Http404('Группа аналогов не найдена')
+        return group
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        group = kwargs.get('object') or self._get_group()
+        context['object'] = group
+        context['form'] = kwargs.get('form') or AnalogGroupForm(instance=group)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        group = self._get_group()
+        form = AnalogGroupForm(request.POST, instance=group)
+        if not form.is_valid():
+            return self.render_to_response(
+                self.get_context_data(form=form, object=group),
+            )
+
+        group = form.save()
+        messages.success(request, 'Группа аналогов успешно обновлена!')
+        return redirect('task_groups:detail', pk=group.pk)
 
 
 def add_tasks_to_group(request, group_id):

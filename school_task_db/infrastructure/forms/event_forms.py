@@ -3,6 +3,7 @@
 from django.utils import timezone
 
 from core_logic.interfaces.event_repo import CreateEventParams
+from core_logic.use_cases.grade_student_work import GradeStudentWorkRequest
 
 
 class EventFormAdapter:
@@ -49,3 +50,29 @@ class EventFormAdapter:
                 continue
             assignments[field_name.removeprefix('variant_')] = variant_id
         return assignments
+
+    def grade_student_work_request_from_form(
+        self,
+        form,
+        participation_id,
+        checked_by_display_name='',
+        checked_by_username='',
+        sync_event_status=True,
+    ):
+        data = form.cleaned_data
+        return GradeStudentWorkRequest(
+            participation_id=participation_id,
+            score=data.get('score'),
+            points=data.get('points'),
+            max_points=data.get('max_points'),
+            teacher_comment=data.get('teacher_comment', ''),
+            mistakes_analysis=data.get('mistakes_analysis', ''),
+            recommendations=data.get('recommendations', ''),
+            checked_by_display_name=checked_by_display_name,
+            checked_by_username=checked_by_username,
+            work_scan=data.get('work_scan'),
+            is_retake=data.get('is_retake', False),
+            is_excellent=data.get('is_excellent', False),
+            needs_attention=data.get('needs_attention', False),
+            sync_event_status=sync_event_status,
+        )

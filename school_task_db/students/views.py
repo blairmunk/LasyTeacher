@@ -4,7 +4,6 @@ from django.contrib import messages
 from django.http import Http404
 from django.views import View
 
-from core_logic.entities.student import SaveStudentGroupParams, SaveStudentParams
 from infrastructure.container import container
 from .forms import StudentForm, StudentGroupForm
 
@@ -154,12 +153,7 @@ class StudentCreateView(TemplateView):
             return self.render_to_response(self.get_context_data(form=form))
 
         container.create_student_use_case().execute(
-            SaveStudentParams(
-                first_name=form.cleaned_data['first_name'],
-                last_name=form.cleaned_data['last_name'],
-                middle_name=form.cleaned_data.get('middle_name', ''),
-                email=form.cleaned_data.get('email', ''),
-            )
+            container.student_form_adapter.student_params_from_form(form),
         )
         messages.success(request, 'Ученик успешно добавлен!')
         return redirect('students:list')
@@ -181,12 +175,7 @@ class StudentUpdateView(TemplateView):
         student = kwargs.get('object') or self._get_student()
         context['object'] = student
         context['form'] = kwargs.get('form') or StudentForm(
-            initial={
-                'first_name': student.first_name,
-                'last_name': student.last_name,
-                'middle_name': student.middle_name,
-                'email': student.email,
-            }
+            initial=container.student_form_adapter.student_form_initial(student),
         )
         return context
 
@@ -199,12 +188,9 @@ class StudentUpdateView(TemplateView):
             )
 
         result = container.update_student_use_case().execute(
-            SaveStudentParams(
+            container.student_form_adapter.student_params_from_form(
+                form,
                 student_id=str(student.pk),
-                first_name=form.cleaned_data['first_name'],
-                last_name=form.cleaned_data['last_name'],
-                middle_name=form.cleaned_data.get('middle_name', ''),
-                email=form.cleaned_data.get('email', ''),
             )
         )
         if result.status == 'not_found':
@@ -254,13 +240,7 @@ class StudentGroupCreateView(TemplateView):
             return self.render_to_response(self.get_context_data(form=form))
 
         result = container.create_student_group_use_case().execute(
-            SaveStudentGroupParams(
-                name=form.cleaned_data['name'],
-                student_ids=[
-                    str(student.pk)
-                    for student in form.cleaned_data.get('students', [])
-                ],
-            )
+            container.student_form_adapter.student_group_params_from_form(form),
         )
         messages.success(request, 'Класс успешно создан!')
         return redirect('students:group-detail', pk=result.group_id)
@@ -282,10 +262,7 @@ class StudentGroupUpdateView(TemplateView):
         group = kwargs.get('object') or self._get_group()
         context['object'] = group
         context['form'] = kwargs.get('form') or StudentGroupForm(
-            initial={
-                'name': group.name,
-                'students': [student.pk for student in group.students],
-            }
+            initial=container.student_form_adapter.student_group_form_initial(group),
         )
         return context
 
@@ -298,13 +275,9 @@ class StudentGroupUpdateView(TemplateView):
             )
 
         result = container.update_student_group_use_case().execute(
-            SaveStudentGroupParams(
+            container.student_form_adapter.student_group_params_from_form(
+                form,
                 group_id=str(group.pk),
-                name=form.cleaned_data['name'],
-                student_ids=[
-                    str(student.pk)
-                    for student in form.cleaned_data.get('students', [])
-                ],
             )
         )
         if result.status == 'not_found':

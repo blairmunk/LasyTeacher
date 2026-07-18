@@ -250,6 +250,7 @@ from infrastructure.services.document_generation_service import (
 )
 from infrastructure.services.task_import_service import DjangoTaskImportService
 from infrastructure.forms.event_forms import EventFormAdapter
+from infrastructure.forms.student_forms import StudentFormAdapter
 from infrastructure.forms.work_forms import WorkFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
 
@@ -269,6 +270,7 @@ class Container:
         self._core_repo = None
         self._settings_repo = None
         self._event_form_adapter = None
+        self._student_form_adapter = None
         self._work_form_adapter = None
         self._task_form_adapter = None
         self._document_generation_service = None
@@ -339,6 +341,12 @@ class Container:
         if self._event_form_adapter is None:
             self._event_form_adapter = EventFormAdapter()
         return self._event_form_adapter
+
+    @property
+    def student_form_adapter(self):
+        if self._student_form_adapter is None:
+            self._student_form_adapter = StudentFormAdapter()
+        return self._student_form_adapter
 
     @property
     def work_form_adapter(self):

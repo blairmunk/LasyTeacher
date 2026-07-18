@@ -317,12 +317,13 @@ class WorkDetailViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'works/compose_variants.html')
         self.assertEqual(response.context['work'].pk, str(self.work.pk))
         self.assertEqual(response.context['work'].name, self.work.name)
         self.assertEqual(response.context['work_groups'], [])
         self.assertIn('form', response.context)
 
-    def test_generate_variants_view_returns_404_for_missing_work_on_get(self):
+    def test_legacy_generate_variants_route_returns_404_for_missing_work_on_get(self):
         response = self.client.get(
             reverse(
                 'works:generate-variants',
@@ -332,7 +333,7 @@ class WorkDetailViewTests(TestCase):
 
         self.assertEqual(response.status_code, 404)
 
-    def test_generate_variants_view_returns_404_for_missing_work(self):
+    def test_legacy_generate_variants_route_returns_404_for_missing_work(self):
         response = self.client.post(
             reverse(
                 'works:generate-variants',

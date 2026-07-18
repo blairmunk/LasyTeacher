@@ -59,14 +59,14 @@
             </div>
         </div>
 
-        <!-- Генерация вариантов для всего курса -->
+        <!-- Сборка вариантов для всего курса -->
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="fas fa-file-alt"></i> Работы курса</h5>
                 <div>
                     <button id="btn-generate-all" class="btn btn-success btn-sm"
                             data-course-id="{{ course.pk }}">
-                        <i class="fas fa-dice"></i> Сгенерировать варианты для всех работ
+                        <i class="fas fa-dice"></i> Собрать варианты для всех работ
                     </button>
                 </div>
             </div>
@@ -135,7 +135,7 @@
                                     <button class="btn btn-outline-success btn-generate-work"
                                             data-work-id="{{ assignment.work.pk }}"
                                             data-work-name="{{ assignment.work.name }}"
-                                            title="Сгенерировать варианты">
+                                            title="Собрать варианты">
                                         <i class="fas fa-dice"></i>
                                     </button>
                                 </div>
@@ -192,7 +192,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
-                    <i class="fas fa-dice"></i> Генерация вариантов
+                    <i class="fas fa-dice"></i> Сборка вариантов
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -207,7 +207,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
                 <button type="button" class="btn btn-success" id="btn-gen-confirm">
-                    <i class="fas fa-dice"></i> Сгенерировать
+                    <i class="fas fa-dice"></i> Собрать
                 </button>
             </div>
         </div>
@@ -218,7 +218,7 @@
 const csrfToken = '{{ csrf_token }}';
 let currentWorkId = null;
 
-// Кнопки генерации для отдельной работы
+// Кнопки сборки вариантов для отдельной работы
 document.querySelectorAll('.btn-generate-work').forEach(btn => {
     btn.addEventListener('click', function() {
         currentWorkId = this.dataset.workId;
@@ -227,11 +227,11 @@ document.querySelectorAll('.btn-generate-work').forEach(btn => {
     });
 });
 
-// Подтверждение генерации
+// Подтверждение сборки вариантов
 document.getElementById('btn-gen-confirm').addEventListener('click', async function() {
     const count = document.getElementById('gen-count').value;
     this.disabled = true;
-    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Генерирую...';
+    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Собираю...';
     
     try {
         const resp = await fetch(`/works/${currentWorkId}/compose/`, {
@@ -254,13 +254,13 @@ document.getElementById('btn-gen-confirm').addEventListener('click', async funct
     }
 });
 
-// Генерация для всех работ
+// Сборка вариантов для всех работ
 document.getElementById('btn-generate-all').addEventListener('click', async function() {
     const count = prompt('Сколько вариантов для каждой работы?', '4');
     if (!count) return;
     
     this.disabled = true;
-    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Генерирую...';
+    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Собираю...';
     
     const buttons = document.querySelectorAll('.btn-generate-work');
     for (const btn of buttons) {

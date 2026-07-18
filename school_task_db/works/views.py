@@ -190,7 +190,7 @@ def compose_variants(request, work_id):
     )
     if form_data.status == 'not_found':
         raise Http404("Работа не найдена")
-    return render(request, 'works/generate_variants.html', {
+    return render(request, 'works/compose_variants.html', {
         'work': form_data.work,
         'work_groups': form_data.work_groups,
         'form': form,

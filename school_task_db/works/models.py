@@ -103,7 +103,7 @@ class Work(BaseModel):
         return list(groups.values())
 
     def generate_variants(self, count=1):
-        """Генерация вариантов: баллы рассчитываются из спецификации"""
+        """Сборка вариантов: баллы рассчитываются из спецификации"""
         variants = []
         distribution = self._calc_points_distribution()
         work_groups = list(self.workanaloggroup_set.order_by('order', 'pk'))

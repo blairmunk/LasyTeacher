@@ -9,10 +9,8 @@ from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_POST
 
 from core_logic.entities.task import (
-    TaskImageSaveParams,
     SourceCreateParams,
     TaskListFilters,
-    TaskSaveParams,
 )
 from core_logic.use_cases.bulk_change_task_groups import (
     BulkAddTasksToGroupRequest,
@@ -27,54 +25,6 @@ from core_logic.use_cases.get_task_reference_options import (
 )
 from infrastructure.container import container
 from .forms import SourceForm
-
-
-def _task_params_from_form(form, task_id=''):
-    subtopic = form.cleaned_data.get('subtopic')
-    source = form.cleaned_data.get('source')
-    return TaskSaveParams(
-        task_id=task_id,
-        text=form.cleaned_data['text'],
-        answer=form.cleaned_data['answer'],
-        topic_id=str(form.cleaned_data['topic'].pk),
-        subtopic_id=str(subtopic.pk) if subtopic else None,
-        task_type=form.cleaned_data['task_type'],
-        difficulty=form.cleaned_data['difficulty'],
-        cognitive_level=form.cleaned_data.get('cognitive_level', 'understand'),
-        content_element=form.cleaned_data.get('content_element', ''),
-        requirement_element=form.cleaned_data.get('requirement_element', ''),
-        short_solution=form.cleaned_data.get('short_solution', ''),
-        full_solution=form.cleaned_data.get('full_solution', ''),
-        hint=form.cleaned_data.get('hint', ''),
-        instruction=form.cleaned_data.get('instruction', ''),
-        estimated_time=form.cleaned_data.get('estimated_time'),
-        source_id=str(source.pk) if source else None,
-        source_detail=form.cleaned_data.get('source_detail', ''),
-        grade=form.cleaned_data.get('grade'),
-        year=form.cleaned_data.get('year'),
-        is_verified=form.cleaned_data.get('is_verified', False),
-        teacher_notes=form.cleaned_data.get('teacher_notes', ''),
-    )
-
-
-def _task_image_params_from_formset(formset):
-    images = []
-    for row in formset.cleaned_data:
-        if not row:
-            continue
-
-        image_obj = row.get('id')
-        images.append(
-            TaskImageSaveParams(
-                image_id=str(image_obj.pk) if image_obj else '',
-                image=row.get('image'),
-                position=row.get('position', ''),
-                caption=row.get('caption', ''),
-                order=row.get('order') or 1,
-                delete=row.get('DELETE', False),
-            )
-        )
-    return images
 
 
 class TaskListView(TemplateView):
@@ -188,11 +138,13 @@ class TaskCreateView(TemplateView):
             )
 
         task_result = container.create_task_use_case().execute(
-            _task_params_from_form(form),
+            container.task_form_adapter.task_params_from_form(form),
         )
         image_result = container.save_task_images_use_case().execute(
             task_id=task_result.task_id,
-            images=_task_image_params_from_formset(image_formset),
+            images=container.task_form_adapter.task_image_params_from_formset(
+                image_formset,
+            ),
         )
 
         messages.success(request, 'Задание успешно создано!')
@@ -255,14 +207,19 @@ class TaskUpdateView(TemplateView):
             )
 
         task_result = container.update_task_use_case().execute(
-            _task_params_from_form(form, task_id=str(task.pk)),
+            container.task_form_adapter.task_params_from_form(
+                form,
+                task_id=str(task.pk),
+            ),
         )
         if task_result.status == 'not_found':
             raise Http404('Задание не найдено')
 
         image_result = container.save_task_images_use_case().execute(
             task_id=task_result.task_id,
-            images=_task_image_params_from_formset(image_formset),
+            images=container.task_form_adapter.task_image_params_from_formset(
+                image_formset,
+            ),
         )
 
         messages.success(request, 'Задание успешно обновлено!')

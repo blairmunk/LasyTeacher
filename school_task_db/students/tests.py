@@ -151,6 +151,15 @@ class RemedialFromEventViewTests(TestCase):
 
         self.assertEqual(response.status_code, 404)
 
+    def test_student_list_contains_user_edit_link(self):
+        response = self.client.get(reverse('students:list'))
+
+        self.assertContains(
+            response,
+            reverse('students:update', args=[self.student.pk]),
+        )
+        self.assertNotContains(response, '/admin/students/student/')
+
     def test_create_student_group_saves_group(self):
         response = self.client.post(
             reverse('students:group-create'),
@@ -197,6 +206,24 @@ class RemedialFromEventViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 404)
+
+    def test_student_group_pages_contain_user_edit_links(self):
+        group = StudentGroup.objects.create(name='9А')
+
+        list_response = self.client.get(reverse('students:group-list'))
+        detail_response = self.client.get(
+            reverse('students:group-detail', args=[group.pk]),
+        )
+
+        self.assertContains(
+            list_response,
+            reverse('students:group-update', args=[group.pk]),
+        )
+        self.assertContains(
+            detail_response,
+            reverse('students:group-update', args=[group.pk]),
+        )
+        self.assertNotContains(detail_response, '/admin/students/studentgroup/')
 
     def test_get_shows_remedial_preview_analysis_for_event(self):
         response = self.client.get(

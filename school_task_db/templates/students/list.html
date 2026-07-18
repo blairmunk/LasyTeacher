@@ -22,6 +22,7 @@
                         <th>Отчество</th>
                         <th>Email</th>
                         <th>Дата добавления</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -33,6 +34,11 @@
                         <td>{{ student.middle_name|default:"—" }}</td>
                         <td>{{ student.email|default:"—" }}</td>
                         <td>{{ student.created_at|date:"d.m.Y" }}</td>
+                        <td class="text-end">
+                            <a href="{% url 'students:update' student.pk %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-edit"></i> Редактировать
+                            </a>
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>

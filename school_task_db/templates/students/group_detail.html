@@ -10,7 +10,7 @@
            class="btn btn-info">
             <i class="fas fa-first-aid"></i> Работа над ошибками
         </a>
-        <a href="/admin/students/studentgroup/{{ studentgroup.pk }}/change/" class="btn btn-primary">
+        <a href="{% url 'students:group-update' studentgroup.pk %}" class="btn btn-primary">
             <i class="fas fa-edit"></i> Редактировать
         </a>
         <a href="{% url 'students:group-list' %}" class="btn btn-secondary">
@@ -61,7 +61,7 @@
         </div>
         {% else %}
         <div class="alert alert-warning">
-            В классе пока нет учеников. <a href="/admin/students/studentgroup/{{ studentgroup.pk }}/change/">Добавить учеников</a>
+            В классе пока нет учеников. <a href="{% url 'students:group-update' studentgroup.pk %}">Добавить учеников</a>
         </div>
         {% endif %}
     </div>

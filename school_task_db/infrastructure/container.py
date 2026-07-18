@@ -249,6 +249,7 @@ from infrastructure.services.document_generation_service import (
     DjangoDocumentGenerationService,
 )
 from infrastructure.services.task_import_service import DjangoTaskImportService
+from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.event_forms import EventFormAdapter
 from infrastructure.forms.settings_forms import SettingsFormAdapter
 from infrastructure.forms.student_forms import StudentFormAdapter
@@ -271,6 +272,7 @@ class Container:
         self._codifier_repo = None
         self._core_repo = None
         self._settings_repo = None
+        self._core_form_adapter = None
         self._event_form_adapter = None
         self._settings_form_adapter = None
         self._student_form_adapter = None
@@ -339,6 +341,12 @@ class Container:
         if self._settings_repo is None:
             self._settings_repo = DjangoSettingsRepository()
         return self._settings_repo
+
+    @property
+    def core_form_adapter(self):
+        if self._core_form_adapter is None:
+            self._core_form_adapter = CoreFormAdapter()
+        return self._core_form_adapter
 
     @property
     def event_form_adapter(self):

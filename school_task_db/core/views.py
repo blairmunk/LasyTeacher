@@ -1,6 +1,5 @@
 from django.shortcuts import render
 from django.views.generic import TemplateView
-from core_logic.use_cases.get_global_search import GlobalSearchRequest
 from infrastructure.container import container
 
 
@@ -23,7 +22,9 @@ class IndexView(TemplateView):
 def global_search(request):
     """Глобальный поиск: UUID + текст"""
     search_data = container.get_global_search_use_case().execute(
-        GlobalSearchRequest(raw_query=request.GET.get('q', '')),
+        container.core_form_adapter.global_search_request_from_query(
+            request.GET,
+        ),
     )
     return render(request, 'core/search_results.html', {
         'query': search_data.query,

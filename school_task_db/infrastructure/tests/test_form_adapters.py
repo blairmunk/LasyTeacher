@@ -1,8 +1,18 @@
 from django.http import QueryDict
 from django.test import SimpleTestCase
 
+from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
 from infrastructure.forms.task_group_forms import TaskGroupFormAdapter
+
+
+class CoreFormAdapterTests(SimpleTestCase):
+    def test_builds_global_search_request_from_query(self):
+        request = CoreFormAdapter().global_search_request_from_query(
+            QueryDict('q=force'),
+        )
+
+        self.assertEqual(request.raw_query, 'force')
 
 
 class TaskFormAdapterTests(SimpleTestCase):

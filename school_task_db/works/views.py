@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.http import Http404
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
+from django.views.generic import CreateView, UpdateView, DeleteView, TemplateView
 from django.views.decorators.http import require_http_methods
 
 from .models import Work, Variant
@@ -193,15 +194,21 @@ def sync_analog_groups(request, work_id):
     return redirect('works:detail', pk=work_id)
 
 
-class VariantListView(ListView):
+class VariantListView(TemplateView):
     template_name = 'works/variant_list.html'
-    context_object_name = 'variants'
     paginate_by = 20
 
-    def get_queryset(self):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         from infrastructure.container import container
 
-        return container.get_variant_list_use_case().execute().variants
+        list_data = container.get_variant_list_use_case().execute()
+        paginator = Paginator(list_data.variants, self.paginate_by)
+        page_obj = paginator.get_page(self.request.GET.get('page'))
+        context['variants'] = page_obj.object_list
+        context['page_obj'] = page_obj
+        context['is_paginated'] = page_obj.has_other_pages()
+        return context
 
 
 class VariantDetailView(TemplateView):
@@ -223,11 +230,10 @@ class VariantDetailView(TemplateView):
         return context
 
 
-class OrphanVariantListView(ListView):
+class OrphanVariantListView(TemplateView):
     """Варианты без привязки к работе (сироты)"""
 
     template_name = 'works/orphan_variants.html'
-    context_object_name = 'variants'
     paginate_by = 20
 
     def _get_orphan_list_data(self):
@@ -239,12 +245,15 @@ class OrphanVariantListView(ListView):
             )
         return self._orphan_list_data
 
-    def get_queryset(self):
-        return self._get_orphan_list_data().variants
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['total_orphans'] = self._get_orphan_list_data().total_orphans
+        list_data = self._get_orphan_list_data()
+        paginator = Paginator(list_data.variants, self.paginate_by)
+        page_obj = paginator.get_page(self.request.GET.get('page'))
+        context['variants'] = page_obj.object_list
+        context['page_obj'] = page_obj
+        context['is_paginated'] = page_obj.has_other_pages()
+        context['total_orphans'] = list_data.total_orphans
         return context
 
 

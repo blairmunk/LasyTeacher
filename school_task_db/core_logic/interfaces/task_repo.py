@@ -20,6 +20,8 @@ from core_logic.entities.task import (
     TaskDetailTask,
     TaskListItem,
     TaskListFilters,
+    TaskSaveParams,
+    TaskSaveResult,
 )
 
 
@@ -58,6 +60,14 @@ class ITaskRepository(ABC):
     @abstractmethod
     def get_task(self, task_id: str) -> Optional[TaskDetailTask]:
         """Return one task detail read model, or None when it does not exist."""
+
+    @abstractmethod
+    def create_task(self, params: TaskSaveParams) -> TaskSaveResult:
+        """Create a task."""
+
+    @abstractmethod
+    def update_task(self, params: TaskSaveParams) -> TaskSaveResult:
+        """Update a task, or return not_found status."""
 
     @abstractmethod
     def get_task_detail_groups(self, task_id: str) -> List[TaskDetailGroup]:

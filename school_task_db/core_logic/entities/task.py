@@ -221,6 +221,37 @@ class TaskDetailGroup:
 
 
 @dataclass(frozen=True)
+class TaskSaveParams:
+    text: str
+    answer: str
+    topic_id: str
+    task_type: str
+    difficulty: int
+    task_id: str = ''
+    subtopic_id: Optional[str] = None
+    cognitive_level: str = 'understand'
+    content_element: str = ''
+    requirement_element: str = ''
+    short_solution: str = ''
+    full_solution: str = ''
+    hint: str = ''
+    instruction: str = ''
+    estimated_time: Optional[int] = None
+    source_id: Optional[str] = None
+    source_detail: str = ''
+    grade: Optional[int] = None
+    year: Optional[int] = None
+    is_verified: bool = False
+    teacher_notes: str = ''
+
+
+@dataclass(frozen=True)
+class TaskSaveResult:
+    status: str
+    task_id: str = ''
+
+
+@dataclass(frozen=True)
 class SelectOption:
     id: str
     name: str

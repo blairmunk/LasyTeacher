@@ -19,6 +19,7 @@ from core_logic.entities.task import (
     TaskExportFilters,
     TaskGroupListFilters,
     TaskListFilters,
+    TaskSaveParams,
 )
 from core_logic.entities.student import SaveStudentGroupParams, SaveStudentParams
 from core_logic.use_cases.create_remedial_from_event import (
@@ -542,6 +543,56 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(source.name, 'Сборник задач')
         self.assertEqual(source.source_type, 'problem_book')
         self.assertEqual(source.year, 2026)
+
+    def test_task_repository_creates_and_updates_task(self):
+        repo = DjangoTaskRepository()
+
+        create_result = repo.create_task(
+            TaskSaveParams(
+                text='Новая задача',
+                answer='Ответ',
+                topic_id=str(self.topic.pk),
+                task_type='computational',
+                difficulty=2,
+                cognitive_level='apply',
+                short_solution='Кратко',
+                source_detail='стр. 10',
+                grade=9,
+                is_verified=True,
+            )
+        )
+        update_result = repo.update_task(
+            TaskSaveParams(
+                task_id=create_result.task_id,
+                text='Обновлённая задача',
+                answer='Новый ответ',
+                topic_id=str(self.topic.pk),
+                task_type='theoretical',
+                difficulty=3,
+                cognitive_level='understand',
+                teacher_notes='Проверить',
+            )
+        )
+        missing_result = repo.update_task(
+            TaskSaveParams(
+                task_id='00000000-0000-0000-0000-000000000000',
+                text='Нет',
+                answer='Нет',
+                topic_id=str(self.topic.pk),
+                task_type='computational',
+                difficulty=1,
+            )
+        )
+
+        task = Task.objects.get(pk=create_result.task_id)
+        self.assertEqual(create_result.status, 'created')
+        self.assertEqual(update_result.status, 'updated')
+        self.assertEqual(task.text, 'Обновлённая задача')
+        self.assertEqual(task.answer, 'Новый ответ')
+        self.assertEqual(task.task_type, 'theoretical')
+        self.assertEqual(task.difficulty, 3)
+        self.assertEqual(task.teacher_notes, 'Проверить')
+        self.assertEqual(missing_result.status, 'not_found')
 
     def test_task_repository_builds_task_export_payload(self):
         source = Source.objects.create(

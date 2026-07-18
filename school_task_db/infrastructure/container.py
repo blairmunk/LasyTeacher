@@ -190,6 +190,7 @@ from core_logic.use_cases.save_student import (
     UpdateStudentUseCase,
 )
 from core_logic.use_cases.save_site_settings import SaveSiteSettingsUseCase
+from core_logic.use_cases.save_task import CreateTaskUseCase, UpdateTaskUseCase
 from core_logic.use_cases.save_work import CreateWorkUseCase, UpdateWorkUseCase
 from core_logic.use_cases.sync_review_session import SyncReviewSessionUseCase
 from core_logic.use_cases.sync_work_analog_groups import SyncWorkAnalogGroupsUseCase
@@ -589,6 +590,16 @@ class Container:
 
     def refresh_task_math_cache_use_case(self):
         return RefreshTaskMathCacheUseCase(
+            task_repo=self.task_repo,
+        )
+
+    def create_task_use_case(self):
+        return CreateTaskUseCase(
+            task_repo=self.task_repo,
+        )
+
+    def update_task_use_case(self):
+        return UpdateTaskUseCase(
             task_repo=self.task_repo,
         )
 

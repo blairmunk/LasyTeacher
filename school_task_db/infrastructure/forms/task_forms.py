@@ -3,7 +3,8 @@
 from dataclasses import dataclass
 from typing import Any
 
-from tasks.forms import TaskImageFormSet
+from tasks.forms import TaskForm, TaskImageFormSet
+from tasks.models import Task
 
 
 @dataclass(frozen=True)
@@ -14,6 +15,17 @@ class TaskImageFormSaveResult:
 
 
 class TaskFormAdapter:
+    def _get_task_instance(self, task_id=None):
+        if not task_id:
+            return None
+        return Task.objects.filter(pk=task_id).first()
+
+    def build_task_form(self, data=None, task_id=None):
+        instance = self._get_task_instance(task_id)
+        if data is not None:
+            return TaskForm(data, instance=instance)
+        return TaskForm(instance=instance)
+
     def build_image_formset(self, data=None, files=None, instance=None):
         kwargs = {'prefix': 'images'}
         if instance is not None:
@@ -22,8 +34,15 @@ class TaskFormAdapter:
             return TaskImageFormSet(data, files, **kwargs)
         return TaskImageFormSet(**kwargs)
 
-    def save_created_task_with_images(self, form, image_formset):
-        task = form.save()
+    def build_image_formset_for_task(self, data=None, files=None, task_id=None):
+        return self.build_image_formset(
+            data=data,
+            files=files,
+            instance=self._get_task_instance(task_id),
+        )
+
+    def save_created_images(self, image_formset, task_id):
+        task = self._get_task_instance(task_id)
         image_formset.instance = task
         image_formset.save()
         created_images = len([
@@ -39,8 +58,9 @@ class TaskFormAdapter:
             created_images=created_images,
         )
 
-    def save_updated_task_with_images(self, form, image_formset):
-        task = form.save()
+    def save_updated_images(self, image_formset, task_id):
+        task = self._get_task_instance(task_id)
+        image_formset.instance = task
         saved_images = image_formset.save()
         return TaskImageFormSaveResult(
             task=task,

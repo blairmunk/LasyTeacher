@@ -378,13 +378,13 @@ def refresh_math_cache(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 
-class SourceListView(ListView):
+class SourceListView(TemplateView):
     template_name = 'tasks/source_list.html'
-    context_object_name = 'sources'
-    paginate_by = 20
 
-    def get_queryset(self):
-        return container.get_source_list_use_case().execute().sources
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sources'] = container.get_source_list_use_case().execute().sources
+        return context
 
 
 class SourceCreateView(CreateView):

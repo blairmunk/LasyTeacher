@@ -8,13 +8,7 @@ from django.urls import reverse
 from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_POST
 
-from core_logic.use_cases.bulk_change_task_groups import (
-    BulkAddTasksToGroupRequest,
-    BulkCreateGroupFromTasksRequest,
-    BulkRemoveTasksFromGroupsRequest,
-)
 from core_logic.use_cases.delete_task import DeleteTaskRequest
-from core_logic.use_cases.create_work_from_tasks import CreateWorkFromTasksRequest
 from core_logic.use_cases.get_task_reference_options import (
     CodifierElementsResult,
     SubtopicOptionsResult,
@@ -289,10 +283,7 @@ def bulk_create_group(request):
         return JsonResponse({'error': 'Невалидный JSON'}, status=400)
 
     result = container.bulk_create_group_from_tasks_use_case().execute(
-        BulkCreateGroupFromTasksRequest(
-            task_ids=body.get('task_ids', []),
-            group_name=body.get('group_name', ''),
-        )
+        container.task_form_adapter.bulk_create_group_request_from_body(body),
     )
 
     if not result.success:
@@ -316,10 +307,7 @@ def bulk_add_to_group(request):
         return JsonResponse({'error': 'Невалидный JSON'}, status=400)
 
     result = container.bulk_add_tasks_to_group_use_case().execute(
-        BulkAddTasksToGroupRequest(
-            task_ids=body.get('task_ids', []),
-            group_id=body.get('group_id', ''),
-        )
+        container.task_form_adapter.bulk_add_to_group_request_from_body(body),
     )
 
     if not result.success:
@@ -342,7 +330,7 @@ def bulk_remove_from_groups(request):
         return JsonResponse({'error': 'Невалидный JSON'}, status=400)
 
     result = container.bulk_remove_tasks_from_groups_use_case().execute(
-        BulkRemoveTasksFromGroupsRequest(task_ids=body.get('task_ids', [])),
+        container.task_form_adapter.bulk_remove_from_groups_request_from_body(body),
     )
 
     if not result.success:
@@ -364,11 +352,7 @@ def bulk_create_work(request):
         return JsonResponse({'error': 'Невалидный JSON'}, status=400)
 
     result = container.create_work_from_tasks_use_case().execute(
-        CreateWorkFromTasksRequest(
-            task_ids=body.get('task_ids', []),
-            work_name=body.get('work_name', ''),
-            work_type=body.get('work_type', 'test'),
-        )
+        container.task_form_adapter.create_work_from_tasks_request_from_body(body),
     )
 
     if not result.success:

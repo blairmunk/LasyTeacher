@@ -207,10 +207,6 @@ def remove_task_from_group(request, group_id, task_id):
 def bulk_create_work_from_groups(request):
     """Создать работу из выбранных групп аналогов"""
     import json
-    from core_logic.use_cases.create_work_from_groups import (
-        CreateWorkFromGroupsRequest,
-        GroupSpecRequest,
-    )
     from infrastructure.container import container
 
     try:
@@ -218,23 +214,9 @@ def bulk_create_work_from_groups(request):
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Невалидный JSON'}, status=400)
 
-    groups_data = body.get('groups', [])
     result = container.create_work_from_groups_use_case().execute(
-        CreateWorkFromGroupsRequest(
-            groups=[
-                GroupSpecRequest(
-                    id=str(group_data.get('id', '')),
-                    order=int(group_data.get('order', index)),
-                    count=int(group_data.get('count', 1)),
-                    weight=int(group_data.get('weight', 1)),
-                )
-                for index, group_data in enumerate(groups_data, 1)
-            ],
-            work_name=body.get('work_name', ''),
-            work_type=body.get('work_type', 'test'),
-            max_score=int(body.get('max_score', 0)),
-            auto_generate=body.get('auto_generate', False),
-            variant_count=int(body.get('variant_count', 2)),
+        container.task_group_form_adapter.create_work_from_groups_request_from_body(
+            body,
         )
     )
 
@@ -260,7 +242,6 @@ def bulk_create_work_from_groups(request):
 def bulk_delete_groups(request):
     """Удалить выбранные группы"""
     import json
-    from core_logic.use_cases.delete_task_groups import DeleteTaskGroupsRequest
     from infrastructure.container import container
 
     try:
@@ -269,7 +250,7 @@ def bulk_delete_groups(request):
         return JsonResponse({'error': 'Невалидный JSON'}, status=400)
 
     result = container.delete_task_groups_use_case().execute(
-        DeleteTaskGroupsRequest(group_ids=body.get('group_ids', [])),
+        container.task_group_form_adapter.delete_task_groups_request_from_body(body),
     )
 
     if not result.success:

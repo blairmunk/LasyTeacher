@@ -6,11 +6,41 @@ from core_logic.entities.task import (
     TaskListFilters,
     TaskSaveParams,
 )
+from core_logic.use_cases.bulk_change_task_groups import (
+    BulkAddTasksToGroupRequest,
+    BulkCreateGroupFromTasksRequest,
+    BulkRemoveTasksFromGroupsRequest,
+)
+from core_logic.use_cases.create_work_from_tasks import CreateWorkFromTasksRequest
 from tasks.forms import TaskForm, TaskImageFormSet
 from tasks.models import Task
 
 
 class TaskFormAdapter:
+    def bulk_create_group_request_from_body(self, body):
+        return BulkCreateGroupFromTasksRequest(
+            task_ids=body.get('task_ids', []),
+            group_name=body.get('group_name', ''),
+        )
+
+    def bulk_add_to_group_request_from_body(self, body):
+        return BulkAddTasksToGroupRequest(
+            task_ids=body.get('task_ids', []),
+            group_id=body.get('group_id', ''),
+        )
+
+    def bulk_remove_from_groups_request_from_body(self, body):
+        return BulkRemoveTasksFromGroupsRequest(
+            task_ids=body.get('task_ids', []),
+        )
+
+    def create_work_from_tasks_request_from_body(self, body):
+        return CreateWorkFromTasksRequest(
+            task_ids=body.get('task_ids', []),
+            work_name=body.get('work_name', ''),
+            work_type=body.get('work_type', 'test'),
+        )
+
     def task_list_filters_from_query(self, query):
         return TaskListFilters(
             search=query.get('search', ''),

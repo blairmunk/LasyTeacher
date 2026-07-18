@@ -84,6 +84,10 @@ class DjangoReportRepository(IReportRepository):
             course=course,
             eventparticipation__student__in=student_ids,
         ).distinct().select_related('work').order_by('planned_date')
+        event_refs = {
+            event.id: self._report_event_ref(event)
+            for event in events
+        }
         participations = EventParticipation.objects.filter(
             event__in=events,
             student_id__in=student_ids,
@@ -100,7 +104,13 @@ class DjangoReportRepository(IReportRepository):
             mark.participation_id: mark
             for mark in marks
         }
-        all_rows = self._build_journal_rows(students, events, part_lookup, mark_lookup)
+        all_rows = self._build_journal_rows(
+            students,
+            events,
+            part_lookup,
+            mark_lookup,
+            event_refs,
+        )
         rows = (
             [row for row in all_rows if row['debts'] > 0]
             if show_debts_only
@@ -110,8 +120,12 @@ class DjangoReportRepository(IReportRepository):
         return JournalData(
             course=course,
             group=group,
-            events=events,
-            event_stats=self._build_journal_event_stats(events, all_rows),
+            events=[event_refs[event.id] for event in events],
+            event_stats=self._build_journal_event_stats(
+                events,
+                all_rows,
+                event_refs,
+            ),
             rows=rows,
             all_rows_count=len(all_rows),
             show_debts_only=show_debts_only,
@@ -1327,7 +1341,14 @@ class DjangoReportRepository(IReportRepository):
                 })
         return rows
 
-    def _build_journal_rows(self, students, events, part_lookup, mark_lookup):
+    def _build_journal_rows(
+        self,
+        students,
+        events,
+        part_lookup,
+        mark_lookup,
+        event_refs,
+    ):
         rows = []
         for student in students:
             cells = []
@@ -1338,7 +1359,11 @@ class DjangoReportRepository(IReportRepository):
             for event in events:
                 participation = part_lookup.get((student.id, event.id))
                 mark = mark_lookup.get(participation.id) if participation else None
-                cell = self._build_journal_cell(event, participation, mark)
+                cell = self._build_journal_cell(
+                    event_refs[event.id],
+                    participation,
+                    mark,
+                )
 
                 if cell['status'] == 'graded':
                     total_score += mark.score
@@ -1427,6 +1452,7 @@ class DjangoReportRepository(IReportRepository):
         return ReportWorkRef(
             pk=str(work.pk),
             name=work.name,
+            work_type=work.work_type,
             work_type_display=work.get_work_type_display(),
             duration=work.duration,
         )
@@ -1440,7 +1466,7 @@ class DjangoReportRepository(IReportRepository):
             return 'journal-3'
         return 'journal-2'
 
-    def _build_journal_event_stats(self, events, rows):
+    def _build_journal_event_stats(self, events, rows, event_refs):
         event_stats = []
         for event in events:
             graded = 0
@@ -1449,7 +1475,7 @@ class DjangoReportRepository(IReportRepository):
             total = 0
             for row in rows:
                 for cell in row['cells']:
-                    if cell['event'].id != event.id:
+                    if cell['event'].pk != str(event.pk):
                         continue
                     total += 1
                     if cell['status'] == 'graded':
@@ -1459,7 +1485,7 @@ class DjangoReportRepository(IReportRepository):
                     elif cell['status'] == 'missing':
                         missing += 1
             event_stats.append({
-                'event': event,
+                'event': event_refs[event.id],
                 'graded': graded,
                 'absent': absent,
                 'missing': missing,

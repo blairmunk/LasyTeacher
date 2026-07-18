@@ -36,6 +36,7 @@ class ReportTaskRef:
 class ReportWorkRef:
     pk: str
     name: str
+    work_type: str
     work_type_display: str
     duration: int
 

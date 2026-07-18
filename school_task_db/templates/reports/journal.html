@@ -201,7 +201,7 @@
                                     {% if event.work.work_type == 'control' %}bg-danger
                                     {% elif event.work.work_type == 'test' %}bg-warning text-dark
                                     {% else %}bg-info{% endif %}">
-                                    {{ event.work.get_work_type_display|truncatechars:4 }}
+                                    {{ event.work.work_type_display|truncatechars:4 }}
                                 </span>
                             </th>
                             {% endfor %}

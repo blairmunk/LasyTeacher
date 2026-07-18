@@ -866,17 +866,24 @@ class DjangoReportRepositoryTests(TestCase):
 
         self.assertEqual(data.course, course)
         self.assertEqual(data.group, group)
-        self.assertEqual(list(data.events), [event])
+        self.assertEqual(data.events[0].pk, str(event.pk))
+        self.assertEqual(data.events[0].work.pk, str(work.pk))
+        self.assertEqual(data.events[0].work.work_type, work.work_type)
+        self.assertEqual(
+            data.events[0].work.work_type_display,
+            work.get_work_type_display(),
+        )
         self.assertEqual(data.all_rows_count, 2)
         self.assertTrue(data.show_debts_only)
         self.assertEqual(data.total_debts, 1)
         self.assertEqual(data.students_with_debts, 1)
         self.assertEqual(len(data.rows), 1)
         self.assertEqual(data.rows[0]['student'], missing_student)
+        self.assertEqual(data.rows[0]['cells'][0]['event'].pk, str(event.pk))
         self.assertEqual(data.rows[0]['cells'][0]['status'], 'missing')
         self.assertEqual(data.rows[0]['cells'][0]['css_class'], 'journal-missing')
         self.assertEqual(data.event_stats, [{
-            'event': event,
+            'event': data.events[0],
             'graded': 1,
             'absent': 0,
             'missing': 1,

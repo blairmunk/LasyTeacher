@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.views.generic import ListView, CreateView, UpdateView, TemplateView
+from django.core.paginator import Paginator
+from django.views.generic import CreateView, UpdateView, TemplateView
 from django.views.decorators.http import require_POST
 from django.http import Http404, JsonResponse
 
@@ -11,9 +12,8 @@ from .models import AnalogGroup
 from .forms import AnalogGroupForm
 
 
-class AnalogGroupListView(ListView):
+class AnalogGroupListView(TemplateView):
     template_name = 'task_groups/list.html'
-    context_object_name = 'analog_groups'
     paginate_by = 20
 
     def _get_list_data(self):
@@ -34,12 +34,15 @@ class AnalogGroupListView(ListView):
             )
         return self._task_group_list_data
 
-    def get_queryset(self):
-        return self._get_list_data().analog_groups
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         list_data = self._get_list_data()
+        paginator = Paginator(list_data.analog_groups, self.paginate_by)
+        page_obj = paginator.get_page(self.request.GET.get('page'))
+
+        context['analog_groups'] = page_obj.object_list
+        context['page_obj'] = page_obj
+        context['is_paginated'] = page_obj.has_other_pages()
         context['topics'] = list_data.topics
         context['subtopics'] = list_data.subtopics
         context['difficulties'] = list_data.difficulties

@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST
 
 from core_logic.entities.task import TaskExportFilters
 from core_logic.entities.task_import import (
+    TaskImportFileRequest,
     TaskImportPreviewRequest,
     TaskImportRequest,
 )
@@ -61,22 +62,17 @@ def validate_json_ajax(request):
     if not uploaded_file:
         return JsonResponse({'error': 'Файл не выбран'}, status=400)
     
-    # Проверка размера (макс 50MB)
-    if uploaded_file.size > 50 * 1024 * 1024:
-        return JsonResponse({
-            'error': f'Файл слишком большой: {uploaded_file.size // 1024 // 1024}MB (макс: 50MB)'
-        }, status=400)
-    
-    # Парсинг JSON
-    try:
-        raw_content = uploaded_file.read().decode('utf-8')
-        data = json.loads(raw_content)
-    except UnicodeDecodeError:
-        return JsonResponse({'error': 'Файл не в кодировке UTF-8'}, status=400)
-    except json.JSONDecodeError as e:
-        return JsonResponse({
-            'error': f'Невалидный JSON: {e.msg} (строка {e.lineno}, позиция {e.colno})'
-        }, status=400)
+    prepared_file = container.prepare_task_import_file_use_case().execute(
+        TaskImportFileRequest(
+            filename=uploaded_file.name,
+            file_size=uploaded_file.size,
+            content=uploaded_file.read(),
+        ),
+    )
+    if not prepared_file.success:
+        return JsonResponse({'error': prepared_file.error}, status=400)
+
+    data = prepared_file.data
     
     # Структурная валидация
     validation = (
@@ -96,8 +92,8 @@ def validate_json_ajax(request):
             validation['warnings'].append(preview_result.warning)
     
     return JsonResponse({
-        'filename': uploaded_file.name,
-        'file_size': uploaded_file.size,
+        'filename': prepared_file.filename,
+        'file_size': prepared_file.file_size,
         'validation': validation,
         'preview': preview,
     })
@@ -113,20 +109,24 @@ def execute_import_ajax(request):
     dry_run = request.POST.get('dry_run') == 'true'
     create_missing = request.POST.get('create_missing', 'true') == 'true'
     
-    # Парсинг
-    try:
-        data = json.loads(uploaded_file.read().decode('utf-8'))
-    except (UnicodeDecodeError, json.JSONDecodeError) as e:
-        return JsonResponse({'error': f'Ошибка чтения JSON: {str(e)}'}, status=400)
+    prepared_file = container.prepare_task_import_file_use_case().execute(
+        TaskImportFileRequest(
+            filename=uploaded_file.name,
+            file_size=uploaded_file.size,
+            content=uploaded_file.read(),
+        ),
+    )
+    if not prepared_file.success:
+        return JsonResponse({'error': prepared_file.error}, status=400)
     
     result = container.execute_task_import_use_case().execute(
         TaskImportRequest(
-            data=data,
-            filename=uploaded_file.name,
+            data=prepared_file.data,
+            filename=prepared_file.filename,
             mode=mode,
             dry_run=dry_run,
             create_missing=create_missing,
-            file_size=uploaded_file.size,
+            file_size=prepared_file.file_size,
         ),
     )
     return JsonResponse(

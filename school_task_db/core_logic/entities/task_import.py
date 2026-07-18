@@ -20,6 +20,25 @@ class TaskImportPreviewRequest:
 
 
 @dataclass(frozen=True)
+class TaskImportFileRequest:
+    filename: str
+    file_size: int
+    content: bytes
+
+
+@dataclass(frozen=True)
+class TaskImportFileResult:
+    filename: str = ''
+    file_size: int = 0
+    data: Dict[str, Any] = field(default_factory=dict)
+    error: str = ''
+
+    @property
+    def success(self) -> bool:
+        return not self.error
+
+
+@dataclass(frozen=True)
 class TaskImportPreviewResult:
     preview: Dict[str, Any] = None
     warning: str = ''

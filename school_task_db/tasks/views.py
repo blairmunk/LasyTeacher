@@ -21,7 +21,7 @@ from core_logic.use_cases.get_task_reference_options import (
     SubtopicOptionsResult,
 )
 from infrastructure.container import container
-from .models import Task, Source
+from .models import Task
 from .forms import TaskForm, SourceForm
 
 
@@ -392,18 +392,19 @@ class SourceListView(TemplateView):
         return context
 
 
-class SourceCreateView(CreateView):
-    model = Source
-    form_class = SourceForm
+class SourceCreateView(TemplateView):
     template_name = 'tasks/source_form.html'
 
-    def get_success_url(self):
-        # Если открыто в popup — закрываем
-        if self.request.GET.get('popup'):
-            return reverse('tasks:source-created-popup', kwargs={'pk': self.object.pk})
-        return reverse('tasks:source-list')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = kwargs.get('form') or SourceForm()
+        return context
 
-    def form_valid(self, form):
-        self.object = container.task_form_adapter.save_source_form(form)
-        messages.success(self.request, f'Источник «{self.object}» создан!')
-        return redirect(self.get_success_url())
+    def post(self, request, *args, **kwargs):
+        form = SourceForm(request.POST)
+        if not form.is_valid():
+            return self.render_to_response(self.get_context_data(form=form))
+
+        source = container.task_form_adapter.save_source_form(form)
+        messages.success(self.request, f'Источник «{source}» создан!')
+        return redirect(reverse('tasks:source-list'))

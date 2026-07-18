@@ -10,7 +10,7 @@ from core_logic.use_cases.generate_remedial_sheet_document import (
     GenerateRemedialSheetDocumentRequest,
 )
 from core_logic.use_cases.generate_work_document import GenerateWorkDocumentRequest
-from core_logic.use_cases.generate_work_variants import GenerateWorkVariantsRequest
+from core_logic.use_cases.generate_work_variants import ComposeWorkVariantsRequest
 from core_logic.use_cases.get_generated_document_file import (
     GetGeneratedDocumentFileRequest,
 )
@@ -74,7 +74,7 @@ class WorkFormAdapter:
         return specs
 
     def compose_variants_request_from_form(self, form, work_id):
-        return GenerateWorkVariantsRequest(
+        return ComposeWorkVariantsRequest(
             work_id=work_id,
             count=form.cleaned_data['count'],
         )

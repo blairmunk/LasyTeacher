@@ -46,7 +46,7 @@ from core_logic.use_cases.delete_task import DeleteTaskUseCase
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
 from core_logic.use_cases.execute_task_import import ExecuteTaskImportUseCase
 from core_logic.use_cases.export_tasks import ExportTasksUseCase
-from core_logic.use_cases.generate_work_variants import GenerateWorkVariantsUseCase
+from core_logic.use_cases.generate_work_variants import ComposeWorkVariantsUseCase
 from core_logic.use_cases.generate_remedial_sheet_document import (
     GenerateRemedialSheetDocumentUseCase,
 )
@@ -970,10 +970,13 @@ class Container:
             work_repo=self.work_repo,
         )
 
-    def generate_work_variants_use_case(self):
-        return GenerateWorkVariantsUseCase(
+    def compose_work_variants_use_case(self):
+        return ComposeWorkVariantsUseCase(
             work_repo=self.work_repo,
         )
+
+    def generate_work_variants_use_case(self):
+        return self.compose_work_variants_use_case()
 
     def generate_work_document_use_case(self):
         return GenerateWorkDocumentUseCase(

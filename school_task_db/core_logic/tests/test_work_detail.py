@@ -26,6 +26,8 @@ from core_logic.use_cases.delete_variant import (
     DeleteVariantUseCase,
 )
 from core_logic.use_cases.generate_work_variants import (
+    ComposeWorkVariantsRequest,
+    ComposeWorkVariantsUseCase,
     GenerateWorkVariantsRequest,
     GenerateWorkVariantsUseCase,
 )
@@ -446,12 +448,12 @@ class WorkDetailTests(TestCase):
         self.assertEqual(result.created_count, 0)
         self.assertIsNone(repo.synced_work_id)
 
-    def test_generate_work_variants_use_case_delegates_to_repository(self):
+    def test_compose_work_variants_use_case_delegates_to_repository(self):
         repo = FakeWorkRepository()
-        use_case = GenerateWorkVariantsUseCase(work_repo=repo)
+        use_case = ComposeWorkVariantsUseCase(work_repo=repo)
 
         result = use_case.execute(
-            GenerateWorkVariantsRequest(work_id='work-1', count=3)
+            ComposeWorkVariantsRequest(work_id='work-1', count=3)
         )
 
         self.assertEqual(result.status, 'generated')
@@ -459,18 +461,29 @@ class WorkDetailTests(TestCase):
         self.assertEqual(repo.work_name_request, 'work-1')
         self.assertEqual(repo.generated_variants_request, ('work-1', 3))
 
-    def test_generate_work_variants_use_case_handles_missing_work(self):
+    def test_compose_work_variants_use_case_handles_missing_work(self):
         repo = FakeWorkRepository()
         repo.work_name = None
-        use_case = GenerateWorkVariantsUseCase(work_repo=repo)
+        use_case = ComposeWorkVariantsUseCase(work_repo=repo)
 
         result = use_case.execute(
-            GenerateWorkVariantsRequest(work_id='missing', count=3)
+            ComposeWorkVariantsRequest(work_id='missing', count=3)
         )
 
         self.assertEqual(result.status, 'not_found')
         self.assertEqual(result.created_count, 0)
         self.assertIsNone(repo.generated_variants_request)
+
+    def test_legacy_generate_work_variants_use_case_alias(self):
+        repo = FakeWorkRepository()
+        use_case = GenerateWorkVariantsUseCase(work_repo=repo)
+
+        result = use_case.execute(
+            GenerateWorkVariantsRequest(work_id='work-1', count=1)
+        )
+
+        self.assertEqual(result.status, 'generated')
+        self.assertEqual(result.created_count, 1)
 
     def test_create_work_from_orphans_use_case_creates_work_and_attaches_variants(self):
         repo = FakeWorkRepository()

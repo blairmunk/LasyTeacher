@@ -270,9 +270,12 @@ class SyncWorkAnalogGroupsResult:
 
 
 @dataclass(frozen=True)
-class GenerateWorkVariantsResult:
+class ComposeWorkVariantsResult:
     created_count: int
     status: str = 'generated'
+
+
+GenerateWorkVariantsResult = ComposeWorkVariantsResult
 
 
 @dataclass(frozen=True)

@@ -131,6 +131,7 @@ from core_logic.use_cases.get_review_dashboard import GetReviewDashboardUseCase
 from core_logic.use_cases.get_review_save_navigation import (
     GetReviewSaveNavigationUseCase,
 )
+from core_logic.use_cases.get_site_settings import GetSiteSettingsUseCase
 from core_logic.use_cases.get_student_detail import GetStudentDetailUseCase
 from core_logic.use_cases.get_student_group_detail import GetStudentGroupDetailUseCase
 from core_logic.use_cases.get_student_group_list import GetStudentGroupListUseCase
@@ -187,6 +188,7 @@ from core_logic.use_cases.save_student import (
     UpdateStudentGroupUseCase,
     UpdateStudentUseCase,
 )
+from core_logic.use_cases.save_site_settings import SaveSiteSettingsUseCase
 from core_logic.use_cases.sync_review_session import SyncReviewSessionUseCase
 from core_logic.use_cases.sync_work_analog_groups import SyncWorkAnalogGroupsUseCase
 from core_logic.use_cases.toggle_participation_absent import (
@@ -202,6 +204,7 @@ from infrastructure.repositories.django_curriculum_repo import DjangoCurriculumR
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
 from infrastructure.repositories.django_report_repo import DjangoReportRepository
+from infrastructure.repositories.django_settings_repo import DjangoSettingsRepository
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
@@ -226,6 +229,7 @@ class Container:
         self._curriculum_repo = None
         self._codifier_repo = None
         self._core_repo = None
+        self._settings_repo = None
         self._work_form_adapter = None
         self._task_form_adapter = None
         self._document_generation_service = None
@@ -284,6 +288,12 @@ class Container:
         if self._core_repo is None:
             self._core_repo = DjangoCoreRepository()
         return self._core_repo
+
+    @property
+    def settings_repo(self):
+        if self._settings_repo is None:
+            self._settings_repo = DjangoSettingsRepository()
+        return self._settings_repo
 
     @property
     def work_form_adapter(self):
@@ -507,6 +517,16 @@ class Container:
     def get_import_history_use_case(self):
         return GetImportHistoryUseCase(
             core_repo=self.core_repo,
+        )
+
+    def get_site_settings_use_case(self):
+        return GetSiteSettingsUseCase(
+            settings_repo=self.settings_repo,
+        )
+
+    def save_site_settings_use_case(self):
+        return SaveSiteSettingsUseCase(
+            settings_repo=self.settings_repo,
         )
 
     def validate_task_import_json_use_case(self):

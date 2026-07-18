@@ -120,6 +120,7 @@ from core_logic.use_cases.get_review_dashboard import GetReviewDashboardUseCase
 from core_logic.use_cases.get_review_save_navigation import (
     GetReviewSaveNavigationUseCase,
 )
+from core_logic.use_cases.get_site_settings import GetSiteSettingsUseCase
 from core_logic.use_cases.get_student_detail import GetStudentDetailUseCase
 from core_logic.use_cases.get_student_group_detail import GetStudentGroupDetailUseCase
 from core_logic.use_cases.get_student_group_list import GetStudentGroupListUseCase
@@ -174,6 +175,7 @@ from core_logic.use_cases.save_student import (
     UpdateStudentGroupUseCase,
     UpdateStudentUseCase,
 )
+from core_logic.use_cases.save_site_settings import SaveSiteSettingsUseCase
 from core_logic.use_cases.sync_review_session import SyncReviewSessionUseCase
 from core_logic.use_cases.sync_work_analog_groups import SyncWorkAnalogGroupsUseCase
 from core_logic.use_cases.toggle_participation_absent import (
@@ -193,6 +195,7 @@ from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
 from infrastructure.repositories.django_report_repo import DjangoReportRepository
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
+from infrastructure.repositories.django_settings_repo import DjangoSettingsRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from infrastructure.forms.task_forms import TaskFormAdapter
@@ -275,6 +278,8 @@ class ContainerTests(SimpleTestCase):
         )
         import_page_use_case = container.get_import_page_use_case()
         import_history_use_case = container.get_import_history_use_case()
+        site_settings_use_case = container.get_site_settings_use_case()
+        save_site_settings_use_case = container.save_site_settings_use_case()
         import_validation_use_case = container.validate_task_import_json_use_case()
         execute_import_use_case = container.execute_task_import_use_case()
         preview_import_use_case = container.preview_task_import_use_case()
@@ -462,6 +467,11 @@ class ContainerTests(SimpleTestCase):
         )
         self.assertIsInstance(import_page_use_case, GetImportPageUseCase)
         self.assertIsInstance(import_history_use_case, GetImportHistoryUseCase)
+        self.assertIsInstance(site_settings_use_case, GetSiteSettingsUseCase)
+        self.assertIsInstance(
+            save_site_settings_use_case,
+            SaveSiteSettingsUseCase,
+        )
         self.assertIsInstance(
             import_validation_use_case,
             ValidateTaskImportJsonUseCase,
@@ -574,6 +584,7 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(container.curriculum_repo, DjangoCurriculumRepository)
         self.assertIsInstance(container.codifier_repo, DjangoCodifierRepository)
         self.assertIsInstance(container.core_repo, DjangoCoreRepository)
+        self.assertIsInstance(container.settings_repo, DjangoSettingsRepository)
         self.assertIsInstance(container.task_form_adapter, TaskFormAdapter)
         self.assertIsInstance(container.work_form_adapter, WorkFormAdapter)
         self.assertIsInstance(container.task_import_service, DjangoTaskImportService)

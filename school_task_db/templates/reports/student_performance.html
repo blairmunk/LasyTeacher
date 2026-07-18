@@ -116,7 +116,7 @@
                             <td>
                                 <a href="{% url 'students:detail' stat.student.pk %}"
                                    class="text-decoration-none fw-bold">
-                                    {{ stat.student.get_full_name }}
+                                    {{ stat.student.full_name }}
                                 </a>
                             </td>
                             <td class="text-center">{{ stat.total_participations }}</td>

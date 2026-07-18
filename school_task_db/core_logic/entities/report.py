@@ -5,6 +5,13 @@ from typing import Any, List
 
 
 @dataclass(frozen=True)
+class ReportStudentRef:
+    pk: str
+    full_name: str
+    short_name: str = ''
+
+
+@dataclass(frozen=True)
 class EventsStatusReportData:
     events_by_status: List[dict]
     overdue_events: Any

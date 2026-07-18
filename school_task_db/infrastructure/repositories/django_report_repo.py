@@ -20,6 +20,7 @@ from core_logic.entities.report import (
     JournalData,
     JournalSelectData,
     ReportsDashboardData,
+    ReportStudentRef,
     StudentPerformanceReportData,
     TaskDBHealthData,
     WorkAnalysisReportData,
@@ -850,7 +851,11 @@ class DjangoReportRepository(IReportRepository):
             )
 
             students_stats.append({
-                'student': student,
+                'student': ReportStudentRef(
+                    pk=str(student.pk),
+                    full_name=student.get_full_name(),
+                    short_name=student.get_short_name(),
+                ),
                 'total_participations': total_participations,
                 'completed_participations': completed_count,
                 'completion_rate': completion_rate,

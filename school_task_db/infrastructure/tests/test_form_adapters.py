@@ -322,6 +322,18 @@ class TaskGroupFormAdapterTests(SimpleTestCase):
 
 
 class WorkFormAdapterTests(SimpleTestCase):
+    def test_reads_document_generator_type_from_post(self):
+        adapter = WorkFormAdapter()
+
+        self.assertEqual(
+            adapter.document_generator_type_from_post(QueryDict('generator_type=html')),
+            'html',
+        )
+        self.assertEqual(
+            adapter.document_generator_type_from_post(QueryDict('')),
+            'pdf',
+        )
+
     def test_builds_generate_work_document_request_from_post(self):
         request = WorkFormAdapter().generate_work_document_request_from_post(
             QueryDict(

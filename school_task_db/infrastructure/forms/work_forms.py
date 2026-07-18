@@ -85,6 +85,9 @@ class WorkFormAdapter:
             options=build_work_generation_options(post_data),
         )
 
+    def document_generator_type_from_post(self, post_data, default='pdf'):
+        return post_data.get('generator_type', default)
+
     def generate_remedial_sheet_request_from_post(self, post_data, variant_id):
         return GenerateRemedialSheetDocumentRequest(
             variant_id=variant_id,

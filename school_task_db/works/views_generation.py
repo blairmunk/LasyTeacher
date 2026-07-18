@@ -11,7 +11,9 @@ def generate_work_ajax(request, work_id):
     """Ajax генерация документов с поддержкой hints/instructions"""
     from infrastructure.container import container
 
-    generator_type = request.POST.get('generator_type', 'pdf')
+    generator_type = container.work_form_adapter.document_generator_type_from_post(
+        request.POST,
+    )
     try:
         document_request = (
             container.work_form_adapter.generate_work_document_request_from_post(

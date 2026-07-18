@@ -22,6 +22,8 @@ from core_logic.entities.task import (
     TaskDetailImage,
     TaskDetailSource,
     TaskDetailTask,
+    TaskImageSaveParams,
+    TaskImagesSaveResult,
     TaskListFilters,
     TaskListItem,
     TaskListSourceRef,
@@ -32,7 +34,7 @@ from core_logic.entities.task import (
 from core_logic.interfaces.task_repo import ITaskRepository
 from curriculum.models import SubTopic, Topic
 from task_groups.models import AnalogGroup, TaskGroup
-from tasks.models import Source, Task
+from tasks.models import Source, Task, TaskImage
 from tasks.utils import math_status_cache
 
 
@@ -373,6 +375,54 @@ class DjangoTaskRepository(ITaskRepository):
             setattr(task, field, value)
         task.save()
         return TaskSaveResult(status='updated', task_id=str(task.pk))
+
+    def save_task_images(
+        self,
+        task_id: str,
+        images: List[TaskImageSaveParams],
+    ) -> TaskImagesSaveResult:
+        if not Task.objects.filter(pk=task_id).exists():
+            return TaskImagesSaveResult(status='not_found')
+
+        created_images = 0
+        deleted_images = 0
+        for image_params in images:
+            if image_params.image_id:
+                task_image = TaskImage.objects.filter(
+                    pk=image_params.image_id,
+                    task_id=task_id,
+                ).first()
+                if task_image is None:
+                    continue
+                if image_params.delete:
+                    task_image.delete()
+                    deleted_images += 1
+                    continue
+
+                if image_params.image:
+                    task_image.image = image_params.image
+                task_image.position = image_params.position
+                task_image.caption = image_params.caption
+                task_image.order = image_params.order
+                task_image.save()
+                continue
+
+            if image_params.delete or not image_params.image:
+                continue
+            TaskImage.objects.create(
+                task_id=task_id,
+                image=image_params.image,
+                position=image_params.position,
+                caption=image_params.caption,
+                order=image_params.order,
+            )
+            created_images += 1
+
+        return TaskImagesSaveResult(
+            status='saved',
+            created_images=created_images,
+            deleted_images=deleted_images,
+        )
 
     def _task_values(self, params: TaskSaveParams):
         return {

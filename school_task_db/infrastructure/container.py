@@ -190,7 +190,11 @@ from core_logic.use_cases.save_student import (
     UpdateStudentUseCase,
 )
 from core_logic.use_cases.save_site_settings import SaveSiteSettingsUseCase
-from core_logic.use_cases.save_task import CreateTaskUseCase, UpdateTaskUseCase
+from core_logic.use_cases.save_task import (
+    CreateTaskUseCase,
+    SaveTaskImagesUseCase,
+    UpdateTaskUseCase,
+)
 from core_logic.use_cases.save_work import (
     CreateWorkUseCase,
     SaveWorkSpecificationUseCase,
@@ -604,6 +608,11 @@ class Container:
 
     def update_task_use_case(self):
         return UpdateTaskUseCase(
+            task_repo=self.task_repo,
+        )
+
+    def save_task_images_use_case(self):
+        return SaveTaskImagesUseCase(
             task_repo=self.task_repo,
         )
 

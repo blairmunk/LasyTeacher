@@ -1,6 +1,7 @@
 import datetime as dt
 
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils import timezone
 
@@ -19,6 +20,7 @@ from core_logic.entities.task import (
     SourceCreateParams,
     TaskExportFilters,
     TaskGroupListFilters,
+    TaskImageSaveParams,
     TaskListFilters,
     TaskSaveParams,
 )
@@ -46,7 +48,7 @@ from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
-from tasks.models import Source, Task
+from tasks.models import Source, Task, TaskImage
 from works.models import Variant, VariantTask, Work, WorkAnalogGroup
 from review.models import ReviewComment, ReviewSession
 
@@ -631,6 +633,64 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(task.task_type, 'theoretical')
         self.assertEqual(task.difficulty, 3)
         self.assertEqual(task.teacher_notes, 'Проверить')
+        self.assertEqual(missing_result.status, 'not_found')
+
+    def test_task_repository_saves_task_images(self):
+        repo = DjangoTaskRepository()
+        task = Task.objects.create(
+            text='Задача с рисунком',
+            answer='Ответ',
+            topic=self.topic,
+            task_type='computational',
+            difficulty=2,
+        )
+
+        create_result = repo.save_task_images(
+            task_id=str(task.pk),
+            images=[
+                TaskImageSaveParams(
+                    image=SimpleUploadedFile(
+                        'task.png',
+                        b'file-content',
+                        content_type='image/png',
+                    ),
+                    position='bottom_70',
+                    caption='Рисунок',
+                    order=1,
+                )
+            ],
+        )
+        image = TaskImage.objects.get(task=task)
+        update_result = repo.save_task_images(
+            task_id=str(task.pk),
+            images=[
+                TaskImageSaveParams(
+                    image_id=str(image.pk),
+                    image=image.image,
+                    position='right_40',
+                    caption='Обновлённый рисунок',
+                    order=2,
+                )
+            ],
+        )
+        image.refresh_from_db()
+        delete_result = repo.save_task_images(
+            task_id=str(task.pk),
+            images=[TaskImageSaveParams(image_id=str(image.pk), delete=True)],
+        )
+        missing_result = repo.save_task_images(
+            task_id='00000000-0000-0000-0000-000000000000',
+            images=[],
+        )
+
+        self.assertEqual(create_result.status, 'saved')
+        self.assertEqual(create_result.created_images, 1)
+        self.assertEqual(update_result.status, 'saved')
+        self.assertEqual(image.position, 'right_40')
+        self.assertEqual(image.caption, 'Обновлённый рисунок')
+        self.assertEqual(image.order, 2)
+        self.assertEqual(delete_result.deleted_images, 1)
+        self.assertFalse(TaskImage.objects.filter(pk=image.pk).exists())
         self.assertEqual(missing_result.status, 'not_found')
 
     def test_task_repository_builds_task_export_payload(self):

@@ -177,7 +177,11 @@ from core_logic.use_cases.save_student import (
     UpdateStudentUseCase,
 )
 from core_logic.use_cases.save_site_settings import SaveSiteSettingsUseCase
-from core_logic.use_cases.save_task import CreateTaskUseCase, UpdateTaskUseCase
+from core_logic.use_cases.save_task import (
+    CreateTaskUseCase,
+    SaveTaskImagesUseCase,
+    UpdateTaskUseCase,
+)
 from core_logic.use_cases.save_work import (
     CreateWorkUseCase,
     SaveWorkSpecificationUseCase,
@@ -230,6 +234,7 @@ class ContainerTests(SimpleTestCase):
         refresh_math_cache_use_case = container.refresh_task_math_cache_use_case()
         create_task_use_case = container.create_task_use_case()
         update_task_use_case = container.update_task_use_case()
+        save_task_images_use_case = container.save_task_images_use_case()
         student_detail_use_case = container.get_student_detail_use_case()
         student_group_detail_use_case = container.get_student_group_detail_use_case()
         student_list_use_case = container.get_student_list_use_case()
@@ -398,6 +403,7 @@ class ContainerTests(SimpleTestCase):
         )
         self.assertIsInstance(create_task_use_case, CreateTaskUseCase)
         self.assertIsInstance(update_task_use_case, UpdateTaskUseCase)
+        self.assertIsInstance(save_task_images_use_case, SaveTaskImagesUseCase)
         self.assertIsInstance(student_detail_use_case, GetStudentDetailUseCase)
         self.assertIsInstance(
             student_group_detail_use_case,

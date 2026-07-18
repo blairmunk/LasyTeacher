@@ -9,6 +9,7 @@ from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_POST
 
 from core_logic.entities.task import (
+    TaskImageSaveParams,
     SourceCreateParams,
     TaskListFilters,
     TaskSaveParams,
@@ -54,6 +55,26 @@ def _task_params_from_form(form, task_id=''):
         is_verified=form.cleaned_data.get('is_verified', False),
         teacher_notes=form.cleaned_data.get('teacher_notes', ''),
     )
+
+
+def _task_image_params_from_formset(formset):
+    images = []
+    for row in formset.cleaned_data:
+        if not row:
+            continue
+
+        image_obj = row.get('id')
+        images.append(
+            TaskImageSaveParams(
+                image_id=str(image_obj.pk) if image_obj else '',
+                image=row.get('image'),
+                position=row.get('position', ''),
+                caption=row.get('caption', ''),
+                order=row.get('order') or 1,
+                delete=row.get('DELETE', False),
+            )
+        )
+    return images
 
 
 class TaskListView(TemplateView):
@@ -169,9 +190,9 @@ class TaskCreateView(TemplateView):
         task_result = container.create_task_use_case().execute(
             _task_params_from_form(form),
         )
-        image_result = container.task_form_adapter.save_created_images(
-            image_formset,
+        image_result = container.save_task_images_use_case().execute(
             task_id=task_result.task_id,
+            images=_task_image_params_from_formset(image_formset),
         )
 
         messages.success(request, 'Задание успешно создано!')
@@ -239,9 +260,9 @@ class TaskUpdateView(TemplateView):
         if task_result.status == 'not_found':
             raise Http404('Задание не найдено')
 
-        image_result = container.task_form_adapter.save_updated_images(
-            image_formset,
+        image_result = container.save_task_images_use_case().execute(
             task_id=task_result.task_id,
+            images=_task_image_params_from_formset(image_formset),
         )
 
         messages.success(request, 'Задание успешно обновлено!')

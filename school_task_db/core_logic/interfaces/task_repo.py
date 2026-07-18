@@ -20,6 +20,8 @@ from core_logic.entities.task import (
     TaskDetailTask,
     TaskListItem,
     TaskListFilters,
+    TaskImageSaveParams,
+    TaskImagesSaveResult,
     TaskSaveParams,
     TaskSaveResult,
 )
@@ -68,6 +70,14 @@ class ITaskRepository(ABC):
     @abstractmethod
     def update_task(self, params: TaskSaveParams) -> TaskSaveResult:
         """Update a task, or return not_found status."""
+
+    @abstractmethod
+    def save_task_images(
+        self,
+        task_id: str,
+        images: List[TaskImageSaveParams],
+    ) -> TaskImagesSaveResult:
+        """Persist task images and return change counts."""
 
     @abstractmethod
     def get_task_detail_groups(self, task_id: str) -> List[TaskDetailGroup]:

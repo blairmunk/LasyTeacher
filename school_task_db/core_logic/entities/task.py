@@ -252,6 +252,23 @@ class TaskSaveResult:
 
 
 @dataclass(frozen=True)
+class TaskImageSaveParams:
+    image_id: str = ''
+    image: Any = None
+    position: str = ''
+    caption: str = ''
+    order: int = 1
+    delete: bool = False
+
+
+@dataclass(frozen=True)
+class TaskImagesSaveResult:
+    status: str
+    created_images: int = 0
+    deleted_images: int = 0
+
+
+@dataclass(frozen=True)
 class SelectOption:
     id: str
     name: str

@@ -284,7 +284,10 @@ class TaskBulkGroupAjaxTests(TestCase):
 
         created_task = Task.objects.get(text='Созданное задание')
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, created_task.get_absolute_url())
+        self.assertEqual(
+            response.url,
+            reverse('tasks:detail', kwargs={'pk': created_task.pk}),
+        )
         self.assertEqual(created_task.topic, self.topic)
 
     def test_update_task_saves_task_with_empty_image_formset(self):
@@ -299,7 +302,10 @@ class TaskBulkGroupAjaxTests(TestCase):
 
         self.first_task.refresh_from_db()
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, self.first_task.get_absolute_url())
+        self.assertEqual(
+            response.url,
+            reverse('tasks:detail', kwargs={'pk': self.first_task.pk}),
+        )
         self.assertEqual(self.first_task.text, 'Обновлённое задание')
 
     def test_delete_task_removes_task(self):

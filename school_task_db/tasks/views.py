@@ -137,7 +137,7 @@ class TaskCreateView(CreateView):
                     f'Добавлено изображений: {result.created_images}',
                 )
 
-            return redirect(self.object.get_absolute_url())
+            return redirect(reverse('tasks:detail', kwargs={'pk': self.object.pk}))
         else:
             messages.error(self.request, 'Ошибка при создании задания.')
             return self.form_invalid(form)
@@ -185,7 +185,7 @@ class TaskUpdateView(UpdateView):
                     f'Удалено изображений: {result.deleted_images}',
                 )
 
-            return redirect(self.object.get_absolute_url())
+            return redirect(reverse('tasks:detail', kwargs={'pk': self.object.pk}))
         else:
             messages.error(self.request, 'Ошибка при обновлении задания.')
             return self.form_invalid(form)

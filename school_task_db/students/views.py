@@ -475,19 +475,22 @@ class RemedialFromEventView(View):
 
     def post(self, request, event_pk):
         """Создаём работу над ошибками из результатов события"""
-        from core_logic.use_cases.create_remedial_from_event import (
-            RemedialFromEventRequest,
+        from core_logic.use_cases.prepare_remedial_from_event_submission import (
+            PrepareRemedialFromEventSubmissionRequest,
         )
         from infrastructure.container import container
 
-        result = container.create_remedial_from_event_use_case().execute(
-            RemedialFromEventRequest(
-                event_id=str(event_pk),
-                selected_student_ids=request.POST.getlist('selected_students'),
-                work_name=request.POST.get('work_name', ''),
-                create_event=request.POST.get('create_event') == '1',
-                event_date=request.POST.get('event_date', ''),
+        create_request = (
+            container.prepare_remedial_from_event_submission_use_case().execute(
+                PrepareRemedialFromEventSubmissionRequest(
+                    event_id=str(event_pk),
+                    data=_post_lists(request.POST),
+                )
             )
+        )
+
+        result = container.create_remedial_from_event_use_case().execute(
+            create_request,
         )
 
         if not result.success:

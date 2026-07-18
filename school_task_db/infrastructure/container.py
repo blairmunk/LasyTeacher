@@ -174,6 +174,9 @@ from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUse
 from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionUseCase,
 )
+from core_logic.use_cases.prepare_remedial_from_event_submission import (
+    PrepareRemedialFromEventSubmissionUseCase,
+)
 from core_logic.use_cases.prepare_remedial_wizard_submission import (
     PrepareRemedialWizardCreateSubmissionUseCase,
     PrepareRemedialWizardPreviewSubmissionUseCase,
@@ -798,6 +801,9 @@ class Container:
         return PrepareParticipationReviewSubmissionUseCase(
             review_service=self.review_service(),
         )
+
+    def prepare_remedial_from_event_submission_use_case(self):
+        return PrepareRemedialFromEventSubmissionUseCase()
 
     def prepare_remedial_wizard_preview_submission_use_case(self):
         return PrepareRemedialWizardPreviewSubmissionUseCase()

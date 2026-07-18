@@ -296,7 +296,8 @@ class ReportsViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['active_report'], 'heatmap')
         self.assertEqual(response.context['topic'], topic)
-        self.assertEqual(response.context['student'], student)
+        self.assertEqual(response.context['student'].pk, str(student.pk))
+        self.assertEqual(response.context['student'].full_name, student.get_full_name())
         self.assertEqual(response.context['selected_subtopic'], subtopic)
         self.assertEqual(response.context['details'][0]['task'], task)
         self.assertEqual(response.context['details'][0]['pct'], 80)
@@ -363,7 +364,7 @@ class ReportsViewsTests(TestCase):
         self.assertEqual(response.context['total_students'], 1)
         self.assertEqual(response.context['student_rows'][0]['pct'], 80)
         self.assertIn(f'group={group.pk}', response.context['student_rows'][0]['url'])
-        self.assertEqual(response.context['task_rows'][0]['task'], task)
+        self.assertEqual(response.context['task_rows'][0]['task'].pk, str(task.pk))
         self.assertEqual(response.context['task_rows'][0]['avg_pct'], 80)
 
     def test_dashboard_view_uses_clean_report_data(self):

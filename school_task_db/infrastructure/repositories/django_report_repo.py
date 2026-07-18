@@ -23,6 +23,7 @@ from core_logic.entities.report import (
     ReportCourseRef,
     ReportGroupRef,
     ReportStudentRef,
+    ReportTaskRef,
     StudentPerformanceReportData,
     TaskDBHealthData,
     WorkAnalysisReportData,
@@ -675,7 +676,7 @@ class DjangoReportRepository(IReportRepository):
 
         return HeatmapStudentDetailData(
             topic=topic,
-            student=student,
+            student=self._report_student_ref(student),
             selected_subtopic=selected_subtopic,
             details=details,
             subtopic_summary=subtopic_summary,
@@ -1275,7 +1276,7 @@ class DjangoReportRepository(IReportRepository):
             if data and data['max_points'] > 0:
                 pct = round(data['points'] / data['max_points'] * 100)
                 rows.append({
-                    'student': student,
+                    'student': self._report_student_ref(student),
                     'points': data['points'],
                     'max_points': data['max_points'],
                     'pct': pct,
@@ -1284,7 +1285,7 @@ class DjangoReportRepository(IReportRepository):
                 })
             else:
                 rows.append({
-                    'student': student,
+                    'student': self._report_student_ref(student),
                     'pct': None,
                     'css': 'no-data',
                     'events': [],
@@ -1298,7 +1299,12 @@ class DjangoReportRepository(IReportRepository):
             if data and data['max_points'] > 0:
                 avg_pct = round(data['points'] / data['max_points'] * 100)
                 rows.append({
-                    'task': task,
+                    'task': ReportTaskRef(
+                        pk=str(task.pk),
+                        text=task.text,
+                        difficulty=task.difficulty,
+                        difficulty_display=task.get_difficulty_display(),
+                    ),
                     'avg_pct': avg_pct,
                     'css': self._color_class(avg_pct),
                     'students_count': data['count'],
@@ -1380,6 +1386,13 @@ class DjangoReportRepository(IReportRepository):
             cell['display'] = '–'
 
         return cell
+
+    def _report_student_ref(self, student):
+        return ReportStudentRef(
+            pk=str(student.pk),
+            full_name=student.get_full_name(),
+            short_name=student.get_short_name(),
+        )
 
     def _journal_score_css(self, score):
         if score >= 5:

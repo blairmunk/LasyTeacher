@@ -122,9 +122,9 @@
                 <tr>
                     <td>
                         {% if row.url %}
-                        <a href="{{ row.url }}">{{ row.student.get_short_name }}</a>
+                        <a href="{{ row.url }}">{{ row.student.short_name }}</a>
                         {% else %}
-                        {{ row.student.get_short_name }}
+                        {{ row.student.short_name }}
                         {% endif %}
                     </td>
                     <td class="text-center">
@@ -189,7 +189,7 @@
                             {% if row.task.difficulty >= 4 %}bg-danger
                             {% elif row.task.difficulty >= 3 %}bg-warning text-dark
                             {% else %}bg-secondary{% endif %}">
-                            {{ row.task.get_difficulty_display }}
+                            {{ row.task.difficulty_display }}
                         </span>
                     </td>
                     <td class="text-center">{{ row.students_count }} уч.</td>

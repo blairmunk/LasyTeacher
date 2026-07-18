@@ -205,14 +205,22 @@ class DjangoReportRepositoryTests(TestCase):
         self.assertEqual(data.students_with_data, 1)
         self.assertEqual(data.overall_pct, 80)
         self.assertEqual(data.overall_css, 'good')
-        self.assertEqual(data.student_rows[0]['student'], selected_student)
+        self.assertEqual(data.student_rows[0]['student'].pk, str(selected_student.pk))
+        self.assertEqual(
+            data.student_rows[0]['student'].short_name,
+            selected_student.get_short_name(),
+        )
         self.assertEqual(data.student_rows[0]['points'], 8)
         self.assertEqual(data.student_rows[0]['max_points'], 10)
         self.assertEqual(data.student_rows[0]['pct'], 80)
         self.assertEqual(data.student_rows[0]['events'], ['КР'])
-        self.assertEqual(data.student_rows[1]['student'], empty_student)
+        self.assertEqual(data.student_rows[1]['student'].pk, str(empty_student.pk))
         self.assertIsNone(data.student_rows[1]['pct'])
-        self.assertEqual(data.task_rows[0]['task'], task)
+        self.assertEqual(data.task_rows[0]['task'].pk, str(task.pk))
+        self.assertEqual(
+            data.task_rows[0]['task'].difficulty_display,
+            task.get_difficulty_display(),
+        )
         self.assertEqual(data.task_rows[0]['avg_pct'], 80)
         self.assertEqual(data.task_rows[0]['students_count'], 1)
         self.assertEqual(data.active_report, 'heatmap')
@@ -272,7 +280,8 @@ class DjangoReportRepositoryTests(TestCase):
         )
 
         self.assertEqual(data.topic, topic)
-        self.assertEqual(data.student, student)
+        self.assertEqual(data.student.pk, str(student.pk))
+        self.assertEqual(data.student.full_name, student.get_full_name())
         self.assertEqual(data.selected_subtopic, subtopic)
         self.assertEqual(len(data.details), 1)
         self.assertEqual(data.details[0]['task'], task)

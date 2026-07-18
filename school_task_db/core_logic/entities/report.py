@@ -25,6 +25,14 @@ class ReportGroupRef:
 
 
 @dataclass(frozen=True)
+class ReportTaskRef:
+    pk: str
+    text: str
+    difficulty: int
+    difficulty_display: str
+
+
+@dataclass(frozen=True)
 class EventsStatusReportData:
     events_by_status: List[dict]
     overdue_events: Any

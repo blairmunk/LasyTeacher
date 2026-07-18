@@ -181,6 +181,12 @@ from core_logic.use_cases.save_analog_group import (
     CreateAnalogGroupUseCase,
     UpdateAnalogGroupUseCase,
 )
+from core_logic.use_cases.save_student import (
+    CreateStudentGroupUseCase,
+    CreateStudentUseCase,
+    UpdateStudentGroupUseCase,
+    UpdateStudentUseCase,
+)
 from core_logic.use_cases.sync_review_session import SyncReviewSessionUseCase
 from core_logic.use_cases.sync_work_analog_groups import SyncWorkAnalogGroupsUseCase
 from core_logic.use_cases.toggle_participation_absent import (
@@ -395,6 +401,26 @@ class Container:
 
     def get_student_remedial_work_use_case(self):
         return GetStudentRemedialWorkUseCase(
+            student_repo=self.student_repo,
+        )
+
+    def create_student_use_case(self):
+        return CreateStudentUseCase(
+            student_repo=self.student_repo,
+        )
+
+    def update_student_use_case(self):
+        return UpdateStudentUseCase(
+            student_repo=self.student_repo,
+        )
+
+    def create_student_group_use_case(self):
+        return CreateStudentGroupUseCase(
+            student_repo=self.student_repo,
+        )
+
+    def update_student_group_use_case(self):
+        return UpdateStudentGroupUseCase(
             student_repo=self.student_repo,
         )
 

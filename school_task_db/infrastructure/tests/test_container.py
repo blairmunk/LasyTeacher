@@ -168,6 +168,12 @@ from core_logic.use_cases.save_analog_group import (
     CreateAnalogGroupUseCase,
     UpdateAnalogGroupUseCase,
 )
+from core_logic.use_cases.save_student import (
+    CreateStudentGroupUseCase,
+    CreateStudentUseCase,
+    UpdateStudentGroupUseCase,
+    UpdateStudentUseCase,
+)
 from core_logic.use_cases.sync_review_session import SyncReviewSessionUseCase
 from core_logic.use_cases.sync_work_analog_groups import SyncWorkAnalogGroupsUseCase
 from core_logic.use_cases.toggle_participation_absent import (
@@ -215,6 +221,10 @@ class ContainerTests(SimpleTestCase):
         student_list_use_case = container.get_student_list_use_case()
         student_group_list_use_case = container.get_student_group_list_use_case()
         student_remedial_use_case = container.get_student_remedial_work_use_case()
+        create_student_use_case = container.create_student_use_case()
+        update_student_use_case = container.update_student_use_case()
+        create_student_group_use_case = container.create_student_group_use_case()
+        update_student_group_use_case = container.update_student_group_use_case()
         create_student_remedial_use_case = (
             container.create_student_remedial_variant_use_case()
         )
@@ -376,6 +386,16 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             student_remedial_use_case,
             GetStudentRemedialWorkUseCase,
+        )
+        self.assertIsInstance(create_student_use_case, CreateStudentUseCase)
+        self.assertIsInstance(update_student_use_case, UpdateStudentUseCase)
+        self.assertIsInstance(
+            create_student_group_use_case,
+            CreateStudentGroupUseCase,
+        )
+        self.assertIsInstance(
+            update_student_group_use_case,
+            UpdateStudentGroupUseCase,
         )
         self.assertIsInstance(
             create_student_remedial_use_case,

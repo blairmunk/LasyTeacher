@@ -12,6 +12,7 @@ from core_logic.entities.task import (
     TaskGroupListFilters,
     TaskListFilters,
 )
+from core_logic.entities.student import SaveStudentGroupParams, SaveStudentParams
 from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
     RemedialFromEventRequest,
@@ -229,6 +230,75 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(student_group.students[0].pk, str(self.student.pk))
         self.assertEqual(student_group.students[0].last_name, self.student.last_name)
         self.assertIsNone(missing_student_group)
+
+    def test_student_repository_creates_and_updates_student(self):
+        repo = DjangoStudentRepository()
+
+        create_result = repo.create_student(
+            SaveStudentParams(
+                first_name='Пётр',
+                last_name='Петров',
+                middle_name='Петрович',
+                email='petrov@example.test',
+            )
+        )
+        update_result = repo.update_student(
+            SaveStudentParams(
+                student_id=create_result.student_id,
+                first_name='Павел',
+                last_name='Петров',
+                middle_name='',
+                email='pavel@example.test',
+            )
+        )
+        missing_result = repo.update_student(
+            SaveStudentParams(
+                student_id='00000000-0000-0000-0000-000000000000',
+                first_name='Нет',
+                last_name='Такого',
+            )
+        )
+
+        student = Student.objects.get(pk=create_result.student_id)
+        self.assertEqual(create_result.status, 'created')
+        self.assertEqual(update_result.status, 'updated')
+        self.assertEqual(student.first_name, 'Павел')
+        self.assertEqual(student.email, 'pavel@example.test')
+        self.assertEqual(missing_result.status, 'not_found')
+
+    def test_student_repository_creates_and_updates_student_group(self):
+        repo = DjangoStudentRepository()
+        second_student = Student.objects.create(
+            first_name='Пётр',
+            last_name='Петров',
+        )
+
+        create_result = repo.create_student_group(
+            SaveStudentGroupParams(
+                name='10А',
+                student_ids=[str(self.student.pk)],
+            )
+        )
+        update_result = repo.update_student_group(
+            SaveStudentGroupParams(
+                group_id=create_result.group_id,
+                name='10Б',
+                student_ids=[str(second_student.pk)],
+            )
+        )
+        missing_result = repo.update_student_group(
+            SaveStudentGroupParams(
+                group_id='00000000-0000-0000-0000-000000000000',
+                name='Нет',
+            )
+        )
+
+        group = StudentGroup.objects.get(pk=create_result.group_id)
+        self.assertEqual(create_result.status, 'created')
+        self.assertEqual(update_result.status, 'updated')
+        self.assertEqual(group.name, '10Б')
+        self.assertEqual(list(group.students.all()), [second_student])
+        self.assertEqual(missing_result.status, 'not_found')
 
     def test_task_repository_returns_filtered_task_list_data(self):
         repo = DjangoTaskRepository()

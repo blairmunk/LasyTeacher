@@ -5,6 +5,10 @@ from typing import Any, List, Optional
 
 from core_logic.entities.student import (
     RemedialWizardPreviewData,
+    SaveStudentGroupParams,
+    SaveStudentGroupResult,
+    SaveStudentParams,
+    SaveStudentResult,
     StudentDetail,
     StudentListItem,
     StudentGroupDetail,
@@ -34,6 +38,28 @@ class IStudentRepository(ABC):
     @abstractmethod
     def get_student_group(self, group_id: str) -> Optional[StudentGroupDetail]:
         """Return one student group detail read model, or None."""
+
+    @abstractmethod
+    def create_student(self, params: SaveStudentParams) -> SaveStudentResult:
+        """Create a student."""
+
+    @abstractmethod
+    def update_student(self, params: SaveStudentParams) -> SaveStudentResult:
+        """Update a student, or return not_found status."""
+
+    @abstractmethod
+    def create_student_group(
+        self,
+        params: SaveStudentGroupParams,
+    ) -> SaveStudentGroupResult:
+        """Create a student group/class."""
+
+    @abstractmethod
+    def update_student_group(
+        self,
+        params: SaveStudentGroupParams,
+    ) -> SaveStudentGroupResult:
+        """Update a student group/class, or return not_found status."""
 
     @abstractmethod
     def get_task_results_for_event(

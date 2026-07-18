@@ -10,6 +10,10 @@ from core_logic.entities.student import (
     MarkRef,
     ObjectRef,
     RemedialWizardPreviewData,
+    SaveStudentGroupParams,
+    SaveStudentGroupResult,
+    SaveStudentParams,
+    SaveStudentResult,
     StudentDetail,
     StudentGroupDetail,
     StudentGroupDetailStudent,
@@ -113,6 +117,48 @@ class DjangoStudentRepository(IStudentRepository):
                 )
             ],
         )
+
+    def create_student(self, params: SaveStudentParams) -> SaveStudentResult:
+        student = Student.objects.create(
+            first_name=params.first_name,
+            last_name=params.last_name,
+            middle_name=params.middle_name,
+            email=params.email,
+        )
+        return SaveStudentResult(status='created', student_id=str(student.pk))
+
+    def update_student(self, params: SaveStudentParams) -> SaveStudentResult:
+        student = Student.objects.filter(pk=params.student_id).first()
+        if student is None:
+            return SaveStudentResult(status='not_found')
+
+        student.first_name = params.first_name
+        student.last_name = params.last_name
+        student.middle_name = params.middle_name
+        student.email = params.email
+        student.save()
+        return SaveStudentResult(status='updated', student_id=str(student.pk))
+
+    def create_student_group(
+        self,
+        params: SaveStudentGroupParams,
+    ) -> SaveStudentGroupResult:
+        group = StudentGroup.objects.create(name=params.name)
+        group.students.set(params.student_ids)
+        return SaveStudentGroupResult(status='created', group_id=str(group.pk))
+
+    def update_student_group(
+        self,
+        params: SaveStudentGroupParams,
+    ) -> SaveStudentGroupResult:
+        group = StudentGroup.objects.filter(pk=params.group_id).first()
+        if group is None:
+            return SaveStudentGroupResult(status='not_found')
+
+        group.name = params.name
+        group.save()
+        group.students.set(params.student_ids)
+        return SaveStudentGroupResult(status='updated', group_id=str(group.pk))
 
     def get_task_results_for_event(
         self,

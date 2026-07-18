@@ -152,6 +152,21 @@ class StudentDetailData:
 
 
 @dataclass(frozen=True)
+class SaveStudentParams:
+    first_name: str
+    last_name: str
+    middle_name: str = ''
+    email: str = ''
+    student_id: str = ''
+
+
+@dataclass(frozen=True)
+class SaveStudentResult:
+    status: str
+    student_id: str = ''
+
+
+@dataclass(frozen=True)
 class StudentGroupListData:
     student_groups: List["StudentGroupListItem"]
 
@@ -191,6 +206,19 @@ class StudentGroupDetail:
     @property
     def students_count(self) -> int:
         return len(self.students)
+
+
+@dataclass(frozen=True)
+class SaveStudentGroupParams:
+    name: str
+    student_ids: List[str] = field(default_factory=list)
+    group_id: str = ''
+
+
+@dataclass(frozen=True)
+class SaveStudentGroupResult:
+    status: str
+    group_id: str = ''
 
 
 @dataclass(frozen=True)

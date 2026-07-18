@@ -346,19 +346,21 @@ class RemedialWorkView(TemplateView):
 
     def post(self, request, *args, **kwargs):
         student = self._get_student()
-        from core_logic.use_cases.create_student_remedial_variant import (
-            CreateStudentRemedialVariantRequest,
+        from core_logic.use_cases.prepare_student_remedial_submission import (
+            PrepareStudentRemedialSubmissionRequest,
         )
 
-        max_tasks = int(request.POST.get('max_tasks', 10))
-        selected_groups = request.POST.getlist('groups')
+        create_request = (
+            container.prepare_student_remedial_submission_use_case().execute(
+                PrepareStudentRemedialSubmissionRequest(
+                    student_id=str(student.pk),
+                    data=_post_lists(request.POST),
+                )
+            )
+        )
 
         result = container.create_student_remedial_variant_use_case().execute(
-            CreateStudentRemedialVariantRequest(
-                student_id=str(student.pk),
-                max_tasks=max_tasks,
-                selected_group_ids=selected_groups,
-            )
+            create_request,
         )
 
         if not result.success:

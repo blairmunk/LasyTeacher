@@ -114,7 +114,11 @@ class DjangoReportRepositoryTests(TestCase):
 
         self.assertEqual(data.columns, [subtopic])
         self.assertEqual(len(data.rows), 1)
-        self.assertEqual(data.rows[0]['student'], student)
+        self.assertEqual(data.rows[0]['student'].pk, str(student.pk))
+        self.assertEqual(
+            data.rows[0]['student'].short_name,
+            student.get_short_name(),
+        )
         self.assertEqual(data.rows[0]['avg'], 80)
         self.assertEqual(data.rows[0]['cells'][0]['pct'], 80)
         self.assertEqual(data.rows[0]['cells'][0]['subtopic'], subtopic)
@@ -431,7 +435,11 @@ class DjangoReportRepositoryTests(TestCase):
 
         self.assertEqual(data.columns, [topic])
         self.assertEqual(len(data.rows), 1)
-        self.assertEqual(data.rows[0]['student'], student)
+        self.assertEqual(data.rows[0]['student'].pk, str(student.pk))
+        self.assertEqual(
+            data.rows[0]['student'].short_name,
+            student.get_short_name(),
+        )
         self.assertEqual(data.rows[0]['avg'], 80)
         self.assertEqual(data.rows[0]['avg_css'], 'good')
         self.assertEqual(data.rows[0]['cells'][0]['pct'], 80)
@@ -524,7 +532,11 @@ class DjangoReportRepositoryTests(TestCase):
 
         self.assertEqual(data.columns, [topic])
         self.assertEqual(len(data.rows), 1)
-        self.assertEqual(data.rows[0]['student'], student)
+        self.assertEqual(data.rows[0]['student'].pk, str(student.pk))
+        self.assertEqual(
+            data.rows[0]['student'].short_name,
+            student.get_short_name(),
+        )
         self.assertEqual(data.rows[0]['avg'], 80)
         self.assertEqual(data.rows[0]['cells'][0]['pct'], 80)
         self.assertEqual(data.col_averages, [{'pct': 80, 'css': 'good'}])

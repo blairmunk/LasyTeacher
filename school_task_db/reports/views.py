@@ -262,7 +262,7 @@ class HeatmapView(View):
         if not transpose:
             grid_row_header = 'Ученик'
             grid_rows = [{
-                'label': row['student'].get_short_name(),
+                'label': row['student'].short_name,
                 'url': reverse('students:detail', args=[row['student'].pk]),
                 'cells': row['cells'],
                 'avg': row['avg'],
@@ -287,8 +287,8 @@ class HeatmapView(View):
                     'avg_css': col_averages[i]['css'],
                 })
             grid_col_headers = [{
-                'label': row['student'].get_short_name(),
-                'title': row['student'].get_full_name(),
+                'label': row['student'].short_name,
+                'title': row['student'].full_name,
             } for row in rows]
             grid_col_averages = [{'pct': row['avg'], 'css': row['avg_css']} for row in rows]
 
@@ -363,7 +363,7 @@ class HeatmapCourseView(View):
         if not transpose:
             grid_row_header = 'Ученик'
             grid_rows = [{
-                'label': row['student'].get_short_name(),
+                'label': row['student'].short_name,
                 'url': reverse('students:detail', args=[row['student'].pk]),
                 'cells': row['cells'],
                 'avg': row['avg'],
@@ -388,8 +388,8 @@ class HeatmapCourseView(View):
                     'avg_css': col_averages[i]['css'],
                 })
             grid_col_headers = [{
-                'label': row['student'].get_short_name(),
-                'title': row['student'].get_full_name(),
+                'label': row['student'].short_name,
+                'title': row['student'].full_name,
             } for row in rows]
             grid_col_averages = [{'pct': row['avg'], 'css': row['avg_css']} for row in rows]
 
@@ -475,7 +475,7 @@ class HeatmapDrilldownView(View):
                                        args=[topic.pk, row['student'].pk])
                                + group_param)
                 grid_rows.append({
-                    'label': row['student'].get_short_name(),
+                    'label': row['student'].short_name,
                     'url': student_url,
                     'cells': cells_with_urls,
                     'avg': row['avg'],
@@ -511,8 +511,8 @@ class HeatmapDrilldownView(View):
                 })
 
             grid_col_headers = [{
-                'label': row['student'].get_short_name(),
-                'title': row['student'].get_full_name(),
+                'label': row['student'].short_name,
+                'title': row['student'].full_name,
                 'url': (reverse('reports:heatmap-student',
                                 args=[topic.pk, row['student'].pk]) + group_param),
             } for row in rows]

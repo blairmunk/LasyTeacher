@@ -1187,7 +1187,7 @@ class DjangoReportRepository(IReportRepository):
 
             avg = round(total_points / total_max * 100) if total_max > 0 else None
             rows.append({
-                'student': student,
+                'student': self._report_student_ref(student),
                 'cells': cells,
                 'avg': avg,
                 'avg_css': self._color_class(avg) if avg is not None else 'no-data',
@@ -1240,7 +1240,7 @@ class DjangoReportRepository(IReportRepository):
 
             avg = round(total_points / total_max * 100) if total_max > 0 else None
             rows.append({
-                'student': student,
+                'student': self._report_student_ref(student),
                 'cells': cells,
                 'avg': avg,
                 'avg_css': self._color_class(avg) if avg is not None else 'no-data',

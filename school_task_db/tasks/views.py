@@ -1,5 +1,6 @@
 import json
 
+from django.core.paginator import Paginator
 from django.shortcuts import redirect
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView
 from django.contrib import messages
@@ -24,9 +25,8 @@ from .models import Task, Source
 from .forms import TaskForm, SourceForm
 
 
-class TaskListView(ListView):
+class TaskListView(TemplateView):
     template_name = 'tasks/list.html'
-    context_object_name = 'tasks'
     paginate_by = 20
 
     def _get_list_data(self):
@@ -49,12 +49,15 @@ class TaskListView(ListView):
             )
         return self._task_list_data
 
-    def get_queryset(self):
-        return self._get_list_data().tasks
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         list_data = self._get_list_data()
+        paginator = Paginator(list_data.tasks, self.paginate_by)
+        page_obj = paginator.get_page(self.request.GET.get('page'))
+
+        context['tasks'] = page_obj.object_list
+        context['page_obj'] = page_obj
+        context['is_paginated'] = page_obj.has_other_pages()
         context['topics'] = list_data.topics
         context['analog_groups'] = list_data.analog_groups
         context['sources'] = list_data.sources

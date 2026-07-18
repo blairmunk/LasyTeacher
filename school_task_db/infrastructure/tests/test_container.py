@@ -177,6 +177,7 @@ from core_logic.use_cases.save_student import (
     UpdateStudentUseCase,
 )
 from core_logic.use_cases.save_site_settings import SaveSiteSettingsUseCase
+from core_logic.use_cases.save_work import CreateWorkUseCase, UpdateWorkUseCase
 from core_logic.use_cases.sync_review_session import SyncReviewSessionUseCase
 from core_logic.use_cases.sync_work_analog_groups import SyncWorkAnalogGroupsUseCase
 from core_logic.use_cases.toggle_participation_absent import (
@@ -342,6 +343,8 @@ class ContainerTests(SimpleTestCase):
         create_from_orphans_use_case = container.create_work_from_orphans_use_case()
         create_from_groups_use_case = container.create_work_from_groups_use_case()
         create_from_tasks_use_case = container.create_work_from_tasks_use_case()
+        create_work_use_case = container.create_work_use_case()
+        update_work_use_case = container.update_work_use_case()
         variant_delete_info_use_case = container.get_variant_delete_info_use_case()
         delete_variant_use_case = container.delete_variant_use_case()
         delete_task_groups_use_case = container.delete_task_groups_use_case()
@@ -557,6 +560,8 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(create_from_orphans_use_case, CreateWorkFromOrphansUseCase)
         self.assertIsInstance(create_from_groups_use_case, CreateWorkFromGroupsUseCase)
         self.assertIsInstance(create_from_tasks_use_case, CreateWorkFromTasksUseCase)
+        self.assertIsInstance(create_work_use_case, CreateWorkUseCase)
+        self.assertIsInstance(update_work_use_case, UpdateWorkUseCase)
         self.assertIsInstance(variant_delete_info_use_case, GetVariantDeleteInfoUseCase)
         self.assertIsInstance(delete_variant_use_case, DeleteVariantUseCase)
         self.assertIsInstance(delete_task_groups_use_case, DeleteTaskGroupsUseCase)

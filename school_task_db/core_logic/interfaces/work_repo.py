@@ -27,8 +27,10 @@ from core_logic.entities.work import (
 class CreateWorkParams:
     name: str
     work_type: str = 'remedial'
+    duration: int = 45
     max_score: int = 0
     variant_counter: int = 0
+    work_id: str = ''
 
 
 @dataclass(frozen=True)
@@ -208,6 +210,10 @@ class IWorkRepository(ABC):
     @abstractmethod
     def create_work(self, params: CreateWorkParams) -> str:
         """Create a work and return its ID."""
+
+    @abstractmethod
+    def update_work(self, params: CreateWorkParams) -> bool:
+        """Update a work and return whether it was found."""
 
     @abstractmethod
     def create_work_analog_group(self, params: CreateWorkAnalogGroupParams) -> None:

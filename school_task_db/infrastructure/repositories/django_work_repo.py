@@ -542,10 +542,23 @@ class DjangoWorkRepository(IWorkRepository):
         work = Work.objects.create(
             name=params.name,
             work_type=params.work_type,
+            duration=params.duration,
             max_score=params.max_score,
             variant_counter=params.variant_counter,
         )
         return str(work.pk)
+
+    def update_work(self, params: CreateWorkParams) -> bool:
+        work = Work.objects.filter(pk=params.work_id).first()
+        if work is None:
+            return False
+
+        work.name = params.name
+        work.work_type = params.work_type
+        work.duration = params.duration
+        work.max_score = params.max_score
+        work.save()
+        return True
 
     def create_work_analog_group(self, params: CreateWorkAnalogGroupParams) -> None:
         WorkAnalogGroup.objects.create(

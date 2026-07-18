@@ -5,8 +5,19 @@ from django.http import Http404
 from django.views.generic import TemplateView
 from django.views.decorators.http import require_http_methods
 
+from core_logic.interfaces.work_repo import CreateWorkParams
 from .models import Work
 from .forms import WorkForm, VariantGenerationForm
+
+
+def _work_params_from_form(form, work_id=''):
+    return CreateWorkParams(
+        work_id=work_id,
+        name=form.cleaned_data['name'],
+        work_type=form.cleaned_data.get('work_type', 'test'),
+        duration=form.cleaned_data.get('duration') or 45,
+        max_score=form.cleaned_data.get('max_score') or 0,
+    )
 
 
 class WorkListView(TemplateView):
@@ -67,7 +78,10 @@ class WorkCreateView(TemplateView):
                 self.get_context_data(form=form, formset=formset),
             )
 
-        work = form.save()
+        result = container.create_work_use_case().execute(
+            _work_params_from_form(form),
+        )
+        work = Work.objects.get(pk=result.work_id)
         container.work_form_adapter.save_analog_group_formset(
             formset=formset,
             work=work,
@@ -120,13 +134,18 @@ class WorkUpdateView(TemplateView):
                 ),
             )
 
-        work = form.save()
+        result = container.update_work_use_case().execute(
+            _work_params_from_form(form, work_id=str(work.pk)),
+        )
+        if result.status == 'not_found':
+            raise Http404('Работа не найдена')
+
         container.work_form_adapter.save_analog_group_formset(
             formset=formset,
             work=work,
         )
         messages.success(request, 'Работа успешно обновлена!')
-        return redirect('works:detail', pk=work.pk)
+        return redirect('works:detail', pk=result.work_id)
 
 
 def generate_variants(request, work_id):

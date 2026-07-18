@@ -10,7 +10,10 @@ from core_logic.interfaces.event_repo import (
     CreateEventParams,
     GradeParticipationParams,
 )
-from core_logic.interfaces.work_repo import CreateWorkWithVariantFromTasksParams
+from core_logic.interfaces.work_repo import (
+    CreateWorkParams,
+    CreateWorkWithVariantFromTasksParams,
+)
 from core_logic.entities.task import (
     SourceCreateParams,
     TaskExportFilters,
@@ -286,6 +289,41 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(event.course, course)
         self.assertEqual(event.description, 'Новое описание')
         self.assertEqual(event.location, '202')
+
+    def test_work_repository_creates_and_updates_work(self):
+        repo = DjangoWorkRepository()
+
+        work_id = repo.create_work(
+            CreateWorkParams(
+                name='Новая работа',
+                work_type='test',
+                duration=50,
+                max_score=10,
+            )
+        )
+        updated = repo.update_work(
+            CreateWorkParams(
+                work_id=work_id,
+                name='Обновлённая работа',
+                work_type='quiz',
+                duration=30,
+                max_score=12,
+            )
+        )
+        missing_updated = repo.update_work(
+            CreateWorkParams(
+                work_id='00000000-0000-0000-0000-000000000000',
+                name='Нет',
+            )
+        )
+
+        work = Work.objects.get(pk=work_id)
+        self.assertTrue(updated)
+        self.assertFalse(missing_updated)
+        self.assertEqual(work.name, 'Обновлённая работа')
+        self.assertEqual(work.work_type, 'quiz')
+        self.assertEqual(work.duration, 30)
+        self.assertEqual(work.max_score, 12)
 
     def test_student_repository_creates_and_updates_student(self):
         repo = DjangoStudentRepository()

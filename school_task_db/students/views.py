@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect
-from django.views.generic import CreateView, UpdateView, TemplateView
+from django.views.generic import TemplateView
 from django.contrib import messages
-from django.urls import reverse_lazy
 from django.http import Http404
 from django.views import View
 
@@ -134,26 +133,51 @@ class StudentDetailView(TemplateView):
         return context
 
 
-class StudentCreateView(CreateView):
-    model = Student
-    form_class = StudentForm
+class StudentCreateView(TemplateView):
     template_name = 'students/form.html'
-    success_url = reverse_lazy('students:list')
 
-    def form_valid(self, form):
-        messages.success(self.request, 'Ученик успешно добавлен!')
-        return super().form_valid(form)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = kwargs.get('form') or StudentForm()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form = StudentForm(request.POST)
+        if not form.is_valid():
+            return self.render_to_response(self.get_context_data(form=form))
+
+        form.save()
+        messages.success(request, 'Ученик успешно добавлен!')
+        return redirect('students:list')
 
 
-class StudentUpdateView(UpdateView):
-    model = Student
-    form_class = StudentForm
+class StudentUpdateView(TemplateView):
     template_name = 'students/form.html'
-    success_url = reverse_lazy('students:list')
 
-    def form_valid(self, form):
-        messages.success(self.request, 'Данные ученика обновлены!')
-        return super().form_valid(form)
+    def _get_student(self):
+        student = Student.objects.filter(pk=self.kwargs['pk']).first()
+        if student is None:
+            raise Http404('Ученик не найден')
+        return student
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        student = kwargs.get('object') or self._get_student()
+        context['object'] = student
+        context['form'] = kwargs.get('form') or StudentForm(instance=student)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        student = self._get_student()
+        form = StudentForm(request.POST, instance=student)
+        if not form.is_valid():
+            return self.render_to_response(
+                self.get_context_data(form=form, object=student),
+            )
+
+        form.save()
+        messages.success(request, 'Данные ученика обновлены!')
+        return redirect('students:list')
 
 
 class StudentGroupListView(TemplateView):
@@ -182,24 +206,52 @@ class StudentGroupDetailView(TemplateView):
         return context
 
 
-class StudentGroupCreateView(CreateView):
-    model = StudentGroup
-    form_class = StudentGroupForm
+class StudentGroupCreateView(TemplateView):
     template_name = 'students/group_form.html'
 
-    def form_valid(self, form):
-        messages.success(self.request, 'Класс успешно создан!')
-        return super().form_valid(form)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = kwargs.get('form') or StudentGroupForm()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form = StudentGroupForm(request.POST)
+        if not form.is_valid():
+            return self.render_to_response(self.get_context_data(form=form))
+
+        group = form.save()
+        messages.success(request, 'Класс успешно создан!')
+        return redirect('students:group-detail', pk=group.pk)
 
 
-class StudentGroupUpdateView(UpdateView):
-    model = StudentGroup
-    form_class = StudentGroupForm
+class StudentGroupUpdateView(TemplateView):
     template_name = 'students/group_form.html'
 
-    def form_valid(self, form):
-        messages.success(self.request, 'Класс успешно обновлен!')
-        return super().form_valid(form)
+    def _get_group(self):
+        group = StudentGroup.objects.filter(pk=self.kwargs['pk']).first()
+        if group is None:
+            raise Http404('Класс не найден')
+        return group
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        group = kwargs.get('object') or self._get_group()
+        context['object'] = group
+        context['form'] = kwargs.get('form') or StudentGroupForm(instance=group)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        group = self._get_group()
+        form = StudentGroupForm(request.POST, instance=group)
+        if not form.is_valid():
+            return self.render_to_response(
+                self.get_context_data(form=form, object=group),
+            )
+
+        group = form.save()
+        messages.success(request, 'Класс успешно обновлен!')
+        return redirect('students:group-detail', pk=group.pk)
+
 
 class RemedialWorkView(TemplateView):
     """Работа над ошибками: анализ + генерация варианта"""

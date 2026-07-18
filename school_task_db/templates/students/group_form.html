@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}{% if object %}Редактирование класса{% else %}Создание класса{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h2>{% if object %}Редактирование класса{% else %}Создание класса{% endif %}</h2>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                {{ form.name|add_class:"form-control" }}
+                {% if form.name.errors %}
+                    <div class="text-danger">{{ form.name.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">{{ form.students.label }}</label>
+                <div class="border rounded p-3">
+                    {{ form.students }}
+                </div>
+                {% if form.students.errors %}
+                    <div class="text-danger">{{ form.students.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    {% if object %}Сохранить{% else %}Создать{% endif %}
+                </button>
+                <a href="{% if object %}{% url 'students:group-detail' object.pk %}{% else %}{% url 'students:group-list' %}{% endif %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Отмена
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

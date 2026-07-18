@@ -101,6 +101,103 @@ class RemedialFromEventViewTests(TestCase):
             difficulty=difficulty,
         )
 
+    def test_create_student_saves_student(self):
+        response = self.client.post(
+            reverse('students:create'),
+            data={
+                'last_name': 'Петров',
+                'first_name': 'Пётр',
+                'middle_name': 'Петрович',
+                'email': 'petrov@example.test',
+            },
+        )
+
+        student = Student.objects.get(last_name='Петров')
+        self.assertRedirects(
+            response,
+            reverse('students:list'),
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(student.first_name, 'Пётр')
+        self.assertEqual(student.email, 'petrov@example.test')
+
+    def test_update_student_saves_student(self):
+        response = self.client.post(
+            reverse('students:update', args=[self.student.pk]),
+            data={
+                'last_name': 'Иванов',
+                'first_name': 'Иван',
+                'middle_name': 'Иванович',
+                'email': 'ivanov@example.test',
+            },
+        )
+
+        self.student.refresh_from_db()
+        self.assertRedirects(
+            response,
+            reverse('students:list'),
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(self.student.middle_name, 'Иванович')
+        self.assertEqual(self.student.email, 'ivanov@example.test')
+
+    def test_update_student_returns_404_for_missing_student(self):
+        response = self.client.get(
+            reverse(
+                'students:update',
+                args=['550e8400-e29b-41d4-a716-446655440000'],
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_create_student_group_saves_group(self):
+        response = self.client.post(
+            reverse('students:group-create'),
+            data={
+                'name': '9Б',
+                'students': [str(self.student.pk)],
+            },
+        )
+
+        group = StudentGroup.objects.get(name='9Б')
+        self.assertRedirects(
+            response,
+            reverse('students:group-detail', args=[group.pk]),
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(list(group.students.all()), [self.student])
+
+    def test_update_student_group_saves_group(self):
+        group = StudentGroup.objects.create(name='9А')
+
+        response = self.client.post(
+            reverse('students:group-update', args=[group.pk]),
+            data={
+                'name': '9А-1',
+                'students': [str(self.student.pk)],
+            },
+        )
+
+        group.refresh_from_db()
+        self.assertRedirects(
+            response,
+            reverse('students:group-detail', args=[group.pk]),
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(group.name, '9А-1')
+        self.assertEqual(list(group.students.all()), [self.student])
+
+    def test_update_student_group_returns_404_for_missing_group(self):
+        response = self.client.get(
+            reverse(
+                'students:group-update',
+                args=['550e8400-e29b-41d4-a716-446655440000'],
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
+
     def test_get_shows_remedial_preview_analysis_for_event(self):
         response = self.client.get(
             reverse('students:remedial-from-event', args=[self.event.pk])

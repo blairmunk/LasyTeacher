@@ -64,7 +64,7 @@ class GetGlobalSearchUseCase:
         return words
 
     def _count_results(self, results) -> int:
-        return sum(result.count() for result in results.values())
+        return sum(len(result) for result in results.values())
 
     def _pluralize_results(self, count: int) -> str:
         if 11 <= count % 100 <= 19:

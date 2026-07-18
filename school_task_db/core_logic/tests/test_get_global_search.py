@@ -6,20 +6,12 @@ from core_logic.use_cases.get_global_search import (
 )
 
 
-class FakeResult:
-    def __init__(self, count):
-        self._count = count
-
-    def count(self):
-        return self._count
-
-
 class FakeCoreRepository:
     def __init__(self):
         self.uuid_query = None
         self.text_words = None
-        self.uuid_results = {'tasks': FakeResult(1), 'works': FakeResult(0)}
-        self.text_results = {'tasks': FakeResult(2), 'works': FakeResult(0)}
+        self.uuid_results = {'tasks': ['task'], 'works': []}
+        self.text_results = {'tasks': ['task-1', 'task-2'], 'works': []}
 
     def search_by_uuid(self, query):
         self.uuid_query = query
@@ -57,7 +49,7 @@ class GetGlobalSearchUseCaseTests(TestCase):
 
     def test_execute_falls_back_to_text_when_uuid_search_is_empty(self):
         repo = FakeCoreRepository()
-        repo.uuid_results = {'tasks': FakeResult(0)}
+        repo.uuid_results = {'tasks': []}
         use_case = GetGlobalSearchUseCase(core_repo=repo)
 
         data = use_case.execute(GlobalSearchRequest(raw_query='abc'))

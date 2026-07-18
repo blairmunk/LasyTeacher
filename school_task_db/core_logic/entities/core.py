@@ -4,11 +4,6 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 
-class SearchResultList(list):
-    def count(self) -> int:
-        return len(self)
-
-
 @dataclass(frozen=True)
 class SearchTaskResult:
     pk: str

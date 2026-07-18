@@ -6,7 +6,6 @@ from core.models import ImportLog
 from core_logic.entities.core import (
     ImportLogItem,
     SearchGroupResult,
-    SearchResultList,
     SearchTaskResult,
     SearchVariantResult,
     SearchWorkResult,
@@ -184,7 +183,7 @@ class DjangoCoreRepository(ICoreRepository):
         return AnalogGroup.objects.filter(group_q)[:20]
 
     def _task_results(self, tasks):
-        return SearchResultList(
+        return [
             SearchTaskResult(
                 pk=str(task.pk),
                 topic=str(task.topic),
@@ -192,10 +191,10 @@ class DjangoCoreRepository(ICoreRepository):
                 short_uuid=task.get_short_uuid(),
             )
             for task in tasks
-        )
+        ]
 
     def _work_results(self, works):
-        return SearchResultList(
+        return [
             SearchWorkResult(
                 pk=str(work.pk),
                 name=work.name,
@@ -204,10 +203,10 @@ class DjangoCoreRepository(ICoreRepository):
                 short_uuid=work.get_short_uuid(),
             )
             for work in works
-        )
+        ]
 
     def _variant_results(self, variants):
-        return SearchResultList(
+        return [
             SearchVariantResult(
                 pk=str(variant.pk),
                 display_name=variant.display_name,
@@ -218,10 +217,10 @@ class DjangoCoreRepository(ICoreRepository):
                 has_work=variant.work_id is not None,
             )
             for variant in variants
-        )
+        ]
 
     def _group_results(self, groups):
-        return SearchResultList(
+        return [
             SearchGroupResult(
                 pk=str(group.pk),
                 name=group.name,
@@ -229,4 +228,4 @@ class DjangoCoreRepository(ICoreRepository):
                 short_uuid=group.get_short_uuid(),
             )
             for group in groups
-        )
+        ]

@@ -56,9 +56,6 @@ class CourseDetailWork:
     work_type: str
     work_type_display: str
 
-    def get_work_type_display(self) -> str:
-        return self.work_type_display
-
 
 @dataclass(frozen=True)
 class CourseDetailAssignment:

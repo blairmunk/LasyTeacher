@@ -241,7 +241,44 @@ class WorkDetailViewTests(TestCase):
 
         self.assertEqual(response.status_code, 404)
 
-    def test_generate_variants_view_uses_clean_use_case(self):
+    def test_compose_variants_view_uses_clean_use_case(self):
+        group = AnalogGroup.objects.create(name='Кинематика')
+        task = Task.objects.create(
+            text='Задание',
+            answer='Ответ',
+            topic=self.topic,
+            task_type='computational',
+            difficulty=2,
+        )
+        TaskGroup.objects.create(task=task, group=group)
+        WorkAnalogGroup.objects.create(
+            work=self.work,
+            analog_group=group,
+            count=1,
+            weight=2,
+            order=1,
+        )
+        Variant.objects.filter(work=self.work).delete()
+        self.work.variant_counter = 0
+        self.work.save()
+
+        response = self.client.post(
+            reverse('works:compose-variants', args=[self.work.pk]),
+            {'count': '2'},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('works:detail', args=[self.work.pk]),
+            fetch_redirect_response=False,
+        )
+        self.work.refresh_from_db()
+        variants = Variant.objects.filter(work=self.work)
+        self.assertEqual(variants.count(), 2)
+        self.assertEqual(self.work.variant_counter, 2)
+        self.assertEqual(variants.first().varianttask_set.count(), 1)
+
+    def test_legacy_generate_variants_route_still_composes_variants(self):
         group = AnalogGroup.objects.create(name='Кинематика')
         task = Task.objects.create(
             text='Задание',
@@ -264,7 +301,7 @@ class WorkDetailViewTests(TestCase):
 
         response = self.client.post(
             reverse('works:generate-variants', args=[self.work.pk]),
-            {'count': '2'},
+            {'count': '1'},
         )
 
         self.assertRedirects(
@@ -272,15 +309,11 @@ class WorkDetailViewTests(TestCase):
             reverse('works:detail', args=[self.work.pk]),
             fetch_redirect_response=False,
         )
-        self.work.refresh_from_db()
-        variants = Variant.objects.filter(work=self.work)
-        self.assertEqual(variants.count(), 2)
-        self.assertEqual(self.work.variant_counter, 2)
-        self.assertEqual(variants.first().varianttask_set.count(), 1)
+        self.assertEqual(Variant.objects.filter(work=self.work).count(), 1)
 
-    def test_generate_variants_view_uses_clean_form_data(self):
+    def test_compose_variants_view_uses_clean_form_data(self):
         response = self.client.get(
-            reverse('works:generate-variants', args=[self.work.pk]),
+            reverse('works:compose-variants', args=[self.work.pk]),
         )
 
         self.assertEqual(response.status_code, 200)

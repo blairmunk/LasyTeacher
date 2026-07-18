@@ -159,7 +159,7 @@ class WorkUpdateView(TemplateView):
         return redirect('works:detail', pk=result.work_id)
 
 
-def generate_variants(request, work_id):
+def compose_variants(request, work_id):
     from infrastructure.container import container
 
     if request.method == 'POST':
@@ -195,6 +195,10 @@ def generate_variants(request, work_id):
         'work_groups': form_data.work_groups,
         'form': form,
     })
+
+
+# Backward-compatible name while routes/templates migrate from generate to compose.
+generate_variants = compose_variants
 
 
 def sync_analog_groups(request, work_id):

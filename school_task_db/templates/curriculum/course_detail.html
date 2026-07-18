@@ -234,7 +234,7 @@ document.getElementById('btn-gen-confirm').addEventListener('click', async funct
     this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Генерирую...';
     
     try {
-        const resp = await fetch(`/works/${currentWorkId}/generate-variants/`, {
+        const resp = await fetch(`/works/${currentWorkId}/compose/`, {
             method: 'POST',
             headers: {
                 'X-CSRFToken': csrfToken,
@@ -266,7 +266,7 @@ document.getElementById('btn-generate-all').addEventListener('click', async func
     for (const btn of buttons) {
         const workId = btn.dataset.workId;
         try {
-            await fetch(`/works/${workId}/generate-variants/`, {
+            await fetch(`/works/${workId}/compose/`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': csrfToken,

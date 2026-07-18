@@ -13,7 +13,7 @@
             <a href="{% url 'works:update' work.pk %}" class="btn btn-outline-primary">
                 <i class="fas fa-edit"></i> Редактировать
             </a>
-            <a href="{% url 'works:generate-variants' work.pk %}" class="btn btn-success">
+            <a href="{% url 'works:compose-variants' work.pk %}" class="btn btn-success">
                 <i class="fas fa-random"></i> Генерировать варианты
             </a>
             <a href="{% url 'works:list' %}" class="btn btn-secondary">
@@ -284,7 +284,7 @@
                     <div class="p-4 text-center text-muted">
                         <i class="fas fa-inbox fa-2x mb-2"></i>
                         <p>Вариантов пока нет</p>
-                        <a href="{% url 'works:generate-variants' work.pk %}" class="btn btn-sm btn-success">
+                        <a href="{% url 'works:compose-variants' work.pk %}" class="btn btn-sm btn-success">
                             Создать варианты
                         </a>
                     </div>

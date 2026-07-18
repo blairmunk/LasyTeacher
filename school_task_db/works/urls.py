@@ -13,7 +13,8 @@ urlpatterns = [
     path('variants/<pk:pk>/', views.VariantDetailView.as_view(), name='variant-detail'),
     path('<pk:pk>/', views.WorkDetailView.as_view(), name='detail'),
     path('<pk:pk>/update/', views.WorkUpdateView.as_view(), name='update'),
-    path('<pk:work_id>/generate-variants/', views.generate_variants, name='generate-variants'),
+    path('<pk:work_id>/compose/', views.compose_variants, name='compose-variants'),
+    path('<pk:work_id>/generate-variants/', views.compose_variants, name='generate-variants'),
     path('<pk:work_id>/sync-groups/', views.sync_analog_groups, name='sync-groups'),
 
     # Рендеринг документов

@@ -91,6 +91,18 @@ class TaskFormAdapterTests(SimpleTestCase):
 
 
 class TaskGroupFormAdapterTests(SimpleTestCase):
+    def test_builds_add_tasks_to_group_request_from_query(self):
+        request = (
+            TaskGroupFormAdapter()
+            .add_tasks_to_group_form_request_from_query(
+                QueryDict('search=force'),
+                group_id='g1',
+            )
+        )
+
+        self.assertEqual(request.group_id, 'g1')
+        self.assertEqual(request.search, 'force')
+
     def test_builds_group_bulk_action_requests_from_body(self):
         body = {
             'groups': [

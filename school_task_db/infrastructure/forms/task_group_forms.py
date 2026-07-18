@@ -6,10 +6,17 @@ from core_logic.use_cases.create_work_from_groups import (
     GroupSpecRequest,
 )
 from core_logic.use_cases.delete_task_groups import DeleteTaskGroupsRequest
+from core_logic.use_cases.get_add_tasks_to_group import AddTasksToGroupFormRequest
 from core_logic.use_cases.save_analog_group import SaveAnalogGroupRequest
 
 
 class TaskGroupFormAdapter:
+    def add_tasks_to_group_form_request_from_query(self, query, group_id):
+        return AddTasksToGroupFormRequest(
+            group_id=group_id,
+            search=query.get('search', ''),
+        )
+
     def create_work_from_groups_request_from_body(self, body):
         groups_data = body.get('groups', [])
         return CreateWorkFromGroupsRequest(

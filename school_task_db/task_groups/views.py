@@ -5,7 +5,6 @@ from django.views.generic import TemplateView
 from django.views.decorators.http import require_POST
 from django.http import Http404, JsonResponse
 
-from core_logic.use_cases.get_add_tasks_to_group import AddTasksToGroupFormRequest
 from infrastructure.container import container
 from .forms import AnalogGroupForm
 
@@ -164,9 +163,9 @@ def add_tasks_to_group(request, group_id):
         return redirect('task_groups:detail', pk=group_id)
 
     data = container.get_add_tasks_to_group_use_case().execute(
-        AddTasksToGroupFormRequest(
+        container.task_group_form_adapter.add_tasks_to_group_form_request_from_query(
+            request.GET,
             group_id=str(group_id),
-            search=request.GET.get('search', ''),
         )
     )
     if data.status == 'not_found':

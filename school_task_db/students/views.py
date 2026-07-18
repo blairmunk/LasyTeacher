@@ -9,6 +9,13 @@ from infrastructure.container import container
 from .forms import StudentForm, StudentGroupForm
 
 
+def _post_lists(post_data):
+    return {
+        key: post_data.getlist(key)
+        for key in post_data
+    }
+
+
 class StudentListView(TemplateView):
     template_name = 'students/list.html'
 
@@ -388,25 +395,19 @@ class RemedialWizardView(View):
 
     def _step2_preview(self, request):
         """Step 2: анализ и превью с дифференциацией по уровню"""
-        from core_logic.use_cases.get_remedial_wizard_preview import (
-            RemedialWizardPreviewRequest,
+        from core_logic.use_cases.prepare_remedial_wizard_submission import (
+            PrepareRemedialWizardSubmissionRequest,
         )
         from infrastructure.container import container
 
-        group_id = request.POST.get('group_id')
-        threshold = int(request.POST.get('threshold', 70))
-        limit_type = request.POST.get('limit_type', 'tasks')
-        limit_value = int(request.POST.get('limit_value', 10))
-        work_name = request.POST.get('work_name', 'Работа над ошибками')
+        preview_request = (
+            container.prepare_remedial_wizard_preview_submission_use_case().execute(
+                PrepareRemedialWizardSubmissionRequest(data=_post_lists(request.POST))
+            )
+        )
 
         preview_data = container.get_remedial_wizard_preview_use_case().execute(
-            RemedialWizardPreviewRequest(
-                group_id=group_id,
-                threshold=threshold,
-                limit_type=limit_type,
-                limit_value=limit_value,
-                work_name=work_name,
-            )
+            preview_request,
         )
         if preview_data.status == 'not_found':
             raise Http404("Класс не найден")
@@ -425,32 +426,19 @@ class RemedialWizardView(View):
 
     def _step3_create(self, request):
         """Step 3: создание Work + Variants + Event"""
-        from core_logic.use_cases.create_remedial_wizard_work import (
-            CreateRemedialWizardWorkRequest,
+        from core_logic.use_cases.prepare_remedial_wizard_submission import (
+            PrepareRemedialWizardSubmissionRequest,
         )
         from infrastructure.container import container
 
-        group_id = request.POST.get('group_id')
-        work_name = request.POST.get('work_name', 'Работа над ошибками')
-        create_event = request.POST.get('create_event') == '1'
-        event_date = request.POST.get('event_date', '')
-
-        selected_students = request.POST.getlist('selected_students')
-        student_tasks = {}
-        for student_id in selected_students:
-            task_ids_str = request.POST.get(f'task_ids_{student_id}', '')
-            if task_ids_str:
-                student_tasks[student_id] = task_ids_str.split(',')
+        create_request = (
+            container.prepare_remedial_wizard_create_submission_use_case().execute(
+                PrepareRemedialWizardSubmissionRequest(data=_post_lists(request.POST))
+            )
+        )
 
         result = container.create_remedial_wizard_work_use_case().execute(
-            CreateRemedialWizardWorkRequest(
-                group_id=group_id,
-                selected_student_ids=selected_students,
-                student_task_ids=student_tasks,
-                work_name=work_name,
-                create_event=create_event,
-                event_date=event_date,
-            )
+            create_request,
         )
 
         if not result.success:

@@ -2,7 +2,7 @@ import json
 
 from django.core.paginator import Paginator
 from django.shortcuts import redirect
-from django.views.generic import CreateView, UpdateView, TemplateView
+from django.views.generic import TemplateView
 from django.contrib import messages
 from django.urls import reverse
 from django.http import Http404, JsonResponse
@@ -104,94 +104,106 @@ class TaskDetailView(TemplateView):
         return context
 
 
-class TaskCreateView(CreateView):
-    model = Task
-    form_class = TaskForm
+class TaskCreateView(TemplateView):
     template_name = 'tasks/form.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if self.request.POST:
-            context['image_formset'] = container.task_form_adapter.build_image_formset(
-                self.request.POST,
-                self.request.FILES,
-            )
-        else:
-            context['image_formset'] = (
-                container.task_form_adapter.build_image_formset()
-            )
+        context['form'] = kwargs.get('form') or TaskForm()
+        context['image_formset'] = (
+            kwargs.get('image_formset')
+            or container.task_form_adapter.build_image_formset()
+        )
         return context
 
-    def form_valid(self, form):
-        context = self.get_context_data()
-        image_formset = context['image_formset']
+    def post(self, request, *args, **kwargs):
+        form = TaskForm(request.POST)
+        image_formset = container.task_form_adapter.build_image_formset(
+            request.POST,
+            request.FILES,
+        )
 
-        if image_formset.is_valid():
-            result = container.task_form_adapter.save_created_task_with_images(
-                form,
-                image_formset,
+        if not form.is_valid() or not image_formset.is_valid():
+            messages.error(request, 'Ошибка при создании задания.')
+            return self.render_to_response(
+                self.get_context_data(
+                    form=form,
+                    image_formset=image_formset,
+                ),
             )
-            self.object = result.task
 
-            messages.success(self.request, 'Задание успешно создано!')
-            if result.created_images > 0:
-                messages.info(
-                    self.request,
-                    f'Добавлено изображений: {result.created_images}',
-                )
+        result = container.task_form_adapter.save_created_task_with_images(
+            form,
+            image_formset,
+        )
 
-            return redirect(reverse('tasks:detail', kwargs={'pk': self.object.pk}))
-        else:
-            messages.error(self.request, 'Ошибка при создании задания.')
-            return self.form_invalid(form)
+        messages.success(request, 'Задание успешно создано!')
+        if result.created_images > 0:
+            messages.info(
+                request,
+                f'Добавлено изображений: {result.created_images}',
+            )
+
+        return redirect(reverse('tasks:detail', kwargs={'pk': result.task.pk}))
 
 
-class TaskUpdateView(UpdateView):
-    model = Task
-    form_class = TaskForm
+class TaskUpdateView(TemplateView):
     template_name = 'tasks/form.html'
+
+    def _get_task(self):
+        task = Task.objects.filter(pk=self.kwargs['pk']).first()
+        if task is None:
+            raise Http404('Задание не найдено')
+        return task
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if self.request.POST:
-            context['image_formset'] = container.task_form_adapter.build_image_formset(
-                self.request.POST,
-                self.request.FILES,
-                instance=self.object,
-            )
-        else:
-            context['image_formset'] = container.task_form_adapter.build_image_formset(
-                instance=self.object,
-            )
+        task = kwargs.get('object') or self._get_task()
+        context['object'] = task
+        context['form'] = kwargs.get('form') or TaskForm(instance=task)
+        context['image_formset'] = (
+            kwargs.get('image_formset')
+            or container.task_form_adapter.build_image_formset(instance=task)
+        )
         return context
 
-    def form_valid(self, form):
-        context = self.get_context_data()
-        image_formset = context['image_formset']
+    def post(self, request, *args, **kwargs):
+        task = self._get_task()
+        form = TaskForm(request.POST, instance=task)
+        image_formset = container.task_form_adapter.build_image_formset(
+            request.POST,
+            request.FILES,
+            instance=task,
+        )
 
-        if image_formset.is_valid():
-            result = container.task_form_adapter.save_updated_task_with_images(
-                form,
-                image_formset,
+        if not form.is_valid() or not image_formset.is_valid():
+            messages.error(request, 'Ошибка при обновлении задания.')
+            return self.render_to_response(
+                self.get_context_data(
+                    form=form,
+                    image_formset=image_formset,
+                    object=task,
+                ),
             )
-            self.object = result.task
 
-            messages.success(self.request, 'Задание успешно обновлено!')
-            if result.created_images > 0:
-                messages.info(
-                    self.request,
-                    f'Добавлено изображений: {result.created_images}',
-                )
-            if result.deleted_images > 0:
-                messages.info(
-                    self.request,
-                    f'Удалено изображений: {result.deleted_images}',
-                )
+        result = container.task_form_adapter.save_updated_task_with_images(
+            form,
+            image_formset,
+        )
 
-            return redirect(reverse('tasks:detail', kwargs={'pk': self.object.pk}))
-        else:
-            messages.error(self.request, 'Ошибка при обновлении задания.')
-            return self.form_invalid(form)
+        messages.success(request, 'Задание успешно обновлено!')
+        if result.created_images > 0:
+            messages.info(
+                request,
+                f'Добавлено изображений: {result.created_images}',
+            )
+        if result.deleted_images > 0:
+            messages.info(
+                request,
+                f'Удалено изображений: {result.deleted_images}',
+            )
+
+        return redirect(reverse('tasks:detail', kwargs={'pk': result.task.pk}))
 
 
 class TaskDeleteView(TemplateView):

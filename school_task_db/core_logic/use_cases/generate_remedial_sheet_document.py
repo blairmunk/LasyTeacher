@@ -8,6 +8,9 @@ from core_logic.interfaces.work_repo import IWorkRepository
 from core_logic.value_objects.content_config import RemedialSheetGenerationOptions
 
 
+SUPPORTED_REMEDIAL_SHEET_GENERATOR_TYPES = {'latex', 'html', 'pdf'}
+
+
 @dataclass(frozen=True)
 class GenerateRemedialSheetDocumentRequest:
     variant_id: str
@@ -36,6 +39,14 @@ class GenerateRemedialSheetDocumentUseCase:
         if variant_type != 'remedial':
             return DocumentGenerationResult(
                 status='not_remedial',
+                generator_type=request.options.generator_type,
+            )
+        if (
+            request.options.generator_type
+            not in SUPPORTED_REMEDIAL_SHEET_GENERATOR_TYPES
+        ):
+            return DocumentGenerationResult(
+                status='unsupported_generator',
                 generator_type=request.options.generator_type,
             )
 

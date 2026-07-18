@@ -178,6 +178,25 @@ class DocumentGenerationUseCaseTests(TestCase):
         self.assertFalse(result.success)
         self.assertEqual(result.status, 'empty')
 
+    def test_generate_remedial_sheet_document_rejects_unsupported_generator(self):
+        service = FakeDocumentGenerationService()
+        use_case = GenerateRemedialSheetDocumentUseCase(
+            document_generation_service=service,
+            work_repo=FakeWorkRepository(),
+        )
+
+        result = use_case.execute(
+            GenerateRemedialSheetDocumentRequest(
+                variant_id='variant-1',
+                options=RemedialSheetGenerationOptions(generator_type='docx'),
+            )
+        )
+
+        self.assertFalse(result.success)
+        self.assertEqual(result.status, 'unsupported_generator')
+        self.assertEqual(result.generator_type, 'docx')
+        self.assertIsNone(service.remedial_request)
+
     def test_generate_remedial_sheet_document_rejects_non_remedial_variant(self):
         service = FakeDocumentGenerationService()
         use_case = GenerateRemedialSheetDocumentUseCase(

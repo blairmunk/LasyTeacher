@@ -161,6 +161,11 @@ def generate_remedial_sheet_ajax(request, variant_id):
                 'status': 'error',
                 'message': 'Этот вариант не является работой над ошибками'
             }, status=400)
+        if result.status == 'unsupported_generator':
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Неподдерживаемый тип генератора: {generator_type}'
+            }, status=400)
         if result.status == 'empty':
             return JsonResponse({
                 'status': 'error',

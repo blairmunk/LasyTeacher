@@ -6,7 +6,7 @@ from django.views.generic import TemplateView
 from django.views.decorators.http import require_http_methods
 
 from core_logic.interfaces.work_repo import CreateWorkParams
-from .models import Work
+from infrastructure.container import container
 from .forms import WorkForm, VariantGenerationForm
 
 
@@ -18,6 +18,15 @@ def _work_params_from_form(form, work_id=''):
         duration=form.cleaned_data.get('duration') or 45,
         max_score=form.cleaned_data.get('max_score') or 0,
     )
+
+
+def _work_form_initial(work):
+    return {
+        'name': work.name,
+        'work_type': work.work_type,
+        'duration': work.duration,
+        'max_score': work.max_score,
+    }
 
 
 class WorkListView(TemplateView):
@@ -81,23 +90,22 @@ class WorkCreateView(TemplateView):
         result = container.create_work_use_case().execute(
             _work_params_from_form(form),
         )
-        work = Work.objects.get(pk=result.work_id)
         container.work_form_adapter.save_analog_group_formset(
             formset=formset,
-            work=work,
+            work_id=result.work_id,
         )
         messages.success(request, 'Работа успешно создана!')
-        return redirect('works:detail', pk=work.pk)
+        return redirect('works:detail', pk=result.work_id)
 
 
 class WorkUpdateView(TemplateView):
     template_name = 'works/form.html'
 
     def _get_work(self):
-        work = Work.objects.filter(pk=self.kwargs['pk']).first()
-        if work is None:
+        detail = container.get_work_detail_use_case().execute(str(self.kwargs['pk']))
+        if detail.work is None:
             raise Http404('Работа не найдена')
-        return work
+        return detail.work
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -105,11 +113,13 @@ class WorkUpdateView(TemplateView):
 
         work = kwargs.get('object') or self._get_work()
         context['object'] = work
-        context['form'] = kwargs.get('form') or WorkForm(instance=work)
+        context['form'] = kwargs.get('form') or WorkForm(
+            initial=_work_form_initial(work),
+        )
         context['formset'] = (
             kwargs.get('formset')
             or container.work_form_adapter.build_analog_group_formset(
-                instance=work,
+                work_id=str(work.pk),
             )
         )
         form_data = container.get_work_form_data_use_case().execute()
@@ -120,10 +130,10 @@ class WorkUpdateView(TemplateView):
         from infrastructure.container import container
 
         work = self._get_work()
-        form = WorkForm(request.POST, instance=work)
+        form = WorkForm(request.POST)
         formset = container.work_form_adapter.build_analog_group_formset(
             data=request.POST,
-            instance=work,
+            work_id=str(work.pk),
         )
         if not form.is_valid() or not formset.is_valid():
             return self.render_to_response(
@@ -142,7 +152,7 @@ class WorkUpdateView(TemplateView):
 
         container.work_form_adapter.save_analog_group_formset(
             formset=formset,
-            work=work,
+            work_id=result.work_id,
         )
         messages.success(request, 'Работа успешно обновлена!')
         return redirect('works:detail', pk=result.work_id)

@@ -1,14 +1,24 @@
 """Infrastructure helpers for Django work forms."""
 
 from works.forms import WorkAnalogGroupFormSet
+from works.models import Work
 
 
 class WorkFormAdapter:
-    def build_analog_group_formset(self, data=None, instance=None):
+    def _get_work_instance(self, work_id=None):
+        if not work_id:
+            return None
+        return Work.objects.filter(pk=work_id).first()
+
+    def build_analog_group_formset(self, data=None, instance=None, work_id=None):
+        if instance is None:
+            instance = self._get_work_instance(work_id)
         if data is not None:
             return WorkAnalogGroupFormSet(data, instance=instance)
         return WorkAnalogGroupFormSet(instance=instance)
 
-    def save_analog_group_formset(self, formset, work):
+    def save_analog_group_formset(self, formset, work=None, work_id=None):
+        if work is None:
+            work = self._get_work_instance(work_id)
         formset.instance = work
         formset.save()

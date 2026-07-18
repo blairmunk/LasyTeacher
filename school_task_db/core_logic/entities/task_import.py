@@ -1,7 +1,7 @@
 """Task import DTOs."""
 
 from dataclasses import dataclass, field
-from typing import Any, Dict
+from typing import Any, Dict, Mapping, Optional, Sequence
 
 
 @dataclass(frozen=True)
@@ -36,6 +36,24 @@ class TaskImportFileResult:
     @property
     def success(self) -> bool:
         return not self.error
+
+
+@dataclass(frozen=True)
+class TaskImportExecutionSubmissionRequest:
+    filename: str
+    file_size: int
+    content: bytes
+    form_data: Mapping[str, Sequence[str]]
+
+
+@dataclass(frozen=True)
+class TaskImportExecutionSubmissionResult:
+    import_request: Optional[TaskImportRequest] = None
+    error: str = ''
+
+    @property
+    def success(self) -> bool:
+        return self.import_request is not None and not self.error
 
 
 @dataclass(frozen=True)

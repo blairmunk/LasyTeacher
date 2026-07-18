@@ -200,6 +200,7 @@ from core_logic.use_cases.get_source_list import GetSourceListUseCase
 from core_logic.use_cases.get_task_import_sample import GetTaskImportSampleUseCase
 from core_logic.use_cases.preview_task_import import PreviewTaskImportUseCase
 from core_logic.use_cases.prepare_task_import_file import (
+    PrepareTaskImportExecutionSubmissionUseCase,
     PrepareTaskImportFileUseCase,
 )
 from core_logic.use_cases.refresh_task_math_cache import RefreshTaskMathCacheUseCase
@@ -590,6 +591,9 @@ class Container:
 
     def prepare_task_import_file_use_case(self):
         return PrepareTaskImportFileUseCase()
+
+    def prepare_task_import_execution_submission_use_case(self):
+        return PrepareTaskImportExecutionSubmissionUseCase()
 
     def get_task_import_sample_use_case(self):
         return GetTaskImportSampleUseCase()

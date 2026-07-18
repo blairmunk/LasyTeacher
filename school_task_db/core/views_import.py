@@ -10,9 +10,9 @@ from django.views.decorators.http import require_POST
 
 from core_logic.entities.task import TaskExportFilters
 from core_logic.entities.task_import import (
+    TaskImportExecutionSubmissionRequest,
     TaskImportFileRequest,
     TaskImportPreviewRequest,
-    TaskImportRequest,
 )
 from core_logic.use_cases.export_tasks import ExportTasksRequest
 from core_logic.use_cases.get_import_views import ImportPageRequest
@@ -20,6 +20,13 @@ from core_logic.use_cases.validate_task_import_json import (
     ValidateTaskImportJsonRequest,
 )
 from infrastructure.container import container
+
+
+def _post_lists(post_data):
+    return {
+        key: post_data.getlist(key)
+        for key in post_data
+    }
 
 
 class ImportPageView(View):
@@ -62,13 +69,7 @@ def validate_json_ajax(request):
     if not uploaded_file:
         return JsonResponse({'error': 'Файл не выбран'}, status=400)
     
-    prepared_file = container.prepare_task_import_file_use_case().execute(
-        TaskImportFileRequest(
-            filename=uploaded_file.name,
-            file_size=uploaded_file.size,
-            content=uploaded_file.read(),
-        ),
-    )
+    prepared_file = _prepare_import_file(uploaded_file)
     if not prepared_file.success:
         return JsonResponse({'error': prepared_file.error}, status=400)
 
@@ -104,34 +105,36 @@ def execute_import_ajax(request):
     uploaded_file = request.FILES.get('json_file')
     if not uploaded_file:
         return JsonResponse({'error': 'Файл не выбран'}, status=400)
-    
-    mode = request.POST.get('mode', 'update')
-    dry_run = request.POST.get('dry_run') == 'true'
-    create_missing = request.POST.get('create_missing', 'true') == 'true'
-    
-    prepared_file = container.prepare_task_import_file_use_case().execute(
+
+    prepared_submission = (
+        container.prepare_task_import_execution_submission_use_case().execute(
+            TaskImportExecutionSubmissionRequest(
+                filename=uploaded_file.name,
+                file_size=uploaded_file.size,
+                content=uploaded_file.read(),
+                form_data=_post_lists(request.POST),
+            )
+        )
+    )
+    if not prepared_submission.success:
+        return JsonResponse({'error': prepared_submission.error}, status=400)
+
+    result = container.execute_task_import_use_case().execute(
+        prepared_submission.import_request,
+    )
+    return JsonResponse(
+        result.to_response_data(),
+        status=200 if result.success else 500,
+    )
+
+
+def _prepare_import_file(uploaded_file):
+    return container.prepare_task_import_file_use_case().execute(
         TaskImportFileRequest(
             filename=uploaded_file.name,
             file_size=uploaded_file.size,
             content=uploaded_file.read(),
         ),
-    )
-    if not prepared_file.success:
-        return JsonResponse({'error': prepared_file.error}, status=400)
-    
-    result = container.execute_task_import_use_case().execute(
-        TaskImportRequest(
-            data=prepared_file.data,
-            filename=prepared_file.filename,
-            mode=mode,
-            dry_run=dry_run,
-            create_missing=create_missing,
-            file_size=prepared_file.file_size,
-        ),
-    )
-    return JsonResponse(
-        result.to_response_data(),
-        status=200 if result.success else 500,
     )
 
 

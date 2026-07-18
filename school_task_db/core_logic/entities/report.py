@@ -12,6 +12,19 @@ class ReportStudentRef:
 
 
 @dataclass(frozen=True)
+class ReportCourseRef:
+    pk: str
+    name: str
+
+
+@dataclass(frozen=True)
+class ReportGroupRef:
+    pk: str
+    name: str
+    students_count: int = 0
+
+
+@dataclass(frozen=True)
 class EventsStatusReportData:
     events_by_status: List[dict]
     overdue_events: Any

@@ -774,11 +774,10 @@ class DjangoReportRepositoryTests(TestCase):
 
         self.assertEqual(list(data.groups), [group])
         self.assertEqual(list(data.courses), [course])
-        self.assertEqual(data.journal_links, [{
-            'course': course,
-            'group': group,
-            'event_count': 1,
-        }])
+        self.assertEqual(data.journal_links[0]['course'].pk, str(course.pk))
+        self.assertEqual(data.journal_links[0]['group'].pk, str(group.pk))
+        self.assertEqual(data.journal_links[0]['group'].students_count, 1)
+        self.assertEqual(data.journal_links[0]['event_count'], 1)
         self.assertEqual(data.active_report, 'journal')
 
     def test_get_journal_returns_rows_stats_and_debt_filter(self):

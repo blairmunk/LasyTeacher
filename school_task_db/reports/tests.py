@@ -558,11 +558,11 @@ class ReportsViewsTests(TestCase):
         self.assertEqual(response.context['active_report'], 'journal')
         self.assertEqual(list(response.context['courses']), [course])
         self.assertEqual(list(response.context['groups']), [group])
-        self.assertEqual(response.context['journal_links'], [{
-            'course': course,
-            'group': group,
-            'event_count': 1,
-        }])
+        link = response.context['journal_links'][0]
+        self.assertEqual(link['course'].pk, str(course.pk))
+        self.assertEqual(link['group'].pk, str(group.pk))
+        self.assertEqual(link['group'].students_count, 1)
+        self.assertEqual(link['event_count'], 1)
 
     def test_journal_view_uses_clean_report_data(self):
         now = timezone.now()

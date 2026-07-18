@@ -20,6 +20,8 @@ from core_logic.entities.report import (
     JournalData,
     JournalSelectData,
     ReportsDashboardData,
+    ReportCourseRef,
+    ReportGroupRef,
     ReportStudentRef,
     StudentPerformanceReportData,
     TaskDBHealthData,
@@ -51,8 +53,15 @@ class DjangoReportRepository(IReportRepository):
                         eventparticipation__student__in=group.students.all(),
                     ).distinct().count()
                     journal_links.append({
-                        'course': course,
-                        'group': group,
+                        'course': ReportCourseRef(
+                            pk=str(course.pk),
+                            name=course.name,
+                        ),
+                        'group': ReportGroupRef(
+                            pk=str(group.pk),
+                            name=group.name,
+                            students_count=group.students.count(),
+                        ),
                         'event_count': event_count,
                     })
 

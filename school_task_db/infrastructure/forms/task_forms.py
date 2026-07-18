@@ -1,6 +1,10 @@
 """Infrastructure helpers for Django task forms."""
 
-from core_logic.entities.task import TaskImageSaveParams, TaskSaveParams
+from core_logic.entities.task import (
+    SourceCreateParams,
+    TaskImageSaveParams,
+    TaskSaveParams,
+)
 from tasks.forms import TaskForm, TaskImageFormSet
 from tasks.models import Task
 
@@ -80,3 +84,15 @@ class TaskFormAdapter:
                 )
             )
         return images
+
+    def source_params_from_form(self, form):
+        return SourceCreateParams(
+            name=form.cleaned_data['name'],
+            short_name=form.cleaned_data.get('short_name', ''),
+            source_type=form.cleaned_data.get('source_type', 'textbook'),
+            author=form.cleaned_data.get('author', ''),
+            year=form.cleaned_data.get('year'),
+            url=form.cleaned_data.get('url', ''),
+            isbn=form.cleaned_data.get('isbn', ''),
+            notes=form.cleaned_data.get('notes', ''),
+        )

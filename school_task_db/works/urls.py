@@ -16,15 +16,21 @@ urlpatterns = [
     path('<pk:work_id>/generate-variants/', views.generate_variants, name='generate-variants'),
     path('<pk:work_id>/sync-groups/', views.sync_analog_groups, name='sync-groups'),
 
-    # Генерация документов
+    # Рендеринг документов
     path('download/<str:file_type>/<str:filename>/', views_generation.download_generated_file, name='download_generated_file'),
-    path('ajax/generate/<pk:work_id>/', views_generation.generate_work_ajax, name='generate_work_ajax'),
-    path('ajax/generate/variant/<pk:variant_id>/', views_generation.generate_variant_ajax, name='generate_variant_ajax'),
+    path('ajax/render/<pk:work_id>/', views_generation.render_work_ajax, name='render_work_ajax'),
+    path('ajax/render/variant/<pk:variant_id>/', views_generation.render_variant_ajax, name='render_variant_ajax'),
+    path('ajax/render/remedial/<uuid:variant_id>/',
+         views_generation.render_remedial_sheet_ajax,
+         name='render-remedial-sheet'),
+
+    # Backward-compatible document generation aliases.
+    path('ajax/generate/<pk:work_id>/', views_generation.render_work_ajax, name='generate_work_ajax'),
+    path('ajax/generate/variant/<pk:variant_id>/', views_generation.render_variant_ajax, name='generate_variant_ajax'),
     path('ajax/generation-status/', views_generation.generation_status_ajax, name='generation_status_ajax'),
     path('create-from-orphans/', views.create_work_from_orphans, name='create-work-from-orphans'),
     path('ajax/generate/remedial/<uuid:variant_id>/',
-         views_generation.generate_remedial_sheet_ajax,
+         views_generation.render_remedial_sheet_ajax,
          name='generate-remedial-sheet'),
 
 ]
-

@@ -7,8 +7,8 @@ from django.views.decorators.http import require_http_methods
 logger = logging.getLogger(__name__)
 
 @require_http_methods(["POST"])
-def generate_work_ajax(request, work_id):
-    """Ajax генерация документов с поддержкой hints/instructions"""
+def render_work_ajax(request, work_id):
+    """Ajax rendering for work documents with hints/instructions support."""
     from infrastructure.container import container
 
     generator_type = container.work_form_adapter.document_generator_type_from_post(
@@ -98,8 +98,8 @@ def generation_status_ajax(request):
 
 # Дополнительные views для вариантов
 @require_http_methods(["POST"])
-def generate_variant_ajax(request, variant_id):
-    """Ajax генерация документов для конкретного варианта"""
+def render_variant_ajax(request, variant_id):
+    """Ajax rendering placeholder for a specific variant."""
     from infrastructure.container import container
     
     result = container.get_variant_generation_placeholder_use_case().execute(
@@ -115,8 +115,8 @@ def generate_variant_ajax(request, variant_id):
     })
 
 @require_http_methods(["POST"])
-def generate_remedial_sheet_ajax(request, variant_id):
-    """Ajax генерация рабочего листа «Работа над ошибками»"""
+def render_remedial_sheet_ajax(request, variant_id):
+    """Ajax rendering for remedial sheet documents."""
     from infrastructure.container import container
 
     try:
@@ -165,3 +165,9 @@ def generate_remedial_sheet_ajax(request, variant_id):
             'status': 'error',
             'message': f'Ошибка: {str(e)}'
         }, status=500)
+
+
+# Backward-compatible names while routes/templates migrate from generate to render.
+generate_work_ajax = render_work_ajax
+generate_variant_ajax = render_variant_ajax
+generate_remedial_sheet_ajax = render_remedial_sheet_ajax

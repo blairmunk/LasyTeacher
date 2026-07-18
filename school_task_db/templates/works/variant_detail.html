@@ -168,7 +168,7 @@
         result.innerHTML = '';
 
         const formData = new FormData(this);
-        fetch("{% url 'works:generate-remedial-sheet' variant.pk %}", {
+        fetch("{% url 'works:render-remedial-sheet' variant.pk %}", {
             method: 'POST',
             body: formData,
         })

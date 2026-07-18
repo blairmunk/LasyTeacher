@@ -394,7 +394,7 @@
         var controller = new AbortController();
         var timeoutId = setTimeout(function() { controller.abort(); }, 60000);
 
-        fetch('/works/ajax/generate/{{ work.id }}/', {
+        fetch('/works/ajax/render/{{ work.id }}/', {
             method: 'POST',
             headers: { 'X-CSRFToken': csrfVal },
             body: formData,
@@ -460,4 +460,3 @@
 })();
 </script>
 {% endblock %}
-

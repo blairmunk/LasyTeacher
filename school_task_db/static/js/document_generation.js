@@ -119,7 +119,7 @@ class DocumentGenerator {
 
             this.showAlert(`🔄 Генерируется ${configMessage}...`, 'info');
 
-            const response = await fetch(`/works/ajax/generate/${params.workId}/`, {
+            const response = await fetch(`/works/ajax/render/${params.workId}/`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': this.getCSRFToken(),

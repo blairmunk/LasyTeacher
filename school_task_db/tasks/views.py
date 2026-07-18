@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_POST
 
-from core_logic.entities.task import TaskListFilters
+from core_logic.entities.task import SourceCreateParams, TaskListFilters
 from core_logic.use_cases.bulk_change_task_groups import (
     BulkAddTasksToGroupRequest,
     BulkCreateGroupFromTasksRequest,
@@ -417,6 +417,20 @@ class SourceCreateView(TemplateView):
         if not form.is_valid():
             return self.render_to_response(self.get_context_data(form=form))
 
-        source = container.task_form_adapter.save_source_form(form)
-        messages.success(self.request, f'Источник «{source}» создан!')
+        result = container.create_source_use_case().execute(
+            SourceCreateParams(
+                name=form.cleaned_data['name'],
+                short_name=form.cleaned_data.get('short_name', ''),
+                source_type=form.cleaned_data.get('source_type', 'textbook'),
+                author=form.cleaned_data.get('author', ''),
+                year=form.cleaned_data.get('year'),
+                url=form.cleaned_data.get('url', ''),
+                isbn=form.cleaned_data.get('isbn', ''),
+                notes=form.cleaned_data.get('notes', ''),
+            )
+        )
+        messages.success(
+            self.request,
+            f'Источник «{result.display_name}» создан!',
+        )
         return redirect(reverse('tasks:source-list'))

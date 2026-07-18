@@ -250,6 +250,24 @@ class SourceListItem:
 
 
 @dataclass(frozen=True)
+class SourceCreateParams:
+    name: str
+    short_name: str = ''
+    source_type: str = 'textbook'
+    author: str = ''
+    year: Optional[int] = None
+    url: str = ''
+    isbn: str = ''
+    notes: str = ''
+
+
+@dataclass(frozen=True)
+class SourceCreateResult:
+    pk: str
+    display_name: str
+
+
+@dataclass(frozen=True)
 class MathCacheRefreshResult:
     status: str
     with_math_count: int = 0

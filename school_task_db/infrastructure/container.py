@@ -26,6 +26,7 @@ from core_logic.use_cases.change_task_group_membership import (
 from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
 )
+from core_logic.use_cases.create_source import CreateSourceUseCase
 from core_logic.use_cases.create_student_remedial_variant import (
     CreateStudentRemedialVariantUseCase,
 )
@@ -520,6 +521,11 @@ class Container:
 
     def get_source_list_use_case(self):
         return GetSourceListUseCase(
+            task_repo=self.task_repo,
+        )
+
+    def create_source_use_case(self):
+        return CreateSourceUseCase(
             task_repo=self.task_repo,
         )
 

@@ -9,6 +9,8 @@ from core_logic.entities.task import (
     AddTasksToGroupTask,
     ReferenceElementOption,
     SelectOption,
+    SourceCreateParams,
+    SourceCreateResult,
     SourceListItem,
     TaskEntity,
     TaskExportFilters,
@@ -434,6 +436,22 @@ class DjangoTaskRepository(ITaskRepository):
                 task_count=Count('task'),
             ).order_by('name')
         ]
+
+    def create_source(self, params: SourceCreateParams) -> SourceCreateResult:
+        source = Source.objects.create(
+            name=params.name,
+            short_name=params.short_name,
+            source_type=params.source_type,
+            author=params.author,
+            year=params.year,
+            url=params.url,
+            isbn=params.isbn,
+            notes=params.notes,
+        )
+        return SourceCreateResult(
+            pk=str(source.pk),
+            display_name=str(source),
+        )
 
     def get_subtopics_for_topic(self, topic_id: str):
         if not topic_id:

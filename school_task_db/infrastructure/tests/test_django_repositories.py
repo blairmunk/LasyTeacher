@@ -7,6 +7,7 @@ from core_logic.services.remedial_service import RemedialService
 from core_logic.interfaces.event_repo import GradeParticipationParams
 from core_logic.interfaces.work_repo import CreateWorkWithVariantFromTasksParams
 from core_logic.entities.task import (
+    SourceCreateParams,
     TaskExportFilters,
     TaskGroupListFilters,
     TaskListFilters,
@@ -355,6 +356,28 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(sources[0].name, source.name)
         self.assertEqual(sources[0].source_type_display, source.get_source_type_display())
         self.assertEqual(sources[0].task_count, 1)
+
+    def test_task_repository_creates_source(self):
+        repo = DjangoTaskRepository()
+
+        result = repo.create_source(
+            SourceCreateParams(
+                name='Сборник задач',
+                short_name='Сборник',
+                source_type='problem_book',
+                author='Автор',
+                year=2026,
+                url='https://example.test',
+                isbn='123',
+                notes='Заметки',
+            )
+        )
+
+        source = Source.objects.get(pk=result.pk)
+        self.assertEqual(result.display_name, 'Сборник')
+        self.assertEqual(source.name, 'Сборник задач')
+        self.assertEqual(source.source_type, 'problem_book')
+        self.assertEqual(source.year, 2026)
 
     def test_task_repository_builds_task_export_payload(self):
         source = Source.objects.create(

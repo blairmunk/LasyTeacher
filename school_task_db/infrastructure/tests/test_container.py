@@ -20,6 +20,7 @@ from core_logic.use_cases.change_task_group_membership import (
 from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
 )
+from core_logic.use_cases.create_source import CreateSourceUseCase
 from core_logic.use_cases.create_remedial_wizard_work import (
     CreateRemedialWizardWorkUseCase,
 )
@@ -269,6 +270,7 @@ class ContainerTests(SimpleTestCase):
         preview_import_use_case = container.preview_task_import_use_case()
         sample_import_use_case = container.get_task_import_sample_use_case()
         export_tasks_use_case = container.export_tasks_use_case()
+        create_source_use_case = container.create_source_use_case()
         participant_selection_use_case = (
             container.get_event_participant_selection_use_case()
         )
@@ -448,6 +450,7 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(preview_import_use_case, PreviewTaskImportUseCase)
         self.assertIsInstance(sample_import_use_case, GetTaskImportSampleUseCase)
         self.assertIsInstance(export_tasks_use_case, ExportTasksUseCase)
+        self.assertIsInstance(create_source_use_case, CreateSourceUseCase)
         self.assertIsInstance(
             participant_selection_use_case,
             GetEventParticipantSelectionUseCase,

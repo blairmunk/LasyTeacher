@@ -18,6 +18,8 @@ class DeleteVariantUseCase:
 
     def execute(self, request: DeleteVariantRequest) -> DeleteVariantResult:
         info = self.work_repo.get_variant_delete_info(request.variant_id)
+        if info is None:
+            return DeleteVariantResult(status='not_found')
 
         if request.action == 'detach':
             return DeleteVariantResult(

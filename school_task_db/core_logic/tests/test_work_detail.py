@@ -541,6 +541,27 @@ class WorkDetailTests(TestCase):
         self.assertEqual(result.task_count, 3)
         self.assertTrue(result.has_participations)
 
+    def test_get_variant_delete_info_use_case_returns_none_for_missing_variant(self):
+        repo = FakeWorkRepository()
+        repo.variant_delete_info = None
+        use_case = GetVariantDeleteInfoUseCase(work_repo=repo)
+
+        result = use_case.execute('missing-variant')
+
+        self.assertIsNone(result)
+
+    def test_delete_variant_use_case_returns_not_found_for_missing_variant(self):
+        repo = FakeWorkRepository()
+        repo.variant_delete_info = None
+        use_case = DeleteVariantUseCase(work_repo=repo)
+
+        result = use_case.execute(
+            DeleteVariantRequest(variant_id='missing-variant', action='delete')
+        )
+
+        self.assertEqual(result.status, 'not_found')
+        self.assertIsNone(repo.deleted_variant_id)
+
     def test_delete_variant_use_case_blocks_delete_when_variant_has_participations(self):
         repo = FakeWorkRepository()
         repo.variant_delete_info = VariantDeleteInfo(

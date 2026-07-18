@@ -173,7 +173,7 @@ class IWorkRepository(ABC):
         """Attach variants to a work and return attached count."""
 
     @abstractmethod
-    def get_variant_delete_info(self, variant_id: str) -> VariantDeleteInfo:
+    def get_variant_delete_info(self, variant_id: str) -> Optional[VariantDeleteInfo]:
         """Return delete screen information for a variant."""
 
     @abstractmethod

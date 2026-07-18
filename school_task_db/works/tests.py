@@ -450,6 +450,16 @@ class WorkDetailViewTests(TestCase):
         self.assertTrue(response.context['has_grades'])
         self.assertEqual(response.context['grade_count'], 1)
 
+    def test_variant_delete_returns_404_for_missing_variant(self):
+        response = self.client.get(
+            reverse(
+                'works:variant-delete',
+                args=['550e8400-e29b-41d4-a716-446655440000'],
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
+
     def test_variant_delete_view_blocks_delete_when_variant_has_participations(self):
         student = Student.objects.create(last_name='Петров', first_name='Пётр')
         event = Event.objects.create(

@@ -895,10 +895,14 @@ class DjangoRemedialRepositoryTests(TestCase):
         repo = DjangoWorkRepository()
 
         info = repo.get_variant_delete_info(str(self.source_variant.pk))
+        missing_info = repo.get_variant_delete_info(
+            '550e8400-e29b-41d4-a716-446655440000',
+        )
 
         self.assertEqual(info.task_count, 2)
         self.assertEqual(info.participation_count, 1)
         self.assertTrue(info.has_participations)
+        self.assertIsNone(missing_info)
 
     def test_work_repository_detaches_variant_from_work(self):
         repo = DjangoWorkRepository()

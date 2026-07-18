@@ -1,6 +1,6 @@
 """Django implementation of the work repository."""
 
-from typing import List, Set
+from typing import List, Optional, Set
 
 from django.db import transaction
 from django.db.models import Count, Sum
@@ -471,8 +471,10 @@ class DjangoWorkRepository(IWorkRepository):
                 attached_count += 1
         return attached_count
 
-    def get_variant_delete_info(self, variant_id: str) -> VariantDeleteInfo:
-        variant = Variant.objects.select_related('work').get(pk=variant_id)
+    def get_variant_delete_info(self, variant_id: str) -> Optional[VariantDeleteInfo]:
+        variant = Variant.objects.select_related('work').filter(pk=variant_id).first()
+        if variant is None:
+            return None
         return VariantDeleteInfo(
             task_count=VariantTask.objects.filter(variant_id=variant_id).count(),
             participation_count=EventParticipation.objects.filter(

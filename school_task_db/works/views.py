@@ -2,10 +2,10 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.http import Http404
-from django.views.generic import CreateView, UpdateView, DeleteView, TemplateView
+from django.views.generic import CreateView, UpdateView, TemplateView
 from django.views.decorators.http import require_http_methods
 
-from .models import Work, Variant
+from .models import Work
 from .forms import WorkForm, VariantGenerationForm
 
 
@@ -257,19 +257,19 @@ class OrphanVariantListView(TemplateView):
         return context
 
 
-class VariantDeleteView(DeleteView):
-    model = Variant
+class VariantDeleteView(TemplateView):
     template_name = 'works/variant_confirm_delete.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        variant = self.object
         from infrastructure.container import container
 
         delete_info = container.get_variant_delete_info_use_case().execute(
-            str(variant.pk),
+            str(self.kwargs['pk']),
         )
-        context['variant'] = variant
+        if delete_info is None:
+            raise Http404('Вариант не найден')
+
         context['delete_info'] = delete_info
         context['task_count'] = delete_info.task_count
         context['has_grades'] = delete_info.has_participations
@@ -278,18 +278,19 @@ class VariantDeleteView(DeleteView):
         return context
 
     def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-
         action = request.POST.get('action', 'delete')
         from core_logic.use_cases.delete_variant import DeleteVariantRequest
         from infrastructure.container import container
 
         result = container.delete_variant_use_case().execute(
             DeleteVariantRequest(
-                variant_id=str(self.object.pk),
+                variant_id=str(self.kwargs['pk']),
                 action=action,
             )
         )
+
+        if result.status == 'not_found':
+            raise Http404('Вариант не найден')
 
         if result.status == 'blocked_has_participations':
             messages.error(

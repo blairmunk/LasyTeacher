@@ -8,25 +8,8 @@ from django.http import JsonResponse, HttpResponse
 from django.views import View
 from django.views.decorators.http import require_POST
 
-from core_logic.entities.task import TaskExportFilters
-from core_logic.entities.task_import import (
-    TaskImportExecutionSubmissionRequest,
-    TaskImportFileRequest,
-    TaskImportPreviewRequest,
-)
-from core_logic.use_cases.export_tasks import ExportTasksRequest
 from core_logic.use_cases.get_import_views import ImportPageRequest
-from core_logic.use_cases.validate_task_import_json import (
-    ValidateTaskImportJsonRequest,
-)
 from infrastructure.container import container
-
-
-def _post_lists(post_data):
-    return {
-        key: post_data.getlist(key)
-        for key in post_data
-    }
 
 
 class ImportPageView(View):
@@ -78,7 +61,11 @@ def validate_json_ajax(request):
     # Структурная валидация
     validation = (
         container.validate_task_import_json_use_case()
-        .execute(ValidateTaskImportJsonRequest(data=data))
+        .execute(
+            container.core_form_adapter.validate_task_import_json_request_from_data(
+                data,
+            )
+        )
         .to_dict()
     )
     
@@ -86,7 +73,7 @@ def validate_json_ajax(request):
     preview = None
     if validation['is_valid']:
         preview_result = container.preview_task_import_use_case().execute(
-            TaskImportPreviewRequest(data=data),
+            container.core_form_adapter.task_import_preview_request_from_data(data),
         )
         preview = preview_result.preview
         if not preview_result.success:
@@ -108,11 +95,9 @@ def execute_import_ajax(request):
 
     prepared_submission = (
         container.prepare_task_import_execution_submission_use_case().execute(
-            TaskImportExecutionSubmissionRequest(
-                filename=uploaded_file.name,
-                file_size=uploaded_file.size,
-                content=uploaded_file.read(),
-                form_data=_post_lists(request.POST),
+            container.core_form_adapter.task_import_execution_submission_from_upload(
+                uploaded_file,
+                request.POST,
             )
         )
     )
@@ -130,10 +115,8 @@ def execute_import_ajax(request):
 
 def _prepare_import_file(uploaded_file):
     return container.prepare_task_import_file_use_case().execute(
-        TaskImportFileRequest(
-            filename=uploaded_file.name,
-            file_size=uploaded_file.size,
-            content=uploaded_file.read(),
+        container.core_form_adapter.task_import_file_request_from_upload(
+            uploaded_file,
         ),
     )
 
@@ -151,12 +134,8 @@ def export_tasks_ajax(request):
     """Экспорт заданий в JSON в формате, совместимом с TaskImporter"""
     export_date = time.strftime('%Y-%m-%d')
     export_data = container.export_tasks_use_case().execute(
-        ExportTasksRequest(
-            filters=TaskExportFilters(
-                topic_id=request.GET.get('topic', ''),
-                subject=request.GET.get('subject', ''),
-                grade=request.GET.get('grade', ''),
-            ),
+        container.core_form_adapter.export_tasks_request_from_query(
+            request.GET,
             export_date=export_date,
         ),
     ).payload

@@ -1,4 +1,5 @@
 from django.http import QueryDict
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import SimpleTestCase
 
 from infrastructure.forms.core_forms import CoreFormAdapter
@@ -13,6 +14,64 @@ class CoreFormAdapterTests(SimpleTestCase):
         )
 
         self.assertEqual(request.raw_query, 'force')
+
+    def test_builds_task_import_file_request_from_upload(self):
+        uploaded_file = SimpleUploadedFile(
+            'tasks.json',
+            b'{"tasks": []}',
+            content_type='application/json',
+        )
+
+        request = CoreFormAdapter().task_import_file_request_from_upload(
+            uploaded_file,
+        )
+
+        self.assertEqual(request.filename, 'tasks.json')
+        self.assertEqual(request.file_size, len(b'{"tasks": []}'))
+        self.assertEqual(request.content, b'{"tasks": []}')
+
+    def test_builds_task_import_execution_submission_from_upload(self):
+        uploaded_file = SimpleUploadedFile(
+            'tasks.json',
+            b'{"tasks": []}',
+            content_type='application/json',
+        )
+        post_data = QueryDict('', mutable=True)
+        post_data.update({'mode': 'append', 'dry_run': 'true'})
+        post_data.setlist('create_missing', ['true'])
+
+        request = CoreFormAdapter().task_import_execution_submission_from_upload(
+            uploaded_file,
+            post_data,
+        )
+
+        self.assertEqual(request.filename, 'tasks.json')
+        self.assertEqual(request.file_size, len(b'{"tasks": []}'))
+        self.assertEqual(request.content, b'{"tasks": []}')
+        self.assertEqual(request.form_data['mode'], ['append'])
+        self.assertEqual(request.form_data['dry_run'], ['true'])
+        self.assertEqual(request.form_data['create_missing'], ['true'])
+
+    def test_builds_task_import_validation_requests_from_data(self):
+        data = {'tasks': []}
+        adapter = CoreFormAdapter()
+
+        validation_request = adapter.validate_task_import_json_request_from_data(data)
+        preview_request = adapter.task_import_preview_request_from_data(data)
+
+        self.assertIs(validation_request.data, data)
+        self.assertIs(preview_request.data, data)
+
+    def test_builds_export_tasks_request_from_query(self):
+        request = CoreFormAdapter().export_tasks_request_from_query(
+            QueryDict('topic=t1&subject=physics&grade=9'),
+            export_date='2026-07-18',
+        )
+
+        self.assertEqual(request.filters.topic_id, 't1')
+        self.assertEqual(request.filters.subject, 'physics')
+        self.assertEqual(request.filters.grade, '9')
+        self.assertEqual(request.export_date, '2026-07-18')
 
 
 class TaskFormAdapterTests(SimpleTestCase):

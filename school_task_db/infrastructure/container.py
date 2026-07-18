@@ -188,6 +188,9 @@ from core_logic.use_cases.prepare_remedial_wizard_submission import (
 from core_logic.use_cases.prepare_student_remedial_submission import (
     PrepareStudentRemedialSubmissionUseCase,
 )
+from core_logic.use_cases.prepare_task_group_membership_submission import (
+    PrepareAddTasksToGroupSubmissionUseCase,
+)
 from core_logic.use_cases.get_source_list import GetSourceListUseCase
 from core_logic.use_cases.get_task_import_sample import GetTaskImportSampleUseCase
 from core_logic.use_cases.preview_task_import import PreviewTaskImportUseCase
@@ -826,6 +829,9 @@ class Container:
 
     def prepare_student_remedial_submission_use_case(self):
         return PrepareStudentRemedialSubmissionUseCase()
+
+    def prepare_add_tasks_to_group_submission_use_case(self):
+        return PrepareAddTasksToGroupSubmissionUseCase()
 
     def validate_review_work_scan_use_case(self):
         return ValidateReviewWorkScanUseCase(

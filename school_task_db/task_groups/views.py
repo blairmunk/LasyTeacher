@@ -12,6 +12,13 @@ from infrastructure.container import container
 from .forms import AnalogGroupForm
 
 
+def _post_lists(post_data):
+    return {
+        key: post_data.getlist(key)
+        for key in post_data
+    }
+
+
 class AnalogGroupListView(TemplateView):
     template_name = 'task_groups/list.html'
     paginate_by = 20
@@ -151,15 +158,19 @@ class AnalogGroupUpdateView(TemplateView):
 def add_tasks_to_group(request, group_id):
     """Добавление заданий в группу аналогов"""
     if request.method == 'POST':
-        from core_logic.use_cases.change_task_group_membership import (
-            AddTasksToGroupRequest,
+        from core_logic.use_cases.prepare_task_group_membership_submission import (
+            PrepareAddTasksToGroupSubmissionRequest,
+        )
+
+        add_request = container.prepare_add_tasks_to_group_submission_use_case().execute(
+            PrepareAddTasksToGroupSubmissionRequest(
+                group_id=str(group_id),
+                data=_post_lists(request.POST),
+            )
         )
 
         result = container.add_tasks_to_group_use_case().execute(
-            AddTasksToGroupRequest(
-                group_id=str(group_id),
-                task_ids=request.POST.getlist('selected_tasks'),
-            )
+            add_request,
         )
         if result.status == 'not_found':
             raise Http404("Группа не найдена")

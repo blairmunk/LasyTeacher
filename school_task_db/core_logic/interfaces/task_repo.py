@@ -158,6 +158,15 @@ class ITaskRepository(ABC):
         """Create an analog group and return its ID."""
 
     @abstractmethod
+    def update_analog_group(
+        self,
+        group_id: str,
+        name: str,
+        description: str = '',
+    ) -> bool:
+        """Update an analog group and return whether it existed."""
+
+    @abstractmethod
     def get_first_task_difficulty_for_group(self, group_id: str) -> int:
         """Return the first task difficulty for an analog group, or 1."""
 

@@ -757,8 +757,19 @@ class DjangoRemedialRepositoryTests(TestCase):
             name='Новая группа',
             description='Описание',
         )
+        updated = repo.update_analog_group(
+            group_id=new_group_id,
+            name='Обновлённая группа',
+            description='Новое описание',
+        )
+        missing_updated = repo.update_analog_group(
+            group_id='550e8400-e29b-41d4-a716-446655440000',
+            name='Нет',
+        )
 
-        self.assertTrue(repo.analog_group_name_exists('Новая группа'))
+        self.assertTrue(updated)
+        self.assertFalse(missing_updated)
+        self.assertTrue(repo.analog_group_name_exists('Обновлённая группа'))
         self.assertEqual(repo.count_existing_task_ids({str(self.original_weak.pk)}), 1)
 
         created_count = repo.add_tasks_to_group(

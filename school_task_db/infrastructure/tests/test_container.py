@@ -163,6 +163,10 @@ from core_logic.use_cases.prepare_participation_review_submission import (
 )
 from core_logic.use_cases.preview_task_import import PreviewTaskImportUseCase
 from core_logic.use_cases.refresh_task_math_cache import RefreshTaskMathCacheUseCase
+from core_logic.use_cases.save_analog_group import (
+    CreateAnalogGroupUseCase,
+    UpdateAnalogGroupUseCase,
+)
 from core_logic.use_cases.sync_review_session import SyncReviewSessionUseCase
 from core_logic.use_cases.sync_work_analog_groups import SyncWorkAnalogGroupsUseCase
 from core_logic.use_cases.toggle_participation_absent import (
@@ -221,6 +225,8 @@ class ContainerTests(SimpleTestCase):
         event_detail_use_case = container.get_event_detail_use_case()
         task_group_detail_use_case = container.get_task_group_detail_use_case()
         task_group_list_use_case = container.get_task_group_list_use_case()
+        create_analog_group_use_case = container.create_analog_group_use_case()
+        update_analog_group_use_case = container.update_analog_group_use_case()
         add_tasks_form_use_case = container.get_add_tasks_to_group_use_case()
         course_detail_use_case = container.get_course_detail_use_case()
         course_list_use_case = container.get_course_list_use_case()
@@ -381,6 +387,14 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(event_detail_use_case, GetEventDetailUseCase)
         self.assertIsInstance(task_group_detail_use_case, GetTaskGroupDetailUseCase)
         self.assertIsInstance(task_group_list_use_case, GetTaskGroupListUseCase)
+        self.assertIsInstance(
+            create_analog_group_use_case,
+            CreateAnalogGroupUseCase,
+        )
+        self.assertIsInstance(
+            update_analog_group_use_case,
+            UpdateAnalogGroupUseCase,
+        )
         self.assertIsInstance(add_tasks_form_use_case, GetAddTasksToGroupUseCase)
         self.assertIsInstance(course_detail_use_case, GetCourseDetailUseCase)
         self.assertIsInstance(course_list_use_case, GetCourseListUseCase)

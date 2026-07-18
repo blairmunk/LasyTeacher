@@ -176,6 +176,10 @@ from core_logic.use_cases.get_source_list import GetSourceListUseCase
 from core_logic.use_cases.get_task_import_sample import GetTaskImportSampleUseCase
 from core_logic.use_cases.preview_task_import import PreviewTaskImportUseCase
 from core_logic.use_cases.refresh_task_math_cache import RefreshTaskMathCacheUseCase
+from core_logic.use_cases.save_analog_group import (
+    CreateAnalogGroupUseCase,
+    UpdateAnalogGroupUseCase,
+)
 from core_logic.use_cases.sync_review_session import SyncReviewSessionUseCase
 from core_logic.use_cases.sync_work_analog_groups import SyncWorkAnalogGroupsUseCase
 from core_logic.use_cases.toggle_participation_absent import (
@@ -405,6 +409,16 @@ class Container:
 
     def get_task_group_detail_use_case(self):
         return GetTaskGroupDetailUseCase(
+            task_repo=self.task_repo,
+        )
+
+    def create_analog_group_use_case(self):
+        return CreateAnalogGroupUseCase(
+            task_repo=self.task_repo,
+        )
+
+    def update_analog_group_use_case(self):
+        return UpdateAnalogGroupUseCase(
             task_repo=self.task_repo,
         )
 

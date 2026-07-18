@@ -543,6 +543,18 @@ class DjangoTaskRepository(ITaskRepository):
         group = AnalogGroup.objects.create(name=name, description=description)
         return str(group.pk)
 
+    def update_analog_group(
+        self,
+        group_id: str,
+        name: str,
+        description: str = '',
+    ) -> bool:
+        updated_count = AnalogGroup.objects.filter(pk=group_id).update(
+            name=name,
+            description=description,
+        )
+        return updated_count > 0
+
     def get_first_task_difficulty_for_group(self, group_id: str) -> int:
         task_group = TaskGroup.objects.filter(
             group_id=group_id,

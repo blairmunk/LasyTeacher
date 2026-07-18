@@ -7,8 +7,8 @@ from django.http import Http404, JsonResponse
 
 from core_logic.entities.task import TaskGroupListFilters
 from core_logic.use_cases.get_add_tasks_to_group import AddTasksToGroupFormRequest
+from core_logic.use_cases.save_analog_group import SaveAnalogGroupRequest
 from infrastructure.container import container
-from .models import AnalogGroup
 from .forms import AnalogGroupForm
 
 
@@ -93,38 +93,59 @@ class AnalogGroupCreateView(TemplateView):
         if not form.is_valid():
             return self.render_to_response(self.get_context_data(form=form))
 
-        group = form.save()
+        result = container.create_analog_group_use_case().execute(
+            SaveAnalogGroupRequest(
+                name=form.cleaned_data['name'],
+                description=form.cleaned_data.get('description', ''),
+            )
+        )
         messages.success(request, 'Группа аналогов успешно создана!')
-        return redirect('task_groups:detail', pk=group.pk)
+        return redirect('task_groups:detail', pk=result.group_id)
 
 
 class AnalogGroupUpdateView(TemplateView):
     template_name = 'task_groups/form.html'
 
-    def _get_group(self):
-        group = AnalogGroup.objects.filter(pk=self.kwargs['pk']).first()
-        if group is None:
+    def _get_group_data(self):
+        detail_data = container.get_task_group_detail_use_case().execute(
+            str(self.kwargs['pk']),
+        )
+        if detail_data.group is None:
             raise Http404('Группа аналогов не найдена')
-        return group
+        return detail_data.group
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        group = kwargs.get('object') or self._get_group()
+        group = kwargs.get('object') or self._get_group_data()
         context['object'] = group
-        context['form'] = kwargs.get('form') or AnalogGroupForm(instance=group)
+        context['form'] = kwargs.get('form') or AnalogGroupForm(
+            initial={
+                'name': group.name,
+                'description': group.description,
+            }
+        )
         return context
 
     def post(self, request, *args, **kwargs):
-        group = self._get_group()
-        form = AnalogGroupForm(request.POST, instance=group)
+        group = self._get_group_data()
+        form = AnalogGroupForm(request.POST)
         if not form.is_valid():
             return self.render_to_response(
                 self.get_context_data(form=form, object=group),
             )
 
-        group = form.save()
+        result = container.update_analog_group_use_case().execute(
+            SaveAnalogGroupRequest(
+                group_id=str(group.pk),
+                name=form.cleaned_data['name'],
+                description=form.cleaned_data.get('description', ''),
+            )
+        )
+        if result.status == 'not_found':
+            raise Http404('Группа аналогов не найдена')
+
         messages.success(request, 'Группа аналогов успешно обновлена!')
-        return redirect('task_groups:detail', pk=group.pk)
+        return redirect('task_groups:detail', pk=result.group_id)
 
 
 def add_tasks_to_group(request, group_id):

@@ -109,7 +109,8 @@ class CoreViewsTests(TestCase):
         response = self.client.get(reverse('core:import-history'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(list(response.context['imports']), [second, first])
+        self.assertEqual(response.context['imports'][0].filename, second.filename)
+        self.assertEqual(response.context['imports'][1].filename, first.filename)
 
     def test_validate_import_json_ajax_uses_clean_validation_data(self):
         upload = SimpleUploadedFile(

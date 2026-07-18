@@ -46,6 +46,22 @@ class SearchGroupResult:
 
 
 @dataclass(frozen=True)
+class ImportLogItem:
+    filename: str
+    mode_display: str
+    dry_run: bool
+    tasks_created: int
+    tasks_updated: int
+    tasks_skipped: int
+    errors_count: int
+    duration_ms: int
+    duration_human: str
+    file_size_human: str
+    status_icon: str
+    created_at: Any
+
+
+@dataclass(frozen=True)
 class DashboardSummaryData:
     tasks_count: int = 0
     works_count: int = 0

@@ -422,8 +422,10 @@ class DjangoRemedialRepositoryTests(TestCase):
         recent_logs = list(repo.get_recent_import_logs(limit=1))
         import_logs = list(repo.get_import_logs())
 
-        self.assertEqual(recent_logs, [second])
-        self.assertEqual(import_logs, [second, first])
+        self.assertEqual(recent_logs[0].filename, second.filename)
+        self.assertEqual(import_logs[0].filename, second.filename)
+        self.assertEqual(import_logs[1].filename, first.filename)
+        self.assertEqual(import_logs[0].mode_display, second.get_mode_display())
 
     def test_create_remedial_use_case_creates_django_objects(self):
         student_repo = DjangoStudentRepository()

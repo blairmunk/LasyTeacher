@@ -182,6 +182,7 @@ from core_logic.use_cases.save_analog_group import (
     CreateAnalogGroupUseCase,
     UpdateAnalogGroupUseCase,
 )
+from core_logic.use_cases.save_event import CreateEventUseCase, UpdateEventUseCase
 from core_logic.use_cases.save_student import (
     CreateStudentGroupUseCase,
     CreateStudentUseCase,
@@ -370,6 +371,16 @@ class Container:
 
     def get_remedial_event_preview_use_case(self):
         return GetRemedialEventPreviewUseCase(
+            event_repo=self.event_repo,
+        )
+
+    def create_event_use_case(self):
+        return CreateEventUseCase(
+            event_repo=self.event_repo,
+        )
+
+    def update_event_use_case(self):
+        return UpdateEventUseCase(
             event_repo=self.event_repo,
         )
 

@@ -209,6 +209,34 @@ class GradeParticipationViewTests(TestCase):
             ).exists()
         )
 
+    def test_event_update_saves_event_through_use_case(self):
+        response = self.client.post(
+            reverse('events:update', args=[self.event.pk]),
+            {
+                'name': 'КР 9Б обновлённая',
+                'work': str(self.work.pk),
+                'planned_date': '2026-03-11',
+                'status': 'completed',
+                'description': 'Новое описание',
+                'location': '205',
+            },
+        )
+
+        self.event.refresh_from_db()
+        self.assertRedirects(
+            response,
+            reverse('events:list'),
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(self.event.name, 'КР 9Б обновлённая')
+        self.assertEqual(self.event.status, 'completed')
+        self.assertEqual(self.event.description, 'Новое описание')
+        self.assertEqual(self.event.location, '205')
+        self.assertEqual(
+            timezone.localtime(self.event.planned_date).date(),
+            dt.date(2026, 3, 11),
+        )
+
     def test_add_participants_view_uses_clean_use_case(self):
         second_student = Student.objects.create(
             last_name='Сидоров',

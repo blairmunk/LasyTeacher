@@ -2,8 +2,40 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.views.generic import TemplateView
 from django.http import Http404
-from .models import Event
+from django.utils import timezone
+
+from core_logic.interfaces.event_repo import CreateEventParams
+from infrastructure.container import container
 from .forms import EventForm, StudentSelectionForm, MarkForm, VariantAssignmentForm
+
+
+def _event_params_from_form(form, event_id=''):
+    course = form.cleaned_data.get('course')
+    return CreateEventParams(
+        event_id=event_id,
+        name=form.cleaned_data['name'],
+        work_id=str(form.cleaned_data['work'].pk),
+        date=form.cleaned_data['planned_date'],
+        status=form.cleaned_data.get('status', 'planned'),
+        course_id=str(course.pk) if course else None,
+        location=form.cleaned_data.get('location', ''),
+        description=form.cleaned_data.get('description', ''),
+    )
+
+
+def _event_form_initial(event):
+    planned_date = event.planned_date
+    if planned_date:
+        planned_date = timezone.localtime(planned_date).date()
+    return {
+        'name': event.name,
+        'work': event.work_id,
+        'planned_date': planned_date,
+        'status': event.status,
+        'course': event.course_id,
+        'description': event.description,
+        'location': event.location,
+    }
 
 
 def _selected_student_ids(cleaned_data):
@@ -28,7 +60,6 @@ class EventListView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        from infrastructure.container import container
 
         event_list = container.get_event_list_use_case().execute()
         context['events'] = event_list.events
@@ -45,7 +76,6 @@ class EventDetailView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        from infrastructure.container import container
 
         detail = container.get_event_detail_use_case().execute(
             event_id=str(self.kwargs['pk']),
@@ -81,16 +111,17 @@ class EventCreateView(TemplateView):
         if not form.is_valid():
             return self.render_to_response(self.get_context_data(form=form))
 
-        event = form.save()
+        event_result = container.create_event_use_case().execute(
+            _event_params_from_form(form),
+        )
 
         from core_logic.use_cases.add_event_participants import (
             AddEventParticipantsRequest,
         )
-        from infrastructure.container import container
 
         result = container.add_event_participants_use_case().execute(
             AddEventParticipantsRequest(
-                event_id=str(event.pk),
+                event_id=event_result.event_id,
                 student_ids=_selected_student_ids(form.cleaned_data),
             )
         )
@@ -103,36 +134,45 @@ class EventCreateView(TemplateView):
         else:
             messages.success(request, 'Событие создано')
 
-        return redirect('events:detail', pk=event.pk)
+        return redirect('events:detail', pk=event_result.event_id)
 
 
 class EventUpdateView(TemplateView):
     template_name = 'events/form.html'
 
     def _get_event(self):
-        event = Event.objects.filter(pk=self.kwargs['pk']).first()
-        if event is None:
+        detail = container.get_event_detail_use_case().execute(
+            event_id=str(self.kwargs['pk']),
+        )
+        if detail.event is None:
             raise Http404('Событие не найдено')
-        return event
+        return detail.event
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         event = kwargs.get('object') or self._get_event()
         context['object'] = event
-        context['form'] = kwargs.get('form') or EventForm(instance=event)
+        context['form'] = kwargs.get('form') or EventForm(
+            initial=_event_form_initial(event),
+        )
         context['page_title'] = 'Редактирование события'
         context['submit_text'] = 'Сохранить'
         return context
 
     def post(self, request, *args, **kwargs):
         event = self._get_event()
-        form = EventForm(request.POST, instance=event)
+        form = EventForm(request.POST)
         if not form.is_valid():
             return self.render_to_response(
                 self.get_context_data(form=form, object=event),
             )
 
-        form.save()
+        result = container.update_event_use_case().execute(
+            _event_params_from_form(form, event_id=str(event.pk)),
+        )
+        if result.status == 'not_found':
+            raise Http404('Событие не найдено')
+
         messages.success(request, 'Событие успешно обновлено!')
         return redirect('events:list')
 

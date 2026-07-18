@@ -169,6 +169,7 @@ from core_logic.use_cases.save_analog_group import (
     CreateAnalogGroupUseCase,
     UpdateAnalogGroupUseCase,
 )
+from core_logic.use_cases.save_event import CreateEventUseCase, UpdateEventUseCase
 from core_logic.use_cases.save_student import (
     CreateStudentGroupUseCase,
     CreateStudentUseCase,
@@ -210,6 +211,8 @@ class ContainerTests(SimpleTestCase):
         use_case = container.create_remedial_from_event_use_case()
         wizard_create_use_case = container.create_remedial_wizard_work_use_case()
         preview_use_case = container.get_remedial_event_preview_use_case()
+        create_event_use_case = container.create_event_use_case()
+        update_event_use_case = container.update_event_use_case()
         wizard_preview_use_case = container.get_remedial_wizard_preview_use_case()
         wizard_start_use_case = container.get_remedial_wizard_start_use_case()
         profile_use_case = container.get_student_profile_use_case()
@@ -360,6 +363,8 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(use_case, CreateRemedialFromEventUseCase)
         self.assertIsInstance(wizard_create_use_case, CreateRemedialWizardWorkUseCase)
         self.assertIsInstance(preview_use_case, GetRemedialEventPreviewUseCase)
+        self.assertIsInstance(create_event_use_case, CreateEventUseCase)
+        self.assertIsInstance(update_event_use_case, UpdateEventUseCase)
         self.assertIsInstance(
             wizard_preview_use_case,
             GetRemedialWizardPreviewUseCase,

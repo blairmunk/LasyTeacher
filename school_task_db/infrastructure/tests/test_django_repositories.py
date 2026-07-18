@@ -1,10 +1,15 @@
+import datetime as dt
+
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.utils import timezone
 
 from core.models import ImportLog
 from core_logic.services.remedial_service import RemedialService
-from core_logic.interfaces.event_repo import GradeParticipationParams
+from core_logic.interfaces.event_repo import (
+    CreateEventParams,
+    GradeParticipationParams,
+)
 from core_logic.interfaces.work_repo import CreateWorkWithVariantFromTasksParams
 from core_logic.entities.task import (
     SourceCreateParams,
@@ -230,6 +235,57 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(student_group.students[0].pk, str(self.student.pk))
         self.assertEqual(student_group.students[0].last_name, self.student.last_name)
         self.assertIsNone(missing_student_group)
+
+    def test_event_repository_creates_and_updates_event(self):
+        repo = DjangoEventRepository()
+        course = Course.objects.create(
+            name='Механика',
+            subject='Физика',
+            grade_level=9,
+        )
+        planned_date = timezone.make_aware(
+            dt.datetime.combine(dt.date(2026, 3, 10), dt.time(9, 0)),
+        )
+
+        event_id = repo.create_event(
+            CreateEventParams(
+                name='Новая КР',
+                work_id=str(self.source_work.pk),
+                date=planned_date,
+                status='planned',
+                course_id=str(course.pk),
+                description='Описание',
+                location='101',
+            )
+        )
+        updated = repo.update_event(
+            CreateEventParams(
+                event_id=event_id,
+                name='Новая КР исправленная',
+                work_id=str(self.source_work.pk),
+                date=planned_date,
+                status='completed',
+                course_id=str(course.pk),
+                description='Новое описание',
+                location='202',
+            )
+        )
+        missing_updated = repo.update_event(
+            CreateEventParams(
+                event_id='00000000-0000-0000-0000-000000000000',
+                name='Нет',
+                work_id=str(self.source_work.pk),
+            )
+        )
+
+        event = Event.objects.get(pk=event_id)
+        self.assertTrue(updated)
+        self.assertFalse(missing_updated)
+        self.assertEqual(event.name, 'Новая КР исправленная')
+        self.assertEqual(event.status, 'completed')
+        self.assertEqual(event.course, course)
+        self.assertEqual(event.description, 'Новое описание')
+        self.assertEqual(event.location, '202')
 
     def test_student_repository_creates_and_updates_student(self):
         repo = DjangoStudentRepository()

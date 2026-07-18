@@ -19,9 +19,12 @@ from core_logic.entities.event import (
 class CreateEventParams:
     name: str
     work_id: str
-    date: Optional[str] = None
+    date: Optional[Any] = None
     course_id: Optional[str] = None
+    status: str = 'planned'
+    location: str = ''
     description: str = ''
+    event_id: str = ''
 
 
 @dataclass(frozen=True)
@@ -120,6 +123,10 @@ class IEventRepository(ABC):
     @abstractmethod
     def create_event(self, params: CreateEventParams) -> str:
         """Create an event and return its ID."""
+
+    @abstractmethod
+    def update_event(self, params: CreateEventParams) -> bool:
+        """Update an event and return whether it was found."""
 
     @abstractmethod
     def create_participation(

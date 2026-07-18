@@ -3,6 +3,7 @@
 from core_logic.entities.task import (
     SourceCreateParams,
     TaskImageSaveParams,
+    TaskListFilters,
     TaskSaveParams,
 )
 from tasks.forms import TaskForm, TaskImageFormSet
@@ -10,6 +11,36 @@ from tasks.models import Task
 
 
 class TaskFormAdapter:
+    def task_list_filters_from_query(self, query):
+        return TaskListFilters(
+            search=query.get('search', ''),
+            topic_id=query.get('topic', ''),
+            subtopic_id=query.get('subtopic', ''),
+            task_type=query.get('task_type', ''),
+            difficulty=query.get('difficulty', ''),
+            group_filter=query.get('group_filter', ''),
+            analog_group_id=query.get('analog_group', ''),
+            math_filter=query.get('math_filter', 'all'),
+            source_id=query.get('source', ''),
+            grade=query.get('grade', ''),
+            verified=query.get('verified', ''),
+        )
+
+    def task_list_filter_context_from_query(self, query):
+        return {
+            'current_source': query.get('source', ''),
+            'current_grade': query.get('grade', ''),
+            'current_verified': query.get('verified', ''),
+            'current_filter': query.get('math_filter', 'all'),
+            'search_query': query.get('search', ''),
+            'current_topic': query.get('topic', ''),
+            'current_subtopic': query.get('subtopic', ''),
+            'current_task_type': query.get('task_type', ''),
+            'current_difficulty': query.get('difficulty', ''),
+            'current_group_filter': query.get('group_filter', ''),
+            'current_analog_group': query.get('analog_group', ''),
+        }
+
     def _get_task_instance(self, task_id=None):
         if not task_id:
             return None

@@ -5,7 +5,6 @@ from django.views.generic import TemplateView
 from django.views.decorators.http import require_POST
 from django.http import Http404, JsonResponse
 
-from core_logic.entities.task import TaskGroupListFilters
 from core_logic.use_cases.get_add_tasks_to_group import AddTasksToGroupFormRequest
 from infrastructure.container import container
 from .forms import AnalogGroupForm
@@ -26,15 +25,9 @@ class AnalogGroupListView(TemplateView):
         if not hasattr(self, '_task_group_list_data'):
             self._task_group_list_data = (
                 container.get_task_group_list_use_case().execute(
-                    TaskGroupListFilters(
-                        search=self.request.GET.get('search', ''),
-                        topic_id=self.request.GET.get('topic', ''),
-                        subtopic_id=self.request.GET.get('subtopic', ''),
-                        difficulty=self.request.GET.get('difficulty', ''),
-                        group_filter=self.request.GET.get('group_filter', ''),
-                        sort=self.request.GET.get('sort', 'name'),
-                        min_tasks=self.request.GET.get('min_tasks', ''),
-                        max_tasks=self.request.GET.get('max_tasks', ''),
+                    container.task_group_form_adapter
+                    .task_group_list_filters_from_query(
+                        self.request.GET,
                     )
                 )
             )
@@ -52,16 +45,12 @@ class AnalogGroupListView(TemplateView):
         context['topics'] = list_data.topics
         context['subtopics'] = list_data.subtopics
         context['difficulties'] = list_data.difficulties
-
-        # Текущие фильтры
-        context['search_query'] = self.request.GET.get('search', '')
-        context['current_topic'] = self.request.GET.get('topic', '')
-        context['current_subtopic'] = self.request.GET.get('subtopic', '')
-        context['current_difficulty'] = self.request.GET.get('difficulty', '')
-        context['current_group_filter'] = self.request.GET.get('group_filter', '')
-        context['current_sort'] = self.request.GET.get('sort', 'name')
-        context['min_tasks'] = self.request.GET.get('min_tasks', '')
-        context['max_tasks'] = self.request.GET.get('max_tasks', '')
+        context.update(
+            container.task_group_form_adapter
+            .task_group_list_filter_context_from_query(
+                self.request.GET,
+            )
+        )
 
         # Статистика
         context['total_groups'] = list_data.total_groups

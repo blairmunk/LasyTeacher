@@ -8,9 +8,6 @@ from django.urls import reverse
 from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_POST
 
-from core_logic.entities.task import (
-    TaskListFilters,
-)
 from core_logic.use_cases.bulk_change_task_groups import (
     BulkAddTasksToGroupRequest,
     BulkCreateGroupFromTasksRequest,
@@ -33,18 +30,8 @@ class TaskListView(TemplateView):
     def _get_list_data(self):
         if not hasattr(self, '_task_list_data'):
             self._task_list_data = container.get_task_list_use_case().execute(
-                TaskListFilters(
-                    search=self.request.GET.get('search', ''),
-                    topic_id=self.request.GET.get('topic', ''),
-                    subtopic_id=self.request.GET.get('subtopic', ''),
-                    task_type=self.request.GET.get('task_type', ''),
-                    difficulty=self.request.GET.get('difficulty', ''),
-                    group_filter=self.request.GET.get('group_filter', ''),
-                    analog_group_id=self.request.GET.get('analog_group', ''),
-                    math_filter=self.request.GET.get('math_filter', 'all'),
-                    source_id=self.request.GET.get('source', ''),
-                    grade=self.request.GET.get('grade', ''),
-                    verified=self.request.GET.get('verified', ''),
+                container.task_form_adapter.task_list_filters_from_query(
+                    self.request.GET,
                 ),
                 include_cache_stats=self.request.user.is_staff,
             )
@@ -62,23 +49,15 @@ class TaskListView(TemplateView):
         context['topics'] = list_data.topics
         context['analog_groups'] = list_data.analog_groups
         context['sources'] = list_data.sources
-        context['current_source'] = self.request.GET.get('source', '')
-        context['current_grade'] = self.request.GET.get('grade', '')
-        context['current_verified'] = self.request.GET.get('verified', '')
         context['grade_choices'] = list_data.grade_choices
         context['subtopics'] = list_data.subtopics
         context['task_types'] = list_data.task_types
         context['difficulties'] = list_data.difficulties
-
-        # Текущие фильтры
-        context['current_filter'] = self.request.GET.get('math_filter', 'all')
-        context['search_query'] = self.request.GET.get('search', '')
-        context['current_topic'] = self.request.GET.get('topic', '')
-        context['current_subtopic'] = self.request.GET.get('subtopic', '')
-        context['current_task_type'] = self.request.GET.get('task_type', '')
-        context['current_difficulty'] = self.request.GET.get('difficulty', '')
-        context['current_group_filter'] = self.request.GET.get('group_filter', '')
-        context['current_analog_group'] = self.request.GET.get('analog_group', '')
+        context.update(
+            container.task_form_adapter.task_list_filter_context_from_query(
+                self.request.GET,
+            )
+        )
 
         # Статистика
         context['total_tasks'] = list_data.total_tasks

@@ -210,6 +210,7 @@ from infrastructure.repositories.django_settings_repo import DjangoSettingsRepos
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from infrastructure.forms.core_forms import CoreFormAdapter
+from infrastructure.forms.report_forms import ReportFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
 from infrastructure.forms.work_forms import WorkFormAdapter
 from infrastructure.services.task_import_service import DjangoTaskImportService
@@ -619,6 +620,7 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(container.core_repo, DjangoCoreRepository)
         self.assertIsInstance(container.settings_repo, DjangoSettingsRepository)
         self.assertIsInstance(container.core_form_adapter, CoreFormAdapter)
+        self.assertIsInstance(container.report_form_adapter, ReportFormAdapter)
         self.assertIsInstance(container.task_form_adapter, TaskFormAdapter)
         self.assertIsInstance(container.work_form_adapter, WorkFormAdapter)
         self.assertIsInstance(container.task_import_service, DjangoTaskImportService)

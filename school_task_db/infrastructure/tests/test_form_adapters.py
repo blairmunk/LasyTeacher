@@ -3,6 +3,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import SimpleTestCase
 
 from infrastructure.forms.core_forms import CoreFormAdapter
+from infrastructure.forms.report_forms import ReportFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
 from infrastructure.forms.task_group_forms import TaskGroupFormAdapter
 
@@ -72,6 +73,92 @@ class CoreFormAdapterTests(SimpleTestCase):
         self.assertEqual(request.filters.subject, 'physics')
         self.assertEqual(request.filters.grade, '9')
         self.assertEqual(request.export_date, '2026-07-18')
+
+
+class ReportFormAdapterTests(SimpleTestCase):
+    def test_builds_top_level_report_requests(self):
+        adapter = ReportFormAdapter()
+        now = object()
+
+        dashboard = adapter.reports_dashboard_request(
+            year=2026,
+            current_date=now,
+        )
+        student_performance = adapter.student_performance_request_from_query(
+            QueryDict('group=g1'),
+            year=2026,
+        )
+        work_analysis = adapter.work_analysis_request(year=2026)
+        events_status = adapter.events_status_request(
+            year=2026,
+            current_date=now,
+        )
+
+        self.assertEqual(dashboard.year, 2026)
+        self.assertIs(dashboard.current_date, now)
+        self.assertEqual(student_performance.year, 2026)
+        self.assertEqual(student_performance.group_id, 'g1')
+        self.assertEqual(work_analysis.year, 2026)
+        self.assertEqual(events_status.year, 2026)
+        self.assertIs(events_status.current_date, now)
+
+    def test_builds_heatmap_params_and_requests_from_query(self):
+        query = QueryDict('group=g1&section=Mechanics&transpose=1&subtopic=s1')
+        adapter = ReportFormAdapter()
+
+        params = adapter.heatmap_params_from_query(query)
+        group_url_params = adapter.heatmap_group_url_params_from_query(query)
+        overview = adapter.heatmap_overview_request_from_query(query)
+        course = adapter.heatmap_course_overview_request_from_query(
+            query,
+            course_id='c1',
+        )
+        drilldown = adapter.heatmap_drilldown_overview_request_from_query(
+            query,
+            topic_id='t1',
+        )
+        student = adapter.heatmap_student_detail_request_from_query(
+            query,
+            topic_id='t1',
+            student_id='st1',
+        )
+        subtopic = adapter.heatmap_subtopic_detail_request_from_query(
+            query,
+            subtopic_id='s1',
+        )
+
+        self.assertEqual(params, {
+            'group_id': 'g1',
+            'section': 'Mechanics',
+            'transpose': True,
+        })
+        self.assertEqual(group_url_params, {
+            'group_param': '?group=g1',
+            'group_suffix': '&group=g1',
+        })
+        self.assertEqual(overview.group_id, 'g1')
+        self.assertEqual(course.course_id, 'c1')
+        self.assertEqual(course.group_id, 'g1')
+        self.assertEqual(drilldown.topic_id, 't1')
+        self.assertEqual(drilldown.group_id, 'g1')
+        self.assertEqual(student.topic_id, 't1')
+        self.assertEqual(student.student_id, 'st1')
+        self.assertEqual(student.subtopic_id, 's1')
+        self.assertEqual(subtopic.subtopic_id, 's1')
+        self.assertEqual(subtopic.group_id, 'g1')
+
+    def test_builds_journal_request_from_query(self):
+        request = ReportFormAdapter().journal_request_from_query(
+            QueryDict('debts=1'),
+            course_id='c1',
+            group_id='g1',
+            year=2026,
+        )
+
+        self.assertEqual(request.course_id, 'c1')
+        self.assertEqual(request.group_id, 'g1')
+        self.assertEqual(request.year, 2026)
+        self.assertTrue(request.show_debts_only)
 
 
 class TaskFormAdapterTests(SimpleTestCase):

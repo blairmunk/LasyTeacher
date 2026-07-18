@@ -7,27 +7,11 @@ from django.views import View
 from django.views.generic import TemplateView
 from django.utils import timezone
 
-from core_logic.use_cases.get_events_status_report import (
-    EventsStatusReportRequest,
-)
-from core_logic.use_cases.get_heatmap_course_overview import (
-    HeatmapCourseOverviewRequest,
-)
 from core_logic.use_cases.get_heatmap_course_topic_matrix import (
     HeatmapCourseTopicMatrixRequest,
 )
 from core_logic.use_cases.get_heatmap_course_timeline import (
     HeatmapCourseTimelineRequest,
-)
-from core_logic.use_cases.get_heatmap_drilldown_overview import (
-    HeatmapDrilldownOverviewRequest,
-)
-from core_logic.use_cases.get_heatmap_overview import HeatmapOverviewRequest
-from core_logic.use_cases.get_heatmap_student_detail import (
-    HeatmapStudentDetailRequest,
-)
-from core_logic.use_cases.get_heatmap_subtopic_detail import (
-    HeatmapSubtopicDetailRequest,
 )
 from core_logic.use_cases.get_heatmap_subtopic_matrix import (
     HeatmapSubtopicMatrixRequest,
@@ -35,13 +19,7 @@ from core_logic.use_cases.get_heatmap_subtopic_matrix import (
 from core_logic.use_cases.get_heatmap_topic_matrix import (
     HeatmapTopicMatrixRequest,
 )
-from core_logic.use_cases.get_journal import JournalRequest
 from core_logic.use_cases.get_journal_select import JournalSelectRequest
-from core_logic.use_cases.get_reports_dashboard import ReportsDashboardRequest
-from core_logic.use_cases.get_student_performance_report import (
-    StudentPerformanceReportRequest,
-)
-from core_logic.use_cases.get_work_analysis_report import WorkAnalysisReportRequest
 from infrastructure.container import container
 from . import plotly_utils
 
@@ -52,7 +30,7 @@ class ReportsDashboardView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         report = container.get_reports_dashboard_use_case().execute(
-            ReportsDashboardRequest(
+            container.report_form_adapter.reports_dashboard_request(
                 year=getattr(self.request, 'current_year', None),
                 current_date=timezone.now(),
             ),
@@ -149,9 +127,9 @@ class StudentPerformanceView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         report = container.get_student_performance_report_use_case().execute(
-            StudentPerformanceReportRequest(
+            container.report_form_adapter.student_performance_request_from_query(
+                self.request.GET,
                 year=getattr(self.request, 'current_year', None),
-                group_id=self.request.GET.get('group'),
             ),
         )
 
@@ -174,7 +152,7 @@ class WorkAnalysisView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         report = container.get_work_analysis_report_use_case().execute(
-            WorkAnalysisReportRequest(
+            container.report_form_adapter.work_analysis_request(
                 year=getattr(self.request, 'current_year', None),
             ),
         )
@@ -196,7 +174,7 @@ class EventsStatusView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         report = container.get_events_status_report_use_case().execute(
-            EventsStatusReportRequest(
+            container.report_form_adapter.events_status_request(
                 year=getattr(self.request, 'current_year', None),
                 current_date=timezone.now(),
             ),
@@ -227,11 +205,15 @@ class HeatmapView(View):
     """Тепловая карта: ученики x темы"""
 
     def get(self, request):
-        group_id = request.GET.get('group')
-        section = request.GET.get('section', '')
-        transpose = request.GET.get('transpose') == '1'
+        params = container.report_form_adapter.heatmap_params_from_query(
+            request.GET,
+        )
+        section = params['section']
+        transpose = params['transpose']
         overview = container.get_heatmap_overview_use_case().execute(
-            HeatmapOverviewRequest(group_id=group_id),
+            container.report_form_adapter.heatmap_overview_request_from_query(
+                request.GET,
+            ),
         )
 
         groups = overview.groups
@@ -322,12 +304,14 @@ class HeatmapCourseView(View):
     """Тепловая карта по курсу: ученики × темы курса"""
 
     def get(self, request, course_pk):
-        group_id = request.GET.get('group')
-        transpose = request.GET.get('transpose') == '1'
+        params = container.report_form_adapter.heatmap_params_from_query(
+            request.GET,
+        )
+        transpose = params['transpose']
         overview = container.get_heatmap_course_overview_use_case().execute(
-            HeatmapCourseOverviewRequest(
+            container.report_form_adapter.heatmap_course_overview_request_from_query(
+                request.GET,
                 course_id=course_pk,
-                group_id=group_id,
             ),
         )
         course = overview.course
@@ -433,12 +417,14 @@ class HeatmapDrilldownView(View):
     """Drill-down: ученики x подтемы одной темы"""
 
     def get(self, request, topic_pk):
-        group_id = request.GET.get('group')
-        transpose = request.GET.get('transpose') == '1'
+        params = container.report_form_adapter.heatmap_params_from_query(
+            request.GET,
+        )
+        transpose = params['transpose']
         overview = container.get_heatmap_drilldown_overview_use_case().execute(
-            HeatmapDrilldownOverviewRequest(
+            container.report_form_adapter.heatmap_drilldown_overview_request_from_query(
+                request.GET,
                 topic_id=topic_pk,
-                group_id=group_id,
             ),
         )
 
@@ -547,15 +533,16 @@ class HeatmapStudentView(View):
     """Детальный вид: один ученик × подтемы одной темы"""
 
     def get(self, request, topic_pk, student_pk):
-        subtopic_id = request.GET.get('subtopic')
-        group_id = request.GET.get('group')
-        group_param = f'?group={group_id}' if group_id else ''
-        group_suffix = f'&group={group_id}' if group_id else ''
+        group_params = (
+            container.report_form_adapter.heatmap_group_url_params_from_query(
+                request.GET,
+            )
+        )
         detail = container.get_heatmap_student_detail_use_case().execute(
-            HeatmapStudentDetailRequest(
+            container.report_form_adapter.heatmap_student_detail_request_from_query(
+                request.GET,
                 topic_id=topic_pk,
                 student_id=student_pk,
-                subtopic_id=subtopic_id,
             ),
         )
 
@@ -565,8 +552,8 @@ class HeatmapStudentView(View):
             'details': detail.details,
             'subtopic_summary': detail.subtopic_summary,
             'selected_subtopic': detail.selected_subtopic,
-            'group_param': group_param,
-            'group_suffix': group_suffix,
+            'group_param': group_params['group_param'],
+            'group_suffix': group_params['group_suffix'],
             'active_report': detail.active_report,
             'active_course_pk': detail.active_course_pk,
             'courses': detail.courses,
@@ -577,11 +564,10 @@ class HeatmapSubtopicView(View):
     """Анализ подтемы: все ученики × задания одной подтемы"""
 
     def get(self, request, subtopic_pk):
-        group_id = request.GET.get('group')
         detail = container.get_heatmap_subtopic_detail_use_case().execute(
-            HeatmapSubtopicDetailRequest(
+            container.report_form_adapter.heatmap_subtopic_detail_request_from_query(
+                request.GET,
                 subtopic_id=subtopic_pk,
-                group_id=group_id,
             ),
         )
         group_param = (
@@ -704,13 +690,12 @@ class JournalView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        show_debts_only = self.request.GET.get('debts') == '1'
         journal = container.get_journal_use_case().execute(
-            JournalRequest(
+            container.report_form_adapter.journal_request_from_query(
+                self.request.GET,
                 course_id=kwargs['course_pk'],
                 group_id=kwargs['group_pk'],
                 year=getattr(self.request, 'current_year', None),
-                show_debts_only=show_debts_only,
             ),
         )
 

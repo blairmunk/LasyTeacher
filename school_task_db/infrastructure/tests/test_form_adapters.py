@@ -2,6 +2,11 @@ from django.http import QueryDict
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import SimpleTestCase
 
+from core_logic.entities.document_generation import (
+    DocumentGenerationResult,
+    GeneratedDocumentFile,
+)
+from core_logic.value_objects.content_config import WorkGenerationOptions
 from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.report_forms import ReportFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
@@ -352,3 +357,56 @@ class WorkFormAdapterTests(SimpleTestCase):
 
         self.assertEqual(request.file_type, 'html')
         self.assertEqual(request.filename, 'work.html')
+
+    def test_builds_generated_work_document_response_payload(self):
+        payload = WorkFormAdapter().generated_work_document_response_payload(
+            DocumentGenerationResult(
+                status='generated',
+                generator_type='html',
+                file_type='html',
+                files=[GeneratedDocumentFile(filename='work.html', size_kb=1.25)],
+            ),
+            WorkGenerationOptions(
+                generator_type='html',
+                answer_type='with_answers',
+            ),
+        )
+
+        self.assertEqual(payload, {
+            'success': True,
+            'message': 'HTML документ создан (с ответами)',
+            'files': [
+                {
+                    'name': 'work.html',
+                    'size': '1.2 KB',
+                    'download_url': '/works/download/html/work.html/',
+                },
+            ],
+            'total_files': 1,
+        })
+
+    def test_builds_remedial_sheet_response_payload(self):
+        payload = WorkFormAdapter().remedial_sheet_response_payload(
+            DocumentGenerationResult(
+                status='generated',
+                generator_type='pdf',
+                file_type='pdf',
+                files=[
+                    GeneratedDocumentFile(
+                        filename='remedial.pdf',
+                        size_kb=2.0,
+                    ),
+                ],
+            ),
+        )
+
+        self.assertEqual(payload, {
+            'status': 'success',
+            'files': [
+                {
+                    'filename': 'remedial.pdf',
+                    'url': '/works/download/pdf/remedial.pdf/',
+                },
+            ],
+            'message': 'Рабочий лист сгенерирован (PDF)',
+        })

@@ -1,5 +1,7 @@
 """Infrastructure helpers for Django work forms."""
 
+from django.urls import reverse
+
 from core_logic.interfaces.work_repo import (
     CreateWorkAnalogGroupParams,
     CreateWorkParams,
@@ -94,3 +96,51 @@ class WorkFormAdapter:
             file_type=file_type,
             filename=filename,
         )
+
+    def generated_work_document_response_payload(self, result, options):
+        files_info = [
+            {
+                'name': file_info.filename,
+                'size': f'{file_info.size_kb:.1f} KB',
+                'download_url': reverse(
+                    'works:download_generated_file',
+                    kwargs={
+                        'file_type': result.file_type,
+                        'filename': file_info.filename,
+                    },
+                ),
+            }
+            for file_info in result.files
+        ]
+
+        return {
+            'success': True,
+            'message': (
+                f'{options.file_type_label} документ создан '
+                f'({options.content_description})'
+            ),
+            'files': files_info,
+            'total_files': len(files_info),
+        }
+
+    def remedial_sheet_response_payload(self, result):
+        return {
+            'status': 'success',
+            'files': [
+                {
+                    'filename': file_info.filename,
+                    'url': reverse(
+                        'works:download_generated_file',
+                        kwargs={
+                            'file_type': result.file_type,
+                            'filename': file_info.filename,
+                        },
+                    ),
+                }
+                for file_info in result.files
+            ],
+            'message': (
+                f'Рабочий лист сгенерирован '
+                f'({result.generator_type.upper()})'
+            ),
+        }

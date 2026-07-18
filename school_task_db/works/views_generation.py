@@ -3,7 +3,6 @@
 import logging
 from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.http import require_http_methods
-from django.urls import reverse
 
 logger = logging.getLogger(__name__)
 
@@ -42,29 +41,12 @@ def generate_work_ajax(request, work_id):
                 'error': f'Неподдерживаемый тип генератора: {generator_type}'
             })
         
-        # Подготавливаем информацию о файлах для frontend
-        files_info = []
-        for file_info in result.files:
-            files_info.append({
-                'name': file_info.filename,
-                'size': f'{file_info.size_kb:.1f} KB',
-                'download_url': reverse('works:download_generated_file', kwargs={
-                    'file_type': result.file_type,
-                    'filename': file_info.filename,
-                })
-            })
-        
-        success_message = (
-            f'{options.file_type_label} документ создан '
-            f'({options.content_description})'
+        return JsonResponse(
+            container.work_form_adapter.generated_work_document_response_payload(
+                result,
+                options,
+            )
         )
-        
-        return JsonResponse({
-            'success': True,
-            'message': success_message,
-            'files': files_info,
-            'total_files': len(files_info)
-        })
         
     except Http404:
         raise
@@ -169,19 +151,9 @@ def generate_remedial_sheet_ajax(request, variant_id):
                 'message': 'Файлы не были сгенерированы'
             }, status=500)
 
-        download_urls = []
-        for file_info in result.files:
-            url = reverse('works:download_generated_file', kwargs={
-                'file_type': result.file_type,
-                'filename': file_info.filename
-            })
-            download_urls.append({'filename': file_info.filename, 'url': url})
-
-        return JsonResponse({
-            'status': 'success',
-            'files': download_urls,
-            'message': f'Рабочий лист сгенерирован ({generator_type.upper()})'
-        })
+        return JsonResponse(
+            container.work_form_adapter.remedial_sheet_response_payload(result)
+        )
 
     except Http404:
         raise

@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.http import Http404
-from django.views.generic import CreateView, UpdateView, TemplateView
+from django.views.generic import TemplateView
 from django.views.decorators.http import require_http_methods
 
 from .models import Work
@@ -39,87 +39,94 @@ class WorkDetailView(TemplateView):
         return context
 
 
-class WorkCreateView(CreateView):
-    model = Work
-    form_class = WorkForm
+class WorkCreateView(TemplateView):
     template_name = 'works/form.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         from infrastructure.container import container
 
-        if self.request.POST:
-            context['formset'] = (
-                container.work_form_adapter.build_analog_group_formset(
-                    data=self.request.POST,
-                )
-            )
-        else:
-            context['formset'] = (
-                container.work_form_adapter.build_analog_group_formset()
-            )
+        context['form'] = kwargs.get('form') or WorkForm()
+        context['formset'] = (
+            kwargs.get('formset')
+            or container.work_form_adapter.build_analog_group_formset()
+        )
         form_data = container.get_work_form_data_use_case().execute()
         context['analog_group_options'] = form_data.analog_group_options
         return context
 
-    def form_valid(self, form):
-        context = self.get_context_data()
-        formset = context['formset']
-        if formset.is_valid():
-            response = super().form_valid(form)
-            from infrastructure.container import container
+    def post(self, request, *args, **kwargs):
+        from infrastructure.container import container
 
-            container.work_form_adapter.save_analog_group_formset(
-                formset=formset,
-                work=self.object,
+        form = WorkForm(request.POST)
+        formset = container.work_form_adapter.build_analog_group_formset(
+            data=request.POST,
+        )
+        if not form.is_valid() or not formset.is_valid():
+            return self.render_to_response(
+                self.get_context_data(form=form, formset=formset),
             )
-            messages.success(self.request, 'Работа успешно создана!')
-            return response
-        else:
-            return self.render_to_response(self.get_context_data(form=form))
+
+        work = form.save()
+        container.work_form_adapter.save_analog_group_formset(
+            formset=formset,
+            work=work,
+        )
+        messages.success(request, 'Работа успешно создана!')
+        return redirect('works:detail', pk=work.pk)
 
 
-class WorkUpdateView(UpdateView):
-    model = Work
-    form_class = WorkForm
+class WorkUpdateView(TemplateView):
     template_name = 'works/form.html'
+
+    def _get_work(self):
+        work = Work.objects.filter(pk=self.kwargs['pk']).first()
+        if work is None:
+            raise Http404('Работа не найдена')
+        return work
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         from infrastructure.container import container
 
-        if self.request.POST:
-            context['formset'] = (
-                container.work_form_adapter.build_analog_group_formset(
-                    data=self.request.POST,
-                    instance=self.object,
-                )
+        work = kwargs.get('object') or self._get_work()
+        context['object'] = work
+        context['form'] = kwargs.get('form') or WorkForm(instance=work)
+        context['formset'] = (
+            kwargs.get('formset')
+            or container.work_form_adapter.build_analog_group_formset(
+                instance=work,
             )
-        else:
-            context['formset'] = (
-                container.work_form_adapter.build_analog_group_formset(
-                    instance=self.object,
-                )
-            )
+        )
         form_data = container.get_work_form_data_use_case().execute()
         context['analog_group_options'] = form_data.analog_group_options
         return context
 
-    def form_valid(self, form):
-        context = self.get_context_data()
-        formset = context['formset']
-        if formset.is_valid():
-            response = super().form_valid(form)
-            from infrastructure.container import container
+    def post(self, request, *args, **kwargs):
+        from infrastructure.container import container
 
-            container.work_form_adapter.save_analog_group_formset(
-                formset=formset,
-                work=self.object,
+        work = self._get_work()
+        form = WorkForm(request.POST, instance=work)
+        formset = container.work_form_adapter.build_analog_group_formset(
+            data=request.POST,
+            instance=work,
+        )
+        if not form.is_valid() or not formset.is_valid():
+            return self.render_to_response(
+                self.get_context_data(
+                    form=form,
+                    formset=formset,
+                    object=work,
+                ),
             )
-            messages.success(self.request, 'Работа успешно обновлена!')
-            return response
-        else:
-            return self.render_to_response(self.get_context_data(form=form))
+
+        work = form.save()
+        container.work_form_adapter.save_analog_group_formset(
+            formset=formset,
+            work=work,
+        )
+        messages.success(request, 'Работа успешно обновлена!')
+        return redirect('works:detail', pk=work.pk)
 
 
 def generate_variants(request, work_id):

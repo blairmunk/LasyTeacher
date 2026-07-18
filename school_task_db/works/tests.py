@@ -151,6 +151,16 @@ class WorkDetailViewTests(TestCase):
         self.assertEqual(spec.count, 3)
         self.assertEqual(spec.weight, 4)
 
+    def test_update_view_returns_404_for_missing_work(self):
+        response = self.client.get(
+            reverse(
+                'works:update',
+                args=['550e8400-e29b-41d4-a716-446655440000'],
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
+
     def test_detail_uses_clean_context_data_with_spec_preview(self):
         group = AnalogGroup.objects.create(name='Кинематика')
         task = Task.objects.create(

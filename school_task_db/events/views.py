@@ -2,9 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.views.generic import TemplateView
 from django.http import Http404
-from django.utils import timezone
 
-from core_logic.interfaces.event_repo import CreateEventParams
 from infrastructure.container import container
 from .forms import EventForm, StudentSelectionForm, MarkForm, VariantAssignmentForm
 
@@ -14,44 +12,6 @@ def _post_lists(post_data):
         key: post_data.getlist(key)
         for key in post_data
     }
-
-
-def _event_params_from_form(form, event_id=''):
-    course = form.cleaned_data.get('course')
-    return CreateEventParams(
-        event_id=event_id,
-        name=form.cleaned_data['name'],
-        work_id=str(form.cleaned_data['work'].pk),
-        date=form.cleaned_data['planned_date'],
-        status=form.cleaned_data.get('status', 'planned'),
-        course_id=str(course.pk) if course else None,
-        location=form.cleaned_data.get('location', ''),
-        description=form.cleaned_data.get('description', ''),
-    )
-
-
-def _event_form_initial(event):
-    planned_date = event.planned_date
-    if planned_date:
-        planned_date = timezone.localtime(planned_date).date()
-    return {
-        'name': event.name,
-        'work': event.work_id,
-        'planned_date': planned_date,
-        'status': event.status,
-        'course': event.course_id,
-        'description': event.description,
-        'location': event.location,
-    }
-
-
-def _selected_student_ids(cleaned_data):
-    students = []
-    if cleaned_data.get('student_group'):
-        students.extend(cleaned_data['student_group'].students.all())
-    if cleaned_data.get('individual_students'):
-        students.extend(cleaned_data['individual_students'])
-    return [str(student.pk) for student in students]
 
 
 def _next_or_event_detail(request, event):
@@ -119,7 +79,7 @@ class EventCreateView(TemplateView):
             return self.render_to_response(self.get_context_data(form=form))
 
         event_result = container.create_event_use_case().execute(
-            _event_params_from_form(form),
+            container.event_form_adapter.event_params_from_form(form),
         )
 
         from core_logic.use_cases.add_event_participants import (
@@ -129,7 +89,9 @@ class EventCreateView(TemplateView):
         result = container.add_event_participants_use_case().execute(
             AddEventParticipantsRequest(
                 event_id=event_result.event_id,
-                student_ids=_selected_student_ids(form.cleaned_data),
+                student_ids=(
+                    container.event_form_adapter.selected_student_ids_from_form(form)
+                ),
             )
         )
 
@@ -160,7 +122,7 @@ class EventUpdateView(TemplateView):
         event = kwargs.get('object') or self._get_event()
         context['object'] = event
         context['form'] = kwargs.get('form') or EventForm(
-            initial=_event_form_initial(event),
+            initial=container.event_form_adapter.event_form_initial(event),
         )
         context['page_title'] = 'Редактирование события'
         context['submit_text'] = 'Сохранить'
@@ -175,7 +137,10 @@ class EventUpdateView(TemplateView):
             )
 
         result = container.update_event_use_case().execute(
-            _event_params_from_form(form, event_id=str(event.pk)),
+            container.event_form_adapter.event_params_from_form(
+                form,
+                event_id=str(event.pk),
+            ),
         )
         if result.status == 'not_found':
             raise Http404('Событие не найдено')
@@ -205,7 +170,11 @@ def add_participants(request, event_id):
             result = container.add_event_participants_use_case().execute(
                 AddEventParticipantsRequest(
                     event_id=str(event_id),
-                    student_ids=_selected_student_ids(form.cleaned_data),
+                    student_ids=(
+                        container.event_form_adapter.selected_student_ids_from_form(
+                            form,
+                        )
+                    ),
                 )
             )
 
@@ -244,16 +213,12 @@ def assign_variants(request, event_id):
                 AssignEventVariantsRequest,
             )
 
-            assignments = {}
-            for field_name, variant_id in form.cleaned_data.items():
-                if not field_name.startswith('variant_') or not variant_id:
-                    continue
-                assignments[field_name.removeprefix('variant_')] = variant_id
-
             container.assign_event_variants_use_case().execute(
                 AssignEventVariantsRequest(
                     event_id=str(event_id),
-                    assignments=assignments,
+                    assignments=container.event_form_adapter.assignments_from_form(
+                        form,
+                    ),
                 )
             )
             messages.success(request, 'Варианты успешно назначены')

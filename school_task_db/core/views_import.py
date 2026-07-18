@@ -2,10 +2,10 @@
 
 import json
 import time
+from django.core.paginator import Paginator
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
 from django.views import View
-from django.views.generic import ListView
 from django.views.decorators.http import require_POST
 
 from core_logic.entities.task import TaskExportFilters
@@ -35,14 +35,21 @@ class ImportPageView(View):
         return render(request, self.template_name, context)
 
 
-class ImportHistoryView(ListView):
+class ImportHistoryView(View):
     """История всех импортов"""
     template_name = 'core/import_history.html'
-    context_object_name = 'imports'
     paginate_by = 20
 
-    def get_queryset(self):
-        return container.get_import_history_use_case().execute().imports
+    def get(self, request):
+        imports = container.get_import_history_use_case().execute().imports
+        paginator = Paginator(imports, self.paginate_by)
+        page_obj = paginator.get_page(request.GET.get('page'))
+
+        return render(request, self.template_name, {
+            'imports': page_obj.object_list,
+            'page_obj': page_obj,
+            'is_paginated': page_obj.has_other_pages(),
+        })
 
 
 def validate_json_ajax(request):

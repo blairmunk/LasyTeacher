@@ -30,6 +30,19 @@ class TaskFormAdapterTests(SimpleTestCase):
         self.assertEqual(create_work.work_name, 'Control work')
         self.assertEqual(create_work.work_type, 'quiz')
 
+    def test_builds_reference_option_params_from_query(self):
+        query = QueryDict('topic_id=t1&subject=physics&category=requirements')
+        adapter = TaskFormAdapter()
+
+        topic_id = adapter.subtopic_options_topic_id_from_query(query)
+        codifier_params = adapter.codifier_elements_params_from_query(query)
+
+        self.assertEqual(topic_id, 't1')
+        self.assertEqual(codifier_params, {
+            'subject': 'physics',
+            'category': 'requirements',
+        })
+
     def test_builds_task_list_filters_from_query(self):
         query = QueryDict(
             'search=force&topic=t1&subtopic=s1&task_type=test'

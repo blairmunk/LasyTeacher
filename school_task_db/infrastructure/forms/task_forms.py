@@ -41,6 +41,15 @@ class TaskFormAdapter:
             work_type=body.get('work_type', 'test'),
         )
 
+    def subtopic_options_topic_id_from_query(self, query):
+        return query.get('topic_id', '')
+
+    def codifier_elements_params_from_query(self, query):
+        return {
+            'subject': query.get('subject', ''),
+            'category': query.get('category', ''),
+        }
+
     def task_list_filters_from_query(self, query):
         return TaskListFilters(
             search=query.get('search', ''),

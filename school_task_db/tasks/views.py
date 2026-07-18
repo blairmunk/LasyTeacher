@@ -240,16 +240,21 @@ class TaskDeleteView(TemplateView):
 def load_subtopics(request):
     """AJAX для загрузки подтем при выборе темы"""
     result = container.get_subtopic_options_use_case().execute(
-        topic_id=request.GET.get('topic_id', ''),
+        topic_id=container.task_form_adapter.subtopic_options_topic_id_from_query(
+            request.GET,
+        ),
     )
     return JsonResponse(_subtopic_options_payload(result))
 
 
 def load_codifier_elements(request):
     """AJAX для загрузки элементов кодификатора"""
+    params = container.task_form_adapter.codifier_elements_params_from_query(
+        request.GET,
+    )
     result = container.get_codifier_elements_use_case().execute(
-        subject=request.GET.get('subject', ''),
-        category=request.GET.get('category', ''),
+        subject=params['subject'],
+        category=params['category'],
     )
     return JsonResponse(_codifier_elements_payload(result))
 

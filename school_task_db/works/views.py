@@ -165,15 +165,11 @@ def generate_variants(request, work_id):
     if request.method == 'POST':
         form = VariantGenerationForm(request.POST)
         if form.is_valid():
-            count = form.cleaned_data['count']
             try:
-                from core_logic.use_cases.generate_work_variants import (
-                    GenerateWorkVariantsRequest,
-                )
                 result = container.generate_work_variants_use_case().execute(
-                    GenerateWorkVariantsRequest(
+                    container.work_form_adapter.generate_variants_request_from_form(
+                        form,
                         work_id=str(work_id),
-                        count=count,
                     )
                 )
                 if result.status == 'not_found':

@@ -4,6 +4,7 @@ from core_logic.interfaces.work_repo import (
     CreateWorkAnalogGroupParams,
     CreateWorkParams,
 )
+from core_logic.use_cases.generate_work_variants import GenerateWorkVariantsRequest
 from works.forms import WorkAnalogGroupFormSet
 from works.models import Work
 
@@ -58,3 +59,9 @@ class WorkFormAdapter:
                 )
             )
         return specs
+
+    def generate_variants_request_from_form(self, form, work_id):
+        return GenerateWorkVariantsRequest(
+            work_id=work_id,
+            count=form.cleaned_data['count'],
+        )

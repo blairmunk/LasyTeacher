@@ -58,6 +58,9 @@ from core_logic.use_cases.get_codifier_list import GetCodifierListUseCase
 from core_logic.use_cases.get_course_detail import GetCourseDetailUseCase
 from core_logic.use_cases.get_course_list import GetCourseListUseCase
 from core_logic.use_cases.get_dashboard_summary import GetDashboardSummaryUseCase
+from core_logic.use_cases.get_document_template_list import (
+    GetDocumentTemplateListUseCase,
+)
 from core_logic.use_cases.get_global_search import GetGlobalSearchUseCase
 from core_logic.use_cases.get_heatmap_course_overview import (
     GetHeatmapCourseOverviewUseCase,
@@ -238,6 +241,9 @@ from core_logic.use_cases.validate_review_work_scan import ValidateReviewWorkSca
 from infrastructure.repositories.django_codifier_repo import DjangoCodifierRepository
 from infrastructure.repositories.django_core_repo import DjangoCoreRepository
 from infrastructure.repositories.django_curriculum_repo import DjangoCurriculumRepository
+from infrastructure.repositories.django_document_template_repo import (
+    DjangoDocumentTemplateRepository,
+)
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
 from infrastructure.repositories.django_report_repo import DjangoReportRepository
@@ -273,6 +279,7 @@ class Container:
         self._codifier_repo = None
         self._core_repo = None
         self._settings_repo = None
+        self._document_template_repo = None
         self._core_form_adapter = None
         self._event_form_adapter = None
         self._report_form_adapter = None
@@ -343,6 +350,12 @@ class Container:
         if self._settings_repo is None:
             self._settings_repo = DjangoSettingsRepository()
         return self._settings_repo
+
+    @property
+    def document_template_repo(self):
+        if self._document_template_repo is None:
+            self._document_template_repo = DjangoDocumentTemplateRepository()
+        return self._document_template_repo
 
     @property
     def core_form_adapter(self):
@@ -601,6 +614,11 @@ class Container:
     def get_dashboard_summary_use_case(self):
         return GetDashboardSummaryUseCase(
             core_repo=self.core_repo,
+        )
+
+    def get_document_template_list_use_case(self):
+        return GetDocumentTemplateListUseCase(
+            document_template_repo=self.document_template_repo,
         )
 
     def get_global_search_use_case(self):

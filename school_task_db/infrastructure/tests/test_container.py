@@ -51,6 +51,9 @@ from core_logic.use_cases.get_course_list import GetCourseListUseCase
 from core_logic.use_cases.get_topic_detail import GetTopicDetailUseCase
 from core_logic.use_cases.get_topic_list import GetTopicListUseCase
 from core_logic.use_cases.get_dashboard_summary import GetDashboardSummaryUseCase
+from core_logic.use_cases.get_document_template_list import (
+    GetDocumentTemplateListUseCase,
+)
 from core_logic.use_cases.get_global_search import GetGlobalSearchUseCase
 from core_logic.use_cases.get_heatmap_course_overview import (
     GetHeatmapCourseOverviewUseCase,
@@ -202,6 +205,9 @@ from infrastructure.repositories.django_core_repo import DjangoCoreRepository
 from infrastructure.repositories.django_curriculum_repo import (
     DjangoCurriculumRepository,
 )
+from infrastructure.repositories.django_document_template_repo import (
+    DjangoDocumentTemplateRepository,
+)
 from infrastructure.container import Container
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
@@ -237,6 +243,9 @@ class ContainerTests(SimpleTestCase):
         subtopic_options_use_case = container.get_subtopic_options_use_case()
         codifier_elements_use_case = container.get_codifier_elements_use_case()
         source_list_use_case = container.get_source_list_use_case()
+        document_template_list_use_case = (
+            container.get_document_template_list_use_case()
+        )
         refresh_math_cache_use_case = container.refresh_task_math_cache_use_case()
         create_task_use_case = container.create_task_use_case()
         update_task_use_case = container.update_task_use_case()
@@ -404,6 +413,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(subtopic_options_use_case, GetSubtopicOptionsUseCase)
         self.assertIsInstance(codifier_elements_use_case, GetCodifierElementsUseCase)
         self.assertIsInstance(source_list_use_case, GetSourceListUseCase)
+        self.assertIsInstance(
+            document_template_list_use_case,
+            GetDocumentTemplateListUseCase,
+        )
         self.assertIsInstance(
             refresh_math_cache_use_case,
             RefreshTaskMathCacheUseCase,
@@ -625,6 +638,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(container.codifier_repo, DjangoCodifierRepository)
         self.assertIsInstance(container.core_repo, DjangoCoreRepository)
         self.assertIsInstance(container.settings_repo, DjangoSettingsRepository)
+        self.assertIsInstance(
+            container.document_template_repo,
+            DjangoDocumentTemplateRepository,
+        )
         self.assertIsInstance(container.core_form_adapter, CoreFormAdapter)
         self.assertIsInstance(container.report_form_adapter, ReportFormAdapter)
         self.assertIsInstance(container.task_form_adapter, TaskFormAdapter)

@@ -3,7 +3,6 @@
 from typing import Dict, Any
 from pathlib import Path
 
-from document_generator.utils.formula_utils import formula_processor
 from document_generator.utils.file_utils import sanitize_filename
 from latex_generator.utils import sanitize_latex
 from latex_generator.utils.latex_image_utils import prepare_images_for_latex, render_task_with_images

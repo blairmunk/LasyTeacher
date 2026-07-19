@@ -4,7 +4,6 @@ import logging
 from typing import Dict, Any, Optional
 from pathlib import Path
 
-from document_generator.utils.formula_utils import formula_processor
 from document_generator.processors.formula import process_formula_text
 from latex_generator.utils.latex_specific import latex_formula_processor
 from latex_generator.utils.latex_image_utils import prepare_images_for_latex, render_task_with_images

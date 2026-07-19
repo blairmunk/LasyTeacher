@@ -3,7 +3,6 @@
 from typing import Dict, Any
 from pathlib import Path
 
-from document_generator.utils.formula_utils import formula_processor
 from document_generator.utils.file_utils import sanitize_filename
 from html_generator.utils.html_specific import html_formula_processor
 from document_generator.utils.html_image_utils import prepare_images_for_html, render_task_with_images_html

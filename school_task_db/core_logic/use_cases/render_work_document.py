@@ -3,7 +3,9 @@
 from dataclasses import dataclass
 
 from core_logic.entities.document_generation import DocumentGenerationResult
-from core_logic.interfaces.document_generation import IDocumentGenerationService
+from core_logic.interfaces.document_rendering_service import (
+    IDocumentRenderingService,
+)
 from core_logic.interfaces.work_repo import IWorkRepository
 from core_logic.value_objects.content_config import WorkDocumentRenderOptions
 from core_logic.value_objects.document_render_plan import (
@@ -23,7 +25,7 @@ class RenderWorkDocumentRequest:
 class RenderWorkDocumentUseCase:
     def __init__(
         self,
-        document_generation_service: IDocumentGenerationService,
+        document_generation_service: IDocumentRenderingService,
         work_repo: IWorkRepository,
     ):
         self.document_generation_service = document_generation_service

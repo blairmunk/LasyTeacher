@@ -9,7 +9,9 @@ from core_logic.entities.document_generation import (
     GeneratedFile,
     GeneratedFileResult,
 )
-from core_logic.interfaces.document_generation import IDocumentGenerationService
+from core_logic.interfaces.document_rendering_service import (
+    IDocumentRenderingService,
+)
 from core_logic.services.document_builder import RecipeDocumentBuilder
 from core_logic.value_objects.document_render_plan import (
     DocumentRenderRequest,
@@ -25,7 +27,7 @@ from infrastructure.services.legacy_document_file_renderer import (
 from works.models import Variant, Work
 
 
-class DjangoDocumentGenerationService(IDocumentGenerationService):
+class DjangoDocumentGenerationService(IDocumentRenderingService):
     type_to_output_dir = {
         'latex': 'web_latex_output',
         'html': 'web_html_output',

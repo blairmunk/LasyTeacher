@@ -9,6 +9,8 @@ from core_logic.entities.document import (
 from core_logic.entities.document_rendering import (
     DocumentGenerationResult,
     DocumentRenderResult,
+    DOCUMENT_RENDER_STATUS_UNSUPPORTED_GENERATOR,
+    DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
     GeneratedDocument,
     GeneratedDocumentFile,
     GeneratedFile,
@@ -131,6 +133,16 @@ class DocumentRenderingUseCaseTests(TestCase):
         self.assertIsInstance(result, DocumentRenderResult)
         self.assertEqual(result.generator_type, 'html')
 
+    def test_keeps_legacy_unsupported_generator_status_constant(self):
+        self.assertEqual(
+            DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
+            'unsupported_renderer',
+        )
+        self.assertEqual(
+            DOCUMENT_RENDER_STATUS_UNSUPPORTED_GENERATOR,
+            'unsupported_generator',
+        )
+
     def test_render_work_document_rejects_unsupported_renderer(self):
         service = FakeDocumentEngine()
         work_repo = FakeWorkRepository()
@@ -147,7 +159,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         )
 
         self.assertFalse(result.success)
-        self.assertEqual(result.status, 'unsupported_generator')
+        self.assertEqual(result.status, 'unsupported_renderer')
         self.assertEqual(result.generator_type, 'docx')
         self.assertEqual(result.renderer_type, 'docx')
         self.assertEqual(result.source_name, 'Контрольная')
@@ -491,7 +503,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         )
 
         self.assertFalse(result.success)
-        self.assertEqual(result.status, 'unsupported_generator')
+        self.assertEqual(result.status, 'unsupported_renderer')
         self.assertEqual(result.generator_type, 'docx')
         self.assertEqual(result.renderer_type, 'docx')
         self.assertIsNone(service.remedial_request)

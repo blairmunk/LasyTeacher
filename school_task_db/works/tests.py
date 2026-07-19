@@ -684,7 +684,7 @@ class WorkDetailViewTests(TestCase):
         ) as render_work:
             response = self.client.post(
                 reverse('works:render_work_ajax', args=[self.work.pk]),
-                {'generator_type': 'html'},
+                {'renderer_type': 'html'},
             )
 
         self.assertEqual(response.status_code, 200)
@@ -897,7 +897,7 @@ class WorkDetailViewTests(TestCase):
                     'works:render-remedial-sheet',
                     args=[remedial_variant.pk],
                 ),
-                {'generator_type': 'pdf'},
+                {'renderer_type': 'pdf'},
             )
 
         self.assertEqual(response.status_code, 200)

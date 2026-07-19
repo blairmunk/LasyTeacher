@@ -180,8 +180,8 @@
                                 <input type="hidden" name="work_id" value="{{ work.id }}">
                                 <div class="row">
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label">Тип генератора</label>
-                                        <select name="generator_type" id="generator_type" class="form-select">
+                                        <label class="form-label">Формат документа</label>
+                                        <select name="renderer_type" id="renderer_type" class="form-select">
                                             <option value="pdf">PDF (Playwright)</option>
                                             <option value="html">HTML (MathJax)</option>
                                             <option value="latex">LaTeX</option>
@@ -433,7 +433,7 @@
             e.preventDefault();
             if (this.disabled) return; // Защита от двойного клика
             generateDoc(this, {
-                generator_type: this.dataset.type,
+                renderer_type: this.dataset.type,
                 with_answers: this.dataset.withAnswers || '0',
                 format: 'A4',
                 variant_selection: 'all'

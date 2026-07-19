@@ -69,7 +69,7 @@ class DocumentGenerator {
         // ОБНОВЛЕННЫЕ параметры с hints/instructions
         const params = {
             workId: formData.get('work_id'),
-            type: formData.get('generator_type'),
+            type: formData.get('renderer_type') || formData.get('generator_type'),
             answerType: formData.get('answer_type'),
             format: formData.get('format'),
             variantSelection: formData.get('variant_selection'),
@@ -126,7 +126,7 @@ class DocumentGenerator {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
                 body: new URLSearchParams({
-                    generator_type: params.type,
+                    renderer_type: params.type,
                     with_answers: params.withAnswers ? '1' : '0',
                     format: params.format || 'A4',
                     answer_type: params.answerType,

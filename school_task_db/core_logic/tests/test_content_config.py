@@ -34,7 +34,6 @@ class DocumentRenderOptionsTests(TestCase):
     def test_builds_default_work_render_options(self):
         options = build_work_render_options({})
 
-        self.assertEqual(options.generator_type, 'pdf')
         self.assertEqual(options.renderer_type, 'pdf')
         self.assertEqual(options.pdf_format, 'A4')
         self.assertEqual(options.answer_type, 'tasks_only')
@@ -79,14 +78,13 @@ class DocumentRenderOptionsTests(TestCase):
 
     def test_builds_full_solution_work_render_options(self):
         options = build_work_render_options({
-            'generator_type': 'html',
+            'renderer_type': 'html',
             'format': 'A5',
             'answer_type': 'with_full_solutions',
             'include_hints': '1',
             'include_instructions': '1',
         })
 
-        self.assertEqual(options.generator_type, 'html')
         self.assertEqual(options.renderer_type, 'html')
         self.assertEqual(options.file_type_label, 'HTML')
         self.assertEqual(options.render_target.renderer_type, 'html')
@@ -111,7 +109,6 @@ class DocumentRenderOptionsTests(TestCase):
     def test_builds_default_remedial_sheet_render_options(self):
         options = build_remedial_sheet_render_options({})
 
-        self.assertEqual(options.generator_type, 'pdf')
         self.assertEqual(options.renderer_type, 'pdf')
         self.assertEqual(options.render_target.renderer_type, 'pdf')
         self.assertEqual(options.render_target.page_format, 'A4')

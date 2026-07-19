@@ -114,10 +114,10 @@
     </div>
 
     {% if variant.source_work %}
-    <!-- Генерация рабочего листа -->
+    <!-- Рендеринг рабочего листа -->
     <div class="card mb-4">
         <div class="card-header bg-success bg-opacity-10">
-            <h6 class="mb-0"><i class="fas fa-print text-success"></i> Генерация рабочего листа</h6>
+            <h6 class="mb-0"><i class="fas fa-print text-success"></i> Печать рабочего листа</h6>
         </div>
         <div class="card-body">
             <form id="remedialGenerateForm">
@@ -125,7 +125,7 @@
                 <div class="row g-2 align-items-end">
                     <div class="col-auto">
                         <label class="form-label">Формат</label>
-                        <select name="generator_type" class="form-select form-select-sm">
+                        <select name="renderer_type" class="form-select form-select-sm">
                             <option value="pdf">PDF (Playwright)</option>
                             <option value="latex">LaTeX → PDF</option>
                             <option value="html">HTML</option>

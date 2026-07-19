@@ -88,12 +88,11 @@ def download_generated_file(request, file_type, filename):
     return response
 
 @require_http_methods(["GET"])
-def generation_status_ajax(request):
-    """Ajax проверка статуса генерации (для прогресс-баров в будущем)"""
-    # Пока простая заглушка, можно расширить для отслеживания прогресса
+def render_status_ajax(request):
+    """Ajax status check for document rendering."""
     return JsonResponse({
         'status': 'ready',
-        'message': 'Система готова к генерации'
+        'message': 'Система готова к рендерингу'
     })
 
 # Дополнительные views для вариантов
@@ -171,3 +170,4 @@ def render_remedial_sheet_ajax(request, variant_id):
 generate_work_ajax = render_work_ajax
 generate_variant_ajax = render_variant_ajax
 generate_remedial_sheet_ajax = render_remedial_sheet_ajax
+generation_status_ajax = render_status_ajax

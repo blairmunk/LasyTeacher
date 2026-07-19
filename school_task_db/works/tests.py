@@ -785,6 +785,24 @@ class WorkDetailViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json()['success'])
 
+    def test_render_status_ajax_reports_ready(self):
+        response = self.client.get(reverse('works:render_status_ajax'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                'status': 'ready',
+                'message': 'Система готова к рендерингу',
+            },
+        )
+
+    def test_legacy_generation_status_ajax_reports_ready(self):
+        response = self.client.get(reverse('works:generation_status_ajax'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['status'], 'ready')
+
     def test_generate_remedial_sheet_ajax_uses_clean_use_case(self):
         remedial_variant = Variant.objects.create(
             work=self.work,

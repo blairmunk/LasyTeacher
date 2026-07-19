@@ -56,6 +56,7 @@ class WorkDetailViewTests(TestCase):
         self.assertContains(response, 'document-rendering-block')
         self.assertContains(response, 'data-rendering-block')
         self.assertContains(response, 'data-rendering-form')
+        self.assertContains(response, 'render-toast-box')
         self.assertContains(response, 'document-generation-block')
         self.assertContains(response, 'advanced-generation-form')
 

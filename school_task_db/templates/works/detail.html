@@ -316,7 +316,7 @@
 (function() {
     // === Toast — отдельный контейнер прямо в body ===
     var toastBox = document.createElement('div');
-    toastBox.id = 'gen-toast-box';
+    toastBox.id = 'render-toast-box';
     toastBox.setAttribute('style',
         'position:fixed;top:20px;right:20px;z-index:99999;max-width:380px;pointer-events:none;'
     );
@@ -330,7 +330,7 @@
             'pointer-events:auto;background:#fff;border-radius:8px;padding:12px 16px;margin-bottom:8px;'
             + 'box-shadow:0 4px 20px rgba(0,0,0,0.15);display:flex;align-items:center;gap:10px;'
             + 'border-left:4px solid ' + (colors[type] || colors.info) + ';'
-            + 'animation:genToastIn 0.3s ease;font-size:14px;'
+            + 'animation:renderToastIn 0.3s ease;font-size:14px;'
         );
         el.innerHTML = '<i class="fas ' + (icons[type] || icons.info) + '" style="color:'
             + (colors[type] || colors.info) + ';font-size:18px"></i>'
@@ -342,7 +342,11 @@
 
     // CSS анимация
     var style = document.createElement('style');
-    style.textContent = '@keyframes genToastIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}';
+    style.textContent = (
+        '@keyframes renderToastIn{'
+        + 'from{transform:translateX(100%);opacity:0}'
+        + 'to{transform:translateX(0);opacity:1}}'
+    );
     document.head.appendChild(style);
 
     // === Результаты ===
@@ -382,8 +386,8 @@
         el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    // === Генерация с таймаутом и защитой от зависания ===
-    function generateDoc(btn, params) {
+    // === Рендеринг с таймаутом и защитой от зависания ===
+    function renderDoc(btn, params) {
         // Фиксируем ширину кнопки до замены содержимого
         if (!btn.dataset.origHtml) {
             btn.dataset.origHtml = btn.innerHTML;
@@ -424,25 +428,27 @@
         })
         .catch(function(err) {
             if (err.name === 'AbortError') {
-                showToast('Таймаут: генерация заняла больше 60 сек', 'error');
+                showToast('Таймаут: рендеринг занял больше 60 сек', 'error');
             } else {
                 showToast('Ошибка: ' + err.message, 'error');
             }
         })
         .finally(function() {
             clearTimeout(timeoutId);
-            btn.innerHTML = btn.dataset.origHtml || 'Генерация';
+            btn.innerHTML = btn.dataset.origHtml || 'Рендеринг';
             btn.disabled = false;
             btn.style.minWidth = '';
         });
     }
+
+    var generateDoc = renderDoc;
 
     // === Быстрые кнопки ===
     document.querySelectorAll('.btn-generate-doc').forEach(function(btn) {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             if (this.disabled) return; // Защита от двойного клика
-            generateDoc(this, {
+            renderDoc(this, {
                 renderer_type: this.dataset.type,
                 with_answers: this.dataset.withAnswers || '0',
                 format: 'A4',
@@ -465,7 +471,7 @@
                     params[key] = val;
                 }
             });
-            generateDoc(submitBtn, params);
+            renderDoc(submitBtn, params);
         });
     }
 })();

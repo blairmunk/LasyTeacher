@@ -62,15 +62,15 @@ class FakeDocumentGenerationService:
             ),
         )
 
-    def render_work_document(self, work_id, options, recipe=None):
-        self.work_request = (work_id, options, recipe)
+    def render_work_document(self, work_id, options, render_plan=None):
+        self.work_request = (work_id, options, render_plan)
         return self.work_document
 
     def generate_work(self, work_id, options):
         return self.render_work_document(work_id, options)
 
-    def render_remedial_sheet_document(self, variant_id, options, recipe=None):
-        self.remedial_request = (variant_id, options, recipe)
+    def render_remedial_sheet_document(self, variant_id, options, render_plan=None):
+        self.remedial_request = (variant_id, options, render_plan)
         return self.remedial_document
 
     def generate_remedial_sheet(self, variant_id, options):
@@ -140,11 +140,15 @@ class DocumentGenerationUseCaseTests(TestCase):
         self.assertEqual(result.files[0].size_kb, 1.0)
         self.assertEqual(result.source_name, 'Контрольная')
         self.assertEqual(work_repo.work_name_request, 'work-1')
-        work_id, used_options, recipe = service.work_request
+        work_id, used_options, render_plan = service.work_request
         self.assertEqual(work_id, 'work-1')
         self.assertEqual(used_options, options)
+        self.assertEqual(render_plan.source.source_type, 'work')
+        self.assertEqual(render_plan.source.source_id, 'work-1')
+        self.assertEqual(render_plan.source.title, 'Контрольная')
+        self.assertEqual(render_plan.render_target.renderer_type, 'html')
         self.assertEqual(
-            recipe.section_types,
+            render_plan.recipe.section_types,
             (HEADER_SECTION, TASK_VARIANTS_SECTION),
         )
 
@@ -205,11 +209,14 @@ class DocumentGenerationUseCaseTests(TestCase):
         self.assertEqual(result.files[0].filename, 'remedial.pdf')
         self.assertEqual(result.files[0].size_kb, 2.0)
         self.assertEqual(work_repo.variant_type_request, 'variant-1')
-        variant_id, used_options, recipe = service.remedial_request
+        variant_id, used_options, render_plan = service.remedial_request
         self.assertEqual(variant_id, 'variant-1')
         self.assertEqual(used_options, options)
+        self.assertEqual(render_plan.source.source_type, 'remedial_variant')
+        self.assertEqual(render_plan.source.source_id, 'variant-1')
+        self.assertEqual(render_plan.render_target.renderer_type, 'pdf')
         self.assertEqual(
-            recipe.section_types,
+            render_plan.recipe.section_types,
             (
                 HEADER_SECTION,
                 'original_mistakes',

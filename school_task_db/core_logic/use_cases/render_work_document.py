@@ -6,6 +6,8 @@ from core_logic.entities.document_generation import DocumentGenerationResult
 from core_logic.interfaces.document_generation import IDocumentGenerationService
 from core_logic.interfaces.work_repo import IWorkRepository
 from core_logic.value_objects.content_config import WorkDocumentRenderOptions
+from core_logic.entities.document import DocumentSourceRef
+from core_logic.value_objects.document_render_plan import DocumentRenderPlan
 from core_logic.value_objects.document_recipes import build_work_document_recipe
 
 
@@ -49,7 +51,15 @@ class RenderWorkDocumentUseCase:
         document = self.document_generation_service.render_work_document(
             request.work_id,
             request.options,
-            build_work_document_recipe(request.options.build_options),
+            DocumentRenderPlan(
+                source=DocumentSourceRef(
+                    source_type='work',
+                    source_id=request.work_id,
+                    title=work_name,
+                ),
+                recipe=build_work_document_recipe(request.options.build_options),
+                render_target=request.options.render_target,
+            ),
         )
         return DocumentGenerationResult(
             status='generated',

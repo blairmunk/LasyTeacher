@@ -6,11 +6,11 @@ from core_logic.entities.document_generation import (
     GeneratedDocument,
     GeneratedFileResult,
 )
-from core_logic.entities.document import DocumentRecipe
 from core_logic.value_objects.content_config import (
     RemedialSheetDocumentRenderOptions,
     WorkDocumentRenderOptions,
 )
+from core_logic.value_objects.document_render_plan import DocumentRenderPlan
 
 
 class IDocumentGenerationService(ABC):
@@ -19,7 +19,7 @@ class IDocumentGenerationService(ABC):
         self,
         work_id: str,
         options: WorkDocumentRenderOptions,
-        recipe: DocumentRecipe | None = None,
+        render_plan: DocumentRenderPlan | None = None,
     ) -> GeneratedDocument:
         """Render document files for a whole work."""
 
@@ -28,7 +28,7 @@ class IDocumentGenerationService(ABC):
         self,
         variant_id: str,
         options: RemedialSheetDocumentRenderOptions,
-        recipe: DocumentRecipe | None = None,
+        render_plan: DocumentRenderPlan | None = None,
     ) -> GeneratedDocument:
         """Render document files for a remedial variant."""
 

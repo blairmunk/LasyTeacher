@@ -29,7 +29,7 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         self,
         work_id: str,
         options,
-        recipe=None,
+        render_plan=None,
     ) -> GeneratedDocument:
         work = Work.objects.get(pk=work_id)
         render_target = options.render_target
@@ -66,7 +66,7 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         self,
         variant_id: str,
         options,
-        recipe=None,
+        render_plan=None,
     ) -> GeneratedDocument:
         variant = Variant.objects.get(pk=variant_id)
         content_config = options.content_config

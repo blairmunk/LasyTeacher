@@ -31,6 +31,10 @@ class WorkGenerationOptions:
     include_instructions: bool = False
 
     @property
+    def renderer_type(self) -> str:
+        return self.generator_type
+
+    @property
     def content_config(self) -> dict:
         return {
             'include_answers': self.answer_type in ANSWER_TYPES_WITH_ANSWERS,
@@ -46,7 +50,7 @@ class WorkGenerationOptions:
 
     @property
     def file_type_label(self) -> str:
-        return FILE_TYPE_LABELS[self.generator_type]
+        return FILE_TYPE_LABELS[self.renderer_type]
 
     @property
     def content_description(self) -> str:
@@ -70,6 +74,10 @@ class RemedialSheetGenerationOptions:
     answer_type: str = 'with_short_solutions'
 
     @property
+    def renderer_type(self) -> str:
+        return self.generator_type
+
+    @property
     def content_config(self) -> dict:
         return {
             'include_answers': self.answer_type in ANSWER_TYPES_WITH_ANSWERS,
@@ -88,7 +96,10 @@ def build_work_generation_options(data: Mapping[str, str]) -> WorkGenerationOpti
         answer_type = 'with_answers'
 
     return WorkGenerationOptions(
-        generator_type=data.get('generator_type', 'pdf'),
+        generator_type=(
+            data.get('renderer_type')
+            or data.get('generator_type', 'pdf')
+        ),
         pdf_format=data.get('format', 'A4'),
         answer_type=answer_type,
         include_hints=data.get('include_hints', '0') == '1',
@@ -100,7 +111,10 @@ def build_remedial_sheet_generation_options(
     data: Mapping[str, str],
 ) -> RemedialSheetGenerationOptions:
     return RemedialSheetGenerationOptions(
-        generator_type=data.get('generator_type', 'pdf'),
+        generator_type=(
+            data.get('renderer_type')
+            or data.get('generator_type', 'pdf')
+        ),
         pdf_format=data.get('format', 'A4'),
         answer_type=data.get('answer_type', 'with_short_solutions'),
     )

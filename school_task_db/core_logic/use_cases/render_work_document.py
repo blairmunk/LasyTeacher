@@ -30,7 +30,7 @@ class RenderWorkDocumentUseCase:
         self,
         request: RenderWorkDocumentRequest,
     ) -> DocumentGenerationResult:
-        renderer_type = request.options.generator_type
+        renderer_type = request.options.renderer_type
         work_name = self.work_repo.get_work_name(request.work_id)
         if work_name is None:
             return DocumentGenerationResult(

@@ -11,7 +11,7 @@ def render_work_ajax(request, work_id):
     """Ajax rendering for work documents with hints/instructions support."""
     from infrastructure.container import container
 
-    generator_type = container.work_form_adapter.document_generator_type_from_post(
+    renderer_type = container.work_form_adapter.document_renderer_type_from_post(
         request.POST,
     )
     try:
@@ -22,9 +22,9 @@ def render_work_ajax(request, work_id):
             )
         )
         options = document_request.options
-        generator_type = options.generator_type
+        renderer_type = options.renderer_type
 
-        logger.info(f"🌐 Веб-генерация {generator_type} для работы {work_id}")
+        logger.info(f"🌐 Веб-рендер {renderer_type} для работы {work_id}")
         logger.info(f"   Тип контента: {options.answer_type}")
         logger.info(
             "   Дополнительно: hints=%s, instructions=%s",
@@ -40,7 +40,7 @@ def render_work_ajax(request, work_id):
         if result.status == 'unsupported_generator':
             return JsonResponse({
                 'success': False, 
-                'error': f'Неподдерживаемый тип генератора: {generator_type}'
+                'error': f'Неподдерживаемый тип рендера: {renderer_type}'
             })
         
         return JsonResponse(
@@ -53,7 +53,7 @@ def render_work_ajax(request, work_id):
     except Http404:
         raise
     except Exception as e:
-        logger.error(f"Ошибка веб-генерации {generator_type} для работы {work_id}: {e}")
+        logger.error(f"Ошибка веб-рендера {renderer_type} для работы {work_id}: {e}")
         return JsonResponse({
             'success': False,
             'error': str(e)
@@ -127,9 +127,9 @@ def render_remedial_sheet_ajax(request, variant_id):
             )
         )
         options = document_request.options
-        generator_type = options.generator_type
+        renderer_type = options.renderer_type
 
-        logger.info(f"Генерация remedial sheet для варианта {variant_id}")
+        logger.info(f"Рендер remedial sheet для варианта {variant_id}")
 
         result = container.render_remedial_sheet_document_use_case().execute(
             document_request,
@@ -145,7 +145,7 @@ def render_remedial_sheet_ajax(request, variant_id):
         if result.status == 'unsupported_generator':
             return JsonResponse({
                 'status': 'error',
-                'message': f'Неподдерживаемый тип генератора: {generator_type}'
+                'message': f'Неподдерживаемый тип рендера: {renderer_type}'
             }, status=400)
         if result.status == 'empty':
             return JsonResponse({

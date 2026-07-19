@@ -322,16 +322,24 @@ class TaskGroupFormAdapterTests(SimpleTestCase):
 
 
 class WorkFormAdapterTests(SimpleTestCase):
-    def test_reads_document_generator_type_from_post(self):
+    def test_reads_document_renderer_type_from_post(self):
+        adapter = WorkFormAdapter()
+
+        self.assertEqual(
+            adapter.document_renderer_type_from_post(QueryDict('renderer_type=html')),
+            'html',
+        )
+        self.assertEqual(
+            adapter.document_renderer_type_from_post(QueryDict('')),
+            'pdf',
+        )
+
+    def test_legacy_document_generator_type_from_post(self):
         adapter = WorkFormAdapter()
 
         self.assertEqual(
             adapter.document_generator_type_from_post(QueryDict('generator_type=html')),
             'html',
-        )
-        self.assertEqual(
-            adapter.document_generator_type_from_post(QueryDict('')),
-            'pdf',
         )
 
     def test_builds_render_work_document_request_from_post(self):
@@ -345,6 +353,7 @@ class WorkFormAdapterTests(SimpleTestCase):
 
         self.assertEqual(request.work_id, 'w1')
         self.assertEqual(request.options.generator_type, 'html')
+        self.assertEqual(request.options.renderer_type, 'html')
         self.assertEqual(request.options.pdf_format, 'A5')
         self.assertEqual(request.options.answer_type, 'with_short_solutions')
         self.assertTrue(request.options.include_hints)
@@ -358,6 +367,7 @@ class WorkFormAdapterTests(SimpleTestCase):
 
         self.assertEqual(request.work_id, 'w1')
         self.assertEqual(request.options.generator_type, 'html')
+        self.assertEqual(request.options.renderer_type, 'html')
 
     def test_builds_render_remedial_sheet_request_from_post(self):
         request = WorkFormAdapter().render_remedial_sheet_request_from_post(
@@ -367,6 +377,7 @@ class WorkFormAdapterTests(SimpleTestCase):
 
         self.assertEqual(request.variant_id, 'v1')
         self.assertEqual(request.options.generator_type, 'pdf')
+        self.assertEqual(request.options.renderer_type, 'pdf')
         self.assertEqual(request.options.pdf_format, 'A4')
         self.assertEqual(request.options.answer_type, 'with_full_solutions')
 
@@ -378,6 +389,7 @@ class WorkFormAdapterTests(SimpleTestCase):
 
         self.assertEqual(request.variant_id, 'v1')
         self.assertEqual(request.options.generator_type, 'html')
+        self.assertEqual(request.options.renderer_type, 'html')
 
     def test_builds_generated_document_file_request(self):
         request = WorkFormAdapter().generated_document_file_request(

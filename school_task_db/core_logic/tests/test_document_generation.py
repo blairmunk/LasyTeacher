@@ -108,6 +108,7 @@ class DocumentGenerationUseCaseTests(TestCase):
         self.assertFalse(result.success)
         self.assertEqual(result.status, 'unsupported_generator')
         self.assertEqual(result.generator_type, 'docx')
+        self.assertEqual(result.renderer_type, 'docx')
         self.assertEqual(result.source_name, 'Контрольная')
         self.assertEqual(work_repo.work_name_request, 'work-1')
         self.assertIsNone(service.work_request)
@@ -227,6 +228,7 @@ class DocumentGenerationUseCaseTests(TestCase):
         self.assertFalse(result.success)
         self.assertEqual(result.status, 'unsupported_generator')
         self.assertEqual(result.generator_type, 'docx')
+        self.assertEqual(result.renderer_type, 'docx')
         self.assertIsNone(service.remedial_request)
 
     def test_render_remedial_sheet_document_rejects_non_remedial_variant(self):

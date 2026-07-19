@@ -11,6 +11,7 @@ class WorkGenerationOptionsTests(TestCase):
         options = build_work_generation_options({})
 
         self.assertEqual(options.generator_type, 'pdf')
+        self.assertEqual(options.renderer_type, 'pdf')
         self.assertEqual(options.pdf_format, 'A4')
         self.assertEqual(options.answer_type, 'tasks_only')
         self.assertEqual(options.content_description, 'только задания')
@@ -46,6 +47,7 @@ class WorkGenerationOptionsTests(TestCase):
         })
 
         self.assertEqual(options.generator_type, 'html')
+        self.assertEqual(options.renderer_type, 'html')
         self.assertEqual(options.file_type_label, 'HTML')
         self.assertEqual(options.pdf_format, 'A5')
         self.assertEqual(
@@ -68,6 +70,7 @@ class WorkGenerationOptionsTests(TestCase):
         options = build_remedial_sheet_generation_options({})
 
         self.assertEqual(options.generator_type, 'pdf')
+        self.assertEqual(options.renderer_type, 'pdf')
         self.assertEqual(options.pdf_format, 'A4')
         self.assertEqual(options.answer_type, 'with_short_solutions')
         self.assertEqual(
@@ -79,3 +82,19 @@ class WorkGenerationOptionsTests(TestCase):
                 'page_format': 'A4',
             },
         )
+
+    def test_builds_work_options_from_renderer_type(self):
+        options = build_work_generation_options({
+            'renderer_type': 'html',
+            'generator_type': 'pdf',
+        })
+
+        self.assertEqual(options.renderer_type, 'html')
+
+    def test_builds_remedial_sheet_options_from_renderer_type(self):
+        options = build_remedial_sheet_generation_options({
+            'renderer_type': 'html',
+            'generator_type': 'pdf',
+        })
+
+        self.assertEqual(options.renderer_type, 'html')

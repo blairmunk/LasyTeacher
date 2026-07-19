@@ -911,7 +911,7 @@ class WorkDetailViewTests(TestCase):
             response.json(),
             {
                 'status': 'error',
-                'message': 'Неподдерживаемый тип генератора: docx',
+                'message': 'Неподдерживаемый тип рендера: docx',
             },
         )
         render_sheet.assert_not_called()

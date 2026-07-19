@@ -34,20 +34,20 @@ class RenderRemedialSheetDocumentUseCase:
         if variant_type is None:
             return DocumentGenerationResult(
                 status='not_found',
-                generator_type=request.options.generator_type,
+                generator_type=request.options.renderer_type,
             )
         if variant_type != 'remedial':
             return DocumentGenerationResult(
                 status='not_remedial',
-                generator_type=request.options.generator_type,
+                generator_type=request.options.renderer_type,
             )
         if (
-            request.options.generator_type
+            request.options.renderer_type
             not in SUPPORTED_REMEDIAL_SHEET_RENDERER_TYPES
         ):
             return DocumentGenerationResult(
                 status='unsupported_generator',
-                generator_type=request.options.generator_type,
+                generator_type=request.options.renderer_type,
             )
 
         document = self.document_generation_service.render_remedial_sheet_document(
@@ -57,7 +57,7 @@ class RenderRemedialSheetDocumentUseCase:
         status = 'generated' if document.files else 'empty'
         return DocumentGenerationResult(
             status=status,
-            generator_type=request.options.generator_type,
+            generator_type=request.options.renderer_type,
             file_type=document.file_type,
             files=document.files,
         )

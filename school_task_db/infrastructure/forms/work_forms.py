@@ -91,8 +91,14 @@ class WorkFormAdapter:
     def generate_work_document_request_from_post(self, post_data, work_id):
         return self.render_work_document_request_from_post(post_data, work_id)
 
+    def document_renderer_type_from_post(self, post_data, default='pdf'):
+        return (
+            post_data.get('renderer_type')
+            or post_data.get('generator_type', default)
+        )
+
     def document_generator_type_from_post(self, post_data, default='pdf'):
-        return post_data.get('generator_type', default)
+        return self.document_renderer_type_from_post(post_data, default)
 
     def render_remedial_sheet_request_from_post(self, post_data, variant_id):
         return RenderRemedialSheetDocumentRequest(
@@ -153,6 +159,6 @@ class WorkFormAdapter:
             ],
             'message': (
                 f'Рабочий лист сгенерирован '
-                f'({result.generator_type.upper()})'
+                f'({result.renderer_type.upper()})'
             ),
         }

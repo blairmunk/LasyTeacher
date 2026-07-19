@@ -25,6 +25,10 @@ class DocumentGenerationResult:
     source_name: str = ''
 
     @property
+    def renderer_type(self) -> str:
+        return self.generator_type
+
+    @property
     def success(self) -> bool:
         return self.status == 'generated'
 

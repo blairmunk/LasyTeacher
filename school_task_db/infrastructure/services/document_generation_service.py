@@ -27,10 +27,10 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
 
     def render_work_document(self, work_id: str, options) -> GeneratedDocument:
         work = Work.objects.get(pk=work_id)
-        generator_type = options.generator_type
+        renderer_type = options.renderer_type
         content_config = options.content_config
 
-        if generator_type == 'latex':
+        if renderer_type == 'latex':
             return self._document_from_paths(
                 file_type='latex',
                 file_paths=self._generate_latex_work(
@@ -39,7 +39,7 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
                     options.pdf_format,
                 ),
             )
-        if generator_type == 'html':
+        if renderer_type == 'html':
             return self._document_from_paths(
                 file_type='html',
                 file_paths=self._generate_html_work(work, content_config),
@@ -63,9 +63,9 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
     ) -> GeneratedDocument:
         variant = Variant.objects.get(pk=variant_id)
         content_config = options.content_config
-        generator_type = options.generator_type
+        renderer_type = options.renderer_type
 
-        if generator_type == 'latex':
+        if renderer_type == 'latex':
             return self._document_from_paths(
                 file_type='latex',
                 file_paths=self._generate_remedial_latex(
@@ -74,7 +74,7 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
                     options.pdf_format,
                 ),
             )
-        if generator_type == 'html':
+        if renderer_type == 'html':
             return self._document_from_paths(
                 file_type='html',
                 file_paths=self._generate_remedial_html(

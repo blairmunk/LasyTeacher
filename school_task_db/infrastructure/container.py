@@ -58,6 +58,9 @@ from core_logic.use_cases.get_codifier_list import GetCodifierListUseCase
 from core_logic.use_cases.get_course_detail import GetCourseDetailUseCase
 from core_logic.use_cases.get_course_list import GetCourseListUseCase
 from core_logic.use_cases.get_dashboard_summary import GetDashboardSummaryUseCase
+from core_logic.use_cases.get_default_document_template import (
+    GetDefaultDocumentTemplateUseCase,
+)
 from core_logic.use_cases.get_document_template_list import (
     GetDocumentTemplateListUseCase,
 )
@@ -618,6 +621,11 @@ class Container:
 
     def get_document_template_list_use_case(self):
         return GetDocumentTemplateListUseCase(
+            document_template_repo=self.document_template_repo,
+        )
+
+    def get_default_document_template_use_case(self):
+        return GetDefaultDocumentTemplateUseCase(
             document_template_repo=self.document_template_repo,
         )
 

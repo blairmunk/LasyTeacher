@@ -51,6 +51,9 @@ from core_logic.use_cases.get_course_list import GetCourseListUseCase
 from core_logic.use_cases.get_topic_detail import GetTopicDetailUseCase
 from core_logic.use_cases.get_topic_list import GetTopicListUseCase
 from core_logic.use_cases.get_dashboard_summary import GetDashboardSummaryUseCase
+from core_logic.use_cases.get_default_document_template import (
+    GetDefaultDocumentTemplateUseCase,
+)
 from core_logic.use_cases.get_document_template_list import (
     GetDocumentTemplateListUseCase,
 )
@@ -246,6 +249,9 @@ class ContainerTests(SimpleTestCase):
         document_template_list_use_case = (
             container.get_document_template_list_use_case()
         )
+        default_document_template_use_case = (
+            container.get_default_document_template_use_case()
+        )
         refresh_math_cache_use_case = container.refresh_task_math_cache_use_case()
         create_task_use_case = container.create_task_use_case()
         update_task_use_case = container.update_task_use_case()
@@ -416,6 +422,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             document_template_list_use_case,
             GetDocumentTemplateListUseCase,
+        )
+        self.assertIsInstance(
+            default_document_template_use_case,
+            GetDefaultDocumentTemplateUseCase,
         )
         self.assertIsInstance(
             refresh_math_cache_use_case,

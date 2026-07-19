@@ -246,7 +246,7 @@ from infrastructure.repositories.django_student_repo import DjangoStudentReposit
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from infrastructure.services.document_generation_service import (
-    DjangoDocumentGenerationService,
+    DjangoDocumentRenderingService,
 )
 from infrastructure.services.task_import_service import DjangoTaskImportService
 from infrastructure.forms.core_forms import CoreFormAdapter
@@ -395,7 +395,7 @@ class Container:
     @property
     def document_rendering_service(self):
         if self._document_rendering_service is None:
-            self._document_rendering_service = DjangoDocumentGenerationService(
+            self._document_rendering_service = DjangoDocumentRenderingService(
                 get_remedial_sheet_data_use_case=(
                     self.get_remedial_sheet_data_use_case()
                 ),

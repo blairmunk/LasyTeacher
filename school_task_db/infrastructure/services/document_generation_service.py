@@ -27,7 +27,7 @@ from infrastructure.services.legacy_document_file_renderer import (
 from works.models import Variant, Work
 
 
-class DjangoDocumentGenerationService(IDocumentRenderingService):
+class DjangoDocumentRenderingService(IDocumentRenderingService):
     type_to_output_dir = {
         'latex': 'web_latex_output',
         'html': 'web_html_output',
@@ -268,3 +268,6 @@ class DjangoDocumentGenerationService(IDocumentRenderingService):
                 render_target=render_target,
             )
         )
+
+
+DjangoDocumentGenerationService = DjangoDocumentRenderingService

@@ -115,7 +115,7 @@ class WorkFormAdapter:
             filename=filename,
         )
 
-    def generated_work_document_response_payload(self, result, options):
+    def rendered_work_document_response_payload(self, result, options):
         files_info = [
             {
                 'name': file_info.filename,
@@ -140,6 +140,9 @@ class WorkFormAdapter:
             'files': files_info,
             'total_files': len(files_info),
         }
+
+    def generated_work_document_response_payload(self, result, options):
+        return self.rendered_work_document_response_payload(result, options)
 
     def remedial_sheet_response_payload(self, result):
         return {

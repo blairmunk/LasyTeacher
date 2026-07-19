@@ -44,7 +44,7 @@ def render_work_ajax(request, work_id):
             })
         
         return JsonResponse(
-            container.work_form_adapter.generated_work_document_response_payload(
+            container.work_form_adapter.rendered_work_document_response_payload(
                 result,
                 options,
             )

@@ -400,8 +400,8 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertEqual(request.file_type, 'html')
         self.assertEqual(request.filename, 'work.html')
 
-    def test_builds_generated_work_document_response_payload(self):
-        payload = WorkFormAdapter().generated_work_document_response_payload(
+    def test_builds_rendered_work_document_response_payload(self):
+        payload = WorkFormAdapter().rendered_work_document_response_payload(
             DocumentGenerationResult(
                 status='generated',
                 renderer_type='html',
@@ -426,6 +426,20 @@ class WorkFormAdapterTests(SimpleTestCase):
             ],
             'total_files': 1,
         })
+
+    def test_legacy_generated_work_document_response_payload_alias(self):
+        adapter = WorkFormAdapter()
+        result = DocumentGenerationResult(
+            status='generated',
+            renderer_type='html',
+            file_type='html',
+        )
+        options = WorkDocumentRenderOptions(renderer_type='html')
+
+        self.assertEqual(
+            adapter.generated_work_document_response_payload(result, options),
+            adapter.rendered_work_document_response_payload(result, options),
+        )
 
     def test_builds_remedial_sheet_response_payload(self):
         payload = WorkFormAdapter().remedial_sheet_response_payload(

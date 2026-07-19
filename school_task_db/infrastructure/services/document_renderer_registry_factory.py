@@ -6,11 +6,12 @@ from core_logic.value_objects.document_recipes import (
     WORK_DOCUMENT_TYPE,
 )
 from infrastructure.services.document_renderers import LegacyDocumentRenderer
-from works.models import Variant, Work
 
 
 def build_legacy_document_renderer_registry(
     document_from_paths,
+    get_work_source,
+    get_remedial_source,
     render_latex_work_files,
     render_html_work_files,
     render_pdf_work_files,
@@ -22,6 +23,7 @@ def build_legacy_document_renderer_registry(
     _register_work_renderers(
         registry=registry,
         document_from_paths=document_from_paths,
+        get_work_source=get_work_source,
         render_latex_work_files=render_latex_work_files,
         render_html_work_files=render_html_work_files,
         render_pdf_work_files=render_pdf_work_files,
@@ -29,6 +31,7 @@ def build_legacy_document_renderer_registry(
     _register_remedial_sheet_renderers(
         registry=registry,
         document_from_paths=document_from_paths,
+        get_remedial_source=get_remedial_source,
         render_remedial_latex_files=render_remedial_latex_files,
         render_remedial_html_files=render_remedial_html_files,
         render_remedial_pdf_files=render_remedial_pdf_files,
@@ -39,6 +42,7 @@ def build_legacy_document_renderer_registry(
 def _register_work_renderers(
     registry,
     document_from_paths,
+    get_work_source,
     render_latex_work_files,
     render_html_work_files,
     render_pdf_work_files,
@@ -47,7 +51,7 @@ def _register_work_renderers(
         'latex',
         LegacyDocumentRenderer(
             file_type='latex',
-            source_getter=lambda source_id: Work.objects.get(pk=source_id),
+            source_getter=get_work_source,
             render_files=lambda work, content_config, render_target:
                 render_latex_work_files(
                     work,
@@ -62,7 +66,7 @@ def _register_work_renderers(
         'html',
         LegacyDocumentRenderer(
             file_type='html',
-            source_getter=lambda source_id: Work.objects.get(pk=source_id),
+            source_getter=get_work_source,
             render_files=lambda work, content_config, render_target:
                 render_html_work_files(work, content_config),
             document_from_paths=document_from_paths,
@@ -73,7 +77,7 @@ def _register_work_renderers(
         'pdf',
         LegacyDocumentRenderer(
             file_type='pdf',
-            source_getter=lambda source_id: Work.objects.get(pk=source_id),
+            source_getter=get_work_source,
             render_files=lambda work, content_config, render_target:
                 render_pdf_work_files(
                     work,
@@ -89,6 +93,7 @@ def _register_work_renderers(
 def _register_remedial_sheet_renderers(
     registry,
     document_from_paths,
+    get_remedial_source,
     render_remedial_latex_files,
     render_remedial_html_files,
     render_remedial_pdf_files,
@@ -97,7 +102,7 @@ def _register_remedial_sheet_renderers(
         'latex',
         LegacyDocumentRenderer(
             file_type='latex',
-            source_getter=lambda source_id: Variant.objects.get(pk=source_id),
+            source_getter=get_remedial_source,
             render_files=lambda variant, content_config, render_target:
                 render_remedial_latex_files(
                     variant,
@@ -112,7 +117,7 @@ def _register_remedial_sheet_renderers(
         'html',
         LegacyDocumentRenderer(
             file_type='html',
-            source_getter=lambda source_id: Variant.objects.get(pk=source_id),
+            source_getter=get_remedial_source,
             render_files=lambda variant, content_config, render_target:
                 render_remedial_html_files(variant, content_config),
             document_from_paths=document_from_paths,
@@ -123,7 +128,7 @@ def _register_remedial_sheet_renderers(
         'pdf',
         LegacyDocumentRenderer(
             file_type='pdf',
-            source_getter=lambda source_id: Variant.objects.get(pk=source_id),
+            source_getter=get_remedial_source,
             render_files=lambda variant, content_config, render_target:
                 render_remedial_pdf_files(
                     variant,

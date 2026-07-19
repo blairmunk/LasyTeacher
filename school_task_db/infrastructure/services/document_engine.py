@@ -52,6 +52,8 @@ class DjangoDocumentEngine(IDocumentEngine):
             document_renderer_registry
             or build_legacy_document_renderer_registry(
                 document_from_paths=self._document_from_paths,
+                get_work_source=self._get_work_source,
+                get_remedial_source=self._get_remedial_source,
                 render_latex_work_files=(
                     self.legacy_file_renderer.render_latex_work
                 ),
@@ -68,6 +70,12 @@ class DjangoDocumentEngine(IDocumentEngine):
                 ),
             )
         )
+
+    def _get_work_source(self, work_id):
+        return Work.objects.get(pk=work_id)
+
+    def _get_remedial_source(self, variant_id):
+        return Variant.objects.get(pk=variant_id)
 
     def render_work_document(
         self,

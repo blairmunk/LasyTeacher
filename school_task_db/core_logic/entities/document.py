@@ -29,6 +29,7 @@ class DocumentSection:
 @dataclass(frozen=True)
 class Document:
     title: str
+    document_type: str = ''
     sections: Tuple[DocumentSection, ...] = field(default_factory=tuple)
     source: DocumentSourceRef | None = None
 
@@ -42,6 +43,7 @@ class Document:
     def with_section(self, section: DocumentSection) -> "Document":
         return Document(
             title=self.title,
+            document_type=self.document_type,
             sections=(*self.sections, section),
             source=self.source,
         )

@@ -30,6 +30,7 @@ class RecipeDocumentBuilderTests(TestCase):
         document = builder.build(source, recipe)
 
         self.assertEqual(document.title, 'Контрольная')
+        self.assertEqual(document.document_type, 'work')
         self.assertEqual(document.source, source)
         self.assertEqual(document.section_types, ('tasks', 'answers'))
         self.assertEqual(document.sections[0].payload, {'include_hints': True})

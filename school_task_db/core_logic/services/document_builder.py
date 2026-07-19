@@ -17,6 +17,7 @@ class RecipeDocumentBuilder(IDocumentBuilder):
     ) -> Document:
         return Document(
             title=source.title,
+            document_type=recipe.document_type,
             source=source,
             sections=[
                 DocumentSection(

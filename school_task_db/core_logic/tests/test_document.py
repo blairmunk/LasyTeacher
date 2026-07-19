@@ -13,6 +13,7 @@ class DocumentModelTests(TestCase):
     def test_document_preserves_ordered_sections(self):
         document = Document(
             title='Контрольная работа',
+            document_type='work',
             source=DocumentSourceRef(
                 source_type='work',
                 source_id='work-1',
@@ -31,9 +32,10 @@ class DocumentModelTests(TestCase):
         )
         self.assertEqual(document.source.source_type, 'work')
         self.assertEqual(document.source.source_id, 'work-1')
+        self.assertEqual(document.document_type, 'work')
 
     def test_document_can_be_extended_without_mutating_original(self):
-        document = Document(title='Разбор')
+        document = Document(title='Разбор', document_type='remedial_sheet')
 
         updated_document = document.with_section(
             DocumentSection(
@@ -43,6 +45,7 @@ class DocumentModelTests(TestCase):
         )
 
         self.assertEqual(document.section_types, ())
+        self.assertEqual(updated_document.document_type, 'remedial_sheet')
         self.assertEqual(updated_document.section_types, ('remedial_tasks',))
         self.assertEqual(
             updated_document.sections[0].payload,

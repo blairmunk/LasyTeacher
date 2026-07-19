@@ -14,6 +14,7 @@ from core_logic.value_objects.document_recipes import (
     TASK_VARIANTS_SECTION,
     TRAINING_TASKS_SECTION,
     build_document_recipe_from_sections_config,
+    build_document_template_spec_from_config,
     build_remedial_sheet_document_recipe,
     build_work_document_recipe,
 )
@@ -84,6 +85,34 @@ class DocumentRecipeTests(TestCase):
                     },
                 ],
             )
+
+    def test_builds_template_spec_from_sections_config(self):
+        template = build_document_template_spec_from_config(
+            name='Рабочий лист',
+            template_type='worksheet',
+            sections_config={
+                'sections': [
+                    {'type': HEADER_SECTION},
+                    {
+                        'type': TASK_LIST_SECTION,
+                        'params': {'source': 'new_tasks'},
+                    },
+                ],
+            },
+            default_content_config={'answer_type': 'tasks_only'},
+        )
+
+        self.assertEqual(template.name, 'Рабочий лист')
+        self.assertEqual(template.template_type, 'worksheet')
+        self.assertEqual(
+            template.section_types,
+            (HEADER_SECTION, TASK_LIST_SECTION),
+        )
+        self.assertEqual(
+            template.default_content_config,
+            {'answer_type': 'tasks_only'},
+        )
+        self.assertEqual(template.to_recipe().document_type, 'worksheet')
 
     def test_default_work_recipe_contains_header_and_task_variants(self):
         recipe = build_work_document_recipe()

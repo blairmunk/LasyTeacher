@@ -3,7 +3,11 @@
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from core_logic.entities.document import DocumentRecipe, DocumentSectionSpec
+from core_logic.entities.document import (
+    DocumentRecipe,
+    DocumentSectionSpec,
+    DocumentTemplateSpec,
+)
 from core_logic.value_objects.content_config import (
     RemedialSheetBuildOptions,
     WorkDocumentBuildOptions,
@@ -44,6 +48,27 @@ def build_document_recipe_from_sections_config(
             _section_spec_from_config(section_config)
             for section_config in sections_config
         ],
+    )
+
+
+def build_document_template_spec_from_config(
+    name: str,
+    template_type: str,
+    sections_config: (
+        Mapping[str, Any]
+        | Sequence[Mapping[str, Any] | DocumentSectionSpec]
+    ),
+    default_content_config: Mapping[str, Any] | None = None,
+) -> DocumentTemplateSpec:
+    recipe = build_document_recipe_from_sections_config(
+        document_type=template_type,
+        sections_config=sections_config,
+    )
+    return DocumentTemplateSpec(
+        name=name,
+        template_type=template_type,
+        sections=recipe.sections,
+        default_content_config=default_content_config or {},
     )
 
 

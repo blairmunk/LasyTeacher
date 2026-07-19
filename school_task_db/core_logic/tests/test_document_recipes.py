@@ -8,6 +8,7 @@ from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
+    TASK_LIST_SECTION,
     ORIGINAL_MISTAKES_SECTION,
     SHORT_SOLUTIONS_SECTION,
     TASK_VARIANTS_SECTION,
@@ -28,7 +29,7 @@ class DocumentRecipeTests(TestCase):
                     'params': {'show_date': True},
                 },
                 {
-                    'type': 'task_list',
+                    'type': TASK_LIST_SECTION,
                     'params': {
                         'section_title': 'Тренировка',
                         'source': 'new_tasks',
@@ -38,7 +39,10 @@ class DocumentRecipeTests(TestCase):
         )
 
         self.assertEqual(recipe.document_type, 'worksheet')
-        self.assertEqual(recipe.section_types, (HEADER_SECTION, 'task_list'))
+        self.assertEqual(
+            recipe.section_types,
+            (HEADER_SECTION, TASK_LIST_SECTION),
+        )
         self.assertEqual(recipe.sections[0].options, {'show_date': True})
         self.assertEqual(
             recipe.sections[1].options,

@@ -14,12 +14,17 @@ WORK_DOCUMENT_TYPE = 'work'
 REMEDIAL_SHEET_DOCUMENT_TYPE = 'remedial_sheet'
 
 HEADER_SECTION = 'header'
+TASK_LIST_SECTION = 'task_list'
 TASK_VARIANTS_SECTION = 'task_variants'
+ANSWER_KEY_SECTION = 'answer_key'
 ANSWERS_SECTION = 'answers'
 SHORT_SOLUTIONS_SECTION = 'short_solutions'
 FULL_SOLUTIONS_SECTION = 'full_solutions'
 ORIGINAL_MISTAKES_SECTION = 'original_mistakes'
 TRAINING_TASKS_SECTION = 'training_tasks'
+THEORY_SECTION = 'theory'
+PAGE_BREAK_SECTION = 'page_break'
+SCORE_TABLE_SECTION = 'score_table'
 
 
 def build_document_recipe_from_sections_config(

@@ -6,6 +6,7 @@ from django.test import SimpleTestCase
 
 from core_logic.entities.document_rendering import (
     DocumentGenerationResult,
+    DocumentRenderResult,
     GeneratedDocumentFile,
 )
 from core_logic.value_objects.content_config import WorkDocumentRenderOptions
@@ -514,7 +515,7 @@ class WorkFormAdapterTests(SimpleTestCase):
 
     def test_builds_rendered_work_document_response_payload(self):
         payload = WorkFormAdapter().rendered_work_document_response_payload(
-            DocumentGenerationResult(
+            DocumentRenderResult(
                 status='generated',
                 renderer_type='html',
                 file_type='html',
@@ -555,7 +556,7 @@ class WorkFormAdapterTests(SimpleTestCase):
 
     def test_builds_remedial_sheet_response_payload(self):
         payload = WorkFormAdapter().remedial_sheet_response_payload(
-            DocumentGenerationResult(
+            DocumentRenderResult(
                 status='generated',
                 renderer_type='pdf',
                 file_type='pdf',

@@ -5,7 +5,7 @@
 
 class DocumentRenderer {
     constructor() {
-        this.isGenerating = false;
+        this.isRendering = false;
         this.initEventListeners();
     }
 
@@ -14,7 +14,7 @@ class DocumentRenderer {
         document.addEventListener('click', (e) => {
             if (e.target.matches('.btn-generate-doc')) {
                 e.preventDefault();
-                this.handleGenerateClick(e.target);
+                this.handleRenderClick(e.target);
             }
         });
 
@@ -25,13 +25,13 @@ class DocumentRenderer {
                 || e.target.matches('#advanced-generation-form')
             ) {
                 e.preventDefault();
-                this.handleAdvancedGeneration(e.target);
+                this.handleAdvancedRendering(e.target);
             }
         });
     }
 
-    async handleGenerateClick(button) {
-        if (this.isGenerating) {
+    async handleRenderClick(button) {
+        if (this.isRendering) {
             this.showAlert('Документ уже готовится, подождите...', 'warning');
             return;
         }
@@ -53,16 +53,20 @@ class DocumentRenderer {
             answerType: answerType,       // ИСПРАВЛЕНО: правильный тип
             withAnswers: withAnswers,     // Для совместимости
             format: button.dataset.format || 'A4',
-            variantSelection: 'all'       // Быстрые кнопки всегда генерируют все варианты
+            variantSelection: 'all'       // Быстрые кнопки всегда рендерят все варианты
         };
 
         console.log('⚡ Быстрый рендеринг с параметрами:', params);
 
-        await this.generateDocument(params, button);
+        await this.renderDocument(params, button);
     }
 
-    async handleAdvancedGeneration(form) {
-        if (this.isGenerating) {
+    async handleGenerateClick(button) {
+        return this.handleRenderClick(button);
+    }
+
+    async handleAdvancedRendering(form) {
+        if (this.isRendering) {
             this.showAlert('Документ уже готовится, подождите...', 'warning');
             return;
         }
@@ -86,11 +90,22 @@ class DocumentRenderer {
 
         console.log('🔧 Расширенный рендеринг с параметрами:', params);
 
-        await this.generateDocument(params, form.querySelector('button[type="submit"]'));
+        await this.renderDocument(
+            params,
+            form.querySelector('button[type="submit"]')
+        );
+    }
+
+    async handleAdvancedGeneration(form) {
+        return this.handleAdvancedRendering(form);
     }
 
     async generateDocument(params, triggerElement) {
-        this.isGenerating = true;
+        return this.renderDocument(params, triggerElement);
+    }
+
+    async renderDocument(params, triggerElement) {
+        this.isRendering = true;
         this.setLoadingState(triggerElement, true);
 
         try {
@@ -158,7 +173,7 @@ class DocumentRenderer {
             console.error('❌ Ошибка рендеринга:', error);
             this.showAlert(`🚨 Ошибка сети: ${error.message}`, 'danger');
         } finally {
-            this.isGenerating = false;
+            this.isRendering = false;
             this.setLoadingState(triggerElement, false);
         }
     }
@@ -179,10 +194,15 @@ class DocumentRenderer {
                 || document.querySelector('[data-rendering-block]')
                 || document.querySelector('.document-generation-block')
                 || document.querySelector('[data-generation-block]')
-                || document.querySelector('.card-header h5 .fa-file-export')?.closest('.card');
+                || document.querySelector(
+                    '.card-header h5 .fa-file-export'
+                )?.closest('.card');
             
             if (genBlock) {
-                genBlock.parentNode.insertBefore(resultsContainer, genBlock.nextSibling);
+                genBlock.parentNode.insertBefore(
+                    resultsContainer,
+                    genBlock.nextSibling
+                );
             } else {
                 // Fallback: вставляем в начало контента
                 const container = document.querySelector('.container-fluid')
@@ -199,7 +219,9 @@ class DocumentRenderer {
         let html = `
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white">
-                    <h6 class="mb-0"><i class="fas fa-file-download"></i> Созданные документы</h6>
+                    <h6 class="mb-0">
+                        <i class="fas fa-file-download"></i> Созданные документы
+                    </h6>
                 </div>
                 <div class="card-body">
                     <div class="list-group list-group-flush">
@@ -208,13 +230,19 @@ class DocumentRenderer {
         files.forEach(file => {
             const iconClass = this.getFileIcon(file.name);
             html += `
-                <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div
+                    class="list-group-item d-flex justify-content-between align-items-center"
+                >
                     <div>
                         <i class="${iconClass} me-2"></i>
                         <strong>${file.name}</strong>
                         <br><small class="text-muted">Размер: ${file.size}</small>
                     </div>
-                    <a href="${file.download_url}" class="btn btn-outline-primary btn-sm" target="_blank">
+                    <a
+                        href="${file.download_url}"
+                        class="btn btn-outline-primary btn-sm"
+                        target="_blank"
+                    >
                         <i class="fas fa-download"></i> Скачать
                     </a>
                 </div>
@@ -248,7 +276,10 @@ class DocumentRenderer {
         if (isLoading) {
             element.disabled = true;
             element.dataset.originalHTML = element.innerHTML;
-            element.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Готовится...';
+            element.innerHTML = (
+                '<span class="spinner-border spinner-border-sm me-2"></span>'
+                + 'Готовится...'
+            );
         } else {
             element.disabled = false;
             element.innerHTML = element.dataset.originalHTML || element.innerHTML;
@@ -269,7 +300,10 @@ class DocumentRenderer {
         oldAlerts.forEach(alert => alert.remove());
 
         const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type} alert-dismissible fade show generator-alert mt-3`;
+        alertDiv.className = (
+            `alert alert-${type} alert-dismissible fade show `
+            + 'generator-alert mt-3'
+        );
         alertDiv.innerHTML = `
             <i class="fas fa-info-circle"></i> ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>

@@ -17,7 +17,7 @@ from core_logic.value_objects.content_config import (
 )
 from core_logic.value_objects.document_render_plan import DocumentRenderPlan
 from curriculum.models import Topic
-from infrastructure.services.document_generation_service import (
+from infrastructure.services.document_rendering_service import (
     DjangoDocumentRenderingService,
 )
 from infrastructure.services.task_import_service import DjangoTaskImportService

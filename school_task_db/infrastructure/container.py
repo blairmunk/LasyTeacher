@@ -245,7 +245,7 @@ from infrastructure.repositories.django_settings_repo import DjangoSettingsRepos
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
-from infrastructure.services.document_generation_service import (
+from infrastructure.services.document_rendering_service import (
     DjangoDocumentRenderingService,
 )
 from infrastructure.services.task_import_service import DjangoTaskImportService

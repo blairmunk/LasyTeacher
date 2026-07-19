@@ -6,15 +6,26 @@ from django.template.loader import render_to_string
 
 
 class LegacyDocumentFileRenderer:
-    def __init__(self, get_remedial_sheet_data_use_case):
+    def __init__(
+        self,
+        get_remedial_sheet_data_use_case,
+        template_renderer=render_to_string,
+        latex_output_dir='web_latex_output',
+        html_output_dir='web_html_output',
+        pdf_output_dir='web_pdf_output',
+    ):
         self.get_remedial_sheet_data_use_case = get_remedial_sheet_data_use_case
+        self.template_renderer = template_renderer
+        self.latex_output_dir = latex_output_dir
+        self.html_output_dir = html_output_dir
+        self.pdf_output_dir = pdf_output_dir
 
     def render_latex_work(self, work, content_config, page_format='A4'):
         from latex_generator.generators.work_generator import WorkLatexGenerator
 
         return self._render_work_files(
             generator_class=WorkLatexGenerator,
-            output_dir='web_latex_output',
+            output_dir=self.latex_output_dir,
             work=work,
             content_config=content_config,
             page_format=page_format,
@@ -25,7 +36,7 @@ class LegacyDocumentFileRenderer:
 
         return self._render_work_files(
             generator_class=WorkHtmlGenerator,
-            output_dir='web_html_output',
+            output_dir=self.html_output_dir,
             work=work,
             content_config=content_config,
         )
@@ -46,7 +57,7 @@ class LegacyDocumentFileRenderer:
 
             pdf_gen = HtmlToPdfGenerator(format=page_format, wait_for_mathjax=True)
             pdf_files = []
-            output_dir = Path('web_pdf_output')
+            output_dir = Path(self.pdf_output_dir)
             output_dir.mkdir(parents=True, exist_ok=True)
 
             for html_file in html_files:
@@ -68,7 +79,7 @@ class LegacyDocumentFileRenderer:
         )
 
         content_config['page_format'] = page_format
-        generator = RemedialSheetLatexGenerator(output_dir='web_latex_output')
+        generator = RemedialSheetLatexGenerator(output_dir=self.latex_output_dir)
         return generator.generate_for_variant(
             variant,
             output_format='pdf',
@@ -80,7 +91,7 @@ class LegacyDocumentFileRenderer:
             str(variant.pk),
         )
 
-        html_content = render_to_string('works/remedial_sheet_print.html', {
+        html_content = self.template_renderer('works/remedial_sheet_print.html', {
             'variant': sheet_data.variant,
             'student': sheet_data.student,
             'source_work': sheet_data.source_work,
@@ -95,7 +106,7 @@ class LegacyDocumentFileRenderer:
             'show_answers': content_config.get('include_answers', False),
         })
 
-        output_dir = Path('web_html_output')
+        output_dir = Path(self.html_output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
         student_name = (
@@ -117,7 +128,7 @@ class LegacyDocumentFileRenderer:
 
         pdf_gen = HtmlToPdfGenerator(format=page_format, wait_for_mathjax=True)
         pdf_files = []
-        output_dir = Path('web_pdf_output')
+        output_dir = Path(self.pdf_output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
         for html_file in html_files:

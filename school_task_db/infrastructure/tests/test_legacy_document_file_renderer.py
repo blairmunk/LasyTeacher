@@ -1,3 +1,6 @@
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -86,6 +89,44 @@ class LegacyDocumentFileRendererTests(TestCase):
         self.assertEqual(generator.output_dir, 'web_latex_output')
         self.assertEqual(generator._content_config['page_format'], 'A5')
 
+    def test_render_remedial_html_uses_configured_template_and_output_dir(self):
+        use_case = FakeRemedialSheetDataUseCase()
+        template_calls = []
+
+        def template_renderer(template_name, context):
+            template_calls.append((template_name, context))
+            return '<html>remedial</html>'
+
+        with TemporaryDirectory() as output_dir:
+            renderer = LegacyDocumentFileRenderer(
+                get_remedial_sheet_data_use_case=use_case,
+                template_renderer=template_renderer,
+                html_output_dir=output_dir,
+            )
+            files = renderer.render_remedial_html(
+                SimpleNamespace(pk='variant-1'),
+                self._content_config(
+                    include_short_solutions=True,
+                    include_full_solutions=True,
+                    include_answers=True,
+                ),
+            )
+
+            output_path = Path(output_dir) / 'remedial_student-short.html'
+            self.assertEqual(files, [str(output_path)])
+            self.assertEqual(
+                output_path.read_text(encoding='utf-8'),
+                '<html>remedial</html>',
+            )
+
+        self.assertEqual(use_case.variant_id, 'variant-1')
+        template_name, context = template_calls[0]
+        self.assertEqual(template_name, 'works/remedial_sheet_print.html')
+        self.assertEqual(context['variant'], 'variant-view')
+        self.assertTrue(context['show_solutions'])
+        self.assertTrue(context['show_full_solutions'])
+        self.assertTrue(context['show_answers'])
+
     def _content_config(self, **overrides):
         return {
             'include_answers': False,
@@ -93,3 +134,19 @@ class LegacyDocumentFileRendererTests(TestCase):
             'include_full_solutions': False,
             **overrides,
         }
+
+
+class FakeRemedialSheetDataUseCase:
+    def __init__(self):
+        self.variant_id = None
+
+    def execute(self, variant_id):
+        self.variant_id = variant_id
+        return SimpleNamespace(
+            variant='variant-view',
+            student=SimpleNamespace(short_name='student-short'),
+            source_work='source-work-view',
+            mark='mark-view',
+            original_tasks=['original-task'],
+            new_tasks=['new-task'],
+        )

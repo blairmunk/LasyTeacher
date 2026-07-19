@@ -47,8 +47,8 @@ from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCas
 from core_logic.use_cases.execute_task_import import ExecuteTaskImportUseCase
 from core_logic.use_cases.export_tasks import ExportTasksUseCase
 from core_logic.use_cases.compose_work_variants import ComposeWorkVariantsUseCase
-from core_logic.use_cases.generate_remedial_sheet_document import (
-    GenerateRemedialSheetDocumentUseCase,
+from core_logic.use_cases.render_remedial_sheet_document import (
+    RenderRemedialSheetDocumentUseCase,
 )
 from core_logic.use_cases.render_work_document import RenderWorkDocumentUseCase
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
@@ -987,11 +987,14 @@ class Container:
     def generate_work_document_use_case(self):
         return self.render_work_document_use_case()
 
-    def generate_remedial_sheet_document_use_case(self):
-        return GenerateRemedialSheetDocumentUseCase(
+    def render_remedial_sheet_document_use_case(self):
+        return RenderRemedialSheetDocumentUseCase(
             document_generation_service=self.document_generation_service,
             work_repo=self.work_repo,
         )
+
+    def generate_remedial_sheet_document_use_case(self):
+        return self.render_remedial_sheet_document_use_case()
 
     def get_generated_document_file_use_case(self):
         return GetGeneratedDocumentFileUseCase(

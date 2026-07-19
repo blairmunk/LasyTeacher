@@ -6,8 +6,8 @@ from core_logic.interfaces.work_repo import (
     CreateWorkAnalogGroupParams,
     CreateWorkParams,
 )
-from core_logic.use_cases.generate_remedial_sheet_document import (
-    GenerateRemedialSheetDocumentRequest,
+from core_logic.use_cases.render_remedial_sheet_document import (
+    RenderRemedialSheetDocumentRequest,
 )
 from core_logic.use_cases.render_work_document import RenderWorkDocumentRequest
 from core_logic.use_cases.compose_work_variants import ComposeWorkVariantsRequest
@@ -94,11 +94,14 @@ class WorkFormAdapter:
     def document_generator_type_from_post(self, post_data, default='pdf'):
         return post_data.get('generator_type', default)
 
-    def generate_remedial_sheet_request_from_post(self, post_data, variant_id):
-        return GenerateRemedialSheetDocumentRequest(
+    def render_remedial_sheet_request_from_post(self, post_data, variant_id):
+        return RenderRemedialSheetDocumentRequest(
             variant_id=variant_id,
             options=build_remedial_sheet_generation_options(post_data),
         )
+
+    def generate_remedial_sheet_request_from_post(self, post_data, variant_id):
+        return self.render_remedial_sheet_request_from_post(post_data, variant_id)
 
     def generated_document_file_request(self, file_type, filename):
         return GetGeneratedDocumentFileRequest(

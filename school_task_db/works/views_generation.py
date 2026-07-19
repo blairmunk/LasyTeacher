@@ -121,7 +121,7 @@ def render_remedial_sheet_ajax(request, variant_id):
 
     try:
         document_request = (
-            container.work_form_adapter.generate_remedial_sheet_request_from_post(
+            container.work_form_adapter.render_remedial_sheet_request_from_post(
                 request.POST,
                 variant_id=str(variant_id),
             )
@@ -131,7 +131,7 @@ def render_remedial_sheet_ajax(request, variant_id):
 
         logger.info(f"Генерация remedial sheet для варианта {variant_id}")
 
-        result = container.generate_remedial_sheet_document_use_case().execute(
+        result = container.render_remedial_sheet_document_use_case().execute(
             document_request,
         )
 

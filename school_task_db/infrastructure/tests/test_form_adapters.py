@@ -359,8 +359,8 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertEqual(request.work_id, 'w1')
         self.assertEqual(request.options.generator_type, 'html')
 
-    def test_builds_generate_remedial_sheet_request_from_post(self):
-        request = WorkFormAdapter().generate_remedial_sheet_request_from_post(
+    def test_builds_render_remedial_sheet_request_from_post(self):
+        request = WorkFormAdapter().render_remedial_sheet_request_from_post(
             QueryDict('generator_type=pdf&format=A4&answer_type=with_full_solutions'),
             variant_id='v1',
         )
@@ -369,6 +369,15 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertEqual(request.options.generator_type, 'pdf')
         self.assertEqual(request.options.pdf_format, 'A4')
         self.assertEqual(request.options.answer_type, 'with_full_solutions')
+
+    def test_legacy_generate_remedial_sheet_request_from_post(self):
+        request = WorkFormAdapter().generate_remedial_sheet_request_from_post(
+            QueryDict('generator_type=html'),
+            variant_id='v1',
+        )
+
+        self.assertEqual(request.variant_id, 'v1')
+        self.assertEqual(request.options.generator_type, 'html')
 
     def test_builds_generated_document_file_request(self):
         request = WorkFormAdapter().generated_document_file_request(

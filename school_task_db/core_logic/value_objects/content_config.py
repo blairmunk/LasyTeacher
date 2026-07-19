@@ -22,6 +22,16 @@ FILE_TYPE_LABELS = {
 }
 
 
+@dataclass(frozen=True)
+class RenderTarget:
+    renderer_type: str = 'pdf'
+    page_format: str = 'A4'
+
+    @property
+    def file_type_label(self) -> str:
+        return FILE_TYPE_LABELS[self.renderer_type]
+
+
 @dataclass(frozen=True, init=False)
 class WorkDocumentRenderOptions:
     renderer_type: str = 'pdf'
@@ -54,6 +64,13 @@ class WorkDocumentRenderOptions:
         return self.renderer_type
 
     @property
+    def render_target(self) -> RenderTarget:
+        return RenderTarget(
+            renderer_type=self.renderer_type,
+            page_format=self.pdf_format,
+        )
+
+    @property
     def content_config(self) -> dict:
         return {
             'include_answers': self.answer_type in ANSWER_TYPES_WITH_ANSWERS,
@@ -69,7 +86,7 @@ class WorkDocumentRenderOptions:
 
     @property
     def file_type_label(self) -> str:
-        return FILE_TYPE_LABELS[self.renderer_type]
+        return self.render_target.file_type_label
 
     @property
     def content_description(self) -> str:
@@ -110,6 +127,13 @@ class RemedialSheetDocumentRenderOptions:
     @property
     def generator_type(self) -> str:
         return self.renderer_type
+
+    @property
+    def render_target(self) -> RenderTarget:
+        return RenderTarget(
+            renderer_type=self.renderer_type,
+            page_format=self.pdf_format,
+        )
 
     @property
     def content_config(self) -> dict:

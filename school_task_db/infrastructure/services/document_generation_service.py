@@ -27,7 +27,8 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
 
     def render_work_document(self, work_id: str, options) -> GeneratedDocument:
         work = Work.objects.get(pk=work_id)
-        renderer_type = options.renderer_type
+        render_target = options.render_target
+        renderer_type = render_target.renderer_type
         content_config = options.content_config
 
         if renderer_type == 'latex':
@@ -36,7 +37,7 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
                 file_paths=self._generate_latex_work(
                     work,
                     content_config,
-                    options.pdf_format,
+                    render_target.page_format,
                 ),
             )
         if renderer_type == 'html':
@@ -49,7 +50,7 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
             file_paths=self._generate_pdf_work(
                 work,
                 content_config,
-                options.pdf_format,
+                render_target.page_format,
             ),
         )
 
@@ -63,7 +64,8 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
     ) -> GeneratedDocument:
         variant = Variant.objects.get(pk=variant_id)
         content_config = options.content_config
-        renderer_type = options.renderer_type
+        render_target = options.render_target
+        renderer_type = render_target.renderer_type
 
         if renderer_type == 'latex':
             return self._document_from_paths(
@@ -71,7 +73,7 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
                 file_paths=self._generate_remedial_latex(
                     variant,
                     content_config,
-                    options.pdf_format,
+                    render_target.page_format,
                 ),
             )
         if renderer_type == 'html':
@@ -87,7 +89,7 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
             file_paths=self._generate_remedial_pdf(
                 variant,
                 content_config,
-                options.pdf_format,
+                render_target.page_format,
             ),
         )
 

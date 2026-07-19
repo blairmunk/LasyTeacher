@@ -3,6 +3,7 @@ from unittest import TestCase
 from core_logic.value_objects.content_config import (
     RemedialSheetDocumentRenderOptions,
     RemedialSheetGenerationOptions,
+    RenderTarget,
     WorkDocumentRenderOptions,
     WorkGenerationOptions,
     build_remedial_sheet_generation_options,
@@ -11,6 +12,13 @@ from core_logic.value_objects.content_config import (
 
 
 class DocumentRenderOptionsTests(TestCase):
+    def test_render_target_exposes_file_type_label(self):
+        target = RenderTarget(renderer_type='html', page_format='A5')
+
+        self.assertEqual(target.renderer_type, 'html')
+        self.assertEqual(target.page_format, 'A5')
+        self.assertEqual(target.file_type_label, 'HTML')
+
     def test_builds_default_work_render_options(self):
         options = build_work_generation_options({})
 
@@ -53,6 +61,8 @@ class DocumentRenderOptionsTests(TestCase):
         self.assertEqual(options.generator_type, 'html')
         self.assertEqual(options.renderer_type, 'html')
         self.assertEqual(options.file_type_label, 'HTML')
+        self.assertEqual(options.render_target.renderer_type, 'html')
+        self.assertEqual(options.render_target.page_format, 'A5')
         self.assertEqual(options.pdf_format, 'A5')
         self.assertEqual(
             options.content_description,
@@ -75,6 +85,8 @@ class DocumentRenderOptionsTests(TestCase):
 
         self.assertEqual(options.generator_type, 'pdf')
         self.assertEqual(options.renderer_type, 'pdf')
+        self.assertEqual(options.render_target.renderer_type, 'pdf')
+        self.assertEqual(options.render_target.page_format, 'A4')
         self.assertEqual(options.pdf_format, 'A4')
         self.assertEqual(options.answer_type, 'with_short_solutions')
         self.assertEqual(

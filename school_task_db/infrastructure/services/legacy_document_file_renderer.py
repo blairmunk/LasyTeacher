@@ -86,20 +86,10 @@ class LegacyDocumentFileRenderer:
             str(variant.pk),
         )
 
-        html_content = self.template_renderer('works/remedial_sheet_print.html', {
-            'variant': sheet_data.variant,
-            'student': sheet_data.student,
-            'source_work': sheet_data.source_work,
-            'mark': sheet_data.mark,
-            'original_tasks': sheet_data.original_tasks,
-            'new_tasks': sheet_data.new_tasks,
-            'show_solutions': content_config.get('include_short_solutions', True),
-            'show_full_solutions': content_config.get(
-                'include_full_solutions',
-                False,
-            ),
-            'show_answers': content_config.get('include_answers', False),
-        })
+        html_content = self.template_renderer(
+            'works/remedial_sheet_print.html',
+            self._remedial_template_context(sheet_data, content_config),
+        )
 
         output_dir = Path(self.html_output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -166,3 +156,19 @@ class LegacyDocumentFileRenderer:
             pdf_files.append(str(result))
 
         return pdf_files
+
+    def _remedial_template_context(self, sheet_data, content_config):
+        return {
+            'variant': sheet_data.variant,
+            'student': sheet_data.student,
+            'source_work': sheet_data.source_work,
+            'mark': sheet_data.mark,
+            'original_tasks': sheet_data.original_tasks,
+            'new_tasks': sheet_data.new_tasks,
+            'show_solutions': content_config.get('include_short_solutions', True),
+            'show_full_solutions': content_config.get(
+                'include_full_solutions',
+                False,
+            ),
+            'show_answers': content_config.get('include_answers', False),
+        }

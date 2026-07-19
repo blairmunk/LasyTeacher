@@ -55,18 +55,13 @@ class LegacyDocumentFileRenderer:
                 content_config=content_config,
             )
 
-            pdf_gen = HtmlToPdfGenerator(format=page_format, wait_for_mathjax=True)
-            pdf_files = []
-            output_dir = Path(self.pdf_output_dir)
-            output_dir.mkdir(parents=True, exist_ok=True)
-
-            for html_file in html_files:
-                html_path = Path(html_file)
-                pdf_path = output_dir / (html_path.stem + '.pdf')
-                result = pdf_gen.generate_pdf(html_path, pdf_path)
-                pdf_files.append(str(result))
-
-        return pdf_files
+            return self._render_pdf_files_from_html(
+                html_files=html_files,
+                pdf_generator=HtmlToPdfGenerator(
+                    format=page_format,
+                    wait_for_mathjax=True,
+                ),
+            )
 
     def render_remedial_latex(
         self,
@@ -126,18 +121,13 @@ class LegacyDocumentFileRenderer:
         if not html_files:
             return []
 
-        pdf_gen = HtmlToPdfGenerator(format=page_format, wait_for_mathjax=True)
-        pdf_files = []
-        output_dir = Path(self.pdf_output_dir)
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        for html_file in html_files:
-            html_path = Path(html_file)
-            pdf_path = output_dir / (html_path.stem + '.pdf')
-            result = pdf_gen.generate_pdf(html_path, pdf_path)
-            pdf_files.append(str(result))
-
-        return pdf_files
+        return self._render_pdf_files_from_html(
+            html_files=html_files,
+            pdf_generator=HtmlToPdfGenerator(
+                format=page_format,
+                wait_for_mathjax=True,
+            ),
+        )
 
     def _should_include_answers(self, content_config):
         return (
@@ -163,3 +153,16 @@ class LegacyDocumentFileRenderer:
         if self._should_include_answers(content_config):
             return generator.generate_with_answers(work)
         return generator.generate(work)
+
+    def _render_pdf_files_from_html(self, html_files, pdf_generator):
+        pdf_files = []
+        output_dir = Path(self.pdf_output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        for html_file in html_files:
+            html_path = Path(html_file)
+            pdf_path = output_dir / (html_path.stem + '.pdf')
+            result = pdf_generator.generate_pdf(html_path, pdf_path)
+            pdf_files.append(str(result))
+
+        return pdf_files

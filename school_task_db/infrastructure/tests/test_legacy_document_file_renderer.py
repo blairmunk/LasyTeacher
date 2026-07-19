@@ -127,6 +127,26 @@ class LegacyDocumentFileRendererTests(TestCase):
         self.assertTrue(context['show_full_solutions'])
         self.assertTrue(context['show_answers'])
 
+    def test_render_pdf_files_from_html_uses_configured_output_dir(self):
+        with TemporaryDirectory() as output_dir:
+            renderer = LegacyDocumentFileRenderer(
+                get_remedial_sheet_data_use_case=None,
+                pdf_output_dir=output_dir,
+            )
+            pdf_generator = FakePdfGenerator()
+
+            files = renderer._render_pdf_files_from_html(
+                html_files=['/tmp/work.html'],
+                pdf_generator=pdf_generator,
+            )
+
+            expected_pdf = Path(output_dir) / 'work.pdf'
+            self.assertEqual(files, [str(expected_pdf)])
+            self.assertEqual(
+                pdf_generator.calls,
+                [(Path('/tmp/work.html'), expected_pdf)],
+            )
+
     def _content_config(self, **overrides):
         return {
             'include_answers': False,
@@ -150,3 +170,12 @@ class FakeRemedialSheetDataUseCase:
             original_tasks=['original-task'],
             new_tasks=['new-task'],
         )
+
+
+class FakePdfGenerator:
+    def __init__(self):
+        self.calls = []
+
+    def generate_pdf(self, html_path, pdf_path):
+        self.calls.append((html_path, pdf_path))
+        return pdf_path

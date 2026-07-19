@@ -12,6 +12,9 @@ from core_logic.entities.document_rendering import (
 from core_logic.interfaces.document_rendering_service import (
     IDocumentRenderingService,
 )
+from core_logic.interfaces.document_template_repo import (
+    IDocumentTemplateRepository,
+)
 from core_logic.interfaces.work_repo import IWorkRepository
 from core_logic.value_objects.content_config import (
     SUPPORTED_DOCUMENT_RENDERER_TYPES,
@@ -20,6 +23,7 @@ from core_logic.value_objects.content_config import (
 from core_logic.value_objects.document_render_plan import (
     build_work_document_render_plan,
 )
+from core_logic.value_objects.document_recipes import WORK_DOCUMENT_TYPE
 
 
 SUPPORTED_WORK_RENDERER_TYPES = SUPPORTED_DOCUMENT_RENDERER_TYPES
@@ -37,12 +41,14 @@ class RenderWorkDocumentUseCase:
         self,
         document_rendering_service: IDocumentRenderingService | None = None,
         work_repo: IWorkRepository | None = None,
+        document_template_repo: IDocumentTemplateRepository | None = None,
         document_generation_service: IDocumentRenderingService | None = None,
     ):
         self.document_rendering_service = (
             document_rendering_service or document_generation_service
         )
         self.work_repo = work_repo
+        self.document_template_repo = document_template_repo
 
     def execute(
         self,
@@ -70,7 +76,10 @@ class RenderWorkDocumentUseCase:
                 work_id=request.work_id,
                 work_name=work_name,
                 options=request.options,
-                template_spec=request.template_spec,
+                template_spec=(
+                    request.template_spec
+                    or self._default_template_spec()
+                ),
             ),
         )
         return DocumentRenderResult(
@@ -79,4 +88,11 @@ class RenderWorkDocumentUseCase:
             file_type=document.file_type,
             files=document.files,
             source_name=work_name,
+        )
+
+    def _default_template_spec(self):
+        if self.document_template_repo is None:
+            return None
+        return self.document_template_repo.get_default_template_spec(
+            WORK_DOCUMENT_TYPE,
         )

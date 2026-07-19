@@ -111,6 +111,19 @@ class FakeWorkRepository:
         return self.variant_type
 
 
+class FakeDocumentTemplateRepository:
+    def __init__(self):
+        self.requested_template_types = []
+        self.default_templates = {}
+
+    def list_template_specs(self, template_type=''):
+        return []
+
+    def get_default_template_spec(self, template_type):
+        self.requested_template_types.append(template_type)
+        return self.default_templates.get(template_type)
+
+
 class DocumentRenderingUseCaseTests(TestCase):
     def test_document_generation_result_aliases_document_render_result(self):
         result = DocumentGenerationResult(status='generated', renderer_type='html')
@@ -174,9 +187,16 @@ class DocumentRenderingUseCaseTests(TestCase):
 
     def test_render_work_document_uses_request_template_spec(self):
         service = FakeDocumentRenderingService()
+        template_repo = FakeDocumentTemplateRepository()
+        template_repo.default_templates['work'] = DocumentTemplateSpec(
+            name='Default work',
+            template_type='work',
+            sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
+        )
         use_case = RenderWorkDocumentUseCase(
             document_rendering_service=service,
             work_repo=FakeWorkRepository(),
+            document_template_repo=template_repo,
         )
         template_spec = DocumentTemplateSpec(
             name='Кастомная работа',
@@ -196,11 +216,38 @@ class DocumentRenderingUseCaseTests(TestCase):
         )
 
         self.assertTrue(result.success)
+        self.assertEqual(template_repo.requested_template_types, [])
         render_plan = service.work_request[2]
         self.assertEqual(
             render_plan.recipe.section_types,
             (TASK_LIST_SECTION, ANSWER_KEY_SECTION),
         )
+
+    def test_render_work_document_uses_default_template_spec(self):
+        service = FakeDocumentRenderingService()
+        template_repo = FakeDocumentTemplateRepository()
+        template_repo.default_templates['work'] = DocumentTemplateSpec(
+            name='Default work',
+            template_type='work',
+            sections=[DocumentSectionSpec(section_type=TASK_LIST_SECTION)],
+        )
+        use_case = RenderWorkDocumentUseCase(
+            document_rendering_service=service,
+            work_repo=FakeWorkRepository(),
+            document_template_repo=template_repo,
+        )
+
+        result = use_case.execute(
+            RenderWorkDocumentRequest(
+                work_id='work-1',
+                options=WorkDocumentRenderOptions(renderer_type='html'),
+            )
+        )
+
+        self.assertTrue(result.success)
+        self.assertEqual(template_repo.requested_template_types, ['work'])
+        render_plan = service.work_request[2]
+        self.assertEqual(render_plan.recipe.section_types, (TASK_LIST_SECTION,))
 
     def test_render_work_document_keeps_legacy_service_keyword(self):
         service = FakeDocumentRenderingService()
@@ -295,9 +342,16 @@ class DocumentRenderingUseCaseTests(TestCase):
 
     def test_render_remedial_sheet_document_uses_request_template_spec(self):
         service = FakeDocumentRenderingService()
+        template_repo = FakeDocumentTemplateRepository()
+        template_repo.default_templates['remedial_sheet'] = DocumentTemplateSpec(
+            name='Default remedial',
+            template_type='remedial_sheet',
+            sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
+        )
         use_case = RenderRemedialSheetDocumentUseCase(
             document_rendering_service=service,
             work_repo=FakeWorkRepository(),
+            document_template_repo=template_repo,
         )
         template_spec = DocumentTemplateSpec(
             name='Кастомная работа над ошибками',
@@ -317,11 +371,41 @@ class DocumentRenderingUseCaseTests(TestCase):
         )
 
         self.assertTrue(result.success)
+        self.assertEqual(template_repo.requested_template_types, [])
         render_plan = service.remedial_request[2]
         self.assertEqual(
             render_plan.recipe.section_types,
             (HEADER_SECTION, TASK_LIST_SECTION),
         )
+
+    def test_render_remedial_sheet_document_uses_default_template_spec(self):
+        service = FakeDocumentRenderingService()
+        template_repo = FakeDocumentTemplateRepository()
+        template_repo.default_templates['remedial_sheet'] = DocumentTemplateSpec(
+            name='Default remedial',
+            template_type='remedial_sheet',
+            sections=[DocumentSectionSpec(section_type=TASK_LIST_SECTION)],
+        )
+        use_case = RenderRemedialSheetDocumentUseCase(
+            document_rendering_service=service,
+            work_repo=FakeWorkRepository(),
+            document_template_repo=template_repo,
+        )
+
+        result = use_case.execute(
+            RenderRemedialSheetDocumentRequest(
+                variant_id='variant-1',
+                options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+            )
+        )
+
+        self.assertTrue(result.success)
+        self.assertEqual(
+            template_repo.requested_template_types,
+            ['remedial_sheet'],
+        )
+        render_plan = service.remedial_request[2]
+        self.assertEqual(render_plan.recipe.section_types, (TASK_LIST_SECTION,))
 
     def test_render_remedial_sheet_document_handles_empty_files(self):
         service = FakeDocumentRenderingService()

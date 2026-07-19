@@ -240,10 +240,14 @@ from core_logic.use_cases.toggle_participation_absent import (
 from core_logic.use_cases.validate_task_import_json import (
     ValidateTaskImportJsonUseCase,
 )
-from core_logic.use_cases.validate_review_work_scan import ValidateReviewWorkScanUseCase
+from core_logic.use_cases.validate_review_work_scan import (
+    ValidateReviewWorkScanUseCase,
+)
 from infrastructure.repositories.django_codifier_repo import DjangoCodifierRepository
 from infrastructure.repositories.django_core_repo import DjangoCoreRepository
-from infrastructure.repositories.django_curriculum_repo import DjangoCurriculumRepository
+from infrastructure.repositories.django_curriculum_repo import (
+    DjangoCurriculumRepository,
+)
 from infrastructure.repositories.django_document_template_repo import (
     DjangoDocumentTemplateRepository,
 )
@@ -1012,6 +1016,7 @@ class Container:
         return RenderWorkDocumentUseCase(
             document_rendering_service=self.document_rendering_service,
             work_repo=self.work_repo,
+            document_template_repo=self.document_template_repo,
         )
 
     def generate_work_document_use_case(self):
@@ -1021,6 +1026,7 @@ class Container:
         return RenderRemedialSheetDocumentUseCase(
             document_rendering_service=self.document_rendering_service,
             work_repo=self.work_repo,
+            document_template_repo=self.document_template_repo,
         )
 
     def generate_remedial_sheet_document_use_case(self):

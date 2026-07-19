@@ -87,7 +87,7 @@ class DjangoDocumentEngine(IDocumentEngine):
         if planned_document is not None:
             return planned_document
 
-        work = Work.objects.get(pk=work_id)
+        work = self._get_work_source(work_id)
         return self._render_legacy_work_document(
             work,
             options,
@@ -134,7 +134,7 @@ class DjangoDocumentEngine(IDocumentEngine):
         options,
         render_plan=None,
     ) -> GeneratedDocument:
-        work = Work.objects.get(pk=work_id)
+        work = self._get_work_source(work_id)
         return self.render_work_document(
             work_id=str(work.pk),
             options=options,
@@ -155,7 +155,7 @@ class DjangoDocumentEngine(IDocumentEngine):
         if planned_document is not None:
             return planned_document
 
-        variant = Variant.objects.get(pk=variant_id)
+        variant = self._get_remedial_source(variant_id)
         return self._render_legacy_remedial_sheet_document(
             variant,
             options,
@@ -202,7 +202,7 @@ class DjangoDocumentEngine(IDocumentEngine):
         options,
         render_plan=None,
     ) -> GeneratedDocument:
-        variant = Variant.objects.get(pk=variant_id)
+        variant = self._get_remedial_source(variant_id)
         return self.render_remedial_sheet_document(
             variant_id=str(variant.pk),
             options=options,

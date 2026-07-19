@@ -4,6 +4,8 @@ from core_logic.entities.document import (
     Document,
     DocumentRecipe,
     DocumentSourceRef,
+    REMEDIAL_VARIANT_SOURCE_TYPE,
+    WORK_SOURCE_TYPE,
 )
 from core_logic.value_objects.content_config import (
     RemedialSheetDocumentRenderOptions,
@@ -60,7 +62,7 @@ class DocumentRenderPlanTests(TestCase):
             ),
         )
 
-        self.assertEqual(plan.source.source_type, 'work')
+        self.assertEqual(plan.source.source_type, WORK_SOURCE_TYPE)
         self.assertEqual(plan.source.source_id, 'work-1')
         self.assertEqual(plan.source.title, 'Контрольная')
         self.assertEqual(plan.render_target.renderer_type, 'html')
@@ -78,7 +80,10 @@ class DocumentRenderPlanTests(TestCase):
             ),
         )
 
-        self.assertEqual(plan.source.source_type, 'remedial_variant')
+        self.assertEqual(
+            plan.source.source_type,
+            REMEDIAL_VARIANT_SOURCE_TYPE,
+        )
         self.assertEqual(plan.source.source_id, 'variant-1')
         self.assertEqual(plan.render_target.renderer_type, 'pdf')
         self.assertEqual(

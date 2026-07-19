@@ -1,6 +1,10 @@
 """Factories for infrastructure document renderer registries."""
 
 from core_logic.services.document_renderer_registry import DocumentRendererRegistry
+from core_logic.value_objects.document_recipes import (
+    REMEDIAL_SHEET_DOCUMENT_TYPE,
+    WORK_DOCUMENT_TYPE,
+)
 from infrastructure.services.document_renderers import LegacyDocumentRenderer
 from works.models import Variant, Work
 
@@ -52,7 +56,7 @@ def _register_work_renderers(
                 ),
             document_from_paths=document_from_paths,
         ),
-        document_type='work',
+        document_type=WORK_DOCUMENT_TYPE,
     )
     registry.register(
         'html',
@@ -63,7 +67,7 @@ def _register_work_renderers(
                 generate_html_work(work, content_config),
             document_from_paths=document_from_paths,
         ),
-        document_type='work',
+        document_type=WORK_DOCUMENT_TYPE,
     )
     registry.register(
         'pdf',
@@ -78,7 +82,7 @@ def _register_work_renderers(
                 ),
             document_from_paths=document_from_paths,
         ),
-        document_type='work',
+        document_type=WORK_DOCUMENT_TYPE,
     )
 
 
@@ -102,7 +106,7 @@ def _register_remedial_sheet_renderers(
                 ),
             document_from_paths=document_from_paths,
         ),
-        document_type='remedial_sheet',
+        document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
     )
     registry.register(
         'html',
@@ -113,7 +117,7 @@ def _register_remedial_sheet_renderers(
                 generate_remedial_html(variant, content_config),
             document_from_paths=document_from_paths,
         ),
-        document_type='remedial_sheet',
+        document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
     )
     registry.register(
         'pdf',
@@ -128,5 +132,5 @@ def _register_remedial_sheet_renderers(
                 ),
             document_from_paths=document_from_paths,
         ),
-        document_type='remedial_sheet',
+        document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
     )

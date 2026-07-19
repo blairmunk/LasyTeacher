@@ -4,6 +4,10 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping, Tuple
 
 
+WORK_SOURCE_TYPE = 'work'
+REMEDIAL_VARIANT_SOURCE_TYPE = 'remedial_variant'
+
+
 @dataclass(frozen=True)
 class DocumentSourceRef:
     source_type: str

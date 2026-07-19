@@ -4,6 +4,8 @@ from core_logic.entities.document import (
     Document,
     DocumentRecipe,
     DocumentSourceRef,
+    REMEDIAL_VARIANT_SOURCE_TYPE,
+    WORK_SOURCE_TYPE,
 )
 from core_logic.entities.document_generation import GeneratedDocument
 from core.models import ImportLog
@@ -168,7 +170,7 @@ class DjangoDocumentGenerationServiceTests(TestCase):
 
         source, recipe = builder.request
         self.assertEqual(result.file_type, 'html')
-        self.assertEqual(source.source_type, 'work')
+        self.assertEqual(source.source_type, WORK_SOURCE_TYPE)
         self.assertEqual(source.source_id, str(work.pk))
         self.assertEqual(source.title, 'Контрольная')
         self.assertEqual(recipe.document_type, 'work')
@@ -195,7 +197,7 @@ class DjangoDocumentGenerationServiceTests(TestCase):
 
         source, recipe = builder.request
         self.assertEqual(result.file_type, 'pdf')
-        self.assertEqual(source.source_type, 'remedial_variant')
+        self.assertEqual(source.source_type, REMEDIAL_VARIANT_SOURCE_TYPE)
         self.assertEqual(source.source_id, str(variant.pk))
         self.assertEqual(recipe.document_type, 'remedial_sheet')
 

@@ -6,6 +6,8 @@ from core_logic.entities.document import (
     Document,
     DocumentRecipe,
     DocumentSourceRef,
+    REMEDIAL_VARIANT_SOURCE_TYPE,
+    WORK_SOURCE_TYPE,
 )
 from core_logic.value_objects.content_config import (
     RemedialSheetDocumentRenderOptions,
@@ -38,7 +40,7 @@ def build_work_document_render_plan(
 ) -> DocumentRenderPlan:
     return DocumentRenderPlan(
         source=DocumentSourceRef(
-            source_type='work',
+            source_type=WORK_SOURCE_TYPE,
             source_id=work_id,
             title=work_name,
         ),
@@ -53,7 +55,7 @@ def build_remedial_sheet_document_render_plan(
 ) -> DocumentRenderPlan:
     return DocumentRenderPlan(
         source=DocumentSourceRef(
-            source_type='remedial_variant',
+            source_type=REMEDIAL_VARIANT_SOURCE_TYPE,
             source_id=variant_id,
         ),
         recipe=build_remedial_sheet_document_recipe(options.build_options),

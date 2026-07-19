@@ -32,6 +32,12 @@ from core_logic.value_objects.content_config import (
     WorkDocumentRenderOptions,
     WorkGenerationOptions,
 )
+from core_logic.value_objects.document_recipes import (
+    ANSWERS_SECTION,
+    HEADER_SECTION,
+    SHORT_SOLUTIONS_SECTION,
+    TASK_VARIANTS_SECTION,
+)
 
 
 class FakeDocumentGenerationService:
@@ -56,15 +62,15 @@ class FakeDocumentGenerationService:
             ),
         )
 
-    def render_work_document(self, work_id, options):
-        self.work_request = (work_id, options)
+    def render_work_document(self, work_id, options, recipe=None):
+        self.work_request = (work_id, options, recipe)
         return self.work_document
 
     def generate_work(self, work_id, options):
         return self.render_work_document(work_id, options)
 
-    def render_remedial_sheet_document(self, variant_id, options):
-        self.remedial_request = (variant_id, options)
+    def render_remedial_sheet_document(self, variant_id, options, recipe=None):
+        self.remedial_request = (variant_id, options, recipe)
         return self.remedial_document
 
     def generate_remedial_sheet(self, variant_id, options):
@@ -134,7 +140,13 @@ class DocumentGenerationUseCaseTests(TestCase):
         self.assertEqual(result.files[0].size_kb, 1.0)
         self.assertEqual(result.source_name, 'Контрольная')
         self.assertEqual(work_repo.work_name_request, 'work-1')
-        self.assertEqual(service.work_request, ('work-1', options))
+        work_id, used_options, recipe = service.work_request
+        self.assertEqual(work_id, 'work-1')
+        self.assertEqual(used_options, options)
+        self.assertEqual(
+            recipe.section_types,
+            (HEADER_SECTION, TASK_VARIANTS_SECTION),
+        )
 
     def test_render_work_document_handles_missing_work(self):
         service = FakeDocumentGenerationService()
@@ -193,7 +205,19 @@ class DocumentGenerationUseCaseTests(TestCase):
         self.assertEqual(result.files[0].filename, 'remedial.pdf')
         self.assertEqual(result.files[0].size_kb, 2.0)
         self.assertEqual(work_repo.variant_type_request, 'variant-1')
-        self.assertEqual(service.remedial_request, ('variant-1', options))
+        variant_id, used_options, recipe = service.remedial_request
+        self.assertEqual(variant_id, 'variant-1')
+        self.assertEqual(used_options, options)
+        self.assertEqual(
+            recipe.section_types,
+            (
+                HEADER_SECTION,
+                'original_mistakes',
+                'training_tasks',
+                ANSWERS_SECTION,
+                SHORT_SOLUTIONS_SECTION,
+            ),
+        )
 
     def test_render_remedial_sheet_document_handles_empty_files(self):
         service = FakeDocumentGenerationService()

@@ -6,6 +6,9 @@ from core_logic.entities.document_generation import DocumentGenerationResult
 from core_logic.interfaces.document_generation import IDocumentGenerationService
 from core_logic.interfaces.work_repo import IWorkRepository
 from core_logic.value_objects.content_config import RemedialSheetDocumentRenderOptions
+from core_logic.value_objects.document_recipes import (
+    build_remedial_sheet_document_recipe,
+)
 
 
 SUPPORTED_REMEDIAL_SHEET_RENDERER_TYPES = {'latex', 'html', 'pdf'}
@@ -53,6 +56,7 @@ class RenderRemedialSheetDocumentUseCase:
         document = self.document_generation_service.render_remedial_sheet_document(
             request.variant_id,
             request.options,
+            build_remedial_sheet_document_recipe(request.options.build_options),
         )
         status = 'generated' if document.files else 'empty'
         return DocumentGenerationResult(

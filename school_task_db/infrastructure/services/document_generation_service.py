@@ -25,7 +25,12 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
     def __init__(self, get_remedial_sheet_data_use_case):
         self.get_remedial_sheet_data_use_case = get_remedial_sheet_data_use_case
 
-    def render_work_document(self, work_id: str, options) -> GeneratedDocument:
+    def render_work_document(
+        self,
+        work_id: str,
+        options,
+        recipe=None,
+    ) -> GeneratedDocument:
         work = Work.objects.get(pk=work_id)
         render_target = options.render_target
         renderer_type = render_target.renderer_type
@@ -61,6 +66,7 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         self,
         variant_id: str,
         options,
+        recipe=None,
     ) -> GeneratedDocument:
         variant = Variant.objects.get(pk=variant_id)
         content_config = options.content_config

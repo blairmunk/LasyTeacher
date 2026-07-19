@@ -1,10 +1,48 @@
 from django.test import TestCase
 
+from core_logic.entities.document import DocumentRecipe, DocumentSourceRef
 from core.models import ImportLog
 from core_logic.entities.task_import import TaskImportPreviewRequest, TaskImportRequest
+from core_logic.value_objects.content_config import (
+    RenderTarget,
+    WorkDocumentRenderOptions,
+)
+from core_logic.value_objects.document_render_plan import DocumentRenderPlan
 from curriculum.models import Topic
+from infrastructure.services.document_generation_service import (
+    DjangoDocumentGenerationService,
+)
 from infrastructure.services.task_import_service import DjangoTaskImportService
 from tasks.models import Task
+
+
+class DjangoDocumentGenerationServiceTests(TestCase):
+    def test_resolve_render_target_prefers_render_plan(self):
+        service = DjangoDocumentGenerationService(
+            get_remedial_sheet_data_use_case=None,
+        )
+        options = WorkDocumentRenderOptions(renderer_type='pdf')
+        plan = DocumentRenderPlan(
+            source=DocumentSourceRef(source_type='work', source_id='work-1'),
+            recipe=DocumentRecipe(document_type='work'),
+            render_target=RenderTarget(renderer_type='html', page_format='A5'),
+        )
+
+        target = service._resolve_render_target(options, plan)
+
+        self.assertEqual(target.renderer_type, 'html')
+        self.assertEqual(target.page_format, 'A5')
+
+    def test_resolve_render_target_falls_back_to_legacy_options(self):
+        service = DjangoDocumentGenerationService(
+            get_remedial_sheet_data_use_case=None,
+        )
+        options = WorkDocumentRenderOptions(renderer_type='latex')
+
+        target = service._resolve_render_target(options)
+
+        self.assertEqual(target.renderer_type, 'latex')
+        self.assertEqual(target.page_format, 'A4')
 
 
 class DjangoTaskImportServiceTests(TestCase):

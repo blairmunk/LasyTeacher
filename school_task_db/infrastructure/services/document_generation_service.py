@@ -32,7 +32,7 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         render_plan=None,
     ) -> GeneratedDocument:
         work = Work.objects.get(pk=work_id)
-        render_target = options.render_target
+        render_target = self._resolve_render_target(options, render_plan)
         renderer_type = render_target.renderer_type
         content_config = options.content_config
 
@@ -70,7 +70,7 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
     ) -> GeneratedDocument:
         variant = Variant.objects.get(pk=variant_id)
         content_config = options.content_config
-        render_target = options.render_target
+        render_target = self._resolve_render_target(options, render_plan)
         renderer_type = render_target.renderer_type
 
         if renderer_type == 'latex':
@@ -148,6 +148,11 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
                 )
 
         return GeneratedDocument(file_type=file_type, files=files)
+
+    def _resolve_render_target(self, options, render_plan=None):
+        if render_plan is not None:
+            return render_plan.render_target
+        return options.render_target
 
     def _generate_latex_work(self, work, content_config, pdf_format='A4'):
         from latex_generator.generators.work_generator import WorkLatexGenerator

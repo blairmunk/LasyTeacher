@@ -32,43 +32,11 @@ class RenderTarget:
         return FILE_TYPE_LABELS[self.renderer_type]
 
 
-@dataclass(frozen=True, init=False)
-class WorkDocumentRenderOptions:
-    renderer_type: str = 'pdf'
-    pdf_format: str = 'A4'
+@dataclass(frozen=True)
+class WorkDocumentBuildOptions:
     answer_type: str = 'tasks_only'
     include_hints: bool = False
     include_instructions: bool = False
-
-    def __init__(
-        self,
-        renderer_type: Optional[str] = None,
-        pdf_format: str = 'A4',
-        answer_type: str = 'tasks_only',
-        include_hints: bool = False,
-        include_instructions: bool = False,
-        generator_type: Optional[str] = None,
-    ):
-        object.__setattr__(
-            self,
-            'renderer_type',
-            renderer_type or generator_type or 'pdf',
-        )
-        object.__setattr__(self, 'pdf_format', pdf_format)
-        object.__setattr__(self, 'answer_type', answer_type)
-        object.__setattr__(self, 'include_hints', include_hints)
-        object.__setattr__(self, 'include_instructions', include_instructions)
-
-    @property
-    def generator_type(self) -> str:
-        return self.renderer_type
-
-    @property
-    def render_target(self) -> RenderTarget:
-        return RenderTarget(
-            renderer_type=self.renderer_type,
-            page_format=self.pdf_format,
-        )
 
     @property
     def content_config(self) -> dict:
@@ -85,10 +53,6 @@ class WorkDocumentRenderOptions:
         }
 
     @property
-    def file_type_label(self) -> str:
-        return self.render_target.file_type_label
-
-    @property
     def content_description(self) -> str:
         base_description = CONTENT_DESCRIPTIONS[self.answer_type]
         additional_content = []
@@ -103,37 +67,9 @@ class WorkDocumentRenderOptions:
         return f"{base_description} + {' + '.join(additional_content)}"
 
 
-@dataclass(frozen=True, init=False)
-class RemedialSheetDocumentRenderOptions:
-    renderer_type: str = 'pdf'
-    pdf_format: str = 'A4'
+@dataclass(frozen=True)
+class RemedialSheetBuildOptions:
     answer_type: str = 'with_short_solutions'
-
-    def __init__(
-        self,
-        renderer_type: Optional[str] = None,
-        pdf_format: str = 'A4',
-        answer_type: str = 'with_short_solutions',
-        generator_type: Optional[str] = None,
-    ):
-        object.__setattr__(
-            self,
-            'renderer_type',
-            renderer_type or generator_type or 'pdf',
-        )
-        object.__setattr__(self, 'pdf_format', pdf_format)
-        object.__setattr__(self, 'answer_type', answer_type)
-
-    @property
-    def generator_type(self) -> str:
-        return self.renderer_type
-
-    @property
-    def render_target(self) -> RenderTarget:
-        return RenderTarget(
-            renderer_type=self.renderer_type,
-            page_format=self.pdf_format,
-        )
 
     @property
     def content_config(self) -> dict:
@@ -144,6 +80,128 @@ class RemedialSheetDocumentRenderOptions:
                 'with_full_solutions',
             },
             'include_full_solutions': self.answer_type == 'with_full_solutions',
+        }
+
+
+@dataclass(frozen=True, init=False)
+class WorkDocumentRenderOptions:
+    render_target: RenderTarget
+    build_options: WorkDocumentBuildOptions
+
+    def __init__(
+        self,
+        renderer_type: Optional[str] = None,
+        pdf_format: str = 'A4',
+        answer_type: str = 'tasks_only',
+        include_hints: bool = False,
+        include_instructions: bool = False,
+        render_target: Optional[RenderTarget] = None,
+        build_options: Optional[WorkDocumentBuildOptions] = None,
+        generator_type: Optional[str] = None,
+    ):
+        object.__setattr__(
+            self,
+            'render_target',
+            render_target or RenderTarget(
+                renderer_type=renderer_type or generator_type or 'pdf',
+                page_format=pdf_format,
+            ),
+        )
+        object.__setattr__(
+            self,
+            'build_options',
+            build_options or WorkDocumentBuildOptions(
+                answer_type=answer_type,
+                include_hints=include_hints,
+                include_instructions=include_instructions,
+            ),
+        )
+
+    @property
+    def renderer_type(self) -> str:
+        return self.render_target.renderer_type
+
+    @property
+    def pdf_format(self) -> str:
+        return self.render_target.page_format
+
+    @property
+    def generator_type(self) -> str:
+        return self.renderer_type
+
+    @property
+    def answer_type(self) -> str:
+        return self.build_options.answer_type
+
+    @property
+    def include_hints(self) -> bool:
+        return self.build_options.include_hints
+
+    @property
+    def include_instructions(self) -> bool:
+        return self.build_options.include_instructions
+
+    @property
+    def content_config(self) -> dict:
+        return self.build_options.content_config
+
+    @property
+    def file_type_label(self) -> str:
+        return self.render_target.file_type_label
+
+    @property
+    def content_description(self) -> str:
+        return self.build_options.content_description
+
+
+@dataclass(frozen=True, init=False)
+class RemedialSheetDocumentRenderOptions:
+    render_target: RenderTarget
+    build_options: RemedialSheetBuildOptions
+
+    def __init__(
+        self,
+        renderer_type: Optional[str] = None,
+        pdf_format: str = 'A4',
+        answer_type: str = 'with_short_solutions',
+        render_target: Optional[RenderTarget] = None,
+        build_options: Optional[RemedialSheetBuildOptions] = None,
+        generator_type: Optional[str] = None,
+    ):
+        object.__setattr__(
+            self,
+            'render_target',
+            render_target or RenderTarget(
+                renderer_type=renderer_type or generator_type or 'pdf',
+                page_format=pdf_format,
+            ),
+        )
+        object.__setattr__(
+            self,
+            'build_options',
+            build_options or RemedialSheetBuildOptions(answer_type=answer_type),
+        )
+
+    @property
+    def renderer_type(self) -> str:
+        return self.render_target.renderer_type
+
+    @property
+    def pdf_format(self) -> str:
+        return self.render_target.page_format
+
+    @property
+    def generator_type(self) -> str:
+        return self.renderer_type
+
+    @property
+    def answer_type(self) -> str:
+        return self.build_options.answer_type
+
+    @property
+    def content_config(self) -> dict:
+        return {
+            **self.build_options.content_config,
             'page_format': self.pdf_format,
         }
 

@@ -2,8 +2,10 @@ from unittest import TestCase
 
 from core_logic.value_objects.content_config import (
     RemedialSheetDocumentRenderOptions,
+    RemedialSheetBuildOptions,
     RemedialSheetGenerationOptions,
     RenderTarget,
+    WorkDocumentBuildOptions,
     WorkDocumentRenderOptions,
     WorkGenerationOptions,
     build_remedial_sheet_generation_options,
@@ -38,6 +40,22 @@ class DocumentRenderOptionsTests(TestCase):
                 'include_instructions': False,
             },
         )
+
+    def test_work_render_options_can_wrap_target_and_build_options(self):
+        options = WorkDocumentRenderOptions(
+            render_target=RenderTarget(renderer_type='html', page_format='A5'),
+            build_options=WorkDocumentBuildOptions(
+                answer_type='with_answers',
+                include_hints=True,
+            ),
+        )
+
+        self.assertEqual(options.renderer_type, 'html')
+        self.assertEqual(options.pdf_format, 'A5')
+        self.assertEqual(options.answer_type, 'with_answers')
+        self.assertTrue(options.include_hints)
+        self.assertFalse(options.include_instructions)
+        self.assertEqual(options.content_description, 'с ответами + подсказки')
 
     def test_supports_legacy_with_answers_flag(self):
         options = build_work_generation_options({
@@ -96,6 +114,27 @@ class DocumentRenderOptionsTests(TestCase):
                 'include_short_solutions': True,
                 'include_full_solutions': False,
                 'page_format': 'A4',
+            },
+        )
+
+    def test_remedial_sheet_render_options_can_wrap_target_and_build_options(self):
+        options = RemedialSheetDocumentRenderOptions(
+            render_target=RenderTarget(renderer_type='latex', page_format='A5'),
+            build_options=RemedialSheetBuildOptions(
+                answer_type='with_full_solutions',
+            ),
+        )
+
+        self.assertEqual(options.renderer_type, 'latex')
+        self.assertEqual(options.pdf_format, 'A5')
+        self.assertEqual(options.answer_type, 'with_full_solutions')
+        self.assertEqual(
+            options.content_config,
+            {
+                'include_answers': True,
+                'include_short_solutions': True,
+                'include_full_solutions': True,
+                'page_format': 'A5',
             },
         )
 

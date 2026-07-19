@@ -2,6 +2,10 @@
 
 from unittest import TestCase
 
+from core_logic.entities.document import (
+    DocumentSectionSpec,
+    DocumentTemplateSpec,
+)
 from core_logic.entities.document_rendering import (
     DocumentGenerationResult,
     DocumentRenderResult,
@@ -37,9 +41,11 @@ from core_logic.value_objects.content_config import (
     WorkGenerationOptions,
 )
 from core_logic.value_objects.document_recipes import (
+    ANSWER_KEY_SECTION,
     ANSWERS_SECTION,
     HEADER_SECTION,
     SHORT_SOLUTIONS_SECTION,
+    TASK_LIST_SECTION,
     TASK_VARIANTS_SECTION,
 )
 
@@ -166,6 +172,36 @@ class DocumentRenderingUseCaseTests(TestCase):
             (HEADER_SECTION, TASK_VARIANTS_SECTION),
         )
 
+    def test_render_work_document_uses_request_template_spec(self):
+        service = FakeDocumentRenderingService()
+        use_case = RenderWorkDocumentUseCase(
+            document_rendering_service=service,
+            work_repo=FakeWorkRepository(),
+        )
+        template_spec = DocumentTemplateSpec(
+            name='Кастомная работа',
+            template_type='work',
+            sections=[
+                DocumentSectionSpec(section_type=TASK_LIST_SECTION),
+                DocumentSectionSpec(section_type=ANSWER_KEY_SECTION),
+            ],
+        )
+
+        result = use_case.execute(
+            RenderWorkDocumentRequest(
+                work_id='work-1',
+                options=WorkDocumentRenderOptions(renderer_type='html'),
+                template_spec=template_spec,
+            )
+        )
+
+        self.assertTrue(result.success)
+        render_plan = service.work_request[2]
+        self.assertEqual(
+            render_plan.recipe.section_types,
+            (TASK_LIST_SECTION, ANSWER_KEY_SECTION),
+        )
+
     def test_render_work_document_keeps_legacy_service_keyword(self):
         service = FakeDocumentRenderingService()
         use_case = RenderWorkDocumentUseCase(
@@ -255,6 +291,36 @@ class DocumentRenderingUseCaseTests(TestCase):
                 ANSWERS_SECTION,
                 SHORT_SOLUTIONS_SECTION,
             ),
+        )
+
+    def test_render_remedial_sheet_document_uses_request_template_spec(self):
+        service = FakeDocumentRenderingService()
+        use_case = RenderRemedialSheetDocumentUseCase(
+            document_rendering_service=service,
+            work_repo=FakeWorkRepository(),
+        )
+        template_spec = DocumentTemplateSpec(
+            name='Кастомная работа над ошибками',
+            template_type='remedial_sheet',
+            sections=[
+                DocumentSectionSpec(section_type=HEADER_SECTION),
+                DocumentSectionSpec(section_type=TASK_LIST_SECTION),
+            ],
+        )
+
+        result = use_case.execute(
+            RenderRemedialSheetDocumentRequest(
+                variant_id='variant-1',
+                options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+                template_spec=template_spec,
+            )
+        )
+
+        self.assertTrue(result.success)
+        render_plan = service.remedial_request[2]
+        self.assertEqual(
+            render_plan.recipe.section_types,
+            (HEADER_SECTION, TASK_LIST_SECTION),
         )
 
     def test_render_remedial_sheet_document_handles_empty_files(self):

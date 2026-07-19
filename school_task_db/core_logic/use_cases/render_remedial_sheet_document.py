@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+from core_logic.entities.document import DocumentTemplateSpec
 from core_logic.entities.document_rendering import (
     DOCUMENT_RENDER_STATUS_EMPTY,
     DOCUMENT_RENDER_STATUS_GENERATED,
@@ -30,6 +31,7 @@ SUPPORTED_REMEDIAL_SHEET_RENDERER_TYPES = SUPPORTED_DOCUMENT_RENDERER_TYPES
 class RenderRemedialSheetDocumentRequest:
     variant_id: str
     options: RemedialSheetDocumentRenderOptions
+    template_spec: DocumentTemplateSpec | None = None
 
 
 class RenderRemedialSheetDocumentUseCase:
@@ -74,6 +76,7 @@ class RenderRemedialSheetDocumentUseCase:
             build_remedial_sheet_document_render_plan(
                 variant_id=request.variant_id,
                 options=request.options,
+                template_spec=request.template_spec,
             ),
         )
         status = (

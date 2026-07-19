@@ -4,6 +4,8 @@ from core_logic.entities.document import (
     Document,
     DocumentRecipe,
     DocumentSourceRef,
+    DocumentSectionSpec,
+    DocumentTemplateSpec,
     REMEDIAL_VARIANT_SOURCE_TYPE,
     WORK_SOURCE_TYPE,
 )
@@ -17,6 +19,11 @@ from core_logic.value_objects.document_render_plan import (
     DocumentRenderRequest,
     build_remedial_sheet_document_render_plan,
     build_work_document_render_plan,
+)
+from core_logic.value_objects.document_recipes import (
+    ANSWER_KEY_SECTION,
+    HEADER_SECTION,
+    TASK_LIST_SECTION,
 )
 
 
@@ -71,6 +78,36 @@ class DocumentRenderPlanTests(TestCase):
             ('header', 'task_variants', 'answers'),
         )
 
+    def test_build_work_document_render_plan_uses_template_spec(self):
+        template_spec = DocumentTemplateSpec(
+            name='Рабочий лист',
+            template_type='work',
+            sections=[
+                DocumentSectionSpec(
+                    section_type=TASK_LIST_SECTION,
+                    options={'source': 'new_tasks'},
+                ),
+                DocumentSectionSpec(section_type=ANSWER_KEY_SECTION),
+            ],
+        )
+
+        plan = build_work_document_render_plan(
+            work_id='work-1',
+            work_name='Контрольная',
+            options=WorkDocumentRenderOptions(renderer_type='html'),
+            template_spec=template_spec,
+        )
+
+        self.assertEqual(plan.recipe.document_type, 'work')
+        self.assertEqual(
+            plan.recipe.section_types,
+            (TASK_LIST_SECTION, ANSWER_KEY_SECTION),
+        )
+        self.assertEqual(
+            plan.recipe.sections[0].options,
+            {'source': 'new_tasks'},
+        )
+
     def test_build_remedial_sheet_document_render_plan(self):
         plan = build_remedial_sheet_document_render_plan(
             variant_id='variant-1',
@@ -96,4 +133,26 @@ class DocumentRenderPlanTests(TestCase):
                 'short_solutions',
                 'full_solutions',
             ),
+        )
+
+    def test_build_remedial_sheet_document_render_plan_uses_template_spec(self):
+        template_spec = DocumentTemplateSpec(
+            name='Кастомная работа над ошибками',
+            template_type='remedial_sheet',
+            sections=[
+                DocumentSectionSpec(section_type=HEADER_SECTION),
+                DocumentSectionSpec(section_type=TASK_LIST_SECTION),
+            ],
+        )
+
+        plan = build_remedial_sheet_document_render_plan(
+            variant_id='variant-1',
+            options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+            template_spec=template_spec,
+        )
+
+        self.assertEqual(plan.recipe.document_type, 'remedial_sheet')
+        self.assertEqual(
+            plan.recipe.section_types,
+            (HEADER_SECTION, TASK_LIST_SECTION),
         )

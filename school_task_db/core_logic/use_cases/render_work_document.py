@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+from core_logic.entities.document import DocumentTemplateSpec
 from core_logic.entities.document_rendering import (
     DOCUMENT_RENDER_STATUS_GENERATED,
     DOCUMENT_RENDER_STATUS_NOT_FOUND,
@@ -28,6 +29,7 @@ SUPPORTED_WORK_RENDERER_TYPES = SUPPORTED_DOCUMENT_RENDERER_TYPES
 class RenderWorkDocumentRequest:
     work_id: str
     options: WorkDocumentRenderOptions
+    template_spec: DocumentTemplateSpec | None = None
 
 
 class RenderWorkDocumentUseCase:
@@ -68,6 +70,7 @@ class RenderWorkDocumentUseCase:
                 work_id=request.work_id,
                 work_name=work_name,
                 options=request.options,
+                template_spec=request.template_spec,
             ),
         )
         return DocumentRenderResult(

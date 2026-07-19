@@ -1,6 +1,11 @@
 from django.test import TestCase
 
-from core_logic.entities.document import DocumentRecipe, DocumentSourceRef
+from core_logic.entities.document import (
+    Document,
+    DocumentRecipe,
+    DocumentSourceRef,
+)
+from core_logic.entities.document_generation import GeneratedDocument
 from core.models import ImportLog
 from core_logic.entities.task_import import TaskImportPreviewRequest, TaskImportRequest
 from core_logic.value_objects.content_config import (
@@ -17,12 +22,22 @@ from tasks.models import Task
 
 
 class FakeDocumentBuilder:
-    def __init__(self):
+    def __init__(self, document='document'):
         self.request = None
+        self.document = document
 
     def build(self, source, recipe):
         self.request = (source, recipe)
-        return 'document'
+        return self.document
+
+
+class FakeDocumentRendererRegistry:
+    def __init__(self):
+        self.request = None
+
+    def render(self, request):
+        self.request = request
+        return GeneratedDocument(file_type=request.render_target.renderer_type)
 
 
 class DjangoDocumentGenerationServiceTests(TestCase):
@@ -78,6 +93,32 @@ class DjangoDocumentGenerationServiceTests(TestCase):
         )
 
         self.assertIsNone(service._build_document())
+
+    def test_render_work_document_uses_document_renderer_registry(self):
+        document = Document(title='Контрольная', document_type='work')
+        builder = FakeDocumentBuilder(document=document)
+        registry = FakeDocumentRendererRegistry()
+        service = DjangoDocumentGenerationService(
+            get_remedial_sheet_data_use_case=None,
+            document_builder=builder,
+            document_renderer_registry=registry,
+        )
+        options = WorkDocumentRenderOptions(renderer_type='html')
+        plan = DocumentRenderPlan(
+            source=DocumentSourceRef(source_type='work', source_id='missing'),
+            recipe=DocumentRecipe(document_type='work'),
+            render_target=RenderTarget(renderer_type='html'),
+        )
+
+        result = service.render_work_document(
+            work_id='missing',
+            options=options,
+            render_plan=plan,
+        )
+
+        self.assertEqual(result.file_type, 'html')
+        self.assertEqual(registry.request.document, document)
+        self.assertEqual(registry.request.render_target.renderer_type, 'html')
 
 
 class DjangoTaskImportServiceTests(TestCase):

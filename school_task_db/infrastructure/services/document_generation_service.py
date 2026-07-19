@@ -13,6 +13,9 @@ from core_logic.entities.document_generation import (
 )
 from core_logic.interfaces.document_generation import IDocumentGenerationService
 from core_logic.services.document_builder import RecipeDocumentBuilder
+from core_logic.services.document_renderer_registry import DocumentRendererRegistry
+from core_logic.value_objects.document_render_plan import DocumentRenderRequest
+from infrastructure.services.document_renderers import LegacyDocumentRenderer
 from works.models import Variant, Work
 
 
@@ -23,9 +26,18 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         'pdf': 'web_pdf_output',
     }
 
-    def __init__(self, get_remedial_sheet_data_use_case, document_builder=None):
+    def __init__(
+        self,
+        get_remedial_sheet_data_use_case,
+        document_builder=None,
+        document_renderer_registry=None,
+    ):
         self.get_remedial_sheet_data_use_case = get_remedial_sheet_data_use_case
         self.document_builder = document_builder or RecipeDocumentBuilder()
+        self.document_renderer_registry = (
+            document_renderer_registry
+            or self._build_legacy_renderer_registry()
+        )
 
     def render_work_document(
         self,
@@ -33,9 +45,17 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         options,
         render_plan=None,
     ) -> GeneratedDocument:
-        work = Work.objects.get(pk=work_id)
-        self._build_document(render_plan)
         render_target = self._resolve_render_target(options, render_plan)
+        document = self._build_document(render_plan)
+        if document is not None:
+            return self.document_renderer_registry.render(
+                DocumentRenderRequest(
+                    document=document,
+                    render_target=render_target,
+                )
+            )
+
+        work = Work.objects.get(pk=work_id)
         renderer_type = render_target.renderer_type
         content_config = options.content_config
 
@@ -71,10 +91,18 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         options,
         render_plan=None,
     ) -> GeneratedDocument:
-        variant = Variant.objects.get(pk=variant_id)
-        self._build_document(render_plan)
-        content_config = options.content_config
         render_target = self._resolve_render_target(options, render_plan)
+        document = self._build_document(render_plan)
+        if document is not None:
+            return self.document_renderer_registry.render(
+                DocumentRenderRequest(
+                    document=document,
+                    render_target=render_target,
+                )
+            )
+
+        variant = Variant.objects.get(pk=variant_id)
+        content_config = options.content_config
         renderer_type = render_target.renderer_type
 
         if renderer_type == 'latex':
@@ -165,6 +193,92 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
             render_plan.source,
             render_plan.recipe,
         )
+
+    def _build_legacy_renderer_registry(self):
+        registry = DocumentRendererRegistry()
+        registry.register(
+            'latex',
+            LegacyDocumentRenderer(
+                file_type='latex',
+                source_getter=lambda source_id: Work.objects.get(pk=source_id),
+                render_files=lambda work, content_config, render_target:
+                    self._generate_latex_work(
+                        work,
+                        content_config,
+                        render_target.page_format,
+                    ),
+                document_from_paths=self._document_from_paths,
+            ),
+            document_type='work',
+        )
+        registry.register(
+            'html',
+            LegacyDocumentRenderer(
+                file_type='html',
+                source_getter=lambda source_id: Work.objects.get(pk=source_id),
+                render_files=lambda work, content_config, render_target:
+                    self._generate_html_work(work, content_config),
+                document_from_paths=self._document_from_paths,
+            ),
+            document_type='work',
+        )
+        registry.register(
+            'pdf',
+            LegacyDocumentRenderer(
+                file_type='pdf',
+                source_getter=lambda source_id: Work.objects.get(pk=source_id),
+                render_files=lambda work, content_config, render_target:
+                    self._generate_pdf_work(
+                        work,
+                        content_config,
+                        render_target.page_format,
+                    ),
+                document_from_paths=self._document_from_paths,
+            ),
+            document_type='work',
+        )
+        registry.register(
+            'latex',
+            LegacyDocumentRenderer(
+                file_type='latex',
+                source_getter=lambda source_id: Variant.objects.get(pk=source_id),
+                render_files=lambda variant, content_config, render_target:
+                    self._generate_remedial_latex(
+                        variant,
+                        content_config,
+                        render_target.page_format,
+                    ),
+                document_from_paths=self._document_from_paths,
+            ),
+            document_type='remedial_sheet',
+        )
+        registry.register(
+            'html',
+            LegacyDocumentRenderer(
+                file_type='html',
+                source_getter=lambda source_id: Variant.objects.get(pk=source_id),
+                render_files=lambda variant, content_config, render_target:
+                    self._generate_remedial_html(variant, content_config),
+                document_from_paths=self._document_from_paths,
+            ),
+            document_type='remedial_sheet',
+        )
+        registry.register(
+            'pdf',
+            LegacyDocumentRenderer(
+                file_type='pdf',
+                source_getter=lambda source_id: Variant.objects.get(pk=source_id),
+                render_files=lambda variant, content_config, render_target:
+                    self._generate_remedial_pdf(
+                        variant,
+                        content_config,
+                        render_target.page_format,
+                    ),
+                document_from_paths=self._document_from_paths,
+            ),
+            document_type='remedial_sheet',
+        )
+        return registry
 
     def _generate_latex_work(self, work, content_config, pdf_format='A4'):
         from latex_generator.generators.work_generator import WorkLatexGenerator

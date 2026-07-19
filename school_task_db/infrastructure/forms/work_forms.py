@@ -15,8 +15,8 @@ from core_logic.use_cases.get_generated_document_file import (
     GetGeneratedDocumentFileRequest,
 )
 from core_logic.value_objects.content_config import (
-    build_remedial_sheet_generation_options,
-    build_work_generation_options,
+    build_remedial_sheet_render_options,
+    build_work_render_options,
 )
 from works.forms import WorkAnalogGroupFormSet
 from works.models import Work
@@ -85,7 +85,7 @@ class WorkFormAdapter:
     def render_work_document_request_from_post(self, post_data, work_id):
         return RenderWorkDocumentRequest(
             work_id=work_id,
-            options=build_work_generation_options(post_data),
+            options=build_work_render_options(post_data),
         )
 
     def generate_work_document_request_from_post(self, post_data, work_id):
@@ -103,7 +103,7 @@ class WorkFormAdapter:
     def render_remedial_sheet_request_from_post(self, post_data, variant_id):
         return RenderRemedialSheetDocumentRequest(
             variant_id=variant_id,
-            options=build_remedial_sheet_generation_options(post_data),
+            options=build_remedial_sheet_render_options(post_data),
         )
 
     def generate_remedial_sheet_request_from_post(self, post_data, variant_id):

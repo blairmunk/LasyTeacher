@@ -9,7 +9,9 @@ from core_logic.value_objects.content_config import (
     WorkDocumentRenderOptions,
     WorkGenerationOptions,
     build_remedial_sheet_generation_options,
+    build_remedial_sheet_render_options,
     build_work_generation_options,
+    build_work_render_options,
 )
 
 
@@ -22,7 +24,7 @@ class DocumentRenderOptionsTests(TestCase):
         self.assertEqual(target.file_type_label, 'HTML')
 
     def test_builds_default_work_render_options(self):
-        options = build_work_generation_options({})
+        options = build_work_render_options({})
 
         self.assertEqual(options.generator_type, 'pdf')
         self.assertEqual(options.renderer_type, 'pdf')
@@ -58,7 +60,7 @@ class DocumentRenderOptionsTests(TestCase):
         self.assertEqual(options.content_description, 'с ответами + подсказки')
 
     def test_supports_legacy_with_answers_flag(self):
-        options = build_work_generation_options({
+        options = build_work_render_options({
             'answer_type': 'tasks_only',
             'with_answers': '1',
         })
@@ -68,7 +70,7 @@ class DocumentRenderOptionsTests(TestCase):
         self.assertTrue(options.content_config['include_answers'])
 
     def test_builds_full_solution_work_render_options(self):
-        options = build_work_generation_options({
+        options = build_work_render_options({
             'generator_type': 'html',
             'format': 'A5',
             'answer_type': 'with_full_solutions',
@@ -99,7 +101,7 @@ class DocumentRenderOptionsTests(TestCase):
         )
 
     def test_builds_default_remedial_sheet_render_options(self):
-        options = build_remedial_sheet_generation_options({})
+        options = build_remedial_sheet_render_options({})
 
         self.assertEqual(options.generator_type, 'pdf')
         self.assertEqual(options.renderer_type, 'pdf')
@@ -139,7 +141,7 @@ class DocumentRenderOptionsTests(TestCase):
         )
 
     def test_builds_work_options_from_renderer_type(self):
-        options = build_work_generation_options({
+        options = build_work_render_options({
             'renderer_type': 'html',
             'generator_type': 'pdf',
         })
@@ -147,7 +149,7 @@ class DocumentRenderOptionsTests(TestCase):
         self.assertEqual(options.renderer_type, 'html')
 
     def test_builds_remedial_sheet_options_from_renderer_type(self):
-        options = build_remedial_sheet_generation_options({
+        options = build_remedial_sheet_render_options({
             'renderer_type': 'html',
             'generator_type': 'pdf',
         })
@@ -172,3 +174,12 @@ class DocumentRenderOptionsTests(TestCase):
             RemedialSheetGenerationOptions,
             RemedialSheetDocumentRenderOptions,
         )
+
+    def test_legacy_generation_option_builders(self):
+        work_options = build_work_generation_options({'renderer_type': 'html'})
+        remedial_options = build_remedial_sheet_generation_options({
+            'renderer_type': 'latex',
+        })
+
+        self.assertEqual(work_options.renderer_type, 'html')
+        self.assertEqual(remedial_options.renderer_type, 'latex')

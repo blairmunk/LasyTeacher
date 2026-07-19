@@ -210,7 +210,7 @@ WorkGenerationOptions = WorkDocumentRenderOptions
 RemedialSheetGenerationOptions = RemedialSheetDocumentRenderOptions
 
 
-def build_work_generation_options(
+def build_work_render_options(
     data: Mapping[str, str],
 ) -> WorkDocumentRenderOptions:
     answer_type = data.get('answer_type', 'tasks_only')
@@ -229,7 +229,7 @@ def build_work_generation_options(
     )
 
 
-def build_remedial_sheet_generation_options(
+def build_remedial_sheet_render_options(
     data: Mapping[str, str],
 ) -> RemedialSheetDocumentRenderOptions:
     return RemedialSheetDocumentRenderOptions(
@@ -240,3 +240,15 @@ def build_remedial_sheet_generation_options(
         pdf_format=data.get('format', 'A4'),
         answer_type=data.get('answer_type', 'with_short_solutions'),
     )
+
+
+def build_work_generation_options(
+    data: Mapping[str, str],
+) -> WorkDocumentRenderOptions:
+    return build_work_render_options(data)
+
+
+def build_remedial_sheet_generation_options(
+    data: Mapping[str, str],
+) -> RemedialSheetDocumentRenderOptions:
+    return build_remedial_sheet_render_options(data)

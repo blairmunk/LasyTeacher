@@ -17,17 +17,25 @@ class DocumentRendererRegistry(IDocumentRenderer):
         self,
         renderer_type: str,
         renderer: IDocumentRenderer,
+        document_type: str = '',
     ) -> None:
         if not renderer_type:
             raise ValueError('renderer_type is required')
-        self._renderers[renderer_type] = renderer
+        self._renderers[(document_type, renderer_type)] = renderer
 
-    def get(self, renderer_type: str) -> IDocumentRenderer:
+    def get(
+        self,
+        renderer_type: str,
+        document_type: str = '',
+    ) -> IDocumentRenderer:
         try:
-            return self._renderers[renderer_type]
+            return self._renderers[(document_type, renderer_type)]
         except KeyError:
             raise UnsupportedDocumentRenderer(renderer_type)
 
     def render(self, request: DocumentRenderRequest) -> GeneratedDocument:
-        renderer = self.get(request.render_target.renderer_type)
+        renderer = self.get(
+            renderer_type=request.render_target.renderer_type,
+            document_type=request.document.document_type,
+        )
         return renderer.render(request)

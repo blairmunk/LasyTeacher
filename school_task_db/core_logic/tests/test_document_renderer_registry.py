@@ -23,9 +23,9 @@ class DocumentRendererRegistryTests(TestCase):
     def test_registers_and_delegates_to_renderer(self):
         registry = DocumentRendererRegistry()
         renderer = FakeRenderer()
-        registry.register('html', renderer)
+        registry.register('html', renderer, document_type='work')
         request = DocumentRenderRequest(
-            document=Document(title='Контрольная'),
+            document=Document(title='Контрольная', document_type='work'),
             render_target=RenderTarget(renderer_type='html'),
         )
 
@@ -40,10 +40,35 @@ class DocumentRendererRegistryTests(TestCase):
         with self.assertRaises(ValueError):
             registry.register('', FakeRenderer())
 
+    def test_can_register_same_renderer_type_for_different_documents(self):
+        registry = DocumentRendererRegistry()
+        work_renderer = FakeRenderer()
+        remedial_renderer = FakeRenderer()
+        registry.register('html', work_renderer, document_type='work')
+        registry.register(
+            'html',
+            remedial_renderer,
+            document_type='remedial_sheet',
+        )
+        work_request = DocumentRenderRequest(
+            document=Document(title='Контрольная', document_type='work'),
+            render_target=RenderTarget(renderer_type='html'),
+        )
+        remedial_request = DocumentRenderRequest(
+            document=Document(title='Разбор', document_type='remedial_sheet'),
+            render_target=RenderTarget(renderer_type='html'),
+        )
+
+        registry.render(work_request)
+        registry.render(remedial_request)
+
+        self.assertEqual(work_renderer.request, work_request)
+        self.assertEqual(remedial_renderer.request, remedial_request)
+
     def test_rejects_unsupported_renderer_type(self):
         registry = DocumentRendererRegistry()
         request = DocumentRenderRequest(
-            document=Document(title='Контрольная'),
+            document=Document(title='Контрольная', document_type='work'),
             render_target=RenderTarget(renderer_type='pdf'),
         )
 

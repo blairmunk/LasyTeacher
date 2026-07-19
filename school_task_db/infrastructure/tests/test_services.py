@@ -44,6 +44,30 @@ class FakeDocumentRendererRegistry:
         return GeneratedDocument(file_type=request.render_target.renderer_type)
 
 
+class FakeLegacyFileRenderer:
+    def __init__(self):
+        self.html_work_request = None
+
+    def render_latex_work(self, work, content_config, page_format='A4'):
+        return []
+
+    def render_html_work(self, work, content_config):
+        self.html_work_request = (work, content_config)
+        return ['work.html']
+
+    def render_pdf_work(self, work, content_config, page_format='A4'):
+        return []
+
+    def render_remedial_latex(self, variant, content_config, page_format='A4'):
+        return []
+
+    def render_remedial_html(self, variant, content_config):
+        return []
+
+    def render_remedial_pdf(self, variant, content_config, page_format='A4'):
+        return []
+
+
 class DjangoDocumentGenerationServiceTests(TestCase):
     def test_build_document_uses_configured_builder(self):
         builder = FakeDocumentBuilder()
@@ -107,10 +131,11 @@ class DjangoDocumentGenerationServiceTests(TestCase):
         self.assertIsNone(result)
 
     def test_legacy_work_render_uses_options_target(self):
+        legacy_file_renderer = FakeLegacyFileRenderer()
         service = DjangoDocumentGenerationService(
             get_remedial_sheet_data_use_case=None,
+            legacy_file_renderer=legacy_file_renderer,
         )
-        service._generate_html_work = lambda work, content_config: ['work.html']
         service._document_from_paths = (
             lambda file_type, file_paths:
                 GeneratedDocument(file_type=file_type)
@@ -122,6 +147,7 @@ class DjangoDocumentGenerationServiceTests(TestCase):
         )
 
         self.assertEqual(result.file_type, 'html')
+        self.assertEqual(legacy_file_renderer.html_work_request[0], 'work-object')
 
     def test_generate_work_alias_builds_render_plan(self):
         work = Work.objects.create(name='Контрольная')

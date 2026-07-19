@@ -11,27 +11,27 @@ from works.models import Variant, Work
 
 def build_legacy_document_renderer_registry(
     document_from_paths,
-    generate_latex_work,
-    generate_html_work,
-    generate_pdf_work,
-    generate_remedial_latex,
-    generate_remedial_html,
-    generate_remedial_pdf,
+    render_latex_work_files,
+    render_html_work_files,
+    render_pdf_work_files,
+    render_remedial_latex_files,
+    render_remedial_html_files,
+    render_remedial_pdf_files,
 ) -> DocumentRendererRegistry:
     registry = DocumentRendererRegistry()
     _register_work_renderers(
         registry=registry,
         document_from_paths=document_from_paths,
-        generate_latex_work=generate_latex_work,
-        generate_html_work=generate_html_work,
-        generate_pdf_work=generate_pdf_work,
+        render_latex_work_files=render_latex_work_files,
+        render_html_work_files=render_html_work_files,
+        render_pdf_work_files=render_pdf_work_files,
     )
     _register_remedial_sheet_renderers(
         registry=registry,
         document_from_paths=document_from_paths,
-        generate_remedial_latex=generate_remedial_latex,
-        generate_remedial_html=generate_remedial_html,
-        generate_remedial_pdf=generate_remedial_pdf,
+        render_remedial_latex_files=render_remedial_latex_files,
+        render_remedial_html_files=render_remedial_html_files,
+        render_remedial_pdf_files=render_remedial_pdf_files,
     )
     return registry
 
@@ -39,9 +39,9 @@ def build_legacy_document_renderer_registry(
 def _register_work_renderers(
     registry,
     document_from_paths,
-    generate_latex_work,
-    generate_html_work,
-    generate_pdf_work,
+    render_latex_work_files,
+    render_html_work_files,
+    render_pdf_work_files,
 ) -> None:
     registry.register(
         'latex',
@@ -49,7 +49,7 @@ def _register_work_renderers(
             file_type='latex',
             source_getter=lambda source_id: Work.objects.get(pk=source_id),
             render_files=lambda work, content_config, render_target:
-                generate_latex_work(
+                render_latex_work_files(
                     work,
                     content_config,
                     render_target.page_format,
@@ -64,7 +64,7 @@ def _register_work_renderers(
             file_type='html',
             source_getter=lambda source_id: Work.objects.get(pk=source_id),
             render_files=lambda work, content_config, render_target:
-                generate_html_work(work, content_config),
+                render_html_work_files(work, content_config),
             document_from_paths=document_from_paths,
         ),
         document_type=WORK_DOCUMENT_TYPE,
@@ -75,7 +75,7 @@ def _register_work_renderers(
             file_type='pdf',
             source_getter=lambda source_id: Work.objects.get(pk=source_id),
             render_files=lambda work, content_config, render_target:
-                generate_pdf_work(
+                render_pdf_work_files(
                     work,
                     content_config,
                     render_target.page_format,
@@ -89,9 +89,9 @@ def _register_work_renderers(
 def _register_remedial_sheet_renderers(
     registry,
     document_from_paths,
-    generate_remedial_latex,
-    generate_remedial_html,
-    generate_remedial_pdf,
+    render_remedial_latex_files,
+    render_remedial_html_files,
+    render_remedial_pdf_files,
 ) -> None:
     registry.register(
         'latex',
@@ -99,7 +99,7 @@ def _register_remedial_sheet_renderers(
             file_type='latex',
             source_getter=lambda source_id: Variant.objects.get(pk=source_id),
             render_files=lambda variant, content_config, render_target:
-                generate_remedial_latex(
+                render_remedial_latex_files(
                     variant,
                     content_config,
                     render_target.page_format,
@@ -114,7 +114,7 @@ def _register_remedial_sheet_renderers(
             file_type='html',
             source_getter=lambda source_id: Variant.objects.get(pk=source_id),
             render_files=lambda variant, content_config, render_target:
-                generate_remedial_html(variant, content_config),
+                render_remedial_html_files(variant, content_config),
             document_from_paths=document_from_paths,
         ),
         document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
@@ -125,7 +125,7 @@ def _register_remedial_sheet_renderers(
             file_type='pdf',
             source_getter=lambda source_id: Variant.objects.get(pk=source_id),
             render_files=lambda variant, content_config, render_target:
-                generate_remedial_pdf(
+                render_remedial_pdf_files(
                     variant,
                     content_config,
                     render_target.page_format,

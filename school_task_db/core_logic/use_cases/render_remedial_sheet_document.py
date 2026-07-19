@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from core_logic.entities.document_generation import DocumentGenerationResult
 from core_logic.interfaces.document_generation import IDocumentGenerationService
 from core_logic.interfaces.work_repo import IWorkRepository
-from core_logic.value_objects.content_config import RemedialSheetGenerationOptions
+from core_logic.value_objects.content_config import RemedialSheetDocumentRenderOptions
 
 
 SUPPORTED_REMEDIAL_SHEET_RENDERER_TYPES = {'latex', 'html', 'pdf'}
@@ -14,7 +14,7 @@ SUPPORTED_REMEDIAL_SHEET_RENDERER_TYPES = {'latex', 'html', 'pdf'}
 @dataclass(frozen=True)
 class RenderRemedialSheetDocumentRequest:
     variant_id: str
-    options: RemedialSheetGenerationOptions
+    options: RemedialSheetDocumentRenderOptions
 
 
 class RenderRemedialSheetDocumentUseCase:

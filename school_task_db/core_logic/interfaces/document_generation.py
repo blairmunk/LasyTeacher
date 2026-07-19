@@ -7,8 +7,8 @@ from core_logic.entities.document_generation import (
     GeneratedFileResult,
 )
 from core_logic.value_objects.content_config import (
-    RemedialSheetGenerationOptions,
-    WorkGenerationOptions,
+    RemedialSheetDocumentRenderOptions,
+    WorkDocumentRenderOptions,
 )
 
 
@@ -17,7 +17,7 @@ class IDocumentGenerationService(ABC):
     def render_work_document(
         self,
         work_id: str,
-        options: WorkGenerationOptions,
+        options: WorkDocumentRenderOptions,
     ) -> GeneratedDocument:
         """Render document files for a whole work."""
 
@@ -25,14 +25,14 @@ class IDocumentGenerationService(ABC):
     def render_remedial_sheet_document(
         self,
         variant_id: str,
-        options: RemedialSheetGenerationOptions,
+        options: RemedialSheetDocumentRenderOptions,
     ) -> GeneratedDocument:
         """Render document files for a remedial variant."""
 
     def generate_work(
         self,
         work_id: str,
-        options: WorkGenerationOptions,
+        options: WorkDocumentRenderOptions,
     ) -> GeneratedDocument:
         """Backward-compatible alias for render_work_document."""
         return self.render_work_document(work_id, options)
@@ -40,7 +40,7 @@ class IDocumentGenerationService(ABC):
     def generate_remedial_sheet(
         self,
         variant_id: str,
-        options: RemedialSheetGenerationOptions,
+        options: RemedialSheetDocumentRenderOptions,
     ) -> GeneratedDocument:
         """Backward-compatible alias for render_remedial_sheet_document."""
         return self.render_remedial_sheet_document(variant_id, options)

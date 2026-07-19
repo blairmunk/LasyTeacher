@@ -1,15 +1,17 @@
 from unittest import TestCase
 
 from core_logic.value_objects.content_config import (
+    RemedialSheetDocumentRenderOptions,
     RemedialSheetGenerationOptions,
+    WorkDocumentRenderOptions,
     WorkGenerationOptions,
     build_remedial_sheet_generation_options,
     build_work_generation_options,
 )
 
 
-class WorkGenerationOptionsTests(TestCase):
-    def test_builds_default_work_generation_options(self):
+class DocumentRenderOptionsTests(TestCase):
+    def test_builds_default_work_render_options(self):
         options = build_work_generation_options({})
 
         self.assertEqual(options.generator_type, 'pdf')
@@ -39,7 +41,7 @@ class WorkGenerationOptionsTests(TestCase):
         self.assertEqual(options.content_description, 'с ответами')
         self.assertTrue(options.content_config['include_answers'])
 
-    def test_builds_full_solution_work_generation_options(self):
+    def test_builds_full_solution_work_render_options(self):
         options = build_work_generation_options({
             'generator_type': 'html',
             'format': 'A5',
@@ -68,7 +70,7 @@ class WorkGenerationOptionsTests(TestCase):
             },
         )
 
-    def test_builds_default_remedial_sheet_generation_options(self):
+    def test_builds_default_remedial_sheet_render_options(self):
         options = build_remedial_sheet_generation_options({})
 
         self.assertEqual(options.generator_type, 'pdf')
@@ -102,13 +104,20 @@ class WorkGenerationOptionsTests(TestCase):
         self.assertEqual(options.renderer_type, 'html')
 
     def test_work_options_keep_legacy_generator_type_keyword(self):
-        options = WorkGenerationOptions(generator_type='html')
+        options = WorkDocumentRenderOptions(generator_type='html')
 
         self.assertEqual(options.renderer_type, 'html')
         self.assertEqual(options.generator_type, 'html')
 
     def test_remedial_sheet_options_keep_legacy_generator_type_keyword(self):
-        options = RemedialSheetGenerationOptions(generator_type='html')
+        options = RemedialSheetDocumentRenderOptions(generator_type='html')
 
         self.assertEqual(options.renderer_type, 'html')
         self.assertEqual(options.generator_type, 'html')
+
+    def test_legacy_generation_options_aliases(self):
+        self.assertIs(WorkGenerationOptions, WorkDocumentRenderOptions)
+        self.assertIs(
+            RemedialSheetGenerationOptions,
+            RemedialSheetDocumentRenderOptions,
+        )

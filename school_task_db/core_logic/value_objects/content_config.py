@@ -23,7 +23,7 @@ FILE_TYPE_LABELS = {
 
 
 @dataclass(frozen=True, init=False)
-class WorkGenerationOptions:
+class WorkDocumentRenderOptions:
     renderer_type: str = 'pdf'
     pdf_format: str = 'A4'
     answer_type: str = 'tasks_only'
@@ -87,7 +87,7 @@ class WorkGenerationOptions:
 
 
 @dataclass(frozen=True, init=False)
-class RemedialSheetGenerationOptions:
+class RemedialSheetDocumentRenderOptions:
     renderer_type: str = 'pdf'
     pdf_format: str = 'A4'
     answer_type: str = 'with_short_solutions'
@@ -124,12 +124,18 @@ class RemedialSheetGenerationOptions:
         }
 
 
-def build_work_generation_options(data: Mapping[str, str]) -> WorkGenerationOptions:
+WorkGenerationOptions = WorkDocumentRenderOptions
+RemedialSheetGenerationOptions = RemedialSheetDocumentRenderOptions
+
+
+def build_work_generation_options(
+    data: Mapping[str, str],
+) -> WorkDocumentRenderOptions:
     answer_type = data.get('answer_type', 'tasks_only')
     if data.get('with_answers', '0') == '1' and answer_type == 'tasks_only':
         answer_type = 'with_answers'
 
-    return WorkGenerationOptions(
+    return WorkDocumentRenderOptions(
         renderer_type=(
             data.get('renderer_type')
             or data.get('generator_type', 'pdf')
@@ -143,8 +149,8 @@ def build_work_generation_options(data: Mapping[str, str]) -> WorkGenerationOpti
 
 def build_remedial_sheet_generation_options(
     data: Mapping[str, str],
-) -> RemedialSheetGenerationOptions:
-    return RemedialSheetGenerationOptions(
+) -> RemedialSheetDocumentRenderOptions:
+    return RemedialSheetDocumentRenderOptions(
         renderer_type=(
             data.get('renderer_type')
             or data.get('generator_type', 'pdf')

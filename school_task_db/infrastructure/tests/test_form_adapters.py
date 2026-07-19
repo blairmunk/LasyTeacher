@@ -6,7 +6,7 @@ from core_logic.entities.document_generation import (
     DocumentGenerationResult,
     GeneratedDocumentFile,
 )
-from core_logic.value_objects.content_config import WorkGenerationOptions
+from core_logic.value_objects.content_config import WorkDocumentRenderOptions
 from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.report_forms import ReportFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
@@ -408,7 +408,7 @@ class WorkFormAdapterTests(SimpleTestCase):
                 file_type='html',
                 files=[GeneratedDocumentFile(filename='work.html', size_kb=1.25)],
             ),
-            WorkGenerationOptions(
+            WorkDocumentRenderOptions(
                 renderer_type='html',
                 answer_type='with_answers',
             ),

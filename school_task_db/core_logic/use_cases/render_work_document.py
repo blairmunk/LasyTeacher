@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from core_logic.entities.document_generation import DocumentGenerationResult
 from core_logic.interfaces.document_generation import IDocumentGenerationService
 from core_logic.interfaces.work_repo import IWorkRepository
-from core_logic.value_objects.content_config import WorkGenerationOptions
+from core_logic.value_objects.content_config import WorkDocumentRenderOptions
 
 
 SUPPORTED_WORK_RENDERER_TYPES = {'latex', 'html', 'pdf'}
@@ -14,7 +14,7 @@ SUPPORTED_WORK_RENDERER_TYPES = {'latex', 'html', 'pdf'}
 @dataclass(frozen=True)
 class RenderWorkDocumentRequest:
     work_id: str
-    options: WorkGenerationOptions
+    options: WorkDocumentRenderOptions
 
 
 class RenderWorkDocumentUseCase:

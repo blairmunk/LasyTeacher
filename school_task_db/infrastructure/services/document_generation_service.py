@@ -66,16 +66,14 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         return self._render_legacy_work_document(
             work,
             options,
-            render_plan,
         )
 
     def _render_legacy_work_document(
         self,
         work,
         options,
-        render_plan=None,
     ) -> GeneratedDocument:
-        render_target = self._resolve_render_target(options, render_plan)
+        render_target = options.render_target
         renderer_type = render_target.renderer_type
         content_config = options.content_config
 
@@ -128,16 +126,14 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         return self._render_legacy_remedial_sheet_document(
             variant,
             options,
-            render_plan,
         )
 
     def _render_legacy_remedial_sheet_document(
         self,
         variant,
         options,
-        render_plan=None,
     ) -> GeneratedDocument:
-        render_target = self._resolve_render_target(options, render_plan)
+        render_target = options.render_target
         content_config = options.content_config
         renderer_type = render_target.renderer_type
 
@@ -224,11 +220,6 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
                 )
 
         return GeneratedDocument(file_type=file_type, files=files)
-
-    def _resolve_render_target(self, options, render_plan=None):
-        if render_plan is not None:
-            return render_plan.render_target
-        return options.render_target
 
     def _build_document(self, render_plan=None):
         if render_plan is None:

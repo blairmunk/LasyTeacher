@@ -12,9 +12,10 @@ class DocumentRenderer {
     initEventListeners() {
         // Делегирование событий для динамических кнопок
         document.addEventListener('click', (e) => {
-            if (e.target.matches('.btn-generate-doc')) {
+            const button = e.target.closest('.btn-render-doc, .btn-generate-doc');
+            if (button) {
                 e.preventDefault();
-                this.handleRenderClick(e.target);
+                this.handleRenderClick(button);
             }
         });
 
@@ -295,14 +296,16 @@ class DocumentRenderer {
             container = document.querySelector('main') || document.body;
         }
         
-        // Удаляем предыдущие алерты от генератора
-        const oldAlerts = document.querySelectorAll('.alert.generator-alert');
+        // Удаляем предыдущие алерты от рендерера
+        const oldAlerts = document.querySelectorAll(
+            '.alert.renderer-alert, .alert.generator-alert'
+        );
         oldAlerts.forEach(alert => alert.remove());
 
         const alertDiv = document.createElement('div');
         alertDiv.className = (
             `alert alert-${type} alert-dismissible fade show `
-            + 'generator-alert mt-3'
+            + 'renderer-alert generator-alert mt-3'
         );
         alertDiv.innerHTML = `
             <i class="fas fa-info-circle"></i> ${message}

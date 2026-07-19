@@ -121,6 +121,35 @@ class DjangoDocumentEngineTests(TestCase):
         self.assertEqual(registry.request.document, document)
         self.assertEqual(registry.request.render_target.renderer_type, 'html')
 
+    def test_render_remedial_sheet_document_uses_document_renderer_registry(self):
+        document = Document(title='Разбор', document_type='remedial_sheet')
+        builder = FakeDocumentBuilder(document=document)
+        registry = FakeDocumentRendererRegistry()
+        service = DjangoDocumentEngine(
+            get_remedial_sheet_data_use_case=None,
+            document_builder=builder,
+            document_renderer_registry=registry,
+        )
+        options = RemedialSheetDocumentRenderOptions(renderer_type='pdf')
+        plan = DocumentRenderPlan(
+            source=DocumentSourceRef(
+                source_type=REMEDIAL_VARIANT_SOURCE_TYPE,
+                source_id='missing',
+            ),
+            recipe=DocumentRecipe(document_type='remedial_sheet'),
+            render_target=RenderTarget(renderer_type='pdf'),
+        )
+
+        result = service.render_remedial_sheet_document(
+            variant_id='missing',
+            options=options,
+            render_plan=plan,
+        )
+
+        self.assertEqual(result.file_type, 'pdf')
+        self.assertEqual(registry.request.document, document)
+        self.assertEqual(registry.request.render_target.renderer_type, 'pdf')
+
     def test_render_from_plan_returns_none_without_plan(self):
         service = DjangoDocumentEngine(
             get_remedial_sheet_data_use_case=None,

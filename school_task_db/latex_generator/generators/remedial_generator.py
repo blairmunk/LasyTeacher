@@ -5,6 +5,7 @@ from typing import Dict, Any, Optional
 from pathlib import Path
 
 from document_generator.utils.formula_utils import formula_processor
+from document_generator.processors.formula import process_formula_text
 from latex_generator.utils.latex_specific import latex_formula_processor
 from latex_generator.utils.latex_image_utils import prepare_images_for_latex, render_task_with_images
 from latex_generator.utils.compilation import latex_compiler, LaTeXCompilationError
@@ -220,13 +221,12 @@ class RemedialSheetLatexGenerator(BaseLatexGenerator):
 
     def _safe_process(self, text, label=''):
         """Обработка формул с fallback."""
-        if not text:
-            return {'content': '', 'errors': [], 'warnings': []}
-        try:
-            return latex_formula_processor.render_for_latex_safe(text)
-        except Exception as e:
-            logger.error(f'Ошибка обработки {label}: {e}')
-            return {'content': text, 'errors': [f'{label}: {e}'], 'warnings': []}
+        return process_formula_text(
+            text,
+            latex_formula_processor.render_for_latex_safe,
+            label=label,
+            fallback_logger=logger,
+        )
 
     def generate_for_variant(self, variant, output_format='pdf',
                               content_config=None):

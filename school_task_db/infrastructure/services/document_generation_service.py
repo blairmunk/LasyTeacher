@@ -13,7 +13,11 @@ from core_logic.entities.document_generation import (
 )
 from core_logic.interfaces.document_generation import IDocumentGenerationService
 from core_logic.services.document_builder import RecipeDocumentBuilder
-from core_logic.value_objects.document_render_plan import DocumentRenderRequest
+from core_logic.value_objects.document_render_plan import (
+    DocumentRenderRequest,
+    build_remedial_sheet_document_render_plan,
+    build_work_document_render_plan,
+)
 from infrastructure.services.document_renderer_registry_factory import (
     build_legacy_document_renderer_registry,
 )
@@ -99,7 +103,16 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         )
 
     def generate_work(self, work_id: str, options) -> GeneratedDocument:
-        return self.render_work_document(work_id, options)
+        work = Work.objects.get(pk=work_id)
+        return self.render_work_document(
+            work_id=str(work.pk),
+            options=options,
+            render_plan=build_work_document_render_plan(
+                work_id=str(work.pk),
+                work_name=work.name,
+                options=options,
+            ),
+        )
 
     def render_remedial_sheet_document(
         self,
@@ -159,7 +172,15 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         variant_id: str,
         options,
     ) -> GeneratedDocument:
-        return self.render_remedial_sheet_document(variant_id, options)
+        variant = Variant.objects.get(pk=variant_id)
+        return self.render_remedial_sheet_document(
+            variant_id=str(variant.pk),
+            options=options,
+            render_plan=build_remedial_sheet_document_render_plan(
+                variant_id=str(variant.pk),
+                options=options,
+            ),
+        )
 
     def get_generated_file(
         self,

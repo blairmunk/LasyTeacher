@@ -9,6 +9,7 @@ from core_logic.entities.document_generation import GeneratedDocument
 from core.models import ImportLog
 from core_logic.entities.task_import import TaskImportPreviewRequest, TaskImportRequest
 from core_logic.value_objects.content_config import (
+    RemedialSheetDocumentRenderOptions,
     RenderTarget,
     WorkDocumentRenderOptions,
 )
@@ -19,6 +20,7 @@ from infrastructure.services.document_generation_service import (
 )
 from infrastructure.services.task_import_service import DjangoTaskImportService
 from tasks.models import Task
+from works.models import Variant, Work
 
 
 class FakeDocumentBuilder:
@@ -147,6 +149,55 @@ class DjangoDocumentGenerationServiceTests(TestCase):
         )
 
         self.assertEqual(result.file_type, 'html')
+
+    def test_generate_work_alias_builds_render_plan(self):
+        work = Work.objects.create(name='Контрольная')
+        document = Document(title='Контрольная', document_type='work')
+        builder = FakeDocumentBuilder(document=document)
+        registry = FakeDocumentRendererRegistry()
+        service = DjangoDocumentGenerationService(
+            get_remedial_sheet_data_use_case=None,
+            document_builder=builder,
+            document_renderer_registry=registry,
+        )
+
+        result = service.generate_work(
+            work_id=str(work.pk),
+            options=WorkDocumentRenderOptions(renderer_type='html'),
+        )
+
+        source, recipe = builder.request
+        self.assertEqual(result.file_type, 'html')
+        self.assertEqual(source.source_type, 'work')
+        self.assertEqual(source.source_id, str(work.pk))
+        self.assertEqual(source.title, 'Контрольная')
+        self.assertEqual(recipe.document_type, 'work')
+
+    def test_generate_remedial_sheet_alias_builds_render_plan(self):
+        variant = Variant.objects.create(
+            work=None,
+            number=1,
+            variant_type='remedial',
+        )
+        document = Document(title='Разбор', document_type='remedial_sheet')
+        builder = FakeDocumentBuilder(document=document)
+        registry = FakeDocumentRendererRegistry()
+        service = DjangoDocumentGenerationService(
+            get_remedial_sheet_data_use_case=None,
+            document_builder=builder,
+            document_renderer_registry=registry,
+        )
+
+        result = service.generate_remedial_sheet(
+            variant_id=str(variant.pk),
+            options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+        )
+
+        source, recipe = builder.request
+        self.assertEqual(result.file_type, 'pdf')
+        self.assertEqual(source.source_type, 'remedial_variant')
+        self.assertEqual(source.source_id, str(variant.pk))
+        self.assertEqual(recipe.document_type, 'remedial_sheet')
 
 
 class DjangoTaskImportServiceTests(TestCase):

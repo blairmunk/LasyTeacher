@@ -43,10 +43,14 @@ class RenderRemedialSheetDocumentUseCase:
         work_repo: IWorkRepository | None = None,
         document_template_repo: IDocumentTemplateRepository | None = None,
         document_generation_service: IDocumentEngine | None = None,
+        document_engine: IDocumentEngine | None = None,
     ):
-        self.document_rendering_service = (
-            document_rendering_service or document_generation_service
+        self.document_engine = (
+            document_engine
+            or document_rendering_service
+            or document_generation_service
         )
+        self.document_rendering_service = self.document_engine
         self.work_repo = work_repo
         self.document_template_repo = document_template_repo
 
@@ -74,7 +78,7 @@ class RenderRemedialSheetDocumentUseCase:
                 renderer_type=request.options.renderer_type,
             )
 
-        document = self.document_rendering_service.render_remedial_sheet_document(
+        document = self.document_engine.render_remedial_sheet_document(
             request.variant_id,
             request.options,
             build_remedial_sheet_document_render_plan(

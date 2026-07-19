@@ -17,16 +17,20 @@ class GetGeneratedDocumentFileUseCase:
         self,
         document_rendering_service: IDocumentEngine | None = None,
         document_generation_service: IDocumentEngine | None = None,
+        document_engine: IDocumentEngine | None = None,
     ):
-        self.document_rendering_service = (
-            document_rendering_service or document_generation_service
+        self.document_engine = (
+            document_engine
+            or document_rendering_service
+            or document_generation_service
         )
+        self.document_rendering_service = self.document_engine
 
     def execute(
         self,
         request: GetGeneratedDocumentFileRequest,
     ) -> GeneratedFileResult:
-        return self.document_rendering_service.get_generated_file(
+        return self.document_engine.get_generated_file(
             file_type=request.file_type,
             filename=request.filename,
         )

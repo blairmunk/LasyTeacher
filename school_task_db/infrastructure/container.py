@@ -1018,7 +1018,7 @@ class Container:
 
     def render_work_document_use_case(self):
         return RenderWorkDocumentUseCase(
-            document_rendering_service=self.document_engine,
+            document_engine=self.document_engine,
             work_repo=self.work_repo,
             document_template_repo=self.document_template_repo,
         )
@@ -1028,7 +1028,7 @@ class Container:
 
     def render_remedial_sheet_document_use_case(self):
         return RenderRemedialSheetDocumentUseCase(
-            document_rendering_service=self.document_engine,
+            document_engine=self.document_engine,
             work_repo=self.work_repo,
             document_template_repo=self.document_template_repo,
         )
@@ -1038,7 +1038,7 @@ class Container:
 
     def get_generated_document_file_use_case(self):
         return GetGeneratedDocumentFileUseCase(
-            document_rendering_service=self.document_engine,
+            document_engine=self.document_engine,
         )
 
     def create_work_from_orphans_use_case(self):

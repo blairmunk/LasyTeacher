@@ -41,10 +41,14 @@ class RenderWorkDocumentUseCase:
         work_repo: IWorkRepository | None = None,
         document_template_repo: IDocumentTemplateRepository | None = None,
         document_generation_service: IDocumentEngine | None = None,
+        document_engine: IDocumentEngine | None = None,
     ):
-        self.document_rendering_service = (
-            document_rendering_service or document_generation_service
+        self.document_engine = (
+            document_engine
+            or document_rendering_service
+            or document_generation_service
         )
+        self.document_rendering_service = self.document_engine
         self.work_repo = work_repo
         self.document_template_repo = document_template_repo
 
@@ -67,7 +71,7 @@ class RenderWorkDocumentUseCase:
                 source_name=work_name,
             )
 
-        document = self.document_rendering_service.render_work_document(
+        document = self.document_engine.render_work_document(
             request.work_id,
             request.options,
             build_work_document_render_plan(

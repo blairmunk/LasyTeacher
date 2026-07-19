@@ -185,6 +185,23 @@ class DocumentRenderingUseCaseTests(TestCase):
             (HEADER_SECTION, TASK_VARIANTS_SECTION),
         )
 
+    def test_render_work_document_accepts_document_engine_keyword(self):
+        service = FakeDocumentRenderingService()
+        use_case = RenderWorkDocumentUseCase(
+            document_engine=service,
+            work_repo=FakeWorkRepository(),
+        )
+
+        result = use_case.execute(
+            RenderWorkDocumentRequest(
+                work_id='work-1',
+                options=WorkDocumentRenderOptions(renderer_type='html'),
+            )
+        )
+
+        self.assertTrue(result.success)
+        self.assertEqual(service.work_request[0], 'work-1')
+
     def test_render_work_document_uses_request_template_spec(self):
         service = FakeDocumentRenderingService()
         template_repo = FakeDocumentTemplateRepository()
@@ -339,6 +356,23 @@ class DocumentRenderingUseCaseTests(TestCase):
                 SHORT_SOLUTIONS_SECTION,
             ),
         )
+
+    def test_render_remedial_sheet_document_accepts_document_engine_keyword(self):
+        service = FakeDocumentRenderingService()
+        use_case = RenderRemedialSheetDocumentUseCase(
+            document_engine=service,
+            work_repo=FakeWorkRepository(),
+        )
+
+        result = use_case.execute(
+            RenderRemedialSheetDocumentRequest(
+                variant_id='variant-1',
+                options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+            )
+        )
+
+        self.assertTrue(result.success)
+        self.assertEqual(service.remedial_request[0], 'variant-1')
 
     def test_render_remedial_sheet_document_uses_request_template_spec(self):
         service = FakeDocumentRenderingService()
@@ -514,4 +548,18 @@ class DocumentRenderingUseCaseTests(TestCase):
 
         self.assertTrue(result.success)
         self.assertEqual(result.file.content, b'html')
+        self.assertEqual(service.file_request, ('html', 'work.html'))
+
+    def test_get_generated_document_file_accepts_document_engine_keyword(self):
+        service = FakeDocumentRenderingService()
+        use_case = GetGeneratedDocumentFileUseCase(document_engine=service)
+
+        result = use_case.execute(
+            GetGeneratedDocumentFileRequest(
+                file_type='html',
+                filename='work.html',
+            )
+        )
+
+        self.assertTrue(result.success)
         self.assertEqual(service.file_request, ('html', 'work.html'))

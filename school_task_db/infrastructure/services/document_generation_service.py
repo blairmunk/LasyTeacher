@@ -39,7 +39,6 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         document_renderer_registry=None,
         legacy_file_renderer=None,
     ):
-        self.get_remedial_sheet_data_use_case = get_remedial_sheet_data_use_case
         self.document_builder = document_builder or RecipeDocumentBuilder()
         self.legacy_file_renderer = (
             legacy_file_renderer

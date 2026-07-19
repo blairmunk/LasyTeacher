@@ -35,13 +35,13 @@ class RenderWorkDocumentUseCase:
         if work_name is None:
             return DocumentGenerationResult(
                 status='not_found',
-                generator_type=renderer_type,
+                renderer_type=renderer_type,
             )
 
         if renderer_type not in SUPPORTED_WORK_RENDERER_TYPES:
             return DocumentGenerationResult(
                 status='unsupported_generator',
-                generator_type=renderer_type,
+                renderer_type=renderer_type,
                 source_name=work_name,
             )
 
@@ -51,7 +51,7 @@ class RenderWorkDocumentUseCase:
         )
         return DocumentGenerationResult(
             status='generated',
-            generator_type=renderer_type,
+            renderer_type=renderer_type,
             file_type=document.file_type,
             files=document.files,
             source_name=work_name,

@@ -16,17 +16,32 @@ class GeneratedDocument:
     files: List[GeneratedDocumentFile] = field(default_factory=list)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class DocumentGenerationResult:
     status: str
-    generator_type: str
+    renderer_type: str
     file_type: str = ''
     files: List[GeneratedDocumentFile] = field(default_factory=list)
     source_name: str = ''
 
+    def __init__(
+        self,
+        status: str,
+        renderer_type: str = '',
+        file_type: str = '',
+        files: Optional[List[GeneratedDocumentFile]] = None,
+        source_name: str = '',
+        generator_type: Optional[str] = None,
+    ):
+        object.__setattr__(self, 'status', status)
+        object.__setattr__(self, 'renderer_type', renderer_type or generator_type or '')
+        object.__setattr__(self, 'file_type', file_type)
+        object.__setattr__(self, 'files', files or [])
+        object.__setattr__(self, 'source_name', source_name)
+
     @property
-    def renderer_type(self) -> str:
-        return self.generator_type
+    def generator_type(self) -> str:
+        return self.renderer_type
 
     @property
     def success(self) -> bool:

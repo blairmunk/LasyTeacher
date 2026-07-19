@@ -404,7 +404,7 @@ class WorkFormAdapterTests(SimpleTestCase):
         payload = WorkFormAdapter().generated_work_document_response_payload(
             DocumentGenerationResult(
                 status='generated',
-                generator_type='html',
+                renderer_type='html',
                 file_type='html',
                 files=[GeneratedDocumentFile(filename='work.html', size_kb=1.25)],
             ),
@@ -431,7 +431,7 @@ class WorkFormAdapterTests(SimpleTestCase):
         payload = WorkFormAdapter().remedial_sheet_response_payload(
             DocumentGenerationResult(
                 status='generated',
-                generator_type='pdf',
+                renderer_type='pdf',
                 file_type='pdf',
                 files=[
                     GeneratedDocumentFile(
@@ -452,3 +452,12 @@ class WorkFormAdapterTests(SimpleTestCase):
             ],
             'message': 'Рабочий лист сгенерирован (PDF)',
         })
+
+    def test_document_generation_result_keeps_legacy_generator_type(self):
+        result = DocumentGenerationResult(
+            status='generated',
+            generator_type='html',
+        )
+
+        self.assertEqual(result.renderer_type, 'html')
+        self.assertEqual(result.generator_type, 'html')

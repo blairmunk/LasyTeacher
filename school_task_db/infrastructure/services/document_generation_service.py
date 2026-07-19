@@ -13,9 +13,10 @@ from core_logic.entities.document_generation import (
 )
 from core_logic.interfaces.document_generation import IDocumentGenerationService
 from core_logic.services.document_builder import RecipeDocumentBuilder
-from core_logic.services.document_renderer_registry import DocumentRendererRegistry
 from core_logic.value_objects.document_render_plan import DocumentRenderRequest
-from infrastructure.services.document_renderers import LegacyDocumentRenderer
+from infrastructure.services.document_renderer_registry_factory import (
+    build_legacy_document_renderer_registry,
+)
 from works.models import Variant, Work
 
 
@@ -36,7 +37,15 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         self.document_builder = document_builder or RecipeDocumentBuilder()
         self.document_renderer_registry = (
             document_renderer_registry
-            or self._build_legacy_renderer_registry()
+            or build_legacy_document_renderer_registry(
+                document_from_paths=self._document_from_paths,
+                generate_latex_work=self._generate_latex_work,
+                generate_html_work=self._generate_html_work,
+                generate_pdf_work=self._generate_pdf_work,
+                generate_remedial_latex=self._generate_remedial_latex,
+                generate_remedial_html=self._generate_remedial_html,
+                generate_remedial_pdf=self._generate_remedial_pdf,
+            )
         )
 
     def render_work_document(
@@ -196,92 +205,6 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
                 render_target=render_target,
             )
         )
-
-    def _build_legacy_renderer_registry(self):
-        registry = DocumentRendererRegistry()
-        registry.register(
-            'latex',
-            LegacyDocumentRenderer(
-                file_type='latex',
-                source_getter=lambda source_id: Work.objects.get(pk=source_id),
-                render_files=lambda work, content_config, render_target:
-                    self._generate_latex_work(
-                        work,
-                        content_config,
-                        render_target.page_format,
-                    ),
-                document_from_paths=self._document_from_paths,
-            ),
-            document_type='work',
-        )
-        registry.register(
-            'html',
-            LegacyDocumentRenderer(
-                file_type='html',
-                source_getter=lambda source_id: Work.objects.get(pk=source_id),
-                render_files=lambda work, content_config, render_target:
-                    self._generate_html_work(work, content_config),
-                document_from_paths=self._document_from_paths,
-            ),
-            document_type='work',
-        )
-        registry.register(
-            'pdf',
-            LegacyDocumentRenderer(
-                file_type='pdf',
-                source_getter=lambda source_id: Work.objects.get(pk=source_id),
-                render_files=lambda work, content_config, render_target:
-                    self._generate_pdf_work(
-                        work,
-                        content_config,
-                        render_target.page_format,
-                    ),
-                document_from_paths=self._document_from_paths,
-            ),
-            document_type='work',
-        )
-        registry.register(
-            'latex',
-            LegacyDocumentRenderer(
-                file_type='latex',
-                source_getter=lambda source_id: Variant.objects.get(pk=source_id),
-                render_files=lambda variant, content_config, render_target:
-                    self._generate_remedial_latex(
-                        variant,
-                        content_config,
-                        render_target.page_format,
-                    ),
-                document_from_paths=self._document_from_paths,
-            ),
-            document_type='remedial_sheet',
-        )
-        registry.register(
-            'html',
-            LegacyDocumentRenderer(
-                file_type='html',
-                source_getter=lambda source_id: Variant.objects.get(pk=source_id),
-                render_files=lambda variant, content_config, render_target:
-                    self._generate_remedial_html(variant, content_config),
-                document_from_paths=self._document_from_paths,
-            ),
-            document_type='remedial_sheet',
-        )
-        registry.register(
-            'pdf',
-            LegacyDocumentRenderer(
-                file_type='pdf',
-                source_getter=lambda source_id: Variant.objects.get(pk=source_id),
-                render_files=lambda variant, content_config, render_target:
-                    self._generate_remedial_pdf(
-                        variant,
-                        content_config,
-                        render_target.page_format,
-                    ),
-                document_from_paths=self._document_from_paths,
-            ),
-            document_type='remedial_sheet',
-        )
-        return registry
 
     def _generate_latex_work(self, work, content_config, pdf_format='A4'):
         from latex_generator.generators.work_generator import WorkLatexGenerator

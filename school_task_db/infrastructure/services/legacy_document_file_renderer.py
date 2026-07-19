@@ -12,23 +12,23 @@ class LegacyDocumentFileRenderer:
     def render_latex_work(self, work, content_config, page_format='A4'):
         from latex_generator.generators.work_generator import WorkLatexGenerator
 
-        content_config['page_format'] = page_format
-        generator = WorkLatexGenerator(output_dir='web_latex_output')
-        generator._content_config = content_config
-
-        if self._should_include_answers(content_config):
-            return generator.generate_with_answers(work)
-        return generator.generate(work)
+        return self._render_work_files(
+            generator_class=WorkLatexGenerator,
+            output_dir='web_latex_output',
+            work=work,
+            content_config=content_config,
+            page_format=page_format,
+        )
 
     def render_html_work(self, work, content_config):
         from html_generator.generators.work_generator import WorkHtmlGenerator
 
-        generator = WorkHtmlGenerator(output_dir='web_html_output')
-        generator._content_config = content_config
-
-        if self._should_include_answers(content_config):
-            return generator.generate_with_answers(work)
-        return generator.generate(work)
+        return self._render_work_files(
+            generator_class=WorkHtmlGenerator,
+            output_dir='web_html_output',
+            work=work,
+            content_config=content_config,
+        )
 
     def render_pdf_work(self, work, content_config, page_format='A4'):
         import tempfile
@@ -37,13 +37,12 @@ class LegacyDocumentFileRenderer:
         from pdf_generator.generators.html_to_pdf import HtmlToPdfGenerator
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            html_gen = WorkHtmlGenerator(output_dir=temp_dir)
-            html_gen._content_config = content_config
-
-            if self._should_include_answers(content_config):
-                html_files = html_gen.generate_with_answers(work)
-            else:
-                html_files = html_gen.generate(work)
+            html_files = self._render_work_files(
+                generator_class=WorkHtmlGenerator,
+                output_dir=temp_dir,
+                work=work,
+                content_config=content_config,
+            )
 
             pdf_gen = HtmlToPdfGenerator(format=page_format, wait_for_mathjax=True)
             pdf_files = []
@@ -135,3 +134,21 @@ class LegacyDocumentFileRenderer:
             or content_config['include_short_solutions']
             or content_config['include_full_solutions']
         )
+
+    def _render_work_files(
+        self,
+        generator_class,
+        output_dir,
+        work,
+        content_config,
+        page_format=None,
+    ):
+        if page_format is not None:
+            content_config['page_format'] = page_format
+
+        generator = generator_class(output_dir=output_dir)
+        generator._content_config = content_config
+
+        if self._should_include_answers(content_config):
+            return generator.generate_with_answers(work)
+        return generator.generate(work)

@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from core.models import BaseModel
@@ -69,6 +70,13 @@ class DocumentTemplate(BaseModel):
 
     def __str__(self):
         return f'{self.name} ({self.get_template_type_display()})'
+
+    def clean(self):
+        super().clean()
+        try:
+            self.to_template_spec()
+        except ValueError as error:
+            raise ValidationError({'sections_config': str(error)}) from error
 
     def to_template_spec(self):
         return build_document_template_spec_from_config(

@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from document_generator.models import DocumentTemplate
@@ -45,3 +46,34 @@ class DocumentTemplateModelTests(TestCase):
         )
 
         self.assertEqual(str(template), 'Ключ (Ключ для проверки)')
+
+    def test_full_clean_accepts_valid_sections_config(self):
+        template = DocumentTemplate(
+            name='Рабочий лист',
+            template_type=DocumentTemplate.TemplateType.WORKSHEET,
+            sections_config=[
+                {
+                    'type': 'task_list',
+                    'params': {'source': 'new_tasks'},
+                },
+            ],
+        )
+
+        template.full_clean()
+
+    def test_full_clean_rejects_invalid_sections_config(self):
+        template = DocumentTemplate(
+            name='Сломанный шаблон',
+            template_type=DocumentTemplate.TemplateType.WORKSHEET,
+            sections_config=[
+                {
+                    'type': 'task_list',
+                    'params': ['not', 'a', 'mapping'],
+                },
+            ],
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            template.full_clean()
+
+        self.assertIn('sections_config', context.exception.error_dict)

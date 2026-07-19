@@ -1,3 +1,5 @@
+"""Document rendering use case tests."""
+
 from unittest import TestCase
 
 from core_logic.entities.document_rendering import (

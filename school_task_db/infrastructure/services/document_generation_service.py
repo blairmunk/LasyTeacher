@@ -45,16 +45,11 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         options,
         render_plan=None,
     ) -> GeneratedDocument:
-        render_target = self._resolve_render_target(options, render_plan)
-        document = self._build_document(render_plan)
-        if document is not None:
-            return self.document_renderer_registry.render(
-                DocumentRenderRequest(
-                    document=document,
-                    render_target=render_target,
-                )
-            )
+        planned_document = self._render_from_plan(options, render_plan)
+        if planned_document is not None:
+            return planned_document
 
+        render_target = self._resolve_render_target(options, render_plan)
         work = Work.objects.get(pk=work_id)
         renderer_type = render_target.renderer_type
         content_config = options.content_config
@@ -91,16 +86,11 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         options,
         render_plan=None,
     ) -> GeneratedDocument:
-        render_target = self._resolve_render_target(options, render_plan)
-        document = self._build_document(render_plan)
-        if document is not None:
-            return self.document_renderer_registry.render(
-                DocumentRenderRequest(
-                    document=document,
-                    render_target=render_target,
-                )
-            )
+        planned_document = self._render_from_plan(options, render_plan)
+        if planned_document is not None:
+            return planned_document
 
+        render_target = self._resolve_render_target(options, render_plan)
         variant = Variant.objects.get(pk=variant_id)
         content_config = options.content_config
         renderer_type = render_target.renderer_type
@@ -192,6 +182,19 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         return self.document_builder.build(
             render_plan.source,
             render_plan.recipe,
+        )
+
+    def _render_from_plan(self, options, render_plan=None):
+        render_target = self._resolve_render_target(options, render_plan)
+        document = self._build_document(render_plan)
+        if document is None:
+            return None
+
+        return self.document_renderer_registry.render(
+            DocumentRenderRequest(
+                document=document,
+                render_target=render_target,
+            )
         )
 
     def _build_legacy_renderer_registry(self):

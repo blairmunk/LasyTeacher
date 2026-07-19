@@ -120,6 +120,17 @@ class DjangoDocumentGenerationServiceTests(TestCase):
         self.assertEqual(registry.request.document, document)
         self.assertEqual(registry.request.render_target.renderer_type, 'html')
 
+    def test_render_from_plan_returns_none_without_plan(self):
+        service = DjangoDocumentGenerationService(
+            get_remedial_sheet_data_use_case=None,
+        )
+
+        result = service._render_from_plan(
+            options=WorkDocumentRenderOptions(renderer_type='html'),
+        )
+
+        self.assertIsNone(result)
+
 
 class DjangoTaskImportServiceTests(TestCase):
     def test_preview_import_returns_dry_run_context_without_creating_tasks(self):

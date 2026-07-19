@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from core_logic.entities.document_generation import (
+from core_logic.entities.document_rendering import (
     GeneratedDocument,
     GeneratedFileResult,
 )

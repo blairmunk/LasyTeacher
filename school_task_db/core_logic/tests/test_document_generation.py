@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from core_logic.entities.document_generation import (
+from core_logic.entities.document_rendering import (
     DocumentGenerationResult,
     DocumentRenderResult,
     GeneratedDocument,

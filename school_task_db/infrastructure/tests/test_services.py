@@ -7,7 +7,7 @@ from core_logic.entities.document import (
     REMEDIAL_VARIANT_SOURCE_TYPE,
     WORK_SOURCE_TYPE,
 )
-from core_logic.entities.document_generation import GeneratedDocument
+from core_logic.entities.document_rendering import GeneratedDocument
 from core.models import ImportLog
 from core_logic.entities.task_import import TaskImportPreviewRequest, TaskImportRequest
 from core_logic.value_objects.content_config import (

@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from core_logic.entities.document_generation import GeneratedFileResult
+from core_logic.entities.document_rendering import GeneratedFileResult
 from core_logic.interfaces.document_rendering_service import (
     IDocumentRenderingService,
 )

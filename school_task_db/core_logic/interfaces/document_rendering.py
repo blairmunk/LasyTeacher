@@ -7,7 +7,7 @@ from core_logic.entities.document import (
     DocumentRecipe,
     DocumentSourceRef,
 )
-from core_logic.entities.document_generation import GeneratedDocument
+from core_logic.entities.document_rendering import GeneratedDocument
 from core_logic.value_objects.document_render_plan import DocumentRenderRequest
 
 

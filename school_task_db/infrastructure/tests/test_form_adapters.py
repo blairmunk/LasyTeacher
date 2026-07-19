@@ -2,7 +2,7 @@ from django.http import QueryDict
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import SimpleTestCase
 
-from core_logic.entities.document_generation import (
+from core_logic.entities.document_rendering import (
     DocumentGenerationResult,
     GeneratedDocumentFile,
 )

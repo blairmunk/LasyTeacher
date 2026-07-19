@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from core_logic.entities.document import Document
-from core_logic.entities.document_generation import GeneratedDocument
+from core_logic.entities.document_rendering import GeneratedDocument
 from core_logic.services.document_renderer_registry import (
     DocumentRendererRegistry,
     UnsupportedDocumentRenderer,

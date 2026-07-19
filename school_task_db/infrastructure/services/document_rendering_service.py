@@ -3,7 +3,7 @@
 import mimetypes
 from pathlib import Path
 
-from core_logic.entities.document_generation import (
+from core_logic.entities.document_rendering import (
     GeneratedDocument,
     GeneratedDocumentFile,
     GeneratedFile,

@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from core_logic.entities.document_generation import (
+from core_logic.entities.document_rendering import (
     GeneratedDocument,
     GeneratedDocumentFile,
     GeneratedFile,

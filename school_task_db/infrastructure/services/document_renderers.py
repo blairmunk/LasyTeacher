@@ -1,6 +1,6 @@
 """Legacy renderer adapters for section-based document requests."""
 
-from core_logic.entities.document_generation import GeneratedDocument
+from core_logic.entities.document_rendering import GeneratedDocument
 from core_logic.interfaces.document_rendering import IDocumentRenderer
 from core_logic.value_objects.document_render_plan import DocumentRenderRequest
 from infrastructure.services.document_content_config import (

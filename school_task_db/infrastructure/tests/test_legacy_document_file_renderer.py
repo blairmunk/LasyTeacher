@@ -32,9 +32,7 @@ class LegacyDocumentFileRendererTests(TestCase):
         FakeWorkGenerator.instances = []
 
     def test_render_html_work_uses_tasks_only_generator_by_default(self):
-        renderer = LegacyDocumentFileRenderer(
-            get_remedial_sheet_data_use_case=None,
-        )
+        renderer = LegacyDocumentFileRenderer()
         content_config = self._content_config()
 
         with patch(
@@ -50,9 +48,7 @@ class LegacyDocumentFileRendererTests(TestCase):
         self.assertIs(generator._content_config, content_config)
 
     def test_render_html_work_uses_answers_generator_when_needed(self):
-        renderer = LegacyDocumentFileRenderer(
-            get_remedial_sheet_data_use_case=None,
-        )
+        renderer = LegacyDocumentFileRenderer()
         content_config = self._content_config(include_answers=True)
 
         with patch(
@@ -69,9 +65,7 @@ class LegacyDocumentFileRendererTests(TestCase):
         )
 
     def test_render_latex_work_sets_page_format_for_legacy_generator(self):
-        renderer = LegacyDocumentFileRenderer(
-            get_remedial_sheet_data_use_case=None,
-        )
+        renderer = LegacyDocumentFileRenderer()
         content_config = self._content_config()
 
         with patch(
@@ -130,7 +124,6 @@ class LegacyDocumentFileRendererTests(TestCase):
     def test_render_pdf_files_from_html_uses_configured_output_dir(self):
         with TemporaryDirectory() as output_dir:
             renderer = LegacyDocumentFileRenderer(
-                get_remedial_sheet_data_use_case=None,
                 pdf_output_dir=output_dir,
             )
             pdf_generator = FakePdfGenerator()

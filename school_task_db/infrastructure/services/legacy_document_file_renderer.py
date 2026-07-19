@@ -9,7 +9,7 @@ from django.template.loader import render_to_string
 class LegacyDocumentFileRenderer:
     def __init__(
         self,
-        get_remedial_sheet_data_use_case,
+        get_remedial_sheet_data_use_case=None,
         template_renderer=render_to_string,
         latex_output_dir='web_latex_output',
         html_output_dir='web_html_output',

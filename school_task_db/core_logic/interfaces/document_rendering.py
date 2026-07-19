@@ -8,7 +8,7 @@ from core_logic.entities.document import (
     DocumentSourceRef,
 )
 from core_logic.entities.document_generation import GeneratedDocument
-from core_logic.value_objects.content_config import RenderTarget
+from core_logic.value_objects.document_render_plan import DocumentRenderRequest
 
 
 class IDocumentBuilder(ABC):
@@ -25,7 +25,6 @@ class IDocumentRenderer(ABC):
     @abstractmethod
     def render(
         self,
-        document: Document,
-        render_target: RenderTarget,
+        request: DocumentRenderRequest,
     ) -> GeneratedDocument:
         """Render a generic document to files for the selected target."""

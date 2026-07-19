@@ -13,6 +13,7 @@ from core_logic.interfaces.document_rendering import (
     IDocumentRenderer,
 )
 from core_logic.value_objects.content_config import RenderTarget
+from core_logic.value_objects.document_render_plan import DocumentRenderRequest
 
 
 class FakeDocumentBuilder(IDocumentBuilder):
@@ -35,9 +36,11 @@ class FakeDocumentRenderer(IDocumentRenderer):
     def __init__(self):
         self.request = None
 
-    def render(self, document, render_target):
-        self.request = (document, render_target)
-        return GeneratedDocument(file_type=render_target.renderer_type)
+    def render(self, request):
+        self.request = request
+        return GeneratedDocument(
+            file_type=request.render_target.renderer_type,
+        )
 
 
 class DocumentRenderingInterfaceTests(TestCase):
@@ -63,8 +66,12 @@ class DocumentRenderingInterfaceTests(TestCase):
         renderer = FakeDocumentRenderer()
         document = Document(title='Контрольная')
         target = RenderTarget(renderer_type='html')
+        request = DocumentRenderRequest(
+            document=document,
+            render_target=target,
+        )
 
-        result = renderer.render(document, target)
+        result = renderer.render(request)
 
-        self.assertEqual(renderer.request, (document, target))
+        self.assertEqual(renderer.request, request)
         self.assertEqual(result.file_type, 'html')

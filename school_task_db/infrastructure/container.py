@@ -281,7 +281,7 @@ class Container:
         self._task_group_form_adapter = None
         self._work_form_adapter = None
         self._task_form_adapter = None
-        self._document_generation_service = None
+        self._document_rendering_service = None
         self._task_import_service = None
 
     @property
@@ -393,14 +393,18 @@ class Container:
         return self._task_form_adapter
 
     @property
-    def document_generation_service(self):
-        if self._document_generation_service is None:
-            self._document_generation_service = DjangoDocumentGenerationService(
+    def document_rendering_service(self):
+        if self._document_rendering_service is None:
+            self._document_rendering_service = DjangoDocumentGenerationService(
                 get_remedial_sheet_data_use_case=(
                     self.get_remedial_sheet_data_use_case()
                 ),
             )
-        return self._document_generation_service
+        return self._document_rendering_service
+
+    @property
+    def document_generation_service(self):
+        return self.document_rendering_service
 
     @property
     def task_import_service(self):
@@ -980,7 +984,7 @@ class Container:
 
     def render_work_document_use_case(self):
         return RenderWorkDocumentUseCase(
-            document_rendering_service=self.document_generation_service,
+            document_rendering_service=self.document_rendering_service,
             work_repo=self.work_repo,
         )
 
@@ -989,7 +993,7 @@ class Container:
 
     def render_remedial_sheet_document_use_case(self):
         return RenderRemedialSheetDocumentUseCase(
-            document_rendering_service=self.document_generation_service,
+            document_rendering_service=self.document_rendering_service,
             work_repo=self.work_repo,
         )
 
@@ -998,7 +1002,7 @@ class Container:
 
     def get_generated_document_file_use_case(self):
         return GetGeneratedDocumentFileUseCase(
-            document_rendering_service=self.document_generation_service,
+            document_rendering_service=self.document_rendering_service,
         )
 
     def create_work_from_orphans_use_case(self):

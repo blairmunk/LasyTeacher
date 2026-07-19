@@ -101,7 +101,7 @@ class DocumentGenerationUseCaseTests(TestCase):
         result = use_case.execute(
             RenderWorkDocumentRequest(
                 work_id='work-1',
-                options=WorkGenerationOptions(generator_type='docx'),
+                options=WorkGenerationOptions(renderer_type='docx'),
             )
         )
 
@@ -120,7 +120,7 @@ class DocumentGenerationUseCaseTests(TestCase):
             document_generation_service=service,
             work_repo=work_repo,
         )
-        options = WorkGenerationOptions(generator_type='html')
+        options = WorkGenerationOptions(renderer_type='html')
 
         result = use_case.execute(
             RenderWorkDocumentRequest(work_id='work-1', options=options)
@@ -144,7 +144,7 @@ class DocumentGenerationUseCaseTests(TestCase):
         result = use_case.execute(
             RenderWorkDocumentRequest(
                 work_id='missing-work',
-                options=WorkGenerationOptions(generator_type='html'),
+                options=WorkGenerationOptions(renderer_type='html'),
             )
         )
 
@@ -177,7 +177,7 @@ class DocumentGenerationUseCaseTests(TestCase):
             document_generation_service=service,
             work_repo=work_repo,
         )
-        options = RemedialSheetGenerationOptions(generator_type='pdf')
+        options = RemedialSheetGenerationOptions(renderer_type='pdf')
 
         result = use_case.execute(
             RenderRemedialSheetDocumentRequest(
@@ -221,7 +221,7 @@ class DocumentGenerationUseCaseTests(TestCase):
         result = use_case.execute(
             RenderRemedialSheetDocumentRequest(
                 variant_id='variant-1',
-                options=RemedialSheetGenerationOptions(generator_type='docx'),
+                options=RemedialSheetGenerationOptions(renderer_type='docx'),
             )
         )
 

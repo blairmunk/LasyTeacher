@@ -409,7 +409,7 @@ class WorkFormAdapterTests(SimpleTestCase):
                 files=[GeneratedDocumentFile(filename='work.html', size_kb=1.25)],
             ),
             WorkGenerationOptions(
-                generator_type='html',
+                renderer_type='html',
                 answer_type='with_answers',
             ),
         )

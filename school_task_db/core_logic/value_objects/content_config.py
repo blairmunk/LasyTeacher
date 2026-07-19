@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Mapping
+from typing import Mapping, Optional
 
 
 ANSWER_TYPES_WITH_ANSWERS = {
@@ -22,17 +22,36 @@ FILE_TYPE_LABELS = {
 }
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class WorkGenerationOptions:
-    generator_type: str = 'pdf'
+    renderer_type: str = 'pdf'
     pdf_format: str = 'A4'
     answer_type: str = 'tasks_only'
     include_hints: bool = False
     include_instructions: bool = False
 
+    def __init__(
+        self,
+        renderer_type: Optional[str] = None,
+        pdf_format: str = 'A4',
+        answer_type: str = 'tasks_only',
+        include_hints: bool = False,
+        include_instructions: bool = False,
+        generator_type: Optional[str] = None,
+    ):
+        object.__setattr__(
+            self,
+            'renderer_type',
+            renderer_type or generator_type or 'pdf',
+        )
+        object.__setattr__(self, 'pdf_format', pdf_format)
+        object.__setattr__(self, 'answer_type', answer_type)
+        object.__setattr__(self, 'include_hints', include_hints)
+        object.__setattr__(self, 'include_instructions', include_instructions)
+
     @property
-    def renderer_type(self) -> str:
-        return self.generator_type
+    def generator_type(self) -> str:
+        return self.renderer_type
 
     @property
     def content_config(self) -> dict:
@@ -67,15 +86,30 @@ class WorkGenerationOptions:
         return f"{base_description} + {' + '.join(additional_content)}"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class RemedialSheetGenerationOptions:
-    generator_type: str = 'pdf'
+    renderer_type: str = 'pdf'
     pdf_format: str = 'A4'
     answer_type: str = 'with_short_solutions'
 
+    def __init__(
+        self,
+        renderer_type: Optional[str] = None,
+        pdf_format: str = 'A4',
+        answer_type: str = 'with_short_solutions',
+        generator_type: Optional[str] = None,
+    ):
+        object.__setattr__(
+            self,
+            'renderer_type',
+            renderer_type or generator_type or 'pdf',
+        )
+        object.__setattr__(self, 'pdf_format', pdf_format)
+        object.__setattr__(self, 'answer_type', answer_type)
+
     @property
-    def renderer_type(self) -> str:
-        return self.generator_type
+    def generator_type(self) -> str:
+        return self.renderer_type
 
     @property
     def content_config(self) -> dict:
@@ -96,7 +130,7 @@ def build_work_generation_options(data: Mapping[str, str]) -> WorkGenerationOpti
         answer_type = 'with_answers'
 
     return WorkGenerationOptions(
-        generator_type=(
+        renderer_type=(
             data.get('renderer_type')
             or data.get('generator_type', 'pdf')
         ),
@@ -111,7 +145,7 @@ def build_remedial_sheet_generation_options(
     data: Mapping[str, str],
 ) -> RemedialSheetGenerationOptions:
     return RemedialSheetGenerationOptions(
-        generator_type=(
+        renderer_type=(
             data.get('renderer_type')
             or data.get('generator_type', 'pdf')
         ),

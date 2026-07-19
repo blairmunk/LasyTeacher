@@ -1,6 +1,8 @@
 from unittest import TestCase
 
 from core_logic.value_objects.content_config import (
+    RemedialSheetGenerationOptions,
+    WorkGenerationOptions,
     build_remedial_sheet_generation_options,
     build_work_generation_options,
 )
@@ -98,3 +100,15 @@ class WorkGenerationOptionsTests(TestCase):
         })
 
         self.assertEqual(options.renderer_type, 'html')
+
+    def test_work_options_keep_legacy_generator_type_keyword(self):
+        options = WorkGenerationOptions(generator_type='html')
+
+        self.assertEqual(options.renderer_type, 'html')
+        self.assertEqual(options.generator_type, 'html')
+
+    def test_remedial_sheet_options_keep_legacy_generator_type_keyword(self):
+        options = RemedialSheetGenerationOptions(generator_type='html')
+
+        self.assertEqual(options.renderer_type, 'html')
+        self.assertEqual(options.generator_type, 'html')

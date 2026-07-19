@@ -42,8 +42,15 @@ class DjangoDocumentEngine(IDocumentEngine):
         document_builder=None,
         document_renderer_registry=None,
         legacy_file_renderer=None,
+        get_work_source=None,
+        get_remedial_source=None,
     ):
         self.document_builder = document_builder or RecipeDocumentBuilder()
+        self.get_work_source = get_work_source or self._get_work_source
+        self.get_remedial_source = (
+            get_remedial_source
+            or self._get_remedial_source
+        )
         self.legacy_file_renderer = (
             legacy_file_renderer
             or LegacyDocumentFileRenderer(get_remedial_sheet_data_use_case)
@@ -52,8 +59,8 @@ class DjangoDocumentEngine(IDocumentEngine):
             document_renderer_registry
             or build_legacy_document_renderer_registry(
                 document_from_paths=self._document_from_paths,
-                get_work_source=self._get_work_source,
-                get_remedial_source=self._get_remedial_source,
+                get_work_source=self.get_work_source,
+                get_remedial_source=self.get_remedial_source,
                 render_latex_work_files=(
                     self.legacy_file_renderer.render_latex_work
                 ),
@@ -87,7 +94,7 @@ class DjangoDocumentEngine(IDocumentEngine):
         if planned_document is not None:
             return planned_document
 
-        work = self._get_work_source(work_id)
+        work = self.get_work_source(work_id)
         return self._render_legacy_work_document(
             work,
             options,
@@ -134,7 +141,7 @@ class DjangoDocumentEngine(IDocumentEngine):
         options,
         render_plan=None,
     ) -> GeneratedDocument:
-        work = self._get_work_source(work_id)
+        work = self.get_work_source(work_id)
         return self.render_work_document(
             work_id=str(work.pk),
             options=options,
@@ -155,7 +162,7 @@ class DjangoDocumentEngine(IDocumentEngine):
         if planned_document is not None:
             return planned_document
 
-        variant = self._get_remedial_source(variant_id)
+        variant = self.get_remedial_source(variant_id)
         return self._render_legacy_remedial_sheet_document(
             variant,
             options,
@@ -202,7 +209,7 @@ class DjangoDocumentEngine(IDocumentEngine):
         options,
         render_plan=None,
     ) -> GeneratedDocument:
-        variant = self._get_remedial_source(variant_id)
+        variant = self.get_remedial_source(variant_id)
         return self.render_remedial_sheet_document(
             variant_id=str(variant.pk),
             options=options,

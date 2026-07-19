@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 from django.test import TestCase
 
 from core_logic.entities.document import (
@@ -232,6 +234,31 @@ class DjangoDocumentEngineTests(TestCase):
         self.assertEqual(source.title, 'Переопределённое имя')
         self.assertEqual(recipe.document_type, 'work')
 
+    def test_generate_work_uses_configured_source_getter(self):
+        calls = []
+        work = SimpleNamespace(pk='work-1', name='Контрольная')
+        document = Document(title='Контрольная', document_type='work')
+        builder = FakeDocumentBuilder(document=document)
+        registry = FakeDocumentRendererRegistry()
+        service = DjangoDocumentEngine(
+            get_remedial_sheet_data_use_case=None,
+            document_builder=builder,
+            document_renderer_registry=registry,
+            get_work_source=lambda work_id: calls.append(work_id) or work,
+        )
+
+        result = service.generate_work(
+            work_id='work-1',
+            options=WorkDocumentRenderOptions(renderer_type='html'),
+        )
+
+        source, recipe = builder.request
+        self.assertEqual(result.file_type, 'html')
+        self.assertEqual(calls, ['work-1'])
+        self.assertEqual(source.source_id, 'work-1')
+        self.assertEqual(source.title, 'Контрольная')
+        self.assertEqual(recipe.document_type, 'work')
+
     def test_generate_remedial_sheet_alias_builds_render_plan(self):
         variant = Variant.objects.create(
             work=None,
@@ -290,6 +317,32 @@ class DjangoDocumentEngineTests(TestCase):
         source, recipe = builder.request
         self.assertEqual(result.file_type, 'html')
         self.assertEqual(source.source_type, REMEDIAL_VARIANT_SOURCE_TYPE)
+        self.assertEqual(recipe.document_type, 'remedial_sheet')
+
+    def test_generate_remedial_sheet_uses_configured_source_getter(self):
+        calls = []
+        variant = SimpleNamespace(pk='variant-1')
+        document = Document(title='Разбор', document_type='remedial_sheet')
+        builder = FakeDocumentBuilder(document=document)
+        registry = FakeDocumentRendererRegistry()
+        service = DjangoDocumentEngine(
+            get_remedial_sheet_data_use_case=None,
+            document_builder=builder,
+            document_renderer_registry=registry,
+            get_remedial_source=(
+                lambda variant_id: calls.append(variant_id) or variant
+            ),
+        )
+
+        result = service.generate_remedial_sheet(
+            variant_id='variant-1',
+            options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+        )
+
+        source, recipe = builder.request
+        self.assertEqual(result.file_type, 'pdf')
+        self.assertEqual(calls, ['variant-1'])
+        self.assertEqual(source.source_id, 'variant-1')
         self.assertEqual(recipe.document_type, 'remedial_sheet')
 
 

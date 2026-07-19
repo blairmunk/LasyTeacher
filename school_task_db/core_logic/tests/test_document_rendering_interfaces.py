@@ -8,9 +8,14 @@ from core_logic.entities.document import (
     DocumentSourceRef,
 )
 from core_logic.entities.document_rendering import GeneratedDocument
+from core_logic.interfaces.document_engine import IDocumentEngine
+from core_logic.interfaces.document_generation import IDocumentGenerationService
 from core_logic.interfaces.document_rendering import (
     IDocumentBuilder,
     IDocumentRenderer,
+)
+from core_logic.interfaces.document_rendering_service import (
+    IDocumentRenderingService,
 )
 from core_logic.value_objects.content_config import RenderTarget
 from core_logic.value_objects.document_render_plan import DocumentRenderRequest
@@ -44,6 +49,10 @@ class FakeDocumentRenderer(IDocumentRenderer):
 
 
 class DocumentRenderingInterfaceTests(TestCase):
+    def test_legacy_document_engine_interface_names_are_aliases(self):
+        self.assertIs(IDocumentRenderingService, IDocumentEngine)
+        self.assertIs(IDocumentGenerationService, IDocumentEngine)
+
     def test_document_builder_contract_accepts_source_and_recipe(self):
         builder = FakeDocumentBuilder()
         source = DocumentSourceRef(

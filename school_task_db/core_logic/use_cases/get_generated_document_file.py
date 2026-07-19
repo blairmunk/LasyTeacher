@@ -3,9 +3,7 @@
 from dataclasses import dataclass
 
 from core_logic.entities.document_rendering import GeneratedFileResult
-from core_logic.interfaces.document_rendering_service import (
-    IDocumentRenderingService,
-)
+from core_logic.interfaces.document_engine import IDocumentEngine
 
 
 @dataclass(frozen=True)
@@ -17,8 +15,8 @@ class GetGeneratedDocumentFileRequest:
 class GetGeneratedDocumentFileUseCase:
     def __init__(
         self,
-        document_rendering_service: IDocumentRenderingService | None = None,
-        document_generation_service: IDocumentRenderingService | None = None,
+        document_rendering_service: IDocumentEngine | None = None,
+        document_generation_service: IDocumentEngine | None = None,
     ):
         self.document_rendering_service = (
             document_rendering_service or document_generation_service

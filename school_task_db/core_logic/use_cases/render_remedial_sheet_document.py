@@ -11,9 +11,7 @@ from core_logic.entities.document_rendering import (
     DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
     DocumentRenderResult,
 )
-from core_logic.interfaces.document_rendering_service import (
-    IDocumentRenderingService,
-)
+from core_logic.interfaces.document_engine import IDocumentEngine
 from core_logic.interfaces.document_template_repo import (
     IDocumentTemplateRepository,
 )
@@ -41,10 +39,10 @@ class RenderRemedialSheetDocumentRequest:
 class RenderRemedialSheetDocumentUseCase:
     def __init__(
         self,
-        document_rendering_service: IDocumentRenderingService | None = None,
+        document_rendering_service: IDocumentEngine | None = None,
         work_repo: IWorkRepository | None = None,
         document_template_repo: IDocumentTemplateRepository | None = None,
-        document_generation_service: IDocumentRenderingService | None = None,
+        document_generation_service: IDocumentEngine | None = None,
     ):
         self.document_rendering_service = (
             document_rendering_service or document_generation_service

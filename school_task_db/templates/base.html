@@ -533,11 +533,13 @@
         {% endblock %}
     </div>
 
-    <!-- Подключение веб-генератора документов -->
+    <!-- Подключение движка рендеринга документов -->
     {% load static %}
+    {% block document_rendering_js %}
         {% block generation_js %}
         <script src="{% static 'js/document_rendering.js' %}"></script>
         {% endblock %}
+    {% endblock %}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     {% block extra_js %}{% endblock %}
 </body>

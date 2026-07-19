@@ -129,9 +129,7 @@ class DjangoDocumentGenerationServiceTests(TestCase):
             get_remedial_sheet_data_use_case=None,
         )
 
-        result = service._render_from_plan(
-            options=WorkDocumentRenderOptions(renderer_type='html'),
-        )
+        result = service._render_from_plan()
 
         self.assertIsNone(result)
 

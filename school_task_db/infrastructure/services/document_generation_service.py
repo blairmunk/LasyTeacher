@@ -58,7 +58,7 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         options,
         render_plan=None,
     ) -> GeneratedDocument:
-        planned_document = self._render_from_plan(options, render_plan)
+        planned_document = self._render_from_plan(render_plan)
         if planned_document is not None:
             return planned_document
 
@@ -120,7 +120,7 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         options,
         render_plan=None,
     ) -> GeneratedDocument:
-        planned_document = self._render_from_plan(options, render_plan)
+        planned_document = self._render_from_plan(render_plan)
         if planned_document is not None:
             return planned_document
 
@@ -238,8 +238,11 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
             render_plan.recipe,
         )
 
-    def _render_from_plan(self, options, render_plan=None):
-        render_target = self._resolve_render_target(options, render_plan)
+    def _render_from_plan(self, render_plan=None):
+        if render_plan is None:
+            return None
+
+        render_target = render_plan.render_target
         document = self._build_document(render_plan)
         if document is None:
             return None

@@ -441,6 +441,25 @@ class WorkDetailViewTests(TestCase):
         self.assertEqual(response.context['variant_tasks'][0].task.text, task.text)
         self.assertEqual(response.context['total_max_points'], 2)
 
+    def test_remedial_variant_detail_exposes_rendering_dom_markers(self):
+        remedial_variant = Variant.objects.create(
+            work=None,
+            number=2,
+            variant_type='remedial',
+            source_work=self.work,
+        )
+
+        response = self.client.get(
+            reverse('works:variant-detail', args=[remedial_variant.pk])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'data-remedial-render-form')
+        self.assertContains(response, 'data-remedial-render-submit')
+        self.assertContains(response, 'data-remedial-render-result')
+        self.assertContains(response, 'remedialGenerateForm')
+        self.assertContains(response, 'btnGenerateRemedial')
+
     def test_variant_detail_returns_404_for_missing_variant(self):
         response = self.client.get(
             reverse(

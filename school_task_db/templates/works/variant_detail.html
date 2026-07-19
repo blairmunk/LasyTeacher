@@ -120,7 +120,7 @@
             <h6 class="mb-0"><i class="fas fa-print text-success"></i> Печать рабочего листа</h6>
         </div>
         <div class="card-body">
-            <form id="remedialGenerateForm">
+            <form id="remedialGenerateForm" data-remedial-render-form>
                 {% csrf_token %}
                 <div class="row g-2 align-items-end">
                     <div class="col-auto">
@@ -148,21 +148,36 @@
                         </select>
                     </div>
                     <div class="col-auto">
-                        <button type="submit" class="btn btn-success btn-sm" id="btnGenerateRemedial">
+                        <button
+                            type="submit"
+                            class="btn btn-success btn-sm"
+                            id="btnGenerateRemedial"
+                            data-remedial-render-submit
+                        >
                             <i class="fas fa-file-pdf"></i> Создать
                         </button>
                     </div>
                 </div>
             </form>
-            <div id="remedialGenerateResult" class="mt-2"></div>
+            <div id="remedialGenerateResult" class="mt-2" data-remedial-render-result></div>
         </div>
     </div>
 
     <script>
-    document.getElementById('remedialGenerateForm').addEventListener('submit', function(e) {
+    const remedialRenderForm = (
+        document.querySelector('[data-remedial-render-form]')
+        || document.getElementById('remedialGenerateForm')
+    );
+    remedialRenderForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        const btn = document.getElementById('btnGenerateRemedial');
-        const result = document.getElementById('remedialGenerateResult');
+        const btn = (
+            document.querySelector('[data-remedial-render-submit]')
+            || document.getElementById('btnGenerateRemedial')
+        );
+        const result = (
+            document.querySelector('[data-remedial-render-result]')
+            || document.getElementById('remedialGenerateResult')
+        );
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Подготовка...';
         result.innerHTML = '';

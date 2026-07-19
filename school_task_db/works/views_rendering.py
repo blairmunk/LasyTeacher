@@ -73,8 +73,8 @@ def download_generated_file(request, file_type, filename):
     """Download a rendered document file."""
     from infrastructure.container import container
 
-    result = container.get_generated_document_file_use_case().execute(
-        container.work_form_adapter.generated_document_file_request(
+    result = container.get_rendered_document_file_use_case().execute(
+        container.work_form_adapter.rendered_document_file_request(
             file_type,
             filename,
         ),

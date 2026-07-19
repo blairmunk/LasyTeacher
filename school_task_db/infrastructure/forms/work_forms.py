@@ -12,7 +12,7 @@ from core_logic.use_cases.render_remedial_sheet_document import (
 from core_logic.use_cases.render_work_document import RenderWorkDocumentRequest
 from core_logic.use_cases.compose_work_variants import ComposeWorkVariantsRequest
 from core_logic.use_cases.get_generated_document_file import (
-    GetGeneratedDocumentFileRequest,
+    GetRenderedDocumentFileRequest,
 )
 from core_logic.value_objects.content_config import (
     build_remedial_sheet_render_options,
@@ -109,11 +109,14 @@ class WorkFormAdapter:
     def generate_remedial_sheet_request_from_post(self, post_data, variant_id):
         return self.render_remedial_sheet_request_from_post(post_data, variant_id)
 
-    def generated_document_file_request(self, file_type, filename):
-        return GetGeneratedDocumentFileRequest(
+    def rendered_document_file_request(self, file_type, filename):
+        return GetRenderedDocumentFileRequest(
             file_type=file_type,
             filename=filename,
         )
+
+    def generated_document_file_request(self, file_type, filename):
+        return self.rendered_document_file_request(file_type, filename)
 
     def rendered_work_document_response_payload(self, result, options):
         files_info = [

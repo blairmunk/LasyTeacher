@@ -109,6 +109,7 @@ from core_logic.use_cases.get_events_status_report import (
 )
 from core_logic.use_cases.get_generated_document_file import (
     GetGeneratedDocumentFileUseCase,
+    GetRenderedDocumentFileUseCase,
 )
 from core_logic.use_cases.get_orphan_variant_list import GetOrphanVariantListUseCase
 from core_logic.use_cases.get_remedial_event_preview import (
@@ -412,7 +413,10 @@ class ContainerTests(SimpleTestCase):
         legacy_generate_remedial_sheet_use_case = (
             container.generate_remedial_sheet_document_use_case()
         )
-        generated_file_use_case = container.get_generated_document_file_use_case()
+        rendered_file_use_case = container.get_rendered_document_file_use_case()
+        legacy_generated_file_use_case = (
+            container.get_generated_document_file_use_case()
+        )
 
         self.assertIsInstance(use_case, CreateRemedialFromEventUseCase)
         self.assertIsInstance(wizard_create_use_case, CreateRemedialWizardWorkUseCase)
@@ -670,7 +674,12 @@ class ContainerTests(SimpleTestCase):
             legacy_generate_remedial_sheet_use_case,
             RenderRemedialSheetDocumentUseCase,
         )
-        self.assertIsInstance(generated_file_use_case, GetGeneratedDocumentFileUseCase)
+        self.assertIsInstance(rendered_file_use_case, GetRenderedDocumentFileUseCase)
+        self.assertIsInstance(
+            legacy_generated_file_use_case,
+            GetRenderedDocumentFileUseCase,
+        )
+        self.assertIs(GetGeneratedDocumentFileUseCase, GetRenderedDocumentFileUseCase)
         self.assertIsInstance(container.student_repo, DjangoStudentRepository)
         self.assertIsInstance(container.task_repo, DjangoTaskRepository)
         self.assertIsInstance(container.work_repo, DjangoWorkRepository)

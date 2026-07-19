@@ -504,14 +504,22 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertEqual(request.options.generator_type, 'html')
         self.assertEqual(request.options.renderer_type, 'html')
 
-    def test_builds_generated_document_file_request(self):
-        request = WorkFormAdapter().generated_document_file_request(
+    def test_builds_rendered_document_file_request(self):
+        request = WorkFormAdapter().rendered_document_file_request(
             'html',
             'work.html',
         )
 
         self.assertEqual(request.file_type, 'html')
         self.assertEqual(request.filename, 'work.html')
+
+    def test_legacy_generated_document_file_request_alias(self):
+        adapter = WorkFormAdapter()
+
+        self.assertEqual(
+            adapter.generated_document_file_request('html', 'work.html'),
+            adapter.rendered_document_file_request('html', 'work.html'),
+        )
 
     def test_builds_rendered_work_document_response_payload(self):
         payload = WorkFormAdapter().rendered_work_document_response_payload(

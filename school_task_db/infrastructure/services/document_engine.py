@@ -204,7 +204,7 @@ class DjangoDocumentEngine(IDocumentEngine):
             ),
         )
 
-    def get_generated_file(
+    def get_rendered_file(
         self,
         file_type: str,
         filename: str,
@@ -232,6 +232,13 @@ class DjangoDocumentEngine(IDocumentEngine):
             )
         except OSError:
             return GeneratedFileResult(status=GENERATED_FILE_STATUS_READ_ERROR)
+
+    def get_generated_file(
+        self,
+        file_type: str,
+        filename: str,
+    ) -> GeneratedFileResult:
+        return self.get_rendered_file(file_type, filename)
 
     def _document_from_paths(self, file_type: str, file_paths):
         files = []

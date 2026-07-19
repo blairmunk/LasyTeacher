@@ -19,6 +19,8 @@ from core_logic.entities.document_rendering import (
 from core_logic.use_cases.get_generated_document_file import (
     GetGeneratedDocumentFileRequest,
     GetGeneratedDocumentFileUseCase,
+    GetRenderedDocumentFileRequest,
+    GetRenderedDocumentFileUseCase,
 )
 from core_logic.use_cases.generate_remedial_sheet_document import (
     GenerateRemedialSheetDocumentRequest,
@@ -92,9 +94,12 @@ class FakeDocumentEngine:
             render_plan,
         )
 
-    def get_generated_file(self, file_type, filename):
+    def get_rendered_file(self, file_type, filename):
         self.file_request = (file_type, filename)
         return self.file_result
+
+    def get_generated_file(self, file_type, filename):
+        return self.get_rendered_file(file_type, filename)
 
 
 class FakeWorkRepository:
@@ -562,14 +567,14 @@ class DocumentRenderingUseCaseTests(TestCase):
         self.assertTrue(result.success)
         self.assertEqual(service.remedial_request[0], 'variant-1')
 
-    def test_get_generated_document_file_delegates_to_service(self):
+    def test_get_rendered_document_file_delegates_to_service(self):
         service = FakeDocumentEngine()
-        use_case = GetGeneratedDocumentFileUseCase(
+        use_case = GetRenderedDocumentFileUseCase(
             document_engine=service,
         )
 
         result = use_case.execute(
-            GetGeneratedDocumentFileRequest(
+            GetRenderedDocumentFileRequest(
                 file_type='html',
                 filename='work.html',
             )
@@ -579,12 +584,12 @@ class DocumentRenderingUseCaseTests(TestCase):
         self.assertEqual(result.file.content, b'html')
         self.assertEqual(service.file_request, ('html', 'work.html'))
 
-    def test_get_generated_document_file_accepts_document_engine_keyword(self):
+    def test_get_rendered_document_file_accepts_document_engine_keyword(self):
         service = FakeDocumentEngine()
-        use_case = GetGeneratedDocumentFileUseCase(document_engine=service)
+        use_case = GetRenderedDocumentFileUseCase(document_engine=service)
 
         result = use_case.execute(
-            GetGeneratedDocumentFileRequest(
+            GetRenderedDocumentFileRequest(
                 file_type='html',
                 filename='work.html',
             )
@@ -592,3 +597,7 @@ class DocumentRenderingUseCaseTests(TestCase):
 
         self.assertTrue(result.success)
         self.assertEqual(service.file_request, ('html', 'work.html'))
+
+    def test_legacy_get_generated_document_file_names_are_aliases(self):
+        self.assertIs(GetGeneratedDocumentFileRequest, GetRenderedDocumentFileRequest)
+        self.assertIs(GetGeneratedDocumentFileUseCase, GetRenderedDocumentFileUseCase)

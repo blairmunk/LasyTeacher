@@ -1,4 +1,4 @@
-"""Return generated document file contents for download."""
+"""Return rendered document file contents for download."""
 
 from dataclasses import dataclass
 
@@ -7,12 +7,12 @@ from core_logic.interfaces.document_engine import IDocumentEngine
 
 
 @dataclass(frozen=True)
-class GetGeneratedDocumentFileRequest:
+class GetRenderedDocumentFileRequest:
     file_type: str
     filename: str
 
 
-class GetGeneratedDocumentFileUseCase:
+class GetRenderedDocumentFileUseCase:
     def __init__(
         self,
         document_rendering_service: IDocumentEngine | None = None,
@@ -27,9 +27,13 @@ class GetGeneratedDocumentFileUseCase:
 
     def execute(
         self,
-        request: GetGeneratedDocumentFileRequest,
+        request: GetRenderedDocumentFileRequest,
     ) -> GeneratedFileResult:
-        return self.document_engine.get_generated_file(
+        return self.document_engine.get_rendered_file(
             file_type=request.file_type,
             filename=request.filename,
         )
+
+
+GetGeneratedDocumentFileRequest = GetRenderedDocumentFileRequest
+GetGeneratedDocumentFileUseCase = GetRenderedDocumentFileUseCase

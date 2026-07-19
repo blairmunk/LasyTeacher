@@ -115,7 +115,7 @@ from core_logic.use_cases.get_events_status_report import (
     GetEventsStatusReportUseCase,
 )
 from core_logic.use_cases.get_generated_document_file import (
-    GetGeneratedDocumentFileUseCase,
+    GetRenderedDocumentFileUseCase,
 )
 from core_logic.use_cases.get_orphan_variant_list import GetOrphanVariantListUseCase
 from core_logic.use_cases.get_remedial_event_preview import (
@@ -1036,10 +1036,13 @@ class Container:
     def generate_remedial_sheet_document_use_case(self):
         return self.render_remedial_sheet_document_use_case()
 
-    def get_generated_document_file_use_case(self):
-        return GetGeneratedDocumentFileUseCase(
+    def get_rendered_document_file_use_case(self):
+        return GetRenderedDocumentFileUseCase(
             document_engine=self.document_engine,
         )
+
+    def get_generated_document_file_use_case(self):
+        return self.get_rendered_document_file_use_case()
 
     def create_work_from_orphans_use_case(self):
         return CreateWorkFromOrphansUseCase(

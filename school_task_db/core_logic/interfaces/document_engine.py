@@ -55,9 +55,17 @@ class IDocumentEngine(ABC):
         )
 
     @abstractmethod
+    def get_rendered_file(
+        self,
+        file_type: str,
+        filename: str,
+    ) -> GeneratedFileResult:
+        """Return rendered file contents for downloading."""
+
     def get_generated_file(
         self,
         file_type: str,
         filename: str,
     ) -> GeneratedFileResult:
-        """Return generated file contents for downloading."""
+        """Backward-compatible alias for get_rendered_file."""
+        return self.get_rendered_file(file_type, filename)

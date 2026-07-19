@@ -38,7 +38,7 @@ class DjangoDocumentEngine(IDocumentEngine):
 
     def __init__(
         self,
-        get_remedial_sheet_data_use_case,
+        get_remedial_sheet_data_use_case=None,
         document_builder=None,
         document_renderer_registry=None,
         legacy_file_renderer=None,

@@ -91,9 +91,7 @@ class DjangoDocumentEngineTests(TestCase):
         self.assertEqual(builder.request, (source, recipe))
 
     def test_build_document_returns_none_without_render_plan(self):
-        service = DjangoDocumentEngine(
-            get_remedial_sheet_data_use_case=None,
-        )
+        service = DjangoDocumentEngine()
 
         self.assertIsNone(service._build_document())
 
@@ -153,9 +151,7 @@ class DjangoDocumentEngineTests(TestCase):
         self.assertEqual(registry.request.render_target.renderer_type, 'pdf')
 
     def test_render_from_plan_returns_none_without_plan(self):
-        service = DjangoDocumentEngine(
-            get_remedial_sheet_data_use_case=None,
-        )
+        service = DjangoDocumentEngine()
 
         result = service._render_from_plan()
 

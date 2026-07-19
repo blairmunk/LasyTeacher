@@ -74,7 +74,6 @@ class DjangoDocumentEngineTests(TestCase):
     def test_build_document_uses_configured_builder(self):
         builder = FakeDocumentBuilder()
         service = DjangoDocumentEngine(
-            get_remedial_sheet_data_use_case=None,
             document_builder=builder,
         )
         source = DocumentSourceRef(source_type='work', source_id='work-1')
@@ -100,7 +99,6 @@ class DjangoDocumentEngineTests(TestCase):
         builder = FakeDocumentBuilder(document=document)
         registry = FakeDocumentRendererRegistry()
         service = DjangoDocumentEngine(
-            get_remedial_sheet_data_use_case=None,
             document_builder=builder,
             document_renderer_registry=registry,
         )
@@ -126,7 +124,6 @@ class DjangoDocumentEngineTests(TestCase):
         builder = FakeDocumentBuilder(document=document)
         registry = FakeDocumentRendererRegistry()
         service = DjangoDocumentEngine(
-            get_remedial_sheet_data_use_case=None,
             document_builder=builder,
             document_renderer_registry=registry,
         )
@@ -160,7 +157,6 @@ class DjangoDocumentEngineTests(TestCase):
     def test_legacy_work_render_uses_options_target(self):
         legacy_file_renderer = FakeLegacyFileRenderer()
         service = DjangoDocumentEngine(
-            get_remedial_sheet_data_use_case=None,
             legacy_file_renderer=legacy_file_renderer,
         )
         service._document_from_paths = (
@@ -182,7 +178,6 @@ class DjangoDocumentEngineTests(TestCase):
         builder = FakeDocumentBuilder(document=document)
         registry = FakeDocumentRendererRegistry()
         service = DjangoDocumentEngine(
-            get_remedial_sheet_data_use_case=None,
             document_builder=builder,
             document_renderer_registry=registry,
         )
@@ -205,7 +200,6 @@ class DjangoDocumentEngineTests(TestCase):
         builder = FakeDocumentBuilder(document=document)
         registry = FakeDocumentRendererRegistry()
         service = DjangoDocumentEngine(
-            get_remedial_sheet_data_use_case=None,
             document_builder=builder,
             document_renderer_registry=registry,
         )
@@ -237,7 +231,6 @@ class DjangoDocumentEngineTests(TestCase):
         builder = FakeDocumentBuilder(document=document)
         registry = FakeDocumentRendererRegistry()
         service = DjangoDocumentEngine(
-            get_remedial_sheet_data_use_case=None,
             document_builder=builder,
             document_renderer_registry=registry,
             get_work_source=lambda work_id: calls.append(work_id) or work,
@@ -265,7 +258,6 @@ class DjangoDocumentEngineTests(TestCase):
         builder = FakeDocumentBuilder(document=document)
         registry = FakeDocumentRendererRegistry()
         service = DjangoDocumentEngine(
-            get_remedial_sheet_data_use_case=None,
             document_builder=builder,
             document_renderer_registry=registry,
         )
@@ -291,7 +283,6 @@ class DjangoDocumentEngineTests(TestCase):
         builder = FakeDocumentBuilder(document=document)
         registry = FakeDocumentRendererRegistry()
         service = DjangoDocumentEngine(
-            get_remedial_sheet_data_use_case=None,
             document_builder=builder,
             document_renderer_registry=registry,
         )
@@ -322,7 +313,6 @@ class DjangoDocumentEngineTests(TestCase):
         builder = FakeDocumentBuilder(document=document)
         registry = FakeDocumentRendererRegistry()
         service = DjangoDocumentEngine(
-            get_remedial_sheet_data_use_case=None,
             document_builder=builder,
             document_renderer_registry=registry,
             get_remedial_source=(

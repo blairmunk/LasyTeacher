@@ -403,8 +403,14 @@ class ContainerTests(SimpleTestCase):
         )
         bulk_delete_variants_use_case = container.bulk_delete_variants_use_case()
         render_work_document_use_case = container.render_work_document_use_case()
+        legacy_generate_work_document_use_case = (
+            container.generate_work_document_use_case()
+        )
         render_remedial_sheet_use_case = (
             container.render_remedial_sheet_document_use_case()
+        )
+        legacy_generate_remedial_sheet_use_case = (
+            container.generate_remedial_sheet_document_use_case()
         )
         generated_file_use_case = container.get_generated_document_file_use_case()
 
@@ -653,7 +659,15 @@ class ContainerTests(SimpleTestCase):
             RenderWorkDocumentUseCase,
         )
         self.assertIsInstance(
+            legacy_generate_work_document_use_case,
+            RenderWorkDocumentUseCase,
+        )
+        self.assertIsInstance(
             render_remedial_sheet_use_case,
+            RenderRemedialSheetDocumentUseCase,
+        )
+        self.assertIsInstance(
+            legacy_generate_remedial_sheet_use_case,
             RenderRemedialSheetDocumentUseCase,
         )
         self.assertIsInstance(generated_file_use_case, GetGeneratedDocumentFileUseCase)

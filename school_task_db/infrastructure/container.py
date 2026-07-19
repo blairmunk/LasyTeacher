@@ -258,8 +258,8 @@ from infrastructure.repositories.django_settings_repo import DjangoSettingsRepos
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
-from infrastructure.services.document_rendering_service import (
-    DjangoDocumentRenderingService,
+from infrastructure.services.document_engine import (
+    DjangoDocumentEngine,
 )
 from infrastructure.services.task_import_service import DjangoTaskImportService
 from infrastructure.forms.core_forms import CoreFormAdapter
@@ -415,7 +415,7 @@ class Container:
     @property
     def document_rendering_service(self):
         if self._document_rendering_service is None:
-            self._document_rendering_service = DjangoDocumentRenderingService(
+            self._document_rendering_service = DjangoDocumentEngine(
                 get_remedial_sheet_data_use_case=(
                     self.get_remedial_sheet_data_use_case()
                 ),

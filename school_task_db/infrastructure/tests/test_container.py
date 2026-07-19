@@ -227,8 +227,8 @@ from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.report_forms import ReportFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
 from infrastructure.forms.work_forms import WorkFormAdapter
-from infrastructure.services.document_rendering_service import (
-    DjangoDocumentRenderingService,
+from infrastructure.services.document_engine import (
+    DjangoDocumentEngine,
 )
 from infrastructure.services.task_import_service import DjangoTaskImportService
 
@@ -677,7 +677,7 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(container.work_form_adapter, WorkFormAdapter)
         self.assertIsInstance(
             container.document_rendering_service,
-            DjangoDocumentRenderingService,
+            DjangoDocumentEngine,
         )
         self.assertIs(
             container.document_generation_service,

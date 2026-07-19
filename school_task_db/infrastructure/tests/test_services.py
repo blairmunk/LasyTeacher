@@ -17,8 +17,8 @@ from core_logic.value_objects.content_config import (
 )
 from core_logic.value_objects.document_render_plan import DocumentRenderPlan
 from curriculum.models import Topic
-from infrastructure.services.document_rendering_service import (
-    DjangoDocumentRenderingService,
+from infrastructure.services.document_engine import (
+    DjangoDocumentEngine,
 )
 from infrastructure.services.task_import_service import DjangoTaskImportService
 from tasks.models import Task
@@ -68,10 +68,10 @@ class FakeLegacyFileRenderer:
         return []
 
 
-class DjangoDocumentRenderingServiceTests(TestCase):
+class DjangoDocumentEngineTests(TestCase):
     def test_build_document_uses_configured_builder(self):
         builder = FakeDocumentBuilder()
-        service = DjangoDocumentRenderingService(
+        service = DjangoDocumentEngine(
             get_remedial_sheet_data_use_case=None,
             document_builder=builder,
         )
@@ -89,7 +89,7 @@ class DjangoDocumentRenderingServiceTests(TestCase):
         self.assertEqual(builder.request, (source, recipe))
 
     def test_build_document_returns_none_without_render_plan(self):
-        service = DjangoDocumentRenderingService(
+        service = DjangoDocumentEngine(
             get_remedial_sheet_data_use_case=None,
         )
 
@@ -99,7 +99,7 @@ class DjangoDocumentRenderingServiceTests(TestCase):
         document = Document(title='Контрольная', document_type='work')
         builder = FakeDocumentBuilder(document=document)
         registry = FakeDocumentRendererRegistry()
-        service = DjangoDocumentRenderingService(
+        service = DjangoDocumentEngine(
             get_remedial_sheet_data_use_case=None,
             document_builder=builder,
             document_renderer_registry=registry,
@@ -122,7 +122,7 @@ class DjangoDocumentRenderingServiceTests(TestCase):
         self.assertEqual(registry.request.render_target.renderer_type, 'html')
 
     def test_render_from_plan_returns_none_without_plan(self):
-        service = DjangoDocumentRenderingService(
+        service = DjangoDocumentEngine(
             get_remedial_sheet_data_use_case=None,
         )
 
@@ -132,7 +132,7 @@ class DjangoDocumentRenderingServiceTests(TestCase):
 
     def test_legacy_work_render_uses_options_target(self):
         legacy_file_renderer = FakeLegacyFileRenderer()
-        service = DjangoDocumentRenderingService(
+        service = DjangoDocumentEngine(
             get_remedial_sheet_data_use_case=None,
             legacy_file_renderer=legacy_file_renderer,
         )
@@ -154,7 +154,7 @@ class DjangoDocumentRenderingServiceTests(TestCase):
         document = Document(title='Контрольная', document_type='work')
         builder = FakeDocumentBuilder(document=document)
         registry = FakeDocumentRendererRegistry()
-        service = DjangoDocumentRenderingService(
+        service = DjangoDocumentEngine(
             get_remedial_sheet_data_use_case=None,
             document_builder=builder,
             document_renderer_registry=registry,
@@ -177,7 +177,7 @@ class DjangoDocumentRenderingServiceTests(TestCase):
         document = Document(title='Контрольная', document_type='work')
         builder = FakeDocumentBuilder(document=document)
         registry = FakeDocumentRendererRegistry()
-        service = DjangoDocumentRenderingService(
+        service = DjangoDocumentEngine(
             get_remedial_sheet_data_use_case=None,
             document_builder=builder,
             document_renderer_registry=registry,
@@ -212,7 +212,7 @@ class DjangoDocumentRenderingServiceTests(TestCase):
         document = Document(title='Разбор', document_type='remedial_sheet')
         builder = FakeDocumentBuilder(document=document)
         registry = FakeDocumentRendererRegistry()
-        service = DjangoDocumentRenderingService(
+        service = DjangoDocumentEngine(
             get_remedial_sheet_data_use_case=None,
             document_builder=builder,
             document_renderer_registry=registry,
@@ -238,7 +238,7 @@ class DjangoDocumentRenderingServiceTests(TestCase):
         document = Document(title='Разбор', document_type='remedial_sheet')
         builder = FakeDocumentBuilder(document=document)
         registry = FakeDocumentRendererRegistry()
-        service = DjangoDocumentRenderingService(
+        service = DjangoDocumentEngine(
             get_remedial_sheet_data_use_case=None,
             document_builder=builder,
             document_renderer_registry=registry,

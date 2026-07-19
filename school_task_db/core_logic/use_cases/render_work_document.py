@@ -25,10 +25,13 @@ class RenderWorkDocumentRequest:
 class RenderWorkDocumentUseCase:
     def __init__(
         self,
-        document_generation_service: IDocumentRenderingService,
-        work_repo: IWorkRepository,
+        document_rendering_service: IDocumentRenderingService | None = None,
+        work_repo: IWorkRepository | None = None,
+        document_generation_service: IDocumentRenderingService | None = None,
     ):
-        self.document_generation_service = document_generation_service
+        self.document_rendering_service = (
+            document_rendering_service or document_generation_service
+        )
         self.work_repo = work_repo
 
     def execute(
@@ -50,7 +53,7 @@ class RenderWorkDocumentUseCase:
                 source_name=work_name,
             )
 
-        document = self.document_generation_service.render_work_document(
+        document = self.document_rendering_service.render_work_document(
             request.work_id,
             request.options,
             build_work_document_render_plan(

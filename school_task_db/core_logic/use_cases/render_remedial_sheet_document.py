@@ -25,10 +25,13 @@ class RenderRemedialSheetDocumentRequest:
 class RenderRemedialSheetDocumentUseCase:
     def __init__(
         self,
-        document_generation_service: IDocumentRenderingService,
-        work_repo: IWorkRepository,
+        document_rendering_service: IDocumentRenderingService | None = None,
+        work_repo: IWorkRepository | None = None,
+        document_generation_service: IDocumentRenderingService | None = None,
     ):
-        self.document_generation_service = document_generation_service
+        self.document_rendering_service = (
+            document_rendering_service or document_generation_service
+        )
         self.work_repo = work_repo
 
     def execute(
@@ -55,7 +58,7 @@ class RenderRemedialSheetDocumentUseCase:
                 renderer_type=request.options.renderer_type,
             )
 
-        document = self.document_generation_service.render_remedial_sheet_document(
+        document = self.document_rendering_service.render_remedial_sheet_document(
             request.variant_id,
             request.options,
             build_remedial_sheet_document_render_plan(

@@ -670,8 +670,8 @@ class WorkDetailViewTests(TestCase):
 
     def test_render_work_ajax_uses_document_service(self):
         with patch(
-            'infrastructure.services.document_generation_service.'
-            'DjangoDocumentGenerationService.render_work_document',
+            'infrastructure.services.document_rendering_service.'
+            'DjangoDocumentRenderingService.render_work_document',
             return_value=GeneratedDocument(
                 file_type='html',
                 files=[
@@ -712,8 +712,8 @@ class WorkDetailViewTests(TestCase):
 
     def test_download_generated_file_uses_document_service(self):
         with patch(
-            'infrastructure.services.document_generation_service.'
-            'DjangoDocumentGenerationService.get_generated_file',
+            'infrastructure.services.document_rendering_service.'
+            'DjangoDocumentRenderingService.get_generated_file',
             return_value=GeneratedFileResult(
                 status='ready',
                 file=GeneratedFile(
@@ -880,8 +880,8 @@ class WorkDetailViewTests(TestCase):
         )
 
         with patch(
-            'infrastructure.services.document_generation_service.'
-            'DjangoDocumentGenerationService.render_remedial_sheet_document',
+            'infrastructure.services.document_rendering_service.'
+            'DjangoDocumentRenderingService.render_remedial_sheet_document',
             return_value=GeneratedDocument(
                 file_type='pdf',
                 files=[

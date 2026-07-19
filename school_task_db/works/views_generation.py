@@ -2,6 +2,7 @@
 
 from works.views_rendering import (
     download_generated_file,
+    download_rendered_file,
     generate_remedial_sheet_ajax,
     generate_variant_ajax,
     generate_work_ajax,

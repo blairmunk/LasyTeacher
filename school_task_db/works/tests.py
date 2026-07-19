@@ -724,7 +724,7 @@ class WorkDetailViewTests(TestCase):
         self.assertTrue(response.json()['success'])
         self.assertEqual(
             response.json()['files'][0]['download_url'],
-            reverse('works:download_generated_file', args=['html', 'work.html']),
+            reverse('works:download_rendered_file', args=['html', 'work.html']),
         )
         render_work.assert_called_once()
 
@@ -743,7 +743,36 @@ class WorkDetailViewTests(TestCase):
         self.assertTrue(response.json()['success'])
         render_work.assert_called_once()
 
-    def test_download_generated_file_uses_document_service(self):
+    def test_download_rendered_file_uses_document_service(self):
+        with patch(
+            'infrastructure.services.document_engine.'
+            'DjangoDocumentEngine.get_rendered_file',
+            return_value=GeneratedFileResult(
+                status='ready',
+                file=GeneratedFile(
+                    filename='work.html',
+                    content=b'<html></html>',
+                    content_type='text/html',
+                ),
+            ),
+        ) as get_rendered_file:
+            response = self.client.get(
+                reverse('works:download_rendered_file', args=['html', 'work.html'])
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b'<html></html>')
+        self.assertEqual(response['Content-Type'], 'text/html')
+        self.assertEqual(
+            response['Content-Disposition'],
+            'attachment; filename="work.html"',
+        )
+        get_rendered_file.assert_called_once_with(
+            file_type='html',
+            filename='work.html',
+        )
+
+    def test_legacy_download_generated_file_route_still_downloads(self):
         with patch(
             'infrastructure.services.document_engine.'
             'DjangoDocumentEngine.get_rendered_file',
@@ -762,11 +791,6 @@ class WorkDetailViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b'<html></html>')
-        self.assertEqual(response['Content-Type'], 'text/html')
-        self.assertEqual(
-            response['Content-Disposition'],
-            'attachment; filename="work.html"',
-        )
         get_rendered_file.assert_called_once_with(
             file_type='html',
             filename='work.html',
@@ -873,7 +897,7 @@ class WorkDetailViewTests(TestCase):
                 {
                     'filename': 'remedial.pdf',
                     'url': reverse(
-                        'works:download_generated_file',
+                        'works:download_rendered_file',
                         args=['pdf', 'remedial.pdf'],
                     ),
                 }

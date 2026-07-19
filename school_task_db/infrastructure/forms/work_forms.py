@@ -124,7 +124,7 @@ class WorkFormAdapter:
                 'name': file_info.filename,
                 'size': f'{file_info.size_kb:.1f} KB',
                 'download_url': reverse(
-                    'works:download_generated_file',
+                    'works:download_rendered_file',
                     kwargs={
                         'file_type': result.file_type,
                         'filename': file_info.filename,
@@ -154,7 +154,7 @@ class WorkFormAdapter:
                 {
                     'filename': file_info.filename,
                     'url': reverse(
-                        'works:download_generated_file',
+                        'works:download_rendered_file',
                         kwargs={
                             'file_type': result.file_type,
                             'filename': file_info.filename,

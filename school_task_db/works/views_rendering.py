@@ -69,7 +69,7 @@ def render_work_ajax(request, work_id):
         })
 
 @require_http_methods(["GET"])
-def download_generated_file(request, file_type, filename):
+def download_rendered_file(request, file_type, filename):
     """Download a rendered document file."""
     from infrastructure.container import container
 
@@ -95,6 +95,9 @@ def download_generated_file(request, file_type, filename):
         f'attachment; filename="{result.file.filename}"'
     )
     return response
+
+
+download_generated_file = download_rendered_file
 
 @require_http_methods(["GET"])
 def render_status_ajax(request):

@@ -41,7 +41,12 @@ urlpatterns = [
     # Рендеринг документов
     path(
         'download/<str:file_type>/<str:filename>/',
-        views_rendering.download_generated_file,
+        views_rendering.download_rendered_file,
+        name='download_rendered_file',
+    ),
+    path(
+        'download/<str:file_type>/<str:filename>/',
+        views_rendering.download_rendered_file,
         name='download_generated_file',
     ),
     path(

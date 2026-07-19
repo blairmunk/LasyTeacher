@@ -16,7 +16,7 @@ def render_work_ajax(request, work_id):
     )
     try:
         document_request = (
-            container.work_form_adapter.generate_work_document_request_from_post(
+            container.work_form_adapter.render_work_document_request_from_post(
                 request.POST,
                 work_id=str(work_id),
             )
@@ -32,7 +32,7 @@ def render_work_ajax(request, work_id):
             options.include_instructions,
         )
 
-        result = container.generate_work_document_use_case().execute(
+        result = container.render_work_document_use_case().execute(
             document_request,
         )
         if result.status == 'not_found':

@@ -18,6 +18,10 @@ from core_logic.use_cases.generate_work_document import (
     GenerateWorkDocumentRequest,
     GenerateWorkDocumentUseCase,
 )
+from core_logic.use_cases.render_work_document import (
+    RenderWorkDocumentRequest,
+    RenderWorkDocumentUseCase,
+)
 from core_logic.value_objects.content_config import (
     RemedialSheetGenerationOptions,
     WorkGenerationOptions,
@@ -76,16 +80,16 @@ class FakeWorkRepository:
 
 
 class DocumentGenerationUseCaseTests(TestCase):
-    def test_generate_work_document_rejects_unsupported_generator(self):
+    def test_render_work_document_rejects_unsupported_renderer(self):
         service = FakeDocumentGenerationService()
         work_repo = FakeWorkRepository()
-        use_case = GenerateWorkDocumentUseCase(
+        use_case = RenderWorkDocumentUseCase(
             document_generation_service=service,
             work_repo=work_repo,
         )
 
         result = use_case.execute(
-            GenerateWorkDocumentRequest(
+            RenderWorkDocumentRequest(
                 work_id='work-1',
                 options=WorkGenerationOptions(generator_type='docx'),
             )
@@ -98,17 +102,17 @@ class DocumentGenerationUseCaseTests(TestCase):
         self.assertEqual(work_repo.work_name_request, 'work-1')
         self.assertIsNone(service.work_request)
 
-    def test_generate_work_document_delegates_to_service(self):
+    def test_render_work_document_delegates_to_service(self):
         service = FakeDocumentGenerationService()
         work_repo = FakeWorkRepository()
-        use_case = GenerateWorkDocumentUseCase(
+        use_case = RenderWorkDocumentUseCase(
             document_generation_service=service,
             work_repo=work_repo,
         )
         options = WorkGenerationOptions(generator_type='html')
 
         result = use_case.execute(
-            GenerateWorkDocumentRequest(work_id='work-1', options=options)
+            RenderWorkDocumentRequest(work_id='work-1', options=options)
         )
 
         self.assertTrue(result.success)
@@ -119,15 +123,15 @@ class DocumentGenerationUseCaseTests(TestCase):
         self.assertEqual(work_repo.work_name_request, 'work-1')
         self.assertEqual(service.work_request, ('work-1', options))
 
-    def test_generate_work_document_handles_missing_work(self):
+    def test_render_work_document_handles_missing_work(self):
         service = FakeDocumentGenerationService()
-        use_case = GenerateWorkDocumentUseCase(
+        use_case = RenderWorkDocumentUseCase(
             document_generation_service=service,
             work_repo=FakeWorkRepository(work_name=None),
         )
 
         result = use_case.execute(
-            GenerateWorkDocumentRequest(
+            RenderWorkDocumentRequest(
                 work_id='missing-work',
                 options=WorkGenerationOptions(generator_type='html'),
             )
@@ -136,6 +140,24 @@ class DocumentGenerationUseCaseTests(TestCase):
         self.assertFalse(result.success)
         self.assertEqual(result.status, 'not_found')
         self.assertIsNone(service.work_request)
+
+    def test_legacy_generate_work_document_use_case_alias(self):
+        service = FakeDocumentGenerationService()
+        work_repo = FakeWorkRepository()
+        use_case = GenerateWorkDocumentUseCase(
+            document_generation_service=service,
+            work_repo=work_repo,
+        )
+
+        result = use_case.execute(
+            GenerateWorkDocumentRequest(
+                work_id='work-1',
+                options=WorkGenerationOptions(generator_type='html'),
+            )
+        )
+
+        self.assertTrue(result.success)
+        self.assertEqual(service.work_request[0], 'work-1')
 
     def test_generate_remedial_sheet_document_delegates_to_service(self):
         service = FakeDocumentGenerationService()

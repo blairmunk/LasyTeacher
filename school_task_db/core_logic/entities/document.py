@@ -82,3 +82,31 @@ class DocumentRecipe:
             document_type=self.document_type,
             sections=(*self.sections, section),
         )
+
+
+@dataclass(frozen=True)
+class DocumentTemplateSpec:
+    name: str
+    template_type: str
+    sections: Tuple[DocumentSectionSpec, ...] = field(default_factory=tuple)
+    default_content_config: Mapping[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self):
+        if not self.template_type:
+            raise ValueError('template_type is required')
+        object.__setattr__(self, 'sections', tuple(self.sections))
+        object.__setattr__(
+            self,
+            'default_content_config',
+            dict(self.default_content_config),
+        )
+
+    @property
+    def section_types(self) -> Tuple[str, ...]:
+        return tuple(section.section_type for section in self.sections)
+
+    def to_recipe(self, document_type: str = '') -> DocumentRecipe:
+        return DocumentRecipe(
+            document_type=document_type or self.template_type,
+            sections=self.sections,
+        )

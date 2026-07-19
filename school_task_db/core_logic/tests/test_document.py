@@ -6,6 +6,7 @@ from core_logic.entities.document import (
     DocumentSection,
     DocumentSectionSpec,
     DocumentSourceRef,
+    DocumentTemplateSpec,
 )
 
 
@@ -87,6 +88,60 @@ class DocumentModelTests(TestCase):
             ('original_mistakes',),
         )
 
+    def test_template_spec_preserves_ordered_sections(self):
+        template = DocumentTemplateSpec(
+            name='Тренировочный лист',
+            template_type='worksheet',
+            sections=[
+                DocumentSectionSpec(section_type='header'),
+                DocumentSectionSpec(
+                    section_type='task_list',
+                    options={'source': 'new_tasks'},
+                ),
+            ],
+            default_content_config={'answer_type': 'tasks_only'},
+        )
+
+        self.assertEqual(template.name, 'Тренировочный лист')
+        self.assertEqual(template.template_type, 'worksheet')
+        self.assertEqual(template.section_types, ('header', 'task_list'))
+        self.assertEqual(
+            template.default_content_config,
+            {'answer_type': 'tasks_only'},
+        )
+
+    def test_template_spec_copies_default_content_config(self):
+        default_content_config = {'answer_type': 'with_answers'}
+        template = DocumentTemplateSpec(
+            name='Ключ',
+            template_type='answer_key',
+            default_content_config=default_content_config,
+        )
+
+        default_content_config['answer_type'] = 'tasks_only'
+
+        self.assertEqual(
+            template.default_content_config,
+            {'answer_type': 'with_answers'},
+        )
+
+    def test_template_spec_converts_to_recipe(self):
+        template = DocumentTemplateSpec(
+            name='Работа над ошибками',
+            template_type='remedial_sheet',
+            sections=[
+                DocumentSectionSpec(section_type='header'),
+                DocumentSectionSpec(section_type='answer_key'),
+            ],
+        )
+
+        recipe = template.to_recipe()
+        overridden_recipe = template.to_recipe(document_type='custom')
+
+        self.assertEqual(recipe.document_type, 'remedial_sheet')
+        self.assertEqual(recipe.section_types, ('header', 'answer_key'))
+        self.assertEqual(overridden_recipe.document_type, 'custom')
+
     def test_rejects_empty_required_identifiers(self):
         with self.assertRaises(ValueError):
             DocumentSourceRef(source_type='')
@@ -96,3 +151,5 @@ class DocumentModelTests(TestCase):
             DocumentSectionSpec(section_type='')
         with self.assertRaises(ValueError):
             DocumentRecipe(document_type='')
+        with self.assertRaises(ValueError):
+            DocumentTemplateSpec(name='Invalid', template_type='')

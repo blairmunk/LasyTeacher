@@ -294,13 +294,9 @@ def bulk_create_group(request):
     if not result.success:
         return JsonResponse({'error': result.message}, status=400)
 
-    return JsonResponse({
-        'success': True,
-        'group_id': result.group_id,
-        'group_name': result.group_name,
-        'added': result.added_count,
-        'message': result.message,
-    })
+    return JsonResponse(
+        container.task_form_adapter.bulk_create_group_response_payload(result),
+    )
 
 
 @require_POST
@@ -318,12 +314,9 @@ def bulk_add_to_group(request):
     if not result.success:
         return JsonResponse({'error': result.message}, status=400)
 
-    return JsonResponse({
-        'success': True,
-        'added': result.added_count,
-        'skipped': result.skipped_count,
-        'message': result.message,
-    })
+    return JsonResponse(
+        container.task_form_adapter.bulk_add_to_group_response_payload(result),
+    )
 
 
 @require_POST
@@ -341,11 +334,11 @@ def bulk_remove_from_groups(request):
     if not result.success:
         return JsonResponse({'error': result.message}, status=400)
 
-    return JsonResponse({
-        'success': True,
-        'removed': result.removed_count,
-        'message': result.message,
-    })
+    return JsonResponse(
+        container.task_form_adapter.bulk_remove_from_groups_response_payload(
+            result,
+        ),
+    )
 
 
 @require_POST
@@ -363,14 +356,11 @@ def bulk_create_work(request):
     if not result.success:
         return JsonResponse({'error': result.message}, status=400)
 
-    return JsonResponse({
-        'success': True,
-        'work_id': result.work_id,
-        'variant_id': result.variant_id,
-        'tasks_count': result.tasks_count,
-        'redirect_url': f'/works/{result.work_id}/',
-        'message': result.message,
-    })
+    return JsonResponse(
+        container.task_form_adapter.create_work_from_tasks_response_payload(
+            result,
+        ),
+    )
 
 
 def refresh_math_cache(request):

@@ -222,19 +222,11 @@ def bulk_create_work_from_groups(request):
     if not result.success:
         return JsonResponse({'error': result.message}, status=400)
 
-    response = {
-        'success': True,
-        'work_id': result.work_id,
-        'redirect_url': f'/works/{result.work_id}/',
-        'message': result.message,
-    }
-    if result.variants_generated:
-        response['variants_generated'] = result.variants_generated
-    if result.warning:
-        response['warning'] = result.warning
-
-    return JsonResponse(response)
-
+    payload = (
+        container.task_group_form_adapter
+        .create_work_from_groups_response_payload(result)
+    )
+    return JsonResponse(payload)
 
 
 @require_POST
@@ -255,8 +247,8 @@ def bulk_delete_groups(request):
     if not result.success:
         return JsonResponse({'error': result.message}, status=400)
 
-    return JsonResponse({
-        'success': True,
-        'deleted': result.deleted_count,
-        'message': result.message,
-    })
+    return JsonResponse(
+        container.task_group_form_adapter.delete_task_groups_response_payload(
+            result,
+        ),
+    )

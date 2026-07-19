@@ -1,5 +1,7 @@
-from django.http import QueryDict
+from types import SimpleNamespace
+
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.http import QueryDict
 from django.test import SimpleTestCase
 
 from core_logic.entities.document_rendering import (
@@ -241,6 +243,70 @@ class TaskFormAdapterTests(SimpleTestCase):
         self.assertEqual(context['current_group_filter'], '')
         self.assertEqual(context['current_analog_group'], '')
 
+    def test_builds_bulk_action_response_payloads(self):
+        adapter = TaskFormAdapter()
+
+        self.assertEqual(
+            adapter.bulk_create_group_response_payload(
+                SimpleNamespace(
+                    group_id='g1',
+                    group_name='Group',
+                    added_count=2,
+                    message='Created',
+                )
+            ),
+            {
+                'success': True,
+                'group_id': 'g1',
+                'group_name': 'Group',
+                'added': 2,
+                'message': 'Created',
+            },
+        )
+        self.assertEqual(
+            adapter.bulk_add_to_group_response_payload(
+                SimpleNamespace(
+                    added_count=1,
+                    skipped_count=1,
+                    message='Added',
+                )
+            ),
+            {
+                'success': True,
+                'added': 1,
+                'skipped': 1,
+                'message': 'Added',
+            },
+        )
+        self.assertEqual(
+            adapter.bulk_remove_from_groups_response_payload(
+                SimpleNamespace(removed_count=3, message='Removed')
+            ),
+            {
+                'success': True,
+                'removed': 3,
+                'message': 'Removed',
+            },
+        )
+        self.assertEqual(
+            adapter.create_work_from_tasks_response_payload(
+                SimpleNamespace(
+                    work_id='w1',
+                    variant_id='v1',
+                    tasks_count=4,
+                    message='Created work',
+                )
+            ),
+            {
+                'success': True,
+                'work_id': 'w1',
+                'variant_id': 'v1',
+                'tasks_count': 4,
+                'redirect_url': '/works/w1/',
+                'message': 'Created work',
+            },
+        )
+
 
 class TaskGroupFormAdapterTests(SimpleTestCase):
     def test_builds_add_tasks_to_group_request_from_query(self):
@@ -319,6 +385,54 @@ class TaskGroupFormAdapterTests(SimpleTestCase):
         self.assertEqual(context['current_sort'], 'name')
         self.assertEqual(context['min_tasks'], '')
         self.assertEqual(context['max_tasks'], '')
+
+    def test_builds_group_bulk_action_response_payloads(self):
+        adapter = TaskGroupFormAdapter()
+
+        self.assertEqual(
+            adapter.create_work_from_groups_response_payload(
+                SimpleNamespace(
+                    work_id='w1',
+                    message='Created',
+                    variants_generated=2,
+                    warning='Partial',
+                )
+            ),
+            {
+                'success': True,
+                'work_id': 'w1',
+                'redirect_url': '/works/w1/',
+                'message': 'Created',
+                'variants_generated': 2,
+                'warning': 'Partial',
+            },
+        )
+        self.assertEqual(
+            adapter.create_work_from_groups_response_payload(
+                SimpleNamespace(
+                    work_id='w1',
+                    message='Created',
+                    variants_generated=0,
+                    warning='',
+                )
+            ),
+            {
+                'success': True,
+                'work_id': 'w1',
+                'redirect_url': '/works/w1/',
+                'message': 'Created',
+            },
+        )
+        self.assertEqual(
+            adapter.delete_task_groups_response_payload(
+                SimpleNamespace(deleted_count=2, message='Deleted')
+            ),
+            {
+                'success': True,
+                'deleted': 2,
+                'message': 'Deleted',
+            },
+        )
 
 
 class WorkFormAdapterTests(SimpleTestCase):

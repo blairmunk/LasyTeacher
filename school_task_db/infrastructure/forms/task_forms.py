@@ -41,6 +41,40 @@ class TaskFormAdapter:
             work_type=body.get('work_type', 'test'),
         )
 
+    def bulk_create_group_response_payload(self, result):
+        return {
+            'success': True,
+            'group_id': result.group_id,
+            'group_name': result.group_name,
+            'added': result.added_count,
+            'message': result.message,
+        }
+
+    def bulk_add_to_group_response_payload(self, result):
+        return {
+            'success': True,
+            'added': result.added_count,
+            'skipped': result.skipped_count,
+            'message': result.message,
+        }
+
+    def bulk_remove_from_groups_response_payload(self, result):
+        return {
+            'success': True,
+            'removed': result.removed_count,
+            'message': result.message,
+        }
+
+    def create_work_from_tasks_response_payload(self, result):
+        return {
+            'success': True,
+            'work_id': result.work_id,
+            'variant_id': result.variant_id,
+            'tasks_count': result.tasks_count,
+            'redirect_url': f'/works/{result.work_id}/',
+            'message': result.message,
+        }
+
     def subtopic_options_topic_id_from_query(self, query):
         return query.get('topic_id', '')
 

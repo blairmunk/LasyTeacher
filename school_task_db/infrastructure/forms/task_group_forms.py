@@ -39,6 +39,26 @@ class TaskGroupFormAdapter:
     def delete_task_groups_request_from_body(self, body):
         return DeleteTaskGroupsRequest(group_ids=body.get('group_ids', []))
 
+    def create_work_from_groups_response_payload(self, result):
+        payload = {
+            'success': True,
+            'work_id': result.work_id,
+            'redirect_url': f'/works/{result.work_id}/',
+            'message': result.message,
+        }
+        if result.variants_generated:
+            payload['variants_generated'] = result.variants_generated
+        if result.warning:
+            payload['warning'] = result.warning
+        return payload
+
+    def delete_task_groups_response_payload(self, result):
+        return {
+            'success': True,
+            'deleted': result.deleted_count,
+            'message': result.message,
+        }
+
     def task_group_list_filters_from_query(self, query):
         return TaskGroupListFilters(
             search=query.get('search', ''),

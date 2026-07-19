@@ -109,6 +109,8 @@ from core_logic.use_cases.get_events_status_report import (
 )
 from core_logic.use_cases.get_generated_document_file import (
     GetGeneratedDocumentFileUseCase,
+)
+from core_logic.use_cases.get_rendered_document_file import (
     GetRenderedDocumentFileUseCase,
 )
 from core_logic.use_cases.get_orphan_variant_list import GetOrphanVariantListUseCase

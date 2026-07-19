@@ -11,7 +11,7 @@ from core_logic.use_cases.render_remedial_sheet_document import (
 )
 from core_logic.use_cases.render_work_document import RenderWorkDocumentRequest
 from core_logic.use_cases.compose_work_variants import ComposeWorkVariantsRequest
-from core_logic.use_cases.get_generated_document_file import (
+from core_logic.use_cases.get_rendered_document_file import (
     GetRenderedDocumentFileRequest,
 )
 from core_logic.value_objects.content_config import (

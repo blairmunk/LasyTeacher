@@ -19,6 +19,8 @@ from core_logic.entities.document_rendering import (
 from core_logic.use_cases.get_generated_document_file import (
     GetGeneratedDocumentFileRequest,
     GetGeneratedDocumentFileUseCase,
+)
+from core_logic.use_cases.get_rendered_document_file import (
     GetRenderedDocumentFileRequest,
     GetRenderedDocumentFileUseCase,
 )

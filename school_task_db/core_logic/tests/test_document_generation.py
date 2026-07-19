@@ -1,6 +1,8 @@
 from unittest import TestCase
 
 from core_logic.entities.document_generation import (
+    DocumentGenerationResult,
+    DocumentRenderResult,
     GeneratedDocument,
     GeneratedDocumentFile,
     GeneratedFile,
@@ -102,6 +104,12 @@ class FakeWorkRepository:
 
 
 class DocumentGenerationUseCaseTests(TestCase):
+    def test_document_generation_result_aliases_document_render_result(self):
+        result = DocumentGenerationResult(status='generated', renderer_type='html')
+
+        self.assertIsInstance(result, DocumentRenderResult)
+        self.assertEqual(result.generator_type, 'html')
+
     def test_render_work_document_rejects_unsupported_renderer(self):
         service = FakeDocumentGenerationService()
         work_repo = FakeWorkRepository()

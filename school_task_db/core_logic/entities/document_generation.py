@@ -17,7 +17,7 @@ class GeneratedDocument:
 
 
 @dataclass(frozen=True, init=False)
-class DocumentGenerationResult:
+class DocumentRenderResult:
     status: str
     renderer_type: str
     file_type: str = ''
@@ -63,3 +63,6 @@ class GeneratedFileResult:
     @property
     def success(self) -> bool:
         return self.status == 'ready'
+
+
+DocumentGenerationResult = DocumentRenderResult

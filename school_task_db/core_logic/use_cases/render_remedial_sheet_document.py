@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from core_logic.entities.document_generation import DocumentGenerationResult
+from core_logic.entities.document_generation import DocumentRenderResult
 from core_logic.interfaces.document_rendering_service import (
     IDocumentRenderingService,
 )
@@ -34,15 +34,15 @@ class RenderRemedialSheetDocumentUseCase:
     def execute(
         self,
         request: RenderRemedialSheetDocumentRequest,
-    ) -> DocumentGenerationResult:
+    ) -> DocumentRenderResult:
         variant_type = self.work_repo.get_variant_type(request.variant_id)
         if variant_type is None:
-            return DocumentGenerationResult(
+            return DocumentRenderResult(
                 status='not_found',
                 renderer_type=request.options.renderer_type,
             )
         if variant_type != 'remedial':
-            return DocumentGenerationResult(
+            return DocumentRenderResult(
                 status='not_remedial',
                 renderer_type=request.options.renderer_type,
             )
@@ -50,7 +50,7 @@ class RenderRemedialSheetDocumentUseCase:
             request.options.renderer_type
             not in SUPPORTED_REMEDIAL_SHEET_RENDERER_TYPES
         ):
-            return DocumentGenerationResult(
+            return DocumentRenderResult(
                 status='unsupported_generator',
                 renderer_type=request.options.renderer_type,
             )
@@ -64,7 +64,7 @@ class RenderRemedialSheetDocumentUseCase:
             ),
         )
         status = 'generated' if document.files else 'empty'
-        return DocumentGenerationResult(
+        return DocumentRenderResult(
             status=status,
             renderer_type=request.options.renderer_type,
             file_type=document.file_type,

@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from core_logic.entities.document_generation import DocumentGenerationResult
+from core_logic.entities.document_generation import DocumentRenderResult
 from core_logic.interfaces.document_rendering_service import (
     IDocumentRenderingService,
 )
@@ -34,17 +34,17 @@ class RenderWorkDocumentUseCase:
     def execute(
         self,
         request: RenderWorkDocumentRequest,
-    ) -> DocumentGenerationResult:
+    ) -> DocumentRenderResult:
         renderer_type = request.options.renderer_type
         work_name = self.work_repo.get_work_name(request.work_id)
         if work_name is None:
-            return DocumentGenerationResult(
+            return DocumentRenderResult(
                 status='not_found',
                 renderer_type=renderer_type,
             )
 
         if renderer_type not in SUPPORTED_WORK_RENDERER_TYPES:
-            return DocumentGenerationResult(
+            return DocumentRenderResult(
                 status='unsupported_generator',
                 renderer_type=renderer_type,
                 source_name=work_name,
@@ -59,7 +59,7 @@ class RenderWorkDocumentUseCase:
                 options=request.options,
             ),
         )
-        return DocumentGenerationResult(
+        return DocumentRenderResult(
             status='generated',
             renderer_type=renderer_type,
             file_type=document.file_type,

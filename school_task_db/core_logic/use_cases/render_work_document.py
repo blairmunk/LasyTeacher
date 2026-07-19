@@ -45,7 +45,7 @@ class RenderWorkDocumentUseCase:
                 source_name=work_name,
             )
 
-        document = self.document_generation_service.generate_work(
+        document = self.document_generation_service.render_work_document(
             request.work_id,
             request.options,
         )

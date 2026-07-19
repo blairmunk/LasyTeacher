@@ -50,7 +50,7 @@ class RenderRemedialSheetDocumentUseCase:
                 generator_type=request.options.generator_type,
             )
 
-        document = self.document_generation_service.generate_remedial_sheet(
+        document = self.document_generation_service.render_remedial_sheet_document(
             request.variant_id,
             request.options,
         )

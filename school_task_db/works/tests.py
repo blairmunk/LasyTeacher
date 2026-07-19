@@ -624,9 +624,9 @@ class WorkDetailViewTests(TestCase):
     def test_generate_work_ajax_uses_clean_content_config(self):
         with patch(
             'infrastructure.services.document_generation_service.'
-            'DjangoDocumentGenerationService.generate_work',
+            'DjangoDocumentGenerationService.render_work_document',
             return_value=GeneratedDocument(file_type='html', files=[]),
-        ) as generate_work:
+        ) as render_work:
             response = self.client.post(
                 reverse('works:generate_work_ajax', args=[self.work.pk]),
                 {
@@ -643,8 +643,8 @@ class WorkDetailViewTests(TestCase):
             response.json()['message'],
             'HTML документ создан (с полными решениями + подсказки + инструкции)',
         )
-        generate_work.assert_called_once()
-        options = generate_work.call_args.args[1]
+        render_work.assert_called_once()
+        options = render_work.call_args.args[1]
         self.assertEqual(
             options.content_config,
             {
@@ -671,7 +671,7 @@ class WorkDetailViewTests(TestCase):
     def test_render_work_ajax_uses_document_service(self):
         with patch(
             'infrastructure.services.document_generation_service.'
-            'DjangoDocumentGenerationService.generate_work',
+            'DjangoDocumentGenerationService.render_work_document',
             return_value=GeneratedDocument(
                 file_type='html',
                 files=[
@@ -681,7 +681,7 @@ class WorkDetailViewTests(TestCase):
                     )
                 ],
             ),
-        ) as generate_work:
+        ) as render_work:
             response = self.client.post(
                 reverse('works:render_work_ajax', args=[self.work.pk]),
                 {'generator_type': 'html'},
@@ -693,14 +693,14 @@ class WorkDetailViewTests(TestCase):
             response.json()['files'][0]['download_url'],
             reverse('works:download_generated_file', args=['html', 'work.html']),
         )
-        generate_work.assert_called_once()
+        render_work.assert_called_once()
 
     def test_legacy_generate_work_ajax_route_still_renders_document(self):
         with patch(
             'infrastructure.services.document_generation_service.'
-            'DjangoDocumentGenerationService.generate_work',
+            'DjangoDocumentGenerationService.render_work_document',
             return_value=GeneratedDocument(file_type='html', files=[]),
-        ) as generate_work:
+        ) as render_work:
             response = self.client.post(
                 reverse('works:generate_work_ajax', args=[self.work.pk]),
                 {'generator_type': 'html'},
@@ -708,7 +708,7 @@ class WorkDetailViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json()['success'])
-        generate_work.assert_called_once()
+        render_work.assert_called_once()
 
     def test_download_generated_file_uses_document_service(self):
         with patch(
@@ -795,7 +795,7 @@ class WorkDetailViewTests(TestCase):
 
         with patch(
             'infrastructure.services.document_generation_service.'
-            'DjangoDocumentGenerationService.generate_remedial_sheet',
+            'DjangoDocumentGenerationService.render_remedial_sheet_document',
             return_value=GeneratedDocument(
                 file_type='pdf',
                 files=[
@@ -805,7 +805,7 @@ class WorkDetailViewTests(TestCase):
                     )
                 ],
             ),
-        ) as generate_sheet:
+        ) as render_sheet:
             response = self.client.post(
                 reverse(
                     'works:generate-remedial-sheet',
@@ -828,13 +828,13 @@ class WorkDetailViewTests(TestCase):
                 }
             ],
         )
-        generate_sheet.assert_called_once()
+        render_sheet.assert_called_once()
 
     def test_generate_remedial_sheet_ajax_rejects_regular_variant(self):
         with patch(
             'infrastructure.services.document_generation_service.'
-            'DjangoDocumentGenerationService.generate_remedial_sheet',
-        ) as generate_sheet:
+            'DjangoDocumentGenerationService.render_remedial_sheet_document',
+        ) as render_sheet:
             response = self.client.post(
                 reverse(
                     'works:generate-remedial-sheet',
@@ -851,7 +851,7 @@ class WorkDetailViewTests(TestCase):
                 'message': 'Этот вариант не является работой над ошибками',
             },
         )
-        generate_sheet.assert_not_called()
+        render_sheet.assert_not_called()
 
     def test_render_remedial_sheet_ajax_uses_clean_use_case(self):
         remedial_variant = Variant.objects.create(
@@ -863,7 +863,7 @@ class WorkDetailViewTests(TestCase):
 
         with patch(
             'infrastructure.services.document_generation_service.'
-            'DjangoDocumentGenerationService.generate_remedial_sheet',
+            'DjangoDocumentGenerationService.render_remedial_sheet_document',
             return_value=GeneratedDocument(
                 file_type='pdf',
                 files=[
@@ -873,7 +873,7 @@ class WorkDetailViewTests(TestCase):
                     )
                 ],
             ),
-        ) as generate_sheet:
+        ) as render_sheet:
             response = self.client.post(
                 reverse(
                     'works:render-remedial-sheet',
@@ -884,7 +884,7 @@ class WorkDetailViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()['status'], 'success')
-        generate_sheet.assert_called_once()
+        render_sheet.assert_called_once()
 
     def test_generate_remedial_sheet_ajax_rejects_unsupported_generator(self):
         remedial_variant = Variant.objects.create(
@@ -896,8 +896,8 @@ class WorkDetailViewTests(TestCase):
 
         with patch(
             'infrastructure.services.document_generation_service.'
-            'DjangoDocumentGenerationService.generate_remedial_sheet',
-        ) as generate_sheet:
+            'DjangoDocumentGenerationService.render_remedial_sheet_document',
+        ) as render_sheet:
             response = self.client.post(
                 reverse(
                     'works:generate-remedial-sheet',
@@ -914,7 +914,7 @@ class WorkDetailViewTests(TestCase):
                 'message': 'Неподдерживаемый тип генератора: docx',
             },
         )
-        generate_sheet.assert_not_called()
+        render_sheet.assert_not_called()
 
     def test_django_work_repo_builds_remedial_sheet_data(self):
         student = Student.objects.create(last_name='Петров', first_name='Пётр')

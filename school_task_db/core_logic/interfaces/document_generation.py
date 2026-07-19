@@ -14,20 +14,36 @@ from core_logic.value_objects.content_config import (
 
 class IDocumentGenerationService(ABC):
     @abstractmethod
+    def render_work_document(
+        self,
+        work_id: str,
+        options: WorkGenerationOptions,
+    ) -> GeneratedDocument:
+        """Render document files for a whole work."""
+
+    @abstractmethod
+    def render_remedial_sheet_document(
+        self,
+        variant_id: str,
+        options: RemedialSheetGenerationOptions,
+    ) -> GeneratedDocument:
+        """Render document files for a remedial variant."""
+
     def generate_work(
         self,
         work_id: str,
         options: WorkGenerationOptions,
     ) -> GeneratedDocument:
-        """Generate files for a whole work."""
+        """Backward-compatible alias for render_work_document."""
+        return self.render_work_document(work_id, options)
 
-    @abstractmethod
     def generate_remedial_sheet(
         self,
         variant_id: str,
         options: RemedialSheetGenerationOptions,
     ) -> GeneratedDocument:
-        """Generate files for a remedial variant."""
+        """Backward-compatible alias for render_remedial_sheet_document."""
+        return self.render_remedial_sheet_document(variant_id, options)
 
     @abstractmethod
     def get_generated_file(

@@ -54,13 +54,19 @@ class FakeDocumentGenerationService:
             ),
         )
 
-    def generate_work(self, work_id, options):
+    def render_work_document(self, work_id, options):
         self.work_request = (work_id, options)
         return self.work_document
 
-    def generate_remedial_sheet(self, variant_id, options):
+    def generate_work(self, work_id, options):
+        return self.render_work_document(work_id, options)
+
+    def render_remedial_sheet_document(self, variant_id, options):
         self.remedial_request = (variant_id, options)
         return self.remedial_document
+
+    def generate_remedial_sheet(self, variant_id, options):
+        return self.render_remedial_sheet_document(variant_id, options)
 
     def get_generated_file(self, file_type, filename):
         self.file_request = (file_type, filename)

@@ -149,7 +149,7 @@
                     </div>
                     <div class="col-auto">
                         <button type="submit" class="btn btn-success btn-sm" id="btnGenerateRemedial">
-                            <i class="fas fa-file-pdf"></i> Сгенерировать
+                            <i class="fas fa-file-pdf"></i> Создать
                         </button>
                     </div>
                 </div>
@@ -164,7 +164,7 @@
         const btn = document.getElementById('btnGenerateRemedial');
         const result = document.getElementById('remedialGenerateResult');
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Генерация...';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Подготовка...';
         result.innerHTML = '';
 
         const formData = new FormData(this);
@@ -175,7 +175,7 @@
         .then(r => r.json())
         .then(data => {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-file-pdf"></i> Сгенерировать';
+            btn.innerHTML = '<i class="fas fa-file-pdf"></i> Создать';
             if (data.status === 'success') {
                 let html = '<div class="alert alert-success py-1">';
                 html += '<i class="fas fa-check"></i> ' + data.message + '<br>';
@@ -191,7 +191,7 @@
         })
         .catch(err => {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-file-pdf"></i> Сгенерировать';
+            btn.innerHTML = '<i class="fas fa-file-pdf"></i> Создать';
             result.innerHTML = `<div class="alert alert-danger py-1">Ошибка: ${err}</div>`;
         });
     });

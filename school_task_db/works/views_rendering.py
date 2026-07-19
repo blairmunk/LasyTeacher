@@ -158,7 +158,7 @@ def render_remedial_sheet_ajax(request, variant_id):
         if result.status == DOCUMENT_RENDER_STATUS_EMPTY:
             return JsonResponse({
                 'status': 'error',
-                'message': 'Файлы не были сгенерированы'
+                'message': 'Файлы не были созданы'
             }, status=500)
 
         return JsonResponse(

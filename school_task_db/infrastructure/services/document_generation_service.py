@@ -12,6 +12,7 @@ from core_logic.entities.document_generation import (
     GeneratedFileResult,
 )
 from core_logic.interfaces.document_generation import IDocumentGenerationService
+from core_logic.services.document_builder import RecipeDocumentBuilder
 from works.models import Variant, Work
 
 
@@ -22,8 +23,9 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         'pdf': 'web_pdf_output',
     }
 
-    def __init__(self, get_remedial_sheet_data_use_case):
+    def __init__(self, get_remedial_sheet_data_use_case, document_builder=None):
         self.get_remedial_sheet_data_use_case = get_remedial_sheet_data_use_case
+        self.document_builder = document_builder or RecipeDocumentBuilder()
 
     def render_work_document(
         self,
@@ -32,6 +34,7 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         render_plan=None,
     ) -> GeneratedDocument:
         work = Work.objects.get(pk=work_id)
+        self._build_document(render_plan)
         render_target = self._resolve_render_target(options, render_plan)
         renderer_type = render_target.renderer_type
         content_config = options.content_config
@@ -69,6 +72,7 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         render_plan=None,
     ) -> GeneratedDocument:
         variant = Variant.objects.get(pk=variant_id)
+        self._build_document(render_plan)
         content_config = options.content_config
         render_target = self._resolve_render_target(options, render_plan)
         renderer_type = render_target.renderer_type
@@ -153,6 +157,14 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         if render_plan is not None:
             return render_plan.render_target
         return options.render_target
+
+    def _build_document(self, render_plan=None):
+        if render_plan is None:
+            return None
+        return self.document_builder.build(
+            render_plan.source,
+            render_plan.recipe,
+        )
 
     def _generate_latex_work(self, work, content_config, pdf_format='A4'):
         from latex_generator.generators.work_generator import WorkLatexGenerator

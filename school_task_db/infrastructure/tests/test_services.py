@@ -16,6 +16,15 @@ from infrastructure.services.task_import_service import DjangoTaskImportService
 from tasks.models import Task
 
 
+class FakeDocumentBuilder:
+    def __init__(self):
+        self.request = None
+
+    def build(self, source, recipe):
+        self.request = (source, recipe)
+        return 'document'
+
+
 class DjangoDocumentGenerationServiceTests(TestCase):
     def test_resolve_render_target_prefers_render_plan(self):
         service = DjangoDocumentGenerationService(
@@ -43,6 +52,32 @@ class DjangoDocumentGenerationServiceTests(TestCase):
 
         self.assertEqual(target.renderer_type, 'latex')
         self.assertEqual(target.page_format, 'A4')
+
+    def test_build_document_uses_configured_builder(self):
+        builder = FakeDocumentBuilder()
+        service = DjangoDocumentGenerationService(
+            get_remedial_sheet_data_use_case=None,
+            document_builder=builder,
+        )
+        source = DocumentSourceRef(source_type='work', source_id='work-1')
+        recipe = DocumentRecipe(document_type='work')
+        plan = DocumentRenderPlan(
+            source=source,
+            recipe=recipe,
+            render_target=RenderTarget(renderer_type='html'),
+        )
+
+        document = service._build_document(plan)
+
+        self.assertEqual(document, 'document')
+        self.assertEqual(builder.request, (source, recipe))
+
+    def test_build_document_returns_none_without_render_plan(self):
+        service = DjangoDocumentGenerationService(
+            get_remedial_sheet_data_use_case=None,
+        )
+
+        self.assertIsNone(service._build_document())
 
 
 class DjangoTaskImportServiceTests(TestCase):

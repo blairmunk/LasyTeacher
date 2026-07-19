@@ -50,6 +50,15 @@ class WorkDetailViewTests(TestCase):
         self.assertEqual(response.context['spec_preview'], [])
         self.assertTrue(response.context['show_sync_button'])
 
+    def test_detail_exposes_document_rendering_dom_markers(self):
+        response = self.client.get(reverse('works:detail', args=[self.work.pk]))
+
+        self.assertContains(response, 'document-rendering-block')
+        self.assertContains(response, 'data-rendering-block')
+        self.assertContains(response, 'data-rendering-form')
+        self.assertContains(response, 'document-generation-block')
+        self.assertContains(response, 'advanced-generation-form')
+
     def test_detail_returns_404_for_missing_work(self):
         response = self.client.get(
             reverse('works:detail', args=['550e8400-e29b-41d4-a716-446655440000'])

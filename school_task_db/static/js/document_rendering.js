@@ -20,7 +20,10 @@ class DocumentRenderer {
 
         // Обработка формы расширенного рендеринга
         document.addEventListener('submit', (e) => {
-            if (e.target.matches('#advanced-generation-form')) {
+            if (
+                e.target.matches('[data-rendering-form]')
+                || e.target.matches('#advanced-generation-form')
+            ) {
                 e.preventDefault();
                 this.handleAdvancedGeneration(e.target);
             }
@@ -163,14 +166,18 @@ class DocumentRenderer {
     displayResults(files) {
         if (!files || files.length === 0) return;
 
-        let resultsContainer = document.getElementById('generation-results');
+        let resultsContainer = document.querySelector('[data-rendering-results]')
+            || document.getElementById('generation-results');
         if (!resultsContainer) {
             resultsContainer = document.createElement('div');
             resultsContainer.id = 'generation-results';
+            resultsContainer.setAttribute('data-rendering-results', '');
             resultsContainer.className = 'mt-4';
             
-            // Ищем блок генерации по нескольким селекторам
-            const genBlock = document.querySelector('.document-generation-block')
+            // Ищем блок рендеринга по нескольким селекторам
+            const genBlock = document.querySelector('.document-rendering-block')
+                || document.querySelector('[data-rendering-block]')
+                || document.querySelector('.document-generation-block')
                 || document.querySelector('[data-generation-block]')
                 || document.querySelector('.card-header h5 .fa-file-export')?.closest('.card');
             

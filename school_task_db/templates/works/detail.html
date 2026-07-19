@@ -135,7 +135,11 @@
             </div>
 
             <!-- Печать документов -->
-            <div class="card border-0 shadow-sm mb-4 document-generation-block">
+            <div
+                class="card border-0 shadow-sm mb-4 document-rendering-block document-generation-block"
+                data-rendering-block
+                data-generation-block
+            >
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="fas fa-file-export"></i> Печать документов</h5>
                 </div>
@@ -175,7 +179,7 @@
                             <i class="fas fa-cogs"></i> Расширенные настройки
                         </summary>
                         <div class="mt-3 p-3 bg-light rounded">
-                            <form id="advanced-generation-form">
+                            <form id="advanced-generation-form" data-rendering-form>
                                 {% csrf_token %}
                                 <input type="hidden" name="work_id" value="{{ work.id }}">
                                 <div class="row">
@@ -344,12 +348,18 @@
     // === Результаты ===
     function displayResults(files) {
         if (!files || files.length === 0) return;
-        var el = document.getElementById('generation-results');
+        var el = document.querySelector('[data-rendering-results]')
+            || document.getElementById('generation-results');
         if (!el) {
             el = document.createElement('div');
             el.id = 'generation-results';
+            el.setAttribute('data-rendering-results', '');
             el.className = 'mt-3';
-            var cardBody = document.querySelector('.document-generation-block .card-body');
+            var cardBody = document.querySelector(
+                '.document-rendering-block .card-body'
+            )
+                || document.querySelector('[data-rendering-block] .card-body')
+                || document.querySelector('.document-generation-block .card-body');
             if (cardBody) cardBody.appendChild(el);
         }
 
@@ -442,7 +452,8 @@
     });
 
     // === Расширенная форма ===
-    var advForm = document.getElementById('advanced-generation-form');
+    var advForm = document.querySelector('[data-rendering-form]')
+        || document.getElementById('advanced-generation-form');
     if (advForm) {
         advForm.addEventListener('submit', function(e) {
             e.preventDefault();

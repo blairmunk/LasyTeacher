@@ -623,8 +623,8 @@ class WorkDetailViewTests(TestCase):
 
     def test_generate_work_ajax_uses_clean_content_config(self):
         with patch(
-            'infrastructure.services.document_generation_service.'
-            'DjangoDocumentGenerationService.render_work_document',
+            'infrastructure.services.document_rendering_service.'
+            'DjangoDocumentRenderingService.render_work_document',
             return_value=GeneratedDocument(file_type='html', files=[]),
         ) as render_work:
             response = self.client.post(
@@ -697,8 +697,8 @@ class WorkDetailViewTests(TestCase):
 
     def test_legacy_generate_work_ajax_route_still_renders_document(self):
         with patch(
-            'infrastructure.services.document_generation_service.'
-            'DjangoDocumentGenerationService.render_work_document',
+            'infrastructure.services.document_rendering_service.'
+            'DjangoDocumentRenderingService.render_work_document',
             return_value=GeneratedDocument(file_type='html', files=[]),
         ) as render_work:
             response = self.client.post(
@@ -812,8 +812,8 @@ class WorkDetailViewTests(TestCase):
         )
 
         with patch(
-            'infrastructure.services.document_generation_service.'
-            'DjangoDocumentGenerationService.render_remedial_sheet_document',
+            'infrastructure.services.document_rendering_service.'
+            'DjangoDocumentRenderingService.render_remedial_sheet_document',
             return_value=GeneratedDocument(
                 file_type='pdf',
                 files=[
@@ -850,8 +850,8 @@ class WorkDetailViewTests(TestCase):
 
     def test_generate_remedial_sheet_ajax_rejects_regular_variant(self):
         with patch(
-            'infrastructure.services.document_generation_service.'
-            'DjangoDocumentGenerationService.render_remedial_sheet_document',
+            'infrastructure.services.document_rendering_service.'
+            'DjangoDocumentRenderingService.render_remedial_sheet_document',
         ) as render_sheet:
             response = self.client.post(
                 reverse(
@@ -913,8 +913,8 @@ class WorkDetailViewTests(TestCase):
         )
 
         with patch(
-            'infrastructure.services.document_generation_service.'
-            'DjangoDocumentGenerationService.render_remedial_sheet_document',
+            'infrastructure.services.document_rendering_service.'
+            'DjangoDocumentRenderingService.render_remedial_sheet_document',
         ) as render_sheet:
             response = self.client.post(
                 reverse(

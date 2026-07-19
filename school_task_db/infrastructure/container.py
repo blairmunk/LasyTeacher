@@ -295,7 +295,7 @@ class Container:
         self._task_group_form_adapter = None
         self._work_form_adapter = None
         self._task_form_adapter = None
-        self._document_rendering_service = None
+        self._document_engine = None
         self._task_import_service = None
 
     @property
@@ -413,18 +413,22 @@ class Container:
         return self._task_form_adapter
 
     @property
-    def document_rendering_service(self):
-        if self._document_rendering_service is None:
-            self._document_rendering_service = DjangoDocumentEngine(
+    def document_engine(self):
+        if self._document_engine is None:
+            self._document_engine = DjangoDocumentEngine(
                 get_remedial_sheet_data_use_case=(
                     self.get_remedial_sheet_data_use_case()
                 ),
             )
-        return self._document_rendering_service
+        return self._document_engine
+
+    @property
+    def document_rendering_service(self):
+        return self.document_engine
 
     @property
     def document_generation_service(self):
-        return self.document_rendering_service
+        return self.document_engine
 
     @property
     def task_import_service(self):
@@ -1014,7 +1018,7 @@ class Container:
 
     def render_work_document_use_case(self):
         return RenderWorkDocumentUseCase(
-            document_rendering_service=self.document_rendering_service,
+            document_rendering_service=self.document_engine,
             work_repo=self.work_repo,
             document_template_repo=self.document_template_repo,
         )
@@ -1024,7 +1028,7 @@ class Container:
 
     def render_remedial_sheet_document_use_case(self):
         return RenderRemedialSheetDocumentUseCase(
-            document_rendering_service=self.document_rendering_service,
+            document_rendering_service=self.document_engine,
             work_repo=self.work_repo,
             document_template_repo=self.document_template_repo,
         )
@@ -1034,7 +1038,7 @@ class Container:
 
     def get_generated_document_file_use_case(self):
         return GetGeneratedDocumentFileUseCase(
-            document_rendering_service=self.document_rendering_service,
+            document_rendering_service=self.document_engine,
         )
 
     def create_work_from_orphans_use_case(self):

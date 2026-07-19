@@ -676,11 +676,15 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(container.task_form_adapter, TaskFormAdapter)
         self.assertIsInstance(container.work_form_adapter, WorkFormAdapter)
         self.assertIsInstance(
-            container.document_rendering_service,
+            container.document_engine,
             DjangoDocumentEngine,
         )
         self.assertIs(
-            container.document_generation_service,
             container.document_rendering_service,
+            container.document_engine,
+        )
+        self.assertIs(
+            container.document_generation_service,
+            container.document_engine,
         )
         self.assertIsInstance(container.task_import_service, DjangoTaskImportService)

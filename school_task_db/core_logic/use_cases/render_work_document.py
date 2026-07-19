@@ -48,7 +48,6 @@ class RenderWorkDocumentUseCase:
             or document_rendering_service
             or document_generation_service
         )
-        self.document_rendering_service = self.document_engine
         self.work_repo = work_repo
         self.document_template_repo = document_template_repo
 

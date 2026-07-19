@@ -24,7 +24,6 @@ class GetGeneratedDocumentFileUseCase:
             or document_rendering_service
             or document_generation_service
         )
-        self.document_rendering_service = self.document_engine
 
     def execute(
         self,

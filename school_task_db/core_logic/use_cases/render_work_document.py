@@ -2,7 +2,12 @@
 
 from dataclasses import dataclass
 
-from core_logic.entities.document_rendering import DocumentRenderResult
+from core_logic.entities.document_rendering import (
+    DOCUMENT_RENDER_STATUS_GENERATED,
+    DOCUMENT_RENDER_STATUS_NOT_FOUND,
+    DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
+    DocumentRenderResult,
+)
 from core_logic.interfaces.document_rendering_service import (
     IDocumentRenderingService,
 )
@@ -45,13 +50,13 @@ class RenderWorkDocumentUseCase:
         work_name = self.work_repo.get_work_name(request.work_id)
         if work_name is None:
             return DocumentRenderResult(
-                status='not_found',
+                status=DOCUMENT_RENDER_STATUS_NOT_FOUND,
                 renderer_type=renderer_type,
             )
 
         if renderer_type not in SUPPORTED_WORK_RENDERER_TYPES:
             return DocumentRenderResult(
-                status='unsupported_generator',
+                status=DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
                 renderer_type=renderer_type,
                 source_name=work_name,
             )
@@ -66,7 +71,7 @@ class RenderWorkDocumentUseCase:
             ),
         )
         return DocumentRenderResult(
-            status='generated',
+            status=DOCUMENT_RENDER_STATUS_GENERATED,
             renderer_type=renderer_type,
             file_type=document.file_type,
             files=document.files,

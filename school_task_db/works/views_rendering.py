@@ -4,6 +4,15 @@ import logging
 from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.http import require_http_methods
 
+from core_logic.entities.document_rendering import (
+    DOCUMENT_RENDER_STATUS_EMPTY,
+    DOCUMENT_RENDER_STATUS_NOT_FOUND,
+    DOCUMENT_RENDER_STATUS_NOT_REMEDIAL,
+    DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
+    GENERATED_FILE_STATUS_NOT_FOUND,
+    GENERATED_FILE_STATUS_UNSUPPORTED_TYPE,
+)
+
 logger = logging.getLogger(__name__)
 
 @require_http_methods(["POST"])
@@ -35,9 +44,9 @@ def render_work_ajax(request, work_id):
         result = container.render_work_document_use_case().execute(
             document_request,
         )
-        if result.status == 'not_found':
+        if result.status == DOCUMENT_RENDER_STATUS_NOT_FOUND:
             raise Http404("Работа не найдена")
-        if result.status == 'unsupported_generator':
+        if result.status == DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER:
             return JsonResponse({
                 'success': False, 
                 'error': f'Неподдерживаемый тип рендера: {renderer_type}'
@@ -71,9 +80,9 @@ def download_generated_file(request, file_type, filename):
         ),
     )
 
-    if result.status == 'unsupported_type':
+    if result.status == GENERATED_FILE_STATUS_UNSUPPORTED_TYPE:
         raise Http404("Неподдерживаемый тип файла")
-    if result.status == 'not_found':
+    if result.status == GENERATED_FILE_STATUS_NOT_FOUND:
         raise Http404("Файл не найден")
     if not result.file:
         raise Http404("Ошибка чтения файла")
@@ -104,7 +113,7 @@ def render_variant_ajax(request, variant_id):
     result = container.get_variant_generation_placeholder_use_case().execute(
         str(variant_id),
     )
-    if result.status == 'not_found':
+    if result.status == DOCUMENT_RENDER_STATUS_NOT_FOUND:
         raise Http404("Вариант не найден")
     
     return JsonResponse({
@@ -134,19 +143,19 @@ def render_remedial_sheet_ajax(request, variant_id):
             document_request,
         )
 
-        if result.status == 'not_found':
+        if result.status == DOCUMENT_RENDER_STATUS_NOT_FOUND:
             raise Http404("Вариант не найден")
-        if result.status == 'not_remedial':
+        if result.status == DOCUMENT_RENDER_STATUS_NOT_REMEDIAL:
             return JsonResponse({
                 'status': 'error',
                 'message': 'Этот вариант не является работой над ошибками'
             }, status=400)
-        if result.status == 'unsupported_generator':
+        if result.status == DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER:
             return JsonResponse({
                 'status': 'error',
                 'message': f'Неподдерживаемый тип рендера: {renderer_type}'
             }, status=400)
-        if result.status == 'empty':
+        if result.status == DOCUMENT_RENDER_STATUS_EMPTY:
             return JsonResponse({
                 'status': 'error',
                 'message': 'Файлы не были сгенерированы'

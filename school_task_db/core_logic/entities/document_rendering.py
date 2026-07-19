@@ -4,6 +4,18 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 
+DOCUMENT_RENDER_STATUS_GENERATED = 'generated'
+DOCUMENT_RENDER_STATUS_NOT_FOUND = 'not_found'
+DOCUMENT_RENDER_STATUS_NOT_REMEDIAL = 'not_remedial'
+DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER = 'unsupported_generator'
+DOCUMENT_RENDER_STATUS_EMPTY = 'empty'
+
+GENERATED_FILE_STATUS_READY = 'ready'
+GENERATED_FILE_STATUS_NOT_FOUND = 'not_found'
+GENERATED_FILE_STATUS_UNSUPPORTED_TYPE = 'unsupported_type'
+GENERATED_FILE_STATUS_READ_ERROR = 'read_error'
+
+
 @dataclass(frozen=True)
 class GeneratedDocumentFile:
     filename: str
@@ -45,7 +57,7 @@ class DocumentRenderResult:
 
     @property
     def success(self) -> bool:
-        return self.status == 'generated'
+        return self.status == DOCUMENT_RENDER_STATUS_GENERATED
 
 
 @dataclass(frozen=True)
@@ -62,7 +74,7 @@ class GeneratedFileResult:
 
     @property
     def success(self) -> bool:
-        return self.status == 'ready'
+        return self.status == GENERATED_FILE_STATUS_READY
 
 
 DocumentGenerationResult = DocumentRenderResult

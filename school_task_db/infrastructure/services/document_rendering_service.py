@@ -4,6 +4,10 @@ import mimetypes
 from pathlib import Path
 
 from core_logic.entities.document_rendering import (
+    GENERATED_FILE_STATUS_NOT_FOUND,
+    GENERATED_FILE_STATUS_READ_ERROR,
+    GENERATED_FILE_STATUS_READY,
+    GENERATED_FILE_STATUS_UNSUPPORTED_TYPE,
     GeneratedDocument,
     GeneratedDocumentFile,
     GeneratedFile,
@@ -209,11 +213,11 @@ class DjangoDocumentRenderingService(IDocumentRenderingService):
     ) -> GeneratedFileResult:
         output_dir = self.type_to_output_dir.get(file_type)
         if not output_dir:
-            return GeneratedFileResult(status='unsupported_type')
+            return GeneratedFileResult(status=GENERATED_FILE_STATUS_UNSUPPORTED_TYPE)
 
         file_path = Path(output_dir) / filename
         if not file_path.exists():
-            return GeneratedFileResult(status='not_found')
+            return GeneratedFileResult(status=GENERATED_FILE_STATUS_NOT_FOUND)
 
         content_type, _ = mimetypes.guess_type(str(file_path))
         if not content_type:
@@ -221,7 +225,7 @@ class DjangoDocumentRenderingService(IDocumentRenderingService):
 
         try:
             return GeneratedFileResult(
-                status='ready',
+                status=GENERATED_FILE_STATUS_READY,
                 file=GeneratedFile(
                     filename=filename,
                     content=file_path.read_bytes(),
@@ -229,7 +233,7 @@ class DjangoDocumentRenderingService(IDocumentRenderingService):
                 ),
             )
         except OSError:
-            return GeneratedFileResult(status='read_error')
+            return GeneratedFileResult(status=GENERATED_FILE_STATUS_READ_ERROR)
 
     def _document_from_paths(self, file_type: str, file_paths):
         files = []

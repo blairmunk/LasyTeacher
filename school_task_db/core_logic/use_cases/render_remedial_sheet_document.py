@@ -2,7 +2,14 @@
 
 from dataclasses import dataclass
 
-from core_logic.entities.document_rendering import DocumentRenderResult
+from core_logic.entities.document_rendering import (
+    DOCUMENT_RENDER_STATUS_EMPTY,
+    DOCUMENT_RENDER_STATUS_GENERATED,
+    DOCUMENT_RENDER_STATUS_NOT_FOUND,
+    DOCUMENT_RENDER_STATUS_NOT_REMEDIAL,
+    DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
+    DocumentRenderResult,
+)
 from core_logic.interfaces.document_rendering_service import (
     IDocumentRenderingService,
 )
@@ -44,12 +51,12 @@ class RenderRemedialSheetDocumentUseCase:
         variant_type = self.work_repo.get_variant_type(request.variant_id)
         if variant_type is None:
             return DocumentRenderResult(
-                status='not_found',
+                status=DOCUMENT_RENDER_STATUS_NOT_FOUND,
                 renderer_type=request.options.renderer_type,
             )
         if variant_type != 'remedial':
             return DocumentRenderResult(
-                status='not_remedial',
+                status=DOCUMENT_RENDER_STATUS_NOT_REMEDIAL,
                 renderer_type=request.options.renderer_type,
             )
         if (
@@ -57,7 +64,7 @@ class RenderRemedialSheetDocumentUseCase:
             not in SUPPORTED_REMEDIAL_SHEET_RENDERER_TYPES
         ):
             return DocumentRenderResult(
-                status='unsupported_generator',
+                status=DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
                 renderer_type=request.options.renderer_type,
             )
 
@@ -69,7 +76,11 @@ class RenderRemedialSheetDocumentUseCase:
                 options=request.options,
             ),
         )
-        status = 'generated' if document.files else 'empty'
+        status = (
+            DOCUMENT_RENDER_STATUS_GENERATED
+            if document.files
+            else DOCUMENT_RENDER_STATUS_EMPTY
+        )
         return DocumentRenderResult(
             status=status,
             renderer_type=request.options.renderer_type,

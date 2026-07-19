@@ -146,6 +146,37 @@ class DjangoDocumentGenerationServiceTests(TestCase):
         self.assertEqual(source.title, 'Контрольная')
         self.assertEqual(recipe.document_type, 'work')
 
+    def test_generate_work_alias_uses_given_render_plan(self):
+        work = Work.objects.create(name='Контрольная')
+        document = Document(title='Контрольная', document_type='work')
+        builder = FakeDocumentBuilder(document=document)
+        registry = FakeDocumentRendererRegistry()
+        service = DjangoDocumentGenerationService(
+            get_remedial_sheet_data_use_case=None,
+            document_builder=builder,
+            document_renderer_registry=registry,
+        )
+        plan = DocumentRenderPlan(
+            source=DocumentSourceRef(
+                source_type=WORK_SOURCE_TYPE,
+                source_id=str(work.pk),
+                title='Переопределённое имя',
+            ),
+            recipe=DocumentRecipe(document_type='work'),
+            render_target=RenderTarget(renderer_type='pdf'),
+        )
+
+        result = service.generate_work(
+            work_id=str(work.pk),
+            options=WorkDocumentRenderOptions(renderer_type='html'),
+            render_plan=plan,
+        )
+
+        source, recipe = builder.request
+        self.assertEqual(result.file_type, 'pdf')
+        self.assertEqual(source.title, 'Переопределённое имя')
+        self.assertEqual(recipe.document_type, 'work')
+
     def test_generate_remedial_sheet_alias_builds_render_plan(self):
         variant = Variant.objects.create(
             work=None,
@@ -170,6 +201,40 @@ class DjangoDocumentGenerationServiceTests(TestCase):
         self.assertEqual(result.file_type, 'pdf')
         self.assertEqual(source.source_type, REMEDIAL_VARIANT_SOURCE_TYPE)
         self.assertEqual(source.source_id, str(variant.pk))
+        self.assertEqual(recipe.document_type, 'remedial_sheet')
+
+    def test_generate_remedial_sheet_alias_uses_given_render_plan(self):
+        variant = Variant.objects.create(
+            work=None,
+            number=1,
+            variant_type='remedial',
+        )
+        document = Document(title='Разбор', document_type='remedial_sheet')
+        builder = FakeDocumentBuilder(document=document)
+        registry = FakeDocumentRendererRegistry()
+        service = DjangoDocumentGenerationService(
+            get_remedial_sheet_data_use_case=None,
+            document_builder=builder,
+            document_renderer_registry=registry,
+        )
+        plan = DocumentRenderPlan(
+            source=DocumentSourceRef(
+                source_type=REMEDIAL_VARIANT_SOURCE_TYPE,
+                source_id=str(variant.pk),
+            ),
+            recipe=DocumentRecipe(document_type='remedial_sheet'),
+            render_target=RenderTarget(renderer_type='html'),
+        )
+
+        result = service.generate_remedial_sheet(
+            variant_id=str(variant.pk),
+            options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+            render_plan=plan,
+        )
+
+        source, recipe = builder.request
+        self.assertEqual(result.file_type, 'html')
+        self.assertEqual(source.source_type, REMEDIAL_VARIANT_SOURCE_TYPE)
         self.assertEqual(recipe.document_type, 'remedial_sheet')
 
 

@@ -100,12 +100,17 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
             ),
         )
 
-    def generate_work(self, work_id: str, options) -> GeneratedDocument:
+    def generate_work(
+        self,
+        work_id: str,
+        options,
+        render_plan=None,
+    ) -> GeneratedDocument:
         work = Work.objects.get(pk=work_id)
         return self.render_work_document(
             work_id=str(work.pk),
             options=options,
-            render_plan=build_work_document_render_plan(
+            render_plan=render_plan or build_work_document_render_plan(
                 work_id=str(work.pk),
                 work_name=work.name,
                 options=options,
@@ -167,12 +172,13 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         self,
         variant_id: str,
         options,
+        render_plan=None,
     ) -> GeneratedDocument:
         variant = Variant.objects.get(pk=variant_id)
         return self.render_remedial_sheet_document(
             variant_id=str(variant.pk),
             options=options,
-            render_plan=build_remedial_sheet_document_render_plan(
+            render_plan=render_plan or build_remedial_sheet_document_render_plan(
                 variant_id=str(variant.pk),
                 options=options,
             ),

@@ -36,17 +36,23 @@ class IDocumentGenerationService(ABC):
         self,
         work_id: str,
         options: WorkDocumentRenderOptions,
+        render_plan: DocumentRenderPlan | None = None,
     ) -> GeneratedDocument:
         """Backward-compatible alias for render_work_document."""
-        return self.render_work_document(work_id, options)
+        return self.render_work_document(work_id, options, render_plan)
 
     def generate_remedial_sheet(
         self,
         variant_id: str,
         options: RemedialSheetDocumentRenderOptions,
+        render_plan: DocumentRenderPlan | None = None,
     ) -> GeneratedDocument:
         """Backward-compatible alias for render_remedial_sheet_document."""
-        return self.render_remedial_sheet_document(variant_id, options)
+        return self.render_remedial_sheet_document(
+            variant_id,
+            options,
+            render_plan,
+        )
 
     @abstractmethod
     def get_generated_file(

@@ -4,6 +4,8 @@
 """
 import logging
 
+from document_generator.processors.formula import process_formula_text
+
 logger = logging.getLogger(__name__)
 
 
@@ -160,15 +162,12 @@ class TaskRenderMixin:
 
     def _safe_process(self, process_func, text, label=''):
         """Безопасная обработка формул с fallback."""
-        try:
-            return process_func(text)
-        except Exception as e:
-            logger.error(f'Ошибка обработки {label}: {e}')
-            return {
-                'content': text,
-                'errors': [f'{label}: {str(e)}'],
-                'warnings': [],
-            }
+        return process_formula_text(
+            text,
+            process_func,
+            label=label,
+            fallback_logger=logger,
+        )
 
     def _prepare_images(self, task):
         """Подготовка изображений задания."""

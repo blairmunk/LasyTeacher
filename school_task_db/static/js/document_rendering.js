@@ -18,7 +18,7 @@ class DocumentRenderer {
             }
         });
 
-        // Обработка формы расширенной генерации
+        // Обработка формы расширенного рендеринга
         document.addEventListener('submit', (e) => {
             if (e.target.matches('#advanced-generation-form')) {
                 e.preventDefault();
@@ -29,7 +29,7 @@ class DocumentRenderer {
 
     async handleGenerateClick(button) {
         if (this.isGenerating) {
-            this.showAlert('Генерация уже выполняется, подождите...', 'warning');
+            this.showAlert('Документ уже готовится, подождите...', 'warning');
             return;
         }
 
@@ -53,14 +53,14 @@ class DocumentRenderer {
             variantSelection: 'all'       // Быстрые кнопки всегда генерируют все варианты
         };
 
-        console.log('⚡ Быстрая генерация с параметрами:', params);
+        console.log('⚡ Быстрый рендеринг с параметрами:', params);
 
         await this.generateDocument(params, button);
     }
 
     async handleAdvancedGeneration(form) {
         if (this.isGenerating) {
-            this.showAlert('Генерация уже выполняется, подождите...', 'warning');
+            this.showAlert('Документ уже готовится, подождите...', 'warning');
             return;
         }
 
@@ -81,7 +81,7 @@ class DocumentRenderer {
         // Преобразуем answer_type для совместимости
         params.withAnswers = params.answerType !== 'tasks_only';
 
-        console.log('🔧 Расширенная генерация с параметрами:', params);
+        console.log('🔧 Расширенный рендеринг с параметрами:', params);
 
         await this.generateDocument(params, form.querySelector('button[type="submit"]'));
     }
@@ -91,7 +91,7 @@ class DocumentRenderer {
         this.setLoadingState(triggerElement, true);
 
         try {
-            console.log(`🌐 Веб-генерация ${params.type} для работы ${params.workId}`);
+            console.log(`🌐 Веб-рендеринг ${params.type} для работы ${params.workId}`);
             
             // Формируем детальное сообщение
             let configMessage = `${params.type.toUpperCase()}`;
@@ -117,7 +117,7 @@ class DocumentRenderer {
                 configMessage += ' • с инструкциями';
             }
 
-            this.showAlert(`🔄 Генерируется ${configMessage}...`, 'info');
+            this.showAlert(`🔄 Готовится ${configMessage}...`, 'info');
 
             const response = await fetch(`/works/ajax/render/${params.workId}/`, {
                 method: 'POST',
@@ -146,13 +146,13 @@ class DocumentRenderer {
             if (data.success) {
                 this.showAlert(`✅ ${data.message}`, 'success');
                 this.displayResults(data.files);
-                console.log(`✅ Генерация завершена: ${data.total_files} файлов`);
+                console.log(`✅ Рендеринг завершён: ${data.total_files} файлов`);
             } else {
                 this.showAlert(`❌ ${data.error}`, 'danger');
             }
 
         } catch (error) {
-            console.error('❌ Ошибка генерации:', error);
+            console.error('❌ Ошибка рендеринга:', error);
             this.showAlert(`🚨 Ошибка сети: ${error.message}`, 'danger');
         } finally {
             this.isGenerating = false;
@@ -241,7 +241,7 @@ class DocumentRenderer {
         if (isLoading) {
             element.disabled = true;
             element.dataset.originalHTML = element.innerHTML;
-            element.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Генерируется...';
+            element.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Готовится...';
         } else {
             element.disabled = false;
             element.innerHTML = element.dataset.originalHTML || element.innerHTML;

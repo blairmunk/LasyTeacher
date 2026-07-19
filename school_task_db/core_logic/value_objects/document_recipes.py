@@ -88,9 +88,9 @@ def build_work_document_recipe(
     if content_config['include_full_solutions']:
         sections.append(DocumentSectionSpec(section_type=FULL_SOLUTIONS_SECTION))
 
-    return DocumentRecipe(
+    return build_document_recipe_from_sections_config(
         document_type=WORK_DOCUMENT_TYPE,
-        sections=sections,
+        sections_config=sections,
     )
 
 
@@ -118,7 +118,7 @@ def build_remedial_sheet_document_recipe(
     if content_config['include_full_solutions']:
         sections.append(DocumentSectionSpec(section_type=FULL_SOLUTIONS_SECTION))
 
-    return DocumentRecipe(
+    return build_document_recipe_from_sections_config(
         document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
-        sections=sections,
+        sections_config=sections,
     )

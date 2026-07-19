@@ -577,7 +577,7 @@ class WorkFormAdapterTests(SimpleTestCase):
                     'url': '/works/download/pdf/remedial.pdf/',
                 },
             ],
-            'message': 'Рабочий лист сгенерирован (PDF)',
+            'message': 'Рабочий лист создан (PDF)',
         })
 
     def test_document_generation_result_keeps_legacy_generator_type(self):

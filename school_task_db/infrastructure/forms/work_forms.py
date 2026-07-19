@@ -161,7 +161,7 @@ class WorkFormAdapter:
                 for file_info in result.files
             ],
             'message': (
-                f'Рабочий лист сгенерирован '
+                f'Рабочий лист создан '
                 f'({result.renderer_type.upper()})'
             ),
         }

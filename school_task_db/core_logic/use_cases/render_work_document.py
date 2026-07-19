@@ -14,6 +14,7 @@ from core_logic.interfaces.document_template_repo import (
     IDocumentTemplateRepository,
 )
 from core_logic.interfaces.work_repo import IWorkRepository
+from core_logic.use_cases.get_rendered_document_file import resolve_document_engine
 from core_logic.value_objects.content_config import (
     SUPPORTED_DOCUMENT_RENDERER_TYPES,
     WorkDocumentRenderOptions,
@@ -43,10 +44,10 @@ class RenderWorkDocumentUseCase:
         document_generation_service: IDocumentEngine | None = None,
         document_engine: IDocumentEngine | None = None,
     ):
-        self.document_engine = (
-            document_engine
-            or document_rendering_service
-            or document_generation_service
+        self.document_engine = resolve_document_engine(
+            document_engine=document_engine,
+            document_rendering_service=document_rendering_service,
+            document_generation_service=document_generation_service,
         )
         self.work_repo = work_repo
         self.document_template_repo = document_template_repo

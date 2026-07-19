@@ -58,8 +58,20 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         if planned_document is not None:
             return planned_document
 
-        render_target = self._resolve_render_target(options, render_plan)
         work = Work.objects.get(pk=work_id)
+        return self._render_legacy_work_document(
+            work,
+            options,
+            render_plan,
+        )
+
+    def _render_legacy_work_document(
+        self,
+        work,
+        options,
+        render_plan=None,
+    ) -> GeneratedDocument:
+        render_target = self._resolve_render_target(options, render_plan)
         renderer_type = render_target.renderer_type
         content_config = options.content_config
 
@@ -99,8 +111,20 @@ class DjangoDocumentGenerationService(IDocumentGenerationService):
         if planned_document is not None:
             return planned_document
 
-        render_target = self._resolve_render_target(options, render_plan)
         variant = Variant.objects.get(pk=variant_id)
+        return self._render_legacy_remedial_sheet_document(
+            variant,
+            options,
+            render_plan,
+        )
+
+    def _render_legacy_remedial_sheet_document(
+        self,
+        variant,
+        options,
+        render_plan=None,
+    ) -> GeneratedDocument:
+        render_target = self._resolve_render_target(options, render_plan)
         content_config = options.content_config
         renderer_type = render_target.renderer_type
 

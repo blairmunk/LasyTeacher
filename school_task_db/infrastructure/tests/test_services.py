@@ -131,6 +131,23 @@ class DjangoDocumentGenerationServiceTests(TestCase):
 
         self.assertIsNone(result)
 
+    def test_legacy_work_render_uses_options_target(self):
+        service = DjangoDocumentGenerationService(
+            get_remedial_sheet_data_use_case=None,
+        )
+        service._generate_html_work = lambda work, content_config: ['work.html']
+        service._document_from_paths = (
+            lambda file_type, file_paths:
+                GeneratedDocument(file_type=file_type)
+        )
+
+        result = service._render_legacy_work_document(
+            work='work-object',
+            options=WorkDocumentRenderOptions(renderer_type='html'),
+        )
+
+        self.assertEqual(result.file_type, 'html')
+
 
 class DjangoTaskImportServiceTests(TestCase):
     def test_preview_import_returns_dry_run_context_without_creating_tasks(self):

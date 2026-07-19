@@ -1,4 +1,4 @@
-from django.test import SimpleTestCase
+from unittest import TestCase
 
 from core_logic.entities.curriculum import CourseListItem
 from core_logic.use_cases.get_course_list import GetCourseListUseCase
@@ -20,7 +20,7 @@ class FakeCurriculumRepository:
         return self.courses
 
 
-class GetCourseListUseCaseTests(SimpleTestCase):
+class GetCourseListUseCaseTests(TestCase):
     def test_execute_returns_course_list_data(self):
         repo = FakeCurriculumRepository()
 

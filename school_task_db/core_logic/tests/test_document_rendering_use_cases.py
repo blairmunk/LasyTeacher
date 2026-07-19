@@ -23,6 +23,7 @@ from core_logic.use_cases.get_generated_document_file import (
 from core_logic.use_cases.get_rendered_document_file import (
     GetRenderedDocumentFileRequest,
     GetRenderedDocumentFileUseCase,
+    resolve_document_engine,
 )
 from core_logic.use_cases.generate_remedial_sheet_document import (
     GenerateRemedialSheetDocumentRequest,
@@ -134,6 +135,37 @@ class FakeDocumentTemplateRepository:
 
 
 class DocumentRenderingUseCaseTests(TestCase):
+    def test_resolve_document_engine_prefers_engine_keyword(self):
+        document_engine = FakeDocumentEngine()
+        rendering_service = FakeDocumentEngine()
+        generation_service = FakeDocumentEngine()
+
+        result = resolve_document_engine(
+            document_engine=document_engine,
+            document_rendering_service=rendering_service,
+            document_generation_service=generation_service,
+        )
+
+        self.assertIs(result, document_engine)
+
+    def test_resolve_document_engine_keeps_legacy_fallback_order(self):
+        rendering_service = FakeDocumentEngine()
+        generation_service = FakeDocumentEngine()
+
+        self.assertIs(
+            resolve_document_engine(
+                document_rendering_service=rendering_service,
+                document_generation_service=generation_service,
+            ),
+            rendering_service,
+        )
+        self.assertIs(
+            resolve_document_engine(
+                document_generation_service=generation_service,
+            ),
+            generation_service,
+        )
+
     def test_document_generation_result_aliases_document_render_result(self):
         result = DocumentGenerationResult(status='generated', renderer_type='html')
 

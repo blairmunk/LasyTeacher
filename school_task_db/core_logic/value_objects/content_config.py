@@ -20,6 +20,7 @@ FILE_TYPE_LABELS = {
     'html': 'HTML',
     'pdf': 'PDF',
 }
+SUPPORTED_DOCUMENT_RENDERER_TYPES = frozenset(FILE_TYPE_LABELS)
 
 
 @dataclass(frozen=True)

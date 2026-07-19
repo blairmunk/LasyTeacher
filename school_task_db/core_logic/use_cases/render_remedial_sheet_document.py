@@ -7,13 +7,16 @@ from core_logic.interfaces.document_rendering_service import (
     IDocumentRenderingService,
 )
 from core_logic.interfaces.work_repo import IWorkRepository
-from core_logic.value_objects.content_config import RemedialSheetDocumentRenderOptions
+from core_logic.value_objects.content_config import (
+    RemedialSheetDocumentRenderOptions,
+    SUPPORTED_DOCUMENT_RENDERER_TYPES,
+)
 from core_logic.value_objects.document_render_plan import (
     build_remedial_sheet_document_render_plan,
 )
 
 
-SUPPORTED_REMEDIAL_SHEET_RENDERER_TYPES = {'latex', 'html', 'pdf'}
+SUPPORTED_REMEDIAL_SHEET_RENDERER_TYPES = SUPPORTED_DOCUMENT_RENDERER_TYPES
 
 
 @dataclass(frozen=True)

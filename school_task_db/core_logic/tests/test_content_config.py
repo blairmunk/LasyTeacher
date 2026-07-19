@@ -1,10 +1,12 @@
 from unittest import TestCase
 
 from core_logic.value_objects.content_config import (
+    FILE_TYPE_LABELS,
     RemedialSheetDocumentRenderOptions,
     RemedialSheetBuildOptions,
     RemedialSheetGenerationOptions,
     RenderTarget,
+    SUPPORTED_DOCUMENT_RENDERER_TYPES,
     WorkDocumentBuildOptions,
     WorkDocumentRenderOptions,
     WorkGenerationOptions,
@@ -16,6 +18,12 @@ from core_logic.value_objects.content_config import (
 
 
 class DocumentRenderOptionsTests(TestCase):
+    def test_supported_renderer_types_match_file_type_labels(self):
+        self.assertEqual(
+            SUPPORTED_DOCUMENT_RENDERER_TYPES,
+            frozenset(FILE_TYPE_LABELS),
+        )
+
     def test_render_target_exposes_file_type_label(self):
         target = RenderTarget(renderer_type='html', page_format='A5')
 

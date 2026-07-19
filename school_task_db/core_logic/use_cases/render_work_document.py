@@ -7,13 +7,16 @@ from core_logic.interfaces.document_rendering_service import (
     IDocumentRenderingService,
 )
 from core_logic.interfaces.work_repo import IWorkRepository
-from core_logic.value_objects.content_config import WorkDocumentRenderOptions
+from core_logic.value_objects.content_config import (
+    SUPPORTED_DOCUMENT_RENDERER_TYPES,
+    WorkDocumentRenderOptions,
+)
 from core_logic.value_objects.document_render_plan import (
     build_work_document_render_plan,
 )
 
 
-SUPPORTED_WORK_RENDERER_TYPES = {'latex', 'html', 'pdf'}
+SUPPORTED_WORK_RENDERER_TYPES = SUPPORTED_DOCUMENT_RENDERER_TYPES
 
 
 @dataclass(frozen=True)

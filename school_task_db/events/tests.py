@@ -179,6 +179,32 @@ class GradeParticipationViewTests(TestCase):
         self.assertEqual(response.context['participations'][0].variant.number, 1)
         self.assertEqual(response.context['participations'][0].mark_obj.score, None)
         self.assertEqual(response.context['available_variants'][0].number, 1)
+        self.assertContains(
+            response,
+            reverse('works:detail', args=[self.work.pk]) + '#generation',
+        )
+        self.assertContains(response, 'Печать работы')
+
+    def test_remedial_event_detail_links_to_batch_remedial_printing(self):
+        remedial_work = Work.objects.create(
+            name='Работа над ошибками',
+            work_type='remedial',
+        )
+        remedial_event = Event.objects.create(
+            name='Работа над ошибками 9Б',
+            work=remedial_work,
+            planned_date=timezone.now(),
+            status='planned',
+        )
+
+        response = self.client.get(reverse('events:detail', args=[remedial_event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            reverse('works:detail', args=[remedial_work.pk]) + '#remedial-batch',
+        )
+        self.assertContains(response, 'Печать листов ошибок')
 
     def test_event_create_adds_selected_group_participants_through_use_case(self):
         group = StudentGroup.objects.create(name='9Б')

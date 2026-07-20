@@ -319,6 +319,7 @@ class WorkDetailViewTests(TestCase):
         response = self.client.get(reverse('works:detail', args=[self.work.pk]))
 
         self.assertContains(response, 'document-rendering-block')
+        self.assertContains(response, 'id="generation"')
         self.assertContains(response, 'data-rendering-block')
         self.assertContains(response, 'btn-render-doc')
         self.assertContains(response, 'data-rendering-form')
@@ -335,6 +336,7 @@ class WorkDetailViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'data-remedial-batch-rendering-block')
+        self.assertContains(response, 'id="remedial-batch"')
         self.assertContains(response, 'data-remedial-batch-rendering-form')
         self.assertContains(response, 'data-remedial-batch-rendering-results')
         self.assertContains(response, 'Печать листов работы над ошибками')

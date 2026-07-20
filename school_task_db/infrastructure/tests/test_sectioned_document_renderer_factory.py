@@ -44,6 +44,32 @@ class SectionedDocumentRendererFactoryTests(SimpleTestCase):
             ('html', 'work.html', '<html:header>\n\n<html:tasks>'),
         )
 
+    def test_builds_renderer_with_document_wrapper(self):
+        section_registry = FakeSectionRendererRegistry()
+        file_store = FakeFileStore()
+        renderer = build_sectioned_text_document_renderer(
+            renderer_type='html',
+            section_renderer_registry=section_registry,
+            filename_builder=lambda request: 'work.html',
+            file_store=file_store,
+            document_wrapper=FakeDocumentWrapper(),
+        )
+
+        renderer.render(
+            DocumentRenderRequest(
+                document=Document(
+                    title='Контрольная',
+                    sections=[DocumentSection(section_type='tasks')],
+                ),
+                render_target=RenderTarget(renderer_type='html'),
+            )
+        )
+
+        self.assertEqual(
+            file_store.request,
+            ('html', 'work.html', '<html><html:tasks></html>'),
+        )
+
     def test_builds_renderer_from_section_templates(self):
         template_calls = []
 
@@ -93,6 +119,41 @@ class SectionedDocumentRendererFactoryTests(SimpleTestCase):
             ['documents/html/header.html', 'documents/html/tasks.html'],
         )
 
+    def test_builds_renderer_from_section_and_wrapper_templates(self):
+        def template_renderer(template_name, context):
+            if template_name == 'documents/html/base/document.html':
+                return f"<html>{context['body_content']}</html>"
+            return f'<section>{template_name}</section>'
+
+        file_store = FakeFileStore()
+        renderer = build_template_sectioned_text_document_renderer(
+            renderer_type='html',
+            section_templates={'tasks': 'documents/html/tasks.html'},
+            filename_builder=lambda request: 'work.html',
+            file_store=file_store,
+            template_renderer=template_renderer,
+            wrapper_template_name='documents/html/base/document.html',
+        )
+
+        renderer.render(
+            DocumentRenderRequest(
+                document=Document(
+                    title='Контрольная',
+                    sections=[DocumentSection(section_type='tasks')],
+                ),
+                render_target=RenderTarget(renderer_type='html'),
+            )
+        )
+
+        self.assertEqual(
+            file_store.request,
+            (
+                'html',
+                'work.html',
+                '<html><section>documents/html/tasks.html</section></html>',
+            ),
+        )
+
     def test_builds_renderer_registry_from_template_specs(self):
         file_store = FakeFileStore()
         registry = build_template_sectioned_text_document_renderer_registry(
@@ -111,13 +172,16 @@ class SectionedDocumentRendererFactoryTests(SimpleTestCase):
                         'tasks': 'documents/html/remedial_tasks.html',
                     },
                     filename_builder=lambda request: 'remedial.html',
+                    wrapper_template_name='documents/html/remedial.html',
                     section_separator='\n\n',
                 ),
             ],
             file_store=file_store,
             template_renderer=(
                 lambda template_name, context:
-                    f'<section>{template_name}</section>'
+                    f"<document>{context['body_content']}</document>"
+                    if template_name == 'documents/html/remedial.html'
+                    else f'<section>{template_name}</section>'
             ),
         )
 
@@ -153,7 +217,11 @@ class SectionedDocumentRendererFactoryTests(SimpleTestCase):
                 (
                     'html',
                     'remedial.html',
-                    '<section>documents/html/remedial_tasks.html</section>',
+                    (
+                        '<document>'
+                        '<section>documents/html/remedial_tasks.html</section>'
+                        '</document>'
+                    ),
                 ),
             ],
         )
@@ -193,3 +261,8 @@ class FakeFileStore:
         self.request = (file_type, filename, content)
         self.requests.append(self.request)
         return GeneratedDocument(file_type=file_type)
+
+
+class FakeDocumentWrapper:
+    def wrap_content(self, request):
+        return f'<html>{request.body_content}</html>'

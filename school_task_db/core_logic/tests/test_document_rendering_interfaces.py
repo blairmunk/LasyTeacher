@@ -9,7 +9,6 @@ from core_logic.entities.document import (
 )
 from core_logic.entities.document_rendering import GeneratedDocument
 from core_logic.interfaces.document_engine import IDocumentEngine
-from core_logic.interfaces.document_generation import IDocumentGenerationService
 from core_logic.interfaces.document_building import (
     IDocumentSectionPayloadBuilder,
 )
@@ -88,9 +87,8 @@ class FakeDocumentContentWrapper(IDocumentContentWrapper):
 
 
 class DocumentRenderingInterfaceTests(TestCase):
-    def test_legacy_document_engine_interface_names_are_aliases(self):
+    def test_document_rendering_service_interface_is_engine_alias(self):
         self.assertIs(IDocumentRenderingService, IDocumentEngine)
-        self.assertIs(IDocumentGenerationService, IDocumentEngine)
 
     def test_document_builder_contract_accepts_source_and_recipe(self):
         builder = FakeDocumentBuilder()

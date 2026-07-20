@@ -19,10 +19,10 @@ from core_logic.value_objects.document_recipes import (
     ANSWER_KEY_SECTION,
     ANSWERS_SECTION,
     HEADER_SECTION,
+    LEGACY_TASK_VARIANTS_SECTION,
     ORIGINAL_MISTAKES_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     TASK_LIST_SECTION,
-    TASK_VARIANTS_SECTION,
     TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
 )
@@ -199,7 +199,7 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
         registry = build_work_section_payload_builder_registry()
 
         task_variants_payload = registry.build_payload(
-            build_request(work, TASK_VARIANTS_SECTION)
+            build_request(work, LEGACY_TASK_VARIANTS_SECTION)
         )
         answer_key_payload = registry.build_payload(
             build_request(work, ANSWER_KEY_SECTION)

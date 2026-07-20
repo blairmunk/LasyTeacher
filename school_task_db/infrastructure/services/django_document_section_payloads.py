@@ -8,11 +8,11 @@ from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
+    LEGACY_TASK_VARIANTS_SECTION,
     ORIGINAL_MISTAKES_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     SHORT_SOLUTIONS_SECTION,
     TASK_LIST_SECTION,
-    TASK_VARIANTS_SECTION,
     TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
 )
@@ -156,7 +156,7 @@ def build_work_section_payload_builder_registry(
         source_type=WORK_SOURCE_TYPE,
     )
     registry.register(
-        TASK_VARIANTS_SECTION,
+        LEGACY_TASK_VARIANTS_SECTION,
         task_list_builder,
         document_type=WORK_DOCUMENT_TYPE,
         source_type=WORK_SOURCE_TYPE,

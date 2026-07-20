@@ -5,10 +5,10 @@ from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
+    LEGACY_TASK_VARIANTS_SECTION,
     ORIGINAL_MISTAKES_SECTION,
     SHORT_SOLUTIONS_SECTION,
     TASK_LIST_SECTION,
-    TASK_VARIANTS_SECTION,
     TRAINING_TASKS_SECTION,
 )
 
@@ -16,7 +16,7 @@ from core_logic.value_objects.document_recipes import (
 WORK_HTML_SECTION_TEMPLATES = {
     HEADER_SECTION: 'documents/html/sections/header.html',
     TASK_LIST_SECTION: 'documents/html/sections/task_list.html',
-    TASK_VARIANTS_SECTION: 'documents/html/sections/task_list.html',
+    LEGACY_TASK_VARIANTS_SECTION: 'documents/html/sections/task_list.html',
     ANSWER_KEY_SECTION: 'documents/html/sections/answers.html',
     ANSWERS_SECTION: 'documents/html/sections/answers.html',
     SHORT_SOLUTIONS_SECTION: 'documents/html/sections/short_solutions.html',
@@ -27,7 +27,7 @@ WORK_HTML_WRAPPER_TEMPLATE = 'documents/html/base/document.html'
 WORK_LATEX_SECTION_TEMPLATES = {
     HEADER_SECTION: 'documents/latex/sections/header.tex',
     TASK_LIST_SECTION: 'documents/latex/sections/task_list.tex',
-    TASK_VARIANTS_SECTION: 'documents/latex/sections/task_list.tex',
+    LEGACY_TASK_VARIANTS_SECTION: 'documents/latex/sections/task_list.tex',
     ANSWER_KEY_SECTION: 'documents/latex/sections/answers.tex',
     ANSWERS_SECTION: 'documents/latex/sections/answers.tex',
     SHORT_SOLUTIONS_SECTION: 'documents/latex/sections/short_solutions.tex',

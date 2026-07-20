@@ -14,6 +14,9 @@ from core_logic.interfaces.document_template_repo import (
 )
 from core_logic.interfaces.work_repo import IWorkRepository
 from core_logic.use_cases.document_engine_dependency import resolve_document_engine
+from core_logic.use_cases.document_template_selection import (
+    resolve_document_template_spec,
+)
 from core_logic.use_cases.render_document import (
     RenderDocumentRequest,
     RenderDocumentUseCase,
@@ -66,9 +69,10 @@ class RenderWorkDocumentUseCase:
             work_id=request.work_id,
             work_name=work_name,
             options=request.options,
-            template_spec=(
-                request.template_spec
-                or self._default_template_spec()
+            template_spec=resolve_document_template_spec(
+                template_type=WORK_DOCUMENT_TYPE,
+                request_template_spec=request.template_spec,
+                document_template_repo=self.document_template_repo,
             ),
         )
         return self.render_document_use_case.execute(
@@ -77,11 +81,4 @@ class RenderWorkDocumentUseCase:
                 source_name=work_name,
                 empty_status=DOCUMENT_RENDER_STATUS_GENERATED,
             )
-        )
-
-    def _default_template_spec(self):
-        if self.document_template_repo is None:
-            return None
-        return self.document_template_repo.get_default_template_spec(
-            WORK_DOCUMENT_TYPE,
         )

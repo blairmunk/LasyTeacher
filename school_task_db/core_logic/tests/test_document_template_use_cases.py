@@ -12,6 +12,9 @@ from core_logic.use_cases.get_document_template_list import (
     GetDocumentTemplateListRequest,
     GetDocumentTemplateListUseCase,
 )
+from core_logic.use_cases.document_template_selection import (
+    resolve_document_template_spec,
+)
 from core_logic.value_objects.document_recipes import (
     ANSWER_KEY_DOCUMENT_TYPE,
     WORKSHEET_DOCUMENT_TYPE,
@@ -84,3 +87,40 @@ class GetDocumentTemplateListUseCaseTests(TestCase):
         )
 
         self.assertIsNone(data.template)
+
+
+class DocumentTemplateSelectionTests(TestCase):
+    def test_request_template_takes_precedence(self):
+        repo = FakeDocumentTemplateRepository()
+        request_template = DocumentTemplateSpec(
+            name='Из запроса',
+            template_type=WORKSHEET_DOCUMENT_TYPE,
+            sections=[],
+        )
+
+        template = resolve_document_template_spec(
+            template_type=WORKSHEET_DOCUMENT_TYPE,
+            request_template_spec=request_template,
+            document_template_repo=repo,
+        )
+
+        self.assertEqual(template, request_template)
+        self.assertIsNone(repo.default_template_type)
+
+    def test_returns_default_template_from_repository(self):
+        repo = FakeDocumentTemplateRepository()
+
+        template = resolve_document_template_spec(
+            template_type=WORKSHEET_DOCUMENT_TYPE,
+            document_template_repo=repo,
+        )
+
+        self.assertEqual(repo.default_template_type, WORKSHEET_DOCUMENT_TYPE)
+        self.assertEqual(template.name, 'Рабочий лист')
+
+    def test_returns_none_without_repository(self):
+        template = resolve_document_template_spec(
+            template_type=WORKSHEET_DOCUMENT_TYPE,
+        )
+
+        self.assertIsNone(template)

@@ -17,12 +17,8 @@ from infrastructure.services.sectioned_document_renderer_factory import (
     build_template_sectioned_text_document_renderer_registry,
 )
 from infrastructure.services.sectioned_document_renderer_specs import (
-    remedial_html_renderer_specs,
-    remedial_latex_renderer_specs,
     sectioned_html_renderer_specs,
     sectioned_latex_renderer_specs,
-    work_html_renderer_specs,
-    work_latex_renderer_specs,
 )
 
 
@@ -30,56 +26,6 @@ from infrastructure.services.sectioned_document_renderer_specs import (
 class SectionedDocumentComponents:
     document_builder: RecipeDocumentBuilder
     document_renderer_registry: DocumentRendererRegistry
-
-
-def build_sectioned_work_html_document_components(
-    file_store,
-    get_work_source=None,
-    template_renderer=None,
-) -> SectionedDocumentComponents:
-    payload_registry = build_work_section_payload_builder_registry(
-        get_work_source=get_work_source,
-    )
-    return SectionedDocumentComponents(
-        document_builder=RecipeDocumentBuilder(
-            section_payload_builder_registry=payload_registry,
-        ),
-        document_renderer_registry=(
-            build_template_sectioned_text_document_renderer_registry(
-                renderer_type='html',
-                renderer_specs=work_html_renderer_specs(),
-                file_store=file_store,
-                template_renderer=template_renderer,
-            )
-        ),
-    )
-
-
-def build_sectioned_work_latex_document_components(
-    file_store,
-    get_work_source=None,
-    template_renderer=None,
-    task_payload_formatter=None,
-) -> SectionedDocumentComponents:
-    payload_registry = build_work_section_payload_builder_registry(
-        get_work_source=get_work_source,
-        task_payload_formatter=(
-            task_payload_formatter or LatexTaskPayloadFormatter()
-        ),
-    )
-    return SectionedDocumentComponents(
-        document_builder=RecipeDocumentBuilder(
-            section_payload_builder_registry=payload_registry,
-        ),
-        document_renderer_registry=(
-            build_template_sectioned_text_document_renderer_registry(
-                renderer_type='latex',
-                renderer_specs=work_latex_renderer_specs(),
-                file_store=file_store,
-                template_renderer=template_renderer,
-            )
-        ),
-    )
 
 
 def build_sectioned_html_document_components(
@@ -171,58 +117,6 @@ def build_sectioned_document_components(
     )
     components.document_renderer_registry.extend(latex_renderer_registry)
     return components
-
-
-def build_sectioned_remedial_sheet_html_document_components(
-    file_store,
-    get_remedial_sheet_data=None,
-    template_renderer=None,
-) -> SectionedDocumentComponents:
-    payload_registry = build_remedial_sheet_section_payload_builder_registry(
-        get_remedial_sheet_data=get_remedial_sheet_data,
-    )
-    return SectionedDocumentComponents(
-        document_builder=RecipeDocumentBuilder(
-            section_payload_builder_registry=payload_registry,
-        ),
-        document_renderer_registry=(
-            build_template_sectioned_text_document_renderer_registry(
-                renderer_type='html',
-                renderer_specs=remedial_html_renderer_specs(),
-                file_store=file_store,
-                template_renderer=template_renderer,
-            )
-        ),
-    )
-
-
-def build_sectioned_remedial_sheet_latex_document_components(
-    file_store,
-    get_remedial_sheet_data=None,
-    template_renderer=None,
-    task_payload_formatter=None,
-) -> SectionedDocumentComponents:
-    payload_registry = build_remedial_sheet_section_payload_builder_registry(
-        get_remedial_sheet_data=get_remedial_sheet_data,
-        task_payload_formatter=(
-            task_payload_formatter or LatexTaskPayloadFormatter()
-        ),
-    )
-    return SectionedDocumentComponents(
-        document_builder=RecipeDocumentBuilder(
-            section_payload_builder_registry=payload_registry,
-        ),
-        document_renderer_registry=(
-            build_template_sectioned_text_document_renderer_registry(
-                renderer_type='latex',
-                renderer_specs=remedial_latex_renderer_specs(),
-                file_store=file_store,
-                template_renderer=template_renderer,
-            )
-        ),
-    )
-
-
 def _sectioned_task_payload_formatter():
     return RenderTargetTaskPayloadFormatter(
         formatters_by_renderer_type={

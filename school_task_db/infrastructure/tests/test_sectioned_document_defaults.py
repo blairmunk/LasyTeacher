@@ -38,10 +38,6 @@ from infrastructure.services.sectioned_document_defaults import (
     build_sectioned_document_components,
     build_sectioned_html_document_components,
     build_sectioned_html_pdf_document_components,
-    build_sectioned_remedial_sheet_html_document_components,
-    build_sectioned_remedial_sheet_latex_document_components,
-    build_sectioned_work_html_document_components,
-    build_sectioned_work_latex_document_components,
 )
 from infrastructure.services.sectioned_document_filenames import (
     remedial_html_filename,
@@ -89,7 +85,7 @@ class SectionedDocumentDefaultsTests(TestCase):
             file_store = RenderedDocumentFileStore(
                 output_dirs={'html': output_dir},
             )
-            components = build_sectioned_work_html_document_components(
+            components = build_sectioned_document_components(
                 file_store=file_store,
             )
             engine = DjangoDocumentEngine(
@@ -143,7 +139,7 @@ class SectionedDocumentDefaultsTests(TestCase):
         )
 
         with TemporaryDirectory() as output_dir:
-            components = build_sectioned_work_html_document_components(
+            components = build_sectioned_document_components(
                 file_store=RenderedDocumentFileStore(
                     output_dirs={'html': output_dir},
                 ),
@@ -202,7 +198,7 @@ class SectionedDocumentDefaultsTests(TestCase):
         )
 
         with TemporaryDirectory() as output_dir:
-            components = build_sectioned_work_latex_document_components(
+            components = build_sectioned_document_components(
                 file_store=RenderedDocumentFileStore(
                     output_dirs={'latex': output_dir},
                 ),
@@ -287,7 +283,7 @@ class SectionedDocumentDefaultsTests(TestCase):
             file_store = RenderedDocumentFileStore(
                 output_dirs={'html': output_dir},
             )
-            components = build_sectioned_remedial_sheet_html_document_components(
+            components = build_sectioned_document_components(
                 file_store=file_store,
                 get_remedial_sheet_data=lambda variant_id: sheet_data,
             )
@@ -369,7 +365,7 @@ class SectionedDocumentDefaultsTests(TestCase):
         )
 
         with TemporaryDirectory() as output_dir:
-            components = build_sectioned_remedial_sheet_latex_document_components(
+            components = build_sectioned_document_components(
                 file_store=RenderedDocumentFileStore(
                     output_dirs={'latex': output_dir},
                 ),

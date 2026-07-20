@@ -1,0 +1,13 @@
+<section class="document-full-solutions">
+    <h2>Полные решения</h2>
+    {% for variant in payload.variants %}
+        <article class="document-variant-full-solutions">
+            <h3>{{ variant.title }}</h3>
+            <ol>
+                {% for task in variant.tasks %}
+                    <li>{{ task.full_solution|linebreaksbr }}</li>
+                {% endfor %}
+            </ol>
+        </article>
+    {% endfor %}
+</section>

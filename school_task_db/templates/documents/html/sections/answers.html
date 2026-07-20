@@ -1,0 +1,13 @@
+<section class="document-answers">
+    <h2>Ответы</h2>
+    {% for variant in payload.variants %}
+        <article class="document-variant-answers">
+            <h3>{{ variant.title }}</h3>
+            <ol>
+                {% for task in variant.tasks %}
+                    <li>{{ task.answer|linebreaksbr }}</li>
+                {% endfor %}
+            </ol>
+        </article>
+    {% endfor %}
+</section>

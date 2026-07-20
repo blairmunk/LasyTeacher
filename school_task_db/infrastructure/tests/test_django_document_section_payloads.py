@@ -10,6 +10,7 @@ from core_logic.value_objects.document_build_plan import (
     DocumentSectionPayloadBuildRequest,
 )
 from core_logic.value_objects.document_recipes import (
+    ANSWERS_SECTION,
     HEADER_SECTION,
     TASK_VARIANTS_SECTION,
     WORK_DOCUMENT_TYPE,
@@ -136,6 +137,28 @@ class DjangoWorkTaskVariantsPayloadBuilderTests(TestCase):
         )
 
         self.assertEqual(payload['title'], 'Контрольная')
+
+    def test_registry_uses_variant_payload_for_answer_sections(self):
+        work = Work.objects.create(name='Контрольная')
+        registry = build_work_section_payload_builder_registry()
+        recipe = DocumentRecipe(
+            document_type=WORK_DOCUMENT_TYPE,
+            sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
+        )
+
+        payload = registry.build_payload(
+            DocumentSectionPayloadBuildRequest(
+                source=DocumentSourceRef(
+                    source_type=WORK_SOURCE_TYPE,
+                    source_id=str(work.pk),
+                    title=work.name,
+                ),
+                recipe=recipe,
+                section=recipe.sections[0],
+            )
+        )
+
+        self.assertEqual(payload['variants'], [])
 
 
 def build_request(work, section_type, options=None):

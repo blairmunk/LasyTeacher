@@ -1,0 +1,13 @@
+<section class="document-short-solutions">
+    <h2>Краткие решения</h2>
+    {% for variant in payload.variants %}
+        <article class="document-variant-short-solutions">
+            <h3>{{ variant.title }}</h3>
+            <ol>
+                {% for task in variant.tasks %}
+                    <li>{{ task.short_solution|linebreaksbr }}</li>
+                {% endfor %}
+            </ol>
+        </article>
+    {% endfor %}
+</section>

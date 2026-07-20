@@ -39,6 +39,7 @@ class SectionedDocumentDefaultsTests(TestCase):
         task = Task.objects.create(
             text='Найдите силу',
             answer='10 Н',
+            short_solution='Кратко: F = ma',
             hint='F = ma',
             topic=topic,
             task_type='computational',
@@ -64,6 +65,7 @@ class SectionedDocumentDefaultsTests(TestCase):
             )
             options = WorkDocumentRenderOptions(
                 renderer_type='html',
+                answer_type='with_short_solutions',
                 include_hints=True,
             )
 
@@ -85,6 +87,10 @@ class SectionedDocumentDefaultsTests(TestCase):
             self.assertIn('Вариант 1', html)
             self.assertIn('Найдите силу', html)
             self.assertIn('Подсказка: F = ma', html)
+            self.assertIn('Ответы', html)
+            self.assertIn('10 Н', html)
+            self.assertIn('Краткие решения', html)
+            self.assertIn('Кратко: F = ma', html)
 
     def test_work_html_filename_uses_source_id(self):
         request = FakeRenderRequest(source_id='work-1')

@@ -23,6 +23,10 @@ from core_logic.use_cases.render_remedial_sheet_document import (
     RenderRemedialSheetDocumentRequest,
     RenderRemedialSheetDocumentUseCase,
 )
+from core_logic.use_cases.render_remedial_sheet_batch_document import (
+    RenderRemedialSheetBatchDocumentRequest,
+    RenderRemedialSheetBatchDocumentUseCase,
+)
 from core_logic.use_cases.render_work_document import (
     RenderWorkDocumentRequest,
     RenderWorkDocumentUseCase,
@@ -72,11 +76,18 @@ class FakeDocumentEngine:
 
 
 class FakeWorkRepository:
-    def __init__(self, variant_type='remedial', work_name='Контрольная'):
+    def __init__(
+        self,
+        variant_type='remedial',
+        work_name='Контрольная',
+        remedial_variant_ids=None,
+    ):
         self.variant_type = variant_type
         self.variant_type_request = None
         self.work_name = work_name
         self.work_name_request = None
+        self.remedial_variant_ids = remedial_variant_ids or []
+        self.remedial_variant_ids_request = None
 
     def get_work_name(self, work_id):
         self.work_name_request = work_id
@@ -85,6 +96,33 @@ class FakeWorkRepository:
     def get_variant_type(self, variant_id):
         self.variant_type_request = variant_id
         return self.variant_type
+
+    def get_work_remedial_variant_ids(self, work_id):
+        self.remedial_variant_ids_request = work_id
+        return self.remedial_variant_ids
+
+
+class FakeRenderRemedialSheetDocumentUseCase:
+    def __init__(self):
+        self.requests = []
+        self.results_by_variant_id = {}
+
+    def execute(self, request):
+        self.requests.append(request)
+        return self.results_by_variant_id.get(
+            request.variant_id,
+            DocumentRenderResult(
+                status='generated',
+                renderer_type=request.options.renderer_type,
+                file_type=request.options.renderer_type,
+                files=[
+                    GeneratedDocumentFile(
+                        filename=f'remedial_{request.variant_id}.pdf',
+                        size_kb=2.0,
+                    ),
+                ],
+            ),
+        )
 
 
 class FakeDocumentTemplateRepository:
@@ -464,6 +502,111 @@ class DocumentRenderingUseCaseTests(TestCase):
         self.assertFalse(result.success)
         self.assertEqual(result.status, 'not_found')
         self.assertIsNone(service.render_request)
+
+    def test_render_remedial_sheet_batch_document_aggregates_variant_files(self):
+        work_repo = FakeWorkRepository(
+            work_name='Работа над ошибками',
+            remedial_variant_ids=['variant-1', 'variant-2'],
+        )
+        remedial_use_case = FakeRenderRemedialSheetDocumentUseCase()
+        use_case = RenderRemedialSheetBatchDocumentUseCase(
+            work_repo=work_repo,
+            render_remedial_sheet_document_use_case=remedial_use_case,
+        )
+
+        result = use_case.execute(
+            RenderRemedialSheetBatchDocumentRequest(
+                work_id='work-1',
+                options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+            )
+        )
+
+        self.assertTrue(result.success)
+        self.assertEqual(result.file_type, 'pdf')
+        self.assertEqual(result.source_name, 'Работа над ошибками')
+        self.assertEqual(work_repo.work_name_request, 'work-1')
+        self.assertEqual(work_repo.remedial_variant_ids_request, 'work-1')
+        self.assertEqual(
+            [file.filename for file in result.files],
+            ['remedial_variant-1.pdf', 'remedial_variant-2.pdf'],
+        )
+        self.assertEqual(
+            [request.variant_id for request in remedial_use_case.requests],
+            ['variant-1', 'variant-2'],
+        )
+
+    def test_render_remedial_sheet_batch_document_handles_missing_work(self):
+        remedial_use_case = FakeRenderRemedialSheetDocumentUseCase()
+        use_case = RenderRemedialSheetBatchDocumentUseCase(
+            work_repo=FakeWorkRepository(work_name=None),
+            render_remedial_sheet_document_use_case=remedial_use_case,
+        )
+
+        result = use_case.execute(
+            RenderRemedialSheetBatchDocumentRequest(
+                work_id='missing-work',
+                options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+            )
+        )
+
+        self.assertFalse(result.success)
+        self.assertEqual(result.status, 'not_found')
+        self.assertEqual(remedial_use_case.requests, [])
+
+    def test_render_remedial_sheet_batch_document_handles_empty_work(self):
+        work_repo = FakeWorkRepository(
+            work_name='Работа над ошибками',
+            remedial_variant_ids=[],
+        )
+        remedial_use_case = FakeRenderRemedialSheetDocumentUseCase()
+        use_case = RenderRemedialSheetBatchDocumentUseCase(
+            work_repo=work_repo,
+            render_remedial_sheet_document_use_case=remedial_use_case,
+        )
+
+        result = use_case.execute(
+            RenderRemedialSheetBatchDocumentRequest(
+                work_id='work-1',
+                options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+            )
+        )
+
+        self.assertFalse(result.success)
+        self.assertEqual(result.status, 'empty')
+        self.assertEqual(result.source_name, 'Работа над ошибками')
+        self.assertEqual(remedial_use_case.requests, [])
+
+    def test_render_remedial_sheet_batch_document_stops_on_failed_variant(self):
+        work_repo = FakeWorkRepository(
+            work_name='Работа над ошибками',
+            remedial_variant_ids=['variant-1', 'variant-2'],
+        )
+        remedial_use_case = FakeRenderRemedialSheetDocumentUseCase()
+        remedial_use_case.results_by_variant_id['variant-2'] = (
+            DocumentRenderResult(
+                status='empty',
+                renderer_type='pdf',
+                file_type='pdf',
+            )
+        )
+        use_case = RenderRemedialSheetBatchDocumentUseCase(
+            work_repo=work_repo,
+            render_remedial_sheet_document_use_case=remedial_use_case,
+        )
+
+        result = use_case.execute(
+            RenderRemedialSheetBatchDocumentRequest(
+                work_id='work-1',
+                options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+            )
+        )
+
+        self.assertFalse(result.success)
+        self.assertEqual(result.status, 'empty')
+        self.assertEqual(
+            [file.filename for file in result.files],
+            ['remedial_variant-1.pdf'],
+        )
 
     def test_get_rendered_document_file_delegates_to_service(self):
         service = FakeDocumentEngine()

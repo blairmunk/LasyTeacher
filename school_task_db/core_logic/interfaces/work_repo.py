@@ -151,6 +151,10 @@ class IWorkRepository(ABC):
         """Return data for rendering a remedial sheet."""
 
     @abstractmethod
+    def get_work_remedial_variant_ids(self, work_id: str) -> List[str]:
+        """Return remedial variant IDs for a work ordered for batch rendering."""
+
+    @abstractmethod
     def get_orphan_variants(self) -> List[OrphanVariantListItem]:
         """Return orphan variants for the orphan list page."""
 

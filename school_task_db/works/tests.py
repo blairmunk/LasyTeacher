@@ -325,6 +325,20 @@ class WorkDetailViewTests(TestCase):
         self.assertContains(response, 'render-toast-box')
         self.assertContains(response, 'advanced-rendering-form')
 
+    def test_remedial_work_detail_exposes_batch_rendering_dom_markers(self):
+        remedial_work = Work.objects.create(
+            name='Работа над ошибками',
+            work_type='remedial',
+        )
+
+        response = self.client.get(reverse('works:detail', args=[remedial_work.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'data-remedial-batch-rendering-block')
+        self.assertContains(response, 'data-remedial-batch-rendering-form')
+        self.assertContains(response, 'data-remedial-batch-rendering-results')
+        self.assertContains(response, 'Печать листов работы над ошибками')
+
     def test_detail_returns_404_for_missing_work(self):
         response = self.client.get(
             reverse('works:detail', args=['550e8400-e29b-41d4-a716-446655440000'])
@@ -1193,6 +1207,87 @@ class WorkDetailViewTests(TestCase):
             },
         )
         render_document.assert_not_called()
+
+    def test_render_remedial_sheet_batch_ajax_renders_work_remedial_variants(self):
+        remedial_work = Work.objects.create(
+            name='Работа над ошибками',
+            work_type='remedial',
+        )
+        first_variant = Variant.objects.create(
+            work=remedial_work,
+            number=1,
+            work_name_snapshot=remedial_work.name,
+            variant_type='remedial',
+        )
+        second_variant = Variant.objects.create(
+            work=remedial_work,
+            number=2,
+            work_name_snapshot=remedial_work.name,
+            variant_type='remedial',
+        )
+
+        with patch(
+            'infrastructure.services.document_engine.'
+            'DjangoDocumentEngine.render_document',
+            side_effect=[
+                GeneratedDocument(
+                    file_type='pdf',
+                    files=[
+                        GeneratedDocumentFile(
+                            filename=f'remedial_{first_variant.pk}.pdf',
+                            size_kb=2.0,
+                        )
+                    ],
+                ),
+                GeneratedDocument(
+                    file_type='pdf',
+                    files=[
+                        GeneratedDocumentFile(
+                            filename=f'remedial_{second_variant.pk}.pdf',
+                            size_kb=2.5,
+                        )
+                    ],
+                ),
+            ],
+        ) as render_document:
+            response = self.client.post(
+                reverse(
+                    'works:render-remedial-sheet-batch',
+                    args=[remedial_work.pk],
+                ),
+                {'renderer_type': 'pdf'},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload['success'])
+        self.assertEqual(payload['total_files'], 2)
+        self.assertEqual(
+            [file_info['name'] for file_info in payload['files']],
+            [
+                f'remedial_{first_variant.pk}.pdf',
+                f'remedial_{second_variant.pk}.pdf',
+            ],
+        )
+        self.assertEqual(render_document.call_count, 2)
+
+    def test_render_remedial_sheet_batch_ajax_rejects_work_without_remedial_variants(self):
+        response = self.client.post(
+            reverse(
+                'works:render-remedial-sheet-batch',
+                args=[self.work.pk],
+            ),
+            {'renderer_type': 'pdf'},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                'success': False,
+                'error': 'В этой работе нет remedial-вариантов для печати.',
+            },
+        )
 
     def test_django_work_repo_builds_remedial_sheet_data(self):
         student = Student.objects.create(last_name='Петров', first_name='Пётр')

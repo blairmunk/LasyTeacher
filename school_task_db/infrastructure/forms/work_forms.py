@@ -9,6 +9,9 @@ from core_logic.interfaces.work_repo import (
 from core_logic.use_cases.render_remedial_sheet_document import (
     RenderRemedialSheetDocumentRequest,
 )
+from core_logic.use_cases.render_remedial_sheet_batch_document import (
+    RenderRemedialSheetBatchDocumentRequest,
+)
 from core_logic.use_cases.render_work_document import RenderWorkDocumentRequest
 from core_logic.use_cases.compose_work_variants import ComposeWorkVariantsRequest
 from core_logic.use_cases.get_rendered_document_file import (
@@ -95,6 +98,12 @@ class WorkFormAdapter:
             options=build_remedial_sheet_render_options(post_data),
         )
 
+    def render_remedial_sheet_batch_request_from_post(self, post_data, work_id):
+        return RenderRemedialSheetBatchDocumentRequest(
+            work_id=work_id,
+            options=build_remedial_sheet_render_options(post_data),
+        )
+
     def rendered_document_file_request(self, file_type, filename):
         return GetRenderedDocumentFileRequest(
             file_type=file_type,
@@ -147,4 +156,30 @@ class WorkFormAdapter:
                 f'Рабочий лист создан '
                 f'({result.renderer_type.upper()})'
             ),
+        }
+
+    def remedial_sheet_batch_response_payload(self, result):
+        files_info = [
+            {
+                'name': file_info.filename,
+                'size': f'{file_info.size_kb:.1f} KB',
+                'download_url': reverse(
+                    'works:download_rendered_file',
+                    kwargs={
+                        'file_type': result.file_type,
+                        'filename': file_info.filename,
+                    },
+                ),
+            }
+            for file_info in result.files
+        ]
+
+        return {
+            'success': True,
+            'message': (
+                f'Листы работы над ошибками созданы '
+                f'({result.renderer_type.upper()}, {len(files_info)} шт.)'
+            ),
+            'files': files_info,
+            'total_files': len(files_info),
         }

@@ -821,6 +821,39 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(variant_task.max_points, self.replacement.difficulty)
         self.assertEqual(variant_task.weight, self.replacement.difficulty)
 
+    def test_work_repository_returns_remedial_variant_ids_for_work(self):
+        remedial_work = Work.objects.create(
+            name='Работа над ошибками',
+            work_type='remedial',
+        )
+        second_variant = Variant.objects.create(
+            work=remedial_work,
+            number=2,
+            work_name_snapshot=remedial_work.name,
+            variant_type='remedial',
+        )
+        first_variant = Variant.objects.create(
+            work=remedial_work,
+            number=1,
+            work_name_snapshot=remedial_work.name,
+            variant_type='remedial',
+        )
+        Variant.objects.create(
+            work=remedial_work,
+            number=3,
+            work_name_snapshot=remedial_work.name,
+            variant_type='regular',
+        )
+
+        variant_ids = DjangoWorkRepository().get_work_remedial_variant_ids(
+            str(remedial_work.pk),
+        )
+
+        self.assertEqual(
+            variant_ids,
+            [str(first_variant.pk), str(second_variant.pk)],
+        )
+
     def test_work_repository_returns_detail_page_data(self):
         repo = DjangoWorkRepository()
 

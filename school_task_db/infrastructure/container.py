@@ -50,6 +50,9 @@ from core_logic.use_cases.compose_work_variants import ComposeWorkVariantsUseCas
 from core_logic.use_cases.render_remedial_sheet_document import (
     RenderRemedialSheetDocumentUseCase,
 )
+from core_logic.use_cases.render_remedial_sheet_batch_document import (
+    RenderRemedialSheetBatchDocumentUseCase,
+)
 from core_logic.use_cases.render_document import RenderDocumentUseCase
 from core_logic.use_cases.render_document_from_template import (
     RenderDocumentFromTemplateUseCase,
@@ -1071,6 +1074,14 @@ class Container:
             work_repo=self.work_repo,
             document_template_repo=self.document_template_repo,
             render_document_use_case=self.render_document_use_case(),
+        )
+
+    def render_remedial_sheet_batch_document_use_case(self):
+        return RenderRemedialSheetBatchDocumentUseCase(
+            work_repo=self.work_repo,
+            render_remedial_sheet_document_use_case=(
+                self.render_remedial_sheet_document_use_case()
+            ),
         )
 
     def get_rendered_document_file_use_case(self):

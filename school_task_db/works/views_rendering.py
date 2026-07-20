@@ -173,3 +173,71 @@ def render_remedial_sheet_ajax(request, variant_id):
             'status': 'error',
             'message': f'Ошибка: {str(e)}'
         }, status=500)
+
+
+@require_http_methods(["POST"])
+def render_remedial_sheet_batch_ajax(request, work_id):
+    """Ajax rendering for all remedial sheet documents in a work."""
+    from infrastructure.container import container
+
+    renderer_type = container.work_form_adapter.document_renderer_type_from_post(
+        request.POST,
+    )
+    try:
+        document_request = (
+            container.work_form_adapter
+            .render_remedial_sheet_batch_request_from_post(
+                request.POST,
+                work_id=str(work_id),
+            )
+        )
+        renderer_type = document_request.options.renderer_type
+
+        logger.info(
+            "Пакетный рендер remedial sheets для работы %s",
+            work_id,
+        )
+
+        result = (
+            container
+            .render_remedial_sheet_batch_document_use_case()
+            .execute(document_request)
+        )
+
+        if result.status == DOCUMENT_RENDER_STATUS_NOT_FOUND:
+            raise Http404("Работа не найдена")
+        if result.status == DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER:
+            return JsonResponse({
+                'success': False,
+                'error': f'Неподдерживаемый тип рендера: {renderer_type}',
+            }, status=400)
+        if result.status == DOCUMENT_RENDER_STATUS_EMPTY:
+            return JsonResponse({
+                'success': False,
+                'error': 'В этой работе нет remedial-вариантов для печати.',
+            }, status=400)
+        if not result.success:
+            return JsonResponse({
+                'success': False,
+                'error': 'Не удалось создать листы работы над ошибками.',
+            }, status=500)
+
+        return JsonResponse(
+            container.work_form_adapter.remedial_sheet_batch_response_payload(
+                result,
+            )
+        )
+
+    except Http404:
+        raise
+    except Exception as e:
+        logger.error(
+            "Ошибка пакетного рендера remedial sheets для работы %s: %s",
+            work_id,
+            e,
+            exc_info=True,
+        )
+        return JsonResponse({
+            'success': False,
+            'error': str(e),
+        }, status=500)

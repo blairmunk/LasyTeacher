@@ -64,4 +64,9 @@ urlpatterns = [
         views_rendering.render_remedial_sheet_ajax,
         name='render-remedial-sheet',
     ),
+    path(
+        'ajax/render/remedial-work/<pk:work_id>/',
+        views_rendering.render_remedial_sheet_batch_ajax,
+        name='render-remedial-sheet-batch',
+    ),
 ]

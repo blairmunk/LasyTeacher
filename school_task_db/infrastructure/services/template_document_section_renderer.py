@@ -18,7 +18,7 @@ class TemplateDocumentSectionRenderer(IDocumentSectionRenderer):
         if not template_name:
             raise ValueError('template_name is required')
         self.template_name = template_name
-        self.template_renderer = template_renderer
+        self.template_renderer = template_renderer or render_to_string
         self.extra_context = extra_context or {}
 
     def render_section(self, request: DocumentSectionRenderRequest) -> str:

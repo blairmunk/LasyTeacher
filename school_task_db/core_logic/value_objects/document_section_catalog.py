@@ -31,6 +31,7 @@ class DocumentSectionCatalogItem:
     section_type: str
     title: str
     supported_document_types: Tuple[str, ...]
+    renderable_document_types: Tuple[str, ...] = ()
     description: str = ''
     is_legacy: bool = False
 
@@ -39,6 +40,12 @@ class DocumentSectionCatalogItem:
             not document_type
             or document_type in self.supported_document_types
         )
+
+    def is_renderable_for(self, document_type: str) -> bool:
+        return (
+            not document_type
+            and bool(self.renderable_document_types)
+        ) or document_type in self.renderable_document_types
 
 
 ALL_DOCUMENT_TYPES = (
@@ -74,18 +81,27 @@ DOCUMENT_SECTION_CATALOG = (
         section_type=HEADER_SECTION,
         title='Заголовок',
         supported_document_types=ALL_DOCUMENT_TYPES,
+        renderable_document_types=(
+            WORK_DOCUMENT_TYPE,
+            REMEDIAL_SHEET_DOCUMENT_TYPE,
+        ),
         description='Название документа и основные метаданные.',
     ),
     DocumentSectionCatalogItem(
         section_type=TASK_LIST_SECTION,
         title='Список заданий',
         supported_document_types=TASK_DOCUMENT_TYPES,
+        renderable_document_types=(WORK_DOCUMENT_TYPE,),
         description='Основной блок заданий или упражнений.',
     ),
     DocumentSectionCatalogItem(
         section_type=ANSWERS_SECTION,
         title='Ответы',
         supported_document_types=SOLUTION_DOCUMENT_TYPES,
+        renderable_document_types=(
+            WORK_DOCUMENT_TYPE,
+            REMEDIAL_SHEET_DOCUMENT_TYPE,
+        ),
         description='Блок кратких ответов.',
     ),
     DocumentSectionCatalogItem(
@@ -96,30 +112,41 @@ DOCUMENT_SECTION_CATALOG = (
             ANSWER_KEY_DOCUMENT_TYPE,
             CUSTOM_DOCUMENT_TYPE,
         ),
+        renderable_document_types=(WORK_DOCUMENT_TYPE,),
         description='Отдельный ключ для проверки или старый блок ответов работы.',
     ),
     DocumentSectionCatalogItem(
         section_type=SHORT_SOLUTIONS_SECTION,
         title='Краткие решения',
         supported_document_types=SOLUTION_DOCUMENT_TYPES,
+        renderable_document_types=(
+            WORK_DOCUMENT_TYPE,
+            REMEDIAL_SHEET_DOCUMENT_TYPE,
+        ),
         description='Блок кратких разборов.',
     ),
     DocumentSectionCatalogItem(
         section_type=FULL_SOLUTIONS_SECTION,
         title='Полные решения',
         supported_document_types=SOLUTION_DOCUMENT_TYPES,
+        renderable_document_types=(
+            WORK_DOCUMENT_TYPE,
+            REMEDIAL_SHEET_DOCUMENT_TYPE,
+        ),
         description='Блок подробных решений.',
     ),
     DocumentSectionCatalogItem(
         section_type=ORIGINAL_MISTAKES_SECTION,
         title='Ошибки исходной работы',
         supported_document_types=(REMEDIAL_SHEET_DOCUMENT_TYPE,),
+        renderable_document_types=(REMEDIAL_SHEET_DOCUMENT_TYPE,),
         description='Разбор заданий, ошибочно решенных в исходной работе.',
     ),
     DocumentSectionCatalogItem(
         section_type=TRAINING_TASKS_SECTION,
         title='Тренировочные задания',
         supported_document_types=(REMEDIAL_SHEET_DOCUMENT_TYPE,),
+        renderable_document_types=(REMEDIAL_SHEET_DOCUMENT_TYPE,),
         description='Новые задания для работы над ошибками.',
     ),
     DocumentSectionCatalogItem(
@@ -155,6 +182,7 @@ DOCUMENT_SECTION_CATALOG = (
         section_type=LEGACY_TASK_VARIANTS_SECTION,
         title='Варианты заданий',
         supported_document_types=(WORK_DOCUMENT_TYPE,),
+        renderable_document_types=(WORK_DOCUMENT_TYPE,),
         description='Старое имя секции списка вариантов.',
         is_legacy=True,
     ),
@@ -164,12 +192,14 @@ DOCUMENT_SECTION_CATALOG = (
 def get_document_section_catalog(
     document_type: str = '',
     include_legacy: bool = False,
+    renderable_only: bool = False,
 ) -> Tuple[DocumentSectionCatalogItem, ...]:
     return tuple(
         item
         for item in DOCUMENT_SECTION_CATALOG
         if (include_legacy or not item.is_legacy)
         and item.supports_document_type(document_type)
+        and (not renderable_only or item.is_renderable_for(document_type))
     )
 
 

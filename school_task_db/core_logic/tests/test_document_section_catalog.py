@@ -12,6 +12,7 @@ from core_logic.value_objects.document_recipes import (
     ORIGINAL_MISTAKES_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     TASK_LIST_SECTION,
+    THEORY_SECTION,
     WORK_DOCUMENT_TYPE,
     WORKSHEET_DOCUMENT_TYPE,
 )
@@ -31,6 +32,7 @@ class DocumentSectionCatalogTests(TestCase):
 
         self.assertIn(HEADER_SECTION, section_types)
         self.assertIn(TASK_LIST_SECTION, section_types)
+        self.assertIn(THEORY_SECTION, section_types)
         self.assertNotIn(ORIGINAL_MISTAKES_SECTION, section_types)
 
     def test_hides_legacy_sections_by_default(self):
@@ -68,6 +70,32 @@ class DocumentSectionCatalogTests(TestCase):
 
         self.assertIn(ANSWER_KEY_SECTION, section_types)
 
+    def test_can_return_renderable_sections_only(self):
+        sections = get_document_section_catalog(
+            document_type=WORKSHEET_DOCUMENT_TYPE,
+            renderable_only=True,
+        )
+
+        section_types = [section.section_type for section in sections]
+
+        self.assertNotIn(THEORY_SECTION, section_types)
+        self.assertNotIn(TASK_LIST_SECTION, section_types)
+
+    def test_reports_section_renderability_for_document_type(self):
+        sections = get_document_section_catalog(
+            document_type=WORK_DOCUMENT_TYPE,
+        )
+        task_list_section = next(
+            section
+            for section in sections
+            if section.section_type == TASK_LIST_SECTION
+        )
+
+        self.assertTrue(task_list_section.is_renderable_for(WORK_DOCUMENT_TYPE))
+        self.assertFalse(
+            task_list_section.is_renderable_for(WORKSHEET_DOCUMENT_TYPE),
+        )
+
     def test_validates_supported_sections(self):
         validate_document_section_types(
             WORKSHEET_DOCUMENT_TYPE,
@@ -94,6 +122,7 @@ class GetDocumentSectionCatalogUseCaseTests(TestCase):
         data = GetDocumentSectionCatalogUseCase().execute(
             GetDocumentSectionCatalogRequest(
                 document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
+                renderable_only=True,
             ),
         )
 

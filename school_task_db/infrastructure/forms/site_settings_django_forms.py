@@ -1,5 +1,6 @@
 from django import forms
-from .models import SiteSettings
+
+from site_settings.models import SiteSettings
 
 
 class SiteSettingsForm(forms.ModelForm):

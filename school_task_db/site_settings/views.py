@@ -3,7 +3,7 @@ from django.views.generic import TemplateView
 from django.contrib import messages
 
 from infrastructure.container import container
-from .forms import SiteSettingsForm
+from infrastructure.forms.site_settings_django_forms import SiteSettingsForm
 
 
 class SiteSettingsView(TemplateView):

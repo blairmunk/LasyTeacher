@@ -4,7 +4,7 @@ from django import template
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 
-from document_generator.utils.formula_utils import formula_processor
+from core_logic.services.formula_processor import formula_processor
 
 register = template.Library()
 

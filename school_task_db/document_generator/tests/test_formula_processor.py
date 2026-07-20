@@ -1,9 +1,18 @@
 from unittest import TestCase
 
+from core_logic.services.formula_processor import (
+    formula_processor as core_formula_processor,
+)
+from document_generator.utils.formula_utils import (
+    formula_processor as compatibility_formula_processor,
+)
 from document_generator.processors.formula import process_formula_text
 
 
 class FormulaProcessorTests(TestCase):
+    def test_legacy_formula_utils_reexports_core_processor(self):
+        self.assertIs(compatibility_formula_processor, core_formula_processor)
+
     def test_process_formula_text_returns_processor_result(self):
         def process(text):
             return {

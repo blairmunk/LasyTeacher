@@ -3,7 +3,7 @@
 import re
 from typing import Any
 
-from document_generator.utils.formula_utils import (
+from core_logic.services.formula_processor import (
     formula_processor as base_processor,
 )
 

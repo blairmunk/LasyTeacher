@@ -2,7 +2,7 @@
 
 import re
 from typing import Dict, Any
-from document_generator.utils.formula_utils import formula_processor as base_processor
+from core_logic.services.formula_processor import formula_processor as base_processor
 
 class HtmlFormulaProcessor:
     """HTML специфичный процессор формул с поддержкой MathJax"""

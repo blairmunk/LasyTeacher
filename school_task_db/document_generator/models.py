@@ -4,6 +4,7 @@ from django.db import models
 
 from core.models import BaseModel
 from core_logic.value_objects.document_recipes import (
+    ANSWER_KEY_DOCUMENT_TYPE,
     build_document_template_spec_from_config,
 )
 
@@ -13,7 +14,7 @@ class DocumentTemplate(BaseModel):
         WORK = 'work', 'Контрольная / самостоятельная'
         REMEDIAL = 'remedial_sheet', 'Работа над ошибками'
         WORKSHEET = 'worksheet', 'Рабочий лист'
-        ANSWER_KEY = 'answer_key', 'Ключ для проверки'
+        ANSWER_KEY = ANSWER_KEY_DOCUMENT_TYPE, 'Ключ для проверки'
         HOMEWORK = 'homework', 'Домашнее задание'
         DIAGNOSTIC = 'diagnostic', 'Диагностическая карта'
         CUSTOM = 'custom', 'Пользовательский'

@@ -16,6 +16,7 @@ from core_logic.value_objects.content_config import (
 
 WORK_DOCUMENT_TYPE = 'work'
 REMEDIAL_SHEET_DOCUMENT_TYPE = 'remedial_sheet'
+ANSWER_KEY_DOCUMENT_TYPE = 'answer_key'
 
 HEADER_SECTION = 'header'
 TASK_LIST_SECTION = 'task_list'

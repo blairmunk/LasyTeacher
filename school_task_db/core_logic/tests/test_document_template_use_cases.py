@@ -12,6 +12,7 @@ from core_logic.use_cases.get_document_template_list import (
     GetDocumentTemplateListRequest,
     GetDocumentTemplateListUseCase,
 )
+from core_logic.value_objects.document_recipes import ANSWER_KEY_DOCUMENT_TYPE
 
 
 class FakeDocumentTemplateRepository:
@@ -70,7 +71,9 @@ class GetDocumentTemplateListUseCaseTests(TestCase):
         )
 
         data = use_case.execute(
-            GetDefaultDocumentTemplateRequest(template_type='answer_key'),
+            GetDefaultDocumentTemplateRequest(
+                template_type=ANSWER_KEY_DOCUMENT_TYPE,
+            ),
         )
 
         self.assertIsNone(data.template)

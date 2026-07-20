@@ -8,6 +8,7 @@ from core_logic.entities.document import (
     DocumentSourceRef,
     DocumentTemplateSpec,
 )
+from core_logic.value_objects.document_recipes import ANSWER_KEY_DOCUMENT_TYPE
 
 
 class DocumentModelTests(TestCase):
@@ -178,7 +179,7 @@ class DocumentModelTests(TestCase):
         default_content_config = {'answer_type': 'with_answers'}
         template = DocumentTemplateSpec(
             name='Ключ',
-            template_type='answer_key',
+            template_type=ANSWER_KEY_DOCUMENT_TYPE,
             default_content_config=default_content_config,
         )
 

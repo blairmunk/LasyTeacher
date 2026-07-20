@@ -732,16 +732,16 @@ class ContainerTests(SimpleTestCase):
             RenderWorkDocumentUseCase,
         )
         self.assertIsInstance(
-            render_work_document_use_case.render_document_from_recipe_use_case,
-            RenderDocumentFromRecipeUseCase,
+            render_work_document_use_case.render_document_use_case,
+            RenderDocumentUseCase,
         )
         self.assertIsInstance(
             render_remedial_sheet_use_case,
             RenderRemedialSheetDocumentUseCase,
         )
         self.assertIsInstance(
-            render_remedial_sheet_use_case.render_document_from_recipe_use_case,
-            RenderDocumentFromRecipeUseCase,
+            render_remedial_sheet_use_case.render_document_use_case,
+            RenderDocumentUseCase,
         )
         self.assertIsInstance(rendered_file_use_case, GetRenderedDocumentFileUseCase)
         self.assertIsInstance(container.student_repo, DjangoStudentRepository)

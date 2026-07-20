@@ -1049,9 +1049,7 @@ class Container:
         return RenderWorkDocumentUseCase(
             work_repo=self.work_repo,
             document_template_repo=self.document_template_repo,
-            render_document_from_recipe_use_case=(
-                self.render_document_from_recipe_use_case()
-            ),
+            render_document_use_case=self.render_document_use_case(),
         )
 
     def render_document_use_case(self):
@@ -1075,9 +1073,7 @@ class Container:
         return RenderRemedialSheetDocumentUseCase(
             work_repo=self.work_repo,
             document_template_repo=self.document_template_repo,
-            render_document_from_recipe_use_case=(
-                self.render_document_from_recipe_use_case()
-            ),
+            render_document_use_case=self.render_document_use_case(),
         )
 
     def get_rendered_document_file_use_case(self):

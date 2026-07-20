@@ -17,16 +17,18 @@ from core_logic.interfaces.work_repo import IWorkRepository
 from core_logic.use_cases.document_template_selection import (
     resolve_document_template_spec,
 )
+from core_logic.use_cases.render_document import (
+    RenderDocumentRequest,
+    RenderDocumentUseCase,
+)
 from core_logic.use_cases.render_document_from_recipe import (
-    RenderDocumentFromRecipeRequest,
     RenderDocumentFromRecipeUseCase,
 )
 from core_logic.value_objects.document_render_options import (
     RemedialSheetDocumentRenderOptions,
 )
 from core_logic.value_objects.document_render_plan_factories import (
-    build_remedial_sheet_document_recipe_for_render,
-    build_remedial_sheet_document_source,
+    build_remedial_sheet_document_render_plan,
 )
 from core_logic.value_objects.document_recipes import REMEDIAL_SHEET_DOCUMENT_TYPE
 
@@ -44,14 +46,21 @@ class RenderRemedialSheetDocumentUseCase:
         work_repo: IWorkRepository | None = None,
         document_template_repo: IDocumentTemplateRepository | None = None,
         document_engine: IDocumentEngine | None = None,
+        render_document_use_case: RenderDocumentUseCase | None = None,
         render_document_from_recipe_use_case: (
             RenderDocumentFromRecipeUseCase | None
         ) = None,
     ):
-        self.render_document_from_recipe_use_case = (
-            render_document_from_recipe_use_case
-            or RenderDocumentFromRecipeUseCase(document_engine=document_engine)
-        )
+        if render_document_use_case is not None:
+            self.render_document_use_case = render_document_use_case
+        elif render_document_from_recipe_use_case is not None:
+            self.render_document_use_case = (
+                render_document_from_recipe_use_case.render_document_use_case
+            )
+        else:
+            self.render_document_use_case = RenderDocumentUseCase(
+                document_engine=document_engine,
+            )
         self.work_repo = work_repo
         self.document_template_repo = document_template_repo
 
@@ -70,10 +79,10 @@ class RenderRemedialSheetDocumentUseCase:
                 status=DOCUMENT_RENDER_STATUS_NOT_REMEDIAL,
                 renderer_type=request.options.renderer_type,
             )
-        return self.render_document_from_recipe_use_case.execute(
-            RenderDocumentFromRecipeRequest(
-                source=build_remedial_sheet_document_source(request.variant_id),
-                recipe=build_remedial_sheet_document_recipe_for_render(
+        return self.render_document_use_case.execute(
+            RenderDocumentRequest(
+                render_plan=build_remedial_sheet_document_render_plan(
+                    variant_id=request.variant_id,
                     options=request.options,
                     template_spec=resolve_document_template_spec(
                         template_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
@@ -81,7 +90,6 @@ class RenderRemedialSheetDocumentUseCase:
                         document_template_repo=self.document_template_repo,
                     ),
                 ),
-                render_target=request.options.render_target,
                 empty_status=DOCUMENT_RENDER_STATUS_EMPTY,
             )
         )

@@ -37,7 +37,6 @@ from core_logic.value_objects.document_recipes import (
     HEADER_SECTION,
     SHORT_SOLUTIONS_SECTION,
     TASK_LIST_SECTION,
-    TASK_VARIANTS_SECTION,
 )
 
 
@@ -177,7 +176,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         self.assertEqual(render_plan.render_target.renderer_type, 'html')
         self.assertEqual(
             render_plan.recipe.section_types,
-            (HEADER_SECTION, TASK_VARIANTS_SECTION),
+            (HEADER_SECTION, TASK_LIST_SECTION),
         )
 
     def test_render_work_document_accepts_document_engine_keyword(self):

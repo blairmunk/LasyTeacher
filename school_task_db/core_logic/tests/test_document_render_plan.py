@@ -92,7 +92,7 @@ class DocumentRenderPlanTests(TestCase):
         self.assertEqual(plan.render_target.renderer_type, 'html')
         self.assertEqual(
             plan.recipe.section_types,
-            ('header', 'task_variants', 'answers'),
+            ('header', 'task_list', 'answers'),
         )
 
     def test_build_work_document_render_plan_uses_template_spec(self):

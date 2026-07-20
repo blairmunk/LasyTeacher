@@ -11,7 +11,6 @@ from core_logic.value_objects.document_recipes import (
     TASK_LIST_SECTION,
     ORIGINAL_MISTAKES_SECTION,
     SHORT_SOLUTIONS_SECTION,
-    TASK_VARIANTS_SECTION,
     TRAINING_TASKS_SECTION,
     build_document_recipe_from_sections_config,
     build_document_template_spec_from_config,
@@ -116,13 +115,13 @@ class DocumentRecipeTests(TestCase):
         )
         self.assertEqual(template.to_recipe().document_type, 'worksheet')
 
-    def test_default_work_recipe_contains_header_and_task_variants(self):
+    def test_default_work_recipe_contains_header_and_task_list(self):
         recipe = build_work_document_recipe()
 
         self.assertEqual(recipe.document_type, 'work')
         self.assertEqual(
             recipe.section_types,
-            (HEADER_SECTION, TASK_VARIANTS_SECTION),
+            (HEADER_SECTION, TASK_LIST_SECTION),
         )
         self.assertEqual(
             recipe.sections[1].options,
@@ -145,7 +144,7 @@ class DocumentRecipeTests(TestCase):
             recipe.section_types,
             (
                 HEADER_SECTION,
-                TASK_VARIANTS_SECTION,
+                TASK_LIST_SECTION,
                 ANSWERS_SECTION,
                 SHORT_SOLUTIONS_SECTION,
                 FULL_SOLUTIONS_SECTION,

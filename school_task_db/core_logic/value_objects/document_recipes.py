@@ -104,7 +104,7 @@ def build_work_document_recipe(
     sections = [
         DocumentSectionSpec(section_type=HEADER_SECTION),
         DocumentSectionSpec(
-            section_type=TASK_VARIANTS_SECTION,
+            section_type=TASK_LIST_SECTION,
             options={
                 'include_hints': content_config['include_hints'],
                 'include_instructions': content_config['include_instructions'],

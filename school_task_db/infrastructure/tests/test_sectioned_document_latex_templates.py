@@ -9,7 +9,7 @@ from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
     HEADER_SECTION,
     SHORT_SOLUTIONS_SECTION,
-    TASK_VARIANTS_SECTION,
+    TASK_LIST_SECTION,
 )
 from core_logic.value_objects.document_render_plan import DocumentRenderRequest
 from infrastructure.services.rendered_document_file_store import (
@@ -27,9 +27,7 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                 renderer_type='latex',
                 section_templates={
                     HEADER_SECTION: 'documents/latex/sections/header.tex',
-                    TASK_VARIANTS_SECTION: (
-                        'documents/latex/sections/task_variants.tex'
-                    ),
+                    TASK_LIST_SECTION: 'documents/latex/sections/task_list.tex',
                     ANSWERS_SECTION: 'documents/latex/sections/answers.tex',
                     SHORT_SOLUTIONS_SECTION: (
                         'documents/latex/sections/short_solutions.tex'
@@ -54,7 +52,7 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                         },
                     ),
                     DocumentSection(
-                        section_type=TASK_VARIANTS_SECTION,
+                        section_type=TASK_LIST_SECTION,
                         payload={
                             'include_hints': True,
                             'variants': [

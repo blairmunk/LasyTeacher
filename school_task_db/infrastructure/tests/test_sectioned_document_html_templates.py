@@ -7,7 +7,7 @@ from core_logic.entities.document import Document, DocumentSection
 from core_logic.value_objects.content_config import RenderTarget
 from core_logic.value_objects.document_recipes import (
     HEADER_SECTION,
-    TASK_VARIANTS_SECTION,
+    TASK_LIST_SECTION,
 )
 from core_logic.value_objects.document_render_plan import DocumentRenderRequest
 from infrastructure.services.rendered_document_file_store import (
@@ -25,9 +25,7 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
                 renderer_type='html',
                 section_templates={
                     HEADER_SECTION: 'documents/html/sections/header.html',
-                    TASK_VARIANTS_SECTION: (
-                        'documents/html/sections/task_variants.html'
-                    ),
+                    TASK_LIST_SECTION: 'documents/html/sections/task_list.html',
                 },
                 filename_builder=lambda request: 'work.html',
                 file_store=RenderedDocumentFileStore(
@@ -48,7 +46,7 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
                         },
                     ),
                     DocumentSection(
-                        section_type=TASK_VARIANTS_SECTION,
+                        section_type=TASK_LIST_SECTION,
                         payload={
                             'include_hints': True,
                             'variants': [

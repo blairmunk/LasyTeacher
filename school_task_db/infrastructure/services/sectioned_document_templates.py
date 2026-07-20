@@ -15,8 +15,8 @@ from core_logic.value_objects.document_recipes import (
 
 WORK_HTML_SECTION_TEMPLATES = {
     HEADER_SECTION: 'documents/html/sections/header.html',
-    TASK_LIST_SECTION: 'documents/html/sections/task_variants.html',
-    TASK_VARIANTS_SECTION: 'documents/html/sections/task_variants.html',
+    TASK_LIST_SECTION: 'documents/html/sections/task_list.html',
+    TASK_VARIANTS_SECTION: 'documents/html/sections/task_list.html',
     ANSWER_KEY_SECTION: 'documents/html/sections/answers.html',
     ANSWERS_SECTION: 'documents/html/sections/answers.html',
     SHORT_SOLUTIONS_SECTION: 'documents/html/sections/short_solutions.html',
@@ -26,8 +26,8 @@ WORK_HTML_WRAPPER_TEMPLATE = 'documents/html/base/document.html'
 
 WORK_LATEX_SECTION_TEMPLATES = {
     HEADER_SECTION: 'documents/latex/sections/header.tex',
-    TASK_LIST_SECTION: 'documents/latex/sections/task_variants.tex',
-    TASK_VARIANTS_SECTION: 'documents/latex/sections/task_variants.tex',
+    TASK_LIST_SECTION: 'documents/latex/sections/task_list.tex',
+    TASK_VARIANTS_SECTION: 'documents/latex/sections/task_list.tex',
     ANSWER_KEY_SECTION: 'documents/latex/sections/answers.tex',
     ANSWERS_SECTION: 'documents/latex/sections/answers.tex',
     SHORT_SOLUTIONS_SECTION: 'documents/latex/sections/short_solutions.tex',

@@ -8,6 +8,7 @@ from core_logic.value_objects.document_render_options import RenderTarget
 from core_logic.value_objects.document_recipes import (
     HEADER_SECTION,
     PAGE_BREAK_SECTION,
+    SCORE_TABLE_SECTION,
     TASK_LIST_SECTION,
 )
 from core_logic.value_objects.document_render_requests import DocumentRenderRequest
@@ -27,6 +28,7 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
                 section_templates={
                     HEADER_SECTION: 'documents/html/sections/header.html',
                     PAGE_BREAK_SECTION: 'documents/html/sections/page_break.html',
+                    SCORE_TABLE_SECTION: 'documents/html/sections/score_table.html',
                     TASK_LIST_SECTION: 'documents/html/sections/task_list.html',
                 },
                 filename_builder=lambda request: 'work.html',
@@ -49,6 +51,19 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
                     ),
                     DocumentSection(
                         section_type=PAGE_BREAK_SECTION,
+                    ),
+                    DocumentSection(
+                        section_type=SCORE_TABLE_SECTION,
+                        payload={
+                            'max_score': 10,
+                            'criteria': [
+                                {
+                                    'score': 5,
+                                    'min_percent': 85,
+                                    'min_points': 8.5,
+                                },
+                            ],
+                        },
                     ),
                     DocumentSection(
                         section_type=TASK_LIST_SECTION,
@@ -85,6 +100,8 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
             self.assertIn('<title>Контрольная</title>', html)
             self.assertIn('<h1>Контрольная</h1>', html)
             self.assertIn('page-break-after: always', html)
+            self.assertIn('Критерии оценивания', html)
+            self.assertIn('<td>85%</td>', html)
             self.assertIn('Вариант 1', html)
             self.assertIn('Найдите силу', html)
             self.assertIn('Подсказка: F = ma', html)

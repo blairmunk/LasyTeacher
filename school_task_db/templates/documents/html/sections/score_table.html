@@ -1,0 +1,28 @@
+<section class="document-score-table">
+    <h2>{{ payload.section_title|default:"Критерии оценивания" }}</h2>
+    {% if payload.max_score %}
+        <p>Максимальный балл: {{ payload.max_score }}</p>
+    {% endif %}
+    {% if payload.criteria %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Оценка</th>
+                    <th>Минимальный процент</th>
+                    <th>Минимальный балл</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in payload.criteria %}
+                    <tr>
+                        <td>{{ row.score }}</td>
+                        <td>{{ row.min_percent }}%</td>
+                        <td>{{ row.min_points }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Критерии оценивания не заданы.</p>
+    {% endif %}
+</section>

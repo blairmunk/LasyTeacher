@@ -1,0 +1,20 @@
+\section*{\centering {{ payload.section_title|default:"Критерии оценивания" }}}
+{% if payload.max_score %}
+Максимальный балл: {{ payload.max_score }}
+
+{% endif %}
+{% if payload.criteria %}
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+Оценка & Минимальный процент & Минимальный балл \\
+\hline
+{% for row in payload.criteria %}
+{{ row.score }} & {{ row.min_percent }}\% & {{ row.min_points }} \\
+\hline
+{% endfor %}
+\end{tabular}
+\end{center}
+{% else %}
+\textit{Критерии оценивания не заданы.}
+{% endif %}

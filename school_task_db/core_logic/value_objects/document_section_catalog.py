@@ -180,6 +180,7 @@ DOCUMENT_SECTION_CATALOG = (
             DIAGNOSTIC_DOCUMENT_TYPE,
             CUSTOM_DOCUMENT_TYPE,
         ),
+        renderable_document_types=(WORK_DOCUMENT_TYPE,),
         description='Таблица шкалы и критериев оценивания.',
     ),
     DocumentSectionCatalogItem(

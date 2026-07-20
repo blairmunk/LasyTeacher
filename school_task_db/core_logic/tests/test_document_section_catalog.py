@@ -11,6 +11,7 @@ from core_logic.value_objects.document_recipes import (
     LEGACY_TASK_VARIANTS_SECTION,
     ORIGINAL_MISTAKES_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
+    SCORE_TABLE_SECTION,
     TASK_LIST_SECTION,
     THEORY_SECTION,
     WORK_DOCUMENT_TYPE,
@@ -69,6 +70,25 @@ class DocumentSectionCatalogTests(TestCase):
         section_types = [section.section_type for section in sections]
 
         self.assertIn(ANSWER_KEY_SECTION, section_types)
+
+    def test_score_table_is_renderable_for_work_only(self):
+        work_sections = get_document_section_catalog(
+            document_type=WORK_DOCUMENT_TYPE,
+            renderable_only=True,
+        )
+        worksheet_sections = get_document_section_catalog(
+            document_type=WORKSHEET_DOCUMENT_TYPE,
+            renderable_only=True,
+        )
+
+        self.assertIn(
+            SCORE_TABLE_SECTION,
+            [section.section_type for section in work_sections],
+        )
+        self.assertNotIn(
+            SCORE_TABLE_SECTION,
+            [section.section_type for section in worksheet_sections],
+        )
 
     def test_can_return_renderable_sections_only(self):
         sections = get_document_section_catalog(

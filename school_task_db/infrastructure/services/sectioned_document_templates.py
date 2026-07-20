@@ -8,6 +8,7 @@ from core_logic.value_objects.document_recipes import (
     LEGACY_TASK_VARIANTS_SECTION,
     ORIGINAL_MISTAKES_SECTION,
     PAGE_BREAK_SECTION,
+    SCORE_TABLE_SECTION,
     SHORT_SOLUTIONS_SECTION,
     TASK_LIST_SECTION,
     TRAINING_TASKS_SECTION,
@@ -23,6 +24,7 @@ WORK_HTML_SECTION_TEMPLATES = {
     SHORT_SOLUTIONS_SECTION: 'documents/html/sections/short_solutions.html',
     FULL_SOLUTIONS_SECTION: 'documents/html/sections/full_solutions.html',
     PAGE_BREAK_SECTION: 'documents/html/sections/page_break.html',
+    SCORE_TABLE_SECTION: 'documents/html/sections/score_table.html',
 }
 WORK_HTML_WRAPPER_TEMPLATE = 'documents/html/base/document.html'
 
@@ -35,6 +37,7 @@ WORK_LATEX_SECTION_TEMPLATES = {
     SHORT_SOLUTIONS_SECTION: 'documents/latex/sections/short_solutions.tex',
     FULL_SOLUTIONS_SECTION: 'documents/latex/sections/full_solutions.tex',
     PAGE_BREAK_SECTION: 'documents/latex/sections/page_break.tex',
+    SCORE_TABLE_SECTION: 'documents/latex/sections/score_table.tex',
 }
 WORK_LATEX_WRAPPER_TEMPLATE = 'documents/latex/base/document.tex'
 

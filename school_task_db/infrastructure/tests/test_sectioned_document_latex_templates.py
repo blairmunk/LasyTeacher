@@ -9,6 +9,7 @@ from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
     HEADER_SECTION,
     PAGE_BREAK_SECTION,
+    SCORE_TABLE_SECTION,
     SHORT_SOLUTIONS_SECTION,
     TASK_LIST_SECTION,
 )
@@ -30,6 +31,7 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                     HEADER_SECTION: 'documents/latex/sections/header.tex',
                     TASK_LIST_SECTION: 'documents/latex/sections/task_list.tex',
                     PAGE_BREAK_SECTION: 'documents/latex/sections/page_break.tex',
+                    SCORE_TABLE_SECTION: 'documents/latex/sections/score_table.tex',
                     ANSWERS_SECTION: 'documents/latex/sections/answers.tex',
                     SHORT_SOLUTIONS_SECTION: (
                         'documents/latex/sections/short_solutions.tex'
@@ -80,6 +82,19 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                         section_type=PAGE_BREAK_SECTION,
                     ),
                     DocumentSection(
+                        section_type=SCORE_TABLE_SECTION,
+                        payload={
+                            'max_score': 10,
+                            'criteria': [
+                                {
+                                    'score': 5,
+                                    'min_percent': 85,
+                                    'min_points': 8.5,
+                                },
+                            ],
+                        },
+                    ),
+                    DocumentSection(
                         section_type=ANSWERS_SECTION,
                         payload={
                             'variants': [
@@ -126,6 +141,8 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
             self.assertIn('Найдите силу', latex)
             self.assertIn('Подсказка: F = ma', latex)
             self.assertIn(r'\clearpage', latex)
+            self.assertIn(r'\section*{\centering Критерии оценивания}', latex)
+            self.assertIn(r'5 & 85\% & 8,5', latex)
             self.assertIn(r'\section*{\centering Ответы}', latex)
             self.assertIn('10 Н', latex)
             self.assertIn(r'\section*{\centering Краткие решения}', latex)

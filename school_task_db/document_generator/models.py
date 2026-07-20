@@ -5,19 +5,25 @@ from django.db import models
 from core.models import BaseModel
 from core_logic.value_objects.document_recipes import (
     ANSWER_KEY_DOCUMENT_TYPE,
+    CUSTOM_DOCUMENT_TYPE,
+    DIAGNOSTIC_DOCUMENT_TYPE,
+    HOMEWORK_DOCUMENT_TYPE,
+    REMEDIAL_SHEET_DOCUMENT_TYPE,
+    WORK_DOCUMENT_TYPE,
+    WORKSHEET_DOCUMENT_TYPE,
     build_document_template_spec_from_config,
 )
 
 
 class DocumentTemplate(BaseModel):
     class TemplateType(models.TextChoices):
-        WORK = 'work', 'Контрольная / самостоятельная'
-        REMEDIAL = 'remedial_sheet', 'Работа над ошибками'
-        WORKSHEET = 'worksheet', 'Рабочий лист'
+        WORK = WORK_DOCUMENT_TYPE, 'Контрольная / самостоятельная'
+        REMEDIAL = REMEDIAL_SHEET_DOCUMENT_TYPE, 'Работа над ошибками'
+        WORKSHEET = WORKSHEET_DOCUMENT_TYPE, 'Рабочий лист'
         ANSWER_KEY = ANSWER_KEY_DOCUMENT_TYPE, 'Ключ для проверки'
-        HOMEWORK = 'homework', 'Домашнее задание'
-        DIAGNOSTIC = 'diagnostic', 'Диагностическая карта'
-        CUSTOM = 'custom', 'Пользовательский'
+        HOMEWORK = HOMEWORK_DOCUMENT_TYPE, 'Домашнее задание'
+        DIAGNOSTIC = DIAGNOSTIC_DOCUMENT_TYPE, 'Диагностическая карта'
+        CUSTOM = CUSTOM_DOCUMENT_TYPE, 'Пользовательский'
 
     name = models.CharField('Название', max_length=200)
     description = models.TextField('Описание', blank=True)

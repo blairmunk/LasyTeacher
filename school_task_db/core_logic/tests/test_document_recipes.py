@@ -8,7 +8,10 @@ from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
+    REMEDIAL_SHEET_DOCUMENT_TYPE,
     TASK_LIST_SECTION,
+    WORK_DOCUMENT_TYPE,
+    WORKSHEET_DOCUMENT_TYPE,
     ORIGINAL_MISTAKES_SECTION,
     SHORT_SOLUTIONS_SECTION,
     TRAINING_TASKS_SECTION,
@@ -22,7 +25,7 @@ from core_logic.value_objects.document_recipes import (
 class DocumentRecipeTests(TestCase):
     def test_builds_recipe_from_template_sections_config(self):
         recipe = build_document_recipe_from_sections_config(
-            document_type='worksheet',
+            document_type=WORKSHEET_DOCUMENT_TYPE,
             sections_config=[
                 {
                     'type': HEADER_SECTION,
@@ -39,7 +42,7 @@ class DocumentRecipeTests(TestCase):
             ],
         )
 
-        self.assertEqual(recipe.document_type, 'worksheet')
+        self.assertEqual(recipe.document_type, WORKSHEET_DOCUMENT_TYPE)
         self.assertEqual(
             recipe.section_types,
             (HEADER_SECTION, TASK_LIST_SECTION),
@@ -56,7 +59,7 @@ class DocumentRecipeTests(TestCase):
 
     def test_builds_recipe_from_wrapped_sections_config(self):
         recipe = build_document_recipe_from_sections_config(
-            document_type='remedial_sheet',
+            document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
             sections_config={
                 'template_type': 'remedial',
                 'sections': [
@@ -78,7 +81,7 @@ class DocumentRecipeTests(TestCase):
     def test_rejects_non_mapping_section_params(self):
         with self.assertRaises(ValueError):
             build_document_recipe_from_sections_config(
-                document_type='worksheet',
+                document_type=WORKSHEET_DOCUMENT_TYPE,
                 sections_config=[
                     {
                         'type': HEADER_SECTION,
@@ -90,7 +93,7 @@ class DocumentRecipeTests(TestCase):
     def test_builds_template_spec_from_sections_config(self):
         template = build_document_template_spec_from_config(
             name='Рабочий лист',
-            template_type='worksheet',
+            template_type=WORKSHEET_DOCUMENT_TYPE,
             sections_config={
                 'sections': [
                     {'type': HEADER_SECTION},
@@ -104,7 +107,7 @@ class DocumentRecipeTests(TestCase):
         )
 
         self.assertEqual(template.name, 'Рабочий лист')
-        self.assertEqual(template.template_type, 'worksheet')
+        self.assertEqual(template.template_type, WORKSHEET_DOCUMENT_TYPE)
         self.assertEqual(
             template.section_types,
             (HEADER_SECTION, TASK_LIST_SECTION),
@@ -113,12 +116,15 @@ class DocumentRecipeTests(TestCase):
             template.default_content_config,
             {'answer_type': 'tasks_only'},
         )
-        self.assertEqual(template.to_recipe().document_type, 'worksheet')
+        self.assertEqual(
+            template.to_recipe().document_type,
+            WORKSHEET_DOCUMENT_TYPE,
+        )
 
     def test_default_work_recipe_contains_header_and_task_list(self):
         recipe = build_work_document_recipe()
 
-        self.assertEqual(recipe.document_type, 'work')
+        self.assertEqual(recipe.document_type, WORK_DOCUMENT_TYPE)
         self.assertEqual(
             recipe.section_types,
             (HEADER_SECTION, TASK_LIST_SECTION),
@@ -161,7 +167,7 @@ class DocumentRecipeTests(TestCase):
     def test_default_remedial_sheet_recipe_contains_review_and_training(self):
         recipe = build_remedial_sheet_document_recipe()
 
-        self.assertEqual(recipe.document_type, 'remedial_sheet')
+        self.assertEqual(recipe.document_type, REMEDIAL_SHEET_DOCUMENT_TYPE)
         self.assertEqual(
             recipe.section_types,
             (

@@ -8,7 +8,12 @@ from core_logic.entities.document import (
     DocumentSourceRef,
     DocumentTemplateSpec,
 )
-from core_logic.value_objects.document_recipes import ANSWER_KEY_DOCUMENT_TYPE
+from core_logic.value_objects.document_recipes import (
+    ANSWER_KEY_DOCUMENT_TYPE,
+    CUSTOM_DOCUMENT_TYPE,
+    REMEDIAL_SHEET_DOCUMENT_TYPE,
+    WORKSHEET_DOCUMENT_TYPE,
+)
 
 
 class DocumentModelTests(TestCase):
@@ -156,7 +161,7 @@ class DocumentModelTests(TestCase):
     def test_template_spec_preserves_ordered_sections(self):
         template = DocumentTemplateSpec(
             name='Тренировочный лист',
-            template_type='worksheet',
+            template_type=WORKSHEET_DOCUMENT_TYPE,
             sections=[
                 DocumentSectionSpec(section_type='header'),
                 DocumentSectionSpec(
@@ -168,7 +173,7 @@ class DocumentModelTests(TestCase):
         )
 
         self.assertEqual(template.name, 'Тренировочный лист')
-        self.assertEqual(template.template_type, 'worksheet')
+        self.assertEqual(template.template_type, WORKSHEET_DOCUMENT_TYPE)
         self.assertEqual(template.section_types, ('header', 'task_list'))
         self.assertEqual(
             template.default_content_config,
@@ -193,7 +198,7 @@ class DocumentModelTests(TestCase):
     def test_template_spec_converts_to_recipe(self):
         template = DocumentTemplateSpec(
             name='Работа над ошибками',
-            template_type='remedial_sheet',
+            template_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
             sections=[
                 DocumentSectionSpec(section_type='header'),
                 DocumentSectionSpec(section_type='answers'),
@@ -201,11 +206,13 @@ class DocumentModelTests(TestCase):
         )
 
         recipe = template.to_recipe()
-        overridden_recipe = template.to_recipe(document_type='custom')
+        overridden_recipe = template.to_recipe(
+            document_type=CUSTOM_DOCUMENT_TYPE,
+        )
 
-        self.assertEqual(recipe.document_type, 'remedial_sheet')
+        self.assertEqual(recipe.document_type, REMEDIAL_SHEET_DOCUMENT_TYPE)
         self.assertEqual(recipe.section_types, ('header', 'answers'))
-        self.assertEqual(overridden_recipe.document_type, 'custom')
+        self.assertEqual(overridden_recipe.document_type, CUSTOM_DOCUMENT_TYPE)
 
     def test_rejects_empty_required_identifiers(self):
         with self.assertRaises(ValueError):

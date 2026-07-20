@@ -9,32 +9,34 @@ from works.management.commands._document_rendering import (
 
 
 class Command(BaseCommand):
-    help = 'Generate LaTeX/PDF document for a work through document engine'
+    help = 'Render a work document through document engine'
 
     def add_arguments(self, parser):
         parser.add_argument('work_id', type=str, help='ID работы')
-        parser.add_argument('--format', choices=['latex', 'pdf'], default='pdf')
+        parser.add_argument(
+            '--renderer',
+            choices=['html', 'latex', 'pdf'],
+            default='pdf',
+        )
+        parser.add_argument(
+            '--page-format',
+            choices=['A4', 'A5', 'Letter'],
+            default='A4',
+        )
         parser.add_argument('--with-answers', action='store_true')
-        parser.add_argument('--output-dir', default='latex_output')
 
     def handle(self, *args, **options):
-        if options.get('output_dir') != 'latex_output':
-            self.stdout.write(
-                self.style.WARNING(
-                    '--output-dir is deprecated and ignored by document engine.'
-                )
-            )
-
         result = render_work_document_with_container(
             render_container=container,
             work_id=options['work_id'],
-            renderer_type=options['format'],
+            renderer_type=options['renderer'],
+            page_format=options['page_format'],
             with_answers=options['with_answers'],
         )
 
         raise_for_work_document_render_error(
             result=result,
             work_id=options['work_id'],
-            renderer_type=options['format'],
+            renderer_type=options['renderer'],
         )
         write_work_document_render_result(self, result)

@@ -158,6 +158,65 @@ class GeneratePdfCommandTests(TestCase):
                 call_command('generate_pdf', 'work', 'missing')
 
 
+class RenderWorkDocumentCommandTests(TestCase):
+    def test_command_renders_work_document_through_container(self):
+        use_case = FakeRenderWorkDocumentUseCase(
+            result=DocumentRenderResult(
+                status=DOCUMENT_RENDER_STATUS_GENERATED,
+                renderer_type='html',
+                file_type='html',
+                files=[
+                    GeneratedDocumentFile(
+                        filename='work_1.html',
+                        size_kb=1.2,
+                    ),
+                ],
+                source_name='Контрольная',
+            ),
+        )
+        stdout = StringIO()
+
+        with patch(
+            'works.management.commands.render_work_document.container',
+            FakeDocumentRenderContainer(use_case),
+        ):
+            call_command(
+                'render_work_document',
+                'work-1',
+                '--renderer',
+                'html',
+                '--page-format',
+                'A5',
+                '--with-answers',
+                stdout=stdout,
+            )
+
+        request = use_case.request
+        self.assertEqual(request.work_id, 'work-1')
+        self.assertEqual(request.options.renderer_type, 'html')
+        self.assertEqual(request.options.pdf_format, 'A5')
+        self.assertEqual(request.options.answer_type, 'with_answers')
+        self.assertIn('Created html document for Контрольная', stdout.getvalue())
+        self.assertIn('work_1.html', stdout.getvalue())
+
+    def test_command_raises_for_missing_work(self):
+        fake_container = FakeDocumentRenderContainer(
+            FakeRenderWorkDocumentUseCase(
+                result=DocumentRenderResult(
+                    status=DOCUMENT_RENDER_STATUS_NOT_FOUND,
+                    renderer_type='pdf',
+                ),
+            )
+        )
+
+        with patch(
+            'works.management.commands.render_work_document.container',
+            fake_container,
+        ):
+            with self.assertRaises(CommandError):
+                call_command('render_work_document', 'missing')
+
+
 class WorkDetailViewTests(TestCase):
     def setUp(self):
         self.work = Work.objects.create(

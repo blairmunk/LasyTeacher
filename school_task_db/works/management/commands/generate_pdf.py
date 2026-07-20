@@ -1,13 +1,11 @@
 from django.core.management.base import BaseCommand, CommandError
 
-from core_logic.entities.document_rendering import (
-    DOCUMENT_RENDER_STATUS_GENERATED,
-    DOCUMENT_RENDER_STATUS_NOT_FOUND,
-    DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
-)
-from core_logic.use_cases.render_work_document import RenderWorkDocumentRequest
-from core_logic.value_objects.document_render_options import WorkDocumentRenderOptions
 from infrastructure.container import container
+from works.management.commands._document_rendering import (
+    raise_for_work_document_render_error,
+    render_work_document_with_container,
+    write_work_document_render_result,
+)
 
 
 class Command(BaseCommand):
@@ -57,35 +55,21 @@ class Command(BaseCommand):
                 )
             )
 
-        result = container.render_work_document_use_case().execute(
-            RenderWorkDocumentRequest(
-                work_id=str(options['object_id']),
-                options=WorkDocumentRenderOptions(
-                    renderer_type='pdf',
-                    pdf_format=options['format'],
-                    answer_type=(
-                        'with_answers'
-                        if options['with_answers']
-                        else 'tasks_only'
-                    ),
-                ),
-            )
+        result = render_work_document_with_container(
+            render_container=container,
+            work_id=options['object_id'],
+            renderer_type='pdf',
+            page_format=options['format'],
+            with_answers=options['with_answers'],
         )
 
-        if result.status == DOCUMENT_RENDER_STATUS_NOT_FOUND:
-            raise CommandError(f'Work {options["object_id"]} not found')
-        if result.status == DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER:
-            raise CommandError('PDF renderer is not supported')
-        if result.status != DOCUMENT_RENDER_STATUS_GENERATED:
-            raise CommandError(f'Document render failed: {result.status}')
-
-        self.stdout.write(
-            self.style.SUCCESS(
-                f'Created PDF document for {result.source_name}'
-            )
+        raise_for_work_document_render_error(
+            result=result,
+            work_id=options['object_id'],
+            renderer_type='pdf',
         )
-        for generated_file in result.files:
-            self.stdout.write(
-                f'  {generated_file.filename} '
-                f'({generated_file.size_kb:.1f} KB)'
-            )
+        write_work_document_render_result(
+            self,
+            result,
+            file_type_label='PDF',
+        )

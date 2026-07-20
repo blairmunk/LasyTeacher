@@ -48,6 +48,16 @@ def build_render_target(
     )
 
 
+def build_render_target_from_data(
+    data: Mapping[str, str],
+    default_renderer_type: str = 'pdf',
+) -> RenderTarget:
+    return build_render_target(
+        renderer_type=renderer_type_from_data(data, default_renderer_type),
+        pdf_format=data.get('format', 'A4'),
+    )
+
+
 @dataclass(frozen=True)
 class WorkDocumentBuildOptions:
     answer_type: str = 'tasks_only'
@@ -222,8 +232,7 @@ def build_work_render_options(
         answer_type = 'with_answers'
 
     return WorkDocumentRenderOptions(
-        renderer_type=renderer_type_from_data(data),
-        pdf_format=data.get('format', 'A4'),
+        render_target=build_render_target_from_data(data),
         answer_type=answer_type,
         include_hints=data.get('include_hints', '0') == '1',
         include_instructions=data.get('include_instructions', '0') == '1',
@@ -234,8 +243,7 @@ def build_remedial_sheet_render_options(
     data: Mapping[str, str],
 ) -> RemedialSheetDocumentRenderOptions:
     return RemedialSheetDocumentRenderOptions(
-        renderer_type=renderer_type_from_data(data),
-        pdf_format=data.get('format', 'A4'),
+        render_target=build_render_target_from_data(data),
         answer_type=data.get('answer_type', 'with_short_solutions'),
     )
 

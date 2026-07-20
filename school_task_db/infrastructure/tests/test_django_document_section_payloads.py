@@ -16,10 +16,12 @@ from core_logic.value_objects.document_build_plan import (
     DocumentSectionPayloadBuildRequest,
 )
 from core_logic.value_objects.document_recipes import (
+    ANSWER_KEY_SECTION,
     ANSWERS_SECTION,
     HEADER_SECTION,
     ORIGINAL_MISTAKES_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
+    TASK_LIST_SECTION,
     TASK_VARIANTS_SECTION,
     TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
@@ -170,6 +172,20 @@ class DjangoWorkTaskVariantsPayloadBuilderTests(TestCase):
         )
 
         self.assertEqual(payload['variants'], [])
+
+    def test_registry_supports_legacy_work_section_names(self):
+        work = Work.objects.create(name='Контрольная')
+        registry = build_work_section_payload_builder_registry()
+
+        task_list_payload = registry.build_payload(
+            build_request(work, TASK_LIST_SECTION)
+        )
+        answer_key_payload = registry.build_payload(
+            build_request(work, ANSWER_KEY_SECTION)
+        )
+
+        self.assertEqual(task_list_payload['variants'], [])
+        self.assertEqual(answer_key_payload['variants'], [])
 
 
 class DjangoRemedialSectionPayloadBuilderTests(TestCase):

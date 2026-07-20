@@ -4,12 +4,14 @@ from core_logic.services.document_builder import (
     DocumentSectionPayloadBuilderRegistry,
 )
 from core_logic.value_objects.document_recipes import (
+    ANSWER_KEY_SECTION,
     ANSWERS_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
     ORIGINAL_MISTAKES_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     SHORT_SOLUTIONS_SECTION,
+    TASK_LIST_SECTION,
     TASK_VARIANTS_SECTION,
     TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
@@ -133,8 +135,15 @@ def build_work_section_payload_builder_registry(
         document_type=WORK_DOCUMENT_TYPE,
         source_type=WORK_SOURCE_TYPE,
     )
+    registry.register(
+        TASK_LIST_SECTION,
+        DjangoWorkTaskVariantsPayloadBuilder(get_work_source=get_work_source),
+        document_type=WORK_DOCUMENT_TYPE,
+        source_type=WORK_SOURCE_TYPE,
+    )
     for section_type in (
         ANSWERS_SECTION,
+        ANSWER_KEY_SECTION,
         SHORT_SOLUTIONS_SECTION,
         FULL_SOLUTIONS_SECTION,
     ):

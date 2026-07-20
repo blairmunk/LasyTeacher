@@ -35,8 +35,8 @@ from infrastructure.services.rendered_document_file_store import (
     RenderedDocumentFileStore,
 )
 from infrastructure.services.sectioned_document_defaults import (
-    build_legacy_with_sectioned_document_components,
     build_sectioned_document_components,
+    build_sectioned_document_components_with_legacy_fallback,
     build_sectioned_html_document_components,
     build_sectioned_html_pdf_document_components,
     build_sectioned_remedial_sheet_html_document_components,
@@ -517,11 +517,11 @@ class SectionedDocumentDefaultsTests(TestCase):
                 )
             )
 
-    def test_builds_hybrid_legacy_with_sectioned_document_components(self):
+    def test_builds_sectioned_components_with_legacy_fallback(self):
         legacy_file_renderer = FakeLegacyFileRenderer()
         pdf_generator = FakePdfGenerator()
         with TemporaryDirectory() as output_dir:
-            components = build_legacy_with_sectioned_document_components(
+            components = build_sectioned_document_components_with_legacy_fallback(
                 file_store=RenderedDocumentFileStore(
                     output_dirs={
                         'html': output_dir,

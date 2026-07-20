@@ -252,7 +252,7 @@ def build_sectioned_document_components(
     return components
 
 
-def build_legacy_with_sectioned_document_components(
+def build_sectioned_document_components_with_legacy_fallback(
     file_store,
     get_work_source,
     get_remedial_source,
@@ -281,6 +281,26 @@ def build_legacy_with_sectioned_document_components(
     )
 
 
+def build_legacy_with_sectioned_document_components(
+    file_store,
+    get_work_source,
+    get_remedial_source,
+    legacy_file_renderer,
+    get_remedial_sheet_data=None,
+    template_renderer=None,
+    pdf_generator_factory=None,
+) -> SectionedDocumentComponents:
+    return build_sectioned_document_components_with_legacy_fallback(
+        file_store=file_store,
+        get_work_source=get_work_source,
+        get_remedial_source=get_remedial_source,
+        legacy_file_renderer=legacy_file_renderer,
+        get_remedial_sheet_data=get_remedial_sheet_data,
+        template_renderer=template_renderer,
+        pdf_generator_factory=pdf_generator_factory,
+    )
+
+
 def build_legacy_with_sectioned_html_document_components(
     file_store,
     get_work_source,
@@ -290,7 +310,7 @@ def build_legacy_with_sectioned_html_document_components(
     template_renderer=None,
     pdf_generator_factory=None,
 ) -> SectionedDocumentComponents:
-    return build_legacy_with_sectioned_document_components(
+    return build_sectioned_document_components_with_legacy_fallback(
         file_store=file_store,
         get_work_source=get_work_source,
         get_remedial_source=get_remedial_source,

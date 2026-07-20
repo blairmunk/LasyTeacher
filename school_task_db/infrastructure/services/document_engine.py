@@ -27,7 +27,7 @@ from infrastructure.services.rendered_document_file_store import (
     RenderedDocumentFileStore,
 )
 from infrastructure.services.sectioned_document_defaults import (
-    build_legacy_with_sectioned_document_components,
+    build_sectioned_document_components_with_legacy_fallback,
 )
 
 
@@ -53,7 +53,7 @@ class DjangoDocumentEngine(IDocumentEngine):
             if get_remedial_sheet_data_use_case
             else None
         )
-        components = build_legacy_with_sectioned_document_components(
+        components = build_sectioned_document_components_with_legacy_fallback(
             file_store=file_store,
             get_work_source=source_provider.get_work_source,
             get_remedial_source=source_provider.get_remedial_source,

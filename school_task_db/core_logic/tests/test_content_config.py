@@ -14,6 +14,7 @@ from core_logic.value_objects.content_config import (
     build_remedial_sheet_render_options,
     build_work_generation_options,
     build_work_render_options,
+    renderer_type_from_data,
 )
 
 
@@ -160,6 +161,15 @@ class DocumentRenderOptionsTests(TestCase):
         })
 
         self.assertEqual(options.renderer_type, 'html')
+
+    def test_reads_renderer_type_from_legacy_generator_type(self):
+        self.assertEqual(
+            renderer_type_from_data({'generator_type': 'latex'}),
+            'latex',
+        )
+
+    def test_renderer_type_defaults_to_pdf(self):
+        self.assertEqual(renderer_type_from_data({}), 'pdf')
 
     def test_work_options_keep_legacy_generator_type_keyword(self):
         options = WorkDocumentRenderOptions(generator_type='html')

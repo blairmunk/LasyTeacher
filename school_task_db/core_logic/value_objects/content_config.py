@@ -219,7 +219,7 @@ def build_work_render_options(
         answer_type = 'with_answers'
 
     return WorkDocumentRenderOptions(
-        renderer_type=_renderer_type_from_data(data),
+        renderer_type=renderer_type_from_data(data),
         pdf_format=data.get('format', 'A4'),
         answer_type=answer_type,
         include_hints=data.get('include_hints', '0') == '1',
@@ -231,13 +231,13 @@ def build_remedial_sheet_render_options(
     data: Mapping[str, str],
 ) -> RemedialSheetDocumentRenderOptions:
     return RemedialSheetDocumentRenderOptions(
-        renderer_type=_renderer_type_from_data(data),
+        renderer_type=renderer_type_from_data(data),
         pdf_format=data.get('format', 'A4'),
         answer_type=data.get('answer_type', 'with_short_solutions'),
     )
 
 
-def _renderer_type_from_data(data: Mapping[str, str]) -> str:
+def renderer_type_from_data(data: Mapping[str, str]) -> str:
     return data.get('renderer_type') or data.get('generator_type', 'pdf')
 
 

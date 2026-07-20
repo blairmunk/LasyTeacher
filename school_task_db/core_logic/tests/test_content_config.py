@@ -10,6 +10,7 @@ from core_logic.value_objects.content_config import (
     WorkDocumentRenderOptions,
     build_remedial_sheet_render_options,
     build_work_render_options,
+    is_supported_document_renderer_type,
     renderer_type_from_data,
 )
 
@@ -20,6 +21,11 @@ class DocumentRenderOptionsTests(TestCase):
             SUPPORTED_DOCUMENT_RENDERER_TYPES,
             frozenset(FILE_TYPE_LABELS),
         )
+
+    def test_checks_supported_renderer_type(self):
+        self.assertTrue(is_supported_document_renderer_type('pdf'))
+        self.assertTrue(is_supported_document_renderer_type('html'))
+        self.assertFalse(is_supported_document_renderer_type('docx'))
 
     def test_render_target_exposes_file_type_label(self):
         target = RenderTarget(renderer_type='html', page_format='A5')

@@ -19,15 +19,12 @@ from core_logic.interfaces.work_repo import IWorkRepository
 from core_logic.use_cases.document_engine_dependency import resolve_document_engine
 from core_logic.value_objects.content_config import (
     RemedialSheetDocumentRenderOptions,
-    SUPPORTED_DOCUMENT_RENDERER_TYPES,
+    is_supported_document_renderer_type,
 )
 from core_logic.value_objects.document_render_plan import (
     build_remedial_sheet_document_render_plan,
 )
 from core_logic.value_objects.document_recipes import REMEDIAL_SHEET_DOCUMENT_TYPE
-
-
-SUPPORTED_REMEDIAL_SHEET_RENDERER_TYPES = SUPPORTED_DOCUMENT_RENDERER_TYPES
 
 
 @dataclass(frozen=True)
@@ -65,9 +62,8 @@ class RenderRemedialSheetDocumentUseCase:
                 status=DOCUMENT_RENDER_STATUS_NOT_REMEDIAL,
                 renderer_type=request.options.renderer_type,
             )
-        if (
-            request.options.renderer_type
-            not in SUPPORTED_REMEDIAL_SHEET_RENDERER_TYPES
+        if not is_supported_document_renderer_type(
+            request.options.renderer_type,
         ):
             return DocumentRenderResult(
                 status=DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,

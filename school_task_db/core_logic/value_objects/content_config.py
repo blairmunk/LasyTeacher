@@ -23,6 +23,10 @@ FILE_TYPE_LABELS = {
 SUPPORTED_DOCUMENT_RENDERER_TYPES = frozenset(FILE_TYPE_LABELS)
 
 
+def is_supported_document_renderer_type(renderer_type: str) -> bool:
+    return renderer_type in SUPPORTED_DOCUMENT_RENDERER_TYPES
+
+
 @dataclass(frozen=True)
 class RenderTarget:
     renderer_type: str = 'pdf'

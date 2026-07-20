@@ -3,8 +3,10 @@ import datetime as dt
 from django import forms
 from django.forms import inlineformset_factory
 from django.utils import timezone
-from .models import Event, EventParticipation, Mark
+
+from events.models import Event, EventParticipation, Mark
 from students.models import Student, StudentGroup
+
 
 class EventForm(forms.ModelForm):
     """Форма для создания события"""
@@ -16,7 +18,7 @@ class EventForm(forms.ModelForm):
             attrs={'class': 'form-control', 'type': 'date'},
         ),
     )
-    
+
     # Поля для добавления участников при создании
     student_group = forms.ModelChoiceField(
         queryset=StudentGroup.objects.all(),
@@ -34,11 +36,11 @@ class EventForm(forms.ModelForm):
         }),
         help_text='Ctrl + клик для выбора нескольких',
     )
-    
+
     class Meta:
         model = Event
         fields = [
-            'name', 'work', 'planned_date', 'status', 'course', 
+            'name', 'work', 'planned_date', 'status', 'course',
             'description', 'location'
         ]
         widgets = {
@@ -65,6 +67,7 @@ class EventForm(forms.ModelForm):
         )
         return timezone.make_aware(planned_datetime)
 
+
 class EventParticipationForm(forms.ModelForm):
     """Форма для участия в событии"""
     class Meta:
@@ -77,11 +80,13 @@ class EventParticipationForm(forms.ModelForm):
             'seat_number': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
+
 # Формсет для участников события
 EventParticipationFormSet = inlineformset_factory(
-    Event, EventParticipation, form=EventParticipationForm, 
+    Event, EventParticipation, form=EventParticipationForm,
     extra=1, can_delete=True
 )
+
 
 class StudentSelectionForm(forms.Form):
     """Форма для выбора учеников для события"""
@@ -91,30 +96,31 @@ class StudentSelectionForm(forms.Form):
         label='Выбрать весь класс',
         widget=forms.Select(attrs={'class': 'form-select'})
     )
-    
+
     individual_students = forms.ModelMultipleChoiceField(
         queryset=Student.objects.all(),
         required=False,
         label='Или выбрать отдельных учеников',
         widget=forms.CheckboxSelectMultiple()
     )
-    
+
     def clean(self):
         cleaned_data = super().clean()
         student_group = cleaned_data.get('student_group')
         individual_students = cleaned_data.get('individual_students')
-        
+
         if not student_group and not individual_students:
             raise forms.ValidationError('Необходимо выбрать либо класс, либо отдельных учеников')
-        
+
         return cleaned_data
+
 
 class MarkForm(forms.ModelForm):
     """Форма для оценивания работы"""
     class Meta:
         model = Mark
         fields = [
-            'score', 'points', 'max_points', 'teacher_comment', 
+            'score', 'points', 'max_points', 'teacher_comment',
             'mistakes_analysis', 'recommendations', 'work_scan',
             'is_retake', 'is_excellent', 'needs_attention'
         ]
@@ -130,6 +136,7 @@ class MarkForm(forms.ModelForm):
             'is_excellent': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'needs_attention': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+
 
 class VariantAssignmentForm(forms.Form):
     """Форма для назначения вариантов участникам"""
@@ -152,6 +159,7 @@ class VariantAssignmentForm(forms.Form):
                 initial=participation.variant.pk if participation.variant else '',
                 widget=forms.Select(attrs={'class': 'form-select'})
             )
+
 
 class QuickMarkForm(forms.Form):
     """Быстрая форма для простановки оценок"""

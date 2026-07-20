@@ -4,7 +4,12 @@ from django.views.generic import TemplateView
 from django.http import Http404
 
 from infrastructure.container import container
-from .forms import EventForm, StudentSelectionForm, MarkForm, VariantAssignmentForm
+from infrastructure.forms.event_django_forms import (
+    EventForm,
+    MarkForm,
+    StudentSelectionForm,
+    VariantAssignmentForm,
+)
 
 
 def _post_lists(post_data):

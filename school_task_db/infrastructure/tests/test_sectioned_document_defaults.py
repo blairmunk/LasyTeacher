@@ -3,6 +3,11 @@ from tempfile import TemporaryDirectory
 
 from django.test import TestCase
 
+from core_logic.entities.document import (
+    DocumentRecipe,
+    DocumentSourceRef,
+    WORK_SOURCE_TYPE,
+)
 from core_logic.entities.work import (
     RemedialOriginalTaskRow,
     RemedialSheetData,
@@ -10,9 +15,11 @@ from core_logic.entities.work import (
 )
 from core_logic.value_objects.content_config import (
     RemedialSheetDocumentRenderOptions,
+    RenderTarget,
     WorkDocumentRenderOptions,
 )
 from core_logic.value_objects.document_render_plan import (
+    DocumentRenderPlan,
     build_remedial_sheet_document_render_plan,
     build_work_document_render_plan,
 )
@@ -22,6 +29,7 @@ from infrastructure.services.rendered_document_file_store import (
     RenderedDocumentFileStore,
 )
 from infrastructure.services.sectioned_document_defaults import (
+    build_legacy_with_sectioned_html_document_components,
     build_sectioned_html_document_components,
     build_sectioned_remedial_sheet_html_document_components,
     build_sectioned_work_html_document_components,
@@ -223,6 +231,46 @@ class SectionedDocumentDefaultsTests(TestCase):
                 )
             )
 
+    def test_builds_hybrid_legacy_with_sectioned_html_components(self):
+        legacy_file_renderer = FakeLegacyFileRenderer()
+        with TemporaryDirectory() as output_dir:
+            components = build_legacy_with_sectioned_html_document_components(
+                file_store=RenderedDocumentFileStore(
+                    output_dirs={'html': output_dir, 'pdf': output_dir},
+                ),
+                get_work_source=lambda work_id: 'work-object',
+                get_remedial_source=lambda variant_id: 'variant-object',
+                legacy_file_renderer=legacy_file_renderer,
+                get_remedial_sheet_data=lambda variant_id: RemedialSheetData(
+                    variant='variant',
+                    student=None,
+                    source_work=None,
+                    mark=None,
+                    new_tasks=[],
+                ),
+            )
+            engine = DjangoDocumentEngine(
+                document_builder=components.document_builder,
+                document_renderer_registry=components.document_renderer_registry,
+            )
+            html_options = WorkDocumentRenderOptions(renderer_type='html')
+            pdf_options = WorkDocumentRenderOptions(renderer_type='pdf')
+
+            html_result = engine.render_work_document(
+                work_id='work-1',
+                options=html_options,
+                render_plan=empty_work_render_plan('html'),
+            )
+            pdf_result = engine.render_work_document(
+                work_id='work-1',
+                options=pdf_options,
+                render_plan=empty_work_render_plan('pdf'),
+            )
+
+        self.assertEqual(html_result.file_type, 'html')
+        self.assertEqual(pdf_result.file_type, 'pdf')
+        self.assertEqual(legacy_file_renderer.pdf_work_requests, [('work-object',)])
+
     def test_work_html_filename_uses_source_id(self):
         request = FakeRenderRequest(source_id='work-1')
 
@@ -287,8 +335,44 @@ def remedial_html_filename_from_id(variant_id):
     return f'remedial_{variant_id}.html'
 
 
+def empty_work_render_plan(renderer_type):
+    return DocumentRenderPlan(
+        source=DocumentSourceRef(
+            source_type=WORK_SOURCE_TYPE,
+            source_id='work-1',
+            title='Контрольная',
+        ),
+        recipe=DocumentRecipe(document_type='work'),
+        render_target=RenderTarget(renderer_type=renderer_type),
+    )
+
+
 class FakeMark:
     def __init__(self, score, points, max_points):
         self.score = score
         self.points = points
         self.max_points = max_points
+
+
+class FakeLegacyFileRenderer:
+    def __init__(self):
+        self.pdf_work_requests = []
+
+    def render_latex_work(self, work, content_config, page_format='A4'):
+        return []
+
+    def render_html_work(self, work, content_config):
+        raise AssertionError('legacy HTML work renderer should not be used')
+
+    def render_pdf_work(self, work, content_config, page_format='A4'):
+        self.pdf_work_requests.append((work,))
+        return []
+
+    def render_remedial_latex(self, variant, content_config, page_format='A4'):
+        return []
+
+    def render_remedial_html(self, variant, content_config):
+        raise AssertionError('legacy HTML remedial renderer should not be used')
+
+    def render_remedial_pdf(self, variant, content_config, page_format='A4'):
+        return []

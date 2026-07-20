@@ -88,6 +88,22 @@ class DocumentRendererRegistryTests(TestCase):
         with self.assertRaises(UnsupportedDocumentRenderer):
             registry.render(request)
 
+    def test_extends_from_another_renderer_registry(self):
+        registry = DocumentRendererRegistry()
+        other_registry = DocumentRendererRegistry()
+        renderer = FakeRenderer()
+        other_registry.register('html', renderer, document_type='work')
+        request = DocumentRenderRequest(
+            document=Document(title='Контрольная', document_type='work'),
+            render_target=RenderTarget(renderer_type='html'),
+        )
+
+        registry.extend(other_registry)
+        result = registry.render(request)
+
+        self.assertEqual(result.file_type, 'html')
+        self.assertEqual(renderer.request, request)
+
 
 class DocumentSectionRendererRegistryTests(TestCase):
     def test_registers_and_delegates_to_section_renderer(self):
@@ -148,3 +164,20 @@ class DocumentSectionRendererRegistryTests(TestCase):
 
         with self.assertRaises(UnsupportedDocumentRenderer):
             registry.render_section(request)
+
+    def test_extends_from_another_section_renderer_registry(self):
+        registry = DocumentSectionRendererRegistry()
+        other_registry = DocumentSectionRendererRegistry()
+        renderer = FakeSectionRenderer()
+        other_registry.register('html', 'task_list', renderer)
+        request = DocumentSectionRenderRequest(
+            document=Document(title='Контрольная'),
+            section=DocumentSection(section_type='task_list'),
+            render_target=RenderTarget(renderer_type='html'),
+        )
+
+        registry.extend(other_registry)
+        result = registry.render_section(request)
+
+        self.assertEqual(result, 'html:task_list')
+        self.assertEqual(renderer.request, request)

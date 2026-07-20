@@ -29,6 +29,9 @@ class DocumentRendererRegistry(IDocumentRenderer):
             raise ValueError('renderer_type is required')
         self._renderers[(document_type, renderer_type)] = renderer
 
+    def extend(self, registry: "DocumentRendererRegistry") -> None:
+        self._renderers.update(registry._renderers)
+
     def get(
         self,
         renderer_type: str,
@@ -62,6 +65,9 @@ class DocumentSectionRendererRegistry(IDocumentSectionRenderer):
         if not section_type:
             raise ValueError('section_type is required')
         self._renderers[(renderer_type, section_type)] = renderer
+
+    def extend(self, registry: "DocumentSectionRendererRegistry") -> None:
+        self._renderers.update(registry._renderers)
 
     def get(
         self,

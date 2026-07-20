@@ -12,7 +12,7 @@ from core_logic.use_cases.bulk_change_task_groups import (
     BulkRemoveTasksFromGroupsRequest,
 )
 from core_logic.use_cases.create_work_from_tasks import CreateWorkFromTasksRequest
-from tasks.forms import TaskForm, TaskImageFormSet
+from infrastructure.forms.task_django_forms import TaskForm, TaskImageFormSet
 from tasks.models import Task
 
 

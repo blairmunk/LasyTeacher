@@ -14,7 +14,7 @@ from core_logic.use_cases.get_task_reference_options import (
     SubtopicOptionsResult,
 )
 from infrastructure.container import container
-from .forms import SourceForm
+from infrastructure.forms.task_django_forms import SourceForm
 
 
 class TaskListView(TemplateView):

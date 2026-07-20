@@ -1,6 +1,6 @@
 from django import forms
-from .models import Task, TaskImage, Source
 from curriculum.models import Topic, SubTopic
+from tasks.models import Task, TaskImage, Source
 
 
 class SourceForm(forms.ModelForm):

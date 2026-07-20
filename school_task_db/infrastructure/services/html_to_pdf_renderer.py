@@ -18,7 +18,13 @@ class HtmlToPdfRenderer:
         self.options.update(options)
 
     def _default_options(self) -> dict[str, Any]:
-        pdf_settings = getattr(settings, 'PDF_GENERATOR_SETTINGS', {})
+        pdf_settings = getattr(
+            settings,
+            'DOCUMENT_ENGINE_PDF_SETTINGS',
+            None,
+        )
+        if pdf_settings is None:
+            pdf_settings = getattr(settings, 'PDF_GENERATOR_SETTINGS', {})
         return {
             'format': pdf_settings.get('DEFAULT_FORMAT', 'A4'),
             'margin': pdf_settings.get(

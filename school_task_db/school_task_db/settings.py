@@ -39,8 +39,8 @@ INSTALLED_APPS = [
     'site_settings',       # Настройки
 ]
 
-# Настройки для PDF генерации
-PDF_GENERATOR_SETTINGS = {
+# Настройки PDF backend для document engine
+DOCUMENT_ENGINE_PDF_SETTINGS = {
     'DEFAULT_FORMAT': 'A4',
     'DEFAULT_MARGIN': {'top': '1cm', 'right': '1cm', 'bottom': '1cm', 'left': '1cm'},
     'PRINT_BACKGROUND': True,
@@ -50,6 +50,9 @@ PDF_GENERATOR_SETTINGS = {
     'MATHJAX_RENDER_TIMEOUT': 8000,   # 8 сек на рендеринг формул
     'OUTPUT_DIR': 'pdf_output',
 }
+
+# Legacy alias for external/local settings that still import the old name.
+PDF_GENERATOR_SETTINGS = DOCUMENT_ENGINE_PDF_SETTINGS
 
 
 MIDDLEWARE = [

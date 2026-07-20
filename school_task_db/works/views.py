@@ -7,7 +7,7 @@ from django.views.decorators.http import require_http_methods
 
 from core_logic.use_cases.save_work import SaveWorkSpecificationRequest
 from infrastructure.container import container
-from .forms import WorkForm, VariantGenerationForm
+from infrastructure.forms.work_django_forms import WorkForm, VariantGenerationForm
 
 
 def _post_lists(post_data):

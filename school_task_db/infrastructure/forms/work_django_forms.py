@@ -1,6 +1,7 @@
 from django import forms
 from django.forms import inlineformset_factory
-from .models import Work, WorkAnalogGroup
+
+from works.models import Work, WorkAnalogGroup
 
 
 class WorkForm(forms.ModelForm):
@@ -16,7 +17,6 @@ class WorkForm(forms.ModelForm):
                 'placeholder': '0 = сумма весов',
             }),
         }
-
 
 
 class WorkAnalogGroupForm(forms.ModelForm):
@@ -38,7 +38,8 @@ class WorkAnalogGroupForm(forms.ModelForm):
 
 
 WorkAnalogGroupFormSet = inlineformset_factory(
-    Work, WorkAnalogGroup,
+    Work,
+    WorkAnalogGroup,
     form=WorkAnalogGroupForm,
     extra=0,
     can_delete=True,
@@ -48,6 +49,8 @@ WorkAnalogGroupFormSet = inlineformset_factory(
 class VariantGenerationForm(forms.Form):
     count = forms.IntegerField(
         label='Количество вариантов',
-        min_value=1, max_value=50, initial=1,
+        min_value=1,
+        max_value=50,
+        initial=1,
         widget=forms.NumberInput(attrs={'class': 'form-control'}),
     )

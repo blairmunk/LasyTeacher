@@ -19,7 +19,7 @@ from core_logic.value_objects.document_render_options import (
     build_work_render_options,
     renderer_type_from_data,
 )
-from works.forms import WorkAnalogGroupFormSet
+from infrastructure.forms.work_django_forms import WorkAnalogGroupFormSet
 from works.models import Work
 
 

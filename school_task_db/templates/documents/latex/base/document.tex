@@ -1,0 +1,15 @@
+\documentclass[12pt,{{ render_target.page_format|lower }}]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian]{babel}
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{geometry}
+\geometry{margin=2cm}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+\begin{document}
+{{ body_content|safe }}
+\end{document}

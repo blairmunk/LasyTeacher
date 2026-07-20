@@ -1,0 +1,24 @@
+{% for variant in payload.variants %}
+\section*{ {{ variant.title }} }
+{% if variant.duration %}{\small Время: {{ variant.duration }} минут}{% endif %}
+{% if variant.max_score %}{\small \hfill Максимальный балл: {{ variant.max_score }}}{% endif %}
+
+{% for task in variant.tasks %}
+\subsection*{Задание {{ task.order }}{% if task.max_points %} \hfill {\normalfont\normalsize ({{ task.max_points }} балл.)}{% endif %}}
+{{ task.text|safe }}
+
+{% if payload.include_hints and task.hint %}
+\textit{Подсказка: {{ task.hint|safe }}}
+
+{% endif %}
+{% if payload.include_instructions and task.instruction %}
+\textit{Инструкция: {{ task.instruction|safe }}}
+
+{% endif %}
+{% endfor %}
+{% if not forloop.last %}
+\newpage
+{% endif %}
+{% empty %}
+\textit{Нет вариантов для печати.}
+{% endfor %}

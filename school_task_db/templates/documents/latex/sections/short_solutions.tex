@@ -1,0 +1,11 @@
+\newpage
+\section*{\centering Краткие решения}
+{% for variant in payload.variants %}
+\subsection*{ {{ variant.title }} }
+{% for task in variant.tasks %}
+\textbf{Задание {{ task.order }}.} {{ task.short_solution|safe }}
+
+{% endfor %}
+{% empty %}
+\textit{Нет кратких решений для печати.}
+{% endfor %}

@@ -1,0 +1,13 @@
+\newpage
+\section*{\centering Полные решения}
+{% for variant in payload.variants %}
+\subsection*{ {{ variant.title }} }
+{% for task in variant.tasks %}
+\textbf{Задание {{ task.order }}.}
+
+{{ task.full_solution|safe }}
+
+{% endfor %}
+{% empty %}
+\textit{Нет полных решений для печати.}
+{% endfor %}

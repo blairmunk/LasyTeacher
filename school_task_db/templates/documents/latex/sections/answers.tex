@@ -1,0 +1,12 @@
+\newpage
+\section*{\centering Ответы}
+{% for variant in payload.variants %}
+\subsection*{ {{ variant.title }} }
+\begin{enumerate}
+{% for task in variant.tasks %}
+\item {{ task.answer|safe }}
+{% endfor %}
+\end{enumerate}
+{% empty %}
+\textit{Нет ответов для печати.}
+{% endfor %}

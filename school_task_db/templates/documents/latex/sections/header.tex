@@ -1,0 +1,13 @@
+\begin{center}
+{\LARGE\bfseries {{ payload.title }}}
+{% if payload.duration %}
+
+{\large Время выполнения: {{ payload.duration }} минут}
+{% endif %}
+{% if payload.max_score %}
+
+{\large Максимальный балл: {{ payload.max_score }}}
+{% endif %}
+\end{center}
+
+\vspace{0.5cm}

@@ -150,7 +150,7 @@ class DocumentRenderingInterfaceTests(TestCase):
         self.assertEqual(builder.request, request)
         self.assertEqual(payload, {'section_type': 'task_list'})
 
-    def test_document_content_wrapper_contract_accepts_wrap_request(self):
+    def test_document_content_wrapper_contract(self):
         wrapper = FakeDocumentContentWrapper()
         document = Document(title='Контрольная')
         target = RenderTarget(renderer_type='html')

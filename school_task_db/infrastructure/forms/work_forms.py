@@ -17,6 +17,7 @@ from core_logic.use_cases.get_rendered_document_file import (
 from core_logic.value_objects.content_config import (
     build_remedial_sheet_render_options,
     build_work_render_options,
+    renderer_type_from_data,
 )
 from works.forms import WorkAnalogGroupFormSet
 from works.models import Work
@@ -92,10 +93,7 @@ class WorkFormAdapter:
         return self.render_work_document_request_from_post(post_data, work_id)
 
     def document_renderer_type_from_post(self, post_data, default='pdf'):
-        return (
-            post_data.get('renderer_type')
-            or post_data.get('generator_type', default)
-        )
+        return renderer_type_from_data(post_data, default=default)
 
     def document_generator_type_from_post(self, post_data, default='pdf'):
         return self.document_renderer_type_from_post(post_data, default)

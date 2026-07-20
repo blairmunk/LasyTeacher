@@ -237,8 +237,8 @@ def build_remedial_sheet_render_options(
     )
 
 
-def renderer_type_from_data(data: Mapping[str, str]) -> str:
-    return data.get('renderer_type') or data.get('generator_type', 'pdf')
+def renderer_type_from_data(data: Mapping[str, str], default='pdf') -> str:
+    return data.get('renderer_type') or data.get('generator_type', default)
 
 
 def build_work_generation_options(

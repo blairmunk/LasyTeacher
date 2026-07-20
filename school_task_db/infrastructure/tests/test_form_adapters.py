@@ -448,6 +448,13 @@ class WorkFormAdapterTests(SimpleTestCase):
             adapter.document_renderer_type_from_post(QueryDict('')),
             'pdf',
         )
+        self.assertEqual(
+            adapter.document_renderer_type_from_post(
+                QueryDict(''),
+                default='html',
+            ),
+            'html',
+        )
 
     def test_legacy_document_generator_type_from_post(self):
         adapter = WorkFormAdapter()

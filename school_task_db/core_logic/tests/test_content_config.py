@@ -171,6 +171,9 @@ class DocumentRenderOptionsTests(TestCase):
     def test_renderer_type_defaults_to_pdf(self):
         self.assertEqual(renderer_type_from_data({}), 'pdf')
 
+    def test_renderer_type_uses_configured_default(self):
+        self.assertEqual(renderer_type_from_data({}, default='html'), 'html')
+
     def test_work_options_keep_legacy_generator_type_keyword(self):
         options = WorkDocumentRenderOptions(generator_type='html')
 

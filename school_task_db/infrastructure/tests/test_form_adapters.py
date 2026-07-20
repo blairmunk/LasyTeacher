@@ -143,12 +143,40 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         self.assertFalse(context['renderable_only'])
         self.assertFalse(context['include_legacy_sections'])
         self.assertEqual(context['document_types'][0]['document_type'], 'work')
+        self.assertEqual(
+            context['document_types'][0]['renderer_labels'],
+            ['HTML', 'PDF', 'LaTeX'],
+        )
+        self.assertEqual(context['document_types'][0]['url'], '?type=work')
         self.assertEqual(context['sections'][0]['section_type'], HEADER_SECTION)
         self.assertEqual(context['templates'][0]['name'], 'Шаблон работы')
         self.assertEqual(context['templates'][0]['sections_count'], 1)
         self.assertEqual(
             context['templates'][0]['default_content_config'],
             {'answer_type': 'tasks_only'},
+        )
+
+    def test_editor_context_preserves_filter_flags_in_document_type_urls(self):
+        request = (
+            DocumentTemplateFormAdapter()
+            .editor_data_request_from_query(
+                QueryDict('type=work&renderable=1&legacy=1'),
+            )
+        )
+        editor_data = DocumentTemplateEditorData(
+            document_types=get_document_type_catalog(renderable_only=True),
+            sections=(),
+            templates=[],
+        )
+
+        context = DocumentTemplateFormAdapter().editor_context(
+            editor_data,
+            request,
+        )
+
+        self.assertEqual(
+            context['document_types'][0]['url'],
+            '?type=work&renderable=1&legacy=1',
         )
 
 

@@ -25,6 +25,10 @@ class DocumentTypeCatalogItem:
     description: str = ''
     source_type: str = ''
     is_renderable: bool = False
+    renderer_types: Tuple[str, ...] = ()
+
+
+SECTIONED_RENDERER_TYPES = ('html', 'pdf', 'latex')
 
 
 DOCUMENT_TYPE_CATALOG = (
@@ -34,6 +38,7 @@ DOCUMENT_TYPE_CATALOG = (
         description='Печатный документ по работе с вариантами.',
         source_type=WORK_SOURCE_TYPE,
         is_renderable=True,
+        renderer_types=SECTIONED_RENDERER_TYPES,
     ),
     DocumentTypeCatalogItem(
         document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
@@ -41,6 +46,7 @@ DOCUMENT_TYPE_CATALOG = (
         description='Индивидуальный разбор и тренировка по remedial-варианту.',
         source_type=REMEDIAL_VARIANT_SOURCE_TYPE,
         is_renderable=True,
+        renderer_types=SECTIONED_RENDERER_TYPES,
     ),
     DocumentTypeCatalogItem(
         document_type=WORKSHEET_DOCUMENT_TYPE,

@@ -25,6 +25,9 @@ class DocumentTemplateEditorViewTests(TestCase):
         self.assertContains(response, 'Контрольная / самостоятельная')
         self.assertContains(response, 'Шаблон работы')
         self.assertContains(response, 'header')
+        self.assertContains(response, 'HTML')
+        self.assertContains(response, 'PDF')
+        self.assertContains(response, 'LaTeX')
 
     def test_template_editor_passes_query_filters_to_clean_use_case(self):
         response = self.client.get(
@@ -37,3 +40,7 @@ class DocumentTemplateEditorViewTests(TestCase):
         self.assertTrue(response.context['renderable_only'])
         self.assertTrue(response.context['include_legacy_sections'])
         self.assertContains(response, 'value="work" selected')
+        self.assertContains(
+            response,
+            'href="?type=remedial_sheet&amp;renderable=1&amp;legacy=1"',
+        )

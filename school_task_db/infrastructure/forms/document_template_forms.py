@@ -1,8 +1,11 @@
 """Infrastructure helpers for document template screens."""
 
+from urllib.parse import urlencode
+
 from core_logic.use_cases.get_document_template_editor_data import (
     GetDocumentTemplateEditorDataRequest,
 )
+from core_logic.value_objects.document_render_options import FILE_TYPE_LABELS
 
 
 class DocumentTemplateFormAdapter:
@@ -16,7 +19,7 @@ class DocumentTemplateFormAdapter:
     def editor_context(self, editor_data, request):
         return {
             'document_types': [
-                self._document_type_context(document_type)
+                self._document_type_context(document_type, request)
                 for document_type in editor_data.document_types
             ],
             'sections': [
@@ -32,13 +35,21 @@ class DocumentTemplateFormAdapter:
             'include_legacy_sections': request.include_legacy_sections,
         }
 
-    def _document_type_context(self, document_type):
+    def _document_type_context(self, document_type, request):
         return {
             'document_type': document_type.document_type,
             'title': document_type.title,
             'description': document_type.description,
             'source_type': document_type.source_type,
             'is_renderable': document_type.is_renderable,
+            'renderer_labels': [
+                FILE_TYPE_LABELS[renderer_type]
+                for renderer_type in document_type.renderer_types
+            ],
+            'url': self._document_type_url(
+                document_type.document_type,
+                request,
+            ),
         }
 
     def _section_context(self, section):
@@ -59,3 +70,17 @@ class DocumentTemplateFormAdapter:
             'sections_count': len(template.sections),
             'default_content_config': template.default_content_config,
         }
+
+    def _document_type_url(self, document_type, request):
+        params = []
+        if document_type:
+            params.append(('type', document_type))
+        if request.renderable_only:
+            params.append(('renderable', '1'))
+        if request.include_legacy_sections:
+            params.append(('legacy', '1'))
+
+        query = urlencode(params)
+        if not query:
+            return '?'
+        return f'?{query}'

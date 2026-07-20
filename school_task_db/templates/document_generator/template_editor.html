@@ -50,7 +50,7 @@
             <h2 class="h5">Типы документов</h2>
             <div class="list-group mb-4">
                 {% for document_type in document_types %}
-                    <a class="list-group-item list-group-item-action {% if document_type.document_type == current_document_type %}active{% endif %}" href="?type={{ document_type.document_type }}">
+                    <a class="list-group-item list-group-item-action {% if document_type.document_type == current_document_type %}active{% endif %}" href="{{ document_type.url }}">
                         <div class="d-flex justify-content-between">
                             <strong>{{ document_type.title }}</strong>
                             {% if document_type.is_renderable %}
@@ -62,6 +62,13 @@
                         <div class="small {% if document_type.document_type == current_document_type %}text-white-50{% else %}text-muted{% endif %}">
                             {{ document_type.document_type }}
                         </div>
+                        {% if document_type.renderer_labels %}
+                            <div class="mt-2">
+                                {% for renderer_label in document_type.renderer_labels %}
+                                    <span class="badge bg-light text-dark">{{ renderer_label }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </a>
                 {% endfor %}
             </div>

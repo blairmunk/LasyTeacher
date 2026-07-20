@@ -19,7 +19,7 @@ class TemplateDocumentContentWrapper(IDocumentContentWrapper):
             raise ValueError('template_name is required')
 
         self.template_name = template_name
-        self.template_renderer = template_renderer
+        self.template_renderer = template_renderer or render_to_string
         self.extra_context = extra_context or {}
 
     def wrap_content(self, request: DocumentContentWrapRequest) -> str:

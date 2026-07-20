@@ -1,0 +1,9 @@
+<header class="document-header">
+    <h1>{{ payload.title|default:document.title }}</h1>
+    {% if payload.duration %}
+        <p>Время выполнения: {{ payload.duration }} мин.</p>
+    {% endif %}
+    {% if payload.max_score %}
+        <p>Максимальный балл: {{ payload.max_score }}</p>
+    {% endif %}
+</header>

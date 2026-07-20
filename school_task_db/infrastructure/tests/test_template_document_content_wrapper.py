@@ -60,6 +60,23 @@ class TemplateDocumentContentWrapperTests(TestCase):
 
         self.assertEqual(result, 'print')
 
+    def test_uses_default_template_renderer_when_none_passed(self):
+        wrapper = TemplateDocumentContentWrapper(
+            template_name='documents/html/base/document.html',
+            template_renderer=None,
+        )
+
+        result = wrapper.wrap_content(
+            DocumentContentWrapRequest(
+                document=Document(title='Контрольная'),
+                render_target=RenderTarget(renderer_type='html'),
+                body_content='<section>body</section>',
+            )
+        )
+
+        self.assertIn('<title>Контрольная</title>', result)
+        self.assertIn('<section>body</section>', result)
+
     def test_rejects_empty_template_name(self):
         with self.assertRaises(ValueError):
             TemplateDocumentContentWrapper(template_name='')

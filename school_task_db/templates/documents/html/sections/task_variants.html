@@ -1,0 +1,25 @@
+<section class="document-task-variants">
+    {% for variant in payload.variants %}
+        <article class="document-variant">
+            <h2>{{ variant.title }}</h2>
+            <ol>
+                {% for task in variant.tasks %}
+                    <li>
+                        <div class="task-text">{{ task.text|linebreaksbr }}</div>
+                        {% if payload.include_hints and task.hint %}
+                            <div class="task-hint">Подсказка: {{ task.hint }}</div>
+                        {% endif %}
+                        {% if payload.include_instructions and task.instruction %}
+                            <div class="task-instruction">{{ task.instruction }}</div>
+                        {% endif %}
+                        {% if task.max_points %}
+                            <div class="task-points">{{ task.max_points }} балл.</div>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ol>
+        </article>
+    {% empty %}
+        <p>Варианты не созданы.</p>
+    {% endfor %}
+</section>

@@ -10,6 +10,9 @@ from core_logic.entities.document import (
 from core_logic.entities.document_rendering import GeneratedDocument
 from core_logic.interfaces.document_engine import IDocumentEngine
 from core_logic.interfaces.document_generation import IDocumentGenerationService
+from core_logic.interfaces.document_building import (
+    IDocumentSectionPayloadBuilder,
+)
 from core_logic.interfaces.document_rendering import (
     IDocumentBuilder,
     IDocumentRenderer,
@@ -19,6 +22,9 @@ from core_logic.interfaces.document_rendering_service import (
     IDocumentRenderingService,
 )
 from core_logic.value_objects.content_config import RenderTarget
+from core_logic.value_objects.document_build_plan import (
+    DocumentSectionPayloadBuildRequest,
+)
 from core_logic.value_objects.document_render_plan import (
     DocumentRenderRequest,
     DocumentSectionRenderRequest,
@@ -59,6 +65,15 @@ class FakeDocumentSectionRenderer(IDocumentSectionRenderer):
     def render_section(self, request):
         self.request = request
         return f'<section>{request.section.section_type}</section>'
+
+
+class FakeSectionPayloadBuilder(IDocumentSectionPayloadBuilder):
+    def __init__(self):
+        self.request = None
+
+    def build_payload(self, request):
+        self.request = request
+        return {'section_type': request.section.section_type}
 
 
 class DocumentRenderingInterfaceTests(TestCase):
@@ -113,3 +128,21 @@ class DocumentRenderingInterfaceTests(TestCase):
 
         self.assertEqual(renderer.request, request)
         self.assertEqual(result, '<section>task_list</section>')
+
+    def test_document_section_payload_builder_contract_accepts_build_request(self):
+        builder = FakeSectionPayloadBuilder()
+        source = DocumentSourceRef(source_type='work')
+        recipe = DocumentRecipe(
+            document_type='work',
+            sections=[DocumentSectionSpec(section_type='task_list')],
+        )
+        request = DocumentSectionPayloadBuildRequest(
+            source=source,
+            recipe=recipe,
+            section=recipe.sections[0],
+        )
+
+        payload = builder.build_payload(request)
+
+        self.assertEqual(builder.request, request)
+        self.assertEqual(payload, {'section_type': 'task_list'})

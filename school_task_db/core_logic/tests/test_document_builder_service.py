@@ -5,7 +5,14 @@ from core_logic.entities.document import (
     DocumentSectionSpec,
     DocumentSourceRef,
 )
-from core_logic.services.document_builder import RecipeDocumentBuilder
+from core_logic.services.document_builder import (
+    DocumentSectionPayloadBuilderRegistry,
+    RecipeDocumentBuilder,
+    UnsupportedDocumentSectionPayloadBuilder,
+)
+from core_logic.value_objects.document_build_plan import (
+    DocumentSectionPayloadBuildRequest,
+)
 
 
 class RecipeDocumentBuilderTests(TestCase):
@@ -58,3 +65,129 @@ class RecipeDocumentBuilderTests(TestCase):
             document.sections[0].payload,
             {'include_scores': True},
         )
+
+    def test_uses_registered_section_payload_builder(self):
+        registry = DocumentSectionPayloadBuilderRegistry()
+        payload_builder = FakeSectionPayloadBuilder(
+            payload={'tasks': ['task-1']},
+        )
+        registry.register('task_list', payload_builder, document_type='work')
+        builder = RecipeDocumentBuilder(
+            section_payload_builder_registry=registry,
+        )
+        source = DocumentSourceRef(
+            source_type='work',
+            source_id='work-1',
+            title='Контрольная',
+        )
+        recipe = DocumentRecipe(
+            document_type='work',
+            sections=[
+                DocumentSectionSpec(
+                    section_type='task_list',
+                    options={'include_hints': True},
+                ),
+            ],
+        )
+
+        document = builder.build(source, recipe)
+
+        self.assertEqual(document.sections[0].payload, {'tasks': ['task-1']})
+        self.assertEqual(payload_builder.request.source, source)
+        self.assertEqual(payload_builder.request.recipe, recipe)
+        self.assertEqual(payload_builder.request.section, recipe.sections[0])
+
+    def test_keeps_section_options_for_unregistered_payload_builder(self):
+        builder = RecipeDocumentBuilder(
+            section_payload_builder_registry=DocumentSectionPayloadBuilderRegistry(),
+        )
+        source = DocumentSourceRef(source_type='work')
+        recipe = DocumentRecipe(
+            document_type='work',
+            sections=[
+                DocumentSectionSpec(
+                    section_type='task_list',
+                    options={'include_hints': True},
+                ),
+            ],
+        )
+
+        document = builder.build(source, recipe)
+
+        self.assertEqual(
+            document.sections[0].payload,
+            {'include_hints': True},
+        )
+
+
+class DocumentSectionPayloadBuilderRegistryTests(TestCase):
+    def test_registers_and_delegates_to_payload_builder(self):
+        registry = DocumentSectionPayloadBuilderRegistry()
+        builder = FakeSectionPayloadBuilder(payload={'title': 'Контрольная'})
+        registry.register('header', builder)
+        source = DocumentSourceRef(source_type='work')
+        recipe = DocumentRecipe(
+            document_type='work',
+            sections=[DocumentSectionSpec(section_type='header')],
+        )
+
+        payload = registry.build_payload(
+            request=payload_build_request(source, recipe, recipe.sections[0]),
+        )
+
+        self.assertEqual(payload, {'title': 'Контрольная'})
+        self.assertEqual(builder.request.section.section_type, 'header')
+
+    def test_prefers_exact_payload_builder_key(self):
+        registry = DocumentSectionPayloadBuilderRegistry()
+        common_builder = FakeSectionPayloadBuilder(payload={'title': 'Common'})
+        exact_builder = FakeSectionPayloadBuilder(payload={'title': 'Exact'})
+        registry.register('header', common_builder)
+        registry.register(
+            'header',
+            exact_builder,
+            document_type='work',
+            source_type='work',
+        )
+        source = DocumentSourceRef(source_type='work')
+        recipe = DocumentRecipe(
+            document_type='work',
+            sections=[DocumentSectionSpec(section_type='header')],
+        )
+
+        payload = registry.build_payload(
+            payload_build_request(source, recipe, recipe.sections[0]),
+        )
+
+        self.assertEqual(payload, {'title': 'Exact'})
+        self.assertIsNone(common_builder.request)
+
+    def test_rejects_empty_section_type(self):
+        registry = DocumentSectionPayloadBuilderRegistry()
+
+        with self.assertRaises(ValueError):
+            registry.register('', FakeSectionPayloadBuilder())
+
+    def test_rejects_unsupported_payload_builder(self):
+        registry = DocumentSectionPayloadBuilderRegistry()
+
+        with self.assertRaises(UnsupportedDocumentSectionPayloadBuilder):
+            registry.get('header', document_type='work', source_type='work')
+
+
+class FakeSectionPayloadBuilder:
+    def __init__(self, payload=None):
+        self.payload = payload or {}
+        self.request = None
+
+    def build_payload(self, request):
+        self.request = request
+        return self.payload
+
+
+def payload_build_request(source, recipe, section):
+    return DocumentSectionPayloadBuildRequest(
+        source=source,
+        recipe=recipe,
+        section=section,
+    )

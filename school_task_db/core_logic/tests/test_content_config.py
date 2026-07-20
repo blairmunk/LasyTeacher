@@ -4,15 +4,11 @@ from core_logic.value_objects.content_config import (
     FILE_TYPE_LABELS,
     RemedialSheetDocumentRenderOptions,
     RemedialSheetBuildOptions,
-    RemedialSheetGenerationOptions,
     RenderTarget,
     SUPPORTED_DOCUMENT_RENDERER_TYPES,
     WorkDocumentBuildOptions,
     WorkDocumentRenderOptions,
-    WorkGenerationOptions,
-    build_remedial_sheet_generation_options,
     build_remedial_sheet_render_options,
-    build_work_generation_options,
     build_work_render_options,
     renderer_type_from_data,
 )
@@ -173,31 +169,3 @@ class DocumentRenderOptionsTests(TestCase):
 
     def test_renderer_type_uses_configured_default(self):
         self.assertEqual(renderer_type_from_data({}, default='html'), 'html')
-
-    def test_work_options_keep_legacy_generator_type_keyword(self):
-        options = WorkDocumentRenderOptions(generator_type='html')
-
-        self.assertEqual(options.renderer_type, 'html')
-        self.assertEqual(options.generator_type, 'html')
-
-    def test_remedial_sheet_options_keep_legacy_generator_type_keyword(self):
-        options = RemedialSheetDocumentRenderOptions(generator_type='html')
-
-        self.assertEqual(options.renderer_type, 'html')
-        self.assertEqual(options.generator_type, 'html')
-
-    def test_legacy_generation_options_aliases(self):
-        self.assertIs(WorkGenerationOptions, WorkDocumentRenderOptions)
-        self.assertIs(
-            RemedialSheetGenerationOptions,
-            RemedialSheetDocumentRenderOptions,
-        )
-
-    def test_legacy_generation_option_builders(self):
-        work_options = build_work_generation_options({'renderer_type': 'html'})
-        remedial_options = build_remedial_sheet_generation_options({
-            'renderer_type': 'latex',
-        })
-
-        self.assertEqual(work_options.renderer_type, 'html')
-        self.assertEqual(remedial_options.renderer_type, 'latex')

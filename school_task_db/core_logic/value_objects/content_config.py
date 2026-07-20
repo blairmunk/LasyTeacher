@@ -98,13 +98,12 @@ class WorkDocumentRenderOptions:
         include_instructions: bool = False,
         render_target: Optional[RenderTarget] = None,
         build_options: Optional[WorkDocumentBuildOptions] = None,
-        generator_type: Optional[str] = None,
     ):
         object.__setattr__(
             self,
             'render_target',
             render_target or RenderTarget(
-                renderer_type=renderer_type or generator_type or 'pdf',
+                renderer_type=renderer_type or 'pdf',
                 page_format=pdf_format,
             ),
         )
@@ -125,10 +124,6 @@ class WorkDocumentRenderOptions:
     @property
     def pdf_format(self) -> str:
         return self.render_target.page_format
-
-    @property
-    def generator_type(self) -> str:
-        return self.renderer_type
 
     @property
     def answer_type(self) -> str:
@@ -167,13 +162,12 @@ class RemedialSheetDocumentRenderOptions:
         answer_type: str = 'with_short_solutions',
         render_target: Optional[RenderTarget] = None,
         build_options: Optional[RemedialSheetBuildOptions] = None,
-        generator_type: Optional[str] = None,
     ):
         object.__setattr__(
             self,
             'render_target',
             render_target or RenderTarget(
-                renderer_type=renderer_type or generator_type or 'pdf',
+                renderer_type=renderer_type or 'pdf',
                 page_format=pdf_format,
             ),
         )
@@ -192,10 +186,6 @@ class RemedialSheetDocumentRenderOptions:
         return self.render_target.page_format
 
     @property
-    def generator_type(self) -> str:
-        return self.renderer_type
-
-    @property
     def answer_type(self) -> str:
         return self.build_options.answer_type
 
@@ -205,11 +195,6 @@ class RemedialSheetDocumentRenderOptions:
             **self.build_options.content_config,
             'page_format': self.pdf_format,
         }
-
-
-WorkGenerationOptions = WorkDocumentRenderOptions
-RemedialSheetGenerationOptions = RemedialSheetDocumentRenderOptions
-
 
 def build_work_render_options(
     data: Mapping[str, str],
@@ -239,15 +224,3 @@ def build_remedial_sheet_render_options(
 
 def renderer_type_from_data(data: Mapping[str, str], default='pdf') -> str:
     return data.get('renderer_type') or data.get('generator_type', default)
-
-
-def build_work_generation_options(
-    data: Mapping[str, str],
-) -> WorkDocumentRenderOptions:
-    return build_work_render_options(data)
-
-
-def build_remedial_sheet_generation_options(
-    data: Mapping[str, str],
-) -> RemedialSheetDocumentRenderOptions:
-    return build_remedial_sheet_render_options(data)

@@ -42,6 +42,13 @@ class DocumentSectionRenderRequest:
     render_target: RenderTarget
 
 
+@dataclass(frozen=True)
+class DocumentContentWrapRequest:
+    document: Document
+    render_target: RenderTarget
+    body_content: str
+
+
 def build_work_document_render_plan(
     work_id: str,
     work_name: str,

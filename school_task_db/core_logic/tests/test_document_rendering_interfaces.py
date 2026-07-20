@@ -14,6 +14,7 @@ from core_logic.interfaces.document_building import (
     IDocumentSectionPayloadBuilder,
 )
 from core_logic.interfaces.document_rendering import (
+    IDocumentContentWrapper,
     IDocumentBuilder,
     IDocumentRenderer,
     IDocumentSectionRenderer,
@@ -26,6 +27,7 @@ from core_logic.value_objects.document_build_plan import (
     DocumentSectionPayloadBuildRequest,
 )
 from core_logic.value_objects.document_render_plan import (
+    DocumentContentWrapRequest,
     DocumentRenderRequest,
     DocumentSectionRenderRequest,
 )
@@ -74,6 +76,15 @@ class FakeSectionPayloadBuilder(IDocumentSectionPayloadBuilder):
     def build_payload(self, request):
         self.request = request
         return {'section_type': request.section.section_type}
+
+
+class FakeDocumentContentWrapper(IDocumentContentWrapper):
+    def __init__(self):
+        self.request = None
+
+    def wrap_content(self, request):
+        self.request = request
+        return f'<html>{request.body_content}</html>'
 
 
 class DocumentRenderingInterfaceTests(TestCase):
@@ -146,3 +157,18 @@ class DocumentRenderingInterfaceTests(TestCase):
 
         self.assertEqual(builder.request, request)
         self.assertEqual(payload, {'section_type': 'task_list'})
+
+    def test_document_content_wrapper_contract_accepts_wrap_request(self):
+        wrapper = FakeDocumentContentWrapper()
+        document = Document(title='Контрольная')
+        target = RenderTarget(renderer_type='html')
+        request = DocumentContentWrapRequest(
+            document=document,
+            render_target=target,
+            body_content='<section>body</section>',
+        )
+
+        content = wrapper.wrap_content(request)
+
+        self.assertEqual(wrapper.request, request)
+        self.assertEqual(content, '<html><section>body</section></html>')

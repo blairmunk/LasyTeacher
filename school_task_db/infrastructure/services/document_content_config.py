@@ -12,24 +12,23 @@ from core_logic.value_objects.document_recipes import (
 
 
 def content_config_from_document(document: Document) -> dict:
-    section_types = set(document.section_types)
     task_section = _first_section_payload(
         document,
         TASK_VARIANTS_SECTION,
         TASK_LIST_SECTION,
     )
     include_full_solutions = (
-        FULL_SOLUTIONS_SECTION in section_types
+        document.has_section(FULL_SOLUTIONS_SECTION)
         or bool(task_section.get('show_full_solutions', False))
     )
     include_short_solutions = (
-        SHORT_SOLUTIONS_SECTION in section_types
+        document.has_section(SHORT_SOLUTIONS_SECTION)
         or bool(task_section.get('show_short_solutions', False))
         or include_full_solutions
     )
     include_answers = (
-        ANSWERS_SECTION in section_types
-        or ANSWER_KEY_SECTION in section_types
+        document.has_section(ANSWERS_SECTION)
+        or document.has_section(ANSWER_KEY_SECTION)
         or bool(task_section.get('show_answers', False))
         or include_short_solutions
         or include_full_solutions
@@ -58,8 +57,9 @@ def content_config_from_document(document: Document) -> dict:
 
 
 def _first_section_payload(document: Document, *section_types: str) -> dict:
-    for section in document.sections:
-        if section.section_type in section_types:
+    for section_type in section_types:
+        section = document.first_section(section_type)
+        if section is not None:
             return dict(section.payload)
     return {}
 

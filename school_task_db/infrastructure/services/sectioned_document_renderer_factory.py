@@ -45,17 +45,10 @@ def build_sectioned_text_document_renderer(
     if not renderer_type:
         raise ValueError('renderer_type is required')
 
-    body_renderer = SectionedDocumentContentRenderer(
+    content_renderer = build_sectioned_document_content_renderer(
         section_renderer_registry=section_renderer_registry,
         section_separator=section_separator,
-    )
-    content_renderer = (
-        WrappedDocumentContentRenderer(
-            body_renderer=body_renderer,
-            document_wrapper=document_wrapper,
-        )
-        if document_wrapper
-        else body_renderer
+        document_wrapper=document_wrapper,
     )
 
     return SectionedDocumentFileRenderer(
@@ -74,17 +67,10 @@ def build_sectioned_html_to_pdf_document_renderer(
     document_wrapper=None,
     html_to_pdf_renderer_factory=None,
 ) -> SectionedHtmlToPdfDocumentRenderer:
-    body_renderer = SectionedDocumentContentRenderer(
+    content_renderer = build_sectioned_document_content_renderer(
         section_renderer_registry=section_renderer_registry,
         section_separator=section_separator,
-    )
-    content_renderer = (
-        WrappedDocumentContentRenderer(
-            body_renderer=body_renderer,
-            document_wrapper=document_wrapper,
-        )
-        if document_wrapper
-        else body_renderer
+        document_wrapper=document_wrapper,
     )
 
     return SectionedHtmlToPdfDocumentRenderer(
@@ -92,6 +78,24 @@ def build_sectioned_html_to_pdf_document_renderer(
         html_content_renderer=content_renderer,
         file_store=file_store,
         html_to_pdf_renderer_factory=html_to_pdf_renderer_factory,
+    )
+
+
+def build_sectioned_document_content_renderer(
+    section_renderer_registry,
+    section_separator='\n',
+    document_wrapper=None,
+):
+    body_renderer = SectionedDocumentContentRenderer(
+        section_renderer_registry=section_renderer_registry,
+        section_separator=section_separator,
+    )
+    if not document_wrapper:
+        return body_renderer
+
+    return WrappedDocumentContentRenderer(
+        body_renderer=body_renderer,
+        document_wrapper=document_wrapper,
     )
 
 

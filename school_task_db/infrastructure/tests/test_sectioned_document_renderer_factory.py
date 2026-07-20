@@ -5,12 +5,17 @@ from django.test import SimpleTestCase
 
 from core_logic.entities.document import Document, DocumentSection
 from core_logic.entities.document_rendering import GeneratedDocument
+from core_logic.services.sectioned_document_renderer import (
+    SectionedDocumentContentRenderer,
+    WrappedDocumentContentRenderer,
+)
 from core_logic.value_objects.document_render_options import RenderTarget
 from core_logic.value_objects.document_render_plan import (
     DocumentRenderRequest,
 )
 from infrastructure.services.sectioned_document_renderer_factory import (
     TemplateSectionedTextDocumentRendererSpec,
+    build_sectioned_document_content_renderer,
     build_sectioned_text_document_renderer,
     build_template_sectioned_html_to_pdf_document_renderer_registry,
     build_template_sectioned_text_document_renderer,
@@ -19,6 +24,21 @@ from infrastructure.services.sectioned_document_renderer_factory import (
 
 
 class SectionedDocumentRendererFactoryTests(SimpleTestCase):
+    def test_builds_content_renderer_without_document_wrapper(self):
+        renderer = build_sectioned_document_content_renderer(
+            section_renderer_registry=FakeSectionRendererRegistry(),
+        )
+
+        self.assertIsInstance(renderer, SectionedDocumentContentRenderer)
+
+    def test_builds_content_renderer_with_document_wrapper(self):
+        renderer = build_sectioned_document_content_renderer(
+            section_renderer_registry=FakeSectionRendererRegistry(),
+            document_wrapper=FakeDocumentWrapper(),
+        )
+
+        self.assertIsInstance(renderer, WrappedDocumentContentRenderer)
+
     def test_builds_renderer_from_section_registry(self):
         section_registry = FakeSectionRendererRegistry()
         file_store = FakeFileStore()

@@ -26,9 +26,49 @@ from infrastructure.services.legacy_document_render_router import (
 from infrastructure.services.rendered_document_file_store import (
     RenderedDocumentFileStore,
 )
+from infrastructure.services.sectioned_document_defaults import (
+    build_legacy_with_sectioned_html_document_components,
+)
 
 
 class DjangoDocumentEngine(IDocumentEngine):
+    @classmethod
+    def with_sectioned_html_renderer(
+        cls,
+        get_remedial_sheet_data_use_case=None,
+        source_provider=None,
+        file_store=None,
+        legacy_file_renderer=None,
+        template_renderer=None,
+    ):
+        source_provider = source_provider or DjangoDocumentSourceProvider()
+        file_store = file_store or RenderedDocumentFileStore()
+        legacy_file_renderer = (
+            legacy_file_renderer
+            or LegacyDocumentFileRenderer(get_remedial_sheet_data_use_case)
+        )
+        get_remedial_sheet_data = (
+            get_remedial_sheet_data_use_case.execute
+            if get_remedial_sheet_data_use_case
+            else None
+        )
+        components = build_legacy_with_sectioned_html_document_components(
+            file_store=file_store,
+            get_work_source=source_provider.get_work_source,
+            get_remedial_source=source_provider.get_remedial_source,
+            legacy_file_renderer=legacy_file_renderer,
+            get_remedial_sheet_data=get_remedial_sheet_data,
+            template_renderer=template_renderer,
+        )
+        return cls(
+            get_remedial_sheet_data_use_case=get_remedial_sheet_data_use_case,
+            document_builder=components.document_builder,
+            document_renderer_registry=components.document_renderer_registry,
+            legacy_file_renderer=legacy_file_renderer,
+            source_provider=source_provider,
+            file_store=file_store,
+        )
+
     def __init__(
         self,
         get_remedial_sheet_data_use_case=None,

@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+from tempfile import TemporaryDirectory
 
 from django.test import TestCase
 
@@ -21,10 +22,16 @@ from core_logic.value_objects.content_config import (
     RenderTarget,
     WorkDocumentRenderOptions,
 )
-from core_logic.value_objects.document_render_plan import DocumentRenderPlan
+from core_logic.value_objects.document_render_plan import (
+    DocumentRenderPlan,
+    build_work_document_render_plan,
+)
 from curriculum.models import Topic
 from infrastructure.services.document_engine import (
     DjangoDocumentEngine,
+)
+from infrastructure.services.rendered_document_file_store import (
+    RenderedDocumentFileStore,
 )
 from infrastructure.services.task_import_service import DjangoTaskImportService
 from tasks.models import Task
@@ -125,6 +132,18 @@ class FakeSectionPayloadBuilder:
     def build_payload(self, request):
         self.request = request
         return self.payload
+
+
+def empty_work_render_plan(work_id, work_name, renderer_type):
+    return DocumentRenderPlan(
+        source=DocumentSourceRef(
+            source_type=WORK_SOURCE_TYPE,
+            source_id=work_id,
+            title=work_name,
+        ),
+        recipe=DocumentRecipe(document_type='work'),
+        render_target=RenderTarget(renderer_type=renderer_type),
+    )
 
 
 class DjangoDocumentEngineTests(TestCase):
@@ -493,6 +512,43 @@ class DjangoDocumentEngineTests(TestCase):
 
         self.assertEqual(result.file_type, 'html')
         self.assertEqual(file_store.path_requests, [('html', ['work.html'])])
+
+    def test_sectioned_html_factory_uses_sectioned_html_and_legacy_pdf(self):
+        work = Work.objects.create(name='Контрольная', duration=45)
+        legacy_file_renderer = FakeLegacyFileRenderer()
+
+        with TemporaryDirectory() as output_dir:
+            service = DjangoDocumentEngine.with_sectioned_html_renderer(
+                file_store=RenderedDocumentFileStore(
+                    output_dirs={'html': output_dir, 'pdf': output_dir},
+                ),
+                legacy_file_renderer=legacy_file_renderer,
+            )
+            html_options = WorkDocumentRenderOptions(renderer_type='html')
+            pdf_options = WorkDocumentRenderOptions(renderer_type='pdf')
+
+            html_result = service.render_work_document(
+                work_id=str(work.pk),
+                options=html_options,
+                render_plan=empty_work_render_plan(
+                    work_id=str(work.pk),
+                    work_name=work.name,
+                    renderer_type='html',
+                ),
+            )
+            pdf_result = service.render_work_document(
+                work_id=str(work.pk),
+                options=pdf_options,
+                render_plan=build_work_document_render_plan(
+                    work_id=str(work.pk),
+                    work_name=work.name,
+                    options=pdf_options,
+                ),
+            )
+
+        self.assertEqual(html_result.file_type, 'html')
+        self.assertEqual(pdf_result.file_type, 'pdf')
+        self.assertIsNone(legacy_file_renderer.html_work_request)
 
 
 class DjangoTaskImportServiceTests(TestCase):

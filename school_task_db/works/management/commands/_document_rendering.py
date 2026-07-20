@@ -1,12 +1,20 @@
 from django.core.management.base import CommandError
 
 from core_logic.entities.document_rendering import (
+    DOCUMENT_RENDER_STATUS_EMPTY,
     DOCUMENT_RENDER_STATUS_GENERATED,
     DOCUMENT_RENDER_STATUS_NOT_FOUND,
+    DOCUMENT_RENDER_STATUS_NOT_REMEDIAL,
     DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
 )
+from core_logic.use_cases.render_remedial_sheet_document import (
+    RenderRemedialSheetDocumentRequest,
+)
 from core_logic.use_cases.render_work_document import RenderWorkDocumentRequest
-from core_logic.value_objects.document_render_options import WorkDocumentRenderOptions
+from core_logic.value_objects.document_render_options import (
+    RemedialSheetDocumentRenderOptions,
+    WorkDocumentRenderOptions,
+)
 
 
 def render_work_document_with_container(
@@ -32,6 +40,25 @@ def render_work_document_with_container(
     )
 
 
+def render_remedial_sheet_document_with_container(
+    render_container,
+    variant_id: str,
+    renderer_type: str,
+    page_format: str = 'A4',
+    answer_type: str = 'with_short_solutions',
+):
+    return render_container.render_remedial_sheet_document_use_case().execute(
+        RenderRemedialSheetDocumentRequest(
+            variant_id=str(variant_id),
+            options=RemedialSheetDocumentRenderOptions(
+                renderer_type=renderer_type,
+                pdf_format=page_format,
+                answer_type=answer_type,
+            ),
+        )
+    )
+
+
 def raise_for_work_document_render_error(
     result,
     work_id: str,
@@ -41,6 +68,23 @@ def raise_for_work_document_render_error(
         raise CommandError(f'Work {work_id} not found')
     if result.status == DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER:
         raise CommandError(f'Unsupported renderer: {renderer_type}')
+    if result.status != DOCUMENT_RENDER_STATUS_GENERATED:
+        raise CommandError(f'Document render failed: {result.status}')
+
+
+def raise_for_remedial_sheet_document_render_error(
+    result,
+    variant_id: str,
+    renderer_type: str,
+):
+    if result.status == DOCUMENT_RENDER_STATUS_NOT_FOUND:
+        raise CommandError(f'Variant {variant_id} not found')
+    if result.status == DOCUMENT_RENDER_STATUS_NOT_REMEDIAL:
+        raise CommandError(f'Variant {variant_id} is not a remedial variant')
+    if result.status == DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER:
+        raise CommandError(f'Unsupported renderer: {renderer_type}')
+    if result.status == DOCUMENT_RENDER_STATUS_EMPTY:
+        raise CommandError('Remedial sheet document is empty')
     if result.status != DOCUMENT_RENDER_STATUS_GENERATED:
         raise CommandError(f'Document render failed: {result.status}')
 

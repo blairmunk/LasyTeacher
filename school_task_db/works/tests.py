@@ -10,6 +10,7 @@ from django.utils import timezone
 from core_logic.entities.document_rendering import (
     DOCUMENT_RENDER_STATUS_GENERATED,
     DOCUMENT_RENDER_STATUS_NOT_FOUND,
+    DOCUMENT_RENDER_STATUS_NOT_REMEDIAL,
     DocumentRenderResult,
     GeneratedDocument,
     GeneratedDocumentFile,
@@ -26,11 +27,15 @@ from works.models import Variant, VariantTask, Work, WorkAnalogGroup
 
 
 class FakeDocumentRenderContainer:
-    def __init__(self, use_case):
+    def __init__(self, use_case=None, remedial_use_case=None):
         self.use_case = use_case
+        self.remedial_use_case = remedial_use_case
 
     def render_work_document_use_case(self):
         return self.use_case
+
+    def render_remedial_sheet_document_use_case(self):
+        return self.remedial_use_case
 
 
 class FakeRenderWorkDocumentUseCase:
@@ -41,6 +46,10 @@ class FakeRenderWorkDocumentUseCase:
     def execute(self, request):
         self.request = request
         return self.result
+
+
+class FakeRenderRemedialSheetDocumentUseCase(FakeRenderWorkDocumentUseCase):
+    pass
 
 
 class GenerateWorkLatexCommandTests(TestCase):
@@ -215,6 +224,64 @@ class RenderWorkDocumentCommandTests(TestCase):
         ):
             with self.assertRaises(CommandError):
                 call_command('render_work_document', 'missing')
+
+
+class RenderRemedialSheetDocumentCommandTests(TestCase):
+    def test_command_renders_remedial_sheet_document_through_container(self):
+        use_case = FakeRenderRemedialSheetDocumentUseCase(
+            result=DocumentRenderResult(
+                status=DOCUMENT_RENDER_STATUS_GENERATED,
+                renderer_type='pdf',
+                file_type='pdf',
+                files=[
+                    GeneratedDocumentFile(
+                        filename='remedial_1.pdf',
+                        size_kb=2.4,
+                    ),
+                ],
+                source_name='',
+            ),
+        )
+        stdout = StringIO()
+
+        with patch(
+            'works.management.commands.render_remedial_sheet_document.container',
+            FakeDocumentRenderContainer(remedial_use_case=use_case),
+        ):
+            call_command(
+                'render_remedial_sheet_document',
+                'variant-1',
+                '--renderer',
+                'pdf',
+                '--page-format',
+                'A5',
+                '--answer-type',
+                'with_full_solutions',
+                stdout=stdout,
+            )
+
+        request = use_case.request
+        self.assertEqual(request.variant_id, 'variant-1')
+        self.assertEqual(request.options.renderer_type, 'pdf')
+        self.assertEqual(request.options.pdf_format, 'A5')
+        self.assertEqual(request.options.answer_type, 'with_full_solutions')
+        self.assertIn('Created pdf document', stdout.getvalue())
+        self.assertIn('remedial_1.pdf', stdout.getvalue())
+
+    def test_command_raises_for_non_remedial_variant(self):
+        use_case = FakeRenderRemedialSheetDocumentUseCase(
+            result=DocumentRenderResult(
+                status=DOCUMENT_RENDER_STATUS_NOT_REMEDIAL,
+                renderer_type='pdf',
+            ),
+        )
+
+        with patch(
+            'works.management.commands.render_remedial_sheet_document.container',
+            FakeDocumentRenderContainer(remedial_use_case=use_case),
+        ):
+            with self.assertRaises(CommandError):
+                call_command('render_remedial_sheet_document', 'variant-1')
 
 
 class WorkDetailViewTests(TestCase):

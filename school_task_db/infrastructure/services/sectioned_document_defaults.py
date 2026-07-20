@@ -24,6 +24,9 @@ from infrastructure.services.django_document_section_payloads import (
 from infrastructure.services.document_renderer_registry_factory import (
     build_legacy_document_renderer_registry_from_adapters,
 )
+from infrastructure.services.latex_document_payloads import (
+    LatexTaskPayloadFormatter,
+)
 from infrastructure.services.sectioned_document_renderer_factory import (
     TemplateSectionedTextDocumentRendererSpec,
     build_template_sectioned_html_to_pdf_document_renderer_registry,
@@ -41,6 +44,16 @@ WORK_HTML_SECTION_TEMPLATES = {
     FULL_SOLUTIONS_SECTION: 'documents/html/sections/full_solutions.html',
 }
 WORK_HTML_WRAPPER_TEMPLATE = 'documents/html/base/document.html'
+WORK_LATEX_SECTION_TEMPLATES = {
+    HEADER_SECTION: 'documents/latex/sections/header.tex',
+    TASK_LIST_SECTION: 'documents/latex/sections/task_variants.tex',
+    TASK_VARIANTS_SECTION: 'documents/latex/sections/task_variants.tex',
+    ANSWER_KEY_SECTION: 'documents/latex/sections/answers.tex',
+    ANSWERS_SECTION: 'documents/latex/sections/answers.tex',
+    SHORT_SOLUTIONS_SECTION: 'documents/latex/sections/short_solutions.tex',
+    FULL_SOLUTIONS_SECTION: 'documents/latex/sections/full_solutions.tex',
+}
+WORK_LATEX_WRAPPER_TEMPLATE = 'documents/latex/base/document.tex'
 REMEDIAL_HTML_SECTION_TEMPLATES = {
     HEADER_SECTION: 'documents/html/sections/remedial_header.html',
     ORIGINAL_MISTAKES_SECTION: (
@@ -87,6 +100,40 @@ def build_sectioned_work_html_document_components(
                         section_templates=WORK_HTML_SECTION_TEMPLATES,
                         filename_builder=work_html_filename,
                         wrapper_template_name=WORK_HTML_WRAPPER_TEMPLATE,
+                    ),
+                ],
+                file_store=file_store,
+                template_renderer=template_renderer,
+            )
+        ),
+    )
+
+
+def build_sectioned_work_latex_document_components(
+    file_store,
+    get_work_source=None,
+    template_renderer=None,
+    task_payload_formatter=None,
+) -> SectionedDocumentComponents:
+    payload_registry = build_work_section_payload_builder_registry(
+        get_work_source=get_work_source,
+        task_payload_formatter=(
+            task_payload_formatter or LatexTaskPayloadFormatter()
+        ),
+    )
+    return SectionedDocumentComponents(
+        document_builder=RecipeDocumentBuilder(
+            section_payload_builder_registry=payload_registry,
+        ),
+        document_renderer_registry=(
+            build_template_sectioned_text_document_renderer_registry(
+                renderer_type='latex',
+                renderer_specs=[
+                    TemplateSectionedTextDocumentRendererSpec(
+                        document_type=WORK_DOCUMENT_TYPE,
+                        section_templates=WORK_LATEX_SECTION_TEMPLATES,
+                        filename_builder=work_latex_filename,
+                        wrapper_template_name=WORK_LATEX_WRAPPER_TEMPLATE,
                     ),
                 ],
                 file_store=file_store,
@@ -240,6 +287,12 @@ def remedial_html_filename(request):
     if request.document.source and request.document.source.source_id:
         return f'remedial_{request.document.source.source_id}.html'
     return 'remedial.html'
+
+
+def work_latex_filename(request):
+    if request.document.source and request.document.source.source_id:
+        return f'work_{request.document.source.source_id}.tex'
+    return 'work.tex'
 
 
 def _sectioned_html_renderer_specs():

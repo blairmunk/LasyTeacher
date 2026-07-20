@@ -5,7 +5,7 @@
 
 {% for task in variant.tasks %}
 \subsection*{Задание {{ task.order }}{% if task.max_points %} \hfill {\normalfont\normalsize ({{ task.max_points }} балл.)}{% endif %}}
-{{ task.text|safe }}
+{{ task.latex_content|default:task.text|safe }}
 
 {% if payload.include_hints and task.hint %}
 \textit{Подсказка: {{ task.hint|safe }}}

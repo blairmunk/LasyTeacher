@@ -40,8 +40,10 @@ from infrastructure.services.sectioned_document_defaults import (
     build_sectioned_html_pdf_document_components,
     build_sectioned_remedial_sheet_html_document_components,
     build_sectioned_work_html_document_components,
+    build_sectioned_work_latex_document_components,
     remedial_html_filename,
     work_html_filename,
+    work_latex_filename,
 )
 from tasks.models import Task
 from works.models import Variant, VariantTask, Work
@@ -172,6 +174,64 @@ class SectionedDocumentDefaultsTests(TestCase):
             self.assertIn('Найдите силу', html)
             self.assertIn('Ответы', html)
             self.assertIn('10 Н', html)
+
+    def test_builds_sectioned_work_latex_document_through_document_engine(self):
+        work = Work.objects.create(name='Контрольная', duration=45, max_score=4)
+        variant = Variant.objects.create(
+            work=work,
+            number=1,
+            work_name_snapshot=work.name,
+            max_score_snapshot=4,
+            duration_snapshot=45,
+        )
+        task = self.create_task(
+            text='Найдите силу & ускорение $F=ma$',
+            answer='10 Н',
+            short_solution='Используем $F=ma$',
+            hint='масса & ускорение',
+        )
+        VariantTask.objects.create(
+            variant=variant,
+            task=task,
+            order=1,
+            max_points=4,
+        )
+
+        with TemporaryDirectory() as output_dir:
+            components = build_sectioned_work_latex_document_components(
+                file_store=RenderedDocumentFileStore(
+                    output_dirs={'latex': output_dir},
+                ),
+            )
+            engine = DjangoDocumentEngine(
+                document_builder=components.document_builder,
+                document_renderer_registry=components.document_renderer_registry,
+            )
+            options = WorkDocumentRenderOptions(
+                renderer_type='latex',
+                answer_type='with_short_solutions',
+                include_hints=True,
+            )
+
+            result = engine.render_work_document(
+                work_id=str(work.pk),
+                options=options,
+                render_plan=build_work_document_render_plan(
+                    work_id=str(work.pk),
+                    work_name=work.name,
+                    options=options,
+                ),
+            )
+
+            filename = work_latex_filename_from_id(work.pk)
+            latex = (Path(output_dir) / filename).read_text(encoding='utf-8')
+            self.assertEqual(result.file_type, 'latex')
+            self.assertEqual(result.files[0].filename, filename)
+            self.assertIn(r'\documentclass', latex)
+            self.assertIn(r'\section*{ Вариант 1 }', latex)
+            self.assertIn(r'Найдите силу \& ускорение \(F=ma\)', latex)
+            self.assertIn(r'Подсказка: масса \& ускорение', latex)
+            self.assertIn(r'Используем \(F=ma\)', latex)
 
     def test_builds_sectioned_remedial_html_document_through_engine(self):
         remedial_variant = Variant.objects.create(
@@ -398,6 +458,11 @@ class SectionedDocumentDefaultsTests(TestCase):
 
         self.assertEqual(work_html_filename(request), 'work.html')
 
+    def test_work_latex_filename_uses_source_id(self):
+        request = FakeRenderRequest(source_id='work-1')
+
+        self.assertEqual(work_latex_filename(request), 'work_work-1.tex')
+
     def test_remedial_html_filename_uses_source_id(self):
         request = FakeRenderRequest(source_id='variant-1')
 
@@ -446,6 +511,10 @@ class FakeSource:
 
 def work_html_filename_from_id(work_id):
     return f'work_{work_id}.html'
+
+
+def work_latex_filename_from_id(work_id):
+    return f'work_{work_id}.tex'
 
 
 def remedial_html_filename_from_id(variant_id):

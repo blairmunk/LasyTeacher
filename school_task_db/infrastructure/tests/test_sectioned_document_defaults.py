@@ -99,10 +99,8 @@ class SectionedDocumentDefaultsTests(TestCase):
                 include_hints=True,
             )
 
-            result = engine.render_work_document(
-                work_id=str(work.pk),
-                options=options,
-                render_plan=build_work_document_render_plan(
+            result = engine.render_document(
+                build_work_document_render_plan(
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=options,
@@ -151,10 +149,8 @@ class SectionedDocumentDefaultsTests(TestCase):
             )
             options = WorkDocumentRenderOptions(renderer_type='html')
 
-            result = engine.render_work_document(
-                work_id=str(work.pk),
-                options=options,
-                render_plan=build_work_document_render_plan(
+            result = engine.render_document(
+                build_work_document_render_plan(
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=options,
@@ -205,10 +201,8 @@ class SectionedDocumentDefaultsTests(TestCase):
             )
             options = WorkDocumentRenderOptions(renderer_type='html')
 
-            result = engine.render_work_document(
-                work_id=str(work.pk),
-                options=options,
-                render_plan=build_work_document_render_plan(
+            result = engine.render_document(
+                build_work_document_render_plan(
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=options,
@@ -268,10 +262,8 @@ class SectionedDocumentDefaultsTests(TestCase):
                 include_hints=True,
             )
 
-            result = engine.render_work_document(
-                work_id=str(work.pk),
-                options=options,
-                render_plan=build_work_document_render_plan(
+            result = engine.render_document(
+                build_work_document_render_plan(
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=options,
@@ -351,10 +343,8 @@ class SectionedDocumentDefaultsTests(TestCase):
                 answer_type='with_short_solutions',
             )
 
-            result = engine.render_remedial_sheet_document(
-                variant_id=str(remedial_variant.pk),
-                options=options,
-                render_plan=build_remedial_sheet_document_render_plan(
+            result = engine.render_document(
+                build_remedial_sheet_document_render_plan(
                     variant_id=str(remedial_variant.pk),
                     options=options,
                 ),
@@ -435,10 +425,8 @@ class SectionedDocumentDefaultsTests(TestCase):
                 answer_type='with_short_solutions',
             )
 
-            result = engine.render_remedial_sheet_document(
-                variant_id=str(remedial_variant.pk),
-                options=options,
-                render_plan=build_remedial_sheet_document_render_plan(
+            result = engine.render_document(
+                build_remedial_sheet_document_render_plan(
                     variant_id=str(remedial_variant.pk),
                     options=options,
                 ),

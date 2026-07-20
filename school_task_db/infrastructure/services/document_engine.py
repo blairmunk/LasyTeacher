@@ -70,26 +70,12 @@ class DjangoDocumentEngine(IDocumentEngine):
             or DocumentRendererRegistry()
         )
 
-    def render_work_document(
-        self,
-        work_id: str,
-        options,
-        render_plan=None,
-    ) -> GeneratedDocument:
-        return self.render_document(self._required_render_plan(render_plan))
-
-    def render_remedial_sheet_document(
-        self,
-        variant_id: str,
-        options,
-        render_plan=None,
-    ) -> GeneratedDocument:
-        return self.render_document(self._required_render_plan(render_plan))
-
     def render_document(
         self,
         render_plan: DocumentRenderPlan,
     ) -> GeneratedDocument:
+        if render_plan is None:
+            raise ValueError('Document render plan is required.')
         render_target = render_plan.render_target
         document = self._build_document(render_plan)
         return self.document_renderer_registry.render(
@@ -114,8 +100,3 @@ class DjangoDocumentEngine(IDocumentEngine):
             render_plan.recipe,
             render_plan.render_target,
         )
-
-    def _required_render_plan(self, render_plan=None):
-        if render_plan is None:
-            raise ValueError('Document render plan is required.')
-        return render_plan

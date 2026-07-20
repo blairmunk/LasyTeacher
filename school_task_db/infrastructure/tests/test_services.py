@@ -17,7 +17,6 @@ from core_logic.services.document_builder import (
     DocumentSectionPayloadBuilderRegistry,
 )
 from core_logic.value_objects.content_config import (
-    RemedialSheetDocumentRenderOptions,
     RenderTarget,
     WorkDocumentRenderOptions,
 )
@@ -147,11 +146,7 @@ class DjangoDocumentEngineTests(TestCase):
             render_target=RenderTarget(renderer_type='html'),
         )
 
-        result = service.render_work_document(
-            work_id='work-1',
-            options=WorkDocumentRenderOptions(renderer_type='html'),
-            render_plan=plan,
-        )
+        result = service.render_document(plan)
 
         self.assertEqual(result.file_type, 'html')
         self.assertEqual(
@@ -180,7 +175,7 @@ class DjangoDocumentEngineTests(TestCase):
         self.assertEqual(registry.request.document, document)
         self.assertEqual(registry.request.render_target.renderer_type, 'html')
 
-    def test_render_remedial_sheet_document_uses_document_renderer_registry(self):
+    def test_render_document_handles_remedial_sheet_plan(self):
         document = Document(title='Разбор', document_type='remedial_sheet')
         builder = FakeDocumentBuilder(document=document)
         registry = FakeDocumentRendererRegistry()
@@ -188,7 +183,6 @@ class DjangoDocumentEngineTests(TestCase):
             document_builder=builder,
             document_renderer_registry=registry,
         )
-        options = RemedialSheetDocumentRenderOptions(renderer_type='pdf')
         plan = DocumentRenderPlan(
             source=DocumentSourceRef(
                 source_type=REMEDIAL_VARIANT_SOURCE_TYPE,
@@ -198,39 +192,20 @@ class DjangoDocumentEngineTests(TestCase):
             render_target=RenderTarget(renderer_type='pdf'),
         )
 
-        result = service.render_remedial_sheet_document(
-            variant_id='missing',
-            options=options,
-            render_plan=plan,
-        )
+        result = service.render_document(plan)
 
         self.assertEqual(result.file_type, 'pdf')
         self.assertEqual(registry.request.document, document)
         self.assertEqual(registry.request.render_target.renderer_type, 'pdf')
 
-    def test_render_work_document_requires_render_plan(self):
+    def test_render_document_requires_render_plan(self):
         service = DjangoDocumentEngine()
 
         with self.assertRaisesRegex(
             ValueError,
             'Document render plan is required.',
         ):
-            service.render_work_document(
-                work_id='work-1',
-                options=WorkDocumentRenderOptions(renderer_type='html'),
-            )
-
-    def test_render_remedial_sheet_document_requires_render_plan(self):
-        service = DjangoDocumentEngine()
-
-        with self.assertRaisesRegex(
-            ValueError,
-            'Document render plan is required.',
-        ):
-            service.render_remedial_sheet_document(
-                variant_id='variant-1',
-                options=RemedialSheetDocumentRenderOptions(renderer_type='html'),
-            )
+            service.render_document(None)
 
     def test_get_rendered_file_uses_configured_file_store(self):
         file_store = FakeRenderedDocumentFileStore()
@@ -259,32 +234,25 @@ class DjangoDocumentEngineTests(TestCase):
                 ),
                 html_to_pdf_renderer_factory=lambda request: html_to_pdf_renderer,
             )
-            html_options = WorkDocumentRenderOptions(renderer_type='html')
             pdf_options = WorkDocumentRenderOptions(renderer_type='pdf')
             latex_options = WorkDocumentRenderOptions(renderer_type='latex')
 
-            html_result = service.render_work_document(
-                work_id=str(work.pk),
-                options=html_options,
-                render_plan=empty_work_render_plan(
+            html_result = service.render_document(
+                empty_work_render_plan(
                     work_id=str(work.pk),
                     work_name=work.name,
                     renderer_type='html',
                 ),
             )
-            pdf_result = service.render_work_document(
-                work_id=str(work.pk),
-                options=pdf_options,
-                render_plan=build_work_document_render_plan(
+            pdf_result = service.render_document(
+                build_work_document_render_plan(
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=pdf_options,
                 ),
             )
-            latex_result = service.render_work_document(
-                work_id=str(work.pk),
-                options=latex_options,
-                render_plan=build_work_document_render_plan(
+            latex_result = service.render_document(
+                build_work_document_render_plan(
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=latex_options,

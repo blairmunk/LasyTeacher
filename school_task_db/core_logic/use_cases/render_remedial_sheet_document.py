@@ -40,14 +40,12 @@ class RenderRemedialSheetDocumentRequest:
 class RenderRemedialSheetDocumentUseCase:
     def __init__(
         self,
-        document_rendering_service: IDocumentEngine | None = None,
         work_repo: IWorkRepository | None = None,
         document_template_repo: IDocumentTemplateRepository | None = None,
         document_engine: IDocumentEngine | None = None,
     ):
         self.document_engine = resolve_document_engine(
             document_engine=document_engine,
-            document_rendering_service=document_rendering_service,
         )
         self.work_repo = work_repo
         self.document_template_repo = document_template_repo

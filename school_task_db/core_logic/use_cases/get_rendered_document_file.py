@@ -16,12 +16,10 @@ class GetRenderedDocumentFileRequest:
 class GetRenderedDocumentFileUseCase:
     def __init__(
         self,
-        document_rendering_service: IDocumentEngine | None = None,
         document_engine: IDocumentEngine | None = None,
     ):
         self.document_engine = resolve_document_engine(
             document_engine=document_engine,
-            document_rendering_service=document_rendering_service,
         )
 
     def execute(

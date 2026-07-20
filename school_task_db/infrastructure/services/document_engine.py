@@ -235,6 +235,3 @@ class DjangoDocumentEngine(IDocumentEngine):
                 render_target=render_target,
             )
         )
-
-
-DjangoDocumentRenderingService = DjangoDocumentEngine

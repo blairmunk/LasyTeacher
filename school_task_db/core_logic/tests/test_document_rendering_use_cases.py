@@ -121,24 +121,12 @@ class FakeDocumentTemplateRepository:
 class DocumentRenderingUseCaseTests(TestCase):
     def test_resolve_document_engine_prefers_engine_keyword(self):
         document_engine = FakeDocumentEngine()
-        rendering_service = FakeDocumentEngine()
 
         result = resolve_document_engine(
             document_engine=document_engine,
-            document_rendering_service=rendering_service,
         )
 
         self.assertIs(result, document_engine)
-
-    def test_resolve_document_engine_keeps_rendering_service_fallback(self):
-        rendering_service = FakeDocumentEngine()
-
-        self.assertIs(
-            resolve_document_engine(
-                document_rendering_service=rendering_service,
-            ),
-            rendering_service,
-        )
 
     def test_resolve_document_engine_requires_dependency(self):
         with self.assertRaisesRegex(
@@ -209,23 +197,6 @@ class DocumentRenderingUseCaseTests(TestCase):
         service = FakeDocumentEngine()
         use_case = RenderWorkDocumentUseCase(
             document_engine=service,
-            work_repo=FakeWorkRepository(),
-        )
-
-        result = use_case.execute(
-            RenderWorkDocumentRequest(
-                work_id='work-1',
-                options=WorkDocumentRenderOptions(renderer_type='html'),
-            )
-        )
-
-        self.assertTrue(result.success)
-        self.assertEqual(service.work_request[0], 'work-1')
-
-    def test_render_work_document_keeps_legacy_rendering_service_keyword(self):
-        service = FakeDocumentEngine()
-        use_case = RenderWorkDocumentUseCase(
-            document_rendering_service=service,
             work_repo=FakeWorkRepository(),
         )
 

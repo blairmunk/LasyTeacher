@@ -423,10 +423,6 @@ class Container:
         return self._document_engine
 
     @property
-    def document_rendering_service(self):
-        return self.document_engine
-
-    @property
     def task_import_service(self):
         if self._task_import_service is None:
             self._task_import_service = DjangoTaskImportService()

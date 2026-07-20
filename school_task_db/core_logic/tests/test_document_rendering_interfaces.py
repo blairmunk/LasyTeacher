@@ -18,9 +18,6 @@ from core_logic.interfaces.document_rendering import (
     IDocumentRenderer,
     IDocumentSectionRenderer,
 )
-from core_logic.interfaces.document_rendering_service import (
-    IDocumentRenderingService,
-)
 from core_logic.value_objects.content_config import RenderTarget
 from core_logic.value_objects.document_build_plan import (
     DocumentSectionPayloadBuildRequest,
@@ -87,9 +84,6 @@ class FakeDocumentContentWrapper(IDocumentContentWrapper):
 
 
 class DocumentRenderingInterfaceTests(TestCase):
-    def test_document_rendering_service_interface_is_engine_alias(self):
-        self.assertIs(IDocumentRenderingService, IDocumentEngine)
-
     def test_document_builder_contract_accepts_source_and_recipe(self):
         builder = FakeDocumentBuilder()
         source = DocumentSourceRef(

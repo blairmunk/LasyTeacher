@@ -5,12 +5,8 @@ from core_logic.interfaces.document_engine import IDocumentEngine
 
 def resolve_document_engine(
     document_engine: IDocumentEngine | None = None,
-    document_rendering_service: IDocumentEngine | None = None,
 ) -> IDocumentEngine:
-    resolved_engine = (
-        document_engine
-        or document_rendering_service
-    )
+    resolved_engine = document_engine
     if resolved_engine is None:
         raise ValueError('Document engine dependency is required.')
     return resolved_engine

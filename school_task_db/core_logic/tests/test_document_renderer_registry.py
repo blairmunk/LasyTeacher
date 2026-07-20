@@ -8,7 +8,7 @@ from core_logic.services.document_renderer_registry import (
     UnsupportedDocumentRenderer,
 )
 from core_logic.value_objects.document_render_options import RenderTarget
-from core_logic.value_objects.document_render_plan import (
+from core_logic.value_objects.document_render_requests import (
     DocumentRenderRequest,
     DocumentSectionRenderRequest,
 )

@@ -9,7 +9,7 @@ from core_logic.value_objects.document_recipes import (
     HEADER_SECTION,
     TASK_LIST_SECTION,
 )
-from core_logic.value_objects.document_render_plan import DocumentRenderRequest
+from core_logic.value_objects.document_render_requests import DocumentRenderRequest
 from infrastructure.services.rendered_document_file_store import (
     RenderedDocumentFileStore,
 )

@@ -8,7 +8,7 @@ from core_logic.services.sectioned_document_renderer import (
     SectionedDocumentContentRenderer,
     WrappedDocumentContentRenderer,
 )
-from core_logic.value_objects.document_render_plan import DocumentRenderRequest
+from core_logic.value_objects.document_render_requests import DocumentRenderRequest
 from infrastructure.services.sectioned_document_file_renderer import (
     SectionedHtmlToPdfDocumentRenderer,
     SectionedDocumentFileRenderer,

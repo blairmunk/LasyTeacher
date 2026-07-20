@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from core_logic.entities.document import Document, DocumentSection
 from core_logic.value_objects.document_render_options import RenderTarget
-from core_logic.value_objects.document_render_plan import (
+from core_logic.value_objects.document_render_requests import (
     DocumentSectionRenderRequest,
 )
 from infrastructure.services.template_document_section_renderer import (

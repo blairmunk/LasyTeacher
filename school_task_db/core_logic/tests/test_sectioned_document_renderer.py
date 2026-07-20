@@ -6,7 +6,7 @@ from core_logic.services.sectioned_document_renderer import (
     WrappedDocumentContentRenderer,
 )
 from core_logic.value_objects.document_render_options import RenderTarget
-from core_logic.value_objects.document_render_plan import DocumentRenderRequest
+from core_logic.value_objects.document_render_requests import DocumentRenderRequest
 
 
 class SectionedDocumentContentRendererTests(TestCase):

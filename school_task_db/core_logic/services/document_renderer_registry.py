@@ -5,7 +5,7 @@ from core_logic.interfaces.document_rendering import (
     IDocumentRenderer,
     IDocumentSectionRenderer,
 )
-from core_logic.value_objects.document_render_plan import (
+from core_logic.value_objects.document_render_requests import (
     DocumentRenderRequest,
     DocumentSectionRenderRequest,
 )

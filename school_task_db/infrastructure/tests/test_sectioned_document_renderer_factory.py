@@ -10,7 +10,7 @@ from core_logic.services.sectioned_document_renderer import (
     WrappedDocumentContentRenderer,
 )
 from core_logic.value_objects.document_render_options import RenderTarget
-from core_logic.value_objects.document_render_plan import (
+from core_logic.value_objects.document_render_requests import (
     DocumentRenderRequest,
 )
 from infrastructure.services.sectioned_document_renderer_factory import (

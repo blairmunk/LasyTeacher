@@ -7,7 +7,7 @@ from typing import Callable
 from core_logic.entities.document_rendering import GeneratedDocument
 from core_logic.interfaces.document_rendering import IDocumentRenderer
 from core_logic.value_objects.document_render_options import build_render_target
-from core_logic.value_objects.document_render_plan import DocumentRenderRequest
+from core_logic.value_objects.document_render_requests import DocumentRenderRequest
 
 
 class SectionedDocumentFileRenderer(IDocumentRenderer):

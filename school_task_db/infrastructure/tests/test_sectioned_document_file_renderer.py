@@ -6,7 +6,7 @@ from django.test import SimpleTestCase
 from core_logic.entities.document import Document
 from core_logic.entities.document_rendering import GeneratedDocument
 from core_logic.value_objects.document_render_options import RenderTarget
-from core_logic.value_objects.document_render_plan import DocumentRenderRequest
+from core_logic.value_objects.document_render_requests import DocumentRenderRequest
 from infrastructure.services.sectioned_document_file_renderer import (
     SectionedHtmlToPdfDocumentRenderer,
     SectionedDocumentFileRenderer,

@@ -3,7 +3,7 @@
 from django.template.loader import render_to_string
 
 from core_logic.interfaces.document_rendering import IDocumentContentWrapper
-from core_logic.value_objects.document_render_plan import (
+from core_logic.value_objects.document_render_requests import (
     DocumentContentWrapRequest,
 )
 

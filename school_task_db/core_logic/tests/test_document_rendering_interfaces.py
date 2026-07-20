@@ -22,7 +22,7 @@ from core_logic.value_objects.document_render_options import RenderTarget
 from core_logic.value_objects.document_build_plan import (
     DocumentSectionPayloadBuildRequest,
 )
-from core_logic.value_objects.document_render_plan import (
+from core_logic.value_objects.document_render_requests import (
     DocumentContentWrapRequest,
     DocumentRenderRequest,
     DocumentSectionRenderRequest,

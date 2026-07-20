@@ -9,10 +9,8 @@ from core_logic.services.document_builder import RecipeDocumentBuilder
 from core_logic.services.document_renderer_registry import (
     DocumentRendererRegistry,
 )
-from core_logic.value_objects.document_render_plan import (
-    DocumentRenderPlan,
-    DocumentRenderRequest,
-)
+from core_logic.value_objects.document_render_plan import DocumentRenderPlan
+from core_logic.value_objects.document_render_requests import DocumentRenderRequest
 from infrastructure.services.django_document_source_provider import (
     DjangoDocumentSourceProvider,
 )

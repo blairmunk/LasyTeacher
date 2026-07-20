@@ -1,6 +1,8 @@
 """LaTeX-safe payload formatting for sectioned documents."""
 
-from latex_generator.utils.latex_specific import latex_formula_processor
+from infrastructure.services.latex_formula_processor import (
+    latex_formula_processor,
+)
 
 
 LATEX_TEXT_FIELDS = (

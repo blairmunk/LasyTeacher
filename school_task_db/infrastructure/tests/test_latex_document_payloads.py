@@ -1,6 +1,10 @@
 from django.test import SimpleTestCase
 
 from core_logic.value_objects.content_config import RenderTarget
+from infrastructure.services.latex_formula_processor import (
+    latex_formula_processor,
+    sanitize_latex,
+)
 from infrastructure.services.latex_document_payloads import (
     LatexTaskPayloadFormatter,
     RenderTargetTaskPayloadFormatter,
@@ -8,6 +12,22 @@ from infrastructure.services.latex_document_payloads import (
 
 
 class LatexTaskPayloadFormatterTests(SimpleTestCase):
+    def test_sanitize_latex_escapes_text_control_characters(self):
+        result = sanitize_latex('Цена $5 & скидка 10%')
+
+        self.assertEqual(result, r'Цена \$5 \& скидка 10\%')
+
+    def test_latex_formula_processor_preserves_math_blocks(self):
+        result = latex_formula_processor.render_for_latex_safe(
+            'Сила & формула $F=ma$',
+        )
+
+        self.assertEqual(
+            result['content'],
+            r'Сила \& формула \(F=ma\)',
+        )
+        self.assertEqual(result['errors'], [])
+
     def test_formats_task_text_fields_for_latex(self):
         formatter = LatexTaskPayloadFormatter(
             formula_processor=FakeFormulaProcessor(),

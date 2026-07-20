@@ -150,9 +150,6 @@ class Work(BaseModel):
         self.save()
         return variants
 
-    def generate_variants(self, count=1):
-        return self.compose_variants(count=count)
-
     def sync_analog_groups_from_variants(self):
         """Анализирует варианты и создаёт WorkAnalogGroup автоматически."""
         from task_groups.models import TaskGroup, AnalogGroup

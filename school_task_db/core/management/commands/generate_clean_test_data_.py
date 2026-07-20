@@ -335,6 +335,6 @@ class Command(BaseCommand):
             
             # Генерируем варианты
             try:
-                work.generate_variants(4)
+                work.compose_variants(4)
             except Exception as e:
                 self.stdout.write(f'⚠️ Ошибка генерации вариантов для {work.name}: {e}')

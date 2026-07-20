@@ -316,7 +316,7 @@ class Command(BaseCommand):
             self.stdout.write(f'\n🎲 Генерация {gen_count} вариантов для каждой работы...')
             for ca in course.courseassignment_set.select_related('work'):
                 work = ca.work
-                variants = work.generate_variants(count=gen_count)
+                variants = work.compose_variants(count=gen_count)
                 variants_total += len(variants)
                 for v in variants:
                     tasks_count = v.tasks.count()

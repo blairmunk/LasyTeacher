@@ -347,8 +347,8 @@ class Command(BaseCommand):
                     order=order,
                 )
 
-            # Генерируем варианты через штатный метод
-            variants = work.generate_variants(count=config['num_variants'])
+            # Собираем варианты через штатный метод
+            variants = work.compose_variants(count=config['num_variants'])
 
             tasks_count = variants[0].tasks.count() if variants else 0
             works.append(work)
@@ -556,4 +556,3 @@ class Command(BaseCommand):
         self.stdout.write(f'✅ Статусы участий обновлены: {updated} graded, {absent} absent')
 
         self.stdout.write(f'📅 Событий: {event_count}')
-

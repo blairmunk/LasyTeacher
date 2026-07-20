@@ -196,11 +196,6 @@ def compose_variants(request, work_id):
         'form': form,
     })
 
-
-# Backward-compatible name while routes/templates migrate from generate to compose.
-generate_variants = compose_variants
-
-
 def sync_analog_groups(request, work_id):
     from infrastructure.container import container
 

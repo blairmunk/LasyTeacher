@@ -517,7 +517,7 @@ class Command(BaseCommand):
         variants = []
         for work in works:
             num_variants = random.randint(4, 8)
-            new_variants = work.generate_variants(num_variants)
+            new_variants = work.compose_variants(num_variants)
             variants.extend(new_variants)
 
         self.stdout.write(f'  Создано вариантов: {len(variants)}')

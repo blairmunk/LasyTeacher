@@ -1042,9 +1042,6 @@ class Container:
             work_repo=self.work_repo,
         )
 
-    def generate_work_variants_use_case(self):
-        return self.compose_work_variants_use_case()
-
     def render_work_document_use_case(self):
         return RenderWorkDocumentUseCase(
             work_repo=self.work_repo,

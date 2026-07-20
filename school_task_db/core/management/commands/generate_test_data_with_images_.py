@@ -386,7 +386,7 @@ class Command(BaseCommand):
         
         # Генерируем варианты
         if not work.variant_set.exists():
-            work.generate_variants(4)
+            work.compose_variants(4)
             self.stdout.write(f'  📋 Создано 4 варианта для работы {work.name}')
         
         return work

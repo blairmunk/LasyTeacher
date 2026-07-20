@@ -43,7 +43,6 @@ from core_logic.use_cases.execute_task_import import ExecuteTaskImportUseCase
 from core_logic.use_cases.export_tasks import ExportTasksUseCase
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
 from core_logic.use_cases.compose_work_variants import ComposeWorkVariantsUseCase
-from core_logic.use_cases.generate_work_variants import GenerateWorkVariantsUseCase
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.get_add_tasks_to_group import GetAddTasksToGroupUseCase
 from core_logic.use_cases.get_codifier_detail import GetCodifierDetailUseCase
@@ -419,7 +418,6 @@ class ContainerTests(SimpleTestCase):
         orphan_variant_list_use_case = container.get_orphan_variant_list_use_case()
         sync_work_groups_use_case = container.sync_work_analog_groups_use_case()
         compose_variants_use_case = container.compose_work_variants_use_case()
-        generate_variants_use_case = container.generate_work_variants_use_case()
         create_from_orphans_use_case = container.create_work_from_orphans_use_case()
         create_from_groups_use_case = container.create_work_from_groups_use_case()
         create_from_tasks_use_case = container.create_work_from_tasks_use_case()
@@ -683,7 +681,6 @@ class ContainerTests(SimpleTestCase):
         )
         self.assertIsInstance(sync_work_groups_use_case, SyncWorkAnalogGroupsUseCase)
         self.assertIsInstance(compose_variants_use_case, ComposeWorkVariantsUseCase)
-        self.assertIsInstance(generate_variants_use_case, GenerateWorkVariantsUseCase)
         self.assertIsInstance(
             create_from_orphans_use_case,
             CreateWorkFromOrphansUseCase,

@@ -42,9 +42,6 @@ class FakeWorkRepository:
         self.generated_variants = (work_id, count)
         return count
 
-    def generate_variants(self, work_id, count):
-        return self.compose_variants(work_id, count)
-
 
 class CreateWorkFromGroupsUseCaseTests(TestCase):
     def test_execute_creates_work_spec_and_generates_variants(self):

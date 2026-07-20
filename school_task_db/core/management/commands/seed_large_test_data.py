@@ -258,7 +258,7 @@ class Command(BaseCommand):
                     CourseAssignment.objects.create(course=course, work=work, order=w_idx+1, planned_date=planned_date)
                     
                     # Генерируем варианты
-                    work.generate_variants(self.size_config['variants'])
+                    work.compose_variants(self.size_config['variants'])
 
         return courses
 

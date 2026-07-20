@@ -80,9 +80,6 @@ class WorkFormAdapter:
             count=form.cleaned_data['count'],
         )
 
-    def generate_variants_request_from_form(self, form, work_id):
-        return self.compose_variants_request_from_form(form, work_id)
-
     def render_work_document_request_from_post(self, post_data, work_id):
         return RenderWorkDocumentRequest(
             work_id=work_id,

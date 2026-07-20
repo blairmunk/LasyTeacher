@@ -275,9 +275,6 @@ class ComposeWorkVariantsResult:
     status: str = 'generated'
 
 
-GenerateWorkVariantsResult = ComposeWorkVariantsResult
-
-
 @dataclass(frozen=True)
 class OrphanVariantRef:
     pk: str

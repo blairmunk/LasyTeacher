@@ -433,9 +433,6 @@ class DjangoWorkRepository(IWorkRepository):
         work = Work.objects.get(pk=work_id)
         return len(work.compose_variants(count=count))
 
-    def generate_variants(self, work_id: str, count: int) -> int:
-        return self.compose_variants(work_id, count)
-
     def get_orphan_variant_refs(
         self,
         variant_ids: List[str],

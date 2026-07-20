@@ -510,7 +510,7 @@ class Command(BaseCommand):
             
             # Генерируем варианты (2-4 варианта)
             variants_count = random.randint(2, 4)
-            work.generate_variants(variants_count)
+            work.compose_variants(variants_count)
             
             self.works.append(work)
 

@@ -29,10 +29,6 @@ from core_logic.use_cases.compose_work_variants import (
     ComposeWorkVariantsRequest,
     ComposeWorkVariantsUseCase,
 )
-from core_logic.use_cases.generate_work_variants import (
-    GenerateWorkVariantsRequest,
-    GenerateWorkVariantsUseCase,
-)
 from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUseCase
 from core_logic.use_cases.get_variant_detail import GetVariantDetailUseCase
 from core_logic.use_cases.get_variant_generation_placeholder import (
@@ -190,9 +186,6 @@ class FakeWorkRepository:
     def compose_variants(self, work_id, count):
         self.generated_variants_request = (work_id, count)
         return count
-
-    def generate_variants(self, work_id, count):
-        return self.compose_variants(work_id, count)
 
     def get_orphan_variant_refs(self, variant_ids):
         requested_ids = set(variant_ids)
@@ -475,17 +468,6 @@ class WorkDetailTests(TestCase):
         self.assertEqual(result.status, 'not_found')
         self.assertEqual(result.created_count, 0)
         self.assertIsNone(repo.generated_variants_request)
-
-    def test_legacy_generate_work_variants_use_case_alias(self):
-        repo = FakeWorkRepository()
-        use_case = GenerateWorkVariantsUseCase(work_repo=repo)
-
-        result = use_case.execute(
-            GenerateWorkVariantsRequest(work_id='work-1', count=1)
-        )
-
-        self.assertEqual(result.status, 'generated')
-        self.assertEqual(result.created_count, 1)
 
     def test_create_work_from_orphans_use_case_creates_work_and_attaches_variants(self):
         repo = FakeWorkRepository()

@@ -138,32 +138,22 @@ class DocumentRenderingUseCaseTests(TestCase):
     def test_resolve_document_engine_prefers_engine_keyword(self):
         document_engine = FakeDocumentEngine()
         rendering_service = FakeDocumentEngine()
-        generation_service = FakeDocumentEngine()
 
         result = resolve_document_engine(
             document_engine=document_engine,
             document_rendering_service=rendering_service,
-            document_generation_service=generation_service,
         )
 
         self.assertIs(result, document_engine)
 
-    def test_resolve_document_engine_keeps_legacy_fallback_order(self):
+    def test_resolve_document_engine_keeps_rendering_service_fallback(self):
         rendering_service = FakeDocumentEngine()
-        generation_service = FakeDocumentEngine()
 
         self.assertIs(
             resolve_document_engine(
                 document_rendering_service=rendering_service,
-                document_generation_service=generation_service,
             ),
             rendering_service,
-        )
-        self.assertIs(
-            resolve_document_engine(
-                document_generation_service=generation_service,
-            ),
-            generation_service,
         )
 
     def test_resolve_document_engine_requires_dependency(self):
@@ -340,23 +330,6 @@ class DocumentRenderingUseCaseTests(TestCase):
         self.assertEqual(template_repo.requested_template_types, ['work'])
         render_plan = service.work_request[2]
         self.assertEqual(render_plan.recipe.section_types, (TASK_LIST_SECTION,))
-
-    def test_render_work_document_keeps_legacy_generation_service_keyword(self):
-        service = FakeDocumentEngine()
-        use_case = RenderWorkDocumentUseCase(
-            document_generation_service=service,
-            work_repo=FakeWorkRepository(),
-        )
-
-        result = use_case.execute(
-            RenderWorkDocumentRequest(
-                work_id='work-1',
-                options=WorkDocumentRenderOptions(renderer_type='html'),
-            )
-        )
-
-        self.assertTrue(result.success)
-        self.assertEqual(service.work_request[0], 'work-1')
 
     def test_render_work_document_handles_missing_work(self):
         service = FakeDocumentEngine()

@@ -23,10 +23,12 @@ from core_logic.value_objects.document_render_plan import (
 from infrastructure.services.document_renderer_registry_factory import (
     build_legacy_document_renderer_registry,
 )
+from infrastructure.services.django_document_source_provider import (
+    DjangoDocumentSourceProvider,
+)
 from infrastructure.services.legacy_document_file_renderer import (
     LegacyDocumentFileRenderer,
 )
-from works.models import Variant, Work
 
 
 class DjangoDocumentEngine(IDocumentEngine):
@@ -44,12 +46,17 @@ class DjangoDocumentEngine(IDocumentEngine):
         legacy_file_renderer=None,
         get_work_source=None,
         get_remedial_source=None,
+        source_provider=None,
     ):
+        self.source_provider = source_provider or DjangoDocumentSourceProvider()
         self.document_builder = document_builder or RecipeDocumentBuilder()
-        self.get_work_source = get_work_source or self._get_work_source
+        self.get_work_source = (
+            get_work_source
+            or self.source_provider.get_work_source
+        )
         self.get_remedial_source = (
             get_remedial_source
-            or self._get_remedial_source
+            or self.source_provider.get_remedial_source
         )
         self.legacy_file_renderer = (
             legacy_file_renderer
@@ -77,12 +84,6 @@ class DjangoDocumentEngine(IDocumentEngine):
                 ),
             )
         )
-
-    def _get_work_source(self, work_id):
-        return Work.objects.get(pk=work_id)
-
-    def _get_remedial_source(self, variant_id):
-        return Variant.objects.get(pk=variant_id)
 
     def render_work_document(
         self,

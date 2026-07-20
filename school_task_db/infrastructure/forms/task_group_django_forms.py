@@ -1,5 +1,7 @@
 from django import forms
-from .models import AnalogGroup
+
+from task_groups.models import AnalogGroup
+
 
 class AnalogGroupForm(forms.ModelForm):
     class Meta:

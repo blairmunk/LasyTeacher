@@ -6,7 +6,7 @@ from django.views.decorators.http import require_POST
 from django.http import Http404, JsonResponse
 
 from infrastructure.container import container
-from .forms import AnalogGroupForm
+from infrastructure.forms.task_group_django_forms import AnalogGroupForm
 
 
 def _post_lists(post_data):

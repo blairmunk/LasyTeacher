@@ -22,6 +22,7 @@ from infrastructure.services.rendered_document_file_store import (
     RenderedDocumentFileStore,
 )
 from infrastructure.services.sectioned_document_defaults import (
+    build_sectioned_html_document_components,
     build_sectioned_remedial_sheet_html_document_components,
     build_sectioned_work_html_document_components,
     remedial_html_filename,
@@ -187,6 +188,40 @@ class SectionedDocumentDefaultsTests(TestCase):
             self.assertIn('Тренировочное задание', html)
             self.assertIn('Тренировочный ответ', html)
             self.assertIn('Краткое решение тренировки', html)
+
+    def test_builds_combined_sectioned_html_components(self):
+        with TemporaryDirectory() as output_dir:
+            components = build_sectioned_html_document_components(
+                file_store=RenderedDocumentFileStore(
+                    output_dirs={'html': output_dir},
+                ),
+                get_work_source=lambda work_id: Work(
+                    id=work_id,
+                    name='Контрольная',
+                    duration=45,
+                    max_score=4,
+                ),
+                get_remedial_sheet_data=lambda variant_id: RemedialSheetData(
+                    variant='variant',
+                    student=None,
+                    source_work=None,
+                    mark=None,
+                    new_tasks=[],
+                ),
+            )
+
+            self.assertIsNotNone(
+                components.document_renderer_registry.get(
+                    'html',
+                    document_type='work',
+                )
+            )
+            self.assertIsNotNone(
+                components.document_renderer_registry.get(
+                    'html',
+                    document_type='remedial_sheet',
+                )
+            )
 
     def test_work_html_filename_uses_source_id(self):
         request = FakeRenderRequest(source_id='work-1')

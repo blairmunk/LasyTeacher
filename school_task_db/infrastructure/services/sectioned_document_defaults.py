@@ -88,6 +88,48 @@ def build_sectioned_work_html_document_components(
     )
 
 
+def build_sectioned_html_document_components(
+    file_store,
+    get_work_source=None,
+    get_remedial_sheet_data=None,
+    template_renderer=None,
+) -> SectionedDocumentComponents:
+    payload_registry = build_work_section_payload_builder_registry(
+        get_work_source=get_work_source,
+    )
+    payload_registry.extend(
+        build_remedial_sheet_section_payload_builder_registry(
+            get_remedial_sheet_data=get_remedial_sheet_data,
+        )
+    )
+    return SectionedDocumentComponents(
+        document_builder=RecipeDocumentBuilder(
+            section_payload_builder_registry=payload_registry,
+        ),
+        document_renderer_registry=(
+            build_template_sectioned_text_document_renderer_registry(
+                renderer_type='html',
+                renderer_specs=[
+                    TemplateSectionedTextDocumentRendererSpec(
+                        document_type=WORK_DOCUMENT_TYPE,
+                        section_templates=WORK_HTML_SECTION_TEMPLATES,
+                        filename_builder=work_html_filename,
+                        wrapper_template_name=WORK_HTML_WRAPPER_TEMPLATE,
+                    ),
+                    TemplateSectionedTextDocumentRendererSpec(
+                        document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
+                        section_templates=REMEDIAL_HTML_SECTION_TEMPLATES,
+                        filename_builder=remedial_html_filename,
+                        wrapper_template_name=REMEDIAL_HTML_WRAPPER_TEMPLATE,
+                    ),
+                ],
+                file_store=file_store,
+                template_renderer=template_renderer,
+            )
+        ),
+    )
+
+
 def build_sectioned_remedial_sheet_html_document_components(
     file_store,
     get_remedial_sheet_data=None,

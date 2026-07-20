@@ -162,6 +162,25 @@ class DocumentSectionPayloadBuilderRegistryTests(TestCase):
         self.assertEqual(payload, {'title': 'Exact'})
         self.assertIsNone(common_builder.request)
 
+    def test_extends_from_another_payload_builder_registry(self):
+        registry = DocumentSectionPayloadBuilderRegistry()
+        other_registry = DocumentSectionPayloadBuilderRegistry()
+        builder = FakeSectionPayloadBuilder(payload={'tasks': []})
+        other_registry.register('task_list', builder, document_type='work')
+        source = DocumentSourceRef(source_type='work')
+        recipe = DocumentRecipe(
+            document_type='work',
+            sections=[DocumentSectionSpec(section_type='task_list')],
+        )
+
+        registry.extend(other_registry)
+
+        payload = registry.build_payload(
+            payload_build_request(source, recipe, recipe.sections[0]),
+        )
+
+        self.assertEqual(payload, {'tasks': []})
+
     def test_rejects_empty_section_type(self):
         registry = DocumentSectionPayloadBuilderRegistry()
 

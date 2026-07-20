@@ -34,6 +34,9 @@ class DocumentSectionPayloadBuilderRegistry:
             raise ValueError('section_type is required')
         self._builders[(source_type, document_type, section_type)] = builder
 
+    def extend(self, registry: "DocumentSectionPayloadBuilderRegistry") -> None:
+        self._builders.update(registry._builders)
+
     def get(
         self,
         section_type: str,

@@ -4,12 +4,32 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import QueryDict
 from django.test import SimpleTestCase
 
+from core_logic.entities.document import (
+    DocumentSectionSpec,
+    DocumentTemplateSpec,
+)
 from core_logic.entities.document_rendering import (
     DocumentRenderResult,
     GeneratedDocumentFile,
 )
+from core_logic.use_cases.get_document_template_editor_data import (
+    DocumentTemplateEditorData,
+)
 from core_logic.value_objects.document_render_options import WorkDocumentRenderOptions
+from core_logic.value_objects.document_recipes import (
+    HEADER_SECTION,
+    WORK_DOCUMENT_TYPE,
+)
+from core_logic.value_objects.document_section_catalog import (
+    get_document_section_catalog,
+)
+from core_logic.value_objects.document_type_catalog import (
+    get_document_type_catalog,
+)
 from infrastructure.forms.core_forms import CoreFormAdapter
+from infrastructure.forms.document_template_forms import (
+    DocumentTemplateFormAdapter,
+)
 from infrastructure.forms.report_forms import ReportFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
 from infrastructure.forms.task_group_forms import TaskGroupFormAdapter
@@ -81,6 +101,55 @@ class CoreFormAdapterTests(SimpleTestCase):
         self.assertEqual(request.filters.subject, 'physics')
         self.assertEqual(request.filters.grade, '9')
         self.assertEqual(request.export_date, '2026-07-18')
+
+
+class DocumentTemplateFormAdapterTests(SimpleTestCase):
+    def test_builds_editor_data_request_from_query(self):
+        request = (
+            DocumentTemplateFormAdapter()
+            .editor_data_request_from_query(
+                QueryDict('type=work&renderable=1&legacy=1'),
+            )
+        )
+
+        self.assertEqual(request.document_type, WORK_DOCUMENT_TYPE)
+        self.assertTrue(request.renderable_only)
+        self.assertTrue(request.include_legacy_sections)
+
+    def test_builds_editor_context(self):
+        request = (
+            DocumentTemplateFormAdapter()
+            .editor_data_request_from_query(QueryDict('type=work'))
+        )
+        editor_data = DocumentTemplateEditorData(
+            document_types=get_document_type_catalog(renderable_only=True),
+            sections=get_document_section_catalog(document_type=WORK_DOCUMENT_TYPE),
+            templates=[
+                DocumentTemplateSpec(
+                    name='Шаблон работы',
+                    template_type=WORK_DOCUMENT_TYPE,
+                    sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
+                    default_content_config={'answer_type': 'tasks_only'},
+                )
+            ],
+        )
+
+        context = DocumentTemplateFormAdapter().editor_context(
+            editor_data,
+            request,
+        )
+
+        self.assertEqual(context['current_document_type'], WORK_DOCUMENT_TYPE)
+        self.assertFalse(context['renderable_only'])
+        self.assertFalse(context['include_legacy_sections'])
+        self.assertEqual(context['document_types'][0]['document_type'], 'work')
+        self.assertEqual(context['sections'][0]['section_type'], HEADER_SECTION)
+        self.assertEqual(context['templates'][0]['name'], 'Шаблон работы')
+        self.assertEqual(context['templates'][0]['sections_count'], 1)
+        self.assertEqual(
+            context['templates'][0]['default_content_config'],
+            {'answer_type': 'tasks_only'},
+        )
 
 
 class ReportFormAdapterTests(SimpleTestCase):

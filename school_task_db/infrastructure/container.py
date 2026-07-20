@@ -279,6 +279,9 @@ from infrastructure.services.document_engine import (
 )
 from infrastructure.services.task_import_service import DjangoTaskImportService
 from infrastructure.forms.core_forms import CoreFormAdapter
+from infrastructure.forms.document_template_forms import (
+    DocumentTemplateFormAdapter,
+)
 from infrastructure.forms.event_forms import EventFormAdapter
 from infrastructure.forms.report_forms import ReportFormAdapter
 from infrastructure.forms.settings_forms import SettingsFormAdapter
@@ -304,6 +307,7 @@ class Container:
         self._settings_repo = None
         self._document_template_repo = None
         self._core_form_adapter = None
+        self._document_template_form_adapter = None
         self._event_form_adapter = None
         self._report_form_adapter = None
         self._settings_form_adapter = None
@@ -385,6 +389,12 @@ class Container:
         if self._core_form_adapter is None:
             self._core_form_adapter = CoreFormAdapter()
         return self._core_form_adapter
+
+    @property
+    def document_template_form_adapter(self):
+        if self._document_template_form_adapter is None:
+            self._document_template_form_adapter = DocumentTemplateFormAdapter()
+        return self._document_template_form_adapter
 
     @property
     def event_form_adapter(self):

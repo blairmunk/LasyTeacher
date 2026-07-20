@@ -75,6 +75,7 @@ class RecipeDocumentBuilder(IDocumentBuilder):
         self,
         source: DocumentSourceRef,
         recipe: DocumentRecipe,
+        render_target=None,
     ) -> Document:
         return Document(
             title=source.title,
@@ -84,13 +85,18 @@ class RecipeDocumentBuilder(IDocumentBuilder):
                 DocumentSection(
                     section_type=section.section_type,
                     title=section.title,
-                    payload=self._section_payload(source, recipe, section),
+                    payload=self._section_payload(
+                        source,
+                        recipe,
+                        section,
+                        render_target,
+                    ),
                 )
                 for section in recipe.sections
             ],
         )
 
-    def _section_payload(self, source, recipe, section):
+    def _section_payload(self, source, recipe, section, render_target=None):
         if self.section_payload_builder_registry is None:
             return dict(section.options)
 
@@ -101,6 +107,7 @@ class RecipeDocumentBuilder(IDocumentBuilder):
                         source=source,
                         recipe=recipe,
                         section=section,
+                        render_target=render_target,
                     )
                 )
             )

@@ -43,8 +43,8 @@ class FakeDocumentBuilder:
         self.request = None
         self.document = document
 
-    def build(self, source, recipe):
-        self.request = (source, recipe)
+    def build(self, source, recipe, render_target=None):
+        self.request = (source, recipe, render_target)
         return self.document
 
 
@@ -175,7 +175,7 @@ class DjangoDocumentEngineTests(TestCase):
         document = service._build_document(plan)
 
         self.assertEqual(document, 'document')
-        self.assertEqual(builder.request, (source, recipe))
+        self.assertEqual(builder.request, (source, recipe, plan.render_target))
 
     def test_build_document_returns_none_without_render_plan(self):
         service = DjangoDocumentEngine()
@@ -308,7 +308,7 @@ class DjangoDocumentEngineTests(TestCase):
             options=WorkDocumentRenderOptions(renderer_type='html'),
         )
 
-        source, recipe = builder.request
+        source, recipe, _ = builder.request
         self.assertEqual(result.file_type, 'html')
         self.assertEqual(source.source_type, WORK_SOURCE_TYPE)
         self.assertEqual(source.source_id, str(work.pk))
@@ -340,7 +340,7 @@ class DjangoDocumentEngineTests(TestCase):
             render_plan=plan,
         )
 
-        source, recipe = builder.request
+        source, recipe, _ = builder.request
         self.assertEqual(result.file_type, 'pdf')
         self.assertEqual(source.title, 'Переопределённое имя')
         self.assertEqual(recipe.document_type, 'work')
@@ -362,7 +362,7 @@ class DjangoDocumentEngineTests(TestCase):
             options=WorkDocumentRenderOptions(renderer_type='html'),
         )
 
-        source, recipe = builder.request
+        source, recipe, _ = builder.request
         self.assertEqual(result.file_type, 'html')
         self.assertEqual(calls, ['work-1'])
         self.assertEqual(source.source_id, 'work-1')
@@ -385,7 +385,7 @@ class DjangoDocumentEngineTests(TestCase):
             options=WorkDocumentRenderOptions(renderer_type='html'),
         )
 
-        source, recipe = builder.request
+        source, recipe, _ = builder.request
         self.assertEqual(result.file_type, 'html')
         self.assertEqual(source_provider.work_requests, ['work-1'])
         self.assertEqual(source.source_id, 'work-1')
@@ -411,7 +411,7 @@ class DjangoDocumentEngineTests(TestCase):
             options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
         )
 
-        source, recipe = builder.request
+        source, recipe, _ = builder.request
         self.assertEqual(result.file_type, 'pdf')
         self.assertEqual(source.source_type, REMEDIAL_VARIANT_SOURCE_TYPE)
         self.assertEqual(source.source_id, str(variant.pk))
@@ -445,7 +445,7 @@ class DjangoDocumentEngineTests(TestCase):
             render_plan=plan,
         )
 
-        source, recipe = builder.request
+        source, recipe, _ = builder.request
         self.assertEqual(result.file_type, 'html')
         self.assertEqual(source.source_type, REMEDIAL_VARIANT_SOURCE_TYPE)
         self.assertEqual(recipe.document_type, 'remedial_sheet')
@@ -469,7 +469,7 @@ class DjangoDocumentEngineTests(TestCase):
             options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
         )
 
-        source, recipe = builder.request
+        source, recipe, _ = builder.request
         self.assertEqual(result.file_type, 'pdf')
         self.assertEqual(calls, ['variant-1'])
         self.assertEqual(source.source_id, 'variant-1')
@@ -491,7 +491,7 @@ class DjangoDocumentEngineTests(TestCase):
             options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
         )
 
-        source, recipe = builder.request
+        source, recipe, _ = builder.request
         self.assertEqual(result.file_type, 'pdf')
         self.assertEqual(source_provider.remedial_requests, ['variant-1'])
         self.assertEqual(source.source_id, 'variant-1')

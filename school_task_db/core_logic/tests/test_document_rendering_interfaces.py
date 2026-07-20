@@ -37,8 +37,8 @@ class FakeDocumentBuilder(IDocumentBuilder):
     def __init__(self):
         self.request = None
 
-    def build(self, source, recipe):
-        self.request = (source, recipe)
+    def build(self, source, recipe, render_target=None):
+        self.request = (source, recipe, render_target)
         return Document(
             title=source.title,
             source=source,
@@ -106,7 +106,7 @@ class DocumentRenderingInterfaceTests(TestCase):
 
         document = builder.build(source, recipe)
 
-        self.assertEqual(builder.request, (source, recipe))
+        self.assertEqual(builder.request, (source, recipe, None))
         self.assertEqual(document.title, 'Контрольная')
         self.assertEqual(document.section_types, ('tasks',))
 

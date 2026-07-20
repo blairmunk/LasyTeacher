@@ -13,6 +13,7 @@ from core_logic.services.document_builder import (
 from core_logic.value_objects.document_build_plan import (
     DocumentSectionPayloadBuildRequest,
 )
+from core_logic.value_objects.content_config import RenderTarget
 
 
 class RecipeDocumentBuilderTests(TestCase):
@@ -96,6 +97,25 @@ class RecipeDocumentBuilderTests(TestCase):
         self.assertEqual(payload_builder.request.source, source)
         self.assertEqual(payload_builder.request.recipe, recipe)
         self.assertEqual(payload_builder.request.section, recipe.sections[0])
+        self.assertIsNone(payload_builder.request.render_target)
+
+    def test_passes_render_target_to_section_payload_builder(self):
+        registry = DocumentSectionPayloadBuilderRegistry()
+        payload_builder = FakeSectionPayloadBuilder(payload={'tasks': []})
+        registry.register('task_list', payload_builder, document_type='work')
+        builder = RecipeDocumentBuilder(
+            section_payload_builder_registry=registry,
+        )
+        source = DocumentSourceRef(source_type='work', source_id='work-1')
+        recipe = DocumentRecipe(
+            document_type='work',
+            sections=[DocumentSectionSpec(section_type='task_list')],
+        )
+        render_target = RenderTarget(renderer_type='latex')
+
+        builder.build(source, recipe, render_target=render_target)
+
+        self.assertEqual(payload_builder.request.render_target, render_target)
 
     def test_keeps_section_options_for_unregistered_payload_builder(self):
         builder = RecipeDocumentBuilder(

@@ -221,6 +221,7 @@ class DjangoDocumentEngine(IDocumentEngine):
         return self.document_builder.build(
             render_plan.source,
             render_plan.recipe,
+            render_plan.render_target,
         )
 
     def _render_from_plan(self, render_plan=None):

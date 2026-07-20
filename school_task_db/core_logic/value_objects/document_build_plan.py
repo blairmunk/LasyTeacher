@@ -7,6 +7,7 @@ from core_logic.entities.document import (
     DocumentSectionSpec,
     DocumentSourceRef,
 )
+from core_logic.value_objects.content_config import RenderTarget
 
 
 @dataclass(frozen=True)
@@ -14,3 +15,4 @@ class DocumentSectionPayloadBuildRequest:
     source: DocumentSourceRef
     recipe: DocumentRecipe
     section: DocumentSectionSpec
+    render_target: RenderTarget | None = None

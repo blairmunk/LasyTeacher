@@ -62,6 +62,9 @@ from core_logic.use_cases.get_document_template_list import (
 from core_logic.use_cases.get_document_section_catalog import (
     GetDocumentSectionCatalogUseCase,
 )
+from core_logic.use_cases.get_document_template_editor_data import (
+    GetDocumentTemplateEditorDataUseCase,
+)
 from core_logic.use_cases.get_document_type_catalog import (
     GetDocumentTypeCatalogUseCase,
 )
@@ -453,6 +456,9 @@ class ContainerTests(SimpleTestCase):
         document_section_catalog_use_case = (
             container.get_document_section_catalog_use_case()
         )
+        document_template_editor_data_use_case = (
+            container.get_document_template_editor_data_use_case()
+        )
         document_type_catalog_use_case = (
             container.get_document_type_catalog_use_case()
         )
@@ -487,6 +493,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             document_section_catalog_use_case,
             GetDocumentSectionCatalogUseCase,
+        )
+        self.assertIsInstance(
+            document_template_editor_data_use_case,
+            GetDocumentTemplateEditorDataUseCase,
         )
         self.assertIsInstance(
             document_type_catalog_use_case,

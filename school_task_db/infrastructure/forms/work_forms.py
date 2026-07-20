@@ -89,14 +89,8 @@ class WorkFormAdapter:
             options=build_work_render_options(post_data),
         )
 
-    def generate_work_document_request_from_post(self, post_data, work_id):
-        return self.render_work_document_request_from_post(post_data, work_id)
-
     def document_renderer_type_from_post(self, post_data, default='pdf'):
         return renderer_type_from_data(post_data, default=default)
-
-    def document_generator_type_from_post(self, post_data, default='pdf'):
-        return self.document_renderer_type_from_post(post_data, default)
 
     def render_remedial_sheet_request_from_post(self, post_data, variant_id):
         return RenderRemedialSheetDocumentRequest(
@@ -104,17 +98,11 @@ class WorkFormAdapter:
             options=build_remedial_sheet_render_options(post_data),
         )
 
-    def generate_remedial_sheet_request_from_post(self, post_data, variant_id):
-        return self.render_remedial_sheet_request_from_post(post_data, variant_id)
-
     def rendered_document_file_request(self, file_type, filename):
         return GetRenderedDocumentFileRequest(
             file_type=file_type,
             filename=filename,
         )
-
-    def generated_document_file_request(self, file_type, filename):
-        return self.rendered_document_file_request(file_type, filename)
 
     def rendered_work_document_response_payload(self, result, options):
         files_info = [
@@ -141,9 +129,6 @@ class WorkFormAdapter:
             'files': files_info,
             'total_files': len(files_info),
         }
-
-    def generated_work_document_response_payload(self, result, options):
-        return self.rendered_work_document_response_payload(result, options)
 
     def remedial_sheet_response_payload(self, result):
         return {

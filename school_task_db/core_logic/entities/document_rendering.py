@@ -8,7 +8,6 @@ DOCUMENT_RENDER_STATUS_GENERATED = 'generated'
 DOCUMENT_RENDER_STATUS_NOT_FOUND = 'not_found'
 DOCUMENT_RENDER_STATUS_NOT_REMEDIAL = 'not_remedial'
 DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER = 'unsupported_renderer'
-DOCUMENT_RENDER_STATUS_UNSUPPORTED_GENERATOR = 'unsupported_generator'
 DOCUMENT_RENDER_STATUS_EMPTY = 'empty'
 
 GENERATED_FILE_STATUS_READY = 'ready'
@@ -44,17 +43,12 @@ class DocumentRenderResult:
         file_type: str = '',
         files: Optional[List[GeneratedDocumentFile]] = None,
         source_name: str = '',
-        generator_type: Optional[str] = None,
     ):
         object.__setattr__(self, 'status', status)
-        object.__setattr__(self, 'renderer_type', renderer_type or generator_type or '')
+        object.__setattr__(self, 'renderer_type', renderer_type)
         object.__setattr__(self, 'file_type', file_type)
         object.__setattr__(self, 'files', files or [])
         object.__setattr__(self, 'source_name', source_name)
-
-    @property
-    def generator_type(self) -> str:
-        return self.renderer_type
 
     @property
     def success(self) -> bool:
@@ -76,6 +70,3 @@ class GeneratedFileResult:
     @property
     def success(self) -> bool:
         return self.status == GENERATED_FILE_STATUS_READY
-
-
-DocumentGenerationResult = DocumentRenderResult

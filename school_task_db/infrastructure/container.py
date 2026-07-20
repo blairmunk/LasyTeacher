@@ -1019,9 +1019,6 @@ class Container:
             document_template_repo=self.document_template_repo,
         )
 
-    def generate_work_document_use_case(self):
-        return self.render_work_document_use_case()
-
     def render_remedial_sheet_document_use_case(self):
         return RenderRemedialSheetDocumentUseCase(
             document_engine=self.document_engine,
@@ -1029,16 +1026,10 @@ class Container:
             document_template_repo=self.document_template_repo,
         )
 
-    def generate_remedial_sheet_document_use_case(self):
-        return self.render_remedial_sheet_document_use_case()
-
     def get_rendered_document_file_use_case(self):
         return GetRenderedDocumentFileUseCase(
             document_engine=self.document_engine,
         )
-
-    def get_generated_document_file_use_case(self):
-        return self.get_rendered_document_file_use_case()
 
     def create_work_from_orphans_use_case(self):
         return CreateWorkFromOrphansUseCase(

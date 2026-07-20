@@ -109,9 +109,6 @@ from core_logic.use_cases.get_event_variant_assignment import (
 from core_logic.use_cases.get_events_status_report import (
     GetEventsStatusReportUseCase,
 )
-from core_logic.use_cases.get_generated_document_file import (
-    GetGeneratedDocumentFileUseCase,
-)
 from core_logic.use_cases.get_rendered_document_file import (
     GetRenderedDocumentFileUseCase,
 )
@@ -429,19 +426,10 @@ class ContainerTests(SimpleTestCase):
         )
         bulk_delete_variants_use_case = container.bulk_delete_variants_use_case()
         render_work_document_use_case = container.render_work_document_use_case()
-        legacy_generate_work_document_use_case = (
-            container.generate_work_document_use_case()
-        )
         render_remedial_sheet_use_case = (
             container.render_remedial_sheet_document_use_case()
         )
-        legacy_generate_remedial_sheet_use_case = (
-            container.generate_remedial_sheet_document_use_case()
-        )
         rendered_file_use_case = container.get_rendered_document_file_use_case()
-        legacy_generated_file_use_case = (
-            container.get_generated_document_file_use_case()
-        )
 
         self.assertIsInstance(use_case, CreateRemedialFromEventUseCase)
         self.assertIsInstance(wizard_create_use_case, CreateRemedialWizardWorkUseCase)
@@ -688,23 +676,10 @@ class ContainerTests(SimpleTestCase):
             RenderWorkDocumentUseCase,
         )
         self.assertIsInstance(
-            legacy_generate_work_document_use_case,
-            RenderWorkDocumentUseCase,
-        )
-        self.assertIsInstance(
             render_remedial_sheet_use_case,
             RenderRemedialSheetDocumentUseCase,
         )
-        self.assertIsInstance(
-            legacy_generate_remedial_sheet_use_case,
-            RenderRemedialSheetDocumentUseCase,
-        )
         self.assertIsInstance(rendered_file_use_case, GetRenderedDocumentFileUseCase)
-        self.assertIsInstance(
-            legacy_generated_file_use_case,
-            GetRenderedDocumentFileUseCase,
-        )
-        self.assertIs(GetGeneratedDocumentFileUseCase, GetRenderedDocumentFileUseCase)
         self.assertIsInstance(container.student_repo, DjangoStudentRepository)
         self.assertIsInstance(container.task_repo, DjangoTaskRepository)
         self.assertIsInstance(container.work_repo, DjangoWorkRepository)

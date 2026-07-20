@@ -5,7 +5,6 @@ from django.http import QueryDict
 from django.test import SimpleTestCase
 
 from core_logic.entities.document_rendering import (
-    DocumentGenerationResult,
     DocumentRenderResult,
     GeneratedDocumentFile,
 )
@@ -456,14 +455,6 @@ class WorkFormAdapterTests(SimpleTestCase):
             'html',
         )
 
-    def test_legacy_document_generator_type_from_post(self):
-        adapter = WorkFormAdapter()
-
-        self.assertEqual(
-            adapter.document_generator_type_from_post(QueryDict('generator_type=html')),
-            'html',
-        )
-
     def test_builds_render_work_document_request_from_post(self):
         request = WorkFormAdapter().render_work_document_request_from_post(
             QueryDict(
@@ -480,16 +471,6 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertTrue(request.options.include_hints)
         self.assertTrue(request.options.include_instructions)
 
-    def test_legacy_generate_work_document_request_from_post(self):
-        request = WorkFormAdapter().generate_work_document_request_from_post(
-            QueryDict('generator_type=html'),
-            work_id='w1',
-        )
-
-        self.assertEqual(request.work_id, 'w1')
-        self.assertEqual(request.options.generator_type, 'html')
-        self.assertEqual(request.options.renderer_type, 'html')
-
     def test_builds_render_remedial_sheet_request_from_post(self):
         request = WorkFormAdapter().render_remedial_sheet_request_from_post(
             QueryDict('renderer_type=pdf&format=A4&answer_type=with_full_solutions'),
@@ -501,16 +482,6 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertEqual(request.options.pdf_format, 'A4')
         self.assertEqual(request.options.answer_type, 'with_full_solutions')
 
-    def test_legacy_generate_remedial_sheet_request_from_post(self):
-        request = WorkFormAdapter().generate_remedial_sheet_request_from_post(
-            QueryDict('generator_type=html'),
-            variant_id='v1',
-        )
-
-        self.assertEqual(request.variant_id, 'v1')
-        self.assertEqual(request.options.generator_type, 'html')
-        self.assertEqual(request.options.renderer_type, 'html')
-
     def test_builds_rendered_document_file_request(self):
         request = WorkFormAdapter().rendered_document_file_request(
             'html',
@@ -519,14 +490,6 @@ class WorkFormAdapterTests(SimpleTestCase):
 
         self.assertEqual(request.file_type, 'html')
         self.assertEqual(request.filename, 'work.html')
-
-    def test_legacy_generated_document_file_request_alias(self):
-        adapter = WorkFormAdapter()
-
-        self.assertEqual(
-            adapter.generated_document_file_request('html', 'work.html'),
-            adapter.rendered_document_file_request('html', 'work.html'),
-        )
 
     def test_builds_rendered_work_document_response_payload(self):
         payload = WorkFormAdapter().rendered_work_document_response_payload(
@@ -555,20 +518,6 @@ class WorkFormAdapterTests(SimpleTestCase):
             'total_files': 1,
         })
 
-    def test_legacy_generated_work_document_response_payload_alias(self):
-        adapter = WorkFormAdapter()
-        result = DocumentGenerationResult(
-            status='generated',
-            renderer_type='html',
-            file_type='html',
-        )
-        options = WorkDocumentRenderOptions(renderer_type='html')
-
-        self.assertEqual(
-            adapter.generated_work_document_response_payload(result, options),
-            adapter.rendered_work_document_response_payload(result, options),
-        )
-
     def test_builds_remedial_sheet_response_payload(self):
         payload = WorkFormAdapter().remedial_sheet_response_payload(
             DocumentRenderResult(
@@ -594,12 +543,3 @@ class WorkFormAdapterTests(SimpleTestCase):
             ],
             'message': 'Рабочий лист создан (PDF)',
         })
-
-    def test_document_generation_result_keeps_legacy_generator_type(self):
-        result = DocumentGenerationResult(
-            status='generated',
-            generator_type='html',
-        )
-
-        self.assertEqual(result.renderer_type, 'html')
-        self.assertEqual(result.generator_type, 'html')

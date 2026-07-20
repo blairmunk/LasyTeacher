@@ -7,35 +7,21 @@ from core_logic.entities.document import (
     DocumentTemplateSpec,
 )
 from core_logic.entities.document_rendering import (
-    DocumentGenerationResult,
     DocumentRenderResult,
-    DOCUMENT_RENDER_STATUS_UNSUPPORTED_GENERATOR,
     DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
     GeneratedDocument,
     GeneratedDocumentFile,
     GeneratedFile,
     GeneratedFileResult,
 )
-from core_logic.use_cases.get_generated_document_file import (
-    GetGeneratedDocumentFileRequest,
-    GetGeneratedDocumentFileUseCase,
-)
 from core_logic.use_cases.document_engine_dependency import resolve_document_engine
 from core_logic.use_cases.get_rendered_document_file import (
     GetRenderedDocumentFileRequest,
     GetRenderedDocumentFileUseCase,
 )
-from core_logic.use_cases.generate_remedial_sheet_document import (
-    GenerateRemedialSheetDocumentRequest,
-    GenerateRemedialSheetDocumentUseCase,
-)
 from core_logic.use_cases.render_remedial_sheet_document import (
     RenderRemedialSheetDocumentRequest,
     RenderRemedialSheetDocumentUseCase,
-)
-from core_logic.use_cases.generate_work_document import (
-    GenerateWorkDocumentRequest,
-    GenerateWorkDocumentUseCase,
 )
 from core_logic.use_cases.render_work_document import (
     RenderWorkDocumentRequest,
@@ -43,9 +29,7 @@ from core_logic.use_cases.render_work_document import (
 )
 from core_logic.value_objects.content_config import (
     RemedialSheetDocumentRenderOptions,
-    RemedialSheetGenerationOptions,
     WorkDocumentRenderOptions,
-    WorkGenerationOptions,
 )
 from core_logic.value_objects.document_recipes import (
     ANSWER_KEY_SECTION,
@@ -163,21 +147,10 @@ class DocumentRenderingUseCaseTests(TestCase):
         ):
             resolve_document_engine()
 
-    def test_document_generation_result_aliases_document_render_result(self):
-        result = DocumentGenerationResult(status='generated', renderer_type='html')
+    def test_document_render_result_exposes_renderer_type(self):
+        result = DocumentRenderResult(status='generated', renderer_type='html')
 
-        self.assertIsInstance(result, DocumentRenderResult)
-        self.assertEqual(result.generator_type, 'html')
-
-    def test_keeps_legacy_unsupported_generator_status_constant(self):
-        self.assertEqual(
-            DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
-            'unsupported_renderer',
-        )
-        self.assertEqual(
-            DOCUMENT_RENDER_STATUS_UNSUPPORTED_GENERATOR,
-            'unsupported_generator',
-        )
+        self.assertEqual(result.renderer_type, 'html')
 
     def test_render_work_document_rejects_unsupported_renderer(self):
         service = FakeDocumentEngine()
@@ -195,8 +168,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         )
 
         self.assertFalse(result.success)
-        self.assertEqual(result.status, 'unsupported_renderer')
-        self.assertEqual(result.generator_type, 'docx')
+        self.assertEqual(result.status, DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER)
         self.assertEqual(result.renderer_type, 'docx')
         self.assertEqual(result.source_name, 'Контрольная')
         self.assertEqual(work_repo.work_name_request, 'work-1')
@@ -348,24 +320,6 @@ class DocumentRenderingUseCaseTests(TestCase):
         self.assertFalse(result.success)
         self.assertEqual(result.status, 'not_found')
         self.assertIsNone(service.work_request)
-
-    def test_legacy_generate_work_document_use_case_alias(self):
-        service = FakeDocumentEngine()
-        work_repo = FakeWorkRepository()
-        use_case = GenerateWorkDocumentUseCase(
-            document_engine=service,
-            work_repo=work_repo,
-        )
-
-        result = use_case.execute(
-            GenerateWorkDocumentRequest(
-                work_id='work-1',
-                options=WorkGenerationOptions(generator_type='html'),
-            )
-        )
-
-        self.assertTrue(result.success)
-        self.assertEqual(service.work_request[0], 'work-1')
 
     def test_render_remedial_sheet_document_delegates_to_service(self):
         service = FakeDocumentEngine()
@@ -522,8 +476,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         )
 
         self.assertFalse(result.success)
-        self.assertEqual(result.status, 'unsupported_renderer')
-        self.assertEqual(result.generator_type, 'docx')
+        self.assertEqual(result.status, DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER)
         self.assertEqual(result.renderer_type, 'docx')
         self.assertIsNone(service.remedial_request)
 
@@ -563,24 +516,6 @@ class DocumentRenderingUseCaseTests(TestCase):
         self.assertEqual(result.status, 'not_found')
         self.assertIsNone(service.remedial_request)
 
-    def test_legacy_generate_remedial_sheet_document_use_case_alias(self):
-        service = FakeDocumentEngine()
-        work_repo = FakeWorkRepository()
-        use_case = GenerateRemedialSheetDocumentUseCase(
-            document_engine=service,
-            work_repo=work_repo,
-        )
-
-        result = use_case.execute(
-            GenerateRemedialSheetDocumentRequest(
-                variant_id='variant-1',
-                options=RemedialSheetGenerationOptions(generator_type='pdf'),
-            )
-        )
-
-        self.assertTrue(result.success)
-        self.assertEqual(service.remedial_request[0], 'variant-1')
-
     def test_get_rendered_document_file_delegates_to_service(self):
         service = FakeDocumentEngine()
         use_case = GetRenderedDocumentFileUseCase(
@@ -611,7 +546,3 @@ class DocumentRenderingUseCaseTests(TestCase):
 
         self.assertTrue(result.success)
         self.assertEqual(service.file_request, ('html', 'work.html'))
-
-    def test_legacy_get_generated_document_file_names_are_aliases(self):
-        self.assertIs(GetGeneratedDocumentFileRequest, GetRenderedDocumentFileRequest)
-        self.assertIs(GetGeneratedDocumentFileUseCase, GetRenderedDocumentFileUseCase)

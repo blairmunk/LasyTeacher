@@ -33,6 +33,12 @@ from infrastructure.services.sectioned_document_renderer_factory import (
     build_template_sectioned_html_to_pdf_document_renderer_registry,
     build_template_sectioned_text_document_renderer_registry,
 )
+from infrastructure.services.sectioned_document_filenames import (
+    remedial_html_filename,
+    remedial_latex_filename,
+    work_html_filename,
+    work_latex_filename,
+)
 
 
 WORK_HTML_SECTION_TEMPLATES = {
@@ -383,30 +389,6 @@ def build_sectioned_remedial_sheet_latex_document_components(
             )
         ),
     )
-
-
-def work_html_filename(request):
-    if request.document.source and request.document.source.source_id:
-        return f'work_{request.document.source.source_id}.html'
-    return 'work.html'
-
-
-def remedial_html_filename(request):
-    if request.document.source and request.document.source.source_id:
-        return f'remedial_{request.document.source.source_id}.html'
-    return 'remedial.html'
-
-
-def work_latex_filename(request):
-    if request.document.source and request.document.source.source_id:
-        return f'work_{request.document.source.source_id}.tex'
-    return 'work.tex'
-
-
-def remedial_latex_filename(request):
-    if request.document.source and request.document.source.source_id:
-        return f'remedial_{request.document.source.source_id}.tex'
-    return 'remedial.tex'
 
 
 def _sectioned_html_renderer_specs():

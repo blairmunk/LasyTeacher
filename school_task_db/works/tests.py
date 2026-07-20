@@ -1,10 +1,16 @@
 from unittest.mock import patch
+from io import StringIO
 
+from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from core_logic.entities.document_rendering import (
+    DOCUMENT_RENDER_STATUS_GENERATED,
+    DOCUMENT_RENDER_STATUS_NOT_FOUND,
+    DocumentRenderResult,
     GeneratedDocument,
     GeneratedDocumentFile,
     GeneratedFile,
@@ -17,6 +23,81 @@ from students.models import Student
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
 from works.models import Variant, VariantTask, Work, WorkAnalogGroup
+
+
+class FakeDocumentRenderContainer:
+    def __init__(self, use_case):
+        self.use_case = use_case
+
+    def render_work_document_use_case(self):
+        return self.use_case
+
+
+class FakeRenderWorkDocumentUseCase:
+    def __init__(self, result):
+        self.result = result
+        self.request = None
+
+    def execute(self, request):
+        self.request = request
+        return self.result
+
+
+class GenerateWorkLatexCommandTests(TestCase):
+    def test_command_renders_work_document_through_container(self):
+        use_case = FakeRenderWorkDocumentUseCase(
+            result=DocumentRenderResult(
+                status=DOCUMENT_RENDER_STATUS_GENERATED,
+                renderer_type='latex',
+                file_type='latex',
+                files=[
+                    GeneratedDocumentFile(
+                        filename='work_1.tex',
+                        size_kb=1.5,
+                    ),
+                ],
+                source_name='Контрольная',
+            ),
+        )
+        fake_container = FakeDocumentRenderContainer(use_case)
+        stdout = StringIO()
+
+        with patch(
+            'works.management.commands.generate_work_latex.container',
+            fake_container,
+        ):
+            call_command(
+                'generate_work_latex',
+                'work-1',
+                '--format',
+                'latex',
+                '--with-answers',
+                stdout=stdout,
+            )
+
+        request = use_case.request
+        self.assertEqual(request.work_id, 'work-1')
+        self.assertEqual(request.options.renderer_type, 'latex')
+        self.assertEqual(request.options.answer_type, 'with_answers')
+        self.assertIn('Created latex document for Контрольная', stdout.getvalue())
+        self.assertIn('work_1.tex', stdout.getvalue())
+
+    def test_command_raises_for_missing_work(self):
+        fake_container = FakeDocumentRenderContainer(
+            FakeRenderWorkDocumentUseCase(
+                result=DocumentRenderResult(
+                    status=DOCUMENT_RENDER_STATUS_NOT_FOUND,
+                    renderer_type='latex',
+                ),
+            )
+        )
+
+        with patch(
+            'works.management.commands.generate_work_latex.container',
+            fake_container,
+        ):
+            with self.assertRaises(CommandError):
+                call_command('generate_work_latex', 'missing', '--format', 'latex')
 
 
 class WorkDetailViewTests(TestCase):

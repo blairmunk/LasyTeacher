@@ -35,7 +35,6 @@ INSTALLED_APPS = [
     'curriculum',     # Учебные курсы
     'review',
     'document_generator',
-    'latex_generator',
     'pdf_generator',       # PDF генератор
     'codifier',            # Кодификатор заданий
     'site_settings',       # Настройки
@@ -74,7 +73,6 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             BASE_DIR / 'templates',
-            BASE_DIR / 'latex_generator' / 'templates',
         ],
         'APP_DIRS': True,
         'OPTIONS': {

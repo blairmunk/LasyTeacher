@@ -47,7 +47,7 @@ class Command(BaseCommand):
                 f'  • Создана тестовая работа: {work.name}\n'
                 f'  • ID работы для тестирования: {work.id}\n\n'
                 f'🚀 Для тестирования запустите:\n'
-                f'   python manage.py generate_latex work {work.id} --format pdf'
+                f'   python manage.py generate_work_latex {work.id} --format pdf'
             )
         )
 

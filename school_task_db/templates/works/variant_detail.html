@@ -115,9 +115,9 @@
 
     {% if variant.source_work %}
     <!-- Рендеринг рабочего листа -->
-    <div class="card mb-4">
+    <div class="card mb-4" id="remedial-render">
         <div class="card-header bg-success bg-opacity-10">
-            <h6 class="mb-0"><i class="fas fa-print text-success"></i> Печать рабочего листа</h6>
+            <h6 class="mb-0"><i class="fas fa-print text-success"></i> Печать листа работы над ошибками</h6>
         </div>
         <div class="card-body">
             <form id="remedialGenerateForm" data-remedial-render-form>
@@ -154,7 +154,7 @@
                             id="btnGenerateRemedial"
                             data-remedial-render-submit
                         >
-                            <i class="fas fa-file-pdf"></i> Создать
+                            <i class="fas fa-file-pdf"></i> Создать лист
                         </button>
                     </div>
                 </div>
@@ -190,7 +190,7 @@
         .then(r => r.json())
         .then(data => {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-file-pdf"></i> Создать';
+            btn.innerHTML = '<i class="fas fa-file-pdf"></i> Создать лист';
             if (data.status === 'success') {
                 let html = '<div class="alert alert-success py-1">';
                 html += '<i class="fas fa-check"></i> ' + data.message + '<br>';
@@ -206,7 +206,7 @@
         })
         .catch(err => {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-file-pdf"></i> Создать';
+            btn.innerHTML = '<i class="fas fa-file-pdf"></i> Создать лист';
             result.innerHTML = `<div class="alert alert-danger py-1">Ошибка: ${err}</div>`;
         });
     });

@@ -13,21 +13,43 @@
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">
-                    {% if variant.work %}{{ variant.work.name }}{% else %}Вариант без работы{% endif %}
+                    {{ variant.display_name }}
                 </h5>
-                <h6 class="text-muted">Вариант {{ variant.number }}</h6>
+                <h6 class="text-muted">
+                    Вариант {{ variant.number }}
+                    {% if variant.variant_type == 'remedial' %}
+                        <span class="badge bg-info ms-2">
+                            <i class="fas fa-first-aid"></i> Работа над ошибками
+                        </span>
+                    {% elif variant.variant_type == 'individual' %}
+                        <span class="badge bg-primary ms-2">
+                            <i class="fas fa-user"></i> Индивидуальный
+                        </span>
+                    {% endif %}
+                </h6>
                 <p class="card-text">
                     <i class="fas fa-tasks"></i> Заданий: {{ variant.task_count }}<br>
                     {% if variant.work %}
                     <i class="fas fa-clock"></i> Время: {{ variant.work.duration }} минут
                     {% endif %}
+                    {% if variant.assigned_student %}
+                    <br><i class="fas fa-user-graduate"></i> {{ variant.assigned_student.short_name }}
+                    {% endif %}
                 </p>
                 <p class="card-text">
                     <small class="text-muted">Создан: {{ variant.created_at|date:"d.m.Y H:i" }}</small>
                 </p>
-                <a href="{% url 'works:variant-detail' variant.pk %}" class="btn btn-primary">
-                    <i class="fas fa-eye"></i> Подробнее
-                </a>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'works:variant-detail' variant.pk %}" class="btn btn-primary">
+                        <i class="fas fa-eye"></i> Подробнее
+                    </a>
+                    {% if variant.variant_type == 'remedial' and variant.has_source_work %}
+                    <a href="{% url 'works:variant-detail' variant.pk %}#remedial-render"
+                       class="btn btn-outline-success">
+                        <i class="fas fa-print"></i> Лист ошибок
+                    </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>

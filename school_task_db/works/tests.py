@@ -347,6 +347,31 @@ class WorkDetailViewTests(TestCase):
         self.assertEqual(response.context['variants'][0].pk, str(self.variant.pk))
         self.assertEqual(response.context['variants'][0].number, self.variant.number)
         self.assertEqual(response.context['variants'][0].task_count, 0)
+        self.assertEqual(response.context['variants'][0].display_name, self.work.name)
+        self.assertEqual(response.context['variants'][0].variant_type, 'regular')
+
+    def test_variant_list_shows_remedial_variant_entry_point(self):
+        student = Student.objects.create(last_name='Петров', first_name='Пётр')
+        remedial_variant = Variant.objects.create(
+            work=None,
+            number=2,
+            work_name_snapshot='Работа над ошибками',
+            variant_type='remedial',
+            assigned_student=student,
+            source_work=self.work,
+        )
+
+        response = self.client.get(reverse('works:variant-list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Работа над ошибками')
+        self.assertContains(response, 'Петров П.')
+        self.assertContains(
+            response,
+            reverse('works:variant-detail', args=[remedial_variant.pk])
+            + '#remedial-render',
+        )
+        self.assertContains(response, 'Лист ошибок')
 
     def test_create_view_saves_work_and_specification_formset(self):
         group = AnalogGroup.objects.create(name='Кинематика')
@@ -723,6 +748,8 @@ class WorkDetailViewTests(TestCase):
         self.assertContains(response, 'data-remedial-render-result')
         self.assertContains(response, 'remedialGenerateForm')
         self.assertContains(response, 'btnGenerateRemedial')
+        self.assertContains(response, 'Печать листа работы над ошибками')
+        self.assertContains(response, 'id="remedial-render"')
 
     def test_variant_detail_returns_404_for_missing_variant(self):
         response = self.client.get(

@@ -98,12 +98,23 @@ class VariantListWorkRef:
 
 
 @dataclass(frozen=True)
+class VariantListStudentRef:
+    pk: str
+    short_name: str
+
+
+@dataclass(frozen=True)
 class VariantListItem:
     pk: str
     number: int
     created_at: datetime
     task_count: int = 0
+    display_name: str = ''
+    variant_type: str = 'regular'
+    variant_type_display: str = ''
     work: Optional[VariantListWorkRef] = None
+    assigned_student: Optional[VariantListStudentRef] = None
+    has_source_work: bool = False
 
 
 @dataclass(frozen=True)

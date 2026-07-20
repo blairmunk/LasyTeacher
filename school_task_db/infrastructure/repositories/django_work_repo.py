@@ -22,6 +22,7 @@ from core_logic.entities.work import (
     VariantGenerationInfo,
     VariantGenerationWork,
     VariantListItem,
+    VariantListStudentRef,
     VariantListWorkRef,
     WorkDetailAnalogGroup,
     WorkDetailSpecGroup,
@@ -67,6 +68,9 @@ class DjangoWorkRepository(IWorkRepository):
                 number=variant.number,
                 created_at=variant.created_at,
                 task_count=variant.task_count,
+                display_name=variant.display_name,
+                variant_type=variant.variant_type,
+                variant_type_display=variant.get_variant_type_display(),
                 work=(
                     VariantListWorkRef(
                         pk=str(variant.work.pk),
@@ -76,9 +80,19 @@ class DjangoWorkRepository(IWorkRepository):
                     if variant.work
                     else None
                 ),
+                assigned_student=(
+                    VariantListStudentRef(
+                        pk=str(variant.assigned_student.pk),
+                        short_name=variant.assigned_student.get_short_name(),
+                    )
+                    if variant.assigned_student
+                    else None
+                ),
+                has_source_work=bool(variant.source_work_id),
             )
             for variant in Variant.objects.select_related(
                 'work',
+                'assigned_student',
             ).annotate(
                 task_count=Count('varianttask'),
             ).order_by('-created_at')

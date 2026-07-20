@@ -129,6 +129,27 @@ class DjangoWorkTaskVariantsPayloadBuilderTests(TestCase):
         self.assertEqual(task_payload['source'], 'Сб.')
         self.assertEqual(task_payload['source_detail'], 'стр. 10')
 
+    def test_builds_task_variants_payload_with_task_formatter(self):
+        work = Work.objects.create(name='Контрольная', duration=45)
+        variant = Variant.objects.create(work=work, number=1)
+        task = self.create_task(text='Найдите силу')
+        VariantTask.objects.create(
+            variant=variant,
+            task=task,
+            order=1,
+            max_points=4,
+        )
+        formatter = FakeTaskPayloadFormatter()
+        builder = DjangoWorkTaskVariantsPayloadBuilder(
+            task_payload_formatter=formatter,
+        )
+
+        payload = builder.build_payload(build_request(work, TASK_VARIANTS_SECTION))
+
+        task_payload = payload['variants'][0]['tasks'][0]
+        self.assertTrue(task_payload['formatted'])
+        self.assertEqual(formatter.requests[0]['text'], 'Найдите силу')
+
     def test_builds_registry_for_work_sections(self):
         work = Work.objects.create(name='Контрольная')
         registry = build_work_section_payload_builder_registry()
@@ -186,6 +207,23 @@ class DjangoWorkTaskVariantsPayloadBuilderTests(TestCase):
 
         self.assertEqual(task_list_payload['variants'], [])
         self.assertEqual(answer_key_payload['variants'], [])
+
+    def create_task(self, **overrides):
+        topic = Topic.objects.create(
+            name=f"Тема {overrides.get('text', '')}",
+            subject='Физика',
+            section='Механика',
+            grade_level=9,
+        )
+        defaults = {
+            'text': 'Задание',
+            'answer': 'Ответ',
+            'topic': topic,
+            'task_type': 'computational',
+            'difficulty': 2,
+        }
+        defaults.update(overrides)
+        return Task.objects.create(**defaults)
 
 
 class DjangoRemedialSectionPayloadBuilderTests(TestCase):
@@ -317,6 +355,42 @@ class DjangoRemedialSectionPayloadBuilderTests(TestCase):
         self.assertEqual(task_payload['answer'], 'Новый ответ')
         self.assertEqual(task_payload['short_solution'], 'Краткое решение')
 
+    def test_builds_remedial_payload_with_task_formatter(self):
+        task = self.create_task(text='Исходное задание', answer='Ответ')
+        formatter = FakeTaskPayloadFormatter()
+        sheet_data = RemedialSheetData(
+            variant='variant',
+            student=None,
+            source_work=None,
+            mark=None,
+            original_tasks=[
+                RemedialOriginalTaskRow(
+                    task=task,
+                    order=1,
+                    points=2,
+                    max_points=5,
+                    pct=40.0,
+                    status='partial',
+                    group_name='Движение',
+                ),
+            ],
+        )
+        registry = build_remedial_sheet_section_payload_builder_registry(
+            get_remedial_sheet_data=lambda variant_id: sheet_data,
+            task_payload_formatter=formatter,
+        )
+        recipe = remedial_recipe(ORIGINAL_MISTAKES_SECTION)
+
+        payload = registry.build_payload(
+            remedial_build_request(
+                recipe=recipe,
+                section=recipe.sections[0],
+            )
+        )
+
+        self.assertTrue(payload['tasks'][0]['formatted'])
+        self.assertEqual(formatter.requests[0]['text'], 'Исходное задание')
+
     def test_provider_caches_sheet_data_per_variant(self):
         calls = []
         sheet_data = RemedialSheetData(
@@ -358,6 +432,18 @@ class FakeMark:
         self.score = score
         self.points = points
         self.max_points = max_points
+
+
+class FakeTaskPayloadFormatter:
+    def __init__(self):
+        self.requests = []
+
+    def format_task_payload(self, payload):
+        self.requests.append(dict(payload))
+        return {
+            **payload,
+            'formatted': True,
+        }
 
 
 def remedial_recipe(section_type):

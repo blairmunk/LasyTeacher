@@ -43,13 +43,17 @@ class DjangoWorkHeaderPayloadBuilder:
 
 
 class DjangoWorkTaskVariantsPayloadBuilder:
-    def __init__(self, get_work_source=None):
+    def __init__(self, get_work_source=None, task_payload_formatter=None):
         self.get_work_source = get_work_source or _get_work_source
+        self.task_payload_formatter = task_payload_formatter
 
     def build_payload(self, request):
         work = self.get_work_source(request.source.source_id)
         variants = [
-            _work_variant_payload(variant)
+            _work_variant_payload(
+                variant,
+                task_payload_formatter=self.task_payload_formatter,
+            )
             for variant in work.variant_set.order_by('number', 'pk')
         ]
         return {
@@ -90,30 +94,38 @@ class DjangoRemedialHeaderPayloadBuilder:
 
 
 class DjangoRemedialOriginalMistakesPayloadBuilder:
-    def __init__(self, sheet_data_provider):
+    def __init__(self, sheet_data_provider, task_payload_formatter=None):
         self.sheet_data_provider = sheet_data_provider
+        self.task_payload_formatter = task_payload_formatter
 
     def build_payload(self, request):
         sheet_data = self.sheet_data_provider.get(request.source.source_id)
         return {
             **dict(request.section.options),
             'tasks': [
-                _original_task_payload(task_row)
+                _original_task_payload(
+                    task_row,
+                    task_payload_formatter=self.task_payload_formatter,
+                )
                 for task_row in sheet_data.original_tasks
             ],
         }
 
 
 class DjangoRemedialTrainingTasksPayloadBuilder:
-    def __init__(self, sheet_data_provider):
+    def __init__(self, sheet_data_provider, task_payload_formatter=None):
         self.sheet_data_provider = sheet_data_provider
+        self.task_payload_formatter = task_payload_formatter
 
     def build_payload(self, request):
         sheet_data = self.sheet_data_provider.get(request.source.source_id)
         return {
             **dict(request.section.options),
             'tasks': [
-                _variant_task_payload(variant_task)
+                _variant_task_payload(
+                    variant_task,
+                    task_payload_formatter=self.task_payload_formatter,
+                )
                 for variant_task in sheet_data.new_tasks or []
             ],
         }
@@ -121,6 +133,7 @@ class DjangoRemedialTrainingTasksPayloadBuilder:
 
 def build_work_section_payload_builder_registry(
     get_work_source=None,
+    task_payload_formatter=None,
 ) -> DocumentSectionPayloadBuilderRegistry:
     registry = DocumentSectionPayloadBuilderRegistry()
     registry.register(
@@ -131,13 +144,19 @@ def build_work_section_payload_builder_registry(
     )
     registry.register(
         TASK_VARIANTS_SECTION,
-        DjangoWorkTaskVariantsPayloadBuilder(get_work_source=get_work_source),
+        DjangoWorkTaskVariantsPayloadBuilder(
+            get_work_source=get_work_source,
+            task_payload_formatter=task_payload_formatter,
+        ),
         document_type=WORK_DOCUMENT_TYPE,
         source_type=WORK_SOURCE_TYPE,
     )
     registry.register(
         TASK_LIST_SECTION,
-        DjangoWorkTaskVariantsPayloadBuilder(get_work_source=get_work_source),
+        DjangoWorkTaskVariantsPayloadBuilder(
+            get_work_source=get_work_source,
+            task_payload_formatter=task_payload_formatter,
+        ),
         document_type=WORK_DOCUMENT_TYPE,
         source_type=WORK_SOURCE_TYPE,
     )
@@ -151,6 +170,7 @@ def build_work_section_payload_builder_registry(
             section_type,
             DjangoWorkTaskVariantsPayloadBuilder(
                 get_work_source=get_work_source,
+                task_payload_formatter=task_payload_formatter,
             ),
             document_type=WORK_DOCUMENT_TYPE,
             source_type=WORK_SOURCE_TYPE,
@@ -160,6 +180,7 @@ def build_work_section_payload_builder_registry(
 
 def build_remedial_sheet_section_payload_builder_registry(
     get_remedial_sheet_data=None,
+    task_payload_formatter=None,
 ) -> DocumentSectionPayloadBuilderRegistry:
     sheet_data_provider = RemedialSheetDataProvider(
         get_remedial_sheet_data=get_remedial_sheet_data,
@@ -173,7 +194,10 @@ def build_remedial_sheet_section_payload_builder_registry(
     )
     registry.register(
         ORIGINAL_MISTAKES_SECTION,
-        DjangoRemedialOriginalMistakesPayloadBuilder(sheet_data_provider),
+        DjangoRemedialOriginalMistakesPayloadBuilder(
+            sheet_data_provider,
+            task_payload_formatter=task_payload_formatter,
+        ),
         document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
         source_type=REMEDIAL_VARIANT_SOURCE_TYPE,
     )
@@ -185,7 +209,10 @@ def build_remedial_sheet_section_payload_builder_registry(
     ):
         registry.register(
             section_type,
-            DjangoRemedialTrainingTasksPayloadBuilder(sheet_data_provider),
+            DjangoRemedialTrainingTasksPayloadBuilder(
+                sheet_data_provider,
+                task_payload_formatter=task_payload_formatter,
+            ),
             document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
             source_type=REMEDIAL_VARIANT_SOURCE_TYPE,
         )
@@ -196,7 +223,7 @@ def _get_work_source(work_id):
     return Work.objects.get(pk=work_id)
 
 
-def _work_variant_payload(variant):
+def _work_variant_payload(variant, task_payload_formatter=None):
     variant_tasks = (
         variant.varianttask_set
         .select_related(
@@ -214,23 +241,27 @@ def _work_variant_payload(variant):
         'max_score': variant.display_max_score,
         'duration': variant.display_duration,
         'tasks': [
-            _variant_task_payload(variant_task)
+            _variant_task_payload(
+                variant_task,
+                task_payload_formatter=task_payload_formatter,
+            )
             for variant_task in variant_tasks
         ],
     }
 
 
-def _variant_task_payload(variant_task):
+def _variant_task_payload(variant_task, task_payload_formatter=None):
     task = variant_task.task
-    return {
+    payload = {
         **_task_payload(task),
         'order': variant_task.order,
         'max_points': variant_task.max_points,
     }
+    return _format_task_payload(payload, task_payload_formatter)
 
 
-def _original_task_payload(task_row):
-    return {
+def _original_task_payload(task_row, task_payload_formatter=None):
+    payload = {
         **_task_payload(task_row.task),
         'order': task_row.order,
         'points': task_row.points,
@@ -239,6 +270,7 @@ def _original_task_payload(task_row):
         'status': task_row.status,
         'group_name': task_row.group_name,
     }
+    return _format_task_payload(payload, task_payload_formatter)
 
 
 def _task_payload(task):
@@ -257,6 +289,12 @@ def _task_payload(task):
         'source': str(task.source) if task.source else '',
         'source_detail': task.source_detail,
     }
+
+
+def _format_task_payload(payload, task_payload_formatter=None):
+    if task_payload_formatter is None:
+        return payload
+    return task_payload_formatter.format_task_payload(payload)
 
 
 def _student_payload(student):

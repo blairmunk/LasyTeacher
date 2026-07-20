@@ -3,7 +3,7 @@
 ## 🎨 HIGH PRIORITY: CSS стили для HTML/PDF генерации
 
 ### Проблема:
-Текущие CSS стили в `html_generator/generators/base.py` требуют **полной переработки**:
+Текущие CSS стили секционного HTML/PDF renderer требуют **полной переработки**:
 
 - ❌ **Печать side-by-side**: изображения "right_20/right_40" не позиционируются корректно при печати
 - ❌ **BEM методология нарушена**: классы не следуют строгой BEM структуре  
@@ -35,9 +35,9 @@
 
 ### Файлы для изменения:
 
-    `html_generator/generators/base.py` - основные CSS стили
-    `document_generator/utils/html_image_utils.py` - HTML структура
-    `html_generator/templates/html/work/all_variants.html` - шаблон
+    `school_task_db/infrastructure/services/sectioned_document_templates.py` - HTML/CSS шаблоны секционного renderer
+    `school_task_db/infrastructure/services/django_document_section_payloads.py` - payload-структуры секций
+    `school_task_db/infrastructure/services/template_document_section_renderer.py` - рендеринг отдельных секций
 
 ### Приоритет: *HIGH* (после завершения основной функциональности)
 

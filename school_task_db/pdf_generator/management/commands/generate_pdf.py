@@ -1,77 +1,91 @@
-"""Интегрированная команда: HTML + PDF генерация одной командой"""
-
 from django.core.management.base import BaseCommand, CommandError
-from django.apps import apps
-from pathlib import Path
-import logging
+
+from core_logic.entities.document_rendering import (
+    DOCUMENT_RENDER_STATUS_GENERATED,
+    DOCUMENT_RENDER_STATUS_NOT_FOUND,
+    DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
+)
+from core_logic.use_cases.render_work_document import RenderWorkDocumentRequest
+from core_logic.value_objects.content_config import WorkDocumentRenderOptions
+from infrastructure.container import container
+
 
 class Command(BaseCommand):
-    help = 'Генерирует PDF документы через HTML→PDF pipeline'
+    help = 'Generate PDF documents through the sectioned document engine'
 
     def add_arguments(self, parser):
         parser.add_argument('object_type', choices=['work'])
-        parser.add_argument('object_id', type=int)
+        parser.add_argument('object_id', type=str)
         parser.add_argument('--with-answers', action='store_true')
         parser.add_argument('--output-dir', default='pdf_output')
-        parser.add_argument('--keep-html', action='store_true', help='Сохранить HTML файлы')
-        parser.add_argument('--format', choices=['A4', 'A5', 'Letter'], default='A4')
-        parser.add_argument('--fast', action='store_true', help='Быстрый режим - не ждать MathJax')
-        parser.add_argument('--mathjax-timeout', type=int, default=8, help='Таймаут MathJax в секундах')
+        parser.add_argument(
+            '--keep-html',
+            action='store_true',
+            help='Deprecated; ignored by the sectioned document engine',
+        )
+        parser.add_argument(
+            '--format',
+            choices=['A4', 'A5', 'Letter'],
+            default='A4',
+        )
+        parser.add_argument(
+            '--fast',
+            action='store_true',
+            help='Deprecated; PDF backend settings are configured centrally',
+        )
+        parser.add_argument(
+            '--mathjax-timeout',
+            type=int,
+            default=8,
+            help='Deprecated; PDF backend settings are configured centrally',
+        )
 
     def handle(self, *args, **options):
-        object_type = options['object_type']
-        object_id = options['object_id']
-        
-        try:
-            if object_type == 'work':
-                Work = apps.get_model('works', 'Work')
-                work = Work.objects.get(id=object_id)
-                
-                self.stdout.write(f"📄 Генерируем PDF для: [{work.get_short_uuid()}] {work.name}")
-                
-                # ШАГ 1: Генерируем HTML
-                from html_generator.generators.work_generator import WorkHtmlGenerator
-                html_gen = WorkHtmlGenerator(output_dir='temp_html_output')
-                
-                if options['with_answers']:
-                    html_files = html_gen.generate_with_answers(work)
-                else:
-                    html_files = html_gen.generate(work)
-                
-                self.stdout.write(f"✅ HTML создан: {len(html_files)} файлов")
-                
-                # ШАГ 2: HTML → PDF
-                from pdf_generator.generators.html_to_pdf import HtmlToPdfGenerator
-                pdf_gen = HtmlToPdfGenerator(
-                    format=options['format'],
-                    wait_for_mathjax=not options['fast'],  # Отключаем в быстром режиме
-                    mathjax_render_timeout=options['mathjax_timeout'] * 1000
+        if options['object_type'] != 'work':
+            raise CommandError(f'Unsupported object type: {options["object_type"]}')
+
+        if options.get('output_dir') != 'pdf_output':
+            self.stdout.write(
+                self.style.WARNING(
+                    '--output-dir is deprecated and ignored by document engine.'
                 )
-                
-                pdf_files = []
-                for html_file in html_files:
-                    html_path = Path(html_file)
-                    pdf_name = html_path.stem + '.pdf'
-                    pdf_path = Path(options['output_dir']) / pdf_name
-                    
-                    self.stdout.write(f"🔄 Конвертируем: {html_path.name}")
-                    result = pdf_gen.generate_pdf(html_path, pdf_path)
-                    pdf_files.append(result)
-                    
-                    file_size = result.stat().st_size / 1024
-                    self.stdout.write(f"  ✅ PDF: {result.name} ({file_size:.1f} KB)")
-                
-                # ШАГ 3: Очистка временных файлов
-                if not options['keep_html']:
-                    import shutil
-                    shutil.rmtree('temp_html_output', ignore_errors=True)
-                    self.stdout.write("🗑️ Временные HTML файлы удалены")
-                
-                # Итоговая статистика
-                self.stdout.write("")
-                self.stdout.write("🎉 PDF генерация завершена!")
-                for pdf_file in pdf_files:
-                    self.stdout.write(f"  📄 {pdf_file}")
-                    
-        except Exception as e:
-            raise CommandError(f"Ошибка: {e}")
+            )
+        if options.get('keep_html') or options.get('fast'):
+            self.stdout.write(
+                self.style.WARNING(
+                    '--keep-html and --fast are deprecated and ignored.'
+                )
+            )
+
+        result = container.render_work_document_use_case().execute(
+            RenderWorkDocumentRequest(
+                work_id=str(options['object_id']),
+                options=WorkDocumentRenderOptions(
+                    renderer_type='pdf',
+                    pdf_format=options['format'],
+                    answer_type=(
+                        'with_answers'
+                        if options['with_answers']
+                        else 'tasks_only'
+                    ),
+                ),
+            )
+        )
+
+        if result.status == DOCUMENT_RENDER_STATUS_NOT_FOUND:
+            raise CommandError(f'Work {options["object_id"]} not found')
+        if result.status == DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER:
+            raise CommandError('PDF renderer is not supported')
+        if result.status != DOCUMENT_RENDER_STATUS_GENERATED:
+            raise CommandError(f'Document render failed: {result.status}')
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f'Created PDF document for {result.source_name}'
+            )
+        )
+        for generated_file in result.files:
+            self.stdout.write(
+                f'  {generated_file.filename} '
+                f'({generated_file.size_kb:.1f} KB)'
+            )

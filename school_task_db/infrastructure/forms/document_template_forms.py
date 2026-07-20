@@ -2,7 +2,10 @@
 
 from urllib.parse import urlencode
 
-from core_logic.entities.document import CreateDocumentTemplateParams
+from core_logic.entities.document import (
+    CreateDocumentTemplateParams,
+    UpdateDocumentTemplateParams,
+)
 from core_logic.use_cases.get_document_template_editor_data import (
     GetDocumentTemplateEditorDataRequest,
 )
@@ -44,6 +47,25 @@ class DocumentTemplateFormAdapter:
             section_types=tuple(form.cleaned_data['sections']),
             is_default=form.cleaned_data.get('is_default', False),
         )
+
+    def update_params_from_form(self, form, template_id):
+        return UpdateDocumentTemplateParams(
+            template_id=template_id,
+            name=form.cleaned_data['name'],
+            description=form.cleaned_data.get('description', ''),
+            template_type=form.cleaned_data['template_type'],
+            section_types=tuple(form.cleaned_data['sections']),
+            is_default=form.cleaned_data.get('is_default', False),
+        )
+
+    def form_initial_from_template(self, template):
+        return {
+            'name': template.name,
+            'description': template.description,
+            'template_type': template.template_type,
+            'sections': template.section_types,
+            'is_default': template.is_default,
+        }
 
     def create_context(self, form, document_types, sections):
         return {

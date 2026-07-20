@@ -99,6 +99,8 @@ class DocumentTemplate(BaseModel):
             name=self.name,
             template_type=self.template_type,
             template_id=str(self.pk),
+            description=self.description,
+            is_default=self.is_default,
             sections_config=self.sections_config,
             default_content_config=self.default_content_config,
             html_template_override=self.html_template_override,

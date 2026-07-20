@@ -6,6 +6,7 @@ from typing import List, Optional
 from core_logic.entities.document import (
     CreateDocumentTemplateParams,
     DocumentTemplateSpec,
+    UpdateDocumentTemplateParams,
 )
 
 
@@ -38,3 +39,10 @@ class IDocumentTemplateRepository(ABC):
         params: CreateDocumentTemplateParams,
     ) -> str:
         """Create a document template and return its id."""
+
+    @abstractmethod
+    def update_template(
+        self,
+        params: UpdateDocumentTemplateParams,
+    ) -> bool:
+        """Update a document template and return whether it existed."""

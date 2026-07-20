@@ -4,6 +4,7 @@ from core_logic.entities.document import (
     CreateDocumentTemplateParams,
     DocumentSectionSpec,
     DocumentTemplateSpec,
+    UpdateDocumentTemplateParams,
 )
 from core_logic.use_cases.create_document_template import (
     CreateDocumentTemplateUseCase,
@@ -13,9 +14,18 @@ from core_logic.use_cases.get_default_document_template import (
     GetDefaultDocumentTemplateRequest,
     GetDefaultDocumentTemplateUseCase,
 )
+from core_logic.use_cases.get_document_template import (
+    GetDocumentTemplateRequest,
+    GetDocumentTemplateUseCase,
+)
 from core_logic.use_cases.get_document_template_list import (
     GetDocumentTemplateListRequest,
     GetDocumentTemplateListUseCase,
+)
+from core_logic.use_cases.update_document_template import (
+    DOCUMENT_TEMPLATE_UPDATE_STATUS_INVALID,
+    DOCUMENT_TEMPLATE_UPDATE_STATUS_NOT_FOUND,
+    UpdateDocumentTemplateUseCase,
 )
 from core_logic.use_cases.document_template_selection import (
     resolve_document_template_spec,
@@ -32,6 +42,8 @@ class FakeDocumentTemplateRepository:
         self.default_template_type = None
         self.requested_template_id = None
         self.created_params = None
+        self.updated_params = None
+        self.update_exists = True
         self.templates = [
             DocumentTemplateSpec(
                 name='Рабочий лист',
@@ -60,6 +72,10 @@ class FakeDocumentTemplateRepository:
     def create_template(self, params):
         self.created_params = params
         return 'created-template'
+
+    def update_template(self, params):
+        self.updated_params = params
+        return self.update_exists
 
 
 class GetDocumentTemplateListUseCaseTests(TestCase):
@@ -105,6 +121,23 @@ class GetDocumentTemplateListUseCaseTests(TestCase):
         )
 
         self.assertIsNone(data.template)
+
+    def test_returns_template_by_id(self):
+        repo = FakeDocumentTemplateRepository()
+        use_case = GetDocumentTemplateUseCase(document_template_repo=repo)
+
+        data = use_case.execute(
+            GetDocumentTemplateRequest(
+                template_id='template-1',
+                template_type=WORKSHEET_DOCUMENT_TYPE,
+            )
+        )
+
+        self.assertEqual(data.template.name, 'Рабочий лист')
+        self.assertEqual(
+            repo.requested_template_id,
+            ('template-1', WORKSHEET_DOCUMENT_TYPE),
+        )
 
 
 class DocumentTemplateSelectionTests(TestCase):
@@ -217,3 +250,58 @@ class CreateDocumentTemplateUseCaseTests(TestCase):
             result.errors,
         )
         self.assertIsNone(repo.created_params)
+
+
+class UpdateDocumentTemplateUseCaseTests(TestCase):
+    def test_updates_template_from_valid_params(self):
+        repo = FakeDocumentTemplateRepository()
+        use_case = UpdateDocumentTemplateUseCase(document_template_repo=repo)
+        params = UpdateDocumentTemplateParams(
+            template_id='template-1',
+            name='  Новый шаблон  ',
+            description='  Новое описание  ',
+            template_type='work',
+            section_types=('header', 'task_list'),
+            is_default=True,
+        )
+
+        result = use_case.execute(params)
+
+        self.assertTrue(result.success)
+        self.assertEqual(result.template_id, 'template-1')
+        self.assertEqual(repo.updated_params.name, 'Новый шаблон')
+        self.assertEqual(repo.updated_params.description, 'Новое описание')
+        self.assertEqual(repo.updated_params.section_types, ('header', 'task_list'))
+        self.assertTrue(repo.updated_params.is_default)
+
+    def test_returns_not_found_for_missing_template(self):
+        repo = FakeDocumentTemplateRepository()
+        repo.update_exists = False
+        use_case = UpdateDocumentTemplateUseCase(document_template_repo=repo)
+
+        result = use_case.execute(
+            UpdateDocumentTemplateParams(
+                template_id='missing',
+                name='Шаблон',
+                template_type='work',
+                section_types=('header',),
+            )
+        )
+
+        self.assertEqual(result.status, DOCUMENT_TEMPLATE_UPDATE_STATUS_NOT_FOUND)
+
+    def test_rejects_invalid_update(self):
+        repo = FakeDocumentTemplateRepository()
+        use_case = UpdateDocumentTemplateUseCase(document_template_repo=repo)
+
+        result = use_case.execute(
+            UpdateDocumentTemplateParams(
+                template_id='template-1',
+                name='Шаблон РнО',
+                template_type='remedial_sheet',
+                section_types=('task_list',),
+            )
+        )
+
+        self.assertEqual(result.status, DOCUMENT_TEMPLATE_UPDATE_STATUS_INVALID)
+        self.assertIsNone(repo.updated_params)

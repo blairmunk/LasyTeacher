@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 
-{% block title %}Новый шаблон документа{% endblock %}
+{% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0">Новый шаблон документа</h1>
+        <h1 class="h3 mb-0">{{ page_title }}</h1>
         <a class="btn btn-outline-secondary" href="{% url 'document_generator:template-editor' %}">
             <i class="fas fa-arrow-left"></i> К шаблонам
         </a>
@@ -82,7 +82,7 @@
                 Отмена
             </a>
             <button class="btn btn-primary" type="submit">
-                <i class="fas fa-save"></i> Сохранить
+                <i class="fas fa-save"></i> {{ submit_label }}
             </button>
         </div>
     </form>

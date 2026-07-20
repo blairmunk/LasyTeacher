@@ -83,8 +83,15 @@
                 {% for template in templates %}
                     <div class="list-group-item">
                         <div class="d-flex justify-content-between">
-                            <strong>{{ template.name }}</strong>
+                            <strong>
+                                <a href="{% url 'document_generator:template-update' template.template_id %}">
+                                    {{ template.name }}
+                                </a>
+                            </strong>
                             <span>
+                                {% if template.is_default %}
+                                    <span class="badge bg-success">по умолчанию</span>
+                                {% endif %}
                                 {% if template.has_customization %}
                                     <span class="badge bg-info">кастом</span>
                                 {% endif %}

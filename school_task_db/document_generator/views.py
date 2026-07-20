@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.http import Http404
 from django.shortcuts import redirect
 from django.views.generic import TemplateView
 
@@ -11,6 +12,7 @@ from core_logic.value_objects.document_section_catalog import (
 )
 from core_logic.value_objects.document_type_catalog import get_document_type_catalog
 from core_logic.value_objects.document_recipes import WORK_DOCUMENT_TYPE
+from core_logic.use_cases.get_document_template import GetDocumentTemplateRequest
 
 
 class DocumentTemplateEditorView(TemplateView):
@@ -31,6 +33,7 @@ class DocumentTemplateEditorView(TemplateView):
 
 class DocumentTemplateCreateView(TemplateView):
     template_name = 'document_generator/template_form.html'
+    page_title = 'Новый шаблон документа'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -49,6 +52,8 @@ class DocumentTemplateCreateView(TemplateView):
                 sections=self._sections(),
             )
         )
+        context['page_title'] = self.page_title
+        context['submit_label'] = 'Сохранить'
         return context
 
     def post(self, request, *args, **kwargs):
@@ -82,3 +87,52 @@ class DocumentTemplateCreateView(TemplateView):
 
     def _sections(self):
         return get_document_section_catalog(renderable_only=True)
+
+
+class DocumentTemplateUpdateView(DocumentTemplateCreateView):
+    page_title = 'Редактирование шаблона'
+
+    def _template(self):
+        data = container.get_document_template_use_case().execute(
+            GetDocumentTemplateRequest(template_id=str(self.kwargs['pk']))
+        )
+        if data.template is None:
+            raise Http404('Шаблон документа не найден')
+        return data.template
+
+    def get_context_data(self, **kwargs):
+        template = self._template()
+        form = kwargs.get('form') or self._form(
+            initial=(
+                container
+                .document_template_form_adapter
+                .form_initial_from_template(template)
+            ),
+        )
+        context = super().get_context_data(form=form, **kwargs)
+        context['template'] = template
+        context['page_title'] = self.page_title
+        context['submit_label'] = 'Сохранить изменения'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self._template()
+        form = self._form(data=request.POST)
+        if not form.is_valid():
+            return self.render_to_response(self.get_context_data(form=form))
+
+        result = container.update_document_template_use_case().execute(
+            container.document_template_form_adapter.update_params_from_form(
+                form,
+                template_id=str(self.kwargs['pk']),
+            )
+        )
+        if not result.success:
+            if result.status == 'not_found':
+                raise Http404('Шаблон документа не найден')
+            for error in result.errors:
+                form.add_error(None, error)
+            return self.render_to_response(self.get_context_data(form=form))
+
+        messages.success(request, 'Шаблон документа обновлён.')
+        return redirect('document_generator:template-editor')

@@ -1,6 +1,9 @@
 from django.test import TestCase
 
-from core_logic.entities.document import CreateDocumentTemplateParams
+from core_logic.entities.document import (
+    CreateDocumentTemplateParams,
+    UpdateDocumentTemplateParams,
+)
 from document_generator.models import DocumentTemplate
 from infrastructure.repositories.django_document_template_repo import (
     DjangoDocumentTemplateRepository,
@@ -126,3 +129,43 @@ class DjangoDocumentTemplateRepositoryTests(TestCase):
 
         old_default.refresh_from_db()
         self.assertFalse(old_default.is_default)
+
+    def test_updates_template_from_clean_params(self):
+        template = DocumentTemplate.objects.create(
+            name='Старый шаблон',
+            template_type=DocumentTemplate.TemplateType.WORK,
+            sections_config=[{'type': 'header'}],
+        )
+
+        updated = DjangoDocumentTemplateRepository().update_template(
+            UpdateDocumentTemplateParams(
+                template_id=str(template.pk),
+                name='Новый шаблон',
+                description='Новое описание',
+                template_type=DocumentTemplate.TemplateType.WORK,
+                section_types=('header', 'task_list'),
+                is_default=True,
+            )
+        )
+
+        template.refresh_from_db()
+        self.assertTrue(updated)
+        self.assertEqual(template.name, 'Новый шаблон')
+        self.assertEqual(template.description, 'Новое описание')
+        self.assertEqual(
+            template.sections_config,
+            [{'type': 'header'}, {'type': 'task_list'}],
+        )
+        self.assertTrue(template.is_default)
+
+    def test_update_returns_false_for_missing_template(self):
+        updated = DjangoDocumentTemplateRepository().update_template(
+            UpdateDocumentTemplateParams(
+                template_id='550e8400-e29b-41d4-a716-446655440000',
+                name='Шаблон',
+                template_type=DocumentTemplate.TemplateType.WORK,
+                section_types=('header',),
+            )
+        )
+
+        self.assertFalse(updated)

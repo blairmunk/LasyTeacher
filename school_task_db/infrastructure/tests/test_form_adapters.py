@@ -210,6 +210,46 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         self.assertEqual(params.section_types, ('header', 'task_list'))
         self.assertTrue(params.is_default)
 
+    def test_builds_update_params_from_template_form(self):
+        form = DocumentTemplateForm(
+            data=QueryDict(
+                'name=Шаблон&description=Описание&template_type=work'
+                '&sections=header',
+            ),
+            sections=get_document_section_catalog(renderable_only=True),
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+
+        params = DocumentTemplateFormAdapter().update_params_from_form(
+            form,
+            template_id='template-1',
+        )
+
+        self.assertEqual(params.template_id, 'template-1')
+        self.assertEqual(params.name, 'Шаблон')
+        self.assertEqual(params.section_types, ('header',))
+        self.assertFalse(params.is_default)
+
+    def test_builds_form_initial_from_template(self):
+        template = DocumentTemplateSpec(
+            name='Шаблон',
+            template_type=WORK_DOCUMENT_TYPE,
+            template_id='template-1',
+            description='Описание',
+            is_default=True,
+            sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
+        )
+
+        initial = DocumentTemplateFormAdapter().form_initial_from_template(
+            template,
+        )
+
+        self.assertEqual(initial['name'], 'Шаблон')
+        self.assertEqual(initial['description'], 'Описание')
+        self.assertEqual(initial['template_type'], WORK_DOCUMENT_TYPE)
+        self.assertEqual(initial['sections'], (HEADER_SECTION,))
+        self.assertTrue(initial['is_default'])
+
     def test_builds_create_context(self):
         form = DocumentTemplateForm(
             data=QueryDict('template_type=work&sections=header'),

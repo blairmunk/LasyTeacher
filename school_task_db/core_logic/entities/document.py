@@ -159,6 +159,8 @@ class DocumentTemplateSpec:
     name: str
     template_type: str
     template_id: str = ''
+    description: str = ''
+    is_default: bool = False
     sections: Tuple[DocumentSectionSpec, ...] = field(default_factory=tuple)
     default_content_config: Mapping[str, Any] = field(default_factory=dict)
     presentation: DocumentPresentation = field(
@@ -215,3 +217,35 @@ class CreateDocumentTemplateResult:
     @property
     def success(self) -> bool:
         return self.status == 'created'
+
+
+@dataclass(frozen=True)
+class UpdateDocumentTemplateParams:
+    template_id: str
+    name: str
+    template_type: str
+    section_types: Tuple[str, ...] = field(default_factory=tuple)
+    description: str = ''
+    is_default: bool = False
+
+    def __post_init__(self):
+        object.__setattr__(self, 'template_id', self.template_id.strip())
+        object.__setattr__(self, 'name', self.name.strip())
+        object.__setattr__(self, 'template_type', self.template_type.strip())
+        object.__setattr__(
+            self,
+            'section_types',
+            tuple(section_type.strip() for section_type in self.section_types),
+        )
+        object.__setattr__(self, 'description', self.description.strip())
+
+
+@dataclass(frozen=True)
+class UpdateDocumentTemplateResult:
+    status: str
+    template_id: str = ''
+    errors: Tuple[str, ...] = field(default_factory=tuple)
+
+    @property
+    def success(self) -> bool:
+        return self.status == 'updated'

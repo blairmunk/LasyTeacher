@@ -29,6 +29,13 @@ class DocumentTemplateEditorViewTests(TestCase):
         self.assertContains(response, 'PDF')
         self.assertContains(response, 'LaTeX')
         self.assertContains(response, reverse('document_generator:template-create'))
+        self.assertContains(
+            response,
+            reverse(
+                'document_generator:template-update',
+                args=[DocumentTemplate.objects.get(name='Шаблон работы').pk],
+            ),
+        )
 
     def test_template_editor_passes_query_filters_to_clean_use_case(self):
         response = self.client.get(
@@ -101,3 +108,68 @@ class DocumentTemplateEditorViewTests(TestCase):
             'Section task_list is not supported for document type remedial_sheet',
         )
         self.assertFalse(DocumentTemplate.objects.exists())
+
+    def test_template_update_view_shows_existing_template(self):
+        template = DocumentTemplate.objects.create(
+            name='Шаблон работы',
+            description='Описание',
+            template_type=DocumentTemplate.TemplateType.WORK,
+            sections_config=[{'type': 'header'}],
+            is_default=True,
+        )
+
+        response = self.client.get(
+            reverse('document_generator:template-update', args=[template.pk]),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(
+            response,
+            'document_generator/template_form.html',
+        )
+        self.assertContains(response, 'Редактирование шаблона')
+        self.assertContains(response, 'value="Шаблон работы"')
+        self.assertContains(response, 'Описание')
+        self.assertContains(response, 'value="header"')
+        self.assertContains(response, 'checked')
+
+    def test_template_update_view_updates_template(self):
+        template = DocumentTemplate.objects.create(
+            name='Старый шаблон',
+            template_type=DocumentTemplate.TemplateType.WORK,
+            sections_config=[{'type': 'header'}],
+        )
+
+        response = self.client.post(
+            reverse('document_generator:template-update', args=[template.pk]),
+            {
+                'name': 'Новый шаблон',
+                'description': 'Новое описание',
+                'template_type': 'work',
+                'sections': ['header', 'task_list'],
+                'is_default': 'on',
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('document_generator:template-editor'),
+        )
+        template.refresh_from_db()
+        self.assertEqual(template.name, 'Новый шаблон')
+        self.assertEqual(template.description, 'Новое описание')
+        self.assertEqual(
+            template.sections_config,
+            [{'type': 'header'}, {'type': 'task_list'}],
+        )
+        self.assertTrue(template.is_default)
+
+    def test_template_update_view_returns_404_for_missing_template(self):
+        response = self.client.get(
+            reverse(
+                'document_generator:template-update',
+                args=['550e8400-e29b-41d4-a716-446655440000'],
+            ),
+        )
+
+        self.assertEqual(response.status_code, 404)

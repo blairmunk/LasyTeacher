@@ -1,7 +1,9 @@
 from django.test import SimpleTestCase
 
+from core_logic.value_objects.content_config import RenderTarget
 from infrastructure.services.latex_document_payloads import (
     LatexTaskPayloadFormatter,
+    RenderTargetTaskPayloadFormatter,
 )
 
 
@@ -42,6 +44,25 @@ class LatexTaskPayloadFormatterTests(SimpleTestCase):
         self.assertTrue(formatted['has_formula_errors'])
         self.assertTrue(formatted['has_formula_warnings'])
 
+    def test_render_target_formatter_applies_formatter_for_matching_target(self):
+        latex_formatter = FakeTaskPayloadFormatter(label='latex')
+        formatter = RenderTargetTaskPayloadFormatter(
+            formatters_by_renderer_type={'latex': latex_formatter},
+        )
+
+        html_payload = formatter.format_task_payload(
+            {'text': 'HTML'},
+            request=FakePayloadBuildRequest(renderer_type='html'),
+        )
+        latex_payload = formatter.format_task_payload(
+            {'text': 'LaTeX'},
+            request=FakePayloadBuildRequest(renderer_type='latex'),
+        )
+
+        self.assertEqual(html_payload, {'text': 'HTML'})
+        self.assertEqual(latex_payload, {'text': 'LaTeX', 'formatted_as': 'latex'})
+        self.assertEqual(latex_formatter.requests[0].render_target.renderer_type, 'latex')
+
 
 class FakeFormulaProcessor:
     def render_for_latex_safe(self, text):
@@ -49,4 +70,22 @@ class FakeFormulaProcessor:
             'content': f'<latex>{text}</latex>',
             'errors': [f'error:{text}'] if '$' in text else [],
             'warnings': [f'warning:{text}'] if '&' in text else [],
+        }
+
+
+class FakePayloadBuildRequest:
+    def __init__(self, renderer_type):
+        self.render_target = RenderTarget(renderer_type=renderer_type)
+
+
+class FakeTaskPayloadFormatter:
+    def __init__(self, label):
+        self.label = label
+        self.requests = []
+
+    def format_task_payload(self, payload, request=None):
+        self.requests.append(request)
+        return {
+            **payload,
+            'formatted_as': self.label,
         }

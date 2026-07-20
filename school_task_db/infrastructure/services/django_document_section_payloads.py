@@ -53,6 +53,7 @@ class DjangoWorkTaskVariantsPayloadBuilder:
             _work_variant_payload(
                 variant,
                 task_payload_formatter=self.task_payload_formatter,
+                request=request,
             )
             for variant in work.variant_set.order_by('number', 'pk')
         ]
@@ -106,6 +107,7 @@ class DjangoRemedialOriginalMistakesPayloadBuilder:
                 _original_task_payload(
                     task_row,
                     task_payload_formatter=self.task_payload_formatter,
+                    request=request,
                 )
                 for task_row in sheet_data.original_tasks
             ],
@@ -125,6 +127,7 @@ class DjangoRemedialTrainingTasksPayloadBuilder:
                 _variant_task_payload(
                     variant_task,
                     task_payload_formatter=self.task_payload_formatter,
+                    request=request,
                 )
                 for variant_task in sheet_data.new_tasks or []
             ],
@@ -223,7 +226,7 @@ def _get_work_source(work_id):
     return Work.objects.get(pk=work_id)
 
 
-def _work_variant_payload(variant, task_payload_formatter=None):
+def _work_variant_payload(variant, task_payload_formatter=None, request=None):
     variant_tasks = (
         variant.varianttask_set
         .select_related(
@@ -244,23 +247,28 @@ def _work_variant_payload(variant, task_payload_formatter=None):
             _variant_task_payload(
                 variant_task,
                 task_payload_formatter=task_payload_formatter,
+                request=request,
             )
             for variant_task in variant_tasks
         ],
     }
 
 
-def _variant_task_payload(variant_task, task_payload_formatter=None):
+def _variant_task_payload(
+    variant_task,
+    task_payload_formatter=None,
+    request=None,
+):
     task = variant_task.task
     payload = {
         **_task_payload(task),
         'order': variant_task.order,
         'max_points': variant_task.max_points,
     }
-    return _format_task_payload(payload, task_payload_formatter)
+    return _format_task_payload(payload, task_payload_formatter, request=request)
 
 
-def _original_task_payload(task_row, task_payload_formatter=None):
+def _original_task_payload(task_row, task_payload_formatter=None, request=None):
     payload = {
         **_task_payload(task_row.task),
         'order': task_row.order,
@@ -270,7 +278,7 @@ def _original_task_payload(task_row, task_payload_formatter=None):
         'status': task_row.status,
         'group_name': task_row.group_name,
     }
-    return _format_task_payload(payload, task_payload_formatter)
+    return _format_task_payload(payload, task_payload_formatter, request=request)
 
 
 def _task_payload(task):
@@ -291,10 +299,10 @@ def _task_payload(task):
     }
 
 
-def _format_task_payload(payload, task_payload_formatter=None):
+def _format_task_payload(payload, task_payload_formatter=None, request=None):
     if task_payload_formatter is None:
         return payload
-    return task_payload_formatter.format_task_payload(payload)
+    return task_payload_formatter.format_task_payload(payload, request=request)
 
 
 def _student_payload(student):

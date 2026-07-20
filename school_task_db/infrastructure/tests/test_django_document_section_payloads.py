@@ -438,7 +438,7 @@ class FakeTaskPayloadFormatter:
     def __init__(self):
         self.requests = []
 
-    def format_task_payload(self, payload):
+    def format_task_payload(self, payload, request=None):
         self.requests.append(dict(payload))
         return {
             **payload,

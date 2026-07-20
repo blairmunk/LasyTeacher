@@ -20,10 +20,10 @@ from core_logic.use_cases.get_generated_document_file import (
     GetGeneratedDocumentFileRequest,
     GetGeneratedDocumentFileUseCase,
 )
+from core_logic.use_cases.document_engine_dependency import resolve_document_engine
 from core_logic.use_cases.get_rendered_document_file import (
     GetRenderedDocumentFileRequest,
     GetRenderedDocumentFileUseCase,
-    resolve_document_engine,
 )
 from core_logic.use_cases.generate_remedial_sheet_document import (
     GenerateRemedialSheetDocumentRequest,

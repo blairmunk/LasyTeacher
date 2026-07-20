@@ -16,7 +16,7 @@ from core_logic.interfaces.document_template_repo import (
     IDocumentTemplateRepository,
 )
 from core_logic.interfaces.work_repo import IWorkRepository
-from core_logic.use_cases.get_rendered_document_file import resolve_document_engine
+from core_logic.use_cases.document_engine_dependency import resolve_document_engine
 from core_logic.value_objects.content_config import (
     RemedialSheetDocumentRenderOptions,
     SUPPORTED_DOCUMENT_RENDERER_TYPES,

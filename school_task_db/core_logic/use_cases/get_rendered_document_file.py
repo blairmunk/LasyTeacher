@@ -4,18 +4,7 @@ from dataclasses import dataclass
 
 from core_logic.entities.document_rendering import GeneratedFileResult
 from core_logic.interfaces.document_engine import IDocumentEngine
-
-
-def resolve_document_engine(
-    document_engine: IDocumentEngine | None = None,
-    document_rendering_service: IDocumentEngine | None = None,
-    document_generation_service: IDocumentEngine | None = None,
-) -> IDocumentEngine:
-    return (
-        document_engine
-        or document_rendering_service
-        or document_generation_service
-    )
+from core_logic.use_cases.document_engine_dependency import resolve_document_engine
 
 
 @dataclass(frozen=True)

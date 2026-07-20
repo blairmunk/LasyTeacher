@@ -166,6 +166,13 @@ class DocumentRenderingUseCaseTests(TestCase):
             generation_service,
         )
 
+    def test_resolve_document_engine_requires_dependency(self):
+        with self.assertRaisesRegex(
+            ValueError,
+            'Document engine dependency is required.',
+        ):
+            resolve_document_engine()
+
     def test_document_generation_result_aliases_document_render_result(self):
         result = DocumentGenerationResult(status='generated', renderer_type='html')
 

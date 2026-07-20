@@ -8,8 +8,11 @@ def resolve_document_engine(
     document_rendering_service: IDocumentEngine | None = None,
     document_generation_service: IDocumentEngine | None = None,
 ) -> IDocumentEngine:
-    return (
+    resolved_engine = (
         document_engine
         or document_rendering_service
         or document_generation_service
     )
+    if resolved_engine is None:
+        raise ValueError('Document engine dependency is required.')
+    return resolved_engine

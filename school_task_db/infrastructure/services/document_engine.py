@@ -71,10 +71,6 @@ class DjangoDocumentEngine(IDocumentEngine):
             file_store=file_store,
         )
 
-    @classmethod
-    def with_sectioned_html_renderer(cls, **kwargs):
-        return cls.with_sectioned_renderers(**kwargs)
-
     def __init__(
         self,
         get_remedial_sheet_data_use_case=None,

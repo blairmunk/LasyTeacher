@@ -13,12 +13,16 @@ from core_logic.interfaces.document_generation import IDocumentGenerationService
 from core_logic.interfaces.document_rendering import (
     IDocumentBuilder,
     IDocumentRenderer,
+    IDocumentSectionRenderer,
 )
 from core_logic.interfaces.document_rendering_service import (
     IDocumentRenderingService,
 )
 from core_logic.value_objects.content_config import RenderTarget
-from core_logic.value_objects.document_render_plan import DocumentRenderRequest
+from core_logic.value_objects.document_render_plan import (
+    DocumentRenderRequest,
+    DocumentSectionRenderRequest,
+)
 
 
 class FakeDocumentBuilder(IDocumentBuilder):
@@ -46,6 +50,15 @@ class FakeDocumentRenderer(IDocumentRenderer):
         return GeneratedDocument(
             file_type=request.render_target.renderer_type,
         )
+
+
+class FakeDocumentSectionRenderer(IDocumentSectionRenderer):
+    def __init__(self):
+        self.request = None
+
+    def render_section(self, request):
+        self.request = request
+        return f'<section>{request.section.section_type}</section>'
 
 
 class DocumentRenderingInterfaceTests(TestCase):
@@ -84,3 +97,19 @@ class DocumentRenderingInterfaceTests(TestCase):
 
         self.assertEqual(renderer.request, request)
         self.assertEqual(result.file_type, 'html')
+
+    def test_document_section_renderer_contract_accepts_section_request(self):
+        renderer = FakeDocumentSectionRenderer()
+        document = Document(title='Контрольная')
+        section = DocumentSection(section_type='task_list')
+        target = RenderTarget(renderer_type='html')
+        request = DocumentSectionRenderRequest(
+            document=document,
+            section=section,
+            render_target=target,
+        )
+
+        result = renderer.render_section(request)
+
+        self.assertEqual(renderer.request, request)
+        self.assertEqual(result, '<section>task_list</section>')

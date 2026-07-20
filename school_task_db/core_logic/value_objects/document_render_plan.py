@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from core_logic.entities.document import (
     Document,
     DocumentRecipe,
+    DocumentSection,
     DocumentSourceRef,
     DocumentTemplateSpec,
     REMEDIAL_VARIANT_SOURCE_TYPE,
@@ -31,6 +32,13 @@ class DocumentRenderPlan:
 @dataclass(frozen=True)
 class DocumentRenderRequest:
     document: Document
+    render_target: RenderTarget
+
+
+@dataclass(frozen=True)
+class DocumentSectionRenderRequest:
+    document: Document
+    section: DocumentSection
     render_target: RenderTarget
 
 

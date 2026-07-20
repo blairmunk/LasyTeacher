@@ -3,6 +3,7 @@ from unittest import TestCase
 from core_logic.entities.document import (
     Document,
     DocumentRecipe,
+    DocumentSection,
     DocumentSourceRef,
     DocumentSectionSpec,
     DocumentTemplateSpec,
@@ -17,6 +18,7 @@ from core_logic.value_objects.content_config import (
 from core_logic.value_objects.document_render_plan import (
     DocumentRenderPlan,
     DocumentRenderRequest,
+    DocumentSectionRenderRequest,
     build_remedial_sheet_document_render_plan,
     build_work_document_render_plan,
 )
@@ -58,6 +60,21 @@ class DocumentRenderPlanTests(TestCase):
 
         self.assertEqual(request.document.title, 'Контрольная')
         self.assertEqual(request.render_target.renderer_type, 'pdf')
+
+    def test_section_render_request_groups_document_section_and_target(self):
+        document = Document(title='Контрольная')
+        section = DocumentSection(section_type='task_list')
+        render_target = RenderTarget(renderer_type='html')
+
+        request = DocumentSectionRenderRequest(
+            document=document,
+            section=section,
+            render_target=render_target,
+        )
+
+        self.assertEqual(request.document.title, 'Контрольная')
+        self.assertEqual(request.section.section_type, 'task_list')
+        self.assertEqual(request.render_target.renderer_type, 'html')
 
     def test_build_work_document_render_plan(self):
         plan = build_work_document_render_plan(

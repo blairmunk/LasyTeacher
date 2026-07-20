@@ -8,7 +8,10 @@ from core_logic.entities.document import (
     DocumentSourceRef,
 )
 from core_logic.entities.document_rendering import GeneratedDocument
-from core_logic.value_objects.document_render_plan import DocumentRenderRequest
+from core_logic.value_objects.document_render_plan import (
+    DocumentRenderRequest,
+    DocumentSectionRenderRequest,
+)
 
 
 class IDocumentBuilder(ABC):
@@ -28,3 +31,12 @@ class IDocumentRenderer(ABC):
         request: DocumentRenderRequest,
     ) -> GeneratedDocument:
         """Render a generic document to files for the selected target."""
+
+
+class IDocumentSectionRenderer(ABC):
+    @abstractmethod
+    def render_section(
+        self,
+        request: DocumentSectionRenderRequest,
+    ) -> str:
+        """Render one document section for the selected target."""

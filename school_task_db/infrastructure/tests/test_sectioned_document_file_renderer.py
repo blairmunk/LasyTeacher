@@ -11,6 +11,7 @@ from infrastructure.services.sectioned_document_file_renderer import (
     SectionedHtmlToPdfDocumentRenderer,
     SectionedDocumentFileRenderer,
 )
+from infrastructure.services.html_to_pdf_generator import HtmlToPdfGenerator
 
 
 class SectionedDocumentFileRendererTests(SimpleTestCase):
@@ -111,6 +112,22 @@ class SectionedHtmlToPdfDocumentRendererTests(SimpleTestCase):
                     render_target=RenderTarget(renderer_type='pdf'),
                 )
             )
+
+    def test_default_pdf_generator_uses_infrastructure_backend(self):
+        renderer = SectionedHtmlToPdfDocumentRenderer(
+            html_filename_builder=lambda request: 'work.html',
+            html_content_renderer=FakeContentRenderer(),
+            file_store=FakeFileStore(),
+        )
+        request = DocumentRenderRequest(
+            document=Document(title='work'),
+            render_target=RenderTarget(renderer_type='pdf', page_format='A5'),
+        )
+
+        pdf_generator = renderer._default_pdf_generator(request)
+
+        self.assertIsInstance(pdf_generator, HtmlToPdfGenerator)
+        self.assertEqual(pdf_generator.options['format'], 'A5')
 
 
 class FakeContentRenderer:

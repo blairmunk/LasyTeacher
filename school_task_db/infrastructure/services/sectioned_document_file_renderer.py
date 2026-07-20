@@ -93,7 +93,9 @@ class SectionedHtmlToPdfDocumentRenderer(IDocumentRenderer):
         )
 
     def _default_pdf_generator(self, request):
-        from pdf_generator.generators.html_to_pdf import HtmlToPdfGenerator
+        from infrastructure.services.html_to_pdf_generator import (
+            HtmlToPdfGenerator,
+        )
 
         return HtmlToPdfGenerator(
             format=request.render_target.page_format,

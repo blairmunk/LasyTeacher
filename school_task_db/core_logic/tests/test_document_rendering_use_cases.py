@@ -66,12 +66,6 @@ class FakeDocumentEngine:
             return self.remedial_document
         return self.work_document
 
-    def render_work_document(self, work_id, options, render_plan=None):
-        return self.render_document(render_plan)
-
-    def render_remedial_sheet_document(self, variant_id, options, render_plan=None):
-        return self.render_document(render_plan)
-
     def get_rendered_file(self, file_type, filename):
         self.file_request = (file_type, filename)
         return self.file_result

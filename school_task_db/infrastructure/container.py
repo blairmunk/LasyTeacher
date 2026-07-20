@@ -1029,9 +1029,11 @@ class Container:
 
     def render_work_document_use_case(self):
         return RenderWorkDocumentUseCase(
-            document_engine=self.document_engine,
             work_repo=self.work_repo,
             document_template_repo=self.document_template_repo,
+            render_document_from_recipe_use_case=(
+                self.render_document_from_recipe_use_case()
+            ),
         )
 
     def render_document_use_case(self):
@@ -1053,9 +1055,11 @@ class Container:
 
     def render_remedial_sheet_document_use_case(self):
         return RenderRemedialSheetDocumentUseCase(
-            document_engine=self.document_engine,
             work_repo=self.work_repo,
             document_template_repo=self.document_template_repo,
+            render_document_from_recipe_use_case=(
+                self.render_document_from_recipe_use_case()
+            ),
         )
 
     def get_rendered_document_file_use_case(self):

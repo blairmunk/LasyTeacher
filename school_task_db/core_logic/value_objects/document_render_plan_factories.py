@@ -29,19 +29,15 @@ def build_work_document_render_plan(
     options: WorkDocumentRenderOptions,
     template_spec: DocumentTemplateSpec | None = None,
 ) -> DocumentRenderPlan:
-    recipe = _recipe_from_template_or_default(
-        template_spec=template_spec,
-        default_recipe_builder=(
-            lambda: build_work_document_recipe(options.build_options)
-        ),
-    )
     return build_document_render_plan(
-        source=DocumentSourceRef(
-            source_type=WORK_SOURCE_TYPE,
-            source_id=work_id,
-            title=work_name,
+        source=build_work_document_source(
+            work_id=work_id,
+            work_name=work_name,
         ),
-        recipe=recipe,
+        recipe=build_work_document_recipe_for_render(
+            options=options,
+            template_spec=template_spec,
+        ),
         render_target=options.render_target,
     )
 
@@ -51,21 +47,59 @@ def build_remedial_sheet_document_render_plan(
     options: RemedialSheetDocumentRenderOptions,
     template_spec: DocumentTemplateSpec | None = None,
 ) -> DocumentRenderPlan:
-    recipe = _recipe_from_template_or_default(
+    return build_document_render_plan(
+        source=build_remedial_sheet_document_source(variant_id),
+        recipe=build_remedial_sheet_document_recipe_for_render(
+            options=options,
+            template_spec=template_spec,
+        ),
+        render_target=options.render_target,
+    )
+
+
+def build_work_document_source(
+    work_id: str,
+    work_name: str,
+) -> DocumentSourceRef:
+    return DocumentSourceRef(
+        source_type=WORK_SOURCE_TYPE,
+        source_id=work_id,
+        title=work_name,
+    )
+
+
+def build_remedial_sheet_document_source(
+    variant_id: str,
+) -> DocumentSourceRef:
+    return DocumentSourceRef(
+        source_type=REMEDIAL_VARIANT_SOURCE_TYPE,
+        source_id=variant_id,
+    )
+
+
+def build_work_document_recipe_for_render(
+    options: WorkDocumentRenderOptions,
+    template_spec: DocumentTemplateSpec | None = None,
+) -> DocumentRecipe:
+    return _recipe_from_template_or_default(
+        template_spec=template_spec,
+        default_recipe_builder=(
+            lambda: build_work_document_recipe(options.build_options)
+        ),
+    )
+
+
+def build_remedial_sheet_document_recipe_for_render(
+    options: RemedialSheetDocumentRenderOptions,
+    template_spec: DocumentTemplateSpec | None = None,
+) -> DocumentRecipe:
+    return _recipe_from_template_or_default(
         template_spec=template_spec,
         default_recipe_builder=(
             lambda: build_remedial_sheet_document_recipe(
                 options.build_options,
             )
         ),
-    )
-    return build_document_render_plan(
-        source=DocumentSourceRef(
-            source_type=REMEDIAL_VARIANT_SOURCE_TYPE,
-            source_id=variant_id,
-        ),
-        recipe=recipe,
-        render_target=options.render_target,
     )
 
 

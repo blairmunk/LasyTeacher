@@ -99,6 +99,20 @@ class FakeRenderedDocumentFileStore:
         return GeneratedDocument(file_type=file_type)
 
 
+class FakeLegacyRenderRouter:
+    def __init__(self):
+        self.work_requests = []
+        self.remedial_requests = []
+
+    def render_work(self, work, options):
+        self.work_requests.append((work, options))
+        return GeneratedDocument(file_type=options.renderer_type)
+
+    def render_remedial_sheet(self, variant, options):
+        self.remedial_requests.append((variant, options))
+        return GeneratedDocument(file_type=options.renderer_type)
+
+
 class DjangoDocumentEngineTests(TestCase):
     def test_build_document_uses_configured_builder(self):
         builder = FakeDocumentBuilder()
@@ -184,18 +198,22 @@ class DjangoDocumentEngineTests(TestCase):
         self.assertIsNone(result)
 
     def test_legacy_work_render_uses_options_target(self):
-        legacy_file_renderer = FakeLegacyFileRenderer()
+        legacy_render_router = FakeLegacyRenderRouter()
         service = DjangoDocumentEngine(
-            legacy_file_renderer=legacy_file_renderer,
+            legacy_render_router=legacy_render_router,
         )
+        options = WorkDocumentRenderOptions(renderer_type='html')
 
         result = service._render_legacy_work_document(
             work='work-object',
-            options=WorkDocumentRenderOptions(renderer_type='html'),
+            options=options,
         )
 
         self.assertEqual(result.file_type, 'html')
-        self.assertEqual(legacy_file_renderer.html_work_request[0], 'work-object')
+        self.assertEqual(
+            legacy_render_router.work_requests,
+            [('work-object', options)],
+        )
 
     def test_generate_work_alias_builds_render_plan(self):
         work = Work.objects.create(name='Контрольная')
@@ -416,8 +434,10 @@ class DjangoDocumentEngineTests(TestCase):
     def test_legacy_work_render_uses_configured_file_store(self):
         file_store = FakeRenderedDocumentFileStore()
         legacy_file_renderer = FakeLegacyFileRenderer()
-        service = DjangoDocumentEngine(file_store=file_store)
-        service.legacy_file_renderer = legacy_file_renderer
+        service = DjangoDocumentEngine(
+            file_store=file_store,
+            legacy_file_renderer=legacy_file_renderer,
+        )
 
         result = service._render_legacy_work_document(
             work='work-object',

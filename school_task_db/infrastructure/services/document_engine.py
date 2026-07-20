@@ -20,6 +20,9 @@ from infrastructure.services.django_document_source_provider import (
 from infrastructure.services.legacy_document_file_renderer import (
     LegacyDocumentFileRenderer,
 )
+from infrastructure.services.legacy_document_render_router import (
+    LegacyDocumentRenderRouter,
+)
 from infrastructure.services.rendered_document_file_store import (
     RenderedDocumentFileStore,
 )
@@ -32,6 +35,7 @@ class DjangoDocumentEngine(IDocumentEngine):
         document_builder=None,
         document_renderer_registry=None,
         legacy_file_renderer=None,
+        legacy_render_router=None,
         get_work_source=None,
         get_remedial_source=None,
         source_provider=None,
@@ -51,6 +55,13 @@ class DjangoDocumentEngine(IDocumentEngine):
         self.legacy_file_renderer = (
             legacy_file_renderer
             or LegacyDocumentFileRenderer(get_remedial_sheet_data_use_case)
+        )
+        self.legacy_render_router = (
+            legacy_render_router
+            or LegacyDocumentRenderRouter(
+                legacy_file_renderer=self.legacy_file_renderer,
+                file_store=self.file_store,
+            )
         )
         self.document_renderer_registry = (
             document_renderer_registry
@@ -96,35 +107,7 @@ class DjangoDocumentEngine(IDocumentEngine):
         work,
         options,
     ) -> GeneratedDocument:
-        render_target = options.render_target
-        renderer_type = render_target.renderer_type
-        content_config = options.content_config
-
-        if renderer_type == 'latex':
-            return self.file_store.document_from_paths(
-                file_type='latex',
-                file_paths=self.legacy_file_renderer.render_latex_work(
-                    work,
-                    content_config,
-                    render_target.page_format,
-                ),
-            )
-        if renderer_type == 'html':
-            return self.file_store.document_from_paths(
-                file_type='html',
-                file_paths=self.legacy_file_renderer.render_html_work(
-                    work,
-                    content_config,
-                ),
-            )
-        return self.file_store.document_from_paths(
-            file_type='pdf',
-            file_paths=self.legacy_file_renderer.render_pdf_work(
-                work,
-                content_config,
-                render_target.page_format,
-            ),
-        )
+        return self.legacy_render_router.render_work(work, options)
 
     def generate_work(
         self,
@@ -164,35 +147,7 @@ class DjangoDocumentEngine(IDocumentEngine):
         variant,
         options,
     ) -> GeneratedDocument:
-        render_target = options.render_target
-        content_config = options.content_config
-        renderer_type = render_target.renderer_type
-
-        if renderer_type == 'latex':
-            return self.file_store.document_from_paths(
-                file_type='latex',
-                file_paths=self.legacy_file_renderer.render_remedial_latex(
-                    variant,
-                    content_config,
-                    render_target.page_format,
-                ),
-            )
-        if renderer_type == 'html':
-            return self.file_store.document_from_paths(
-                file_type='html',
-                file_paths=self.legacy_file_renderer.render_remedial_html(
-                    variant,
-                    content_config,
-                ),
-            )
-        return self.file_store.document_from_paths(
-            file_type='pdf',
-            file_paths=self.legacy_file_renderer.render_remedial_pdf(
-                variant,
-                content_config,
-                render_target.page_format,
-            ),
-        )
+        return self.legacy_render_router.render_remedial_sheet(variant, options)
 
     def generate_remedial_sheet(
         self,

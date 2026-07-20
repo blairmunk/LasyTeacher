@@ -87,11 +87,16 @@ class FakeDocumentSourceProvider:
 class FakeRenderedDocumentFileStore:
     def __init__(self):
         self.requests = []
+        self.path_requests = []
         self.result = 'file-result'
 
     def get_file(self, file_type, filename):
         self.requests.append((file_type, filename))
         return self.result
+
+    def document_from_paths(self, file_type, file_paths):
+        self.path_requests.append((file_type, file_paths))
+        return GeneratedDocument(file_type=file_type)
 
 
 class DjangoDocumentEngineTests(TestCase):
@@ -411,6 +416,18 @@ class DjangoDocumentEngineTests(TestCase):
 
         self.assertEqual(result, 'file-result')
         self.assertEqual(file_store.requests, [('html', 'work.html')])
+
+    def test_document_from_paths_uses_configured_file_store(self):
+        file_store = FakeRenderedDocumentFileStore()
+        service = DjangoDocumentEngine(file_store=file_store)
+
+        result = service._document_from_paths(
+            file_type='html',
+            file_paths=['work.html'],
+        )
+
+        self.assertEqual(result.file_type, 'html')
+        self.assertEqual(file_store.path_requests, [('html', ['work.html'])])
 
 
 class DjangoTaskImportServiceTests(TestCase):

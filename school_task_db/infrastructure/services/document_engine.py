@@ -1,10 +1,7 @@
 """Django document engine."""
 
-from pathlib import Path
-
 from core_logic.entities.document_rendering import (
     GeneratedDocument,
-    GeneratedDocumentFile,
     GeneratedFileResult,
 )
 from core_logic.interfaces.document_engine import IDocumentEngine
@@ -58,7 +55,7 @@ class DjangoDocumentEngine(IDocumentEngine):
         self.document_renderer_registry = (
             document_renderer_registry
             or build_legacy_document_renderer_registry(
-                document_from_paths=self._document_from_paths,
+                document_from_paths=self.file_store.document_from_paths,
                 get_work_source=self.get_work_source,
                 get_remedial_source=self.get_remedial_source,
                 render_latex_work_files=(
@@ -228,18 +225,7 @@ class DjangoDocumentEngine(IDocumentEngine):
         return self.get_rendered_file(file_type, filename)
 
     def _document_from_paths(self, file_type: str, file_paths):
-        files = []
-        for file_path in file_paths:
-            path = Path(file_path)
-            if path.exists():
-                files.append(
-                    GeneratedDocumentFile(
-                        filename=path.name,
-                        size_kb=path.stat().st_size / 1024,
-                    )
-                )
-
-        return GeneratedDocument(file_type=file_type, files=files)
+        return self.file_store.document_from_paths(file_type, file_paths)
 
     def _build_document(self, render_plan=None):
         if render_plan is None:

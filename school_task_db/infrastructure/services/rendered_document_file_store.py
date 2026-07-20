@@ -8,6 +8,8 @@ from core_logic.entities.document_rendering import (
     GENERATED_FILE_STATUS_READ_ERROR,
     GENERATED_FILE_STATUS_READY,
     GENERATED_FILE_STATUS_UNSUPPORTED_TYPE,
+    GeneratedDocument,
+    GeneratedDocumentFile,
     GeneratedFile,
     GeneratedFileResult,
 )
@@ -47,3 +49,17 @@ class RenderedDocumentFileStore:
             )
         except OSError:
             return GeneratedFileResult(status=GENERATED_FILE_STATUS_READ_ERROR)
+
+    def document_from_paths(self, file_type: str, file_paths):
+        files = []
+        for file_path in file_paths:
+            path = Path(file_path)
+            if path.exists():
+                files.append(
+                    GeneratedDocumentFile(
+                        filename=path.name,
+                        size_kb=path.stat().st_size / 1024,
+                    )
+                )
+
+        return GeneratedDocument(file_type=file_type, files=files)

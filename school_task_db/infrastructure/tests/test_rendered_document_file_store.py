@@ -44,3 +44,20 @@ class RenderedDocumentFileStoreTests(TestCase):
         result = store.get_file(file_type='docx', filename='work.docx')
 
         self.assertEqual(result.status, GENERATED_FILE_STATUS_UNSUPPORTED_TYPE)
+
+    def test_builds_document_from_existing_paths(self):
+        with TemporaryDirectory() as output_dir:
+            file_path = Path(output_dir) / 'work.html'
+            file_path.write_bytes(b'<html>work</html>')
+            missing_path = Path(output_dir) / 'missing.html'
+            store = RenderedDocumentFileStore()
+
+            document = store.document_from_paths(
+                file_type='html',
+                file_paths=[file_path, missing_path],
+            )
+
+            self.assertEqual(document.file_type, 'html')
+            self.assertEqual(len(document.files), 1)
+            self.assertEqual(document.files[0].filename, 'work.html')
+            self.assertGreater(document.files[0].size_kb, 0)

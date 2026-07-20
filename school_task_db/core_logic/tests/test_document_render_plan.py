@@ -19,6 +19,7 @@ from core_logic.value_objects.document_render_plan import (
     DocumentRenderPlan,
     DocumentRenderRequest,
     DocumentSectionRenderRequest,
+    build_document_render_plan,
     build_remedial_sheet_document_render_plan,
     build_work_document_render_plan,
 )
@@ -48,6 +49,25 @@ class DocumentRenderPlanTests(TestCase):
         self.assertEqual(plan.source.source_id, 'work-1')
         self.assertEqual(plan.recipe.document_type, 'work')
         self.assertEqual(plan.render_target.renderer_type, 'html')
+
+    def test_build_document_render_plan_from_generic_parts(self):
+        source = DocumentSourceRef(
+            source_type='custom',
+            source_id='source-1',
+            title='Документ',
+        )
+        recipe = DocumentRecipe(document_type='custom')
+        render_target = RenderTarget(renderer_type='html')
+
+        plan = build_document_render_plan(
+            source=source,
+            recipe=recipe,
+            render_target=render_target,
+        )
+
+        self.assertEqual(plan.source, source)
+        self.assertEqual(plan.recipe, recipe)
+        self.assertEqual(plan.render_target, render_target)
 
     def test_render_request_groups_document_and_target(self):
         document = Document(title='Контрольная')

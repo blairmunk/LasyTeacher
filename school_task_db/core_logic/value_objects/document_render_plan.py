@@ -50,6 +50,18 @@ class DocumentContentWrapRequest:
     body_content: str
 
 
+def build_document_render_plan(
+    source: DocumentSourceRef,
+    recipe: DocumentRecipe,
+    render_target: RenderTarget,
+) -> DocumentRenderPlan:
+    return DocumentRenderPlan(
+        source=source,
+        recipe=recipe,
+        render_target=render_target,
+    )
+
+
 def build_work_document_render_plan(
     work_id: str,
     work_name: str,
@@ -62,7 +74,7 @@ def build_work_document_render_plan(
             lambda: build_work_document_recipe(options.build_options)
         ),
     )
-    return DocumentRenderPlan(
+    return build_document_render_plan(
         source=DocumentSourceRef(
             source_type=WORK_SOURCE_TYPE,
             source_id=work_id,
@@ -86,7 +98,7 @@ def build_remedial_sheet_document_render_plan(
             )
         ),
     )
-    return DocumentRenderPlan(
+    return build_document_render_plan(
         source=DocumentSourceRef(
             source_type=REMEDIAL_VARIANT_SOURCE_TYPE,
             source_id=variant_id,

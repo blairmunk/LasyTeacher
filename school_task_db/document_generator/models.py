@@ -16,6 +16,7 @@ from core_logic.value_objects.document_recipes import (
 from core_logic.value_objects.document_section_catalog import (
     validate_document_section_types,
 )
+from core_logic.value_objects.document_type_catalog import validate_document_type
 
 
 class DocumentTemplate(BaseModel):
@@ -84,6 +85,7 @@ class DocumentTemplate(BaseModel):
     def clean(self):
         super().clean()
         try:
+            validate_document_type(self.template_type)
             template_spec = self.to_template_spec()
             validate_document_section_types(
                 self.template_type,

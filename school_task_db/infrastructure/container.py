@@ -68,6 +68,9 @@ from core_logic.use_cases.get_document_template_list import (
 from core_logic.use_cases.get_document_section_catalog import (
     GetDocumentSectionCatalogUseCase,
 )
+from core_logic.use_cases.get_document_type_catalog import (
+    GetDocumentTypeCatalogUseCase,
+)
 from core_logic.use_cases.get_global_search import GetGlobalSearchUseCase
 from core_logic.use_cases.get_heatmap_course_overview import (
     GetHeatmapCourseOverviewUseCase,
@@ -630,6 +633,9 @@ class Container:
 
     def get_document_section_catalog_use_case(self):
         return GetDocumentSectionCatalogUseCase()
+
+    def get_document_type_catalog_use_case(self):
+        return GetDocumentTypeCatalogUseCase()
 
     def get_default_document_template_use_case(self):
         return GetDefaultDocumentTemplateUseCase(

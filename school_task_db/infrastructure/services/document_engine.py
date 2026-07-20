@@ -1,16 +1,10 @@
 """Django document engine."""
 
-import mimetypes
 from pathlib import Path
 
 from core_logic.entities.document_rendering import (
-    GENERATED_FILE_STATUS_NOT_FOUND,
-    GENERATED_FILE_STATUS_READ_ERROR,
-    GENERATED_FILE_STATUS_READY,
-    GENERATED_FILE_STATUS_UNSUPPORTED_TYPE,
     GeneratedDocument,
     GeneratedDocumentFile,
-    GeneratedFile,
     GeneratedFileResult,
 )
 from core_logic.interfaces.document_engine import IDocumentEngine
@@ -29,15 +23,12 @@ from infrastructure.services.django_document_source_provider import (
 from infrastructure.services.legacy_document_file_renderer import (
     LegacyDocumentFileRenderer,
 )
+from infrastructure.services.rendered_document_file_store import (
+    RenderedDocumentFileStore,
+)
 
 
 class DjangoDocumentEngine(IDocumentEngine):
-    type_to_output_dir = {
-        'latex': 'web_latex_output',
-        'html': 'web_html_output',
-        'pdf': 'web_pdf_output',
-    }
-
     def __init__(
         self,
         get_remedial_sheet_data_use_case=None,
@@ -47,8 +38,10 @@ class DjangoDocumentEngine(IDocumentEngine):
         get_work_source=None,
         get_remedial_source=None,
         source_provider=None,
+        file_store=None,
     ):
         self.source_provider = source_provider or DjangoDocumentSourceProvider()
+        self.file_store = file_store or RenderedDocumentFileStore()
         self.document_builder = document_builder or RecipeDocumentBuilder()
         self.get_work_source = (
             get_work_source
@@ -225,29 +218,7 @@ class DjangoDocumentEngine(IDocumentEngine):
         file_type: str,
         filename: str,
     ) -> GeneratedFileResult:
-        output_dir = self.type_to_output_dir.get(file_type)
-        if not output_dir:
-            return GeneratedFileResult(status=GENERATED_FILE_STATUS_UNSUPPORTED_TYPE)
-
-        file_path = Path(output_dir) / filename
-        if not file_path.exists():
-            return GeneratedFileResult(status=GENERATED_FILE_STATUS_NOT_FOUND)
-
-        content_type, _ = mimetypes.guess_type(str(file_path))
-        if not content_type:
-            content_type = 'application/octet-stream'
-
-        try:
-            return GeneratedFileResult(
-                status=GENERATED_FILE_STATUS_READY,
-                file=GeneratedFile(
-                    filename=filename,
-                    content=file_path.read_bytes(),
-                    content_type=content_type,
-                ),
-            )
-        except OSError:
-            return GeneratedFileResult(status=GENERATED_FILE_STATUS_READ_ERROR)
+        return self.file_store.get_file(file_type, filename)
 
     def get_generated_file(
         self,

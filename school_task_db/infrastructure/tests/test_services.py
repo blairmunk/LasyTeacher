@@ -84,6 +84,16 @@ class FakeDocumentSourceProvider:
         return SimpleNamespace(pk=variant_id)
 
 
+class FakeRenderedDocumentFileStore:
+    def __init__(self):
+        self.requests = []
+        self.result = 'file-result'
+
+    def get_file(self, file_type, filename):
+        self.requests.append((file_type, filename))
+        return self.result
+
+
 class DjangoDocumentEngineTests(TestCase):
     def test_build_document_uses_configured_builder(self):
         builder = FakeDocumentBuilder()
@@ -389,6 +399,18 @@ class DjangoDocumentEngineTests(TestCase):
         self.assertEqual(source_provider.remedial_requests, ['variant-1'])
         self.assertEqual(source.source_id, 'variant-1')
         self.assertEqual(recipe.document_type, 'remedial_sheet')
+
+    def test_get_rendered_file_uses_configured_file_store(self):
+        file_store = FakeRenderedDocumentFileStore()
+        service = DjangoDocumentEngine(file_store=file_store)
+
+        result = service.get_rendered_file(
+            file_type='html',
+            filename='work.html',
+        )
+
+        self.assertEqual(result, 'file-result')
+        self.assertEqual(file_store.requests, [('html', 'work.html')])
 
 
 class DjangoTaskImportServiceTests(TestCase):

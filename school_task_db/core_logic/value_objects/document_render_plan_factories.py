@@ -4,8 +4,10 @@ from collections.abc import Callable
 
 from core_logic.entities.document import (
     DocumentRecipe,
+    DocumentSectionSpec,
     DocumentSourceRef,
     DocumentTemplateSpec,
+    REMEDIAL_WORK_SOURCE_TYPE,
     REMEDIAL_VARIANT_SOURCE_TYPE,
     WORK_SOURCE_TYPE,
 )
@@ -21,6 +23,7 @@ from core_logic.value_objects.document_recipe_factories import (
     build_remedial_sheet_document_recipe,
     build_work_document_recipe,
 )
+from core_logic.value_objects.document_recipes import PAGE_BREAK_SECTION
 
 
 def build_work_document_render_plan(
@@ -57,6 +60,27 @@ def build_remedial_sheet_document_render_plan(
     )
 
 
+def build_remedial_sheet_batch_document_render_plan(
+    work_id: str,
+    work_name: str,
+    variant_ids: list[str],
+    options: RemedialSheetDocumentRenderOptions,
+    template_spec: DocumentTemplateSpec | None = None,
+) -> DocumentRenderPlan:
+    return build_document_render_plan(
+        source=build_remedial_sheet_batch_document_source(
+            work_id=work_id,
+            work_name=work_name,
+        ),
+        recipe=build_remedial_sheet_batch_document_recipe_for_render(
+            variant_ids=variant_ids,
+            options=options,
+            template_spec=template_spec,
+        ),
+        render_target=options.render_target,
+    )
+
+
 def build_work_document_source(
     work_id: str,
     work_name: str,
@@ -75,6 +99,17 @@ def build_remedial_sheet_document_source(
         source_type=REMEDIAL_VARIANT_SOURCE_TYPE,
         source_id=variant_id,
         title='Работа над ошибками',
+    )
+
+
+def build_remedial_sheet_batch_document_source(
+    work_id: str,
+    work_name: str,
+) -> DocumentSourceRef:
+    return DocumentSourceRef(
+        source_type=REMEDIAL_WORK_SOURCE_TYPE,
+        source_id=work_id,
+        title=work_name,
     )
 
 
@@ -101,6 +136,36 @@ def build_remedial_sheet_document_recipe_for_render(
                 options.build_options,
             )
         ),
+    )
+
+
+def build_remedial_sheet_batch_document_recipe_for_render(
+    variant_ids: list[str],
+    options: RemedialSheetDocumentRenderOptions,
+    template_spec: DocumentTemplateSpec | None = None,
+) -> DocumentRecipe:
+    base_recipe = build_remedial_sheet_document_recipe_for_render(
+        options=options,
+        template_spec=template_spec,
+    )
+    sections = []
+    for index, variant_id in enumerate(variant_ids):
+        if index > 0:
+            sections.append(DocumentSectionSpec(section_type=PAGE_BREAK_SECTION))
+        sections.extend(
+            DocumentSectionSpec(
+                section_type=section.section_type,
+                title=section.title,
+                options={
+                    **dict(section.options),
+                    'variant_id': variant_id,
+                },
+            )
+            for section in base_recipe.sections
+        )
+    return DocumentRecipe(
+        document_type=base_recipe.document_type,
+        sections=sections,
     )
 
 

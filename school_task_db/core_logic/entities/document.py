@@ -6,6 +6,7 @@ from typing import Any, Mapping, Tuple
 
 WORK_SOURCE_TYPE = 'work'
 REMEDIAL_VARIANT_SOURCE_TYPE = 'remedial_variant'
+REMEDIAL_WORK_SOURCE_TYPE = 'remedial_work'
 
 
 @dataclass(frozen=True)

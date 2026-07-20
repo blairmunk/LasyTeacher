@@ -177,8 +177,8 @@ class WorkFormAdapter:
         return {
             'success': True,
             'message': (
-                f'Листы работы над ошибками созданы '
-                f'({result.renderer_type.upper()}, {len(files_info)} шт.)'
+                f'Пакет листов работы над ошибками создан '
+                f'({result.renderer_type.upper()})'
             ),
             'files': files_info,
             'total_files': len(files_info),

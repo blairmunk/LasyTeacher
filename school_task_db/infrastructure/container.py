@@ -1079,9 +1079,8 @@ class Container:
     def render_remedial_sheet_batch_document_use_case(self):
         return RenderRemedialSheetBatchDocumentUseCase(
             work_repo=self.work_repo,
-            render_remedial_sheet_document_use_case=(
-                self.render_remedial_sheet_document_use_case()
-            ),
+            document_template_repo=self.document_template_repo,
+            render_document_use_case=self.render_document_use_case(),
         )
 
     def get_rendered_document_file_use_case(self):

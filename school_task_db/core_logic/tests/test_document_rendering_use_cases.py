@@ -66,7 +66,7 @@ class FakeDocumentEngine:
 
     def render_document(self, render_plan):
         self.render_request = render_plan
-        if render_plan.source.source_type == 'remedial_variant':
+        if render_plan.recipe.document_type == 'remedial_sheet':
             return self.remedial_document
         return self.work_document
 
@@ -503,15 +503,15 @@ class DocumentRenderingUseCaseTests(TestCase):
         self.assertEqual(result.status, 'not_found')
         self.assertIsNone(service.render_request)
 
-    def test_render_remedial_sheet_batch_document_aggregates_variant_files(self):
+    def test_render_remedial_sheet_batch_document_builds_one_batch_plan(self):
         work_repo = FakeWorkRepository(
             work_name='Работа над ошибками',
             remedial_variant_ids=['variant-1', 'variant-2'],
         )
-        remedial_use_case = FakeRenderRemedialSheetDocumentUseCase()
+        service = FakeDocumentEngine()
         use_case = RenderRemedialSheetBatchDocumentUseCase(
             work_repo=work_repo,
-            render_remedial_sheet_document_use_case=remedial_use_case,
+            document_engine=service,
         )
 
         result = use_case.execute(
@@ -526,20 +526,51 @@ class DocumentRenderingUseCaseTests(TestCase):
         self.assertEqual(result.source_name, 'Работа над ошибками')
         self.assertEqual(work_repo.work_name_request, 'work-1')
         self.assertEqual(work_repo.remedial_variant_ids_request, 'work-1')
+        self.assertEqual(result.files[0].filename, 'remedial.pdf')
+        render_plan = service.render_request
+        self.assertEqual(render_plan.source.source_type, 'remedial_work')
+        self.assertEqual(render_plan.source.source_id, 'work-1')
         self.assertEqual(
-            [file.filename for file in result.files],
-            ['remedial_variant-1.pdf', 'remedial_variant-2.pdf'],
+            render_plan.recipe.section_types,
+            (
+                HEADER_SECTION,
+                'original_mistakes',
+                'training_tasks',
+                ANSWERS_SECTION,
+                SHORT_SOLUTIONS_SECTION,
+                'page_break',
+                HEADER_SECTION,
+                'original_mistakes',
+                'training_tasks',
+                ANSWERS_SECTION,
+                SHORT_SOLUTIONS_SECTION,
+            ),
         )
         self.assertEqual(
-            [request.variant_id for request in remedial_use_case.requests],
-            ['variant-1', 'variant-2'],
+            [
+                section.options.get('variant_id')
+                for section in render_plan.recipe.sections
+                if section.section_type != 'page_break'
+            ],
+            [
+                'variant-1',
+                'variant-1',
+                'variant-1',
+                'variant-1',
+                'variant-1',
+                'variant-2',
+                'variant-2',
+                'variant-2',
+                'variant-2',
+                'variant-2',
+            ],
         )
 
     def test_render_remedial_sheet_batch_document_handles_missing_work(self):
-        remedial_use_case = FakeRenderRemedialSheetDocumentUseCase()
+        service = FakeDocumentEngine()
         use_case = RenderRemedialSheetBatchDocumentUseCase(
             work_repo=FakeWorkRepository(work_name=None),
-            render_remedial_sheet_document_use_case=remedial_use_case,
+            document_engine=service,
         )
 
         result = use_case.execute(
@@ -551,17 +582,17 @@ class DocumentRenderingUseCaseTests(TestCase):
 
         self.assertFalse(result.success)
         self.assertEqual(result.status, 'not_found')
-        self.assertEqual(remedial_use_case.requests, [])
+        self.assertIsNone(service.render_request)
 
     def test_render_remedial_sheet_batch_document_handles_empty_work(self):
         work_repo = FakeWorkRepository(
             work_name='Работа над ошибками',
             remedial_variant_ids=[],
         )
-        remedial_use_case = FakeRenderRemedialSheetDocumentUseCase()
+        service = FakeDocumentEngine()
         use_case = RenderRemedialSheetBatchDocumentUseCase(
             work_repo=work_repo,
-            render_remedial_sheet_document_use_case=remedial_use_case,
+            document_engine=service,
         )
 
         result = use_case.execute(
@@ -574,24 +605,18 @@ class DocumentRenderingUseCaseTests(TestCase):
         self.assertFalse(result.success)
         self.assertEqual(result.status, 'empty')
         self.assertEqual(result.source_name, 'Работа над ошибками')
-        self.assertEqual(remedial_use_case.requests, [])
+        self.assertIsNone(service.render_request)
 
-    def test_render_remedial_sheet_batch_document_stops_on_failed_variant(self):
+    def test_render_remedial_sheet_batch_document_handles_empty_rendered_file(self):
         work_repo = FakeWorkRepository(
             work_name='Работа над ошибками',
             remedial_variant_ids=['variant-1', 'variant-2'],
         )
-        remedial_use_case = FakeRenderRemedialSheetDocumentUseCase()
-        remedial_use_case.results_by_variant_id['variant-2'] = (
-            DocumentRenderResult(
-                status='empty',
-                renderer_type='pdf',
-                file_type='pdf',
-            )
-        )
+        service = FakeDocumentEngine()
+        service.remedial_document = GeneratedDocument(file_type='pdf')
         use_case = RenderRemedialSheetBatchDocumentUseCase(
             work_repo=work_repo,
-            render_remedial_sheet_document_use_case=remedial_use_case,
+            document_engine=service,
         )
 
         result = use_case.execute(
@@ -603,10 +628,7 @@ class DocumentRenderingUseCaseTests(TestCase):
 
         self.assertFalse(result.success)
         self.assertEqual(result.status, 'empty')
-        self.assertEqual(
-            [file.filename for file in result.files],
-            ['remedial_variant-1.pdf'],
-        )
+        self.assertEqual(result.files, [])
 
     def test_get_rendered_document_file_delegates_to_service(self):
         service = FakeDocumentEngine()

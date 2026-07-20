@@ -1229,26 +1229,15 @@ class WorkDetailViewTests(TestCase):
         with patch(
             'infrastructure.services.document_engine.'
             'DjangoDocumentEngine.render_document',
-            side_effect=[
-                GeneratedDocument(
-                    file_type='pdf',
-                    files=[
-                        GeneratedDocumentFile(
-                            filename=f'remedial_{first_variant.pk}.pdf',
-                            size_kb=2.0,
-                        )
-                    ],
-                ),
-                GeneratedDocument(
-                    file_type='pdf',
-                    files=[
-                        GeneratedDocumentFile(
-                            filename=f'remedial_{second_variant.pk}.pdf',
-                            size_kb=2.5,
-                        )
-                    ],
-                ),
-            ],
+            return_value=GeneratedDocument(
+                file_type='pdf',
+                files=[
+                    GeneratedDocumentFile(
+                        filename=f'remedial_{remedial_work.pk}.pdf',
+                        size_kb=4.5,
+                    )
+                ],
+            ),
         ) as render_document:
             response = self.client.post(
                 reverse(
@@ -1261,15 +1250,12 @@ class WorkDetailViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertTrue(payload['success'])
-        self.assertEqual(payload['total_files'], 2)
+        self.assertEqual(payload['total_files'], 1)
         self.assertEqual(
             [file_info['name'] for file_info in payload['files']],
-            [
-                f'remedial_{first_variant.pk}.pdf',
-                f'remedial_{second_variant.pk}.pdf',
-            ],
+            [f'remedial_{remedial_work.pk}.pdf'],
         )
-        self.assertEqual(render_document.call_count, 2)
+        self.assertEqual(render_document.call_count, 1)
 
     def test_render_remedial_sheet_batch_ajax_rejects_work_without_remedial_variants(self):
         response = self.client.post(

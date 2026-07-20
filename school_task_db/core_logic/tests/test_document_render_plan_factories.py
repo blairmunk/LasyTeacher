@@ -3,6 +3,7 @@ from unittest import TestCase
 from core_logic.entities.document import (
     DocumentSectionSpec,
     DocumentTemplateSpec,
+    REMEDIAL_WORK_SOURCE_TYPE,
     REMEDIAL_VARIANT_SOURCE_TYPE,
     WORK_SOURCE_TYPE,
 )
@@ -12,6 +13,7 @@ from core_logic.value_objects.document_render_options import (
 )
 from core_logic.value_objects.document_render_plan_factories import (
     build_remedial_sheet_document_recipe_for_render,
+    build_remedial_sheet_batch_document_render_plan,
     build_remedial_sheet_document_render_plan,
     build_remedial_sheet_document_source,
     build_work_document_recipe_for_render,
@@ -181,3 +183,34 @@ class DocumentRenderPlanFactoriesTests(TestCase):
             plan.recipe.section_types,
             (HEADER_SECTION, TASK_LIST_SECTION),
         )
+
+    def test_build_remedial_sheet_batch_document_render_plan_repeats_sections(self):
+        plan = build_remedial_sheet_batch_document_render_plan(
+            work_id='work-1',
+            work_name='Работа над ошибками',
+            variant_ids=['variant-1', 'variant-2'],
+            options=RemedialSheetDocumentRenderOptions(
+                renderer_type='html',
+                answer_type='with_answers',
+            ),
+        )
+
+        self.assertEqual(plan.source.source_type, REMEDIAL_WORK_SOURCE_TYPE)
+        self.assertEqual(plan.source.source_id, 'work-1')
+        self.assertEqual(plan.source.title, 'Работа над ошибками')
+        self.assertEqual(
+            plan.recipe.section_types,
+            (
+                'header',
+                'original_mistakes',
+                'training_tasks',
+                'answers',
+                'page_break',
+                'header',
+                'original_mistakes',
+                'training_tasks',
+                'answers',
+            ),
+        )
+        self.assertEqual(plan.recipe.sections[0].options['variant_id'], 'variant-1')
+        self.assertEqual(plan.recipe.sections[5].options['variant_id'], 'variant-2')

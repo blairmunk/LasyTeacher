@@ -7,6 +7,9 @@ from django.utils import timezone
 from core_logic.use_cases.render_remedial_sheet_document import (
     RenderRemedialSheetDocumentRequest,
 )
+from core_logic.use_cases.render_remedial_sheet_batch_document import (
+    RenderRemedialSheetBatchDocumentRequest,
+)
 from core_logic.use_cases.render_work_document import (
     RenderWorkDocumentRequest,
 )
@@ -217,3 +220,110 @@ class DocumentContainerIntegrationTests(TestCase):
         self.assertIn('Найдите силу по массе и ускорению', html)
         self.assertIn('Краткие решения', html)
         self.assertIn('F = ma', html)
+
+    def test_container_renders_remedial_batch_html_with_sectioned_engine(self):
+        remedial_work = Work.objects.create(
+            name='Работа над ошибками 9А',
+            work_type='remedial',
+            duration=45,
+            max_score=4,
+        )
+        topic = Topic.objects.create(
+            name='Динамика',
+            subject='Физика',
+            grade_level=9,
+        )
+        first_student = Student.objects.create(
+            first_name='Иван',
+            last_name='Петров',
+        )
+        second_student = Student.objects.create(
+            first_name='Анна',
+            last_name='Сидорова',
+        )
+        first_task = Task.objects.create(
+            text='Тренировка для Петрова',
+            answer='8 Н',
+            short_solution='F = ma',
+            topic=topic,
+            task_type='computational',
+            difficulty=3,
+        )
+        second_task = Task.objects.create(
+            text='Тренировка для Сидоровой',
+            answer='2 м/с^2',
+            short_solution='a = F / m',
+            topic=topic,
+            task_type='computational',
+            difficulty=3,
+        )
+        first_variant = Variant.objects.create(
+            work=remedial_work,
+            number=1,
+            work_name_snapshot=remedial_work.name,
+            max_score_snapshot=4,
+            duration_snapshot=45,
+            variant_type='remedial',
+            assigned_student=first_student,
+        )
+        second_variant = Variant.objects.create(
+            work=remedial_work,
+            number=2,
+            work_name_snapshot=remedial_work.name,
+            max_score_snapshot=4,
+            duration_snapshot=45,
+            variant_type='remedial',
+            assigned_student=second_student,
+        )
+        VariantTask.objects.create(
+            variant=first_variant,
+            task=first_task,
+            order=1,
+            max_points=4,
+        )
+        VariantTask.objects.create(
+            variant=second_variant,
+            task=second_task,
+            order=1,
+            max_points=4,
+        )
+
+        with TemporaryDirectory() as output_dir:
+            old_output_dirs = RenderedDocumentFileStore.default_output_dirs
+            RenderedDocumentFileStore.default_output_dirs = {
+                'html': output_dir,
+                'pdf': output_dir,
+                'latex': output_dir,
+            }
+            self.addCleanup(
+                setattr,
+                RenderedDocumentFileStore,
+                'default_output_dirs',
+                old_output_dirs,
+            )
+
+            result = (
+                Container()
+                .render_remedial_sheet_batch_document_use_case()
+                .execute(
+                    RenderRemedialSheetBatchDocumentRequest(
+                        work_id=str(remedial_work.pk),
+                        options=RemedialSheetDocumentRenderOptions(
+                            renderer_type='html',
+                            answer_type='with_short_solutions',
+                        ),
+                    )
+                )
+            )
+
+            filename = result.files[0].filename
+            html = (Path(output_dir) / filename).read_text(encoding='utf-8')
+
+        self.assertTrue(result.success)
+        self.assertEqual(result.file_type, 'html')
+        self.assertEqual(result.source_name, remedial_work.name)
+        self.assertEqual(filename, f'remedial_{remedial_work.pk}.html')
+        self.assertIn('Петров Иван', html)
+        self.assertIn('Сидорова Анна', html)
+        self.assertIn('Тренировка для Петрова', html)
+        self.assertIn('Тренировка для Сидоровой', html)

@@ -415,7 +415,7 @@ class Container:
     @property
     def document_engine(self):
         if self._document_engine is None:
-            self._document_engine = DjangoDocumentEngine.with_sectioned_html_renderer(
+            self._document_engine = DjangoDocumentEngine.with_sectioned_renderers(
                 get_remedial_sheet_data_use_case=(
                     self.get_remedial_sheet_data_use_case()
                 ),

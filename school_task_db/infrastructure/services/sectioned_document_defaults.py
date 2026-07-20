@@ -26,6 +26,7 @@ from infrastructure.services.document_renderer_registry_factory import (
 )
 from infrastructure.services.sectioned_document_renderer_factory import (
     TemplateSectionedTextDocumentRendererSpec,
+    build_template_sectioned_html_to_pdf_document_renderer_registry,
     build_template_sectioned_text_document_renderer_registry,
 )
 
@@ -116,20 +117,7 @@ def build_sectioned_html_document_components(
         document_renderer_registry=(
             build_template_sectioned_text_document_renderer_registry(
                 renderer_type='html',
-                renderer_specs=[
-                    TemplateSectionedTextDocumentRendererSpec(
-                        document_type=WORK_DOCUMENT_TYPE,
-                        section_templates=WORK_HTML_SECTION_TEMPLATES,
-                        filename_builder=work_html_filename,
-                        wrapper_template_name=WORK_HTML_WRAPPER_TEMPLATE,
-                    ),
-                    TemplateSectionedTextDocumentRendererSpec(
-                        document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
-                        section_templates=REMEDIAL_HTML_SECTION_TEMPLATES,
-                        filename_builder=remedial_html_filename,
-                        wrapper_template_name=REMEDIAL_HTML_WRAPPER_TEMPLATE,
-                    ),
-                ],
+                renderer_specs=_sectioned_html_renderer_specs(),
                 file_store=file_store,
                 template_renderer=template_renderer,
             )
@@ -137,19 +125,47 @@ def build_sectioned_html_document_components(
     )
 
 
-def build_legacy_with_sectioned_html_document_components(
+def build_sectioned_html_pdf_document_components(
+    file_store,
+    get_work_source=None,
+    get_remedial_sheet_data=None,
+    template_renderer=None,
+    pdf_generator_factory=None,
+) -> SectionedDocumentComponents:
+    components = build_sectioned_html_document_components(
+        file_store=file_store,
+        get_work_source=get_work_source,
+        get_remedial_sheet_data=get_remedial_sheet_data,
+        template_renderer=template_renderer,
+    )
+    pdf_renderer_registry = (
+        build_template_sectioned_html_to_pdf_document_renderer_registry(
+            renderer_type='pdf',
+            renderer_specs=_sectioned_html_renderer_specs(),
+            file_store=file_store,
+            template_renderer=template_renderer,
+            pdf_generator_factory=pdf_generator_factory,
+        )
+    )
+    components.document_renderer_registry.extend(pdf_renderer_registry)
+    return components
+
+
+def build_legacy_with_sectioned_document_components(
     file_store,
     get_work_source,
     get_remedial_source,
     legacy_file_renderer,
     get_remedial_sheet_data=None,
     template_renderer=None,
+    pdf_generator_factory=None,
 ) -> SectionedDocumentComponents:
-    sectioned_components = build_sectioned_html_document_components(
+    sectioned_components = build_sectioned_html_pdf_document_components(
         file_store=file_store,
         get_work_source=get_work_source,
         get_remedial_sheet_data=get_remedial_sheet_data,
         template_renderer=template_renderer,
+        pdf_generator_factory=pdf_generator_factory,
     )
     renderer_registry = build_legacy_document_renderer_registry_from_adapters(
         file_store=file_store,
@@ -161,6 +177,26 @@ def build_legacy_with_sectioned_html_document_components(
     return SectionedDocumentComponents(
         document_builder=sectioned_components.document_builder,
         document_renderer_registry=renderer_registry,
+    )
+
+
+def build_legacy_with_sectioned_html_document_components(
+    file_store,
+    get_work_source,
+    get_remedial_source,
+    legacy_file_renderer,
+    get_remedial_sheet_data=None,
+    template_renderer=None,
+    pdf_generator_factory=None,
+) -> SectionedDocumentComponents:
+    return build_legacy_with_sectioned_document_components(
+        file_store=file_store,
+        get_work_source=get_work_source,
+        get_remedial_source=get_remedial_source,
+        legacy_file_renderer=legacy_file_renderer,
+        get_remedial_sheet_data=get_remedial_sheet_data,
+        template_renderer=template_renderer,
+        pdf_generator_factory=pdf_generator_factory,
     )
 
 
@@ -204,3 +240,20 @@ def remedial_html_filename(request):
     if request.document.source and request.document.source.source_id:
         return f'remedial_{request.document.source.source_id}.html'
     return 'remedial.html'
+
+
+def _sectioned_html_renderer_specs():
+    return [
+        TemplateSectionedTextDocumentRendererSpec(
+            document_type=WORK_DOCUMENT_TYPE,
+            section_templates=WORK_HTML_SECTION_TEMPLATES,
+            filename_builder=work_html_filename,
+            wrapper_template_name=WORK_HTML_WRAPPER_TEMPLATE,
+        ),
+        TemplateSectionedTextDocumentRendererSpec(
+            document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
+            section_templates=REMEDIAL_HTML_SECTION_TEMPLATES,
+            filename_builder=remedial_html_filename,
+            wrapper_template_name=REMEDIAL_HTML_WRAPPER_TEMPLATE,
+        ),
+    ]

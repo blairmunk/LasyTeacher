@@ -239,7 +239,7 @@ from infrastructure.services.task_import_service import DjangoTaskImportService
 
 
 class ContainerTests(SimpleTestCase):
-    def test_document_engine_uses_sectioned_html_factory(self):
+    def test_document_engine_uses_sectioned_renderer_factory(self):
         container = Container()
         remedial_sheet_data_use_case = object()
         engine = object()
@@ -250,7 +250,7 @@ class ContainerTests(SimpleTestCase):
             return_value=remedial_sheet_data_use_case,
         ), patch.object(
             DjangoDocumentEngine,
-            'with_sectioned_html_renderer',
+            'with_sectioned_renderers',
             return_value=engine,
         ) as factory:
             result = container.document_engine

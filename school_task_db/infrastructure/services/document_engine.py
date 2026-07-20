@@ -27,19 +27,20 @@ from infrastructure.services.rendered_document_file_store import (
     RenderedDocumentFileStore,
 )
 from infrastructure.services.sectioned_document_defaults import (
-    build_legacy_with_sectioned_html_document_components,
+    build_legacy_with_sectioned_document_components,
 )
 
 
 class DjangoDocumentEngine(IDocumentEngine):
     @classmethod
-    def with_sectioned_html_renderer(
+    def with_sectioned_renderers(
         cls,
         get_remedial_sheet_data_use_case=None,
         source_provider=None,
         file_store=None,
         legacy_file_renderer=None,
         template_renderer=None,
+        pdf_generator_factory=None,
     ):
         source_provider = source_provider or DjangoDocumentSourceProvider()
         file_store = file_store or RenderedDocumentFileStore()
@@ -52,13 +53,14 @@ class DjangoDocumentEngine(IDocumentEngine):
             if get_remedial_sheet_data_use_case
             else None
         )
-        components = build_legacy_with_sectioned_html_document_components(
+        components = build_legacy_with_sectioned_document_components(
             file_store=file_store,
             get_work_source=source_provider.get_work_source,
             get_remedial_source=source_provider.get_remedial_source,
             legacy_file_renderer=legacy_file_renderer,
             get_remedial_sheet_data=get_remedial_sheet_data,
             template_renderer=template_renderer,
+            pdf_generator_factory=pdf_generator_factory,
         )
         return cls(
             get_remedial_sheet_data_use_case=get_remedial_sheet_data_use_case,
@@ -68,6 +70,10 @@ class DjangoDocumentEngine(IDocumentEngine):
             source_provider=source_provider,
             file_store=file_store,
         )
+
+    @classmethod
+    def with_sectioned_html_renderer(cls, **kwargs):
+        return cls.with_sectioned_renderers(**kwargs)
 
     def __init__(
         self,

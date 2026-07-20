@@ -60,6 +60,7 @@ class FakeDocumentRendererRegistry:
 class FakeLegacyFileRenderer:
     def __init__(self):
         self.html_work_request = None
+        self.pdf_work_request = None
 
     def render_latex_work(self, work, content_config, page_format='A4'):
         return []
@@ -69,6 +70,7 @@ class FakeLegacyFileRenderer:
         return ['work.html']
 
     def render_pdf_work(self, work, content_config, page_format='A4'):
+        self.pdf_work_request = (work, content_config, page_format)
         return []
 
     def render_remedial_latex(self, variant, content_config, page_format='A4'):
@@ -132,6 +134,16 @@ class FakeSectionPayloadBuilder:
     def build_payload(self, request):
         self.request = request
         return self.payload
+
+
+class FakePdfGenerator:
+    def __init__(self):
+        self.html_content = ''
+
+    def generate_pdf(self, html_path, pdf_path):
+        self.html_content = html_path.read_text(encoding='utf-8')
+        pdf_path.write_bytes(b'pdf')
+        return pdf_path
 
 
 def empty_work_render_plan(work_id, work_name, renderer_type):
@@ -513,19 +525,26 @@ class DjangoDocumentEngineTests(TestCase):
         self.assertEqual(result.file_type, 'html')
         self.assertEqual(file_store.path_requests, [('html', ['work.html'])])
 
-    def test_sectioned_html_factory_uses_sectioned_html_and_legacy_pdf(self):
+    def test_sectioned_factory_uses_sectioned_html_pdf_and_legacy_latex(self):
         work = Work.objects.create(name='Контрольная', duration=45)
         legacy_file_renderer = FakeLegacyFileRenderer()
+        pdf_generator = FakePdfGenerator()
 
         with TemporaryDirectory() as output_dir:
-            service = DjangoDocumentEngine.with_sectioned_html_renderer(
+            service = DjangoDocumentEngine.with_sectioned_renderers(
                 file_store=RenderedDocumentFileStore(
-                    output_dirs={'html': output_dir, 'pdf': output_dir},
+                    output_dirs={
+                        'html': output_dir,
+                        'pdf': output_dir,
+                        'latex': output_dir,
+                    },
                 ),
                 legacy_file_renderer=legacy_file_renderer,
+                pdf_generator_factory=lambda request: pdf_generator,
             )
             html_options = WorkDocumentRenderOptions(renderer_type='html')
             pdf_options = WorkDocumentRenderOptions(renderer_type='pdf')
+            latex_options = WorkDocumentRenderOptions(renderer_type='latex')
 
             html_result = service.render_work_document(
                 work_id=str(work.pk),
@@ -545,10 +564,22 @@ class DjangoDocumentEngineTests(TestCase):
                     options=pdf_options,
                 ),
             )
+            latex_result = service.render_work_document(
+                work_id=str(work.pk),
+                options=latex_options,
+                render_plan=build_work_document_render_plan(
+                    work_id=str(work.pk),
+                    work_name=work.name,
+                    options=latex_options,
+                ),
+            )
 
         self.assertEqual(html_result.file_type, 'html')
         self.assertEqual(pdf_result.file_type, 'pdf')
+        self.assertEqual(latex_result.file_type, 'latex')
         self.assertIsNone(legacy_file_renderer.html_work_request)
+        self.assertIsNone(legacy_file_renderer.pdf_work_request)
+        self.assertIn('<title>Контрольная</title>', pdf_generator.html_content)
 
 
 class DjangoTaskImportServiceTests(TestCase):

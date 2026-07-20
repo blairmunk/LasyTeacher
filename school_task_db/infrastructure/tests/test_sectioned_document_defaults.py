@@ -35,8 +35,9 @@ from infrastructure.services.rendered_document_file_store import (
     RenderedDocumentFileStore,
 )
 from infrastructure.services.sectioned_document_defaults import (
-    build_legacy_with_sectioned_html_document_components,
+    build_legacy_with_sectioned_document_components,
     build_sectioned_html_document_components,
+    build_sectioned_html_pdf_document_components,
     build_sectioned_remedial_sheet_html_document_components,
     build_sectioned_work_html_document_components,
     remedial_html_filename,
@@ -291,16 +292,63 @@ class SectionedDocumentDefaultsTests(TestCase):
                 )
             )
 
-    def test_builds_hybrid_legacy_with_sectioned_html_components(self):
-        legacy_file_renderer = FakeLegacyFileRenderer()
+    def test_builds_combined_sectioned_html_pdf_components(self):
         with TemporaryDirectory() as output_dir:
-            components = build_legacy_with_sectioned_html_document_components(
+            components = build_sectioned_html_pdf_document_components(
                 file_store=RenderedDocumentFileStore(
                     output_dirs={'html': output_dir, 'pdf': output_dir},
+                ),
+                get_work_source=lambda work_id: Work(
+                    id=work_id,
+                    name='Контрольная',
+                    duration=45,
+                    max_score=4,
+                ),
+                get_remedial_sheet_data=lambda variant_id: RemedialSheetData(
+                    variant='variant',
+                    student=None,
+                    source_work=None,
+                    mark=None,
+                    new_tasks=[],
+                ),
+                pdf_generator_factory=lambda request: FakePdfGenerator(),
+            )
+
+            self.assertIsNotNone(
+                components.document_renderer_registry.get(
+                    'html',
+                    document_type='work',
+                )
+            )
+            self.assertIsNotNone(
+                components.document_renderer_registry.get(
+                    'pdf',
+                    document_type='work',
+                )
+            )
+            self.assertIsNotNone(
+                components.document_renderer_registry.get(
+                    'pdf',
+                    document_type='remedial_sheet',
+                )
+            )
+
+    def test_builds_hybrid_legacy_with_sectioned_document_components(self):
+        legacy_file_renderer = FakeLegacyFileRenderer()
+        pdf_generator = FakePdfGenerator()
+        with TemporaryDirectory() as output_dir:
+            components = build_legacy_with_sectioned_document_components(
+                file_store=RenderedDocumentFileStore(
+                    output_dirs={
+                        'html': output_dir,
+                        'pdf': output_dir,
+                        'latex': output_dir,
+                    },
                 ),
                 get_work_source=lambda work_id: 'work-object',
                 get_remedial_source=lambda variant_id: 'variant-object',
                 legacy_file_renderer=legacy_file_renderer,
+                pdf_generator_factory=lambda request: pdf_generator,
                 get_remedial_sheet_data=lambda variant_id: RemedialSheetData(
                     variant='variant',
                     student=None,
@@ -315,6 +363,7 @@ class SectionedDocumentDefaultsTests(TestCase):
             )
             html_options = WorkDocumentRenderOptions(renderer_type='html')
             pdf_options = WorkDocumentRenderOptions(renderer_type='pdf')
+            latex_options = WorkDocumentRenderOptions(renderer_type='latex')
 
             html_result = engine.render_work_document(
                 work_id='work-1',
@@ -326,10 +375,18 @@ class SectionedDocumentDefaultsTests(TestCase):
                 options=pdf_options,
                 render_plan=empty_work_render_plan('pdf'),
             )
+            latex_result = engine.render_work_document(
+                work_id='work-1',
+                options=latex_options,
+                render_plan=empty_work_render_plan('latex'),
+            )
 
         self.assertEqual(html_result.file_type, 'html')
         self.assertEqual(pdf_result.file_type, 'pdf')
-        self.assertEqual(legacy_file_renderer.pdf_work_requests, [('work-object',)])
+        self.assertEqual(latex_result.file_type, 'latex')
+        self.assertEqual(legacy_file_renderer.pdf_work_requests, [])
+        self.assertEqual(legacy_file_renderer.latex_work_requests, [('work-object',)])
+        self.assertIn('<title>Контрольная</title>', pdf_generator.html_content)
 
     def test_work_html_filename_uses_source_id(self):
         request = FakeRenderRequest(source_id='work-1')
@@ -416,9 +473,11 @@ class FakeMark:
 
 class FakeLegacyFileRenderer:
     def __init__(self):
+        self.latex_work_requests = []
         self.pdf_work_requests = []
 
     def render_latex_work(self, work, content_config, page_format='A4'):
+        self.latex_work_requests.append((work,))
         return []
 
     def render_html_work(self, work, content_config):
@@ -436,3 +495,13 @@ class FakeLegacyFileRenderer:
 
     def render_remedial_pdf(self, variant, content_config, page_format='A4'):
         return []
+
+
+class FakePdfGenerator:
+    def __init__(self):
+        self.html_content = ''
+
+    def generate_pdf(self, html_path, pdf_path):
+        self.html_content = html_path.read_text(encoding='utf-8')
+        pdf_path.write_bytes(b'pdf')
+        return pdf_path

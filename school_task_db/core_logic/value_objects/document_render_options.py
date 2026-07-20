@@ -37,6 +37,17 @@ class RenderTarget:
         return FILE_TYPE_LABELS[self.renderer_type]
 
 
+def build_render_target(
+    renderer_type: Optional[str] = None,
+    pdf_format: str = 'A4',
+    render_target: Optional[RenderTarget] = None,
+) -> RenderTarget:
+    return render_target or RenderTarget(
+        renderer_type=renderer_type or 'pdf',
+        page_format=pdf_format,
+    )
+
+
 @dataclass(frozen=True)
 class WorkDocumentBuildOptions:
     answer_type: str = 'tasks_only'
@@ -106,9 +117,10 @@ class WorkDocumentRenderOptions:
         object.__setattr__(
             self,
             'render_target',
-            render_target or RenderTarget(
-                renderer_type=renderer_type or 'pdf',
-                page_format=pdf_format,
+            build_render_target(
+                renderer_type=renderer_type,
+                pdf_format=pdf_format,
+                render_target=render_target,
             ),
         )
         object.__setattr__(
@@ -170,9 +182,10 @@ class RemedialSheetDocumentRenderOptions:
         object.__setattr__(
             self,
             'render_target',
-            render_target or RenderTarget(
-                renderer_type=renderer_type or 'pdf',
-                page_format=pdf_format,
+            build_render_target(
+                renderer_type=renderer_type,
+                pdf_format=pdf_format,
+                render_target=render_target,
             ),
         )
         object.__setattr__(
@@ -199,6 +212,7 @@ class RemedialSheetDocumentRenderOptions:
             **self.build_options.content_config,
             'page_format': self.pdf_format,
         }
+
 
 def build_work_render_options(
     data: Mapping[str, str],

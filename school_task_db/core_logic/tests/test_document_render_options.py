@@ -8,6 +8,7 @@ from core_logic.value_objects.document_render_options import (
     SUPPORTED_DOCUMENT_RENDERER_TYPES,
     WorkDocumentBuildOptions,
     WorkDocumentRenderOptions,
+    build_render_target,
     build_remedial_sheet_render_options,
     build_work_render_options,
     is_supported_document_renderer_type,
@@ -33,6 +34,23 @@ class DocumentRenderOptionsTests(TestCase):
         self.assertEqual(target.renderer_type, 'html')
         self.assertEqual(target.page_format, 'A5')
         self.assertEqual(target.file_type_label, 'HTML')
+
+    def test_build_render_target_from_legacy_arguments(self):
+        target = build_render_target(renderer_type='html', pdf_format='A5')
+
+        self.assertEqual(target.renderer_type, 'html')
+        self.assertEqual(target.page_format, 'A5')
+
+    def test_build_render_target_preserves_existing_target(self):
+        existing_target = RenderTarget(renderer_type='latex', page_format='A4')
+
+        target = build_render_target(
+            renderer_type='html',
+            pdf_format='A5',
+            render_target=existing_target,
+        )
+
+        self.assertEqual(target, existing_target)
 
     def test_builds_default_work_render_options(self):
         options = build_work_render_options({})

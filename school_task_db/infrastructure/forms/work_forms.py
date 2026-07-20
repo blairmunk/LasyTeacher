@@ -6,6 +6,7 @@ from core_logic.interfaces.work_repo import (
     CreateWorkAnalogGroupParams,
     CreateWorkParams,
 )
+from core_logic.entities.work import WorkListFilters
 from core_logic.use_cases.render_remedial_sheet_document import (
     RenderRemedialSheetDocumentRequest,
 )
@@ -54,6 +55,30 @@ class WorkFormAdapter:
             'work_type': work.work_type,
             'duration': work.duration,
             'max_score': work.max_score,
+        }
+
+    def work_list_filters_from_query(self, query_data):
+        return WorkListFilters(
+            q=query_data.get('q', '').strip(),
+            work_type=query_data.get('work_type', '').strip(),
+            variant_status=query_data.get('variant_status', '').strip(),
+            hide_remedial=query_data.get('hide_remedial') == '1',
+        )
+
+    def work_list_context(self, list_data):
+        filters = list_data.filters or WorkListFilters()
+        return {
+            'works': list_data.works,
+            'filters': filters,
+            'has_active_filters': filters.has_active_filters,
+            'work_type_options': [
+                {'value': value, 'label': label}
+                for value, label in Work.WORK_TYPE_CHOICES
+            ],
+            'variant_status_options': [
+                {'value': 'with_variants', 'label': 'С вариантами'},
+                {'value': 'without_variants', 'label': 'Без вариантов'},
+            ],
         }
 
     def work_specs_from_formset(self, formset, work_id):

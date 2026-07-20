@@ -78,7 +78,7 @@ class CreatedWorkVariantRef:
 
 class IWorkRepository(ABC):
     @abstractmethod
-    def get_list_works(self) -> List[WorkListItem]:
+    def get_list_works(self, filters=None) -> List[WorkListItem]:
         """Return works for the work list page."""
 
     @abstractmethod

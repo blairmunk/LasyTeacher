@@ -10,12 +10,89 @@
     </a>
 </div>
 
+<form method="get" class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-lg-4">
+                <label class="form-label" for="work-filter-q">Название</label>
+                <input
+                    type="search"
+                    id="work-filter-q"
+                    name="q"
+                    value="{{ filters.q }}"
+                    class="form-control"
+                    placeholder="Найти работу"
+                >
+            </div>
+            <div class="col-lg-3">
+                <label class="form-label" for="work-filter-type">Тип</label>
+                <select id="work-filter-type" name="work_type" class="form-select">
+                    <option value="">Все типы</option>
+                    {% for option in work_type_options %}
+                    <option value="{{ option.value }}" {% if filters.work_type == option.value %}selected{% endif %}>
+                        {{ option.label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-2">
+                <label class="form-label" for="work-filter-variants">Варианты</label>
+                <select id="work-filter-variants" name="variant_status" class="form-select">
+                    <option value="">Любые</option>
+                    {% for option in variant_status_options %}
+                    <option value="{{ option.value }}" {% if filters.variant_status == option.value %}selected{% endif %}>
+                        {{ option.label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-2">
+                <div class="form-check">
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="work-filter-hide-remedial"
+                        name="hide_remedial"
+                        value="1"
+                        {% if filters.hide_remedial %}checked{% endif %}
+                    >
+                    <label class="form-check-label" for="work-filter-hide-remedial">
+                        Скрыть РнО
+                    </label>
+                </div>
+            </div>
+            <div class="col-lg-1 d-grid">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="fas fa-filter"></i>
+                </button>
+            </div>
+        </div>
+        {% if has_active_filters %}
+        <div class="mt-3">
+            <a href="{% url 'works:list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-times"></i> Сбросить фильтры
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</form>
+
 <div class="row">
     {% for work in works %}
     <div class="col-md-6 mb-3">
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">{{ work.name }}</h5>
+                <div class="d-flex justify-content-between gap-2">
+                    <h5 class="card-title mb-2">{{ work.name }}</h5>
+                    {% if work.is_remedial %}
+                    <span class="badge bg-info align-self-start">РнО</span>
+                    {% endif %}
+                </div>
+                <p class="mb-2">
+                    <span class="badge {% if work.is_remedial %}bg-info{% else %}bg-secondary{% endif %}">
+                        {{ work.work_type_display }}
+                    </span>
+                </p>
                 <p class="card-text">
                     <i class="fas fa-clock"></i> {{ work.duration }} минут<br>
                     <i class="fas fa-copy"></i> Вариантов: {{ work.variant_count }}
@@ -32,7 +109,12 @@
     {% empty %}
     <div class="col-12">
         <div class="alert alert-info">
-            Работ пока нет. <a href="{% url 'works:create' %}">Создать первую работу</a>
+            Работы не найдены.
+            {% if has_active_filters %}
+            <a href="{% url 'works:list' %}">Сбросить фильтры</a>
+            {% else %}
+            <a href="{% url 'works:create' %}">Создать первую работу</a>
+            {% endif %}
         </div>
     </div>
     {% endfor %}

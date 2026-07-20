@@ -9,6 +9,7 @@ from core_logic.entities.work import (
     VariantDetailVariant,
     VariantGenerationInfo,
     WorkDetailWork,
+    WorkListFilters,
 )
 from core_logic.interfaces.work_repo import CreateWorkParams
 from core_logic.services.work_service import WorkService
@@ -112,6 +113,7 @@ class FakeWorkRepository:
         self.variant_generation_id = None
         self.work_name = 'Контрольная'
         self.work_name_request = None
+        self.work_list_filters = None
         self.variant_type = 'remedial'
         self.variant_type_request = None
         self.work_detail = WorkDetailWork(
@@ -133,7 +135,8 @@ class FakeWorkRepository:
     def get_detail_variants(self, work_id):
         return self.variants
 
-    def get_list_works(self):
+    def get_list_works(self, filters=None):
+        self.work_list_filters = filters
         return self.works
 
     def get_list_variants(self):
@@ -282,6 +285,22 @@ class WorkDetailTests(TestCase):
         result = use_case.execute()
 
         self.assertEqual(result.works, ['work-1'])
+        self.assertEqual(result.filters, WorkListFilters())
+
+    def test_get_work_list_use_case_passes_filters_to_repository(self):
+        repo = FakeWorkRepository()
+        filters = WorkListFilters(
+            q='контрольная',
+            work_type='test',
+            variant_status='with_variants',
+            hide_remedial=True,
+        )
+        use_case = GetWorkListUseCase(work_repo=repo)
+
+        result = use_case.execute(filters)
+
+        self.assertEqual(repo.work_list_filters, filters)
+        self.assertEqual(result.filters, filters)
 
     def test_get_variant_list_use_case_builds_list_context_data(self):
         repo = FakeWorkRepository()

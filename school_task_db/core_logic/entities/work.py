@@ -74,6 +74,24 @@ class WorkDetailVariant:
 @dataclass(frozen=True)
 class WorkListData:
     works: List["WorkListItem"]
+    filters: Optional["WorkListFilters"] = None
+
+
+@dataclass(frozen=True)
+class WorkListFilters:
+    q: str = ''
+    work_type: str = ''
+    variant_status: str = ''
+    hide_remedial: bool = False
+
+    @property
+    def has_active_filters(self) -> bool:
+        return bool(
+            self.q
+            or self.work_type
+            or self.variant_status
+            or self.hide_remedial
+        )
 
 
 @dataclass(frozen=True)
@@ -83,6 +101,12 @@ class WorkListItem:
     duration: int
     created_at: datetime
     variant_count: int = 0
+    work_type: str = ''
+    work_type_display: str = ''
+
+    @property
+    def is_remedial(self) -> bool:
+        return self.work_type == 'remedial'
 
 
 @dataclass(frozen=True)

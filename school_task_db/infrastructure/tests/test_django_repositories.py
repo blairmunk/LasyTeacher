@@ -25,6 +25,7 @@ from core_logic.entities.task import (
     TaskSaveParams,
 )
 from core_logic.entities.student import SaveStudentGroupParams, SaveStudentParams
+from core_logic.entities.work import WorkListFilters
 from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
     RemedialFromEventRequest,
@@ -890,11 +891,51 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(works[0].name, self.source_work.name)
         self.assertEqual(works[0].duration, self.source_work.duration)
         self.assertEqual(works[0].variant_count, 1)
+        self.assertEqual(works[0].work_type, self.source_work.work_type)
+        self.assertEqual(
+            works[0].work_type_display,
+            self.source_work.get_work_type_display(),
+        )
         self.assertEqual(work.pk, str(self.source_work.pk))
         self.assertEqual(work.variant_counter, self.source_work.variant_counter)
         self.assertEqual(generation_groups[0].group_name, self.weak_group.name)
         self.assertEqual(generation_groups[0].available_count, 3)
         self.assertIsNone(missing_work)
+
+    def test_work_repository_filters_list_page_data(self):
+        remedial_work = Work.objects.create(
+            name='Работа над ошибками',
+            work_type='remedial',
+        )
+        empty_work = Work.objects.create(
+            name='Пустая самостоятельная',
+            work_type='quiz',
+        )
+
+        repo = DjangoWorkRepository()
+
+        remedial_works = repo.get_list_works(
+            WorkListFilters(work_type='remedial'),
+        )
+        non_remedial_works = repo.get_list_works(
+            WorkListFilters(hide_remedial=True),
+        )
+        works_with_variants = repo.get_list_works(
+            WorkListFilters(variant_status='with_variants'),
+        )
+        works_without_variants = repo.get_list_works(
+            WorkListFilters(variant_status='without_variants'),
+        )
+        searched_works = repo.get_list_works(
+            WorkListFilters(q='самостоятельная'),
+        )
+
+        self.assertEqual([work.pk for work in remedial_works], [str(remedial_work.pk)])
+        self.assertNotIn(str(remedial_work.pk), [work.pk for work in non_remedial_works])
+        self.assertIn(str(self.source_work.pk), [work.pk for work in works_with_variants])
+        self.assertNotIn(str(empty_work.pk), [work.pk for work in works_with_variants])
+        self.assertIn(str(empty_work.pk), [work.pk for work in works_without_variants])
+        self.assertEqual([work.pk for work in searched_works], [str(empty_work.pk)])
 
     def test_curriculum_repository_returns_course_detail_data(self):
         course = Course.objects.create(

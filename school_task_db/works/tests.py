@@ -355,6 +355,47 @@ class WorkDetailViewTests(TestCase):
         self.assertEqual(response.context['works'][0].pk, str(self.work.pk))
         self.assertEqual(response.context['works'][0].name, self.work.name)
         self.assertEqual(response.context['works'][0].variant_count, 1)
+        self.assertEqual(response.context['works'][0].work_type, self.work.work_type)
+        self.assertEqual(response.context['filters'].q, '')
+        self.assertFalse(response.context['has_active_filters'])
+        self.assertContains(response, 'Контрольная работа')
+
+    def test_list_filters_and_marks_remedial_works(self):
+        Work.objects.create(
+            name='Работа над ошибками',
+            work_type='remedial',
+        )
+
+        response = self.client.get(
+            reverse('works:list'),
+            {'work_type': 'remedial'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['works']), 1)
+        self.assertEqual(response.context['works'][0].work_type, 'remedial')
+        self.assertTrue(response.context['works'][0].is_remedial)
+        self.assertTrue(response.context['has_active_filters'])
+        self.assertContains(response, 'РнО')
+        self.assertContains(response, 'value="remedial" selected')
+
+    def test_list_can_hide_remedial_works(self):
+        Work.objects.create(
+            name='Работа над ошибками',
+            work_type='remedial',
+        )
+
+        response = self.client.get(
+            reverse('works:list'),
+            {'hide_remedial': '1'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['filters'].hide_remedial)
+        self.assertNotIn(
+            'remedial',
+            [work.work_type for work in response.context['works']],
+        )
 
     def test_variant_list_uses_clean_context_data(self):
         response = self.client.get(reverse('works:variant-list'))

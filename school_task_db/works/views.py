@@ -24,7 +24,11 @@ class WorkListView(TemplateView):
         context = super().get_context_data(**kwargs)
         from infrastructure.container import container
 
-        context['works'] = container.get_work_list_use_case().execute().works
+        filters = container.work_form_adapter.work_list_filters_from_query(
+            self.request.GET,
+        )
+        list_data = container.get_work_list_use_case().execute(filters)
+        context.update(container.work_form_adapter.work_list_context(list_data))
         return context
 
 

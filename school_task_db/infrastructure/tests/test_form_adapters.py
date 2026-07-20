@@ -12,6 +12,11 @@ from core_logic.entities.document_rendering import (
     DocumentRenderResult,
     GeneratedDocumentFile,
 )
+from core_logic.entities.work import (
+    WorkListData,
+    WorkListFilters,
+    WorkListItem,
+)
 from core_logic.use_cases.get_document_template_editor_data import (
     DocumentTemplateEditorData,
 )
@@ -533,6 +538,55 @@ class TaskGroupFormAdapterTests(SimpleTestCase):
 
 
 class WorkFormAdapterTests(SimpleTestCase):
+    def test_builds_work_list_filters_from_query(self):
+        filters = WorkFormAdapter().work_list_filters_from_query(
+            QueryDict(
+                'q=контрольная&work_type=test'
+                '&variant_status=with_variants&hide_remedial=1',
+            ),
+        )
+
+        self.assertEqual(
+            filters,
+            WorkListFilters(
+                q='контрольная',
+                work_type='test',
+                variant_status='with_variants',
+                hide_remedial=True,
+            ),
+        )
+
+    def test_builds_work_list_context(self):
+        filters = WorkListFilters(work_type='remedial', hide_remedial=True)
+        data = WorkListData(
+            works=[
+                WorkListItem(
+                    pk='work-1',
+                    name='Работа над ошибками',
+                    duration=45,
+                    created_at=None,
+                    variant_count=2,
+                    work_type='remedial',
+                    work_type_display='Работа над ошибками',
+                )
+            ],
+            filters=filters,
+        )
+
+        context = WorkFormAdapter().work_list_context(data)
+
+        self.assertEqual(context['works'], data.works)
+        self.assertEqual(context['filters'], filters)
+        self.assertTrue(context['has_active_filters'])
+        self.assertIn(
+            {'value': 'remedial', 'label': 'Работа над ошибками'},
+            context['work_type_options'],
+        )
+        self.assertIn(
+            {'value': 'with_variants', 'label': 'С вариантами'},
+            context['variant_status_options'],
+        )
+
     def test_reads_document_renderer_type_from_post(self):
         adapter = WorkFormAdapter()
 

@@ -47,7 +47,22 @@ from works.models import Variant, VariantTask, Work, WorkAnalogGroup
 
 
 class DjangoWorkRepository(IWorkRepository):
-    def get_list_works(self):
+    def get_list_works(self, filters=None):
+        queryset = Work.objects.annotate(
+            variant_count=Count('variant'),
+        )
+        if filters:
+            if filters.q:
+                queryset = queryset.filter(name__icontains=filters.q)
+            if filters.work_type:
+                queryset = queryset.filter(work_type=filters.work_type)
+            if filters.hide_remedial:
+                queryset = queryset.exclude(work_type='remedial')
+            if filters.variant_status == 'with_variants':
+                queryset = queryset.filter(variant_count__gt=0)
+            elif filters.variant_status == 'without_variants':
+                queryset = queryset.filter(variant_count=0)
+
         return [
             WorkListItem(
                 pk=str(work.pk),
@@ -55,10 +70,10 @@ class DjangoWorkRepository(IWorkRepository):
                 duration=work.duration,
                 created_at=work.created_at,
                 variant_count=work.variant_count,
+                work_type=work.work_type,
+                work_type_display=work.get_work_type_display(),
             )
-            for work in Work.objects.annotate(
-                variant_count=Count('variant'),
-            ).order_by('-created_at')
+            for work in queryset.order_by('-created_at')
         ]
 
     def get_list_variants(self):

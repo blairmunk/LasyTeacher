@@ -5,7 +5,7 @@ from django.http import Http404
 from django.views import View
 
 from infrastructure.container import container
-from .forms import StudentForm, StudentGroupForm
+from infrastructure.forms.student_django_forms import StudentForm, StudentGroupForm
 
 
 def _post_lists(post_data):

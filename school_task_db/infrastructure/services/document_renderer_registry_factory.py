@@ -8,6 +8,25 @@ from core_logic.value_objects.document_recipes import (
 from infrastructure.services.document_renderers import LegacyDocumentRenderer
 
 
+def build_legacy_document_renderer_registry_from_adapters(
+    file_store,
+    get_work_source,
+    get_remedial_source,
+    legacy_file_renderer,
+) -> DocumentRendererRegistry:
+    return build_legacy_document_renderer_registry(
+        document_from_paths=file_store.document_from_paths,
+        get_work_source=get_work_source,
+        get_remedial_source=get_remedial_source,
+        render_latex_work_files=legacy_file_renderer.render_latex_work,
+        render_html_work_files=legacy_file_renderer.render_html_work,
+        render_pdf_work_files=legacy_file_renderer.render_pdf_work,
+        render_remedial_latex_files=legacy_file_renderer.render_remedial_latex,
+        render_remedial_html_files=legacy_file_renderer.render_remedial_html,
+        render_remedial_pdf_files=legacy_file_renderer.render_remedial_pdf,
+    )
+
+
 def build_legacy_document_renderer_registry(
     document_from_paths,
     get_work_source,

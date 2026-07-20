@@ -12,7 +12,7 @@ from core_logic.value_objects.document_render_plan import (
     build_work_document_render_plan,
 )
 from infrastructure.services.document_renderer_registry_factory import (
-    build_legacy_document_renderer_registry,
+    build_legacy_document_renderer_registry_from_adapters,
 )
 from infrastructure.services.django_document_source_provider import (
     DjangoDocumentSourceProvider,
@@ -65,24 +65,11 @@ class DjangoDocumentEngine(IDocumentEngine):
         )
         self.document_renderer_registry = (
             document_renderer_registry
-            or build_legacy_document_renderer_registry(
-                document_from_paths=self.file_store.document_from_paths,
+            or build_legacy_document_renderer_registry_from_adapters(
+                file_store=self.file_store,
                 get_work_source=self.get_work_source,
                 get_remedial_source=self.get_remedial_source,
-                render_latex_work_files=(
-                    self.legacy_file_renderer.render_latex_work
-                ),
-                render_html_work_files=self.legacy_file_renderer.render_html_work,
-                render_pdf_work_files=self.legacy_file_renderer.render_pdf_work,
-                render_remedial_latex_files=(
-                    self.legacy_file_renderer.render_remedial_latex
-                ),
-                render_remedial_html_files=(
-                    self.legacy_file_renderer.render_remedial_html
-                ),
-                render_remedial_pdf_files=(
-                    self.legacy_file_renderer.render_remedial_pdf
-                ),
+                legacy_file_renderer=self.legacy_file_renderer,
             )
         )
 

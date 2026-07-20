@@ -64,19 +64,16 @@ class RenderWorkDocumentUseCase:
                 source_name=work_name,
             )
 
-        document = self.document_engine.render_work_document(
-            request.work_id,
-            request.options,
-            build_work_document_render_plan(
-                work_id=request.work_id,
-                work_name=work_name,
-                options=request.options,
-                template_spec=(
-                    request.template_spec
-                    or self._default_template_spec()
-                ),
+        render_plan = build_work_document_render_plan(
+            work_id=request.work_id,
+            work_name=work_name,
+            options=request.options,
+            template_spec=(
+                request.template_spec
+                or self._default_template_spec()
             ),
         )
+        document = self.document_engine.render_document(render_plan)
         return DocumentRenderResult(
             status=DOCUMENT_RENDER_STATUS_GENERATED,
             renderer_type=renderer_type,

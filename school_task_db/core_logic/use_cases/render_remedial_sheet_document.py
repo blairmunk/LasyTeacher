@@ -70,18 +70,15 @@ class RenderRemedialSheetDocumentUseCase:
                 renderer_type=request.options.renderer_type,
             )
 
-        document = self.document_engine.render_remedial_sheet_document(
-            request.variant_id,
-            request.options,
-            build_remedial_sheet_document_render_plan(
-                variant_id=request.variant_id,
-                options=request.options,
-                template_spec=(
-                    request.template_spec
-                    or self._default_template_spec()
-                ),
+        render_plan = build_remedial_sheet_document_render_plan(
+            variant_id=request.variant_id,
+            options=request.options,
+            template_spec=(
+                request.template_spec
+                or self._default_template_spec()
             ),
         )
+        document = self.document_engine.render_document(render_plan)
         status = (
             DOCUMENT_RENDER_STATUS_GENERATED
             if document.files

@@ -153,11 +153,13 @@ DOCUMENT_SECTION_CATALOG = (
         section_type=THEORY_SECTION,
         title='Теория',
         supported_document_types=(
+            WORK_DOCUMENT_TYPE,
             WORKSHEET_DOCUMENT_TYPE,
             HOMEWORK_DOCUMENT_TYPE,
             DIAGNOSTIC_DOCUMENT_TYPE,
             CUSTOM_DOCUMENT_TYPE,
         ),
+        renderable_document_types=(WORK_DOCUMENT_TYPE,),
         description='Теоретическая справка или опорный материал.',
     ),
     DocumentSectionCatalogItem(

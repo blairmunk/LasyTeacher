@@ -12,6 +12,7 @@ from core_logic.value_objects.document_recipes import (
     SCORE_TABLE_SECTION,
     SHORT_SOLUTIONS_SECTION,
     TASK_LIST_SECTION,
+    THEORY_SECTION,
 )
 from core_logic.value_objects.document_render_requests import DocumentRenderRequest
 from infrastructure.services.rendered_document_file_store import (
@@ -33,6 +34,7 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                     PAGE_BREAK_SECTION: 'documents/latex/sections/page_break.tex',
                     SCORE_TABLE_SECTION: 'documents/latex/sections/score_table.tex',
                     ANSWERS_SECTION: 'documents/latex/sections/answers.tex',
+                    THEORY_SECTION: 'documents/latex/sections/theory.tex',
                     SHORT_SOLUTIONS_SECTION: (
                         'documents/latex/sections/short_solutions.tex'
                     ),
@@ -53,6 +55,18 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                             'title': 'Контрольная',
                             'duration': 45,
                             'max_score': 10,
+                        },
+                    ),
+                    DocumentSection(
+                        section_type=THEORY_SECTION,
+                        payload={
+                            'blocks': [
+                                {
+                                    'topic_name': 'Динамика',
+                                    'content': r'Формула \(F=ma\)',
+                                    'subtopics': [],
+                                },
+                            ],
                         },
                     ),
                     DocumentSection(
@@ -137,6 +151,8 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
             self.assertIn(r'\documentclass', latex)
             self.assertIn(r'\begin{document}', latex)
             self.assertIn(r'{\LARGE\bfseries Контрольная}', latex)
+            self.assertIn(r'\section*{\centering Теоретическая справка}', latex)
+            self.assertIn(r'Формула \(F=ma\)', latex)
             self.assertIn(r'\section*{ Вариант 1 }', latex)
             self.assertIn('Найдите силу', latex)
             self.assertIn('Подсказка: F = ma', latex)

@@ -1,0 +1,21 @@
+<section class="document-theory">
+    <h2>{{ payload.section_title|default:"Теоретическая справка" }}</h2>
+    {% for block in payload.blocks %}
+        <article class="document-theory-block">
+            <h3>{{ block.topic_name }}</h3>
+            <div class="theory-content">{{ block.content|linebreaksbr }}</div>
+            {% if block.subtopics %}
+                <ul>
+                    {% for subtopic in block.subtopics %}
+                        <li>
+                            <strong>{{ subtopic.name }}</strong>
+                            <div>{{ subtopic.content|linebreaksbr }}</div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </article>
+    {% empty %}
+        <p>Теоретическая справка не задана.</p>
+    {% endfor %}
+</section>

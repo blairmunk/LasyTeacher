@@ -23,6 +23,7 @@ from core_logic.value_objects.document_recipes import (
     ORIGINAL_MISTAKES_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     TASK_LIST_SECTION,
+    THEORY_SECTION,
     TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
 )
@@ -30,6 +31,7 @@ from curriculum.models import SubTopic, Topic
 from infrastructure.services.django_document_section_payloads import (
     DjangoWorkHeaderPayloadBuilder,
     DjangoWorkTaskListPayloadBuilder,
+    DjangoWorkTheoryPayloadBuilder,
     RemedialSheetDataProvider,
     build_remedial_sheet_section_payload_builder_registry,
     build_work_section_payload_builder_registry,
@@ -214,6 +216,144 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             subject='Физика',
             section='Механика',
             grade_level=9,
+        )
+        defaults = {
+            'text': 'Задание',
+            'answer': 'Ответ',
+            'topic': topic,
+            'task_type': 'computational',
+            'difficulty': 2,
+        }
+        defaults.update(overrides)
+        return Task.objects.create(**defaults)
+
+
+class DjangoWorkTheoryPayloadBuilderTests(TestCase):
+    def test_builds_theory_payload_from_work_task_topics(self):
+        work = Work.objects.create(name='Контрольная')
+        variant = Variant.objects.create(work=work, number=1)
+        topic = Topic.objects.create(
+            name='Динамика',
+            subject='Физика',
+            section='Механика',
+            grade_level=9,
+            description='Второй закон Ньютона: F = ma',
+        )
+        task = Task.objects.create(
+            text='Задание',
+            answer='Ответ',
+            topic=topic,
+            task_type='computational',
+            difficulty=2,
+        )
+        second_task = Task.objects.create(
+            text='Второе задание',
+            answer='Ответ',
+            topic=topic,
+            task_type='computational',
+            difficulty=2,
+        )
+        VariantTask.objects.create(variant=variant, task=task, order=1)
+        VariantTask.objects.create(variant=variant, task=second_task, order=2)
+        builder = DjangoWorkTheoryPayloadBuilder()
+
+        payload = builder.build_payload(build_request(work, THEORY_SECTION))
+
+        self.assertEqual(payload['section_title'], 'Теоретическая справка')
+        self.assertEqual(len(payload['blocks']), 1)
+        self.assertEqual(payload['blocks'][0]['topic_name'], 'Динамика')
+        self.assertEqual(
+            payload['blocks'][0]['content'],
+            'Второй закон Ньютона: F = ma',
+        )
+
+    def test_skips_topics_without_description(self):
+        work = Work.objects.create(name='Контрольная')
+        variant = Variant.objects.create(work=work, number=1)
+        task = self.create_task(description='')
+        VariantTask.objects.create(variant=variant, task=task, order=1)
+        builder = DjangoWorkTheoryPayloadBuilder()
+
+        payload = builder.build_payload(build_request(work, THEORY_SECTION))
+
+        self.assertEqual(payload['blocks'], [])
+
+    def test_can_include_subtopic_descriptions(self):
+        work = Work.objects.create(name='Контрольная')
+        variant = Variant.objects.create(work=work, number=1)
+        topic = Topic.objects.create(
+            name='Динамика',
+            subject='Физика',
+            section='Механика',
+            grade_level=9,
+            description='Теория темы',
+        )
+        subtopic = SubTopic.objects.create(
+            topic=topic,
+            name='Силы',
+            description='Теория подтемы',
+        )
+        task = Task.objects.create(
+            text='Задание',
+            answer='Ответ',
+            topic=topic,
+            subtopic=subtopic,
+            task_type='computational',
+            difficulty=2,
+        )
+        VariantTask.objects.create(variant=variant, task=task, order=1)
+        builder = DjangoWorkTheoryPayloadBuilder()
+
+        payload = builder.build_payload(
+            build_request(
+                work,
+                THEORY_SECTION,
+                options={'include_subtopics': True},
+            )
+        )
+
+        self.assertEqual(payload['blocks'][0]['subtopics'][0]['name'], 'Силы')
+        self.assertEqual(
+            payload['blocks'][0]['subtopics'][0]['content'],
+            'Теория подтемы',
+        )
+
+    def test_formats_theory_text_with_task_formatter(self):
+        work = Work.objects.create(name='Контрольная')
+        variant = Variant.objects.create(work=work, number=1)
+        task = self.create_task(description='Закон $F=ma$')
+        VariantTask.objects.create(variant=variant, task=task, order=1)
+        formatter = FakeTaskPayloadFormatter()
+        builder = DjangoWorkTheoryPayloadBuilder(
+            task_payload_formatter=formatter,
+        )
+
+        payload = builder.build_payload(build_request(work, THEORY_SECTION))
+
+        self.assertEqual(
+            payload['blocks'][0]['content'],
+            'Закон $F=ma$',
+        )
+        self.assertEqual(formatter.requests[0]['text'], 'Закон $F=ma$')
+
+    def test_registry_supports_work_theory_section(self):
+        work = Work.objects.create(name='Контрольная')
+        variant = Variant.objects.create(work=work, number=1)
+        task = self.create_task(description='Теория')
+        VariantTask.objects.create(variant=variant, task=task, order=1)
+        registry = build_work_section_payload_builder_registry()
+
+        payload = registry.build_payload(build_request(work, THEORY_SECTION))
+
+        self.assertEqual(payload['blocks'][0]['content'], 'Теория')
+
+    def create_task(self, description='Теория темы', **overrides):
+        topic = Topic.objects.create(
+            name='Динамика',
+            subject='Физика',
+            section='Механика',
+            grade_level=9,
+            description=description,
         )
         defaults = {
             'text': 'Задание',

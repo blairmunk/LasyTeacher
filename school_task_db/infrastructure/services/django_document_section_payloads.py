@@ -13,6 +13,7 @@ from core_logic.value_objects.document_recipes import (
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     SHORT_SOLUTIONS_SECTION,
     TASK_LIST_SECTION,
+    THEORY_SECTION,
     TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
 )
@@ -61,6 +62,85 @@ class DjangoWorkTaskListPayloadBuilder:
             **dict(request.section.options),
             'variants': variants,
         }
+
+
+class DjangoWorkTheoryPayloadBuilder:
+    def __init__(self, get_work_source=None, task_payload_formatter=None):
+        self.get_work_source = get_work_source or _get_work_source
+        self.task_payload_formatter = task_payload_formatter
+
+    def build_payload(self, request):
+        work = self.get_work_source(request.source.source_id)
+        options = dict(request.section.options)
+        include_subtopics = options.get('include_subtopics', False)
+        return {
+            **options,
+            'section_title': options.get(
+                'section_title',
+                'Теоретическая справка',
+            ),
+            'blocks': self._topic_blocks(
+                work,
+                request=request,
+                include_subtopics=include_subtopics,
+            ),
+        }
+
+    def _topic_blocks(self, work, request=None, include_subtopics=False):
+        topic_map = {}
+        for variant in work.variant_set.order_by('number', 'pk'):
+            variant_tasks = (
+                variant.varianttask_set
+                .select_related('task', 'task__topic', 'task__subtopic')
+                .order_by('order', 'pk')
+            )
+            for variant_task in variant_tasks:
+                task = variant_task.task
+                topic = task.topic
+                if not topic or not topic.description:
+                    continue
+                topic_id = str(topic.pk)
+                if topic_id not in topic_map:
+                    topic_map[topic_id] = {
+                        'id': topic_id,
+                        'topic_name': topic.name,
+                        'subject': topic.subject,
+                        'section': topic.section,
+                        'grade_level': topic.grade_level,
+                        'content': topic.description,
+                        'subtopics': [],
+                    }
+                if include_subtopics and task.subtopic:
+                    subtopic = task.subtopic
+                    if subtopic.description:
+                        _append_unique_subtopic(
+                            topic_map[topic_id]['subtopics'],
+                            subtopic,
+                        )
+        return [
+            self._format_block_payload(block, request=request)
+            for block in topic_map.values()
+        ]
+
+    def _format_block_payload(self, block, request=None):
+        block_payload = dict(block)
+        block_payload['content'] = _format_text_payload(
+            block_payload['content'],
+            self.task_payload_formatter,
+            request=request,
+        )
+        block_payload['subtopics'] = [
+            {
+                **subtopic,
+                'content': _format_text_payload(
+                    subtopic['content'],
+                    self.task_payload_formatter,
+                    request=request,
+                ),
+            }
+            for subtopic in block_payload['subtopics']
+        ]
+        return block_payload
 
 
 class RemedialSheetDataProvider:
@@ -158,6 +238,15 @@ def build_work_section_payload_builder_registry(
     registry.register(
         LEGACY_TASK_VARIANTS_SECTION,
         task_list_builder,
+        document_type=WORK_DOCUMENT_TYPE,
+        source_type=WORK_SOURCE_TYPE,
+    )
+    registry.register(
+        THEORY_SECTION,
+        DjangoWorkTheoryPayloadBuilder(
+            get_work_source=get_work_source,
+            task_payload_formatter=task_payload_formatter,
+        ),
         document_type=WORK_DOCUMENT_TYPE,
         source_type=WORK_SOURCE_TYPE,
     )
@@ -298,6 +387,28 @@ def _format_task_payload(payload, task_payload_formatter=None, request=None):
     if task_payload_formatter is None:
         return payload
     return task_payload_formatter.format_task_payload(payload, request=request)
+
+
+def _format_text_payload(text, task_payload_formatter=None, request=None):
+    if task_payload_formatter is None:
+        return text
+    return task_payload_formatter.format_task_payload(
+        {'text': text},
+        request=request,
+    )['text']
+
+
+def _append_unique_subtopic(subtopics, subtopic):
+    subtopic_id = str(subtopic.pk)
+    if any(item['id'] == subtopic_id for item in subtopics):
+        return
+    subtopics.append(
+        {
+            'id': subtopic_id,
+            'name': subtopic.name,
+            'content': subtopic.description,
+        }
+    )
 
 
 def _student_payload(student):

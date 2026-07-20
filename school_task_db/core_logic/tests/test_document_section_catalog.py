@@ -90,6 +90,25 @@ class DocumentSectionCatalogTests(TestCase):
             [section.section_type for section in worksheet_sections],
         )
 
+    def test_theory_is_renderable_for_work_only(self):
+        work_sections = get_document_section_catalog(
+            document_type=WORK_DOCUMENT_TYPE,
+            renderable_only=True,
+        )
+        worksheet_sections = get_document_section_catalog(
+            document_type=WORKSHEET_DOCUMENT_TYPE,
+            renderable_only=True,
+        )
+
+        self.assertIn(
+            THEORY_SECTION,
+            [section.section_type for section in work_sections],
+        )
+        self.assertNotIn(
+            THEORY_SECTION,
+            [section.section_type for section in worksheet_sections],
+        )
+
     def test_can_return_renderable_sections_only(self):
         sections = get_document_section_catalog(
             document_type=WORKSHEET_DOCUMENT_TYPE,

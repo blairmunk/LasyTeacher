@@ -11,6 +11,7 @@ from core_logic.value_objects.document_recipes import (
     SCORE_TABLE_SECTION,
     SHORT_SOLUTIONS_SECTION,
     TASK_LIST_SECTION,
+    THEORY_SECTION,
     TRAINING_TASKS_SECTION,
 )
 
@@ -25,6 +26,7 @@ WORK_HTML_SECTION_TEMPLATES = {
     FULL_SOLUTIONS_SECTION: 'documents/html/sections/full_solutions.html',
     PAGE_BREAK_SECTION: 'documents/html/sections/page_break.html',
     SCORE_TABLE_SECTION: 'documents/html/sections/score_table.html',
+    THEORY_SECTION: 'documents/html/sections/theory.html',
 }
 WORK_HTML_WRAPPER_TEMPLATE = 'documents/html/base/document.html'
 
@@ -38,6 +40,7 @@ WORK_LATEX_SECTION_TEMPLATES = {
     FULL_SOLUTIONS_SECTION: 'documents/latex/sections/full_solutions.tex',
     PAGE_BREAK_SECTION: 'documents/latex/sections/page_break.tex',
     SCORE_TABLE_SECTION: 'documents/latex/sections/score_table.tex',
+    THEORY_SECTION: 'documents/latex/sections/theory.tex',
 }
 WORK_LATEX_WRAPPER_TEMPLATE = 'documents/latex/base/document.tex'
 

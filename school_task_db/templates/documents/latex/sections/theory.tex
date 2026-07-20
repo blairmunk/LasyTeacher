@@ -1,0 +1,15 @@
+\section*{\centering {{ payload.section_title|default:"Теоретическая справка" }}}
+{% for block in payload.blocks %}
+\subsection*{ {{ block.topic_name }} }
+{{ block.content|safe }}
+
+{% if block.subtopics %}
+\begin{itemize}
+{% for subtopic in block.subtopics %}
+\item \textbf{ {{ subtopic.name }} } {{ subtopic.content|safe }}
+{% endfor %}
+\end{itemize}
+{% endif %}
+{% empty %}
+\textit{Теоретическая справка не задана.}
+{% endfor %}

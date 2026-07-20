@@ -35,6 +35,7 @@ from core_logic.value_objects.document_recipes import (
     LEGACY_ANSWER_KEY_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     TASK_LIST_SECTION,
+    THEORY_SECTION,
     WORK_DOCUMENT_TYPE,
 )
 from curriculum.models import Topic
@@ -231,6 +232,70 @@ class SectionedDocumentDefaultsTests(TestCase):
             self.assertEqual(result.files[0].filename, filename)
             self.assertIn('Ответы', html)
             self.assertIn('10 Н', html)
+
+    def test_work_html_supports_theory_section(self):
+        work = Work.objects.create(name='Контрольная', duration=45, max_score=4)
+        variant = Variant.objects.create(
+            work=work,
+            number=1,
+            work_name_snapshot=work.name,
+            max_score_snapshot=4,
+            duration_snapshot=45,
+        )
+        topic = Topic.objects.create(
+            name='Динамика',
+            subject='Физика',
+            section='Механика',
+            grade_level=9,
+            description='Сила равна произведению массы на ускорение.',
+        )
+        task = Task.objects.create(
+            text='Найдите силу',
+            answer='10 Н',
+            topic=topic,
+            task_type='computational',
+            difficulty=3,
+        )
+        VariantTask.objects.create(
+            variant=variant,
+            task=task,
+            order=1,
+            max_points=4,
+        )
+
+        with TemporaryDirectory() as output_dir:
+            components = build_sectioned_document_components(
+                file_store=RenderedDocumentFileStore(
+                    output_dirs={'html': output_dir},
+                ),
+            )
+            engine = DjangoDocumentEngine(
+                document_builder=components.document_builder,
+                document_renderer_registry=components.document_renderer_registry,
+            )
+
+            result = engine.render_document(
+                build_work_document_render_plan(
+                    work_id=str(work.pk),
+                    work_name=work.name,
+                    options=WorkDocumentRenderOptions(renderer_type='html'),
+                    template_spec=DocumentTemplateSpec(
+                        name='Work with theory',
+                        template_type='work',
+                        sections=[
+                            DocumentSectionSpec(section_type=THEORY_SECTION),
+                            DocumentSectionSpec(section_type=TASK_LIST_SECTION),
+                        ],
+                    ),
+                ),
+            )
+
+            filename = work_html_filename_from_id(work.pk)
+            html = (Path(output_dir) / filename).read_text(encoding='utf-8')
+            self.assertEqual(result.files[0].filename, filename)
+            self.assertIn('Теоретическая справка', html)
+            self.assertIn('Динамика', html)
+            self.assertIn('Сила равна произведению массы на ускорение.', html)
 
     def test_builds_sectioned_work_latex_document_through_document_engine(self):
         work = Work.objects.create(name='Контрольная', duration=45, max_score=4)

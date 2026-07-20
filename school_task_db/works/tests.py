@@ -100,6 +100,64 @@ class GenerateWorkLatexCommandTests(TestCase):
                 call_command('generate_work_latex', 'missing', '--format', 'latex')
 
 
+class GeneratePdfCommandTests(TestCase):
+    def test_command_renders_work_pdf_through_container(self):
+        use_case = FakeRenderWorkDocumentUseCase(
+            result=DocumentRenderResult(
+                status=DOCUMENT_RENDER_STATUS_GENERATED,
+                renderer_type='pdf',
+                file_type='pdf',
+                files=[
+                    GeneratedDocumentFile(
+                        filename='work_1.pdf',
+                        size_kb=2.5,
+                    ),
+                ],
+                source_name='Контрольная',
+            ),
+        )
+        stdout = StringIO()
+
+        with patch(
+            'works.management.commands.generate_pdf.container',
+            FakeDocumentRenderContainer(use_case),
+        ):
+            call_command(
+                'generate_pdf',
+                'work',
+                'work-1',
+                '--format',
+                'A5',
+                '--with-answers',
+                stdout=stdout,
+            )
+
+        request = use_case.request
+        self.assertEqual(request.work_id, 'work-1')
+        self.assertEqual(request.options.renderer_type, 'pdf')
+        self.assertEqual(request.options.pdf_format, 'A5')
+        self.assertEqual(request.options.answer_type, 'with_answers')
+        self.assertIn('Created PDF document for Контрольная', stdout.getvalue())
+        self.assertIn('work_1.pdf', stdout.getvalue())
+
+    def test_command_raises_for_missing_work(self):
+        fake_container = FakeDocumentRenderContainer(
+            FakeRenderWorkDocumentUseCase(
+                result=DocumentRenderResult(
+                    status=DOCUMENT_RENDER_STATUS_NOT_FOUND,
+                    renderer_type='pdf',
+                ),
+            )
+        )
+
+        with patch(
+            'works.management.commands.generate_pdf.container',
+            fake_container,
+        ):
+            with self.assertRaises(CommandError):
+                call_command('generate_pdf', 'work', 'missing')
+
+
 class WorkDetailViewTests(TestCase):
     def setUp(self):
         self.work = Work.objects.create(

@@ -35,7 +35,6 @@ INSTALLED_APPS = [
     'curriculum',     # Учебные курсы
     'review',
     'document_generator',
-    'pdf_generator',       # PDF генератор
     'codifier',            # Кодификатор заданий
     'site_settings',       # Настройки
 ]

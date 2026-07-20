@@ -1,5 +1,9 @@
 import json
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
+from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
@@ -12,9 +16,45 @@ from students.models import Student
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Source, Task
 from works.models import Variant, Work
+from core.management.commands.html_to_pdf import (
+    html_to_pdf_file_pairs,
+    is_valid_html_file,
+    output_pdf_path,
+)
 
 
 class CoreViewsTests(TestCase):
+    def test_html_to_pdf_command_rejects_missing_path(self):
+        with self.assertRaises(CommandError):
+            call_command('html_to_pdf', 'missing.html')
+
+    def test_html_to_pdf_helpers_build_valid_file_pairs(self):
+        with TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            valid_html = temp_path / 'valid.html'
+            invalid_html = temp_path / 'invalid.html'
+            valid_html.write_text(
+                '<html><head></head><body>OK</body></html>',
+                encoding='utf-8',
+            )
+            invalid_html.write_text('<div>bad</div>', encoding='utf-8')
+
+            pairs = html_to_pdf_file_pairs(
+                [valid_html, invalid_html],
+                temp_path / 'pdf',
+            )
+
+            self.assertTrue(is_valid_html_file(valid_html))
+            self.assertFalse(is_valid_html_file(invalid_html))
+            self.assertEqual(
+                pairs,
+                [(valid_html, temp_path / 'pdf' / 'valid.pdf')],
+            )
+            self.assertEqual(
+                output_pdf_path(valid_html, temp_path / 'pdf'),
+                temp_path / 'pdf' / 'valid.pdf',
+            )
+
     def test_index_uses_clean_dashboard_summary_context(self):
         topic = Topic.objects.create(
             name='Кинематика',

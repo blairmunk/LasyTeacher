@@ -58,8 +58,7 @@ class WorkDetailViewTests(TestCase):
         self.assertContains(response, 'btn-render-doc')
         self.assertContains(response, 'data-rendering-form')
         self.assertContains(response, 'render-toast-box')
-        self.assertContains(response, 'document-generation-block')
-        self.assertContains(response, 'advanced-generation-form')
+        self.assertContains(response, 'advanced-rendering-form')
 
     def test_detail_returns_404_for_missing_work(self):
         response = self.client.get(

@@ -12,7 +12,7 @@ class DocumentRenderer {
     initEventListeners() {
         // Делегирование событий для динамических кнопок
         document.addEventListener('click', (e) => {
-            const button = e.target.closest('.btn-render-doc, .btn-generate-doc');
+            const button = e.target.closest('.btn-render-doc');
             if (button) {
                 e.preventDefault();
                 this.handleRenderClick(button);
@@ -23,7 +23,7 @@ class DocumentRenderer {
         document.addEventListener('submit', (e) => {
             if (
                 e.target.matches('[data-rendering-form]')
-                || e.target.matches('#advanced-generation-form')
+                || e.target.matches('#advanced-rendering-form')
             ) {
                 e.preventDefault();
                 this.handleAdvancedRendering(e.target);
@@ -62,10 +62,6 @@ class DocumentRenderer {
         await this.renderDocument(params, button);
     }
 
-    async handleGenerateClick(button) {
-        return this.handleRenderClick(button);
-    }
-
     async handleAdvancedRendering(form) {
         if (this.isRendering) {
             this.showAlert('Документ уже готовится, подождите...', 'warning');
@@ -95,14 +91,6 @@ class DocumentRenderer {
             params,
             form.querySelector('button[type="submit"]')
         );
-    }
-
-    async handleAdvancedGeneration(form) {
-        return this.handleAdvancedRendering(form);
-    }
-
-    async generateDocument(params, triggerElement) {
-        return this.renderDocument(params, triggerElement);
     }
 
     async renderDocument(params, triggerElement) {
@@ -182,19 +170,16 @@ class DocumentRenderer {
     displayResults(files) {
         if (!files || files.length === 0) return;
 
-        let resultsContainer = document.querySelector('[data-rendering-results]')
-            || document.getElementById('generation-results');
+        let resultsContainer = document.querySelector('[data-rendering-results]');
         if (!resultsContainer) {
             resultsContainer = document.createElement('div');
-            resultsContainer.id = 'generation-results';
+            resultsContainer.id = 'rendering-results';
             resultsContainer.setAttribute('data-rendering-results', '');
             resultsContainer.className = 'mt-4';
             
             // Ищем блок рендеринга по нескольким селекторам
             const genBlock = document.querySelector('.document-rendering-block')
                 || document.querySelector('[data-rendering-block]')
-                || document.querySelector('.document-generation-block')
-                || document.querySelector('[data-generation-block]')
                 || document.querySelector(
                     '.card-header h5 .fa-file-export'
                 )?.closest('.card');

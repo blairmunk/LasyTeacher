@@ -53,6 +53,37 @@ class DocumentModelTests(TestCase):
             {'task_ids': ['task-1']},
         )
 
+    def test_document_finds_sections_by_type(self):
+        document = Document(
+            title='Контрольная работа',
+            sections=[
+                DocumentSection(section_type='header'),
+                DocumentSection(
+                    section_type='task_list',
+                    payload={'source': 'variant-1'},
+                ),
+                DocumentSection(
+                    section_type='task_list',
+                    payload={'source': 'variant-2'},
+                ),
+            ],
+        )
+
+        self.assertTrue(document.has_section('task_list'))
+        self.assertFalse(document.has_section('answers'))
+        self.assertEqual(
+            tuple(
+                section.payload['source']
+                for section in document.sections_by_type('task_list')
+            ),
+            ('variant-1', 'variant-2'),
+        )
+        self.assertEqual(
+            document.first_section('task_list').payload,
+            {'source': 'variant-1'},
+        )
+        self.assertIsNone(document.first_section('answers'))
+
     def test_recipe_preserves_ordered_section_specs(self):
         recipe = DocumentRecipe(
             document_type='work',
@@ -87,6 +118,37 @@ class DocumentModelTests(TestCase):
             updated_recipe.section_types,
             ('original_mistakes',),
         )
+
+    def test_recipe_finds_sections_by_type(self):
+        recipe = DocumentRecipe(
+            document_type='work',
+            sections=[
+                DocumentSectionSpec(section_type='header'),
+                DocumentSectionSpec(
+                    section_type='task_list',
+                    options={'source': 'variant-1'},
+                ),
+                DocumentSectionSpec(
+                    section_type='task_list',
+                    options={'source': 'variant-2'},
+                ),
+            ],
+        )
+
+        self.assertTrue(recipe.has_section('task_list'))
+        self.assertFalse(recipe.has_section('answers'))
+        self.assertEqual(
+            tuple(
+                section.options['source']
+                for section in recipe.sections_by_type('task_list')
+            ),
+            ('variant-1', 'variant-2'),
+        )
+        self.assertEqual(
+            recipe.first_section('task_list').options,
+            {'source': 'variant-1'},
+        )
+        self.assertIsNone(recipe.first_section('answers'))
 
     def test_template_spec_preserves_ordered_sections(self):
         template = DocumentTemplateSpec(

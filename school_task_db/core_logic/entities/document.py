@@ -44,6 +44,22 @@ class Document:
     def section_types(self) -> Tuple[str, ...]:
         return tuple(section.section_type for section in self.sections)
 
+    def has_section(self, section_type: str) -> bool:
+        return section_type in self.section_types
+
+    def sections_by_type(self, section_type: str) -> Tuple[DocumentSection, ...]:
+        return tuple(
+            section
+            for section in self.sections
+            if section.section_type == section_type
+        )
+
+    def first_section(self, section_type: str) -> DocumentSection | None:
+        sections = self.sections_by_type(section_type)
+        if not sections:
+            return None
+        return sections[0]
+
     def with_section(self, section: DocumentSection) -> "Document":
         return Document(
             title=self.title,
@@ -76,6 +92,25 @@ class DocumentRecipe:
     @property
     def section_types(self) -> Tuple[str, ...]:
         return tuple(section.section_type for section in self.sections)
+
+    def has_section(self, section_type: str) -> bool:
+        return section_type in self.section_types
+
+    def sections_by_type(
+        self,
+        section_type: str,
+    ) -> Tuple[DocumentSectionSpec, ...]:
+        return tuple(
+            section
+            for section in self.sections
+            if section.section_type == section_type
+        )
+
+    def first_section(self, section_type: str) -> DocumentSectionSpec | None:
+        sections = self.sections_by_type(section_type)
+        if not sections:
+            return None
+        return sections[0]
 
     def with_section(self, section: DocumentSectionSpec) -> "DocumentRecipe":
         return DocumentRecipe(

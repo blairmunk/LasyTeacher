@@ -31,6 +31,7 @@ class DocumentRecipeTests(TestCase):
                 },
                 {
                     'type': TASK_LIST_SECTION,
+                    'title': 'Блок тренировки',
                     'params': {
                         'section_title': 'Тренировка',
                         'source': 'new_tasks',
@@ -45,6 +46,7 @@ class DocumentRecipeTests(TestCase):
             (HEADER_SECTION, TASK_LIST_SECTION),
         )
         self.assertEqual(recipe.sections[0].options, {'show_date': True})
+        self.assertEqual(recipe.sections[1].title, 'Блок тренировки')
         self.assertEqual(
             recipe.sections[1].options,
             {

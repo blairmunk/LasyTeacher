@@ -72,6 +72,7 @@ class Document:
 @dataclass(frozen=True)
 class DocumentSectionSpec:
     section_type: str
+    title: str = ''
     options: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):

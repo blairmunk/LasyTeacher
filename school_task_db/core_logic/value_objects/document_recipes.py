@@ -91,6 +91,7 @@ def _section_spec_from_config(
 
     return DocumentSectionSpec(
         section_type=section_type,
+        title=section_config.get('title', ''),
         options=dict(options),
     )
 

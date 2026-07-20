@@ -90,6 +90,7 @@ class DocumentModelTests(TestCase):
             sections=[
                 DocumentSectionSpec(
                     section_type='tasks',
+                    title='Задания',
                     options={'include_hints': True},
                 ),
                 DocumentSectionSpec(
@@ -101,6 +102,7 @@ class DocumentModelTests(TestCase):
 
         self.assertEqual(recipe.document_type, 'work')
         self.assertEqual(recipe.section_types, ('tasks', 'solutions'))
+        self.assertEqual(recipe.sections[0].title, 'Задания')
         self.assertEqual(recipe.sections[0].options, {'include_hints': True})
 
     def test_recipe_can_be_extended_without_mutating_original(self):

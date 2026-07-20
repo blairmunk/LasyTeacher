@@ -22,6 +22,7 @@ class RecipeDocumentBuilder(IDocumentBuilder):
             sections=[
                 DocumentSection(
                     section_type=section.section_type,
+                    title=section.title,
                     payload=dict(section.options),
                 )
                 for section in recipe.sections

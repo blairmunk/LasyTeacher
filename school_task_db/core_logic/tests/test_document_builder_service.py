@@ -21,6 +21,7 @@ class RecipeDocumentBuilderTests(TestCase):
             sections=[
                 DocumentSectionSpec(
                     section_type='tasks',
+                    title='Задания',
                     options={'include_hints': True},
                 ),
                 DocumentSectionSpec(section_type='answers'),
@@ -33,6 +34,7 @@ class RecipeDocumentBuilderTests(TestCase):
         self.assertEqual(document.document_type, 'work')
         self.assertEqual(document.source, source)
         self.assertEqual(document.section_types, ('tasks', 'answers'))
+        self.assertEqual(document.sections[0].title, 'Задания')
         self.assertEqual(document.sections[0].payload, {'include_hints': True})
 
     def test_copies_section_options_into_payload(self):

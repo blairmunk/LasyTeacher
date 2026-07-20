@@ -1,0 +1,32 @@
+<section class="remedial-original-mistakes">
+    <h2>Часть 1. Разбор ошибок</h2>
+    {% for task in payload.tasks %}
+        <article class="remedial-task remedial-task-{{ task.status }}">
+            <h3>
+                Задание {{ task.order }}
+                {% if task.group_name %}<small>{{ task.group_name }}</small>{% endif %}
+            </h3>
+            <p>
+                {% if task.status == 'fail' %}Не решено
+                {% elif task.status == 'partial' %}Частично
+                {% else %}Верно
+                {% endif %}
+                {% if task.max_points is not None %}
+                    ({{ task.points }}/{{ task.max_points }})
+                {% endif %}
+            </p>
+            <div class="task-text">{{ task.text|linebreaksbr }}</div>
+            <div class="task-answer">
+                <strong>Ответ:</strong> {{ task.answer|linebreaksbr }}
+            </div>
+            {% if task.short_solution %}
+                <div class="task-solution">
+                    <strong>Краткое решение:</strong>
+                    {{ task.short_solution|linebreaksbr }}
+                </div>
+            {% endif %}
+        </article>
+    {% empty %}
+        <p>Ошибки не найдены.</p>
+    {% endfor %}
+</section>

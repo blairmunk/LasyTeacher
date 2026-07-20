@@ -1,0 +1,17 @@
+<section class="remedial-training-tasks">
+    <h2>Часть 2. Тренировочные задания</h2>
+    {% for task in payload.tasks %}
+        <article class="remedial-training-task">
+            <h3>
+                Задание {{ task.order }}
+                {% if task.max_points %}
+                    <small>{{ task.max_points }} балл.</small>
+                {% endif %}
+            </h3>
+            <div class="task-text">{{ task.text|linebreaksbr }}</div>
+            <div class="workspace"></div>
+        </article>
+    {% empty %}
+        <p>Тренировочные задания не созданы.</p>
+    {% endfor %}
+</section>

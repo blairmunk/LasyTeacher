@@ -1,0 +1,8 @@
+<section class="remedial-full-solutions">
+    <h2>Полные решения тренировочных заданий</h2>
+    <ol>
+        {% for task in payload.tasks %}
+            <li>{{ task.full_solution|linebreaksbr }}</li>
+        {% endfor %}
+    </ol>
+</section>

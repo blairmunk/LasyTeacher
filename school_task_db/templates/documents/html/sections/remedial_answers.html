@@ -1,0 +1,8 @@
+<section class="remedial-answers">
+    <h2>Ответы к тренировочным заданиям</h2>
+    <ol>
+        {% for task in payload.tasks %}
+            <li>{{ task.answer|linebreaksbr }}</li>
+        {% endfor %}
+    </ol>
+</section>

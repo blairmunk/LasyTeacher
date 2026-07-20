@@ -1,0 +1,15 @@
+<header class="document-header remedial-header">
+    <h1>{{ payload.title|default:document.title }}</h1>
+    {% if payload.student %}
+        <p><strong>{{ payload.student.full_name }}</strong></p>
+    {% endif %}
+    {% if payload.source_work %}
+        <p>Исходная работа: {{ payload.source_work.name }}</p>
+    {% endif %}
+    {% if payload.mark %}
+        <p>
+            Оценка: <strong>{{ payload.mark.score }}</strong>
+            · {{ payload.mark.points }}/{{ payload.mark.max_points }} баллов
+        </p>
+    {% endif %}
+</header>

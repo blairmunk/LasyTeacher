@@ -1,0 +1,8 @@
+<section class="remedial-short-solutions">
+    <h2>Краткие решения тренировочных заданий</h2>
+    <ol>
+        {% for task in payload.tasks %}
+            <li>{{ task.short_solution|linebreaksbr }}</li>
+        {% endfor %}
+    </ol>
+</section>

@@ -40,10 +40,13 @@ class DjangoDocumentEngine(IDocumentEngine):
         get_remedial_source=None,
         source_provider=None,
         file_store=None,
+        section_payload_builder_registry=None,
     ):
         self.source_provider = source_provider or DjangoDocumentSourceProvider()
         self.file_store = file_store or RenderedDocumentFileStore()
-        self.document_builder = document_builder or RecipeDocumentBuilder()
+        self.document_builder = document_builder or RecipeDocumentBuilder(
+            section_payload_builder_registry=section_payload_builder_registry,
+        )
         self.get_work_source = (
             get_work_source
             or self.source_provider.get_work_source

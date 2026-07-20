@@ -5,6 +5,7 @@ from django.test import TestCase
 from core_logic.entities.document import (
     Document,
     DocumentRecipe,
+    DocumentSectionSpec,
     DocumentSourceRef,
     REMEDIAL_VARIANT_SOURCE_TYPE,
     WORK_SOURCE_TYPE,
@@ -12,6 +13,9 @@ from core_logic.entities.document import (
 from core_logic.entities.document_rendering import GeneratedDocument
 from core.models import ImportLog
 from core_logic.entities.task_import import TaskImportPreviewRequest, TaskImportRequest
+from core_logic.services.document_builder import (
+    DocumentSectionPayloadBuilderRegistry,
+)
 from core_logic.value_objects.content_config import (
     RemedialSheetDocumentRenderOptions,
     RenderTarget,
@@ -113,6 +117,16 @@ class FakeLegacyRenderRouter:
         return GeneratedDocument(file_type=options.renderer_type)
 
 
+class FakeSectionPayloadBuilder:
+    def __init__(self, payload):
+        self.payload = payload
+        self.request = None
+
+    def build_payload(self, request):
+        self.request = request
+        return self.payload
+
+
 class DjangoDocumentEngineTests(TestCase):
     def test_build_document_uses_configured_builder(self):
         builder = FakeDocumentBuilder()
@@ -136,6 +150,39 @@ class DjangoDocumentEngineTests(TestCase):
         service = DjangoDocumentEngine()
 
         self.assertIsNone(service._build_document())
+
+    def test_default_document_builder_uses_section_payload_registry(self):
+        payload_registry = DocumentSectionPayloadBuilderRegistry()
+        payload_builder = FakeSectionPayloadBuilder(
+            payload={'title': 'Из payload'},
+        )
+        payload_registry.register('header', payload_builder, document_type='work')
+        registry = FakeDocumentRendererRegistry()
+        service = DjangoDocumentEngine(
+            section_payload_builder_registry=payload_registry,
+            document_renderer_registry=registry,
+        )
+        plan = DocumentRenderPlan(
+            source=DocumentSourceRef(source_type='work', source_id='work-1'),
+            recipe=DocumentRecipe(
+                document_type='work',
+                sections=[DocumentSectionSpec(section_type='header')],
+            ),
+            render_target=RenderTarget(renderer_type='html'),
+        )
+
+        result = service.render_work_document(
+            work_id='work-1',
+            options=WorkDocumentRenderOptions(renderer_type='html'),
+            render_plan=plan,
+        )
+
+        self.assertEqual(result.file_type, 'html')
+        self.assertEqual(
+            registry.request.document.sections[0].payload,
+            {'title': 'Из payload'},
+        )
+        self.assertEqual(payload_builder.request.source.source_id, 'work-1')
 
     def test_render_work_document_uses_document_renderer_registry(self):
         document = Document(title='Контрольная', document_type='work')

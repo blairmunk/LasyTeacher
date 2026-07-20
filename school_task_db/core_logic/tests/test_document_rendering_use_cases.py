@@ -67,26 +67,13 @@ class FakeDocumentEngine:
         self.work_request = (work_id, options, render_plan)
         return self.work_document
 
-    def generate_work(self, work_id, options, render_plan=None):
-        return self.render_work_document(work_id, options, render_plan)
-
     def render_remedial_sheet_document(self, variant_id, options, render_plan=None):
         self.remedial_request = (variant_id, options, render_plan)
         return self.remedial_document
 
-    def generate_remedial_sheet(self, variant_id, options, render_plan=None):
-        return self.render_remedial_sheet_document(
-            variant_id,
-            options,
-            render_plan,
-        )
-
     def get_rendered_file(self, file_type, filename):
         self.file_request = (file_type, filename)
         return self.file_result
-
-    def get_generated_file(self, file_type, filename):
-        return self.get_rendered_file(file_type, filename)
 
 
 class FakeWorkRepository:

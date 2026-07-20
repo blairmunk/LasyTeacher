@@ -8,9 +8,6 @@ from infrastructure.services.django_document_section_payloads import (
     build_remedial_sheet_section_payload_builder_registry,
     build_work_section_payload_builder_registry,
 )
-from infrastructure.services.document_renderer_registry_factory import (
-    build_legacy_document_renderer_registry_from_adapters,
-)
 from infrastructure.services.latex_document_payloads import (
     LatexTaskPayloadFormatter,
     RenderTargetTaskPayloadFormatter,
@@ -174,35 +171,6 @@ def build_sectioned_document_components(
     )
     components.document_renderer_registry.extend(latex_renderer_registry)
     return components
-
-
-def build_sectioned_document_components_with_legacy_fallback(
-    file_store,
-    get_work_source,
-    get_remedial_source,
-    legacy_file_renderer,
-    get_remedial_sheet_data=None,
-    template_renderer=None,
-    pdf_generator_factory=None,
-) -> SectionedDocumentComponents:
-    sectioned_components = build_sectioned_document_components(
-        file_store=file_store,
-        get_work_source=get_work_source,
-        get_remedial_sheet_data=get_remedial_sheet_data,
-        template_renderer=template_renderer,
-        pdf_generator_factory=pdf_generator_factory,
-    )
-    renderer_registry = build_legacy_document_renderer_registry_from_adapters(
-        file_store=file_store,
-        get_work_source=get_work_source,
-        get_remedial_source=get_remedial_source,
-        legacy_file_renderer=legacy_file_renderer,
-    )
-    renderer_registry.extend(sectioned_components.document_renderer_registry)
-    return SectionedDocumentComponents(
-        document_builder=sectioned_components.document_builder,
-        document_renderer_registry=renderer_registry,
-    )
 
 
 def build_sectioned_remedial_sheet_html_document_components(

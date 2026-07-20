@@ -132,6 +132,9 @@ from core_logic.use_cases.render_remedial_sheet_document import (
     RenderRemedialSheetDocumentUseCase,
 )
 from core_logic.use_cases.render_document import RenderDocumentUseCase
+from core_logic.use_cases.render_document_from_template import (
+    RenderDocumentFromTemplateUseCase,
+)
 from core_logic.use_cases.render_work_document import RenderWorkDocumentUseCase
 from core_logic.use_cases.get_recent_review_sessions import (
     GetRecentReviewSessionsUseCase,
@@ -433,6 +436,9 @@ class ContainerTests(SimpleTestCase):
         )
         bulk_delete_variants_use_case = container.bulk_delete_variants_use_case()
         render_document_use_case = container.render_document_use_case()
+        render_from_template_use_case = (
+            container.render_document_from_template_use_case()
+        )
         render_work_document_use_case = container.render_work_document_use_case()
         render_remedial_sheet_use_case = (
             container.render_remedial_sheet_document_use_case()
@@ -694,6 +700,10 @@ class ContainerTests(SimpleTestCase):
         )
         self.assertIsInstance(bulk_delete_variants_use_case, BulkDeleteVariantsUseCase)
         self.assertIsInstance(render_document_use_case, RenderDocumentUseCase)
+        self.assertIsInstance(
+            render_from_template_use_case,
+            RenderDocumentFromTemplateUseCase,
+        )
         self.assertIsInstance(
             render_work_document_use_case,
             RenderWorkDocumentUseCase,

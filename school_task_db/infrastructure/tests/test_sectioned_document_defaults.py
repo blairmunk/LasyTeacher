@@ -8,6 +8,7 @@ from core_logic.entities.document import (
     DocumentSectionSpec,
     DocumentSourceRef,
     DocumentTemplateSpec,
+    REMEDIAL_VARIANT_SOURCE_TYPE,
     WORK_SOURCE_TYPE,
 )
 from core_logic.entities.work import (
@@ -20,6 +21,9 @@ from core_logic.value_objects.document_render_options import (
     RenderTarget,
     WorkDocumentRenderOptions,
 )
+from core_logic.value_objects.document_build_plan import (
+    DocumentSectionPayloadBuildRequest,
+)
 from core_logic.value_objects.document_render_plan import DocumentRenderPlan
 from core_logic.value_objects.document_render_plan_factories import (
     build_remedial_sheet_document_render_plan,
@@ -27,8 +31,11 @@ from core_logic.value_objects.document_render_plan_factories import (
 )
 from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
+    HEADER_SECTION,
     LEGACY_ANSWER_KEY_SECTION,
+    REMEDIAL_SHEET_DOCUMENT_TYPE,
     TASK_LIST_SECTION,
+    WORK_DOCUMENT_TYPE,
 )
 from curriculum.models import Topic
 from infrastructure.services.document_engine import DjangoDocumentEngine
@@ -37,6 +44,7 @@ from infrastructure.services.rendered_document_file_store import (
 )
 from infrastructure.services.sectioned_document_defaults import (
     build_sectioned_document_components,
+    build_sectioned_document_payload_builder_registry,
     build_sectioned_html_document_components,
     build_sectioned_html_pdf_document_components,
 )
@@ -476,6 +484,49 @@ class SectionedDocumentDefaultsTests(TestCase):
                     document_type='remedial_sheet',
                 )
             )
+
+    def test_builds_combined_section_payload_registry(self):
+        registry = build_sectioned_document_payload_builder_registry(
+            get_work_source=lambda work_id: Work(
+                id=work_id,
+                name='Контрольная',
+                duration=45,
+                max_score=4,
+            ),
+            get_remedial_sheet_data=lambda variant_id: RemedialSheetData(
+                variant='variant',
+                student=None,
+                source_work=Work(name='Исходная работа'),
+                mark=None,
+                new_tasks=[],
+            ),
+        )
+
+        work_payload = registry.build_payload(
+            DocumentSectionPayloadBuildRequest(
+                source=DocumentSourceRef(
+                    source_type=WORK_SOURCE_TYPE,
+                    source_id='work-1',
+                ),
+                recipe=DocumentRecipe(document_type=WORK_DOCUMENT_TYPE),
+                section=DocumentSectionSpec(section_type=HEADER_SECTION),
+            )
+        )
+        remedial_payload = registry.build_payload(
+            DocumentSectionPayloadBuildRequest(
+                source=DocumentSourceRef(
+                    source_type=REMEDIAL_VARIANT_SOURCE_TYPE,
+                    source_id='variant-1',
+                ),
+                recipe=DocumentRecipe(
+                    document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
+                ),
+                section=DocumentSectionSpec(section_type=HEADER_SECTION),
+            )
+        )
+
+        self.assertEqual(work_payload['title'], 'Контрольная')
+        self.assertEqual(remedial_payload['title'], 'Работа над ошибками')
 
     def test_builds_combined_sectioned_html_pdf_components(self):
         with TemporaryDirectory() as output_dir:

@@ -35,15 +35,10 @@ def build_sectioned_html_document_components(
     template_renderer=None,
     task_payload_formatter=None,
 ) -> SectionedDocumentComponents:
-    payload_registry = build_work_section_payload_builder_registry(
+    payload_registry = build_sectioned_document_payload_builder_registry(
         get_work_source=get_work_source,
+        get_remedial_sheet_data=get_remedial_sheet_data,
         task_payload_formatter=task_payload_formatter,
-    )
-    payload_registry.extend(
-        build_remedial_sheet_section_payload_builder_registry(
-            get_remedial_sheet_data=get_remedial_sheet_data,
-            task_payload_formatter=task_payload_formatter,
-        )
     )
     return SectionedDocumentComponents(
         document_builder=RecipeDocumentBuilder(
@@ -117,6 +112,26 @@ def build_sectioned_document_components(
     )
     components.document_renderer_registry.extend(latex_renderer_registry)
     return components
+
+
+def build_sectioned_document_payload_builder_registry(
+    get_work_source=None,
+    get_remedial_sheet_data=None,
+    task_payload_formatter=None,
+):
+    payload_registry = build_work_section_payload_builder_registry(
+        get_work_source=get_work_source,
+        task_payload_formatter=task_payload_formatter,
+    )
+    payload_registry.extend(
+        build_remedial_sheet_section_payload_builder_registry(
+            get_remedial_sheet_data=get_remedial_sheet_data,
+            task_payload_formatter=task_payload_formatter,
+        )
+    )
+    return payload_registry
+
+
 def _sectioned_task_payload_formatter():
     return RenderTargetTaskPayloadFormatter(
         formatters_by_renderer_type={

@@ -42,7 +42,7 @@ class DjangoWorkHeaderPayloadBuilder:
         }
 
 
-class DjangoWorkTaskVariantsPayloadBuilder:
+class DjangoWorkTaskListPayloadBuilder:
     def __init__(self, get_work_source=None, task_payload_formatter=None):
         self.get_work_source = get_work_source or _get_work_source
         self.task_payload_formatter = task_payload_formatter
@@ -139,6 +139,10 @@ def build_work_section_payload_builder_registry(
     task_payload_formatter=None,
 ) -> DocumentSectionPayloadBuilderRegistry:
     registry = DocumentSectionPayloadBuilderRegistry()
+    task_list_builder = DjangoWorkTaskListPayloadBuilder(
+        get_work_source=get_work_source,
+        task_payload_formatter=task_payload_formatter,
+    )
     registry.register(
         HEADER_SECTION,
         DjangoWorkHeaderPayloadBuilder(get_work_source=get_work_source),
@@ -146,20 +150,14 @@ def build_work_section_payload_builder_registry(
         source_type=WORK_SOURCE_TYPE,
     )
     registry.register(
-        TASK_VARIANTS_SECTION,
-        DjangoWorkTaskVariantsPayloadBuilder(
-            get_work_source=get_work_source,
-            task_payload_formatter=task_payload_formatter,
-        ),
+        TASK_LIST_SECTION,
+        task_list_builder,
         document_type=WORK_DOCUMENT_TYPE,
         source_type=WORK_SOURCE_TYPE,
     )
     registry.register(
-        TASK_LIST_SECTION,
-        DjangoWorkTaskVariantsPayloadBuilder(
-            get_work_source=get_work_source,
-            task_payload_formatter=task_payload_formatter,
-        ),
+        TASK_VARIANTS_SECTION,
+        task_list_builder,
         document_type=WORK_DOCUMENT_TYPE,
         source_type=WORK_SOURCE_TYPE,
     )
@@ -171,10 +169,7 @@ def build_work_section_payload_builder_registry(
     ):
         registry.register(
             section_type,
-            DjangoWorkTaskVariantsPayloadBuilder(
-                get_work_source=get_work_source,
-                task_payload_formatter=task_payload_formatter,
-            ),
+            task_list_builder,
             document_type=WORK_DOCUMENT_TYPE,
             source_type=WORK_SOURCE_TYPE,
         )

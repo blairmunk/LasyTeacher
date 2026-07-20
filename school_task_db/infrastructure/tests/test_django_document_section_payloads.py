@@ -29,7 +29,7 @@ from core_logic.value_objects.document_recipes import (
 from curriculum.models import SubTopic, Topic
 from infrastructure.services.django_document_section_payloads import (
     DjangoWorkHeaderPayloadBuilder,
-    DjangoWorkTaskVariantsPayloadBuilder,
+    DjangoWorkTaskListPayloadBuilder,
     RemedialSheetDataProvider,
     build_remedial_sheet_section_payload_builder_registry,
     build_work_section_payload_builder_registry,
@@ -64,8 +64,8 @@ class DjangoWorkHeaderPayloadBuilderTests(TestCase):
         )
 
 
-class DjangoWorkTaskVariantsPayloadBuilderTests(TestCase):
-    def test_builds_task_variants_payload(self):
+class DjangoWorkTaskListPayloadBuilderTests(TestCase):
+    def test_builds_task_list_payload(self):
         work = Work.objects.create(name='Контрольная', duration=45)
         variant = Variant.objects.create(
             work=work,
@@ -102,12 +102,12 @@ class DjangoWorkTaskVariantsPayloadBuilderTests(TestCase):
             order=1,
             max_points=4,
         )
-        builder = DjangoWorkTaskVariantsPayloadBuilder()
+        builder = DjangoWorkTaskListPayloadBuilder()
 
         payload = builder.build_payload(
             build_request(
                 work,
-                TASK_VARIANTS_SECTION,
+                TASK_LIST_SECTION,
                 options={'include_hints': True},
             ),
         )
@@ -129,7 +129,7 @@ class DjangoWorkTaskVariantsPayloadBuilderTests(TestCase):
         self.assertEqual(task_payload['source'], 'Сб.')
         self.assertEqual(task_payload['source_detail'], 'стр. 10')
 
-    def test_builds_task_variants_payload_with_task_formatter(self):
+    def test_builds_task_list_payload_with_task_formatter(self):
         work = Work.objects.create(name='Контрольная', duration=45)
         variant = Variant.objects.create(work=work, number=1)
         task = self.create_task(text='Найдите силу')
@@ -140,11 +140,11 @@ class DjangoWorkTaskVariantsPayloadBuilderTests(TestCase):
             max_points=4,
         )
         formatter = FakeTaskPayloadFormatter()
-        builder = DjangoWorkTaskVariantsPayloadBuilder(
+        builder = DjangoWorkTaskListPayloadBuilder(
             task_payload_formatter=formatter,
         )
 
-        payload = builder.build_payload(build_request(work, TASK_VARIANTS_SECTION))
+        payload = builder.build_payload(build_request(work, TASK_LIST_SECTION))
 
         task_payload = payload['variants'][0]['tasks'][0]
         self.assertTrue(task_payload['formatted'])
@@ -194,18 +194,18 @@ class DjangoWorkTaskVariantsPayloadBuilderTests(TestCase):
 
         self.assertEqual(payload['variants'], [])
 
-    def test_registry_supports_legacy_work_section_names(self):
+    def test_registry_supports_work_section_aliases(self):
         work = Work.objects.create(name='Контрольная')
         registry = build_work_section_payload_builder_registry()
 
-        task_list_payload = registry.build_payload(
-            build_request(work, TASK_LIST_SECTION)
+        task_variants_payload = registry.build_payload(
+            build_request(work, TASK_VARIANTS_SECTION)
         )
         answer_key_payload = registry.build_payload(
             build_request(work, ANSWER_KEY_SECTION)
         )
 
-        self.assertEqual(task_list_payload['variants'], [])
+        self.assertEqual(task_variants_payload['variants'], [])
         self.assertEqual(answer_key_payload['variants'], [])
 
     def create_task(self, **overrides):

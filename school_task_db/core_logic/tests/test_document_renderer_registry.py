@@ -1,13 +1,17 @@
 from unittest import TestCase
 
-from core_logic.entities.document import Document
+from core_logic.entities.document import Document, DocumentSection
 from core_logic.entities.document_rendering import GeneratedDocument
 from core_logic.services.document_renderer_registry import (
     DocumentRendererRegistry,
+    DocumentSectionRendererRegistry,
     UnsupportedDocumentRenderer,
 )
 from core_logic.value_objects.content_config import RenderTarget
-from core_logic.value_objects.document_render_plan import DocumentRenderRequest
+from core_logic.value_objects.document_render_plan import (
+    DocumentRenderRequest,
+    DocumentSectionRenderRequest,
+)
 
 
 class FakeRenderer:
@@ -17,6 +21,15 @@ class FakeRenderer:
     def render(self, request):
         self.request = request
         return GeneratedDocument(file_type=request.render_target.renderer_type)
+
+
+class FakeSectionRenderer:
+    def __init__(self):
+        self.request = None
+
+    def render_section(self, request):
+        self.request = request
+        return f'{request.render_target.renderer_type}:{request.section.section_type}'
 
 
 class DocumentRendererRegistryTests(TestCase):
@@ -74,3 +87,64 @@ class DocumentRendererRegistryTests(TestCase):
 
         with self.assertRaises(UnsupportedDocumentRenderer):
             registry.render(request)
+
+
+class DocumentSectionRendererRegistryTests(TestCase):
+    def test_registers_and_delegates_to_section_renderer(self):
+        registry = DocumentSectionRendererRegistry()
+        renderer = FakeSectionRenderer()
+        registry.register('html', 'task_list', renderer)
+        request = DocumentSectionRenderRequest(
+            document=Document(title='Контрольная'),
+            section=DocumentSection(section_type='task_list'),
+            render_target=RenderTarget(renderer_type='html'),
+        )
+
+        result = registry.render_section(request)
+
+        self.assertEqual(result, 'html:task_list')
+        self.assertEqual(renderer.request, request)
+
+    def test_can_register_same_section_for_different_renderers(self):
+        registry = DocumentSectionRendererRegistry()
+        html_renderer = FakeSectionRenderer()
+        latex_renderer = FakeSectionRenderer()
+        registry.register('html', 'task_list', html_renderer)
+        registry.register('latex', 'task_list', latex_renderer)
+        document = Document(title='Контрольная')
+        section = DocumentSection(section_type='task_list')
+        html_request = DocumentSectionRenderRequest(
+            document=document,
+            section=section,
+            render_target=RenderTarget(renderer_type='html'),
+        )
+        latex_request = DocumentSectionRenderRequest(
+            document=document,
+            section=section,
+            render_target=RenderTarget(renderer_type='latex'),
+        )
+
+        registry.render_section(html_request)
+        registry.render_section(latex_request)
+
+        self.assertEqual(html_renderer.request, html_request)
+        self.assertEqual(latex_renderer.request, latex_request)
+
+    def test_rejects_empty_section_renderer_keys(self):
+        registry = DocumentSectionRendererRegistry()
+
+        with self.assertRaises(ValueError):
+            registry.register('', 'task_list', FakeSectionRenderer())
+        with self.assertRaises(ValueError):
+            registry.register('html', '', FakeSectionRenderer())
+
+    def test_rejects_unsupported_section_renderer(self):
+        registry = DocumentSectionRendererRegistry()
+        request = DocumentSectionRenderRequest(
+            document=Document(title='Контрольная'),
+            section=DocumentSection(section_type='task_list'),
+            render_target=RenderTarget(renderer_type='html'),
+        )
+
+        with self.assertRaises(UnsupportedDocumentRenderer):
+            registry.render_section(request)

@@ -4,10 +4,6 @@ from dataclasses import dataclass
 
 from core_logic.services.document_builder import RecipeDocumentBuilder
 from core_logic.services.document_renderer_registry import DocumentRendererRegistry
-from core_logic.value_objects.document_recipes import (
-    REMEDIAL_SHEET_DOCUMENT_TYPE,
-    WORK_DOCUMENT_TYPE,
-)
 from infrastructure.services.django_document_section_payloads import (
     build_remedial_sheet_section_payload_builder_registry,
     build_work_section_payload_builder_registry,
@@ -20,7 +16,6 @@ from infrastructure.services.latex_document_payloads import (
     RenderTargetTaskPayloadFormatter,
 )
 from infrastructure.services.sectioned_document_renderer_factory import (
-    TemplateSectionedTextDocumentRendererSpec,
     build_template_sectioned_html_to_pdf_document_renderer_registry,
     build_template_sectioned_text_document_renderer_registry,
 )
@@ -30,15 +25,13 @@ from infrastructure.services.sectioned_document_filenames import (
     work_html_filename,
     work_latex_filename,
 )
-from infrastructure.services.sectioned_document_templates import (
-    REMEDIAL_HTML_SECTION_TEMPLATES,
-    REMEDIAL_HTML_WRAPPER_TEMPLATE,
-    REMEDIAL_LATEX_SECTION_TEMPLATES,
-    REMEDIAL_LATEX_WRAPPER_TEMPLATE,
-    WORK_HTML_SECTION_TEMPLATES,
-    WORK_HTML_WRAPPER_TEMPLATE,
-    WORK_LATEX_SECTION_TEMPLATES,
-    WORK_LATEX_WRAPPER_TEMPLATE,
+from infrastructure.services.sectioned_document_renderer_specs import (
+    remedial_html_renderer_specs,
+    remedial_latex_renderer_specs,
+    sectioned_html_renderer_specs,
+    sectioned_latex_renderer_specs,
+    work_html_renderer_specs,
+    work_latex_renderer_specs,
 )
 
 
@@ -63,14 +56,7 @@ def build_sectioned_work_html_document_components(
         document_renderer_registry=(
             build_template_sectioned_text_document_renderer_registry(
                 renderer_type='html',
-                renderer_specs=[
-                    TemplateSectionedTextDocumentRendererSpec(
-                        document_type=WORK_DOCUMENT_TYPE,
-                        section_templates=WORK_HTML_SECTION_TEMPLATES,
-                        filename_builder=work_html_filename,
-                        wrapper_template_name=WORK_HTML_WRAPPER_TEMPLATE,
-                    ),
-                ],
+                renderer_specs=work_html_renderer_specs(),
                 file_store=file_store,
                 template_renderer=template_renderer,
             )
@@ -97,14 +83,7 @@ def build_sectioned_work_latex_document_components(
         document_renderer_registry=(
             build_template_sectioned_text_document_renderer_registry(
                 renderer_type='latex',
-                renderer_specs=[
-                    TemplateSectionedTextDocumentRendererSpec(
-                        document_type=WORK_DOCUMENT_TYPE,
-                        section_templates=WORK_LATEX_SECTION_TEMPLATES,
-                        filename_builder=work_latex_filename,
-                        wrapper_template_name=WORK_LATEX_WRAPPER_TEMPLATE,
-                    ),
-                ],
+                renderer_specs=work_latex_renderer_specs(),
                 file_store=file_store,
                 template_renderer=template_renderer,
             )
@@ -136,7 +115,7 @@ def build_sectioned_html_document_components(
         document_renderer_registry=(
             build_template_sectioned_text_document_renderer_registry(
                 renderer_type='html',
-                renderer_specs=_sectioned_html_renderer_specs(),
+                renderer_specs=sectioned_html_renderer_specs(),
                 file_store=file_store,
                 template_renderer=template_renderer,
             )
@@ -162,7 +141,7 @@ def build_sectioned_html_pdf_document_components(
     pdf_renderer_registry = (
         build_template_sectioned_html_to_pdf_document_renderer_registry(
             renderer_type='pdf',
-            renderer_specs=_sectioned_html_renderer_specs(),
+            renderer_specs=sectioned_html_renderer_specs(),
             file_store=file_store,
             template_renderer=template_renderer,
             pdf_generator_factory=pdf_generator_factory,
@@ -194,7 +173,7 @@ def build_sectioned_document_components(
     latex_renderer_registry = (
         build_template_sectioned_text_document_renderer_registry(
             renderer_type='latex',
-            renderer_specs=_sectioned_latex_renderer_specs(),
+            renderer_specs=sectioned_latex_renderer_specs(),
             file_store=file_store,
             template_renderer=template_renderer,
         )
@@ -287,14 +266,7 @@ def build_sectioned_remedial_sheet_html_document_components(
         document_renderer_registry=(
             build_template_sectioned_text_document_renderer_registry(
                 renderer_type='html',
-                renderer_specs=[
-                    TemplateSectionedTextDocumentRendererSpec(
-                        document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
-                        section_templates=REMEDIAL_HTML_SECTION_TEMPLATES,
-                        filename_builder=remedial_html_filename,
-                        wrapper_template_name=REMEDIAL_HTML_WRAPPER_TEMPLATE,
-                    ),
-                ],
+                renderer_specs=remedial_html_renderer_specs(),
                 file_store=file_store,
                 template_renderer=template_renderer,
             )
@@ -321,53 +293,12 @@ def build_sectioned_remedial_sheet_latex_document_components(
         document_renderer_registry=(
             build_template_sectioned_text_document_renderer_registry(
                 renderer_type='latex',
-                renderer_specs=[
-                    TemplateSectionedTextDocumentRendererSpec(
-                        document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
-                        section_templates=REMEDIAL_LATEX_SECTION_TEMPLATES,
-                        filename_builder=remedial_latex_filename,
-                        wrapper_template_name=REMEDIAL_LATEX_WRAPPER_TEMPLATE,
-                    ),
-                ],
+                renderer_specs=remedial_latex_renderer_specs(),
                 file_store=file_store,
                 template_renderer=template_renderer,
             )
         ),
     )
-
-
-def _sectioned_html_renderer_specs():
-    return [
-        TemplateSectionedTextDocumentRendererSpec(
-            document_type=WORK_DOCUMENT_TYPE,
-            section_templates=WORK_HTML_SECTION_TEMPLATES,
-            filename_builder=work_html_filename,
-            wrapper_template_name=WORK_HTML_WRAPPER_TEMPLATE,
-        ),
-        TemplateSectionedTextDocumentRendererSpec(
-            document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
-            section_templates=REMEDIAL_HTML_SECTION_TEMPLATES,
-            filename_builder=remedial_html_filename,
-            wrapper_template_name=REMEDIAL_HTML_WRAPPER_TEMPLATE,
-        ),
-    ]
-
-
-def _sectioned_latex_renderer_specs():
-    return [
-        TemplateSectionedTextDocumentRendererSpec(
-            document_type=WORK_DOCUMENT_TYPE,
-            section_templates=WORK_LATEX_SECTION_TEMPLATES,
-            filename_builder=work_latex_filename,
-            wrapper_template_name=WORK_LATEX_WRAPPER_TEMPLATE,
-        ),
-        TemplateSectionedTextDocumentRendererSpec(
-            document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
-            section_templates=REMEDIAL_LATEX_SECTION_TEMPLATES,
-            filename_builder=remedial_latex_filename,
-            wrapper_template_name=REMEDIAL_LATEX_WRAPPER_TEMPLATE,
-        ),
-    ]
 
 
 def _sectioned_task_payload_formatter():

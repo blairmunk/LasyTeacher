@@ -30,7 +30,7 @@
 ### 3. Генераторы документов
 Проект обладает мощной подсистемой экспорта:
 *   **`core_logic` + `infrastructure/services`:** Секционный document engine для HTML, LaTeX и PDF.
-*   **`document_generator`:** Хранение шаблонов документов и compatibility-утилиты старого пути.
+*   **`document_generator`:** Хранение шаблонов документов для секционного движка.
 
 ---
 

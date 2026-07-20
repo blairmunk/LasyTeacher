@@ -5,16 +5,7 @@ from dataclasses import dataclass
 from core_logic.services.document_builder import RecipeDocumentBuilder
 from core_logic.services.document_renderer_registry import DocumentRendererRegistry
 from core_logic.value_objects.document_recipes import (
-    ANSWER_KEY_SECTION,
-    ANSWERS_SECTION,
-    FULL_SOLUTIONS_SECTION,
-    HEADER_SECTION,
-    ORIGINAL_MISTAKES_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
-    SHORT_SOLUTIONS_SECTION,
-    TASK_LIST_SECTION,
-    TASK_VARIANTS_SECTION,
-    TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
 )
 from infrastructure.services.django_document_section_payloads import (
@@ -39,62 +30,16 @@ from infrastructure.services.sectioned_document_filenames import (
     work_html_filename,
     work_latex_filename,
 )
-
-
-WORK_HTML_SECTION_TEMPLATES = {
-    HEADER_SECTION: 'documents/html/sections/header.html',
-    TASK_LIST_SECTION: 'documents/html/sections/task_variants.html',
-    TASK_VARIANTS_SECTION: 'documents/html/sections/task_variants.html',
-    ANSWER_KEY_SECTION: 'documents/html/sections/answers.html',
-    ANSWERS_SECTION: 'documents/html/sections/answers.html',
-    SHORT_SOLUTIONS_SECTION: 'documents/html/sections/short_solutions.html',
-    FULL_SOLUTIONS_SECTION: 'documents/html/sections/full_solutions.html',
-}
-WORK_HTML_WRAPPER_TEMPLATE = 'documents/html/base/document.html'
-WORK_LATEX_SECTION_TEMPLATES = {
-    HEADER_SECTION: 'documents/latex/sections/header.tex',
-    TASK_LIST_SECTION: 'documents/latex/sections/task_variants.tex',
-    TASK_VARIANTS_SECTION: 'documents/latex/sections/task_variants.tex',
-    ANSWER_KEY_SECTION: 'documents/latex/sections/answers.tex',
-    ANSWERS_SECTION: 'documents/latex/sections/answers.tex',
-    SHORT_SOLUTIONS_SECTION: 'documents/latex/sections/short_solutions.tex',
-    FULL_SOLUTIONS_SECTION: 'documents/latex/sections/full_solutions.tex',
-}
-WORK_LATEX_WRAPPER_TEMPLATE = 'documents/latex/base/document.tex'
-REMEDIAL_HTML_SECTION_TEMPLATES = {
-    HEADER_SECTION: 'documents/html/sections/remedial_header.html',
-    ORIGINAL_MISTAKES_SECTION: (
-        'documents/html/sections/remedial_original_mistakes.html'
-    ),
-    TRAINING_TASKS_SECTION: (
-        'documents/html/sections/remedial_training_tasks.html'
-    ),
-    ANSWERS_SECTION: 'documents/html/sections/remedial_answers.html',
-    SHORT_SOLUTIONS_SECTION: (
-        'documents/html/sections/remedial_short_solutions.html'
-    ),
-    FULL_SOLUTIONS_SECTION: (
-        'documents/html/sections/remedial_full_solutions.html'
-    ),
-}
-REMEDIAL_HTML_WRAPPER_TEMPLATE = 'documents/html/base/document.html'
-REMEDIAL_LATEX_SECTION_TEMPLATES = {
-    HEADER_SECTION: 'documents/latex/sections/remedial_header.tex',
-    ORIGINAL_MISTAKES_SECTION: (
-        'documents/latex/sections/remedial_original_mistakes.tex'
-    ),
-    TRAINING_TASKS_SECTION: (
-        'documents/latex/sections/remedial_training_tasks.tex'
-    ),
-    ANSWERS_SECTION: 'documents/latex/sections/remedial_answers.tex',
-    SHORT_SOLUTIONS_SECTION: (
-        'documents/latex/sections/remedial_short_solutions.tex'
-    ),
-    FULL_SOLUTIONS_SECTION: (
-        'documents/latex/sections/remedial_full_solutions.tex'
-    ),
-}
-REMEDIAL_LATEX_WRAPPER_TEMPLATE = 'documents/latex/base/document.tex'
+from infrastructure.services.sectioned_document_templates import (
+    REMEDIAL_HTML_SECTION_TEMPLATES,
+    REMEDIAL_HTML_WRAPPER_TEMPLATE,
+    REMEDIAL_LATEX_SECTION_TEMPLATES,
+    REMEDIAL_LATEX_WRAPPER_TEMPLATE,
+    WORK_HTML_SECTION_TEMPLATES,
+    WORK_HTML_WRAPPER_TEMPLATE,
+    WORK_LATEX_SECTION_TEMPLATES,
+    WORK_LATEX_WRAPPER_TEMPLATE,
+)
 
 
 @dataclass(frozen=True)

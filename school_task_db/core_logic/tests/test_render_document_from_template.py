@@ -7,6 +7,7 @@ from core_logic.entities.document import (
 )
 from core_logic.entities.document_rendering import (
     DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
+    DocumentRenderResult,
     GeneratedDocument,
     GeneratedDocumentFile,
 )
@@ -36,6 +37,36 @@ class FakeDocumentEngine:
 
 
 class RenderDocumentFromTemplateUseCaseTests(TestCase):
+    def test_delegates_to_recipe_render_use_case(self):
+        recipe_use_case = FakeRenderDocumentFromRecipeUseCase()
+        use_case = RenderDocumentFromTemplateUseCase(
+            render_document_from_recipe_use_case=recipe_use_case,
+        )
+        template_spec = DocumentTemplateSpec(
+            name='Work template',
+            template_type=WORK_DOCUMENT_TYPE,
+            sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
+        )
+
+        result = use_case.execute(
+            RenderDocumentFromTemplateRequest(
+                source=DocumentSourceRef(
+                    source_type='work',
+                    source_id='work-1',
+                    title='Контрольная',
+                ),
+                template_spec=template_spec,
+                render_target=RenderTarget(renderer_type='html'),
+            )
+        )
+
+        self.assertTrue(result.success)
+        self.assertEqual(
+            recipe_use_case.request.recipe.section_types,
+            (HEADER_SECTION,),
+        )
+        self.assertEqual(recipe_use_case.request.source_name, 'Контрольная')
+
     def test_renders_document_from_template_spec(self):
         engine = FakeDocumentEngine()
         use_case = RenderDocumentFromTemplateUseCase(document_engine=engine)
@@ -116,3 +147,15 @@ class RenderDocumentFromTemplateUseCaseTests(TestCase):
         self.assertEqual(result.status, DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER)
         self.assertEqual(result.renderer_type, 'docx')
         self.assertIsNone(engine.render_request)
+
+
+class FakeRenderDocumentFromRecipeUseCase:
+    def __init__(self):
+        self.request = None
+
+    def execute(self, request):
+        self.request = request
+        return DocumentRenderResult(
+            status='generated',
+            renderer_type=request.render_target.renderer_type,
+        )

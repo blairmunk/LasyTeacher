@@ -11,14 +11,11 @@ from core_logic.entities.document_rendering import (
     DocumentRenderResult,
 )
 from core_logic.interfaces.document_engine import IDocumentEngine
-from core_logic.use_cases.render_document import (
-    RenderDocumentRequest,
-    RenderDocumentUseCase,
+from core_logic.use_cases.render_document_from_recipe import (
+    RenderDocumentFromRecipeRequest,
+    RenderDocumentFromRecipeUseCase,
 )
 from core_logic.value_objects.document_render_options import RenderTarget
-from core_logic.value_objects.document_render_plan import (
-    build_document_render_plan,
-)
 
 
 @dataclass(frozen=True)
@@ -34,25 +31,24 @@ class RenderDocumentFromTemplateUseCase:
     def __init__(
         self,
         document_engine: IDocumentEngine | None = None,
-        render_document_use_case: RenderDocumentUseCase | None = None,
+        render_document_from_recipe_use_case: (
+            RenderDocumentFromRecipeUseCase | None
+        ) = None,
     ):
-        self.render_document_use_case = (
-            render_document_use_case
-            or RenderDocumentUseCase(document_engine=document_engine)
+        self.render_document_from_recipe_use_case = (
+            render_document_from_recipe_use_case
+            or RenderDocumentFromRecipeUseCase(document_engine=document_engine)
         )
 
     def execute(
         self,
         request: RenderDocumentFromTemplateRequest,
     ) -> DocumentRenderResult:
-        render_plan = build_document_render_plan(
-            source=request.source,
-            recipe=request.template_spec.to_recipe(),
-            render_target=request.render_target,
-        )
-        return self.render_document_use_case.execute(
-            RenderDocumentRequest(
-                render_plan=render_plan,
+        return self.render_document_from_recipe_use_case.execute(
+            RenderDocumentFromRecipeRequest(
+                source=request.source,
+                recipe=request.template_spec.to_recipe(),
+                render_target=request.render_target,
                 source_name=request.source_name or request.source.title,
                 empty_status=request.empty_status,
             )

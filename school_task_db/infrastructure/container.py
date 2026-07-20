@@ -54,6 +54,9 @@ from core_logic.use_cases.render_document import RenderDocumentUseCase
 from core_logic.use_cases.render_document_from_template import (
     RenderDocumentFromTemplateUseCase,
 )
+from core_logic.use_cases.render_document_from_recipe import (
+    RenderDocumentFromRecipeUseCase,
+)
 from core_logic.use_cases.render_work_document import RenderWorkDocumentUseCase
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.get_add_tasks_to_group import GetAddTasksToGroupUseCase
@@ -1038,6 +1041,13 @@ class Container:
 
     def render_document_from_template_use_case(self):
         return RenderDocumentFromTemplateUseCase(
+            render_document_from_recipe_use_case=(
+                self.render_document_from_recipe_use_case()
+            ),
+        )
+
+    def render_document_from_recipe_use_case(self):
+        return RenderDocumentFromRecipeUseCase(
             document_engine=self.document_engine,
         )
 

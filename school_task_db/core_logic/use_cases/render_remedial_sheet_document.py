@@ -5,10 +5,8 @@ from dataclasses import dataclass
 from core_logic.entities.document import DocumentTemplateSpec
 from core_logic.entities.document_rendering import (
     DOCUMENT_RENDER_STATUS_EMPTY,
-    DOCUMENT_RENDER_STATUS_GENERATED,
     DOCUMENT_RENDER_STATUS_NOT_FOUND,
     DOCUMENT_RENDER_STATUS_NOT_REMEDIAL,
-    DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
     DocumentRenderResult,
 )
 from core_logic.interfaces.document_engine import IDocumentEngine
@@ -17,9 +15,12 @@ from core_logic.interfaces.document_template_repo import (
 )
 from core_logic.interfaces.work_repo import IWorkRepository
 from core_logic.use_cases.document_engine_dependency import resolve_document_engine
+from core_logic.use_cases.render_document import (
+    RenderDocumentRequest,
+    RenderDocumentUseCase,
+)
 from core_logic.value_objects.document_render_options import (
     RemedialSheetDocumentRenderOptions,
-    is_supported_document_renderer_type,
 )
 from core_logic.value_objects.document_render_plan_factories import (
     build_remedial_sheet_document_render_plan,
@@ -44,6 +45,9 @@ class RenderRemedialSheetDocumentUseCase:
         self.document_engine = resolve_document_engine(
             document_engine=document_engine,
         )
+        self.render_document_use_case = RenderDocumentUseCase(
+            document_engine=self.document_engine,
+        )
         self.work_repo = work_repo
         self.document_template_repo = document_template_repo
 
@@ -62,14 +66,6 @@ class RenderRemedialSheetDocumentUseCase:
                 status=DOCUMENT_RENDER_STATUS_NOT_REMEDIAL,
                 renderer_type=request.options.renderer_type,
             )
-        if not is_supported_document_renderer_type(
-            request.options.renderer_type,
-        ):
-            return DocumentRenderResult(
-                status=DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
-                renderer_type=request.options.renderer_type,
-            )
-
         render_plan = build_remedial_sheet_document_render_plan(
             variant_id=request.variant_id,
             options=request.options,
@@ -78,17 +74,11 @@ class RenderRemedialSheetDocumentUseCase:
                 or self._default_template_spec()
             ),
         )
-        document = self.document_engine.render_document(render_plan)
-        status = (
-            DOCUMENT_RENDER_STATUS_GENERATED
-            if document.files
-            else DOCUMENT_RENDER_STATUS_EMPTY
-        )
-        return DocumentRenderResult(
-            status=status,
-            renderer_type=request.options.renderer_type,
-            file_type=document.file_type,
-            files=document.files,
+        return self.render_document_use_case.execute(
+            RenderDocumentRequest(
+                render_plan=render_plan,
+                empty_status=DOCUMENT_RENDER_STATUS_EMPTY,
+            )
         )
 
     def _default_template_spec(self):

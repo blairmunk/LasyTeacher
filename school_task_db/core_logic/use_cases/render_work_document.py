@@ -6,7 +6,6 @@ from core_logic.entities.document import DocumentTemplateSpec
 from core_logic.entities.document_rendering import (
     DOCUMENT_RENDER_STATUS_GENERATED,
     DOCUMENT_RENDER_STATUS_NOT_FOUND,
-    DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
     DocumentRenderResult,
 )
 from core_logic.interfaces.document_engine import IDocumentEngine
@@ -15,9 +14,12 @@ from core_logic.interfaces.document_template_repo import (
 )
 from core_logic.interfaces.work_repo import IWorkRepository
 from core_logic.use_cases.document_engine_dependency import resolve_document_engine
+from core_logic.use_cases.render_document import (
+    RenderDocumentRequest,
+    RenderDocumentUseCase,
+)
 from core_logic.value_objects.document_render_options import (
     WorkDocumentRenderOptions,
-    is_supported_document_renderer_type,
 )
 from core_logic.value_objects.document_render_plan_factories import (
     build_work_document_render_plan,
@@ -42,6 +44,9 @@ class RenderWorkDocumentUseCase:
         self.document_engine = resolve_document_engine(
             document_engine=document_engine,
         )
+        self.render_document_use_case = RenderDocumentUseCase(
+            document_engine=self.document_engine,
+        )
         self.work_repo = work_repo
         self.document_template_repo = document_template_repo
 
@@ -57,13 +62,6 @@ class RenderWorkDocumentUseCase:
                 renderer_type=renderer_type,
             )
 
-        if not is_supported_document_renderer_type(renderer_type):
-            return DocumentRenderResult(
-                status=DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
-                renderer_type=renderer_type,
-                source_name=work_name,
-            )
-
         render_plan = build_work_document_render_plan(
             work_id=request.work_id,
             work_name=work_name,
@@ -73,13 +71,12 @@ class RenderWorkDocumentUseCase:
                 or self._default_template_spec()
             ),
         )
-        document = self.document_engine.render_document(render_plan)
-        return DocumentRenderResult(
-            status=DOCUMENT_RENDER_STATUS_GENERATED,
-            renderer_type=renderer_type,
-            file_type=document.file_type,
-            files=document.files,
-            source_name=work_name,
+        return self.render_document_use_case.execute(
+            RenderDocumentRequest(
+                render_plan=render_plan,
+                source_name=work_name,
+                empty_status=DOCUMENT_RENDER_STATUS_GENERATED,
+            )
         )
 
     def _default_template_spec(self):

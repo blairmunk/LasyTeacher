@@ -160,7 +160,7 @@ class DjangoDocumentEngineTests(TestCase):
         )
         self.assertEqual(payload_builder.request.source.source_id, 'work-1')
 
-    def test_render_work_document_uses_document_renderer_registry(self):
+    def test_render_document_uses_document_renderer_registry(self):
         document = Document(title='Контрольная', document_type='work')
         builder = FakeDocumentBuilder(document=document)
         registry = FakeDocumentRendererRegistry()
@@ -168,18 +168,13 @@ class DjangoDocumentEngineTests(TestCase):
             document_builder=builder,
             document_renderer_registry=registry,
         )
-        options = WorkDocumentRenderOptions(renderer_type='html')
         plan = DocumentRenderPlan(
             source=DocumentSourceRef(source_type='work', source_id='missing'),
             recipe=DocumentRecipe(document_type='work'),
             render_target=RenderTarget(renderer_type='html'),
         )
 
-        result = service.render_work_document(
-            work_id='missing',
-            options=options,
-            render_plan=plan,
-        )
+        result = service.render_document(plan)
 
         self.assertEqual(result.file_type, 'html')
         self.assertEqual(registry.request.document, document)
@@ -212,13 +207,6 @@ class DjangoDocumentEngineTests(TestCase):
         self.assertEqual(result.file_type, 'pdf')
         self.assertEqual(registry.request.document, document)
         self.assertEqual(registry.request.render_target.renderer_type, 'pdf')
-
-    def test_render_from_plan_returns_none_without_plan(self):
-        service = DjangoDocumentEngine()
-
-        result = service._render_from_plan()
-
-        self.assertIsNone(result)
 
     def test_render_work_document_requires_render_plan(self):
         service = DjangoDocumentEngine()

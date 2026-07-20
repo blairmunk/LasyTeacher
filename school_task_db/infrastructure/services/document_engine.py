@@ -10,6 +10,7 @@ from core_logic.services.document_renderer_registry import (
     DocumentRendererRegistry,
 )
 from core_logic.value_objects.document_render_plan import (
+    DocumentRenderPlan,
     DocumentRenderRequest,
 )
 from infrastructure.services.django_document_source_provider import (
@@ -75,11 +76,7 @@ class DjangoDocumentEngine(IDocumentEngine):
         options,
         render_plan=None,
     ) -> GeneratedDocument:
-        planned_document = self._render_from_plan(render_plan)
-        if planned_document is not None:
-            return planned_document
-
-        raise ValueError('Document render plan is required.')
+        return self.render_document(self._required_render_plan(render_plan))
 
     def render_remedial_sheet_document(
         self,
@@ -87,11 +84,20 @@ class DjangoDocumentEngine(IDocumentEngine):
         options,
         render_plan=None,
     ) -> GeneratedDocument:
-        planned_document = self._render_from_plan(render_plan)
-        if planned_document is not None:
-            return planned_document
+        return self.render_document(self._required_render_plan(render_plan))
 
-        raise ValueError('Document render plan is required.')
+    def render_document(
+        self,
+        render_plan: DocumentRenderPlan,
+    ) -> GeneratedDocument:
+        render_target = render_plan.render_target
+        document = self._build_document(render_plan)
+        return self.document_renderer_registry.render(
+            DocumentRenderRequest(
+                document=document,
+                render_target=render_target,
+            )
+        )
 
     def get_rendered_file(
         self,
@@ -109,18 +115,7 @@ class DjangoDocumentEngine(IDocumentEngine):
             render_plan.render_target,
         )
 
-    def _render_from_plan(self, render_plan=None):
+    def _required_render_plan(self, render_plan=None):
         if render_plan is None:
-            return None
-
-        render_target = render_plan.render_target
-        document = self._build_document(render_plan)
-        if document is None:
-            return None
-
-        return self.document_renderer_registry.render(
-            DocumentRenderRequest(
-                document=document,
-                render_target=render_target,
-            )
-        )
+            raise ValueError('Document render plan is required.')
+        return render_plan

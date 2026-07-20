@@ -16,7 +16,7 @@ class DjangoDocumentTemplateRepositoryTests(TestCase):
         DocumentTemplate.objects.create(
             name='Ключ',
             template_type=DocumentTemplate.TemplateType.ANSWER_KEY,
-            sections_config=[{'type': 'answer_key'}],
+            sections_config=[{'type': 'answers'}],
         )
 
         templates = DjangoDocumentTemplateRepository().list_template_specs(

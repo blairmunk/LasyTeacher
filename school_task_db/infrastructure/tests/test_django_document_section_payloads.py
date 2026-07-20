@@ -16,9 +16,9 @@ from core_logic.value_objects.document_build_plan import (
     DocumentSectionPayloadBuildRequest,
 )
 from core_logic.value_objects.document_recipes import (
-    ANSWER_KEY_SECTION,
     ANSWERS_SECTION,
     HEADER_SECTION,
+    LEGACY_ANSWER_KEY_SECTION,
     LEGACY_TASK_VARIANTS_SECTION,
     ORIGINAL_MISTAKES_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
@@ -202,7 +202,7 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             build_request(work, LEGACY_TASK_VARIANTS_SECTION)
         )
         answer_key_payload = registry.build_payload(
-            build_request(work, ANSWER_KEY_SECTION)
+            build_request(work, LEGACY_ANSWER_KEY_SECTION)
         )
 
         self.assertEqual(task_variants_payload['variants'], [])

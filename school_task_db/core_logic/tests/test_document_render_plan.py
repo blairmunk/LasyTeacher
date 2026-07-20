@@ -23,7 +23,7 @@ from core_logic.value_objects.document_render_plan import (
     build_work_document_render_plan,
 )
 from core_logic.value_objects.document_recipes import (
-    ANSWER_KEY_SECTION,
+    ANSWERS_SECTION,
     HEADER_SECTION,
     TASK_LIST_SECTION,
 )
@@ -104,7 +104,7 @@ class DocumentRenderPlanTests(TestCase):
                     section_type=TASK_LIST_SECTION,
                     options={'source': 'new_tasks'},
                 ),
-                DocumentSectionSpec(section_type=ANSWER_KEY_SECTION),
+                DocumentSectionSpec(section_type=ANSWERS_SECTION),
             ],
         )
 
@@ -118,7 +118,7 @@ class DocumentRenderPlanTests(TestCase):
         self.assertEqual(plan.recipe.document_type, 'work')
         self.assertEqual(
             plan.recipe.section_types,
-            (TASK_LIST_SECTION, ANSWER_KEY_SECTION),
+            (TASK_LIST_SECTION, ANSWERS_SECTION),
         )
         self.assertEqual(
             plan.recipe.sections[0].options,

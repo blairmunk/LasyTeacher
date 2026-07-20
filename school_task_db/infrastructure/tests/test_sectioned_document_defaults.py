@@ -26,7 +26,8 @@ from core_logic.value_objects.document_render_plan import (
     build_work_document_render_plan,
 )
 from core_logic.value_objects.document_recipes import (
-    ANSWER_KEY_SECTION,
+    ANSWERS_SECTION,
+    LEGACY_ANSWER_KEY_SECTION,
     TASK_LIST_SECTION,
 )
 from curriculum.models import Topic
@@ -121,7 +122,7 @@ class SectionedDocumentDefaultsTests(TestCase):
             self.assertIn('Краткие решения', html)
             self.assertIn('Кратко: F = ma', html)
 
-    def test_work_html_supports_legacy_task_list_and_answer_key_sections(self):
+    def test_work_html_supports_task_list_and_answers_sections(self):
         work = Work.objects.create(name='Контрольная', duration=45, max_score=4)
         variant = Variant.objects.create(
             work=work,
@@ -162,7 +163,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                         template_type='work',
                         sections=[
                             DocumentSectionSpec(section_type=TASK_LIST_SECTION),
-                            DocumentSectionSpec(section_type=ANSWER_KEY_SECTION),
+                            DocumentSectionSpec(section_type=ANSWERS_SECTION),
                         ],
                     ),
                 ),
@@ -172,6 +173,60 @@ class SectionedDocumentDefaultsTests(TestCase):
             html = (Path(output_dir) / filename).read_text(encoding='utf-8')
             self.assertEqual(result.files[0].filename, filename)
             self.assertIn('Найдите силу', html)
+            self.assertIn('Ответы', html)
+            self.assertIn('10 Н', html)
+
+    def test_work_html_supports_legacy_answer_key_section(self):
+        work = Work.objects.create(name='Контрольная', duration=45, max_score=4)
+        variant = Variant.objects.create(
+            work=work,
+            number=1,
+            work_name_snapshot=work.name,
+            max_score_snapshot=4,
+            duration_snapshot=45,
+        )
+        task = self.create_task(text='Найдите силу', answer='10 Н')
+        VariantTask.objects.create(
+            variant=variant,
+            task=task,
+            order=1,
+            max_points=4,
+        )
+
+        with TemporaryDirectory() as output_dir:
+            components = build_sectioned_document_components(
+                file_store=RenderedDocumentFileStore(
+                    output_dirs={'html': output_dir},
+                ),
+            )
+            engine = DjangoDocumentEngine(
+                document_builder=components.document_builder,
+                document_renderer_registry=components.document_renderer_registry,
+            )
+            options = WorkDocumentRenderOptions(renderer_type='html')
+
+            result = engine.render_work_document(
+                work_id=str(work.pk),
+                options=options,
+                render_plan=build_work_document_render_plan(
+                    work_id=str(work.pk),
+                    work_name=work.name,
+                    options=options,
+                    template_spec=DocumentTemplateSpec(
+                        name='Legacy answer template',
+                        template_type='work',
+                        sections=[
+                            DocumentSectionSpec(
+                                section_type=LEGACY_ANSWER_KEY_SECTION,
+                            ),
+                        ],
+                    ),
+                ),
+            )
+
+            filename = work_html_filename_from_id(work.pk)
+            html = (Path(output_dir) / filename).read_text(encoding='utf-8')
+            self.assertEqual(result.files[0].filename, filename)
             self.assertIn('Ответы', html)
             self.assertIn('10 Н', html)
 

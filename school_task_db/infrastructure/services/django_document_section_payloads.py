@@ -4,10 +4,10 @@ from core_logic.services.document_builder import (
     DocumentSectionPayloadBuilderRegistry,
 )
 from core_logic.value_objects.document_recipes import (
-    ANSWER_KEY_SECTION,
     ANSWERS_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
+    LEGACY_ANSWER_KEY_SECTION,
     LEGACY_TASK_VARIANTS_SECTION,
     ORIGINAL_MISTAKES_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
@@ -163,7 +163,7 @@ def build_work_section_payload_builder_registry(
     )
     for section_type in (
         ANSWERS_SECTION,
-        ANSWER_KEY_SECTION,
+        LEGACY_ANSWER_KEY_SECTION,
         SHORT_SOLUTIONS_SECTION,
         FULL_SOLUTIONS_SECTION,
     ):

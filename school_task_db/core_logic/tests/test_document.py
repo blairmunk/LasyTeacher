@@ -195,7 +195,7 @@ class DocumentModelTests(TestCase):
             template_type='remedial_sheet',
             sections=[
                 DocumentSectionSpec(section_type='header'),
-                DocumentSectionSpec(section_type='answer_key'),
+                DocumentSectionSpec(section_type='answers'),
             ],
         )
 
@@ -203,7 +203,7 @@ class DocumentModelTests(TestCase):
         overridden_recipe = template.to_recipe(document_type='custom')
 
         self.assertEqual(recipe.document_type, 'remedial_sheet')
-        self.assertEqual(recipe.section_types, ('header', 'answer_key'))
+        self.assertEqual(recipe.section_types, ('header', 'answers'))
         self.assertEqual(overridden_recipe.document_type, 'custom')
 
     def test_rejects_empty_required_identifiers(self):

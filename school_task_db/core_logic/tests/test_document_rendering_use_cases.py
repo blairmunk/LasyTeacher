@@ -32,7 +32,6 @@ from core_logic.value_objects.content_config import (
     WorkDocumentRenderOptions,
 )
 from core_logic.value_objects.document_recipes import (
-    ANSWER_KEY_SECTION,
     ANSWERS_SECTION,
     HEADER_SECTION,
     SHORT_SOLUTIONS_SECTION,
@@ -214,7 +213,7 @@ class DocumentRenderingUseCaseTests(TestCase):
             template_type='work',
             sections=[
                 DocumentSectionSpec(section_type=TASK_LIST_SECTION),
-                DocumentSectionSpec(section_type=ANSWER_KEY_SECTION),
+                DocumentSectionSpec(section_type=ANSWERS_SECTION),
             ],
         )
 
@@ -231,7 +230,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         render_plan = service.work_request[2]
         self.assertEqual(
             render_plan.recipe.section_types,
-            (TASK_LIST_SECTION, ANSWER_KEY_SECTION),
+            (TASK_LIST_SECTION, ANSWERS_SECTION),
         )
 
     def test_render_work_document_uses_default_template_spec(self):

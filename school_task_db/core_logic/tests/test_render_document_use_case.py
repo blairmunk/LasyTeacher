@@ -78,6 +78,23 @@ class RenderDocumentUseCaseTests(TestCase):
         self.assertEqual(result.source_name, 'Контрольная')
         self.assertIsNone(service.render_request)
 
+    def test_render_document_uses_source_title_as_default_source_name(self):
+        service = FakeDocumentEngine()
+        use_case = RenderDocumentUseCase(document_engine=service)
+        render_plan = build_document_render_plan(
+            source=DocumentSourceRef(
+                source_type='work',
+                source_id='work-1',
+                title='Контрольная',
+            ),
+            recipe=DocumentRecipe(document_type='work'),
+            render_target=RenderTarget(renderer_type='html'),
+        )
+
+        result = use_case.execute(RenderDocumentRequest(render_plan=render_plan))
+
+        self.assertEqual(result.source_name, 'Контрольная')
+
     def test_render_document_uses_empty_status_for_empty_files(self):
         service = FakeDocumentEngine()
         service.document = GeneratedDocument(file_type='html')

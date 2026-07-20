@@ -36,11 +36,12 @@ class RenderDocumentUseCase:
         request: RenderDocumentRequest,
     ) -> DocumentRenderResult:
         renderer_type = request.render_plan.render_target.renderer_type
+        source_name = self._source_name(request)
         if not is_supported_document_renderer_type(renderer_type):
             return DocumentRenderResult(
                 status=DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
                 renderer_type=renderer_type,
-                source_name=request.source_name,
+                source_name=source_name,
             )
 
         document = self.document_engine.render_document(request.render_plan)
@@ -54,5 +55,12 @@ class RenderDocumentUseCase:
             renderer_type=renderer_type,
             file_type=document.file_type,
             files=document.files,
-            source_name=request.source_name,
+            source_name=source_name,
         )
+
+    def _source_name(self, request: RenderDocumentRequest) -> str:
+        if request.source_name:
+            return request.source_name
+        if request.render_plan.source:
+            return request.render_plan.source.title
+        return ''

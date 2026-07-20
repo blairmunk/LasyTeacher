@@ -74,6 +74,7 @@ def build_remedial_sheet_document_source(
     return DocumentSourceRef(
         source_type=REMEDIAL_VARIANT_SOURCE_TYPE,
         source_id=variant_id,
+        title='Работа над ошибками',
     )
 
 

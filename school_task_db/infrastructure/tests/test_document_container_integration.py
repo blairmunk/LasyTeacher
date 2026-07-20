@@ -206,6 +206,7 @@ class DocumentContainerIntegrationTests(TestCase):
 
         self.assertTrue(result.success)
         self.assertEqual(result.file_type, 'html')
+        self.assertEqual(result.source_name, 'Работа над ошибками')
         self.assertEqual(filename, f'remedial_{remedial_variant.pk}.html')
         self.assertIn('Петров Иван', html)
         self.assertIn('Исходная работа: Контрольная по динамике', html)

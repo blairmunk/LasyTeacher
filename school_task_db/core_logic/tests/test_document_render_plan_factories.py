@@ -43,6 +43,7 @@ class DocumentRenderPlanFactoriesTests(TestCase):
 
         self.assertEqual(source.source_type, REMEDIAL_VARIANT_SOURCE_TYPE)
         self.assertEqual(source.source_id, 'variant-1')
+        self.assertEqual(source.title, 'Работа над ошибками')
 
     def test_build_work_document_recipe_for_render(self):
         recipe = build_work_document_recipe_for_render(

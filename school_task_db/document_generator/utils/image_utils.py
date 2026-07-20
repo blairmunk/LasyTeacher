@@ -84,4 +84,4 @@ def optimize_image_for_web(image_path: Path, quality: int = 85) -> Optional[Path
         logger.error(f"Ошибка оптимизации изображения {image_path}: {e}")
         return None
 
-# УБРАНО: Все LaTeX специфичные функции перенесены в latex_generator
+# LaTeX-specific image handling now belongs to the sectioned document renderer.

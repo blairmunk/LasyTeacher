@@ -50,9 +50,7 @@ class FormulaProcessor:
     
     def render_for_latex_safe(self, text: str) -> Dict[str, Any]:
         """СПЕЦИФИЧНО ДЛЯ LaTeX: Безопасное преобразование для LaTeX компиляции"""
-        # ЭТОТ МЕТОД ПЕРЕНОСИМ В latex_generator/utils/latex_specific.py
-        # А ЗДЕСЬ ОСТАВЛЯЕМ ЗАГЛУШКУ ИЛИ БАЗОВУЮ РЕАЛИЗАЦИЮ
-        raise NotImplementedError("Используйте специфичную реализацию для вашего формата")
+        raise NotImplementedError("Используйте специфичную реализацию для формата")
     
     def render_for_html_safe(self, text: str) -> Dict[str, Any]:
         """НОВОЕ: Безопасное преобразование для HTML (MathJax)"""

@@ -7,9 +7,7 @@ from pathlib import Path
 from typing import Union
 
 def sanitize_filename(filename: str) -> str:
-    """
-    ПЕРЕМЕЩЕНО из latex_generator: Очищает имя файла от недопустимых символов
-    """
+    """Очищает имя файла от недопустимых символов."""
     if not filename:
         return "untitled"
     

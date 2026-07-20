@@ -72,7 +72,7 @@ def build_sectioned_html_to_pdf_document_renderer(
     file_store,
     section_separator='\n',
     document_wrapper=None,
-    pdf_generator_factory=None,
+    html_to_pdf_renderer_factory=None,
 ) -> SectionedHtmlToPdfDocumentRenderer:
     body_renderer = SectionedDocumentContentRenderer(
         section_renderer_registry=section_renderer_registry,
@@ -91,7 +91,7 @@ def build_sectioned_html_to_pdf_document_renderer(
         html_filename_builder=html_filename_builder,
         html_content_renderer=content_renderer,
         file_store=file_store,
-        pdf_generator_factory=pdf_generator_factory,
+        html_to_pdf_renderer_factory=html_to_pdf_renderer_factory,
     )
 
 
@@ -160,7 +160,7 @@ def build_template_sectioned_html_to_pdf_document_renderer_registry(
     renderer_specs,
     file_store,
     template_renderer=None,
-    pdf_generator_factory=None,
+    html_to_pdf_renderer_factory=None,
 ) -> DocumentRendererRegistry:
     if not renderer_type:
         raise ValueError('renderer_type is required')
@@ -186,7 +186,7 @@ def build_template_sectioned_html_to_pdf_document_renderer_registry(
             file_store=file_store,
             section_separator=spec.section_separator,
             document_wrapper=document_wrapper,
-            pdf_generator_factory=pdf_generator_factory,
+            html_to_pdf_renderer_factory=html_to_pdf_renderer_factory,
         )
         registry.register(
             renderer_type,

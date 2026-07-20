@@ -31,7 +31,7 @@ class DjangoDocumentEngine(IDocumentEngine):
         source_provider=None,
         file_store=None,
         template_renderer=None,
-        pdf_generator_factory=None,
+        html_to_pdf_renderer_factory=None,
     ):
         source_provider = source_provider or DjangoDocumentSourceProvider()
         file_store = file_store or RenderedDocumentFileStore()
@@ -45,7 +45,7 @@ class DjangoDocumentEngine(IDocumentEngine):
             get_work_source=source_provider.get_work_source,
             get_remedial_sheet_data=get_remedial_sheet_data,
             template_renderer=template_renderer,
-            pdf_generator_factory=pdf_generator_factory,
+            html_to_pdf_renderer_factory=html_to_pdf_renderer_factory,
         )
         return cls(
             document_builder=components.document_builder,

@@ -119,7 +119,7 @@ def build_sectioned_html_pdf_document_components(
     get_work_source=None,
     get_remedial_sheet_data=None,
     template_renderer=None,
-    pdf_generator_factory=None,
+    html_to_pdf_renderer_factory=None,
     task_payload_formatter=None,
 ) -> SectionedDocumentComponents:
     components = build_sectioned_html_document_components(
@@ -135,7 +135,7 @@ def build_sectioned_html_pdf_document_components(
             renderer_specs=sectioned_html_renderer_specs(),
             file_store=file_store,
             template_renderer=template_renderer,
-            pdf_generator_factory=pdf_generator_factory,
+            html_to_pdf_renderer_factory=html_to_pdf_renderer_factory,
         )
     )
     components.document_renderer_registry.extend(pdf_renderer_registry)
@@ -147,7 +147,7 @@ def build_sectioned_document_components(
     get_work_source=None,
     get_remedial_sheet_data=None,
     template_renderer=None,
-    pdf_generator_factory=None,
+    html_to_pdf_renderer_factory=None,
     task_payload_formatter=None,
 ) -> SectionedDocumentComponents:
     components = build_sectioned_html_pdf_document_components(
@@ -155,7 +155,7 @@ def build_sectioned_document_components(
         get_work_source=get_work_source,
         get_remedial_sheet_data=get_remedial_sheet_data,
         template_renderer=template_renderer,
-        pdf_generator_factory=pdf_generator_factory,
+        html_to_pdf_renderer_factory=html_to_pdf_renderer_factory,
         task_payload_formatter=(
             task_payload_formatter
             or _sectioned_task_payload_formatter()

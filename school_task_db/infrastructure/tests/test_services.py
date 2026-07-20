@@ -81,7 +81,7 @@ class FakeSectionPayloadBuilder:
         return self.payload
 
 
-class FakePdfGenerator:
+class FakeHtmlToPdfRenderer:
     def __init__(self):
         self.html_content = ''
 
@@ -258,7 +258,7 @@ class DjangoDocumentEngineTests(TestCase):
 
     def test_sectioned_factory_uses_sectioned_renderers(self):
         work = Work.objects.create(name='Контрольная', duration=45)
-        pdf_generator = FakePdfGenerator()
+        html_to_pdf_renderer = FakeHtmlToPdfRenderer()
 
         with TemporaryDirectory() as output_dir:
             service = DjangoDocumentEngine.with_sectioned_renderers(
@@ -269,7 +269,7 @@ class DjangoDocumentEngineTests(TestCase):
                         'latex': output_dir,
                     },
                 ),
-                pdf_generator_factory=lambda request: pdf_generator,
+                html_to_pdf_renderer_factory=lambda request: html_to_pdf_renderer,
             )
             html_options = WorkDocumentRenderOptions(renderer_type='html')
             pdf_options = WorkDocumentRenderOptions(renderer_type='pdf')
@@ -306,7 +306,7 @@ class DjangoDocumentEngineTests(TestCase):
         self.assertEqual(html_result.file_type, 'html')
         self.assertEqual(pdf_result.file_type, 'pdf')
         self.assertEqual(latex_result.file_type, 'latex')
-        self.assertIn('<title>Контрольная</title>', pdf_generator.html_content)
+        self.assertIn('<title>Контрольная</title>', html_to_pdf_renderer.html_content)
 
 
 class DjangoTaskImportServiceTests(TestCase):

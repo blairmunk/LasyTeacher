@@ -11,7 +11,7 @@ from infrastructure.services.sectioned_document_file_renderer import (
     SectionedHtmlToPdfDocumentRenderer,
     SectionedDocumentFileRenderer,
 )
-from infrastructure.services.html_to_pdf_generator import HtmlToPdfGenerator
+from infrastructure.services.html_to_pdf_renderer import HtmlToPdfRenderer
 
 
 class SectionedDocumentFileRendererTests(SimpleTestCase):
@@ -69,14 +69,16 @@ class SectionedHtmlToPdfDocumentRendererTests(SimpleTestCase):
         content_renderer = FakeContentRenderer(content='<html>work</html>')
         with TemporaryDirectory() as output_dir:
             file_store = FakeFileStore(output_dirs={'pdf': output_dir})
-            pdf_generator = FakePdfGenerator()
+            html_to_pdf_renderer = FakeHtmlToPdfRenderer()
             renderer = SectionedHtmlToPdfDocumentRenderer(
                 html_filename_builder=lambda request: (
                     f'{request.document.title}.html'
                 ),
                 html_content_renderer=content_renderer,
                 file_store=file_store,
-                pdf_generator_factory=lambda request: pdf_generator,
+                html_to_pdf_renderer_factory=(
+                    lambda request: html_to_pdf_renderer
+                ),
             )
             request = DocumentRenderRequest(
                 document=Document(title='work-1'),
@@ -88,12 +90,21 @@ class SectionedHtmlToPdfDocumentRendererTests(SimpleTestCase):
 
             result = renderer.render(request)
 
-            html_path, pdf_path = pdf_generator.request
+            html_path, pdf_path = html_to_pdf_renderer.request
             self.assertEqual(result.file_type, 'pdf')
-            self.assertEqual(content_renderer.request.render_target.renderer_type, 'html')
-            self.assertEqual(content_renderer.request.render_target.page_format, 'A5')
+            self.assertEqual(
+                content_renderer.request.render_target.renderer_type,
+                'html',
+            )
+            self.assertEqual(
+                content_renderer.request.render_target.page_format,
+                'A5',
+            )
             self.assertEqual(html_path.name, 'work-1.html')
-            self.assertEqual(pdf_generator.html_content, '<html>work</html>')
+            self.assertEqual(
+                html_to_pdf_renderer.html_content,
+                '<html>work</html>',
+            )
             self.assertEqual(pdf_path, Path(output_dir) / 'work-1.pdf')
             self.assertEqual(file_store.path_requests, [('pdf', [pdf_path])])
 
@@ -102,7 +113,7 @@ class SectionedHtmlToPdfDocumentRendererTests(SimpleTestCase):
             html_filename_builder=lambda request: 'work.html',
             html_content_renderer=FakeContentRenderer(),
             file_store=FakeFileStore(output_dirs={}),
-            pdf_generator_factory=lambda request: FakePdfGenerator(),
+            html_to_pdf_renderer_factory=lambda request: FakeHtmlToPdfRenderer(),
         )
 
         with self.assertRaises(ValueError):
@@ -113,7 +124,7 @@ class SectionedHtmlToPdfDocumentRendererTests(SimpleTestCase):
                 )
             )
 
-    def test_default_pdf_generator_uses_infrastructure_backend(self):
+    def test_default_html_to_pdf_renderer_uses_infrastructure_backend(self):
         renderer = SectionedHtmlToPdfDocumentRenderer(
             html_filename_builder=lambda request: 'work.html',
             html_content_renderer=FakeContentRenderer(),
@@ -124,10 +135,10 @@ class SectionedHtmlToPdfDocumentRendererTests(SimpleTestCase):
             render_target=RenderTarget(renderer_type='pdf', page_format='A5'),
         )
 
-        pdf_generator = renderer._default_pdf_generator(request)
+        html_to_pdf_renderer = renderer._default_html_to_pdf_renderer(request)
 
-        self.assertIsInstance(pdf_generator, HtmlToPdfGenerator)
-        self.assertEqual(pdf_generator.options['format'], 'A5')
+        self.assertIsInstance(html_to_pdf_renderer, HtmlToPdfRenderer)
+        self.assertEqual(html_to_pdf_renderer.options['format'], 'A5')
 
 
 class FakeContentRenderer:
@@ -155,7 +166,7 @@ class FakeFileStore:
         return GeneratedDocument(file_type=file_type)
 
 
-class FakePdfGenerator:
+class FakeHtmlToPdfRenderer:
     def __init__(self):
         self.request = None
         self.html_content = ''

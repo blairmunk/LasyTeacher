@@ -457,7 +457,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                     mark=None,
                     new_tasks=[],
                 ),
-                pdf_generator_factory=lambda request: FakePdfGenerator(),
+                html_to_pdf_renderer_factory=lambda request: FakeHtmlToPdfRenderer(),
             )
 
             self.assertIsNotNone(
@@ -502,7 +502,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                     mark=None,
                     new_tasks=[],
                 ),
-                pdf_generator_factory=lambda request: FakePdfGenerator(),
+                html_to_pdf_renderer_factory=lambda request: FakeHtmlToPdfRenderer(),
             )
 
             self.assertIsNotNone(
@@ -622,7 +622,7 @@ class FakeMark:
         self.max_points = max_points
 
 
-class FakePdfGenerator:
+class FakeHtmlToPdfRenderer:
     def __init__(self):
         self.html_content = ''
 

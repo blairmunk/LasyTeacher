@@ -45,13 +45,13 @@ class SectionedHtmlToPdfDocumentRenderer(IDocumentRenderer):
         html_filename_builder: Callable[[DocumentRenderRequest], str],
         html_content_renderer,
         file_store,
-        pdf_generator_factory=None,
+        html_to_pdf_renderer_factory=None,
     ):
         self.html_filename_builder = html_filename_builder
         self.html_content_renderer = html_content_renderer
         self.file_store = file_store
-        self.pdf_generator_factory = (
-            pdf_generator_factory or self._default_pdf_generator
+        self.html_to_pdf_renderer_factory = (
+            html_to_pdf_renderer_factory or self._default_html_to_pdf_renderer
         )
 
     def render(self, request: DocumentRenderRequest) -> GeneratedDocument:
@@ -72,8 +72,8 @@ class SectionedHtmlToPdfDocumentRenderer(IDocumentRenderer):
                 ),
                 encoding='utf-8',
             )
-            pdf_generator = self.pdf_generator_factory(request)
-            rendered_pdf = pdf_generator.generate_pdf(html_path, pdf_path)
+            html_to_pdf_renderer = self.html_to_pdf_renderer_factory(request)
+            rendered_pdf = html_to_pdf_renderer.generate_pdf(html_path, pdf_path)
 
         return self.file_store.document_from_paths('pdf', [rendered_pdf])
 
@@ -92,12 +92,12 @@ class SectionedHtmlToPdfDocumentRenderer(IDocumentRenderer):
             ),
         )
 
-    def _default_pdf_generator(self, request):
-        from infrastructure.services.html_to_pdf_generator import (
-            HtmlToPdfGenerator,
+    def _default_html_to_pdf_renderer(self, request):
+        from infrastructure.services.html_to_pdf_renderer import (
+            HtmlToPdfRenderer,
         )
 
-        return HtmlToPdfGenerator(
+        return HtmlToPdfRenderer(
             format=request.render_target.page_format,
             wait_for_mathjax=True,
         )

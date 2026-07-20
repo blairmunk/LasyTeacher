@@ -232,7 +232,7 @@ class SectionedDocumentRendererFactoryTests(SimpleTestCase):
 
     def test_builds_pdf_renderer_registry_from_html_template_specs(self):
         with TemporaryDirectory() as output_dir:
-            pdf_generator = FakePdfGenerator()
+            html_to_pdf_renderer = FakeHtmlToPdfRenderer()
             file_store = FakeFileStore(output_dirs={'pdf': output_dir})
             registry = (
                 build_template_sectioned_html_to_pdf_document_renderer_registry(
@@ -255,7 +255,7 @@ class SectionedDocumentRendererFactoryTests(SimpleTestCase):
                             else f"<section>{context['render_target'].renderer_type}:"
                             f"{template_name}</section>"
                     ),
-                    pdf_generator_factory=lambda request: pdf_generator,
+                    html_to_pdf_renderer_factory=lambda request: html_to_pdf_renderer,
                 )
             )
 
@@ -273,11 +273,11 @@ class SectionedDocumentRendererFactoryTests(SimpleTestCase):
                 )
             )
 
-            html_path, pdf_path = pdf_generator.request
+            html_path, pdf_path = html_to_pdf_renderer.request
             self.assertEqual(result.file_type, 'pdf')
             self.assertEqual(html_path.name, 'work.html')
             self.assertEqual(
-                pdf_generator.html_content,
+                html_to_pdf_renderer.html_content,
                 (
                     '<document>'
                     '<section>html:documents/html/work_tasks.html</section>'
@@ -335,7 +335,7 @@ class FakeDocumentWrapper:
         return f'<html>{request.body_content}</html>'
 
 
-class FakePdfGenerator:
+class FakeHtmlToPdfRenderer:
     def __init__(self):
         self.request = None
         self.html_content = ''

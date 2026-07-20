@@ -12,7 +12,7 @@ from playwright.async_api import Page, async_playwright
 logger = logging.getLogger(__name__)
 
 
-class HtmlToPdfGenerator:
+class HtmlToPdfRenderer:
     def __init__(self, **options):
         self.options = self._default_options()
         self.options.update(options)

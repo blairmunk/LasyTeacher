@@ -2,7 +2,10 @@
 
 from typing import List, Optional
 
-from core_logic.entities.document import DocumentTemplateSpec
+from core_logic.entities.document import (
+    CreateDocumentTemplateParams,
+    DocumentTemplateSpec,
+)
 from core_logic.interfaces.document_template_repo import (
     IDocumentTemplateRepository,
 )
@@ -44,3 +47,27 @@ class DjangoDocumentTemplateRepository(IDocumentTemplateRepository):
         if template is None:
             return None
         return template.to_template_spec()
+
+    def create_template(
+        self,
+        params: CreateDocumentTemplateParams,
+    ) -> str:
+        if params.is_default:
+            DocumentTemplate.objects.filter(
+                template_type=params.template_type,
+                is_default=True,
+            ).update(is_default=False)
+
+        template = DocumentTemplate(
+            name=params.name,
+            description=params.description,
+            template_type=params.template_type,
+            sections_config=[
+                {'type': section_type}
+                for section_type in params.section_types
+            ],
+            is_default=params.is_default,
+        )
+        template.full_clean()
+        template.save()
+        return str(template.pk)

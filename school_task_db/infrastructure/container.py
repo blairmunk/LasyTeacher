@@ -61,6 +61,9 @@ from core_logic.use_cases.render_document_from_recipe import (
     RenderDocumentFromRecipeUseCase,
 )
 from core_logic.use_cases.render_work_document import RenderWorkDocumentUseCase
+from core_logic.use_cases.create_document_template import (
+    CreateDocumentTemplateUseCase,
+)
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.get_add_tasks_to_group import GetAddTasksToGroupUseCase
 from core_logic.use_cases.get_codifier_detail import GetCodifierDetailUseCase
@@ -650,6 +653,11 @@ class Container:
 
     def get_document_template_list_use_case(self):
         return GetDocumentTemplateListUseCase(
+            document_template_repo=self.document_template_repo,
+        )
+
+    def create_document_template_use_case(self):
+        return CreateDocumentTemplateUseCase(
             document_template_repo=self.document_template_repo,
         )
 

@@ -1,5 +1,6 @@
 from django.test import TestCase
 
+from core_logic.entities.document import CreateDocumentTemplateParams
 from document_generator.models import DocumentTemplate
 from infrastructure.repositories.django_document_template_repo import (
     DjangoDocumentTemplateRepository,
@@ -84,3 +85,44 @@ class DjangoDocumentTemplateRepositoryTests(TestCase):
         )
 
         self.assertIsNone(template)
+
+    def test_creates_template_from_clean_params(self):
+        template_id = DjangoDocumentTemplateRepository().create_template(
+            CreateDocumentTemplateParams(
+                name='Шаблон работы',
+                description='Для печати',
+                template_type=DocumentTemplate.TemplateType.WORK,
+                section_types=('header', 'task_list'),
+                is_default=True,
+            )
+        )
+
+        template = DocumentTemplate.objects.get(pk=template_id)
+        self.assertEqual(template.name, 'Шаблон работы')
+        self.assertEqual(template.description, 'Для печати')
+        self.assertEqual(template.template_type, DocumentTemplate.TemplateType.WORK)
+        self.assertEqual(
+            template.sections_config,
+            [{'type': 'header'}, {'type': 'task_list'}],
+        )
+        self.assertTrue(template.is_default)
+
+    def test_creating_default_template_clears_previous_default_for_type(self):
+        old_default = DocumentTemplate.objects.create(
+            name='Старый шаблон',
+            template_type=DocumentTemplate.TemplateType.WORK,
+            sections_config=[{'type': 'header'}],
+            is_default=True,
+        )
+
+        DjangoDocumentTemplateRepository().create_template(
+            CreateDocumentTemplateParams(
+                name='Новый шаблон',
+                template_type=DocumentTemplate.TemplateType.WORK,
+                section_types=('header', 'task_list'),
+                is_default=True,
+            )
+        )
+
+        old_default.refresh_from_db()
+        self.assertFalse(old_default.is_default)

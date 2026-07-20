@@ -4,6 +4,9 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import QueryDict
 from django.test import SimpleTestCase
 
+from infrastructure.forms.document_template_django_forms import (
+    DocumentTemplateForm,
+)
 from core_logic.entities.document import (
     DocumentPresentation,
     DocumentSectionSpec,
@@ -188,6 +191,41 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
             context['document_types'][0]['url'],
             '?type=work&renderable=1&legacy=1',
         )
+
+    def test_builds_create_params_from_template_form(self):
+        form = DocumentTemplateForm(
+            data=QueryDict(
+                'name=Шаблон&description=Описание&template_type=work'
+                '&sections=header&sections=task_list&is_default=on',
+            ),
+            sections=get_document_section_catalog(renderable_only=True),
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+
+        params = DocumentTemplateFormAdapter().create_params_from_form(form)
+
+        self.assertEqual(params.name, 'Шаблон')
+        self.assertEqual(params.description, 'Описание')
+        self.assertEqual(params.template_type, 'work')
+        self.assertEqual(params.section_types, ('header', 'task_list'))
+        self.assertTrue(params.is_default)
+
+    def test_builds_create_context(self):
+        form = DocumentTemplateForm(
+            data=QueryDict('template_type=work&sections=header'),
+            sections=get_document_section_catalog(renderable_only=True),
+        )
+
+        context = DocumentTemplateFormAdapter().create_context(
+            form=form,
+            document_types=get_document_type_catalog(renderable_only=True),
+            sections=get_document_section_catalog(renderable_only=True),
+        )
+
+        self.assertEqual(context['form'], form)
+        self.assertEqual(context['selected_document_type'], 'work')
+        self.assertEqual(context['selected_sections'], {'header'})
+        self.assertEqual(context['section_options'][0]['section_type'], 'header')
 
 
 class ReportFormAdapterTests(SimpleTestCase):

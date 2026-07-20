@@ -1,8 +1,13 @@
 from unittest import TestCase
 
 from core_logic.entities.document import (
+    CreateDocumentTemplateParams,
     DocumentSectionSpec,
     DocumentTemplateSpec,
+)
+from core_logic.use_cases.create_document_template import (
+    CreateDocumentTemplateUseCase,
+    DOCUMENT_TEMPLATE_CREATE_STATUS_INVALID,
 )
 from core_logic.use_cases.get_default_document_template import (
     GetDefaultDocumentTemplateRequest,
@@ -26,6 +31,7 @@ class FakeDocumentTemplateRepository:
         self.requested_template_type = None
         self.default_template_type = None
         self.requested_template_id = None
+        self.created_params = None
         self.templates = [
             DocumentTemplateSpec(
                 name='Рабочий лист',
@@ -50,6 +56,10 @@ class FakeDocumentTemplateRepository:
         if template_id == 'template-1' and template_type == WORKSHEET_DOCUMENT_TYPE:
             return self.templates[0]
         return None
+
+    def create_template(self, params):
+        self.created_params = params
+        return 'created-template'
 
 
 class GetDocumentTemplateListUseCaseTests(TestCase):
@@ -148,3 +158,62 @@ class DocumentTemplateSelectionTests(TestCase):
         )
 
         self.assertIsNone(template)
+
+
+class CreateDocumentTemplateUseCaseTests(TestCase):
+    def test_creates_template_from_valid_params(self):
+        repo = FakeDocumentTemplateRepository()
+        use_case = CreateDocumentTemplateUseCase(document_template_repo=repo)
+        params = CreateDocumentTemplateParams(
+            name='  Шаблон работы  ',
+            description='  Для печати  ',
+            template_type='work',
+            section_types=('header', 'task_list'),
+            is_default=True,
+        )
+
+        result = use_case.execute(params)
+
+        self.assertTrue(result.success)
+        self.assertEqual(result.template_id, 'created-template')
+        self.assertEqual(repo.created_params.name, 'Шаблон работы')
+        self.assertEqual(repo.created_params.description, 'Для печати')
+        self.assertEqual(repo.created_params.section_types, ('header', 'task_list'))
+        self.assertTrue(repo.created_params.is_default)
+
+    def test_rejects_missing_required_fields(self):
+        repo = FakeDocumentTemplateRepository()
+        use_case = CreateDocumentTemplateUseCase(document_template_repo=repo)
+
+        result = use_case.execute(
+            CreateDocumentTemplateParams(
+                name='',
+                template_type='',
+                section_types=(),
+            )
+        )
+
+        self.assertEqual(result.status, DOCUMENT_TEMPLATE_CREATE_STATUS_INVALID)
+        self.assertIn('Название шаблона обязательно.', result.errors)
+        self.assertIn('Тип документа обязателен.', result.errors)
+        self.assertIn('Выберите хотя бы одну секцию.', result.errors)
+        self.assertIsNone(repo.created_params)
+
+    def test_rejects_section_for_wrong_document_type(self):
+        repo = FakeDocumentTemplateRepository()
+        use_case = CreateDocumentTemplateUseCase(document_template_repo=repo)
+
+        result = use_case.execute(
+            CreateDocumentTemplateParams(
+                name='Шаблон РнО',
+                template_type='remedial_sheet',
+                section_types=('task_list',),
+            )
+        )
+
+        self.assertEqual(result.status, DOCUMENT_TEMPLATE_CREATE_STATUS_INVALID)
+        self.assertIn(
+            'Section task_list is not supported for document type remedial_sheet',
+            result.errors,
+        )
+        self.assertIsNone(repo.created_params)

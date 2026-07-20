@@ -3,7 +3,10 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from core_logic.entities.document import DocumentTemplateSpec
+from core_logic.entities.document import (
+    CreateDocumentTemplateParams,
+    DocumentTemplateSpec,
+)
 
 
 class IDocumentTemplateRepository(ABC):
@@ -28,3 +31,10 @@ class IDocumentTemplateRepository(ABC):
         template_type: str = '',
     ) -> Optional[DocumentTemplateSpec]:
         """Return a template spec by id, optionally constrained by type."""
+
+    @abstractmethod
+    def create_template(
+        self,
+        params: CreateDocumentTemplateParams,
+    ) -> str:
+        """Create a document template and return its id."""

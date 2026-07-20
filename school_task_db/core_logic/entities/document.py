@@ -185,3 +185,33 @@ class DocumentTemplateSpec:
             sections=self.sections,
             presentation=self.presentation,
         )
+
+
+@dataclass(frozen=True)
+class CreateDocumentTemplateParams:
+    name: str
+    template_type: str
+    section_types: Tuple[str, ...] = field(default_factory=tuple)
+    description: str = ''
+    is_default: bool = False
+
+    def __post_init__(self):
+        object.__setattr__(self, 'name', self.name.strip())
+        object.__setattr__(self, 'template_type', self.template_type.strip())
+        object.__setattr__(
+            self,
+            'section_types',
+            tuple(section_type.strip() for section_type in self.section_types),
+        )
+        object.__setattr__(self, 'description', self.description.strip())
+
+
+@dataclass(frozen=True)
+class CreateDocumentTemplateResult:
+    status: str
+    template_id: str = ''
+    errors: Tuple[str, ...] = field(default_factory=tuple)
+
+    @property
+    def success(self) -> bool:
+        return self.status == 'created'

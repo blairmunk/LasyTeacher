@@ -101,7 +101,7 @@ class DjangoDocumentEngine(IDocumentEngine):
         content_config = options.content_config
 
         if renderer_type == 'latex':
-            return self._document_from_paths(
+            return self.file_store.document_from_paths(
                 file_type='latex',
                 file_paths=self.legacy_file_renderer.render_latex_work(
                     work,
@@ -110,14 +110,14 @@ class DjangoDocumentEngine(IDocumentEngine):
                 ),
             )
         if renderer_type == 'html':
-            return self._document_from_paths(
+            return self.file_store.document_from_paths(
                 file_type='html',
                 file_paths=self.legacy_file_renderer.render_html_work(
                     work,
                     content_config,
                 ),
             )
-        return self._document_from_paths(
+        return self.file_store.document_from_paths(
             file_type='pdf',
             file_paths=self.legacy_file_renderer.render_pdf_work(
                 work,
@@ -169,7 +169,7 @@ class DjangoDocumentEngine(IDocumentEngine):
         renderer_type = render_target.renderer_type
 
         if renderer_type == 'latex':
-            return self._document_from_paths(
+            return self.file_store.document_from_paths(
                 file_type='latex',
                 file_paths=self.legacy_file_renderer.render_remedial_latex(
                     variant,
@@ -178,14 +178,14 @@ class DjangoDocumentEngine(IDocumentEngine):
                 ),
             )
         if renderer_type == 'html':
-            return self._document_from_paths(
+            return self.file_store.document_from_paths(
                 file_type='html',
                 file_paths=self.legacy_file_renderer.render_remedial_html(
                     variant,
                     content_config,
                 ),
             )
-        return self._document_from_paths(
+        return self.file_store.document_from_paths(
             file_type='pdf',
             file_paths=self.legacy_file_renderer.render_remedial_pdf(
                 variant,
@@ -223,9 +223,6 @@ class DjangoDocumentEngine(IDocumentEngine):
         filename: str,
     ) -> GeneratedFileResult:
         return self.get_rendered_file(file_type, filename)
-
-    def _document_from_paths(self, file_type: str, file_paths):
-        return self.file_store.document_from_paths(file_type, file_paths)
 
     def _build_document(self, render_plan=None):
         if render_plan is None:

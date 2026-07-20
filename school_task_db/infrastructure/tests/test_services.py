@@ -188,10 +188,6 @@ class DjangoDocumentEngineTests(TestCase):
         service = DjangoDocumentEngine(
             legacy_file_renderer=legacy_file_renderer,
         )
-        service._document_from_paths = (
-            lambda file_type, file_paths:
-                GeneratedDocument(file_type=file_type)
-        )
 
         result = service._render_legacy_work_document(
             work='work-object',
@@ -417,13 +413,15 @@ class DjangoDocumentEngineTests(TestCase):
         self.assertEqual(result, 'file-result')
         self.assertEqual(file_store.requests, [('html', 'work.html')])
 
-    def test_document_from_paths_uses_configured_file_store(self):
+    def test_legacy_work_render_uses_configured_file_store(self):
         file_store = FakeRenderedDocumentFileStore()
+        legacy_file_renderer = FakeLegacyFileRenderer()
         service = DjangoDocumentEngine(file_store=file_store)
+        service.legacy_file_renderer = legacy_file_renderer
 
-        result = service._document_from_paths(
-            file_type='html',
-            file_paths=['work.html'],
+        result = service._render_legacy_work_document(
+            work='work-object',
+            options=WorkDocumentRenderOptions(renderer_type='html'),
         )
 
         self.assertEqual(result.file_type, 'html')

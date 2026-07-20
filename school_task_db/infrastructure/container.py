@@ -50,6 +50,7 @@ from core_logic.use_cases.compose_work_variants import ComposeWorkVariantsUseCas
 from core_logic.use_cases.render_remedial_sheet_document import (
     RenderRemedialSheetDocumentUseCase,
 )
+from core_logic.use_cases.render_document import RenderDocumentUseCase
 from core_logic.use_cases.render_work_document import RenderWorkDocumentUseCase
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.get_add_tasks_to_group import GetAddTasksToGroupUseCase
@@ -1013,6 +1014,11 @@ class Container:
             document_engine=self.document_engine,
             work_repo=self.work_repo,
             document_template_repo=self.document_template_repo,
+        )
+
+    def render_document_use_case(self):
+        return RenderDocumentUseCase(
+            document_engine=self.document_engine,
         )
 
     def render_remedial_sheet_document_use_case(self):

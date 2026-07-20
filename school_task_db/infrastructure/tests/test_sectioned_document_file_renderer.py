@@ -1,3 +1,6 @@
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
 from django.test import SimpleTestCase
 
 from core_logic.entities.document import Document
@@ -5,6 +8,7 @@ from core_logic.entities.document_rendering import GeneratedDocument
 from core_logic.value_objects.content_config import RenderTarget
 from core_logic.value_objects.document_render_plan import DocumentRenderRequest
 from infrastructure.services.sectioned_document_file_renderer import (
+    SectionedHtmlToPdfDocumentRenderer,
     SectionedDocumentFileRenderer,
 )
 
@@ -59,6 +63,56 @@ class SectionedDocumentFileRendererTests(SimpleTestCase):
             )
 
 
+class SectionedHtmlToPdfDocumentRendererTests(SimpleTestCase):
+    def test_renders_sectioned_html_to_pdf_document(self):
+        content_renderer = FakeContentRenderer(content='<html>work</html>')
+        with TemporaryDirectory() as output_dir:
+            file_store = FakeFileStore(output_dirs={'pdf': output_dir})
+            pdf_generator = FakePdfGenerator()
+            renderer = SectionedHtmlToPdfDocumentRenderer(
+                html_filename_builder=lambda request: (
+                    f'{request.document.title}.html'
+                ),
+                html_content_renderer=content_renderer,
+                file_store=file_store,
+                pdf_generator_factory=lambda request: pdf_generator,
+            )
+            request = DocumentRenderRequest(
+                document=Document(title='work-1'),
+                render_target=RenderTarget(
+                    renderer_type='pdf',
+                    page_format='A5',
+                ),
+            )
+
+            result = renderer.render(request)
+
+            html_path, pdf_path = pdf_generator.request
+            self.assertEqual(result.file_type, 'pdf')
+            self.assertEqual(content_renderer.request.render_target.renderer_type, 'html')
+            self.assertEqual(content_renderer.request.render_target.page_format, 'A5')
+            self.assertEqual(html_path.name, 'work-1.html')
+            self.assertEqual(pdf_generator.html_content, '<html>work</html>')
+            self.assertEqual(pdf_path, Path(output_dir) / 'work-1.pdf')
+            self.assertEqual(file_store.path_requests, [('pdf', [pdf_path])])
+
+    def test_rejects_missing_pdf_output_dir(self):
+        renderer = SectionedHtmlToPdfDocumentRenderer(
+            html_filename_builder=lambda request: 'work.html',
+            html_content_renderer=FakeContentRenderer(),
+            file_store=FakeFileStore(output_dirs={}),
+            pdf_generator_factory=lambda request: FakePdfGenerator(),
+        )
+
+        with self.assertRaises(ValueError):
+            renderer.render(
+                DocumentRenderRequest(
+                    document=Document(title='work'),
+                    render_target=RenderTarget(renderer_type='pdf'),
+                )
+            )
+
+
 class FakeContentRenderer:
     def __init__(self, content='content'):
         self.content = content
@@ -70,9 +124,27 @@ class FakeContentRenderer:
 
 
 class FakeFileStore:
-    def __init__(self):
+    def __init__(self, output_dirs=None):
         self.request = None
+        self.path_requests = []
+        self.output_dirs = output_dirs or {}
 
     def write_text_document(self, file_type, filename, content):
         self.request = (file_type, filename, content)
         return GeneratedDocument(file_type=file_type)
+
+    def document_from_paths(self, file_type, file_paths):
+        self.path_requests.append((file_type, file_paths))
+        return GeneratedDocument(file_type=file_type)
+
+
+class FakePdfGenerator:
+    def __init__(self):
+        self.request = None
+        self.html_content = ''
+
+    def generate_pdf(self, html_path, pdf_path):
+        self.request = (html_path, pdf_path)
+        self.html_content = html_path.read_text(encoding='utf-8')
+        pdf_path.write_bytes(b'pdf')
+        return pdf_path

@@ -36,6 +36,7 @@ from infrastructure.services.rendered_document_file_store import (
 )
 from infrastructure.services.sectioned_document_defaults import (
     build_legacy_with_sectioned_document_components,
+    build_sectioned_document_components,
     build_sectioned_html_document_components,
     build_sectioned_html_pdf_document_components,
     build_sectioned_remedial_sheet_html_document_components,
@@ -477,6 +478,45 @@ class SectionedDocumentDefaultsTests(TestCase):
                 )
             )
 
+    def test_builds_combined_sectioned_document_components(self):
+        with TemporaryDirectory() as output_dir:
+            components = build_sectioned_document_components(
+                file_store=RenderedDocumentFileStore(
+                    output_dirs={
+                        'html': output_dir,
+                        'pdf': output_dir,
+                        'latex': output_dir,
+                    },
+                ),
+                get_work_source=lambda work_id: Work(
+                    id=work_id,
+                    name='Контрольная',
+                    duration=45,
+                    max_score=4,
+                ),
+                get_remedial_sheet_data=lambda variant_id: RemedialSheetData(
+                    variant='variant',
+                    student=None,
+                    source_work=None,
+                    mark=None,
+                    new_tasks=[],
+                ),
+                pdf_generator_factory=lambda request: FakePdfGenerator(),
+            )
+
+            self.assertIsNotNone(
+                components.document_renderer_registry.get(
+                    'latex',
+                    document_type='work',
+                )
+            )
+            self.assertIsNotNone(
+                components.document_renderer_registry.get(
+                    'latex',
+                    document_type='remedial_sheet',
+                )
+            )
+
     def test_builds_hybrid_legacy_with_sectioned_document_components(self):
         legacy_file_renderer = FakeLegacyFileRenderer()
         pdf_generator = FakePdfGenerator()
@@ -529,7 +569,7 @@ class SectionedDocumentDefaultsTests(TestCase):
         self.assertEqual(pdf_result.file_type, 'pdf')
         self.assertEqual(latex_result.file_type, 'latex')
         self.assertEqual(legacy_file_renderer.pdf_work_requests, [])
-        self.assertEqual(legacy_file_renderer.latex_work_requests, [('work-object',)])
+        self.assertEqual(legacy_file_renderer.latex_work_requests, [])
         self.assertIn('<title>Контрольная</title>', pdf_generator.html_content)
 
     def test_work_html_filename_uses_source_id(self):

@@ -26,6 +26,7 @@ from infrastructure.services.document_renderer_registry_factory import (
 )
 from infrastructure.services.latex_document_payloads import (
     LatexTaskPayloadFormatter,
+    RenderTargetTaskPayloadFormatter,
 )
 from infrastructure.services.sectioned_document_renderer_factory import (
     TemplateSectionedTextDocumentRendererSpec,
@@ -165,13 +166,16 @@ def build_sectioned_html_document_components(
     get_work_source=None,
     get_remedial_sheet_data=None,
     template_renderer=None,
+    task_payload_formatter=None,
 ) -> SectionedDocumentComponents:
     payload_registry = build_work_section_payload_builder_registry(
         get_work_source=get_work_source,
+        task_payload_formatter=task_payload_formatter,
     )
     payload_registry.extend(
         build_remedial_sheet_section_payload_builder_registry(
             get_remedial_sheet_data=get_remedial_sheet_data,
+            task_payload_formatter=task_payload_formatter,
         )
     )
     return SectionedDocumentComponents(
@@ -195,12 +199,14 @@ def build_sectioned_html_pdf_document_components(
     get_remedial_sheet_data=None,
     template_renderer=None,
     pdf_generator_factory=None,
+    task_payload_formatter=None,
 ) -> SectionedDocumentComponents:
     components = build_sectioned_html_document_components(
         file_store=file_store,
         get_work_source=get_work_source,
         get_remedial_sheet_data=get_remedial_sheet_data,
         template_renderer=template_renderer,
+        task_payload_formatter=task_payload_formatter,
     )
     pdf_renderer_registry = (
         build_template_sectioned_html_to_pdf_document_renderer_registry(
@@ -215,6 +221,37 @@ def build_sectioned_html_pdf_document_components(
     return components
 
 
+def build_sectioned_document_components(
+    file_store,
+    get_work_source=None,
+    get_remedial_sheet_data=None,
+    template_renderer=None,
+    pdf_generator_factory=None,
+    task_payload_formatter=None,
+) -> SectionedDocumentComponents:
+    components = build_sectioned_html_pdf_document_components(
+        file_store=file_store,
+        get_work_source=get_work_source,
+        get_remedial_sheet_data=get_remedial_sheet_data,
+        template_renderer=template_renderer,
+        pdf_generator_factory=pdf_generator_factory,
+        task_payload_formatter=(
+            task_payload_formatter
+            or _sectioned_task_payload_formatter()
+        ),
+    )
+    latex_renderer_registry = (
+        build_template_sectioned_text_document_renderer_registry(
+            renderer_type='latex',
+            renderer_specs=_sectioned_latex_renderer_specs(),
+            file_store=file_store,
+            template_renderer=template_renderer,
+        )
+    )
+    components.document_renderer_registry.extend(latex_renderer_registry)
+    return components
+
+
 def build_legacy_with_sectioned_document_components(
     file_store,
     get_work_source,
@@ -224,7 +261,7 @@ def build_legacy_with_sectioned_document_components(
     template_renderer=None,
     pdf_generator_factory=None,
 ) -> SectionedDocumentComponents:
-    sectioned_components = build_sectioned_html_pdf_document_components(
+    sectioned_components = build_sectioned_document_components(
         file_store=file_store,
         get_work_source=get_work_source,
         get_remedial_sheet_data=get_remedial_sheet_data,
@@ -367,3 +404,28 @@ def _sectioned_html_renderer_specs():
             wrapper_template_name=REMEDIAL_HTML_WRAPPER_TEMPLATE,
         ),
     ]
+
+
+def _sectioned_latex_renderer_specs():
+    return [
+        TemplateSectionedTextDocumentRendererSpec(
+            document_type=WORK_DOCUMENT_TYPE,
+            section_templates=WORK_LATEX_SECTION_TEMPLATES,
+            filename_builder=work_latex_filename,
+            wrapper_template_name=WORK_LATEX_WRAPPER_TEMPLATE,
+        ),
+        TemplateSectionedTextDocumentRendererSpec(
+            document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
+            section_templates=REMEDIAL_LATEX_SECTION_TEMPLATES,
+            filename_builder=remedial_latex_filename,
+            wrapper_template_name=REMEDIAL_LATEX_WRAPPER_TEMPLATE,
+        ),
+    ]
+
+
+def _sectioned_task_payload_formatter():
+    return RenderTargetTaskPayloadFormatter(
+        formatters_by_renderer_type={
+            'latex': LatexTaskPayloadFormatter(),
+        },
+    )

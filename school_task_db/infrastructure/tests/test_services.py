@@ -60,9 +60,11 @@ class FakeDocumentRendererRegistry:
 class FakeLegacyFileRenderer:
     def __init__(self):
         self.html_work_request = None
+        self.latex_work_request = None
         self.pdf_work_request = None
 
     def render_latex_work(self, work, content_config, page_format='A4'):
+        self.latex_work_request = (work, content_config, page_format)
         return []
 
     def render_html_work(self, work, content_config):
@@ -525,7 +527,7 @@ class DjangoDocumentEngineTests(TestCase):
         self.assertEqual(result.file_type, 'html')
         self.assertEqual(file_store.path_requests, [('html', ['work.html'])])
 
-    def test_sectioned_factory_uses_sectioned_html_pdf_and_legacy_latex(self):
+    def test_sectioned_factory_uses_sectioned_renderers(self):
         work = Work.objects.create(name='Контрольная', duration=45)
         legacy_file_renderer = FakeLegacyFileRenderer()
         pdf_generator = FakePdfGenerator()
@@ -579,6 +581,7 @@ class DjangoDocumentEngineTests(TestCase):
         self.assertEqual(latex_result.file_type, 'latex')
         self.assertIsNone(legacy_file_renderer.html_work_request)
         self.assertIsNone(legacy_file_renderer.pdf_work_request)
+        self.assertIsNone(legacy_file_renderer.latex_work_request)
         self.assertIn('<title>Контрольная</title>', pdf_generator.html_content)
 
 

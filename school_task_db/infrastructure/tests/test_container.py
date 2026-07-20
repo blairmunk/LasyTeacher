@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.test import SimpleTestCase
 
 from core_logic.use_cases.add_event_participants import AddEventParticipantsUseCase
@@ -237,6 +239,27 @@ from infrastructure.services.task_import_service import DjangoTaskImportService
 
 
 class ContainerTests(SimpleTestCase):
+    def test_document_engine_uses_sectioned_html_factory(self):
+        container = Container()
+        remedial_sheet_data_use_case = object()
+        engine = object()
+
+        with patch.object(
+            container,
+            'get_remedial_sheet_data_use_case',
+            return_value=remedial_sheet_data_use_case,
+        ), patch.object(
+            DjangoDocumentEngine,
+            'with_sectioned_html_renderer',
+            return_value=engine,
+        ) as factory:
+            result = container.document_engine
+
+        self.assertIs(result, engine)
+        factory.assert_called_once_with(
+            get_remedial_sheet_data_use_case=remedial_sheet_data_use_case,
+        )
+
     def test_wires_remedial_from_event_use_case(self):
         container = Container()
 

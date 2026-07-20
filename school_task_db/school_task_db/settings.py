@@ -36,7 +36,6 @@ INSTALLED_APPS = [
     'review',
     'document_generator',
     'latex_generator',
-    'html_generator',      # HTML генератор
     'pdf_generator',       # PDF генератор
     'codifier',            # Кодификатор заданий
     'site_settings',       # Настройки

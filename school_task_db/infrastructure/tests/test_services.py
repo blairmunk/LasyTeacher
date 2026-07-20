@@ -22,6 +22,8 @@ from core_logic.value_objects.document_render_options import (
 )
 from core_logic.value_objects.document_render_plan import (
     DocumentRenderPlan,
+)
+from core_logic.value_objects.document_render_plan_factories import (
     build_work_document_render_plan,
 )
 from curriculum.models import Topic

@@ -21,7 +21,7 @@ from core_logic.value_objects.document_render_options import (
     RemedialSheetDocumentRenderOptions,
     is_supported_document_renderer_type,
 )
-from core_logic.value_objects.document_render_plan import (
+from core_logic.value_objects.document_render_plan_factories import (
     build_remedial_sheet_document_render_plan,
 )
 from core_logic.value_objects.document_recipes import REMEDIAL_SHEET_DOCUMENT_TYPE

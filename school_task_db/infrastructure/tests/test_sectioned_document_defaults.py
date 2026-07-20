@@ -20,8 +20,8 @@ from core_logic.value_objects.document_render_options import (
     RenderTarget,
     WorkDocumentRenderOptions,
 )
-from core_logic.value_objects.document_render_plan import (
-    DocumentRenderPlan,
+from core_logic.value_objects.document_render_plan import DocumentRenderPlan
+from core_logic.value_objects.document_render_plan_factories import (
     build_remedial_sheet_document_render_plan,
     build_work_document_render_plan,
 )

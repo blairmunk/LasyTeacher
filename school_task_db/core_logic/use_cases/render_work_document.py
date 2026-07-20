@@ -19,7 +19,7 @@ from core_logic.value_objects.document_render_options import (
     WorkDocumentRenderOptions,
     is_supported_document_renderer_type,
 )
-from core_logic.value_objects.document_render_plan import (
+from core_logic.value_objects.document_render_plan_factories import (
     build_work_document_render_plan,
 )
 from core_logic.value_objects.document_recipes import WORK_DOCUMENT_TYPE

@@ -88,6 +88,10 @@ class GenerateWorkLatexCommandTests(TestCase):
         self.assertEqual(request.work_id, 'work-1')
         self.assertEqual(request.options.renderer_type, 'latex')
         self.assertEqual(request.options.answer_type, 'with_answers')
+        self.assertIn(
+            'generate_work_latex is deprecated',
+            stdout.getvalue(),
+        )
         self.assertIn('Created latex document for Контрольная', stdout.getvalue())
         self.assertIn('work_1.tex', stdout.getvalue())
 
@@ -146,6 +150,7 @@ class GeneratePdfCommandTests(TestCase):
         self.assertEqual(request.options.renderer_type, 'pdf')
         self.assertEqual(request.options.pdf_format, 'A5')
         self.assertEqual(request.options.answer_type, 'with_answers')
+        self.assertIn('generate_pdf is deprecated', stdout.getvalue())
         self.assertIn('Created PDF document for Контрольная', stdout.getvalue())
         self.assertIn('work_1.pdf', stdout.getvalue())
 

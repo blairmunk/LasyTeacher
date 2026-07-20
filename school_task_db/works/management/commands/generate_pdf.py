@@ -9,7 +9,10 @@ from works.management.commands._document_rendering import (
 
 
 class Command(BaseCommand):
-    help = 'Generate PDF documents through the sectioned document engine'
+    help = (
+        'Deprecated alias for render_work_document. '
+        'Renders PDF documents through the sectioned document engine.'
+    )
 
     def add_arguments(self, parser):
         parser.add_argument('object_type', choices=['work'])
@@ -39,6 +42,12 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        self.stdout.write(
+            self.style.WARNING(
+                'generate_pdf is deprecated; use render_work_document instead.'
+            )
+        )
+
         if options['object_type'] != 'work':
             raise CommandError(f'Unsupported object type: {options["object_type"]}')
 

@@ -238,4 +238,3 @@ class DjangoDocumentEngine(IDocumentEngine):
 
 
 DjangoDocumentRenderingService = DjangoDocumentEngine
-DjangoDocumentGenerationService = DjangoDocumentEngine

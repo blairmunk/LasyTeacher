@@ -731,8 +731,4 @@ class ContainerTests(SimpleTestCase):
             container.document_rendering_service,
             container.document_engine,
         )
-        self.assertIs(
-            container.document_generation_service,
-            container.document_engine,
-        )
         self.assertIsInstance(container.task_import_service, DjangoTaskImportService)

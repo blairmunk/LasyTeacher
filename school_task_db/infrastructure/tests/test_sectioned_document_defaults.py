@@ -39,9 +39,11 @@ from infrastructure.services.sectioned_document_defaults import (
     build_sectioned_html_document_components,
     build_sectioned_html_pdf_document_components,
     build_sectioned_remedial_sheet_html_document_components,
+    build_sectioned_remedial_sheet_latex_document_components,
     build_sectioned_work_html_document_components,
     build_sectioned_work_latex_document_components,
     remedial_html_filename,
+    remedial_latex_filename,
     work_html_filename,
     work_latex_filename,
 )
@@ -318,6 +320,88 @@ class SectionedDocumentDefaultsTests(TestCase):
             self.assertIn('Тренировочный ответ', html)
             self.assertIn('Краткое решение тренировки', html)
 
+    def test_builds_sectioned_remedial_latex_document_through_engine(self):
+        remedial_variant = Variant.objects.create(
+            work=None,
+            number=1,
+            variant_type='remedial',
+        )
+        source_work = Work.objects.create(name='Исходная работа')
+        original_task = self.create_task(
+            text='Ошибка & формула $F=ma$',
+            answer='Ответ & исходный',
+            short_solution='Разбор $F=ma$',
+        )
+        training_task = self.create_task(
+            text='Тренировка & $a=F/m$',
+            answer='Ответ тренировки',
+            short_solution='Кратко $a=F/m$',
+        )
+        training_variant_task = VariantTask.objects.create(
+            variant=remedial_variant,
+            task=training_task,
+            order=1,
+            max_points=2,
+        )
+        sheet_data = RemedialSheetData(
+            variant=remedial_variant,
+            student=VariantDetailStudentRef(
+                pk='student-1',
+                full_name='Петров Пётр',
+                short_name='Петров П.',
+            ),
+            source_work=source_work,
+            mark=FakeMark(score=3, points=2, max_points=5),
+            original_tasks=[
+                RemedialOriginalTaskRow(
+                    task=original_task,
+                    order=1,
+                    points=2,
+                    max_points=5,
+                    pct=40.0,
+                    status='partial',
+                    group_name='Динамика',
+                ),
+            ],
+            new_tasks=[training_variant_task],
+        )
+
+        with TemporaryDirectory() as output_dir:
+            components = build_sectioned_remedial_sheet_latex_document_components(
+                file_store=RenderedDocumentFileStore(
+                    output_dirs={'latex': output_dir},
+                ),
+                get_remedial_sheet_data=lambda variant_id: sheet_data,
+            )
+            engine = DjangoDocumentEngine(
+                document_builder=components.document_builder,
+                document_renderer_registry=components.document_renderer_registry,
+            )
+            options = RemedialSheetDocumentRenderOptions(
+                renderer_type='latex',
+                answer_type='with_short_solutions',
+            )
+
+            result = engine.render_remedial_sheet_document(
+                variant_id=str(remedial_variant.pk),
+                options=options,
+                render_plan=build_remedial_sheet_document_render_plan(
+                    variant_id=str(remedial_variant.pk),
+                    options=options,
+                ),
+            )
+
+            filename = remedial_latex_filename_from_id(remedial_variant.pk)
+            latex = (Path(output_dir) / filename).read_text(encoding='utf-8')
+            self.assertEqual(result.file_type, 'latex')
+            self.assertEqual(result.files[0].filename, filename)
+            self.assertIn(r'\documentclass', latex)
+            self.assertIn('Работа над ошибками', latex)
+            self.assertIn(r'Ошибка \& формула \(F=ma\)', latex)
+            self.assertIn(r'Ответ \& исходный', latex)
+            self.assertIn(r'Тренировка \& \(a=F/m\)', latex)
+            self.assertIn(r'Кратко \(a=F/m\)', latex)
+
     def test_builds_combined_sectioned_html_components(self):
         with TemporaryDirectory() as output_dir:
             components = build_sectioned_html_document_components(
@@ -476,6 +560,14 @@ class SectionedDocumentDefaultsTests(TestCase):
 
         self.assertEqual(remedial_html_filename(request), 'remedial.html')
 
+    def test_remedial_latex_filename_uses_source_id(self):
+        request = FakeRenderRequest(source_id='variant-1')
+
+        self.assertEqual(
+            remedial_latex_filename(request),
+            'remedial_variant-1.tex',
+        )
+
     def create_task(self, **overrides):
         topic = Topic.objects.create(
             name=f"Тема {overrides.get('text', '')}",
@@ -519,6 +611,10 @@ def work_latex_filename_from_id(work_id):
 
 def remedial_html_filename_from_id(variant_id):
     return f'remedial_{variant_id}.html'
+
+
+def remedial_latex_filename_from_id(variant_id):
+    return f'remedial_{variant_id}.tex'
 
 
 def empty_work_render_plan(renderer_type):

@@ -1,0 +1,10 @@
+\newpage
+\section*{\centering Полные решения тренировочных заданий}
+{% for task in payload.tasks %}
+\textbf{Задание {{ task.order }}.}
+
+{{ task.full_solution|safe }}
+
+{% empty %}
+\textit{Нет полных решений для печати.}
+{% endfor %}

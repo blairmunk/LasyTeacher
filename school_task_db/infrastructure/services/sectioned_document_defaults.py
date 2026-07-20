@@ -71,6 +71,23 @@ REMEDIAL_HTML_SECTION_TEMPLATES = {
     ),
 }
 REMEDIAL_HTML_WRAPPER_TEMPLATE = 'documents/html/base/document.html'
+REMEDIAL_LATEX_SECTION_TEMPLATES = {
+    HEADER_SECTION: 'documents/latex/sections/remedial_header.tex',
+    ORIGINAL_MISTAKES_SECTION: (
+        'documents/latex/sections/remedial_original_mistakes.tex'
+    ),
+    TRAINING_TASKS_SECTION: (
+        'documents/latex/sections/remedial_training_tasks.tex'
+    ),
+    ANSWERS_SECTION: 'documents/latex/sections/remedial_answers.tex',
+    SHORT_SOLUTIONS_SECTION: (
+        'documents/latex/sections/remedial_short_solutions.tex'
+    ),
+    FULL_SOLUTIONS_SECTION: (
+        'documents/latex/sections/remedial_full_solutions.tex'
+    ),
+}
+REMEDIAL_LATEX_WRAPPER_TEMPLATE = 'documents/latex/base/document.tex'
 
 
 @dataclass(frozen=True)
@@ -277,6 +294,40 @@ def build_sectioned_remedial_sheet_html_document_components(
     )
 
 
+def build_sectioned_remedial_sheet_latex_document_components(
+    file_store,
+    get_remedial_sheet_data=None,
+    template_renderer=None,
+    task_payload_formatter=None,
+) -> SectionedDocumentComponents:
+    payload_registry = build_remedial_sheet_section_payload_builder_registry(
+        get_remedial_sheet_data=get_remedial_sheet_data,
+        task_payload_formatter=(
+            task_payload_formatter or LatexTaskPayloadFormatter()
+        ),
+    )
+    return SectionedDocumentComponents(
+        document_builder=RecipeDocumentBuilder(
+            section_payload_builder_registry=payload_registry,
+        ),
+        document_renderer_registry=(
+            build_template_sectioned_text_document_renderer_registry(
+                renderer_type='latex',
+                renderer_specs=[
+                    TemplateSectionedTextDocumentRendererSpec(
+                        document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
+                        section_templates=REMEDIAL_LATEX_SECTION_TEMPLATES,
+                        filename_builder=remedial_latex_filename,
+                        wrapper_template_name=REMEDIAL_LATEX_WRAPPER_TEMPLATE,
+                    ),
+                ],
+                file_store=file_store,
+                template_renderer=template_renderer,
+            )
+        ),
+    )
+
+
 def work_html_filename(request):
     if request.document.source and request.document.source.source_id:
         return f'work_{request.document.source.source_id}.html'
@@ -293,6 +344,12 @@ def work_latex_filename(request):
     if request.document.source and request.document.source.source_id:
         return f'work_{request.document.source.source_id}.tex'
     return 'work.tex'
+
+
+def remedial_latex_filename(request):
+    if request.document.source and request.document.source.source_id:
+        return f'remedial_{request.document.source.source_id}.tex'
+    return 'remedial.tex'
 
 
 def _sectioned_html_renderer_specs():

@@ -1,0 +1,20 @@
+\section*{Часть 1. Разбор ошибок}
+{% for task in payload.tasks %}
+\subsection*{Задание {{ task.order }}{% if task.group_name %} \hfill {\normalfont\normalsize {{ task.group_name }}}{% endif %}}
+{% if task.max_points is not None %}
+{\small Баллы: {{ task.points }}/{{ task.max_points }}}
+
+{% endif %}
+{{ task.latex_content|default:task.text|safe }}
+
+\textbf{Ответ:} {{ task.answer|safe }}
+
+{% if task.short_solution %}
+\textbf{Краткое решение:}
+
+{{ task.short_solution|safe }}
+
+{% endif %}
+{% empty %}
+\textit{Ошибки не найдены.}
+{% endfor %}

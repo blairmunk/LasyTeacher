@@ -1,0 +1,17 @@
+\begin{center}
+{\LARGE\bfseries {{ payload.title|default:document.title }}}
+{% if payload.student %}
+
+{\large Ученик: {{ payload.student.full_name }}}
+{% endif %}
+{% if payload.source_work %}
+
+{\normalsize Исходная работа: {{ payload.source_work.name }}}
+{% endif %}
+{% if payload.mark %}
+
+{\normalsize Оценка: {{ payload.mark.score }} \hspace{0.5cm} Баллы: {{ payload.mark.points }}/{{ payload.mark.max_points }}}
+{% endif %}
+\end{center}
+
+\vspace{0.5cm}

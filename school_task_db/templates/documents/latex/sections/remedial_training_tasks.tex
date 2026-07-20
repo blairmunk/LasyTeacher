@@ -1,0 +1,11 @@
+\newpage
+\section*{Часть 2. Тренировочные задания}
+{% for task in payload.tasks %}
+\subsection*{Задание {{ task.order }}{% if task.max_points %} \hfill {\normalfont\normalsize ({{ task.max_points }} балл.)}{% endif %}}
+{{ task.latex_content|default:task.text|safe }}
+
+\vspace{1cm}
+
+{% empty %}
+\textit{Тренировочные задания не созданы.}
+{% endfor %}

@@ -1,0 +1,8 @@
+\newpage
+\section*{\centering Краткие решения тренировочных заданий}
+{% for task in payload.tasks %}
+\textbf{Задание {{ task.order }}.} {{ task.short_solution|safe }}
+
+{% empty %}
+\textit{Нет кратких решений для печати.}
+{% endfor %}

@@ -10,6 +10,7 @@ from core_logic.services.sectioned_document_renderer import (
 )
 from core_logic.value_objects.document_render_plan import DocumentRenderRequest
 from infrastructure.services.sectioned_document_file_renderer import (
+    SectionedHtmlToPdfDocumentRenderer,
     SectionedDocumentFileRenderer,
 )
 from infrastructure.services.template_section_renderer_registry_factory import (
@@ -65,6 +66,35 @@ def build_sectioned_text_document_renderer(
     )
 
 
+def build_sectioned_html_to_pdf_document_renderer(
+    section_renderer_registry,
+    html_filename_builder,
+    file_store,
+    section_separator='\n',
+    document_wrapper=None,
+    pdf_generator_factory=None,
+) -> SectionedHtmlToPdfDocumentRenderer:
+    body_renderer = SectionedDocumentContentRenderer(
+        section_renderer_registry=section_renderer_registry,
+        section_separator=section_separator,
+    )
+    content_renderer = (
+        WrappedDocumentContentRenderer(
+            body_renderer=body_renderer,
+            document_wrapper=document_wrapper,
+        )
+        if document_wrapper
+        else body_renderer
+    )
+
+    return SectionedHtmlToPdfDocumentRenderer(
+        html_filename_builder=html_filename_builder,
+        html_content_renderer=content_renderer,
+        file_store=file_store,
+        pdf_generator_factory=pdf_generator_factory,
+    )
+
+
 def build_template_sectioned_text_document_renderer(
     renderer_type: str,
     section_templates,
@@ -116,6 +146,47 @@ def build_template_sectioned_text_document_renderer_registry(
             template_renderer=template_renderer,
             section_separator=spec.section_separator,
             wrapper_template_name=spec.wrapper_template_name,
+        )
+        registry.register(
+            renderer_type,
+            renderer,
+            document_type=spec.document_type,
+        )
+    return registry
+
+
+def build_template_sectioned_html_to_pdf_document_renderer_registry(
+    renderer_type: str,
+    renderer_specs,
+    file_store,
+    template_renderer=None,
+    pdf_generator_factory=None,
+) -> DocumentRendererRegistry:
+    if not renderer_type:
+        raise ValueError('renderer_type is required')
+
+    registry = DocumentRendererRegistry()
+    for spec in renderer_specs:
+        section_renderer_registry = build_template_section_renderer_registry(
+            renderer_type='html',
+            section_templates=spec.section_templates,
+            template_renderer=template_renderer,
+        )
+        document_wrapper = (
+            TemplateDocumentContentWrapper(
+                template_name=spec.wrapper_template_name,
+                template_renderer=template_renderer,
+            )
+            if spec.wrapper_template_name
+            else None
+        )
+        renderer = build_sectioned_html_to_pdf_document_renderer(
+            section_renderer_registry=section_renderer_registry,
+            html_filename_builder=spec.filename_builder,
+            file_store=file_store,
+            section_separator=spec.section_separator,
+            document_wrapper=document_wrapper,
+            pdf_generator_factory=pdf_generator_factory,
         )
         registry.register(
             renderer_type,

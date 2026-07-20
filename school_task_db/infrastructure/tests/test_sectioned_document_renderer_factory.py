@@ -1,3 +1,6 @@
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
 from django.test import SimpleTestCase
 
 from core_logic.entities.document import Document, DocumentSection
@@ -9,6 +12,7 @@ from core_logic.value_objects.document_render_plan import (
 from infrastructure.services.sectioned_document_renderer_factory import (
     TemplateSectionedTextDocumentRendererSpec,
     build_sectioned_text_document_renderer,
+    build_template_sectioned_html_to_pdf_document_renderer_registry,
     build_template_sectioned_text_document_renderer,
     build_template_sectioned_text_document_renderer_registry,
 )
@@ -226,6 +230,63 @@ class SectionedDocumentRendererFactoryTests(SimpleTestCase):
             ],
         )
 
+    def test_builds_pdf_renderer_registry_from_html_template_specs(self):
+        with TemporaryDirectory() as output_dir:
+            pdf_generator = FakePdfGenerator()
+            file_store = FakeFileStore(output_dirs={'pdf': output_dir})
+            registry = (
+                build_template_sectioned_html_to_pdf_document_renderer_registry(
+                    renderer_type='pdf',
+                    renderer_specs=[
+                        TemplateSectionedTextDocumentRendererSpec(
+                            document_type='work',
+                            section_templates={
+                                'tasks': 'documents/html/work_tasks.html',
+                            },
+                            filename_builder=lambda request: 'work.html',
+                            wrapper_template_name='documents/html/base.html',
+                        ),
+                    ],
+                    file_store=file_store,
+                    template_renderer=(
+                        lambda template_name, context:
+                            f"<document>{context['body_content']}</document>"
+                            if template_name == 'documents/html/base.html'
+                            else f"<section>{context['render_target'].renderer_type}:"
+                            f"{template_name}</section>"
+                    ),
+                    pdf_generator_factory=lambda request: pdf_generator,
+                )
+            )
+
+            result = registry.render(
+                DocumentRenderRequest(
+                    document=Document(
+                        title='Контрольная',
+                        document_type='work',
+                        sections=[DocumentSection(section_type='tasks')],
+                    ),
+                    render_target=RenderTarget(
+                        renderer_type='pdf',
+                        page_format='A5',
+                    ),
+                )
+            )
+
+            html_path, pdf_path = pdf_generator.request
+            self.assertEqual(result.file_type, 'pdf')
+            self.assertEqual(html_path.name, 'work.html')
+            self.assertEqual(
+                pdf_generator.html_content,
+                (
+                    '<document>'
+                    '<section>html:documents/html/work_tasks.html</section>'
+                    '</document>'
+                ),
+            )
+            self.assertEqual(pdf_path, Path(output_dir) / 'work.pdf')
+            self.assertEqual(file_store.path_requests, [('pdf', [pdf_path])])
+
     def test_renderer_spec_rejects_empty_document_type(self):
         with self.assertRaises(ValueError):
             TemplateSectionedTextDocumentRendererSpec(
@@ -253,16 +314,34 @@ class FakeSectionRendererRegistry:
 
 
 class FakeFileStore:
-    def __init__(self):
+    def __init__(self, output_dirs=None):
         self.request = None
         self.requests = []
+        self.path_requests = []
+        self.output_dirs = output_dirs or {}
 
     def write_text_document(self, file_type, filename, content):
         self.request = (file_type, filename, content)
         self.requests.append(self.request)
         return GeneratedDocument(file_type=file_type)
 
+    def document_from_paths(self, file_type, file_paths):
+        self.path_requests.append((file_type, file_paths))
+        return GeneratedDocument(file_type=file_type)
+
 
 class FakeDocumentWrapper:
     def wrap_content(self, request):
         return f'<html>{request.body_content}</html>'
+
+
+class FakePdfGenerator:
+    def __init__(self):
+        self.request = None
+        self.html_content = ''
+
+    def generate_pdf(self, html_path, pdf_path):
+        self.request = (html_path, pdf_path)
+        self.html_content = html_path.read_text(encoding='utf-8')
+        pdf_path.write_bytes(b'pdf')
+        return pdf_path

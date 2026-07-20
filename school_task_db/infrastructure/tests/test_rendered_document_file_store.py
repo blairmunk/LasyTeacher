@@ -61,3 +61,34 @@ class RenderedDocumentFileStoreTests(TestCase):
             self.assertEqual(len(document.files), 1)
             self.assertEqual(document.files[0].filename, 'work.html')
             self.assertGreater(document.files[0].size_kb, 0)
+
+    def test_writes_text_document(self):
+        with TemporaryDirectory() as output_dir:
+            store = RenderedDocumentFileStore(
+                output_dirs={'html': output_dir},
+            )
+
+            document = store.write_text_document(
+                file_type='html',
+                filename='work.html',
+                content='<html>work</html>',
+            )
+
+            file_path = Path(output_dir) / 'work.html'
+            self.assertEqual(
+                file_path.read_text(encoding='utf-8'),
+                '<html>work</html>',
+            )
+            self.assertEqual(document.file_type, 'html')
+            self.assertEqual(len(document.files), 1)
+            self.assertEqual(document.files[0].filename, 'work.html')
+
+    def test_write_text_document_rejects_unknown_file_type(self):
+        store = RenderedDocumentFileStore(output_dirs={'html': 'unused'})
+
+        with self.assertRaises(ValueError):
+            store.write_text_document(
+                file_type='docx',
+                filename='work.docx',
+                content='work',
+            )

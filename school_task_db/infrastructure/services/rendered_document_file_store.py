@@ -63,3 +63,20 @@ class RenderedDocumentFileStore:
                 )
 
         return GeneratedDocument(file_type=file_type, files=files)
+
+    def write_text_document(
+        self,
+        file_type: str,
+        filename: str,
+        content: str,
+    ) -> GeneratedDocument:
+        output_dir = self.output_dirs.get(file_type)
+        if not output_dir:
+            raise ValueError(f'unsupported file type: {file_type}')
+
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+        file_path = output_path / filename
+        file_path.write_text(content, encoding='utf-8')
+
+        return self.document_from_paths(file_type, [file_path])

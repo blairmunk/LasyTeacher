@@ -20,9 +20,6 @@ from core_logic.use_cases.render_document import (
     RenderDocumentRequest,
     RenderDocumentUseCase,
 )
-from core_logic.use_cases.render_document_from_recipe import (
-    RenderDocumentFromRecipeUseCase,
-)
 from core_logic.value_objects.document_render_options import (
     WorkDocumentRenderOptions,
 )
@@ -46,16 +43,9 @@ class RenderWorkDocumentUseCase:
         document_template_repo: IDocumentTemplateRepository | None = None,
         document_engine: IDocumentEngine | None = None,
         render_document_use_case: RenderDocumentUseCase | None = None,
-        render_document_from_recipe_use_case: (
-            RenderDocumentFromRecipeUseCase | None
-        ) = None,
     ):
         if render_document_use_case is not None:
             self.render_document_use_case = render_document_use_case
-        elif render_document_from_recipe_use_case is not None:
-            self.render_document_use_case = (
-                render_document_from_recipe_use_case.render_document_use_case
-            )
         else:
             self.render_document_use_case = RenderDocumentUseCase(
                 document_engine=document_engine,

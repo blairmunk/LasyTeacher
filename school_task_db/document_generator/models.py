@@ -98,6 +98,7 @@ class DocumentTemplate(BaseModel):
         return build_document_template_spec_from_config(
             name=self.name,
             template_type=self.template_type,
+            template_id=str(self.pk),
             sections_config=self.sections_config,
             default_content_config=self.default_content_config,
             html_template_override=self.html_template_override,

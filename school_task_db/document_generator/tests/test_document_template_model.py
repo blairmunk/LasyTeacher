@@ -32,6 +32,7 @@ class DocumentTemplateModelTests(TestCase):
         spec = template.to_template_spec()
 
         self.assertEqual(spec.name, 'Рабочий лист')
+        self.assertEqual(spec.template_id, str(template.pk))
         self.assertEqual(spec.template_type, 'worksheet')
         self.assertEqual(spec.section_types, ('header', 'task_list'))
         self.assertEqual(

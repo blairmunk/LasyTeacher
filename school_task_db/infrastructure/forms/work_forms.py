@@ -112,6 +112,7 @@ class WorkFormAdapter:
         return RenderWorkDocumentRequest(
             work_id=work_id,
             options=build_work_render_options(post_data),
+            template_id=post_data.get('template_id', '').strip(),
         )
 
     def document_renderer_type_from_post(self, post_data, default='pdf'):
@@ -121,12 +122,14 @@ class WorkFormAdapter:
         return RenderRemedialSheetDocumentRequest(
             variant_id=variant_id,
             options=build_remedial_sheet_render_options(post_data),
+            template_id=post_data.get('template_id', '').strip(),
         )
 
     def render_remedial_sheet_batch_request_from_post(self, post_data, work_id):
         return RenderRemedialSheetBatchDocumentRequest(
             work_id=work_id,
             options=build_remedial_sheet_render_options(post_data),
+            template_id=post_data.get('template_id', '').strip(),
         )
 
     def rendered_document_file_request(self, file_type, filename):

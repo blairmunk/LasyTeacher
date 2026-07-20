@@ -134,6 +134,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
                 DocumentTemplateSpec(
                     name='Шаблон работы',
                     template_type=WORK_DOCUMENT_TYPE,
+                    template_id='template-work',
                     sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
                     default_content_config={'answer_type': 'tasks_only'},
                     presentation=DocumentPresentation(custom_css='body {}'),
@@ -156,6 +157,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         )
         self.assertEqual(context['document_types'][0]['url'], '?type=work')
         self.assertEqual(context['sections'][0]['section_type'], HEADER_SECTION)
+        self.assertEqual(context['templates'][0]['template_id'], 'template-work')
         self.assertEqual(context['templates'][0]['name'], 'Шаблон работы')
         self.assertEqual(context['templates'][0]['sections_count'], 1)
         self.assertEqual(
@@ -613,12 +615,14 @@ class WorkFormAdapterTests(SimpleTestCase):
         request = WorkFormAdapter().render_work_document_request_from_post(
             QueryDict(
                 'renderer_type=html&format=A5&answer_type=with_short_solutions'
-                '&include_hints=1&include_instructions=1',
+                '&include_hints=1&include_instructions=1'
+                '&template_id=template-work',
             ),
             work_id='w1',
         )
 
         self.assertEqual(request.work_id, 'w1')
+        self.assertEqual(request.template_id, 'template-work')
         self.assertEqual(request.options.renderer_type, 'html')
         self.assertEqual(request.options.pdf_format, 'A5')
         self.assertEqual(request.options.answer_type, 'with_short_solutions')
@@ -627,14 +631,28 @@ class WorkFormAdapterTests(SimpleTestCase):
 
     def test_builds_render_remedial_sheet_request_from_post(self):
         request = WorkFormAdapter().render_remedial_sheet_request_from_post(
-            QueryDict('renderer_type=pdf&format=A4&answer_type=with_full_solutions'),
+            QueryDict(
+                'renderer_type=pdf&format=A4'
+                '&answer_type=with_full_solutions&template_id=template-rno',
+            ),
             variant_id='v1',
         )
 
         self.assertEqual(request.variant_id, 'v1')
+        self.assertEqual(request.template_id, 'template-rno')
         self.assertEqual(request.options.renderer_type, 'pdf')
         self.assertEqual(request.options.pdf_format, 'A4')
         self.assertEqual(request.options.answer_type, 'with_full_solutions')
+
+    def test_builds_render_remedial_sheet_batch_request_from_post(self):
+        request = WorkFormAdapter().render_remedial_sheet_batch_request_from_post(
+            QueryDict('renderer_type=html&template_id=template-rno'),
+            work_id='w1',
+        )
+
+        self.assertEqual(request.work_id, 'w1')
+        self.assertEqual(request.template_id, 'template-rno')
+        self.assertEqual(request.options.renderer_type, 'html')
 
     def test_builds_rendered_document_file_request(self):
         request = WorkFormAdapter().rendered_document_file_request(

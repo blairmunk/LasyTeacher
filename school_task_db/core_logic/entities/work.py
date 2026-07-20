@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, List, Optional
 
+from core_logic.entities.document import DocumentTemplateSpec
+
 
 @dataclass(frozen=True)
 class WorkDetailData:
@@ -11,6 +13,8 @@ class WorkDetailData:
     variants: List["WorkDetailVariant"] = field(default_factory=list)
     analog_groups: List["WorkDetailSpecGroup"] = field(default_factory=list)
     spec_preview: List["WorkDetailSpecPreviewItem"] = field(default_factory=list)
+    work_document_templates: List[DocumentTemplateSpec] = field(default_factory=list)
+    remedial_sheet_templates: List[DocumentTemplateSpec] = field(default_factory=list)
     show_sync_button: bool = False
 
 

@@ -153,7 +153,7 @@
                     >
                         {% csrf_token %}
                         <div class="row g-3 align-items-end">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">Формат документа</label>
                                 <select name="renderer_type" class="form-select">
                                     <option value="pdf">PDF (Playwright)</option>
@@ -161,7 +161,7 @@
                                     <option value="latex">LaTeX</option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">Контент</label>
                                 <select name="answer_type" class="form-select">
                                     <option value="with_short_solutions">С краткими решениями</option>
@@ -175,6 +175,17 @@
                                 <select name="format" class="form-select">
                                     <option value="A4">A4</option>
                                     <option value="A5">A5</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Шаблон</label>
+                                <select name="template_id" class="form-select">
+                                    <option value="">По умолчанию</option>
+                                    {% for template in remedial_sheet_templates %}
+                                    <option value="{{ template.template_id }}">
+                                        {{ template.name }}{% if template.presentation.has_customization %} · кастом{% endif %}
+                                    </option>
+                                    {% endfor %}
                                 </select>
                             </div>
                             <div class="col-md-2">
@@ -238,7 +249,7 @@
                                 {% csrf_token %}
                                 <input type="hidden" name="work_id" value="{{ work.id }}">
                                 <div class="row">
-                                    <div class="col-md-4 mb-3">
+                                    <div class="col-md-3 mb-3">
                                         <label class="form-label">Формат документа</label>
                                         <select name="renderer_type" id="renderer_type" class="form-select">
                                             <option value="pdf">PDF (Playwright)</option>
@@ -246,19 +257,30 @@
                                             <option value="latex">LaTeX</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-4 mb-3">
+                                    <div class="col-md-3 mb-3">
                                         <label class="form-label">Формат страницы</label>
                                         <select name="format" id="format" class="form-select">
                                             <option value="A4">A4 (210×297 мм)</option>
                                             <option value="A5">A5 (148×210 мм)</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-4 mb-3">
+                                    <div class="col-md-3 mb-3">
                                         <label class="form-label">Варианты</label>
                                         <select name="variant_selection" class="form-select">
                                             <option value="all">Все ({{ variants|length }} шт.)</option>
                                             {% for variant in variants %}
                                             <option value="{{ variant.id }}">Вариант {{ variant.number }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">Шаблон</label>
+                                        <select name="template_id" class="form-select">
+                                            <option value="">По умолчанию</option>
+                                            {% for template in work_document_templates %}
+                                            <option value="{{ template.template_id }}">
+                                                {{ template.name }}{% if template.presentation.has_customization %} · кастом{% endif %}
+                                            </option>
                                             {% endfor %}
                                         </select>
                                     </div>

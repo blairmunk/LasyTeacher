@@ -55,3 +55,32 @@ class DjangoDocumentTemplateRepositoryTests(TestCase):
         )
 
         self.assertIsNone(template)
+
+    def test_returns_template_spec_by_id_and_type(self):
+        template_model = DocumentTemplate.objects.create(
+            name='Рабочий лист',
+            template_type=DocumentTemplate.TemplateType.WORKSHEET,
+            sections_config=[{'type': 'header'}],
+        )
+
+        template = DjangoDocumentTemplateRepository().get_template_spec(
+            template_id=str(template_model.pk),
+            template_type=DocumentTemplate.TemplateType.WORKSHEET,
+        )
+
+        self.assertEqual(template.template_id, str(template_model.pk))
+        self.assertEqual(template.name, 'Рабочий лист')
+
+    def test_returns_none_when_template_id_has_wrong_type(self):
+        template_model = DocumentTemplate.objects.create(
+            name='Рабочий лист',
+            template_type=DocumentTemplate.TemplateType.WORKSHEET,
+            sections_config=[{'type': 'header'}],
+        )
+
+        template = DjangoDocumentTemplateRepository().get_template_spec(
+            template_id=str(template_model.pk),
+            template_type=DocumentTemplate.TemplateType.ANSWER_KEY,
+        )
+
+        self.assertIsNone(template)

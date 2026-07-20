@@ -67,6 +67,7 @@ def build_document_template_spec_from_config(
     latex_template_override: str = '',
     custom_css: str = '',
     custom_latex_preamble: str = '',
+    template_id: str = '',
 ) -> DocumentTemplateSpec:
     recipe = build_document_recipe_from_sections_config(
         document_type=template_type,
@@ -75,6 +76,7 @@ def build_document_template_spec_from_config(
     return DocumentTemplateSpec(
         name=name,
         template_type=template_type,
+        template_id=template_id,
         sections=recipe.sections,
         default_content_config=default_content_config or {},
         presentation=DocumentPresentation(

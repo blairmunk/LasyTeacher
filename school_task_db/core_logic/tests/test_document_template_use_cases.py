@@ -25,10 +25,12 @@ class FakeDocumentTemplateRepository:
     def __init__(self):
         self.requested_template_type = None
         self.default_template_type = None
+        self.requested_template_id = None
         self.templates = [
             DocumentTemplateSpec(
                 name='Рабочий лист',
                 template_type=WORKSHEET_DOCUMENT_TYPE,
+                template_id='template-1',
                 sections=[DocumentSectionSpec(section_type='header')],
             )
         ]
@@ -40,6 +42,12 @@ class FakeDocumentTemplateRepository:
     def get_default_template_spec(self, template_type):
         self.default_template_type = template_type
         if template_type == WORKSHEET_DOCUMENT_TYPE:
+            return self.templates[0]
+        return None
+
+    def get_template_spec(self, template_id, template_type=''):
+        self.requested_template_id = (template_id, template_type)
+        if template_id == 'template-1' and template_type == WORKSHEET_DOCUMENT_TYPE:
             return self.templates[0]
         return None
 
@@ -117,6 +125,22 @@ class DocumentTemplateSelectionTests(TestCase):
 
         self.assertEqual(repo.default_template_type, WORKSHEET_DOCUMENT_TYPE)
         self.assertEqual(template.name, 'Рабочий лист')
+
+    def test_returns_template_by_id_from_repository(self):
+        repo = FakeDocumentTemplateRepository()
+
+        template = resolve_document_template_spec(
+            template_type=WORKSHEET_DOCUMENT_TYPE,
+            request_template_id='template-1',
+            document_template_repo=repo,
+        )
+
+        self.assertEqual(
+            repo.requested_template_id,
+            ('template-1', WORKSHEET_DOCUMENT_TYPE),
+        )
+        self.assertEqual(template.name, 'Рабочий лист')
+        self.assertIsNone(repo.default_template_type)
 
     def test_returns_none_without_repository(self):
         template = resolve_document_template_spec(

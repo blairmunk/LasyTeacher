@@ -31,3 +31,16 @@ class DjangoDocumentTemplateRepository(IDocumentTemplateRepository):
         if template is None:
             return None
         return template.to_template_spec()
+
+    def get_template_spec(
+        self,
+        template_id: str,
+        template_type: str = '',
+    ) -> Optional[DocumentTemplateSpec]:
+        queryset = DocumentTemplate.objects.filter(pk=template_id)
+        if template_type:
+            queryset = queryset.filter(template_type=template_type)
+        template = queryset.first()
+        if template is None:
+            return None
+        return template.to_template_spec()

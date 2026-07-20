@@ -64,6 +64,7 @@ class DocumentTemplateFormAdapter:
 
     def _template_context(self, template):
         return {
+            'template_id': template.template_id,
             'name': template.name,
             'template_type': template.template_type,
             'section_types': template.section_types,

@@ -158,6 +158,7 @@ class DocumentRecipe:
 class DocumentTemplateSpec:
     name: str
     template_type: str
+    template_id: str = ''
     sections: Tuple[DocumentSectionSpec, ...] = field(default_factory=tuple)
     default_content_config: Mapping[str, Any] = field(default_factory=dict)
     presentation: DocumentPresentation = field(

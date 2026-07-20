@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+from core_logic.entities.document import DocumentTemplateSpec
 from core_logic.entities.work import (
     OrphanVariantRef,
     RemedialSheetData,
@@ -225,6 +226,37 @@ class FakeWorkRepository:
         return self.remaining_variant_count
 
 
+class FakeDocumentTemplateRepository:
+    def __init__(self):
+        self.requested_template_types = []
+        self.templates_by_type = {
+            'work': [
+                DocumentTemplateSpec(
+                    name='Шаблон работы',
+                    template_type='work',
+                    template_id='template-work',
+                ),
+            ],
+            'remedial_sheet': [
+                DocumentTemplateSpec(
+                    name='Шаблон РнО',
+                    template_type='remedial_sheet',
+                    template_id='template-remedial',
+                ),
+            ],
+        }
+
+    def list_template_specs(self, template_type=''):
+        self.requested_template_types.append(template_type)
+        return self.templates_by_type.get(template_type, [])
+
+    def get_default_template_spec(self, template_type):
+        return None
+
+    def get_template_spec(self, template_id, template_type=''):
+        return None
+
+
 class WorkDetailTests(TestCase):
     def test_work_service_shows_sync_button_only_for_variants_without_groups(self):
         service = WorkService()
@@ -249,6 +281,7 @@ class WorkDetailTests(TestCase):
         )
 
     def test_get_work_detail_use_case_builds_detail_context_data(self):
+        template_repo = FakeDocumentTemplateRepository()
         use_case = GetWorkDetailUseCase(
             work_repo=FakeWorkRepository(
                 variants=['variant-1'],
@@ -256,6 +289,7 @@ class WorkDetailTests(TestCase):
                 spec_preview=['spec-1'],
             ),
             work_service=WorkService(),
+            document_template_repo=template_repo,
         )
 
         result = use_case.execute('work-1')
@@ -263,6 +297,18 @@ class WorkDetailTests(TestCase):
         self.assertEqual(result.work.name, 'Контрольная')
         self.assertEqual(result.variants, ['variant-1'])
         self.assertEqual(result.spec_preview, ['spec-1'])
+        self.assertEqual(
+            result.work_document_templates[0].template_id,
+            'template-work',
+        )
+        self.assertEqual(
+            result.remedial_sheet_templates[0].template_id,
+            'template-remedial',
+        )
+        self.assertEqual(
+            template_repo.requested_template_types,
+            ['work', 'remedial_sheet'],
+        )
         self.assertTrue(result.show_sync_button)
 
     def test_get_work_detail_use_case_returns_empty_data_for_missing_work(self):

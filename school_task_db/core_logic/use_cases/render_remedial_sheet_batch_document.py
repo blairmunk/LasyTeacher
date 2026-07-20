@@ -34,6 +34,7 @@ class RenderRemedialSheetBatchDocumentRequest:
     work_id: str
     options: RemedialSheetDocumentRenderOptions
     template_spec: DocumentTemplateSpec | None = None
+    template_id: str = ''
 
 
 class RenderRemedialSheetBatchDocumentUseCase:
@@ -84,6 +85,7 @@ class RenderRemedialSheetBatchDocumentUseCase:
                     template_spec=resolve_document_template_spec(
                         template_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
                         request_template_spec=request.template_spec,
+                        request_template_id=request.template_id,
                         document_template_repo=self.document_template_repo,
                     ),
                 ),

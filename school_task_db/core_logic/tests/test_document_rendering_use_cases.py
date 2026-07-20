@@ -129,7 +129,9 @@ class FakeRenderRemedialSheetDocumentUseCase:
 class FakeDocumentTemplateRepository:
     def __init__(self):
         self.requested_template_types = []
+        self.requested_template_ids = []
         self.default_templates = {}
+        self.templates_by_id = {}
 
     def list_template_specs(self, template_type=''):
         return []
@@ -137,6 +139,10 @@ class FakeDocumentTemplateRepository:
     def get_default_template_spec(self, template_type):
         self.requested_template_types.append(template_type)
         return self.default_templates.get(template_type)
+
+    def get_template_spec(self, template_id, template_type=''):
+        self.requested_template_ids.append((template_id, template_type))
+        return self.templates_by_id.get((template_id, template_type))
 
 
 class DocumentRenderingUseCaseTests(TestCase):
@@ -300,6 +306,38 @@ class DocumentRenderingUseCaseTests(TestCase):
         render_plan = service.render_request
         self.assertEqual(render_plan.recipe.section_types, (TASK_LIST_SECTION,))
 
+    def test_render_work_document_uses_template_id(self):
+        service = FakeDocumentEngine()
+        template_repo = FakeDocumentTemplateRepository()
+        template_repo.templates_by_id[('template-work', 'work')] = (
+            DocumentTemplateSpec(
+                name='Selected work',
+                template_type='work',
+                template_id='template-work',
+                sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
+            )
+        )
+        use_case = RenderWorkDocumentUseCase(
+            document_engine=service,
+            work_repo=FakeWorkRepository(),
+            document_template_repo=template_repo,
+        )
+
+        result = use_case.execute(
+            RenderWorkDocumentRequest(
+                work_id='work-1',
+                options=WorkDocumentRenderOptions(renderer_type='html'),
+                template_id='template-work',
+            )
+        )
+
+        self.assertTrue(result.success)
+        self.assertEqual(
+            template_repo.requested_template_ids,
+            [('template-work', 'work')],
+        )
+        self.assertEqual(service.render_request.recipe.section_types, (ANSWERS_SECTION,))
+
     def test_render_work_document_handles_missing_work(self):
         service = FakeDocumentEngine()
         use_case = RenderWorkDocumentUseCase(
@@ -437,6 +475,38 @@ class DocumentRenderingUseCaseTests(TestCase):
         )
         render_plan = service.render_request
         self.assertEqual(render_plan.recipe.section_types, (TASK_LIST_SECTION,))
+
+    def test_render_remedial_sheet_document_uses_template_id(self):
+        service = FakeDocumentEngine()
+        template_repo = FakeDocumentTemplateRepository()
+        template_repo.templates_by_id[('template-rno', 'remedial_sheet')] = (
+            DocumentTemplateSpec(
+                name='Selected remedial',
+                template_type='remedial_sheet',
+                template_id='template-rno',
+                sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
+            )
+        )
+        use_case = RenderRemedialSheetDocumentUseCase(
+            document_engine=service,
+            work_repo=FakeWorkRepository(),
+            document_template_repo=template_repo,
+        )
+
+        result = use_case.execute(
+            RenderRemedialSheetDocumentRequest(
+                variant_id='variant-1',
+                options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+                template_id='template-rno',
+            )
+        )
+
+        self.assertTrue(result.success)
+        self.assertEqual(
+            template_repo.requested_template_ids,
+            [('template-rno', 'remedial_sheet')],
+        )
+        self.assertEqual(service.render_request.recipe.section_types, (ANSWERS_SECTION,))
 
     def test_render_remedial_sheet_document_handles_empty_files(self):
         service = FakeDocumentEngine()

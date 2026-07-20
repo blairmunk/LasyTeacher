@@ -20,3 +20,11 @@ class IDocumentTemplateRepository(ABC):
         template_type: str,
     ) -> Optional[DocumentTemplateSpec]:
         """Return the default template spec for a type, if one exists."""
+
+    @abstractmethod
+    def get_template_spec(
+        self,
+        template_id: str,
+        template_type: str = '',
+    ) -> Optional[DocumentTemplateSpec]:
+        """Return a template spec by id, optionally constrained by type."""

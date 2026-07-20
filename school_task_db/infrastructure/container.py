@@ -993,6 +993,7 @@ class Container:
         return GetWorkDetailUseCase(
             work_repo=self.work_repo,
             work_service=self.work_service(),
+            document_template_repo=self.document_template_repo,
         )
 
     def get_work_list_use_case(self):

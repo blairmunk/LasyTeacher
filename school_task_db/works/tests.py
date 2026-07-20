@@ -18,6 +18,7 @@ from core_logic.entities.document_rendering import (
     GeneratedFileResult,
 )
 from curriculum.models import Topic
+from document_generator.models import DocumentTemplate
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from students.models import Student
@@ -331,20 +332,48 @@ class WorkDetailViewTests(TestCase):
         self.assertContains(response, 'render-toast-box')
         self.assertContains(response, 'advanced-rendering-form')
 
+    def test_detail_exposes_work_template_selector(self):
+        template = DocumentTemplate.objects.create(
+            name='Кастомный шаблон работы',
+            template_type=DocumentTemplate.TemplateType.WORK,
+            sections_config=[{'type': 'header'}],
+            custom_latex_preamble='\\usepackage{multicol}',
+        )
+
+        response = self.client.get(reverse('works:detail', args=[self.work.pk]))
+
+        self.assertEqual(
+            response.context['work_document_templates'][0].template_id,
+            str(template.pk),
+        )
+        self.assertContains(response, 'name="template_id"')
+        self.assertContains(response, 'Кастомный шаблон работы')
+        self.assertContains(response, 'кастом')
+
     def test_remedial_work_detail_exposes_batch_rendering_dom_markers(self):
         remedial_work = Work.objects.create(
             name='Работа над ошибками',
             work_type='remedial',
         )
+        template = DocumentTemplate.objects.create(
+            name='Шаблон листа РнО',
+            template_type=DocumentTemplate.TemplateType.REMEDIAL,
+            sections_config=[{'type': 'header'}],
+        )
 
         response = self.client.get(reverse('works:detail', args=[remedial_work.pk]))
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context['remedial_sheet_templates'][0].template_id,
+            str(template.pk),
+        )
         self.assertContains(response, 'data-remedial-batch-rendering-block')
         self.assertContains(response, 'id="remedial-batch"')
         self.assertContains(response, 'data-remedial-batch-rendering-form')
         self.assertContains(response, 'data-remedial-batch-rendering-results')
         self.assertContains(response, 'Печать листов работы над ошибками')
+        self.assertContains(response, 'Шаблон листа РнО')
 
     def test_detail_returns_404_for_missing_work(self):
         response = self.client.get(

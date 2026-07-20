@@ -34,6 +34,7 @@ class RenderWorkDocumentRequest:
     work_id: str
     options: WorkDocumentRenderOptions
     template_spec: DocumentTemplateSpec | None = None
+    template_id: str = ''
 
 
 class RenderWorkDocumentUseCase:
@@ -74,6 +75,7 @@ class RenderWorkDocumentUseCase:
                     template_spec=resolve_document_template_spec(
                         template_type=WORK_DOCUMENT_TYPE,
                         request_template_spec=request.template_spec,
+                        request_template_id=request.template_id,
                         document_template_repo=self.document_template_repo,
                     ),
                 ),

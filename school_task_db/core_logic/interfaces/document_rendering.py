@@ -2,29 +2,12 @@
 
 from abc import ABC, abstractmethod
 
-from core_logic.entities.document import (
-    Document,
-    DocumentRecipe,
-    DocumentSourceRef,
-)
 from core_logic.entities.document_rendering import GeneratedDocument
 from core_logic.value_objects.document_render_plan import (
     DocumentContentWrapRequest,
     DocumentRenderRequest,
     DocumentSectionRenderRequest,
 )
-from core_logic.value_objects.content_config import RenderTarget
-
-
-class IDocumentBuilder(ABC):
-    @abstractmethod
-    def build(
-        self,
-        source: DocumentSourceRef,
-        recipe: DocumentRecipe,
-        render_target: RenderTarget | None = None,
-    ) -> Document:
-        """Build a generic document from a source and a section recipe."""
 
 
 class IDocumentRenderer(ABC):

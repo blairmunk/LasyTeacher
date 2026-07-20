@@ -1,6 +1,7 @@
 """Pure document builders."""
 
 from core_logic.interfaces.document_building import (
+    IDocumentBuilder,
     IDocumentSectionPayloadBuilder,
 )
 from core_logic.entities.document import (
@@ -9,7 +10,6 @@ from core_logic.entities.document import (
     DocumentSection,
     DocumentSourceRef,
 )
-from core_logic.interfaces.document_rendering import IDocumentBuilder
 from core_logic.value_objects.document_build_plan import (
     DocumentSectionPayloadBuildRequest,
 )

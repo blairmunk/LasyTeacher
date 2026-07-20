@@ -10,11 +10,11 @@ from core_logic.entities.document import (
 from core_logic.entities.document_rendering import GeneratedDocument
 from core_logic.interfaces.document_engine import IDocumentEngine
 from core_logic.interfaces.document_building import (
+    IDocumentBuilder,
     IDocumentSectionPayloadBuilder,
 )
 from core_logic.interfaces.document_rendering import (
     IDocumentContentWrapper,
-    IDocumentBuilder,
     IDocumentRenderer,
     IDocumentSectionRenderer,
 )

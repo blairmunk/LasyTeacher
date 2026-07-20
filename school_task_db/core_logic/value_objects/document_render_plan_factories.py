@@ -17,7 +17,7 @@ from core_logic.value_objects.document_render_plan import (
     DocumentRenderPlan,
     build_document_render_plan,
 )
-from core_logic.value_objects.document_recipes import (
+from core_logic.value_objects.document_recipe_factories import (
     build_remedial_sheet_document_recipe,
     build_work_document_recipe,
 )

@@ -4,6 +4,10 @@ from core_logic.value_objects.document_render_options import (
     RemedialSheetBuildOptions,
     WorkDocumentBuildOptions,
 )
+from core_logic.value_objects.document_recipe_factories import (
+    build_remedial_sheet_document_recipe,
+    build_work_document_recipe,
+)
 from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
     FULL_SOLUTIONS_SECTION,
@@ -17,8 +21,6 @@ from core_logic.value_objects.document_recipes import (
     TRAINING_TASKS_SECTION,
     build_document_recipe_from_sections_config,
     build_document_template_spec_from_config,
-    build_remedial_sheet_document_recipe,
-    build_work_document_recipe,
 )
 
 

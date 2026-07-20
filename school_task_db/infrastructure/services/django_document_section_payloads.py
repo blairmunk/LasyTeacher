@@ -7,11 +7,21 @@ from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
+    ORIGINAL_MISTAKES_SECTION,
+    REMEDIAL_SHEET_DOCUMENT_TYPE,
     SHORT_SOLUTIONS_SECTION,
     TASK_VARIANTS_SECTION,
+    TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
 )
-from core_logic.entities.document import WORK_SOURCE_TYPE
+from core_logic.entities.document import (
+    REMEDIAL_VARIANT_SOURCE_TYPE,
+    WORK_SOURCE_TYPE,
+)
+from core_logic.use_cases.get_remedial_sheet_data import (
+    GetRemedialSheetDataUseCase,
+)
+from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from works.models import Work
 
 
@@ -46,6 +56,67 @@ class DjangoWorkTaskVariantsPayloadBuilder:
         }
 
 
+class RemedialSheetDataProvider:
+    def __init__(self, get_remedial_sheet_data=None):
+        self.get_remedial_sheet_data = (
+            get_remedial_sheet_data
+            or GetRemedialSheetDataUseCase(
+                work_repo=DjangoWorkRepository(),
+            ).execute
+        )
+        self._cache = {}
+
+    def get(self, variant_id):
+        if variant_id not in self._cache:
+            self._cache[variant_id] = self.get_remedial_sheet_data(variant_id)
+        return self._cache[variant_id]
+
+
+class DjangoRemedialHeaderPayloadBuilder:
+    def __init__(self, sheet_data_provider):
+        self.sheet_data_provider = sheet_data_provider
+
+    def build_payload(self, request):
+        sheet_data = self.sheet_data_provider.get(request.source.source_id)
+        return {
+            **dict(request.section.options),
+            'title': 'Работа над ошибками',
+            'student': _student_payload(sheet_data.student),
+            'source_work': _work_ref_payload(sheet_data.source_work),
+            'mark': _mark_payload(sheet_data.mark),
+        }
+
+
+class DjangoRemedialOriginalMistakesPayloadBuilder:
+    def __init__(self, sheet_data_provider):
+        self.sheet_data_provider = sheet_data_provider
+
+    def build_payload(self, request):
+        sheet_data = self.sheet_data_provider.get(request.source.source_id)
+        return {
+            **dict(request.section.options),
+            'tasks': [
+                _original_task_payload(task_row)
+                for task_row in sheet_data.original_tasks
+            ],
+        }
+
+
+class DjangoRemedialTrainingTasksPayloadBuilder:
+    def __init__(self, sheet_data_provider):
+        self.sheet_data_provider = sheet_data_provider
+
+    def build_payload(self, request):
+        sheet_data = self.sheet_data_provider.get(request.source.source_id)
+        return {
+            **dict(request.section.options),
+            'tasks': [
+                _variant_task_payload(variant_task)
+                for variant_task in sheet_data.new_tasks or []
+            ],
+        }
+
+
 def build_work_section_payload_builder_registry(
     get_work_source=None,
 ) -> DocumentSectionPayloadBuilderRegistry:
@@ -74,6 +145,40 @@ def build_work_section_payload_builder_registry(
             ),
             document_type=WORK_DOCUMENT_TYPE,
             source_type=WORK_SOURCE_TYPE,
+        )
+    return registry
+
+
+def build_remedial_sheet_section_payload_builder_registry(
+    get_remedial_sheet_data=None,
+) -> DocumentSectionPayloadBuilderRegistry:
+    sheet_data_provider = RemedialSheetDataProvider(
+        get_remedial_sheet_data=get_remedial_sheet_data,
+    )
+    registry = DocumentSectionPayloadBuilderRegistry()
+    registry.register(
+        HEADER_SECTION,
+        DjangoRemedialHeaderPayloadBuilder(sheet_data_provider),
+        document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
+        source_type=REMEDIAL_VARIANT_SOURCE_TYPE,
+    )
+    registry.register(
+        ORIGINAL_MISTAKES_SECTION,
+        DjangoRemedialOriginalMistakesPayloadBuilder(sheet_data_provider),
+        document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
+        source_type=REMEDIAL_VARIANT_SOURCE_TYPE,
+    )
+    for section_type in (
+        TRAINING_TASKS_SECTION,
+        ANSWERS_SECTION,
+        SHORT_SOLUTIONS_SECTION,
+        FULL_SOLUTIONS_SECTION,
+    ):
+        registry.register(
+            section_type,
+            DjangoRemedialTrainingTasksPayloadBuilder(sheet_data_provider),
+            document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
+            source_type=REMEDIAL_VARIANT_SOURCE_TYPE,
         )
     return registry
 
@@ -115,6 +220,18 @@ def _variant_task_payload(variant_task):
     }
 
 
+def _original_task_payload(task_row):
+    return {
+        **_task_payload(task_row.task),
+        'order': task_row.order,
+        'points': task_row.points,
+        'max_points': task_row.max_points,
+        'pct': task_row.pct,
+        'status': task_row.status,
+        'group_name': task_row.group_name,
+    }
+
+
 def _task_payload(task):
     return {
         'id': str(task.pk),
@@ -130,4 +247,33 @@ def _task_payload(task):
         'subtopic': task.subtopic.name if task.subtopic else '',
         'source': str(task.source) if task.source else '',
         'source_detail': task.source_detail,
+    }
+
+
+def _student_payload(student):
+    if not student:
+        return None
+    return {
+        'id': student.pk,
+        'full_name': student.full_name,
+        'short_name': student.short_name,
+    }
+
+
+def _work_ref_payload(work):
+    if not work:
+        return None
+    return {
+        'id': str(work.pk),
+        'name': work.name,
+    }
+
+
+def _mark_payload(mark):
+    if not mark:
+        return None
+    return {
+        'score': mark.score,
+        'points': mark.points,
+        'max_points': mark.max_points,
     }

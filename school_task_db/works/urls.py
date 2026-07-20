@@ -45,11 +45,6 @@ urlpatterns = [
         name='download_rendered_file',
     ),
     path(
-        'download/<str:file_type>/<str:filename>/',
-        views_rendering.download_rendered_file,
-        name='download_generated_file',
-    ),
-    path(
         'ajax/render/<pk:work_id>/',
         views_rendering.render_work_ajax,
         name='render_work_ajax',
@@ -68,27 +63,5 @@ urlpatterns = [
         'ajax/render/remedial/<uuid:variant_id>/',
         views_rendering.render_remedial_sheet_ajax,
         name='render-remedial-sheet',
-    ),
-
-    # Backward-compatible document generation aliases.
-    path(
-        'ajax/generate/<pk:work_id>/',
-        views_rendering.render_work_ajax,
-        name='generate_work_ajax',
-    ),
-    path(
-        'ajax/generate/variant/<pk:variant_id>/',
-        views_rendering.render_variant_ajax,
-        name='generate_variant_ajax',
-    ),
-    path(
-        'ajax/generation-status/',
-        views_rendering.render_status_ajax,
-        name='generation_status_ajax',
-    ),
-    path(
-        'ajax/generate/remedial/<uuid:variant_id>/',
-        views_rendering.render_remedial_sheet_ajax,
-        name='generate-remedial-sheet',
     ),
 ]

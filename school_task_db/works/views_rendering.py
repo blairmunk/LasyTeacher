@@ -96,9 +96,6 @@ def download_rendered_file(request, file_type, filename):
     )
     return response
 
-
-download_generated_file = download_rendered_file
-
 @require_http_methods(["GET"])
 def render_status_ajax(request):
     """Ajax status check for document rendering."""
@@ -176,10 +173,3 @@ def render_remedial_sheet_ajax(request, variant_id):
             'status': 'error',
             'message': f'Ошибка: {str(e)}'
         }, status=500)
-
-
-# Backward-compatible names while routes/templates migrate from generate to render.
-generate_work_ajax = render_work_ajax
-generate_variant_ajax = render_variant_ajax
-generate_remedial_sheet_ajax = render_remedial_sheet_ajax
-generation_status_ajax = render_status_ajax

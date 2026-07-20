@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from core_logic.entities.document import Document
-from core_logic.value_objects.content_config import RenderTarget
+from core_logic.value_objects.document_render_options import RenderTarget
 from core_logic.value_objects.document_render_plan import (
     DocumentContentWrapRequest,
 )

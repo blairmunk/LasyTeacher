@@ -27,7 +27,7 @@ from core_logic.use_cases.render_work_document import (
     RenderWorkDocumentRequest,
     RenderWorkDocumentUseCase,
 )
-from core_logic.value_objects.content_config import (
+from core_logic.value_objects.document_render_options import (
     RemedialSheetDocumentRenderOptions,
     WorkDocumentRenderOptions,
 )

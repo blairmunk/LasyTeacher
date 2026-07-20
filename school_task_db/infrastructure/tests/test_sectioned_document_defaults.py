@@ -15,7 +15,7 @@ from core_logic.entities.work import (
     RemedialSheetData,
     VariantDetailStudentRef,
 )
-from core_logic.value_objects.content_config import (
+from core_logic.value_objects.document_render_options import (
     RemedialSheetDocumentRenderOptions,
     RenderTarget,
     WorkDocumentRenderOptions,

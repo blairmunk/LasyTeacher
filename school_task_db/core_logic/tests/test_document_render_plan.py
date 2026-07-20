@@ -10,7 +10,7 @@ from core_logic.entities.document import (
     REMEDIAL_VARIANT_SOURCE_TYPE,
     WORK_SOURCE_TYPE,
 )
-from core_logic.value_objects.content_config import (
+from core_logic.value_objects.document_render_options import (
     RemedialSheetDocumentRenderOptions,
     RenderTarget,
     WorkDocumentRenderOptions,

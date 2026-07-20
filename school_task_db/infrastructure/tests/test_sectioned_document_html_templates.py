@@ -4,7 +4,7 @@ from tempfile import TemporaryDirectory
 from django.test import SimpleTestCase
 
 from core_logic.entities.document import Document, DocumentSection
-from core_logic.value_objects.content_config import RenderTarget
+from core_logic.value_objects.document_render_options import RenderTarget
 from core_logic.value_objects.document_recipes import (
     HEADER_SECTION,
     TASK_LIST_SECTION,

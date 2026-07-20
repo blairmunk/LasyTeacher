@@ -6,7 +6,7 @@ from core_logic.entities.document_rendering import (
     DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
 )
 from core_logic.use_cases.render_work_document import RenderWorkDocumentRequest
-from core_logic.value_objects.content_config import WorkDocumentRenderOptions
+from core_logic.value_objects.document_render_options import WorkDocumentRenderOptions
 from infrastructure.container import container
 
 

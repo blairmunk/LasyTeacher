@@ -7,7 +7,7 @@ from core_logic.entities.document import (
     DocumentSectionSpec,
     DocumentSourceRef,
 )
-from core_logic.value_objects.content_config import RenderTarget
+from core_logic.value_objects.document_render_options import RenderTarget
 
 
 @dataclass(frozen=True)

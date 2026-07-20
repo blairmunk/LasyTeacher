@@ -13,7 +13,7 @@ from core_logic.services.document_builder import (
 from core_logic.value_objects.document_build_plan import (
     DocumentSectionPayloadBuildRequest,
 )
-from core_logic.value_objects.content_config import RenderTarget
+from core_logic.value_objects.document_render_options import RenderTarget
 
 
 class RecipeDocumentBuilderTests(TestCase):

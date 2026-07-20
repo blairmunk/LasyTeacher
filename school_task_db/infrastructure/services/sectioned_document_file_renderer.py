@@ -6,7 +6,7 @@ from typing import Callable
 
 from core_logic.entities.document_rendering import GeneratedDocument
 from core_logic.interfaces.document_rendering import IDocumentRenderer
-from core_logic.value_objects.content_config import RenderTarget
+from core_logic.value_objects.document_render_options import RenderTarget
 from core_logic.value_objects.document_render_plan import DocumentRenderRequest
 
 

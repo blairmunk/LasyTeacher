@@ -14,7 +14,7 @@ from core_logic.use_cases.compose_work_variants import ComposeWorkVariantsReques
 from core_logic.use_cases.get_rendered_document_file import (
     GetRenderedDocumentFileRequest,
 )
-from core_logic.value_objects.content_config import (
+from core_logic.value_objects.document_render_options import (
     build_remedial_sheet_render_options,
     build_work_render_options,
     renderer_type_from_data,

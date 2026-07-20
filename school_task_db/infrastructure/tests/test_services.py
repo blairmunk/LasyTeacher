@@ -16,7 +16,7 @@ from core_logic.entities.task_import import TaskImportPreviewRequest, TaskImport
 from core_logic.services.document_builder import (
     DocumentSectionPayloadBuilderRegistry,
 )
-from core_logic.value_objects.content_config import (
+from core_logic.value_objects.document_render_options import (
     RenderTarget,
     WorkDocumentRenderOptions,
 )

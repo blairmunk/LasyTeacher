@@ -1,6 +1,6 @@
 from django.test import SimpleTestCase
 
-from core_logic.value_objects.content_config import RenderTarget
+from core_logic.value_objects.document_render_options import RenderTarget
 from infrastructure.services.latex_formula_processor import (
     latex_formula_processor,
     sanitize_latex,

@@ -15,7 +15,7 @@ from core_logic.interfaces.document_template_repo import (
 )
 from core_logic.interfaces.work_repo import IWorkRepository
 from core_logic.use_cases.document_engine_dependency import resolve_document_engine
-from core_logic.value_objects.content_config import (
+from core_logic.value_objects.document_render_options import (
     WorkDocumentRenderOptions,
     is_supported_document_renderer_type,
 )

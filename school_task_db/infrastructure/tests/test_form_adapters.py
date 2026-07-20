@@ -8,7 +8,7 @@ from core_logic.entities.document_rendering import (
     DocumentRenderResult,
     GeneratedDocumentFile,
 )
-from core_logic.value_objects.content_config import WorkDocumentRenderOptions
+from core_logic.value_objects.document_render_options import WorkDocumentRenderOptions
 from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.report_forms import ReportFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter

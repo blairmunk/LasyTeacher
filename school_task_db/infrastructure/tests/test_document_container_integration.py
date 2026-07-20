@@ -6,7 +6,7 @@ from django.test import TestCase
 from core_logic.use_cases.render_work_document import (
     RenderWorkDocumentRequest,
 )
-from core_logic.value_objects.content_config import WorkDocumentRenderOptions
+from core_logic.value_objects.document_render_options import WorkDocumentRenderOptions
 from curriculum.models import Topic
 from infrastructure.container import Container
 from infrastructure.services.rendered_document_file_store import (

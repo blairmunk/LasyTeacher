@@ -43,6 +43,8 @@ from infrastructure.services.sectioned_document_defaults import (
     build_sectioned_remedial_sheet_latex_document_components,
     build_sectioned_work_html_document_components,
     build_sectioned_work_latex_document_components,
+)
+from infrastructure.services.sectioned_document_filenames import (
     remedial_html_filename,
     remedial_latex_filename,
     work_html_filename,

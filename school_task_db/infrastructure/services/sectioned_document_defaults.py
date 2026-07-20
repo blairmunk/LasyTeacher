@@ -19,12 +19,6 @@ from infrastructure.services.sectioned_document_renderer_factory import (
     build_template_sectioned_html_to_pdf_document_renderer_registry,
     build_template_sectioned_text_document_renderer_registry,
 )
-from infrastructure.services.sectioned_document_filenames import (
-    remedial_html_filename,
-    remedial_latex_filename,
-    work_html_filename,
-    work_latex_filename,
-)
 from infrastructure.services.sectioned_document_renderer_specs import (
     remedial_html_renderer_specs,
     remedial_latex_renderer_specs,
@@ -208,46 +202,6 @@ def build_sectioned_document_components_with_legacy_fallback(
     return SectionedDocumentComponents(
         document_builder=sectioned_components.document_builder,
         document_renderer_registry=renderer_registry,
-    )
-
-
-def build_legacy_with_sectioned_document_components(
-    file_store,
-    get_work_source,
-    get_remedial_source,
-    legacy_file_renderer,
-    get_remedial_sheet_data=None,
-    template_renderer=None,
-    pdf_generator_factory=None,
-) -> SectionedDocumentComponents:
-    return build_sectioned_document_components_with_legacy_fallback(
-        file_store=file_store,
-        get_work_source=get_work_source,
-        get_remedial_source=get_remedial_source,
-        legacy_file_renderer=legacy_file_renderer,
-        get_remedial_sheet_data=get_remedial_sheet_data,
-        template_renderer=template_renderer,
-        pdf_generator_factory=pdf_generator_factory,
-    )
-
-
-def build_legacy_with_sectioned_html_document_components(
-    file_store,
-    get_work_source,
-    get_remedial_source,
-    legacy_file_renderer,
-    get_remedial_sheet_data=None,
-    template_renderer=None,
-    pdf_generator_factory=None,
-) -> SectionedDocumentComponents:
-    return build_sectioned_document_components_with_legacy_fallback(
-        file_store=file_store,
-        get_work_source=get_work_source,
-        get_remedial_source=get_remedial_source,
-        legacy_file_renderer=legacy_file_renderer,
-        get_remedial_sheet_data=get_remedial_sheet_data,
-        template_renderer=template_renderer,
-        pdf_generator_factory=pdf_generator_factory,
     )
 
 

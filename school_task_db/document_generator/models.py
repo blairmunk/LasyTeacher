@@ -13,6 +13,9 @@ from core_logic.value_objects.document_recipes import (
     WORKSHEET_DOCUMENT_TYPE,
     build_document_template_spec_from_config,
 )
+from core_logic.value_objects.document_section_catalog import (
+    validate_document_section_types,
+)
 
 
 class DocumentTemplate(BaseModel):
@@ -81,7 +84,11 @@ class DocumentTemplate(BaseModel):
     def clean(self):
         super().clean()
         try:
-            self.to_template_spec()
+            template_spec = self.to_template_spec()
+            validate_document_section_types(
+                self.template_type,
+                template_spec.section_types,
+            )
         except ValueError as error:
             raise ValidationError({'sections_config': str(error)}) from error
 

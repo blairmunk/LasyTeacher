@@ -77,3 +77,37 @@ class DocumentTemplateModelTests(TestCase):
             template.full_clean()
 
         self.assertIn('sections_config', context.exception.error_dict)
+
+    def test_full_clean_rejects_unknown_section_type(self):
+        template = DocumentTemplate(
+            name='Сломанный шаблон',
+            template_type=DocumentTemplate.TemplateType.WORKSHEET,
+            sections_config=[
+                {
+                    'type': 'unknown_section',
+                    'params': {},
+                },
+            ],
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            template.full_clean()
+
+        self.assertIn('sections_config', context.exception.error_dict)
+
+    def test_full_clean_rejects_section_for_wrong_template_type(self):
+        template = DocumentTemplate(
+            name='Сломанный шаблон',
+            template_type=DocumentTemplate.TemplateType.WORKSHEET,
+            sections_config=[
+                {
+                    'type': 'original_mistakes',
+                    'params': {},
+                },
+            ],
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            template.full_clean()
+
+        self.assertIn('sections_config', context.exception.error_dict)

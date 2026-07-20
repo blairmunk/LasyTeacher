@@ -59,6 +59,9 @@ from core_logic.use_cases.get_default_document_template import (
 from core_logic.use_cases.get_document_template_list import (
     GetDocumentTemplateListUseCase,
 )
+from core_logic.use_cases.get_document_section_catalog import (
+    GetDocumentSectionCatalogUseCase,
+)
 from core_logic.use_cases.get_global_search import GetGlobalSearchUseCase
 from core_logic.use_cases.get_heatmap_course_overview import (
     GetHeatmapCourseOverviewUseCase,
@@ -432,6 +435,9 @@ class ContainerTests(SimpleTestCase):
             container.render_remedial_sheet_document_use_case()
         )
         rendered_file_use_case = container.get_rendered_document_file_use_case()
+        document_section_catalog_use_case = (
+            container.get_document_section_catalog_use_case()
+        )
 
         self.assertIsInstance(use_case, CreateRemedialFromEventUseCase)
         self.assertIsInstance(wizard_create_use_case, CreateRemedialWizardWorkUseCase)
@@ -459,6 +465,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             default_document_template_use_case,
             GetDefaultDocumentTemplateUseCase,
+        )
+        self.assertIsInstance(
+            document_section_catalog_use_case,
+            GetDocumentSectionCatalogUseCase,
         )
         self.assertIsInstance(
             refresh_math_cache_use_case,

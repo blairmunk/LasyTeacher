@@ -145,7 +145,6 @@ class DocumentRenderOptionsTests(TestCase):
     def test_builds_work_options_from_renderer_type(self):
         options = build_work_render_options({
             'renderer_type': 'html',
-            'generator_type': 'pdf',
         })
 
         self.assertEqual(options.renderer_type, 'html')
@@ -153,16 +152,9 @@ class DocumentRenderOptionsTests(TestCase):
     def test_builds_remedial_sheet_options_from_renderer_type(self):
         options = build_remedial_sheet_render_options({
             'renderer_type': 'html',
-            'generator_type': 'pdf',
         })
 
         self.assertEqual(options.renderer_type, 'html')
-
-    def test_reads_renderer_type_from_legacy_generator_type(self):
-        self.assertEqual(
-            renderer_type_from_data({'generator_type': 'latex'}),
-            'latex',
-        )
 
     def test_renderer_type_defaults_to_pdf(self):
         self.assertEqual(renderer_type_from_data({}), 'pdf')

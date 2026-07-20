@@ -77,7 +77,7 @@ class DocumentRenderer {
         // ОБНОВЛЕННЫЕ параметры с hints/instructions
         const params = {
             workId: formData.get('work_id'),
-            type: formData.get('renderer_type') || formData.get('generator_type'),
+            type: formData.get('renderer_type'),
             answerType: formData.get('answer_type'),
             format: formData.get('format'),
             variantSelection: formData.get('variant_selection'),

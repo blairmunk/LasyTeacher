@@ -100,4 +100,8 @@ class DocumentTemplate(BaseModel):
             template_type=self.template_type,
             sections_config=self.sections_config,
             default_content_config=self.default_content_config,
+            html_template_override=self.html_template_override,
+            latex_template_override=self.latex_template_override,
+            custom_css=self.custom_css,
+            custom_latex_preamble=self.custom_latex_preamble,
         )

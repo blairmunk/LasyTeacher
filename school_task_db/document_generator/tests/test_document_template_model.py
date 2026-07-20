@@ -23,6 +23,10 @@ class DocumentTemplateModelTests(TestCase):
                 },
             ],
             default_content_config={'answer_type': 'tasks_only'},
+            html_template_override='<html>{{ body_content }}</html>',
+            latex_template_override='\\begin{document}{{ body_content }}',
+            custom_css='body { font-size: 14px; }',
+            custom_latex_preamble='\\usepackage{multicol}',
         )
 
         spec = template.to_template_spec()
@@ -37,6 +41,20 @@ class DocumentTemplateModelTests(TestCase):
         self.assertEqual(
             spec.default_content_config,
             {'answer_type': 'tasks_only'},
+        )
+        self.assertTrue(spec.presentation.has_customization)
+        self.assertEqual(
+            spec.presentation.html_template_override,
+            '<html>{{ body_content }}</html>',
+        )
+        self.assertEqual(
+            spec.presentation.latex_template_override,
+            '\\begin{document}{{ body_content }}',
+        )
+        self.assertEqual(spec.presentation.custom_css, 'body { font-size: 14px; }')
+        self.assertEqual(
+            spec.presentation.custom_latex_preamble,
+            '\\usepackage{multicol}',
         )
 
     def test_string_representation_contains_name_and_type(self):

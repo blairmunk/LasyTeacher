@@ -79,7 +79,12 @@
                     <div class="list-group-item">
                         <div class="d-flex justify-content-between">
                             <strong>{{ template.name }}</strong>
-                            <span class="badge bg-light text-dark">{{ template.sections_count }}</span>
+                            <span>
+                                {% if template.has_customization %}
+                                    <span class="badge bg-info">кастом</span>
+                                {% endif %}
+                                <span class="badge bg-light text-dark">{{ template.sections_count }}</span>
+                            </span>
                         </div>
                         <div class="small text-muted">{{ template.template_type }}</div>
                     </div>

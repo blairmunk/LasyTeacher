@@ -3,6 +3,7 @@
 from unittest import TestCase
 
 from core_logic.entities.document import (
+    DocumentPresentation,
     DocumentSectionSpec,
     DocumentTemplateSpec,
 )
@@ -248,6 +249,9 @@ class DocumentRenderingUseCaseTests(TestCase):
                 DocumentSectionSpec(section_type=TASK_LIST_SECTION),
                 DocumentSectionSpec(section_type=ANSWERS_SECTION),
             ],
+            presentation=DocumentPresentation(
+                custom_latex_preamble='\\usepackage{multicol}',
+            ),
         )
 
         result = use_case.execute(
@@ -264,6 +268,10 @@ class DocumentRenderingUseCaseTests(TestCase):
         self.assertEqual(
             render_plan.recipe.section_types,
             (TASK_LIST_SECTION, ANSWERS_SECTION),
+        )
+        self.assertEqual(
+            render_plan.recipe.presentation.custom_latex_preamble,
+            '\\usepackage{multicol}',
         )
 
     def test_render_work_document_uses_default_template_spec(self):

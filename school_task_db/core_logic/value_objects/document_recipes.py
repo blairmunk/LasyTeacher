@@ -4,6 +4,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from core_logic.entities.document import (
+    DocumentPresentation,
     DocumentRecipe,
     DocumentSectionSpec,
     DocumentTemplateSpec,
@@ -62,6 +63,10 @@ def build_document_template_spec_from_config(
         | Sequence[Mapping[str, Any] | DocumentSectionSpec]
     ),
     default_content_config: Mapping[str, Any] | None = None,
+    html_template_override: str = '',
+    latex_template_override: str = '',
+    custom_css: str = '',
+    custom_latex_preamble: str = '',
 ) -> DocumentTemplateSpec:
     recipe = build_document_recipe_from_sections_config(
         document_type=template_type,
@@ -72,6 +77,12 @@ def build_document_template_spec_from_config(
         template_type=template_type,
         sections=recipe.sections,
         default_content_config=default_content_config or {},
+        presentation=DocumentPresentation(
+            html_template_override=html_template_override,
+            latex_template_override=latex_template_override,
+            custom_css=custom_css,
+            custom_latex_preamble=custom_latex_preamble,
+        ),
     )
 
 

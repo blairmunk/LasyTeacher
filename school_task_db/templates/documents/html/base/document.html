@@ -3,6 +3,11 @@
 <head>
     <meta charset="utf-8">
     <title>{{ document.title }}</title>
+    {% if custom_css %}
+    <style>
+{{ custom_css|safe }}
+    </style>
+    {% endif %}
 </head>
 <body>
 {{ body_content|safe }}

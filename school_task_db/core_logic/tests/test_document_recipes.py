@@ -109,3 +109,29 @@ class DocumentRecipeTests(TestCase):
             template.to_recipe().document_type,
             WORKSHEET_DOCUMENT_TYPE,
         )
+
+    def test_builds_template_spec_with_presentation_overrides(self):
+        template = build_document_template_spec_from_config(
+            name='Рабочий лист',
+            template_type=WORKSHEET_DOCUMENT_TYPE,
+            sections_config=[{'type': HEADER_SECTION}],
+            html_template_override='<html>{{ body_content }}</html>',
+            latex_template_override='\\begin{document}{{ body_content }}',
+            custom_css='body { font-size: 14px; }',
+            custom_latex_preamble='\\usepackage{multicol}',
+        )
+
+        self.assertTrue(template.presentation.has_customization)
+        self.assertEqual(
+            template.presentation.template_override_for_renderer('html'),
+            '<html>{{ body_content }}</html>',
+        )
+        self.assertEqual(
+            template.presentation.template_override_for_renderer('latex'),
+            '\\begin{document}{{ body_content }}',
+        )
+        self.assertEqual(template.presentation.custom_css, 'body { font-size: 14px; }')
+        self.assertEqual(
+            template.to_recipe().presentation.custom_latex_preamble,
+            '\\usepackage{multicol}',
+        )

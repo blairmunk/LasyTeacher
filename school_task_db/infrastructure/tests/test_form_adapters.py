@@ -5,6 +5,7 @@ from django.http import QueryDict
 from django.test import SimpleTestCase
 
 from core_logic.entities.document import (
+    DocumentPresentation,
     DocumentSectionSpec,
     DocumentTemplateSpec,
 )
@@ -135,6 +136,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
                     template_type=WORK_DOCUMENT_TYPE,
                     sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
                     default_content_config={'answer_type': 'tasks_only'},
+                    presentation=DocumentPresentation(custom_css='body {}'),
                 )
             ],
         )
@@ -160,6 +162,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
             context['templates'][0]['default_content_config'],
             {'answer_type': 'tasks_only'},
         )
+        self.assertTrue(context['templates'][0]['has_customization'])
 
     def test_editor_context_preserves_filter_flags_in_document_type_urls(self):
         request = (

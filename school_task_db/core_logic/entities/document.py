@@ -10,6 +10,32 @@ REMEDIAL_WORK_SOURCE_TYPE = 'remedial_work'
 
 
 @dataclass(frozen=True)
+class DocumentPresentation:
+    html_template_override: str = ''
+    latex_template_override: str = ''
+    custom_css: str = ''
+    custom_latex_preamble: str = ''
+
+    def template_override_for_renderer(self, renderer_type: str) -> str:
+        if renderer_type == 'html':
+            return self.html_template_override
+        if renderer_type == 'latex':
+            return self.latex_template_override
+        return ''
+
+    @property
+    def has_customization(self) -> bool:
+        return any(
+            (
+                self.html_template_override,
+                self.latex_template_override,
+                self.custom_css,
+                self.custom_latex_preamble,
+            )
+        )
+
+
+@dataclass(frozen=True)
 class DocumentSourceRef:
     source_type: str
     source_id: str = ''
@@ -37,6 +63,9 @@ class Document:
     document_type: str = ''
     sections: Tuple[DocumentSection, ...] = field(default_factory=tuple)
     source: DocumentSourceRef | None = None
+    presentation: DocumentPresentation = field(
+        default_factory=DocumentPresentation,
+    )
 
     def __post_init__(self):
         object.__setattr__(self, 'sections', tuple(self.sections))
@@ -85,6 +114,9 @@ class DocumentSectionSpec:
 class DocumentRecipe:
     document_type: str
     sections: Tuple[DocumentSectionSpec, ...] = field(default_factory=tuple)
+    presentation: DocumentPresentation = field(
+        default_factory=DocumentPresentation,
+    )
 
     def __post_init__(self):
         if not self.document_type:
@@ -118,6 +150,7 @@ class DocumentRecipe:
         return DocumentRecipe(
             document_type=self.document_type,
             sections=(*self.sections, section),
+            presentation=self.presentation,
         )
 
 
@@ -127,6 +160,9 @@ class DocumentTemplateSpec:
     template_type: str
     sections: Tuple[DocumentSectionSpec, ...] = field(default_factory=tuple)
     default_content_config: Mapping[str, Any] = field(default_factory=dict)
+    presentation: DocumentPresentation = field(
+        default_factory=DocumentPresentation,
+    )
 
     def __post_init__(self):
         if not self.template_type:
@@ -146,4 +182,5 @@ class DocumentTemplateSpec:
         return DocumentRecipe(
             document_type=document_type or self.template_type,
             sections=self.sections,
+            presentation=self.presentation,
         )

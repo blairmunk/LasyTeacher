@@ -81,6 +81,7 @@ class RecipeDocumentBuilder(IDocumentBuilder):
             title=source.title,
             document_type=recipe.document_type,
             source=source,
+            presentation=recipe.presentation,
             sections=[
                 DocumentSection(
                     section_type=section.section_type,

@@ -69,6 +69,7 @@ class DocumentTemplateFormAdapter:
             'section_types': template.section_types,
             'sections_count': len(template.sections),
             'default_content_config': template.default_content_config,
+            'has_customization': template.presentation.has_customization,
         }
 
     def _document_type_url(self, document_type, request):

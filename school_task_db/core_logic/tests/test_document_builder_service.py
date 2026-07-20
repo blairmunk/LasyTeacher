@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 from core_logic.entities.document import (
+    DocumentPresentation,
     DocumentRecipe,
     DocumentSectionSpec,
     DocumentSourceRef,
@@ -44,6 +45,22 @@ class RecipeDocumentBuilderTests(TestCase):
         self.assertEqual(document.section_types, ('tasks', 'answers'))
         self.assertEqual(document.sections[0].title, 'Задания')
         self.assertEqual(document.sections[0].payload, {'include_hints': True})
+
+    def test_copies_recipe_presentation_to_document(self):
+        builder = RecipeDocumentBuilder()
+        presentation = DocumentPresentation(
+            custom_latex_preamble='\\usepackage{multicol}',
+        )
+        source = DocumentSourceRef(source_type='work')
+        recipe = DocumentRecipe(
+            document_type='work',
+            sections=[DocumentSectionSpec(section_type='header')],
+            presentation=presentation,
+        )
+
+        document = builder.build(source, recipe)
+
+        self.assertEqual(document.presentation, presentation)
 
     def test_copies_section_options_into_payload(self):
         builder = RecipeDocumentBuilder()

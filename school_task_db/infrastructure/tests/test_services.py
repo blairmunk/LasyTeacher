@@ -121,11 +121,6 @@ class DjangoDocumentEngineTests(TestCase):
         self.assertEqual(document, 'document')
         self.assertEqual(builder.request, (source, recipe, plan.render_target))
 
-    def test_build_document_returns_none_without_render_plan(self):
-        service = DjangoDocumentEngine()
-
-        self.assertIsNone(service._build_document())
-
     def test_default_document_builder_uses_section_payload_registry(self):
         payload_registry = DocumentSectionPayloadBuilderRegistry()
         payload_builder = FakeSectionPayloadBuilder(

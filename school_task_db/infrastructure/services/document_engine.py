@@ -92,9 +92,7 @@ class DjangoDocumentEngine(IDocumentEngine):
     ) -> GeneratedFileResult:
         return self.file_store.get_file(file_type, filename)
 
-    def _build_document(self, render_plan=None):
-        if render_plan is None:
-            return None
+    def _build_document(self, render_plan: DocumentRenderPlan):
         return self.document_builder.build(
             render_plan.source,
             render_plan.recipe,

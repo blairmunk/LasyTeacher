@@ -8,6 +8,7 @@ from core_logic.value_objects.document_render_options import RenderTarget
 from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
     HEADER_SECTION,
+    PAGE_BREAK_SECTION,
     SHORT_SOLUTIONS_SECTION,
     TASK_LIST_SECTION,
 )
@@ -28,6 +29,7 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                 section_templates={
                     HEADER_SECTION: 'documents/latex/sections/header.tex',
                     TASK_LIST_SECTION: 'documents/latex/sections/task_list.tex',
+                    PAGE_BREAK_SECTION: 'documents/latex/sections/page_break.tex',
                     ANSWERS_SECTION: 'documents/latex/sections/answers.tex',
                     SHORT_SOLUTIONS_SECTION: (
                         'documents/latex/sections/short_solutions.tex'
@@ -75,6 +77,9 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                         },
                     ),
                     DocumentSection(
+                        section_type=PAGE_BREAK_SECTION,
+                    ),
+                    DocumentSection(
                         section_type=ANSWERS_SECTION,
                         payload={
                             'variants': [
@@ -120,6 +125,7 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
             self.assertIn(r'\section*{ Вариант 1 }', latex)
             self.assertIn('Найдите силу', latex)
             self.assertIn('Подсказка: F = ma', latex)
+            self.assertIn(r'\clearpage', latex)
             self.assertIn(r'\section*{\centering Ответы}', latex)
             self.assertIn('10 Н', latex)
             self.assertIn(r'\section*{\centering Краткие решения}', latex)

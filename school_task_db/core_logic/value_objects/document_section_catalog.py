@@ -164,6 +164,10 @@ DOCUMENT_SECTION_CATALOG = (
         section_type=PAGE_BREAK_SECTION,
         title='Разрыв страницы',
         supported_document_types=ALL_DOCUMENT_TYPES,
+        renderable_document_types=(
+            WORK_DOCUMENT_TYPE,
+            REMEDIAL_SHEET_DOCUMENT_TYPE,
+        ),
         description='Техническая секция для управления печатной версткой.',
     ),
     DocumentSectionCatalogItem(

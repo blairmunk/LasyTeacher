@@ -7,6 +7,7 @@ from core_logic.entities.document import Document, DocumentSection
 from core_logic.value_objects.document_render_options import RenderTarget
 from core_logic.value_objects.document_recipes import (
     HEADER_SECTION,
+    PAGE_BREAK_SECTION,
     TASK_LIST_SECTION,
 )
 from core_logic.value_objects.document_render_requests import DocumentRenderRequest
@@ -25,6 +26,7 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
                 renderer_type='html',
                 section_templates={
                     HEADER_SECTION: 'documents/html/sections/header.html',
+                    PAGE_BREAK_SECTION: 'documents/html/sections/page_break.html',
                     TASK_LIST_SECTION: 'documents/html/sections/task_list.html',
                 },
                 filename_builder=lambda request: 'work.html',
@@ -44,6 +46,9 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
                             'duration': 45,
                             'max_score': 10,
                         },
+                    ),
+                    DocumentSection(
+                        section_type=PAGE_BREAK_SECTION,
                     ),
                     DocumentSection(
                         section_type=TASK_LIST_SECTION,
@@ -79,6 +84,7 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
             self.assertEqual(result.files[0].filename, 'work.html')
             self.assertIn('<title>Контрольная</title>', html)
             self.assertIn('<h1>Контрольная</h1>', html)
+            self.assertIn('page-break-after: always', html)
             self.assertIn('Вариант 1', html)
             self.assertIn('Найдите силу', html)
             self.assertIn('Подсказка: F = ma', html)

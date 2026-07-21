@@ -544,6 +544,9 @@ def _variant_print_plan_payload(print_plan):
                 'variant_task_id': block.variant_task_id,
                 'task_id': block.task_id,
                 'order': block.order,
+                'content_role': block.content_role,
+                'source_render_mode': block.source_render_mode,
+                'render_mode': block.render_mode,
                 'options': dict(block.options),
             }
             for block in print_plan.blocks
@@ -559,6 +562,9 @@ def _variant_print_blocks_payload(print_plan, task_payloads_by_variant_task_id):
             'variant_task_id': block.variant_task_id,
             'task_id': block.task_id,
             'order': block.order,
+            'content_role': block.content_role,
+            'source_render_mode': block.source_render_mode,
+            'render_mode': block.render_mode,
             'options': dict(block.options),
         }
         if block.block_type == VARIANT_PRINT_BLOCK_TASK:

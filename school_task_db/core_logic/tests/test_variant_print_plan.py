@@ -101,6 +101,15 @@ class VariantPrintPlanTests(TestCase):
             plan.blocks[0].options['render_mode'],
             TASK_RENDER_MODE_WITH_FULL_SOLUTION,
         )
+        self.assertEqual(plan.blocks[0].content_role, TASK_BANK_ROLE_DEMO)
+        self.assertEqual(
+            plan.blocks[0].source_render_mode,
+            TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+        )
+        self.assertEqual(
+            plan.blocks[0].render_mode,
+            TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+        )
         self.assertFalse(plan.blocks[0].options['is_assessable'])
         self.assertEqual(plan.blocks[2].options, {'rows': 8})
 
@@ -153,6 +162,16 @@ class VariantPrintPlanTests(TestCase):
             plan.blocks[0].options['render_mode'],
             TASK_RENDER_MODE_WITH_FULL_SOLUTION,
         )
+        self.assertEqual(plan.blocks[0].content_role, TASK_BANK_ROLE_DEMO)
+        self.assertEqual(
+            plan.blocks[0].source_render_mode,
+            TASK_RENDER_MODE_TASK_ONLY,
+        )
+        self.assertEqual(
+            plan.blocks[0].render_mode,
+            TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+        )
+        self.assertEqual(plan.blocks[2].content_role, TASK_BANK_ROLE_PRACTICE)
         self.assertEqual(plan.blocks[2].options['rows'], 9)
 
     def test_print_profile_can_hide_roles(self):

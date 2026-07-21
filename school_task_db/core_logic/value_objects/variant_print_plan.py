@@ -96,6 +96,9 @@ class VariantPrintBlock:
     variant_task_id: str = ''
     task_id: str = ''
     order: int = 0
+    content_role: str = ''
+    source_render_mode: str = ''
+    render_mode: str = ''
     options: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
@@ -153,18 +156,7 @@ def build_variant_print_plan_from_content_plan(
         if not profile.includes_item(row):
             continue
         blocks.append(
-            VariantPrintBlock(
-                block_type=VARIANT_PRINT_BLOCK_TASK,
-                variant_task_id=row.variant_task_id,
-                task_id=row.task_id,
-                order=row.order,
-                options={
-                    'bank_role': row.bank_role,
-                    'render_mode': profile.task_render_mode(row),
-                    'is_assessable': row.is_assessable,
-                    'max_points': row.max_points,
-                },
-            )
+            _task_print_block(row, profile)
         )
         blank_cells_options = profile.blank_cells_options(row)
         if blank_cells_options:
@@ -174,10 +166,33 @@ def build_variant_print_plan_from_content_plan(
                     variant_task_id=row.variant_task_id,
                     task_id=row.task_id,
                     order=row.order,
+                    content_role=row.bank_role,
                     options=blank_cells_options,
                 )
             )
     return VariantPrintPlan(variant_id=content_plan.variant_id, blocks=blocks)
+
+
+def _task_print_block(
+    row: VariantContentItem,
+    profile: VariantPrintProfile,
+) -> VariantPrintBlock:
+    render_mode = profile.task_render_mode(row)
+    return VariantPrintBlock(
+        block_type=VARIANT_PRINT_BLOCK_TASK,
+        variant_task_id=row.variant_task_id,
+        task_id=row.task_id,
+        order=row.order,
+        content_role=row.bank_role,
+        source_render_mode=row.render_mode,
+        render_mode=render_mode,
+        options={
+            'bank_role': row.bank_role,
+            'render_mode': render_mode,
+            'is_assessable': row.is_assessable,
+            'max_points': row.max_points,
+        },
+    )
 
 
 def build_variant_print_profile_from_options(options) -> VariantPrintProfile:

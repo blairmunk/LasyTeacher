@@ -284,6 +284,18 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             TASK_RENDER_MODE_WITH_FULL_SOLUTION,
         )
         self.assertEqual(
+            variant_payload['print_blocks'][0]['content_role'],
+            TASK_BANK_ROLE_DEMO,
+        )
+        self.assertEqual(
+            variant_payload['print_blocks'][0]['source_render_mode'],
+            TASK_RENDER_MODE_TASK_ONLY,
+        )
+        self.assertEqual(
+            variant_payload['print_blocks'][0]['render_mode'],
+            TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+        )
+        self.assertEqual(
             variant_payload['print_blocks'][1]['variant_task_id'],
             str(variant_task.pk),
         )

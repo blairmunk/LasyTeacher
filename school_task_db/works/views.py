@@ -54,6 +54,7 @@ class WorkDetailView(TemplateView):
         context['spec_preview'] = detail.spec_preview
         context['work_document_templates'] = detail.work_document_templates
         context['remedial_sheet_templates'] = detail.remedial_sheet_templates
+        context['work_document_style_options'] = detail.work_document_style_options
         context['show_sync_button'] = detail.show_sync_button
         return context
 

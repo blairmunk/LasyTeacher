@@ -31,6 +31,30 @@ WORK_DOCUMENT_STYLES = frozenset(
 )
 
 
+@dataclass(frozen=True)
+class WorkDocumentStyleOption:
+    value: str
+    label: str
+    description: str = ''
+
+
+WORK_DOCUMENT_STYLE_OPTIONS = (
+    WorkDocumentStyleOption(
+        value=WORK_DOCUMENT_STYLE_STANDARD,
+        label='Обычная работа',
+        description='Стандартная печать вариантов с заданиями и решениями.',
+    ),
+    WorkDocumentStyleOption(
+        value=WORK_DOCUMENT_STYLE_WORKSHEET,
+        label='Рабочий лист',
+        description=(
+            'Печать демонстрационных заданий с решениями и '
+            'заданий для самостоятельной работы.'
+        ),
+    ),
+)
+
+
 def is_supported_document_renderer_type(renderer_type: str) -> bool:
     return renderer_type in SUPPORTED_DOCUMENT_RENDERER_TYPES
 

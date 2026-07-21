@@ -9,6 +9,7 @@ urlpatterns = [
     path('create/', views.AnalogGroupCreateView.as_view(), name='create'),
     path('<pk:pk>/update/', views.AnalogGroupUpdateView.as_view(), name='update'),
     path('<pk:group_id>/add-tasks/', views.add_tasks_to_group, name='add-tasks'),
+    path('<pk:group_id>/update-roles/', views.update_task_group_roles, name='update-roles'),
     path('<pk:group_id>/remove-task/<pk:task_id>/', views.remove_task_from_group, name='remove-task'),
 
     # Bulk actions

@@ -22,6 +22,7 @@ from core_logic.use_cases.change_event_status import ChangeEventStatusUseCase
 from core_logic.use_cases.change_task_group_membership import (
     AddTasksToGroupUseCase,
     RemoveTaskFromGroupUseCase,
+    UpdateTaskGroupRolesUseCase,
 )
 from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
@@ -224,6 +225,7 @@ from core_logic.use_cases.prepare_student_remedial_submission import (
 )
 from core_logic.use_cases.prepare_task_group_membership_submission import (
     PrepareAddTasksToGroupSubmissionUseCase,
+    PrepareUpdateTaskGroupRolesSubmissionUseCase,
 )
 from core_logic.use_cases.prepare_work_variant_submission import (
     PrepareBulkDeleteVariantsSubmissionUseCase,
@@ -984,6 +986,9 @@ class Container:
     def prepare_add_tasks_to_group_submission_use_case(self):
         return PrepareAddTasksToGroupSubmissionUseCase()
 
+    def prepare_update_task_group_roles_submission_use_case(self):
+        return PrepareUpdateTaskGroupRolesSubmissionUseCase()
+
     def prepare_delete_variant_submission_use_case(self):
         return PrepareDeleteVariantSubmissionUseCase()
 
@@ -1172,6 +1177,11 @@ class Container:
 
     def remove_task_from_group_use_case(self):
         return RemoveTaskFromGroupUseCase(
+            task_repo=self.task_repo,
+        )
+
+    def update_task_group_roles_use_case(self):
+        return UpdateTaskGroupRolesUseCase(
             task_repo=self.task_repo,
         )
 

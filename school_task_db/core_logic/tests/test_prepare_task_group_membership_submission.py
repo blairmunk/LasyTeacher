@@ -1,9 +1,14 @@
 from unittest import TestCase
 
-from core_logic.use_cases.change_task_group_membership import AddTasksToGroupRequest
+from core_logic.use_cases.change_task_group_membership import (
+    AddTasksToGroupRequest,
+    UpdateTaskGroupRolesRequest,
+)
 from core_logic.use_cases.prepare_task_group_membership_submission import (
     PrepareAddTasksToGroupSubmissionRequest,
     PrepareAddTasksToGroupSubmissionUseCase,
+    PrepareUpdateTaskGroupRolesSubmissionRequest,
+    PrepareUpdateTaskGroupRolesSubmissionUseCase,
 )
 from core_logic.value_objects.variant_print_plan import TASK_BANK_ROLE_DEMO
 
@@ -39,3 +44,22 @@ class PrepareTaskGroupMembershipSubmissionUseCaseTests(TestCase):
 
         self.assertEqual(result.task_ids, [])
         self.assertEqual(result.bank_role, 'control')
+
+    def test_prepare_update_task_group_roles_submission(self):
+        result = PrepareUpdateTaskGroupRolesSubmissionUseCase().execute(
+            PrepareUpdateTaskGroupRolesSubmissionRequest(
+                group_id='group-1',
+                data={
+                    'task_role_task-1': [TASK_BANK_ROLE_DEMO],
+                    'selected_tasks': ['ignored'],
+                },
+            )
+        )
+
+        self.assertEqual(
+            result,
+            UpdateTaskGroupRolesRequest(
+                group_id='group-1',
+                task_roles={'task-1': TASK_BANK_ROLE_DEMO},
+            ),
+        )

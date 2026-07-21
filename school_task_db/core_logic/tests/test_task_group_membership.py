@@ -5,6 +5,8 @@ from core_logic.use_cases.change_task_group_membership import (
     AddTasksToGroupUseCase,
     RemoveTaskFromGroupRequest,
     RemoveTaskFromGroupUseCase,
+    UpdateTaskGroupRolesRequest,
+    UpdateTaskGroupRolesUseCase,
 )
 from core_logic.value_objects.variant_print_plan import TASK_BANK_ROLE_DEMO
 
@@ -25,6 +27,10 @@ class FakeTaskRepository:
     def remove_task_from_group(self, group_id, task_id):
         self.removed_request = (group_id, task_id)
         return 1
+
+    def update_task_group_roles(self, group_id, task_roles):
+        self.updated_roles_request = (group_id, task_roles)
+        return len(task_roles)
 
 
 class TaskGroupMembershipUseCaseTests(TestCase):
@@ -89,3 +95,39 @@ class TaskGroupMembershipUseCaseTests(TestCase):
         self.assertTrue(result.success)
         self.assertEqual(result.deleted_count, 1)
         self.assertEqual(repo.removed_request, ('group-1', 'task-1'))
+
+    def test_update_task_group_roles_delegates_valid_roles(self):
+        repo = FakeTaskRepository()
+        use_case = UpdateTaskGroupRolesUseCase(task_repo=repo)
+
+        result = use_case.execute(
+            UpdateTaskGroupRolesRequest(
+                group_id='group-1',
+                task_roles={
+                    'task-1': TASK_BANK_ROLE_DEMO,
+                    '': TASK_BANK_ROLE_DEMO,
+                },
+            )
+        )
+
+        self.assertTrue(result.success)
+        self.assertEqual(result.updated_count, 1)
+        self.assertEqual(
+            repo.updated_roles_request,
+            ('group-1', {'task-1': TASK_BANK_ROLE_DEMO}),
+        )
+
+    def test_update_task_group_roles_rejects_unknown_role(self):
+        repo = FakeTaskRepository()
+        use_case = UpdateTaskGroupRolesUseCase(task_repo=repo)
+
+        result = use_case.execute(
+            UpdateTaskGroupRolesRequest(
+                group_id='group-1',
+                task_roles={'task-1': 'any'},
+            )
+        )
+
+        self.assertFalse(result.success)
+        self.assertEqual(result.status, 'invalid')
+        self.assertIn('Unsupported specific task bank role', result.errors[0])

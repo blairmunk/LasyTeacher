@@ -5,6 +5,7 @@ from typing import Mapping, Sequence
 
 from core_logic.use_cases.change_task_group_membership import (
     AddTasksToGroupRequest,
+    UpdateTaskGroupRolesRequest,
 )
 from core_logic.value_objects.variant_print_plan import TASK_BANK_ROLE_CONTROL
 
@@ -24,6 +25,27 @@ class PrepareAddTasksToGroupSubmissionUseCase:
             group_id=request.group_id,
             task_ids=_list(request.data, 'selected_tasks'),
             bank_role=_first(request.data, 'bank_role') or TASK_BANK_ROLE_CONTROL,
+        )
+
+
+@dataclass(frozen=True)
+class PrepareUpdateTaskGroupRolesSubmissionRequest:
+    group_id: str
+    data: Mapping[str, Sequence[str]]
+
+
+class PrepareUpdateTaskGroupRolesSubmissionUseCase:
+    def execute(
+        self,
+        request: PrepareUpdateTaskGroupRolesSubmissionRequest,
+    ) -> UpdateTaskGroupRolesRequest:
+        return UpdateTaskGroupRolesRequest(
+            group_id=request.group_id,
+            task_roles={
+                key.removeprefix('task_role_'): _first(request.data, key)
+                for key in request.data
+                if key.startswith('task_role_')
+            },
         )
 
 

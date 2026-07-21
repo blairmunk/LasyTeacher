@@ -235,6 +235,20 @@ class TaskGroupBulkActionTests(TestCase):
         task_group = TaskGroup.objects.get(group=self.group, task=second_task)
         self.assertEqual(task_group.bank_role, TASK_BANK_ROLE_DEMO)
 
+    def test_update_task_group_roles_post_uses_clean_use_case(self):
+        response = self.client.post(
+            reverse('task_groups:update-roles', args=[self.group.pk]),
+            {f'task_role_{self.task.pk}': TASK_BANK_ROLE_DEMO},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('task_groups:detail', args=[self.group.pk]),
+            fetch_redirect_response=False,
+        )
+        membership = TaskGroup.objects.get(group=self.group, task=self.task)
+        self.assertEqual(membership.bank_role, TASK_BANK_ROLE_DEMO)
+
     def test_remove_task_from_group_post_uses_clean_use_case(self):
         response = self.client.post(
             reverse(

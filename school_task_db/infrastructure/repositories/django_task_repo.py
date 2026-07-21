@@ -696,6 +696,15 @@ class DjangoTaskRepository(ITaskRepository):
                 created_count += 1
         return created_count
 
+    def update_task_group_roles(self, group_id: str, task_roles: dict) -> int:
+        updated_count = 0
+        for task_id, bank_role in task_roles.items():
+            updated_count += TaskGroup.objects.filter(
+                group_id=group_id,
+                task_id=task_id,
+            ).update(bank_role=bank_role)
+        return updated_count
+
     def remove_task_from_group(self, group_id: str, task_id: str) -> int:
         return TaskGroup.objects.filter(
             group_id=group_id,

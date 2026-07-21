@@ -83,6 +83,7 @@ class AnalogGroupDetailView(TemplateView):
             raise Http404('Группа аналогов не найдена')
         context['analoggroup'] = detail_data.group
         context['tasks'] = detail_data.tasks
+        context['bank_role_options'] = TASK_BANK_ROLE_SPECIFIC_CHOICES
         return context
 
 
@@ -214,6 +215,34 @@ def remove_task_from_group(request, group_id, task_id):
             raise Http404("Группа не найдена")
         messages.success(request, f'Задание удалено из группы "{result.group_name}"')
 
+    return redirect('task_groups:detail', pk=group_id)
+
+
+@require_POST
+def update_task_group_roles(request, group_id):
+    from core_logic.use_cases.prepare_task_group_membership_submission import (
+        PrepareUpdateTaskGroupRolesSubmissionRequest,
+    )
+
+    update_request = (
+        container.prepare_update_task_group_roles_submission_use_case().execute(
+            PrepareUpdateTaskGroupRolesSubmissionRequest(
+                group_id=str(group_id),
+                data=_post_lists(request.POST),
+            )
+        )
+    )
+    result = container.update_task_group_roles_use_case().execute(update_request)
+    if result.status == 'not_found':
+        raise Http404("Группа не найдена")
+    if result.status == 'invalid':
+        messages.error(request, '; '.join(result.errors))
+        return redirect('task_groups:detail', pk=group_id)
+
+    messages.success(
+        request,
+        f'Обновлено ролей: {result.updated_count}',
+    )
     return redirect('task_groups:detail', pk=group_id)
 
 

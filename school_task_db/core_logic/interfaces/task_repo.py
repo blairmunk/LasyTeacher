@@ -1,7 +1,7 @@
 """Task repository interface."""
 
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from core_logic.entities.task import (
     AddTasksToGroupTask,
@@ -209,6 +209,14 @@ class ITaskRepository(ABC):
         bank_role: str = TASK_BANK_ROLE_CONTROL,
     ) -> int:
         """Add tasks to an analog group and return created membership count."""
+
+    @abstractmethod
+    def update_task_group_roles(
+        self,
+        group_id: str,
+        task_roles: Dict[str, str],
+    ) -> int:
+        """Update bank roles for existing task memberships in one analog group."""
 
     @abstractmethod
     def remove_task_from_group(self, group_id: str, task_id: str) -> int:

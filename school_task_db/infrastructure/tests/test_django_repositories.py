@@ -1240,6 +1240,40 @@ class DjangoRemedialRepositoryTests(TestCase):
             ).exists()
         )
 
+    def test_task_repository_updates_task_group_roles(self):
+        repo = DjangoTaskRepository()
+        group = AnalogGroup.objects.create(name='Роли')
+        other_group = AnalogGroup.objects.create(name='Другая группа')
+        first_membership = TaskGroup.objects.create(
+            task=self.original_weak,
+            group=group,
+        )
+        second_membership = TaskGroup.objects.create(
+            task=self.replacement,
+            group=group,
+        )
+        other_membership = TaskGroup.objects.create(
+            task=self.original_weak,
+            group=other_group,
+        )
+
+        updated_count = repo.update_task_group_roles(
+            group_id=str(group.pk),
+            task_roles={
+                str(self.original_weak.pk): TASK_BANK_ROLE_DEMO,
+                str(self.replacement.pk): TASK_BANK_ROLE_PRACTICE,
+                str(self.too_hard.pk): TASK_BANK_ROLE_DEMO,
+            },
+        )
+
+        first_membership.refresh_from_db()
+        second_membership.refresh_from_db()
+        other_membership.refresh_from_db()
+        self.assertEqual(updated_count, 2)
+        self.assertEqual(first_membership.bank_role, TASK_BANK_ROLE_DEMO)
+        self.assertEqual(second_membership.bank_role, TASK_BANK_ROLE_PRACTICE)
+        self.assertEqual(other_membership.bank_role, 'control')
+
     def test_work_repository_composes_variants(self):
         repo = DjangoWorkRepository()
         existing_count = Variant.objects.filter(work=self.source_work).count()

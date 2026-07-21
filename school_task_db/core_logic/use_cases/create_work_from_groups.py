@@ -9,6 +9,10 @@ from core_logic.interfaces.work_repo import (
     CreateWorkParams,
     IWorkRepository,
 )
+from core_logic.value_objects.variant_print_plan import (
+    TASK_BANK_ROLE_ANY,
+    validate_task_bank_role,
+)
 
 
 @dataclass(frozen=True)
@@ -17,6 +21,7 @@ class GroupSpecRequest:
     order: int = 0
     count: int = 1
     weight: int = 1
+    bank_role_filter: str = TASK_BANK_ROLE_ANY
 
 
 @dataclass(frozen=True)
@@ -75,6 +80,15 @@ class CreateWorkFromGroupsUseCase:
                 message='Некоторые группы не найдены',
             )
 
+        for group in request.groups:
+            try:
+                validate_task_bank_role(group.bank_role_filter)
+            except ValueError as error:
+                return CreateWorkFromGroupsResult(
+                    status='invalid_group_spec',
+                    message=str(error),
+                )
+
         work_id = self.work_repo.create_work(
             CreateWorkParams(
                 name=work_name,
@@ -95,6 +109,7 @@ class CreateWorkFromGroupsUseCase:
                     order=group.order or position,
                     count=group.count,
                     weight=max(1, int(weight)),
+                    bank_role_filter=group.bank_role_filter,
                 )
             )
 

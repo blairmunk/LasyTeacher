@@ -8,6 +8,7 @@ from core_logic.use_cases.create_work_from_groups import (
 from core_logic.use_cases.delete_task_groups import DeleteTaskGroupsRequest
 from core_logic.use_cases.get_add_tasks_to_group import AddTasksToGroupFormRequest
 from core_logic.use_cases.save_analog_group import SaveAnalogGroupRequest
+from core_logic.value_objects.variant_print_plan import TASK_BANK_ROLE_ANY
 
 
 class TaskGroupFormAdapter:
@@ -26,6 +27,10 @@ class TaskGroupFormAdapter:
                     order=int(group_data.get('order', index)),
                     count=int(group_data.get('count', 1)),
                     weight=int(group_data.get('weight', 1)),
+                    bank_role_filter=group_data.get(
+                        'bank_role_filter',
+                        TASK_BANK_ROLE_ANY,
+                    ),
                 )
                 for index, group_data in enumerate(groups_data, 1)
             ],

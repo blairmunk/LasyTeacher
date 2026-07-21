@@ -8,6 +8,7 @@ from django.http import Http404, JsonResponse
 from infrastructure.container import container
 from infrastructure.forms.task_group_django_forms import AnalogGroupForm
 from core_logic.value_objects.variant_print_plan import (
+    TASK_BANK_ROLE_ANY,
     TASK_BANK_ROLE_CONTROL,
     TASK_BANK_ROLE_SPECIFIC_CHOICES,
 )
@@ -59,6 +60,13 @@ class AnalogGroupListView(TemplateView):
         context['total_groups'] = list_data.total_groups
         context['empty_groups'] = list_data.empty_groups
         context['total_tasks_in_groups'] = list_data.total_tasks_in_groups
+        context['bank_role_filter_options'] = tuple(
+            (value, label)
+            for value, label in (
+                (TASK_BANK_ROLE_ANY, 'Любая роль'),
+                *TASK_BANK_ROLE_SPECIFIC_CHOICES,
+            )
+        )
 
         return context
 

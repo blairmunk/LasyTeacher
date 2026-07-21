@@ -540,7 +540,13 @@ class TaskGroupFormAdapterTests(SimpleTestCase):
     def test_builds_group_bulk_action_requests_from_body(self):
         body = {
             'groups': [
-                {'id': 'g1', 'order': '2', 'count': '3', 'weight': '4'},
+                {
+                    'id': 'g1',
+                    'order': '2',
+                    'count': '3',
+                    'weight': '4',
+                    'bank_role_filter': TASK_BANK_ROLE_DEMO,
+                },
                 {'id': 'g2'},
             ],
             'work_name': 'From groups',
@@ -564,10 +570,12 @@ class TaskGroupFormAdapterTests(SimpleTestCase):
         self.assertEqual(create_work.groups[0].order, 2)
         self.assertEqual(create_work.groups[0].count, 3)
         self.assertEqual(create_work.groups[0].weight, 4)
+        self.assertEqual(create_work.groups[0].bank_role_filter, TASK_BANK_ROLE_DEMO)
         self.assertEqual(create_work.groups[1].id, 'g2')
         self.assertEqual(create_work.groups[1].order, 2)
         self.assertEqual(create_work.groups[1].count, 1)
         self.assertEqual(create_work.groups[1].weight, 1)
+        self.assertEqual(create_work.groups[1].bank_role_filter, 'any')
         self.assertEqual(delete_groups.group_ids, ['g1', 'g2'])
 
     def test_builds_task_group_list_filters_from_query(self):

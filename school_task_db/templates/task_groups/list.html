@@ -320,6 +320,7 @@
                         <tr>
                             <th style="width:50px">№</th>
                             <th>Группа аналогов</th>
+                            <th style="width:150px">Роль</th>
                             <th style="width:80px" class="text-center">Заданий</th>
                             <th style="width:70px" class="text-center">Вес</th>
                             <th style="width:80px" class="text-center">В группе</th>
@@ -328,7 +329,7 @@
                     <tbody id="spec-body"></tbody>
                     <tfoot class="table-light">
                         <tr>
-                            <td colspan="5">
+                            <td colspan="6">
                                 <div class="d-flex align-items-center gap-3">
                                     <label class="form-label mb-0 small fw-bold">Макс. балл:</label>
                                     <input type="number" class="form-control form-control-sm" id="new-work-max-score"
@@ -439,7 +440,8 @@
                 difficulty: parseInt(card.dataset.difficulty) || 1,
                 weight: parseInt(card.dataset.difficulty) || 1,
                 count: 1,
-                order: getCount() + 1
+                order: getCount() + 1,
+                bankRoleFilter: 'any'
             };
         } else {
             delete selectedGroups[id];
@@ -467,7 +469,9 @@
                     taskCount: parseInt(card.dataset.taskCount) || 0,
                     difficulty: parseInt(card.dataset.difficulty) || 1,
                     weight: parseInt(card.dataset.difficulty) || 1,
-                    count: 1, order: getCount() + 1
+                    count: 1,
+                    order: getCount() + 1,
+                    bankRoleFilter: 'any'
                 };
             }
         });
@@ -524,9 +528,15 @@
                 var g = selectedGroups[id];
                 // Автозаполнение веса из difficulty (хранится в selectedGroups)
                 var defaultWeight = g.weight || g.difficulty || 1;
+                var roleOptions = `{% for value, label in bank_role_filter_options %}<option value="{{ value }}">{{ label }}</option>{% endfor %}`;
+                roleOptions = roleOptions.replace(
+                    'value="' + (g.bankRoleFilter || 'any') + '"',
+                    'value="' + (g.bankRoleFilter || 'any') + '" selected'
+                );
                 html += '<tr>'
                     + '<td>' + i + '</td>'
                     + '<td>' + g.name + '</td>'
+                    + '<td><select class="form-select form-select-sm spec-bank-role" data-id="' + id + '">' + roleOptions + '</select></td>'
                     + '<td class="text-center"><input type="number" class="form-control form-control-sm spec-count" '
                     + 'data-id="' + id + '" min="1" max="' + g.taskCount + '" value="' + (g.count || 1) + '"></td>'
                     + '<td class="text-center"><input type="number" class="form-control form-control-sm spec-weight" '
@@ -596,6 +606,15 @@
         }
     });
 
+    document.addEventListener('change', function(e) {
+        if (!e.target.classList.contains('spec-bank-role')) return;
+        var id = e.target.dataset.id;
+        if (selectedGroups[id]) {
+            selectedGroups[id].bankRoleFilter = e.target.value || 'any';
+            save();
+        }
+    });
+
 
     // Toggle variant count
     var autoGenCb = document.getElementById('auto-generate');
@@ -623,7 +642,8 @@
                 id: id,
                 order: order++,
                 count: selectedGroups[id].count || 1,
-                weight: selectedGroups[id].weight || 1
+                weight: selectedGroups[id].weight || 1,
+                bank_role_filter: selectedGroups[id].bankRoleFilter || 'any'
             });
         }
         var maxScore = parseInt(document.getElementById('new-work-max-score').value) || 0;

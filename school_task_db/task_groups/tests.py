@@ -73,6 +73,7 @@ class TaskGroupBulkActionTests(TestCase):
                         'order': 1,
                         'count': 2,
                         'weight': 0,
+                        'bank_role_filter': TASK_BANK_ROLE_DEMO,
                     }
                 ],
                 'work_name': '  Контрольная по кинематике  ',
@@ -92,6 +93,7 @@ class TaskGroupBulkActionTests(TestCase):
         self.assertEqual(spec.analog_group, self.group)
         self.assertEqual(spec.count, 2)
         self.assertEqual(spec.weight, 4)
+        self.assertEqual(spec.bank_role_filter, TASK_BANK_ROLE_DEMO)
         self.assertEqual(response.json()['work_id'], str(work.pk))
 
     def test_analog_group_list_uses_clean_list_context(self):
@@ -113,6 +115,10 @@ class TaskGroupBulkActionTests(TestCase):
         self.assertEqual(response.context['total_groups'], 1)
         self.assertEqual(response.context['empty_groups'], 0)
         self.assertEqual(response.context['total_tasks_in_groups'], 1)
+        self.assertIn(
+            ('any', 'Любая роль'),
+            response.context['bank_role_filter_options'],
+        )
 
     def test_analog_group_detail_uses_clean_detail_context(self):
         response = self.client.get(reverse('task_groups:detail', args=[self.group.pk]))

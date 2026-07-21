@@ -15,6 +15,33 @@
 \textit{Инструкция: {{ task.instruction|safe }}}
 
 {% endif %}
+{% if task.render_mode == 'with_answer' and task.answer %}
+\textbf{Ответ:} {{ task.answer|safe }}
+
+{% endif %}
+{% if task.render_mode == 'with_short_solution' and task.short_solution %}
+\textbf{Краткое решение:} {{ task.short_solution|safe }}
+
+{% endif %}
+{% if task.render_mode == 'with_full_solution' and task.full_solution %}
+\textbf{Решение.}
+
+{{ task.full_solution|safe }}
+
+{% endif %}
+{% if task.blank_cells_after %}
+\begin{center}
+\setlength{\tabcolsep}{0pt}
+\renewcommand{\arraystretch}{1}
+\begin{tabular}{|*{ {{ task.blank_cells.columns }} }{p{0.3cm}|}}
+\hline
+{% for row in task.blank_cells.rows_range %}
+{% for cell in task.blank_cells.latex_cells %}{% if not forloop.first %} & {% endif %}{{ cell|safe }}{% endfor %} \\ \hline
+{% endfor %}
+\end{tabular}
+\end{center}
+
+{% endif %}
 {% endfor %}
 {% if not forloop.last %}
 \newpage

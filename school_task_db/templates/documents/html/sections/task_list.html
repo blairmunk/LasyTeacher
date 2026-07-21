@@ -12,8 +12,37 @@
                         {% if payload.include_instructions and task.instruction %}
                             <div class="task-instruction">{{ task.instruction }}</div>
                         {% endif %}
+                        {% if task.render_mode == 'with_answer' and task.answer %}
+                            <div class="task-answer">
+                                <strong>Ответ:</strong> {{ task.answer|linebreaksbr }}
+                            </div>
+                        {% endif %}
+                        {% if task.render_mode == 'with_short_solution' and task.short_solution %}
+                            <div class="task-short-solution">
+                                <strong>Краткое решение:</strong>
+                                {{ task.short_solution|linebreaksbr }}
+                            </div>
+                        {% endif %}
+                        {% if task.render_mode == 'with_full_solution' and task.full_solution %}
+                            <div class="task-full-solution">
+                                <strong>Решение:</strong>
+                                {{ task.full_solution|linebreaksbr }}
+                            </div>
+                        {% endif %}
                         {% if task.max_points %}
                             <div class="task-points">{{ task.max_points }} балл.</div>
+                        {% endif %}
+                        {% if task.blank_cells_after %}
+                            <div
+                                class="blank-cells-grid task-blank-cells"
+                                style="display: grid; grid-template-columns: repeat({{ task.blank_cells.columns }}, minmax(0, 1fr)); border-left: 1px solid #999; border-top: 1px solid #999; margin-top: 0.75rem;"
+                            >
+                                {% for cell in task.blank_cells.cells_range %}
+                                <span
+                                    style="height: {{ task.blank_cells.row_height }}px; border-right: 1px solid #999; border-bottom: 1px solid #999;"
+                                ></span>
+                                {% endfor %}
+                            </div>
                         {% endif %}
                     </li>
                 {% endfor %}

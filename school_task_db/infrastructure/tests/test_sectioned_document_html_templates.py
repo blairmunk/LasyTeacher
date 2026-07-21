@@ -14,6 +14,9 @@ from core_logic.value_objects.document_recipes import (
     THEORY_SECTION,
 )
 from core_logic.value_objects.document_render_requests import DocumentRenderRequest
+from core_logic.value_objects.variant_print_plan import (
+    TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+)
 from infrastructure.services.rendered_document_file_store import (
     RenderedDocumentFileStore,
 )
@@ -105,6 +108,16 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
                                             'hint': 'F = ma',
                                             'instruction': '',
                                             'max_points': 2,
+                                            'full_solution': 'Подставим в формулу',
+                                            'render_mode': (
+                                                TASK_RENDER_MODE_WITH_FULL_SOLUTION
+                                            ),
+                                            'blank_cells_after': True,
+                                            'blank_cells': {
+                                                'columns': 3,
+                                                'row_height': 18,
+                                                'cells_range': range(6),
+                                            },
                                         },
                                     ],
                                 },
@@ -137,3 +150,6 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
             self.assertIn('Вариант 1', html)
             self.assertIn('Найдите силу', html)
             self.assertIn('Подсказка: F = ma', html)
+            self.assertIn('Решение:', html)
+            self.assertIn('Подставим в формулу', html)
+            self.assertIn('task-blank-cells', html)

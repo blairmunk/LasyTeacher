@@ -16,6 +16,9 @@ from core_logic.value_objects.document_recipes import (
     THEORY_SECTION,
 )
 from core_logic.value_objects.document_render_requests import DocumentRenderRequest
+from core_logic.value_objects.variant_print_plan import (
+    TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+)
 from infrastructure.services.rendered_document_file_store import (
     RenderedDocumentFileStore,
 )
@@ -90,6 +93,20 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                                             'max_points': 2,
                                             'answer': '10 Н',
                                             'short_solution': 'F = ma',
+                                            'full_solution': 'Подставим в формулу',
+                                            'render_mode': (
+                                                TASK_RENDER_MODE_WITH_FULL_SOLUTION
+                                            ),
+                                            'blank_cells_after': True,
+                                            'blank_cells': {
+                                                'columns': 3,
+                                                'rows_range': range(2),
+                                                'latex_cells': [
+                                                    r'\rule{0pt}{6.0mm}',
+                                                    '',
+                                                    '',
+                                                ],
+                                            },
                                         },
                                     ],
                                 },
@@ -169,6 +186,8 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
             self.assertIn(r'\section*{ Вариант 1 }', latex)
             self.assertIn('Найдите силу', latex)
             self.assertIn('Подсказка: F = ma', latex)
+            self.assertIn(r'\textbf{Решение.}', latex)
+            self.assertIn('Подставим в формулу', latex)
             self.assertIn(r'\clearpage', latex)
             self.assertIn(r'\section*{\centering Черновик}', latex)
             self.assertIn(r'\begin{tabular}{|*{ 3 }{p{0.3cm}|}}', latex)

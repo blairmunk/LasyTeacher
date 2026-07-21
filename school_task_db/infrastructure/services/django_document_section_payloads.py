@@ -19,6 +19,13 @@ from core_logic.value_objects.document_recipes import (
     TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
 )
+from core_logic.value_objects.variant_print_plan import (
+    DEFAULT_BLANK_CELLS_COLUMNS,
+    DEFAULT_BLANK_CELLS_ROW_HEIGHT,
+    DEFAULT_BLANK_CELLS_ROWS,
+    TASK_BANK_ROLE_CONTROL,
+    TASK_RENDER_MODE_TASK_ONLY,
+)
 from core_logic.entities.document import (
     REMEDIAL_WORK_SOURCE_TYPE,
     REMEDIAL_VARIANT_SOURCE_TYPE,
@@ -227,27 +234,7 @@ class DjangoRemedialTrainingTasksPayloadBuilder:
 
 class BlankCellsPayloadBuilder:
     def build_payload(self, request):
-        options = dict(request.section.options)
-        rows = _positive_int(options.get('rows'), default=6, max_value=40)
-        columns = _positive_int(
-            options.get('columns'),
-            default=24,
-            max_value=40,
-        )
-        row_height = _positive_int(
-            options.get('row_height'),
-            default=24,
-            max_value=120,
-        )
-        return {
-            **options,
-            'rows': rows,
-            'columns': columns,
-            'row_height': row_height,
-            'rows_range': range(rows),
-            'cells_range': range(rows * columns),
-            'latex_cells': _blank_cells_latex_cells(columns, row_height),
-        }
+        return _blank_cells_payload(request.section.options)
 
 
 def build_work_section_payload_builder_registry(
@@ -402,6 +389,34 @@ def _positive_int(value, default, max_value):
     return min(parsed, max_value)
 
 
+def _blank_cells_payload(options):
+    options = dict(options)
+    rows = _positive_int(
+        options.get('rows'),
+        default=DEFAULT_BLANK_CELLS_ROWS,
+        max_value=40,
+    )
+    columns = _positive_int(
+        options.get('columns'),
+        default=DEFAULT_BLANK_CELLS_COLUMNS,
+        max_value=40,
+    )
+    row_height = _positive_int(
+        options.get('row_height'),
+        default=DEFAULT_BLANK_CELLS_ROW_HEIGHT,
+        max_value=120,
+    )
+    return {
+        **options,
+        'rows': rows,
+        'columns': columns,
+        'row_height': row_height,
+        'rows_range': range(rows),
+        'cells_range': range(rows * columns),
+        'latex_cells': _blank_cells_latex_cells(columns, row_height),
+    }
+
+
 def _blank_cells_latex_cells(columns, row_height):
     cells = [''] * columns
     cells[0] = rf'\rule{{0pt}}{{{row_height / 3:.1f}mm}}'
@@ -444,9 +459,43 @@ def _variant_task_payload(
     task = variant_task.task
     payload = {
         **_task_payload(task),
+        'variant_task_id': str(variant_task.pk),
         'order': variant_task.order,
         'max_points': variant_task.max_points,
+        'bank_role': getattr(
+            variant_task,
+            'bank_role',
+            TASK_BANK_ROLE_CONTROL,
+        ),
+        'render_mode': getattr(
+            variant_task,
+            'render_mode',
+            TASK_RENDER_MODE_TASK_ONLY,
+        ),
+        'is_assessable': getattr(variant_task, 'is_assessable', True),
+        'blank_cells_after': getattr(variant_task, 'blank_cells_after', False),
+        'blank_cells_rows': getattr(
+            variant_task,
+            'blank_cells_rows',
+            DEFAULT_BLANK_CELLS_ROWS,
+        ),
     }
+    if payload['blank_cells_after']:
+        payload['blank_cells'] = _blank_cells_payload(
+            {
+                'rows': payload['blank_cells_rows'],
+                'columns': getattr(
+                    variant_task,
+                    'blank_cells_columns',
+                    DEFAULT_BLANK_CELLS_COLUMNS,
+                ),
+                'row_height': getattr(
+                    variant_task,
+                    'blank_cells_row_height',
+                    DEFAULT_BLANK_CELLS_ROW_HEIGHT,
+                ),
+            }
+        )
     return _format_task_payload(payload, task_payload_formatter, request=request)
 
 

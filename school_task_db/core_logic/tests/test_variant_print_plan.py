@@ -1,0 +1,96 @@
+from unittest import TestCase
+
+from core_logic.value_objects.variant_print_plan import (
+    TASK_BANK_ROLE_DEMO,
+    TASK_BANK_ROLE_PRACTICE,
+    TASK_RENDER_MODE_TASK_ONLY,
+    TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+    VARIANT_PRINT_BLOCK_BLANK_CELLS,
+    VARIANT_PRINT_BLOCK_TASK,
+    VariantTaskPrintRow,
+    WorkTaskRoleSpec,
+    build_variant_print_plan,
+)
+
+
+class WorkTaskRoleSpecTests(TestCase):
+    def test_accepts_demo_spec_row_for_same_analog_group_use_case(self):
+        spec = WorkTaskRoleSpec(
+            analog_group_id='group-1',
+            count=2,
+            bank_role_filter=TASK_BANK_ROLE_DEMO,
+            render_mode=TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+            is_assessable=False,
+        )
+
+        self.assertEqual(spec.analog_group_id, 'group-1')
+        self.assertEqual(spec.count, 2)
+        self.assertEqual(spec.bank_role_filter, TASK_BANK_ROLE_DEMO)
+        self.assertEqual(spec.render_mode, TASK_RENDER_MODE_WITH_FULL_SOLUTION)
+        self.assertFalse(spec.is_assessable)
+
+    def test_rejects_unknown_bank_role(self):
+        with self.assertRaisesRegex(ValueError, 'Unsupported task bank role'):
+            WorkTaskRoleSpec(
+                analog_group_id='group-1',
+                count=1,
+                bank_role_filter='unknown',
+            )
+
+    def test_rejects_unknown_render_mode(self):
+        with self.assertRaisesRegex(ValueError, 'Unsupported task render mode'):
+            WorkTaskRoleSpec(
+                analog_group_id='group-1',
+                count=1,
+                render_mode='unknown',
+            )
+
+
+class VariantPrintPlanTests(TestCase):
+    def test_builds_print_blocks_and_assessment_ids_from_variant_rows(self):
+        plan = build_variant_print_plan(
+            variant_id='variant-1',
+            task_rows=[
+                VariantTaskPrintRow(
+                    variant_task_id='vt-2',
+                    task_id='task-2',
+                    order=2,
+                    bank_role=TASK_BANK_ROLE_PRACTICE,
+                    render_mode=TASK_RENDER_MODE_TASK_ONLY,
+                    is_assessable=True,
+                    max_points=3,
+                    blank_cells_after=True,
+                    blank_cells_rows=8,
+                ),
+                VariantTaskPrintRow(
+                    variant_task_id='vt-1',
+                    task_id='task-1',
+                    order=1,
+                    bank_role=TASK_BANK_ROLE_DEMO,
+                    render_mode=TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+                    is_assessable=False,
+                    max_points=0,
+                ),
+            ],
+        )
+
+        self.assertEqual(plan.variant_id, 'variant-1')
+        self.assertEqual(
+            [block.block_type for block in plan.blocks],
+            [
+                VARIANT_PRINT_BLOCK_TASK,
+                VARIANT_PRINT_BLOCK_TASK,
+                VARIANT_PRINT_BLOCK_BLANK_CELLS,
+            ],
+        )
+        self.assertEqual(
+            [block.variant_task_id for block in plan.task_blocks],
+            ['vt-1', 'vt-2'],
+        )
+        self.assertEqual(plan.assessable_variant_task_ids, ('vt-2',))
+        self.assertEqual(
+            plan.blocks[0].options['render_mode'],
+            TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+        )
+        self.assertFalse(plan.blocks[0].options['is_assessable'])
+        self.assertEqual(plan.blocks[2].options, {'rows': 8})

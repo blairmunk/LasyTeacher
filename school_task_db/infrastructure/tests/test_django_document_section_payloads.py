@@ -28,6 +28,11 @@ from core_logic.value_objects.document_recipes import (
     TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
 )
+from core_logic.value_objects.variant_print_plan import (
+    DEFAULT_BLANK_CELLS_ROWS,
+    TASK_BANK_ROLE_CONTROL,
+    TASK_RENDER_MODE_TASK_ONLY,
+)
 from curriculum.models import SubTopic, Topic
 from infrastructure.services.django_document_section_payloads import (
     DjangoWorkHeaderPayloadBuilder,
@@ -99,7 +104,7 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             source=source,
             source_detail='стр. 10',
         )
-        VariantTask.objects.create(
+        variant_task = VariantTask.objects.create(
             variant=variant,
             task=task,
             order=1,
@@ -123,8 +128,17 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
         self.assertEqual(variant_payload['duration'], 40)
         self.assertEqual(len(variant_payload['tasks']), 1)
         task_payload = variant_payload['tasks'][0]
+        self.assertEqual(task_payload['variant_task_id'], str(variant_task.pk))
         self.assertEqual(task_payload['order'], 1)
         self.assertEqual(task_payload['max_points'], 4)
+        self.assertEqual(task_payload['bank_role'], TASK_BANK_ROLE_CONTROL)
+        self.assertEqual(task_payload['render_mode'], TASK_RENDER_MODE_TASK_ONLY)
+        self.assertTrue(task_payload['is_assessable'])
+        self.assertFalse(task_payload['blank_cells_after'])
+        self.assertEqual(
+            task_payload['blank_cells_rows'],
+            DEFAULT_BLANK_CELLS_ROWS,
+        )
         self.assertEqual(task_payload['text'], 'Найдите силу')
         self.assertEqual(task_payload['answer'], '10 Н')
         self.assertEqual(task_payload['topic'], 'Динамика')

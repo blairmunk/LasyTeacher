@@ -31,8 +31,10 @@ from core_logic.value_objects.document_render_plan_factories import (
 )
 from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
+    COMMON_HEADER_SECTION,
     HEADER_SECTION,
     LEGACY_ANSWER_KEY_SECTION,
+    PAGE_BREAK_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     TASK_LIST_SECTION,
     THEORY_SECTION,
@@ -128,6 +130,80 @@ class SectionedDocumentDefaultsTests(TestCase):
             self.assertIn('10 Н', html)
             self.assertIn('Краткие решения', html)
             self.assertIn('Кратко: F = ma', html)
+
+    def test_work_html_can_render_sections_per_variant(self):
+        work = Work.objects.create(name='Контрольная', duration=45, max_score=4)
+        first_variant = Variant.objects.create(
+            work=work,
+            number=1,
+            work_name_snapshot=work.name,
+            max_score_snapshot=4,
+            duration_snapshot=45,
+        )
+        second_variant = Variant.objects.create(
+            work=work,
+            number=2,
+            work_name_snapshot=work.name,
+            max_score_snapshot=4,
+            duration_snapshot=45,
+        )
+        first_task = self.create_task(text='Первое задание', answer='1')
+        second_task = self.create_task(text='Второе задание', answer='2')
+        VariantTask.objects.create(
+            variant=first_variant,
+            task=first_task,
+            order=1,
+            max_points=4,
+        )
+        VariantTask.objects.create(
+            variant=second_variant,
+            task=second_task,
+            order=1,
+            max_points=4,
+        )
+
+        with TemporaryDirectory() as output_dir:
+            components = build_sectioned_document_components(
+                file_store=RenderedDocumentFileStore(
+                    output_dirs={'html': output_dir},
+                ),
+            )
+            engine = DjangoDocumentEngine(
+                document_builder=components.document_builder,
+                document_renderer_registry=components.document_renderer_registry,
+            )
+
+            result = engine.render_document(
+                build_work_document_render_plan(
+                    work_id=str(work.pk),
+                    work_name=work.name,
+                    options=WorkDocumentRenderOptions(renderer_type='html'),
+                    template_spec=DocumentTemplateSpec(
+                        name='Вариантная работа',
+                        template_type='work',
+                        sections=[
+                            DocumentSectionSpec(section_type=COMMON_HEADER_SECTION),
+                            DocumentSectionSpec(section_type=HEADER_SECTION),
+                            DocumentSectionSpec(section_type=TASK_LIST_SECTION),
+                            DocumentSectionSpec(section_type=PAGE_BREAK_SECTION),
+                        ],
+                    ),
+                    variant_ids=[
+                        str(first_variant.pk),
+                        str(second_variant.pk),
+                    ],
+                ),
+            )
+
+            filename = work_html_filename_from_id(work.pk)
+            html = (Path(output_dir) / filename).read_text(encoding='utf-8')
+            self.assertEqual(result.files[0].filename, filename)
+            self.assertIn('<h1>Контрольная</h1>', html)
+            self.assertIn('<h1>Контрольная. Вариант 1</h1>', html)
+            self.assertIn('<h1>Контрольная. Вариант 2</h1>', html)
+            self.assertIn('Первое задание', html)
+            self.assertIn('Второе задание', html)
+            self.assertIn('page-break-after: always', html)
 
     def test_work_html_supports_task_list_and_answers_sections(self):
         work = Work.objects.create(name='Контрольная', duration=45, max_score=4)

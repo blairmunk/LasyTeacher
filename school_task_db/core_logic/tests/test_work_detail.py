@@ -117,6 +117,8 @@ class FakeWorkRepository:
         self.work_list_filters = None
         self.variant_type = 'remedial'
         self.variant_type_request = None
+        self.work_variant_ids = []
+        self.work_variant_ids_request = None
         self.work_detail = WorkDetailWork(
             pk='work-1',
             name='Контрольная',
@@ -168,6 +170,10 @@ class FakeWorkRepository:
     def get_variant_type(self, variant_id):
         self.variant_type_request = variant_id
         return self.variant_type
+
+    def get_work_variant_ids(self, work_id):
+        self.work_variant_ids_request = work_id
+        return self.work_variant_ids
 
     def get_variant_generation_info(self, variant_id):
         self.variant_generation_id = variant_id

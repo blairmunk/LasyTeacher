@@ -23,7 +23,10 @@ from core_logic.value_objects.document_recipe_factories import (
     build_remedial_sheet_document_recipe,
     build_work_document_recipe,
 )
-from core_logic.value_objects.document_recipes import PAGE_BREAK_SECTION
+from core_logic.value_objects.document_recipes import (
+    COMMON_HEADER_SECTION,
+    PAGE_BREAK_SECTION,
+)
 
 
 def build_work_document_render_plan(
@@ -31,6 +34,7 @@ def build_work_document_render_plan(
     work_name: str,
     options: WorkDocumentRenderOptions,
     template_spec: DocumentTemplateSpec | None = None,
+    variant_ids: list[str] | None = None,
 ) -> DocumentRenderPlan:
     return build_document_render_plan(
         source=build_work_document_source(
@@ -40,6 +44,7 @@ def build_work_document_render_plan(
         recipe=build_work_document_recipe_for_render(
             options=options,
             template_spec=template_spec,
+            variant_ids=variant_ids,
         ),
         render_target=options.render_target,
     )
@@ -116,12 +121,53 @@ def build_remedial_sheet_batch_document_source(
 def build_work_document_recipe_for_render(
     options: WorkDocumentRenderOptions,
     template_spec: DocumentTemplateSpec | None = None,
+    variant_ids: list[str] | None = None,
 ) -> DocumentRecipe:
-    return _recipe_from_template_or_default(
+    recipe = _recipe_from_template_or_default(
         template_spec=template_spec,
         default_recipe_builder=(
             lambda: build_work_document_recipe(options.build_options)
         ),
+    )
+    return expand_work_document_recipe_per_variant(recipe, variant_ids)
+
+
+def expand_work_document_recipe_per_variant(
+    recipe: DocumentRecipe,
+    variant_ids: list[str] | None,
+) -> DocumentRecipe:
+    if not variant_ids:
+        return recipe
+
+    common_sections = [
+        section
+        for section in recipe.sections
+        if section.section_type == COMMON_HEADER_SECTION
+    ]
+    repeated_sections = [
+        section
+        for section in recipe.sections
+        if section.section_type != COMMON_HEADER_SECTION
+    ]
+    sections = list(common_sections)
+    last_index = len(variant_ids) - 1
+    for index, variant_id in enumerate(variant_ids):
+        for section in repeated_sections:
+            if section.section_type == PAGE_BREAK_SECTION and index == last_index:
+                continue
+            sections.append(
+                _section_with_options(
+                    section,
+                    {
+                        **dict(section.options),
+                        'variant_id': variant_id,
+                    },
+                )
+            )
+    return DocumentRecipe(
+        document_type=recipe.document_type,
+        sections=sections,
+        presentation=recipe.presentation,
     )
 
 
@@ -176,3 +222,14 @@ def _recipe_from_template_or_default(
     if template_spec:
         return template_spec.to_recipe()
     return default_recipe_builder()
+
+
+def _section_with_options(
+    section: DocumentSectionSpec,
+    options: dict,
+) -> DocumentSectionSpec:
+    return DocumentSectionSpec(
+        section_type=section.section_type,
+        title=section.title,
+        options=options,
+    )

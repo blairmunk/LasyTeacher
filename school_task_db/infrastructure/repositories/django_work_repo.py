@@ -420,6 +420,20 @@ class DjangoWorkRepository(IWorkRepository):
             )
         ]
 
+    def get_work_variant_ids(self, work_id: str) -> List[str]:
+        return [
+            str(variant_id)
+            for variant_id in Variant.objects.filter(
+                work_id=work_id,
+            ).order_by(
+                'number',
+                'pk',
+            ).values_list(
+                'pk',
+                flat=True,
+            )
+        ]
+
     def _score_status(self, points, max_points):
         if (
             isinstance(points, (int, float))

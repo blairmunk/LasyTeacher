@@ -65,6 +65,7 @@ class RenderWorkDocumentUseCase:
                 status=DOCUMENT_RENDER_STATUS_NOT_FOUND,
                 renderer_type=renderer_type,
             )
+        variant_ids = self.work_repo.get_work_variant_ids(request.work_id)
 
         return self.render_document_use_case.execute(
             RenderDocumentRequest(
@@ -78,6 +79,7 @@ class RenderWorkDocumentUseCase:
                         request_template_id=request.template_id,
                         document_template_repo=self.document_template_repo,
                     ),
+                    variant_ids=variant_ids,
                 ),
                 source_name=work_name,
                 empty_status=DOCUMENT_RENDER_STATUS_GENERATED,

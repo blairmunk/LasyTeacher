@@ -1062,12 +1062,27 @@ class WorkDetailViewTests(TestCase):
         render_plan = render_document.call_args.args[0]
         self.assertEqual(
             render_plan.recipe.section_types,
-            ('header', 'task_list', 'answers', 'short_solutions',
-             'full_solutions'),
+            (
+                'header',
+                'task_list',
+                'answers',
+                'short_solutions',
+                'full_solutions',
+            ),
         )
         self.assertEqual(
-            render_plan.recipe.sections[1].options,
-            {'include_hints': True, 'include_instructions': True},
+            {
+                key: render_plan.recipe.sections[1].options[key]
+                for key in ('include_hints', 'include_instructions')
+            },
+            {
+                'include_hints': True,
+                'include_instructions': True,
+            },
+        )
+        self.assertEqual(
+            render_plan.recipe.sections[1].options['variant_id'],
+            str(self.variant.pk),
         )
 
     def test_render_work_ajax_returns_404_for_missing_work(self):

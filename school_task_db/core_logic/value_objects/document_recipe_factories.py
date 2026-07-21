@@ -5,6 +5,7 @@ from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
+    PAGE_BREAK_SECTION,
     ORIGINAL_MISTAKES_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     SHORT_SOLUTIONS_SECTION,
@@ -41,6 +42,8 @@ def build_work_document_recipe(
         sections.append(DocumentSectionSpec(section_type=SHORT_SOLUTIONS_SECTION))
     if content_config['include_full_solutions']:
         sections.append(DocumentSectionSpec(section_type=FULL_SOLUTIONS_SECTION))
+
+    sections.append(DocumentSectionSpec(section_type=PAGE_BREAK_SECTION))
 
     return build_document_recipe_from_sections_config(
         document_type=WORK_DOCUMENT_TYPE,

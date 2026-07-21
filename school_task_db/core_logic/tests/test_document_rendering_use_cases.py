@@ -81,6 +81,7 @@ class FakeWorkRepository:
         self,
         variant_type='remedial',
         work_name='Контрольная',
+        variant_ids=None,
         remedial_variant_ids=None,
     ):
         self.variant_type = variant_type
@@ -89,6 +90,8 @@ class FakeWorkRepository:
         self.work_name_request = None
         self.remedial_variant_ids = remedial_variant_ids or []
         self.remedial_variant_ids_request = None
+        self.variant_ids = variant_ids or ['variant-1']
+        self.variant_ids_request = None
 
     def get_work_name(self, work_id):
         self.work_name_request = work_id
@@ -101,6 +104,10 @@ class FakeWorkRepository:
     def get_work_remedial_variant_ids(self, work_id):
         self.remedial_variant_ids_request = work_id
         return self.remedial_variant_ids
+
+    def get_work_variant_ids(self, work_id):
+        self.variant_ids_request = work_id
+        return self.variant_ids
 
 
 class FakeRenderRemedialSheetDocumentUseCase:

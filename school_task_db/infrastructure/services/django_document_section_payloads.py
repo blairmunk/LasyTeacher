@@ -5,6 +5,7 @@ from core_logic.services.document_builder import (
 )
 from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
+    COMMON_HEADER_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
     LEGACY_ANSWER_KEY_SECTION,
@@ -35,12 +36,20 @@ class DjangoWorkHeaderPayloadBuilder:
 
     def build_payload(self, request):
         work = self.get_work_source(request.source.source_id)
+        variant = _work_variant_from_request(work, request)
+        title = work.name
+        duration = work.duration
+        max_score = work.effective_max_score
+        if variant is not None:
+            title = f'{work.name}. Вариант {variant.number}'
+            duration = variant.display_duration
+            max_score = variant.display_max_score
         return {
             **dict(request.section.options),
-            'title': work.name,
+            'title': title,
             'work_type': work.work_type,
-            'duration': work.duration,
-            'max_score': work.effective_max_score,
+            'duration': duration,
+            'max_score': max_score,
         }
 
 
@@ -57,7 +66,7 @@ class DjangoWorkTaskListPayloadBuilder:
                 task_payload_formatter=self.task_payload_formatter,
                 request=request,
             )
-            for variant in work.variant_set.order_by('number', 'pk')
+            for variant in _work_variants_from_request(work, request)
         ]
         return {
             **dict(request.section.options),
@@ -89,7 +98,7 @@ class DjangoWorkTheoryPayloadBuilder:
 
     def _topic_blocks(self, work, request=None, include_subtopics=False):
         topic_map = {}
-        for variant in work.variant_set.order_by('number', 'pk'):
+        for variant in _work_variants_from_request(work, request):
             variant_tasks = (
                 variant.varianttask_set
                 .select_related('task', 'task__topic', 'task__subtopic')
@@ -225,6 +234,12 @@ def build_work_section_payload_builder_registry(
         task_payload_formatter=task_payload_formatter,
     )
     registry.register(
+        COMMON_HEADER_SECTION,
+        DjangoWorkHeaderPayloadBuilder(get_work_source=get_work_source),
+        document_type=WORK_DOCUMENT_TYPE,
+        source_type=WORK_SOURCE_TYPE,
+    )
+    registry.register(
         HEADER_SECTION,
         DjangoWorkHeaderPayloadBuilder(get_work_source=get_work_source),
         document_type=WORK_DOCUMENT_TYPE,
@@ -317,6 +332,21 @@ def build_remedial_sheet_section_payload_builder_registry(
 
 def _get_work_source(work_id):
     return Work.objects.get(pk=work_id)
+
+
+def _work_variants_from_request(work, request):
+    variants = work.variant_set.order_by('number', 'pk')
+    variant_id = request.section.options.get('variant_id')
+    if variant_id:
+        variants = variants.filter(pk=variant_id)
+    return variants
+
+
+def _work_variant_from_request(work, request):
+    variant_id = request.section.options.get('variant_id')
+    if not variant_id:
+        return None
+    return work.variant_set.filter(pk=variant_id).first()
 
 
 def _remedial_variant_id(request):

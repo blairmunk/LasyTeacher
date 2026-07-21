@@ -2,6 +2,7 @@
 
 from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
+    COMMON_HEADER_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
     LEGACY_ANSWER_KEY_SECTION,
@@ -17,6 +18,7 @@ from core_logic.value_objects.document_recipes import (
 
 
 WORK_HTML_SECTION_TEMPLATES = {
+    COMMON_HEADER_SECTION: 'documents/html/sections/header.html',
     HEADER_SECTION: 'documents/html/sections/header.html',
     TASK_LIST_SECTION: 'documents/html/sections/task_list.html',
     LEGACY_TASK_VARIANTS_SECTION: 'documents/html/sections/task_list.html',
@@ -31,6 +33,7 @@ WORK_HTML_SECTION_TEMPLATES = {
 WORK_HTML_WRAPPER_TEMPLATE = 'documents/html/base/document.html'
 
 WORK_LATEX_SECTION_TEMPLATES = {
+    COMMON_HEADER_SECTION: 'documents/latex/sections/header.tex',
     HEADER_SECTION: 'documents/latex/sections/header.tex',
     TASK_LIST_SECTION: 'documents/latex/sections/task_list.tex',
     LEGACY_TASK_VARIANTS_SECTION: 'documents/latex/sections/task_list.tex',

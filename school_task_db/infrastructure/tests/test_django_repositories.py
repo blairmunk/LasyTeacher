@@ -855,6 +855,26 @@ class DjangoRemedialRepositoryTests(TestCase):
             [str(first_variant.pk), str(second_variant.pk)],
         )
 
+    def test_work_repository_returns_variant_ids_for_work(self):
+        work = Work.objects.create(name='Контрольная')
+        second_variant = Variant.objects.create(
+            work=work,
+            number=2,
+            work_name_snapshot=work.name,
+        )
+        first_variant = Variant.objects.create(
+            work=work,
+            number=1,
+            work_name_snapshot=work.name,
+        )
+
+        variant_ids = DjangoWorkRepository().get_work_variant_ids(str(work.pk))
+
+        self.assertEqual(
+            variant_ids,
+            [str(first_variant.pk), str(second_variant.pk)],
+        )
+
     def test_work_repository_returns_detail_page_data(self):
         repo = DjangoWorkRepository()
 

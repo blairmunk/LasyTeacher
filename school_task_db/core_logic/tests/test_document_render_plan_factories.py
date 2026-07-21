@@ -22,7 +22,9 @@ from core_logic.value_objects.document_render_plan_factories import (
 )
 from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
+    COMMON_HEADER_SECTION,
     HEADER_SECTION,
+    PAGE_BREAK_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     TASK_LIST_SECTION,
     WORK_DOCUMENT_TYPE,
@@ -58,7 +60,7 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         self.assertEqual(recipe.document_type, WORK_DOCUMENT_TYPE)
         self.assertEqual(
             recipe.section_types,
-            (HEADER_SECTION, TASK_LIST_SECTION, ANSWERS_SECTION),
+            (HEADER_SECTION, TASK_LIST_SECTION, ANSWERS_SECTION, PAGE_BREAK_SECTION),
         )
 
     def test_build_work_document_recipe_for_render_uses_template_spec(self):
@@ -102,7 +104,7 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         self.assertEqual(plan.render_target.renderer_type, 'html')
         self.assertEqual(
             plan.recipe.section_types,
-            ('header', 'task_list', 'answers'),
+            ('header', 'task_list', 'answers', 'page_break'),
         )
 
     def test_build_work_document_render_plan_uses_template_spec(self):
@@ -133,6 +135,45 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         self.assertEqual(
             plan.recipe.sections[0].options,
             {'source': 'new_tasks'},
+        )
+
+    def test_build_work_document_render_plan_repeats_sections_per_variant(self):
+        template_spec = DocumentTemplateSpec(
+            name='Работа по вариантам',
+            template_type='work',
+            sections=[
+                DocumentSectionSpec(section_type=COMMON_HEADER_SECTION),
+                DocumentSectionSpec(section_type=HEADER_SECTION),
+                DocumentSectionSpec(section_type=TASK_LIST_SECTION),
+                DocumentSectionSpec(section_type=PAGE_BREAK_SECTION),
+            ],
+        )
+
+        plan = build_work_document_render_plan(
+            work_id='work-1',
+            work_name='Контрольная',
+            options=WorkDocumentRenderOptions(renderer_type='html'),
+            template_spec=template_spec,
+            variant_ids=['variant-1', 'variant-2'],
+        )
+
+        self.assertEqual(
+            plan.recipe.section_types,
+            (
+                COMMON_HEADER_SECTION,
+                HEADER_SECTION,
+                TASK_LIST_SECTION,
+                PAGE_BREAK_SECTION,
+                HEADER_SECTION,
+                TASK_LIST_SECTION,
+            ),
+        )
+        self.assertEqual(
+            [
+                section.options.get('variant_id')
+                for section in plan.recipe.sections
+            ],
+            [None, 'variant-1', 'variant-1', 'variant-1', 'variant-2', 'variant-2'],
         )
 
     def test_build_remedial_sheet_document_render_plan(self):

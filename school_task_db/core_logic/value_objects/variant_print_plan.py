@@ -24,8 +24,6 @@ from core_logic.value_objects.task_print_settings import (
     TASK_RENDER_MODE_WITH_FULL_SOLUTION,
     TASK_RENDER_MODE_WITH_SHORT_SOLUTION,
     TASK_RENDER_MODES,
-    validate_task_bank_role,
-    validate_task_render_mode,
     validate_task_specific_bank_role,
 )
 from core_logic.value_objects.variant_content_plan import (
@@ -33,6 +31,7 @@ from core_logic.value_objects.variant_content_plan import (
     VariantContentPlan,
     build_variant_content_plan,
 )
+from core_logic.value_objects.work_specification import WorkTaskRoleSpec
 
 VARIANT_PRINT_BLOCK_TASK = 'task'
 VARIANT_PRINT_BLOCK_BLANK_CELLS = 'blank_cells'
@@ -43,33 +42,6 @@ VARIANT_PRINT_BLOCK_TYPES = frozenset(
         VARIANT_PRINT_BLOCK_BLANK_CELLS,
     )
 )
-
-
-@dataclass(frozen=True)
-class WorkTaskRoleSpec:
-    """Specification row for selecting and printing tasks from a bank group."""
-
-    analog_group_id: str
-    count: int
-    order: int = 0
-    bank_role_filter: str = TASK_BANK_ROLE_ANY
-    render_mode: str = TASK_RENDER_MODE_TASK_ONLY
-    is_assessable: bool = True
-    blank_cells_after: bool = False
-    blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
-    weight: int = 1
-
-    def __post_init__(self):
-        if not self.analog_group_id:
-            raise ValueError('analog_group_id is required')
-        if self.count < 1:
-            raise ValueError('count must be positive')
-        if self.weight < 0:
-            raise ValueError('weight must be non-negative')
-        if self.blank_cells_rows < 1:
-            raise ValueError('blank_cells_rows must be positive')
-        validate_task_bank_role(self.bank_role_filter)
-        validate_task_render_mode(self.render_mode)
 
 
 VariantTaskPrintRow = VariantContentItem

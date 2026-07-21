@@ -14,9 +14,7 @@ from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_ANY,
     TASK_RENDER_MODE_TASK_ONLY,
 )
-from core_logic.value_objects.variant_print_plan import (
-    WorkTaskRoleSpec,
-)
+from core_logic.value_objects.work_specification import WorkTaskRoleSpec
 
 
 @dataclass(frozen=True)

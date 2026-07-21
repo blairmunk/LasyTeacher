@@ -8,7 +8,7 @@ from core_logic.interfaces.work_repo import (
     CreateWorkParams,
     IWorkRepository,
 )
-from core_logic.value_objects.variant_print_plan import WorkTaskRoleSpec
+from core_logic.value_objects.work_specification import WorkTaskRoleSpec
 
 
 @dataclass(frozen=True)

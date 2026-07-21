@@ -1,5 +1,10 @@
 from django.db import models
 from django.urls import reverse
+
+from core_logic.value_objects.variant_print_plan import (
+    TASK_BANK_ROLE_CONTROL,
+    TASK_BANK_ROLE_SPECIFIC_CHOICES,
+)
 from core.models import BaseModel
 
 from tasks.models import Task
@@ -58,6 +63,13 @@ class TaskGroup(BaseModel):
     """Промежуточная модель для связи заданий и групп"""
     task = models.ForeignKey('tasks.Task', on_delete=models.CASCADE, verbose_name='Задание')
     group = models.ForeignKey(AnalogGroup, on_delete=models.CASCADE, verbose_name='Группа')
+    bank_role = models.CharField(
+        'Роль задания в банке',
+        max_length=20,
+        choices=TASK_BANK_ROLE_SPECIFIC_CHOICES,
+        default=TASK_BANK_ROLE_CONTROL,
+        db_index=True,
+    )
     
     class Meta:
         verbose_name = 'Задание в группе'
@@ -65,4 +77,4 @@ class TaskGroup(BaseModel):
         unique_together = ['task', 'group']
     
     def __str__(self):
-        return f"{self.task.topic} в {self.group.name}"
+        return f"{self.task.topic} в {self.group.name} ({self.get_bank_role_display()})"

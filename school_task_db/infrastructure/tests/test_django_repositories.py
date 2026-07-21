@@ -34,6 +34,12 @@ from core_logic.use_cases.create_work_from_orphans import (
     CreateWorkFromOrphansRequest,
     CreateWorkFromOrphansUseCase,
 )
+from core_logic.value_objects.variant_print_plan import (
+    DEFAULT_BLANK_CELLS_ROWS,
+    TASK_BANK_ROLE_DEMO,
+    TASK_BANK_ROLE_PRACTICE,
+    TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+)
 from codifier.models import CodifierSpec, ContentEntry, Requirement
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
@@ -1241,6 +1247,65 @@ class DjangoRemedialRepositoryTests(TestCase):
             1,
         )
 
+    def test_work_repository_composes_variant_with_role_filtered_snapshot_rows(self):
+        work = Work.objects.create(
+            name='Рабочий лист',
+            work_type='practice',
+            max_score=0,
+        )
+        analog_group = AnalogGroup.objects.create(name='Один закон, разные роли')
+        demo_task = self._task('Демо задача', difficulty=4)
+        practice_task = self._task('Самостоятельная задача', difficulty=3)
+        TaskGroup.objects.create(
+            task=demo_task,
+            group=analog_group,
+            bank_role=TASK_BANK_ROLE_DEMO,
+        )
+        TaskGroup.objects.create(
+            task=practice_task,
+            group=analog_group,
+            bank_role=TASK_BANK_ROLE_PRACTICE,
+        )
+        WorkAnalogGroup.objects.create(
+            work=work,
+            analog_group=analog_group,
+            order=1,
+            count=1,
+            weight=4,
+            bank_role_filter=TASK_BANK_ROLE_DEMO,
+            render_mode=TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+            is_assessable=False,
+            blank_cells_after=True,
+            blank_cells_rows=9,
+        )
+        WorkAnalogGroup.objects.create(
+            work=work,
+            analog_group=analog_group,
+            order=2,
+            count=1,
+            weight=3,
+            bank_role_filter=TASK_BANK_ROLE_PRACTICE,
+        )
+        repo = DjangoWorkRepository()
+
+        created_count = repo.compose_variants(str(work.pk), count=1)
+
+        variant = Variant.objects.get(work=work)
+        rows = list(variant.varianttask_set.select_related('task').order_by('order'))
+        self.assertEqual(created_count, 1)
+        self.assertEqual(variant.max_score_snapshot, 3)
+        self.assertEqual([row.task for row in rows], [demo_task, practice_task])
+        self.assertEqual(rows[0].bank_role, TASK_BANK_ROLE_DEMO)
+        self.assertEqual(rows[0].render_mode, TASK_RENDER_MODE_WITH_FULL_SOLUTION)
+        self.assertFalse(rows[0].is_assessable)
+        self.assertTrue(rows[0].blank_cells_after)
+        self.assertEqual(rows[0].blank_cells_rows, 9)
+        self.assertEqual(rows[0].max_points, 0)
+        self.assertEqual(rows[1].bank_role, TASK_BANK_ROLE_PRACTICE)
+        self.assertTrue(rows[1].is_assessable)
+        self.assertEqual(rows[1].blank_cells_rows, DEFAULT_BLANK_CELLS_ROWS)
+        self.assertEqual(rows[1].max_points, 3)
+
     def test_work_repository_creates_work_from_orphan_variants(self):
         first_orphan = Variant.objects.create(
             work=None,
@@ -1525,6 +1590,15 @@ class DjangoRemedialRepositoryTests(TestCase):
             category='suggestion',
             usage_count=3,
         )
+        demo_task = self._task('Демо с решением', difficulty=4)
+        VariantTask.objects.create(
+            variant=self.source_variant,
+            task=demo_task,
+            order=3,
+            max_points=0,
+            weight=4,
+            is_assessable=False,
+        )
         repo = DjangoReviewRepository()
 
         participation = repo.get_participation(str(self.participation.pk))
@@ -1536,6 +1610,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(participation.student.last_name, 'Петров')
         self.assertEqual(participation.event.name, self.event.name)
         self.assertEqual(participation.variant.number, 1)
+        self.assertEqual(len(variant_tasks), 2)
         self.assertEqual(variant_tasks[0].task.text, self.original_weak.text)
         self.assertEqual(variant_tasks[0].task.topic.name, self.topic.name)
         self.assertEqual(variant_tasks[0].weight, 2)

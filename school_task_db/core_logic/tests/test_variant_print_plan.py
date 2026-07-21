@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 from core_logic.value_objects.variant_print_plan import (
+    TASK_BANK_ROLE_ANY,
     TASK_BANK_ROLE_DEMO,
     TASK_BANK_ROLE_PRACTICE,
     TASK_RENDER_MODE_TASK_ONLY,
@@ -44,6 +45,15 @@ class WorkTaskRoleSpecTests(TestCase):
                 count=1,
                 render_mode='unknown',
             )
+
+    def test_accepts_any_as_spec_filter_only(self):
+        spec = WorkTaskRoleSpec(
+            analog_group_id='group-1',
+            count=1,
+            bank_role_filter=TASK_BANK_ROLE_ANY,
+        )
+
+        self.assertEqual(spec.bank_role_filter, TASK_BANK_ROLE_ANY)
 
 
 class VariantPrintPlanTests(TestCase):
@@ -94,3 +104,12 @@ class VariantPrintPlanTests(TestCase):
         )
         self.assertFalse(plan.blocks[0].options['is_assessable'])
         self.assertEqual(plan.blocks[2].options, {'rows': 8})
+
+    def test_rejects_any_role_for_concrete_variant_task_row(self):
+        with self.assertRaisesRegex(ValueError, 'Unsupported specific task bank role'):
+            VariantTaskPrintRow(
+                variant_task_id='vt-1',
+                task_id='task-1',
+                order=1,
+                bank_role=TASK_BANK_ROLE_ANY,
+            )

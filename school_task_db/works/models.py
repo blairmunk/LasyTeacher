@@ -1,5 +1,15 @@
 from django.db import models
 from django.urls import reverse
+
+from core_logic.value_objects.variant_print_plan import (
+    DEFAULT_BLANK_CELLS_ROWS,
+    TASK_BANK_ROLE_ANY,
+    TASK_BANK_ROLE_CHOICES,
+    TASK_BANK_ROLE_CONTROL,
+    TASK_BANK_ROLE_SPECIFIC_CHOICES,
+    TASK_RENDER_MODE_CHOICES,
+    TASK_RENDER_MODE_TASK_ONLY,
+)
 from core.models import BaseModel
 import random
 
@@ -35,6 +45,7 @@ class Work(BaseModel):
         return sum(
             wg.weight * wg.count
             for wg in self.workanaloggroup_set.all()
+            if wg.is_assessable
         )
 
 
@@ -62,7 +73,7 @@ class Work(BaseModel):
         task_slots = []
         for wg in work_groups:
             for _ in range(wg.count):
-                task_slots.append((wg.weight, wg))
+                task_slots.append((wg.weight if wg.is_assessable else 0, wg))
 
         total_weight = sum(w for w, _ in task_slots)
 
@@ -126,14 +137,24 @@ class Work(BaseModel):
                 available_task_groups = TaskGroup.objects.filter(
                     group=work_group.analog_group
                 )
-                available_tasks = [tg.task for tg in available_task_groups]
+                if work_group.bank_role_filter != TASK_BANK_ROLE_ANY:
+                    available_task_groups = available_task_groups.filter(
+                        bank_role=work_group.bank_role_filter,
+                    )
+                available_task_groups = list(
+                    available_task_groups.select_related('task')
+                )
 
-                if len(available_tasks) >= work_group.count:
-                    selected_tasks = random.sample(available_tasks, work_group.count)
+                if len(available_task_groups) >= work_group.count:
+                    selected_task_groups = random.sample(
+                        available_task_groups,
+                        work_group.count,
+                    )
                 else:
-                    selected_tasks = available_tasks
+                    selected_task_groups = available_task_groups
 
-                for task in selected_tasks:
+                for task_group in selected_task_groups:
+                    task = task_group.task
                     max_pts = distribution[task_idx][0] if task_idx < len(distribution) else 0
                     VariantTask.objects.create(
                         variant=variant,
@@ -141,6 +162,11 @@ class Work(BaseModel):
                         order=task_order,
                         max_points=max_pts,
                         weight=work_group.weight,  # deprecated, для обратной совместимости
+                        bank_role=task_group.bank_role,
+                        render_mode=work_group.render_mode,
+                        is_assessable=work_group.is_assessable,
+                        blank_cells_after=work_group.blank_cells_after,
+                        blank_cells_rows=work_group.blank_cells_rows,
                     )
                     task_order += 1
                     task_idx += 1
@@ -197,15 +223,39 @@ class WorkAnalogGroup(BaseModel):
     order = models.PositiveIntegerField('Порядок в работе', default=0)
     weight = models.PositiveIntegerField('Вес задания', default=1,
                                           help_text='Вес для нормировки баллов')
+    bank_role_filter = models.CharField(
+        'Роль заданий',
+        max_length=20,
+        choices=TASK_BANK_ROLE_CHOICES,
+        default=TASK_BANK_ROLE_ANY,
+        help_text='Какие задания выбирать из группы аналогов',
+    )
+    render_mode = models.CharField(
+        'Режим печати',
+        max_length=40,
+        choices=TASK_RENDER_MODE_CHOICES,
+        default=TASK_RENDER_MODE_TASK_ONLY,
+    )
+    is_assessable = models.BooleanField('Оценивать', default=True)
+    blank_cells_after = models.BooleanField(
+        'Пустые клетки после задания',
+        default=False,
+    )
+    blank_cells_rows = models.PositiveIntegerField(
+        'Строк клеток',
+        default=DEFAULT_BLANK_CELLS_ROWS,
+    )
 
     class Meta:
         verbose_name = 'Группа заданий в работе'
         verbose_name_plural = 'Группы заданий в работе'
-        unique_together = ['work', 'analog_group']
         ordering = ['order', 'pk']
 
     def __str__(self):
-        return f"{self.work.name} — #{self.order} {self.analog_group.name} (×{self.count}, вес={self.weight})"
+        return (
+            f"{self.work.name} — #{self.order} {self.analog_group.name} "
+            f"(×{self.count}, вес={self.weight})"
+        )
 
 
 class Variant(BaseModel):
@@ -299,6 +349,27 @@ class VariantTask(BaseModel):
                                               help_text='Рассчитано при генерации из спецификации')
     # DEPRECATED: оставлено для обратной совместимости с генераторами
     weight = models.PositiveIntegerField('Вес (deprecated)', default=1)
+    bank_role = models.CharField(
+        'Роль задания',
+        max_length=20,
+        choices=TASK_BANK_ROLE_SPECIFIC_CHOICES,
+        default=TASK_BANK_ROLE_CONTROL,
+    )
+    render_mode = models.CharField(
+        'Режим печати',
+        max_length=40,
+        choices=TASK_RENDER_MODE_CHOICES,
+        default=TASK_RENDER_MODE_TASK_ONLY,
+    )
+    is_assessable = models.BooleanField('Оценивать', default=True)
+    blank_cells_after = models.BooleanField(
+        'Пустые клетки после задания',
+        default=False,
+    )
+    blank_cells_rows = models.PositiveIntegerField(
+        'Строк клеток',
+        default=DEFAULT_BLANK_CELLS_ROWS,
+    )
 
     class Meta:
         verbose_name = 'Задание в варианте'

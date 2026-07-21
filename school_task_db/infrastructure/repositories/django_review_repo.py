@@ -147,6 +147,7 @@ class DjangoReviewRepository(IReviewRepository):
 
         variant_tasks = VariantTask.objects.filter(
             variant=participation.variant,
+            is_assessable=True,
         ).select_related(
             'task',
             'task__topic',
@@ -169,7 +170,7 @@ class DjangoReviewRepository(IReviewRepository):
                         else None
                     ),
                 ),
-                weight=variant_task.weight,
+                weight=variant_task.max_points or variant_task.weight,
             )
             for variant_task in variant_tasks
         ]

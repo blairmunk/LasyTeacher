@@ -48,6 +48,14 @@ class VariantAdmin(admin.ModelAdmin):
 
 @admin.register(WorkAnalogGroup)
 class WorkAnalogGroupAdmin(admin.ModelAdmin):
-    list_display = ['work', 'analog_group', 'count', 'order']
-    list_filter = ['work', 'analog_group']
+    list_display = [
+        'work',
+        'analog_group',
+        'bank_role_filter',
+        'render_mode',
+        'is_assessable',
+        'count',
+        'order',
+    ]
+    list_filter = ['work', 'analog_group', 'bank_role_filter', 'render_mode']
     search_fields = ['work__name', 'analog_group__name']

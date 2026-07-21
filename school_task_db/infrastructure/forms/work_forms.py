@@ -23,6 +23,11 @@ from core_logic.value_objects.document_render_options import (
     build_work_render_options,
     renderer_type_from_data,
 )
+from core_logic.value_objects.variant_print_plan import (
+    DEFAULT_BLANK_CELLS_ROWS,
+    TASK_BANK_ROLE_ANY,
+    TASK_RENDER_MODE_TASK_ONLY,
+)
 from infrastructure.forms.work_django_forms import WorkAnalogGroupFormSet
 from works.models import Work
 
@@ -98,6 +103,17 @@ class WorkFormAdapter:
                     order=row.get('order') or 0,
                     count=row.get('count') or 1,
                     weight=row.get('weight') or 1,
+                    bank_role_filter=(
+                        row.get('bank_role_filter') or TASK_BANK_ROLE_ANY
+                    ),
+                    render_mode=(
+                        row.get('render_mode') or TASK_RENDER_MODE_TASK_ONLY
+                    ),
+                    is_assessable=row.get('is_assessable', True),
+                    blank_cells_after=row.get('blank_cells_after', False),
+                    blank_cells_rows=(
+                        row.get('blank_cells_rows') or DEFAULT_BLANK_CELLS_ROWS
+                    ),
                 )
             )
         return specs

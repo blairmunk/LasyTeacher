@@ -21,6 +21,11 @@ from core_logic.entities.work import (
     VariantDetailTaskRow,
     VariantDetailVariant,
 )
+from core_logic.value_objects.variant_print_plan import (
+    DEFAULT_BLANK_CELLS_ROWS,
+    TASK_BANK_ROLE_ANY,
+    TASK_RENDER_MODE_TASK_ONLY,
+)
 
 
 @dataclass(frozen=True)
@@ -60,6 +65,11 @@ class CreateWorkAnalogGroupParams:
     order: int
     count: int
     weight: int
+    bank_role_filter: str = TASK_BANK_ROLE_ANY
+    render_mode: str = TASK_RENDER_MODE_TASK_ONLY
+    is_assessable: bool = True
+    blank_cells_after: bool = False
+    blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
 
 
 @dataclass(frozen=True)

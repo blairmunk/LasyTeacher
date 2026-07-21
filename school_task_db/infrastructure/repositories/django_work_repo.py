@@ -31,6 +31,11 @@ from core_logic.entities.work import (
     WorkDetailWork,
     WorkListItem,
 )
+from core_logic.value_objects.variant_print_plan import (
+    TASK_BANK_ROLE_ANY,
+    TASK_BANK_ROLE_CONTROL,
+    TASK_BANK_ROLE_REMEDIAL,
+)
 from core_logic.interfaces.work_repo import (
     AttachVariantsToWorkParams,
     CreatedWorkVariantRef,
@@ -138,9 +143,8 @@ class DjangoWorkRepository(IWorkRepository):
             VariantGenerationGroup(
                 group_name=work_group.analog_group.name,
                 requested_count=work_group.count,
-                available_count=TaskGroup.objects.filter(
-                    group=work_group.analog_group,
-                ).count(),
+                available_count=self._count_available_group_tasks(work_group),
+                bank_role_filter=work_group.bank_role_filter,
             )
             for work_group in WorkAnalogGroup.objects.filter(
                 work_id=work_id,
@@ -199,9 +203,7 @@ class DjangoWorkRepository(IWorkRepository):
                 wg=self._build_work_detail_spec_group(item['wg']),
                 per_task=item['per_task'],
                 total_points=item['total_points'],
-                available_count=TaskGroup.objects.filter(
-                    group=item['wg'].analog_group,
-                ).count(),
+                available_count=self._count_available_group_tasks(item['wg']),
             )
             for item in work.get_spec_preview()
         ]
@@ -218,6 +220,11 @@ class DjangoWorkRepository(IWorkRepository):
             ),
             count=work_group.count,
             weight=work_group.weight,
+            bank_role_filter=work_group.bank_role_filter,
+            render_mode=work_group.render_mode,
+            is_assessable=work_group.is_assessable,
+            blank_cells_after=work_group.blank_cells_after,
+            blank_cells_rows=work_group.blank_cells_rows,
         )
 
     def get_variant_detail(self, variant_id: str):
@@ -303,6 +310,11 @@ class DjangoWorkRepository(IWorkRepository):
                 ),
                 order=variant_task.order,
                 max_points=variant_task.max_points,
+                bank_role=variant_task.bank_role,
+                render_mode=variant_task.render_mode,
+                is_assessable=variant_task.is_assessable,
+                blank_cells_after=variant_task.blank_cells_after,
+                blank_cells_rows=variant_task.blank_cells_rows,
             )
             for variant_task in variant_tasks
         ]
@@ -625,6 +637,11 @@ class DjangoWorkRepository(IWorkRepository):
             order=params.order,
             count=params.count,
             weight=params.weight,
+            bank_role_filter=params.bank_role_filter,
+            render_mode=params.render_mode,
+            is_assessable=params.is_assessable,
+            blank_cells_after=params.blank_cells_after,
+            blank_cells_rows=params.blank_cells_rows,
         )
 
     def replace_work_analog_groups(
@@ -644,6 +661,11 @@ class DjangoWorkRepository(IWorkRepository):
                     order=spec.order,
                     count=spec.count,
                     weight=spec.weight,
+                    bank_role_filter=spec.bank_role_filter,
+                    render_mode=spec.render_mode,
+                    is_assessable=spec.is_assessable,
+                    blank_cells_after=spec.blank_cells_after,
+                    blank_cells_rows=spec.blank_cells_rows,
                 )
                 for spec in specs
             ])
@@ -669,12 +691,18 @@ class DjangoWorkRepository(IWorkRepository):
             if not task:
                 continue
             points = task.difficulty or 1
+            bank_role = (
+                TASK_BANK_ROLE_REMEDIAL
+                if params.variant_type == 'remedial'
+                else TASK_BANK_ROLE_CONTROL
+            )
             VariantTask.objects.create(
                 variant=variant,
                 task=task,
                 order=order,
                 weight=points,
                 max_points=points,
+                bank_role=bank_role,
             )
 
         return str(variant.pk)
@@ -721,3 +749,9 @@ class DjangoWorkRepository(IWorkRepository):
             variant_id=str(variant.pk),
             tasks_count=len(ordered_tasks),
         )
+
+    def _count_available_group_tasks(self, work_group) -> int:
+        queryset = TaskGroup.objects.filter(group=work_group.analog_group)
+        if work_group.bank_role_filter != TASK_BANK_ROLE_ANY:
+            queryset = queryset.filter(bank_role=work_group.bank_role_filter)
+        return queryset.count()

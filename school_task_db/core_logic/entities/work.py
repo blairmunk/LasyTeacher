@@ -5,6 +5,12 @@ from datetime import datetime
 from typing import Any, List, Optional
 
 from core_logic.entities.document import DocumentTemplateSpec
+from core_logic.value_objects.variant_print_plan import (
+    DEFAULT_BLANK_CELLS_ROWS,
+    TASK_BANK_ROLE_ANY,
+    TASK_BANK_ROLE_CONTROL,
+    TASK_RENDER_MODE_TASK_ONLY,
+)
 
 
 @dataclass(frozen=True)
@@ -49,6 +55,11 @@ class WorkDetailSpecGroup:
     analog_group: WorkDetailAnalogGroup
     count: int
     weight: int
+    bank_role_filter: str = TASK_BANK_ROLE_ANY
+    render_mode: str = TASK_RENDER_MODE_TASK_ONLY
+    is_assessable: bool = True
+    blank_cells_after: bool = False
+    blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
 
 
 @dataclass(frozen=True)
@@ -170,6 +181,7 @@ class VariantGenerationGroup:
     group_name: str
     requested_count: int
     available_count: int
+    bank_role_filter: str = TASK_BANK_ROLE_ANY
 
 
 @dataclass(frozen=True)
@@ -240,6 +252,11 @@ class VariantDetailTaskRow:
     task: VariantDetailTask
     order: int
     max_points: int
+    bank_role: str = TASK_BANK_ROLE_CONTROL
+    render_mode: str = TASK_RENDER_MODE_TASK_ONLY
+    is_assessable: bool = True
+    blank_cells_after: bool = False
+    blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
 
 
 @dataclass(frozen=True)

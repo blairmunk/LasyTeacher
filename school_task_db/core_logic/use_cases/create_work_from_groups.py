@@ -1,7 +1,7 @@
 """Create a work specification from selected analog groups."""
 
 from dataclasses import dataclass
-from typing import List
+from typing import Any, Mapping, List
 
 from core_logic.interfaces.task_repo import ITaskRepository
 from core_logic.interfaces.work_repo import (
@@ -35,6 +35,11 @@ class CreateWorkFromGroupsRequest:
 
 
 @dataclass(frozen=True)
+class PrepareCreateWorkFromGroupsSubmissionRequest:
+    body: Any
+
+
+@dataclass(frozen=True)
 class CreateWorkFromGroupsResult:
     status: str
     work_id: str = ''
@@ -45,6 +50,41 @@ class CreateWorkFromGroupsResult:
     @property
     def success(self) -> bool:
         return self.status == 'created'
+
+
+class PrepareCreateWorkFromGroupsSubmissionUseCase:
+    def execute(
+        self,
+        request: PrepareCreateWorkFromGroupsSubmissionRequest,
+    ) -> CreateWorkFromGroupsRequest:
+        body = request.body
+        if not isinstance(body, Mapping):
+            body = {}
+        groups_data = body.get('groups', [])
+        if not isinstance(groups_data, list):
+            groups_data = []
+
+        return CreateWorkFromGroupsRequest(
+            groups=[
+                GroupSpecRequest(
+                    id=str(group_data.get('id', '')),
+                    order=_int_or_default(group_data.get('order'), index),
+                    count=_int_or_default(group_data.get('count'), 1),
+                    weight=_int_or_default(group_data.get('weight'), 1),
+                    bank_role_filter=group_data.get(
+                        'bank_role_filter',
+                        TASK_BANK_ROLE_ANY,
+                    ),
+                )
+                for index, group_data in enumerate(groups_data, 1)
+                if isinstance(group_data, Mapping)
+            ],
+            work_name=str(body.get('work_name', '')),
+            work_type=str(body.get('work_type', 'test')),
+            max_score=_int_or_default(body.get('max_score'), 0),
+            auto_generate=_bool_or_default(body.get('auto_generate'), False),
+            variant_count=_int_or_default(body.get('variant_count'), 2),
+        )
 
 
 class CreateWorkFromGroupsUseCase:
@@ -137,3 +177,24 @@ class CreateWorkFromGroupsUseCase:
             warning=warning,
             variants_generated=variants_generated,
         )
+
+
+def _int_or_default(value, default):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _bool_or_default(value, default):
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {'1', 'true', 'yes', 'on'}:
+            return True
+        if normalized in {'0', 'false', 'no', 'off', ''}:
+            return False
+    if value is None:
+        return default
+    return bool(value)

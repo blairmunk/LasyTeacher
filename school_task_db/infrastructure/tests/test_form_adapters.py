@@ -537,45 +537,14 @@ class TaskGroupFormAdapterTests(SimpleTestCase):
         self.assertEqual(request.group_id, 'g1')
         self.assertEqual(request.search, 'force')
 
-    def test_builds_group_bulk_action_requests_from_body(self):
+    def test_builds_group_bulk_delete_request_from_body(self):
         body = {
-            'groups': [
-                {
-                    'id': 'g1',
-                    'order': '2',
-                    'count': '3',
-                    'weight': '4',
-                    'bank_role_filter': TASK_BANK_ROLE_DEMO,
-                },
-                {'id': 'g2'},
-            ],
-            'work_name': 'From groups',
-            'work_type': 'test',
-            'max_score': '12',
-            'auto_generate': True,
-            'variant_count': '5',
             'group_ids': ['g1', 'g2'],
         }
         adapter = TaskGroupFormAdapter()
 
-        create_work = adapter.create_work_from_groups_request_from_body(body)
         delete_groups = adapter.delete_task_groups_request_from_body(body)
 
-        self.assertEqual(create_work.work_name, 'From groups')
-        self.assertEqual(create_work.work_type, 'test')
-        self.assertEqual(create_work.max_score, 12)
-        self.assertTrue(create_work.auto_generate)
-        self.assertEqual(create_work.variant_count, 5)
-        self.assertEqual(create_work.groups[0].id, 'g1')
-        self.assertEqual(create_work.groups[0].order, 2)
-        self.assertEqual(create_work.groups[0].count, 3)
-        self.assertEqual(create_work.groups[0].weight, 4)
-        self.assertEqual(create_work.groups[0].bank_role_filter, TASK_BANK_ROLE_DEMO)
-        self.assertEqual(create_work.groups[1].id, 'g2')
-        self.assertEqual(create_work.groups[1].order, 2)
-        self.assertEqual(create_work.groups[1].count, 1)
-        self.assertEqual(create_work.groups[1].weight, 1)
-        self.assertEqual(create_work.groups[1].bank_role_filter, 'any')
         self.assertEqual(delete_groups.group_ids, ['g1', 'g2'])
 
     def test_builds_task_group_list_filters_from_query(self):

@@ -1,14 +1,9 @@
 """Infrastructure helpers for Django task group forms."""
 
 from core_logic.entities.task import TaskGroupListFilters
-from core_logic.use_cases.create_work_from_groups import (
-    CreateWorkFromGroupsRequest,
-    GroupSpecRequest,
-)
 from core_logic.use_cases.delete_task_groups import DeleteTaskGroupsRequest
 from core_logic.use_cases.get_add_tasks_to_group import AddTasksToGroupFormRequest
 from core_logic.use_cases.save_analog_group import SaveAnalogGroupRequest
-from core_logic.value_objects.variant_print_plan import TASK_BANK_ROLE_ANY
 
 
 class TaskGroupFormAdapter:
@@ -16,29 +11,6 @@ class TaskGroupFormAdapter:
         return AddTasksToGroupFormRequest(
             group_id=group_id,
             search=query.get('search', ''),
-        )
-
-    def create_work_from_groups_request_from_body(self, body):
-        groups_data = body.get('groups', [])
-        return CreateWorkFromGroupsRequest(
-            groups=[
-                GroupSpecRequest(
-                    id=str(group_data.get('id', '')),
-                    order=int(group_data.get('order', index)),
-                    count=int(group_data.get('count', 1)),
-                    weight=int(group_data.get('weight', 1)),
-                    bank_role_filter=group_data.get(
-                        'bank_role_filter',
-                        TASK_BANK_ROLE_ANY,
-                    ),
-                )
-                for index, group_data in enumerate(groups_data, 1)
-            ],
-            work_name=body.get('work_name', ''),
-            work_type=body.get('work_type', 'test'),
-            max_score=int(body.get('max_score', 0)),
-            auto_generate=body.get('auto_generate', False),
-            variant_count=int(body.get('variant_count', 2)),
         )
 
     def delete_task_groups_request_from_body(self, body):

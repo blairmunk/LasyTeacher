@@ -259,11 +259,16 @@ def bulk_create_work_from_groups(request):
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Невалидный JSON'}, status=400)
 
-    result = container.create_work_from_groups_use_case().execute(
-        container.task_group_form_adapter.create_work_from_groups_request_from_body(
-            body,
+    from core_logic.use_cases.create_work_from_groups import (
+        PrepareCreateWorkFromGroupsSubmissionRequest,
+    )
+
+    create_request = (
+        container.prepare_create_work_from_groups_submission_use_case().execute(
+            PrepareCreateWorkFromGroupsSubmissionRequest(body=body),
         )
     )
+    result = container.create_work_from_groups_use_case().execute(create_request)
 
     if not result.success:
         return JsonResponse({'error': result.message}, status=400)

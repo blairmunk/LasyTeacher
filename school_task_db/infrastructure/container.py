@@ -38,6 +38,7 @@ from core_logic.use_cases.create_work_from_orphans import (
     CreateWorkFromOrphansUseCase,
 )
 from core_logic.use_cases.create_work_from_groups import (
+    PrepareCreateWorkFromGroupsSubmissionUseCase,
     CreateWorkFromGroupsUseCase,
 )
 from core_logic.use_cases.create_work_from_tasks import CreateWorkFromTasksUseCase
@@ -1128,6 +1129,9 @@ class Container:
             task_repo=self.task_repo,
             work_repo=self.work_repo,
         )
+
+    def prepare_create_work_from_groups_submission_use_case(self):
+        return PrepareCreateWorkFromGroupsSubmissionUseCase()
 
     def create_work_from_tasks_use_case(self):
         return CreateWorkFromTasksUseCase(

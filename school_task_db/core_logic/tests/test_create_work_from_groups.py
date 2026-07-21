@@ -8,6 +8,8 @@ from core_logic.use_cases.create_work_from_groups import (
     CreateWorkFromGroupsRequest,
     CreateWorkFromGroupsUseCase,
     GroupSpecRequest,
+    PrepareCreateWorkFromGroupsSubmissionRequest,
+    PrepareCreateWorkFromGroupsSubmissionUseCase,
 )
 from core_logic.value_objects.variant_print_plan import TASK_BANK_ROLE_DEMO
 
@@ -45,6 +47,82 @@ class FakeWorkRepository:
 
 
 class CreateWorkFromGroupsUseCaseTests(TestCase):
+    def test_prepare_submission_builds_request_from_body(self):
+        result = PrepareCreateWorkFromGroupsSubmissionUseCase().execute(
+            PrepareCreateWorkFromGroupsSubmissionRequest(
+                body={
+                    'groups': [
+                        {
+                            'id': 'g1',
+                            'order': '2',
+                            'count': '3',
+                            'weight': '4',
+                            'bank_role_filter': TASK_BANK_ROLE_DEMO,
+                        },
+                        {'id': 'g2'},
+                    ],
+                    'work_name': 'From groups',
+                    'work_type': 'test',
+                    'max_score': '12',
+                    'auto_generate': True,
+                    'variant_count': '5',
+                },
+            )
+        )
+
+        self.assertEqual(result.work_name, 'From groups')
+        self.assertEqual(result.work_type, 'test')
+        self.assertEqual(result.max_score, 12)
+        self.assertTrue(result.auto_generate)
+        self.assertEqual(result.variant_count, 5)
+        self.assertEqual(result.groups[0].id, 'g1')
+        self.assertEqual(result.groups[0].order, 2)
+        self.assertEqual(result.groups[0].count, 3)
+        self.assertEqual(result.groups[0].weight, 4)
+        self.assertEqual(result.groups[0].bank_role_filter, TASK_BANK_ROLE_DEMO)
+        self.assertEqual(result.groups[1].id, 'g2')
+        self.assertEqual(result.groups[1].order, 2)
+        self.assertEqual(result.groups[1].count, 1)
+        self.assertEqual(result.groups[1].weight, 1)
+        self.assertEqual(result.groups[1].bank_role_filter, 'any')
+
+    def test_prepare_submission_uses_defaults_for_invalid_numbers(self):
+        result = PrepareCreateWorkFromGroupsSubmissionUseCase().execute(
+            PrepareCreateWorkFromGroupsSubmissionRequest(
+                body={
+                    'groups': [
+                        {
+                            'id': 'g1',
+                            'order': 'bad',
+                            'count': None,
+                            'weight': '',
+                        },
+                    ],
+                    'max_score': 'bad',
+                    'variant_count': None,
+                },
+            )
+        )
+
+        self.assertEqual(result.max_score, 0)
+        self.assertEqual(result.variant_count, 2)
+        self.assertEqual(result.groups[0].order, 1)
+        self.assertEqual(result.groups[0].count, 1)
+        self.assertEqual(result.groups[0].weight, 1)
+
+    def test_prepare_submission_handles_non_mapping_body_and_string_bool(self):
+        empty_result = PrepareCreateWorkFromGroupsSubmissionUseCase().execute(
+            PrepareCreateWorkFromGroupsSubmissionRequest(body=[])
+        )
+        bool_result = PrepareCreateWorkFromGroupsSubmissionUseCase().execute(
+            PrepareCreateWorkFromGroupsSubmissionRequest(
+                body={'auto_generate': 'false'},
+            )
+        )
+
+        self.assertEqual(empty_result.groups, [])
+        self.assertFalse(bool_result.auto_generate)
+
     def test_execute_creates_work_spec_and_generates_variants(self):
         task_repo = FakeTaskRepository()
         work_repo = FakeWorkRepository()

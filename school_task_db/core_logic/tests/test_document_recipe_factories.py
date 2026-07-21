@@ -9,7 +9,6 @@ from core_logic.value_objects.document_recipes import (
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
     ORIGINAL_MISTAKES_SECTION,
-    PAGE_BREAK_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     SHORT_SOLUTIONS_SECTION,
     TASK_LIST_SECTION,
@@ -29,7 +28,7 @@ class DocumentRecipeFactoriesTests(TestCase):
         self.assertEqual(recipe.document_type, WORK_DOCUMENT_TYPE)
         self.assertEqual(
             recipe.section_types,
-            (HEADER_SECTION, TASK_LIST_SECTION, PAGE_BREAK_SECTION),
+            (HEADER_SECTION, TASK_LIST_SECTION),
         )
         self.assertEqual(
             recipe.sections[1].options,
@@ -56,7 +55,6 @@ class DocumentRecipeFactoriesTests(TestCase):
                 ANSWERS_SECTION,
                 SHORT_SOLUTIONS_SECTION,
                 FULL_SOLUTIONS_SECTION,
-                PAGE_BREAK_SECTION,
             ),
         )
         self.assertEqual(

@@ -84,6 +84,7 @@ class DocumentRenderOptionsTests(TestCase):
                 'answer_type': 'tasks_only',
                 'include_hints': False,
                 'include_instructions': False,
+                'break_between_variants': True,
             },
         )
 
@@ -93,6 +94,7 @@ class DocumentRenderOptionsTests(TestCase):
             build_options=WorkDocumentBuildOptions(
                 answer_type='with_answers',
                 include_hints=True,
+                break_between_variants=False,
             ),
         )
 
@@ -101,6 +103,7 @@ class DocumentRenderOptionsTests(TestCase):
         self.assertEqual(options.answer_type, 'with_answers')
         self.assertTrue(options.include_hints)
         self.assertFalse(options.include_instructions)
+        self.assertFalse(options.break_between_variants)
         self.assertEqual(options.content_description, 'с ответами + подсказки')
 
     def test_supports_legacy_with_answers_flag(self):
@@ -140,8 +143,17 @@ class DocumentRenderOptionsTests(TestCase):
                 'answer_type': 'with_full_solutions',
                 'include_hints': True,
                 'include_instructions': True,
+                'break_between_variants': True,
             },
         )
+
+    def test_can_disable_work_variant_page_breaks_from_data(self):
+        options = build_work_render_options({
+            'break_between_variants': '0',
+        })
+
+        self.assertFalse(options.break_between_variants)
+        self.assertFalse(options.content_config['break_between_variants'])
 
     def test_builds_default_remedial_sheet_render_options(self):
         options = build_remedial_sheet_render_options({})

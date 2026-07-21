@@ -9,6 +9,7 @@ from core_logic.entities.document import (
 from core_logic.use_cases.get_document_template_editor_data import (
     GetDocumentTemplateEditorDataRequest,
 )
+from core_logic.value_objects.document_recipes import COMMON_HEADER_SECTION
 from core_logic.value_objects.document_render_options import FILE_TYPE_LABELS
 
 
@@ -114,6 +115,7 @@ class DocumentTemplateFormAdapter:
             'supported_document_types': section.supported_document_types,
             'renderable_document_types': section.renderable_document_types,
             'is_legacy': section.is_legacy,
+            'is_fixed_order': section.section_type == COMMON_HEADER_SECTION,
         }
 
     def _template_context(self, template):

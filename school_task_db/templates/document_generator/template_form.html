@@ -48,6 +48,7 @@
                         class="col-md-6"
                         data-section-option
                         data-section-type="{{ section.section_type }}"
+                        {% if section.is_fixed_order %}data-fixed-order="1"{% endif %}
                         data-document-types="{% for document_type in section.renderable_document_types %}{{ document_type }} {% endfor %}"
                     >
                         <label class="border rounded p-3 d-block h-100">
@@ -65,6 +66,7 @@
                                         {{ section.title }}
                                     </span>
                                 </div>
+                                {% if not section.is_fixed_order %}
                                 <div class="btn-group btn-group-sm" role="group">
                                     <button
                                         class="btn btn-outline-secondary"
@@ -83,6 +85,7 @@
                                         <i class="fas fa-arrow-down"></i>
                                     </button>
                                 </div>
+                                {% endif %}
                             </div>
                             <div class="small text-muted mt-2">{{ section.description }}</div>
                             <code class="small">{{ section.section_type }}</code>
@@ -128,17 +131,30 @@
     function sortSectionsByOrder() {
         var list = form.querySelector('[data-section-list]');
         var optionByType = {};
+        var fixedOptions = [];
         sectionOptions.forEach(function(option) {
             optionByType[option.dataset.sectionType] = option;
+            if (option.dataset.fixedOrder === '1') {
+                fixedOptions.push(option);
+            }
         });
 
+        fixedOptions.forEach(function(option) {
+            list.appendChild(option);
+        });
         initialOrder.forEach(function(sectionType) {
-            if (optionByType[sectionType]) {
+            if (
+                optionByType[sectionType]
+                && optionByType[sectionType].dataset.fixedOrder !== '1'
+            ) {
                 list.appendChild(optionByType[sectionType]);
             }
         });
         sectionOptions.forEach(function(option) {
-            if (initialOrder.indexOf(option.dataset.sectionType) === -1) {
+            if (
+                option.dataset.fixedOrder !== '1'
+                && initialOrder.indexOf(option.dataset.sectionType) === -1
+            ) {
                 list.appendChild(option);
             }
         });
@@ -156,7 +172,19 @@
             .map(function(option) {
                 return option.dataset.sectionType;
             });
-        orderInput.value = selectedSectionTypes.join(',');
+        var fixedSections = selectedSectionTypes.filter(function(sectionType) {
+            return optionByType(sectionType).dataset.fixedOrder === '1';
+        });
+        var movableSections = selectedSectionTypes.filter(function(sectionType) {
+            return optionByType(sectionType).dataset.fixedOrder !== '1';
+        });
+        orderInput.value = fixedSections.concat(movableSections).join(',');
+    }
+
+    function optionByType(sectionType) {
+        return sectionOptions.find(function(option) {
+            return option.dataset.sectionType === sectionType;
+        });
     }
 
     function syncSections() {
@@ -182,8 +210,13 @@
         if (!button) return;
         var option = button.closest('[data-section-option]');
         if (!option) return;
+        if (option.dataset.fixedOrder === '1') return;
         var direction = button.dataset.sectionMove;
-        if (direction === 'up' && option.previousElementSibling) {
+        if (
+            direction === 'up'
+            && option.previousElementSibling
+            && option.previousElementSibling.dataset.fixedOrder !== '1'
+        ) {
             option.parentNode.insertBefore(option, option.previousElementSibling);
         }
         if (direction === 'down' && option.nextElementSibling) {

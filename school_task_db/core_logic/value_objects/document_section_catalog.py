@@ -80,6 +80,13 @@ SOLUTION_DOCUMENT_TYPES = (
 
 DOCUMENT_SECTION_CATALOG = (
     DocumentSectionCatalogItem(
+        section_type=COMMON_HEADER_SECTION,
+        title='Общий заголовок',
+        supported_document_types=(WORK_DOCUMENT_TYPE,),
+        renderable_document_types=(WORK_DOCUMENT_TYPE,),
+        description='Заголовок для всей распечатки перед вариантами.',
+    ),
+    DocumentSectionCatalogItem(
         section_type=HEADER_SECTION,
         title='Заголовок',
         supported_document_types=ALL_DOCUMENT_TYPES,
@@ -88,13 +95,6 @@ DOCUMENT_SECTION_CATALOG = (
             REMEDIAL_SHEET_DOCUMENT_TYPE,
         ),
         description='Название документа и основные метаданные.',
-    ),
-    DocumentSectionCatalogItem(
-        section_type=COMMON_HEADER_SECTION,
-        title='Общий заголовок',
-        supported_document_types=(WORK_DOCUMENT_TYPE,),
-        renderable_document_types=(WORK_DOCUMENT_TYPE,),
-        description='Заголовок для всей распечатки перед вариантами.',
     ),
     DocumentSectionCatalogItem(
         section_type=TASK_LIST_SECTION,

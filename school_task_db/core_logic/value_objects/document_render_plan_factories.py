@@ -129,12 +129,17 @@ def build_work_document_recipe_for_render(
             lambda: build_work_document_recipe(options.build_options)
         ),
     )
-    return expand_work_document_recipe_per_variant(recipe, variant_ids)
+    return expand_work_document_recipe_per_variant(
+        recipe,
+        variant_ids,
+        break_between_variants=options.break_between_variants,
+    )
 
 
 def expand_work_document_recipe_per_variant(
     recipe: DocumentRecipe,
     variant_ids: list[str] | None,
+    break_between_variants: bool = True,
 ) -> DocumentRecipe:
     if not variant_ids:
         return recipe
@@ -153,8 +158,6 @@ def expand_work_document_recipe_per_variant(
     last_index = len(variant_ids) - 1
     for index, variant_id in enumerate(variant_ids):
         for section in repeated_sections:
-            if section.section_type == PAGE_BREAK_SECTION and index == last_index:
-                continue
             sections.append(
                 _section_with_options(
                     section,
@@ -164,6 +167,8 @@ def expand_work_document_recipe_per_variant(
                     },
                 )
             )
+        if break_between_variants and index < last_index:
+            sections.append(DocumentSectionSpec(section_type=PAGE_BREAK_SECTION))
     return DocumentRecipe(
         document_type=recipe.document_type,
         sections=sections,

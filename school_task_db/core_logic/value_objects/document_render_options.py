@@ -63,6 +63,7 @@ class WorkDocumentBuildOptions:
     answer_type: str = 'tasks_only'
     include_hints: bool = False
     include_instructions: bool = False
+    break_between_variants: bool = True
 
     @property
     def content_config(self) -> dict:
@@ -76,6 +77,7 @@ class WorkDocumentBuildOptions:
             'answer_type': self.answer_type,
             'include_hints': self.include_hints,
             'include_instructions': self.include_instructions,
+            'break_between_variants': self.break_between_variants,
         }
 
     @property
@@ -121,6 +123,7 @@ class WorkDocumentRenderOptions:
         answer_type: str = 'tasks_only',
         include_hints: bool = False,
         include_instructions: bool = False,
+        break_between_variants: bool = True,
         render_target: Optional[RenderTarget] = None,
         build_options: Optional[WorkDocumentBuildOptions] = None,
     ):
@@ -140,6 +143,7 @@ class WorkDocumentRenderOptions:
                 answer_type=answer_type,
                 include_hints=include_hints,
                 include_instructions=include_instructions,
+                break_between_variants=break_between_variants,
             ),
         )
 
@@ -162,6 +166,10 @@ class WorkDocumentRenderOptions:
     @property
     def include_instructions(self) -> bool:
         return self.build_options.include_instructions
+
+    @property
+    def break_between_variants(self) -> bool:
+        return self.build_options.break_between_variants
 
     @property
     def content_config(self) -> dict:
@@ -236,6 +244,7 @@ def build_work_render_options(
         answer_type=answer_type,
         include_hints=data.get('include_hints', '0') == '1',
         include_instructions=data.get('include_instructions', '0') == '1',
+        break_between_variants=data.get('break_between_variants', '1') == '1',
     )
 
 

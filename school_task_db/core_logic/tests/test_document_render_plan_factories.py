@@ -60,7 +60,7 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         self.assertEqual(recipe.document_type, WORK_DOCUMENT_TYPE)
         self.assertEqual(
             recipe.section_types,
-            (HEADER_SECTION, TASK_LIST_SECTION, ANSWERS_SECTION, PAGE_BREAK_SECTION),
+            (HEADER_SECTION, TASK_LIST_SECTION, ANSWERS_SECTION),
         )
 
     def test_build_work_document_recipe_for_render_uses_template_spec(self):
@@ -104,7 +104,7 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         self.assertEqual(plan.render_target.renderer_type, 'html')
         self.assertEqual(
             plan.recipe.section_types,
-            ('header', 'task_list', 'answers', 'page_break'),
+            ('header', 'task_list', 'answers'),
         )
 
     def test_build_work_document_render_plan_uses_template_spec(self):
@@ -145,7 +145,6 @@ class DocumentRenderPlanFactoriesTests(TestCase):
                 DocumentSectionSpec(section_type=COMMON_HEADER_SECTION),
                 DocumentSectionSpec(section_type=HEADER_SECTION),
                 DocumentSectionSpec(section_type=TASK_LIST_SECTION),
-                DocumentSectionSpec(section_type=PAGE_BREAK_SECTION),
             ],
         )
 
@@ -173,7 +172,38 @@ class DocumentRenderPlanFactoriesTests(TestCase):
                 section.options.get('variant_id')
                 for section in plan.recipe.sections
             ],
-            [None, 'variant-1', 'variant-1', 'variant-1', 'variant-2', 'variant-2'],
+            [None, 'variant-1', 'variant-1', None, 'variant-2', 'variant-2'],
+        )
+
+    def test_build_work_document_render_plan_can_disable_variant_breaks(self):
+        template_spec = DocumentTemplateSpec(
+            name='Сплошная работа',
+            template_type='work',
+            sections=[
+                DocumentSectionSpec(section_type=HEADER_SECTION),
+                DocumentSectionSpec(section_type=TASK_LIST_SECTION),
+            ],
+        )
+
+        plan = build_work_document_render_plan(
+            work_id='work-1',
+            work_name='Контрольная',
+            options=WorkDocumentRenderOptions(
+                renderer_type='html',
+                break_between_variants=False,
+            ),
+            template_spec=template_spec,
+            variant_ids=['variant-1', 'variant-2'],
+        )
+
+        self.assertEqual(
+            plan.recipe.section_types,
+            (
+                HEADER_SECTION,
+                TASK_LIST_SECTION,
+                HEADER_SECTION,
+                TASK_LIST_SECTION,
+            ),
         )
 
     def test_build_remedial_sheet_document_render_plan(self):

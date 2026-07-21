@@ -26,6 +26,7 @@ from core_logic.use_cases.get_document_template_editor_data import (
 )
 from core_logic.value_objects.document_render_options import WorkDocumentRenderOptions
 from core_logic.value_objects.document_recipes import (
+    COMMON_HEADER_SECTION,
     HEADER_SECTION,
     WORK_DOCUMENT_TYPE,
 )
@@ -159,7 +160,12 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
             ['HTML', 'PDF', 'LaTeX'],
         )
         self.assertEqual(context['document_types'][0]['url'], '?type=work')
-        self.assertEqual(context['sections'][0]['section_type'], HEADER_SECTION)
+        self.assertEqual(
+            context['sections'][0]['section_type'],
+            COMMON_HEADER_SECTION,
+        )
+        self.assertTrue(context['sections'][0]['is_fixed_order'])
+        self.assertEqual(context['sections'][1]['section_type'], HEADER_SECTION)
         self.assertEqual(context['templates'][0]['template_id'], 'template-work')
         self.assertEqual(context['templates'][0]['name'], 'Шаблон работы')
         self.assertEqual(context['templates'][0]['sections_count'], 1)
@@ -282,7 +288,11 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         self.assertEqual(context['selected_document_type'], 'work')
         self.assertEqual(context['selected_sections'], {'header'})
         self.assertEqual(context['selected_section_order'], ['header'])
-        self.assertEqual(context['section_options'][0]['section_type'], 'header')
+        self.assertEqual(
+            context['section_options'][0]['section_type'],
+            COMMON_HEADER_SECTION,
+        )
+        self.assertTrue(context['section_options'][0]['is_fixed_order'])
 
 
 class ReportFormAdapterTests(SimpleTestCase):

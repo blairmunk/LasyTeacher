@@ -43,6 +43,7 @@
                         <div class="mb-2">
                             <span class="badge bg-primary">{{ task.task_type_display }}</span>
                             <span class="badge bg-secondary">{{ task.difficulty_display }}</span>
+                            <span class="badge bg-light text-dark border">{{ task.bank_role_label }}</span>
                             {% if task.image_count %}
                                 <span class="badge bg-info">{{ task.image_count }} изображ.</span>
                             {% endif %}

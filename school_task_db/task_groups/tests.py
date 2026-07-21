@@ -3,6 +3,7 @@ import json
 from django.test import TestCase
 from django.urls import reverse
 
+from core_logic.value_objects.variant_print_plan import TASK_BANK_ROLE_DEMO
 from curriculum.models import Topic
 from tasks.models import Task
 from task_groups.models import AnalogGroup, TaskGroup
@@ -121,6 +122,7 @@ class TaskGroupBulkActionTests(TestCase):
         self.assertEqual(response.context['analoggroup'].name, self.group.name)
         self.assertEqual(response.context['tasks'][0].pk, str(self.task.pk))
         self.assertEqual(response.context['tasks'][0].text, self.task.text)
+        self.assertEqual(response.context['tasks'][0].bank_role, 'control')
 
     def test_analog_group_detail_returns_404_for_missing_group(self):
         response = self.client.get(
@@ -151,6 +153,10 @@ class TaskGroupBulkActionTests(TestCase):
         self.assertEqual(response.context['available_tasks'][0].pk, str(second_task.pk))
         self.assertEqual(response.context['available_tasks'][0].text, second_task.text)
         self.assertEqual(response.context['search'], 'Вторая')
+        self.assertIn(
+            (TASK_BANK_ROLE_DEMO, 'Демонстрационное'),
+            response.context['bank_role_options'],
+        )
 
     def test_bulk_create_work_from_groups_rejects_missing_groups(self):
         response = self.client.post(
@@ -209,7 +215,10 @@ class TaskGroupBulkActionTests(TestCase):
 
         response = self.client.post(
             reverse('task_groups:add-tasks', args=[self.group.pk]),
-            {'selected_tasks': [str(second_task.pk)]},
+            {
+                'selected_tasks': [str(second_task.pk)],
+                'bank_role': TASK_BANK_ROLE_DEMO,
+            },
         )
 
         self.assertRedirects(
@@ -217,9 +226,8 @@ class TaskGroupBulkActionTests(TestCase):
             reverse('task_groups:detail', args=[self.group.pk]),
             fetch_redirect_response=False,
         )
-        self.assertTrue(
-            TaskGroup.objects.filter(group=self.group, task=second_task).exists()
-        )
+        task_group = TaskGroup.objects.get(group=self.group, task=second_task)
+        self.assertEqual(task_group.bank_role, TASK_BANK_ROLE_DEMO)
 
     def test_remove_task_from_group_post_uses_clean_use_case(self):
         response = self.client.post(

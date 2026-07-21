@@ -1212,17 +1212,27 @@ class DjangoRemedialRepositoryTests(TestCase):
         created_count = repo.add_tasks_to_group(
             new_group_id,
             [str(self.original_weak.pk), str(self.replacement.pk)],
+            bank_role=TASK_BANK_ROLE_DEMO,
         )
         duplicate_count = repo.add_tasks_to_group(
             new_group_id,
             [str(self.original_weak.pk)],
         )
-        removed_count = repo.remove_tasks_from_all_groups(
-            [str(self.original_weak.pk), str(self.replacement.pk)]
-        )
 
         self.assertEqual(created_count, 2)
         self.assertEqual(duplicate_count, 0)
+        self.assertEqual(
+            set(
+                TaskGroup.objects.filter(
+                    group_id=new_group_id,
+                    task_id__in=[self.original_weak.pk, self.replacement.pk],
+                ).values_list('bank_role', flat=True)
+            ),
+            {TASK_BANK_ROLE_DEMO},
+        )
+        removed_count = repo.remove_tasks_from_all_groups(
+            [str(self.original_weak.pk), str(self.replacement.pk)]
+        )
         self.assertEqual(removed_count, 4)
         self.assertFalse(
             TaskGroup.objects.filter(

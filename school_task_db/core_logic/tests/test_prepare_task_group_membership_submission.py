@@ -5,6 +5,7 @@ from core_logic.use_cases.prepare_task_group_membership_submission import (
     PrepareAddTasksToGroupSubmissionRequest,
     PrepareAddTasksToGroupSubmissionUseCase,
 )
+from core_logic.value_objects.variant_print_plan import TASK_BANK_ROLE_DEMO
 
 
 class PrepareTaskGroupMembershipSubmissionUseCaseTests(TestCase):
@@ -12,7 +13,10 @@ class PrepareTaskGroupMembershipSubmissionUseCaseTests(TestCase):
         result = PrepareAddTasksToGroupSubmissionUseCase().execute(
             PrepareAddTasksToGroupSubmissionRequest(
                 group_id='group-1',
-                data={'selected_tasks': ['task-1', 'task-2']},
+                data={
+                    'selected_tasks': ['task-1', 'task-2'],
+                    'bank_role': [TASK_BANK_ROLE_DEMO],
+                },
             )
         )
 
@@ -21,6 +25,7 @@ class PrepareTaskGroupMembershipSubmissionUseCaseTests(TestCase):
             AddTasksToGroupRequest(
                 group_id='group-1',
                 task_ids=['task-1', 'task-2'],
+                bank_role=TASK_BANK_ROLE_DEMO,
             ),
         )
 
@@ -33,3 +38,4 @@ class PrepareTaskGroupMembershipSubmissionUseCaseTests(TestCase):
         )
 
         self.assertEqual(result.task_ids, [])
+        self.assertEqual(result.bank_role, 'control')

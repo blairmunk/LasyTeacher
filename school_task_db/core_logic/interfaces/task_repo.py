@@ -25,6 +25,7 @@ from core_logic.entities.task import (
     TaskSaveParams,
     TaskSaveResult,
 )
+from core_logic.value_objects.variant_print_plan import TASK_BANK_ROLE_CONTROL
 
 
 class ITaskRepository(ABC):
@@ -201,7 +202,12 @@ class ITaskRepository(ABC):
         """Return an analog-group name, or None when it does not exist."""
 
     @abstractmethod
-    def add_tasks_to_group(self, group_id: str, task_ids: List[str]) -> int:
+    def add_tasks_to_group(
+        self,
+        group_id: str,
+        task_ids: List[str],
+        bank_role: str = TASK_BANK_ROLE_CONTROL,
+    ) -> int:
         """Add tasks to an analog group and return created membership count."""
 
     @abstractmethod

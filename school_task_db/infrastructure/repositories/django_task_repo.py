@@ -32,6 +32,7 @@ from core_logic.entities.task import (
     TaskSaveResult,
 )
 from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.value_objects.variant_print_plan import TASK_BANK_ROLE_CONTROL
 from curriculum.models import SubTopic, Topic
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Source, Task, TaskImage
@@ -271,6 +272,7 @@ class DjangoTaskRepository(ITaskRepository):
                 task_type_display=task_group.task.get_task_type_display(),
                 difficulty_display=task_group.task.get_difficulty_display(),
                 image_count=task_group.task.images.count(),
+                bank_role=task_group.bank_role,
             )
             for task_group in task_groups
         ]
@@ -677,12 +679,18 @@ class DjangoTaskRepository(ITaskRepository):
             flat=True,
         ).first()
 
-    def add_tasks_to_group(self, group_id: str, task_ids: List[str]) -> int:
+    def add_tasks_to_group(
+        self,
+        group_id: str,
+        task_ids: List[str],
+        bank_role: str = TASK_BANK_ROLE_CONTROL,
+    ) -> int:
         created_count = 0
         for task in Task.objects.filter(pk__in=task_ids):
             _, created = TaskGroup.objects.get_or_create(
                 task=task,
                 group_id=group_id,
+                defaults={'bank_role': bank_role},
             )
             if created:
                 created_count += 1

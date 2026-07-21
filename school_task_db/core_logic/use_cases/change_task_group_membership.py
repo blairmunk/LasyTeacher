@@ -4,12 +4,17 @@ from dataclasses import dataclass
 from typing import List
 
 from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.value_objects.variant_print_plan import (
+    TASK_BANK_ROLE_CONTROL,
+    validate_task_specific_bank_role,
+)
 
 
 @dataclass(frozen=True)
 class AddTasksToGroupRequest:
     group_id: str
     task_ids: List[str]
+    bank_role: str = TASK_BANK_ROLE_CONTROL
 
 
 @dataclass(frozen=True)
@@ -17,6 +22,7 @@ class AddTasksToGroupResult:
     status: str
     group_name: str = ''
     created_count: int = 0
+    errors: tuple[str, ...] = ()
 
     @property
     def success(self) -> bool:
@@ -33,9 +39,18 @@ class AddTasksToGroupUseCase:
             return AddTasksToGroupResult(status='not_found')
 
         task_ids = [str(task_id) for task_id in request.task_ids if task_id]
+        try:
+            validate_task_specific_bank_role(request.bank_role)
+        except ValueError as error:
+            return AddTasksToGroupResult(
+                status='invalid',
+                group_name=group_name,
+                errors=(str(error),),
+            )
         created_count = self.task_repo.add_tasks_to_group(
             group_id=request.group_id,
             task_ids=task_ids,
+            bank_role=request.bank_role,
         )
         return AddTasksToGroupResult(
             status='added',

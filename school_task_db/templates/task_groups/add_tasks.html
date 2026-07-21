@@ -69,6 +69,16 @@
                     {% endfor %}
                 </div>
                 <div class="card-footer">
+                    <div class="row align-items-end g-2 mb-3">
+                        <div class="col-md-4">
+                            <label for="bank_role" class="form-label">Роль добавляемых заданий</label>
+                            <select name="bank_role" id="bank_role" class="form-select">
+                                {% for value, label in bank_role_options %}
+                                <option value="{{ value }}" {% if value == selected_bank_role %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
                     <button type="submit" class="btn btn-success" id="addButton" disabled>
                         <i class="fas fa-plus"></i> Добавить выбранные задания
                     </button>

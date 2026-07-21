@@ -3,6 +3,11 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
+from core_logic.value_objects.variant_print_plan import (
+    TASK_BANK_ROLE_CONTROL,
+    TASK_BANK_ROLE_LABELS,
+)
+
 
 @dataclass(frozen=True)
 class TaskEntity:
@@ -142,6 +147,11 @@ class TaskGroupDetailTask:
     task_type_display: str
     difficulty_display: str
     image_count: int = 0
+    bank_role: str = TASK_BANK_ROLE_CONTROL
+
+    @property
+    def bank_role_label(self) -> str:
+        return TASK_BANK_ROLE_LABELS.get(self.bank_role, self.bank_role)
 
 
 @dataclass(frozen=True)

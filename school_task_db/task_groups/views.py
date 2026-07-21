@@ -7,6 +7,10 @@ from django.http import Http404, JsonResponse
 
 from infrastructure.container import container
 from infrastructure.forms.task_group_django_forms import AnalogGroupForm
+from core_logic.value_objects.variant_print_plan import (
+    TASK_BANK_ROLE_CONTROL,
+    TASK_BANK_ROLE_SPECIFIC_CHOICES,
+)
 
 
 def _post_lists(post_data):
@@ -154,6 +158,9 @@ def add_tasks_to_group(request, group_id):
         )
         if result.status == 'not_found':
             raise Http404("Группа не найдена")
+        if result.status == 'invalid':
+            messages.error(request, '; '.join(result.errors))
+            return redirect('task_groups:add-tasks', group_id=group_id)
         if result.created_count:
             messages.success(
                 request,
@@ -175,6 +182,8 @@ def add_tasks_to_group(request, group_id):
         'group': data.group,
         'available_tasks': data.available_tasks,
         'search': data.search,
+        'bank_role_options': TASK_BANK_ROLE_SPECIFIC_CHOICES,
+        'selected_bank_role': TASK_BANK_ROLE_CONTROL,
     }
     return render(request, 'task_groups/add_tasks.html', context)
 

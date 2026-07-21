@@ -97,6 +97,8 @@ class WorkTaskRoleSpec:
             raise ValueError('count must be positive')
         if self.weight < 0:
             raise ValueError('weight must be non-negative')
+        if self.blank_cells_rows < 1:
+            raise ValueError('blank_cells_rows must be positive')
         validate_task_bank_role(self.bank_role_filter)
         validate_task_render_mode(self.render_mode)
 
@@ -124,6 +126,8 @@ class VariantTaskPrintRow:
             raise ValueError('order must be positive')
         if self.max_points < 0:
             raise ValueError('max_points must be non-negative')
+        if self.blank_cells_rows < 1:
+            raise ValueError('blank_cells_rows must be positive')
         validate_task_specific_bank_role(self.bank_role)
         validate_task_render_mode(self.render_mode)
 

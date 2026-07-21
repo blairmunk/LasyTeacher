@@ -55,6 +55,14 @@ class WorkTaskRoleSpecTests(TestCase):
 
         self.assertEqual(spec.bank_role_filter, TASK_BANK_ROLE_ANY)
 
+    def test_rejects_non_positive_blank_cells_rows(self):
+        with self.assertRaisesRegex(ValueError, 'blank_cells_rows must be positive'):
+            WorkTaskRoleSpec(
+                analog_group_id='group-1',
+                count=1,
+                blank_cells_rows=0,
+            )
+
 
 class VariantPrintPlanTests(TestCase):
     def test_builds_print_blocks_and_assessment_ids_from_variant_rows(self):
@@ -112,4 +120,13 @@ class VariantPrintPlanTests(TestCase):
                 task_id='task-1',
                 order=1,
                 bank_role=TASK_BANK_ROLE_ANY,
+            )
+
+    def test_rejects_non_positive_blank_cells_rows(self):
+        with self.assertRaisesRegex(ValueError, 'blank_cells_rows must be positive'):
+            VariantTaskPrintRow(
+                variant_task_id='vt-1',
+                task_id='task-1',
+                order=1,
+                blank_cells_rows=0,
             )

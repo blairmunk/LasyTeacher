@@ -10,6 +10,7 @@ from core_logic.use_cases.save_work import (
     SaveWorkSpecificationUseCase,
     UpdateWorkUseCase,
 )
+from core_logic.value_objects.variant_print_plan import TASK_BANK_ROLE_DEMO
 
 
 class FakeWorkRepository:
@@ -90,6 +91,30 @@ class SaveWorkUseCaseTests(TestCase):
         self.assertEqual(result.status, 'saved')
         self.assertEqual(result.saved_count, 1)
         self.assertEqual(repo.replaced_specs, ('work-1', specs))
+
+    def test_save_work_specification_rejects_invalid_spec_rows(self):
+        repo = FakeWorkRepository()
+
+        result = SaveWorkSpecificationUseCase(repo).execute(
+            SaveWorkSpecificationRequest(
+                work_id='work-1',
+                specs=[
+                    CreateWorkAnalogGroupParams(
+                        work_id='work-1',
+                        analog_group_id='group-1',
+                        order=1,
+                        count=1,
+                        weight=1,
+                        bank_role_filter=TASK_BANK_ROLE_DEMO,
+                        blank_cells_rows=0,
+                    )
+                ],
+            )
+        )
+
+        self.assertEqual(result.status, 'invalid')
+        self.assertIn('blank_cells_rows must be positive', result.errors[0])
+        self.assertIsNone(repo.replaced_specs)
 
     def test_save_work_specification_returns_not_found(self):
         result = SaveWorkSpecificationUseCase(FakeWorkRepository(False)).execute(

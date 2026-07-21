@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.paginator import Paginator
@@ -5,7 +7,10 @@ from django.http import Http404
 from django.views.generic import TemplateView
 from django.views.decorators.http import require_http_methods
 
-from core_logic.use_cases.save_work import SaveWorkSpecificationRequest
+from core_logic.use_cases.save_work import (
+    SaveWorkSpecificationRequest,
+    validate_work_specification_specs,
+)
 from infrastructure.container import container
 from infrastructure.forms.work_django_forms import WorkForm, VariantGenerationForm
 
@@ -81,18 +86,35 @@ class WorkCreateView(TemplateView):
                 self.get_context_data(form=form, formset=formset),
             )
 
+        specs = container.work_form_adapter.work_specs_from_formset(
+            formset,
+            work_id='',
+        )
+        spec_errors = validate_work_specification_specs(specs)
+        if spec_errors:
+            messages.error(request, '; '.join(spec_errors))
+            return self.render_to_response(
+                self.get_context_data(form=form, formset=formset),
+            )
+
         result = container.create_work_use_case().execute(
             container.work_form_adapter.work_params_from_form(form),
         )
-        container.save_work_specification_use_case().execute(
+        specs = [
+            replace(spec, work_id=result.work_id)
+            for spec in specs
+        ]
+        specification_result = container.save_work_specification_use_case().execute(
             SaveWorkSpecificationRequest(
                 work_id=result.work_id,
-                specs=container.work_form_adapter.work_specs_from_formset(
-                    formset,
-                    result.work_id,
-                ),
+                specs=specs,
             )
         )
+        if specification_result.status == 'invalid':
+            messages.error(request, '; '.join(specification_result.errors))
+            return self.render_to_response(
+                self.get_context_data(form=form, formset=formset),
+            )
         messages.success(request, 'Работа успешно создана!')
         return redirect('works:detail', pk=result.work_id)
 
@@ -152,15 +174,25 @@ class WorkUpdateView(TemplateView):
         if result.status == 'not_found':
             raise Http404('Работа не найдена')
 
-        container.save_work_specification_use_case().execute(
+        specs = container.work_form_adapter.work_specs_from_formset(
+            formset,
+            result.work_id,
+        )
+        specification_result = container.save_work_specification_use_case().execute(
             SaveWorkSpecificationRequest(
                 work_id=result.work_id,
-                specs=container.work_form_adapter.work_specs_from_formset(
-                    formset,
-                    result.work_id,
-                ),
+                specs=specs,
             )
         )
+        if specification_result.status == 'invalid':
+            messages.error(request, '; '.join(specification_result.errors))
+            return self.render_to_response(
+                self.get_context_data(
+                    form=form,
+                    formset=formset,
+                    object=work,
+                ),
+            )
         messages.success(request, 'Работа успешно обновлена!')
         return redirect('works:detail', pk=result.work_id)
 

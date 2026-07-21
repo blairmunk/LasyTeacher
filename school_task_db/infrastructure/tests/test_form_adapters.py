@@ -30,7 +30,7 @@ from core_logic.value_objects.document_recipes import (
     HEADER_SECTION,
     WORK_DOCUMENT_TYPE,
 )
-from core_logic.value_objects.variant_print_plan import (
+from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_DEMO,
     TASK_RENDER_MODE_WITH_FULL_SOLUTION,
 )

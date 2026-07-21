@@ -34,7 +34,7 @@ from core_logic.use_cases.create_work_from_orphans import (
     CreateWorkFromOrphansRequest,
     CreateWorkFromOrphansUseCase,
 )
-from core_logic.value_objects.variant_print_plan import (
+from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_DEMO,
     TASK_BANK_ROLE_PRACTICE,

@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Any, List, Optional
 
 from core_logic.entities.document import DocumentTemplateSpec
-from core_logic.value_objects.variant_print_plan import (
+from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_LABELS,
     TASK_BANK_ROLE_ANY,

@@ -3,7 +3,7 @@ import json
 from django.test import TestCase
 from django.urls import reverse
 
-from core_logic.value_objects.variant_print_plan import TASK_BANK_ROLE_DEMO
+from core_logic.value_objects.task_print_settings import TASK_BANK_ROLE_DEMO
 from curriculum.models import Topic
 from tasks.models import Task
 from task_groups.models import AnalogGroup, TaskGroup

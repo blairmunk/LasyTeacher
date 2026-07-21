@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
-from core_logic.value_objects.variant_print_plan import (
+from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_CONTROL,
     TASK_BANK_ROLE_LABELS,
 )

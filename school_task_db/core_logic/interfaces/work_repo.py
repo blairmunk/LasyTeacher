@@ -21,7 +21,7 @@ from core_logic.entities.work import (
     VariantDetailTaskRow,
     VariantDetailVariant,
 )
-from core_logic.value_objects.variant_print_plan import (
+from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_ANY,
     TASK_RENDER_MODE_TASK_ONLY,

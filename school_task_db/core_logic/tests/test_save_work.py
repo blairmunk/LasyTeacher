@@ -10,7 +10,7 @@ from core_logic.use_cases.save_work import (
     SaveWorkSpecificationUseCase,
     UpdateWorkUseCase,
 )
-from core_logic.value_objects.variant_print_plan import TASK_BANK_ROLE_DEMO
+from core_logic.value_objects.task_print_settings import TASK_BANK_ROLE_DEMO
 
 
 class FakeWorkRepository:

@@ -1,7 +1,7 @@
 from django.db import models
 from django.urls import reverse
 
-from core_logic.value_objects.variant_print_plan import (
+from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_ANY,
     TASK_BANK_ROLE_CHOICES,

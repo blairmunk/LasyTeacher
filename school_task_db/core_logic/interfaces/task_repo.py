@@ -25,7 +25,7 @@ from core_logic.entities.task import (
     TaskSaveParams,
     TaskSaveResult,
 )
-from core_logic.value_objects.variant_print_plan import TASK_BANK_ROLE_CONTROL
+from core_logic.value_objects.task_print_settings import TASK_BANK_ROLE_CONTROL
 
 
 class ITaskRepository(ABC):

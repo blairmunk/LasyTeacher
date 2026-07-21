@@ -10,7 +10,7 @@ from core_logic.use_cases.prepare_task_group_membership_submission import (
     PrepareUpdateTaskGroupRolesSubmissionRequest,
     PrepareUpdateTaskGroupRolesSubmissionUseCase,
 )
-from core_logic.value_objects.variant_print_plan import TASK_BANK_ROLE_DEMO
+from core_logic.value_objects.task_print_settings import TASK_BANK_ROLE_DEMO
 
 
 class PrepareTaskGroupMembershipSubmissionUseCaseTests(TestCase):

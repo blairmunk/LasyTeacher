@@ -8,7 +8,7 @@ from core_logic.use_cases.change_task_group_membership import (
     UpdateTaskGroupRolesRequest,
     UpdateTaskGroupRolesUseCase,
 )
-from core_logic.value_objects.variant_print_plan import TASK_BANK_ROLE_DEMO
+from core_logic.value_objects.task_print_settings import TASK_BANK_ROLE_DEMO
 
 
 class FakeTaskRepository:

@@ -32,7 +32,7 @@ from core_logic.entities.task import (
     TaskSaveResult,
 )
 from core_logic.interfaces.task_repo import ITaskRepository
-from core_logic.value_objects.variant_print_plan import TASK_BANK_ROLE_CONTROL
+from core_logic.value_objects.task_print_settings import TASK_BANK_ROLE_CONTROL
 from curriculum.models import SubTopic, Topic
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Source, Task, TaskImage

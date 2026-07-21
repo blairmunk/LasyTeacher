@@ -7,7 +7,7 @@ from core_logic.use_cases.change_task_group_membership import (
     AddTasksToGroupRequest,
     UpdateTaskGroupRolesRequest,
 )
-from core_logic.value_objects.variant_print_plan import TASK_BANK_ROLE_CONTROL
+from core_logic.value_objects.task_print_settings import TASK_BANK_ROLE_CONTROL
 
 
 @dataclass(frozen=True)

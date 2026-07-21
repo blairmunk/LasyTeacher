@@ -10,8 +10,10 @@ from core_logic.interfaces.work_repo import (
     IWorkRepository,
 )
 from core_logic.value_objects.variant_print_plan import (
+    DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_ANY,
-    validate_task_bank_role,
+    TASK_RENDER_MODE_TASK_ONLY,
+    WorkTaskRoleSpec,
 )
 
 
@@ -22,6 +24,10 @@ class GroupSpecRequest:
     count: int = 1
     weight: int = 1
     bank_role_filter: str = TASK_BANK_ROLE_ANY
+    render_mode: str = TASK_RENDER_MODE_TASK_ONLY
+    is_assessable: bool = True
+    blank_cells_after: bool = False
+    blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
 
 
 @dataclass(frozen=True)
@@ -75,6 +81,22 @@ class PrepareCreateWorkFromGroupsSubmissionUseCase:
                         'bank_role_filter',
                         TASK_BANK_ROLE_ANY,
                     ),
+                    render_mode=group_data.get(
+                        'render_mode',
+                        TASK_RENDER_MODE_TASK_ONLY,
+                    ),
+                    is_assessable=_bool_or_default(
+                        group_data.get('is_assessable'),
+                        True,
+                    ),
+                    blank_cells_after=_bool_or_default(
+                        group_data.get('blank_cells_after'),
+                        False,
+                    ),
+                    blank_cells_rows=_int_or_default(
+                        group_data.get('blank_cells_rows'),
+                        DEFAULT_BLANK_CELLS_ROWS,
+                    ),
                 )
                 for index, group_data in enumerate(groups_data, 1)
                 if isinstance(group_data, Mapping)
@@ -122,7 +144,17 @@ class CreateWorkFromGroupsUseCase:
 
         for group in request.groups:
             try:
-                validate_task_bank_role(group.bank_role_filter)
+                WorkTaskRoleSpec(
+                    analog_group_id=group.id,
+                    count=group.count,
+                    order=group.order,
+                    bank_role_filter=group.bank_role_filter,
+                    render_mode=group.render_mode,
+                    is_assessable=group.is_assessable,
+                    blank_cells_after=group.blank_cells_after,
+                    blank_cells_rows=group.blank_cells_rows,
+                    weight=group.weight,
+                )
             except ValueError as error:
                 return CreateWorkFromGroupsResult(
                     status='invalid_group_spec',
@@ -150,6 +182,10 @@ class CreateWorkFromGroupsUseCase:
                     count=group.count,
                     weight=max(1, int(weight)),
                     bank_role_filter=group.bank_role_filter,
+                    render_mode=group.render_mode,
+                    is_assessable=group.is_assessable,
+                    blank_cells_after=group.blank_cells_after,
+                    blank_cells_rows=group.blank_cells_rows,
                 )
             )
 

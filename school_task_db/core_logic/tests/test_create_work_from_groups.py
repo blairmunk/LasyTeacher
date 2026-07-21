@@ -11,7 +11,10 @@ from core_logic.use_cases.create_work_from_groups import (
     PrepareCreateWorkFromGroupsSubmissionRequest,
     PrepareCreateWorkFromGroupsSubmissionUseCase,
 )
-from core_logic.value_objects.variant_print_plan import TASK_BANK_ROLE_DEMO
+from core_logic.value_objects.variant_print_plan import (
+    TASK_BANK_ROLE_DEMO,
+    TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+)
 
 
 class FakeTaskRepository:
@@ -58,6 +61,10 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
                             'count': '3',
                             'weight': '4',
                             'bank_role_filter': TASK_BANK_ROLE_DEMO,
+                            'render_mode': TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+                            'is_assessable': 'false',
+                            'blank_cells_after': 'true',
+                            'blank_cells_rows': '8',
                         },
                         {'id': 'g2'},
                     ],
@@ -80,6 +87,13 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         self.assertEqual(result.groups[0].count, 3)
         self.assertEqual(result.groups[0].weight, 4)
         self.assertEqual(result.groups[0].bank_role_filter, TASK_BANK_ROLE_DEMO)
+        self.assertEqual(
+            result.groups[0].render_mode,
+            TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+        )
+        self.assertFalse(result.groups[0].is_assessable)
+        self.assertTrue(result.groups[0].blank_cells_after)
+        self.assertEqual(result.groups[0].blank_cells_rows, 8)
         self.assertEqual(result.groups[1].id, 'g2')
         self.assertEqual(result.groups[1].order, 2)
         self.assertEqual(result.groups[1].count, 1)
@@ -204,12 +218,47 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
             TASK_BANK_ROLE_DEMO,
         )
 
+    def test_execute_preserves_group_print_settings(self):
+        task_repo = FakeTaskRepository()
+        task_repo.existing_count = 1
+        work_repo = FakeWorkRepository()
+        use_case = CreateWorkFromGroupsUseCase(
+            task_repo=task_repo,
+            work_repo=work_repo,
+        )
+
+        result = use_case.execute(
+            CreateWorkFromGroupsRequest(
+                groups=[
+                    GroupSpecRequest(
+                        id='group-1',
+                        render_mode=TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+                        is_assessable=False,
+                        blank_cells_after=True,
+                        blank_cells_rows=8,
+                    ),
+                ],
+                work_name='Рабочий лист',
+            )
+        )
+
+        self.assertTrue(result.success)
+        created_group = work_repo.created_groups[0]
+        self.assertEqual(
+            created_group.render_mode,
+            TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+        )
+        self.assertFalse(created_group.is_assessable)
+        self.assertTrue(created_group.blank_cells_after)
+        self.assertEqual(created_group.blank_cells_rows, 8)
+
     def test_execute_rejects_invalid_group_role_filter(self):
         task_repo = FakeTaskRepository()
         task_repo.existing_count = 1
+        work_repo = FakeWorkRepository()
         use_case = CreateWorkFromGroupsUseCase(
             task_repo=task_repo,
-            work_repo=FakeWorkRepository(),
+            work_repo=work_repo,
         )
 
         result = use_case.execute(
@@ -226,6 +275,32 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
 
         self.assertFalse(result.success)
         self.assertEqual(result.status, 'invalid_group_spec')
+        self.assertIsNone(work_repo.created_work)
+
+    def test_execute_rejects_invalid_group_render_mode(self):
+        task_repo = FakeTaskRepository()
+        task_repo.existing_count = 1
+        work_repo = FakeWorkRepository()
+        use_case = CreateWorkFromGroupsUseCase(
+            task_repo=task_repo,
+            work_repo=work_repo,
+        )
+
+        result = use_case.execute(
+            CreateWorkFromGroupsRequest(
+                groups=[
+                    GroupSpecRequest(
+                        id='group-1',
+                        render_mode='unknown',
+                    ),
+                ],
+                work_name='Рабочий лист',
+            )
+        )
+
+        self.assertFalse(result.success)
+        self.assertEqual(result.status, 'invalid_group_spec')
+        self.assertIsNone(work_repo.created_work)
 
     def test_execute_rejects_empty_groups(self):
         use_case = CreateWorkFromGroupsUseCase(

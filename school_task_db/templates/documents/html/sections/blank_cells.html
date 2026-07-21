@@ -1,0 +1,15 @@
+<section class="document-section document-section-blank-cells">
+    {% if payload.title %}
+    <h2>{{ payload.title }}</h2>
+    {% endif %}
+    <div
+        class="blank-cells-grid"
+        style="display: grid; grid-template-columns: repeat({{ payload.columns }}, minmax(0, 1fr)); border-left: 1px solid #999; border-top: 1px solid #999;"
+    >
+        {% for cell in payload.cells_range %}
+        <span
+            style="height: {{ payload.row_height }}px; border-right: 1px solid #999; border-bottom: 1px solid #999;"
+        ></span>
+        {% endfor %}
+    </div>
+</section>

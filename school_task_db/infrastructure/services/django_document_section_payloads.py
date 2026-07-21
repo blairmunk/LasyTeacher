@@ -5,6 +5,7 @@ from core_logic.services.document_builder import (
 )
 from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
+    BLANK_CELLS_SECTION,
     COMMON_HEADER_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
@@ -224,6 +225,31 @@ class DjangoRemedialTrainingTasksPayloadBuilder:
         }
 
 
+class BlankCellsPayloadBuilder:
+    def build_payload(self, request):
+        options = dict(request.section.options)
+        rows = _positive_int(options.get('rows'), default=6, max_value=40)
+        columns = _positive_int(
+            options.get('columns'),
+            default=24,
+            max_value=40,
+        )
+        row_height = _positive_int(
+            options.get('row_height'),
+            default=24,
+            max_value=120,
+        )
+        return {
+            **options,
+            'rows': rows,
+            'columns': columns,
+            'row_height': row_height,
+            'rows_range': range(rows),
+            'cells_range': range(rows * columns),
+            'latex_cells': _blank_cells_latex_cells(columns, row_height),
+        }
+
+
 def build_work_section_payload_builder_registry(
     get_work_source=None,
     task_payload_formatter=None,
@@ -266,6 +292,12 @@ def build_work_section_payload_builder_registry(
         document_type=WORK_DOCUMENT_TYPE,
         source_type=WORK_SOURCE_TYPE,
     )
+    registry.register(
+        BLANK_CELLS_SECTION,
+        BlankCellsPayloadBuilder(),
+        document_type=WORK_DOCUMENT_TYPE,
+        source_type=WORK_SOURCE_TYPE,
+    )
     for section_type in (
         ANSWERS_SECTION,
         LEGACY_ANSWER_KEY_SECTION,
@@ -298,6 +330,7 @@ def build_remedial_sheet_section_payload_builder_registry(
         sheet_data_provider,
         task_payload_formatter=task_payload_formatter,
     )
+    blank_cells_builder = BlankCellsPayloadBuilder()
     for source_type in (REMEDIAL_VARIANT_SOURCE_TYPE, REMEDIAL_WORK_SOURCE_TYPE):
         registry.register(
             HEADER_SECTION,
@@ -308,6 +341,12 @@ def build_remedial_sheet_section_payload_builder_registry(
         registry.register(
             ORIGINAL_MISTAKES_SECTION,
             original_mistakes_builder,
+            document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
+            source_type=source_type,
+        )
+        registry.register(
+            BLANK_CELLS_SECTION,
+            blank_cells_builder,
             document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
             source_type=source_type,
         )
@@ -351,6 +390,22 @@ def _work_variant_from_request(work, request):
 
 def _remedial_variant_id(request):
     return request.section.options.get('variant_id') or request.source.source_id
+
+
+def _positive_int(value, default, max_value):
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return default
+    if parsed < 1:
+        return default
+    return min(parsed, max_value)
+
+
+def _blank_cells_latex_cells(columns, row_height):
+    cells = [''] * columns
+    cells[0] = rf'\rule{{0pt}}{{{row_height / 3:.1f}mm}}'
+    return cells
 
 
 def _work_variant_payload(variant, task_payload_formatter=None, request=None):

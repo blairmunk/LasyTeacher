@@ -7,6 +7,7 @@ from core_logic.entities.document import Document, DocumentSection
 from core_logic.value_objects.document_render_options import RenderTarget
 from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
+    BLANK_CELLS_SECTION,
     HEADER_SECTION,
     PAGE_BREAK_SECTION,
     SCORE_TABLE_SECTION,
@@ -35,6 +36,9 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                     SCORE_TABLE_SECTION: 'documents/latex/sections/score_table.tex',
                     ANSWERS_SECTION: 'documents/latex/sections/answers.tex',
                     THEORY_SECTION: 'documents/latex/sections/theory.tex',
+                    BLANK_CELLS_SECTION: (
+                        'documents/latex/sections/blank_cells.tex'
+                    ),
                     SHORT_SOLUTIONS_SECTION: (
                         'documents/latex/sections/short_solutions.tex'
                     ),
@@ -94,6 +98,15 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                     ),
                     DocumentSection(
                         section_type=PAGE_BREAK_SECTION,
+                    ),
+                    DocumentSection(
+                        section_type=BLANK_CELLS_SECTION,
+                        payload={
+                            'title': 'Черновик',
+                            'columns': 3,
+                            'rows_range': range(2),
+                            'latex_cells': [r'\rule{0pt}{6.0mm}', '', ''],
+                        },
                     ),
                     DocumentSection(
                         section_type=SCORE_TABLE_SECTION,
@@ -157,6 +170,9 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
             self.assertIn('Найдите силу', latex)
             self.assertIn('Подсказка: F = ma', latex)
             self.assertIn(r'\clearpage', latex)
+            self.assertIn(r'\section*{\centering Черновик}', latex)
+            self.assertIn(r'\begin{tabular}{|*{ 3 }{p{0.3cm}|}}', latex)
+            self.assertIn(r'\rule{0pt}{6.0mm}', latex)
             self.assertIn(r'\section*{\centering Критерии оценивания}', latex)
             self.assertIn(r'5 & 85\% & 8,5', latex)
             self.assertIn(r'\section*{\centering Ответы}', latex)

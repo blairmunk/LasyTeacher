@@ -2,6 +2,7 @@
 
 from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
+    BLANK_CELLS_SECTION,
     COMMON_HEADER_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
@@ -29,6 +30,7 @@ WORK_HTML_SECTION_TEMPLATES = {
     PAGE_BREAK_SECTION: 'documents/html/sections/page_break.html',
     SCORE_TABLE_SECTION: 'documents/html/sections/score_table.html',
     THEORY_SECTION: 'documents/html/sections/theory.html',
+    BLANK_CELLS_SECTION: 'documents/html/sections/blank_cells.html',
 }
 WORK_HTML_WRAPPER_TEMPLATE = 'documents/html/base/document.html'
 
@@ -44,6 +46,7 @@ WORK_LATEX_SECTION_TEMPLATES = {
     PAGE_BREAK_SECTION: 'documents/latex/sections/page_break.tex',
     SCORE_TABLE_SECTION: 'documents/latex/sections/score_table.tex',
     THEORY_SECTION: 'documents/latex/sections/theory.tex',
+    BLANK_CELLS_SECTION: 'documents/latex/sections/blank_cells.tex',
 }
 WORK_LATEX_WRAPPER_TEMPLATE = 'documents/latex/base/document.tex'
 
@@ -63,6 +66,7 @@ REMEDIAL_HTML_SECTION_TEMPLATES = {
         'documents/html/sections/remedial_full_solutions.html'
     ),
     PAGE_BREAK_SECTION: 'documents/html/sections/page_break.html',
+    BLANK_CELLS_SECTION: 'documents/html/sections/blank_cells.html',
 }
 REMEDIAL_HTML_WRAPPER_TEMPLATE = 'documents/html/base/document.html'
 
@@ -82,5 +86,6 @@ REMEDIAL_LATEX_SECTION_TEMPLATES = {
         'documents/latex/sections/remedial_full_solutions.tex'
     ),
     PAGE_BREAK_SECTION: 'documents/latex/sections/page_break.tex',
+    BLANK_CELLS_SECTION: 'documents/latex/sections/blank_cells.tex',
 }
 REMEDIAL_LATEX_WRAPPER_TEMPLATE = 'documents/latex/base/document.tex'

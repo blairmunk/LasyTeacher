@@ -17,6 +17,7 @@ from core_logic.value_objects.document_build_plan import (
 )
 from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
+    BLANK_CELLS_SECTION,
     HEADER_SECTION,
     LEGACY_ANSWER_KEY_SECTION,
     LEGACY_TASK_VARIANTS_SECTION,
@@ -346,6 +347,24 @@ class DjangoWorkTheoryPayloadBuilderTests(TestCase):
         payload = registry.build_payload(build_request(work, THEORY_SECTION))
 
         self.assertEqual(payload['blocks'][0]['content'], 'Теория')
+
+    def test_registry_supports_work_blank_cells_section(self):
+        work = Work.objects.create(name='Контрольная')
+        registry = build_work_section_payload_builder_registry()
+
+        payload = registry.build_payload(
+            build_request(
+                work,
+                BLANK_CELLS_SECTION,
+                options={'rows': '2', 'columns': '3', 'row_height': '18'},
+            )
+        )
+
+        self.assertEqual(payload['rows'], 2)
+        self.assertEqual(payload['columns'], 3)
+        self.assertEqual(payload['row_height'], 18)
+        self.assertEqual(list(payload['rows_range']), [0, 1])
+        self.assertEqual(list(payload['cells_range']), [0, 1, 2, 3, 4, 5])
 
     def create_task(self, description='Теория темы', **overrides):
         topic = Topic.objects.create(

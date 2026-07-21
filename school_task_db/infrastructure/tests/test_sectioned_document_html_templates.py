@@ -6,6 +6,7 @@ from django.test import SimpleTestCase
 from core_logic.entities.document import Document, DocumentSection
 from core_logic.value_objects.document_render_options import RenderTarget
 from core_logic.value_objects.document_recipes import (
+    BLANK_CELLS_SECTION,
     HEADER_SECTION,
     PAGE_BREAK_SECTION,
     SCORE_TABLE_SECTION,
@@ -32,6 +33,9 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
                     SCORE_TABLE_SECTION: 'documents/html/sections/score_table.html',
                     TASK_LIST_SECTION: 'documents/html/sections/task_list.html',
                     THEORY_SECTION: 'documents/html/sections/theory.html',
+                    BLANK_CELLS_SECTION: (
+                        'documents/html/sections/blank_cells.html'
+                    ),
                 },
                 filename_builder=lambda request: 'work.html',
                 file_store=RenderedDocumentFileStore(
@@ -65,6 +69,15 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
                     ),
                     DocumentSection(
                         section_type=PAGE_BREAK_SECTION,
+                    ),
+                    DocumentSection(
+                        section_type=BLANK_CELLS_SECTION,
+                        payload={
+                            'title': 'Черновик',
+                            'columns': 3,
+                            'row_height': 18,
+                            'cells_range': range(6),
+                        },
                     ),
                     DocumentSection(
                         section_type=SCORE_TABLE_SECTION,
@@ -116,6 +129,9 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
             self.assertIn('Теоретическая справка', html)
             self.assertIn('Второй закон Ньютона', html)
             self.assertIn('page-break-after: always', html)
+            self.assertIn('Черновик', html)
+            self.assertIn('grid-template-columns: repeat(3', html)
+            self.assertIn('height: 18px', html)
             self.assertIn('Критерии оценивания', html)
             self.assertIn('<td>85%</td>', html)
             self.assertIn('Вариант 1', html)

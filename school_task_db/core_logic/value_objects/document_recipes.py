@@ -34,6 +34,7 @@ TRAINING_TASKS_SECTION = 'training_tasks'
 THEORY_SECTION = 'theory'
 PAGE_BREAK_SECTION = 'page_break'
 SCORE_TABLE_SECTION = 'score_table'
+BLANK_CELLS_SECTION = 'blank_cells'
 
 
 def build_document_recipe_from_sections_config(

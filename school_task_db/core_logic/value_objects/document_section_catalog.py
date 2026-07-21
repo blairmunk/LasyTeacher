@@ -7,6 +7,7 @@ from core_logic.value_objects.document_recipes import (
     ANSWER_KEY_DOCUMENT_TYPE,
     ANSWER_KEY_SECTION,
     ANSWERS_SECTION,
+    BLANK_CELLS_SECTION,
     COMMON_HEADER_SECTION,
     CUSTOM_DOCUMENT_TYPE,
     DIAGNOSTIC_DOCUMENT_TYPE,
@@ -179,6 +180,16 @@ DOCUMENT_SECTION_CATALOG = (
             REMEDIAL_SHEET_DOCUMENT_TYPE,
         ),
         description='Техническая секция для управления печатной версткой.',
+    ),
+    DocumentSectionCatalogItem(
+        section_type=BLANK_CELLS_SECTION,
+        title='Пустые клетки',
+        supported_document_types=ALL_DOCUMENT_TYPES,
+        renderable_document_types=(
+            WORK_DOCUMENT_TYPE,
+            REMEDIAL_SHEET_DOCUMENT_TYPE,
+        ),
+        description='Разлинованное место для решения или черновика.',
     ),
     DocumentSectionCatalogItem(
         section_type=SCORE_TABLE_SECTION,

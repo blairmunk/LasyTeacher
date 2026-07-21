@@ -4,26 +4,6 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping, Tuple
 
 from core_logic.value_objects.task_print_settings import (
-    DEFAULT_BLANK_CELLS_COLUMNS,
-    DEFAULT_BLANK_CELLS_ROW_HEIGHT,
-    DEFAULT_BLANK_CELLS_ROWS,
-    TASK_BANK_ROLE_ANY,
-    TASK_BANK_ROLE_CHOICES,
-    TASK_BANK_ROLE_CONTROL,
-    TASK_BANK_ROLE_DEMO,
-    TASK_BANK_ROLE_LABELS,
-    TASK_BANK_ROLE_PRACTICE,
-    TASK_BANK_ROLE_REMEDIAL,
-    TASK_BANK_ROLE_SPECIFIC_CHOICES,
-    TASK_BANK_ROLES,
-    TASK_BANK_SPECIFIC_ROLES,
-    TASK_RENDER_MODE_CHOICES,
-    TASK_RENDER_MODE_LABELS,
-    TASK_RENDER_MODE_TASK_ONLY,
-    TASK_RENDER_MODE_WITH_ANSWER,
-    TASK_RENDER_MODE_WITH_FULL_SOLUTION,
-    TASK_RENDER_MODE_WITH_SHORT_SOLUTION,
-    TASK_RENDER_MODES,
     validate_task_render_mode,
     validate_task_specific_bank_role,
 )
@@ -32,7 +12,6 @@ from core_logic.value_objects.variant_content_plan import (
     VariantContentPlan,
     build_variant_content_plan,
 )
-from core_logic.value_objects.work_specification import WorkTaskRoleSpec
 
 VARIANT_PRINT_BLOCK_TASK = 'task'
 VARIANT_PRINT_BLOCK_BLANK_CELLS = 'blank_cells'

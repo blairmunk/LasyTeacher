@@ -4,18 +4,20 @@ from core_logic.value_objects.variant_content_plan import (
     VariantContentItem,
     build_variant_content_plan,
 )
-from core_logic.value_objects.variant_print_plan import (
+from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_ANY,
     TASK_BANK_ROLE_DEMO,
     TASK_BANK_ROLE_PRACTICE,
     TASK_RENDER_MODE_TASK_ONLY,
     TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+)
+from core_logic.value_objects.variant_print_plan import (
     VARIANT_PRINT_BLOCK_BLANK_CELLS,
     VARIANT_PRINT_BLOCK_TASK,
-    build_variant_print_profile_from_options,
-    build_variant_print_plan_from_content_plan,
     VariantTaskPrintRow,
     build_variant_print_plan,
+    build_variant_print_profile_from_options,
+    build_variant_print_plan_from_content_plan,
 )
 
 

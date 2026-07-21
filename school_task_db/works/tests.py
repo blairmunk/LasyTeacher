@@ -331,6 +331,11 @@ class WorkDetailViewTests(TestCase):
         self.assertContains(response, 'data-rendering-form')
         self.assertContains(response, 'render-toast-box')
         self.assertContains(response, 'advanced-rendering-form')
+        self.assertContains(response, 'data-document-template-select')
+        self.assertContains(response, 'data-template-controlled-options')
+        self.assertContains(response, 'Состав по умолчанию')
+        self.assertContains(response, 'Печать')
+        self.assertContains(response, 'break_between_variants')
 
     def test_detail_exposes_work_template_selector(self):
         template = DocumentTemplate.objects.create(

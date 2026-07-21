@@ -161,7 +161,7 @@
                                     <option value="latex">LaTeX</option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-3" data-template-controlled-options>
                                 <label class="form-label">Контент</label>
                                 <select name="answer_type" class="form-select">
                                     <option value="with_short_solutions">С краткими решениями</option>
@@ -179,7 +179,11 @@
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label">Шаблон</label>
-                                <select name="template_id" class="form-select">
+                                <select
+                                    name="template_id"
+                                    class="form-select"
+                                    data-document-template-select
+                                >
                                     <option value="">По умолчанию</option>
                                     {% for template in remedial_sheet_templates %}
                                     <option value="{{ template.template_id }}">
@@ -275,7 +279,11 @@
                                     </div>
                                     <div class="col-md-3 mb-3">
                                         <label class="form-label">Шаблон</label>
-                                        <select name="template_id" class="form-select">
+                                        <select
+                                            name="template_id"
+                                            class="form-select"
+                                            data-document-template-select
+                                        >
                                             <option value="">По умолчанию</option>
                                             {% for template in work_document_templates %}
                                             <option value="{{ template.template_id }}">
@@ -286,8 +294,8 @@
                                     </div>
                                 </div>
                                 <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Контент</label>
+                                    <div class="col-md-5 mb-3" data-template-controlled-options>
+                                        <label class="form-label">Состав по умолчанию</label>
                                         <div class="form-check">
                                             <input class="form-check-input" type="radio" name="answer_type" value="tasks_only" checked>
                                             <label class="form-check-label">Только задания</label>
@@ -301,8 +309,8 @@
                                             <label class="form-check-label">Задания + полные решения</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Дополнительно</label>
+                                    <div class="col-md-3 mb-3" data-template-controlled-options>
+                                        <label class="form-label">Задания</label>
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" name="include_hints" value="1">
                                             <label class="form-check-label">Подсказки</label>
@@ -311,6 +319,9 @@
                                             <input class="form-check-input" type="checkbox" name="include_instructions" value="1">
                                             <label class="form-check-label">Инструкции</label>
                                         </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Печать</label>
                                         <input type="hidden" name="break_between_variants" value="0">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" name="break_between_variants" value="1" checked>
@@ -535,6 +546,31 @@
                 variant_selection: 'all'
             });
         });
+    });
+
+    function syncTemplateControlledOptions(form) {
+        var templateSelect = form.querySelector('[data-document-template-select]');
+        if (!templateSelect) return;
+        var usesSavedTemplate = Boolean(templateSelect.value);
+        form.querySelectorAll('[data-template-controlled-options]').forEach(
+            function(block) {
+                block.classList.toggle('opacity-50', usesSavedTemplate);
+                block.querySelectorAll('input, select, textarea, button').forEach(
+                    function(control) {
+                        control.disabled = usesSavedTemplate;
+                    }
+                );
+            }
+        );
+    }
+
+    document.querySelectorAll('form').forEach(function(form) {
+        var templateSelect = form.querySelector('[data-document-template-select]');
+        if (!templateSelect) return;
+        templateSelect.addEventListener('change', function() {
+            syncTemplateControlledOptions(form);
+        });
+        syncTemplateControlledOptions(form);
     });
 
     // === Пакетная печать листов работы над ошибками ===

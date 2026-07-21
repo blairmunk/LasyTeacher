@@ -1,13 +1,105 @@
+from io import StringIO
+from tempfile import TemporaryDirectory
+from pathlib import Path
+
+from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from core.models import AcademicYear
 from curriculum.models import Topic
 from events.models import Event, EventParticipation, Mark
 from students.models import Student, StudentGroup
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
 from works.models import Variant, VariantTask, Work, WorkAnalogGroup
+
+
+class ImportStudentsCsvCommandTests(TestCase):
+    def test_dry_run_does_not_save_students_or_groups(self):
+        with TemporaryDirectory() as temp_dir:
+            csv_path = Path(temp_dir) / 'students.csv'
+            csv_path.write_text(
+                (
+                    'class,academic_year,last_name,first_name,middle_name,email\n'
+                    '8А,2026-2027,Иванов,Иван,Петрович,ivanov@example.test\n'
+                ),
+                encoding='utf-8',
+            )
+            out = StringIO()
+
+            call_command(
+                'import_students_csv',
+                str(csv_path),
+                dry_run=True,
+                stdout=out,
+            )
+
+        self.assertEqual(Student.objects.count(), 0)
+        self.assertEqual(StudentGroup.objects.count(), 0)
+        self.assertEqual(AcademicYear.objects.count(), 0)
+        self.assertIn('DRY RUN', out.getvalue())
+
+    def test_imports_students_groups_and_academic_year_from_csv(self):
+        with TemporaryDirectory() as temp_dir:
+            csv_path = Path(temp_dir) / 'students.csv'
+            csv_path.write_text(
+                (
+                    'класс,учебный_год,фамилия,имя,отчество,email\n'
+                    '8А,2026-2027,Иванов,Иван,Петрович,ivanov@example.test\n'
+                    '8А,2026-2027,Петрова,Анна,Сергеевна,\n'
+                ),
+                encoding='utf-8',
+            )
+            out = StringIO()
+
+            call_command('import_students_csv', str(csv_path), stdout=out)
+
+        year = AcademicYear.objects.get(name='2026-2027')
+        group = StudentGroup.objects.get(name='8А', academic_year=year)
+        self.assertEqual(Student.objects.count(), 2)
+        self.assertEqual(group.students.count(), 2)
+        self.assertTrue(year.is_active)
+        self.assertIn('Импорт завершен', out.getvalue())
+
+    def test_second_import_updates_existing_student_without_duplicate(self):
+        with TemporaryDirectory() as temp_dir:
+            csv_path = Path(temp_dir) / 'students.csv'
+            csv_path.write_text(
+                (
+                    'class,academic_year,last_name,first_name,middle_name,email\n'
+                    '8А,2026-2027,Иванов,Иван,Петрович,ivanov@example.test\n'
+                ),
+                encoding='utf-8',
+            )
+
+            call_command('import_students_csv', str(csv_path), stdout=StringIO())
+            call_command('import_students_csv', str(csv_path), stdout=StringIO())
+
+        self.assertEqual(Student.objects.count(), 1)
+        self.assertEqual(StudentGroup.objects.count(), 1)
+        self.assertEqual(StudentGroup.objects.get().students.count(), 1)
+
+    def test_dry_run_validates_academic_year_format(self):
+        with TemporaryDirectory() as temp_dir:
+            csv_path = Path(temp_dir) / 'students.csv'
+            csv_path.write_text(
+                (
+                    'class,academic_year,last_name,first_name\n'
+                    '8А,2026,Иванов,Иван\n'
+                ),
+                encoding='utf-8',
+            )
+
+            with self.assertRaisesRegex(CommandError, '2026-2027'):
+                call_command(
+                    'import_students_csv',
+                    str(csv_path),
+                    dry_run=True,
+                    stdout=StringIO(),
+                )
 
 
 class RemedialFromEventViewTests(TestCase):

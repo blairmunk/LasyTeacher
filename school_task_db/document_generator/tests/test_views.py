@@ -92,6 +92,27 @@ class DocumentTemplateEditorViewTests(TestCase):
         )
         self.assertTrue(template.is_default)
 
+    def test_template_create_view_preserves_section_order(self):
+        response = self.client.post(
+            reverse('document_generator:template-create'),
+            {
+                'name': 'Рабочий лист',
+                'template_type': 'work',
+                'sections': ['header', 'task_list'],
+                'section_order': 'task_list,header',
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('document_generator:template-editor'),
+        )
+        template = DocumentTemplate.objects.get(name='Рабочий лист')
+        self.assertEqual(
+            template.sections_config,
+            [{'type': 'task_list'}, {'type': 'header'}],
+        )
+
     def test_template_create_view_shows_clean_validation_errors(self):
         response = self.client.post(
             reverse('document_generator:template-create'),
@@ -163,6 +184,33 @@ class DocumentTemplateEditorViewTests(TestCase):
             [{'type': 'header'}, {'type': 'task_list'}],
         )
         self.assertTrue(template.is_default)
+
+    def test_template_update_view_preserves_section_order(self):
+        template = DocumentTemplate.objects.create(
+            name='Старый шаблон',
+            template_type=DocumentTemplate.TemplateType.WORK,
+            sections_config=[{'type': 'header'}],
+        )
+
+        response = self.client.post(
+            reverse('document_generator:template-update', args=[template.pk]),
+            {
+                'name': 'Новый шаблон',
+                'template_type': 'work',
+                'sections': ['header', 'task_list'],
+                'section_order': 'task_list,header',
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('document_generator:template-editor'),
+        )
+        template.refresh_from_db()
+        self.assertEqual(
+            template.sections_config,
+            [{'type': 'task_list'}, {'type': 'header'}],
+        )
 
     def test_template_update_view_returns_404_for_missing_template(self):
         response = self.client.get(

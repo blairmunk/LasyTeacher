@@ -44,7 +44,7 @@ class DocumentTemplateFormAdapter:
             name=form.cleaned_data['name'],
             description=form.cleaned_data.get('description', ''),
             template_type=form.cleaned_data['template_type'],
-            section_types=tuple(form.cleaned_data['sections']),
+            section_types=self._section_types_from_form(form),
             is_default=form.cleaned_data.get('is_default', False),
         )
 
@@ -54,7 +54,7 @@ class DocumentTemplateFormAdapter:
             name=form.cleaned_data['name'],
             description=form.cleaned_data.get('description', ''),
             template_type=form.cleaned_data['template_type'],
-            section_types=tuple(form.cleaned_data['sections']),
+            section_types=self._section_types_from_form(form),
             is_default=form.cleaned_data.get('is_default', False),
         )
 
@@ -64,6 +64,7 @@ class DocumentTemplateFormAdapter:
             'description': template.description,
             'template_type': template.template_type,
             'sections': template.section_types,
+            'section_order': ','.join(template.section_types),
             'is_default': template.is_default,
         }
 
@@ -80,6 +81,7 @@ class DocumentTemplateFormAdapter:
                 if form.is_bound
                 else form.initial.get('sections', [])
             ),
+            'selected_section_order': self._selected_section_order(form),
             'selected_document_type': (
                 form.data.get('template_type')
                 if form.is_bound
@@ -138,3 +140,43 @@ class DocumentTemplateFormAdapter:
         if not query:
             return '?'
         return f'?{query}'
+
+    def _section_types_from_form(self, form):
+        selected_sections = tuple(form.cleaned_data['sections'])
+        ordered_sections = self._ordered_sections(
+            selected_sections=selected_sections,
+            section_order=form.cleaned_data.get('section_order', ''),
+        )
+        return tuple(ordered_sections)
+
+    def _selected_section_order(self, form):
+        selected_sections = (
+            form.data.getlist('sections')
+            if form.is_bound
+            else list(form.initial.get('sections', []))
+        )
+        section_order = (
+            form.data.get('section_order', '')
+            if form.is_bound
+            else form.initial.get('section_order', '')
+        )
+        return self._ordered_sections(
+            selected_sections=selected_sections,
+            section_order=section_order,
+        )
+
+    def _ordered_sections(self, selected_sections, section_order):
+        selected = list(selected_sections)
+        selected_set = set(selected)
+        ordered = [
+            section_type.strip()
+            for section_type in section_order.split(',')
+            if section_type.strip() in selected_set
+        ]
+        seen = set(ordered)
+        ordered.extend(
+            section_type
+            for section_type in selected
+            if section_type not in seen
+        )
+        return ordered

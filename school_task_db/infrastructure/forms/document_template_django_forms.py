@@ -26,6 +26,10 @@ class DocumentTemplateForm(forms.Form):
         choices=(),
         widget=forms.CheckboxSelectMultiple,
     )
+    section_order = forms.CharField(
+        required=False,
+        widget=forms.HiddenInput,
+    )
     is_default = forms.BooleanField(
         label='Использовать по умолчанию для этого типа',
         required=False,

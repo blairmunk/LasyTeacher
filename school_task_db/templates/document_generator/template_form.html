@@ -41,26 +41,48 @@
             <div class="mt-4">
                 <h2 class="h5 mb-3">Секции</h2>
                 {{ form.sections.errors }}
+                {{ form.section_order }}
                 <div class="row g-3" data-section-list>
                     {% for section in section_options %}
                     <div
                         class="col-md-6"
                         data-section-option
+                        data-section-type="{{ section.section_type }}"
                         data-document-types="{% for document_type in section.renderable_document_types %}{{ document_type }} {% endfor %}"
                     >
                         <label class="border rounded p-3 d-block h-100">
-                            <div class="form-check">
-                                <input
-                                    class="form-check-input"
-                                    type="checkbox"
-                                    name="sections"
-                                    value="{{ section.section_type }}"
-                                    id="section-{{ section.section_type }}"
-                                    {% if section.section_type in selected_sections %}checked{% endif %}
-                                >
-                                <span class="form-check-label fw-semibold">
-                                    {{ section.title }}
-                                </span>
+                            <div class="d-flex gap-2 align-items-start">
+                                <div class="form-check flex-grow-1">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        name="sections"
+                                        value="{{ section.section_type }}"
+                                        id="section-{{ section.section_type }}"
+                                        {% if section.section_type in selected_sections %}checked{% endif %}
+                                    >
+                                    <span class="form-check-label fw-semibold">
+                                        {{ section.title }}
+                                    </span>
+                                </div>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button
+                                        class="btn btn-outline-secondary"
+                                        type="button"
+                                        data-section-move="up"
+                                        title="Выше"
+                                    >
+                                        <i class="fas fa-arrow-up"></i>
+                                    </button>
+                                    <button
+                                        class="btn btn-outline-secondary"
+                                        type="button"
+                                        data-section-move="down"
+                                        title="Ниже"
+                                    >
+                                        <i class="fas fa-arrow-down"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="small text-muted mt-2">{{ section.description }}</div>
                             <code class="small">{{ section.section_type }}</code>
@@ -95,9 +117,47 @@
     var form = document.querySelector('[data-document-template-form]');
     if (!form) return;
     var typeSelect = form.querySelector('[name="template_type"]');
+    var orderInput = form.querySelector('[name="section_order"]');
     var sectionOptions = Array.prototype.slice.call(
         form.querySelectorAll('[data-section-option]')
     );
+    var initialOrder = '{{ selected_section_order|join:","|escapejs }}'
+        .split(',')
+        .filter(Boolean);
+
+    function sortSectionsByOrder() {
+        var list = form.querySelector('[data-section-list]');
+        var optionByType = {};
+        sectionOptions.forEach(function(option) {
+            optionByType[option.dataset.sectionType] = option;
+        });
+
+        initialOrder.forEach(function(sectionType) {
+            if (optionByType[sectionType]) {
+                list.appendChild(optionByType[sectionType]);
+            }
+        });
+        sectionOptions.forEach(function(option) {
+            if (initialOrder.indexOf(option.dataset.sectionType) === -1) {
+                list.appendChild(option);
+            }
+        });
+        sectionOptions = Array.prototype.slice.call(
+            form.querySelectorAll('[data-section-option]')
+        );
+    }
+
+    function syncSectionOrder() {
+        var selectedSectionTypes = sectionOptions
+            .filter(function(option) {
+                var input = option.querySelector('input[type="checkbox"]');
+                return input && input.checked && !option.classList.contains('d-none');
+            })
+            .map(function(option) {
+                return option.dataset.sectionType;
+            });
+        orderInput.value = selectedSectionTypes.join(',');
+    }
 
     function syncSections() {
         var selectedType = typeSelect.value;
@@ -108,9 +168,35 @@
             var input = option.querySelector('input[type="checkbox"]');
             if (input && !isSupported) input.checked = false;
         });
+        syncSectionOrder();
     }
 
+    form.addEventListener('change', function(event) {
+        if (event.target.matches('[name="sections"]')) {
+            syncSectionOrder();
+        }
+    });
+
+    form.addEventListener('click', function(event) {
+        var button = event.target.closest('[data-section-move]');
+        if (!button) return;
+        var option = button.closest('[data-section-option]');
+        if (!option) return;
+        var direction = button.dataset.sectionMove;
+        if (direction === 'up' && option.previousElementSibling) {
+            option.parentNode.insertBefore(option, option.previousElementSibling);
+        }
+        if (direction === 'down' && option.nextElementSibling) {
+            option.parentNode.insertBefore(option.nextElementSibling, option);
+        }
+        sectionOptions = Array.prototype.slice.call(
+            form.querySelectorAll('[data-section-option]')
+        );
+        syncSectionOrder();
+    });
+
     typeSelect.addEventListener('change', syncSections);
+    sortSectionsByOrder();
     syncSections();
 })();
 </script>

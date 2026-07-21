@@ -210,6 +210,21 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         self.assertEqual(params.section_types, ('header', 'task_list'))
         self.assertTrue(params.is_default)
 
+    def test_builds_create_params_preserving_section_order(self):
+        form = DocumentTemplateForm(
+            data=QueryDict(
+                'name=Шаблон&template_type=work'
+                '&sections=header&sections=task_list'
+                '&section_order=task_list,header',
+            ),
+            sections=get_document_section_catalog(renderable_only=True),
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+
+        params = DocumentTemplateFormAdapter().create_params_from_form(form)
+
+        self.assertEqual(params.section_types, ('task_list', 'header'))
+
     def test_builds_update_params_from_template_form(self):
         form = DocumentTemplateForm(
             data=QueryDict(
@@ -248,6 +263,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         self.assertEqual(initial['description'], 'Описание')
         self.assertEqual(initial['template_type'], WORK_DOCUMENT_TYPE)
         self.assertEqual(initial['sections'], (HEADER_SECTION,))
+        self.assertEqual(initial['section_order'], HEADER_SECTION)
         self.assertTrue(initial['is_default'])
 
     def test_builds_create_context(self):
@@ -265,6 +281,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         self.assertEqual(context['form'], form)
         self.assertEqual(context['selected_document_type'], 'work')
         self.assertEqual(context['selected_sections'], {'header'})
+        self.assertEqual(context['selected_section_order'], ['header'])
         self.assertEqual(context['section_options'][0]['section_type'], 'header')
 
 

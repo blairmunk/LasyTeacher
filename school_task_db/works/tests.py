@@ -334,6 +334,8 @@ class WorkDetailViewTests(TestCase):
         self.assertContains(response, 'data-document-template-select')
         self.assertContains(response, 'data-template-controlled-options')
         self.assertContains(response, 'Состав по умолчанию')
+        self.assertContains(response, 'document_style')
+        self.assertContains(response, 'Рабочий лист')
         self.assertContains(response, 'Печать')
         self.assertContains(response, 'break_between_variants')
 

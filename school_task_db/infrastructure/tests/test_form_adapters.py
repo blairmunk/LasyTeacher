@@ -24,7 +24,10 @@ from core_logic.entities.work import (
 from core_logic.use_cases.get_document_template_editor_data import (
     DocumentTemplateEditorData,
 )
-from core_logic.value_objects.document_render_options import WorkDocumentRenderOptions
+from core_logic.value_objects.document_render_options import (
+    WORK_DOCUMENT_STYLE_WORKSHEET,
+    WorkDocumentRenderOptions,
+)
 from core_logic.value_objects.document_recipes import (
     COMMON_HEADER_SECTION,
     HEADER_SECTION,
@@ -735,6 +738,7 @@ class WorkFormAdapterTests(SimpleTestCase):
             QueryDict(
                 'renderer_type=html&format=A5&answer_type=with_short_solutions'
                 '&include_hints=1&include_instructions=1'
+                '&document_style=worksheet'
                 '&template_id=template-work',
             ),
             work_id='w1',
@@ -747,6 +751,7 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertEqual(request.options.answer_type, 'with_short_solutions')
         self.assertTrue(request.options.include_hints)
         self.assertTrue(request.options.include_instructions)
+        self.assertEqual(request.options.document_style, WORK_DOCUMENT_STYLE_WORKSHEET)
 
     def test_builds_render_remedial_sheet_request_from_post(self):
         request = WorkFormAdapter().render_remedial_sheet_request_from_post(

@@ -62,6 +62,10 @@
                         <option value="{{ ag.pk }}">{{ ag.name }}</option>
                         {% endfor %}
                     </select>
+                    <div id="work-spec-empty-fields" class="d-none">
+                        {{ formset.empty_form.bank_role_filter }}
+                        {{ formset.empty_form.render_mode }}
+                    </div>
 
 
                     {% if formset.non_form_errors %}
@@ -116,6 +120,35 @@
                                     <div class="d-none">{{ f.DELETE }}</div>
                                 </div>
                             </div>
+                            <div class="row gx-2 mt-2 align-items-end">
+                                <div class="col-md-3">
+                                    <label for="{{ f.bank_role_filter.id_for_label }}" class="form-label small text-muted mb-1">Роль</label>
+                                    {{ f.bank_role_filter }}
+                                    {% if f.bank_role_filter.errors %}<div class="text-danger small">{{ f.bank_role_filter.errors }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ f.render_mode.id_for_label }}" class="form-label small text-muted mb-1">Печать</label>
+                                    {{ f.render_mode }}
+                                    {% if f.render_mode.errors %}<div class="text-danger small">{{ f.render_mode.errors }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-auto">
+                                    <div class="form-check mb-1">
+                                        {{ f.is_assessable }}
+                                        <label for="{{ f.is_assessable.id_for_label }}" class="form-check-label small">Оценивать</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-auto">
+                                    <div class="form-check mb-1">
+                                        {{ f.blank_cells_after }}
+                                        <label for="{{ f.blank_cells_after.id_for_label }}" class="form-check-label small">Клетки после</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-auto">
+                                    <label for="{{ f.blank_cells_rows.id_for_label }}" class="form-label small text-muted mb-1">Строк</label>
+                                    {{ f.blank_cells_rows }}
+                                    {% if f.blank_cells_rows.errors %}<div class="text-danger small">{{ f.blank_cells_rows.errors }}</div>{% endif %}
+                                </div>
+                            </div>
                             {{ f.id }}
                         </div>
                         {% endfor %}
@@ -135,7 +168,7 @@
                         <i class="fas fa-info-circle"></i>
                         <strong>×</strong> — кол-во заданий из группы.
                         <strong><i class="fas fa-weight-hanging"></i></strong> — вес (чем больше, тем больше баллов).
-                        Баллы рассчитываются пропорционально весам при генерации.
+                        Неоцениваемые строки печатаются в варианте, но не попадают в проверку и сумму баллов.
                     </div>
                 </div>
             </div>
@@ -205,6 +238,12 @@
         }
     }
 
+    const emptyFields = document.getElementById('work-spec-empty-fields');
+    const roleMasterSelect = emptyFields ? emptyFields.querySelector('select[name$="-bank_role_filter"]') : null;
+    const renderMasterSelect = emptyFields ? emptyFields.querySelector('select[name$="-render_mode"]') : null;
+    const roleOptions = roleMasterSelect ? roleMasterSelect.innerHTML : '<option value="any">Любая роль</option>';
+    const renderOptions = renderMasterSelect ? renderMasterSelect.innerHTML : '<option value="task_only">Только задание</option>';
+
 
     // === Превью баллов ===
     function updatePointsPreview() {
@@ -222,13 +261,20 @@
         rows.forEach(function(row) {
             var countInput = row.querySelector('input[name$="-count"]');
             var weightInput = row.querySelector('input[name$="-weight"]');
+            var assessableInput = row.querySelector('input[name$="-is_assessable"]');
+            var isAssessable = !assessableInput || assessableInput.checked;
             var count = parseInt(countInput ? countInput.value : 1) || 1;
-            var weight = parseInt(weightInput ? weightInput.value : 1) || 1;
+            var weight = isAssessable ? (parseInt(weightInput ? weightInput.value : 1) || 1) : 0;
             for (var i = 0; i < count; i++) slots.push({weight: weight, row: row});
         });
 
         var totalWeight = slots.reduce(function(s, x) { return s + x.weight; }, 0);
         if (slots.length === 0) { previewDiv.style.display = 'none'; return; }
+        if (totalWeight <= 0) {
+            previewText.innerHTML = '<strong>Нет оцениваемых заданий.</strong>';
+            previewDiv.style.display = '';
+            return;
+        }
 
         // Если max_score=0 — без нормировки, баллы = вес напрямую
         var scale = maxScore > 0 ? maxScore : totalWeight;
@@ -271,6 +317,7 @@
 
     // Слушаем изменения
     container.addEventListener('input', updatePointsPreview);
+    container.addEventListener('change', updatePointsPreview);
     var maxScoreInput = document.getElementById('{{ form.max_score.id_for_label }}');
     if (maxScoreInput) maxScoreInput.addEventListener('input', updatePointsPreview);
 
@@ -393,6 +440,37 @@
                     </div>
                 </div>
             </div>
+            <div class="row gx-2 mt-2 align-items-end">
+                <div class="col-md-3">
+                    <label for="id_${prefix}-bank_role_filter" class="form-label small text-muted mb-1">Роль</label>
+                    <select name="${prefix}-bank_role_filter" id="id_${prefix}-bank_role_filter" class="form-select form-select-sm">
+                        ${roleOptions}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="id_${prefix}-render_mode" class="form-label small text-muted mb-1">Печать</label>
+                    <select name="${prefix}-render_mode" id="id_${prefix}-render_mode" class="form-select form-select-sm">
+                        ${renderOptions}
+                    </select>
+                </div>
+                <div class="col-md-auto">
+                    <div class="form-check mb-1">
+                        <input type="checkbox" name="${prefix}-is_assessable" id="id_${prefix}-is_assessable" class="form-check-input" checked>
+                        <label for="id_${prefix}-is_assessable" class="form-check-label small">Оценивать</label>
+                    </div>
+                </div>
+                <div class="col-md-auto">
+                    <div class="form-check mb-1">
+                        <input type="checkbox" name="${prefix}-blank_cells_after" id="id_${prefix}-blank_cells_after" class="form-check-input">
+                        <label for="id_${prefix}-blank_cells_after" class="form-check-label small">Клетки после</label>
+                    </div>
+                </div>
+                <div class="col-md-auto">
+                    <label for="id_${prefix}-blank_cells_rows" class="form-label small text-muted mb-1">Строк</label>
+                    <input type="number" name="${prefix}-blank_cells_rows" id="id_${prefix}-blank_cells_rows"
+                           value="6" min="1" max="40" class="form-control form-control-sm" style="width: 80px">
+                </div>
+            </div>
         </div>`;
 
         container.insertAdjacentHTML('beforeend', rowHtml);
@@ -406,4 +484,3 @@
 })();
 </script>
 {% endblock %}
-

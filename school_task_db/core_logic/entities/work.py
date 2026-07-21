@@ -7,8 +7,10 @@ from typing import Any, List, Optional
 from core_logic.entities.document import DocumentTemplateSpec
 from core_logic.value_objects.variant_print_plan import (
     DEFAULT_BLANK_CELLS_ROWS,
+    TASK_BANK_ROLE_LABELS,
     TASK_BANK_ROLE_ANY,
     TASK_BANK_ROLE_CONTROL,
+    TASK_RENDER_MODE_LABELS,
     TASK_RENDER_MODE_TASK_ONLY,
 )
 
@@ -60,6 +62,20 @@ class WorkDetailSpecGroup:
     is_assessable: bool = True
     blank_cells_after: bool = False
     blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
+
+    @property
+    def bank_role_filter_label(self) -> str:
+        return TASK_BANK_ROLE_LABELS.get(
+            self.bank_role_filter,
+            self.bank_role_filter,
+        )
+
+    @property
+    def render_mode_label(self) -> str:
+        return TASK_RENDER_MODE_LABELS.get(
+            self.render_mode,
+            self.render_mode,
+        )
 
 
 @dataclass(frozen=True)
@@ -182,6 +198,13 @@ class VariantGenerationGroup:
     requested_count: int
     available_count: int
     bank_role_filter: str = TASK_BANK_ROLE_ANY
+
+    @property
+    def bank_role_filter_label(self) -> str:
+        return TASK_BANK_ROLE_LABELS.get(
+            self.bank_role_filter,
+            self.bank_role_filter,
+        )
 
 
 @dataclass(frozen=True)

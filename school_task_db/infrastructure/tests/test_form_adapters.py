@@ -30,6 +30,10 @@ from core_logic.value_objects.document_recipes import (
     HEADER_SECTION,
     WORK_DOCUMENT_TYPE,
 )
+from core_logic.value_objects.variant_print_plan import (
+    TASK_BANK_ROLE_DEMO,
+    TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+)
 from core_logic.value_objects.document_section_catalog import (
     get_document_section_catalog,
 )
@@ -696,6 +700,39 @@ class WorkFormAdapterTests(SimpleTestCase):
             {'value': 'with_variants', 'label': 'С вариантами'},
             context['variant_status_options'],
         )
+
+    def test_builds_work_specs_from_expanded_formset(self):
+        analog_group = SimpleNamespace(pk='group-1')
+        formset = SimpleNamespace(
+            cleaned_data=[
+                {
+                    'analog_group': analog_group,
+                    'order': 2,
+                    'count': 1,
+                    'weight': 0,
+                    'bank_role_filter': TASK_BANK_ROLE_DEMO,
+                    'render_mode': TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+                    'is_assessable': False,
+                    'blank_cells_after': True,
+                    'blank_cells_rows': 8,
+                },
+                {'DELETE': True, 'analog_group': analog_group},
+                {},
+            ],
+        )
+
+        specs = WorkFormAdapter().work_specs_from_formset(formset, work_id='work-1')
+
+        self.assertEqual(len(specs), 1)
+        self.assertEqual(specs[0].work_id, 'work-1')
+        self.assertEqual(specs[0].analog_group_id, 'group-1')
+        self.assertEqual(specs[0].order, 2)
+        self.assertEqual(specs[0].weight, 1)
+        self.assertEqual(specs[0].bank_role_filter, TASK_BANK_ROLE_DEMO)
+        self.assertEqual(specs[0].render_mode, TASK_RENDER_MODE_WITH_FULL_SOLUTION)
+        self.assertFalse(specs[0].is_assessable)
+        self.assertTrue(specs[0].blank_cells_after)
+        self.assertEqual(specs[0].blank_cells_rows, 8)
 
     def test_reads_document_renderer_type_from_post(self):
         adapter = WorkFormAdapter()

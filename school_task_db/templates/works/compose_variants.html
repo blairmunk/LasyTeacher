@@ -18,8 +18,11 @@
                 <h6>Группы заданий:</h6>
                 <ul>
                     {% for work_group in work_groups %}
-                    <li>{{ work_group.group_name }} - {{ work_group.requested_count }} заданий 
-                        (доступно: {{ work_group.available_count }})</li>
+                    <li>
+                        {{ work_group.group_name }} - {{ work_group.requested_count }} заданий,
+                        роль: {{ work_group.bank_role_filter_label }}
+                        (доступно: {{ work_group.available_count }})
+                    </li>
                     {% endfor %}
                 </ul>
             </div>

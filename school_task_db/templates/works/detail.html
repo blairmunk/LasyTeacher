@@ -63,6 +63,8 @@
                             <tr>
                                 <th style="width: 50px">№</th>
                                 <th>Группа аналогов</th>
+                                <th style="width: 140px">Роль</th>
+                                <th style="width: 160px">Печать</th>
                                 <th style="width: 80px" class="text-center">Кол-во</th>
                                 <th style="width: 70px" class="text-center">Вес</th>
                                 <th style="width: 90px" class="text-center">Баллы</th>
@@ -77,6 +79,18 @@
                                     <a href="{% url 'task_groups:detail' item.wg.analog_group.pk %}">
                                         {{ item.wg.analog_group.name }}
                                     </a>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">{{ item.wg.bank_role_filter_label }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">{{ item.wg.render_mode_label }}</span>
+                                    {% if not item.wg.is_assessable %}
+                                    <span class="badge bg-secondary">без оценки</span>
+                                    {% endif %}
+                                    {% if item.wg.blank_cells_after %}
+                                    <span class="badge bg-info text-dark">клетки: {{ item.wg.blank_cells_rows }}</span>
+                                    {% endif %}
                                 </td>
                                 <td class="text-center fw-bold">{{ item.wg.count }}</td>
                                 <td class="text-center">
@@ -101,7 +115,7 @@
                         </tbody>
                         <tfoot class="table-light">
                             <tr>
-                                <td colspan="4" class="text-end fw-bold">Итого:</td>
+                                <td colspan="6" class="text-end fw-bold">Итого:</td>
                                 <td class="text-center fw-bold text-primary">{{ work.effective_max_score }}</td>
                                 <td></td>
                             </tr>

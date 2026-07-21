@@ -28,12 +28,14 @@ from core_logic.value_objects.document_recipes import (
     TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
 )
-from core_logic.value_objects.variant_print_plan import (
+from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_CONTROL,
     TASK_BANK_ROLE_DEMO,
     TASK_RENDER_MODE_TASK_ONLY,
     TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+)
+from core_logic.value_objects.variant_print_plan import (
     VARIANT_PRINT_BLOCK_BLANK_CELLS,
     VARIANT_PRINT_BLOCK_TASK,
 )

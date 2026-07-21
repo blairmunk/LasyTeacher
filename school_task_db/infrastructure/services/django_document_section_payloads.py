@@ -23,12 +23,14 @@ from core_logic.value_objects.variant_content_plan import (
     VariantContentItem,
     build_variant_content_plan,
 )
-from core_logic.value_objects.variant_print_plan import (
+from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_COLUMNS,
     DEFAULT_BLANK_CELLS_ROW_HEIGHT,
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_CONTROL,
     TASK_RENDER_MODE_TASK_ONLY,
+)
+from core_logic.value_objects.variant_print_plan import (
     VARIANT_PRINT_BLOCK_BLANK_CELLS,
     VARIANT_PRINT_BLOCK_TASK,
     build_variant_print_profile_from_options,

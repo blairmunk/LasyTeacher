@@ -3,63 +3,36 @@
 from dataclasses import dataclass, field
 from typing import Any, Mapping, Tuple
 
-
-TASK_BANK_ROLE_ANY = 'any'
-TASK_BANK_ROLE_DEMO = 'demo'
-TASK_BANK_ROLE_PRACTICE = 'practice'
-TASK_BANK_ROLE_CONTROL = 'control'
-TASK_BANK_ROLE_REMEDIAL = 'remedial'
-
-TASK_BANK_ROLES = frozenset(
-    (
-        TASK_BANK_ROLE_ANY,
-        TASK_BANK_ROLE_DEMO,
-        TASK_BANK_ROLE_PRACTICE,
-        TASK_BANK_ROLE_CONTROL,
-        TASK_BANK_ROLE_REMEDIAL,
-    )
+from core_logic.value_objects.task_print_settings import (
+    DEFAULT_BLANK_CELLS_COLUMNS,
+    DEFAULT_BLANK_CELLS_ROW_HEIGHT,
+    DEFAULT_BLANK_CELLS_ROWS,
+    TASK_BANK_ROLE_ANY,
+    TASK_BANK_ROLE_CHOICES,
+    TASK_BANK_ROLE_CONTROL,
+    TASK_BANK_ROLE_DEMO,
+    TASK_BANK_ROLE_LABELS,
+    TASK_BANK_ROLE_PRACTICE,
+    TASK_BANK_ROLE_REMEDIAL,
+    TASK_BANK_ROLE_SPECIFIC_CHOICES,
+    TASK_BANK_ROLES,
+    TASK_BANK_SPECIFIC_ROLES,
+    TASK_RENDER_MODE_CHOICES,
+    TASK_RENDER_MODE_LABELS,
+    TASK_RENDER_MODE_TASK_ONLY,
+    TASK_RENDER_MODE_WITH_ANSWER,
+    TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+    TASK_RENDER_MODE_WITH_SHORT_SOLUTION,
+    TASK_RENDER_MODES,
+    validate_task_bank_role,
+    validate_task_render_mode,
+    validate_task_specific_bank_role,
 )
-TASK_BANK_SPECIFIC_ROLES = frozenset(
-    role for role in TASK_BANK_ROLES if role != TASK_BANK_ROLE_ANY
+from core_logic.value_objects.variant_content_plan import (
+    VariantContentItem,
+    VariantContentPlan,
+    build_variant_content_plan,
 )
-
-TASK_BANK_ROLE_LABELS = {
-    TASK_BANK_ROLE_ANY: 'Любая роль',
-    TASK_BANK_ROLE_DEMO: 'Демонстрационное',
-    TASK_BANK_ROLE_PRACTICE: 'Для самостоятельной работы',
-    TASK_BANK_ROLE_CONTROL: 'Контрольное',
-    TASK_BANK_ROLE_REMEDIAL: 'Работа над ошибками',
-}
-
-TASK_BANK_ROLE_CHOICES = tuple(TASK_BANK_ROLE_LABELS.items())
-TASK_BANK_ROLE_SPECIFIC_CHOICES = tuple(
-    (role, label)
-    for role, label in TASK_BANK_ROLE_CHOICES
-    if role != TASK_BANK_ROLE_ANY
-)
-
-TASK_RENDER_MODE_TASK_ONLY = 'task_only'
-TASK_RENDER_MODE_WITH_ANSWER = 'with_answer'
-TASK_RENDER_MODE_WITH_SHORT_SOLUTION = 'with_short_solution'
-TASK_RENDER_MODE_WITH_FULL_SOLUTION = 'with_full_solution'
-
-TASK_RENDER_MODES = frozenset(
-    (
-        TASK_RENDER_MODE_TASK_ONLY,
-        TASK_RENDER_MODE_WITH_ANSWER,
-        TASK_RENDER_MODE_WITH_SHORT_SOLUTION,
-        TASK_RENDER_MODE_WITH_FULL_SOLUTION,
-    )
-)
-
-TASK_RENDER_MODE_LABELS = {
-    TASK_RENDER_MODE_TASK_ONLY: 'Только задание',
-    TASK_RENDER_MODE_WITH_ANSWER: 'Задание + ответ',
-    TASK_RENDER_MODE_WITH_SHORT_SOLUTION: 'Задание + краткое решение',
-    TASK_RENDER_MODE_WITH_FULL_SOLUTION: 'Задание + полное решение',
-}
-
-TASK_RENDER_MODE_CHOICES = tuple(TASK_RENDER_MODE_LABELS.items())
 
 VARIANT_PRINT_BLOCK_TASK = 'task'
 VARIANT_PRINT_BLOCK_BLANK_CELLS = 'blank_cells'
@@ -70,10 +43,6 @@ VARIANT_PRINT_BLOCK_TYPES = frozenset(
         VARIANT_PRINT_BLOCK_BLANK_CELLS,
     )
 )
-
-DEFAULT_BLANK_CELLS_ROWS = 6
-DEFAULT_BLANK_CELLS_COLUMNS = 24
-DEFAULT_BLANK_CELLS_ROW_HEIGHT = 24
 
 
 @dataclass(frozen=True)
@@ -101,64 +70,6 @@ class WorkTaskRoleSpec:
             raise ValueError('blank_cells_rows must be positive')
         validate_task_bank_role(self.bank_role_filter)
         validate_task_render_mode(self.render_mode)
-
-
-@dataclass(frozen=True)
-class VariantContentItem:
-    """Snapshot content item included in a concrete variant."""
-
-    variant_task_id: str
-    task_id: str
-    order: int
-    max_points: int = 0
-    bank_role: str = TASK_BANK_ROLE_CONTROL
-    render_mode: str = TASK_RENDER_MODE_TASK_ONLY
-    is_assessable: bool = True
-    blank_cells_after: bool = False
-    blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
-
-    def __post_init__(self):
-        if not self.variant_task_id:
-            raise ValueError('variant_task_id is required')
-        if not self.task_id:
-            raise ValueError('task_id is required')
-        if self.order < 1:
-            raise ValueError('order must be positive')
-        if self.max_points < 0:
-            raise ValueError('max_points must be non-negative')
-        if self.blank_cells_rows < 1:
-            raise ValueError('blank_cells_rows must be positive')
-        validate_task_specific_bank_role(self.bank_role)
-        validate_task_render_mode(self.render_mode)
-
-
-@dataclass(frozen=True)
-class VariantContentPlan:
-    """Ordered content snapshot for one variant.
-
-    This object describes what the variant contains and what is assessable.
-    Rendering concerns are derived from it into VariantPrintPlan.
-    """
-
-    variant_id: str
-    items: Tuple[VariantContentItem, ...] = field(default_factory=tuple)
-
-    def __post_init__(self):
-        if not self.variant_id:
-            raise ValueError('variant_id is required')
-        object.__setattr__(
-            self,
-            'items',
-            tuple(sorted(self.items, key=lambda item: item.order)),
-        )
-
-    @property
-    def assessable_variant_task_ids(self) -> Tuple[str, ...]:
-        return tuple(
-            item.variant_task_id
-            for item in self.items
-            if item.is_assessable
-        )
 
 
 VariantTaskPrintRow = VariantContentItem
@@ -217,16 +128,6 @@ def build_variant_print_plan(
     )
 
 
-def build_variant_content_plan(
-    variant_id: str,
-    items,
-) -> VariantContentPlan:
-    return VariantContentPlan(
-        variant_id=variant_id,
-        items=tuple(items),
-    )
-
-
 def build_variant_print_plan_from_content_plan(
     content_plan: VariantContentPlan,
 ) -> VariantPrintPlan:
@@ -257,18 +158,3 @@ def build_variant_print_plan_from_content_plan(
                 )
             )
     return VariantPrintPlan(variant_id=content_plan.variant_id, blocks=blocks)
-
-
-def validate_task_bank_role(role: str) -> None:
-    if role not in TASK_BANK_ROLES:
-        raise ValueError(f'Unsupported task bank role: {role}')
-
-
-def validate_task_specific_bank_role(role: str) -> None:
-    if role not in TASK_BANK_SPECIFIC_ROLES:
-        raise ValueError(f'Unsupported specific task bank role: {role}')
-
-
-def validate_task_render_mode(render_mode: str) -> None:
-    if render_mode not in TASK_RENDER_MODES:
-        raise ValueError(f'Unsupported task render mode: {render_mode}')

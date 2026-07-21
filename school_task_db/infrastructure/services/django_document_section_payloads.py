@@ -19,6 +19,10 @@ from core_logic.value_objects.document_recipes import (
     TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
 )
+from core_logic.value_objects.variant_content_plan import (
+    VariantContentItem,
+    build_variant_content_plan,
+)
 from core_logic.value_objects.variant_print_plan import (
     DEFAULT_BLANK_CELLS_COLUMNS,
     DEFAULT_BLANK_CELLS_ROW_HEIGHT,
@@ -27,8 +31,6 @@ from core_logic.value_objects.variant_print_plan import (
     TASK_RENDER_MODE_TASK_ONLY,
     VARIANT_PRINT_BLOCK_BLANK_CELLS,
     VARIANT_PRINT_BLOCK_TASK,
-    VariantContentItem,
-    build_variant_content_plan,
     build_variant_print_plan_from_content_plan,
 )
 from core_logic.entities.document import (

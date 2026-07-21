@@ -1,5 +1,9 @@
 from unittest import TestCase
 
+from core_logic.value_objects.variant_content_plan import (
+    VariantContentItem,
+    build_variant_content_plan,
+)
 from core_logic.value_objects.variant_print_plan import (
     TASK_BANK_ROLE_ANY,
     TASK_BANK_ROLE_DEMO,
@@ -8,8 +12,6 @@ from core_logic.value_objects.variant_print_plan import (
     TASK_RENDER_MODE_WITH_FULL_SOLUTION,
     VARIANT_PRINT_BLOCK_BLANK_CELLS,
     VARIANT_PRINT_BLOCK_TASK,
-    VariantContentItem,
-    build_variant_content_plan,
     build_variant_print_plan_from_content_plan,
     VariantTaskPrintRow,
     WorkTaskRoleSpec,

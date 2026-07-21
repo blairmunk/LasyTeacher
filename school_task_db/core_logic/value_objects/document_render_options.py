@@ -21,6 +21,14 @@ FILE_TYPE_LABELS = {
     'pdf': 'PDF',
 }
 SUPPORTED_DOCUMENT_RENDERER_TYPES = frozenset(FILE_TYPE_LABELS)
+WORK_DOCUMENT_STYLE_STANDARD = 'standard'
+WORK_DOCUMENT_STYLE_WORKSHEET = 'worksheet'
+WORK_DOCUMENT_STYLES = frozenset(
+    (
+        WORK_DOCUMENT_STYLE_STANDARD,
+        WORK_DOCUMENT_STYLE_WORKSHEET,
+    )
+)
 
 
 def is_supported_document_renderer_type(renderer_type: str) -> bool:
@@ -64,6 +72,7 @@ class WorkDocumentBuildOptions:
     include_hints: bool = False
     include_instructions: bool = False
     break_between_variants: bool = True
+    document_style: str = WORK_DOCUMENT_STYLE_STANDARD
 
     @property
     def content_config(self) -> dict:
@@ -78,6 +87,7 @@ class WorkDocumentBuildOptions:
             'include_hints': self.include_hints,
             'include_instructions': self.include_instructions,
             'break_between_variants': self.break_between_variants,
+            'document_style': self.document_style,
         }
 
     @property
@@ -124,6 +134,7 @@ class WorkDocumentRenderOptions:
         include_hints: bool = False,
         include_instructions: bool = False,
         break_between_variants: bool = True,
+        document_style: str = WORK_DOCUMENT_STYLE_STANDARD,
         render_target: Optional[RenderTarget] = None,
         build_options: Optional[WorkDocumentBuildOptions] = None,
     ):
@@ -144,6 +155,7 @@ class WorkDocumentRenderOptions:
                 include_hints=include_hints,
                 include_instructions=include_instructions,
                 break_between_variants=break_between_variants,
+                document_style=_supported_work_document_style(document_style),
             ),
         )
 
@@ -170,6 +182,10 @@ class WorkDocumentRenderOptions:
     @property
     def break_between_variants(self) -> bool:
         return self.build_options.break_between_variants
+
+    @property
+    def document_style(self) -> str:
+        return self.build_options.document_style
 
     @property
     def content_config(self) -> dict:
@@ -245,6 +261,7 @@ def build_work_render_options(
         include_hints=data.get('include_hints', '0') == '1',
         include_instructions=data.get('include_instructions', '0') == '1',
         break_between_variants=data.get('break_between_variants', '1') == '1',
+        document_style=data.get('document_style', WORK_DOCUMENT_STYLE_STANDARD),
     )
 
 
@@ -259,3 +276,9 @@ def build_remedial_sheet_render_options(
 
 def renderer_type_from_data(data: Mapping[str, str], default='pdf') -> str:
     return data.get('renderer_type', default)
+
+
+def _supported_work_document_style(document_style: str) -> str:
+    if document_style not in WORK_DOCUMENT_STYLES:
+        return WORK_DOCUMENT_STYLE_STANDARD
+    return document_style

@@ -6,6 +6,8 @@ from core_logic.value_objects.document_render_options import (
     RemedialSheetBuildOptions,
     RenderTarget,
     SUPPORTED_DOCUMENT_RENDERER_TYPES,
+    WORK_DOCUMENT_STYLE_STANDARD,
+    WORK_DOCUMENT_STYLE_WORKSHEET,
     WorkDocumentBuildOptions,
     WorkDocumentRenderOptions,
     build_render_target,
@@ -85,6 +87,7 @@ class DocumentRenderOptionsTests(TestCase):
                 'include_hints': False,
                 'include_instructions': False,
                 'break_between_variants': True,
+                'document_style': WORK_DOCUMENT_STYLE_STANDARD,
             },
         )
 
@@ -95,6 +98,7 @@ class DocumentRenderOptionsTests(TestCase):
                 answer_type='with_answers',
                 include_hints=True,
                 break_between_variants=False,
+                document_style=WORK_DOCUMENT_STYLE_WORKSHEET,
             ),
         )
 
@@ -104,6 +108,7 @@ class DocumentRenderOptionsTests(TestCase):
         self.assertTrue(options.include_hints)
         self.assertFalse(options.include_instructions)
         self.assertFalse(options.break_between_variants)
+        self.assertEqual(options.document_style, WORK_DOCUMENT_STYLE_WORKSHEET)
         self.assertEqual(options.content_description, 'с ответами + подсказки')
 
     def test_supports_legacy_with_answers_flag(self):
@@ -144,7 +149,26 @@ class DocumentRenderOptionsTests(TestCase):
                 'include_hints': True,
                 'include_instructions': True,
                 'break_between_variants': True,
+                'document_style': WORK_DOCUMENT_STYLE_STANDARD,
             },
+        )
+
+    def test_builds_work_document_style_from_data(self):
+        options = build_work_render_options({
+            'document_style': WORK_DOCUMENT_STYLE_WORKSHEET,
+        })
+        fallback_options = build_work_render_options({
+            'document_style': 'unsupported',
+        })
+
+        self.assertEqual(options.document_style, WORK_DOCUMENT_STYLE_WORKSHEET)
+        self.assertEqual(
+            options.content_config['document_style'],
+            WORK_DOCUMENT_STYLE_WORKSHEET,
+        )
+        self.assertEqual(
+            fallback_options.document_style,
+            WORK_DOCUMENT_STYLE_STANDARD,
         )
 
     def test_can_disable_work_variant_page_breaks_from_data(self):

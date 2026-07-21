@@ -2,9 +2,58 @@
     {% for variant in payload.variants %}
         <article class="document-variant">
             <h2>{{ variant.title }}</h2>
-            <ol>
-                {% for task in variant.tasks %}
-                    <li>
+            {% if variant.print_blocks %}
+                <div class="task-list">
+                    {% for block in variant.print_blocks %}
+                        {% if block.block_type == 'task' and block.task %}
+                        <div class="task-item">
+                            <h3>Задание {{ block.task.order }}</h3>
+                            <div class="task-text">{{ block.task.text|linebreaksbr }}</div>
+                            {% if payload.include_hints and block.task.hint %}
+                                <div class="task-hint">Подсказка: {{ block.task.hint }}</div>
+                            {% endif %}
+                            {% if payload.include_instructions and block.task.instruction %}
+                                <div class="task-instruction">{{ block.task.instruction }}</div>
+                            {% endif %}
+                            {% if block.task.render_mode == 'with_answer' and block.task.answer %}
+                                <div class="task-answer">
+                                    <strong>Ответ:</strong> {{ block.task.answer|linebreaksbr }}
+                                </div>
+                            {% endif %}
+                            {% if block.task.render_mode == 'with_short_solution' and block.task.short_solution %}
+                                <div class="task-short-solution">
+                                    <strong>Краткое решение:</strong>
+                                    {{ block.task.short_solution|linebreaksbr }}
+                                </div>
+                            {% endif %}
+                            {% if block.task.render_mode == 'with_full_solution' and block.task.full_solution %}
+                                <div class="task-full-solution">
+                                    <strong>Решение:</strong>
+                                    {{ block.task.full_solution|linebreaksbr }}
+                                </div>
+                            {% endif %}
+                            {% if block.task.max_points %}
+                                <div class="task-points">{{ block.task.max_points }} балл.</div>
+                            {% endif %}
+                        </div>
+                        {% elif block.block_type == 'blank_cells' %}
+                            <div
+                                class="blank-cells-grid task-blank-cells"
+                                style="display: grid; grid-template-columns: repeat({{ block.blank_cells.columns }}, minmax(0, 1fr)); border-left: 1px solid #999; border-top: 1px solid #999; margin-top: 0.75rem; margin-bottom: 1rem;"
+                            >
+                                {% for cell in block.blank_cells.cells_range %}
+                                <span
+                                    style="height: {{ block.blank_cells.row_height }}px; border-right: 1px solid #999; border-bottom: 1px solid #999;"
+                                ></span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <ol>
+                    {% for task in variant.tasks %}
+                        <li>
                         <div class="task-text">{{ task.text|linebreaksbr }}</div>
                         {% if payload.include_hints and task.hint %}
                             <div class="task-hint">Подсказка: {{ task.hint }}</div>
@@ -44,9 +93,10 @@
                                 {% endfor %}
                             </div>
                         {% endif %}
-                    </li>
-                {% endfor %}
-            </ol>
+                        </li>
+                    {% endfor %}
+                </ol>
+            {% endif %}
         </article>
     {% empty %}
         <p>Варианты не созданы.</p>

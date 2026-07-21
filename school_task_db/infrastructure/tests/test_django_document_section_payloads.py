@@ -168,6 +168,22 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             variant_payload['print_plan']['blocks'][2]['options'],
             {'rows': 7},
         )
+        self.assertEqual(
+            [block['block_type'] for block in variant_payload['print_blocks']],
+            [
+                VARIANT_PRINT_BLOCK_TASK,
+                VARIANT_PRINT_BLOCK_TASK,
+                VARIANT_PRINT_BLOCK_BLANK_CELLS,
+            ],
+        )
+        self.assertEqual(
+            variant_payload['print_blocks'][1]['task']['variant_task_id'],
+            str(demo_variant_task.pk),
+        )
+        self.assertEqual(
+            variant_payload['print_blocks'][2]['blank_cells']['rows'],
+            7,
+        )
         self.assertEqual(len(variant_payload['tasks']), 2)
         task_payload = variant_payload['tasks'][0]
         self.assertEqual(task_payload['variant_task_id'], str(variant_task.pk))

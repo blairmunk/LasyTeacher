@@ -3,6 +3,49 @@
 {% if variant.duration %}{\small Время: {{ variant.duration }} минут}{% endif %}
 {% if variant.max_score %}{\small \hfill Максимальный балл: {{ variant.max_score }}}{% endif %}
 
+{% if variant.print_blocks %}
+{% for block in variant.print_blocks %}
+{% if block.block_type == 'task' and block.task %}
+\subsection*{Задание {{ block.task.order }}{% if block.task.max_points %} \hfill {\normalfont\normalsize ({{ block.task.max_points }} балл.)}{% endif %}}
+{{ block.task.latex_content|default:block.task.text|safe }}
+
+{% if payload.include_hints and block.task.hint %}
+\textit{Подсказка: {{ block.task.hint|safe }}}
+
+{% endif %}
+{% if payload.include_instructions and block.task.instruction %}
+\textit{Инструкция: {{ block.task.instruction|safe }}}
+
+{% endif %}
+{% if block.task.render_mode == 'with_answer' and block.task.answer %}
+\textbf{Ответ:} {{ block.task.answer|safe }}
+
+{% endif %}
+{% if block.task.render_mode == 'with_short_solution' and block.task.short_solution %}
+\textbf{Краткое решение:} {{ block.task.short_solution|safe }}
+
+{% endif %}
+{% if block.task.render_mode == 'with_full_solution' and block.task.full_solution %}
+\textbf{Решение.}
+
+{{ block.task.full_solution|safe }}
+
+{% endif %}
+{% elif block.block_type == 'blank_cells' %}
+\begin{center}
+\setlength{\tabcolsep}{0pt}
+\renewcommand{\arraystretch}{1}
+\begin{tabular}{|*{ {{ block.blank_cells.columns }} }{p{0.3cm}|}}
+\hline
+{% for row in block.blank_cells.rows_range %}
+{% for cell in block.blank_cells.latex_cells %}{% if not forloop.first %} & {% endif %}{{ cell|safe }}{% endfor %} \\ \hline
+{% endfor %}
+\end{tabular}
+\end{center}
+
+{% endif %}
+{% endfor %}
+{% else %}
 {% for task in variant.tasks %}
 \subsection*{Задание {{ task.order }}{% if task.max_points %} \hfill {\normalfont\normalsize ({{ task.max_points }} балл.)}{% endif %}}
 {{ task.latex_content|default:task.text|safe }}
@@ -43,6 +86,7 @@
 
 {% endif %}
 {% endfor %}
+{% endif %}
 {% if not forloop.last %}
 \newpage
 {% endif %}

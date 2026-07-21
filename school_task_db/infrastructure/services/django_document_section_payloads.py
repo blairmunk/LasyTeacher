@@ -25,6 +25,8 @@ from core_logic.value_objects.variant_print_plan import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_CONTROL,
     TASK_RENDER_MODE_TASK_ONLY,
+    VARIANT_PRINT_BLOCK_BLANK_CELLS,
+    VARIANT_PRINT_BLOCK_TASK,
     VariantTaskPrintRow,
     build_variant_print_plan,
 )
@@ -443,6 +445,18 @@ def _work_variant_payload(variant, task_payload_formatter=None, request=None):
             for variant_task in variant_tasks
         ],
     )
+    task_payloads = [
+        _variant_task_payload(
+            variant_task,
+            task_payload_formatter=task_payload_formatter,
+            request=request,
+        )
+        for variant_task in variant_tasks
+    ]
+    task_payloads_by_variant_task_id = {
+        task_payload['variant_task_id']: task_payload
+        for task_payload in task_payloads
+    }
     return {
         'id': str(variant.pk),
         'number': variant.number,
@@ -450,15 +464,12 @@ def _work_variant_payload(variant, task_payload_formatter=None, request=None):
         'max_score': variant.display_max_score,
         'duration': variant.display_duration,
         'print_plan': _variant_print_plan_payload(print_plan),
+        'print_blocks': _variant_print_blocks_payload(
+            print_plan,
+            task_payloads_by_variant_task_id,
+        ),
         'assessable_variant_task_ids': print_plan.assessable_variant_task_ids,
-        'tasks': [
-            _variant_task_payload(
-                variant_task,
-                task_payload_formatter=task_payload_formatter,
-                request=request,
-            )
-            for variant_task in variant_tasks
-        ],
+        'tasks': task_payloads,
     }
 
 
@@ -503,6 +514,26 @@ def _variant_print_plan_payload(print_plan):
             for block in print_plan.blocks
         ],
     }
+
+
+def _variant_print_blocks_payload(print_plan, task_payloads_by_variant_task_id):
+    print_blocks = []
+    for block in print_plan.blocks:
+        block_payload = {
+            'block_type': block.block_type,
+            'variant_task_id': block.variant_task_id,
+            'task_id': block.task_id,
+            'order': block.order,
+            'options': dict(block.options),
+        }
+        if block.block_type == VARIANT_PRINT_BLOCK_TASK:
+            block_payload['task'] = task_payloads_by_variant_task_id.get(
+                block.variant_task_id,
+            )
+        elif block.block_type == VARIANT_PRINT_BLOCK_BLANK_CELLS:
+            block_payload['blank_cells'] = _blank_cells_payload(block.options)
+        print_blocks.append(block_payload)
+    return print_blocks
 
 
 def _variant_task_payload(

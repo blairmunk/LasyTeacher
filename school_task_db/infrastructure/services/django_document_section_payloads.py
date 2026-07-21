@@ -31,6 +31,7 @@ from core_logic.value_objects.variant_print_plan import (
     TASK_RENDER_MODE_TASK_ONLY,
     VARIANT_PRINT_BLOCK_BLANK_CELLS,
     VARIANT_PRINT_BLOCK_TASK,
+    build_variant_print_profile_from_options,
     build_variant_print_plan_from_content_plan,
 )
 from core_logic.entities.document import (
@@ -448,7 +449,13 @@ def _work_variant_payload(variant, task_payload_formatter=None, request=None):
             for variant_task in variant_tasks
         ],
     )
-    print_plan = build_variant_print_plan_from_content_plan(content_plan)
+    print_profile = build_variant_print_profile_from_options(
+        request.section.options if request else {},
+    )
+    print_plan = build_variant_print_plan_from_content_plan(
+        content_plan,
+        profile=print_profile,
+    )
     task_payloads = [
         _variant_task_payload(
             variant_task,
@@ -555,9 +562,14 @@ def _variant_print_blocks_payload(print_plan, task_payloads_by_variant_task_id):
             'options': dict(block.options),
         }
         if block.block_type == VARIANT_PRINT_BLOCK_TASK:
-            block_payload['task'] = task_payloads_by_variant_task_id.get(
+            task_payload = task_payloads_by_variant_task_id.get(
                 block.variant_task_id,
             )
+            if task_payload:
+                block_payload['task'] = {
+                    **task_payload,
+                    **dict(block.options),
+                }
         elif block.block_type == VARIANT_PRINT_BLOCK_BLANK_CELLS:
             block_payload['blank_cells'] = _blank_cells_payload(block.options)
         print_blocks.append(block_payload)

@@ -239,6 +239,59 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
         self.assertTrue(task_payload['formatted'])
         self.assertEqual(formatter.requests[0]['text'], 'Найдите силу')
 
+    def test_task_list_section_options_override_print_blocks_only(self):
+        work = Work.objects.create(name='Рабочий лист', duration=45)
+        variant = Variant.objects.create(work=work, number=1)
+        task = self.create_task(
+            text='Разберите пример',
+            full_solution='Полное решение',
+        )
+        variant_task = VariantTask.objects.create(
+            variant=variant,
+            task=task,
+            order=1,
+            max_points=0,
+            bank_role=TASK_BANK_ROLE_DEMO,
+            render_mode=TASK_RENDER_MODE_TASK_ONLY,
+            is_assessable=False,
+        )
+        builder = DjangoWorkTaskListPayloadBuilder()
+
+        payload = builder.build_payload(
+            build_request(
+                work,
+                TASK_LIST_SECTION,
+                options={
+                    'role_render_modes': {
+                        TASK_BANK_ROLE_DEMO: (
+                            TASK_RENDER_MODE_WITH_FULL_SOLUTION
+                        ),
+                    },
+                    'role_blank_cells': {
+                        TASK_BANK_ROLE_DEMO: {'rows': 5},
+                    },
+                },
+            ),
+        )
+
+        variant_payload = payload['variants'][0]
+        self.assertEqual(
+            variant_payload['content_plan']['items'][0]['render_mode'],
+            TASK_RENDER_MODE_TASK_ONLY,
+        )
+        self.assertEqual(
+            variant_payload['print_blocks'][0]['task']['render_mode'],
+            TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+        )
+        self.assertEqual(
+            variant_payload['print_blocks'][1]['variant_task_id'],
+            str(variant_task.pk),
+        )
+        self.assertEqual(
+            variant_payload['print_blocks'][1]['blank_cells']['rows'],
+            5,
+        )
+
     def test_builds_registry_for_work_sections(self):
         work = Work.objects.create(name='Контрольная')
         registry = build_work_section_payload_builder_registry()

@@ -12,6 +12,7 @@ from core_logic.value_objects.variant_print_plan import (
     TASK_RENDER_MODE_WITH_FULL_SOLUTION,
     VARIANT_PRINT_BLOCK_BLANK_CELLS,
     VARIANT_PRINT_BLOCK_TASK,
+    build_variant_print_profile_from_options,
     build_variant_print_plan_from_content_plan,
     VariantTaskPrintRow,
     build_variant_print_plan,
@@ -102,6 +103,90 @@ class VariantPrintPlanTests(TestCase):
         )
         self.assertFalse(plan.blocks[0].options['is_assessable'])
         self.assertEqual(plan.blocks[2].options, {'rows': 8})
+
+    def test_print_profile_overrides_rendering_without_changing_content(self):
+        content_plan = build_variant_content_plan(
+            variant_id='variant-1',
+            items=[
+                VariantContentItem(
+                    variant_task_id='vt-1',
+                    task_id='task-1',
+                    order=1,
+                    bank_role=TASK_BANK_ROLE_DEMO,
+                    render_mode=TASK_RENDER_MODE_TASK_ONLY,
+                    is_assessable=False,
+                ),
+                VariantContentItem(
+                    variant_task_id='vt-2',
+                    task_id='task-2',
+                    order=2,
+                    bank_role=TASK_BANK_ROLE_PRACTICE,
+                    render_mode=TASK_RENDER_MODE_TASK_ONLY,
+                    blank_cells_after=False,
+                ),
+            ],
+        )
+        profile = build_variant_print_profile_from_options({
+            'role_render_modes': {
+                TASK_BANK_ROLE_DEMO: TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+            },
+            'role_blank_cells': {
+                TASK_BANK_ROLE_PRACTICE: {'rows': 9},
+            },
+        })
+
+        plan = build_variant_print_plan_from_content_plan(
+            content_plan,
+            profile=profile,
+        )
+
+        self.assertEqual(content_plan.assessable_variant_task_ids, ('vt-2',))
+        self.assertEqual(
+            [block.block_type for block in plan.blocks],
+            [
+                VARIANT_PRINT_BLOCK_TASK,
+                VARIANT_PRINT_BLOCK_TASK,
+                VARIANT_PRINT_BLOCK_BLANK_CELLS,
+            ],
+        )
+        self.assertEqual(
+            plan.blocks[0].options['render_mode'],
+            TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+        )
+        self.assertEqual(plan.blocks[2].options['rows'], 9)
+
+    def test_print_profile_can_hide_roles(self):
+        content_plan = build_variant_content_plan(
+            variant_id='variant-1',
+            items=[
+                VariantContentItem(
+                    variant_task_id='vt-1',
+                    task_id='task-1',
+                    order=1,
+                    bank_role=TASK_BANK_ROLE_DEMO,
+                    is_assessable=False,
+                ),
+                VariantContentItem(
+                    variant_task_id='vt-2',
+                    task_id='task-2',
+                    order=2,
+                    bank_role=TASK_BANK_ROLE_PRACTICE,
+                ),
+            ],
+        )
+        profile = build_variant_print_profile_from_options({
+            'hidden_roles': TASK_BANK_ROLE_DEMO,
+        })
+
+        plan = build_variant_print_plan_from_content_plan(
+            content_plan,
+            profile=profile,
+        )
+
+        self.assertEqual(
+            [block.variant_task_id for block in plan.task_blocks],
+            ['vt-2'],
+        )
 
     def test_build_variant_print_plan_keeps_legacy_row_api(self):
         plan = build_variant_print_plan(

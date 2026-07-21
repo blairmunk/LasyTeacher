@@ -153,6 +153,20 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             (str(variant_task.pk),),
         )
         self.assertEqual(
+            variant_payload['content_plan']['assessable_variant_task_ids'],
+            (str(variant_task.pk),),
+        )
+        self.assertEqual(
+            [
+                item['variant_task_id']
+                for item in variant_payload['content_plan']['items']
+            ],
+            [str(variant_task.pk), str(demo_variant_task.pk)],
+        )
+        self.assertFalse(
+            variant_payload['content_plan']['items'][1]['is_assessable'],
+        )
+        self.assertEqual(
             [block['block_type'] for block in variant_payload['print_plan']['blocks']],
             [
                 VARIANT_PRINT_BLOCK_TASK,

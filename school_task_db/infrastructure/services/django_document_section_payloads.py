@@ -27,8 +27,9 @@ from core_logic.value_objects.variant_print_plan import (
     TASK_RENDER_MODE_TASK_ONLY,
     VARIANT_PRINT_BLOCK_BLANK_CELLS,
     VARIANT_PRINT_BLOCK_TASK,
-    VariantTaskPrintRow,
-    build_variant_print_plan,
+    VariantContentItem,
+    build_variant_content_plan,
+    build_variant_print_plan_from_content_plan,
 )
 from core_logic.entities.document import (
     REMEDIAL_WORK_SOURCE_TYPE,
@@ -438,13 +439,14 @@ def _work_variant_payload(variant, task_payload_formatter=None, request=None):
         )
         .order_by('order', 'pk')
     )
-    print_plan = build_variant_print_plan(
+    content_plan = build_variant_content_plan(
         variant_id=str(variant.pk),
-        task_rows=[
-            _variant_task_print_row(variant_task)
+        items=[
+            _variant_content_item(variant_task)
             for variant_task in variant_tasks
         ],
     )
+    print_plan = build_variant_print_plan_from_content_plan(content_plan)
     task_payloads = [
         _variant_task_payload(
             variant_task,
@@ -463,6 +465,7 @@ def _work_variant_payload(variant, task_payload_formatter=None, request=None):
         'title': f'Вариант {variant.number}',
         'max_score': variant.display_max_score,
         'duration': variant.display_duration,
+        'content_plan': _variant_content_plan_payload(content_plan),
         'print_plan': _variant_print_plan_payload(print_plan),
         'print_blocks': _variant_print_blocks_payload(
             print_plan,
@@ -473,8 +476,8 @@ def _work_variant_payload(variant, task_payload_formatter=None, request=None):
     }
 
 
-def _variant_task_print_row(variant_task):
-    return VariantTaskPrintRow(
+def _variant_content_item(variant_task):
+    return VariantContentItem(
         variant_task_id=str(variant_task.pk),
         task_id=str(variant_task.task_id),
         order=variant_task.order,
@@ -497,6 +500,29 @@ def _variant_task_print_row(variant_task):
             DEFAULT_BLANK_CELLS_ROWS,
         ),
     )
+
+
+def _variant_content_plan_payload(content_plan):
+    return {
+        'variant_id': content_plan.variant_id,
+        'assessable_variant_task_ids': (
+            content_plan.assessable_variant_task_ids
+        ),
+        'items': [
+            {
+                'variant_task_id': item.variant_task_id,
+                'task_id': item.task_id,
+                'order': item.order,
+                'max_points': item.max_points,
+                'bank_role': item.bank_role,
+                'render_mode': item.render_mode,
+                'is_assessable': item.is_assessable,
+                'blank_cells_after': item.blank_cells_after,
+                'blank_cells_rows': item.blank_cells_rows,
+            }
+            for item in content_plan.items
+        ],
+    }
 
 
 def _variant_print_plan_payload(print_plan):

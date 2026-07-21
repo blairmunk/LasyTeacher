@@ -104,8 +104,8 @@ class WorkTaskRoleSpec:
 
 
 @dataclass(frozen=True)
-class VariantTaskPrintRow:
-    """Snapshot row used to build a printable variant plan."""
+class VariantContentItem:
+    """Snapshot content item included in a concrete variant."""
 
     variant_task_id: str
     task_id: str
@@ -130,6 +130,38 @@ class VariantTaskPrintRow:
             raise ValueError('blank_cells_rows must be positive')
         validate_task_specific_bank_role(self.bank_role)
         validate_task_render_mode(self.render_mode)
+
+
+@dataclass(frozen=True)
+class VariantContentPlan:
+    """Ordered content snapshot for one variant.
+
+    This object describes what the variant contains and what is assessable.
+    Rendering concerns are derived from it into VariantPrintPlan.
+    """
+
+    variant_id: str
+    items: Tuple[VariantContentItem, ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        if not self.variant_id:
+            raise ValueError('variant_id is required')
+        object.__setattr__(
+            self,
+            'items',
+            tuple(sorted(self.items, key=lambda item: item.order)),
+        )
+
+    @property
+    def assessable_variant_task_ids(self) -> Tuple[str, ...]:
+        return tuple(
+            item.variant_task_id
+            for item in self.items
+            if item.is_assessable
+        )
+
+
+VariantTaskPrintRow = VariantContentItem
 
 
 @dataclass(frozen=True)
@@ -177,8 +209,29 @@ def build_variant_print_plan(
     variant_id: str,
     task_rows,
 ) -> VariantPrintPlan:
+    return build_variant_print_plan_from_content_plan(
+        build_variant_content_plan(
+            variant_id=variant_id,
+            items=task_rows,
+        )
+    )
+
+
+def build_variant_content_plan(
+    variant_id: str,
+    items,
+) -> VariantContentPlan:
+    return VariantContentPlan(
+        variant_id=variant_id,
+        items=tuple(items),
+    )
+
+
+def build_variant_print_plan_from_content_plan(
+    content_plan: VariantContentPlan,
+) -> VariantPrintPlan:
     blocks = []
-    for row in sorted(task_rows, key=lambda item: item.order):
+    for row in content_plan.items:
         blocks.append(
             VariantPrintBlock(
                 block_type=VARIANT_PRINT_BLOCK_TASK,
@@ -203,7 +256,7 @@ def build_variant_print_plan(
                     options={'rows': row.blank_cells_rows},
                 )
             )
-    return VariantPrintPlan(variant_id=variant_id, blocks=blocks)
+    return VariantPrintPlan(variant_id=content_plan.variant_id, blocks=blocks)
 
 
 def validate_task_bank_role(role: str) -> None:

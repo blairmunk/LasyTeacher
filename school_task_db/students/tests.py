@@ -42,6 +42,31 @@ class ImportStudentsCsvCommandTests(TestCase):
         self.assertEqual(AcademicYear.objects.count(), 0)
         self.assertIn('DRY RUN', out.getvalue())
 
+    def test_dry_run_counts_unique_years_and_groups(self):
+        with TemporaryDirectory() as temp_dir:
+            csv_path = Path(temp_dir) / 'students.csv'
+            csv_path.write_text(
+                (
+                    'class,academic_year,last_name,first_name\n'
+                    '8А,2026-2027,Иванов,Иван\n'
+                    '8А,2026-2027,Петрова,Анна\n'
+                ),
+                encoding='utf-8',
+            )
+            out = StringIO()
+
+            call_command(
+                'import_students_csv',
+                str(csv_path),
+                dry_run=True,
+                stdout=out,
+            )
+
+        output = out.getvalue()
+        self.assertIn('учебных годов создано=1', output)
+        self.assertIn('классов создано=1', output)
+        self.assertIn('учеников создано=2', output)
+
     def test_imports_students_groups_and_academic_year_from_csv(self):
         with TemporaryDirectory() as temp_dir:
             csv_path = Path(temp_dir) / 'students.csv'

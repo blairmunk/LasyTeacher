@@ -46,6 +46,10 @@ class Command(BaseCommand):
 
         rows = self._read_rows(csv_path)
         stats = ImportStats()
+        self._dry_run_year_names = set()
+        self._dry_run_group_keys = set()
+        self._dry_run_student_keys = set()
+        self._dry_run_membership_keys = set()
 
         with transaction.atomic():
             for row_number, row in enumerate(rows, start=2):
@@ -102,6 +106,7 @@ class Command(BaseCommand):
         group = self._get_or_create_group(
             group_name,
             academic_year=academic_year,
+            academic_year_name=academic_year_name,
             dry_run=dry_run,
             stats=stats,
         )
@@ -115,9 +120,14 @@ class Command(BaseCommand):
         )
 
         if dry_run:
-            if group and student and not group.students.filter(pk=student.pk).exists():
-                stats.memberships_created += 1
-            elif not group or not student:
+            membership_key = (
+                _group_key(group_name, academic_year_name),
+                _student_key(last_name, first_name, middle_name, email),
+            )
+            if group and student and group.students.filter(pk=student.pk).exists():
+                return
+            if membership_key not in self._dry_run_membership_keys:
+                self._dry_run_membership_keys.add(membership_key)
                 stats.memberships_created += 1
             return
 
@@ -134,10 +144,13 @@ class Command(BaseCommand):
             return academic_year
 
         start_year, end_year = _parse_academic_year(name)
-        stats.years_created += 1
         if dry_run:
+            if name not in self._dry_run_year_names:
+                self._dry_run_year_names.add(name)
+                stats.years_created += 1
             return None
 
+        stats.years_created += 1
         return AcademicYear.objects.create(
             name=name,
             start_date=date(start_year, 9, 1),
@@ -145,7 +158,14 @@ class Command(BaseCommand):
             is_active=AcademicYear.get_current() is None,
         )
 
-    def _get_or_create_group(self, name, academic_year, dry_run, stats):
+    def _get_or_create_group(
+        self,
+        name,
+        academic_year,
+        academic_year_name,
+        dry_run,
+        stats,
+    ):
         group = StudentGroup.objects.filter(
             name=name,
             academic_year=academic_year,
@@ -153,10 +173,14 @@ class Command(BaseCommand):
         if group:
             return group
 
-        stats.groups_created += 1
         if dry_run:
+            group_key = _group_key(name, academic_year_name)
+            if group_key not in self._dry_run_group_keys:
+                self._dry_run_group_keys.add(group_key)
+                stats.groups_created += 1
             return None
 
+        stats.groups_created += 1
         return StudentGroup.objects.create(
             name=name,
             academic_year=academic_year,
@@ -178,9 +202,18 @@ class Command(BaseCommand):
             email=email,
         )
         if student is None:
-            stats.students_created += 1
             if dry_run:
+                student_key = _student_key(
+                    last_name,
+                    first_name,
+                    middle_name,
+                    email,
+                )
+                if student_key not in self._dry_run_student_keys:
+                    self._dry_run_student_keys.add(student_key)
+                    stats.students_created += 1
                 return None
+            stats.students_created += 1
             return Student.objects.create(
                 last_name=last_name,
                 first_name=first_name,
@@ -229,6 +262,16 @@ def _row_value(row, aliases):
         if value is not None:
             return value.strip()
     return ''
+
+
+def _group_key(name, academic_year_name):
+    return name, academic_year_name
+
+
+def _student_key(last_name, first_name, middle_name, email):
+    if email:
+        return 'email', email.lower()
+    return 'name', last_name, first_name, middle_name
 
 
 def _parse_academic_year(name):

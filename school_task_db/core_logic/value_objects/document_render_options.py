@@ -53,6 +53,10 @@ WORK_DOCUMENT_STYLE_OPTIONS = (
         ),
     ),
 )
+WORK_DOCUMENT_STYLE_LABELS = {
+    option.value: option.label
+    for option in WORK_DOCUMENT_STYLE_OPTIONS
+}
 
 
 def is_supported_document_renderer_type(renderer_type: str) -> bool:
@@ -117,6 +121,11 @@ class WorkDocumentBuildOptions:
     @property
     def content_description(self) -> str:
         base_description = CONTENT_DESCRIPTIONS[self.answer_type]
+        if self.document_style != WORK_DOCUMENT_STYLE_STANDARD:
+            base_description = (
+                f'{WORK_DOCUMENT_STYLE_LABELS[self.document_style].lower()}: '
+                f'{base_description}'
+            )
         additional_content = []
         if self.include_hints:
             additional_content.append('подсказки')

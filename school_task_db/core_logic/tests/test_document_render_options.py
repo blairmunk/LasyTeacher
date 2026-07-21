@@ -109,7 +109,10 @@ class DocumentRenderOptionsTests(TestCase):
         self.assertFalse(options.include_instructions)
         self.assertFalse(options.break_between_variants)
         self.assertEqual(options.document_style, WORK_DOCUMENT_STYLE_WORKSHEET)
-        self.assertEqual(options.content_description, 'с ответами + подсказки')
+        self.assertEqual(
+            options.content_description,
+            'рабочий лист: с ответами + подсказки',
+        )
 
     def test_supports_legacy_with_answers_flag(self):
         options = build_work_render_options({

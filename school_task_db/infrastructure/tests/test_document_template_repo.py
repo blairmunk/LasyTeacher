@@ -2,6 +2,7 @@ from django.test import TestCase
 
 from core_logic.entities.document import (
     CreateDocumentTemplateParams,
+    DocumentSectionSpec,
     UpdateDocumentTemplateParams,
 )
 from document_generator.models import DocumentTemplate
@@ -110,6 +111,39 @@ class DjangoDocumentTemplateRepositoryTests(TestCase):
         )
         self.assertTrue(template.is_default)
 
+    def test_creates_template_preserving_section_specs(self):
+        template_id = DjangoDocumentTemplateRepository().create_template(
+            CreateDocumentTemplateParams(
+                name='Рабочий лист',
+                template_type=DocumentTemplate.TemplateType.WORK,
+                sections=(
+                    DocumentSectionSpec(section_type='header'),
+                    DocumentSectionSpec(
+                        section_type='blank_cells',
+                        title='Черновик',
+                        options={'rows': 8},
+                    ),
+                    DocumentSectionSpec(section_type='page_break'),
+                    DocumentSectionSpec(section_type='page_break'),
+                ),
+            )
+        )
+
+        template = DocumentTemplate.objects.get(pk=template_id)
+        self.assertEqual(
+            template.sections_config,
+            [
+                {'type': 'header'},
+                {
+                    'type': 'blank_cells',
+                    'title': 'Черновик',
+                    'params': {'rows': 8},
+                },
+                {'type': 'page_break'},
+                {'type': 'page_break'},
+            ],
+        )
+
     def test_creating_default_template_clears_previous_default_for_type(self):
         old_default = DocumentTemplate.objects.create(
             name='Старый шаблон',
@@ -157,6 +191,40 @@ class DjangoDocumentTemplateRepositoryTests(TestCase):
             [{'type': 'header'}, {'type': 'task_list'}],
         )
         self.assertTrue(template.is_default)
+
+    def test_updates_template_preserving_section_specs(self):
+        template = DocumentTemplate.objects.create(
+            name='Старый шаблон',
+            template_type=DocumentTemplate.TemplateType.WORK,
+            sections_config=[{'type': 'header'}],
+        )
+
+        updated = DjangoDocumentTemplateRepository().update_template(
+            UpdateDocumentTemplateParams(
+                template_id=str(template.pk),
+                name='Новый шаблон',
+                template_type=DocumentTemplate.TemplateType.WORK,
+                sections=(
+                    DocumentSectionSpec(section_type='page_break'),
+                    DocumentSectionSpec(
+                        section_type='blank_cells',
+                        options={'rows': 5},
+                    ),
+                    DocumentSectionSpec(section_type='page_break'),
+                ),
+            )
+        )
+
+        template.refresh_from_db()
+        self.assertTrue(updated)
+        self.assertEqual(
+            template.sections_config,
+            [
+                {'type': 'page_break'},
+                {'type': 'blank_cells', 'params': {'rows': 5}},
+                {'type': 'page_break'},
+            ],
+        )
 
     def test_update_returns_false_for_missing_template(self):
         updated = DjangoDocumentTemplateRepository().update_template(

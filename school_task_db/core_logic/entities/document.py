@@ -106,6 +106,9 @@ class DocumentSectionSpec:
     options: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
+        object.__setattr__(self, 'section_type', self.section_type.strip())
+        object.__setattr__(self, 'title', self.title.strip())
+        object.__setattr__(self, 'options', dict(self.options))
         if not self.section_type:
             raise ValueError('section_type is required')
 
@@ -189,22 +192,43 @@ class DocumentTemplateSpec:
         )
 
 
+def _clean_section_types(section_types) -> Tuple[str, ...]:
+    return tuple(section_type.strip() for section_type in section_types)
+
+
+def _clean_section_specs(sections) -> Tuple[DocumentSectionSpec, ...]:
+    return tuple(
+        section
+        if isinstance(section, DocumentSectionSpec)
+        else DocumentSectionSpec(section_type=str(section))
+        for section in sections
+    )
+
+
 @dataclass(frozen=True)
 class CreateDocumentTemplateParams:
     name: str
     template_type: str
     section_types: Tuple[str, ...] = field(default_factory=tuple)
+    sections: Tuple[DocumentSectionSpec, ...] = field(default_factory=tuple)
     description: str = ''
     is_default: bool = False
 
     def __post_init__(self):
         object.__setattr__(self, 'name', self.name.strip())
         object.__setattr__(self, 'template_type', self.template_type.strip())
-        object.__setattr__(
-            self,
-            'section_types',
-            tuple(section_type.strip() for section_type in self.section_types),
-        )
+        sections = _clean_section_specs(self.sections)
+        section_types = _clean_section_types(self.section_types)
+        if sections:
+            section_types = tuple(section.section_type for section in sections)
+        elif section_types:
+            sections = tuple(
+                DocumentSectionSpec(section_type=section_type)
+                for section_type in section_types
+            )
+
+        object.__setattr__(self, 'section_types', section_types)
+        object.__setattr__(self, 'sections', sections)
         object.__setattr__(self, 'description', self.description.strip())
 
 
@@ -225,6 +249,7 @@ class UpdateDocumentTemplateParams:
     name: str
     template_type: str
     section_types: Tuple[str, ...] = field(default_factory=tuple)
+    sections: Tuple[DocumentSectionSpec, ...] = field(default_factory=tuple)
     description: str = ''
     is_default: bool = False
 
@@ -232,11 +257,18 @@ class UpdateDocumentTemplateParams:
         object.__setattr__(self, 'template_id', self.template_id.strip())
         object.__setattr__(self, 'name', self.name.strip())
         object.__setattr__(self, 'template_type', self.template_type.strip())
-        object.__setattr__(
-            self,
-            'section_types',
-            tuple(section_type.strip() for section_type in self.section_types),
-        )
+        sections = _clean_section_specs(self.sections)
+        section_types = _clean_section_types(self.section_types)
+        if sections:
+            section_types = tuple(section.section_type for section in sections)
+        elif section_types:
+            sections = tuple(
+                DocumentSectionSpec(section_type=section_type)
+                for section_type in section_types
+            )
+
+        object.__setattr__(self, 'section_types', section_types)
+        object.__setattr__(self, 'sections', sections)
         object.__setattr__(self, 'description', self.description.strip())
 
 

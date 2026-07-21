@@ -1,12 +1,14 @@
 from unittest import TestCase
 
 from core_logic.entities.document import (
+    CreateDocumentTemplateParams,
     Document,
     DocumentRecipe,
     DocumentSection,
     DocumentSectionSpec,
     DocumentSourceRef,
     DocumentTemplateSpec,
+    UpdateDocumentTemplateParams,
 )
 from core_logic.value_objects.document_recipes import (
     ANSWER_KEY_DOCUMENT_TYPE,
@@ -213,6 +215,61 @@ class DocumentModelTests(TestCase):
         self.assertEqual(recipe.document_type, REMEDIAL_SHEET_DOCUMENT_TYPE)
         self.assertEqual(recipe.section_types, ('header', 'answers'))
         self.assertEqual(overridden_recipe.document_type, CUSTOM_DOCUMENT_TYPE)
+
+    def test_create_template_params_build_sections_from_legacy_section_types(self):
+        params = CreateDocumentTemplateParams(
+            name=' Шаблон ',
+            template_type=' work ',
+            section_types=(' header ', 'task_list'),
+        )
+
+        self.assertEqual(params.name, 'Шаблон')
+        self.assertEqual(params.template_type, 'work')
+        self.assertEqual(params.section_types, ('header', 'task_list'))
+        self.assertEqual(
+            tuple(section.section_type for section in params.sections),
+            ('header', 'task_list'),
+        )
+
+    def test_create_template_params_preserve_full_section_specs(self):
+        params = CreateDocumentTemplateParams(
+            name='Шаблон',
+            template_type='work',
+            sections=(
+                DocumentSectionSpec(section_type='page_break'),
+                DocumentSectionSpec(
+                    section_type='blank_cells',
+                    title='Черновик',
+                    options={'rows': 8},
+                ),
+                DocumentSectionSpec(section_type='page_break'),
+            ),
+        )
+
+        self.assertEqual(
+            params.section_types,
+            ('page_break', 'blank_cells', 'page_break'),
+        )
+        self.assertEqual(params.sections[1].title, 'Черновик')
+        self.assertEqual(params.sections[1].options, {'rows': 8})
+
+    def test_update_template_params_preserve_full_section_specs(self):
+        params = UpdateDocumentTemplateParams(
+            template_id=' template-1 ',
+            name='Шаблон',
+            template_type='work',
+            sections=(
+                DocumentSectionSpec(section_type='header'),
+                DocumentSectionSpec(
+                    section_type='blank_cells',
+                    options={'rows': 4},
+                ),
+            ),
+        )
+
+        self.assertEqual(params.template_id, 'template-1')
+        self.assertEqual(params.section_types, ('header', 'blank_cells'))
+        self.assertEqual(params.sections[1].options, {'rows': 4})
 
     def test_rejects_empty_required_identifiers(self):
         with self.assertRaises(ValueError):

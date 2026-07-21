@@ -4,6 +4,7 @@ from typing import List, Optional
 
 from core_logic.entities.document import (
     CreateDocumentTemplateParams,
+    DocumentSectionSpec,
     DocumentTemplateSpec,
     UpdateDocumentTemplateParams,
 )
@@ -63,10 +64,7 @@ class DjangoDocumentTemplateRepository(IDocumentTemplateRepository):
             name=params.name,
             description=params.description,
             template_type=params.template_type,
-            sections_config=[
-                {'type': section_type}
-                for section_type in params.section_types
-            ],
+            sections_config=_sections_config_from_specs(params.sections),
             is_default=params.is_default,
         )
         template.full_clean()
@@ -90,11 +88,22 @@ class DjangoDocumentTemplateRepository(IDocumentTemplateRepository):
         template.name = params.name
         template.description = params.description
         template.template_type = params.template_type
-        template.sections_config = [
-            {'type': section_type}
-            for section_type in params.section_types
-        ]
+        template.sections_config = _sections_config_from_specs(params.sections)
         template.is_default = params.is_default
         template.full_clean()
         template.save()
         return True
+
+
+def _sections_config_from_specs(
+    sections: tuple[DocumentSectionSpec, ...],
+) -> list[dict]:
+    sections_config = []
+    for section in sections:
+        section_config = {'type': section.section_type}
+        if section.title:
+            section_config['title'] = section.title
+        if section.options:
+            section_config['params'] = dict(section.options)
+        sections_config.append(section_config)
+    return sections_config

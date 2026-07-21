@@ -221,6 +221,10 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         self.assertEqual(params.description, 'Описание')
         self.assertEqual(params.template_type, 'work')
         self.assertEqual(params.section_types, ('header', 'task_list'))
+        self.assertEqual(
+            [section.section_type for section in params.sections],
+            ['header', 'task_list'],
+        )
         self.assertTrue(params.is_default)
 
     def test_builds_create_params_preserving_section_order(self):
@@ -237,6 +241,10 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         params = DocumentTemplateFormAdapter().create_params_from_form(form)
 
         self.assertEqual(params.section_types, ('task_list', 'header'))
+        self.assertEqual(
+            [section.section_type for section in params.sections],
+            ['task_list', 'header'],
+        )
 
     def test_builds_update_params_from_template_form(self):
         form = DocumentTemplateForm(
@@ -256,6 +264,10 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         self.assertEqual(params.template_id, 'template-1')
         self.assertEqual(params.name, 'Шаблон')
         self.assertEqual(params.section_types, ('header',))
+        self.assertEqual(
+            [section.section_type for section in params.sections],
+            ['header'],
+        )
         self.assertFalse(params.is_default)
 
     def test_builds_form_initial_from_template(self):

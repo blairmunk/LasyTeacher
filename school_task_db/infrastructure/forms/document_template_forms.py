@@ -4,6 +4,7 @@ from urllib.parse import urlencode
 
 from core_logic.entities.document import (
     CreateDocumentTemplateParams,
+    DocumentSectionSpec,
     UpdateDocumentTemplateParams,
 )
 from core_logic.use_cases.get_document_template_editor_data import (
@@ -45,7 +46,7 @@ class DocumentTemplateFormAdapter:
             name=form.cleaned_data['name'],
             description=form.cleaned_data.get('description', ''),
             template_type=form.cleaned_data['template_type'],
-            section_types=self._section_types_from_form(form),
+            sections=self._section_specs_from_form(form),
             is_default=form.cleaned_data.get('is_default', False),
         )
 
@@ -55,7 +56,7 @@ class DocumentTemplateFormAdapter:
             name=form.cleaned_data['name'],
             description=form.cleaned_data.get('description', ''),
             template_type=form.cleaned_data['template_type'],
-            section_types=self._section_types_from_form(form),
+            sections=self._section_specs_from_form(form),
             is_default=form.cleaned_data.get('is_default', False),
         )
 
@@ -150,6 +151,12 @@ class DocumentTemplateFormAdapter:
             section_order=form.cleaned_data.get('section_order', ''),
         )
         return tuple(ordered_sections)
+
+    def _section_specs_from_form(self, form):
+        return tuple(
+            DocumentSectionSpec(section_type=section_type)
+            for section_type in self._section_types_from_form(form)
+        )
 
     def _selected_section_order(self, form):
         selected_sections = (

@@ -49,7 +49,10 @@ class DjangoStudentRepository(IStudentRepository):
             short_name=student.get_short_name(),
         )
 
-    def get_list_students(self):
+    def get_list_students(self, year=None):
+        students = Student.objects.all()
+        if year:
+            students = students.filter(studentgroup__academic_year=year).distinct()
         return [
             StudentListItem(
                 pk=str(student.pk),
@@ -59,13 +62,18 @@ class DjangoStudentRepository(IStudentRepository):
                 email=student.email,
                 created_at=student.created_at,
             )
-            for student in Student.objects.all().order_by(
+            for student in students.order_by(
                 'last_name',
                 'first_name',
             )
         ]
 
-    def get_list_student_groups(self):
+    def get_list_student_groups(self, year=None):
+        groups = StudentGroup.objects.select_related(
+            'academic_year',
+        )
+        if year:
+            groups = groups.filter(academic_year=year)
         return [
             StudentGroupListItem(
                 pk=str(group.pk),
@@ -74,9 +82,7 @@ class DjangoStudentRepository(IStudentRepository):
                 created_at=group.created_at,
                 students_count=group.students_count,
             )
-            for group in StudentGroup.objects.select_related(
-                'academic_year',
-            ).annotate(
+            for group in groups.annotate(
                 students_count=Count('students'),
             ).order_by('name')
         ]

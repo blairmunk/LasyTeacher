@@ -5,7 +5,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils import timezone
 
-from core.models import ImportLog
+from core.models import AcademicYear, ImportLog
 from core_logic.services.remedial_service import RemedialService
 from core_logic.interfaces.event_repo import (
     CreateEventParams,
@@ -223,6 +223,44 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(student_groups[0].name, self.group.name)
         self.assertEqual(student_groups[0].short_uuid, self.group.get_short_uuid())
         self.assertEqual(student_groups[0].students_count, 1)
+
+    def test_student_repository_filters_list_page_data_by_academic_year(self):
+        year_2026 = AcademicYear.objects.create(
+            name='2026-2027',
+            start_date=dt.date(2026, 9, 1),
+            end_date=dt.date(2027, 8, 31),
+            is_active=True,
+        )
+        year_2027 = AcademicYear.objects.create(
+            name='2027-2028',
+            start_date=dt.date(2027, 9, 1),
+            end_date=dt.date(2028, 8, 31),
+        )
+        group_2026 = StudentGroup.objects.create(
+            name='8А',
+            academic_year=year_2026,
+        )
+        group_2027 = StudentGroup.objects.create(
+            name='8А',
+            academic_year=year_2027,
+        )
+        student_2026 = Student.objects.create(
+            last_name='Иванов',
+            first_name='Иван',
+        )
+        student_2027 = Student.objects.create(
+            last_name='Петров',
+            first_name='Пётр',
+        )
+        group_2026.students.add(student_2026)
+        group_2027.students.add(student_2027)
+        repo = DjangoStudentRepository()
+
+        students = repo.get_list_students(year=year_2026)
+        groups = repo.get_list_student_groups(year=year_2026)
+
+        self.assertEqual([student.pk for student in students], [str(student_2026.pk)])
+        self.assertEqual([group.pk for group in groups], [str(group_2026.pk)])
 
     def test_student_repository_returns_detail_page_objects(self):
         repo = DjangoStudentRepository()
@@ -1031,6 +1069,35 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertIsNone(missing_topic)
         self.assertEqual(topic_detail_subtopics[0].pk, str(subtopic.pk))
         self.assertEqual(topic_detail_subtopics[0].name, subtopic.name)
+
+    def test_curriculum_repository_filters_courses_by_academic_year(self):
+        year_2026 = AcademicYear.objects.create(
+            name='2026-2027',
+            start_date=dt.date(2026, 9, 1),
+            end_date=dt.date(2027, 8, 31),
+            is_active=True,
+        )
+        year_2027 = AcademicYear.objects.create(
+            name='2027-2028',
+            start_date=dt.date(2027, 9, 1),
+            end_date=dt.date(2028, 8, 31),
+        )
+        course_2026 = Course.objects.create(
+            name='Физика 8',
+            subject='Физика',
+            grade_level=8,
+            year=year_2026,
+        )
+        Course.objects.create(
+            name='Физика 9',
+            subject='Физика',
+            grade_level=9,
+            year=year_2027,
+        )
+
+        courses = DjangoCurriculumRepository().get_courses(year=year_2026)
+
+        self.assertEqual([course.pk for course in courses], [str(course_2026.pk)])
 
     def test_codifier_repository_returns_list_and_detail_data(self):
         codifier = CodifierSpec.objects.create(

@@ -20,7 +20,9 @@ class StudentListView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['students'] = container.get_student_list_use_case().execute().students
+        context['students'] = container.get_student_list_use_case().execute(
+            year=getattr(self.request, 'current_year', None),
+        ).students
         return context
 
 
@@ -206,7 +208,9 @@ class StudentGroupListView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['student_groups'] = (
-            container.get_student_group_list_use_case().execute().student_groups
+            container.get_student_group_list_use_case().execute(
+                year=getattr(self.request, 'current_year', None),
+            ).student_groups
         )
         return context
 

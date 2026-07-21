@@ -16,7 +16,7 @@ from core_logic.entities.curriculum import (
 
 class ICurriculumRepository(ABC):
     @abstractmethod
-    def get_courses(self) -> List[CourseListItem]:
+    def get_courses(self, year: Any = None) -> List[CourseListItem]:
         """Return courses for the course list page."""
 
     @abstractmethod

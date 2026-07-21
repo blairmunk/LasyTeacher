@@ -18,7 +18,10 @@ from works.models import Variant, WorkAnalogGroup
 
 
 class DjangoCurriculumRepository(ICurriculumRepository):
-    def get_courses(self):
+    def get_courses(self, year=None):
+        courses = Course.objects.select_related('year')
+        if year:
+            courses = courses.filter(year=year)
         return [
             CourseListItem(
                 pk=str(course.pk),
@@ -33,9 +36,7 @@ class DjangoCurriculumRepository(ICurriculumRepository):
                 hours_per_week=course.hours_per_week,
                 assignments_count=course.assignments_count,
             )
-            for course in Course.objects.select_related(
-                'year',
-            ).annotate(
+            for course in courses.annotate(
                 assignments_count=Count('courseassignment'),
             ).order_by('subject', 'grade_level', 'name')
         ]

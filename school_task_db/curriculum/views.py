@@ -41,7 +41,9 @@ class CourseListView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        data = container.get_course_list_use_case().execute()
+        data = container.get_course_list_use_case().execute(
+            year=getattr(self.request, 'current_year', None),
+        )
         context['courses'] = data.courses
         return context
 

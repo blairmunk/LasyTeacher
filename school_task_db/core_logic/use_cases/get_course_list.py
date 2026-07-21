@@ -8,5 +8,5 @@ class GetCourseListUseCase:
     def __init__(self, curriculum_repo: ICurriculumRepository):
         self.curriculum_repo = curriculum_repo
 
-    def execute(self) -> CourseListData:
-        return CourseListData(courses=self.curriculum_repo.get_courses())
+    def execute(self, year=None) -> CourseListData:
+        return CourseListData(courses=self.curriculum_repo.get_courses(year=year))

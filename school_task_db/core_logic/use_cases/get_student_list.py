@@ -8,7 +8,7 @@ class GetStudentListUseCase:
     def __init__(self, student_repo: IStudentRepository):
         self.student_repo = student_repo
 
-    def execute(self) -> StudentListData:
+    def execute(self, year=None) -> StudentListData:
         return StudentListData(
-            students=self.student_repo.get_list_students(),
+            students=self.student_repo.get_list_students(year=year),
         )

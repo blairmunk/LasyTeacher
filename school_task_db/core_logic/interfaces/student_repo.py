@@ -24,11 +24,11 @@ from core_logic.entities.student import (
 
 class IStudentRepository(ABC):
     @abstractmethod
-    def get_list_students(self) -> List[StudentListItem]:
+    def get_list_students(self, year: Any = None) -> List[StudentListItem]:
         """Return students for the student list page."""
 
     @abstractmethod
-    def get_list_student_groups(self) -> List[StudentGroupListItem]:
+    def get_list_student_groups(self, year: Any = None) -> List[StudentGroupListItem]:
         """Return student groups/classes for the group list page."""
 
     @abstractmethod

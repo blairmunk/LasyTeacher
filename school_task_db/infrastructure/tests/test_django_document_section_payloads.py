@@ -31,7 +31,11 @@ from core_logic.value_objects.document_recipes import (
 from core_logic.value_objects.variant_print_plan import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_CONTROL,
+    TASK_BANK_ROLE_DEMO,
     TASK_RENDER_MODE_TASK_ONLY,
+    TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+    VARIANT_PRINT_BLOCK_BLANK_CELLS,
+    VARIANT_PRINT_BLOCK_TASK,
 )
 from curriculum.models import SubTopic, Topic
 from infrastructure.services.django_document_section_payloads import (
@@ -110,6 +114,24 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             order=1,
             max_points=4,
         )
+        demo_task = Task.objects.create(
+            text='Разберите пример',
+            answer='42',
+            topic=topic,
+            task_type='computational',
+            difficulty=2,
+        )
+        demo_variant_task = VariantTask.objects.create(
+            variant=variant,
+            task=demo_task,
+            order=2,
+            max_points=0,
+            bank_role=TASK_BANK_ROLE_DEMO,
+            render_mode=TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+            is_assessable=False,
+            blank_cells_after=True,
+            blank_cells_rows=7,
+        )
         builder = DjangoWorkTaskListPayloadBuilder()
 
         payload = builder.build_payload(
@@ -126,7 +148,27 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
         self.assertEqual(variant_payload['number'], 2)
         self.assertEqual(variant_payload['max_score'], 8)
         self.assertEqual(variant_payload['duration'], 40)
-        self.assertEqual(len(variant_payload['tasks']), 1)
+        self.assertEqual(
+            variant_payload['assessable_variant_task_ids'],
+            (str(variant_task.pk),),
+        )
+        self.assertEqual(
+            [block['block_type'] for block in variant_payload['print_plan']['blocks']],
+            [
+                VARIANT_PRINT_BLOCK_TASK,
+                VARIANT_PRINT_BLOCK_TASK,
+                VARIANT_PRINT_BLOCK_BLANK_CELLS,
+            ],
+        )
+        self.assertEqual(
+            variant_payload['print_plan']['blocks'][2]['variant_task_id'],
+            str(demo_variant_task.pk),
+        )
+        self.assertEqual(
+            variant_payload['print_plan']['blocks'][2]['options'],
+            {'rows': 7},
+        )
+        self.assertEqual(len(variant_payload['tasks']), 2)
         task_payload = variant_payload['tasks'][0]
         self.assertEqual(task_payload['variant_task_id'], str(variant_task.pk))
         self.assertEqual(task_payload['order'], 1)

@@ -25,6 +25,8 @@ from core_logic.value_objects.variant_print_plan import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_CONTROL,
     TASK_RENDER_MODE_TASK_ONLY,
+    VariantTaskPrintRow,
+    build_variant_print_plan,
 )
 from core_logic.entities.document import (
     REMEDIAL_WORK_SOURCE_TYPE,
@@ -424,7 +426,7 @@ def _blank_cells_latex_cells(columns, row_height):
 
 
 def _work_variant_payload(variant, task_payload_formatter=None, request=None):
-    variant_tasks = (
+    variant_tasks = list(
         variant.varianttask_set
         .select_related(
             'task',
@@ -434,12 +436,21 @@ def _work_variant_payload(variant, task_payload_formatter=None, request=None):
         )
         .order_by('order', 'pk')
     )
+    print_plan = build_variant_print_plan(
+        variant_id=str(variant.pk),
+        task_rows=[
+            _variant_task_print_row(variant_task)
+            for variant_task in variant_tasks
+        ],
+    )
     return {
         'id': str(variant.pk),
         'number': variant.number,
         'title': f'Вариант {variant.number}',
         'max_score': variant.display_max_score,
         'duration': variant.display_duration,
+        'print_plan': _variant_print_plan_payload(print_plan),
+        'assessable_variant_task_ids': print_plan.assessable_variant_task_ids,
         'tasks': [
             _variant_task_payload(
                 variant_task,
@@ -447,6 +458,49 @@ def _work_variant_payload(variant, task_payload_formatter=None, request=None):
                 request=request,
             )
             for variant_task in variant_tasks
+        ],
+    }
+
+
+def _variant_task_print_row(variant_task):
+    return VariantTaskPrintRow(
+        variant_task_id=str(variant_task.pk),
+        task_id=str(variant_task.task_id),
+        order=variant_task.order,
+        max_points=variant_task.max_points,
+        bank_role=getattr(
+            variant_task,
+            'bank_role',
+            TASK_BANK_ROLE_CONTROL,
+        ),
+        render_mode=getattr(
+            variant_task,
+            'render_mode',
+            TASK_RENDER_MODE_TASK_ONLY,
+        ),
+        is_assessable=getattr(variant_task, 'is_assessable', True),
+        blank_cells_after=getattr(variant_task, 'blank_cells_after', False),
+        blank_cells_rows=getattr(
+            variant_task,
+            'blank_cells_rows',
+            DEFAULT_BLANK_CELLS_ROWS,
+        ),
+    )
+
+
+def _variant_print_plan_payload(print_plan):
+    return {
+        'variant_id': print_plan.variant_id,
+        'assessable_variant_task_ids': print_plan.assessable_variant_task_ids,
+        'blocks': [
+            {
+                'block_type': block.block_type,
+                'variant_task_id': block.variant_task_id,
+                'task_id': block.task_id,
+                'order': block.order,
+                'options': dict(block.options),
+            }
+            for block in print_plan.blocks
         ],
     }
 

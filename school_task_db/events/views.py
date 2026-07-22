@@ -2,7 +2,17 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.views.generic import TemplateView
 from django.http import Http404
+from django.views.decorators.http import require_POST
 
+from core_logic.use_cases.add_event_participants import (
+    AddEventParticipantsRequest,
+)
+from core_logic.use_cases.assign_event_variants import (
+    AssignEventVariantsRequest,
+)
+from core_logic.use_cases.prepare_event_action_submission import (
+    PrepareEventActionSubmissionRequest,
+)
 from infrastructure.container import container
 from infrastructure.forms.event_django_forms import (
     EventForm,
@@ -87,10 +97,6 @@ class EventCreateView(TemplateView):
             container.event_form_adapter.event_params_from_form(form),
         )
 
-        from core_logic.use_cases.add_event_participants import (
-            AddEventParticipantsRequest,
-        )
-
         result = container.add_event_participants_use_case().execute(
             AddEventParticipantsRequest(
                 event_id=event_result.event_id,
@@ -156,8 +162,6 @@ class EventUpdateView(TemplateView):
 
 def add_participants(request, event_id):
     """Добавление участников в событие"""
-    from infrastructure.container import container
-
     selection_data = container.get_event_participant_selection_use_case().execute(
         str(event_id),
     )
@@ -168,10 +172,6 @@ def add_participants(request, event_id):
     if request.method == 'POST':
         form = StudentSelectionForm(request.POST)
         if form.is_valid():
-            from core_logic.use_cases.add_event_participants import (
-                AddEventParticipantsRequest,
-            )
-
             result = container.add_event_participants_use_case().execute(
                 AddEventParticipantsRequest(
                     event_id=str(event_id),
@@ -202,8 +202,6 @@ def add_participants(request, event_id):
 
 def assign_variants(request, event_id):
     """Назначение вариантов участникам"""
-    from infrastructure.container import container
-
     assignment_data = container.get_event_variant_assignment_use_case().execute(
         str(event_id),
     )
@@ -214,10 +212,6 @@ def assign_variants(request, event_id):
     if request.method == 'POST':
         form = VariantAssignmentForm(assignment_data, request.POST)
         if form.is_valid():
-            from core_logic.use_cases.assign_event_variants import (
-                AssignEventVariantsRequest,
-            )
-
             container.assign_event_variants_use_case().execute(
                 AssignEventVariantsRequest(
                     event_id=str(event_id),
@@ -244,8 +238,6 @@ def review_works(request):
 
 def grade_participation(request, participation_id):
     """Legacy grading endpoint kept for old links."""
-    from infrastructure.container import container
-
     participation_data = container.get_event_participation_ref_use_case().execute(
         str(participation_id),
     )
@@ -275,16 +267,10 @@ def grade_participation(request, participation_id):
     else:
         return redirect('review:participation-review', pk=participation.pk)
 
-from django.views.decorators.http import require_POST
 
 @require_POST
 def assign_single_variant(request, event_id):
     """Inline-назначение варианта одному участнику"""
-    from core_logic.use_cases.prepare_event_action_submission import (
-        PrepareEventActionSubmissionRequest,
-    )
-    from infrastructure.container import container
-
     assign_request = container.prepare_assign_single_variant_submission_use_case().execute(
         PrepareEventActionSubmissionRequest(
             event_id=str(event_id),
@@ -313,11 +299,6 @@ def assign_single_variant(request, event_id):
 @require_POST
 def change_status(request, event_id):
     """Смена статуса события"""
-    from core_logic.use_cases.prepare_event_action_submission import (
-        PrepareEventActionSubmissionRequest,
-    )
-    from infrastructure.container import container
-
     status_request = container.prepare_change_event_status_submission_use_case().execute(
         PrepareEventActionSubmissionRequest(
             event_id=str(event_id),

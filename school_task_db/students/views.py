@@ -4,6 +4,15 @@ from django.contrib import messages
 from django.http import Http404
 from django.views import View
 
+from core_logic.use_cases.prepare_remedial_from_event_submission import (
+    PrepareRemedialFromEventSubmissionRequest,
+)
+from core_logic.use_cases.prepare_remedial_wizard_submission import (
+    PrepareRemedialWizardSubmissionRequest,
+)
+from core_logic.use_cases.prepare_student_remedial_submission import (
+    PrepareStudentRemedialSubmissionRequest,
+)
 from infrastructure.container import container
 from infrastructure.forms.student_django_forms import StudentForm, StudentGroupForm
 
@@ -323,9 +332,6 @@ class RemedialWorkView(TemplateView):
 
     def post(self, request, *args, **kwargs):
         student = self._get_student()
-        from core_logic.use_cases.prepare_student_remedial_submission import (
-            PrepareStudentRemedialSubmissionRequest,
-        )
 
         create_request = (
             container.prepare_student_remedial_submission_use_case().execute(
@@ -352,8 +358,6 @@ class RemedialWizardView(View):
 
     def get(self, request):
         """Step 1: выбор класса и параметров"""
-        from infrastructure.container import container
-
         start_data = container.get_remedial_wizard_start_use_case().execute()
 
         context = {
@@ -374,11 +378,6 @@ class RemedialWizardView(View):
 
     def _step2_preview(self, request):
         """Step 2: анализ и превью с дифференциацией по уровню"""
-        from core_logic.use_cases.prepare_remedial_wizard_submission import (
-            PrepareRemedialWizardSubmissionRequest,
-        )
-        from infrastructure.container import container
-
         preview_request = (
             container.prepare_remedial_wizard_preview_submission_use_case().execute(
                 PrepareRemedialWizardSubmissionRequest(data=_post_lists(request.POST))
@@ -405,11 +404,6 @@ class RemedialWizardView(View):
 
     def _step3_create(self, request):
         """Step 3: создание Work + Variants + Event"""
-        from core_logic.use_cases.prepare_remedial_wizard_submission import (
-            PrepareRemedialWizardSubmissionRequest,
-        )
-        from infrastructure.container import container
-
         create_request = (
             container.prepare_remedial_wizard_create_submission_use_case().execute(
                 PrepareRemedialWizardSubmissionRequest(data=_post_lists(request.POST))
@@ -436,9 +430,6 @@ class RemedialFromEventView(View):
 
     def get(self, request, event_pk):
         """Показываем анализ: кто плохо написал"""
-        from django.http import Http404
-        from infrastructure.container import container
-
         result = container.get_remedial_event_preview_use_case().execute(
             str(event_pk)
         )
@@ -454,11 +445,6 @@ class RemedialFromEventView(View):
 
     def post(self, request, event_pk):
         """Создаём работу над ошибками из результатов события"""
-        from core_logic.use_cases.prepare_remedial_from_event_submission import (
-            PrepareRemedialFromEventSubmissionRequest,
-        )
-        from infrastructure.container import container
-
         create_request = (
             container.prepare_remedial_from_event_submission_use_case().execute(
                 PrepareRemedialFromEventSubmissionRequest(
@@ -485,8 +471,6 @@ class RemedialSolutionsView(View):
     """Страница решений: показывает оригинальные задания КР + их решения"""
 
     def get(self, request, variant_pk):
-        from infrastructure.container import container
-
         sheet_data = container.get_remedial_sheet_data_use_case().execute(
             str(variant_pk),
         )

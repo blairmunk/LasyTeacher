@@ -4,6 +4,33 @@ from django.contrib import messages
 from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_POST
 
+from core_logic.use_cases.calculate_review_score import (
+    CalculateReviewScoreRequest,
+)
+from core_logic.use_cases.finalize_review_event import (
+    FinalizeReviewEventRequest,
+)
+from core_logic.use_cases.get_recent_review_sessions import (
+    GetRecentReviewSessionsRequest,
+)
+from core_logic.use_cases.get_review_save_navigation import (
+    GetReviewSaveNavigationRequest,
+)
+from core_logic.use_cases.grade_student_work import GradeStudentWorkRequest
+from core_logic.use_cases.prepare_participation_review_submission import (
+    PrepareParticipationReviewSubmissionRequest,
+)
+from core_logic.use_cases.sync_review_session import (
+    SyncReviewSessionRequest,
+)
+from core_logic.use_cases.toggle_participation_absent import (
+    ToggleParticipationAbsentRequest,
+)
+from core_logic.use_cases.validate_review_work_scan import (
+    ValidateReviewWorkScanRequest,
+)
+from infrastructure.container import container
+
 
 class ReviewDashboardView(TemplateView):
     """Главная панель проверки работ"""
@@ -11,8 +38,6 @@ class ReviewDashboardView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        from infrastructure.container import container
 
         dashboard = container.get_review_dashboard_use_case().execute()
 
@@ -24,10 +49,6 @@ class ReviewDashboardView(TemplateView):
         })
 
         if self.request.user.is_authenticated:
-            from core_logic.use_cases.get_recent_review_sessions import (
-                GetRecentReviewSessionsRequest,
-            )
-
             context['recent_sessions'] = (
                 container.get_recent_review_sessions_use_case().execute(
                     GetRecentReviewSessionsRequest(
@@ -45,8 +66,6 @@ class EventReviewView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        from infrastructure.container import container
 
         review_data = container.get_event_review_use_case().execute(
             str(self.kwargs['pk']),
@@ -73,10 +92,6 @@ class EventReviewView(TemplateView):
         })
 
         if self.request.user.is_authenticated:
-            from core_logic.use_cases.sync_review_session import (
-                SyncReviewSessionRequest,
-            )
-
             context['review_session'] = (
                 container.sync_review_session_use_case().execute(
                     SyncReviewSessionRequest(
@@ -98,7 +113,6 @@ class ParticipationReviewView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         participation_id = kwargs.get('pk')
-        from infrastructure.container import container
 
         review_data = container.get_participation_review_use_case().execute(
             str(participation_id),
@@ -120,18 +134,6 @@ class ParticipationReviewView(TemplateView):
 
     def post(self, request, pk):
         """Сохранение результатов проверки"""
-        from core_logic.use_cases.get_review_save_navigation import (
-            GetReviewSaveNavigationRequest,
-        )
-        from core_logic.use_cases.grade_student_work import GradeStudentWorkRequest
-        from core_logic.use_cases.prepare_participation_review_submission import (
-            PrepareParticipationReviewSubmissionRequest,
-        )
-        from core_logic.use_cases.validate_review_work_scan import (
-            ValidateReviewWorkScanRequest,
-        )
-        from infrastructure.container import container
-
         participation_id = str(pk)
         submission = container.prepare_participation_review_submission_use_case().execute(
             PrepareParticipationReviewSubmissionRequest(data=request.POST),
@@ -202,11 +204,6 @@ class ParticipationReviewView(TemplateView):
 
 def ajax_calculate_score(request):
     """AJAX расчёт оценки по баллам"""
-    from core_logic.use_cases.calculate_review_score import (
-        CalculateReviewScoreRequest,
-    )
-    from infrastructure.container import container
-
     result = container.calculate_review_score_use_case().execute(
         CalculateReviewScoreRequest(
             points=request.GET.get('points', 0),
@@ -218,16 +215,9 @@ def ajax_calculate_score(request):
         'percentage': result.percentage,
     })
 
-from django.views.decorators.http import require_POST
-
 @require_POST
 def finalize_event(request, pk):
     """Завершить проверку события — установить статус graded"""
-    from core_logic.use_cases.finalize_review_event import (
-        FinalizeReviewEventRequest,
-    )
-    from infrastructure.container import container
-
     event = container.finalize_review_event_use_case().execute(
         FinalizeReviewEventRequest(event_id=str(pk))
     )
@@ -237,11 +227,6 @@ def finalize_event(request, pk):
 @require_POST
 def toggle_absent(request, pk):
     """Переключить статус отсутствия"""
-    from core_logic.use_cases.toggle_participation_absent import (
-        ToggleParticipationAbsentRequest,
-    )
-    from infrastructure.container import container
-
     result = container.toggle_participation_absent_use_case().execute(
         ToggleParticipationAbsentRequest(participation_id=str(pk))
     )

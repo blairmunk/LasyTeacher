@@ -8,9 +8,12 @@ from core_logic.value_objects.document_recipes import (
     ANSWER_KEY_DOCUMENT_TYPE,
     ANSWER_KEY_SECTION,
     BLANK_CELLS_SECTION,
+    COMMON_HEADER_SECTION,
+    FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
     LEGACY_TASK_VARIANTS_SECTION,
     ORIGINAL_MISTAKES_SECTION,
+    PAGE_BREAK_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     SCORE_TABLE_SECTION,
     TASK_LIST_SECTION,
@@ -62,6 +65,19 @@ class DocumentSectionCatalogTests(TestCase):
                 for section in sections
             )
         )
+
+    def test_marks_repeatable_rendering_sections(self):
+        sections_by_type = {
+            section.section_type: section
+            for section in get_document_section_catalog()
+        }
+
+        self.assertTrue(sections_by_type[HEADER_SECTION].is_repeatable)
+        self.assertTrue(sections_by_type[TASK_LIST_SECTION].is_repeatable)
+        self.assertTrue(sections_by_type[FULL_SOLUTIONS_SECTION].is_repeatable)
+        self.assertTrue(sections_by_type[PAGE_BREAK_SECTION].is_repeatable)
+        self.assertTrue(sections_by_type[BLANK_CELLS_SECTION].is_repeatable)
+        self.assertFalse(sections_by_type[COMMON_HEADER_SECTION].is_repeatable)
 
     def test_answer_key_section_is_available_for_answer_key_documents(self):
         sections = get_document_section_catalog(

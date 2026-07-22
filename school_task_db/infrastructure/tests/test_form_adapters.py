@@ -428,7 +428,10 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
             COMMON_HEADER_SECTION,
         )
         self.assertTrue(context['section_options'][0]['is_fixed_order'])
+        self.assertFalse(context['section_options'][0]['is_repeatable'])
         self.assertFalse(context['section_options'][0]['has_options'])
+        self.assertIn('task_list', context['repeatable_section_types'])
+        self.assertIn('page_break', context['repeatable_section_types'])
 
         task_list_context = next(
             section
@@ -436,6 +439,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
             if section['section_type'] == 'task_list'
         )
         self.assertTrue(task_list_context['has_options'])
+        self.assertTrue(task_list_context['is_repeatable'])
         self.assertIn(
             'role_render_modes',
             task_list_context['options_example_json'],

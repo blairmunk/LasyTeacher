@@ -45,6 +45,7 @@ class DocumentSectionCatalogItem:
     renderable_document_types: Tuple[str, ...] = ()
     description: str = ''
     is_legacy: bool = False
+    is_repeatable: bool = False
     options_hint: str = ''
     options_example: Mapping[str, Any] = field(default_factory=dict)
 
@@ -110,6 +111,7 @@ DOCUMENT_SECTION_CATALOG = (
             REMEDIAL_SHEET_DOCUMENT_TYPE,
         ),
         description='Название документа и основные метаданные.',
+        is_repeatable=True,
     ),
     DocumentSectionCatalogItem(
         section_type=TASK_LIST_SECTION,
@@ -117,6 +119,7 @@ DOCUMENT_SECTION_CATALOG = (
         supported_document_types=TASK_DOCUMENT_TYPES,
         renderable_document_types=(WORK_DOCUMENT_TYPE,),
         description='Основной блок заданий или упражнений.',
+        is_repeatable=True,
         options_hint=(
             'Можно скрывать роли, переопределять режим печати по ролям '
             'и добавлять клетки после заданий выбранной роли.'
@@ -174,6 +177,7 @@ DOCUMENT_SECTION_CATALOG = (
             REMEDIAL_SHEET_DOCUMENT_TYPE,
         ),
         description='Блок подробных решений.',
+        is_repeatable=True,
     ),
     DocumentSectionCatalogItem(
         section_type=ORIGINAL_MISTAKES_SECTION,
@@ -211,6 +215,7 @@ DOCUMENT_SECTION_CATALOG = (
             REMEDIAL_SHEET_DOCUMENT_TYPE,
         ),
         description='Техническая секция для управления печатной версткой.',
+        is_repeatable=True,
     ),
     DocumentSectionCatalogItem(
         section_type=BLANK_CELLS_SECTION,
@@ -221,6 +226,7 @@ DOCUMENT_SECTION_CATALOG = (
             REMEDIAL_SHEET_DOCUMENT_TYPE,
         ),
         description='Разлинованное место для решения или черновика.',
+        is_repeatable=True,
         options_hint='Размер отдельного блока клеток.',
         options_example={
             'rows': DEFAULT_BLANK_CELLS_ROWS,

@@ -96,6 +96,11 @@ class DocumentTemplateFormAdapter:
                 }
                 for section in sections
             ],
+            'repeatable_section_types': [
+                section.section_type
+                for section in sections
+                if section.is_repeatable
+            ],
             'selected_sections': set(
                 form.data.getlist('sections')
                 if form.is_bound
@@ -134,6 +139,7 @@ class DocumentTemplateFormAdapter:
             'supported_document_types': section.supported_document_types,
             'renderable_document_types': section.renderable_document_types,
             'is_legacy': section.is_legacy,
+            'is_repeatable': section.is_repeatable,
             'is_fixed_order': section.section_type == COMMON_HEADER_SECTION,
             'has_options': section.has_options,
             'options_hint': section.options_hint,

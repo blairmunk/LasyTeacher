@@ -73,6 +73,8 @@ class DocumentTemplateEditorViewTests(TestCase):
         self.assertContains(response, 'name="section_options__blank_cells"')
         self.assertNotContains(response, 'name="section_options__header"')
         self.assertContains(response, 'Порядок секций')
+        self.assertContains(response, 'можно повторять')
+        self.assertContains(response, 'Повторяемые:')
         self.assertContains(response, 'common_header,header,task_list,page_break')
         self.assertContains(response, 'header,theory,full_solutions,task_list')
 

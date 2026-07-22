@@ -64,6 +64,11 @@
                                     <label class="form-check-label fw-semibold" for="section-{{ section.section_type }}">
                                         {{ section.title }}
                                     </label>
+                                    {% if section.is_repeatable %}
+                                    <span class="badge text-bg-light border ms-1">
+                                        можно повторять
+                                    </span>
+                                    {% endif %}
                                 </div>
                                 {% if not section.is_fixed_order %}
                                 <div class="btn-group btn-group-sm" role="group">
@@ -129,6 +134,9 @@
                     {{ form.section_order.errors }}
                     <div class="form-text">
                         {{ form.section_order.help_text }}
+                        {% if repeatable_section_types %}
+                        Повторяемые: <code>{{ repeatable_section_types|join:", " }}</code>.
+                        {% endif %}
                     </div>
                     <div class="small text-muted mt-2">
                         <div>

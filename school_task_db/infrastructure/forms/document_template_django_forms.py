@@ -30,8 +30,8 @@ class DocumentTemplateForm(forms.Form):
         label='Порядок секций',
         required=False,
         help_text=(
-            'Коды секций через запятую. Можно повторять page_break, '
-            'blank_cells, task_list, full_solutions.'
+            'Коды секций через запятую. Повторяемые секции можно указать '
+            'несколько раз.'
         ),
         widget=forms.Textarea(
             attrs={

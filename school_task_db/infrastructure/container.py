@@ -94,6 +94,9 @@ from core_logic.use_cases.get_document_section_catalog import (
 from core_logic.use_cases.get_document_template_editor_data import (
     GetDocumentTemplateEditorDataUseCase,
 )
+from core_logic.use_cases.get_document_template_form_data import (
+    GetDocumentTemplateFormDataUseCase,
+)
 from core_logic.use_cases.get_document_type_catalog import (
     GetDocumentTypeCatalogUseCase,
 )
@@ -691,6 +694,11 @@ class Container:
 
     def get_document_template_editor_data_use_case(self):
         return GetDocumentTemplateEditorDataUseCase(
+            document_template_repo=self.document_template_repo,
+        )
+
+    def get_document_template_form_data_use_case(self):
+        return GetDocumentTemplateFormDataUseCase(
             document_template_repo=self.document_template_repo,
         )
 

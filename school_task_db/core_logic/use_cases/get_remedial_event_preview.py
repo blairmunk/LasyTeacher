@@ -5,6 +5,7 @@ from typing import List, Optional
 
 from core_logic.entities.event import EventEntity, WorkSummary
 from core_logic.interfaces.event_repo import IEventRepository
+from core_logic.value_objects.task_scores import normalize_task_scores
 
 
 @dataclass(frozen=True)
@@ -62,12 +63,9 @@ class GetRemedialEventPreviewUseCase:
         score_pct = round(points / max_points * 100, 1) if max_points > 0 else 0
 
         weak_tasks = []
-        for task_id, score_data in (item.task_scores or {}).items():
-            if not isinstance(score_data, dict):
-                continue
-
-            task_points = score_data.get('points', 0)
-            task_max_points = score_data.get('max_points', 1)
+        for score_record in normalize_task_scores(item.task_scores):
+            task_points = score_record.points or 0
+            task_max_points = score_record.max_points or 1
             if task_max_points <= 0:
                 continue
 
@@ -77,7 +75,7 @@ class GetRemedialEventPreviewUseCase:
                 is_weak = task_points / task_max_points < 0.5
 
             if is_weak:
-                weak_tasks.append(str(task_id))
+                weak_tasks.append(score_record.task_id)
 
         if item.score and item.score <= 2:
             status = 'weak'

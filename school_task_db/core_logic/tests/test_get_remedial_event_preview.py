@@ -32,7 +32,11 @@ class FakeEventRepository:
                 max_points=7,
                 task_scores={
                     't1': {'points': 0, 'max_points': 2},
-                    't2': {'points': 5, 'max_points': 5},
+                    'variant-task-2': {
+                        'task_id': 't2',
+                        'points': 5,
+                        'max_points': 5,
+                    },
                 },
             ),
             ParticipationMarkData(

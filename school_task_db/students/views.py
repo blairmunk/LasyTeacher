@@ -226,16 +226,12 @@ class RemedialWorkView(TemplateView):
         remedial_data = container.get_student_remedial_work_use_case().execute(
             str(student.pk),
         )
-        context['student'] = student
-        context['object'] = student
-        if remedial_data.no_data:
-            context['no_data'] = True
-            return context
-
-        context['remedial_groups'] = remedial_data.remedial_groups
-        context['weak_topics'] = remedial_data.weak_topics
-        context['total_available'] = remedial_data.total_available
-        context['done_count'] = remedial_data.done_count
+        context.update(
+            container.student_form_adapter.student_remedial_context(
+                student,
+                remedial_data,
+            )
+        )
         return context
 
     def post(self, request, *args, **kwargs):
@@ -268,10 +264,9 @@ class RemedialWizardView(View):
         """Step 1: выбор класса и параметров"""
         start_data = container.get_remedial_wizard_start_use_case().execute()
 
-        context = {
-            'groups': start_data.groups,
-            'limit_choices': start_data.limit_choices,
-        }
+        context = container.student_form_adapter.remedial_wizard_start_context(
+            start_data,
+        )
         return render(request, 'students/remedial_wizard_step1.html', context)
 
     def post(self, request):
@@ -298,16 +293,9 @@ class RemedialWizardView(View):
         if preview_data.status == 'not_found':
             raise Http404("Класс не найден")
 
-        context = {
-            'group': preview_data.group,
-            'preview': preview_data.preview,
-            'threshold': preview_data.threshold,
-            'limit_type': preview_data.limit_type,
-            'limit_value': preview_data.limit_value,
-            'work_name': preview_data.work_name,
-            'students_with_tasks': preview_data.students_with_tasks,
-            'total_tasks': preview_data.total_tasks,
-        }
+        context = container.student_form_adapter.remedial_wizard_preview_context(
+            preview_data,
+        )
         return render(request, 'students/remedial_wizard_step2.html', context)
 
     def _step3_create(self, request):
@@ -344,12 +332,11 @@ class RemedialFromEventView(View):
         if not result.success:
             raise Http404(result.message)
 
-        return render(request, 'students/remedial_from_event.html', {
-            'event': result.event,
-            'work': result.work,
-            'analysis': result.analysis,
-            'weak_students': result.weak_students,
-        })
+        return render(
+            request,
+            'students/remedial_from_event.html',
+            container.student_form_adapter.remedial_event_preview_context(result),
+        )
 
     def post(self, request, event_pk):
         """Создаём работу над ошибками из результатов события"""
@@ -393,12 +380,8 @@ class RemedialSolutionsView(View):
             messages.error(request, sheet_data.message)
             return redirect('works:variant-detail', pk=variant_pk)
 
-        context = {
-            'variant': sheet_data.variant,
-            'student': sheet_data.student,
-            'source_work': sheet_data.source_work,
-            'original_tasks': sheet_data.original_tasks,
-            'new_tasks': sheet_data.new_tasks,
-            'mark': sheet_data.mark,
-        }
-        return render(request, 'students/remedial_solutions.html', context)
+        return render(
+            request,
+            'students/remedial_solutions.html',
+            container.student_form_adapter.remedial_solutions_context(sheet_data),
+        )

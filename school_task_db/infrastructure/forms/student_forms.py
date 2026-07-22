@@ -55,6 +55,59 @@ class StudentFormAdapter:
         context.update(self.student_profile_chart_context(student, profile))
         return context
 
+    def student_remedial_context(self, student, remedial_data):
+        context = {
+            'student': student,
+            'object': student,
+        }
+        if remedial_data.no_data:
+            context['no_data'] = True
+            return context
+
+        context.update({
+            'remedial_groups': remedial_data.remedial_groups,
+            'weak_topics': remedial_data.weak_topics,
+            'total_available': remedial_data.total_available,
+            'done_count': remedial_data.done_count,
+        })
+        return context
+
+    def remedial_wizard_start_context(self, start_data):
+        return {
+            'groups': start_data.groups,
+            'limit_choices': start_data.limit_choices,
+        }
+
+    def remedial_wizard_preview_context(self, preview_data):
+        return {
+            'group': preview_data.group,
+            'preview': preview_data.preview,
+            'threshold': preview_data.threshold,
+            'limit_type': preview_data.limit_type,
+            'limit_value': preview_data.limit_value,
+            'work_name': preview_data.work_name,
+            'students_with_tasks': preview_data.students_with_tasks,
+            'total_tasks': preview_data.total_tasks,
+        }
+
+    def remedial_event_preview_context(self, result):
+        return {
+            'event': result.event,
+            'work': result.work,
+            'analysis': result.analysis,
+            'weak_students': result.weak_students,
+        }
+
+    def remedial_solutions_context(self, sheet_data):
+        return {
+            'variant': sheet_data.variant,
+            'student': sheet_data.student,
+            'source_work': sheet_data.source_work,
+            'original_tasks': sheet_data.original_tasks,
+            'new_tasks': sheet_data.new_tasks,
+            'mark': sheet_data.mark,
+        }
+
     def student_profile_chart_context(self, student, profile):
         context = {}
         if profile.group_scores:

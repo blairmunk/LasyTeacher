@@ -22,6 +22,7 @@ from core_logic.entities.work import (
     WorkListItem,
 )
 from core_logic.entities.report import ReportsDashboardData
+from core_logic.entities.student import StudentRemedialWorkData
 from core_logic.services.analytics_service import (
     ScoreTimelinePoint,
     StudentProfileData,
@@ -656,6 +657,103 @@ class StudentFormAdapterTests(SimpleTestCase):
         self.assertNotIn('mini_heatmap_json', context)
         self.assertNotIn('dynamics_chart_json', context)
         self.assertNotIn('score_chart_json', context)
+
+    def test_builds_student_remedial_context(self):
+        student = SimpleNamespace(pk='student-1')
+        remedial_data = StudentRemedialWorkData(
+            remedial_groups=['group-1'],
+            weak_topics=['topic-1'],
+            total_available=3,
+            done_count=1,
+        )
+
+        context = StudentFormAdapter().student_remedial_context(
+            student,
+            remedial_data,
+        )
+
+        self.assertEqual(context['student'], student)
+        self.assertEqual(context['object'], student)
+        self.assertEqual(context['remedial_groups'], ['group-1'])
+        self.assertEqual(context['weak_topics'], ['topic-1'])
+        self.assertEqual(context['total_available'], 3)
+        self.assertEqual(context['done_count'], 1)
+        self.assertNotIn('no_data', context)
+
+    def test_student_remedial_context_handles_no_data(self):
+        student = SimpleNamespace(pk='student-1')
+        remedial_data = StudentRemedialWorkData(no_data=True)
+
+        context = StudentFormAdapter().student_remedial_context(
+            student,
+            remedial_data,
+        )
+
+        self.assertEqual(context['student'], student)
+        self.assertTrue(context['no_data'])
+        self.assertNotIn('remedial_groups', context)
+
+    def test_builds_remedial_wizard_contexts(self):
+        start_data = SimpleNamespace(
+            groups=['7А'],
+            limit_choices=(('tasks', 'По количеству заданий'),),
+        )
+        preview_data = SimpleNamespace(
+            group='7А',
+            preview=['row-1'],
+            threshold=70,
+            limit_type='tasks',
+            limit_value=10,
+            work_name='Работа над ошибками',
+            students_with_tasks=2,
+            total_tasks=5,
+        )
+
+        adapter = StudentFormAdapter()
+        start_context = adapter.remedial_wizard_start_context(start_data)
+        preview_context = adapter.remedial_wizard_preview_context(preview_data)
+
+        self.assertEqual(start_context['groups'], ['7А'])
+        self.assertEqual(
+            start_context['limit_choices'],
+            (('tasks', 'По количеству заданий'),),
+        )
+        self.assertEqual(preview_context['group'], '7А')
+        self.assertEqual(preview_context['preview'], ['row-1'])
+        self.assertEqual(preview_context['threshold'], 70)
+        self.assertEqual(preview_context['students_with_tasks'], 2)
+        self.assertEqual(preview_context['total_tasks'], 5)
+
+    def test_builds_remedial_event_and_solutions_contexts(self):
+        event_result = SimpleNamespace(
+            event='event-1',
+            work='work-1',
+            analysis=['row-1'],
+            weak_students=1,
+        )
+        sheet_data = SimpleNamespace(
+            variant='variant-1',
+            student='student-1',
+            source_work='source-work-1',
+            original_tasks=['original-task-1'],
+            new_tasks=['new-task-1'],
+            mark='mark-1',
+        )
+
+        adapter = StudentFormAdapter()
+        event_context = adapter.remedial_event_preview_context(event_result)
+        solutions_context = adapter.remedial_solutions_context(sheet_data)
+
+        self.assertEqual(event_context['event'], 'event-1')
+        self.assertEqual(event_context['work'], 'work-1')
+        self.assertEqual(event_context['analysis'], ['row-1'])
+        self.assertEqual(event_context['weak_students'], 1)
+        self.assertEqual(solutions_context['variant'], 'variant-1')
+        self.assertEqual(solutions_context['student'], 'student-1')
+        self.assertEqual(solutions_context['source_work'], 'source-work-1')
+        self.assertEqual(solutions_context['original_tasks'], ['original-task-1'])
+        self.assertEqual(solutions_context['new_tasks'], ['new-task-1'])
+        self.assertEqual(solutions_context['mark'], 'mark-1')
 
 
 class TaskFormAdapterTests(SimpleTestCase):

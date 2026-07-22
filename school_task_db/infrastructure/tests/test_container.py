@@ -256,6 +256,7 @@ from infrastructure.forms.document_template_forms import (
     DocumentTemplateFormAdapter,
 )
 from infrastructure.forms.report_forms import ReportFormAdapter
+from infrastructure.forms.review_forms import ReviewFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
 from infrastructure.forms.work_forms import WorkFormAdapter
 from infrastructure.services.document_engine import (
@@ -801,6 +802,7 @@ class ContainerTests(SimpleTestCase):
             DocumentTemplateFormAdapter,
         )
         self.assertIsInstance(container.report_form_adapter, ReportFormAdapter)
+        self.assertIsInstance(container.review_form_adapter, ReviewFormAdapter)
         self.assertIsInstance(container.task_form_adapter, TaskFormAdapter)
         self.assertIsInstance(container.work_form_adapter, WorkFormAdapter)
         self.assertIsInstance(

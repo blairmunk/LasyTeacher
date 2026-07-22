@@ -41,22 +41,24 @@ class ReviewDashboardView(TemplateView):
 
         dashboard = container.get_review_dashboard_use_case().execute()
 
-        context.update({
-            'needs_review': dashboard.needs_review,
-            'in_progress': dashboard.in_progress,
-            'fully_graded': dashboard.fully_graded,
-            'total_events': dashboard.total_events,
-        })
-
+        recent_sessions = None
         if self.request.user.is_authenticated:
-            context['recent_sessions'] = (
-                container.get_recent_review_sessions_use_case().execute(
+            recent_sessions = (
+                container
+                .get_recent_review_sessions_use_case()
+                .execute(
                     GetRecentReviewSessionsRequest(
                         reviewer_id=str(self.request.user.pk),
                     )
                 )
             )
 
+        context.update(
+            container.review_form_adapter.dashboard_context(
+                dashboard,
+                recent_sessions=recent_sessions,
+            )
+        )
         return context
 
 
@@ -73,27 +75,12 @@ class EventReviewView(TemplateView):
         if review_data.event is None:
             raise Http404('Событие не найдено')
 
-        context.update({
-            'event': review_data.event,
-            'has_participants': review_data.has_participants,
-            'variants_assigned': review_data.variants_assigned,
-            'all_variants_assigned': review_data.all_variants_assigned,
-            'blocked': review_data.blocked,
-            'block_reason': review_data.block_reason,
-            'available_variants': review_data.available_variants,
-            'participations_data': review_data.participations_data,
-            'total_participants': review_data.total_participants,
-            'active_participants': review_data.active_participants,
-            'graded_participants': review_data.graded_participants,
-            'absent_participants': review_data.absent_participants,
-            'progress_percentage': review_data.progress_percentage,
-            'avg_score': review_data.avg_score,
-            'score_distribution': review_data.score_distribution,
-        })
-
+        review_session = None
         if self.request.user.is_authenticated:
-            context['review_session'] = (
-                container.sync_review_session_use_case().execute(
+            review_session = (
+                container
+                .sync_review_session_use_case()
+                .execute(
                     SyncReviewSessionRequest(
                         reviewer_id=str(self.request.user.pk),
                         event_id=str(review_data.event.pk),
@@ -103,6 +90,12 @@ class EventReviewView(TemplateView):
                 )
             )
 
+        context.update(
+            container.review_form_adapter.event_review_context(
+                review_data,
+                review_session=review_session,
+            )
+        )
         return context
 
 
@@ -118,17 +111,9 @@ class ParticipationReviewView(TemplateView):
             str(participation_id),
         )
 
-        context.update({
-            'participation': review_data.participation,
-            'mark': review_data.mark,
-            'tasks_with_scores': review_data.tasks_with_scores,
-            'typical_comments': review_data.typical_comments,
-            'previous_participation': review_data.previous_participation,
-            'next_participation': review_data.next_participation,
-            'current_position': review_data.current_position,
-            'total_positions': review_data.total_positions,
-            'navigation_progress': review_data.navigation_progress,
-        })
+        context.update(
+            container.review_form_adapter.participation_review_context(review_data)
+        )
 
         return context
 
@@ -210,10 +195,7 @@ def ajax_calculate_score(request):
             max_points=request.GET.get('max_points', 1),
         )
     )
-    return JsonResponse({
-        'score': result.score,
-        'percentage': result.percentage,
-    })
+    return JsonResponse(container.review_form_adapter.score_calculation_payload(result))
 
 @require_POST
 def finalize_event(request, pk):

@@ -63,6 +63,7 @@ from infrastructure.forms.document_template_forms import (
 )
 from infrastructure.forms.event_forms import EventFormAdapter
 from infrastructure.forms.report_forms import ReportFormAdapter
+from infrastructure.forms.review_forms import ReviewFormAdapter
 from infrastructure.forms.student_forms import StudentFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
 from infrastructure.forms.task_group_forms import TaskGroupFormAdapter
@@ -818,6 +819,93 @@ class ReportFormAdapterTests(SimpleTestCase):
         self.assertEqual(request.group_id, 'g1')
         self.assertEqual(request.year, 2026)
         self.assertTrue(request.show_debts_only)
+
+
+class ReviewFormAdapterTests(SimpleTestCase):
+    def test_builds_review_dashboard_context(self):
+        dashboard = SimpleNamespace(
+            needs_review=['event-1'],
+            in_progress=['event-2'],
+            fully_graded=['event-3'],
+            total_events=3,
+        )
+
+        context = ReviewFormAdapter().dashboard_context(
+            dashboard,
+            recent_sessions=['session-1'],
+        )
+
+        self.assertEqual(context['needs_review'], ['event-1'])
+        self.assertEqual(context['in_progress'], ['event-2'])
+        self.assertEqual(context['fully_graded'], ['event-3'])
+        self.assertEqual(context['total_events'], 3)
+        self.assertEqual(context['recent_sessions'], ['session-1'])
+
+    def test_builds_event_review_context(self):
+        review_data = SimpleNamespace(
+            event='event-1',
+            has_participants=True,
+            variants_assigned=True,
+            all_variants_assigned=False,
+            blocked=False,
+            block_reason='',
+            available_variants=['variant-1'],
+            participations_data=['participation-1'],
+            total_participants=2,
+            active_participants=2,
+            graded_participants=1,
+            absent_participants=0,
+            progress_percentage=50,
+            avg_score=4.0,
+            score_distribution={4: 1},
+        )
+
+        context = ReviewFormAdapter().event_review_context(
+            review_data,
+            review_session='session-1',
+        )
+
+        self.assertEqual(context['event'], 'event-1')
+        self.assertTrue(context['has_participants'])
+        self.assertTrue(context['variants_assigned'])
+        self.assertFalse(context['all_variants_assigned'])
+        self.assertFalse(context['blocked'])
+        self.assertEqual(context['available_variants'], ['variant-1'])
+        self.assertEqual(context['participations_data'], ['participation-1'])
+        self.assertEqual(context['total_participants'], 2)
+        self.assertEqual(context['active_participants'], 2)
+        self.assertEqual(context['graded_participants'], 1)
+        self.assertEqual(context['progress_percentage'], 50)
+        self.assertEqual(context['review_session'], 'session-1')
+
+    def test_builds_participation_review_context_and_score_payload(self):
+        review_data = SimpleNamespace(
+            participation='participation-1',
+            mark='mark-1',
+            tasks_with_scores=['task-1'],
+            typical_comments=['comment-1'],
+            previous_participation='previous-1',
+            next_participation='next-1',
+            current_position=2,
+            total_positions=5,
+            navigation_progress=40,
+        )
+        result = SimpleNamespace(score=4, percentage=75.0)
+        adapter = ReviewFormAdapter()
+
+        context = adapter.participation_review_context(review_data)
+        payload = adapter.score_calculation_payload(result)
+
+        self.assertEqual(context['participation'], 'participation-1')
+        self.assertEqual(context['mark'], 'mark-1')
+        self.assertEqual(context['tasks_with_scores'], ['task-1'])
+        self.assertEqual(context['typical_comments'], ['comment-1'])
+        self.assertEqual(context['previous_participation'], 'previous-1')
+        self.assertEqual(context['next_participation'], 'next-1')
+        self.assertEqual(context['current_position'], 2)
+        self.assertEqual(context['total_positions'], 5)
+        self.assertEqual(context['navigation_progress'], 40)
+        self.assertEqual(payload, {'score': 4, 'percentage': 75.0})
 
 
 class StudentFormAdapterTests(SimpleTestCase):

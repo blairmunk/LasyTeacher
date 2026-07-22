@@ -1413,6 +1413,121 @@ class WorkFormAdapterTests(SimpleTestCase):
             context['variant_status_options'],
         )
 
+    def test_builds_work_detail_and_form_contexts(self):
+        adapter = WorkFormAdapter()
+        form = object()
+        formset = object()
+        work = object()
+        form_data = SimpleNamespace(analog_group_options=['group-option-1'])
+        detail = SimpleNamespace(
+            work='work-1',
+            variants=['variant-1'],
+            analog_groups=['group-1'],
+            spec_preview=['spec-1'],
+            work_document_templates=['work-template-1'],
+            remedial_sheet_templates=['remedial-template-1'],
+            work_document_style_options=['style-1'],
+            show_sync_button=True,
+        )
+
+        detail_context = adapter.work_detail_context(detail)
+        create_context = adapter.work_create_context(form, formset, form_data)
+        update_context = adapter.work_update_context(
+            work,
+            form,
+            formset,
+            form_data,
+        )
+
+        self.assertEqual(detail_context['work'], 'work-1')
+        self.assertEqual(detail_context['object'], 'work-1')
+        self.assertEqual(detail_context['variants'], ['variant-1'])
+        self.assertEqual(detail_context['analog_groups'], ['group-1'])
+        self.assertEqual(detail_context['spec_preview'], ['spec-1'])
+        self.assertEqual(
+            detail_context['work_document_templates'],
+            ['work-template-1'],
+        )
+        self.assertEqual(
+            detail_context['remedial_sheet_templates'],
+            ['remedial-template-1'],
+        )
+        self.assertTrue(detail_context['show_sync_button'])
+        self.assertEqual(create_context['form'], form)
+        self.assertEqual(create_context['formset'], formset)
+        self.assertEqual(create_context['analog_group_options'], ['group-option-1'])
+        self.assertEqual(update_context['object'], work)
+        self.assertEqual(update_context['form'], form)
+        self.assertEqual(update_context['formset'], formset)
+
+    def test_builds_variant_contexts_with_pagination(self):
+        adapter = WorkFormAdapter()
+        list_data = SimpleNamespace(variants=['v1', 'v2', 'v3'])
+        orphan_list_data = SimpleNamespace(
+            variants=['o1', 'o2', 'o3'],
+            total_orphans=3,
+        )
+        detail = SimpleNamespace(
+            variant='variant-1',
+            variant_tasks=['task-1'],
+            total_max_points=5,
+        )
+
+        list_context = adapter.variant_list_context(
+            list_data,
+            QueryDict('page=1'),
+            paginate_by=2,
+        )
+        orphan_context = adapter.orphan_variant_list_context(
+            orphan_list_data,
+            QueryDict('page=1'),
+            paginate_by=2,
+        )
+        detail_context = adapter.variant_detail_context(detail)
+
+        self.assertEqual(list(list_context['variants']), ['v1', 'v2'])
+        self.assertTrue(list_context['is_paginated'])
+        self.assertEqual(list(orphan_context['variants']), ['o1', 'o2'])
+        self.assertEqual(orphan_context['total_orphans'], 3)
+        self.assertEqual(detail_context['variant'], 'variant-1')
+        self.assertEqual(detail_context['object'], 'variant-1')
+        self.assertEqual(detail_context['variant_tasks'], ['task-1'])
+        self.assertEqual(detail_context['total_max_points'], 5)
+
+    def test_builds_variant_delete_and_bulk_delete_contexts(self):
+        adapter = WorkFormAdapter()
+        delete_info = SimpleNamespace(
+            task_count=4,
+            has_participations=True,
+            participation_count=2,
+        )
+        bulk_result = SimpleNamespace(deleted_count=3, remaining_count=1)
+
+        delete_context = adapter.variant_delete_context(delete_info)
+        payload = adapter.bulk_delete_variants_response_payload(bulk_result)
+
+        self.assertEqual(delete_context['delete_info'], delete_info)
+        self.assertEqual(delete_context['task_count'], 4)
+        self.assertTrue(delete_context['has_grades'])
+        self.assertEqual(delete_context['grade_count'], 2)
+        self.assertEqual(
+            payload,
+            {'success': True, 'deleted': 3, 'remaining': 1},
+        )
+
+    def test_builds_compose_variants_context(self):
+        form_data = SimpleNamespace(
+            work='work-1',
+            work_groups=['group-1'],
+        )
+        form = object()
+
+        context = WorkFormAdapter().compose_variants_context(form_data, form)
+
+        self.assertEqual(context['work'], 'work-1')
+        self.assertEqual(context['work_groups'], ['group-1'])
+        self.assertEqual(context['form'], form)
+
     def test_builds_work_specs_from_expanded_formset(self):
         analog_group = SimpleNamespace(pk='group-1')
         formset = SimpleNamespace(

@@ -2,7 +2,6 @@ from dataclasses import replace
 
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.core.paginator import Paginator
 from django.http import Http404, JsonResponse
 from django.views.generic import TemplateView
 from django.views.decorators.http import require_http_methods
@@ -51,15 +50,7 @@ class WorkDetailView(TemplateView):
         detail = container.get_work_detail_use_case().execute(str(self.kwargs['pk']))
         if detail.work is None:
             raise Http404('Работа не найдена')
-        context['work'] = detail.work
-        context['object'] = detail.work
-        context['variants'] = detail.variants
-        context['analog_groups'] = detail.analog_groups
-        context['spec_preview'] = detail.spec_preview
-        context['work_document_templates'] = detail.work_document_templates
-        context['remedial_sheet_templates'] = detail.remedial_sheet_templates
-        context['work_document_style_options'] = detail.work_document_style_options
-        context['show_sync_button'] = detail.show_sync_button
+        context.update(container.work_form_adapter.work_detail_context(detail))
         return context
 
 
@@ -69,13 +60,15 @@ class WorkCreateView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context['form'] = kwargs.get('form') or WorkForm()
-        context['formset'] = (
-            kwargs.get('formset')
-            or container.work_form_adapter.build_analog_group_formset()
-        )
         form_data = container.get_work_form_data_use_case().execute()
-        context['analog_group_options'] = form_data.analog_group_options
+        context.update(
+            container.work_form_adapter.work_create_context(
+                kwargs.get('form') or WorkForm(),
+                kwargs.get('formset')
+                or container.work_form_adapter.build_analog_group_formset(),
+                form_data,
+            )
+        )
         return context
 
     def post(self, request, *args, **kwargs):
@@ -134,18 +127,24 @@ class WorkUpdateView(TemplateView):
         context = super().get_context_data(**kwargs)
 
         work = kwargs.get('object') or self._get_work()
-        context['object'] = work
-        context['form'] = kwargs.get('form') or WorkForm(
+        form = kwargs.get('form') or WorkForm(
             initial=container.work_form_adapter.work_form_initial(work),
         )
-        context['formset'] = (
+        formset = (
             kwargs.get('formset')
             or container.work_form_adapter.build_analog_group_formset(
                 work_id=str(work.pk),
             )
         )
         form_data = container.get_work_form_data_use_case().execute()
-        context['analog_group_options'] = form_data.analog_group_options
+        context.update(
+            container.work_form_adapter.work_update_context(
+                work,
+                form,
+                formset,
+                form_data,
+            )
+        )
         return context
 
     def post(self, request, *args, **kwargs):
@@ -225,11 +224,11 @@ def compose_variants(request, work_id):
     )
     if form_data.status == 'not_found':
         raise Http404("Работа не найдена")
-    return render(request, 'works/compose_variants.html', {
-        'work': form_data.work,
-        'work_groups': form_data.work_groups,
-        'form': form,
-    })
+    return render(
+        request,
+        'works/compose_variants.html',
+        container.work_form_adapter.compose_variants_context(form_data, form),
+    )
 
 def sync_analog_groups(request, work_id):
     if request.method == 'POST':
@@ -263,11 +262,13 @@ class VariantListView(TemplateView):
         context = super().get_context_data(**kwargs)
 
         list_data = container.get_variant_list_use_case().execute()
-        paginator = Paginator(list_data.variants, self.paginate_by)
-        page_obj = paginator.get_page(self.request.GET.get('page'))
-        context['variants'] = page_obj.object_list
-        context['page_obj'] = page_obj
-        context['is_paginated'] = page_obj.has_other_pages()
+        context.update(
+            container.work_form_adapter.variant_list_context(
+                list_data,
+                self.request.GET,
+                self.paginate_by,
+            )
+        )
         return context
 
 
@@ -282,10 +283,7 @@ class VariantDetailView(TemplateView):
         )
         if detail.variant is None:
             raise Http404('Вариант не найден')
-        context['variant'] = detail.variant
-        context['object'] = detail.variant
-        context['variant_tasks'] = detail.variant_tasks
-        context['total_max_points'] = detail.total_max_points
+        context.update(container.work_form_adapter.variant_detail_context(detail))
         return context
 
 
@@ -305,12 +303,13 @@ class OrphanVariantListView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         list_data = self._get_orphan_list_data()
-        paginator = Paginator(list_data.variants, self.paginate_by)
-        page_obj = paginator.get_page(self.request.GET.get('page'))
-        context['variants'] = page_obj.object_list
-        context['page_obj'] = page_obj
-        context['is_paginated'] = page_obj.has_other_pages()
-        context['total_orphans'] = list_data.total_orphans
+        context.update(
+            container.work_form_adapter.orphan_variant_list_context(
+                list_data,
+                self.request.GET,
+                self.paginate_by,
+            )
+        )
         return context
 
 
@@ -326,10 +325,7 @@ class VariantDeleteView(TemplateView):
         if delete_info is None:
             raise Http404('Вариант не найден')
 
-        context['delete_info'] = delete_info
-        context['task_count'] = delete_info.task_count
-        context['has_grades'] = delete_info.has_participations
-        context['grade_count'] = delete_info.participation_count
+        context.update(container.work_form_adapter.variant_delete_context(delete_info))
 
         return context
 
@@ -388,11 +384,9 @@ def bulk_delete_variants(request, work_id):
     if result.status == 'empty_selection':
         return JsonResponse({'error': 'Не выбраны варианты'}, status=400)
 
-    return JsonResponse({
-        'success': True,
-        'deleted': result.deleted_count,
-        'remaining': result.remaining_count,
-    })
+    return JsonResponse(
+        container.work_form_adapter.bulk_delete_variants_response_payload(result),
+    )
 
 
 @require_http_methods(["POST"])

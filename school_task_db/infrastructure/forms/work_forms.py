@@ -1,6 +1,7 @@
 """Infrastructure helpers for Django work forms."""
 
 from django.urls import reverse
+from django.core.paginator import Paginator
 
 from core_logic.interfaces.work_repo import (
     CreateWorkAnalogGroupParams,
@@ -84,6 +85,76 @@ class WorkFormAdapter:
                 {'value': 'with_variants', 'label': 'С вариантами'},
                 {'value': 'without_variants', 'label': 'Без вариантов'},
             ],
+        }
+
+    def work_detail_context(self, detail):
+        return {
+            'work': detail.work,
+            'object': detail.work,
+            'variants': detail.variants,
+            'analog_groups': detail.analog_groups,
+            'spec_preview': detail.spec_preview,
+            'work_document_templates': detail.work_document_templates,
+            'remedial_sheet_templates': detail.remedial_sheet_templates,
+            'work_document_style_options': detail.work_document_style_options,
+            'show_sync_button': detail.show_sync_button,
+        }
+
+    def work_create_context(self, form, formset, form_data):
+        return {
+            'form': form,
+            'formset': formset,
+            'analog_group_options': form_data.analog_group_options,
+        }
+
+    def work_update_context(self, work, form, formset, form_data):
+        context = self.work_create_context(form, formset, form_data)
+        context['object'] = work
+        return context
+
+    def compose_variants_context(self, form_data, form):
+        return {
+            'work': form_data.work,
+            'work_groups': form_data.work_groups,
+            'form': form,
+        }
+
+    def variant_list_context(self, list_data, query, paginate_by):
+        page_obj = Paginator(list_data.variants, paginate_by).get_page(
+            query.get('page'),
+        )
+        return {
+            'variants': page_obj.object_list,
+            'page_obj': page_obj,
+            'is_paginated': page_obj.has_other_pages(),
+        }
+
+    def variant_detail_context(self, detail):
+        return {
+            'variant': detail.variant,
+            'object': detail.variant,
+            'variant_tasks': detail.variant_tasks,
+            'total_max_points': detail.total_max_points,
+        }
+
+    def orphan_variant_list_context(self, list_data, query, paginate_by):
+        context = self.variant_list_context(list_data, query, paginate_by)
+        context['total_orphans'] = list_data.total_orphans
+        return context
+
+    def variant_delete_context(self, delete_info):
+        return {
+            'delete_info': delete_info,
+            'task_count': delete_info.task_count,
+            'has_grades': delete_info.has_participations,
+            'grade_count': delete_info.participation_count,
+        }
+
+    def bulk_delete_variants_response_payload(self, result):
+        return {
+            'success': True,
+            'deleted': result.deleted_count,
+            'remaining': result.remaining_count,
         }
 
     def work_specs_from_formset(self, formset, work_id):

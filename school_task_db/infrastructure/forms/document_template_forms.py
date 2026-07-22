@@ -12,6 +12,9 @@ from core_logic.use_cases.get_document_template_editor_data import (
     GetDocumentTemplateEditorDataRequest,
 )
 from core_logic.value_objects.document_recipes import COMMON_HEADER_SECTION
+from core_logic.value_objects.document_section_catalog import (
+    order_document_section_types,
+)
 from core_logic.value_objects.document_render_options import FILE_TYPE_LABELS
 from infrastructure.forms.document_template_django_forms import (
     section_options_field_name,
@@ -208,31 +211,12 @@ class DocumentTemplateFormAdapter:
         )
 
     def _ordered_sections(self, selected_sections, section_order):
-        selected = list(selected_sections)
-        selected_set = set(selected)
-        fixed_order_sections = [
-            section_type
-            for section_type in selected
-            if section_type == COMMON_HEADER_SECTION
-        ]
-        ordered = [
-            section_type.strip()
-            for section_type in section_order.split(',')
-            if (
-                section_type.strip() in selected_set
-                and section_type.strip() not in fixed_order_sections
-            )
-        ]
-        seen = set(ordered)
-        ordered.extend(
-            section_type
-            for section_type in selected
-            if (
-                section_type not in seen
-                and section_type not in fixed_order_sections
+        return list(
+            order_document_section_types(
+                selected_section_types=selected_sections,
+                section_order=section_order,
             )
         )
-        return fixed_order_sections + ordered
 
     def _section_options_by_type(self, form):
         if form.is_bound:

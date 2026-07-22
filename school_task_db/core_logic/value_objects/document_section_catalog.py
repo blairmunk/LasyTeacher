@@ -282,6 +282,41 @@ def get_document_section_catalog_item(
     return None
 
 
+def order_document_section_types(
+    selected_section_types,
+    section_order,
+) -> Tuple[str, ...]:
+    selected = [
+        section_type.strip()
+        for section_type in selected_section_types
+        if section_type.strip()
+    ]
+    selected_set = set(selected)
+    fixed_order_sections = [
+        section_type
+        for section_type in selected
+        if section_type == COMMON_HEADER_SECTION
+    ]
+    ordered = [
+        section_type.strip()
+        for section_type in _section_order_items(section_order)
+        if (
+            section_type.strip() in selected_set
+            and section_type.strip() not in fixed_order_sections
+        )
+    ]
+    seen = set(ordered)
+    ordered.extend(
+        section_type
+        for section_type in selected
+        if (
+            section_type not in seen
+            and section_type not in fixed_order_sections
+        )
+    )
+    return tuple(fixed_order_sections + ordered)
+
+
 def validate_document_section_types(
     document_type: str,
     section_types,
@@ -299,3 +334,9 @@ def validate_document_section_types(
                 f'Section {section_type} is not supported '
                 f'for document type {document_type}'
             )
+
+
+def _section_order_items(section_order):
+    if isinstance(section_order, str):
+        return section_order.split(',')
+    return section_order or ()

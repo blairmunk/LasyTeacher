@@ -23,6 +23,7 @@ from core_logic.value_objects.document_recipes import (
 )
 from core_logic.value_objects.document_section_catalog import (
     get_document_section_catalog,
+    order_document_section_types,
     validate_document_section_types,
 )
 
@@ -78,6 +79,48 @@ class DocumentSectionCatalogTests(TestCase):
         self.assertTrue(sections_by_type[PAGE_BREAK_SECTION].is_repeatable)
         self.assertTrue(sections_by_type[BLANK_CELLS_SECTION].is_repeatable)
         self.assertFalse(sections_by_type[COMMON_HEADER_SECTION].is_repeatable)
+
+    def test_orders_document_sections_with_common_header_fixed_first(self):
+        ordered = order_document_section_types(
+            selected_section_types=(
+                HEADER_SECTION,
+                COMMON_HEADER_SECTION,
+                TASK_LIST_SECTION,
+            ),
+            section_order=(
+                f'{TASK_LIST_SECTION},{HEADER_SECTION},'
+                f'{COMMON_HEADER_SECTION}'
+            ),
+        )
+
+        self.assertEqual(
+            ordered,
+            (COMMON_HEADER_SECTION, TASK_LIST_SECTION, HEADER_SECTION),
+        )
+
+    def test_orders_document_sections_preserving_repeat_entries(self):
+        ordered = order_document_section_types(
+            selected_section_types=(
+                HEADER_SECTION,
+                TASK_LIST_SECTION,
+                PAGE_BREAK_SECTION,
+            ),
+            section_order=(
+                f'{HEADER_SECTION},{TASK_LIST_SECTION},{PAGE_BREAK_SECTION},'
+                f'{HEADER_SECTION},{TASK_LIST_SECTION}'
+            ),
+        )
+
+        self.assertEqual(
+            ordered,
+            (
+                HEADER_SECTION,
+                TASK_LIST_SECTION,
+                PAGE_BREAK_SECTION,
+                HEADER_SECTION,
+                TASK_LIST_SECTION,
+            ),
+        )
 
     def test_answer_key_section_is_available_for_answer_key_documents(self):
         sections = get_document_section_catalog(

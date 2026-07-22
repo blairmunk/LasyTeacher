@@ -175,6 +175,20 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(selection.target_difficulty, 3)
 
     def test_student_repository_returns_task_level_mark_results(self):
+        ok_variant_task = VariantTask.objects.get(
+            variant=self.source_variant,
+            task=self.original_ok,
+        )
+        self.mark.task_scores = {
+            str(self.original_weak.pk): {'points': 0, 'max_points': 2},
+            str(ok_variant_task.pk): {
+                'task_id': str(self.original_ok.pk),
+                'points': 5,
+                'max_points': 5,
+            },
+        }
+        self.mark.save()
+
         results = DjangoStudentRepository().get_task_results_for_event(
             student_id=str(self.student.pk),
             event_id=str(self.event.pk),
@@ -186,6 +200,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(weak_result.max_points, 2)
         self.assertEqual(weak_result.group_id, str(self.weak_group.pk))
         self.assertEqual(weak_result.group_name, self.weak_group.name)
+        self.assertEqual(result_by_task[str(self.original_ok.pk)].points, 5)
 
     def test_student_repository_returns_profile_data(self):
         repo = DjangoStudentRepository()

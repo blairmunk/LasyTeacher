@@ -28,6 +28,7 @@ from core_logic.entities.student import (
     WorkRef,
 )
 from core_logic.interfaces.student_repo import IStudentRepository
+from core_logic.value_objects.task_scores import normalize_task_scores
 from events.models import EventParticipation, Mark
 from task_groups.models import AnalogGroup, TaskGroup
 from students.models import StudentGroup, StudentTaskLog
@@ -182,24 +183,25 @@ class DjangoStudentRepository(IStudentRepository):
         if not mark or not mark.task_scores:
             return []
 
+        score_records = normalize_task_scores(mark.task_scores)
+        if not score_records:
+            return []
+
         results = []
         task_groups = {
             str(tg.task_id): tg
             for tg in TaskGroup.objects.filter(
-                task_id__in=mark.task_scores.keys()
+                task_id__in=[record.task_id for record in score_records]
             ).select_related('group')
         }
 
-        for task_id, score_data in mark.task_scores.items():
-            if not isinstance(score_data, dict):
-                continue
-
-            task_group = task_groups.get(str(task_id))
+        for score_record in score_records:
+            task_group = task_groups.get(score_record.task_id)
             results.append(
                 TaskResult(
-                    task_id=str(task_id),
-                    points=score_data.get('points'),
-                    max_points=score_data.get('max_points'),
+                    task_id=score_record.task_id,
+                    points=score_record.points,
+                    max_points=score_record.max_points,
                     group_id=str(task_group.group_id) if task_group else None,
                     group_name=task_group.group.name if task_group else '',
                 )

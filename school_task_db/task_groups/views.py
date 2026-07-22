@@ -2,7 +2,6 @@ import json
 
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.core.paginator import Paginator
 from django.views.generic import TemplateView
 from django.views.decorators.http import require_POST
 from django.http import Http404, JsonResponse
@@ -19,11 +18,6 @@ from core_logic.use_cases.prepare_task_group_membership_submission import (
 )
 from infrastructure.container import container
 from infrastructure.forms.task_group_django_forms import AnalogGroupForm
-from core_logic.value_objects.task_print_settings import (
-    TASK_BANK_ROLE_ANY,
-    TASK_BANK_ROLE_CONTROL,
-    TASK_BANK_ROLE_SPECIFIC_CHOICES,
-)
 
 
 def _post_lists(post_data):
@@ -52,34 +46,14 @@ class AnalogGroupListView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         list_data = self._get_list_data()
-        paginator = Paginator(list_data.analog_groups, self.paginate_by)
-        page_obj = paginator.get_page(self.request.GET.get('page'))
-
-        context['analog_groups'] = page_obj.object_list
-        context['page_obj'] = page_obj
-        context['is_paginated'] = page_obj.has_other_pages()
-        context['topics'] = list_data.topics
-        context['subtopics'] = list_data.subtopics
-        context['difficulties'] = list_data.difficulties
         context.update(
             container.task_group_form_adapter
-            .task_group_list_filter_context_from_query(
+            .task_group_list_context(
+                list_data,
                 self.request.GET,
+                self.paginate_by,
             )
         )
-
-        # Статистика
-        context['total_groups'] = list_data.total_groups
-        context['empty_groups'] = list_data.empty_groups
-        context['total_tasks_in_groups'] = list_data.total_tasks_in_groups
-        context['bank_role_filter_options'] = tuple(
-            (value, label)
-            for value, label in (
-                (TASK_BANK_ROLE_ANY, 'Любая роль'),
-                *TASK_BANK_ROLE_SPECIFIC_CHOICES,
-            )
-        )
-
         return context
 
 
@@ -93,9 +67,9 @@ class AnalogGroupDetailView(TemplateView):
         )
         if detail_data.group is None:
             raise Http404('Группа аналогов не найдена')
-        context['analoggroup'] = detail_data.group
-        context['tasks'] = detail_data.tasks
-        context['bank_role_options'] = TASK_BANK_ROLE_SPECIFIC_CHOICES
+        context.update(
+            container.task_group_form_adapter.task_group_detail_context(detail_data)
+        )
         return context
 
 
@@ -104,7 +78,11 @@ class AnalogGroupCreateView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['form'] = kwargs.get('form') or AnalogGroupForm()
+        context.update(
+            container.task_group_form_adapter.analog_group_create_context(
+                kwargs.get('form') or AnalogGroupForm(),
+            )
+        )
         return context
 
     def post(self, request, *args, **kwargs):
@@ -133,9 +111,14 @@ class AnalogGroupUpdateView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         group = kwargs.get('object') or self._get_group_data()
-        context['object'] = group
-        context['form'] = kwargs.get('form') or AnalogGroupForm(
+        form = kwargs.get('form') or AnalogGroupForm(
             initial=container.task_group_form_adapter.analog_group_form_initial(group),
+        )
+        context.update(
+            container.task_group_form_adapter.analog_group_update_context(
+                group,
+                form,
+            )
         )
         return context
 
@@ -195,14 +178,11 @@ def add_tasks_to_group(request, group_id):
     if data.status == 'not_found':
         raise Http404("Группа не найдена")
 
-    context = {
-        'group': data.group,
-        'available_tasks': data.available_tasks,
-        'search': data.search,
-        'bank_role_options': TASK_BANK_ROLE_SPECIFIC_CHOICES,
-        'selected_bank_role': TASK_BANK_ROLE_CONTROL,
-    }
-    return render(request, 'task_groups/add_tasks.html', context)
+    return render(
+        request,
+        'task_groups/add_tasks.html',
+        container.task_group_form_adapter.add_tasks_to_group_context(data),
+    )
 
 
 def remove_task_from_group(request, group_id, task_id):

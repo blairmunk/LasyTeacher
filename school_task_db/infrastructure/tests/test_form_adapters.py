@@ -44,6 +44,8 @@ from core_logic.value_objects.document_recipes import (
     WORK_DOCUMENT_TYPE,
 )
 from core_logic.value_objects.task_print_settings import (
+    TASK_BANK_ROLE_ANY,
+    TASK_BANK_ROLE_CONTROL,
     TASK_BANK_ROLE_DEMO,
     TASK_RENDER_MODE_WITH_FULL_SOLUTION,
 )
@@ -1251,6 +1253,66 @@ class TaskGroupFormAdapterTests(SimpleTestCase):
         self.assertEqual(context['current_sort'], 'name')
         self.assertEqual(context['min_tasks'], '')
         self.assertEqual(context['max_tasks'], '')
+
+    def test_builds_task_group_list_context_with_pagination_and_stats(self):
+        list_data = SimpleNamespace(
+            analog_groups=['group-1', 'group-2', 'group-3'],
+            topics=['topic-1'],
+            subtopics=['subtopic-1'],
+            difficulties=[(1, 'Легкая')],
+            total_groups=3,
+            empty_groups=1,
+            total_tasks_in_groups=7,
+        )
+
+        context = TaskGroupFormAdapter().task_group_list_context(
+            list_data,
+            QueryDict('page=1&search=force'),
+            paginate_by=2,
+        )
+
+        self.assertEqual(list(context['analog_groups']), ['group-1', 'group-2'])
+        self.assertTrue(context['is_paginated'])
+        self.assertEqual(context['topics'], ['topic-1'])
+        self.assertEqual(context['subtopics'], ['subtopic-1'])
+        self.assertEqual(context['difficulties'], [(1, 'Легкая')])
+        self.assertEqual(context['total_groups'], 3)
+        self.assertEqual(context['empty_groups'], 1)
+        self.assertEqual(context['total_tasks_in_groups'], 7)
+        self.assertEqual(context['search_query'], 'force')
+        self.assertEqual(
+            context['bank_role_filter_options'][0],
+            (TASK_BANK_ROLE_ANY, 'Любая роль'),
+        )
+
+    def test_builds_task_group_page_contexts(self):
+        adapter = TaskGroupFormAdapter()
+        form = object()
+        group = object()
+        detail_data = SimpleNamespace(group='group-1', tasks=['task-1'])
+        add_tasks_data = SimpleNamespace(
+            group='group-1',
+            available_tasks=['task-2'],
+            search='force',
+        )
+
+        detail_context = adapter.task_group_detail_context(detail_data)
+        create_context = adapter.analog_group_create_context(form)
+        update_context = adapter.analog_group_update_context(group, form)
+        add_tasks_context = adapter.add_tasks_to_group_context(add_tasks_data)
+
+        self.assertEqual(detail_context['analoggroup'], 'group-1')
+        self.assertEqual(detail_context['tasks'], ['task-1'])
+        self.assertIn(TASK_BANK_ROLE_CONTROL, dict(detail_context['bank_role_options']))
+        self.assertEqual(create_context, {'form': form})
+        self.assertEqual(update_context, {'object': group, 'form': form})
+        self.assertEqual(add_tasks_context['group'], 'group-1')
+        self.assertEqual(add_tasks_context['available_tasks'], ['task-2'])
+        self.assertEqual(add_tasks_context['search'], 'force')
+        self.assertEqual(
+            add_tasks_context['selected_bank_role'],
+            TASK_BANK_ROLE_CONTROL,
+        )
 
     def test_builds_group_bulk_action_response_payloads(self):
         adapter = TaskGroupFormAdapter()

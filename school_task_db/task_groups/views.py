@@ -1,3 +1,5 @@
+import json
+
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.paginator import Paginator
@@ -5,6 +7,16 @@ from django.views.generic import TemplateView
 from django.views.decorators.http import require_POST
 from django.http import Http404, JsonResponse
 
+from core_logic.use_cases.change_task_group_membership import (
+    RemoveTaskFromGroupRequest,
+)
+from core_logic.use_cases.create_work_from_groups import (
+    PrepareCreateWorkFromGroupsSubmissionRequest,
+)
+from core_logic.use_cases.prepare_task_group_membership_submission import (
+    PrepareAddTasksToGroupSubmissionRequest,
+    PrepareUpdateTaskGroupRolesSubmissionRequest,
+)
 from infrastructure.container import container
 from infrastructure.forms.task_group_django_forms import AnalogGroupForm
 from core_logic.value_objects.task_print_settings import (
@@ -151,10 +163,6 @@ class AnalogGroupUpdateView(TemplateView):
 def add_tasks_to_group(request, group_id):
     """Добавление заданий в группу аналогов"""
     if request.method == 'POST':
-        from core_logic.use_cases.prepare_task_group_membership_submission import (
-            PrepareAddTasksToGroupSubmissionRequest,
-        )
-
         add_request = container.prepare_add_tasks_to_group_submission_use_case().execute(
             PrepareAddTasksToGroupSubmissionRequest(
                 group_id=str(group_id),
@@ -200,11 +208,6 @@ def add_tasks_to_group(request, group_id):
 def remove_task_from_group(request, group_id, task_id):
     """Удаление задания из группы аналогов"""
     if request.method == 'POST':
-        from core_logic.use_cases.change_task_group_membership import (
-            RemoveTaskFromGroupRequest,
-        )
-        from infrastructure.container import container
-
         result = container.remove_task_from_group_use_case().execute(
             RemoveTaskFromGroupRequest(
                 group_id=str(group_id),
@@ -220,10 +223,6 @@ def remove_task_from_group(request, group_id, task_id):
 
 @require_POST
 def update_task_group_roles(request, group_id):
-    from core_logic.use_cases.prepare_task_group_membership_submission import (
-        PrepareUpdateTaskGroupRolesSubmissionRequest,
-    )
-
     update_request = (
         container.prepare_update_task_group_roles_submission_use_case().execute(
             PrepareUpdateTaskGroupRolesSubmissionRequest(
@@ -251,17 +250,10 @@ def update_task_group_roles(request, group_id):
 @require_POST
 def bulk_create_work_from_groups(request):
     """Создать работу из выбранных групп аналогов"""
-    import json
-    from infrastructure.container import container
-
     try:
         body = json.loads(request.body)
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Невалидный JSON'}, status=400)
-
-    from core_logic.use_cases.create_work_from_groups import (
-        PrepareCreateWorkFromGroupsSubmissionRequest,
-    )
 
     create_request = (
         container.prepare_create_work_from_groups_submission_use_case().execute(
@@ -283,9 +275,6 @@ def bulk_create_work_from_groups(request):
 @require_POST
 def bulk_delete_groups(request):
     """Удалить выбранные группы"""
-    import json
-    from infrastructure.container import container
-
     try:
         body = json.loads(request.body)
     except json.JSONDecodeError:

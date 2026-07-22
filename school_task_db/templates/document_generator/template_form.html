@@ -234,7 +234,26 @@
         var movableSections = selectedSectionTypes.filter(function(sectionType) {
             return optionByType(sectionType).dataset.fixedOrder !== '1';
         });
-        orderInput.value = fixedSections.concat(movableSections).join(',');
+        var currentOrder = orderInput.value
+            .split(',')
+            .map(function(sectionType) {
+                return sectionType.trim();
+            })
+            .filter(Boolean);
+        var preservedMovableSections = currentOrder.filter(function(sectionType) {
+            var option = optionByType(sectionType);
+            return (
+                option
+                && movableSections.indexOf(sectionType) !== -1
+                && option.dataset.fixedOrder !== '1'
+            );
+        });
+        movableSections.forEach(function(sectionType) {
+            if (preservedMovableSections.indexOf(sectionType) === -1) {
+                preservedMovableSections.push(sectionType);
+            }
+        });
+        orderInput.value = fixedSections.concat(preservedMovableSections).join(',');
     }
 
     function optionByType(sectionType) {

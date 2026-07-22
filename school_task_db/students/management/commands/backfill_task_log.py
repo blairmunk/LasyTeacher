@@ -1,4 +1,6 @@
 from django.core.management.base import BaseCommand
+
+from core_logic.value_objects.task_scores import normalize_task_scores
 from events.models import Mark
 from students.models import StudentTaskLog
 
@@ -12,19 +14,19 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         dry_run = options['dry_run']
-        
+
         marks = Mark.objects.exclude(task_scores={}).select_related(
             'participation__student',
             'participation__event',
             'participation__variant',
         )
-        
+
         total_marks = marks.count()
         self.stdout.write(f"Найдено {total_marks} отметок с task_scores")
-        
+
         if dry_run:
             for mark in marks:
-                task_count = len(mark.task_scores)
+                task_count = len(normalize_task_scores(mark.task_scores))
                 self.stdout.write(
                     f"  Mark #{str(mark.pk)[-8:]} → "
                     f"{mark.participation.student} → "

@@ -11,7 +11,7 @@ from django.utils import timezone
 from core.models import AcademicYear
 from curriculum.models import Topic
 from events.models import Event, EventParticipation, Mark
-from students.models import Student, StudentGroup
+from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
 from works.models import Variant, VariantTask, Work, WorkAnalogGroup
@@ -125,6 +125,67 @@ class ImportStudentsCsvCommandTests(TestCase):
                     dry_run=True,
                     stdout=StringIO(),
                 )
+
+
+class BackfillTaskLogCommandTests(TestCase):
+    def test_dry_run_counts_normalized_variant_task_scores(self):
+        topic = Topic.objects.create(
+            name='Кинематика',
+            subject='Физика',
+            section='Механика',
+            grade_level=9,
+        )
+        student = Student.objects.create(last_name='Иванов', first_name='Иван')
+        work = Work.objects.create(name='Контрольная')
+        variant = Variant.objects.create(work=work, number=1)
+        task = Task.objects.create(
+            text='Найти скорость',
+            answer='10 м/с',
+            topic=topic,
+            task_type='computational',
+            difficulty=2,
+        )
+        variant_task = VariantTask.objects.create(
+            variant=variant,
+            task=task,
+            order=1,
+            max_points=2,
+            weight=2,
+        )
+        event = Event.objects.create(
+            name='КР 9А',
+            work=work,
+            planned_date=timezone.now(),
+            status='graded',
+        )
+        participation = EventParticipation.objects.create(
+            event=event,
+            student=student,
+            variant=variant,
+            status='graded',
+        )
+        Mark.objects.create(
+            participation=participation,
+            score=5,
+            points=2,
+            max_points=2,
+            task_scores={
+                str(variant_task.pk): {
+                    'task_id': str(task.pk),
+                    'variant_task_id': str(variant_task.pk),
+                    'points': 2,
+                    'max_points': 2,
+                },
+            },
+        )
+        out = StringIO()
+        initial_log_count = StudentTaskLog.objects.count()
+
+        call_command('backfill_task_log', dry_run=True, stdout=out)
+
+        self.assertIn('Найдено 1 отметок', out.getvalue())
+        self.assertIn('1 заданий', out.getvalue())
+        self.assertEqual(StudentTaskLog.objects.count(), initial_log_count)
 
 
 class RemedialFromEventViewTests(TestCase):

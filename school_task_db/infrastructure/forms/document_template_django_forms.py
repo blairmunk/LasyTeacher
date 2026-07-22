@@ -4,8 +4,6 @@ import json
 
 from django import forms
 
-from core_logic.value_objects.document_type_catalog import get_document_type_catalog
-
 
 class DocumentTemplateForm(forms.Form):
     name = forms.CharField(
@@ -42,7 +40,7 @@ class DocumentTemplateForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.fields['template_type'].choices = [
             (item.document_type, item.title)
-            for item in (document_types or get_document_type_catalog())
+            for item in (document_types or [])
         ]
         self.fields['sections'].choices = [
             (

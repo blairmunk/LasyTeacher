@@ -121,6 +121,18 @@ class CoreFormAdapterTests(SimpleTestCase):
 
 
 class DocumentTemplateFormAdapterTests(SimpleTestCase):
+    def _template_form(self, *args, sections=None, **kwargs):
+        return DocumentTemplateForm(
+            *args,
+            document_types=get_document_type_catalog(renderable_only=True),
+            sections=(
+                sections
+                if sections is not None
+                else get_document_section_catalog(renderable_only=True)
+            ),
+            **kwargs,
+        )
+
     def test_builds_editor_data_request_from_query(self):
         request = (
             DocumentTemplateFormAdapter()
@@ -206,12 +218,11 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         )
 
     def test_builds_create_params_from_template_form(self):
-        form = DocumentTemplateForm(
+        form = self._template_form(
             data=QueryDict(
                 'name=Шаблон&description=Описание&template_type=work'
                 '&sections=header&sections=task_list&is_default=on',
             ),
-            sections=get_document_section_catalog(renderable_only=True),
         )
         self.assertTrue(form.is_valid(), form.errors)
 
@@ -228,13 +239,12 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         self.assertTrue(params.is_default)
 
     def test_builds_create_params_preserving_section_order(self):
-        form = DocumentTemplateForm(
+        form = self._template_form(
             data=QueryDict(
                 'name=Шаблон&template_type=work'
                 '&sections=header&sections=task_list'
                 '&section_order=task_list,header',
             ),
-            sections=get_document_section_catalog(renderable_only=True),
         )
         self.assertTrue(form.is_valid(), form.errors)
 
@@ -253,9 +263,8 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         data['section_options__task_list'] = (
             '{"hidden_roles": ["demo"], "role_blank_cells": {"practice": 6}}'
         )
-        form = DocumentTemplateForm(
+        form = self._template_form(
             data=data,
-            sections=get_document_section_catalog(renderable_only=True),
         )
         self.assertTrue(form.is_valid(), form.errors)
 
@@ -276,9 +285,8 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         data.update({'name': 'Шаблон', 'template_type': 'work'})
         data.setlist('sections', ['task_list'])
         data['section_options__task_list'] = '{"hidden_roles":'
-        form = DocumentTemplateForm(
+        form = self._template_form(
             data=data,
-            sections=get_document_section_catalog(renderable_only=True),
         )
 
         self.assertFalse(form.is_valid())
@@ -292,9 +300,8 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         data.update({'name': 'Шаблон', 'template_type': 'work'})
         data.setlist('sections', ['task_list'])
         data['section_options__task_list'] = '["demo"]'
-        form = DocumentTemplateForm(
+        form = self._template_form(
             data=data,
-            sections=get_document_section_catalog(renderable_only=True),
         )
 
         self.assertFalse(form.is_valid())
@@ -304,12 +311,11 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         )
 
     def test_builds_update_params_from_template_form(self):
-        form = DocumentTemplateForm(
+        form = self._template_form(
             data=QueryDict(
                 'name=Шаблон&description=Описание&template_type=work'
                 '&sections=header',
             ),
-            sections=get_document_section_catalog(renderable_only=True),
         )
         self.assertTrue(form.is_valid(), form.errors)
 
@@ -379,9 +385,8 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         )
 
     def test_builds_create_context(self):
-        form = DocumentTemplateForm(
+        form = self._template_form(
             data=QueryDict('template_type=work&sections=header'),
-            sections=get_document_section_catalog(renderable_only=True),
         )
 
         context = DocumentTemplateFormAdapter().create_context(
@@ -414,7 +419,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         self.assertIn('Можно скрывать роли', task_list_context['options_hint'])
 
     def test_builds_create_context_with_section_options_json(self):
-        form = DocumentTemplateForm(
+        form = self._template_form(
             initial={
                 'template_type': WORK_DOCUMENT_TYPE,
                 'sections': ['task_list'],
@@ -425,7 +430,6 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
                     },
                 },
             },
-            sections=get_document_section_catalog(renderable_only=True),
         )
 
         context = DocumentTemplateFormAdapter().create_context(

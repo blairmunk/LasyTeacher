@@ -3,13 +3,19 @@ from dataclasses import replace
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.views.generic import TemplateView
 from django.views.decorators.http import require_http_methods
 
+from core_logic.use_cases.prepare_work_variant_submission import (
+    PrepareVariantActionSubmissionRequest,
+)
 from core_logic.use_cases.save_work import (
     SaveWorkSpecificationRequest,
     validate_work_specification_specs,
+)
+from core_logic.use_cases.sync_work_analog_groups import (
+    SyncWorkAnalogGroupsRequest,
 )
 from infrastructure.container import container
 from infrastructure.forms.work_django_forms import WorkForm, VariantGenerationForm
@@ -27,7 +33,6 @@ class WorkListView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        from infrastructure.container import container
 
         filters = container.work_form_adapter.work_list_filters_from_query(
             self.request.GET,
@@ -42,7 +47,6 @@ class WorkDetailView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        from infrastructure.container import container
 
         detail = container.get_work_detail_use_case().execute(str(self.kwargs['pk']))
         if detail.work is None:
@@ -64,7 +68,6 @@ class WorkCreateView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        from infrastructure.container import container
 
         context['form'] = kwargs.get('form') or WorkForm()
         context['formset'] = (
@@ -76,8 +79,6 @@ class WorkCreateView(TemplateView):
         return context
 
     def post(self, request, *args, **kwargs):
-        from infrastructure.container import container
-
         form = WorkForm(request.POST)
         formset = container.work_form_adapter.build_analog_group_formset(
             data=request.POST,
@@ -131,7 +132,6 @@ class WorkUpdateView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        from infrastructure.container import container
 
         work = kwargs.get('object') or self._get_work()
         context['object'] = work
@@ -149,8 +149,6 @@ class WorkUpdateView(TemplateView):
         return context
 
     def post(self, request, *args, **kwargs):
-        from infrastructure.container import container
-
         work = self._get_work()
         form = WorkForm(request.POST)
         formset = container.work_form_adapter.build_analog_group_formset(
@@ -199,8 +197,6 @@ class WorkUpdateView(TemplateView):
 
 
 def compose_variants(request, work_id):
-    from infrastructure.container import container
-
     if request.method == 'POST':
         form = VariantGenerationForm(request.POST)
         if form.is_valid():
@@ -236,13 +232,7 @@ def compose_variants(request, work_id):
     })
 
 def sync_analog_groups(request, work_id):
-    from infrastructure.container import container
-
     if request.method == 'POST':
-        from core_logic.use_cases.sync_work_analog_groups import (
-            SyncWorkAnalogGroupsRequest,
-        )
-
         result = container.sync_work_analog_groups_use_case().execute(
             SyncWorkAnalogGroupsRequest(work_id=str(work_id)),
         )
@@ -271,7 +261,6 @@ class VariantListView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        from infrastructure.container import container
 
         list_data = container.get_variant_list_use_case().execute()
         paginator = Paginator(list_data.variants, self.paginate_by)
@@ -287,7 +276,6 @@ class VariantDetailView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        from infrastructure.container import container
 
         detail = container.get_variant_detail_use_case().execute(
             str(self.kwargs['pk']),
@@ -309,8 +297,6 @@ class OrphanVariantListView(TemplateView):
 
     def _get_orphan_list_data(self):
         if not hasattr(self, '_orphan_list_data'):
-            from infrastructure.container import container
-
             self._orphan_list_data = (
                 container.get_orphan_variant_list_use_case().execute()
             )
@@ -333,7 +319,6 @@ class VariantDeleteView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        from infrastructure.container import container
 
         delete_info = container.get_variant_delete_info_use_case().execute(
             str(self.kwargs['pk']),
@@ -349,11 +334,6 @@ class VariantDeleteView(TemplateView):
         return context
 
     def post(self, request, *args, **kwargs):
-        from core_logic.use_cases.prepare_work_variant_submission import (
-            PrepareVariantActionSubmissionRequest,
-        )
-        from infrastructure.container import container
-
         delete_request = container.prepare_delete_variant_submission_use_case().execute(
             PrepareVariantActionSubmissionRequest(
                 variant_id=str(self.kwargs['pk']),
@@ -389,15 +369,8 @@ class VariantDeleteView(TemplateView):
 
 def bulk_delete_variants(request, work_id):
     """Удаление нескольких вариантов работы"""
-    from django.http import JsonResponse
-
     if request.method != 'POST':
         return JsonResponse({'error': 'POST only'}, status=405)
-
-    from core_logic.use_cases.prepare_work_variant_submission import (
-        PrepareVariantActionSubmissionRequest,
-    )
-    from infrastructure.container import container
 
     bulk_delete_request = (
         container.prepare_bulk_delete_variants_submission_use_case().execute(
@@ -425,11 +398,6 @@ def bulk_delete_variants(request, work_id):
 @require_http_methods(["POST"])
 def create_work_from_orphans(request):
     """Создать работу из выбранных вариантов-сирот"""
-    from core_logic.use_cases.prepare_work_variant_submission import (
-        PrepareVariantActionSubmissionRequest,
-    )
-    from infrastructure.container import container
-
     create_request = (
         container.prepare_create_work_from_orphans_submission_use_case().execute(
             PrepareVariantActionSubmissionRequest(data=_post_lists(request.POST))

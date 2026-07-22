@@ -1413,7 +1413,7 @@ class WorkDetailViewTests(TestCase):
             difficulty=2,
         )
         TaskGroup.objects.create(task=task, group=group)
-        VariantTask.objects.create(
+        original_variant_task = VariantTask.objects.create(
             variant=original_variant,
             task=task,
             order=1,
@@ -1445,7 +1445,8 @@ class WorkDetailViewTests(TestCase):
             points=2,
             max_points=5,
             task_scores={
-                str(task.pk): {
+                str(original_variant_task.pk): {
+                    'task_id': str(task.pk),
                     'points': 2,
                     'max_points': 5,
                 },

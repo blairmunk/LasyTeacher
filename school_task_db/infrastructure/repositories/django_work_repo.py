@@ -36,6 +36,7 @@ from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_CONTROL,
     TASK_BANK_ROLE_REMEDIAL,
 )
+from core_logic.value_objects.task_scores import task_score_records_by_task_id
 from core_logic.interfaces.work_repo import (
     AttachVariantsToWorkParams,
     CreatedWorkVariantRef,
@@ -365,7 +366,9 @@ class DjangoWorkRepository(IWorkRepository):
 
             if original_ep:
                 mark = Mark.objects.filter(participation=original_ep).first()
-                task_scores = mark.task_scores if mark else {}
+                task_scores_by_task_id = task_score_records_by_task_id(
+                    mark.task_scores if mark else {},
+                )
 
                 if original_ep.variant:
                     original_variant_tasks = VariantTask.objects.filter(
@@ -374,9 +377,13 @@ class DjangoWorkRepository(IWorkRepository):
 
                     for variant_task in original_variant_tasks:
                         task = variant_task.task
-                        score_data = task_scores.get(str(task.pk), {})
-                        points = score_data.get('points', None)
-                        max_points = score_data.get('max_points', None)
+                        score_record = task_scores_by_task_id.get(str(task.pk))
+                        points = score_record.points if score_record else None
+                        max_points = (
+                            score_record.max_points
+                            if score_record
+                            else None
+                        )
                         pct, status = self._score_status(points, max_points)
                         task_group = TaskGroup.objects.filter(task=task).first()
 

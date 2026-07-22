@@ -1,5 +1,7 @@
 """Django forms for document templates."""
 
+import json
+
 from django import forms
 
 from core_logic.value_objects.document_type_catalog import get_document_type_catalog
@@ -49,3 +51,34 @@ class DocumentTemplateForm(forms.Form):
             )
             for item in (sections or [])
         ]
+
+    def clean(self):
+        cleaned_data = super().clean()
+        selected_sections = cleaned_data.get('sections') or ()
+        section_options = {}
+
+        for section_type in selected_sections:
+            raw_options = self.data.get(
+                section_options_field_name(section_type),
+                '',
+            ).strip()
+            if not raw_options:
+                continue
+            try:
+                parsed_options = json.loads(raw_options)
+            except json.JSONDecodeError as error:
+                raise forms.ValidationError(
+                    f'Настройки секции {section_type}: некорректный JSON.'
+                ) from error
+            if not isinstance(parsed_options, dict):
+                raise forms.ValidationError(
+                    f'Настройки секции {section_type} должны быть JSON-объектом.'
+                )
+            section_options[section_type] = parsed_options
+
+        cleaned_data['section_options'] = section_options
+        return cleaned_data
+
+
+def section_options_field_name(section_type):
+    return f'section_options__{section_type}'

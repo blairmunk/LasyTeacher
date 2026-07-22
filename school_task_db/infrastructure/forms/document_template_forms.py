@@ -1,5 +1,6 @@
 """Infrastructure helpers for document template screens."""
 
+import json
 from urllib.parse import urlencode
 
 from core_logic.entities.document import (
@@ -12,6 +13,9 @@ from core_logic.use_cases.get_document_template_editor_data import (
 )
 from core_logic.value_objects.document_recipes import COMMON_HEADER_SECTION
 from core_logic.value_objects.document_render_options import FILE_TYPE_LABELS
+from infrastructure.forms.document_template_django_forms import (
+    section_options_field_name,
+)
 
 
 class DocumentTemplateFormAdapter:
@@ -67,15 +71,29 @@ class DocumentTemplateFormAdapter:
             'template_type': template.template_type,
             'sections': template.section_types,
             'section_order': ','.join(template.section_types),
+            'section_options': {
+                section.section_type: dict(section.options)
+                for section in template.sections
+                if section.options
+            },
             'is_default': template.is_default,
         }
 
     def create_context(self, form, document_types, sections):
+        section_options_by_type = self._section_options_by_type(form)
         return {
             'form': form,
             'document_types': document_types,
             'section_options': [
-                self._section_context(section)
+                {
+                    **self._section_context(section),
+                    'options_field_name': section_options_field_name(
+                        section.section_type,
+                    ),
+                    'options_json': self._format_section_options_json(
+                        section_options_by_type.get(section.section_type, {}),
+                    ),
+                }
                 for section in sections
             ],
             'selected_sections': set(
@@ -153,8 +171,12 @@ class DocumentTemplateFormAdapter:
         return tuple(ordered_sections)
 
     def _section_specs_from_form(self, form):
+        section_options = form.cleaned_data.get('section_options', {})
         return tuple(
-            DocumentSectionSpec(section_type=section_type)
+            DocumentSectionSpec(
+                section_type=section_type,
+                options=section_options.get(section_type, {}),
+            )
             for section_type in self._section_types_from_form(form)
         )
 
@@ -189,3 +211,26 @@ class DocumentTemplateFormAdapter:
             if section_type not in seen
         )
         return ordered
+
+    def _section_options_by_type(self, form):
+        if form.is_bound:
+            return {
+                section_type: form.data.get(
+                    section_options_field_name(section_type),
+                    '',
+                )
+                for section_type, _label in form.fields['sections'].choices
+            }
+        return form.initial.get('section_options', {})
+
+    def _format_section_options_json(self, value):
+        if not value:
+            return ''
+        if isinstance(value, str):
+            return value
+        return json.dumps(
+            value,
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+        )

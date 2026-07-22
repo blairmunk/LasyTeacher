@@ -246,6 +246,63 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
             ['task_list', 'header'],
         )
 
+    def test_builds_create_params_with_section_options(self):
+        data = QueryDict('', mutable=True)
+        data.update({'name': 'Шаблон', 'template_type': 'work'})
+        data.setlist('sections', ['header', 'task_list'])
+        data['section_options__task_list'] = (
+            '{"hidden_roles": ["demo"], "role_blank_cells": {"practice": 6}}'
+        )
+        form = DocumentTemplateForm(
+            data=data,
+            sections=get_document_section_catalog(renderable_only=True),
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+
+        params = DocumentTemplateFormAdapter().create_params_from_form(form)
+
+        self.assertEqual(params.section_types, ('header', 'task_list'))
+        self.assertEqual(params.sections[0].options, {})
+        self.assertEqual(
+            params.sections[1].options,
+            {
+                'hidden_roles': ['demo'],
+                'role_blank_cells': {'practice': 6},
+            },
+        )
+
+    def test_template_form_rejects_invalid_section_options_json(self):
+        data = QueryDict('', mutable=True)
+        data.update({'name': 'Шаблон', 'template_type': 'work'})
+        data.setlist('sections', ['task_list'])
+        data['section_options__task_list'] = '{"hidden_roles":'
+        form = DocumentTemplateForm(
+            data=data,
+            sections=get_document_section_catalog(renderable_only=True),
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn(
+            'Настройки секции task_list: некорректный JSON.',
+            form.non_field_errors(),
+        )
+
+    def test_template_form_rejects_non_object_section_options_json(self):
+        data = QueryDict('', mutable=True)
+        data.update({'name': 'Шаблон', 'template_type': 'work'})
+        data.setlist('sections', ['task_list'])
+        data['section_options__task_list'] = '["demo"]'
+        form = DocumentTemplateForm(
+            data=data,
+            sections=get_document_section_catalog(renderable_only=True),
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn(
+            'Настройки секции task_list должны быть JSON-объектом.',
+            form.non_field_errors(),
+        )
+
     def test_builds_update_params_from_template_form(self):
         form = DocumentTemplateForm(
             data=QueryDict(
@@ -291,6 +348,36 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         self.assertEqual(initial['section_order'], HEADER_SECTION)
         self.assertTrue(initial['is_default'])
 
+    def test_builds_form_initial_with_section_options_from_template(self):
+        template = DocumentTemplateSpec(
+            name='Шаблон',
+            template_type=WORK_DOCUMENT_TYPE,
+            sections=[
+                DocumentSectionSpec(section_type=HEADER_SECTION),
+                DocumentSectionSpec(
+                    section_type='task_list',
+                    options={
+                        'hidden_roles': ['demo'],
+                        'role_blank_cells': {'practice': {'rows': 6}},
+                    },
+                ),
+            ],
+        )
+
+        initial = DocumentTemplateFormAdapter().form_initial_from_template(
+            template,
+        )
+
+        self.assertEqual(
+            initial['section_options'],
+            {
+                'task_list': {
+                    'hidden_roles': ['demo'],
+                    'role_blank_cells': {'practice': {'rows': 6}},
+                },
+            },
+        )
+
     def test_builds_create_context(self):
         form = DocumentTemplateForm(
             data=QueryDict('template_type=work&sections=header'),
@@ -312,6 +399,39 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
             COMMON_HEADER_SECTION,
         )
         self.assertTrue(context['section_options'][0]['is_fixed_order'])
+
+    def test_builds_create_context_with_section_options_json(self):
+        form = DocumentTemplateForm(
+            initial={
+                'template_type': WORK_DOCUMENT_TYPE,
+                'sections': ['task_list'],
+                'section_options': {
+                    'task_list': {
+                        'hidden_roles': ['demo'],
+                        'role_blank_cells': {'practice': 6},
+                    },
+                },
+            },
+            sections=get_document_section_catalog(renderable_only=True),
+        )
+
+        context = DocumentTemplateFormAdapter().create_context(
+            form=form,
+            document_types=get_document_type_catalog(renderable_only=True),
+            sections=get_document_section_catalog(renderable_only=True),
+        )
+        task_list_context = next(
+            section
+            for section in context['section_options']
+            if section['section_type'] == 'task_list'
+        )
+
+        self.assertEqual(
+            task_list_context['options_field_name'],
+            'section_options__task_list',
+        )
+        self.assertIn('"hidden_roles": [', task_list_context['options_json'])
+        self.assertIn('"role_blank_cells": {', task_list_context['options_json'])
 
 
 class ReportFormAdapterTests(SimpleTestCase):

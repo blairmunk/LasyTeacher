@@ -113,6 +113,57 @@ class DocumentTemplateEditorViewTests(TestCase):
             [{'type': 'task_list'}, {'type': 'header'}],
         )
 
+    def test_template_create_view_saves_section_options(self):
+        response = self.client.post(
+            reverse('document_generator:template-create'),
+            {
+                'name': 'Рабочий лист',
+                'template_type': 'work',
+                'sections': ['header', 'task_list'],
+                'section_options__task_list': (
+                    '{"hidden_roles": ["demo"], '
+                    '"role_blank_cells": {"practice": {"rows": 6}}}'
+                ),
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('document_generator:template-editor'),
+        )
+        template = DocumentTemplate.objects.get(name='Рабочий лист')
+        self.assertEqual(
+            template.sections_config,
+            [
+                {'type': 'header'},
+                {
+                    'type': 'task_list',
+                    'params': {
+                        'hidden_roles': ['demo'],
+                        'role_blank_cells': {'practice': {'rows': 6}},
+                    },
+                },
+            ],
+        )
+
+    def test_template_create_view_shows_invalid_section_options_error(self):
+        response = self.client.post(
+            reverse('document_generator:template-create'),
+            {
+                'name': 'Рабочий лист',
+                'template_type': 'work',
+                'sections': ['task_list'],
+                'section_options__task_list': '{"hidden_roles":',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            'Настройки секции task_list: некорректный JSON.',
+        )
+        self.assertFalse(DocumentTemplate.objects.exists())
+
     def test_template_create_view_shows_clean_validation_errors(self):
         response = self.client.post(
             reverse('document_generator:template-create'),
@@ -153,6 +204,31 @@ class DocumentTemplateEditorViewTests(TestCase):
         self.assertContains(response, 'Описание')
         self.assertContains(response, 'value="header"')
         self.assertContains(response, 'checked')
+
+    def test_template_update_view_shows_existing_section_options(self):
+        template = DocumentTemplate.objects.create(
+            name='Шаблон работы',
+            template_type=DocumentTemplate.TemplateType.WORK,
+            sections_config=[
+                {'type': 'header'},
+                {
+                    'type': 'task_list',
+                    'params': {
+                        'hidden_roles': ['demo'],
+                        'role_blank_cells': {'practice': {'rows': 6}},
+                    },
+                },
+            ],
+        )
+
+        response = self.client.get(
+            reverse('document_generator:template-update', args=[template.pk]),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '&quot;hidden_roles&quot;: [')
+        self.assertContains(response, '&quot;role_blank_cells&quot;: {')
+        self.assertContains(response, '&quot;rows&quot;: 6')
 
     def test_template_update_view_updates_template(self):
         template = DocumentTemplate.objects.create(

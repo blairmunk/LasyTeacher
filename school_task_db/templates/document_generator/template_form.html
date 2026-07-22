@@ -51,7 +51,7 @@
                         {% if section.is_fixed_order %}data-fixed-order="1"{% endif %}
                         data-document-types="{% for document_type in section.renderable_document_types %}{{ document_type }} {% endfor %}"
                     >
-                        <label class="border rounded p-3 d-block h-100">
+                        <div class="border rounded p-3 h-100">
                             <div class="d-flex gap-2 align-items-start">
                                 <div class="form-check flex-grow-1">
                                     <input
@@ -62,9 +62,9 @@
                                         id="section-{{ section.section_type }}"
                                         {% if section.section_type in selected_sections %}checked{% endif %}
                                     >
-                                    <span class="form-check-label fw-semibold">
+                                    <label class="form-check-label fw-semibold" for="section-{{ section.section_type }}">
                                         {{ section.title }}
-                                    </span>
+                                    </label>
                                 </div>
                                 {% if not section.is_fixed_order %}
                                 <div class="btn-group btn-group-sm" role="group">
@@ -89,7 +89,19 @@
                             </div>
                             <div class="small text-muted mt-2">{{ section.description }}</div>
                             <code class="small">{{ section.section_type }}</code>
-                        </label>
+                            <div class="mt-3">
+                                <label class="form-label small text-muted mb-1" for="section-options-{{ section.section_type }}">
+                                    Настройки секции, JSON
+                                </label>
+                                <textarea
+                                    class="form-control form-control-sm font-monospace"
+                                    id="section-options-{{ section.section_type }}"
+                                    name="{{ section.options_field_name }}"
+                                    rows="4"
+                                    placeholder='{"rows": 6}'
+                                >{{ section.options_json }}</textarea>
+                            </div>
+                        </div>
                     </div>
                     {% endfor %}
                 </div>

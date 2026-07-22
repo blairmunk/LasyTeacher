@@ -54,6 +54,7 @@ from core_logic.value_objects.document_type_catalog import (
     get_document_type_catalog,
 )
 from infrastructure.forms.core_forms import CoreFormAdapter
+from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
 from infrastructure.forms.document_template_forms import (
     DocumentTemplateFormAdapter,
 )
@@ -157,6 +158,57 @@ class CoreFormAdapterTests(SimpleTestCase):
         self.assertEqual(request.filters.subject, 'physics')
         self.assertEqual(request.filters.grade, '9')
         self.assertEqual(request.export_date, '2026-07-18')
+
+
+class CurriculumFormAdapterTests(SimpleTestCase):
+    def test_builds_topic_list_context_with_pagination(self):
+        list_data = SimpleNamespace(topics=['topic-1', 'topic-2', 'topic-3'])
+
+        context = CurriculumFormAdapter().topic_list_context(
+            list_data,
+            page_number='1',
+            paginate_by=2,
+        )
+
+        self.assertEqual(list(context['topics']), ['topic-1', 'topic-2'])
+        self.assertTrue(context['is_paginated'])
+        self.assertEqual(context['page_obj'].number, 1)
+
+    def test_builds_curriculum_detail_contexts_and_payload(self):
+        adapter = CurriculumFormAdapter()
+        topic_detail = SimpleNamespace(topic='topic-1', subtopics=['subtopic-1'])
+        course_list = SimpleNamespace(courses=['course-1'])
+        course_detail = SimpleNamespace(
+            course='course-1',
+            assignments=['assignment-1'],
+            total_variants=3,
+            works_by_type={'КР': 1},
+            groups_coverage={'Алгебра': 2},
+        )
+        subtopics_data = SimpleNamespace(subtopics=[{'id': 'subtopic-1'}])
+
+        self.assertEqual(
+            adapter.topic_detail_context(topic_detail),
+            {'topic': 'topic-1', 'subtopics': ['subtopic-1']},
+        )
+        self.assertEqual(
+            adapter.course_list_context(course_list),
+            {'courses': ['course-1']},
+        )
+        self.assertEqual(
+            adapter.course_detail_context(course_detail),
+            {
+                'course': 'course-1',
+                'assignments': ['assignment-1'],
+                'total_variants': 3,
+                'works_by_type': {'КР': 1},
+                'groups_coverage': {'Алгебра': 2},
+            },
+        )
+        self.assertEqual(
+            adapter.topic_subtopics_payload(subtopics_data),
+            {'subtopics': [{'id': 'subtopic-1'}]},
+        )
 
 
 class DocumentTemplateFormAdapterTests(SimpleTestCase):

@@ -1,4 +1,3 @@
-from django.core.paginator import Paginator
 from django.views.generic import TemplateView
 from django.http import Http404, JsonResponse
 
@@ -13,11 +12,13 @@ class TopicListView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         data = container.get_topic_list_use_case().execute()
-        paginator = Paginator(data.topics, self.paginate_by)
-        page_obj = paginator.get_page(self.request.GET.get('page'))
-        context['topics'] = page_obj.object_list
-        context['page_obj'] = page_obj
-        context['is_paginated'] = page_obj.has_other_pages()
+        context.update(
+            container.curriculum_form_adapter.topic_list_context(
+                data,
+                page_number=self.request.GET.get('page'),
+                paginate_by=self.paginate_by,
+            )
+        )
         return context
 
 
@@ -31,8 +32,7 @@ class TopicDetailView(TemplateView):
         )
         if detail.topic is None:
             raise Http404('Тема не найдена')
-        context['topic'] = detail.topic
-        context['subtopics'] = detail.subtopics
+        context.update(container.curriculum_form_adapter.topic_detail_context(detail))
         return context
 
 
@@ -44,7 +44,7 @@ class CourseListView(TemplateView):
         data = container.get_course_list_use_case().execute(
             year=getattr(self.request, 'current_year', None),
         )
-        context['courses'] = data.courses
+        context.update(container.curriculum_form_adapter.course_list_context(data))
         return context
 
 
@@ -58,11 +58,7 @@ class CourseDetailView(TemplateView):
         )
         if detail.course is None:
             raise Http404('Курс не найден')
-        context['course'] = detail.course
-        context['assignments'] = detail.assignments
-        context['total_variants'] = detail.total_variants
-        context['works_by_type'] = detail.works_by_type
-        context['groups_coverage'] = detail.groups_coverage
+        context.update(container.curriculum_form_adapter.course_detail_context(detail))
 
         return context
 
@@ -72,4 +68,4 @@ def topic_subtopics_api(request, topic_id):
     data = container.get_topic_subtopics_use_case().execute(
         TopicSubtopicsRequest(topic_id=topic_id),
     )
-    return JsonResponse({'subtopics': data.subtopics})
+    return JsonResponse(container.curriculum_form_adapter.topic_subtopics_payload(data))

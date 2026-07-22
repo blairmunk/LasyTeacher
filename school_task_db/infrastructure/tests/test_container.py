@@ -250,6 +250,7 @@ from infrastructure.repositories.django_settings_repo import DjangoSettingsRepos
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from infrastructure.forms.core_forms import CoreFormAdapter
+from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
 from infrastructure.forms.document_template_forms import (
     DocumentTemplateFormAdapter,
 )
@@ -786,6 +787,10 @@ class ContainerTests(SimpleTestCase):
             DjangoDocumentTemplateRepository,
         )
         self.assertIsInstance(container.core_form_adapter, CoreFormAdapter)
+        self.assertIsInstance(
+            container.curriculum_form_adapter,
+            CurriculumFormAdapter,
+        )
         self.assertIsInstance(
             container.document_template_form_adapter,
             DocumentTemplateFormAdapter,

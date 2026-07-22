@@ -103,7 +103,11 @@ class DjangoReportRepositoryTests(TestCase):
             points=8,
             max_points=10,
             task_scores={
-                str(task.pk): {'points': 8, 'max_points': 10},
+                'variant-task-1': {
+                    'task_id': str(task.pk),
+                    'points': 8,
+                    'max_points': 10,
+                },
             },
         )
 
@@ -191,7 +195,11 @@ class DjangoReportRepositoryTests(TestCase):
             points=10,
             max_points=20,
             task_scores={
-                str(task.pk): {'points': 8, 'max_points': 10},
+                'variant-task-1': {
+                    'task_id': str(task.pk),
+                    'points': 8,
+                    'max_points': 10,
+                },
                 str(other_task.pk): {'points': 2, 'max_points': 10},
             },
         )
@@ -273,7 +281,11 @@ class DjangoReportRepositoryTests(TestCase):
             points=8,
             max_points=10,
             task_scores={
-                str(task.pk): {'points': 8, 'max_points': 10},
+                'variant-task-1': {
+                    'task_id': str(task.pk),
+                    'points': 8,
+                    'max_points': 10,
+                },
             },
         )
 
@@ -423,7 +435,11 @@ class DjangoReportRepositoryTests(TestCase):
             points=8,
             max_points=10,
             task_scores={
-                str(task.pk): {'points': 8, 'max_points': 10},
+                'variant-task-1': {
+                    'task_id': str(task.pk),
+                    'points': 8,
+                    'max_points': 10,
+                },
                 str(other_task.pk): {'points': 2, 'max_points': 10},
             },
         )
@@ -511,7 +527,11 @@ class DjangoReportRepositoryTests(TestCase):
             points=8,
             max_points=10,
             task_scores={
-                str(task.pk): {'points': 8, 'max_points': 10},
+                'variant-task-1': {
+                    'task_id': str(task.pk),
+                    'points': 8,
+                    'max_points': 10,
+                },
                 str(other_task.pk): {'points': 1, 'max_points': 10},
             },
         )

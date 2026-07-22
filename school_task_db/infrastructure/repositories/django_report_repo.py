@@ -34,6 +34,7 @@ from core_logic.entities.report import (
     WorkAnalysisReportData,
 )
 from core_logic.interfaces.report_repo import IReportRepository
+from core_logic.value_objects.task_scores import normalize_task_scores
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
 from students.models import Student, StudentGroup
@@ -353,10 +354,7 @@ class DjangoReportRepository(IReportRepository):
             participation__student__in=students,
         ).select_related('participation__student')
 
-        all_task_ids = set()
-        for mark in marks:
-            if mark.task_scores:
-                all_task_ids.update(mark.task_scores.keys())
+        all_task_ids = self._task_score_task_ids(marks)
 
         if not all_task_ids:
             return HeatmapTopicMatrixData(columns=[], rows=[], col_averages=[])
@@ -370,10 +368,9 @@ class DjangoReportRepository(IReportRepository):
 
         for mark in marks:
             student_id = mark.participation.student_id
-            if not mark.task_scores:
-                continue
             seen = set()
-            for task_id, scores in mark.task_scores.items():
+            for score_record in self._task_score_records(mark):
+                task_id = score_record.task_id
                 if task_id in seen:
                     continue
                 seen.add(task_id)
@@ -385,8 +382,8 @@ class DjangoReportRepository(IReportRepository):
                     continue
 
                 key = (student_id, task.topic_id)
-                aggregated[key]['points'] += scores.get('points', 0)
-                aggregated[key]['max_points'] += scores.get('max_points', 0)
+                aggregated[key]['points'] += score_record.points or 0
+                aggregated[key]['max_points'] += score_record.max_points or 0
 
         topic_ids = {topic_id for _, topic_id in aggregated.keys()}
         columns = list(
@@ -422,10 +419,7 @@ class DjangoReportRepository(IReportRepository):
             participation__event__work_id__in=work_ids,
         ).select_related('participation__student')
 
-        all_task_ids = set()
-        for mark in marks:
-            if mark.task_scores:
-                all_task_ids.update(mark.task_scores.keys())
+        all_task_ids = self._task_score_task_ids(marks)
 
         relevant_task_ids = (
             all_task_ids & course_task_ids
@@ -444,10 +438,9 @@ class DjangoReportRepository(IReportRepository):
 
         for mark in marks:
             student_id = mark.participation.student_id
-            if not mark.task_scores:
-                continue
             seen = set()
-            for task_id, scores in mark.task_scores.items():
+            for score_record in self._task_score_records(mark):
+                task_id = score_record.task_id
                 if task_id in seen:
                     continue
                 seen.add(task_id)
@@ -457,8 +450,8 @@ class DjangoReportRepository(IReportRepository):
                     continue
 
                 key = (student_id, task.topic_id)
-                aggregated[key]['points'] += scores.get('points', 0)
-                aggregated[key]['max_points'] += scores.get('max_points', 0)
+                aggregated[key]['points'] += score_record.points or 0
+                aggregated[key]['max_points'] += score_record.max_points or 0
 
         topic_ids = {topic_id for _, topic_id in aggregated.keys()}
         columns = list(
@@ -502,15 +495,14 @@ class DjangoReportRepository(IReportRepository):
             total_points = 0
             total_max = 0
             for mark in marks:
-                if not mark.task_scores:
-                    continue
                 seen = set()
-                for task_id, scores in mark.task_scores.items():
+                for score_record in self._task_score_records(mark):
+                    task_id = score_record.task_id
                     if task_id in seen:
                         continue
                     seen.add(task_id)
-                    total_points += scores.get('points', 0)
-                    total_max += scores.get('max_points', 0)
+                    total_points += score_record.points or 0
+                    total_max += score_record.max_points or 0
 
             if total_max > 0:
                 dates.append(event.planned_date.strftime('%Y-%m-%d'))
@@ -535,10 +527,7 @@ class DjangoReportRepository(IReportRepository):
             participation__student__in=students,
         ).select_related('participation__student')
 
-        all_task_ids = set()
-        for mark in marks:
-            if mark.task_scores:
-                all_task_ids.update(mark.task_scores.keys())
+        all_task_ids = self._task_score_task_ids(marks)
 
         if not all_task_ids:
             return HeatmapSubtopicMatrixData(
@@ -556,10 +545,9 @@ class DjangoReportRepository(IReportRepository):
 
         for mark in marks:
             student_id = mark.participation.student_id
-            if not mark.task_scores:
-                continue
             seen = set()
-            for task_id, scores in mark.task_scores.items():
+            for score_record in self._task_score_records(mark):
+                task_id = score_record.task_id
                 if task_id in seen:
                     continue
                 seen.add(task_id)
@@ -574,8 +562,8 @@ class DjangoReportRepository(IReportRepository):
                     else f'topic_{task.topic_id}'
                 )
                 key = (student_id, col_key)
-                aggregated[key]['points'] += scores.get('points', 0)
-                aggregated[key]['max_points'] += scores.get('max_points', 0)
+                aggregated[key]['points'] += score_record.points or 0
+                aggregated[key]['max_points'] += score_record.max_points or 0
 
         subtopic_ids = {
             col_key for _, col_key in aggregated.keys()
@@ -617,10 +605,7 @@ class DjangoReportRepository(IReportRepository):
             participation__student__in=students,
         ).select_related('participation__student', 'participation__event')
 
-        all_task_ids = set()
-        for mark in marks:
-            if mark.task_scores:
-                all_task_ids.update(mark.task_scores.keys())
+        all_task_ids = self._task_score_task_ids(marks)
 
         tasks_qs = Task.objects.filter(
             pk__in=all_task_ids,
@@ -633,12 +618,11 @@ class DjangoReportRepository(IReportRepository):
         task_agg = defaultdict(lambda: {'points': 0, 'max_points': 0, 'count': 0})
 
         for mark in marks:
-            if not mark.task_scores:
-                continue
             student_id = mark.participation.student_id
             event_name = mark.participation.event.name
             seen = set()
-            for task_id, scores in mark.task_scores.items():
+            for score_record in self._task_score_records(mark):
+                task_id = score_record.task_id
                 if task_id in seen:
                     continue
                 seen.add(task_id)
@@ -647,8 +631,8 @@ class DjangoReportRepository(IReportRepository):
                 if not task:
                     continue
 
-                points = scores.get('points', 0)
-                max_points = scores.get('max_points', 0)
+                points = score_record.points or 0
+                max_points = score_record.max_points or 0
                 student_agg[student_id]['points'] += points
                 student_agg[student_id]['max_points'] += max_points
                 student_agg[student_id]['events'].add(event_name)
@@ -1103,11 +1087,20 @@ class DjangoReportRepository(IReportRepository):
                 task_ids.add(str(task.pk))
         return task_ids
 
-    def _get_task_map_for_marks(self, marks, topic):
+    def _task_score_records(self, mark):
+        return normalize_task_scores(getattr(mark, 'task_scores', None))
+
+    def _task_score_task_ids(self, marks):
         task_ids = set()
         for mark in marks:
-            if mark.task_scores:
-                task_ids.update(mark.task_scores.keys())
+            task_ids.update(
+                record.task_id
+                for record in self._task_score_records(mark)
+            )
+        return task_ids
+
+    def _get_task_map_for_marks(self, marks, topic):
+        task_ids = self._task_score_task_ids(marks)
 
         tasks = Task.objects.filter(
             pk__in=task_ids,
@@ -1123,11 +1116,10 @@ class DjangoReportRepository(IReportRepository):
     ):
         details = []
         for mark in marks:
-            if not mark.task_scores:
-                continue
             event = mark.participation.event
             seen = set()
-            for task_id, scores in mark.task_scores.items():
+            for score_record in self._task_score_records(mark):
+                task_id = score_record.task_id
                 if task_id in seen:
                     continue
                 seen.add(task_id)
@@ -1138,8 +1130,8 @@ class DjangoReportRepository(IReportRepository):
                 if selected_subtopic and task.subtopic_id != selected_subtopic.id:
                     continue
 
-                points = scores.get('points', 0)
-                max_points = scores.get('max_points', 0)
+                points = score_record.points or 0
+                max_points = score_record.max_points or 0
                 pct = round(points / max_points * 100) if max_points > 0 else 0
                 details.append({
                     'event': event,
@@ -1166,20 +1158,18 @@ class DjangoReportRepository(IReportRepository):
     ):
         aggregated = defaultdict(lambda: {'points': 0, 'max_points': 0})
         for mark in marks:
-            if not mark.task_scores:
-                continue
             seen = set()
-            for task_id, scores in mark.task_scores.items():
+            for score_record in self._task_score_records(mark):
+                task_id = score_record.task_id
                 if task_id in seen:
                     continue
                 seen.add(task_id)
                 task = task_map.get(task_id)
                 if not task or not task.subtopic:
                     continue
-                aggregated[task.subtopic.id]['points'] += scores.get('points', 0)
-                aggregated[task.subtopic.id]['max_points'] += scores.get(
-                    'max_points',
-                    0,
+                aggregated[task.subtopic.id]['points'] += score_record.points or 0
+                aggregated[task.subtopic.id]['max_points'] += (
+                    score_record.max_points or 0
                 )
 
         summary = []
@@ -1653,11 +1643,9 @@ class DjangoReportRepository(IReportRepository):
         total_points = 0
         total_max = 0
         for mark in marks:
-            if not mark.task_scores:
-                continue
-            for scores in mark.task_scores.values():
-                total_points += scores.get('points', 0)
-                total_max += scores.get('max_points', 0)
+            for score_record in self._task_score_records(mark):
+                total_points += score_record.points or 0
+                total_max += score_record.max_points or 0
         return round(total_points / total_max * 100) if total_max > 0 else default
 
     def _assess_difficulty(self, avg_pct):

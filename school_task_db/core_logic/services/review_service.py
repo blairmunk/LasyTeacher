@@ -58,18 +58,28 @@ class ReviewService:
         for key, value in data.items():
             if not key.startswith('task_'):
                 continue
-            if '_max' in key or '_comment' in key:
+            if key.endswith(('_max', '_comment', '_task_id', '_variant_task_id')):
                 continue
 
-            task_id = key[5:]
-            task_scores[task_id] = {
+            score_key = key[5:]
+            score_data = {
                 'points': self._int_or_default(value, 0),
                 'max_points': self._int_or_default(
-                    data.get(f'task_{task_id}_max'),
+                    data.get(f'task_{score_key}_max'),
                     5,
                 ),
-                'comment': data.get(f'task_{task_id}_comment', ''),
+                'comment': data.get(f'task_{score_key}_comment', ''),
             }
+            task_id = str(data.get(f'task_{score_key}_task_id') or '').strip()
+            variant_task_id = str(
+                data.get(f'task_{score_key}_variant_task_id') or ''
+            ).strip()
+            if task_id and task_id != score_key:
+                score_data['task_id'] = task_id
+            if variant_task_id:
+                score_data['variant_task_id'] = variant_task_id
+
+            task_scores[score_key] = score_data
 
         return ReviewSubmissionData(
             score=self._int_or_none(data.get('score')),

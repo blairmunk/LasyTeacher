@@ -69,6 +69,28 @@ class ReviewServiceTests(TestCase):
         self.assertEqual(submission.task_scores['task-1']['points'], 0)
         self.assertEqual(submission.task_scores['task-1']['max_points'], 5)
 
+    def test_parse_submission_accepts_variant_task_score_keys(self):
+        submission = ReviewService().parse_submission({
+            'task_variant-task-1': '2',
+            'task_variant-task-1_max': '3',
+            'task_variant-task-1_comment': 'Верно',
+            'task_variant-task-1_task_id': 'task-1',
+            'task_variant-task-1_variant_task_id': 'variant-task-1',
+        })
+
+        self.assertEqual(
+            submission.task_scores,
+            {
+                'variant-task-1': {
+                    'points': 2,
+                    'max_points': 3,
+                    'comment': 'Верно',
+                    'task_id': 'task-1',
+                    'variant_task_id': 'variant-task-1',
+                }
+            },
+        )
+
     def test_validate_work_scan_accepts_supported_files(self):
         validation = ReviewService().validate_work_scan(
             size=1024,

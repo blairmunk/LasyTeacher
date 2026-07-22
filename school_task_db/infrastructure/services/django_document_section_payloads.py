@@ -482,7 +482,7 @@ def _work_variant_payload(variant, task_payload_formatter=None, request=None):
             print_plan,
             task_payloads_by_variant_task_id,
         ),
-        'assessable_variant_task_ids': print_plan.assessable_variant_task_ids,
+        'assessable_variant_task_ids': content_plan.assessable_variant_task_ids,
         'tasks': task_payloads,
     }
 

@@ -32,6 +32,7 @@ from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_CONTROL,
     TASK_BANK_ROLE_DEMO,
+    TASK_BANK_ROLE_PRACTICE,
     TASK_RENDER_MODE_TASK_ONLY,
     TASK_RENDER_MODE_WITH_FULL_SOLUTION,
 )
@@ -305,6 +306,40 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             variant_payload['print_blocks'][1]['blank_cells']['rows'],
             5,
         )
+
+    def test_hidden_roles_do_not_change_assessable_content_snapshot(self):
+        work = Work.objects.create(name='Рабочий лист', duration=45)
+        variant = Variant.objects.create(work=work, number=1)
+        task = self.create_task(text='Самостоятельная задача')
+        variant_task = VariantTask.objects.create(
+            variant=variant,
+            task=task,
+            order=1,
+            max_points=3,
+            bank_role=TASK_BANK_ROLE_PRACTICE,
+            is_assessable=True,
+        )
+        builder = DjangoWorkTaskListPayloadBuilder()
+
+        payload = builder.build_payload(
+            build_request(
+                work,
+                TASK_LIST_SECTION,
+                options={'hidden_roles': [TASK_BANK_ROLE_PRACTICE]},
+            ),
+        )
+
+        variant_payload = payload['variants'][0]
+        self.assertEqual(
+            variant_payload['assessable_variant_task_ids'],
+            (str(variant_task.pk),),
+        )
+        self.assertEqual(
+            variant_payload['content_plan']['assessable_variant_task_ids'],
+            (str(variant_task.pk),),
+        )
+        self.assertEqual(variant_payload['print_plan']['blocks'], [])
+        self.assertEqual(variant_payload['print_blocks'], [])
 
     def test_builds_registry_for_work_sections(self):
         work = Work.objects.create(name='Контрольная')

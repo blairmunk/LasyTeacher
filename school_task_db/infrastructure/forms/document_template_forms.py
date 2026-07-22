@@ -204,18 +204,29 @@ class DocumentTemplateFormAdapter:
     def _ordered_sections(self, selected_sections, section_order):
         selected = list(selected_sections)
         selected_set = set(selected)
+        fixed_order_sections = [
+            section_type
+            for section_type in selected
+            if section_type == COMMON_HEADER_SECTION
+        ]
         ordered = [
             section_type.strip()
             for section_type in section_order.split(',')
-            if section_type.strip() in selected_set
+            if (
+                section_type.strip() in selected_set
+                and section_type.strip() not in fixed_order_sections
+            )
         ]
         seen = set(ordered)
         ordered.extend(
             section_type
             for section_type in selected
-            if section_type not in seen
+            if (
+                section_type not in seen
+                and section_type not in fixed_order_sections
+            )
         )
-        return ordered
+        return fixed_order_sections + ordered
 
     def _section_options_by_type(self, form):
         if form.is_bound:

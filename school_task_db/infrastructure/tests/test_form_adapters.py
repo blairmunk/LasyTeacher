@@ -246,6 +246,23 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
             ['task_list', 'header'],
         )
 
+    def test_builds_create_params_with_common_header_fixed_first(self):
+        form = self._template_form(
+            data=QueryDict(
+                'name=Шаблон&template_type=work'
+                '&sections=header&sections=common_header&sections=task_list'
+                '&section_order=task_list,header,common_header',
+            ),
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+
+        params = DocumentTemplateFormAdapter().create_params_from_form(form)
+
+        self.assertEqual(
+            params.section_types,
+            ('common_header', 'task_list', 'header'),
+        )
+
     def test_builds_create_params_with_section_options(self):
         data = QueryDict('', mutable=True)
         data.update({'name': 'Шаблон', 'template_type': 'work'})

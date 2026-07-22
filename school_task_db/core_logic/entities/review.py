@@ -96,6 +96,7 @@ class ReviewTaskRef:
 class ReviewVariantTaskRef:
     task: ReviewTaskRef
     weight: int = 5
+    is_assessable: bool = True
 
 
 @dataclass(frozen=True)

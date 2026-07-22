@@ -193,6 +193,24 @@ class ReviewServiceTests(TestCase):
         self.assertEqual(rows[0].max_points, 3)
         self.assertEqual(rows[0].comment, 'Верно')
 
+    def test_filters_assessable_variant_tasks(self):
+        service = ReviewService()
+        assessable_task = ReviewVariantTaskRef(
+            task=ReviewTaskRef(id='task-1', text='Задание'),
+            weight=3,
+        )
+        demo_task = ReviewVariantTaskRef(
+            task=ReviewTaskRef(id='task-demo', text='Демо'),
+            weight=10,
+            is_assessable=False,
+        )
+
+        result = service.assessable_variant_tasks(
+            [demo_task, assessable_task],
+        )
+
+        self.assertEqual(result, [assessable_task])
+
     def test_build_navigation_returns_neighbors_and_progress(self):
         service = ReviewService()
         event = ReviewEventRef(pk='event-1', name='КР')

@@ -236,6 +236,16 @@ class ReviewService:
             )
         return rows
 
+    def assessable_variant_tasks(
+        self,
+        variant_tasks: List[ReviewVariantTaskRef],
+    ) -> List[ReviewVariantTaskRef]:
+        return [
+            variant_task
+            for variant_task in variant_tasks
+            if variant_task.is_assessable
+        ]
+
     def build_navigation(
         self,
         participations: List[ReviewParticipationRef],

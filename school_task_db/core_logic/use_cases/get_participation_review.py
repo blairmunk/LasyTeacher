@@ -17,9 +17,15 @@ class GetParticipationReviewUseCase:
     def execute(self, participation_id: str) -> ParticipationReviewData:
         participation = self.review_repo.get_participation(participation_id)
         variant_tasks = self.review_repo.get_variant_tasks(participation_id)
+        assessable_variant_tasks = self.review_service.assessable_variant_tasks(
+            variant_tasks,
+        )
         mark = self.review_repo.get_or_create_mark(
             participation_id=participation_id,
-            default_max_points=sum(task.weight for task in variant_tasks),
+            default_max_points=sum(
+                task.weight
+                for task in assessable_variant_tasks
+            ),
         )
         review_participations = self.review_repo.get_review_participations(
             participation.event.pk,
@@ -33,7 +39,7 @@ class GetParticipationReviewUseCase:
             participation=participation,
             mark=mark,
             tasks_with_scores=self.review_service.build_task_score_rows(
-                variant_tasks=variant_tasks,
+                variant_tasks=assessable_variant_tasks,
                 existing_scores=mark.task_scores,
             ),
             typical_comments=self.review_repo.get_typical_comments(limit=10),

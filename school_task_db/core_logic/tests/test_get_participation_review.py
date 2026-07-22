@@ -38,6 +38,11 @@ class FakeReviewRepository:
                 task=ReviewTaskRef(id='task-2', text='Задание 2'),
                 weight=3,
             ),
+            ReviewVariantTaskRef(
+                task=ReviewTaskRef(id='task-demo', text='Демо'),
+                weight=10,
+                is_assessable=False,
+            ),
         ]
 
     def get_or_create_mark(self, participation_id, default_max_points):
@@ -70,6 +75,10 @@ class GetParticipationReviewUseCaseTests(TestCase):
         self.assertEqual(result.mark.max_points, 5)
         self.assertEqual(result.tasks_with_scores[0].points, 1)
         self.assertEqual(result.tasks_with_scores[1].max_points, 3)
+        self.assertEqual(
+            [row.task.id for row in result.tasks_with_scores],
+            ['task-1', 'task-2'],
+        )
         self.assertEqual(result.typical_comments[0].text, 'Хорошо')
         self.assertEqual(result.current_position, 1)
         self.assertEqual(result.total_positions, 1)

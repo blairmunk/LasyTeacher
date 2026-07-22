@@ -13,21 +13,21 @@ class Command(BaseCommand):
         parser.add_argument('--verbose', action='store_true', help='Подробная диагностика')
 
     def handle(self, *args, **options):
-        print("🔍 ВАЛИДАЦИЯ JSON ФАЙЛОВ:")
+        self.stdout.write("🔍 ВАЛИДАЦИЯ JSON ФАЙЛОВ:")
         
         total_files = len(options['json_files'])
         valid_files = 0
         
         for json_file_path in options['json_files']:
-            print(f"\n📄 Проверка: {json_file_path}")
+            self.stdout.write(f"\n📄 Проверка: {json_file_path}")
             
             if self.validate_file(json_file_path, options['verbose']):
                 valid_files += 1
         
-        print(f"\n📊 ИТОГИ ВАЛИДАЦИИ:")
-        print(f"  ✅ Валидных файлов: {valid_files}")
-        print(f"  ❌ Невалидных файлов: {total_files - valid_files}")
-        print(f"  🎯 Успешность: {(valid_files/total_files)*100:.1f}%")
+        self.stdout.write("\n📊 ИТОГИ ВАЛИДАЦИИ:")
+        self.stdout.write(f"  ✅ Валидных файлов: {valid_files}")
+        self.stdout.write(f"  ❌ Невалидных файлов: {total_files - valid_files}")
+        self.stdout.write(f"  🎯 Успешность: {(valid_files/total_files)*100:.1f}%")
 
     def validate_file(self, file_path: str, verbose: bool) -> bool:
         """Валидация одного файла"""
@@ -35,7 +35,7 @@ class Command(BaseCommand):
         
         # Проверка существования файла
         if not path.exists():
-            print(f"  ❌ Файл не найден: {file_path}")
+            self.stdout.write(f"  ❌ Файл не найден: {file_path}")
             return False
         
         # Проверка JSON синтаксиса
@@ -43,10 +43,10 @@ class Command(BaseCommand):
             with open(path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
         except json.JSONDecodeError as e:
-            print(f"  ❌ Ошибка JSON синтаксиса: {e}")
+            self.stdout.write(f"  ❌ Ошибка JSON синтаксиса: {e}")
             return False
         except Exception as e:
-            print(f"  ❌ Ошибка чтения файла: {e}")
+            self.stdout.write(f"  ❌ Ошибка чтения файла: {e}")
             return False
         
         # Валидация структуры
@@ -70,19 +70,21 @@ class Command(BaseCommand):
         
         # Вывод результата
         if issues:
-            print(f"  ❌ Найдено проблем: {len(issues)}")
+            self.stdout.write(f"  ❌ Найдено проблем: {len(issues)}")
             if verbose:
                 for issue in issues[:10]:  # Показываем первые 10
-                    print(f"    • {issue}")
+                    self.stdout.write(f"    • {issue}")
                 if len(issues) > 10:
-                    print(f"    ... и еще {len(issues) - 10}")
+                    self.stdout.write(f"    ... и еще {len(issues) - 10}")
             return False
         else:
-            print(f"  ✅ Файл валиден")
+            self.stdout.write("  ✅ Файл валиден")
             if verbose:
                 tasks_count = len(data.get('tasks', []))
                 groups_count = len(data.get('analog_groups', []))
-                print(f"    📊 Заданий: {tasks_count}, групп: {groups_count}")
+                self.stdout.write(
+                    f"    📊 Заданий: {tasks_count}, групп: {groups_count}"
+                )
             return True
 
     def validate_task(self, task: dict, index: int) -> list:

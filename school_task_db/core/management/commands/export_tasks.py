@@ -8,8 +8,6 @@ from django.core.serializers.json import DjangoJSONEncoder
 from datetime import datetime
 
 from tasks.models import Task
-from task_groups.models import AnalogGroup, TaskGroup  
-from curriculum.models import Topic
 
 class Command(BaseCommand):
     help = 'Экспорт заданий в JSON формат'
@@ -24,40 +22,46 @@ class Command(BaseCommand):
         parser.add_argument('--verbose', action='store_true', help='Подробный вывод процесса экспорта')
 
     def handle(self, *args, **options):
-        # ИСПРАВЛЕНО: добавить verbose логирование
         verbose = options.get('verbose', False)
         
         if verbose:
-            print("📤 ЭКСПОРТ ЗАДАНИЙ В JSON (verbose режим):")
+            self.stdout.write("📤 ЭКСПОРТ ЗАДАНИЙ В JSON (verbose режим):")
         else:
-            print("📤 ЭКСПОРТ ЗАДАНИЙ В JSON:")
+            self.stdout.write("📤 ЭКСПОРТ ЗАДАНИЙ В JSON:")
         
         # Базовый queryset заданий
-        tasks_qs = Task.objects.select_related('topic', 'subtopic').prefetch_related('taskgroup_set__group')
+        tasks_qs = (
+            Task.objects
+            .select_related('topic', 'subtopic')
+            .prefetch_related('taskgroup_set__group')
+        )
         
         # Применяем фильтры
         if options['filter_subject']:
             tasks_qs = tasks_qs.filter(topic__subject=options['filter_subject'])
-            print(f"  📚 Фильтр по предмету: {options['filter_subject']}")
+            self.stdout.write(
+                f"  📚 Фильтр по предмету: {options['filter_subject']}"
+            )
         
         if options['filter_grade']:
             tasks_qs = tasks_qs.filter(topic__grade_level=options['filter_grade'])
-            print(f"  🎓 Фильтр по классу: {options['filter_grade']}")
+            self.stdout.write(
+                f"  🎓 Фильтр по классу: {options['filter_grade']}"
+            )
         
         if options['limit']:
             tasks_qs = tasks_qs[:options['limit']]
-            print(f"  📊 Ограничение: {options['limit']} заданий")
+            self.stdout.write(f"  📊 Ограничение: {options['limit']} заданий")
         
         tasks = list(tasks_qs)
-        print(f"  📝 Заданий для экспорта: {len(tasks)}")
+        self.stdout.write(f"  📝 Заданий для экспорта: {len(tasks)}")
         
         # Собираем связанные данные
         used_groups = set()
         used_topics = set()
         
-        # ИСПРАВЛЕНО: verbose детали обработки
         if verbose:
-            print("  🔍 Анализ связанных данных...")
+            self.stdout.write("  🔍 Анализ связанных данных...")
         
         for i, task in enumerate(tasks):
             if task.topic:
@@ -66,32 +70,38 @@ class Command(BaseCommand):
             for task_group in task.taskgroup_set.all():
                 used_groups.add(task_group.group)
             
-            # ДОБАВЛЕНО: Progress в verbose режиме
             if verbose and (i + 1) % 50 == 0:
-                print(f"    Обработано заданий: {i + 1}/{len(tasks)}")
+                self.stdout.write(
+                    f"    Обработано заданий: {i + 1}/{len(tasks)}"
+                )
         
-        print(f"  📋 Связанных групп: {len(used_groups)}")
-        print(f"  📚 Связанных тем: {len(used_topics)}")
+        self.stdout.write(f"  📋 Связанных групп: {len(used_groups)}")
+        self.stdout.write(f"  📚 Связанных тем: {len(used_topics)}")
 
-        # ДОБАВЛЕНО: детали групп и тем в verbose режиме
         if verbose:
-            print("  📋 Группы:")
+            self.stdout.write("  📋 Группы:")
             for group in sorted(used_groups, key=lambda x: x.name)[:5]:
-                print(f"    - {group.name} [{group.get_short_uuid()}]")
+                self.stdout.write(f"    - {group.name} [{group.get_short_uuid()}]")
             if len(used_groups) > 5:
-                print(f"    ... и еще {len(used_groups) - 5}")
+                self.stdout.write(f"    ... и еще {len(used_groups) - 5}")
             
-            print("  📚 Темы:")
-            for topic in sorted(used_topics, key=lambda x: (x.subject, x.grade_level, x.name))[:5]:
-                print(f"    - {topic.subject} {topic.grade_level} класс: {topic.name}")
+            self.stdout.write("  📚 Темы:")
+            for topic in sorted(
+                used_topics,
+                key=lambda x: (x.subject, x.grade_level, x.name),
+            )[:5]:
+                self.stdout.write(
+                    f"    - {topic.subject} {topic.grade_level} класс: "
+                    f"{topic.name}"
+                )
             if len(used_topics) > 5:
-                print(f"    ... и еще {len(used_topics) - 5}")
+                self.stdout.write(f"    ... и еще {len(used_topics) - 5}")
         
         # Создаем JSON структуру
         export_data = {
             "format_version": "1.0",
             "metadata": {
-                "description": f"Экспорт заданий из базы данных",
+                "description": "Экспорт заданий из базы данных",
                 "created_at": datetime.now().isoformat(),
                 "filters": {
                     "subject": options.get('filter_subject'),
@@ -172,22 +182,38 @@ class Command(BaseCommand):
         output_path = Path(options['output_file'])
         try:
             if verbose:
-                print(f"  💾 Сохранение в файл: {output_path}")
+                self.stdout.write(f"  💾 Сохранение в файл: {output_path}")
             
             with open(output_path, 'w', encoding='utf-8') as f:
-                json.dump(export_data, f, ensure_ascii=False, indent=2, cls=DjangoJSONEncoder)
+                json.dump(
+                    export_data,
+                    f,
+                    ensure_ascii=False,
+                    indent=2,
+                    cls=DjangoJSONEncoder,
+                )
             
-            print(f"✅ Экспорт завершен: {output_path}")
-            print(f"📊 Размер файла: {output_path.stat().st_size / 1024:.1f} KB")
+            self.stdout.write(f"✅ Экспорт завершен: {output_path}")
+            self.stdout.write(
+                f"📊 Размер файла: {output_path.stat().st_size / 1024:.1f} KB"
+            )
             
-            # ДОБАВЛЕНО: детальная статистика в verbose режиме
             if verbose:
-                print("\n📊 ДЕТАЛЬНАЯ СТАТИСТИКА:")
-                print(f"  📝 Заданий экспортировано: {len(export_data['tasks'])}")
+                self.stdout.write("\n📊 ДЕТАЛЬНАЯ СТАТИСТИКА:")
+                self.stdout.write(
+                    f"  📝 Заданий экспортировано: "
+                    f"{len(export_data['tasks'])}"
+                )
                 if 'analog_groups' in export_data:
-                    print(f"  📋 Групп экспортировано: {len(export_data['analog_groups'])}")
+                    self.stdout.write(
+                        f"  📋 Групп экспортировано: "
+                        f"{len(export_data['analog_groups'])}"
+                    )
                 if 'topics' in export_data:
-                    print(f"  📚 Тем экспортировано: {len(export_data['topics'])}")
+                    self.stdout.write(
+                        f"  📚 Тем экспортировано: "
+                        f"{len(export_data['topics'])}"
+                    )
                 
                 # Анализ типов заданий
                 task_types = {}
@@ -199,13 +225,13 @@ class Command(BaseCommand):
                     difficulty = task.get('difficulty', 0)
                     difficulties[difficulty] = difficulties.get(difficulty, 0) + 1
                 
-                print(f"  🎯 Типы заданий:")
+                self.stdout.write("  🎯 Типы заданий:")
                 for t_type, count in sorted(task_types.items()):
-                    print(f"    - {t_type}: {count}")
+                    self.stdout.write(f"    - {t_type}: {count}")
                 
-                print(f"  📈 Уровни сложности:")
+                self.stdout.write("  📈 Уровни сложности:")
                 for diff, count in sorted(difficulties.items()):
-                    print(f"    - {diff}: {count}")
+                    self.stdout.write(f"    - {diff}: {count}")
             
         except Exception as e:
             raise CommandError(f"Ошибка записи файла: {e}")

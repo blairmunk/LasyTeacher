@@ -2,8 +2,7 @@
 Расширенный анализ изображений с отчетом по пустым позициям
 """
 from django.core.management.base import BaseCommand
-from tasks.models import Task, TaskImage
-from django.db.models import Q
+from tasks.models import TaskImage
 
 class Command(BaseCommand):
     help = 'Анализ изображений заданий с фокусом на отсутствующие позиции'
@@ -15,13 +14,13 @@ class Command(BaseCommand):
                            help='Предложить исправление пустых позиций')
 
     def handle(self, *args, **options):
-        print("📊 АНАЛИЗ ИЗОБРАЖЕНИЙ ЗАДАНИЙ:")
+        self.stdout.write("📊 АНАЛИЗ ИЗОБРАЖЕНИЙ ЗАДАНИЙ:")
         
         total_images = TaskImage.objects.count()
-        print(f"  🖼️ Всего изображений: {total_images}")
+        self.stdout.write(f"  🖼️ Всего изображений: {total_images}")
         
         if total_images == 0:
-            print("  ℹ️ Изображений нет")
+            self.stdout.write("  ℹ️ Изображений нет")
             return
         
         # Анализ по позициям
@@ -36,38 +35,50 @@ class Command(BaseCommand):
                 positions['MISSING'] = positions.get('MISSING', 0) + 1
                 missing_position_images.append(image)
         
-        print(f"\n📍 РАСПРЕДЕЛЕНИЕ ПО ПОЗИЦИЯМ:")
+        self.stdout.write("\n📍 РАСПРЕДЕЛЕНИЕ ПО ПОЗИЦИЯМ:")
         for pos, count in sorted(positions.items()):
             percentage = (count / total_images) * 100
             if pos == 'MISSING':
                 display_name = "⚠️ ПОЗИЦИЯ НЕ ЗАДАНА"
-                print(f"  {display_name}: {count} ({percentage:.1f}%)")
+                self.stdout.write(
+                    f"  {display_name}: {count} ({percentage:.1f}%)"
+                )
             else:
                 display_name = dict(TaskImage.POSITION_CHOICES).get(pos, pos)
-                print(f"  {display_name}: {count} ({percentage:.1f}%)")
+                self.stdout.write(
+                    f"  {display_name}: {count} ({percentage:.1f}%)"
+                )
         
         # Детальный анализ пропущенных позиций
         missing_count = len(missing_position_images)
         if missing_count > 0:
-            print(f"\n🔍 ИЗОБРАЖЕНИЯ БЕЗ ПОЗИЦИИ: {missing_count}")
+            self.stdout.write(
+                f"\n🔍 ИЗОБРАЖЕНИЯ БЕЗ ПОЗИЦИИ: {missing_count}"
+            )
             
             if options['show_missing']:
-                print("\n📝 ДЕТАЛИ:")
+                self.stdout.write("\n📝 ДЕТАЛИ:")
                 for i, image in enumerate(missing_position_images[:10], 1):
-                    task_preview = image.task.text[:40] + "..." if len(image.task.text) > 40 else image.task.text
-                    print(f"  {i}. [{image.get_short_uuid()}] {task_preview}")
-                    print(f"     Задание: {image.task.topic.name}")
-                    print(f"     Файл: {image.image.name}")
+                    task_preview = (
+                        image.task.text[:40] + "..."
+                        if len(image.task.text) > 40
+                        else image.task.text
+                    )
+                    self.stdout.write(
+                        f"  {i}. [{image.get_short_uuid()}] {task_preview}"
+                    )
+                    self.stdout.write(f"     Задание: {image.task.topic.name}")
+                    self.stdout.write(f"     Файл: {image.image.name}")
                     if image.caption:
-                        print(f"     Подпись: {image.caption}")
-                    print()
+                        self.stdout.write(f"     Подпись: {image.caption}")
+                    self.stdout.write("")
                 
                 if missing_count > 10:
-                    print(f"     ... и еще {missing_count - 10}")
+                    self.stdout.write(f"     ... и еще {missing_count - 10}")
             
             # Предложение автоисправления
             if options['fix_missing']:
-                print("\n🔧 ПРЕДЛОЖЕНИЯ ПО ИСПРАВЛЕНИЮ:")
+                self.stdout.write("\n🔧 ПРЕДЛОЖЕНИЯ ПО ИСПРАВЛЕНИЮ:")
                 
                 # Анализируем подписи для предложения позиций
                 suggestions = []
@@ -83,8 +94,13 @@ class Command(BaseCommand):
                     by_suggestion[suggestion].append(image)
                 
                 for position, images in by_suggestion.items():
-                    position_display = dict(TaskImage.POSITION_CHOICES).get(position, position)
-                    print(f"  📍 {position_display}: {len(images)} изображений")
+                    position_display = dict(TaskImage.POSITION_CHOICES).get(
+                        position,
+                        position,
+                    )
+                    self.stdout.write(
+                        f"  📍 {position_display}: {len(images)} изображений"
+                    )
                 
                 # Спрашиваем подтверждение
                 if input("\nПрименить предложенные позиции? (y/n): ").lower() == 'y':
@@ -94,15 +110,23 @@ class Command(BaseCommand):
                         image.save()
                         updated += 1
                     
-                    print(f"✅ Обновлено позиций: {updated}")
+                    self.stdout.write(f"✅ Обновлено позиций: {updated}")
             
             # Рекомендации
-            print(f"\n💡 РЕКОМЕНДАЦИИ:")
-            print(f"  • Для массового обновления: python manage.py analyze_images --fix-missing")
-            print(f"  • Для ручного редактирования перейдите в админ-панель")
-            print(f"  • При импорте указывайте position в JSON для избежания пустых позиций")
+            self.stdout.write("\n💡 РЕКОМЕНДАЦИИ:")
+            self.stdout.write(
+                "  • Для массового обновления: "
+                "python manage.py analyze_images --fix-missing"
+            )
+            self.stdout.write(
+                "  • Для ручного редактирования перейдите в админ-панель"
+            )
+            self.stdout.write(
+                "  • При импорте указывайте position в JSON "
+                "для избежания пустых позиций"
+            )
         else:
-            print(f"\n✅ Все изображения имеют заданные позиции")
+            self.stdout.write("\n✅ Все изображения имеют заданные позиции")
     
     def suggest_position(self, image):
         """Предлагает позицию на основе анализа изображения и подписи"""

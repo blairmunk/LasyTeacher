@@ -48,7 +48,7 @@ class ParticipationReviewViewTests(TestCase):
         )
         self.group = AnalogGroup.objects.create(name='Скорость')
         TaskGroup.objects.create(task=self.task, group=self.group)
-        VariantTask.objects.create(
+        self.variant_task = VariantTask.objects.create(
             variant=self.variant,
             task=self.task,
             order=1,
@@ -161,9 +161,13 @@ class ParticipationReviewViewTests(TestCase):
                 'points': '2',
                 'max_points': '2',
                 'teacher_comment': 'Хорошо',
-                f'task_{self.task.pk}': '2',
-                f'task_{self.task.pk}_max': '2',
-                f'task_{self.task.pk}_comment': 'Верно',
+                f'task_{self.variant_task.pk}': '2',
+                f'task_{self.variant_task.pk}_max': '2',
+                f'task_{self.variant_task.pk}_task_id': str(self.task.pk),
+                f'task_{self.variant_task.pk}_variant_task_id': str(
+                    self.variant_task.pk,
+                ),
+                f'task_{self.variant_task.pk}_comment': 'Верно',
             },
         )
 
@@ -189,7 +193,15 @@ class ParticipationReviewViewTests(TestCase):
         self.assertEqual(mark.checked_by, 'Мария Иванова')
         self.assertEqual(
             mark.task_scores,
-            {str(self.task.pk): {'points': 2, 'max_points': 2, 'comment': 'Верно'}},
+            {
+                str(self.variant_task.pk): {
+                    'points': 2,
+                    'max_points': 2,
+                    'comment': 'Верно',
+                    'task_id': str(self.task.pk),
+                    'variant_task_id': str(self.variant_task.pk),
+                },
+            },
         )
         self.assertEqual(self.participation.status, 'graded')
         self.assertEqual(self.event.status, 'reviewing')
@@ -202,8 +214,12 @@ class ParticipationReviewViewTests(TestCase):
                 'score': '4',
                 'points': '2',
                 'max_points': '2',
-                f'task_{self.task.pk}': '2',
-                f'task_{self.task.pk}_max': '2',
+                f'task_{self.variant_task.pk}': '2',
+                f'task_{self.variant_task.pk}_max': '2',
+                f'task_{self.variant_task.pk}_task_id': str(self.task.pk),
+                f'task_{self.variant_task.pk}_variant_task_id': str(
+                    self.variant_task.pk,
+                ),
                 'save_and_next': '1',
             },
         )

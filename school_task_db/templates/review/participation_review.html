@@ -78,17 +78,23 @@
                         </div>
                         <!-- ИЗМЕНЕНО: Упрощенный ввод баллов с max атрибутом -->
                         <div class="d-flex align-items-center gap-2">
-                            <input type="number" 
-                                   name="task_{{ td.task.id }}" 
+                            <input type="number"
+                                   name="task_{{ td.score_key }}"
                                    class="form-control form-control-sm task-points"
                                    style="width: 70px;" 
                                    value="{{ td.points }}" 
                                    min="0" 
                                    max="{{ td.max_points }}"
                                    onchange="calculateTotal()">
-                            <input type="hidden" 
-                                   name="task_{{ td.task.id }}_max" 
+                            <input type="hidden"
+                                   name="task_{{ td.score_key }}_max"
                                    value="{{ td.max_points }}">
+                            <input type="hidden"
+                                   name="task_{{ td.score_key }}_task_id"
+                                   value="{{ td.task.id }}">
+                            <input type="hidden"
+                                   name="task_{{ td.score_key }}_variant_task_id"
+                                   value="{{ td.variant_task_id }}">
                         </div>
                     </div>
                     <div class="card-body">
@@ -107,8 +113,8 @@
                         <!-- ИЗМЕНЕНО: Поле комментария с label для улучшения UX -->
                         <div class="mt-2">
                             <label class="form-label small fw-bold mb-1">Комментарий к заданию:</label>
-                            <input type="text" 
-                                   name="task_{{ td.task.id }}_comment" 
+                            <input type="text"
+                                   name="task_{{ td.score_key }}_comment"
                                    class="form-control form-control-sm"
                                    placeholder="Комментарий к заданию..."
                                    value="{{ td.comment }}">

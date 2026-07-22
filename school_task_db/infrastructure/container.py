@@ -236,6 +236,9 @@ from core_logic.use_cases.prepare_work_variant_submission import (
 from core_logic.use_cases.get_source_list import GetSourceListUseCase
 from core_logic.use_cases.get_task_import_sample import GetTaskImportSampleUseCase
 from core_logic.use_cases.preview_task_import import PreviewTaskImportUseCase
+from core_logic.use_cases.preview_task_import_file import (
+    PreviewTaskImportFileUseCase,
+)
 from core_logic.use_cases.prepare_task_import_file import (
     PrepareTaskImportExecutionSubmissionUseCase,
     PrepareTaskImportFileUseCase,
@@ -732,6 +735,11 @@ class Container:
     def preview_task_import_use_case(self):
         return PreviewTaskImportUseCase(
             task_import_service=self.task_import_service,
+        )
+
+    def preview_task_import_file_use_case(self):
+        return PreviewTaskImportFileUseCase(
+            preview_task_import_use_case=self.preview_task_import_use_case(),
         )
 
     def prepare_task_import_file_use_case(self):

@@ -67,6 +67,30 @@ class TaskImportPreviewResult:
 
 
 @dataclass(frozen=True)
+class TaskImportValidationPreviewResult:
+    filename: str = ''
+    file_size: int = 0
+    validation: Dict[str, Any] = field(default_factory=dict)
+    preview: Optional[Dict[str, Any]] = None
+    error: str = ''
+
+    @property
+    def success(self) -> bool:
+        return not self.error
+
+    def to_response_data(self) -> Dict[str, Any]:
+        if not self.success:
+            return {'error': self.error}
+
+        return {
+            'filename': self.filename,
+            'file_size': self.file_size,
+            'validation': self.validation,
+            'preview': self.preview,
+        }
+
+
+@dataclass(frozen=True)
 class TaskImportSampleData:
     filename: str
     payload: Dict[str, Any]

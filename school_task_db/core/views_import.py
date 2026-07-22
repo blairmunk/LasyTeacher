@@ -52,39 +52,15 @@ def validate_json_ajax(request):
     if not uploaded_file:
         return JsonResponse({'error': 'Файл не выбран'}, status=400)
     
-    prepared_file = _prepare_import_file(uploaded_file)
-    if not prepared_file.success:
-        return JsonResponse({'error': prepared_file.error}, status=400)
-
-    data = prepared_file.data
-    
-    # Структурная валидация
-    validation = (
-        container.validate_task_import_json_use_case()
-        .execute(
-            container.core_form_adapter.validate_task_import_json_request_from_data(
-                data,
-            )
-        )
-        .to_dict()
+    result = container.preview_task_import_file_use_case().execute(
+        container.core_form_adapter.task_import_file_request_from_upload(
+            uploaded_file,
+        ),
     )
-    
-    # Dry-run через существующий импортёр
-    preview = None
-    if validation['is_valid']:
-        preview_result = container.preview_task_import_use_case().execute(
-            container.core_form_adapter.task_import_preview_request_from_data(data),
-        )
-        preview = preview_result.preview
-        if not preview_result.success:
-            validation['warnings'].append(preview_result.warning)
-    
-    return JsonResponse({
-        'filename': prepared_file.filename,
-        'file_size': prepared_file.file_size,
-        'validation': validation,
-        'preview': preview,
-    })
+    return JsonResponse(
+        result.to_response_data(),
+        status=200 if result.success else 400,
+    )
 
 @require_POST
 def execute_import_ajax(request):
@@ -110,14 +86,6 @@ def execute_import_ajax(request):
     return JsonResponse(
         result.to_response_data(),
         status=200 if result.success else 500,
-    )
-
-
-def _prepare_import_file(uploaded_file):
-    return container.prepare_task_import_file_use_case().execute(
-        container.core_form_adapter.task_import_file_request_from_upload(
-            uploaded_file,
-        ),
     )
 
 

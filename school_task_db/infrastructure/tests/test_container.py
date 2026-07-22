@@ -192,6 +192,9 @@ from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionUseCase,
 )
 from core_logic.use_cases.preview_task_import import PreviewTaskImportUseCase
+from core_logic.use_cases.preview_task_import_file import (
+    PreviewTaskImportFileUseCase,
+)
 from core_logic.use_cases.refresh_task_math_cache import RefreshTaskMathCacheUseCase
 from core_logic.use_cases.save_analog_group import (
     CreateAnalogGroupUseCase,
@@ -365,6 +368,9 @@ class ContainerTests(SimpleTestCase):
         import_validation_use_case = container.validate_task_import_json_use_case()
         execute_import_use_case = container.execute_task_import_use_case()
         preview_import_use_case = container.preview_task_import_use_case()
+        preview_import_file_use_case = (
+            container.preview_task_import_file_use_case()
+        )
         sample_import_use_case = container.get_task_import_sample_use_case()
         export_tasks_use_case = container.export_tasks_use_case()
         create_source_use_case = container.create_source_use_case()
@@ -610,6 +616,10 @@ class ContainerTests(SimpleTestCase):
         )
         self.assertIsInstance(execute_import_use_case, ExecuteTaskImportUseCase)
         self.assertIsInstance(preview_import_use_case, PreviewTaskImportUseCase)
+        self.assertIsInstance(
+            preview_import_file_use_case,
+            PreviewTaskImportFileUseCase,
+        )
         self.assertIsInstance(sample_import_use_case, GetTaskImportSampleUseCase)
         self.assertIsInstance(export_tasks_use_case, ExportTasksUseCase)
         self.assertIsInstance(create_source_use_case, CreateSourceUseCase)

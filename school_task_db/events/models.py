@@ -157,7 +157,7 @@ class Mark(BaseModel):
     
     # Детализация по заданиям (JSON)
     task_scores = models.JSONField('Баллы по заданиям', default=dict, blank=True,
-                                 help_text='{"task_id": {"points": 2, "max_points": 3, "comment": "..."}}')
+                                 help_text='{"variant_task_id": {"task_id": "...", "points": 2, "max_points": 3, "comment": "..."}}')
     
     # Комментарии учителя
     teacher_comment = models.TextField('Комментарий учителя', blank=True)

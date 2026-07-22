@@ -1,6 +1,5 @@
 import json
 
-from django.core.paginator import Paginator
 from django.shortcuts import redirect
 from django.views.generic import TemplateView
 from django.contrib import messages
@@ -9,10 +8,6 @@ from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_POST
 
 from core_logic.use_cases.delete_task import DeleteTaskRequest
-from core_logic.use_cases.get_task_reference_options import (
-    CodifierElementsResult,
-    SubtopicOptionsResult,
-)
 from infrastructure.container import container
 from infrastructure.forms.task_django_forms import SourceForm
 
@@ -34,32 +29,13 @@ class TaskListView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         list_data = self._get_list_data()
-        paginator = Paginator(list_data.tasks, self.paginate_by)
-        page_obj = paginator.get_page(self.request.GET.get('page'))
-
-        context['tasks'] = page_obj.object_list
-        context['page_obj'] = page_obj
-        context['is_paginated'] = page_obj.has_other_pages()
-        context['topics'] = list_data.topics
-        context['analog_groups'] = list_data.analog_groups
-        context['sources'] = list_data.sources
-        context['grade_choices'] = list_data.grade_choices
-        context['subtopics'] = list_data.subtopics
-        context['task_types'] = list_data.task_types
-        context['difficulties'] = list_data.difficulties
         context.update(
-            container.task_form_adapter.task_list_filter_context_from_query(
+            container.task_form_adapter.task_list_context(
+                list_data,
                 self.request.GET,
+                self.paginate_by,
             )
         )
-
-        # Статистика
-        context['total_tasks'] = list_data.total_tasks
-        context['ungrouped_count'] = list_data.ungrouped_count
-
-        if list_data.cache_stats is not None:
-            context['cache_stats'] = list_data.cache_stats
-
         return context
 
 
@@ -73,8 +49,7 @@ class TaskDetailView(TemplateView):
         )
         if detail_data.task is None:
             raise Http404('Задание не найдено')
-        context['task'] = detail_data.task
-        context['task_groups'] = detail_data.task_groups
+        context.update(container.task_form_adapter.task_detail_context(detail_data))
         return context
 
 
@@ -83,13 +58,12 @@ class TaskCreateView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['form'] = (
-            kwargs.get('form')
-            or container.task_form_adapter.build_task_form()
-        )
-        context['image_formset'] = (
-            kwargs.get('image_formset')
-            or container.task_form_adapter.build_image_formset()
+        context.update(
+            container.task_form_adapter.task_create_context(
+                kwargs.get('form') or container.task_form_adapter.build_task_form(),
+                kwargs.get('image_formset')
+                or container.task_form_adapter.build_image_formset(),
+            )
         )
         return context
 
@@ -143,15 +117,21 @@ class TaskUpdateView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         task = kwargs.get('object') or self._get_task()
-        context['object'] = task
-        context['form'] = (
+        form = (
             kwargs.get('form')
             or container.task_form_adapter.build_task_form(task_id=str(task.pk))
         )
-        context['image_formset'] = (
+        image_formset = (
             kwargs.get('image_formset')
             or container.task_form_adapter.build_image_formset_for_task(
                 task_id=str(task.pk),
+            )
+        )
+        context.update(
+            container.task_form_adapter.task_update_context(
+                task,
+                form,
+                image_formset,
             )
         )
         return context
@@ -219,10 +199,14 @@ class TaskDeleteView(TemplateView):
         )
         if detail_data.task is None:
             raise Http404('Задание не найдено')
-        context['task'] = detail_data.task
-        context['cancel_url'] = reverse(
-            'tasks:detail',
-            kwargs={'pk': self.kwargs['pk']},
+        context.update(
+            container.task_form_adapter.task_delete_context(
+                detail_data,
+                cancel_url=reverse(
+                    'tasks:detail',
+                    kwargs={'pk': self.kwargs['pk']},
+                ),
+            )
         )
         return context
 
@@ -244,7 +228,7 @@ def load_subtopics(request):
             request.GET,
         ),
     )
-    return JsonResponse(_subtopic_options_payload(result))
+    return JsonResponse(container.task_form_adapter.subtopic_options_payload(result))
 
 
 def load_codifier_elements(request):
@@ -256,25 +240,7 @@ def load_codifier_elements(request):
         subject=params['subject'],
         category=params['category'],
     )
-    return JsonResponse(_codifier_elements_payload(result))
-
-
-def _subtopic_options_payload(result: SubtopicOptionsResult):
-    return {
-        'subtopics': [
-            {'id': option.id, 'name': option.name}
-            for option in result.subtopics
-        ],
-    }
-
-
-def _codifier_elements_payload(result: CodifierElementsResult):
-    return {
-        'elements': [
-            {'code': element.code, 'name': element.name}
-            for element in result.elements
-        ],
-    }
+    return JsonResponse(container.task_form_adapter.codifier_elements_payload(result))
 
 
 # === Bulk actions ===
@@ -388,7 +354,8 @@ class SourceListView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['sources'] = container.get_source_list_use_case().execute().sources
+        list_data = container.get_source_list_use_case().execute()
+        context.update(container.task_form_adapter.source_list_context(list_data))
         return context
 
 
@@ -397,7 +364,11 @@ class SourceCreateView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['form'] = kwargs.get('form') or SourceForm()
+        context.update(
+            container.task_form_adapter.source_create_context(
+                kwargs.get('form') or SourceForm(),
+            )
+        )
         return context
 
     def post(self, request, *args, **kwargs):

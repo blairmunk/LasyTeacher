@@ -1037,6 +1037,101 @@ class TaskFormAdapterTests(SimpleTestCase):
         self.assertEqual(context['current_group_filter'], '')
         self.assertEqual(context['current_analog_group'], '')
 
+    def test_builds_task_list_context_with_pagination_and_stats(self):
+        list_data = SimpleNamespace(
+            tasks=['task-1', 'task-2', 'task-3'],
+            topics=['topic-1'],
+            analog_groups=['group-1'],
+            sources=['source-1'],
+            grade_choices=[(9, '9 класс')],
+            subtopics=['subtopic-1'],
+            task_types=[('test', 'Тест')],
+            difficulties=[(1, 'Легкая')],
+            total_tasks=3,
+            ungrouped_count=1,
+            cache_stats={'with_math': 2},
+        )
+
+        context = TaskFormAdapter().task_list_context(
+            list_data,
+            QueryDict('page=1&search=force'),
+            paginate_by=2,
+        )
+
+        self.assertEqual(list(context['tasks']), ['task-1', 'task-2'])
+        self.assertTrue(context['is_paginated'])
+        self.assertEqual(context['topics'], ['topic-1'])
+        self.assertEqual(context['analog_groups'], ['group-1'])
+        self.assertEqual(context['sources'], ['source-1'])
+        self.assertEqual(context['grade_choices'], [(9, '9 класс')])
+        self.assertEqual(context['subtopics'], ['subtopic-1'])
+        self.assertEqual(context['task_types'], [('test', 'Тест')])
+        self.assertEqual(context['difficulties'], [(1, 'Легкая')])
+        self.assertEqual(context['total_tasks'], 3)
+        self.assertEqual(context['ungrouped_count'], 1)
+        self.assertEqual(context['cache_stats'], {'with_math': 2})
+        self.assertEqual(context['search_query'], 'force')
+
+    def test_builds_task_page_contexts(self):
+        adapter = TaskFormAdapter()
+        form = object()
+        image_formset = object()
+        task = object()
+        detail_data = SimpleNamespace(
+            task='task-1',
+            task_groups=['group-1'],
+        )
+
+        self.assertEqual(
+            adapter.task_detail_context(detail_data),
+            {'task': 'task-1', 'task_groups': ['group-1']},
+        )
+        self.assertEqual(
+            adapter.task_create_context(form, image_formset),
+            {'form': form, 'image_formset': image_formset},
+        )
+        self.assertEqual(
+            adapter.task_update_context(task, form, image_formset),
+            {'object': task, 'form': form, 'image_formset': image_formset},
+        )
+        self.assertEqual(
+            adapter.task_delete_context(detail_data, '/tasks/1/'),
+            {'task': 'task-1', 'cancel_url': '/tasks/1/'},
+        )
+
+    def test_builds_source_contexts(self):
+        adapter = TaskFormAdapter()
+        source_list = SimpleNamespace(sources=['source-1'])
+        form = object()
+
+        self.assertEqual(
+            adapter.source_list_context(source_list),
+            {'sources': ['source-1']},
+        )
+        self.assertEqual(adapter.source_create_context(form), {'form': form})
+
+    def test_builds_reference_option_payloads(self):
+        adapter = TaskFormAdapter()
+        subtopics = SimpleNamespace(
+            subtopics=[
+                SimpleNamespace(id='s1', name='Кинематика'),
+            ],
+        )
+        elements = SimpleNamespace(
+            elements=[
+                SimpleNamespace(code='1.1', name='Механика'),
+            ],
+        )
+
+        self.assertEqual(
+            adapter.subtopic_options_payload(subtopics),
+            {'subtopics': [{'id': 's1', 'name': 'Кинематика'}]},
+        )
+        self.assertEqual(
+            adapter.codifier_elements_payload(elements),
+            {'elements': [{'code': '1.1', 'name': 'Механика'}]},
+        )
+
     def test_builds_bulk_action_response_payloads(self):
         adapter = TaskFormAdapter()
 

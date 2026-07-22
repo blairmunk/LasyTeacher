@@ -1,5 +1,7 @@
 """Infrastructure helpers for Django task forms."""
 
+from django.core.paginator import Paginator
+
 from core_logic.entities.task import (
     SourceCreateParams,
     TaskImageSaveParams,
@@ -17,6 +19,64 @@ from tasks.models import Task
 
 
 class TaskFormAdapter:
+    def task_list_context(self, list_data, query, paginate_by):
+        page_obj = Paginator(list_data.tasks, paginate_by).get_page(
+            query.get('page'),
+        )
+        context = {
+            'tasks': page_obj.object_list,
+            'page_obj': page_obj,
+            'is_paginated': page_obj.has_other_pages(),
+            'topics': list_data.topics,
+            'analog_groups': list_data.analog_groups,
+            'sources': list_data.sources,
+            'grade_choices': list_data.grade_choices,
+            'subtopics': list_data.subtopics,
+            'task_types': list_data.task_types,
+            'difficulties': list_data.difficulties,
+            'total_tasks': list_data.total_tasks,
+            'ungrouped_count': list_data.ungrouped_count,
+        }
+        if list_data.cache_stats is not None:
+            context['cache_stats'] = list_data.cache_stats
+        context.update(self.task_list_filter_context_from_query(query))
+        return context
+
+    def task_detail_context(self, detail_data):
+        return {
+            'task': detail_data.task,
+            'task_groups': detail_data.task_groups,
+        }
+
+    def task_create_context(self, form, image_formset):
+        return {
+            'form': form,
+            'image_formset': image_formset,
+        }
+
+    def task_update_context(self, task, form, image_formset):
+        return {
+            'object': task,
+            'form': form,
+            'image_formset': image_formset,
+        }
+
+    def task_delete_context(self, detail_data, cancel_url):
+        return {
+            'task': detail_data.task,
+            'cancel_url': cancel_url,
+        }
+
+    def source_list_context(self, list_data):
+        return {
+            'sources': list_data.sources,
+        }
+
+    def source_create_context(self, form):
+        return {
+            'form': form,
+        }
+
     def bulk_create_group_request_from_body(self, body):
         return BulkCreateGroupFromTasksRequest(
             task_ids=body.get('task_ids', []),
@@ -82,6 +142,22 @@ class TaskFormAdapter:
         return {
             'subject': query.get('subject', ''),
             'category': query.get('category', ''),
+        }
+
+    def subtopic_options_payload(self, result):
+        return {
+            'subtopics': [
+                {'id': option.id, 'name': option.name}
+                for option in result.subtopics
+            ],
+        }
+
+    def codifier_elements_payload(self, result):
+        return {
+            'elements': [
+                {'code': element.code, 'name': element.name}
+                for element in result.elements
+            ],
         }
 
     def task_list_filters_from_query(self, query):

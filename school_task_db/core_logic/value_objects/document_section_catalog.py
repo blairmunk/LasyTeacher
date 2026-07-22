@@ -46,6 +46,7 @@ class DocumentSectionCatalogItem:
     description: str = ''
     is_legacy: bool = False
     is_repeatable: bool = False
+    is_fixed_order: bool = False
     options_hint: str = ''
     options_example: Mapping[str, Any] = field(default_factory=dict)
 
@@ -101,6 +102,7 @@ DOCUMENT_SECTION_CATALOG = (
         supported_document_types=(WORK_DOCUMENT_TYPE,),
         renderable_document_types=(WORK_DOCUMENT_TYPE,),
         description='Заголовок для всей распечатки перед вариантами.',
+        is_fixed_order=True,
     ),
     DocumentSectionCatalogItem(
         section_type=HEADER_SECTION,

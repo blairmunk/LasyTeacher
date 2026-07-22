@@ -80,6 +80,15 @@ class DocumentSectionCatalogTests(TestCase):
         self.assertTrue(sections_by_type[BLANK_CELLS_SECTION].is_repeatable)
         self.assertFalse(sections_by_type[COMMON_HEADER_SECTION].is_repeatable)
 
+    def test_marks_common_header_as_fixed_order(self):
+        sections_by_type = {
+            section.section_type: section
+            for section in get_document_section_catalog()
+        }
+
+        self.assertTrue(sections_by_type[COMMON_HEADER_SECTION].is_fixed_order)
+        self.assertFalse(sections_by_type[HEADER_SECTION].is_fixed_order)
+
     def test_orders_document_sections_with_common_header_fixed_first(self):
         ordered = order_document_section_types(
             selected_section_types=(

@@ -11,7 +11,6 @@ from core_logic.entities.document import (
 from core_logic.use_cases.get_document_template_editor_data import (
     GetDocumentTemplateEditorDataRequest,
 )
-from core_logic.value_objects.document_recipes import COMMON_HEADER_SECTION
 from core_logic.value_objects.document_section_catalog import (
     order_document_section_types,
 )
@@ -143,7 +142,7 @@ class DocumentTemplateFormAdapter:
             'renderable_document_types': section.renderable_document_types,
             'is_legacy': section.is_legacy,
             'is_repeatable': section.is_repeatable,
-            'is_fixed_order': section.section_type == COMMON_HEADER_SECTION,
+            'is_fixed_order': section.is_fixed_order,
             'has_options': section.has_options,
             'options_hint': section.options_hint,
             'options_example_json': self._format_section_options_json(

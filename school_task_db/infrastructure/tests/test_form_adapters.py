@@ -21,6 +21,7 @@ from core_logic.entities.work import (
     WorkListFilters,
     WorkListItem,
 )
+from core_logic.entities.report import ReportsDashboardData
 from core_logic.use_cases.get_document_template_editor_data import (
     DocumentTemplateEditorData,
 )
@@ -505,6 +506,45 @@ class ReportFormAdapterTests(SimpleTestCase):
         self.assertEqual(work_analysis.year, 2026)
         self.assertEqual(events_status.year, 2026)
         self.assertIs(events_status.current_date, now)
+
+    def test_builds_reports_dashboard_context(self):
+        report = ReportsDashboardData(
+            total_students=3,
+            total_events=4,
+            total_works=5,
+            total_courses=2,
+            total_marks=6,
+            average_score=4.2,
+            marks_last_month=1,
+            score_counts={2: 0, 3: 1, 4: 2, 5: 3},
+            events_planned=1,
+            events_completed=2,
+            events_graded=1,
+            monthly_labels=['Июль'],
+            monthly_values=[3],
+            class_stats=[{'name': '7А'}],
+            class_names=['7А'],
+            class_avg_scores=[4.2],
+            class_completion=[50],
+            recent_events=['event-1'],
+            event_status_counts={'planned': 1, 'graded': 2},
+            box_data={'КР': [4, 5]},
+            courses=['course-1'],
+        )
+
+        context = ReportFormAdapter().reports_dashboard_context(report)
+
+        self.assertEqual(context['total_students'], 3)
+        self.assertEqual(context['class_stats'], [{'name': '7А'}])
+        self.assertEqual(context['recent_events'], ['event-1'])
+        self.assertIn('score_chart_json', context)
+        self.assertIn('activity_chart_json', context)
+        self.assertIn('class_chart_json', context)
+        self.assertIn('gauge_json', context)
+        self.assertIn('donut_json', context)
+        self.assertIn('box_plot_json', context)
+        self.assertIn('Запланировано', context['donut_json'])
+        self.assertIn('Проверено', context['donut_json'])
 
     def test_builds_heatmap_params_and_requests_from_query(self):
         query = QueryDict('group=g1&section=Mechanics&transpose=1&subtopic=s1')

@@ -98,16 +98,6 @@ class CoreFormAdapterTests(SimpleTestCase):
         self.assertEqual(request.form_data['dry_run'], ['true'])
         self.assertEqual(request.form_data['create_missing'], ['true'])
 
-    def test_builds_task_import_validation_requests_from_data(self):
-        data = {'tasks': []}
-        adapter = CoreFormAdapter()
-
-        validation_request = adapter.validate_task_import_json_request_from_data(data)
-        preview_request = adapter.task_import_preview_request_from_data(data)
-
-        self.assertIs(validation_request.data, data)
-        self.assertIs(preview_request.data, data)
-
     def test_builds_export_tasks_request_from_query(self):
         request = CoreFormAdapter().export_tasks_request_from_query(
             QueryDict('topic=t1&subject=physics&grade=9'),

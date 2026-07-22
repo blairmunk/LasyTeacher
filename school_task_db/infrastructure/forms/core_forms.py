@@ -4,13 +4,9 @@ from core_logic.entities.task import TaskExportFilters
 from core_logic.entities.task_import import (
     TaskImportExecutionSubmissionRequest,
     TaskImportFileRequest,
-    TaskImportPreviewRequest,
 )
 from core_logic.use_cases.export_tasks import ExportTasksRequest
 from core_logic.use_cases.get_global_search import GlobalSearchRequest
-from core_logic.use_cases.validate_task_import_json import (
-    ValidateTaskImportJsonRequest,
-)
 
 
 class CoreFormAdapter:
@@ -31,12 +27,6 @@ class CoreFormAdapter:
             content=uploaded_file.read(),
             form_data=self._post_lists(post_data),
         )
-
-    def validate_task_import_json_request_from_data(self, data):
-        return ValidateTaskImportJsonRequest(data=data)
-
-    def task_import_preview_request_from_data(self, data):
-        return TaskImportPreviewRequest(data=data)
 
     def export_tasks_request_from_query(self, query, export_date):
         return ExportTasksRequest(

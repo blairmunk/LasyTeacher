@@ -22,6 +22,10 @@ from core_logic.entities.work import (
     WorkListItem,
 )
 from core_logic.entities.report import ReportsDashboardData
+from core_logic.services.analytics_service import (
+    ScoreTimelinePoint,
+    StudentProfileData,
+)
 from core_logic.use_cases.get_document_template_editor_data import (
     DocumentTemplateEditorData,
 )
@@ -49,6 +53,7 @@ from infrastructure.forms.document_template_forms import (
     DocumentTemplateFormAdapter,
 )
 from infrastructure.forms.report_forms import ReportFormAdapter
+from infrastructure.forms.student_forms import StudentFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
 from infrastructure.forms.task_group_forms import TaskGroupFormAdapter
 from infrastructure.forms.work_forms import WorkFormAdapter
@@ -603,6 +608,54 @@ class ReportFormAdapterTests(SimpleTestCase):
         self.assertEqual(request.group_id, 'g1')
         self.assertEqual(request.year, 2026)
         self.assertTrue(request.show_debts_only)
+
+
+class StudentFormAdapterTests(SimpleTestCase):
+    def test_builds_student_detail_context_with_charts(self):
+        student = SimpleNamespace(pk='student-1', short_name='И. Иванов')
+        profile = StudentProfileData(
+            student_groups=['7А'],
+            participations_data=['participation-1'],
+            stats={
+                'graded_works': 2,
+                'score_counts': {2: 0, 3: 0, 4: 1, 5: 1},
+                'avg_score': 4.5,
+            },
+            group_scores=[{'name': 'Алгебра', 'avg': 4.5}],
+            scores_timeline=[
+                ScoreTimelinePoint(date='01.09.2026', score=4, work='КР 1'),
+                ScoreTimelinePoint(date='02.09.2026', score=5, work='КР 2'),
+            ],
+            task_log_stats={'total': 1},
+            heatmap_groups=[{'name': 'Алгебра'}],
+            heatmap_topics=[{'name': 'Линейные уравнения'}],
+            heatmap_difficulty=[{'name': '2'}],
+            recent_task_log=['log-1'],
+        )
+
+        context = StudentFormAdapter().student_detail_context(student, profile)
+
+        self.assertEqual(context['student'], student)
+        self.assertEqual(context['object'], student)
+        self.assertEqual(context['student_groups'], ['7А'])
+        self.assertEqual(context['participations_data'], ['participation-1'])
+        self.assertEqual(context['recent_task_log'], ['log-1'])
+        self.assertIn('mini_heatmap_json', context)
+        self.assertIn('dynamics_chart_json', context)
+        self.assertIn('score_chart_json', context)
+        self.assertIn('Успеваемость по темам', context['mini_heatmap_json'])
+        self.assertIn('Динамика оценок', context['dynamics_chart_json'])
+        self.assertIn('Распределение оценок', context['score_chart_json'])
+
+    def test_student_detail_context_omits_empty_charts(self):
+        student = SimpleNamespace(pk='student-1', short_name='И. Иванов')
+        profile = StudentProfileData(stats={})
+
+        context = StudentFormAdapter().student_detail_context(student, profile)
+
+        self.assertNotIn('mini_heatmap_json', context)
+        self.assertNotIn('dynamics_chart_json', context)
+        self.assertNotIn('score_chart_json', context)
 
 
 class TaskFormAdapterTests(SimpleTestCase):

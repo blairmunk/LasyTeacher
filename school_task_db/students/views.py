@@ -47,106 +47,14 @@ class StudentDetailView(TemplateView):
         if student is None:
             raise Http404('Ученик не найден')
 
-        from reports import plotly_utils
         profile = container.get_student_profile_use_case().execute(str(student.pk))
 
-        context['student'] = student
-        context['object'] = student
-        context['student_groups'] = profile.student_groups
-        context['participations_data'] = profile.participations_data
-        context['stats'] = profile.stats
-        context['group_scores'] = profile.group_scores
-        context['task_log_stats'] = profile.task_log_stats
-        context['heatmap_groups'] = profile.heatmap_groups
-        context['heatmap_topics'] = profile.heatmap_topics
-        context['heatmap_difficulty'] = profile.heatmap_difficulty
-        context['recent_task_log'] = profile.recent_task_log
-
-        if profile.group_scores:
-            # Для Plotly мини-heatmap
-            group_names = [g['name'] for g in profile.group_scores]
-
-            heatmap_chart = plotly_utils.heatmap_config(
-                students=[student.short_name],
-                groups=group_names,
-                matrix=[[g['avg'] for g in profile.group_scores]],
-                title='Успеваемость по темам',
+        context.update(
+            container.student_form_adapter.student_detail_context(
+                student,
+                profile,
             )
-            # Уменьшаем высоту для мини-версии
-            heatmap_chart['layout']['height'] = 150
-            heatmap_chart['layout']['margin'] = {
-                'l': 250, 't': 50, 'r': 80, 'b': 30
-            }
-            context['mini_heatmap_json'] = plotly_utils.to_json(heatmap_chart)
-
-        # --- График динамики ---
-        if profile.scores_timeline:
-            scores_timeline = list(reversed(profile.scores_timeline))
-            dates = [s.date for s in scores_timeline]
-            scores_vals = [s.score for s in scores_timeline]
-            hover_texts = [
-                f"{s.work}<br>Оценка: <b>{s.score}</b>"
-                for s in scores_timeline
-            ]
-
-            dynamics_chart = {
-                'data': [{
-                    'type': 'scatter',
-                    'mode': 'lines+markers',
-                    'x': dates,
-                    'y': scores_vals,
-                    'text': hover_texts,
-                    'hoverinfo': 'text',
-                    'line': {'color': 'rgba(13, 110, 253, 0.75)', 'width': 2},
-                    'marker': {
-                        'size': 10,
-                        'color': [
-                            'rgba(220,53,69,0.7)' if s <= 2
-                            else 'rgba(255,193,7,0.7)' if s <= 3
-                            else 'rgba(40,167,69,0.7)' if s <= 4
-                            else 'rgba(13,110,253,0.7)'
-                            for s in scores_vals
-                        ],
-                    },
-                    'fill': 'tozeroy',
-                    'fillcolor': 'rgba(13, 110, 253, 0.05)',
-                }],
-                'layout': {
-                    'title': 'Динамика оценок',
-                    'yaxis': {
-                        'range': [1.5, 5.5],
-                        'tickvals': [2, 3, 4, 5],
-                        'gridcolor': 'rgba(0,0,0,0.1)',
-                    },
-                    'xaxis': {'tickangle': -45},
-                    'margin': {'l': 40, 't': 40, 'r': 20, 'b': 80},
-                    'height': 280,
-                    'paper_bgcolor': '#fff',
-                    'plot_bgcolor': '#f8f9fa',
-                    'shapes': [{
-                        'type': 'line',
-                        'x0': dates[0], 'x1': dates[-1],
-                        'y0': profile.stats['avg_score'],
-                        'y1': profile.stats['avg_score'],
-                        'line': {
-                            'color': 'rgba(255,0,0,0.3)',
-                            'width': 1, 'dash': 'dash'
-                        },
-                    }] if len(dates) > 1 else [],
-                },
-                'config': {'responsive': True, 'displayModeBar': False},
-            }
-            context['dynamics_chart_json'] = plotly_utils.to_json(dynamics_chart)
-
-        # --- Распределение оценок ---
-        if profile.stats['graded_works'] > 0:
-            context['score_chart_json'] = plotly_utils.to_json(
-                plotly_utils.score_distribution_config(
-                    profile.stats['score_counts'],
-                    title='Распределение оценок',
-                )
-            )
-
+        )
         return context
 
 

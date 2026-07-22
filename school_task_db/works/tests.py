@@ -332,7 +332,12 @@ class WorkDetailViewTests(TestCase):
         self.assertContains(response, 'render-toast-box')
         self.assertContains(response, 'advanced-rendering-form')
         self.assertContains(response, 'data-document-template-select')
+        self.assertContains(response, 'data-template-selection-notice')
         self.assertContains(response, 'data-template-controlled-options')
+        self.assertContains(
+            response,
+            'Выбранный шаблон задаёт состав и порядок секций документа.',
+        )
         self.assertContains(response, 'Состав по умолчанию')
         self.assertContains(response, 'document_style')
         self.assertContains(response, 'Рабочий лист')
@@ -379,6 +384,7 @@ class WorkDetailViewTests(TestCase):
         self.assertContains(response, 'id="remedial-batch"')
         self.assertContains(response, 'data-remedial-batch-rendering-form')
         self.assertContains(response, 'data-remedial-batch-rendering-results')
+        self.assertContains(response, 'data-template-selection-notice')
         self.assertContains(response, 'Печать листов работы над ошибками')
         self.assertContains(response, 'Шаблон листа РнО')
 

@@ -248,6 +248,32 @@ class ReviewServiceTests(TestCase):
         self.assertEqual(rows[0].points, 2)
         self.assertEqual(rows[0].comment, 'По snapshot-строке')
 
+    def test_build_task_score_rows_falls_back_to_payload_task_id(self):
+        service = ReviewService()
+        task = ReviewTaskRef(id='task-1', text='Задание', difficulty=2)
+
+        rows = service.build_task_score_rows(
+            variant_tasks=[
+                ReviewVariantTaskRef(
+                    task=task,
+                    variant_task_id='variant-task-1',
+                    weight=3,
+                ),
+            ],
+            existing_scores={
+                'stored-score-row-1': {
+                    'task_id': 'task-1',
+                    'points': 2,
+                    'max_points': 3,
+                    'comment': 'По task_id внутри payload',
+                },
+            },
+        )
+
+        self.assertEqual(rows[0].points, 2)
+        self.assertEqual(rows[0].max_points, 3)
+        self.assertEqual(rows[0].comment, 'По task_id внутри payload')
+
     def test_filters_assessable_variant_tasks(self):
         service = ReviewService()
         assessable_task = ReviewVariantTaskRef(

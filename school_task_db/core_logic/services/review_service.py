@@ -16,6 +16,10 @@ from core_logic.entities.review import (
     ReviewTaskScoreRow,
     ReviewVariantTaskRef,
 )
+from core_logic.value_objects.task_scores import (
+    task_score_records_by_score_key,
+    task_score_records_by_task_id,
+)
 
 
 @dataclass(frozen=True)
@@ -318,13 +322,15 @@ class ReviewService:
         variant_task: ReviewVariantTaskRef,
         task_id: str,
     ) -> dict:
+        records_by_score_key = task_score_records_by_score_key(existing_scores)
         if variant_task.variant_task_id:
-            score_data = existing_scores.get(variant_task.variant_task_id)
-            if isinstance(score_data, dict):
-                return score_data
-        score_data = existing_scores.get(task_id, {})
-        if isinstance(score_data, dict):
-            return score_data
+            score_record = records_by_score_key.get(variant_task.variant_task_id)
+            if score_record:
+                return score_record.raw
+
+        score_record = task_score_records_by_task_id(existing_scores).get(task_id)
+        if score_record:
+            return score_record.raw
         return {}
 
     def _blocked_event_review(

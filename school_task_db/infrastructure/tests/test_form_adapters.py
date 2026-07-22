@@ -59,6 +59,7 @@ from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
 from infrastructure.forms.document_template_forms import (
     DocumentTemplateFormAdapter,
 )
+from infrastructure.forms.event_forms import EventFormAdapter
 from infrastructure.forms.report_forms import ReportFormAdapter
 from infrastructure.forms.student_forms import StudentFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
@@ -608,6 +609,88 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         )
         self.assertIn('"hidden_roles": [', task_list_context['options_json'])
         self.assertIn('"role_blank_cells": {', task_list_context['options_json'])
+
+
+class EventFormAdapterTests(SimpleTestCase):
+    def test_builds_event_list_and_detail_contexts(self):
+        event_list = SimpleNamespace(
+            events=['event-1'],
+            planned_events=['planned-1'],
+            active_events=['active-1'],
+            graded_events=['graded-1'],
+        )
+        detail = SimpleNamespace(
+            event='event-1',
+            participations=['participation-1'],
+            some_variants_assigned=True,
+            all_variants_assigned=False,
+            can_review=True,
+            status_color='warning',
+            status_steps=['step-1'],
+            available_variants=['variant-1'],
+            status_transitions=['transition-1'],
+        )
+
+        adapter = EventFormAdapter()
+        list_context = adapter.event_list_context(event_list)
+        detail_context = adapter.event_detail_context(detail)
+
+        self.assertEqual(list_context['events'], ['event-1'])
+        self.assertEqual(list_context['planned_events'], ['planned-1'])
+        self.assertEqual(list_context['active_events'], ['active-1'])
+        self.assertEqual(list_context['graded_events'], ['graded-1'])
+        self.assertEqual(detail_context['event'], 'event-1')
+        self.assertEqual(detail_context['participations'], ['participation-1'])
+        self.assertTrue(detail_context['some_variants_assigned'])
+        self.assertFalse(detail_context['all_variants_assigned'])
+        self.assertTrue(detail_context['can_review'])
+        self.assertEqual(detail_context['status_color'], 'warning')
+        self.assertEqual(detail_context['status_steps'], ['step-1'])
+        self.assertEqual(detail_context['available_variants'], ['variant-1'])
+        self.assertEqual(detail_context['status_transitions'], ['transition-1'])
+
+    def test_builds_event_form_contexts(self):
+        adapter = EventFormAdapter()
+        form = object()
+        event = object()
+
+        create_context = adapter.event_create_context(form)
+        update_context = adapter.event_update_context(event, form)
+
+        self.assertEqual(create_context['form'], form)
+        self.assertEqual(create_context['page_title'], 'Создание события')
+        self.assertEqual(create_context['submit_text'], 'Создать')
+        self.assertEqual(update_context['object'], event)
+        self.assertEqual(update_context['form'], form)
+        self.assertEqual(update_context['page_title'], 'Редактирование события')
+        self.assertEqual(update_context['submit_text'], 'Сохранить')
+
+    def test_builds_event_action_form_contexts(self):
+        adapter = EventFormAdapter()
+        form = object()
+        selection_data = SimpleNamespace(
+            event='event-1',
+            current_participants=['student-1'],
+        )
+        assignment_data = SimpleNamespace(event='event-1')
+
+        selection_context = adapter.participant_selection_context(
+            selection_data,
+            form,
+        )
+        assignment_context = adapter.variant_assignment_context(
+            assignment_data,
+            form,
+        )
+
+        self.assertEqual(selection_context['event'], 'event-1')
+        self.assertEqual(selection_context['form'], form)
+        self.assertEqual(
+            selection_context['current_participants'],
+            ['student-1'],
+        )
+        self.assertEqual(assignment_context['event'], 'event-1')
+        self.assertEqual(assignment_context['form'], form)
 
 
 class ReportFormAdapterTests(SimpleTestCase):

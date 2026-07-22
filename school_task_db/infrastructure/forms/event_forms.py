@@ -7,6 +7,55 @@ from core_logic.use_cases.grade_student_work import GradeStudentWorkRequest
 
 
 class EventFormAdapter:
+    def event_list_context(self, event_list):
+        return {
+            'events': event_list.events,
+            'planned_events': event_list.planned_events,
+            'active_events': event_list.active_events,
+            'graded_events': event_list.graded_events,
+        }
+
+    def event_detail_context(self, detail):
+        return {
+            'event': detail.event,
+            'participations': detail.participations,
+            'some_variants_assigned': detail.some_variants_assigned,
+            'all_variants_assigned': detail.all_variants_assigned,
+            'can_review': detail.can_review,
+            'status_color': detail.status_color,
+            'status_steps': detail.status_steps,
+            'available_variants': detail.available_variants,
+            'status_transitions': detail.status_transitions,
+        }
+
+    def event_create_context(self, form):
+        return {
+            'form': form,
+            'page_title': 'Создание события',
+            'submit_text': 'Создать',
+        }
+
+    def event_update_context(self, event, form):
+        return {
+            'object': event,
+            'form': form,
+            'page_title': 'Редактирование события',
+            'submit_text': 'Сохранить',
+        }
+
+    def participant_selection_context(self, selection_data, form):
+        return {
+            'event': selection_data.event,
+            'form': form,
+            'current_participants': selection_data.current_participants,
+        }
+
+    def variant_assignment_context(self, assignment_data, form):
+        return {
+            'event': assignment_data.event,
+            'form': form,
+        }
+
     def event_params_from_form(self, form, event_id=''):
         course = form.cleaned_data.get('course')
         return CreateEventParams(

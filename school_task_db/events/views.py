@@ -44,10 +44,7 @@ class EventListView(TemplateView):
         context = super().get_context_data(**kwargs)
 
         event_list = container.get_event_list_use_case().execute()
-        context['events'] = event_list.events
-        context['planned_events'] = event_list.planned_events
-        context['active_events'] = event_list.active_events
-        context['graded_events'] = event_list.graded_events
+        context.update(container.event_form_adapter.event_list_context(event_list))
 
         return context
 
@@ -65,15 +62,7 @@ class EventDetailView(TemplateView):
         if detail.event is None:
             raise Http404('Событие не найдено')
 
-        context['event'] = detail.event
-        context['participations'] = detail.participations
-        context['some_variants_assigned'] = detail.some_variants_assigned
-        context['all_variants_assigned'] = detail.all_variants_assigned
-        context['can_review'] = detail.can_review
-        context['status_color'] = detail.status_color
-        context['status_steps'] = detail.status_steps
-        context['available_variants'] = detail.available_variants
-        context['status_transitions'] = detail.status_transitions
+        context.update(container.event_form_adapter.event_detail_context(detail))
 
         return context
 
@@ -83,9 +72,11 @@ class EventCreateView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['form'] = kwargs.get('form') or EventForm()
-        context['page_title'] = 'Создание события'
-        context['submit_text'] = 'Создать'
+        context.update(
+            container.event_form_adapter.event_create_context(
+                kwargs.get('form') or EventForm(),
+            )
+        )
         return context
 
     def post(self, request, *args, **kwargs):
@@ -131,12 +122,10 @@ class EventUpdateView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         event = kwargs.get('object') or self._get_event()
-        context['object'] = event
-        context['form'] = kwargs.get('form') or EventForm(
+        form = kwargs.get('form') or EventForm(
             initial=container.event_form_adapter.event_form_initial(event),
         )
-        context['page_title'] = 'Редактирование события'
-        context['submit_text'] = 'Сохранить'
+        context.update(container.event_form_adapter.event_update_context(event, form))
         return context
 
     def post(self, request, *args, **kwargs):
@@ -193,11 +182,14 @@ def add_participants(request, event_id):
     else:
         form = StudentSelectionForm()
 
-    return render(request, 'events/add_participants.html', {
-        'event': event,
-        'form': form,
-        'current_participants': selection_data.current_participants,
-    })
+    return render(
+        request,
+        'events/add_participants.html',
+        container.event_form_adapter.participant_selection_context(
+            selection_data,
+            form,
+        ),
+    )
 
 
 def assign_variants(request, event_id):
@@ -225,10 +217,14 @@ def assign_variants(request, event_id):
     else:
         form = VariantAssignmentForm(assignment_data)
 
-    return render(request, 'events/assign_variants.html', {
-        'event': event,
-        'form': form
-    })
+    return render(
+        request,
+        'events/assign_variants.html',
+        container.event_form_adapter.variant_assignment_context(
+            assignment_data,
+            form,
+        ),
+    )
 
 
 def review_works(request):

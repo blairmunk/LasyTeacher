@@ -157,6 +157,43 @@ class WorkFormAdapter:
             'remaining': result.remaining_count,
         }
 
+    def render_work_unsupported_renderer_payload(self, renderer_type):
+        return {
+            'success': False,
+            'error': f'Неподдерживаемый тип рендера: {renderer_type}',
+        }
+
+    def render_work_error_payload(self, error):
+        return {
+            'success': False,
+            'error': str(error),
+        }
+
+    def render_status_payload(self):
+        return {
+            'status': 'ready',
+            'message': 'Система готова к рендерингу',
+        }
+
+    def variant_placeholder_response_payload(self, result):
+        return {
+            'success': True,
+            'message': result.message,
+            'files': [],
+        }
+
+    def remedial_sheet_error_payload(self, message):
+        return {
+            'status': 'error',
+            'message': message,
+        }
+
+    def remedial_sheet_batch_error_payload(self, message):
+        return {
+            'success': False,
+            'error': message,
+        }
+
     def work_specs_from_formset(self, formset, work_id):
         specs = []
         for row in formset.cleaned_data:

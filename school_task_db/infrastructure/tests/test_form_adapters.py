@@ -1528,6 +1528,50 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertEqual(context['work_groups'], ['group-1'])
         self.assertEqual(context['form'], form)
 
+    def test_builds_document_rendering_status_and_error_payloads(self):
+        adapter = WorkFormAdapter()
+
+        self.assertEqual(
+            adapter.render_work_unsupported_renderer_payload('docx'),
+            {
+                'success': False,
+                'error': 'Неподдерживаемый тип рендера: docx',
+            },
+        )
+        self.assertEqual(
+            adapter.render_work_error_payload(ValueError('bad')),
+            {'success': False, 'error': 'bad'},
+        )
+        self.assertEqual(
+            adapter.render_status_payload(),
+            {
+                'status': 'ready',
+                'message': 'Система готова к рендерингу',
+            },
+        )
+        self.assertEqual(
+            adapter.variant_placeholder_response_payload(
+                SimpleNamespace(message='Пока не реализовано'),
+            ),
+            {
+                'success': True,
+                'message': 'Пока не реализовано',
+                'files': [],
+            },
+        )
+
+    def test_builds_remedial_rendering_error_payloads(self):
+        adapter = WorkFormAdapter()
+
+        self.assertEqual(
+            adapter.remedial_sheet_error_payload('Ошибка'),
+            {'status': 'error', 'message': 'Ошибка'},
+        )
+        self.assertEqual(
+            adapter.remedial_sheet_batch_error_payload('Ошибка'),
+            {'success': False, 'error': 'Ошибка'},
+        )
+
     def test_builds_work_specs_from_expanded_formset(self):
         analog_group = SimpleNamespace(pk='group-1')
         formset = SimpleNamespace(

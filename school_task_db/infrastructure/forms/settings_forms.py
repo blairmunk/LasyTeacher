@@ -4,6 +4,12 @@ from core_logic.entities.site_settings import SaveSiteSettingsParams
 
 
 class SettingsFormAdapter:
+    def settings_context(self, settings, form):
+        return {
+            'object': settings,
+            'form': form,
+        }
+
     def settings_form_initial(self, settings):
         return {
             'school_name': settings.school_name,

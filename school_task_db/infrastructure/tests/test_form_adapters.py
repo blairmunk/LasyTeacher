@@ -64,6 +64,7 @@ from infrastructure.forms.document_template_forms import (
 from infrastructure.forms.event_forms import EventFormAdapter
 from infrastructure.forms.report_forms import ReportFormAdapter
 from infrastructure.forms.review_forms import ReviewFormAdapter
+from infrastructure.forms.settings_forms import SettingsFormAdapter
 from infrastructure.forms.student_forms import StudentFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
 from infrastructure.forms.task_group_forms import TaskGroupFormAdapter
@@ -906,6 +907,16 @@ class ReviewFormAdapterTests(SimpleTestCase):
         self.assertEqual(context['total_positions'], 5)
         self.assertEqual(context['navigation_progress'], 40)
         self.assertEqual(payload, {'score': 4, 'percentage': 75.0})
+
+
+class SettingsFormAdapterTests(SimpleTestCase):
+    def test_builds_settings_context(self):
+        settings = object()
+        form = object()
+
+        context = SettingsFormAdapter().settings_context(settings, form)
+
+        self.assertEqual(context, {'object': settings, 'form': form})
 
 
 class StudentFormAdapterTests(SimpleTestCase):

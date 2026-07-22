@@ -15,10 +15,10 @@ class SiteSettingsView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         settings = kwargs.get('object') or self._get_settings()
-        context['object'] = settings
-        context['form'] = kwargs.get('form') or SiteSettingsForm(
+        form = kwargs.get('form') or SiteSettingsForm(
             initial=container.settings_form_adapter.settings_form_initial(settings),
         )
+        context.update(container.settings_form_adapter.settings_context(settings, form))
         return context
 
     def post(self, request, *args, **kwargs):

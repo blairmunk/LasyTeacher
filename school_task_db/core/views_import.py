@@ -69,19 +69,11 @@ def execute_import_ajax(request):
     if not uploaded_file:
         return JsonResponse({'error': 'Файл не выбран'}, status=400)
 
-    prepared_submission = (
-        container.prepare_task_import_execution_submission_use_case().execute(
-            container.core_form_adapter.task_import_execution_submission_from_upload(
-                uploaded_file,
-                request.POST,
-            )
+    result = container.execute_task_import_submission_use_case().execute(
+        container.core_form_adapter.task_import_execution_submission_from_upload(
+            uploaded_file,
+            request.POST,
         )
-    )
-    if not prepared_submission.success:
-        return JsonResponse({'error': prepared_submission.error}, status=400)
-
-    result = container.execute_task_import_use_case().execute(
-        prepared_submission.import_request,
     )
     return JsonResponse(
         result.to_response_data(),

@@ -47,6 +47,9 @@ from core_logic.use_cases.delete_task_groups import DeleteTaskGroupsUseCase
 from core_logic.use_cases.delete_task import DeleteTaskUseCase
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
 from core_logic.use_cases.execute_task_import import ExecuteTaskImportUseCase
+from core_logic.use_cases.execute_task_import_submission import (
+    ExecuteTaskImportSubmissionUseCase,
+)
 from core_logic.use_cases.export_tasks import ExportTasksUseCase
 from core_logic.use_cases.compose_work_variants import ComposeWorkVariantsUseCase
 from core_logic.use_cases.render_remedial_sheet_document import (
@@ -729,6 +732,11 @@ class Container:
 
     def execute_task_import_use_case(self):
         return ExecuteTaskImportUseCase(
+            task_import_service=self.task_import_service,
+        )
+
+    def execute_task_import_submission_use_case(self):
+        return ExecuteTaskImportSubmissionUseCase(
             task_import_service=self.task_import_service,
         )
 

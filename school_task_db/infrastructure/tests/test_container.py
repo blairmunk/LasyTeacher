@@ -40,6 +40,9 @@ from core_logic.use_cases.delete_task_groups import DeleteTaskGroupsUseCase
 from core_logic.use_cases.delete_task import DeleteTaskUseCase
 from core_logic.use_cases.delete_variant import DeleteVariantUseCase
 from core_logic.use_cases.execute_task_import import ExecuteTaskImportUseCase
+from core_logic.use_cases.execute_task_import_submission import (
+    ExecuteTaskImportSubmissionUseCase,
+)
 from core_logic.use_cases.export_tasks import ExportTasksUseCase
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
 from core_logic.use_cases.compose_work_variants import ComposeWorkVariantsUseCase
@@ -367,6 +370,9 @@ class ContainerTests(SimpleTestCase):
         save_site_settings_use_case = container.save_site_settings_use_case()
         import_validation_use_case = container.validate_task_import_json_use_case()
         execute_import_use_case = container.execute_task_import_use_case()
+        execute_import_submission_use_case = (
+            container.execute_task_import_submission_use_case()
+        )
         preview_import_use_case = container.preview_task_import_use_case()
         preview_import_file_use_case = (
             container.preview_task_import_file_use_case()
@@ -615,6 +621,10 @@ class ContainerTests(SimpleTestCase):
             ValidateTaskImportJsonUseCase,
         )
         self.assertIsInstance(execute_import_use_case, ExecuteTaskImportUseCase)
+        self.assertIsInstance(
+            execute_import_submission_use_case,
+            ExecuteTaskImportSubmissionUseCase,
+        )
         self.assertIsInstance(preview_import_use_case, PreviewTaskImportUseCase)
         self.assertIsInstance(
             preview_import_file_use_case,

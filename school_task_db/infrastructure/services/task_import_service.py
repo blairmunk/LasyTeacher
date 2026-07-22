@@ -24,6 +24,7 @@ class DjangoTaskImportService(ITaskImportService):
                 dry_run=True,
                 verbose=False,
                 create_missing=True,
+                output=lambda _message: None,
             )
             importer.validate_mode()
             context = importer.import_tasks_from_json(request.data)
@@ -61,6 +62,7 @@ class DjangoTaskImportService(ITaskImportService):
                 dry_run=request.dry_run,
                 verbose=True,
                 create_missing=request.create_missing,
+                output=lambda _message: None,
             )
             importer.validate_mode()
             context = importer.import_tasks_from_json(request.data)

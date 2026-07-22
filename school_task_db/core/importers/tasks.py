@@ -21,11 +21,11 @@ class TaskImporter(BaseImporter):
         """Основной метод импорта заданий из JSON"""
         
         if self.dry_run:
-            print("🔍 ПРЕДВАРИТЕЛЬНЫЙ ПРОСМОТР (--dry-run)")
+            self._write("🔍 ПРЕДВАРИТЕЛЬНЫЙ ПРОСМОТР (--dry-run)")
             return self._preview_import(json_data)
         
         with transaction.atomic():
-            print("🚀 ИМПОРТ ЗАДАНИЙ:")
+            self._write("🚀 ИМПОРТ ЗАДАНИЙ:")
 
             # ЭТАП 0: Импорт источников
             if 'sources' in json_data:
@@ -58,9 +58,9 @@ class TaskImporter(BaseImporter):
         groups_data = json_data.get('analog_groups', [])
         topics_data = json_data.get('topics', [])
         
-        print(f"  📝 Заданий в файле: {len(tasks_data)}")
-        print(f"  📋 Групп аналогов: {len(groups_data)}")
-        print(f"  📚 Тем: {len(topics_data)}")
+        self._write(f"  📝 Заданий в файле: {len(tasks_data)}")
+        self._write(f"  📋 Групп аналогов: {len(groups_data)}")
+        self._write(f"  📚 Тем: {len(topics_data)}")
         
         # Анализ UUID конфликтов
         self._analyze_uuid_conflicts(json_data)
@@ -72,7 +72,7 @@ class TaskImporter(BaseImporter):
     
     def _import_sources(self, sources_data: List[Dict[str, Any]]):
         """Импорт источников"""
-        print("📚 Импорт источников...")
+        self._write("📚 Импорт источников...")
 
         for source_data in sources_data:
             try:
@@ -84,7 +84,7 @@ class TaskImporter(BaseImporter):
 
     def _import_analog_groups(self, groups_data: List[Dict[str, Any]]):
         """Импорт групп аналогов"""
-        print("📋 Импорт групп аналогов...")
+        self._write("📋 Импорт групп аналогов...")
         
         for group_data in groups_data:
             try:
@@ -119,7 +119,7 @@ class TaskImporter(BaseImporter):
     
     def _import_topics(self, topics_data: List[Dict[str, Any]]):
         """Импорт тем (если создание зависимостей разрешено)"""
-        print("📚 Импорт тем...")
+        self._write("📚 Импорт тем...")
         
         for topic_data in topics_data:
             try:
@@ -134,7 +134,7 @@ class TaskImporter(BaseImporter):
     
     def _import_tasks(self, tasks_data: List[Dict[str, Any]]):
         """Импорт заданий"""
-        print("📝 Импорт заданий...")
+        self._write("📝 Импорт заданий...")
         
         for task_data in tasks_data:
             try:
@@ -323,7 +323,7 @@ class TaskImporter(BaseImporter):
     
     def _create_task_group_relations(self, json_data: Dict[str, Any]):
         """Создание связей задание-группа"""
-        print("🔗 Создание связей заданий с группами...")
+        self._write("🔗 Создание связей заданий с группами...")
         
         relations_created = 0
         
@@ -354,7 +354,7 @@ class TaskImporter(BaseImporter):
                 if group and self._create_task_group_relation(task, group):
                     relations_created += 1
         
-        print(f"  ✅ Создано связей: {relations_created}")
+        self._write(f"  ✅ Создано связей: {relations_created}")
     
     def _create_task_group_relation(self, task, group) -> bool:
         """Создание связи задание-группа"""
@@ -394,7 +394,7 @@ class TaskImporter(BaseImporter):
 
     def _import_task_images(self, images_data: List[Dict[str, Any]]):
         """Импорт изображений заданий из base64 или файлов"""
-        print("🖼️ Импорт изображений заданий...")
+        self._write("🖼️ Импорт изображений заданий...")
         
         for image_data in images_data:
             try:
@@ -545,7 +545,7 @@ class TaskImporter(BaseImporter):
 
     def _analyze_uuid_conflicts(self, json_data: Dict[str, Any]):
         """Анализ конфликтов UUID"""
-        print("\n📊 UUID АНАЛИЗ:")
+        self._write("\n📊 UUID АНАЛИЗ:")
         
         tasks_data = json_data.get('tasks', [])
         groups_data = json_data.get('analog_groups', [])
@@ -596,29 +596,29 @@ class TaskImporter(BaseImporter):
                 group_conflicts['invalid'].append(f"Группа {i}: некорректный UUID '{group_uuid}'")
         
         # Вывод анализа
-        print(f"  📝 ЗАДАНИЯ:")
-        print(f"    🆕 Новых: {len(task_conflicts['new'])}")
-        print(f"    🔄 Существующих: {len(task_conflicts['existing'])}")
-        print(f"    ❌ Некорректных UUID: {len(task_conflicts['invalid'])}")
+        self._write(f"  📝 ЗАДАНИЯ:")
+        self._write(f"    🆕 Новых: {len(task_conflicts['new'])}")
+        self._write(f"    🔄 Существующих: {len(task_conflicts['existing'])}")
+        self._write(f"    ❌ Некорректных UUID: {len(task_conflicts['invalid'])}")
         
-        print(f"  📋 ГРУППЫ:")
-        print(f"    🆕 Новых: {len(group_conflicts['new'])}")
-        print(f"    🔄 Существующих: {len(group_conflicts['existing'])}")
-        print(f"    ❌ Некорректных UUID: {len(group_conflicts['invalid'])}")
+        self._write(f"  📋 ГРУППЫ:")
+        self._write(f"    🆕 Новых: {len(group_conflicts['new'])}")
+        self._write(f"    🔄 Существующих: {len(group_conflicts['existing'])}")
+        self._write(f"    ❌ Некорректных UUID: {len(group_conflicts['invalid'])}")
         
         if images_data:
-            print(f"  🖼️ ИЗОБРАЖЕНИЯ: {len(images_data)}")
+            self._write(f"  🖼️ ИЗОБРАЖЕНИЯ: {len(images_data)}")
         
         # Предупреждения
         if task_conflicts['existing'] and self.mode == 'strict':
-            print(f"  ⚠️ В режиме strict будут ошибки для {len(task_conflicts['existing'])} существующих заданий")
+            self._write(f"  ⚠️ В режиме strict будут ошибки для {len(task_conflicts['existing'])} существующих заданий")
         
         if task_conflicts['invalid'] or group_conflicts['invalid']:
-            print(f"  🚨 Некорректные UUID будут пропущены")
+            self._write(f"  🚨 Некорректные UUID будут пропущены")
 
     def _analyze_dependencies(self, json_data: Dict[str, Any]):
         """Анализ зависимостей"""
-        print("\n🔍 АНАЛИЗ ЗАВИСИМОСТЕЙ:")
+        self._write("\n🔍 АНАЛИЗ ЗАВИСИМОСТЕЙ:")
         
         tasks_data = json_data.get('tasks', [])
         missing_topics = set()
@@ -662,35 +662,35 @@ class TaskImporter(BaseImporter):
         
         # Вывод анализа зависимостей
         if missing_topics:
-            print(f"  📚 ОТСУТСТВУЮЩИЕ ТЕМЫ: {len(missing_topics)}")
+            self._write(f"  📚 ОТСУТСТВУЮЩИЕ ТЕМЫ: {len(missing_topics)}")
             for topic in sorted(list(missing_topics))[:3]:
-                print(f"    - {topic}")
+                self._write(f"    - {topic}")
             if len(missing_topics) > 3:
-                print(f"    ... и еще {len(missing_topics) - 3}")
+                self._write(f"    ... и еще {len(missing_topics) - 3}")
             
             if self.create_missing:
-                print(f"    ✅ Будут созданы автоматически (--create-topics)")
+                self._write(f"    ✅ Будут созданы автоматически (--create-topics)")
             else:
-                print(f"    ⚠️ Задания без тем будут пропущены (используйте --create-topics)")
+                self._write(f"    ⚠️ Задания без тем будут пропущены (используйте --create-topics)")
         
         if missing_groups:
-            print(f"  📋 ОТСУТСТВУЮЩИЕ ГРУППЫ: {len(missing_groups)}")
+            self._write(f"  📋 ОТСУТСТВУЮЩИЕ ГРУППЫ: {len(missing_groups)}")
             for group in sorted(list(missing_groups))[:3]:
-                print(f"    - {group}")
+                self._write(f"    - {group}")
             if len(missing_groups) > 3:
-                print(f"    ... и еще {len(missing_groups) - 3}")
+                self._write(f"    ... и еще {len(missing_groups) - 3}")
                 
             if self.create_missing:
-                print(f"    ✅ Будут созданы автоматически (--create-groups)")
+                self._write(f"    ✅ Будут созданы автоматически (--create-groups)")
             else:
-                print(f"    ⚠️ Связи будут пропущены (используйте --create-groups)")
+                self._write(f"    ⚠️ Связи будут пропущены (используйте --create-groups)")
         
         if broken_references:
-            print(f"  🔗 ПРОБЛЕМНЫЕ СВЯЗИ: {len(broken_references)}")
+            self._write(f"  🔗 ПРОБЛЕМНЫЕ СВЯЗИ: {len(broken_references)}")
             for ref in broken_references[:3]:
-                print(f"    - {ref}")
+                self._write(f"    - {ref}")
             if len(broken_references) > 3:
-                print(f"    ... и еще {len(broken_references) - 3}")
+                self._write(f"    ... и еще {len(broken_references) - 3}")
         
         # Рекомендации
         recommendations = []
@@ -702,9 +702,9 @@ class TaskImporter(BaseImporter):
             recommendations.append("Проверьте UUID групп в JSON файле")
         
         if recommendations:
-            print(f"  💡 РЕКОМЕНДАЦИИ:")
+            self._write(f"  💡 РЕКОМЕНДАЦИИ:")
             for rec in recommendations:
-                print(f"    • {rec}")
+                self._write(f"    • {rec}")
 
     def _update_analog_group(self, group: AnalogGroup, group_data: Dict[str, Any]):
         """Обновление существующей группы аналогов"""
@@ -795,4 +795,3 @@ class TaskImporter(BaseImporter):
                 self.log_error(f"Ошибка создания подтемы: {e}", e)
         
         return None
-

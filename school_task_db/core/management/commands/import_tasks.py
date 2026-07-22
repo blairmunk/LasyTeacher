@@ -38,7 +38,8 @@ class Command(BaseCommand):
             mode=options['mode'],
             dry_run=options['dry_run'],
             verbose=options['verbose'],
-            create_missing=options['create_groups'] or options['create_topics']
+            create_missing=options['create_groups'] or options['create_topics'],
+            output=self.stdout.write,
         )
 
         # Валидация режима

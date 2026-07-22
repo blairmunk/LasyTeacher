@@ -59,7 +59,8 @@ class BaseImporter:
                  mode: str = 'update',
                  dry_run: bool = False,
                  verbose: bool = False,
-                 create_missing: bool = True):
+                 create_missing: bool = True,
+                 output=None):
         """
         Args:
             mode: Режим импорта (strict/update/skip)
@@ -71,10 +72,17 @@ class BaseImporter:
         self.dry_run = dry_run
         self.verbose = verbose
         self.create_missing = create_missing
+        self.output = output
         self.stats = ImportStats()
         
         # Кэш для избежания повторных запросов
         self._cache = {}
+
+    def _write(self, message: str = ''):
+        if self.output is not None:
+            self.output(message)
+        else:
+            print(message)
     
     def validate_mode(self):
         """Валидация режима импорта"""
@@ -86,24 +94,24 @@ class BaseImporter:
         """Логирование информационных сообщений"""
         if self.verbose:
             prefix = "  " * indent
-            print(f"{prefix}{message}")
+            self._write(f"{prefix}{message}")
     
     def log_warning(self, message: str, context: Optional[Dict] = None):
         """Логирование предупреждений"""
-        print(f"  ⚠️ {message}")
+        self._write(f"  ⚠️ {message}")
         self.stats.add_warning(message, context)
     
     def log_error(self, message: str, exception: Optional[Exception] = None, context: Optional[Dict] = None):
         """Логирование ошибок"""
-        print(f"  ❌ {message}")
+        self._write(f"  ❌ {message}")
         if exception and self.verbose:
-            print(f"     Детали: {str(exception)}")
+            self._write(f"     Детали: {str(exception)}")
         self.stats.add_error(message, exception, context)
     
     def log_success(self, message: str):
         """Логирование успешных операций"""
         if self.verbose:
-            print(f"  ✅ {message}")
+            self._write(f"  ✅ {message}")
     
     def generate_uuid_if_missing(self, data: Dict[str, Any], field_name: str = 'id') -> str:
         """Генерирует UUID если отсутствует"""
@@ -150,27 +158,27 @@ class BaseImporter:
         """Печать итогового резюме импорта"""
         summary = self.stats.get_summary()
         
-        print("\n📊 ИТОГИ ИМПОРТА:")
-        print(f"  ✅ Создано: {summary['created']}")
-        print(f"  ✏️ Обновлено: {summary['updated']}")
-        print(f"  ⏭️ Пропущено: {summary['skipped']}")
-        print(f"  ❌ Ошибок: {summary['errors']}")
-        print(f"  ⚠️ Предупреждений: {summary['warnings_count']}")
-        print(f"  🎯 Успешность: {summary['success_rate']:.1f}%")
+        self._write("\n📊 ИТОГИ ИМПОРТА:")
+        self._write(f"  ✅ Создано: {summary['created']}")
+        self._write(f"  ✏️ Обновлено: {summary['updated']}")
+        self._write(f"  ⏭️ Пропущено: {summary['skipped']}")
+        self._write(f"  ❌ Ошибок: {summary['errors']}")
+        self._write(f"  ⚠️ Предупреждений: {summary['warnings_count']}")
+        self._write(f"  🎯 Успешность: {summary['success_rate']:.1f}%")
         
         # Детали ошибок
         if self.stats.errors > 0 and self.verbose:
-            print("\n❌ ДЕТАЛИ ОШИБОК:")
+            self._write("\n❌ ДЕТАЛИ ОШИБОК:")
             for error in self.stats.error_details[:5]:  # Показываем первые 5
-                print(f"  • {error['message']}")
+                self._write(f"  • {error['message']}")
                 if error['exception']:
-                    print(f"    Исключение: {error['exception']}")
+                    self._write(f"    Исключение: {error['exception']}")
         
         # Предупреждения
         if len(self.stats.warnings) > 0 and self.verbose:
-            print("\n⚠️ ПРЕДУПРЕЖДЕНИЯ:")
+            self._write("\n⚠️ ПРЕДУПРЕЖДЕНИЯ:")
             for warning in self.stats.warnings[:5]:  # Показываем первые 5
-                print(f"  • {warning['message']}")
+                self._write(f"  • {warning['message']}")
 
 class ImportContext:
     """Контекст импорта для передачи данных между импортерами"""

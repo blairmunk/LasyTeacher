@@ -12,6 +12,10 @@ from core_logic.entities.document import (
     DocumentSectionSpec,
     DocumentTemplateSpec,
 )
+from core_logic.entities.core import (
+    DashboardSummaryData,
+    GlobalSearchData,
+)
 from core_logic.entities.document_rendering import (
     DocumentRenderResult,
     GeneratedDocumentFile,
@@ -61,12 +65,50 @@ from infrastructure.forms.work_forms import WorkFormAdapter
 
 
 class CoreFormAdapterTests(SimpleTestCase):
+    def test_builds_dashboard_summary_context(self):
+        summary = DashboardSummaryData(
+            tasks_count=1,
+            works_count=2,
+            variants_count=3,
+            orphan_variants_count=4,
+            students_count=5,
+            events_count=6,
+            groups_count=7,
+        )
+
+        context = CoreFormAdapter().dashboard_summary_context(summary)
+
+        self.assertEqual(context['tasks_count'], 1)
+        self.assertEqual(context['works_count'], 2)
+        self.assertEqual(context['variants_count'], 3)
+        self.assertEqual(context['orphan_variants_count'], 4)
+        self.assertEqual(context['students_count'], 5)
+        self.assertEqual(context['events_count'], 6)
+        self.assertEqual(context['groups_count'], 7)
+
     def test_builds_global_search_request_from_query(self):
         request = CoreFormAdapter().global_search_request_from_query(
             QueryDict('q=force'),
         )
 
         self.assertEqual(request.raw_query, 'force')
+
+    def test_builds_global_search_context(self):
+        search_data = GlobalSearchData(
+            query='force',
+            results={'tasks': ['task-1']},
+            total_found=1,
+            search_mode='text',
+            found_text='1 результат',
+        )
+
+        context = CoreFormAdapter().global_search_context(search_data)
+
+        self.assertEqual(context['query'], 'force')
+        self.assertEqual(context['results'], {'tasks': ['task-1']})
+        self.assertEqual(context['total_found'], 1)
+        self.assertEqual(context['search_mode'], 'text')
+        self.assertEqual(context['found_text'], '1 результат')
 
     def test_builds_task_import_file_request_from_upload(self):
         uploaded_file = SimpleUploadedFile(

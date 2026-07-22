@@ -10,8 +10,28 @@ from core_logic.use_cases.get_global_search import GlobalSearchRequest
 
 
 class CoreFormAdapter:
+    def dashboard_summary_context(self, summary):
+        return {
+            'tasks_count': summary.tasks_count,
+            'works_count': summary.works_count,
+            'variants_count': summary.variants_count,
+            'orphan_variants_count': summary.orphan_variants_count,
+            'students_count': summary.students_count,
+            'events_count': summary.events_count,
+            'groups_count': summary.groups_count,
+        }
+
     def global_search_request_from_query(self, query):
         return GlobalSearchRequest(raw_query=query.get('q', ''))
+
+    def global_search_context(self, search_data):
+        return {
+            'query': search_data.query,
+            'results': search_data.results,
+            'total_found': search_data.total_found,
+            'search_mode': search_data.search_mode,
+            'found_text': search_data.found_text,
+        }
 
     def task_import_file_request_from_upload(self, uploaded_file):
         return TaskImportFileRequest(

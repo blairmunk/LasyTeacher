@@ -302,6 +302,7 @@ from infrastructure.services.document_engine import (
     DjangoDocumentEngine,
 )
 from infrastructure.services.task_import_service import DjangoTaskImportService
+from infrastructure.forms.codifier_forms import CodifierFormAdapter
 from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
 from infrastructure.forms.document_template_forms import (
@@ -331,6 +332,7 @@ class Container:
         self._core_repo = None
         self._settings_repo = None
         self._document_template_repo = None
+        self._codifier_form_adapter = None
         self._core_form_adapter = None
         self._curriculum_form_adapter = None
         self._document_template_form_adapter = None
@@ -415,6 +417,12 @@ class Container:
         if self._core_form_adapter is None:
             self._core_form_adapter = CoreFormAdapter()
         return self._core_form_adapter
+
+    @property
+    def codifier_form_adapter(self):
+        if self._codifier_form_adapter is None:
+            self._codifier_form_adapter = CodifierFormAdapter()
+        return self._codifier_form_adapter
 
     @property
     def curriculum_form_adapter(self):

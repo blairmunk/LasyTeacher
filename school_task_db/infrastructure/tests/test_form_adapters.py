@@ -53,6 +53,7 @@ from core_logic.value_objects.document_section_catalog import (
 from core_logic.value_objects.document_type_catalog import (
     get_document_type_catalog,
 )
+from infrastructure.forms.codifier_forms import CodifierFormAdapter
 from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
 from infrastructure.forms.document_template_forms import (
@@ -158,6 +159,35 @@ class CoreFormAdapterTests(SimpleTestCase):
         self.assertEqual(request.filters.subject, 'physics')
         self.assertEqual(request.filters.grade, '9')
         self.assertEqual(request.export_date, '2026-07-18')
+
+
+class CodifierFormAdapterTests(SimpleTestCase):
+    def test_builds_codifier_list_context(self):
+        list_data = SimpleNamespace(codifiers=['codifier-1'])
+
+        context = CodifierFormAdapter().codifier_list_context(list_data)
+
+        self.assertEqual(context, {'codifiers': ['codifier-1']})
+
+    def test_builds_codifier_detail_context(self):
+        detail = SimpleNamespace(
+            codifier='codifier-1',
+            content_tree=['entry-1'],
+            requirements=['requirement-1'],
+            coverage={'total': 2, 'covered': 1},
+        )
+
+        context = CodifierFormAdapter().codifier_detail_context(detail)
+
+        self.assertEqual(
+            context,
+            {
+                'codifier': 'codifier-1',
+                'content_tree': ['entry-1'],
+                'requirements': ['requirement-1'],
+                'coverage': {'total': 2, 'covered': 1},
+            },
+        )
 
 
 class CurriculumFormAdapterTests(SimpleTestCase):

@@ -249,6 +249,7 @@ from infrastructure.repositories.django_student_repo import DjangoStudentReposit
 from infrastructure.repositories.django_settings_repo import DjangoSettingsRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
+from infrastructure.forms.codifier_forms import CodifierFormAdapter
 from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
 from infrastructure.forms.document_template_forms import (
@@ -785,6 +786,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             container.document_template_repo,
             DjangoDocumentTemplateRepository,
+        )
+        self.assertIsInstance(
+            container.codifier_form_adapter,
+            CodifierFormAdapter,
         )
         self.assertIsInstance(container.core_form_adapter, CoreFormAdapter)
         self.assertIsInstance(

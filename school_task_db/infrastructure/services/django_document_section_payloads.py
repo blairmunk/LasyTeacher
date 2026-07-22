@@ -488,28 +488,17 @@ def _work_variant_payload(variant, task_payload_formatter=None, request=None):
 
 
 def _variant_content_item(variant_task):
+    print_settings = _variant_task_print_settings(variant_task)
     return VariantContentItem(
         variant_task_id=str(variant_task.pk),
         task_id=str(variant_task.task_id),
         order=variant_task.order,
         max_points=variant_task.max_points,
-        bank_role=getattr(
-            variant_task,
-            'bank_role',
-            TASK_BANK_ROLE_CONTROL,
-        ),
-        render_mode=getattr(
-            variant_task,
-            'render_mode',
-            TASK_RENDER_MODE_TASK_ONLY,
-        ),
-        is_assessable=getattr(variant_task, 'is_assessable', True),
-        blank_cells_after=getattr(variant_task, 'blank_cells_after', False),
-        blank_cells_rows=getattr(
-            variant_task,
-            'blank_cells_rows',
-            DEFAULT_BLANK_CELLS_ROWS,
-        ),
+        bank_role=print_settings['bank_role'],
+        render_mode=print_settings['render_mode'],
+        is_assessable=print_settings['is_assessable'],
+        blank_cells_after=print_settings['blank_cells_after'],
+        blank_cells_rows=print_settings['blank_cells_rows'],
     )
 
 
@@ -592,26 +581,10 @@ def _variant_task_payload(
     task = variant_task.task
     payload = {
         **_task_payload(task),
+        **_variant_task_print_settings(variant_task),
         'variant_task_id': str(variant_task.pk),
         'order': variant_task.order,
         'max_points': variant_task.max_points,
-        'bank_role': getattr(
-            variant_task,
-            'bank_role',
-            TASK_BANK_ROLE_CONTROL,
-        ),
-        'render_mode': getattr(
-            variant_task,
-            'render_mode',
-            TASK_RENDER_MODE_TASK_ONLY,
-        ),
-        'is_assessable': getattr(variant_task, 'is_assessable', True),
-        'blank_cells_after': getattr(variant_task, 'blank_cells_after', False),
-        'blank_cells_rows': getattr(
-            variant_task,
-            'blank_cells_rows',
-            DEFAULT_BLANK_CELLS_ROWS,
-        ),
     }
     if payload['blank_cells_after']:
         payload['blank_cells'] = _blank_cells_payload(
@@ -630,6 +603,28 @@ def _variant_task_payload(
             }
         )
     return _format_task_payload(payload, task_payload_formatter, request=request)
+
+
+def _variant_task_print_settings(variant_task):
+    return {
+        'bank_role': getattr(
+            variant_task,
+            'bank_role',
+            TASK_BANK_ROLE_CONTROL,
+        ),
+        'render_mode': getattr(
+            variant_task,
+            'render_mode',
+            TASK_RENDER_MODE_TASK_ONLY,
+        ),
+        'is_assessable': getattr(variant_task, 'is_assessable', True),
+        'blank_cells_after': getattr(variant_task, 'blank_cells_after', False),
+        'blank_cells_rows': getattr(
+            variant_task,
+            'blank_cells_rows',
+            DEFAULT_BLANK_CELLS_ROWS,
+        ),
+    }
 
 
 def _original_task_payload(task_row, task_payload_formatter=None, request=None):

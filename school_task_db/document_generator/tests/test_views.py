@@ -67,6 +67,10 @@ class DocumentTemplateEditorViewTests(TestCase):
         self.assertContains(response, 'name="template_type"')
         self.assertContains(response, 'value="header"')
         self.assertContains(response, 'value="task_list"')
+        self.assertContains(response, 'name="section_options__task_list"')
+        self.assertContains(response, 'role_render_modes')
+        self.assertContains(response, 'name="section_options__blank_cells"')
+        self.assertNotContains(response, 'name="section_options__header"')
 
     def test_template_create_view_creates_template(self):
         response = self.client.post(

@@ -399,6 +399,19 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
             COMMON_HEADER_SECTION,
         )
         self.assertTrue(context['section_options'][0]['is_fixed_order'])
+        self.assertFalse(context['section_options'][0]['has_options'])
+
+        task_list_context = next(
+            section
+            for section in context['section_options']
+            if section['section_type'] == 'task_list'
+        )
+        self.assertTrue(task_list_context['has_options'])
+        self.assertIn(
+            'role_render_modes',
+            task_list_context['options_example_json'],
+        )
+        self.assertIn('Можно скрывать роли', task_list_context['options_hint'])
 
     def test_builds_create_context_with_section_options_json(self):
         form = DocumentTemplateForm(

@@ -89,18 +89,23 @@
                             </div>
                             <div class="small text-muted mt-2">{{ section.description }}</div>
                             <code class="small">{{ section.section_type }}</code>
+                            {% if section.has_options or section.options_json %}
                             <div class="mt-3">
                                 <label class="form-label small text-muted mb-1" for="section-options-{{ section.section_type }}">
                                     Настройки секции, JSON
                                 </label>
+                                {% if section.options_hint %}
+                                <div class="small text-muted mb-1">{{ section.options_hint }}</div>
+                                {% endif %}
                                 <textarea
                                     class="form-control form-control-sm font-monospace"
                                     id="section-options-{{ section.section_type }}"
                                     name="{{ section.options_field_name }}"
                                     rows="4"
-                                    placeholder='{"rows": 6}'
+                                    placeholder="{{ section.options_example_json }}"
                                 >{{ section.options_json }}</textarea>
                             </div>
+                            {% endif %}
                         </div>
                     </div>
                     {% endfor %}

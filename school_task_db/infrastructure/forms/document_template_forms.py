@@ -135,6 +135,11 @@ class DocumentTemplateFormAdapter:
             'renderable_document_types': section.renderable_document_types,
             'is_legacy': section.is_legacy,
             'is_fixed_order': section.section_type == COMMON_HEADER_SECTION,
+            'has_options': section.has_options,
+            'options_hint': section.options_hint,
+            'options_example_json': self._format_section_options_json(
+                section.options_example,
+            ),
         }
 
     def _template_context(self, template):

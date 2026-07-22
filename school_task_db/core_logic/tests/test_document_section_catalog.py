@@ -7,6 +7,7 @@ from core_logic.use_cases.get_document_section_catalog import (
 from core_logic.value_objects.document_recipes import (
     ANSWER_KEY_DOCUMENT_TYPE,
     ANSWER_KEY_SECTION,
+    BLANK_CELLS_SECTION,
     HEADER_SECTION,
     LEGACY_TASK_VARIANTS_SECTION,
     ORIGINAL_MISTAKES_SECTION,
@@ -134,6 +135,25 @@ class DocumentSectionCatalogTests(TestCase):
         self.assertFalse(
             task_list_section.is_renderable_for(WORKSHEET_DOCUMENT_TYPE),
         )
+
+    def test_reports_configurable_section_options(self):
+        sections = get_document_section_catalog(
+            document_type=WORK_DOCUMENT_TYPE,
+            renderable_only=True,
+        )
+        section_by_type = {
+            section.section_type: section
+            for section in sections
+        }
+
+        self.assertTrue(section_by_type[TASK_LIST_SECTION].has_options)
+        self.assertIn(
+            'role_render_modes',
+            section_by_type[TASK_LIST_SECTION].options_example,
+        )
+        self.assertTrue(section_by_type[BLANK_CELLS_SECTION].has_options)
+        self.assertIn('rows', section_by_type[BLANK_CELLS_SECTION].options_example)
+        self.assertFalse(section_by_type[HEADER_SECTION].has_options)
 
     def test_validates_supported_sections(self):
         validate_document_section_types(

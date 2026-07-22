@@ -1,7 +1,7 @@
 """Catalog of supported section types for document templates."""
 
-from dataclasses import dataclass
-from typing import Tuple
+from dataclasses import dataclass, field
+from typing import Any, Mapping, Tuple
 
 from core_logic.value_objects.document_recipes import (
     ANSWER_KEY_DOCUMENT_TYPE,
@@ -26,6 +26,15 @@ from core_logic.value_objects.document_recipes import (
     WORK_DOCUMENT_TYPE,
     WORKSHEET_DOCUMENT_TYPE,
 )
+from core_logic.value_objects.task_print_settings import (
+    DEFAULT_BLANK_CELLS_COLUMNS,
+    DEFAULT_BLANK_CELLS_ROW_HEIGHT,
+    DEFAULT_BLANK_CELLS_ROWS,
+    TASK_BANK_ROLE_DEMO,
+    TASK_BANK_ROLE_PRACTICE,
+    TASK_RENDER_MODE_TASK_ONLY,
+    TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+)
 
 
 @dataclass(frozen=True)
@@ -36,6 +45,8 @@ class DocumentSectionCatalogItem:
     renderable_document_types: Tuple[str, ...] = ()
     description: str = ''
     is_legacy: bool = False
+    options_hint: str = ''
+    options_example: Mapping[str, Any] = field(default_factory=dict)
 
     def supports_document_type(self, document_type: str) -> bool:
         return (
@@ -48,6 +59,10 @@ class DocumentSectionCatalogItem:
             not document_type
             and bool(self.renderable_document_types)
         ) or document_type in self.renderable_document_types
+
+    @property
+    def has_options(self) -> bool:
+        return bool(self.options_hint or self.options_example)
 
 
 ALL_DOCUMENT_TYPES = (
@@ -102,6 +117,22 @@ DOCUMENT_SECTION_CATALOG = (
         supported_document_types=TASK_DOCUMENT_TYPES,
         renderable_document_types=(WORK_DOCUMENT_TYPE,),
         description='Основной блок заданий или упражнений.',
+        options_hint=(
+            'Можно скрывать роли, переопределять режим печати по ролям '
+            'и добавлять клетки после заданий выбранной роли.'
+        ),
+        options_example={
+            'hidden_roles': [],
+            'role_render_modes': {
+                TASK_BANK_ROLE_DEMO: TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+                TASK_BANK_ROLE_PRACTICE: TASK_RENDER_MODE_TASK_ONLY,
+            },
+            'role_blank_cells': {
+                TASK_BANK_ROLE_PRACTICE: {
+                    'rows': DEFAULT_BLANK_CELLS_ROWS,
+                },
+            },
+        },
     ),
     DocumentSectionCatalogItem(
         section_type=ANSWERS_SECTION,
@@ -190,6 +221,12 @@ DOCUMENT_SECTION_CATALOG = (
             REMEDIAL_SHEET_DOCUMENT_TYPE,
         ),
         description='Разлинованное место для решения или черновика.',
+        options_hint='Размер отдельного блока клеток.',
+        options_example={
+            'rows': DEFAULT_BLANK_CELLS_ROWS,
+            'columns': DEFAULT_BLANK_CELLS_COLUMNS,
+            'row_height': DEFAULT_BLANK_CELLS_ROW_HEIGHT,
+        },
     ),
     DocumentSectionCatalogItem(
         section_type=SCORE_TABLE_SECTION,

@@ -1702,7 +1702,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             usage_count=3,
         )
         demo_task = self._task('Демо с решением', difficulty=4)
-        VariantTask.objects.create(
+        demo_variant_task = VariantTask.objects.create(
             variant=self.source_variant,
             task=demo_task,
             order=3,
@@ -1727,6 +1727,10 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(variant_tasks[0].weight, 2)
         self.assertTrue(variant_tasks[0].is_assessable)
         self.assertEqual(variant_tasks[2].task.text, 'Демо с решением')
+        self.assertEqual(
+            variant_tasks[2].variant_task_id,
+            str(demo_variant_task.pk),
+        )
         self.assertFalse(variant_tasks[2].is_assessable)
         self.assertEqual(mark.score, 2)
         self.assertEqual(mark.task_scores[str(self.original_weak.pk)]['points'], 0)

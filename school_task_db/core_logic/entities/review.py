@@ -95,6 +95,7 @@ class ReviewTaskRef:
 @dataclass(frozen=True)
 class ReviewVariantTaskRef:
     task: ReviewTaskRef
+    variant_task_id: str = ''
     weight: int = 5
     is_assessable: bool = True
 
@@ -161,7 +162,12 @@ class ReviewTaskScoreRow:
     number: int
     points: int
     max_points: int
+    variant_task_id: str = ''
     comment: str = ''
+
+    @property
+    def score_key(self) -> str:
+        return self.variant_task_id or self.task.id
 
 
 @dataclass(frozen=True)

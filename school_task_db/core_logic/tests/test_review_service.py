@@ -177,7 +177,13 @@ class ReviewServiceTests(TestCase):
         task = ReviewTaskRef(id='task-1', text='Задание', difficulty=2)
 
         rows = service.build_task_score_rows(
-            variant_tasks=[ReviewVariantTaskRef(task=task, weight=3)],
+            variant_tasks=[
+                ReviewVariantTaskRef(
+                    task=task,
+                    variant_task_id='variant-task-1',
+                    weight=3,
+                ),
+            ],
             existing_scores={
                 'task-1': {
                     'points': 2,
@@ -191,7 +197,34 @@ class ReviewServiceTests(TestCase):
         self.assertEqual(rows[0].number, 1)
         self.assertEqual(rows[0].points, 2)
         self.assertEqual(rows[0].max_points, 3)
+        self.assertEqual(rows[0].variant_task_id, 'variant-task-1')
+        self.assertEqual(rows[0].score_key, 'variant-task-1')
         self.assertEqual(rows[0].comment, 'Верно')
+
+    def test_build_task_score_rows_prefers_existing_variant_task_scores(self):
+        service = ReviewService()
+        task = ReviewTaskRef(id='task-1', text='Задание', difficulty=2)
+
+        rows = service.build_task_score_rows(
+            variant_tasks=[
+                ReviewVariantTaskRef(
+                    task=task,
+                    variant_task_id='variant-task-1',
+                    weight=3,
+                ),
+            ],
+            existing_scores={
+                'task-1': {'points': 1, 'max_points': 3},
+                'variant-task-1': {
+                    'points': 2,
+                    'max_points': 3,
+                    'comment': 'По snapshot-строке',
+                },
+            },
+        )
+
+        self.assertEqual(rows[0].points, 2)
+        self.assertEqual(rows[0].comment, 'По snapshot-строке')
 
     def test_filters_assessable_variant_tasks(self):
         service = ReviewService()

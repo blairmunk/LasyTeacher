@@ -169,6 +169,7 @@ class DjangoReviewRepository(IReviewRepository):
                         else None
                     ),
                 ),
+                variant_task_id=str(variant_task.pk),
                 weight=variant_task.max_points or variant_task.weight,
                 is_assessable=variant_task.is_assessable,
             )

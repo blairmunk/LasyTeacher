@@ -224,13 +224,18 @@ class ReviewService:
         rows = []
         for index, variant_task in enumerate(variant_tasks, start=1):
             task_id = str(variant_task.task.id)
-            score_data = existing_scores.get(task_id, {})
+            score_data = self._variant_task_score_data(
+                existing_scores=existing_scores,
+                variant_task=variant_task,
+                task_id=task_id,
+            )
             rows.append(
                 ReviewTaskScoreRow(
                     task=variant_task.task,
                     number=index,
                     points=score_data.get('points', 0),
                     max_points=score_data.get('max_points', variant_task.weight),
+                    variant_task_id=variant_task.variant_task_id,
                     comment=score_data.get('comment', ''),
                 )
             )
@@ -296,6 +301,21 @@ class ReviewService:
             return int(value)
         except (TypeError, ValueError):
             return default
+
+    @staticmethod
+    def _variant_task_score_data(
+        existing_scores: dict,
+        variant_task: ReviewVariantTaskRef,
+        task_id: str,
+    ) -> dict:
+        if variant_task.variant_task_id:
+            score_data = existing_scores.get(variant_task.variant_task_id)
+            if isinstance(score_data, dict):
+                return score_data
+        score_data = existing_scores.get(task_id, {})
+        if isinstance(score_data, dict):
+            return score_data
+        return {}
 
     def _blocked_event_review(
         self,

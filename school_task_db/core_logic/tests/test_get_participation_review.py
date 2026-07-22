@@ -32,14 +32,17 @@ class FakeReviewRepository:
         return [
             ReviewVariantTaskRef(
                 task=ReviewTaskRef(id='task-1', text='Задание'),
+                variant_task_id='variant-task-1',
                 weight=2,
             ),
             ReviewVariantTaskRef(
                 task=ReviewTaskRef(id='task-2', text='Задание 2'),
+                variant_task_id='variant-task-2',
                 weight=3,
             ),
             ReviewVariantTaskRef(
                 task=ReviewTaskRef(id='task-demo', text='Демо'),
+                variant_task_id='variant-task-demo',
                 weight=10,
                 is_assessable=False,
             ),
@@ -74,6 +77,10 @@ class GetParticipationReviewUseCaseTests(TestCase):
         self.assertEqual(result.participation.pk, 'p1')
         self.assertEqual(result.mark.max_points, 5)
         self.assertEqual(result.tasks_with_scores[0].points, 1)
+        self.assertEqual(
+            result.tasks_with_scores[0].variant_task_id,
+            'variant-task-1',
+        )
         self.assertEqual(result.tasks_with_scores[1].max_points, 3)
         self.assertEqual(
             [row.task.id for row in result.tasks_with_scores],

@@ -1584,6 +1584,10 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.event.save()
         self.participation.status = 'completed'
         self.participation.save()
+        variant_task = VariantTask.objects.get(
+            variant=self.source_variant,
+            task=self.original_weak,
+        )
 
         result = DjangoEventRepository().grade_participation(
             GradeParticipationParams(
@@ -1594,7 +1598,8 @@ class DjangoRemedialRepositoryTests(TestCase):
                 teacher_comment='Хорошая работа',
                 checked_by='teacher',
                 task_scores={
-                    str(self.original_weak.pk): {
+                    str(variant_task.pk): {
+                        'task_id': str(self.original_weak.pk),
                         'points': 1,
                         'max_points': 2,
                         'comment': 'Повторить',
@@ -1619,6 +1624,10 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(self.mark.max_points, 7)
         self.assertEqual(self.mark.teacher_comment, 'Хорошая работа')
         self.assertEqual(self.mark.checked_by, 'teacher')
+        self.assertEqual(
+            self.mark.task_scores[str(variant_task.pk)]['task_id'],
+            str(self.original_weak.pk),
+        )
         self.assertIsNotNone(self.mark.checked_at)
         self.assertEqual(self.participation.status, 'graded')
         self.assertIsNotNone(self.participation.graded_at)

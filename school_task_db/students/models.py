@@ -160,6 +160,7 @@ class StudentTaskLog(BaseModel):
     @classmethod
     def update_from_mark(cls, mark):
         """Создать/обновить записи лога из Mark.task_scores JSON"""
+        from core_logic.value_objects.task_scores import normalize_task_scores
         from tasks.models import Task
         
         participation = mark.participation
@@ -167,26 +168,31 @@ class StudentTaskLog(BaseModel):
         event = participation.event
         variant = participation.variant
         
-        task_scores = mark.task_scores or {}
-        if not task_scores:
+        task_score_records = normalize_task_scores(mark.task_scores)
+        if not task_score_records:
             return 0
         
         created_count = 0
         completed_at = mark.checked_at or mark.created_at
+        tasks_by_id = {
+            str(task.pk): task
+            for task in Task.objects.select_related('topic').filter(
+                pk__in=[record.task_id for record in task_score_records],
+            )
+        }
         
-        for task_id_str, score_data in task_scores.items():
-            try:
-                task = Task.objects.select_related('topic').get(pk=task_id_str)
-            except (Task.DoesNotExist, ValueError):
+        for score_record in task_score_records:
+            task = tasks_by_id.get(score_record.task_id)
+            if task is None:
                 continue
             
             # Кэш группы аналогов
             first_group = task.taskgroup_set.select_related('group').first()
             analog_group = first_group.group if first_group else None
             
-            points = score_data.get('points')
-            max_points = score_data.get('max_points')
-            comment_text = score_data.get('comment', '')
+            points = score_record.points
+            max_points = score_record.max_points
+            comment_text = score_record.comment
             
             obj, created = cls.objects.update_or_create(
                 student=student,

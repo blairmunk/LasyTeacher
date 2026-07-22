@@ -263,6 +263,23 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
             ('common_header', 'task_list', 'header'),
         )
 
+    def test_builds_create_params_with_repeated_sections_from_order(self):
+        form = self._template_form(
+            data=QueryDict(
+                'name=Шаблон&template_type=work'
+                '&sections=header&sections=task_list&sections=page_break'
+                '&section_order=header,task_list,page_break,header,task_list',
+            ),
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+
+        params = DocumentTemplateFormAdapter().create_params_from_form(form)
+
+        self.assertEqual(
+            params.section_types,
+            ('header', 'task_list', 'page_break', 'header', 'task_list'),
+        )
+
     def test_builds_create_params_with_section_options(self):
         data = QueryDict('', mutable=True)
         data.update({'name': 'Шаблон', 'template_type': 'work'})

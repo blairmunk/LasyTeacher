@@ -72,6 +72,9 @@ class DocumentTemplateEditorViewTests(TestCase):
         self.assertContains(response, 'data-section-options-example')
         self.assertContains(response, 'name="section_options__blank_cells"')
         self.assertNotContains(response, 'name="section_options__header"')
+        self.assertContains(response, 'Порядок секций')
+        self.assertContains(response, 'common_header,header,task_list,page_break')
+        self.assertContains(response, 'header,theory,full_solutions,task_list')
 
     def test_template_create_view_creates_template(self):
         response = self.client.post(

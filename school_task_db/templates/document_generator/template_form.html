@@ -41,7 +41,6 @@
             <div class="mt-4">
                 <h2 class="h5 mb-3">Секции</h2>
                 {{ form.sections.errors }}
-                {{ form.section_order }}
                 <div class="row g-3" data-section-list>
                     {% for section in section_options %}
                     <div
@@ -121,6 +120,26 @@
                         </div>
                     </div>
                     {% endfor %}
+                </div>
+                <div class="mt-3">
+                    <label class="form-label" for="{{ form.section_order.id_for_label }}">
+                        {{ form.section_order.label }}
+                    </label>
+                    {{ form.section_order }}
+                    {{ form.section_order.errors }}
+                    <div class="form-text">
+                        {{ form.section_order.help_text }}
+                    </div>
+                    <div class="small text-muted mt-2">
+                        <div>
+                            Варианты с разрывом:
+                            <code>common_header,header,task_list,page_break,header,task_list</code>
+                        </div>
+                        <div>
+                            Рабочий лист:
+                            <code>header,theory,full_solutions,task_list,blank_cells</code>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -216,7 +235,7 @@
         });
     }
 
-    function syncSections() {
+    function syncSections(preserveOrder) {
         var selectedType = typeSelect.value;
         sectionOptions.forEach(function(option) {
             var supportedTypes = option.dataset.documentTypes || '';
@@ -225,7 +244,9 @@
             var input = option.querySelector('input[type="checkbox"]');
             if (input && !isSupported) input.checked = false;
         });
-        syncSectionOrder();
+        if (!preserveOrder) {
+            syncSectionOrder();
+        }
     }
 
     form.addEventListener('change', function(event) {
@@ -270,9 +291,11 @@
         syncSectionOrder();
     });
 
-    typeSelect.addEventListener('change', syncSections);
+    typeSelect.addEventListener('change', function() {
+        syncSections(false);
+    });
     sortSectionsByOrder();
-    syncSections();
+    syncSections(true);
 })();
 </script>
 {% endblock %}

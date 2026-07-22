@@ -27,8 +27,19 @@ class DocumentTemplateForm(forms.Form):
         widget=forms.CheckboxSelectMultiple,
     )
     section_order = forms.CharField(
+        label='Порядок секций',
         required=False,
-        widget=forms.HiddenInput,
+        help_text=(
+            'Коды секций через запятую. Можно повторять page_break, '
+            'blank_cells, task_list, full_solutions.'
+        ),
+        widget=forms.Textarea(
+            attrs={
+                'class': 'form-control font-monospace',
+                'rows': 2,
+                'spellcheck': 'false',
+            },
+        ),
     )
     is_default = forms.BooleanField(
         label='Использовать по умолчанию для этого типа',

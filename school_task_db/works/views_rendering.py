@@ -4,6 +4,7 @@ import logging
 from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.http import require_http_methods
 
+from infrastructure.container import container
 from core_logic.entities.document_rendering import (
     DOCUMENT_RENDER_STATUS_EMPTY,
     DOCUMENT_RENDER_STATUS_NOT_FOUND,
@@ -18,8 +19,6 @@ logger = logging.getLogger(__name__)
 @require_http_methods(["POST"])
 def render_work_ajax(request, work_id):
     """Ajax rendering for work documents with hints/instructions support."""
-    from infrastructure.container import container
-
     renderer_type = container.work_form_adapter.document_renderer_type_from_post(
         request.POST,
     )
@@ -71,8 +70,6 @@ def render_work_ajax(request, work_id):
 @require_http_methods(["GET"])
 def download_rendered_file(request, file_type, filename):
     """Download a rendered document file."""
-    from infrastructure.container import container
-
     result = container.get_rendered_document_file_use_case().execute(
         container.work_form_adapter.rendered_document_file_request(
             file_type,
@@ -108,8 +105,6 @@ def render_status_ajax(request):
 @require_http_methods(["POST"])
 def render_variant_ajax(request, variant_id):
     """Ajax rendering placeholder for a specific variant."""
-    from infrastructure.container import container
-    
     result = container.get_variant_generation_placeholder_use_case().execute(
         str(variant_id),
     )
@@ -125,8 +120,6 @@ def render_variant_ajax(request, variant_id):
 @require_http_methods(["POST"])
 def render_remedial_sheet_ajax(request, variant_id):
     """Ajax rendering for remedial sheet documents."""
-    from infrastructure.container import container
-
     try:
         document_request = (
             container.work_form_adapter.render_remedial_sheet_request_from_post(
@@ -178,8 +171,6 @@ def render_remedial_sheet_ajax(request, variant_id):
 @require_http_methods(["POST"])
 def render_remedial_sheet_batch_ajax(request, work_id):
     """Ajax rendering for all remedial sheet documents in a work."""
-    from infrastructure.container import container
-
     renderer_type = container.work_form_adapter.document_renderer_type_from_post(
         request.POST,
     )

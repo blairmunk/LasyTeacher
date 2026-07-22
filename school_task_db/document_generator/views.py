@@ -7,10 +7,12 @@ from infrastructure.container import container
 from infrastructure.forms.document_template_django_forms import (
     DocumentTemplateForm,
 )
-from core_logic.value_objects.document_section_catalog import (
-    get_document_section_catalog,
+from core_logic.use_cases.get_document_section_catalog import (
+    GetDocumentSectionCatalogRequest,
 )
-from core_logic.value_objects.document_type_catalog import get_document_type_catalog
+from core_logic.use_cases.get_document_type_catalog import (
+    GetDocumentTypeCatalogRequest,
+)
 from core_logic.value_objects.document_recipes import WORK_DOCUMENT_TYPE
 from core_logic.use_cases.get_document_template import GetDocumentTemplateRequest
 
@@ -83,10 +85,20 @@ class DocumentTemplateCreateView(TemplateView):
         )
 
     def _document_types(self):
-        return get_document_type_catalog(renderable_only=True)
+        return (
+            container
+            .get_document_type_catalog_use_case()
+            .execute(GetDocumentTypeCatalogRequest(renderable_only=True))
+            .document_types
+        )
 
     def _sections(self):
-        return get_document_section_catalog(renderable_only=True)
+        return (
+            container
+            .get_document_section_catalog_use_case()
+            .execute(GetDocumentSectionCatalogRequest(renderable_only=True))
+            .sections
+        )
 
 
 class DocumentTemplateUpdateView(DocumentTemplateCreateView):

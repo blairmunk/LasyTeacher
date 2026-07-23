@@ -85,7 +85,7 @@ class RenderRemedialSheetDocumentUseCase:
                 render_plan=build_remedial_sheet_document_render_plan(
                     variant_id=request.variant_id,
                     options=request.options,
-                    template_spec=resolve_document_print_settings_spec(
+                    print_settings_spec=resolve_document_print_settings_spec(
                         document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
                         request_print_settings_spec=(
                             request.selected_print_settings_spec

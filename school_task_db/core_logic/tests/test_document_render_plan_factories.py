@@ -94,6 +94,20 @@ class DocumentRenderPlanFactoriesTests(TestCase):
 
         self.assertEqual(recipe.section_types, (HEADER_SECTION,))
 
+    def test_build_work_document_recipe_for_render_uses_print_settings_spec(self):
+        print_settings_spec = DocumentTemplateSpec(
+            name='Профиль печати',
+            template_type=WORK_DOCUMENT_TYPE,
+            sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
+        )
+
+        recipe = build_work_document_recipe_for_render(
+            WorkDocumentRenderOptions(renderer_type='html'),
+            print_settings_spec=print_settings_spec,
+        )
+
+        self.assertEqual(recipe.section_types, (ANSWERS_SECTION,))
+
     def test_template_spec_takes_priority_over_worksheet_style(self):
         template_spec = DocumentTemplateSpec(
             name='Кастомная работа',
@@ -319,3 +333,21 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         )
         self.assertEqual(plan.recipe.sections[0].options['variant_id'], 'variant-1')
         self.assertEqual(plan.recipe.sections[5].options['variant_id'], 'variant-2')
+
+    def test_build_remedial_sheet_batch_document_render_plan_uses_print_settings_spec(self):
+        print_settings_spec = DocumentTemplateSpec(
+            name='Профиль РнО',
+            template_type='remedial_sheet',
+            sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
+        )
+
+        plan = build_remedial_sheet_batch_document_render_plan(
+            work_id='work-1',
+            work_name='Работа над ошибками',
+            variant_ids=['variant-1'],
+            options=RemedialSheetDocumentRenderOptions(renderer_type='html'),
+            print_settings_spec=print_settings_spec,
+        )
+
+        self.assertEqual(plan.recipe.section_types, (ANSWERS_SECTION,))
+        self.assertEqual(plan.recipe.sections[0].options['variant_id'], 'variant-1')

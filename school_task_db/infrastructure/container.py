@@ -411,6 +411,10 @@ class Container:
 
     @property
     def document_template_repo(self):
+        return self.print_settings_repo
+
+    @property
+    def print_settings_repo(self):
         if self._document_template_repo is None:
             self._document_template_repo = DjangoDocumentTemplateRepository()
         return self._document_template_repo
@@ -703,7 +707,7 @@ class Container:
 
     def get_print_settings_list_use_case(self):
         return GetPrintSettingsListUseCase(
-            document_template_repo=self.document_template_repo,
+            document_template_repo=self.print_settings_repo,
         )
 
     def get_document_template_use_case(self):
@@ -711,7 +715,7 @@ class Container:
 
     def get_print_settings_use_case(self):
         return GetPrintSettingsUseCase(
-            document_template_repo=self.document_template_repo,
+            document_template_repo=self.print_settings_repo,
         )
 
     def create_document_template_use_case(self):
@@ -719,7 +723,7 @@ class Container:
 
     def create_print_settings_use_case(self):
         return CreatePrintSettingsUseCase(
-            document_template_repo=self.document_template_repo,
+            document_template_repo=self.print_settings_repo,
         )
 
     def update_document_template_use_case(self):
@@ -727,7 +731,7 @@ class Container:
 
     def update_print_settings_use_case(self):
         return UpdatePrintSettingsUseCase(
-            document_template_repo=self.document_template_repo,
+            document_template_repo=self.print_settings_repo,
         )
 
     def get_document_section_catalog_use_case(self):
@@ -738,7 +742,7 @@ class Container:
 
     def get_print_settings_editor_data_use_case(self):
         return GetPrintSettingsEditorDataUseCase(
-            document_template_repo=self.document_template_repo,
+            document_template_repo=self.print_settings_repo,
         )
 
     def get_document_template_form_data_use_case(self):
@@ -746,7 +750,7 @@ class Container:
 
     def get_print_settings_form_data_use_case(self):
         return GetPrintSettingsFormDataUseCase(
-            document_template_repo=self.document_template_repo,
+            document_template_repo=self.print_settings_repo,
         )
 
     def get_document_type_catalog_use_case(self):
@@ -757,7 +761,7 @@ class Container:
 
     def get_default_print_settings_use_case(self):
         return GetDefaultPrintSettingsUseCase(
-            document_template_repo=self.document_template_repo,
+            document_template_repo=self.print_settings_repo,
         )
 
     def get_global_search_use_case(self):
@@ -1097,7 +1101,7 @@ class Container:
         return GetWorkDetailUseCase(
             work_repo=self.work_repo,
             work_service=self.work_service(),
-            document_template_repo=self.document_template_repo,
+            document_template_repo=self.print_settings_repo,
         )
 
     def get_work_list_use_case(self):
@@ -1153,7 +1157,7 @@ class Container:
     def render_work_document_use_case(self):
         return RenderWorkDocumentUseCase(
             work_repo=self.work_repo,
-            document_template_repo=self.document_template_repo,
+            document_template_repo=self.print_settings_repo,
             render_document_use_case=self.render_document_use_case(),
         )
 
@@ -1177,14 +1181,14 @@ class Container:
     def render_remedial_sheet_document_use_case(self):
         return RenderRemedialSheetDocumentUseCase(
             work_repo=self.work_repo,
-            document_template_repo=self.document_template_repo,
+            document_template_repo=self.print_settings_repo,
             render_document_use_case=self.render_document_use_case(),
         )
 
     def render_remedial_sheet_batch_document_use_case(self):
         return RenderRemedialSheetBatchDocumentUseCase(
             work_repo=self.work_repo,
-            document_template_repo=self.document_template_repo,
+            document_template_repo=self.print_settings_repo,
             render_document_use_case=self.render_document_use_case(),
         )
 

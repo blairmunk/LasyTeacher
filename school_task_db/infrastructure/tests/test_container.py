@@ -852,6 +852,11 @@ class ContainerTests(SimpleTestCase):
             DjangoDocumentTemplateRepository,
         )
         self.assertIsInstance(
+            container.print_settings_repo,
+            DjangoDocumentTemplateRepository,
+        )
+        self.assertIs(container.document_template_repo, container.print_settings_repo)
+        self.assertIsInstance(
             container.codifier_form_adapter,
             CodifierFormAdapter,
         )

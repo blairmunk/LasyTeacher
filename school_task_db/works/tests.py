@@ -211,7 +211,7 @@ class WorkDetailViewTests(TestCase):
         self.assertContains(response, 'data-rendering-form')
         self.assertContains(response, 'render-toast-box')
         self.assertContains(response, 'advanced-rendering-form')
-        self.assertContains(response, 'data-document-template-select')
+        self.assertContains(response, 'data-print-settings-select')
         self.assertContains(response, 'data-template-selection-notice')
         self.assertContains(response, 'data-template-controlled-options')
         self.assertContains(
@@ -238,7 +238,7 @@ class WorkDetailViewTests(TestCase):
             response.context['work_print_settings'][0].template_id,
             str(template.pk),
         )
-        self.assertContains(response, 'name="template_id"')
+        self.assertContains(response, 'name="print_settings_id"')
         self.assertContains(response, 'Кастомный шаблон работы')
         self.assertContains(response, 'кастом')
 

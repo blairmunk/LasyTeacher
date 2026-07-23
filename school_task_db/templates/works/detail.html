@@ -194,9 +194,9 @@
                             <div class="col-md-2">
                                 <label class="form-label">Настройки печати</label>
                                 <select
-                                    name="template_id"
+                                    name="print_settings_id"
                                     class="form-select"
-                                    data-document-template-select
+                                    data-print-settings-select
                                 >
                                     <option value="">По умолчанию</option>
                                     {% for print_settings in remedial_sheet_print_settings %}
@@ -300,9 +300,9 @@
                                     <div class="col-md-3 mb-3">
                                         <label class="form-label">Настройки печати</label>
                                         <select
-                                            name="template_id"
+                                            name="print_settings_id"
                                             class="form-select"
-                                            data-document-template-select
+                                            data-print-settings-select
                                         >
                                             <option value="">По умолчанию</option>
                                             {% for print_settings in work_print_settings %}
@@ -581,7 +581,10 @@
     });
 
     function syncTemplateControlledOptions(form) {
-        var templateSelect = form.querySelector('[data-document-template-select]');
+        var templateSelect = (
+            form.querySelector('[data-print-settings-select]')
+            || form.querySelector('[data-document-template-select]')
+        );
         if (!templateSelect) return;
         var usesSavedTemplate = Boolean(templateSelect.value);
         var notice = form.querySelector('[data-template-selection-notice]');
@@ -601,7 +604,10 @@
     }
 
     document.querySelectorAll('form').forEach(function(form) {
-        var templateSelect = form.querySelector('[data-document-template-select]');
+        var templateSelect = (
+            form.querySelector('[data-print-settings-select]')
+            || form.querySelector('[data-document-template-select]')
+        );
         if (!templateSelect) return;
         templateSelect.addEventListener('change', function() {
             syncTemplateControlledOptions(form);

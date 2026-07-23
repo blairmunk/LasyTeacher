@@ -1741,7 +1741,7 @@ class WorkFormAdapterTests(SimpleTestCase):
                 'renderer_type=html&format=A5&answer_type=with_short_solutions'
                 '&include_hints=1&include_instructions=1'
                 '&document_style=worksheet'
-                '&template_id=template-work',
+                '&print_settings_id=template-work',
             ),
             work_id='w1',
         )
@@ -1760,7 +1760,8 @@ class WorkFormAdapterTests(SimpleTestCase):
         request = WorkFormAdapter().render_remedial_sheet_request_from_post(
             QueryDict(
                 'renderer_type=pdf&format=A4'
-                '&answer_type=with_full_solutions&template_id=template-rno',
+                '&answer_type=with_full_solutions'
+                '&print_settings_id=template-rno',
             ),
             variant_id='v1',
         )
@@ -1774,7 +1775,7 @@ class WorkFormAdapterTests(SimpleTestCase):
 
     def test_builds_render_remedial_sheet_batch_request_from_post(self):
         request = WorkFormAdapter().render_remedial_sheet_batch_request_from_post(
-            QueryDict('renderer_type=html&template_id=template-rno'),
+            QueryDict('renderer_type=html&print_settings_id=template-rno'),
             work_id='w1',
         )
 
@@ -1782,6 +1783,14 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertEqual(request.print_settings_id, 'template-rno')
         self.assertEqual(request.selected_print_settings_id, 'template-rno')
         self.assertEqual(request.options.renderer_type, 'html')
+
+    def test_render_document_requests_accept_legacy_template_id_post_key(self):
+        request = WorkFormAdapter().render_work_document_request_from_post(
+            QueryDict('renderer_type=html&template_id=template-work'),
+            work_id='w1',
+        )
+
+        self.assertEqual(request.print_settings_id, 'template-work')
 
     def test_builds_rendered_document_file_request(self):
         request = WorkFormAdapter().rendered_document_file_request(

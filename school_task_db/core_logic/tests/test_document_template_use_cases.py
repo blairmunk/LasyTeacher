@@ -103,7 +103,7 @@ class FakeDocumentTemplateRepository:
 class GetDocumentTemplateListUseCaseTests(TestCase):
     def test_returns_print_profiles_from_repository(self):
         repo = FakeDocumentTemplateRepository()
-        use_case = GetDocumentTemplateListUseCase(document_template_repo=repo)
+        use_case = GetDocumentTemplateListUseCase(print_settings_repo=repo)
 
         data = use_case.execute(
             GetDocumentTemplateListRequest(
@@ -111,6 +111,8 @@ class GetDocumentTemplateListUseCaseTests(TestCase):
             ),
         )
 
+        self.assertIs(use_case.print_settings_repo, repo)
+        self.assertIs(use_case.document_template_repo, repo)
         self.assertEqual(repo.requested_template_type, WORKSHEET_DOCUMENT_TYPE)
         self.assertEqual(data.print_profiles[0].name, 'Рабочий лист')
         self.assertEqual(data.print_profiles[0].section_types, ('header',))

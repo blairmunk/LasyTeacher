@@ -707,7 +707,7 @@ class Container:
 
     def get_print_settings_list_use_case(self):
         return GetPrintSettingsListUseCase(
-            document_template_repo=self.print_settings_repo,
+            print_settings_repo=self.print_settings_repo,
         )
 
     def get_document_template_use_case(self):
@@ -715,7 +715,7 @@ class Container:
 
     def get_print_settings_use_case(self):
         return GetPrintSettingsUseCase(
-            document_template_repo=self.print_settings_repo,
+            print_settings_repo=self.print_settings_repo,
         )
 
     def create_document_template_use_case(self):
@@ -723,7 +723,7 @@ class Container:
 
     def create_print_settings_use_case(self):
         return CreatePrintSettingsUseCase(
-            document_template_repo=self.print_settings_repo,
+            print_settings_repo=self.print_settings_repo,
         )
 
     def update_document_template_use_case(self):
@@ -731,7 +731,7 @@ class Container:
 
     def update_print_settings_use_case(self):
         return UpdatePrintSettingsUseCase(
-            document_template_repo=self.print_settings_repo,
+            print_settings_repo=self.print_settings_repo,
         )
 
     def get_document_section_catalog_use_case(self):
@@ -742,7 +742,7 @@ class Container:
 
     def get_print_settings_editor_data_use_case(self):
         return GetPrintSettingsEditorDataUseCase(
-            document_template_repo=self.print_settings_repo,
+            print_settings_repo=self.print_settings_repo,
         )
 
     def get_document_template_form_data_use_case(self):
@@ -750,7 +750,7 @@ class Container:
 
     def get_print_settings_form_data_use_case(self):
         return GetPrintSettingsFormDataUseCase(
-            document_template_repo=self.print_settings_repo,
+            print_settings_repo=self.print_settings_repo,
         )
 
     def get_document_type_catalog_use_case(self):
@@ -761,7 +761,7 @@ class Container:
 
     def get_default_print_settings_use_case(self):
         return GetDefaultPrintSettingsUseCase(
-            document_template_repo=self.print_settings_repo,
+            print_settings_repo=self.print_settings_repo,
         )
 
     def get_global_search_use_case(self):

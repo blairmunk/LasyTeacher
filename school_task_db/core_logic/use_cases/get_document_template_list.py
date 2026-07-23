@@ -29,8 +29,13 @@ class DocumentTemplateListData:
 
 
 class GetDocumentTemplateListUseCase:
-    def __init__(self, document_template_repo: IPrintSettingsRepository):
-        self.document_template_repo = document_template_repo
+    def __init__(
+        self,
+        print_settings_repo: IPrintSettingsRepository | None = None,
+        document_template_repo: IPrintSettingsRepository | None = None,
+    ):
+        self.print_settings_repo = print_settings_repo or document_template_repo
+        self.document_template_repo = self.print_settings_repo
 
     def execute(
         self,
@@ -38,7 +43,7 @@ class GetDocumentTemplateListUseCase:
     ) -> DocumentTemplateListData:
         request = request or GetDocumentTemplateListRequest()
         return DocumentTemplateListData(
-            print_profiles=self.document_template_repo.list_print_settings_specs(
+            print_profiles=self.print_settings_repo.list_print_settings_specs(
                 document_type=request.selected_document_type,
             ),
         )

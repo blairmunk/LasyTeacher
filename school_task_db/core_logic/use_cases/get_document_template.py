@@ -36,16 +36,18 @@ class GetDocumentTemplateData:
 class GetDocumentTemplateUseCase:
     def __init__(
         self,
-        document_template_repo: IPrintSettingsRepository,
+        print_settings_repo: IPrintSettingsRepository | None = None,
+        document_template_repo: IPrintSettingsRepository | None = None,
     ):
-        self.document_template_repo = document_template_repo
+        self.print_settings_repo = print_settings_repo or document_template_repo
+        self.document_template_repo = self.print_settings_repo
 
     def execute(
         self,
         request: GetDocumentTemplateRequest,
     ) -> GetDocumentTemplateData:
         return GetDocumentTemplateData(
-            print_profile=self.document_template_repo.get_print_settings_spec(
+            print_profile=self.print_settings_repo.get_print_settings_spec(
                 print_settings_id=request.selected_print_settings_id,
                 document_type=request.selected_document_type,
             )

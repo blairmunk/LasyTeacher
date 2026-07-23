@@ -38,9 +38,11 @@ class DocumentTemplateEditorData:
 class GetDocumentTemplateEditorDataUseCase:
     def __init__(
         self,
+        print_settings_repo: IPrintSettingsRepository | None = None,
         document_template_repo: IPrintSettingsRepository | None = None,
     ):
-        self.document_template_repo = document_template_repo
+        self.print_settings_repo = print_settings_repo or document_template_repo
+        self.document_template_repo = self.print_settings_repo
 
     def execute(
         self,
@@ -60,9 +62,9 @@ class GetDocumentTemplateEditorDataUseCase:
         )
 
     def _print_profiles(self, document_type: str) -> List[PrintSettingsSpec]:
-        if self.document_template_repo is None:
+        if self.print_settings_repo is None:
             return []
-        return self.document_template_repo.list_print_settings_specs(
+        return self.print_settings_repo.list_print_settings_specs(
             document_type=document_type,
         )
 

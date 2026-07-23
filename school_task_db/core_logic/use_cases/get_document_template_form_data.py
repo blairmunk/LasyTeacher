@@ -43,9 +43,11 @@ class DocumentTemplateFormData:
 class GetDocumentTemplateFormDataUseCase:
     def __init__(
         self,
+        print_settings_repo: IPrintSettingsRepository | None = None,
         document_template_repo: IPrintSettingsRepository | None = None,
     ):
-        self.document_template_repo = document_template_repo
+        self.print_settings_repo = print_settings_repo or document_template_repo
+        self.document_template_repo = self.print_settings_repo
 
     def execute(
         self,
@@ -66,9 +68,9 @@ class GetDocumentTemplateFormDataUseCase:
         )
 
     def _print_profile(self, print_settings_id: str) -> PrintSettingsSpec | None:
-        if not print_settings_id or self.document_template_repo is None:
+        if not print_settings_id or self.print_settings_repo is None:
             return None
-        return self.document_template_repo.get_print_settings_spec(
+        return self.print_settings_repo.get_print_settings_spec(
             print_settings_id=print_settings_id,
         )
 

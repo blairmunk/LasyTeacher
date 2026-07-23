@@ -28,8 +28,13 @@ class DefaultDocumentTemplateData:
 
 
 class GetDefaultDocumentTemplateUseCase:
-    def __init__(self, document_template_repo: IPrintSettingsRepository):
-        self.document_template_repo = document_template_repo
+    def __init__(
+        self,
+        print_settings_repo: IPrintSettingsRepository | None = None,
+        document_template_repo: IPrintSettingsRepository | None = None,
+    ):
+        self.print_settings_repo = print_settings_repo or document_template_repo
+        self.document_template_repo = self.print_settings_repo
 
     def execute(
         self,
@@ -37,7 +42,7 @@ class GetDefaultDocumentTemplateUseCase:
     ) -> DefaultDocumentTemplateData:
         return DefaultDocumentTemplateData(
             print_profile=(
-                self.document_template_repo.get_default_print_settings_spec(
+                self.print_settings_repo.get_default_print_settings_spec(
                     request.selected_document_type,
                 )
             ),

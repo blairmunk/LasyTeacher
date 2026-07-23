@@ -24,9 +24,11 @@ DOCUMENT_TEMPLATE_UPDATE_STATUS_NOT_FOUND = 'not_found'
 class UpdateDocumentTemplateUseCase:
     def __init__(
         self,
-        document_template_repo: IPrintSettingsRepository,
+        print_settings_repo: IPrintSettingsRepository | None = None,
+        document_template_repo: IPrintSettingsRepository | None = None,
     ):
-        self.document_template_repo = document_template_repo
+        self.print_settings_repo = print_settings_repo or document_template_repo
+        self.document_template_repo = self.print_settings_repo
 
     def execute(
         self,
@@ -40,7 +42,7 @@ class UpdateDocumentTemplateUseCase:
                 errors=tuple(errors),
             )
 
-        updated = self.document_template_repo.update_print_settings(params)
+        updated = self.print_settings_repo.update_print_settings(params)
         if not updated:
             return UpdatePrintSettingsResult(
                 status=DOCUMENT_TEMPLATE_UPDATE_STATUS_NOT_FOUND,

@@ -209,7 +209,8 @@ class DocumentTemplateSpec:
         return self.to_print_recipe(document_type=document_type)
 
 
-PrintSettingsSpec = DocumentTemplateSpec
+class PrintSettingsSpec(DocumentTemplateSpec):
+    """Saved print settings for a sectioned document."""
 
 
 def _clean_section_types(section_types) -> Tuple[str, ...]:
@@ -267,8 +268,12 @@ class CreateDocumentTemplateResult:
         return self.status == 'created'
 
 
-CreatePrintSettingsParams = CreateDocumentTemplateParams
-CreatePrintSettingsResult = CreateDocumentTemplateResult
+class CreatePrintSettingsParams(CreateDocumentTemplateParams):
+    """Parameters for creating a print settings profile."""
+
+
+class CreatePrintSettingsResult(CreateDocumentTemplateResult):
+    """Result of creating a print settings profile."""
 
 
 @dataclass(frozen=True)
@@ -315,5 +320,9 @@ class UpdateDocumentTemplateResult:
         return self.status == 'updated'
 
 
-UpdatePrintSettingsParams = UpdateDocumentTemplateParams
-UpdatePrintSettingsResult = UpdateDocumentTemplateResult
+class UpdatePrintSettingsParams(UpdateDocumentTemplateParams):
+    """Parameters for updating a print settings profile."""
+
+
+class UpdatePrintSettingsResult(UpdateDocumentTemplateResult):
+    """Result of updating a print settings profile."""

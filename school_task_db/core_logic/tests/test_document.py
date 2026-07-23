@@ -3,14 +3,19 @@ from unittest import TestCase
 from core_logic.entities.document import (
     CreateDocumentTemplateParams,
     CreatePrintSettingsParams,
+    CreatePrintSettingsResult,
     Document,
     DocumentRecipe,
     DocumentSection,
     DocumentSectionSpec,
     DocumentSourceRef,
     DocumentTemplateSpec,
+    PrintSettingsSpec,
+    CreateDocumentTemplateResult,
     UpdateDocumentTemplateParams,
+    UpdateDocumentTemplateResult,
     UpdatePrintSettingsParams,
+    UpdatePrintSettingsResult,
 )
 from core_logic.value_objects.document_recipes import (
     ANSWER_KEY_DOCUMENT_TYPE,
@@ -283,6 +288,21 @@ class DocumentModelTests(TestCase):
 
         self.assertIsInstance(create_params, CreateDocumentTemplateParams)
         self.assertIsInstance(update_params, UpdateDocumentTemplateParams)
+
+    def test_print_settings_types_are_template_compatible_subclasses(self):
+        self.assertTrue(issubclass(PrintSettingsSpec, DocumentTemplateSpec))
+        self.assertTrue(
+            issubclass(CreatePrintSettingsParams, CreateDocumentTemplateParams)
+        )
+        self.assertTrue(
+            issubclass(CreatePrintSettingsResult, CreateDocumentTemplateResult)
+        )
+        self.assertTrue(
+            issubclass(UpdatePrintSettingsParams, UpdateDocumentTemplateParams)
+        )
+        self.assertTrue(
+            issubclass(UpdatePrintSettingsResult, UpdateDocumentTemplateResult)
+        )
 
     def test_update_template_params_preserve_full_section_specs(self):
         params = UpdateDocumentTemplateParams(

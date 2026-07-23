@@ -2,9 +2,22 @@ from django.test import TestCase
 from django.urls import reverse
 
 from document_generator.models import DocumentTemplate
+from document_generator.views import (
+    DocumentTemplateCreateView,
+    DocumentTemplateEditorView,
+    DocumentTemplateUpdateView,
+    PrintSettingsCreateView,
+    PrintSettingsEditorView,
+    PrintSettingsUpdateView,
+)
 
 
 class DocumentTemplateEditorViewTests(TestCase):
+    def test_legacy_view_names_are_print_settings_aliases(self):
+        self.assertIs(DocumentTemplateEditorView, PrintSettingsEditorView)
+        self.assertIs(DocumentTemplateCreateView, PrintSettingsCreateView)
+        self.assertIs(DocumentTemplateUpdateView, PrintSettingsUpdateView)
+
     def test_template_editor_shows_catalog_and_saved_templates(self):
         DocumentTemplate.objects.create(
             name='Шаблон работы',

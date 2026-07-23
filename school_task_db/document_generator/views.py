@@ -13,7 +13,7 @@ from core_logic.use_cases.get_document_template_form_data import (
 from core_logic.value_objects.document_recipes import WORK_DOCUMENT_TYPE
 
 
-class DocumentTemplateEditorView(TemplateView):
+class PrintSettingsEditorView(TemplateView):
     template_name = 'document_generator/template_editor.html'
 
     def get_context_data(self, **kwargs):
@@ -29,7 +29,7 @@ class DocumentTemplateEditorView(TemplateView):
         return context
 
 
-class DocumentTemplateCreateView(TemplateView):
+class PrintSettingsCreateView(TemplateView):
     template_name = 'document_generator/template_form.html'
     page_title = 'Новые настройки печати'
 
@@ -101,7 +101,7 @@ class DocumentTemplateCreateView(TemplateView):
         )
 
 
-class DocumentTemplateUpdateView(DocumentTemplateCreateView):
+class PrintSettingsUpdateView(PrintSettingsCreateView):
     page_title = 'Редактирование настроек печати'
 
     def _form_data(self, template_id=''):
@@ -157,3 +157,8 @@ class DocumentTemplateUpdateView(DocumentTemplateCreateView):
 
         messages.success(request, 'Настройки печати обновлены.')
         return redirect('document_generator:print-profile-editor')
+
+
+DocumentTemplateEditorView = PrintSettingsEditorView
+DocumentTemplateCreateView = PrintSettingsCreateView
+DocumentTemplateUpdateView = PrintSettingsUpdateView

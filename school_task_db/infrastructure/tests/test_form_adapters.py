@@ -60,6 +60,7 @@ from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
 from infrastructure.forms.document_template_forms import (
     DocumentTemplateFormAdapter,
+    PrintSettingsFormAdapter,
 )
 from infrastructure.forms.event_forms import EventFormAdapter
 from infrastructure.forms.report_forms import ReportFormAdapter
@@ -247,6 +248,9 @@ class CurriculumFormAdapterTests(SimpleTestCase):
 
 
 class DocumentTemplateFormAdapterTests(SimpleTestCase):
+    def test_print_settings_form_adapter_is_template_adapter_alias(self):
+        self.assertIs(PrintSettingsFormAdapter, DocumentTemplateFormAdapter)
+
     def _template_form(self, *args, sections=None, **kwargs):
         return DocumentTemplateForm(
             *args,

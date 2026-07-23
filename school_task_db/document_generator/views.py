@@ -18,7 +18,7 @@ class DocumentTemplateEditorView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        adapter = container.document_template_form_adapter
+        adapter = container.print_settings_form_adapter
         request = adapter.editor_data_request_from_query(self.request.GET)
         editor_data = (
             container
@@ -46,7 +46,7 @@ class DocumentTemplateCreateView(TemplateView):
             },
         )
         context.update(
-            container.document_template_form_adapter.create_context(
+            container.print_settings_form_adapter.create_context(
                 form=form,
                 document_types=form_data.document_types,
                 sections=form_data.sections,
@@ -66,7 +66,7 @@ class DocumentTemplateCreateView(TemplateView):
 
         result = container.create_print_settings_use_case().execute(
             container
-            .document_template_form_adapter
+            .print_settings_form_adapter
             .create_print_settings_params_from_form(form)
         )
         if not result.success:
@@ -117,7 +117,7 @@ class DocumentTemplateUpdateView(DocumentTemplateCreateView):
             form_data=form_data,
             initial=(
                 container
-                .document_template_form_adapter
+                .print_settings_form_adapter
                 .form_initial_from_template(template)
             ),
         )
@@ -139,7 +139,7 @@ class DocumentTemplateUpdateView(DocumentTemplateCreateView):
                 self.get_context_data(form=form, form_data=form_data),
             )
 
-        adapter = container.document_template_form_adapter
+        adapter = container.print_settings_form_adapter
         result = container.update_print_settings_use_case().execute(
             adapter.update_print_settings_params_from_form(
                 form,

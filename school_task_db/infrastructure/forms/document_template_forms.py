@@ -254,3 +254,6 @@ class DocumentTemplateFormAdapter:
             indent=2,
             sort_keys=True,
         )
+
+
+PrintSettingsFormAdapter = DocumentTemplateFormAdapter

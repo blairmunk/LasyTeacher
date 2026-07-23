@@ -266,6 +266,7 @@ from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
 from infrastructure.forms.document_template_forms import (
     DocumentTemplateFormAdapter,
+    PrintSettingsFormAdapter,
 )
 from infrastructure.forms.report_forms import ReportFormAdapter
 from infrastructure.forms.review_forms import ReviewFormAdapter
@@ -862,6 +863,14 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             container.document_template_form_adapter,
             DocumentTemplateFormAdapter,
+        )
+        self.assertIsInstance(
+            container.print_settings_form_adapter,
+            PrintSettingsFormAdapter,
+        )
+        self.assertIs(
+            container.document_template_form_adapter,
+            container.print_settings_form_adapter,
         )
         self.assertIsInstance(container.report_form_adapter, ReportFormAdapter)
         self.assertIsInstance(container.review_form_adapter, ReviewFormAdapter)

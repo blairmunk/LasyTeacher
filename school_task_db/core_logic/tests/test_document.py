@@ -221,6 +221,16 @@ class DocumentModelTests(TestCase):
         self.assertEqual(legacy_recipe.section_types, recipe.section_types)
         self.assertEqual(overridden_recipe.document_type, CUSTOM_DOCUMENT_TYPE)
 
+    def test_print_settings_spec_exposes_print_profile_aliases(self):
+        print_settings = DocumentTemplateSpec(
+            name='Профиль печати',
+            template_type=WORKSHEET_DOCUMENT_TYPE,
+            template_id='profile-1',
+        )
+
+        self.assertEqual(print_settings.print_settings_id, 'profile-1')
+        self.assertEqual(print_settings.document_type, WORKSHEET_DOCUMENT_TYPE)
+
     def test_create_template_params_build_sections_from_legacy_section_types(self):
         params = CreateDocumentTemplateParams(
             name=' Шаблон ',

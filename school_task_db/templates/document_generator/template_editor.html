@@ -84,7 +84,7 @@
                     <div class="list-group-item">
                         <div class="d-flex justify-content-between">
                             <strong>
-                                <a href="{% url 'document_generator:template-update' print_profile.template_id %}">
+                                <a href="{% url 'document_generator:template-update' print_profile.print_settings_id %}">
                                     {{ print_profile.name }}
                                 </a>
                             </strong>
@@ -98,7 +98,7 @@
                                 <span class="badge bg-light text-dark">{{ print_profile.sections_count }}</span>
                             </span>
                         </div>
-                        <div class="small text-muted">{{ print_profile.template_type }}</div>
+                        <div class="small text-muted">{{ print_profile.document_type }}</div>
                     </div>
                 {% empty %}
                     <div class="list-group-item text-muted">Настройки печати не найдены.</div>

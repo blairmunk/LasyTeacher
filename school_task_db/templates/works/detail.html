@@ -200,7 +200,7 @@
                                 >
                                     <option value="">По умолчанию</option>
                                     {% for print_settings in remedial_sheet_print_settings %}
-                                    <option value="{{ print_settings.template_id }}">
+                                    <option value="{{ print_settings.print_settings_id }}">
                                         {{ print_settings.name }}{% if print_settings.presentation.has_customization %} · кастом{% endif %}
                                     </option>
                                     {% endfor %}
@@ -306,7 +306,7 @@
                                         >
                                             <option value="">По умолчанию</option>
                                             {% for print_settings in work_print_settings %}
-                                            <option value="{{ print_settings.template_id }}">
+                                            <option value="{{ print_settings.print_settings_id }}">
                                                 {{ print_settings.name }}{% if print_settings.presentation.has_customization %} · кастом{% endif %}
                                             </option>
                                             {% endfor %}

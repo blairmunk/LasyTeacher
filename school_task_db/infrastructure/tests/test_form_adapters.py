@@ -315,7 +315,12 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
             context['print_profiles'][0]['template_id'],
             'template-work',
         )
+        self.assertEqual(
+            context['print_profiles'][0]['print_settings_id'],
+            'template-work',
+        )
         self.assertEqual(context['print_profiles'][0]['name'], 'Шаблон работы')
+        self.assertEqual(context['print_profiles'][0]['document_type'], 'work')
         self.assertEqual(context['print_profiles'][0]['sections_count'], 1)
         self.assertEqual(
             context['print_profiles'][0]['default_content_config'],

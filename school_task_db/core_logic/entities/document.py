@@ -190,6 +190,14 @@ class DocumentTemplateSpec:
     def section_types(self) -> Tuple[str, ...]:
         return tuple(section.section_type for section in self.sections)
 
+    @property
+    def print_settings_id(self) -> str:
+        return self.template_id
+
+    @property
+    def document_type(self) -> str:
+        return self.template_type
+
     def to_print_recipe(self, document_type: str = '') -> DocumentRecipe:
         return DocumentRecipe(
             document_type=document_type or self.template_type,
@@ -251,6 +259,10 @@ class CreateDocumentTemplateResult:
     errors: Tuple[str, ...] = field(default_factory=tuple)
 
     @property
+    def print_settings_id(self) -> str:
+        return self.template_id
+
+    @property
     def success(self) -> bool:
         return self.status == 'created'
 
@@ -293,6 +305,10 @@ class UpdateDocumentTemplateResult:
     status: str
     template_id: str = ''
     errors: Tuple[str, ...] = field(default_factory=tuple)
+
+    @property
+    def print_settings_id(self) -> str:
+        return self.template_id
 
     @property
     def success(self) -> bool:

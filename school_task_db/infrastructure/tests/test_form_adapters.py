@@ -279,7 +279,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         editor_data = DocumentTemplateEditorData(
             document_types=get_document_type_catalog(renderable_only=True),
             sections=get_document_section_catalog(document_type=WORK_DOCUMENT_TYPE),
-            templates=[
+            print_profiles=[
                 DocumentTemplateSpec(
                     name='Шаблон работы',
                     template_type=WORK_DOCUMENT_TYPE,
@@ -311,14 +311,18 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         )
         self.assertTrue(context['sections'][0]['is_fixed_order'])
         self.assertEqual(context['sections'][1]['section_type'], HEADER_SECTION)
-        self.assertEqual(context['templates'][0]['template_id'], 'template-work')
-        self.assertEqual(context['templates'][0]['name'], 'Шаблон работы')
-        self.assertEqual(context['templates'][0]['sections_count'], 1)
         self.assertEqual(
-            context['templates'][0]['default_content_config'],
+            context['print_profiles'][0]['template_id'],
+            'template-work',
+        )
+        self.assertEqual(context['print_profiles'][0]['name'], 'Шаблон работы')
+        self.assertEqual(context['print_profiles'][0]['sections_count'], 1)
+        self.assertEqual(
+            context['print_profiles'][0]['default_content_config'],
             {'answer_type': 'tasks_only'},
         )
-        self.assertTrue(context['templates'][0]['has_customization'])
+        self.assertTrue(context['print_profiles'][0]['has_customization'])
+        self.assertEqual(context['templates'][0]['template_id'], 'template-work')
 
     def test_editor_context_preserves_filter_flags_in_document_type_urls(self):
         request = (
@@ -330,7 +334,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         editor_data = DocumentTemplateEditorData(
             document_types=get_document_type_catalog(renderable_only=True),
             sections=(),
-            templates=[],
+            print_profiles=[],
         )
 
         context = DocumentTemplateFormAdapter().editor_context(

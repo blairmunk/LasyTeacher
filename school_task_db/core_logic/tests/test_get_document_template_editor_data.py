@@ -39,7 +39,7 @@ class FakeDocumentTemplateRepository:
 
 
 class GetDocumentTemplateEditorDataUseCaseTests(TestCase):
-    def test_returns_catalogs_and_templates_for_document_type(self):
+    def test_returns_catalogs_and_print_profiles_for_document_type(self):
         repo = FakeDocumentTemplateRepository()
         use_case = GetDocumentTemplateEditorDataUseCase(
             document_template_repo=repo,
@@ -52,6 +52,7 @@ class GetDocumentTemplateEditorDataUseCaseTests(TestCase):
         )
 
         self.assertEqual(repo.template_type, REMEDIAL_SHEET_DOCUMENT_TYPE)
+        self.assertEqual(data.print_profiles[0].name, 'Work template')
         self.assertEqual(data.templates[0].name, 'Work template')
         section_types = [section.section_type for section in data.sections]
         self.assertIn(ORIGINAL_MISTAKES_SECTION, section_types)
@@ -78,7 +79,7 @@ class GetDocumentTemplateEditorDataUseCaseTests(TestCase):
             [WORK_DOCUMENT_TYPE, REMEDIAL_SHEET_DOCUMENT_TYPE],
         )
         self.assertNotIn(THEORY_SECTION, section_types)
-        self.assertEqual(data.templates, [])
+        self.assertEqual(data.print_profiles, [])
 
     def test_can_include_legacy_sections(self):
         use_case = GetDocumentTemplateEditorDataUseCase()

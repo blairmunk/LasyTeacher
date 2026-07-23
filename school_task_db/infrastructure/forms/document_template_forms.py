@@ -38,9 +38,13 @@ class DocumentTemplateFormAdapter:
                 self._section_context(section)
                 for section in editor_data.sections
             ],
+            'print_profiles': [
+                self._template_context(print_profile)
+                for print_profile in editor_data.print_profiles
+            ],
             'templates': [
-                self._template_context(template)
-                for template in editor_data.templates
+                self._template_context(print_profile)
+                for print_profile in editor_data.print_profiles
             ],
             'current_document_type': request.document_type,
             'renderable_only': request.renderable_only,

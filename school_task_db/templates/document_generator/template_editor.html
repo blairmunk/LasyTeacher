@@ -80,25 +80,25 @@
 
             <h2 class="h5">Сохранённые настройки печати</h2>
             <div class="list-group">
-                {% for template in templates %}
+                {% for print_profile in print_profiles %}
                     <div class="list-group-item">
                         <div class="d-flex justify-content-between">
                             <strong>
-                                <a href="{% url 'document_generator:template-update' template.template_id %}">
-                                    {{ template.name }}
+                                <a href="{% url 'document_generator:template-update' print_profile.template_id %}">
+                                    {{ print_profile.name }}
                                 </a>
                             </strong>
                             <span>
-                                {% if template.is_default %}
+                                {% if print_profile.is_default %}
                                     <span class="badge bg-success">по умолчанию</span>
                                 {% endif %}
-                                {% if template.has_customization %}
+                                {% if print_profile.has_customization %}
                                     <span class="badge bg-info">кастом</span>
                                 {% endif %}
-                                <span class="badge bg-light text-dark">{{ template.sections_count }}</span>
+                                <span class="badge bg-light text-dark">{{ print_profile.sections_count }}</span>
                             </span>
                         </div>
-                        <div class="small text-muted">{{ template.template_type }}</div>
+                        <div class="small text-muted">{{ print_profile.template_type }}</div>
                     </div>
                 {% empty %}
                     <div class="list-group-item text-muted">Настройки печати не найдены.</div>

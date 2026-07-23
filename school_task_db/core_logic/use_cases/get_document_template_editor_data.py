@@ -1,9 +1,9 @@
-"""Use case for preparing document template editor data."""
+"""Use case for preparing document print profile editor data."""
 
 from dataclasses import dataclass
 from typing import List, Tuple
 
-from core_logic.entities.document import DocumentTemplateSpec
+from core_logic.entities.document import PrintSettingsSpec
 from core_logic.interfaces.document_template_repo import (
     IDocumentTemplateRepository,
 )
@@ -28,7 +28,11 @@ class GetDocumentTemplateEditorDataRequest:
 class DocumentTemplateEditorData:
     document_types: Tuple[DocumentTypeCatalogItem, ...]
     sections: Tuple[DocumentSectionCatalogItem, ...]
-    templates: List[DocumentTemplateSpec]
+    print_profiles: List[PrintSettingsSpec]
+
+    @property
+    def templates(self) -> List[PrintSettingsSpec]:
+        return self.print_profiles
 
 
 class GetDocumentTemplateEditorDataUseCase:
@@ -52,10 +56,10 @@ class GetDocumentTemplateEditorDataUseCase:
                 include_legacy=request.include_legacy_sections,
                 renderable_only=request.renderable_only,
             ),
-            templates=self._templates(request.document_type),
+            print_profiles=self._print_profiles(request.document_type),
         )
 
-    def _templates(self, document_type: str) -> List[DocumentTemplateSpec]:
+    def _print_profiles(self, document_type: str) -> List[PrintSettingsSpec]:
         if self.document_template_repo is None:
             return []
         return self.document_template_repo.list_template_specs(

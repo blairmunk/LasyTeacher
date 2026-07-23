@@ -77,7 +77,7 @@ class DocumentTemplateCreateView(TemplateView):
             )
 
         messages.success(request, 'Настройки печати созданы.')
-        return redirect('document_generator:template-editor')
+        return redirect('document_generator:print-profile-editor')
 
     def _form(self, *args, form_data=None, **kwargs):
         form_data = form_data or self._form_data()
@@ -156,4 +156,4 @@ class DocumentTemplateUpdateView(DocumentTemplateCreateView):
             )
 
         messages.success(request, 'Настройки печати обновлены.')
-        return redirect('document_generator:template-editor')
+        return redirect('document_generator:print-profile-editor')

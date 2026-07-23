@@ -13,7 +13,7 @@ class DocumentTemplateEditorViewTests(TestCase):
         )
 
         response = self.client.get(
-            reverse('document_generator:template-editor'),
+            reverse('document_generator:print-profile-editor'),
         )
 
         self.assertEqual(response.status_code, 200)
@@ -28,18 +28,28 @@ class DocumentTemplateEditorViewTests(TestCase):
         self.assertContains(response, 'HTML')
         self.assertContains(response, 'PDF')
         self.assertContains(response, 'LaTeX')
-        self.assertContains(response, reverse('document_generator:template-create'))
+        self.assertContains(
+            response,
+            reverse('document_generator:print-profile-create'),
+        )
         self.assertContains(
             response,
             reverse(
-                'document_generator:template-update',
+                'document_generator:print-profile-update',
                 args=[DocumentTemplate.objects.get(name='Шаблон работы').pk],
             ),
         )
 
-    def test_template_editor_passes_query_filters_to_clean_use_case(self):
+    def test_legacy_template_editor_route_still_works(self):
         response = self.client.get(
             reverse('document_generator:template-editor'),
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_template_editor_passes_query_filters_to_clean_use_case(self):
+        response = self.client.get(
+            reverse('document_generator:print-profile-editor'),
             {'type': 'work', 'renderable': '1', 'legacy': '1'},
         )
 
@@ -55,7 +65,7 @@ class DocumentTemplateEditorViewTests(TestCase):
 
     def test_template_create_view_shows_section_form(self):
         response = self.client.get(
-            reverse('document_generator:template-create'),
+            reverse('document_generator:print-profile-create'),
         )
 
         self.assertEqual(response.status_code, 200)
@@ -80,7 +90,7 @@ class DocumentTemplateEditorViewTests(TestCase):
 
     def test_template_create_view_creates_template(self):
         response = self.client.post(
-            reverse('document_generator:template-create'),
+            reverse('document_generator:print-profile-create'),
             {
                 'name': 'Шаблон работы',
                 'description': 'Для печати',
@@ -92,7 +102,7 @@ class DocumentTemplateEditorViewTests(TestCase):
 
         self.assertRedirects(
             response,
-            reverse('document_generator:template-editor'),
+            reverse('document_generator:print-profile-editor'),
         )
         template = DocumentTemplate.objects.get(name='Шаблон работы')
         self.assertEqual(template.description, 'Для печати')
@@ -104,7 +114,7 @@ class DocumentTemplateEditorViewTests(TestCase):
 
     def test_template_create_view_preserves_section_order(self):
         response = self.client.post(
-            reverse('document_generator:template-create'),
+            reverse('document_generator:print-profile-create'),
             {
                 'name': 'Рабочий лист',
                 'template_type': 'work',
@@ -115,7 +125,7 @@ class DocumentTemplateEditorViewTests(TestCase):
 
         self.assertRedirects(
             response,
-            reverse('document_generator:template-editor'),
+            reverse('document_generator:print-profile-editor'),
         )
         template = DocumentTemplate.objects.get(name='Рабочий лист')
         self.assertEqual(
@@ -125,7 +135,7 @@ class DocumentTemplateEditorViewTests(TestCase):
 
     def test_template_create_view_saves_section_options(self):
         response = self.client.post(
-            reverse('document_generator:template-create'),
+            reverse('document_generator:print-profile-create'),
             {
                 'name': 'Рабочий лист',
                 'template_type': 'work',
@@ -139,7 +149,7 @@ class DocumentTemplateEditorViewTests(TestCase):
 
         self.assertRedirects(
             response,
-            reverse('document_generator:template-editor'),
+            reverse('document_generator:print-profile-editor'),
         )
         template = DocumentTemplate.objects.get(name='Рабочий лист')
         self.assertEqual(
@@ -158,7 +168,7 @@ class DocumentTemplateEditorViewTests(TestCase):
 
     def test_template_create_view_shows_invalid_section_options_error(self):
         response = self.client.post(
-            reverse('document_generator:template-create'),
+            reverse('document_generator:print-profile-create'),
             {
                 'name': 'Рабочий лист',
                 'template_type': 'work',
@@ -176,7 +186,7 @@ class DocumentTemplateEditorViewTests(TestCase):
 
     def test_template_create_view_shows_clean_validation_errors(self):
         response = self.client.post(
-            reverse('document_generator:template-create'),
+            reverse('document_generator:print-profile-create'),
             {
                 'name': 'Шаблон РнО',
                 'template_type': 'remedial_sheet',
@@ -201,7 +211,7 @@ class DocumentTemplateEditorViewTests(TestCase):
         )
 
         response = self.client.get(
-            reverse('document_generator:template-update', args=[template.pk]),
+            reverse('document_generator:print-profile-update', args=[template.pk]),
         )
 
         self.assertEqual(response.status_code, 200)
@@ -232,7 +242,7 @@ class DocumentTemplateEditorViewTests(TestCase):
         )
 
         response = self.client.get(
-            reverse('document_generator:template-update', args=[template.pk]),
+            reverse('document_generator:print-profile-update', args=[template.pk]),
         )
 
         self.assertEqual(response.status_code, 200)
@@ -248,7 +258,7 @@ class DocumentTemplateEditorViewTests(TestCase):
         )
 
         response = self.client.post(
-            reverse('document_generator:template-update', args=[template.pk]),
+            reverse('document_generator:print-profile-update', args=[template.pk]),
             {
                 'name': 'Новый шаблон',
                 'description': 'Новое описание',
@@ -260,7 +270,7 @@ class DocumentTemplateEditorViewTests(TestCase):
 
         self.assertRedirects(
             response,
-            reverse('document_generator:template-editor'),
+            reverse('document_generator:print-profile-editor'),
         )
         template.refresh_from_db()
         self.assertEqual(template.name, 'Новый шаблон')
@@ -279,7 +289,7 @@ class DocumentTemplateEditorViewTests(TestCase):
         )
 
         response = self.client.post(
-            reverse('document_generator:template-update', args=[template.pk]),
+            reverse('document_generator:print-profile-update', args=[template.pk]),
             {
                 'name': 'Новый шаблон',
                 'template_type': 'work',
@@ -290,7 +300,7 @@ class DocumentTemplateEditorViewTests(TestCase):
 
         self.assertRedirects(
             response,
-            reverse('document_generator:template-editor'),
+            reverse('document_generator:print-profile-editor'),
         )
         template.refresh_from_db()
         self.assertEqual(
@@ -301,7 +311,7 @@ class DocumentTemplateEditorViewTests(TestCase):
     def test_template_update_view_returns_404_for_missing_template(self):
         response = self.client.get(
             reverse(
-                'document_generator:template-update',
+                'document_generator:print-profile-update',
                 args=['550e8400-e29b-41d4-a716-446655440000'],
             ),
         )

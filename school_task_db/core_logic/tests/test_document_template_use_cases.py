@@ -104,7 +104,7 @@ class GetDocumentTemplateListUseCaseTests(TestCase):
 
         data = use_case.execute(
             GetDocumentTemplateListRequest(
-                template_type=WORKSHEET_DOCUMENT_TYPE,
+                document_type=WORKSHEET_DOCUMENT_TYPE,
             ),
         )
 
@@ -121,7 +121,8 @@ class GetDocumentTemplateListUseCaseTests(TestCase):
 
         data = use_case.execute(
             GetDefaultDocumentTemplateRequest(
-                template_type=WORKSHEET_DOCUMENT_TYPE,
+                template_type='legacy-unused',
+                document_type=WORKSHEET_DOCUMENT_TYPE,
             ),
         )
 
@@ -150,8 +151,10 @@ class GetDocumentTemplateListUseCaseTests(TestCase):
 
         data = use_case.execute(
             GetDocumentTemplateRequest(
-                template_id='template-1',
-                template_type=WORKSHEET_DOCUMENT_TYPE,
+                template_id='legacy-unused',
+                template_type='legacy-unused',
+                print_settings_id='template-1',
+                document_type=WORKSHEET_DOCUMENT_TYPE,
             )
         )
 

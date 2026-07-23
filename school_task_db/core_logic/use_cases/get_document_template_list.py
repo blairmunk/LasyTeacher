@@ -12,6 +12,11 @@ from core_logic.interfaces.document_template_repo import (
 @dataclass(frozen=True)
 class GetDocumentTemplateListRequest:
     template_type: str = ''
+    document_type: str = ''
+
+    @property
+    def selected_document_type(self) -> str:
+        return self.document_type or self.template_type
 
 
 @dataclass(frozen=True)
@@ -34,6 +39,6 @@ class GetDocumentTemplateListUseCase:
         request = request or GetDocumentTemplateListRequest()
         return DocumentTemplateListData(
             print_profiles=self.document_template_repo.list_print_settings_specs(
-                document_type=request.template_type,
+                document_type=request.selected_document_type,
             ),
         )

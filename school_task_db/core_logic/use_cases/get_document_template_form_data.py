@@ -20,8 +20,13 @@ from core_logic.value_objects.document_type_catalog import (
 @dataclass(frozen=True)
 class GetDocumentTemplateFormDataRequest:
     template_id: str = ''
+    print_settings_id: str = ''
     renderable_only: bool = True
     include_legacy_sections: bool = False
+
+    @property
+    def selected_print_settings_id(self) -> str:
+        return self.print_settings_id or self.template_id
 
 
 @dataclass(frozen=True)
@@ -55,12 +60,14 @@ class GetDocumentTemplateFormDataUseCase:
                 include_legacy=request.include_legacy_sections,
                 renderable_only=request.renderable_only,
             ),
-            print_profile=self._print_profile(request.template_id),
+            print_profile=self._print_profile(
+                request.selected_print_settings_id,
+            ),
         )
 
-    def _print_profile(self, template_id: str) -> PrintSettingsSpec | None:
-        if not template_id or self.document_template_repo is None:
+    def _print_profile(self, print_settings_id: str) -> PrintSettingsSpec | None:
+        if not print_settings_id or self.document_template_repo is None:
             return None
         return self.document_template_repo.get_print_settings_spec(
-            print_settings_id=template_id,
+            print_settings_id=print_settings_id,
         )

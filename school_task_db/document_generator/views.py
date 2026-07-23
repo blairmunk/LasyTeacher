@@ -94,7 +94,7 @@ class DocumentTemplateCreateView(TemplateView):
             .get_document_template_form_data_use_case()
             .execute(
                 GetDocumentTemplateFormDataRequest(
-                    template_id=template_id,
+                    print_settings_id=template_id,
                     renderable_only=True,
                 ),
             )

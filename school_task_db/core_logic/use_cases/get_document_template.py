@@ -12,6 +12,16 @@ from core_logic.interfaces.document_template_repo import (
 class GetDocumentTemplateRequest:
     template_id: str
     template_type: str = ''
+    print_settings_id: str = ''
+    document_type: str = ''
+
+    @property
+    def selected_print_settings_id(self) -> str:
+        return self.print_settings_id or self.template_id
+
+    @property
+    def selected_document_type(self) -> str:
+        return self.document_type or self.template_type
 
 
 @dataclass(frozen=True)
@@ -36,7 +46,7 @@ class GetDocumentTemplateUseCase:
     ) -> GetDocumentTemplateData:
         return GetDocumentTemplateData(
             print_profile=self.document_template_repo.get_print_settings_spec(
-                print_settings_id=request.template_id,
-                document_type=request.template_type,
+                print_settings_id=request.selected_print_settings_id,
+                document_type=request.selected_document_type,
             )
         )

@@ -57,7 +57,7 @@ class GetDocumentTemplateFormDataUseCaseTests(TestCase):
         data = GetDocumentTemplateFormDataUseCase(
             document_template_repo=repo,
         ).execute(
-            GetDocumentTemplateFormDataRequest(template_id='template-1'),
+            GetDocumentTemplateFormDataRequest(print_settings_id='template-1'),
         )
 
         self.assertEqual(repo.template_id, 'template-1')

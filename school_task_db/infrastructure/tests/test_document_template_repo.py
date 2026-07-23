@@ -2,7 +2,9 @@ from django.test import TestCase
 
 from core_logic.entities.document import (
     CreateDocumentTemplateParams,
+    CreatePrintSettingsParams,
     DocumentSectionSpec,
+    UpdatePrintSettingsParams,
     UpdateDocumentTemplateParams,
 )
 from document_generator.models import DocumentTemplate
@@ -24,8 +26,8 @@ class DjangoDocumentTemplateRepositoryTests(TestCase):
             sections_config=[{'type': 'answers'}],
         )
 
-        templates = DjangoDocumentTemplateRepository().list_template_specs(
-            template_type=DocumentTemplate.TemplateType.WORKSHEET,
+        templates = DjangoDocumentTemplateRepository().list_print_settings_specs(
+            document_type=DocumentTemplate.TemplateType.WORKSHEET,
         )
 
         self.assertEqual(len(templates), 1)
@@ -47,7 +49,7 @@ class DjangoDocumentTemplateRepositoryTests(TestCase):
             sections_config=[{'type': 'task_list'}],
         )
 
-        template = DjangoDocumentTemplateRepository().get_default_template_spec(
+        template = DjangoDocumentTemplateRepository().get_default_print_settings_spec(
             DocumentTemplate.TemplateType.WORKSHEET,
         )
 
@@ -68,12 +70,12 @@ class DjangoDocumentTemplateRepositoryTests(TestCase):
             sections_config=[{'type': 'header'}],
         )
 
-        template = DjangoDocumentTemplateRepository().get_template_spec(
-            template_id=str(template_model.pk),
-            template_type=DocumentTemplate.TemplateType.WORKSHEET,
+        template = DjangoDocumentTemplateRepository().get_print_settings_spec(
+            print_settings_id=str(template_model.pk),
+            document_type=DocumentTemplate.TemplateType.WORKSHEET,
         )
 
-        self.assertEqual(template.template_id, str(template_model.pk))
+        self.assertEqual(template.print_settings_id, str(template_model.pk))
         self.assertEqual(template.name, 'Рабочий лист')
 
     def test_returns_none_when_template_id_has_wrong_type(self):
@@ -91,8 +93,8 @@ class DjangoDocumentTemplateRepositoryTests(TestCase):
         self.assertIsNone(template)
 
     def test_creates_template_from_clean_params(self):
-        template_id = DjangoDocumentTemplateRepository().create_template(
-            CreateDocumentTemplateParams(
+        template_id = DjangoDocumentTemplateRepository().create_print_settings(
+            CreatePrintSettingsParams(
                 name='Шаблон работы',
                 description='Для печати',
                 template_type=DocumentTemplate.TemplateType.WORK,
@@ -171,8 +173,8 @@ class DjangoDocumentTemplateRepositoryTests(TestCase):
             sections_config=[{'type': 'header'}],
         )
 
-        updated = DjangoDocumentTemplateRepository().update_template(
-            UpdateDocumentTemplateParams(
+        updated = DjangoDocumentTemplateRepository().update_print_settings(
+            UpdatePrintSettingsParams(
                 template_id=str(template.pk),
                 name='Новый шаблон',
                 description='Новое описание',

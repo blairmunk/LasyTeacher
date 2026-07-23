@@ -80,7 +80,7 @@ class FakeDocumentTemplateRepository:
 
 
 class GetDocumentTemplateListUseCaseTests(TestCase):
-    def test_returns_templates_from_repository(self):
+    def test_returns_print_profiles_from_repository(self):
         repo = FakeDocumentTemplateRepository()
         use_case = GetDocumentTemplateListUseCase(document_template_repo=repo)
 
@@ -91,8 +91,9 @@ class GetDocumentTemplateListUseCaseTests(TestCase):
         )
 
         self.assertEqual(repo.requested_template_type, WORKSHEET_DOCUMENT_TYPE)
+        self.assertEqual(data.print_profiles[0].name, 'Рабочий лист')
+        self.assertEqual(data.print_profiles[0].section_types, ('header',))
         self.assertEqual(data.templates[0].name, 'Рабочий лист')
-        self.assertEqual(data.templates[0].section_types, ('header',))
 
     def test_returns_default_template_from_repository(self):
         repo = FakeDocumentTemplateRepository()
@@ -245,7 +246,7 @@ class CreateDocumentTemplateUseCaseTests(TestCase):
         )
 
         self.assertEqual(result.status, DOCUMENT_TEMPLATE_CREATE_STATUS_INVALID)
-        self.assertIn('Название шаблона обязательно.', result.errors)
+        self.assertIn('Название профиля печати обязательно.', result.errors)
         self.assertIn('Тип документа обязателен.', result.errors)
         self.assertIn('Выберите хотя бы одну секцию.', result.errors)
         self.assertIsNone(repo.created_params)

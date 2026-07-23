@@ -1,9 +1,9 @@
-"""Build document template list data."""
+"""Build document print profile list data."""
 
 from dataclasses import dataclass
 from typing import List
 
-from core_logic.entities.document import DocumentTemplateSpec
+from core_logic.entities.document import PrintSettingsSpec
 from core_logic.interfaces.document_template_repo import (
     IDocumentTemplateRepository,
 )
@@ -16,7 +16,11 @@ class GetDocumentTemplateListRequest:
 
 @dataclass(frozen=True)
 class DocumentTemplateListData:
-    templates: List[DocumentTemplateSpec]
+    print_profiles: List[PrintSettingsSpec]
+
+    @property
+    def templates(self) -> List[PrintSettingsSpec]:
+        return self.print_profiles
 
 
 class GetDocumentTemplateListUseCase:
@@ -29,7 +33,7 @@ class GetDocumentTemplateListUseCase:
     ) -> DocumentTemplateListData:
         request = request or GetDocumentTemplateListRequest()
         return DocumentTemplateListData(
-            templates=self.document_template_repo.list_template_specs(
+            print_profiles=self.document_template_repo.list_template_specs(
                 template_type=request.template_type,
             ),
         )

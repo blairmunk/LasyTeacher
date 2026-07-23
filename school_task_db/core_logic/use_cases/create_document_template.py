@@ -1,8 +1,11 @@
-"""Create a sectioned document template."""
+"""Create a document print profile.
+
+The module name is legacy; persistence is still backed by document templates.
+"""
 
 from core_logic.entities.document import (
-    CreateDocumentTemplateParams,
-    CreateDocumentTemplateResult,
+    CreatePrintSettingsParams,
+    CreatePrintSettingsResult,
 )
 from core_logic.interfaces.document_template_repo import (
     IDocumentTemplateRepository,
@@ -26,25 +29,25 @@ class CreateDocumentTemplateUseCase:
 
     def execute(
         self,
-        params: CreateDocumentTemplateParams,
-    ) -> CreateDocumentTemplateResult:
+        params: CreatePrintSettingsParams,
+    ) -> CreatePrintSettingsResult:
         errors = self._validate(params)
         if errors:
-            return CreateDocumentTemplateResult(
+            return CreatePrintSettingsResult(
                 status=DOCUMENT_TEMPLATE_CREATE_STATUS_INVALID,
                 errors=tuple(errors),
             )
 
         template_id = self.document_template_repo.create_template(params)
-        return CreateDocumentTemplateResult(
+        return CreatePrintSettingsResult(
             status=DOCUMENT_TEMPLATE_CREATE_STATUS_CREATED,
             template_id=template_id,
         )
 
-    def _validate(self, params: CreateDocumentTemplateParams) -> list[str]:
+    def _validate(self, params: CreatePrintSettingsParams) -> list[str]:
         errors = []
         if not params.name:
-            errors.append('Название шаблона обязательно.')
+            errors.append('Название профиля печати обязательно.')
         if not params.template_type:
             errors.append('Тип документа обязателен.')
         if not params.section_types:

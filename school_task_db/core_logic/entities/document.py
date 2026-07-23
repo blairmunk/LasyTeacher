@@ -255,6 +255,10 @@ class CreateDocumentTemplateResult:
         return self.status == 'created'
 
 
+CreatePrintSettingsParams = CreateDocumentTemplateParams
+CreatePrintSettingsResult = CreateDocumentTemplateResult
+
+
 @dataclass(frozen=True)
 class UpdateDocumentTemplateParams:
     template_id: str
@@ -293,3 +297,7 @@ class UpdateDocumentTemplateResult:
     @property
     def success(self) -> bool:
         return self.status == 'updated'
+
+
+UpdatePrintSettingsParams = UpdateDocumentTemplateParams
+UpdatePrintSettingsResult = UpdateDocumentTemplateResult

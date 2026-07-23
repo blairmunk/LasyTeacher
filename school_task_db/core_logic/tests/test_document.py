@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from core_logic.entities.document import (
     CreateDocumentTemplateParams,
+    CreatePrintSettingsParams,
     Document,
     DocumentRecipe,
     DocumentSection,
@@ -9,6 +10,7 @@ from core_logic.entities.document import (
     DocumentSourceRef,
     DocumentTemplateSpec,
     UpdateDocumentTemplateParams,
+    UpdatePrintSettingsParams,
 )
 from core_logic.value_objects.document_recipes import (
     ANSWER_KEY_DOCUMENT_TYPE,
@@ -255,6 +257,22 @@ class DocumentModelTests(TestCase):
         )
         self.assertEqual(params.sections[1].title, 'Черновик')
         self.assertEqual(params.sections[1].options, {'rows': 8})
+
+    def test_print_settings_params_are_template_params_aliases(self):
+        create_params = CreatePrintSettingsParams(
+            name='Профиль печати',
+            template_type='work',
+            section_types=('header',),
+        )
+        update_params = UpdatePrintSettingsParams(
+            template_id='profile-1',
+            name='Профиль печати',
+            template_type='work',
+            section_types=('header',),
+        )
+
+        self.assertIsInstance(create_params, CreateDocumentTemplateParams)
+        self.assertIsInstance(update_params, UpdateDocumentTemplateParams)
 
     def test_update_template_params_preserve_full_section_specs(self):
         params = UpdateDocumentTemplateParams(

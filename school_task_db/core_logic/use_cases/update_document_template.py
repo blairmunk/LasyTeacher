@@ -1,8 +1,11 @@
-"""Update a sectioned document template."""
+"""Update a document print profile.
+
+The module name is legacy; persistence is still backed by document templates.
+"""
 
 from core_logic.entities.document import (
-    UpdateDocumentTemplateParams,
-    UpdateDocumentTemplateResult,
+    UpdatePrintSettingsParams,
+    UpdatePrintSettingsResult,
 )
 from core_logic.interfaces.document_template_repo import (
     IDocumentTemplateRepository,
@@ -27,11 +30,11 @@ class UpdateDocumentTemplateUseCase:
 
     def execute(
         self,
-        params: UpdateDocumentTemplateParams,
-    ) -> UpdateDocumentTemplateResult:
+        params: UpdatePrintSettingsParams,
+    ) -> UpdatePrintSettingsResult:
         errors = self._validate(params)
         if errors:
-            return UpdateDocumentTemplateResult(
+            return UpdatePrintSettingsResult(
                 status=DOCUMENT_TEMPLATE_UPDATE_STATUS_INVALID,
                 template_id=params.template_id,
                 errors=tuple(errors),
@@ -39,21 +42,21 @@ class UpdateDocumentTemplateUseCase:
 
         updated = self.document_template_repo.update_template(params)
         if not updated:
-            return UpdateDocumentTemplateResult(
+            return UpdatePrintSettingsResult(
                 status=DOCUMENT_TEMPLATE_UPDATE_STATUS_NOT_FOUND,
                 template_id=params.template_id,
             )
-        return UpdateDocumentTemplateResult(
+        return UpdatePrintSettingsResult(
             status=DOCUMENT_TEMPLATE_UPDATE_STATUS_UPDATED,
             template_id=params.template_id,
         )
 
-    def _validate(self, params: UpdateDocumentTemplateParams) -> list[str]:
+    def _validate(self, params: UpdatePrintSettingsParams) -> list[str]:
         errors = []
         if not params.template_id:
-            errors.append('ID шаблона обязателен.')
+            errors.append('ID профиля печати обязателен.')
         if not params.name:
-            errors.append('Название шаблона обязательно.')
+            errors.append('Название профиля печати обязательно.')
         if not params.template_type:
             errors.append('Тип документа обязателен.')
         if not params.section_types:

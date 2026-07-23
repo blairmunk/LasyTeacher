@@ -175,7 +175,7 @@
                                     <option value="latex">LaTeX</option>
                                 </select>
                             </div>
-                            <div class="col-md-3" data-template-controlled-options>
+                            <div class="col-md-3" data-print-settings-controlled-options>
                                 <label class="form-label">Контент</label>
                                 <select name="answer_type" class="form-select">
                                     <option value="with_short_solutions">С краткими решениями</option>
@@ -214,7 +214,7 @@
                         </div>
                         <div
                             class="alert alert-info py-2 mt-3 mb-0 d-none"
-                            data-template-selection-notice
+                            data-print-settings-selection-notice
                         >
                             Выбранные настройки печати задают состав, порядок секций и оформление документа.
                         </div>
@@ -315,13 +315,13 @@
                                 </div>
                                 <div
                                     class="alert alert-info py-2 mb-3 d-none"
-                                    data-template-selection-notice
+                                    data-print-settings-selection-notice
                                 >
                                     Выбранные настройки печати задают состав, порядок секций и оформление документа.
                                     Разрыв между вариантами остаётся отдельной настройкой печати.
                                 </div>
                                 <div class="row">
-                                    <div class="col-md-5 mb-3" data-template-controlled-options>
+                                    <div class="col-md-5 mb-3" data-print-settings-controlled-options>
                                         <label class="form-label">Состав по умолчанию</label>
                                         <select name="document_style" class="form-select form-select-sm mb-2">
                                             {% for style_option in work_document_style_options %}
@@ -341,7 +341,7 @@
                                             <label class="form-check-label">Задания + полные решения</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-3 mb-3" data-template-controlled-options>
+                                    <div class="col-md-3 mb-3" data-print-settings-controlled-options>
                                         <label class="form-label">Задания</label>
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" name="include_hints" value="1">
@@ -580,23 +580,29 @@
         });
     });
 
-    function syncTemplateControlledOptions(form) {
-        var templateSelect = (
+    function syncPrintSettingsControlledOptions(form) {
+        var printSettingsSelect = (
             form.querySelector('[data-print-settings-select]')
             || form.querySelector('[data-document-template-select]')
         );
-        if (!templateSelect) return;
-        var usesSavedTemplate = Boolean(templateSelect.value);
-        var notice = form.querySelector('[data-template-selection-notice]');
+        if (!printSettingsSelect) return;
+        var usesPrintSettings = Boolean(printSettingsSelect.value);
+        var notice = (
+            form.querySelector('[data-print-settings-selection-notice]')
+            || form.querySelector('[data-template-selection-notice]')
+        );
         if (notice) {
-            notice.classList.toggle('d-none', !usesSavedTemplate);
+            notice.classList.toggle('d-none', !usesPrintSettings);
         }
-        form.querySelectorAll('[data-template-controlled-options]').forEach(
+        form.querySelectorAll(
+            '[data-print-settings-controlled-options],'
+            + '[data-template-controlled-options]'
+        ).forEach(
             function(block) {
-                block.classList.toggle('opacity-50', usesSavedTemplate);
+                block.classList.toggle('opacity-50', usesPrintSettings);
                 block.querySelectorAll('input, select, textarea, button').forEach(
                     function(control) {
-                        control.disabled = usesSavedTemplate;
+                        control.disabled = usesPrintSettings;
                     }
                 );
             }
@@ -604,15 +610,15 @@
     }
 
     document.querySelectorAll('form').forEach(function(form) {
-        var templateSelect = (
+        var printSettingsSelect = (
             form.querySelector('[data-print-settings-select]')
             || form.querySelector('[data-document-template-select]')
         );
-        if (!templateSelect) return;
-        templateSelect.addEventListener('change', function() {
-            syncTemplateControlledOptions(form);
+        if (!printSettingsSelect) return;
+        printSettingsSelect.addEventListener('change', function() {
+            syncPrintSettingsControlledOptions(form);
         });
-        syncTemplateControlledOptions(form);
+        syncPrintSettingsControlledOptions(form);
     });
 
     // === Пакетная печать листов работы над ошибками ===

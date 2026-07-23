@@ -212,8 +212,8 @@ class WorkDetailViewTests(TestCase):
         self.assertContains(response, 'render-toast-box')
         self.assertContains(response, 'advanced-rendering-form')
         self.assertContains(response, 'data-print-settings-select')
-        self.assertContains(response, 'data-template-selection-notice')
-        self.assertContains(response, 'data-template-controlled-options')
+        self.assertContains(response, 'data-print-settings-selection-notice')
+        self.assertContains(response, 'data-print-settings-controlled-options')
         self.assertContains(
             response,
             'Выбранные настройки печати задают состав, порядок секций и оформление документа.',
@@ -264,7 +264,7 @@ class WorkDetailViewTests(TestCase):
         self.assertContains(response, 'id="remedial-batch"')
         self.assertContains(response, 'data-remedial-batch-rendering-form')
         self.assertContains(response, 'data-remedial-batch-rendering-results')
-        self.assertContains(response, 'data-template-selection-notice')
+        self.assertContains(response, 'data-print-settings-selection-notice')
         self.assertContains(response, 'Печать листов работы над ошибками')
         self.assertContains(response, 'Шаблон листа РнО')
 

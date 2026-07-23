@@ -33,7 +33,7 @@ class DocumentTemplateAdmin(admin.ModelAdmin):
                 'default_content_config',
             ],
         }),
-        ('Переопределения шаблонов', {
+        ('Шаблоны оформления', {
             'fields': [
                 'latex_template_override',
                 'html_template_override',

@@ -32,19 +32,19 @@ class DocumentTemplate(BaseModel):
     name = models.CharField('Название', max_length=200)
     description = models.TextField('Описание', blank=True)
     template_type = models.CharField(
-        'Тип шаблона',
+        'Тип документа',
         max_length=50,
         choices=TemplateType.choices,
     )
 
     sections_config = models.JSONField(
-        'Конфигурация секций',
+        'Секции печати',
         default=list,
         blank=True,
         help_text='JSON: [{"type": "header", "params": {...}}, ...]',
     )
     default_content_config = models.JSONField(
-        'Параметры контента по умолчанию',
+        'Параметры секций по умолчанию',
         default=dict,
         blank=True,
     )
@@ -63,7 +63,7 @@ class DocumentTemplate(BaseModel):
         blank=True,
     )
 
-    is_default = models.BooleanField('Шаблон по умолчанию', default=False)
+    is_default = models.BooleanField('Профиль печати по умолчанию', default=False)
     is_public = models.BooleanField('Доступен всем учителям', default=False)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -75,8 +75,8 @@ class DocumentTemplate(BaseModel):
     )
 
     class Meta:
-        verbose_name = 'Шаблон документа'
-        verbose_name_plural = 'Шаблоны документов'
+        verbose_name = 'Профиль печати'
+        verbose_name_plural = 'Профили печати'
         ordering = ['-is_default', 'template_type', 'name']
 
     def __str__(self):

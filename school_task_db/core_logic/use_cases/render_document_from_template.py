@@ -24,10 +24,18 @@ from core_logic.value_objects.document_render_options import RenderTarget
 @dataclass(frozen=True)
 class RenderDocumentFromTemplateRequest:
     source: DocumentSourceRef
-    template_spec: PrintSettingsSpec
     render_target: RenderTarget
+    template_spec: PrintSettingsSpec | None = None
+    print_settings_spec: PrintSettingsSpec | None = None
     source_name: str = ''
     empty_status: str = DOCUMENT_RENDER_STATUS_GENERATED
+
+    @property
+    def selected_print_settings_spec(self) -> PrintSettingsSpec:
+        print_settings_spec = self.print_settings_spec or self.template_spec
+        if print_settings_spec is None:
+            raise ValueError('print_settings_spec is required')
+        return print_settings_spec
 
 
 class RenderDocumentFromTemplateUseCase:
@@ -50,7 +58,7 @@ class RenderDocumentFromTemplateUseCase:
         return self.render_document_from_recipe_use_case.execute(
             RenderDocumentFromRecipeRequest(
                 source=request.source,
-                recipe=request.template_spec.to_print_recipe(),
+                recipe=request.selected_print_settings_spec.to_print_recipe(),
                 render_target=request.render_target,
                 source_name=request.source_name or request.source.title,
                 empty_status=request.empty_status,

@@ -67,11 +67,11 @@ class RenderDocumentFromTemplateUseCaseTests(TestCase):
         )
         self.assertEqual(recipe_use_case.request.source_name, 'Контрольная')
 
-    def test_renders_document_from_template_spec(self):
+    def test_renders_document_from_print_settings_spec(self):
         engine = FakeDocumentEngine()
         use_case = RenderDocumentFromTemplateUseCase(document_engine=engine)
-        template_spec = DocumentTemplateSpec(
-            name='Work template',
+        print_settings_spec = DocumentTemplateSpec(
+            name='Work print profile',
             template_type=WORK_DOCUMENT_TYPE,
             sections=[
                 DocumentSectionSpec(section_type=HEADER_SECTION),
@@ -86,8 +86,8 @@ class RenderDocumentFromTemplateUseCaseTests(TestCase):
                     source_id='work-1',
                     title='Контрольная',
                 ),
-                template_spec=template_spec,
                 render_target=RenderTarget(renderer_type='html'),
+                print_settings_spec=print_settings_spec,
             )
         )
 
@@ -102,6 +102,24 @@ class RenderDocumentFromTemplateUseCaseTests(TestCase):
             (HEADER_SECTION, TASK_LIST_SECTION),
         )
         self.assertEqual(render_plan.render_target.renderer_type, 'html')
+
+    def test_rejects_missing_print_settings_spec(self):
+        use_case = RenderDocumentFromTemplateUseCase(
+            render_document_from_recipe_use_case=(
+                FakeRenderDocumentFromRecipeUseCase()
+            ),
+        )
+
+        with self.assertRaises(ValueError):
+            use_case.execute(
+                RenderDocumentFromTemplateRequest(
+                    source=DocumentSourceRef(
+                        source_type='work',
+                        source_id='work-1',
+                    ),
+                    render_target=RenderTarget(renderer_type='html'),
+                )
+            )
 
     def test_explicit_source_name_overrides_source_title(self):
         engine = FakeDocumentEngine()

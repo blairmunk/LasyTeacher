@@ -201,6 +201,9 @@ class DocumentTemplateSpec:
         return self.to_print_recipe(document_type=document_type)
 
 
+PrintSettingsSpec = DocumentTemplateSpec
+
+
 def _clean_section_types(section_types) -> Tuple[str, ...]:
     return tuple(section_type.strip() for section_type in section_types)
 

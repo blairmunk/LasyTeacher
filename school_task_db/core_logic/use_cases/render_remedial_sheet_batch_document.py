@@ -14,7 +14,7 @@ from core_logic.interfaces.document_template_repo import (
 )
 from core_logic.interfaces.work_repo import IWorkRepository
 from core_logic.use_cases.document_template_selection import (
-    resolve_document_template_spec,
+    resolve_document_print_settings_spec,
 )
 from core_logic.use_cases.render_document import (
     RenderDocumentRequest,
@@ -82,10 +82,10 @@ class RenderRemedialSheetBatchDocumentUseCase:
                     work_name=work_name,
                     variant_ids=variant_ids,
                     options=request.options,
-                    template_spec=resolve_document_template_spec(
-                        template_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
-                        request_template_spec=request.template_spec,
-                        request_template_id=request.template_id,
+                    template_spec=resolve_document_print_settings_spec(
+                        document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
+                        request_print_settings_spec=request.template_spec,
+                        request_print_settings_id=request.template_id,
                         document_template_repo=self.document_template_repo,
                     ),
                 ),

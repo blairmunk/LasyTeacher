@@ -28,6 +28,7 @@ from core_logic.use_cases.update_document_template import (
     UpdateDocumentTemplateUseCase,
 )
 from core_logic.use_cases.document_template_selection import (
+    resolve_document_print_settings_spec,
     resolve_document_template_spec,
 )
 from core_logic.value_objects.document_recipes import (
@@ -141,6 +142,23 @@ class GetDocumentTemplateListUseCaseTests(TestCase):
 
 
 class DocumentTemplateSelectionTests(TestCase):
+    def test_request_print_settings_takes_precedence(self):
+        repo = FakeDocumentTemplateRepository()
+        request_print_settings = DocumentTemplateSpec(
+            name='Из запроса',
+            template_type=WORKSHEET_DOCUMENT_TYPE,
+            sections=[],
+        )
+
+        print_settings = resolve_document_print_settings_spec(
+            document_type=WORKSHEET_DOCUMENT_TYPE,
+            request_print_settings_spec=request_print_settings,
+            document_template_repo=repo,
+        )
+
+        self.assertEqual(print_settings, request_print_settings)
+        self.assertIsNone(repo.default_template_type)
+
     def test_request_template_takes_precedence(self):
         repo = FakeDocumentTemplateRepository()
         request_template = DocumentTemplateSpec(

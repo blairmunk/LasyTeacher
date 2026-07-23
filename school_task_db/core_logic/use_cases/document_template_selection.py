@@ -20,11 +20,11 @@ def resolve_document_print_settings_spec(
     if document_template_repo is None:
         return None
     if request_print_settings_id:
-        return document_template_repo.get_template_spec(
-            template_id=request_print_settings_id,
-            template_type=document_type,
+        return document_template_repo.get_print_settings_spec(
+            print_settings_id=request_print_settings_id,
+            document_type=document_type,
         )
-    return document_template_repo.get_default_template_spec(document_type)
+    return document_template_repo.get_default_print_settings_spec(document_type)
 
 
 def resolve_document_template_spec(

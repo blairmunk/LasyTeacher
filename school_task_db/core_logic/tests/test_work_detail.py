@@ -259,11 +259,23 @@ class FakeDocumentTemplateRepository:
         self.requested_template_types.append(template_type)
         return self.templates_by_type.get(template_type, [])
 
+    def list_print_settings_specs(self, document_type=''):
+        return self.list_template_specs(template_type=document_type)
+
     def get_default_template_spec(self, template_type):
         return None
 
+    def get_default_print_settings_spec(self, document_type):
+        return self.get_default_template_spec(template_type=document_type)
+
     def get_template_spec(self, template_id, template_type=''):
         return None
+
+    def get_print_settings_spec(self, print_settings_id, document_type=''):
+        return self.get_template_spec(
+            template_id=print_settings_id,
+            template_type=document_type,
+        )
 
 
 class WorkDetailTests(TestCase):

@@ -60,4 +60,6 @@ class GetWorkDetailUseCase:
     def _print_settings(self, document_type: str):
         if self.document_template_repo is None:
             return []
-        return self.document_template_repo.list_template_specs(document_type)
+        return self.document_template_repo.list_print_settings_specs(
+            document_type,
+        )

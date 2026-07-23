@@ -33,7 +33,7 @@ class GetDocumentTemplateListUseCase:
     ) -> DocumentTemplateListData:
         request = request or GetDocumentTemplateListRequest()
         return DocumentTemplateListData(
-            print_profiles=self.document_template_repo.list_template_specs(
-                template_type=request.template_type,
+            print_profiles=self.document_template_repo.list_print_settings_specs(
+                document_type=request.template_type,
             ),
         )

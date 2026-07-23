@@ -58,17 +58,29 @@ class FakeDocumentTemplateRepository:
         self.requested_template_type = template_type
         return self.templates
 
+    def list_print_settings_specs(self, document_type=''):
+        return self.list_template_specs(template_type=document_type)
+
     def get_default_template_spec(self, template_type):
         self.default_template_type = template_type
         if template_type == WORKSHEET_DOCUMENT_TYPE:
             return self.templates[0]
         return None
 
+    def get_default_print_settings_spec(self, document_type):
+        return self.get_default_template_spec(template_type=document_type)
+
     def get_template_spec(self, template_id, template_type=''):
         self.requested_template_id = (template_id, template_type)
         if template_id == 'template-1' and template_type == WORKSHEET_DOCUMENT_TYPE:
             return self.templates[0]
         return None
+
+    def get_print_settings_spec(self, print_settings_id, document_type=''):
+        return self.get_template_spec(
+            template_id=print_settings_id,
+            template_type=document_type,
+        )
 
     def create_template(self, params):
         self.created_params = params

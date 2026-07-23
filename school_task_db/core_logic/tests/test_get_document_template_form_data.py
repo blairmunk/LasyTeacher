@@ -23,6 +23,12 @@ class FakeDocumentTemplateRepository:
         self.template_id = template_id
         return self.template
 
+    def get_print_settings_spec(self, print_settings_id, document_type=''):
+        return self.get_template_spec(
+            template_id=print_settings_id,
+            template_type=document_type,
+        )
+
 
 class GetDocumentTemplateFormDataUseCaseTests(TestCase):
     def test_returns_renderable_types_and_sections_for_create_form(self):

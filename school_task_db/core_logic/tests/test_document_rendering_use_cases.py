@@ -143,13 +143,25 @@ class FakeDocumentTemplateRepository:
     def list_template_specs(self, template_type=''):
         return []
 
+    def list_print_settings_specs(self, document_type=''):
+        return self.list_template_specs(template_type=document_type)
+
     def get_default_template_spec(self, template_type):
         self.requested_template_types.append(template_type)
         return self.default_templates.get(template_type)
 
+    def get_default_print_settings_spec(self, document_type):
+        return self.get_default_template_spec(template_type=document_type)
+
     def get_template_spec(self, template_id, template_type=''):
         self.requested_template_ids.append((template_id, template_type))
         return self.templates_by_id.get((template_id, template_type))
+
+    def get_print_settings_spec(self, print_settings_id, document_type=''):
+        return self.get_template_spec(
+            template_id=print_settings_id,
+            template_type=document_type,
+        )
 
 
 class DocumentRenderingUseCaseTests(TestCase):

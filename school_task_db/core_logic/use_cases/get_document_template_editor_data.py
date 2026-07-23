@@ -62,6 +62,6 @@ class GetDocumentTemplateEditorDataUseCase:
     def _print_profiles(self, document_type: str) -> List[PrintSettingsSpec]:
         if self.document_template_repo is None:
             return []
-        return self.document_template_repo.list_template_specs(
-            template_type=document_type,
+        return self.document_template_repo.list_print_settings_specs(
+            document_type=document_type,
         )

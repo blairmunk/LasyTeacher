@@ -31,7 +31,9 @@ class GetDefaultDocumentTemplateUseCase:
         request: GetDefaultDocumentTemplateRequest,
     ) -> DefaultDocumentTemplateData:
         return DefaultDocumentTemplateData(
-            print_profile=self.document_template_repo.get_default_template_spec(
-                request.template_type,
+            print_profile=(
+                self.document_template_repo.get_default_print_settings_spec(
+                    request.template_type,
+                )
             ),
         )

@@ -34,6 +34,9 @@ class FakeDocumentTemplateRepository:
         self.template_type = template_type
         return self.templates
 
+    def list_print_settings_specs(self, document_type=''):
+        return self.list_template_specs(template_type=document_type)
+
     def get_default_template_spec(self, template_type):
         return None
 

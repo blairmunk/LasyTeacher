@@ -35,8 +35,8 @@ class GetDocumentTemplateUseCase:
         request: GetDocumentTemplateRequest,
     ) -> GetDocumentTemplateData:
         return GetDocumentTemplateData(
-            print_profile=self.document_template_repo.get_template_spec(
-                template_id=request.template_id,
-                template_type=request.template_type,
+            print_profile=self.document_template_repo.get_print_settings_spec(
+                print_settings_id=request.template_id,
+                document_type=request.template_type,
             )
         )

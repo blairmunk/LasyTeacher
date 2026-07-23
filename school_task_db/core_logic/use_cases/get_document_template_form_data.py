@@ -61,6 +61,6 @@ class GetDocumentTemplateFormDataUseCase:
     def _print_profile(self, template_id: str) -> PrintSettingsSpec | None:
         if not template_id or self.document_template_repo is None:
             return None
-        return self.document_template_repo.get_template_spec(
-            template_id=template_id,
+        return self.document_template_repo.get_print_settings_spec(
+            print_settings_id=template_id,
         )

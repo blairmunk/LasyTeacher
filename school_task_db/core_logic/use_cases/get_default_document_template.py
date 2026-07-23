@@ -42,3 +42,8 @@ class GetDefaultDocumentTemplateUseCase:
                 )
             ),
         )
+
+
+GetDefaultPrintSettingsRequest = GetDefaultDocumentTemplateRequest
+DefaultPrintSettingsData = DefaultDocumentTemplateData
+GetDefaultPrintSettingsUseCase = GetDefaultDocumentTemplateUseCase

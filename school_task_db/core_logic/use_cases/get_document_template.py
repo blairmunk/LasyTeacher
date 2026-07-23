@@ -50,3 +50,8 @@ class GetDocumentTemplateUseCase:
                 document_type=request.selected_document_type,
             )
         )
+
+
+GetPrintSettingsRequest = GetDocumentTemplateRequest
+GetPrintSettingsData = GetDocumentTemplateData
+GetPrintSettingsUseCase = GetDocumentTemplateUseCase

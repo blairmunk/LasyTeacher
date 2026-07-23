@@ -77,3 +77,6 @@ class UpdateDocumentTemplateUseCase:
             errors.append(str(error))
 
         return errors
+
+
+UpdatePrintSettingsUseCase = UpdateDocumentTemplateUseCase

@@ -71,3 +71,8 @@ class GetDocumentTemplateFormDataUseCase:
         return self.document_template_repo.get_print_settings_spec(
             print_settings_id=print_settings_id,
         )
+
+
+GetPrintSettingsFormDataRequest = GetDocumentTemplateFormDataRequest
+PrintSettingsFormData = DocumentTemplateFormData
+GetPrintSettingsFormDataUseCase = GetDocumentTemplateFormDataUseCase

@@ -67,10 +67,10 @@ from core_logic.use_cases.render_document_from_recipe import (
 )
 from core_logic.use_cases.render_work_document import RenderWorkDocumentUseCase
 from core_logic.use_cases.create_document_template import (
-    CreateDocumentTemplateUseCase,
+    CreatePrintSettingsUseCase,
 )
 from core_logic.use_cases.update_document_template import (
-    UpdateDocumentTemplateUseCase,
+    UpdatePrintSettingsUseCase,
 )
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.get_add_tasks_to_group import GetAddTasksToGroupUseCase
@@ -80,22 +80,22 @@ from core_logic.use_cases.get_course_detail import GetCourseDetailUseCase
 from core_logic.use_cases.get_course_list import GetCourseListUseCase
 from core_logic.use_cases.get_dashboard_summary import GetDashboardSummaryUseCase
 from core_logic.use_cases.get_default_document_template import (
-    GetDefaultDocumentTemplateUseCase,
+    GetDefaultPrintSettingsUseCase,
 )
 from core_logic.use_cases.get_document_template import (
-    GetDocumentTemplateUseCase,
+    GetPrintSettingsUseCase,
 )
 from core_logic.use_cases.get_document_template_list import (
-    GetDocumentTemplateListUseCase,
+    GetPrintSettingsListUseCase,
 )
 from core_logic.use_cases.get_document_section_catalog import (
     GetDocumentSectionCatalogUseCase,
 )
 from core_logic.use_cases.get_document_template_editor_data import (
-    GetDocumentTemplateEditorDataUseCase,
+    GetPrintSettingsEditorDataUseCase,
 )
 from core_logic.use_cases.get_document_template_form_data import (
-    GetDocumentTemplateFormDataUseCase,
+    GetPrintSettingsFormDataUseCase,
 )
 from core_logic.use_cases.get_document_type_catalog import (
     GetDocumentTypeCatalogUseCase,
@@ -694,22 +694,34 @@ class Container:
         )
 
     def get_document_template_list_use_case(self):
-        return GetDocumentTemplateListUseCase(
+        return self.get_print_settings_list_use_case()
+
+    def get_print_settings_list_use_case(self):
+        return GetPrintSettingsListUseCase(
             document_template_repo=self.document_template_repo,
         )
 
     def get_document_template_use_case(self):
-        return GetDocumentTemplateUseCase(
+        return self.get_print_settings_use_case()
+
+    def get_print_settings_use_case(self):
+        return GetPrintSettingsUseCase(
             document_template_repo=self.document_template_repo,
         )
 
     def create_document_template_use_case(self):
-        return CreateDocumentTemplateUseCase(
+        return self.create_print_settings_use_case()
+
+    def create_print_settings_use_case(self):
+        return CreatePrintSettingsUseCase(
             document_template_repo=self.document_template_repo,
         )
 
     def update_document_template_use_case(self):
-        return UpdateDocumentTemplateUseCase(
+        return self.update_print_settings_use_case()
+
+    def update_print_settings_use_case(self):
+        return UpdatePrintSettingsUseCase(
             document_template_repo=self.document_template_repo,
         )
 
@@ -717,12 +729,18 @@ class Container:
         return GetDocumentSectionCatalogUseCase()
 
     def get_document_template_editor_data_use_case(self):
-        return GetDocumentTemplateEditorDataUseCase(
+        return self.get_print_settings_editor_data_use_case()
+
+    def get_print_settings_editor_data_use_case(self):
+        return GetPrintSettingsEditorDataUseCase(
             document_template_repo=self.document_template_repo,
         )
 
     def get_document_template_form_data_use_case(self):
-        return GetDocumentTemplateFormDataUseCase(
+        return self.get_print_settings_form_data_use_case()
+
+    def get_print_settings_form_data_use_case(self):
+        return GetPrintSettingsFormDataUseCase(
             document_template_repo=self.document_template_repo,
         )
 
@@ -730,7 +748,10 @@ class Container:
         return GetDocumentTypeCatalogUseCase()
 
     def get_default_document_template_use_case(self):
-        return GetDefaultDocumentTemplateUseCase(
+        return self.get_default_print_settings_use_case()
+
+    def get_default_print_settings_use_case(self):
+        return GetDefaultPrintSettingsUseCase(
             document_template_repo=self.document_template_repo,
         )
 

@@ -26,6 +26,10 @@ from core_logic.use_cases.create_source import CreateSourceUseCase
 from core_logic.use_cases.create_remedial_wizard_work import (
     CreateRemedialWizardWorkUseCase,
 )
+from core_logic.use_cases.create_document_template import (
+    CreateDocumentTemplateUseCase,
+    CreatePrintSettingsUseCase,
+)
 from core_logic.use_cases.create_student_remedial_variant import (
     CreateStudentRemedialVariantUseCase,
 )
@@ -39,6 +43,10 @@ from core_logic.use_cases.create_work_from_tasks import CreateWorkFromTasksUseCa
 from core_logic.use_cases.delete_task_groups import DeleteTaskGroupsUseCase
 from core_logic.use_cases.delete_task import DeleteTaskUseCase
 from core_logic.use_cases.delete_variant import DeleteVariantUseCase
+from core_logic.use_cases.update_document_template import (
+    UpdateDocumentTemplateUseCase,
+    UpdatePrintSettingsUseCase,
+)
 from core_logic.use_cases.execute_task_import import ExecuteTaskImportUseCase
 from core_logic.use_cases.execute_task_import_submission import (
     ExecuteTaskImportSubmissionUseCase,
@@ -57,18 +65,22 @@ from core_logic.use_cases.get_topic_list import GetTopicListUseCase
 from core_logic.use_cases.get_dashboard_summary import GetDashboardSummaryUseCase
 from core_logic.use_cases.get_default_document_template import (
     GetDefaultDocumentTemplateUseCase,
+    GetDefaultPrintSettingsUseCase,
 )
 from core_logic.use_cases.get_document_template_list import (
     GetDocumentTemplateListUseCase,
+    GetPrintSettingsListUseCase,
 )
 from core_logic.use_cases.get_document_section_catalog import (
     GetDocumentSectionCatalogUseCase,
 )
 from core_logic.use_cases.get_document_template_editor_data import (
     GetDocumentTemplateEditorDataUseCase,
+    GetPrintSettingsEditorDataUseCase,
 )
 from core_logic.use_cases.get_document_template_form_data import (
     GetDocumentTemplateFormDataUseCase,
+    GetPrintSettingsFormDataUseCase,
 )
 from core_logic.use_cases.get_document_type_catalog import (
     GetDocumentTypeCatalogUseCase,
@@ -303,11 +315,23 @@ class ContainerTests(SimpleTestCase):
         subtopic_options_use_case = container.get_subtopic_options_use_case()
         codifier_elements_use_case = container.get_codifier_elements_use_case()
         source_list_use_case = container.get_source_list_use_case()
+        create_document_template_use_case = (
+            container.create_document_template_use_case()
+        )
+        create_print_settings_use_case = container.create_print_settings_use_case()
+        update_document_template_use_case = (
+            container.update_document_template_use_case()
+        )
+        update_print_settings_use_case = container.update_print_settings_use_case()
         document_template_list_use_case = (
             container.get_document_template_list_use_case()
         )
+        print_settings_list_use_case = container.get_print_settings_list_use_case()
         default_document_template_use_case = (
             container.get_default_document_template_use_case()
+        )
+        default_print_settings_use_case = (
+            container.get_default_print_settings_use_case()
         )
         refresh_math_cache_use_case = container.refresh_task_math_cache_use_case()
         create_task_use_case = container.create_task_use_case()
@@ -478,8 +502,14 @@ class ContainerTests(SimpleTestCase):
         document_template_editor_data_use_case = (
             container.get_document_template_editor_data_use_case()
         )
+        print_settings_editor_data_use_case = (
+            container.get_print_settings_editor_data_use_case()
+        )
         document_template_form_data_use_case = (
             container.get_document_template_form_data_use_case()
+        )
+        print_settings_form_data_use_case = (
+            container.get_print_settings_form_data_use_case()
         )
         document_type_catalog_use_case = (
             container.get_document_type_catalog_use_case()
@@ -505,12 +535,36 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(codifier_elements_use_case, GetCodifierElementsUseCase)
         self.assertIsInstance(source_list_use_case, GetSourceListUseCase)
         self.assertIsInstance(
+            create_document_template_use_case,
+            CreateDocumentTemplateUseCase,
+        )
+        self.assertIsInstance(
+            create_print_settings_use_case,
+            CreatePrintSettingsUseCase,
+        )
+        self.assertIsInstance(
+            update_document_template_use_case,
+            UpdateDocumentTemplateUseCase,
+        )
+        self.assertIsInstance(
+            update_print_settings_use_case,
+            UpdatePrintSettingsUseCase,
+        )
+        self.assertIsInstance(
             document_template_list_use_case,
             GetDocumentTemplateListUseCase,
         )
         self.assertIsInstance(
+            print_settings_list_use_case,
+            GetPrintSettingsListUseCase,
+        )
+        self.assertIsInstance(
             default_document_template_use_case,
             GetDefaultDocumentTemplateUseCase,
+        )
+        self.assertIsInstance(
+            default_print_settings_use_case,
+            GetDefaultPrintSettingsUseCase,
         )
         self.assertIsInstance(
             document_section_catalog_use_case,
@@ -521,8 +575,16 @@ class ContainerTests(SimpleTestCase):
             GetDocumentTemplateEditorDataUseCase,
         )
         self.assertIsInstance(
+            print_settings_editor_data_use_case,
+            GetPrintSettingsEditorDataUseCase,
+        )
+        self.assertIsInstance(
             document_template_form_data_use_case,
             GetDocumentTemplateFormDataUseCase,
+        )
+        self.assertIsInstance(
+            print_settings_form_data_use_case,
+            GetPrintSettingsFormDataUseCase,
         )
         self.assertIsInstance(
             document_type_catalog_use_case,

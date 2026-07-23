@@ -68,3 +68,6 @@ class CreateDocumentTemplateUseCase:
             errors.append(str(error))
 
         return errors
+
+
+CreatePrintSettingsUseCase = CreateDocumentTemplateUseCase

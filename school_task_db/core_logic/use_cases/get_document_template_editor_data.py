@@ -65,3 +65,8 @@ class GetDocumentTemplateEditorDataUseCase:
         return self.document_template_repo.list_print_settings_specs(
             document_type=document_type,
         )
+
+
+GetPrintSettingsEditorDataRequest = GetDocumentTemplateEditorDataRequest
+PrintSettingsEditorData = DocumentTemplateEditorData
+GetPrintSettingsEditorDataUseCase = GetDocumentTemplateEditorDataUseCase

@@ -42,3 +42,8 @@ class GetDocumentTemplateListUseCase:
                 document_type=request.selected_document_type,
             ),
         )
+
+
+GetPrintSettingsListRequest = GetDocumentTemplateListRequest
+PrintSettingsListData = DocumentTemplateListData
+GetPrintSettingsListUseCase = GetDocumentTemplateListUseCase

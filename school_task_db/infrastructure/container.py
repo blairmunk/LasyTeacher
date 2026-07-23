@@ -288,8 +288,8 @@ from infrastructure.repositories.django_core_repo import DjangoCoreRepository
 from infrastructure.repositories.django_curriculum_repo import (
     DjangoCurriculumRepository,
 )
-from infrastructure.repositories.django_document_template_repo import (
-    DjangoDocumentTemplateRepository,
+from infrastructure.repositories.django_print_settings_repo import (
+    DjangoPrintSettingsRepository,
 )
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
@@ -416,7 +416,7 @@ class Container:
     @property
     def print_settings_repo(self):
         if self._document_template_repo is None:
-            self._document_template_repo = DjangoDocumentTemplateRepository()
+            self._document_template_repo = DjangoPrintSettingsRepository()
         return self._document_template_repo
 
     @property

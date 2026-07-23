@@ -253,6 +253,9 @@ from infrastructure.repositories.django_curriculum_repo import (
 from infrastructure.repositories.django_document_template_repo import (
     DjangoDocumentTemplateRepository,
 )
+from infrastructure.repositories.django_print_settings_repo import (
+    DjangoPrintSettingsRepository,
+)
 from infrastructure.container import Container
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
@@ -853,7 +856,7 @@ class ContainerTests(SimpleTestCase):
         )
         self.assertIsInstance(
             container.print_settings_repo,
-            DjangoDocumentTemplateRepository,
+            DjangoPrintSettingsRepository,
         )
         self.assertIs(container.document_template_repo, container.print_settings_repo)
         self.assertIsInstance(

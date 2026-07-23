@@ -12,9 +12,15 @@ from document_generator.models import DocumentTemplate
 from infrastructure.repositories.django_document_template_repo import (
     DjangoDocumentTemplateRepository,
 )
+from infrastructure.repositories.django_print_settings_repo import (
+    DjangoPrintSettingsRepository,
+)
 
 
 class DjangoDocumentTemplateRepositoryTests(TestCase):
+    def test_print_settings_repository_is_template_repository_alias(self):
+        self.assertIs(DjangoPrintSettingsRepository, DjangoDocumentTemplateRepository)
+
     def test_lists_template_specs_filtered_by_type(self):
         DocumentTemplate.objects.create(
             name='Рабочий лист',

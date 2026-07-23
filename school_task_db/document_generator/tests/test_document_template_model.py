@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
+from core_logic.entities.document import PrintSettingsSpec
 from document_generator.models import DocumentTemplate
 
 
@@ -29,8 +30,9 @@ class DocumentTemplateModelTests(TestCase):
             custom_latex_preamble='\\usepackage{multicol}',
         )
 
-        spec = template.to_template_spec()
+        spec = template.to_print_settings_spec()
 
+        self.assertIsInstance(spec, PrintSettingsSpec)
         self.assertEqual(spec.name, 'Рабочий лист')
         self.assertEqual(spec.template_id, str(template.pk))
         self.assertEqual(spec.template_type, 'worksheet')
@@ -57,6 +59,7 @@ class DocumentTemplateModelTests(TestCase):
             spec.presentation.custom_latex_preamble,
             '\\usepackage{multicol}',
         )
+        self.assertEqual(template.to_template_spec(), spec)
 
     def test_string_representation_contains_name_and_type(self):
         template = DocumentTemplate(

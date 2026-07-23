@@ -86,7 +86,7 @@ class DocumentTemplate(BaseModel):
         super().clean()
         try:
             validate_document_type(self.template_type)
-            template_spec = self.to_template_spec()
+            template_spec = self.to_print_settings_spec()
             validate_document_section_types(
                 self.template_type,
                 template_spec.section_types,
@@ -94,7 +94,7 @@ class DocumentTemplate(BaseModel):
         except ValueError as error:
             raise ValidationError({'sections_config': str(error)}) from error
 
-    def to_template_spec(self):
+    def to_print_settings_spec(self):
         return build_print_settings_spec_from_config(
             name=self.name,
             template_type=self.template_type,
@@ -108,3 +108,6 @@ class DocumentTemplate(BaseModel):
             custom_css=self.custom_css,
             custom_latex_preamble=self.custom_latex_preamble,
         )
+
+    def to_template_spec(self):
+        return self.to_print_settings_spec()

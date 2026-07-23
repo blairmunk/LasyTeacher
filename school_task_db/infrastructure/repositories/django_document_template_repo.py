@@ -25,7 +25,7 @@ class DjangoDocumentTemplateRepository(IDocumentTemplateRepository):
         queryset = DocumentTemplate.objects.all()
         if document_type:
             queryset = queryset.filter(template_type=document_type)
-        return [template.to_template_spec() for template in queryset]
+        return [template.to_print_settings_spec() for template in queryset]
 
     def list_template_specs(
         self,
@@ -44,7 +44,7 @@ class DjangoDocumentTemplateRepository(IDocumentTemplateRepository):
         )
         if template is None:
             return None
-        return template.to_template_spec()
+        return template.to_print_settings_spec()
 
     def get_default_template_spec(
         self,
@@ -63,7 +63,7 @@ class DjangoDocumentTemplateRepository(IDocumentTemplateRepository):
         template = queryset.first()
         if template is None:
             return None
-        return template.to_template_spec()
+        return template.to_print_settings_spec()
 
     def get_template_spec(
         self,

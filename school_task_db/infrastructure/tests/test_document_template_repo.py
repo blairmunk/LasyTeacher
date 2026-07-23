@@ -4,6 +4,7 @@ from core_logic.entities.document import (
     CreateDocumentTemplateParams,
     CreatePrintSettingsParams,
     DocumentSectionSpec,
+    PrintSettingsSpec,
     UpdatePrintSettingsParams,
     UpdateDocumentTemplateParams,
 )
@@ -31,6 +32,7 @@ class DjangoDocumentTemplateRepositoryTests(TestCase):
         )
 
         self.assertEqual(len(templates), 1)
+        self.assertIsInstance(templates[0], PrintSettingsSpec)
         self.assertEqual(templates[0].name, 'Рабочий лист')
         self.assertEqual(templates[0].template_type, 'worksheet')
         self.assertEqual(templates[0].section_types, ('header',))

@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from core_logic.entities.document import DocumentTemplateSpec
+from core_logic.entities.document import PrintSettingsSpec
 from core_logic.entities.document_rendering import (
     DOCUMENT_RENDER_STATUS_EMPTY,
     DOCUMENT_RENDER_STATUS_NOT_FOUND,
@@ -33,8 +33,18 @@ from core_logic.value_objects.document_recipes import REMEDIAL_SHEET_DOCUMENT_TY
 class RenderRemedialSheetBatchDocumentRequest:
     work_id: str
     options: RemedialSheetDocumentRenderOptions
-    template_spec: DocumentTemplateSpec | None = None
+    template_spec: PrintSettingsSpec | None = None
     template_id: str = ''
+    print_settings_spec: PrintSettingsSpec | None = None
+    print_settings_id: str = ''
+
+    @property
+    def selected_print_settings_spec(self) -> PrintSettingsSpec | None:
+        return self.print_settings_spec or self.template_spec
+
+    @property
+    def selected_print_settings_id(self) -> str:
+        return self.print_settings_id or self.template_id
 
 
 class RenderRemedialSheetBatchDocumentUseCase:
@@ -84,8 +94,12 @@ class RenderRemedialSheetBatchDocumentUseCase:
                     options=request.options,
                     template_spec=resolve_document_print_settings_spec(
                         document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
-                        request_print_settings_spec=request.template_spec,
-                        request_print_settings_id=request.template_id,
+                        request_print_settings_spec=(
+                            request.selected_print_settings_spec
+                        ),
+                        request_print_settings_id=(
+                            request.selected_print_settings_id
+                        ),
                         document_template_repo=self.document_template_repo,
                     ),
                 ),

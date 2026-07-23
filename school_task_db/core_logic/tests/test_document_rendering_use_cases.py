@@ -287,6 +287,32 @@ class DocumentRenderingUseCaseTests(TestCase):
             '\\usepackage{multicol}',
         )
 
+    def test_render_work_document_uses_request_print_settings_spec(self):
+        service = FakeDocumentEngine()
+        template_repo = FakeDocumentTemplateRepository()
+        use_case = RenderWorkDocumentUseCase(
+            document_engine=service,
+            work_repo=FakeWorkRepository(),
+            document_template_repo=template_repo,
+        )
+        print_settings_spec = DocumentTemplateSpec(
+            name='Профиль печати',
+            template_type='work',
+            sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
+        )
+
+        result = use_case.execute(
+            RenderWorkDocumentRequest(
+                work_id='work-1',
+                options=WorkDocumentRenderOptions(renderer_type='html'),
+                print_settings_spec=print_settings_spec,
+            )
+        )
+
+        self.assertTrue(result.success)
+        self.assertEqual(template_repo.requested_template_types, [])
+        self.assertEqual(service.render_request.recipe.section_types, (ANSWERS_SECTION,))
+
     def test_render_work_document_uses_default_template_spec(self):
         service = FakeDocumentEngine()
         template_repo = FakeDocumentTemplateRepository()
@@ -515,6 +541,38 @@ class DocumentRenderingUseCaseTests(TestCase):
         )
         self.assertEqual(service.render_request.recipe.section_types, (ANSWERS_SECTION,))
 
+    def test_render_remedial_sheet_document_uses_print_settings_id(self):
+        service = FakeDocumentEngine()
+        template_repo = FakeDocumentTemplateRepository()
+        template_repo.templates_by_id[('profile-rno', 'remedial_sheet')] = (
+            DocumentTemplateSpec(
+                name='Selected remedial',
+                template_type='remedial_sheet',
+                template_id='profile-rno',
+                sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
+            )
+        )
+        use_case = RenderRemedialSheetDocumentUseCase(
+            document_engine=service,
+            work_repo=FakeWorkRepository(),
+            document_template_repo=template_repo,
+        )
+
+        result = use_case.execute(
+            RenderRemedialSheetDocumentRequest(
+                variant_id='variant-1',
+                options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+                print_settings_id='profile-rno',
+            )
+        )
+
+        self.assertTrue(result.success)
+        self.assertEqual(
+            template_repo.requested_template_ids,
+            [('profile-rno', 'remedial_sheet')],
+        )
+        self.assertEqual(service.render_request.recipe.section_types, (ANSWERS_SECTION,))
+
     def test_render_remedial_sheet_document_handles_empty_files(self):
         service = FakeDocumentEngine()
         service.remedial_document = GeneratedDocument(file_type='pdf')
@@ -650,6 +708,33 @@ class DocumentRenderingUseCaseTests(TestCase):
                 'variant-2',
             ],
         )
+
+    def test_render_remedial_sheet_batch_document_uses_print_settings_spec(self):
+        work_repo = FakeWorkRepository(
+            work_name='Работа над ошибками',
+            remedial_variant_ids=['variant-1'],
+        )
+        service = FakeDocumentEngine()
+        use_case = RenderRemedialSheetBatchDocumentUseCase(
+            work_repo=work_repo,
+            document_engine=service,
+        )
+        print_settings_spec = DocumentTemplateSpec(
+            name='Профиль РнО',
+            template_type='remedial_sheet',
+            sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
+        )
+
+        result = use_case.execute(
+            RenderRemedialSheetBatchDocumentRequest(
+                work_id='work-1',
+                options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+                print_settings_spec=print_settings_spec,
+            )
+        )
+
+        self.assertTrue(result.success)
+        self.assertEqual(service.render_request.recipe.section_types, (ANSWERS_SECTION,))
 
     def test_render_remedial_sheet_batch_document_handles_missing_work(self):
         service = FakeDocumentEngine()

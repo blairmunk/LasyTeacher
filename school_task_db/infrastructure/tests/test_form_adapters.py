@@ -361,7 +361,10 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         )
         self.assertTrue(form.is_valid(), form.errors)
 
-        params = DocumentTemplateFormAdapter().create_params_from_form(form)
+        params = (
+            DocumentTemplateFormAdapter()
+            .create_print_settings_params_from_form(form)
+        )
 
         self.assertEqual(params.name, 'Шаблон')
         self.assertEqual(params.description, 'Описание')
@@ -488,9 +491,12 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         )
         self.assertTrue(form.is_valid(), form.errors)
 
-        params = DocumentTemplateFormAdapter().update_params_from_form(
-            form,
-            template_id='template-1',
+        params = (
+            DocumentTemplateFormAdapter()
+            .update_print_settings_params_from_form(
+                form,
+                print_settings_id='template-1',
+            )
         )
 
         self.assertEqual(params.template_id, 'template-1')

@@ -65,9 +65,9 @@ class DocumentTemplateCreateView(TemplateView):
             )
 
         result = container.create_document_template_use_case().execute(
-            container.document_template_form_adapter.create_params_from_form(
-                form,
-            )
+            container
+            .document_template_form_adapter
+            .create_print_settings_params_from_form(form)
         )
         if not result.success:
             for error in result.errors:
@@ -139,10 +139,11 @@ class DocumentTemplateUpdateView(DocumentTemplateCreateView):
                 self.get_context_data(form=form, form_data=form_data),
             )
 
+        adapter = container.document_template_form_adapter
         result = container.update_document_template_use_case().execute(
-            container.document_template_form_adapter.update_params_from_form(
+            adapter.update_print_settings_params_from_form(
                 form,
-                template_id=str(self.kwargs['pk']),
+                print_settings_id=str(self.kwargs['pk']),
             )
         )
         if not result.success:

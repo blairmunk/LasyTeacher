@@ -4,9 +4,9 @@ import json
 from urllib.parse import urlencode
 
 from core_logic.entities.document import (
-    CreateDocumentTemplateParams,
+    CreatePrintSettingsParams,
     DocumentSectionSpec,
-    UpdateDocumentTemplateParams,
+    UpdatePrintSettingsParams,
 )
 from core_logic.use_cases.get_document_template_editor_data import (
     GetDocumentTemplateEditorDataRequest,
@@ -52,7 +52,10 @@ class DocumentTemplateFormAdapter:
         }
 
     def create_params_from_form(self, form):
-        return CreateDocumentTemplateParams(
+        return self.create_print_settings_params_from_form(form)
+
+    def create_print_settings_params_from_form(self, form):
+        return CreatePrintSettingsParams(
             name=form.cleaned_data['name'],
             description=form.cleaned_data.get('description', ''),
             template_type=form.cleaned_data['template_type'],
@@ -61,8 +64,14 @@ class DocumentTemplateFormAdapter:
         )
 
     def update_params_from_form(self, form, template_id):
-        return UpdateDocumentTemplateParams(
-            template_id=template_id,
+        return self.update_print_settings_params_from_form(
+            form,
+            print_settings_id=template_id,
+        )
+
+    def update_print_settings_params_from_form(self, form, print_settings_id):
+        return UpdatePrintSettingsParams(
+            template_id=print_settings_id,
             name=form.cleaned_data['name'],
             description=form.cleaned_data.get('description', ''),
             template_type=form.cleaned_data['template_type'],

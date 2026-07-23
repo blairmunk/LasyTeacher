@@ -265,8 +265,10 @@ class DocumentRenderingUseCaseTests(TestCase):
         use_case = RenderWorkDocumentUseCase(
             document_engine=service,
             work_repo=FakeWorkRepository(),
-            document_template_repo=template_repo,
+            print_settings_repo=template_repo,
         )
+        self.assertIs(use_case.print_settings_repo, template_repo)
+        self.assertIs(use_case.document_template_repo, template_repo)
         template_spec = DocumentTemplateSpec(
             name='Кастомная работа',
             template_type='work',

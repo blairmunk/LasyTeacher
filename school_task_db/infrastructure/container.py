@@ -1101,7 +1101,7 @@ class Container:
         return GetWorkDetailUseCase(
             work_repo=self.work_repo,
             work_service=self.work_service(),
-            document_template_repo=self.print_settings_repo,
+            print_settings_repo=self.print_settings_repo,
         )
 
     def get_work_list_use_case(self):
@@ -1157,7 +1157,7 @@ class Container:
     def render_work_document_use_case(self):
         return RenderWorkDocumentUseCase(
             work_repo=self.work_repo,
-            document_template_repo=self.print_settings_repo,
+            print_settings_repo=self.print_settings_repo,
             render_document_use_case=self.render_document_use_case(),
         )
 
@@ -1181,14 +1181,14 @@ class Container:
     def render_remedial_sheet_document_use_case(self):
         return RenderRemedialSheetDocumentUseCase(
             work_repo=self.work_repo,
-            document_template_repo=self.print_settings_repo,
+            print_settings_repo=self.print_settings_repo,
             render_document_use_case=self.render_document_use_case(),
         )
 
     def render_remedial_sheet_batch_document_use_case(self):
         return RenderRemedialSheetBatchDocumentUseCase(
             work_repo=self.work_repo,
-            document_template_repo=self.print_settings_repo,
+            print_settings_repo=self.print_settings_repo,
             render_document_use_case=self.render_document_use_case(),
         )
 

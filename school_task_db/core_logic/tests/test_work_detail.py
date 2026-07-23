@@ -310,8 +310,10 @@ class WorkDetailTests(TestCase):
                 spec_preview=['spec-1'],
             ),
             work_service=WorkService(),
-            document_template_repo=template_repo,
+            print_settings_repo=template_repo,
         )
+        self.assertIs(use_case.print_settings_repo, template_repo)
+        self.assertIs(use_case.document_template_repo, template_repo)
 
         result = use_case.execute('work-1')
 

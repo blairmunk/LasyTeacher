@@ -189,7 +189,7 @@ class DocumentTemplateSelectionTests(TestCase):
         print_settings = resolve_document_print_settings_spec(
             document_type=WORKSHEET_DOCUMENT_TYPE,
             request_print_settings_spec=request_print_settings,
-            document_template_repo=repo,
+            print_settings_repo=repo,
         )
 
         self.assertEqual(print_settings, request_print_settings)

@@ -51,12 +51,14 @@ class RenderRemedialSheetBatchDocumentUseCase:
     def __init__(
         self,
         work_repo: IWorkRepository,
+        print_settings_repo: IPrintSettingsRepository | None = None,
         document_template_repo: IPrintSettingsRepository | None = None,
         document_engine: IDocumentEngine | None = None,
         render_document_use_case: RenderDocumentUseCase | None = None,
     ):
         self.work_repo = work_repo
-        self.document_template_repo = document_template_repo
+        self.print_settings_repo = print_settings_repo or document_template_repo
+        self.document_template_repo = self.print_settings_repo
         self.render_document_use_case = (
             render_document_use_case
             or RenderDocumentUseCase(
@@ -100,7 +102,7 @@ class RenderRemedialSheetBatchDocumentUseCase:
                         request_print_settings_id=(
                             request.selected_print_settings_id
                         ),
-                        document_template_repo=self.document_template_repo,
+                        print_settings_repo=self.print_settings_repo,
                     ),
                 ),
                 source_name=work_name,

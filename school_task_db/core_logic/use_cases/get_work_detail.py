@@ -20,11 +20,13 @@ class GetWorkDetailUseCase:
         self,
         work_repo: IWorkRepository,
         work_service: WorkService,
+        print_settings_repo: IPrintSettingsRepository | None = None,
         document_template_repo: IPrintSettingsRepository | None = None,
     ):
         self.work_repo = work_repo
         self.work_service = work_service
-        self.document_template_repo = document_template_repo
+        self.print_settings_repo = print_settings_repo or document_template_repo
+        self.document_template_repo = self.print_settings_repo
 
     def execute(self, work_id: str) -> WorkDetailData:
         work = self.work_repo.get_work_detail(work_id)
@@ -58,8 +60,8 @@ class GetWorkDetailUseCase:
         return bool(items)
 
     def _print_settings(self, document_type: str):
-        if self.document_template_repo is None:
+        if self.print_settings_repo is None:
             return []
-        return self.document_template_repo.list_print_settings_specs(
+        return self.print_settings_repo.list_print_settings_specs(
             document_type,
         )

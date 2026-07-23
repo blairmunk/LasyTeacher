@@ -13,7 +13,7 @@ from core_logic.interfaces.print_settings_repo import (
     IPrintSettingsRepository,
 )
 from core_logic.interfaces.work_repo import IWorkRepository
-from core_logic.use_cases.document_template_selection import (
+from core_logic.use_cases.print_settings_selection import (
     resolve_document_print_settings_spec,
 )
 from core_logic.use_cases.render_document import (

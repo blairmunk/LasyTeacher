@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from typing import Tuple
 
 from core_logic.entities.document import PrintSettingsSpec
-from core_logic.interfaces.document_template_repo import (
-    IDocumentTemplateRepository,
+from core_logic.interfaces.print_settings_repo import (
+    IPrintSettingsRepository,
 )
 from core_logic.value_objects.document_section_catalog import (
     DocumentSectionCatalogItem,
@@ -43,7 +43,7 @@ class DocumentTemplateFormData:
 class GetDocumentTemplateFormDataUseCase:
     def __init__(
         self,
-        document_template_repo: IDocumentTemplateRepository | None = None,
+        document_template_repo: IPrintSettingsRepository | None = None,
     ):
         self.document_template_repo = document_template_repo
 

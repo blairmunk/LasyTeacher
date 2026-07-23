@@ -3,8 +3,8 @@
 from dataclasses import dataclass
 
 from core_logic.entities.document import PrintSettingsSpec
-from core_logic.interfaces.document_template_repo import (
-    IDocumentTemplateRepository,
+from core_logic.interfaces.print_settings_repo import (
+    IPrintSettingsRepository,
 )
 
 
@@ -28,7 +28,7 @@ class DefaultDocumentTemplateData:
 
 
 class GetDefaultDocumentTemplateUseCase:
-    def __init__(self, document_template_repo: IDocumentTemplateRepository):
+    def __init__(self, document_template_repo: IPrintSettingsRepository):
         self.document_template_repo = document_template_repo
 
     def execute(

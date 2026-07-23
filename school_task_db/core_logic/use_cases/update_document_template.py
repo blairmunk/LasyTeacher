@@ -7,8 +7,8 @@ from core_logic.entities.document import (
     UpdatePrintSettingsParams,
     UpdatePrintSettingsResult,
 )
-from core_logic.interfaces.document_template_repo import (
-    IDocumentTemplateRepository,
+from core_logic.interfaces.print_settings_repo import (
+    IPrintSettingsRepository,
 )
 from core_logic.value_objects.document_section_catalog import (
     validate_document_section_types,
@@ -24,7 +24,7 @@ DOCUMENT_TEMPLATE_UPDATE_STATUS_NOT_FOUND = 'not_found'
 class UpdateDocumentTemplateUseCase:
     def __init__(
         self,
-        document_template_repo: IDocumentTemplateRepository,
+        document_template_repo: IPrintSettingsRepository,
     ):
         self.document_template_repo = document_template_repo
 

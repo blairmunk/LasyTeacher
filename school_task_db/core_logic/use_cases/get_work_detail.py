@@ -1,8 +1,8 @@
 """Build work detail page data."""
 
 from core_logic.entities.work import WorkDetailData
-from core_logic.interfaces.document_template_repo import (
-    IDocumentTemplateRepository,
+from core_logic.interfaces.print_settings_repo import (
+    IPrintSettingsRepository,
 )
 from core_logic.interfaces.work_repo import IWorkRepository
 from core_logic.services.work_service import WorkService
@@ -20,7 +20,7 @@ class GetWorkDetailUseCase:
         self,
         work_repo: IWorkRepository,
         work_service: WorkService,
-        document_template_repo: IDocumentTemplateRepository | None = None,
+        document_template_repo: IPrintSettingsRepository | None = None,
     ):
         self.work_repo = work_repo
         self.work_service = work_service

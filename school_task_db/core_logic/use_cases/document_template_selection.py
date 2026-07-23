@@ -4,8 +4,8 @@ The module name is legacy; persistence is still backed by document templates.
 """
 
 from core_logic.entities.document import PrintSettingsSpec
-from core_logic.interfaces.document_template_repo import (
-    IDocumentTemplateRepository,
+from core_logic.interfaces.print_settings_repo import (
+    IPrintSettingsRepository,
 )
 
 
@@ -13,7 +13,7 @@ def resolve_document_print_settings_spec(
     document_type: str,
     request_print_settings_spec: PrintSettingsSpec | None = None,
     request_print_settings_id: str = '',
-    document_template_repo: IDocumentTemplateRepository | None = None,
+    document_template_repo: IPrintSettingsRepository | None = None,
 ) -> PrintSettingsSpec | None:
     if request_print_settings_spec is not None:
         return request_print_settings_spec
@@ -31,7 +31,7 @@ def resolve_document_template_spec(
     template_type: str,
     request_template_spec: PrintSettingsSpec | None = None,
     request_template_id: str = '',
-    document_template_repo: IDocumentTemplateRepository | None = None,
+    document_template_repo: IPrintSettingsRepository | None = None,
 ) -> PrintSettingsSpec | None:
     """Legacy alias for callers that still use template terminology."""
 

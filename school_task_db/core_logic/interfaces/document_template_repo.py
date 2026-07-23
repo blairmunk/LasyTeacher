@@ -83,3 +83,6 @@ class IDocumentTemplateRepository(ABC):
         params: UpdateDocumentTemplateParams,
     ) -> bool:
         """Update a document template and return whether it existed."""
+
+
+IPrintSettingsRepository = IDocumentTemplateRepository

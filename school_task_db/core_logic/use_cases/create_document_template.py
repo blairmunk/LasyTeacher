@@ -7,8 +7,8 @@ from core_logic.entities.document import (
     CreatePrintSettingsParams,
     CreatePrintSettingsResult,
 )
-from core_logic.interfaces.document_template_repo import (
-    IDocumentTemplateRepository,
+from core_logic.interfaces.print_settings_repo import (
+    IPrintSettingsRepository,
 )
 from core_logic.value_objects.document_section_catalog import (
     validate_document_section_types,
@@ -23,7 +23,7 @@ DOCUMENT_TEMPLATE_CREATE_STATUS_INVALID = 'invalid'
 class CreateDocumentTemplateUseCase:
     def __init__(
         self,
-        document_template_repo: IDocumentTemplateRepository,
+        document_template_repo: IPrintSettingsRepository,
     ):
         self.document_template_repo = document_template_repo
 

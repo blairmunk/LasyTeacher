@@ -9,8 +9,8 @@ from core_logic.entities.document_rendering import (
     DocumentRenderResult,
 )
 from core_logic.interfaces.document_engine import IDocumentEngine
-from core_logic.interfaces.document_template_repo import (
-    IDocumentTemplateRepository,
+from core_logic.interfaces.print_settings_repo import (
+    IPrintSettingsRepository,
 )
 from core_logic.interfaces.work_repo import IWorkRepository
 from core_logic.use_cases.document_template_selection import (
@@ -51,7 +51,7 @@ class RenderRemedialSheetBatchDocumentUseCase:
     def __init__(
         self,
         work_repo: IWorkRepository,
-        document_template_repo: IDocumentTemplateRepository | None = None,
+        document_template_repo: IPrintSettingsRepository | None = None,
         document_engine: IDocumentEngine | None = None,
         render_document_use_case: RenderDocumentUseCase | None = None,
     ):

@@ -91,3 +91,6 @@ class DocumentTemplateForm(forms.Form):
 
 def section_options_field_name(section_type):
     return f'section_options__{section_type}'
+
+
+PrintSettingsForm = DocumentTemplateForm

@@ -6,6 +6,7 @@ from django.test import SimpleTestCase
 
 from infrastructure.forms.document_template_django_forms import (
     DocumentTemplateForm,
+    PrintSettingsForm,
 )
 from core_logic.entities.document import (
     DocumentPresentation,
@@ -248,11 +249,14 @@ class CurriculumFormAdapterTests(SimpleTestCase):
 
 
 class DocumentTemplateFormAdapterTests(SimpleTestCase):
+    def test_print_settings_form_is_template_form_alias(self):
+        self.assertIs(PrintSettingsForm, DocumentTemplateForm)
+
     def test_print_settings_form_adapter_is_template_adapter_alias(self):
         self.assertIs(PrintSettingsFormAdapter, DocumentTemplateFormAdapter)
 
     def _template_form(self, *args, sections=None, **kwargs):
-        return DocumentTemplateForm(
+        return PrintSettingsForm(
             *args,
             document_types=get_document_type_catalog(renderable_only=True),
             sections=(

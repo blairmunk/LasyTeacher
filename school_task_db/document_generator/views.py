@@ -5,10 +5,10 @@ from django.views.generic import TemplateView
 
 from infrastructure.container import container
 from infrastructure.forms.document_template_django_forms import (
-    DocumentTemplateForm,
+    PrintSettingsForm,
 )
 from core_logic.use_cases.get_document_template_form_data import (
-    GetDocumentTemplateFormDataRequest,
+    GetPrintSettingsFormDataRequest,
 )
 from core_logic.value_objects.document_recipes import WORK_DOCUMENT_TYPE
 
@@ -81,7 +81,7 @@ class DocumentTemplateCreateView(TemplateView):
 
     def _form(self, *args, form_data=None, **kwargs):
         form_data = form_data or self._form_data()
-        return DocumentTemplateForm(
+        return PrintSettingsForm(
             *args,
             document_types=form_data.document_types,
             sections=form_data.sections,
@@ -93,7 +93,7 @@ class DocumentTemplateCreateView(TemplateView):
             container
             .get_print_settings_form_data_use_case()
             .execute(
-                GetDocumentTemplateFormDataRequest(
+                GetPrintSettingsFormDataRequest(
                     print_settings_id=template_id,
                     renderable_only=True,
                 ),

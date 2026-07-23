@@ -216,7 +216,7 @@ class WorkDetailViewTests(TestCase):
         self.assertContains(response, 'data-template-controlled-options')
         self.assertContains(
             response,
-            'Выбранный шаблон задаёт состав и порядок секций документа.',
+            'Выбранные настройки печати задают состав, порядок секций и оформление документа.',
         )
         self.assertContains(response, 'Состав по умолчанию')
         self.assertContains(response, 'document_style')

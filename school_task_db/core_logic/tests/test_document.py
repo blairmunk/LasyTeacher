@@ -207,13 +207,16 @@ class DocumentModelTests(TestCase):
             ],
         )
 
-        recipe = template.to_recipe()
-        overridden_recipe = template.to_recipe(
+        recipe = template.to_print_recipe()
+        legacy_recipe = template.to_recipe()
+        overridden_recipe = template.to_print_recipe(
             document_type=CUSTOM_DOCUMENT_TYPE,
         )
 
         self.assertEqual(recipe.document_type, REMEDIAL_SHEET_DOCUMENT_TYPE)
         self.assertEqual(recipe.section_types, ('header', 'answers'))
+        self.assertEqual(legacy_recipe.document_type, recipe.document_type)
+        self.assertEqual(legacy_recipe.section_types, recipe.section_types)
         self.assertEqual(overridden_recipe.document_type, CUSTOM_DOCUMENT_TYPE)
 
     def test_create_template_params_build_sections_from_legacy_section_types(self):

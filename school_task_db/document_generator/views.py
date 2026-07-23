@@ -31,7 +31,7 @@ class DocumentTemplateEditorView(TemplateView):
 
 class DocumentTemplateCreateView(TemplateView):
     template_name = 'document_generator/template_form.html'
-    page_title = 'Новый шаблон документа'
+    page_title = 'Новые настройки печати'
 
     def get_context_data(self, **kwargs):
         form_data = kwargs.pop('form_data', None) or self._form_data()
@@ -76,7 +76,7 @@ class DocumentTemplateCreateView(TemplateView):
                 self.get_context_data(form=form, form_data=form_data),
             )
 
-        messages.success(request, 'Шаблон документа создан.')
+        messages.success(request, 'Настройки печати созданы.')
         return redirect('document_generator:template-editor')
 
     def _form(self, *args, form_data=None, **kwargs):
@@ -102,12 +102,12 @@ class DocumentTemplateCreateView(TemplateView):
 
 
 class DocumentTemplateUpdateView(DocumentTemplateCreateView):
-    page_title = 'Редактирование шаблона'
+    page_title = 'Редактирование настроек печати'
 
     def _form_data(self, template_id=''):
         form_data = super()._form_data(template_id or str(self.kwargs['pk']))
         if form_data.template is None:
-            raise Http404('Шаблон документа не найден')
+            raise Http404('Настройки печати не найдены')
         return form_data
 
     def get_context_data(self, **kwargs):
@@ -147,12 +147,12 @@ class DocumentTemplateUpdateView(DocumentTemplateCreateView):
         )
         if not result.success:
             if result.status == 'not_found':
-                raise Http404('Шаблон документа не найден')
+                raise Http404('Настройки печати не найдены')
             for error in result.errors:
                 form.add_error(None, error)
             return self.render_to_response(
                 self.get_context_data(form=form, form_data=form_data),
             )
 
-        messages.success(request, 'Шаблон документа обновлён.')
+        messages.success(request, 'Настройки печати обновлены.')
         return redirect('document_generator:template-editor')

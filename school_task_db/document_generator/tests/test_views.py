@@ -21,7 +21,7 @@ class DocumentTemplateEditorViewTests(TestCase):
             response,
             'document_generator/template_editor.html',
         )
-        self.assertContains(response, 'Шаблоны документов')
+        self.assertContains(response, 'Настройки печати')
         self.assertContains(response, 'Контрольная / самостоятельная')
         self.assertContains(response, 'Шаблон работы')
         self.assertContains(response, 'header')
@@ -63,7 +63,7 @@ class DocumentTemplateEditorViewTests(TestCase):
             response,
             'document_generator/template_form.html',
         )
-        self.assertContains(response, 'Новый шаблон документа')
+        self.assertContains(response, 'Новые настройки печати')
         self.assertContains(response, 'name="template_type"')
         self.assertContains(response, 'value="header"')
         self.assertContains(response, 'value="task_list"')
@@ -209,7 +209,7 @@ class DocumentTemplateEditorViewTests(TestCase):
             response,
             'document_generator/template_form.html',
         )
-        self.assertContains(response, 'Редактирование шаблона')
+        self.assertContains(response, 'Редактирование настроек печати')
         self.assertContains(response, 'value="Шаблон работы"')
         self.assertContains(response, 'Описание')
         self.assertContains(response, 'value="header"')

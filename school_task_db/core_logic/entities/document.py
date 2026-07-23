@@ -159,6 +159,12 @@ class DocumentRecipe:
 
 @dataclass(frozen=True)
 class DocumentTemplateSpec:
+    """Saved print settings for a sectioned document.
+
+    The class name is kept for compatibility with the current persistence layer.
+    Conceptually it is a print profile: section recipe plus presentation options.
+    """
+
     name: str
     template_type: str
     template_id: str = ''
@@ -184,12 +190,15 @@ class DocumentTemplateSpec:
     def section_types(self) -> Tuple[str, ...]:
         return tuple(section.section_type for section in self.sections)
 
-    def to_recipe(self, document_type: str = '') -> DocumentRecipe:
+    def to_print_recipe(self, document_type: str = '') -> DocumentRecipe:
         return DocumentRecipe(
             document_type=document_type or self.template_type,
             sections=self.sections,
             presentation=self.presentation,
         )
+
+    def to_recipe(self, document_type: str = '') -> DocumentRecipe:
+        return self.to_print_recipe(document_type=document_type)
 
 
 def _clean_section_types(section_types) -> Tuple[str, ...]:

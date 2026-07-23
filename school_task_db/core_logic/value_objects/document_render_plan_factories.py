@@ -235,7 +235,7 @@ def _recipe_from_template_or_default(
     default_recipe_builder: Callable[[], DocumentRecipe],
 ) -> DocumentRecipe:
     if template_spec:
-        return template_spec.to_recipe()
+        return template_spec.to_print_recipe()
     return default_recipe_builder()
 
 

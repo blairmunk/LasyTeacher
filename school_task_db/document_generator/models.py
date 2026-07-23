@@ -11,7 +11,7 @@ from core_logic.value_objects.document_recipes import (
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     WORK_DOCUMENT_TYPE,
     WORKSHEET_DOCUMENT_TYPE,
-    build_document_template_spec_from_config,
+    build_print_settings_spec_from_config,
 )
 from core_logic.value_objects.document_section_catalog import (
     validate_document_section_types,
@@ -95,7 +95,7 @@ class DocumentTemplate(BaseModel):
             raise ValidationError({'sections_config': str(error)}) from error
 
     def to_template_spec(self):
-        return build_document_template_spec_from_config(
+        return build_print_settings_spec_from_config(
             name=self.name,
             template_type=self.template_type,
             template_id=str(self.pk),

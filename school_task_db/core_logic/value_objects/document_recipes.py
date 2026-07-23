@@ -7,7 +7,7 @@ from core_logic.entities.document import (
     DocumentPresentation,
     DocumentRecipe,
     DocumentSectionSpec,
-    DocumentTemplateSpec,
+    PrintSettingsSpec,
 )
 
 
@@ -57,6 +57,43 @@ def build_document_recipe_from_sections_config(
     )
 
 
+def build_print_settings_spec_from_config(
+    name: str,
+    template_type: str,
+    sections_config: (
+        Mapping[str, Any]
+        | Sequence[Mapping[str, Any] | DocumentSectionSpec]
+    ),
+    default_content_config: Mapping[str, Any] | None = None,
+    html_template_override: str = '',
+    latex_template_override: str = '',
+    custom_css: str = '',
+    custom_latex_preamble: str = '',
+    template_id: str = '',
+    description: str = '',
+    is_default: bool = False,
+) -> PrintSettingsSpec:
+    recipe = build_document_recipe_from_sections_config(
+        document_type=template_type,
+        sections_config=sections_config,
+    )
+    return PrintSettingsSpec(
+        name=name,
+        template_type=template_type,
+        template_id=template_id,
+        description=description,
+        is_default=is_default,
+        sections=recipe.sections,
+        default_content_config=default_content_config or {},
+        presentation=DocumentPresentation(
+            html_template_override=html_template_override,
+            latex_template_override=latex_template_override,
+            custom_css=custom_css,
+            custom_latex_preamble=custom_latex_preamble,
+        ),
+    )
+
+
 def build_document_template_spec_from_config(
     name: str,
     template_type: str,
@@ -72,25 +109,19 @@ def build_document_template_spec_from_config(
     template_id: str = '',
     description: str = '',
     is_default: bool = False,
-) -> DocumentTemplateSpec:
-    recipe = build_document_recipe_from_sections_config(
-        document_type=template_type,
-        sections_config=sections_config,
-    )
-    return DocumentTemplateSpec(
+) -> PrintSettingsSpec:
+    return build_print_settings_spec_from_config(
         name=name,
         template_type=template_type,
+        sections_config=sections_config,
+        default_content_config=default_content_config,
+        html_template_override=html_template_override,
+        latex_template_override=latex_template_override,
+        custom_css=custom_css,
+        custom_latex_preamble=custom_latex_preamble,
         template_id=template_id,
         description=description,
         is_default=is_default,
-        sections=recipe.sections,
-        default_content_config=default_content_config or {},
-        presentation=DocumentPresentation(
-            html_template_override=html_template_override,
-            latex_template_override=latex_template_override,
-            custom_css=custom_css,
-            custom_latex_preamble=custom_latex_preamble,
-        ),
     )
 
 

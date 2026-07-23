@@ -1,4 +1,4 @@
-"""Catalog of supported section types for document templates."""
+"""Catalog of supported section types for document print profiles."""
 
 from dataclasses import dataclass, field
 from typing import Any, Mapping, Tuple

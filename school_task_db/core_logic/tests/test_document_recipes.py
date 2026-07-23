@@ -8,6 +8,7 @@ from core_logic.value_objects.document_recipes import (
     WORKSHEET_DOCUMENT_TYPE,
     build_document_recipe_from_sections_config,
     build_document_template_spec_from_config,
+    build_print_settings_spec_from_config,
 )
 
 
@@ -79,8 +80,8 @@ class DocumentRecipeTests(TestCase):
                 ],
             )
 
-    def test_builds_template_spec_from_sections_config(self):
-        template = build_document_template_spec_from_config(
+    def test_builds_print_settings_spec_from_sections_config(self):
+        print_settings = build_print_settings_spec_from_config(
             name='Рабочий лист',
             template_type=WORKSHEET_DOCUMENT_TYPE,
             sections_config={
@@ -95,23 +96,32 @@ class DocumentRecipeTests(TestCase):
             default_content_config={'answer_type': 'tasks_only'},
         )
 
-        self.assertEqual(template.name, 'Рабочий лист')
-        self.assertEqual(template.template_type, WORKSHEET_DOCUMENT_TYPE)
+        self.assertEqual(print_settings.name, 'Рабочий лист')
+        self.assertEqual(print_settings.template_type, WORKSHEET_DOCUMENT_TYPE)
         self.assertEqual(
-            template.section_types,
+            print_settings.section_types,
             (HEADER_SECTION, TASK_LIST_SECTION),
         )
         self.assertEqual(
-            template.default_content_config,
+            print_settings.default_content_config,
             {'answer_type': 'tasks_only'},
         )
         self.assertEqual(
-            template.to_recipe().document_type,
+            print_settings.to_print_recipe().document_type,
             WORKSHEET_DOCUMENT_TYPE,
         )
 
-    def test_builds_template_spec_with_presentation_overrides(self):
-        template = build_document_template_spec_from_config(
+    def test_legacy_template_spec_factory_uses_print_settings_builder(self):
+        print_settings = build_document_template_spec_from_config(
+            name='Рабочий лист',
+            template_type=WORKSHEET_DOCUMENT_TYPE,
+            sections_config=[{'type': HEADER_SECTION}],
+        )
+
+        self.assertEqual(print_settings.section_types, (HEADER_SECTION,))
+
+    def test_builds_print_settings_spec_with_presentation_overrides(self):
+        print_settings = build_print_settings_spec_from_config(
             name='Рабочий лист',
             template_type=WORKSHEET_DOCUMENT_TYPE,
             sections_config=[{'type': HEADER_SECTION}],
@@ -121,17 +131,20 @@ class DocumentRecipeTests(TestCase):
             custom_latex_preamble='\\usepackage{multicol}',
         )
 
-        self.assertTrue(template.presentation.has_customization)
+        self.assertTrue(print_settings.presentation.has_customization)
         self.assertEqual(
-            template.presentation.template_override_for_renderer('html'),
+            print_settings.presentation.template_override_for_renderer('html'),
             '<html>{{ body_content }}</html>',
         )
         self.assertEqual(
-            template.presentation.template_override_for_renderer('latex'),
+            print_settings.presentation.template_override_for_renderer('latex'),
             '\\begin{document}{{ body_content }}',
         )
-        self.assertEqual(template.presentation.custom_css, 'body { font-size: 14px; }')
         self.assertEqual(
-            template.to_recipe().presentation.custom_latex_preamble,
+            print_settings.presentation.custom_css,
+            'body { font-size: 14px; }',
+        )
+        self.assertEqual(
+            print_settings.to_print_recipe().presentation.custom_latex_preamble,
             '\\usepackage{multicol}',
         )

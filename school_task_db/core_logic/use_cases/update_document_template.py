@@ -40,7 +40,7 @@ class UpdateDocumentTemplateUseCase:
                 errors=tuple(errors),
             )
 
-        updated = self.document_template_repo.update_template(params)
+        updated = self.document_template_repo.update_print_settings(params)
         if not updated:
             return UpdatePrintSettingsResult(
                 status=DOCUMENT_TEMPLATE_UPDATE_STATUS_NOT_FOUND,

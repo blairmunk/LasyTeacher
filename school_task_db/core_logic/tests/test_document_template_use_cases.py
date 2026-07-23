@@ -86,9 +86,15 @@ class FakeDocumentTemplateRepository:
         self.created_params = params
         return 'created-template'
 
+    def create_print_settings(self, params):
+        return self.create_template(params)
+
     def update_template(self, params):
         self.updated_params = params
         return self.update_exists
+
+    def update_print_settings(self, params):
+        return self.update_template(params)
 
 
 class GetDocumentTemplateListUseCaseTests(TestCase):

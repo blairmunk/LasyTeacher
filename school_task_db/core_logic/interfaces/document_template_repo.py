@@ -5,9 +5,11 @@ from typing import List, Optional
 
 from core_logic.entities.document import (
     CreateDocumentTemplateParams,
+    CreatePrintSettingsParams,
     DocumentTemplateSpec,
     PrintSettingsSpec,
     UpdateDocumentTemplateParams,
+    UpdatePrintSettingsParams,
 )
 
 
@@ -33,6 +35,18 @@ class IDocumentTemplateRepository(ABC):
             template_id=print_settings_id,
             template_type=document_type,
         )
+
+    def create_print_settings(
+        self,
+        params: CreatePrintSettingsParams,
+    ) -> str:
+        return self.create_template(params)
+
+    def update_print_settings(
+        self,
+        params: UpdatePrintSettingsParams,
+    ) -> bool:
+        return self.update_template(params)
 
     @abstractmethod
     def list_template_specs(

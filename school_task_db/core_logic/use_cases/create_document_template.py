@@ -38,7 +38,7 @@ class CreateDocumentTemplateUseCase:
                 errors=tuple(errors),
             )
 
-        template_id = self.document_template_repo.create_template(params)
+        template_id = self.document_template_repo.create_print_settings(params)
         return CreatePrintSettingsResult(
             status=DOCUMENT_TEMPLATE_CREATE_STATUS_CREATED,
             template_id=template_id,

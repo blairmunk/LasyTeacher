@@ -40,8 +40,8 @@ class GetWorkDetailUseCase:
             variants=variants,
             analog_groups=analog_groups,
             spec_preview=spec_preview,
-            work_document_templates=self._template_specs(WORK_DOCUMENT_TYPE),
-            remedial_sheet_templates=self._template_specs(
+            work_print_settings=self._print_settings(WORK_DOCUMENT_TYPE),
+            remedial_sheet_print_settings=self._print_settings(
                 REMEDIAL_SHEET_DOCUMENT_TYPE,
             ),
             work_document_style_options=list(WORK_DOCUMENT_STYLE_OPTIONS),
@@ -57,7 +57,7 @@ class GetWorkDetailUseCase:
             return items.exists()
         return bool(items)
 
-    def _template_specs(self, template_type: str):
+    def _print_settings(self, document_type: str):
         if self.document_template_repo is None:
             return []
-        return self.document_template_repo.list_template_specs(template_type)
+        return self.document_template_repo.list_template_specs(document_type)

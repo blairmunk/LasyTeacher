@@ -307,12 +307,16 @@ class WorkDetailTests(TestCase):
         self.assertEqual(result.variants, ['variant-1'])
         self.assertEqual(result.spec_preview, ['spec-1'])
         self.assertEqual(
-            result.work_document_templates[0].template_id,
+            result.work_print_settings[0].template_id,
             'template-work',
         )
         self.assertEqual(
-            result.remedial_sheet_templates[0].template_id,
+            result.remedial_sheet_print_settings[0].template_id,
             'template-remedial',
+        )
+        self.assertEqual(
+            result.work_document_templates[0].template_id,
+            'template-work',
         )
         self.assertEqual(
             template_repo.requested_template_types,

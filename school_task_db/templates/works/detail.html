@@ -199,9 +199,9 @@
                                     data-document-template-select
                                 >
                                     <option value="">По умолчанию</option>
-                                    {% for template in remedial_sheet_templates %}
-                                    <option value="{{ template.template_id }}">
-                                        {{ template.name }}{% if template.presentation.has_customization %} · кастом{% endif %}
+                                    {% for print_settings in remedial_sheet_print_settings %}
+                                    <option value="{{ print_settings.template_id }}">
+                                        {{ print_settings.name }}{% if print_settings.presentation.has_customization %} · кастом{% endif %}
                                     </option>
                                     {% endfor %}
                                 </select>
@@ -305,9 +305,9 @@
                                             data-document-template-select
                                         >
                                             <option value="">По умолчанию</option>
-                                            {% for template in work_document_templates %}
-                                            <option value="{{ template.template_id }}">
-                                                {{ template.name }}{% if template.presentation.has_customization %} · кастом{% endif %}
+                                            {% for print_settings in work_print_settings %}
+                                            <option value="{{ print_settings.template_id }}">
+                                                {{ print_settings.name }}{% if print_settings.presentation.has_customization %} · кастом{% endif %}
                                             </option>
                                             {% endfor %}
                                         </select>

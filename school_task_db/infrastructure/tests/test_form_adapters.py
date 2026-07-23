@@ -1523,8 +1523,8 @@ class WorkFormAdapterTests(SimpleTestCase):
             variants=['variant-1'],
             analog_groups=['group-1'],
             spec_preview=['spec-1'],
-            work_document_templates=['work-template-1'],
-            remedial_sheet_templates=['remedial-template-1'],
+            work_print_settings=['work-template-1'],
+            remedial_sheet_print_settings=['remedial-template-1'],
             work_document_style_options=['style-1'],
             show_sync_button=True,
         )
@@ -1549,6 +1549,14 @@ class WorkFormAdapterTests(SimpleTestCase):
         )
         self.assertEqual(
             detail_context['remedial_sheet_templates'],
+            ['remedial-template-1'],
+        )
+        self.assertEqual(
+            detail_context['work_print_settings'],
+            ['work-template-1'],
+        )
+        self.assertEqual(
+            detail_context['remedial_sheet_print_settings'],
             ['remedial-template-1'],
         )
         self.assertTrue(detail_context['show_sync_button'])

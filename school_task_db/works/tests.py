@@ -235,7 +235,7 @@ class WorkDetailViewTests(TestCase):
         response = self.client.get(reverse('works:detail', args=[self.work.pk]))
 
         self.assertEqual(
-            response.context['work_document_templates'][0].template_id,
+            response.context['work_print_settings'][0].template_id,
             str(template.pk),
         )
         self.assertContains(response, 'name="template_id"')
@@ -257,7 +257,7 @@ class WorkDetailViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
-            response.context['remedial_sheet_templates'][0].template_id,
+            response.context['remedial_sheet_print_settings'][0].template_id,
             str(template.pk),
         )
         self.assertContains(response, 'data-remedial-batch-rendering-block')

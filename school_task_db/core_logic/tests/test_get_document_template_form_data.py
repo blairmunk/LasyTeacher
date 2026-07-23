@@ -36,6 +36,7 @@ class GetDocumentTemplateFormDataUseCaseTests(TestCase):
         self.assertTrue(
             all(section.renderable_document_types for section in data.sections),
         )
+        self.assertIsNone(data.print_profile)
         self.assertIsNone(data.template)
 
     def test_loads_template_for_update_form(self):
@@ -54,4 +55,5 @@ class GetDocumentTemplateFormDataUseCaseTests(TestCase):
         )
 
         self.assertEqual(repo.template_id, 'template-1')
+        self.assertEqual(data.print_profile, template)
         self.assertEqual(data.template, template)

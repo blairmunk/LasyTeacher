@@ -1,9 +1,9 @@
-"""Prepare data for the sectioned document template form."""
+"""Prepare data for the sectioned document print profile form."""
 
 from dataclasses import dataclass
 from typing import Tuple
 
-from core_logic.entities.document import DocumentTemplateSpec
+from core_logic.entities.document import PrintSettingsSpec
 from core_logic.interfaces.document_template_repo import (
     IDocumentTemplateRepository,
 )
@@ -28,7 +28,11 @@ class GetDocumentTemplateFormDataRequest:
 class DocumentTemplateFormData:
     document_types: Tuple[DocumentTypeCatalogItem, ...]
     sections: Tuple[DocumentSectionCatalogItem, ...]
-    template: DocumentTemplateSpec | None = None
+    print_profile: PrintSettingsSpec | None = None
+
+    @property
+    def template(self) -> PrintSettingsSpec | None:
+        return self.print_profile
 
 
 class GetDocumentTemplateFormDataUseCase:
@@ -51,10 +55,10 @@ class GetDocumentTemplateFormDataUseCase:
                 include_legacy=request.include_legacy_sections,
                 renderable_only=request.renderable_only,
             ),
-            template=self._template(request.template_id),
+            print_profile=self._print_profile(request.template_id),
         )
 
-    def _template(self, template_id: str) -> DocumentTemplateSpec | None:
+    def _print_profile(self, template_id: str) -> PrintSettingsSpec | None:
         if not template_id or self.document_template_repo is None:
             return None
         return self.document_template_repo.get_template_spec(

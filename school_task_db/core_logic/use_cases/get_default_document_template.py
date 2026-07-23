@@ -1,8 +1,8 @@
-"""Find the default document template for a document type."""
+"""Find the default document print profile for a document type."""
 
 from dataclasses import dataclass
 
-from core_logic.entities.document import DocumentTemplateSpec
+from core_logic.entities.document import PrintSettingsSpec
 from core_logic.interfaces.document_template_repo import (
     IDocumentTemplateRepository,
 )
@@ -15,7 +15,11 @@ class GetDefaultDocumentTemplateRequest:
 
 @dataclass(frozen=True)
 class DefaultDocumentTemplateData:
-    template: DocumentTemplateSpec | None = None
+    print_profile: PrintSettingsSpec | None = None
+
+    @property
+    def template(self) -> PrintSettingsSpec | None:
+        return self.print_profile
 
 
 class GetDefaultDocumentTemplateUseCase:
@@ -27,7 +31,7 @@ class GetDefaultDocumentTemplateUseCase:
         request: GetDefaultDocumentTemplateRequest,
     ) -> DefaultDocumentTemplateData:
         return DefaultDocumentTemplateData(
-            template=self.document_template_repo.get_default_template_spec(
+            print_profile=self.document_template_repo.get_default_template_spec(
                 request.template_type,
             ),
         )

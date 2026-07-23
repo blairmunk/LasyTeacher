@@ -108,6 +108,7 @@ class GetDocumentTemplateListUseCaseTests(TestCase):
         )
 
         self.assertEqual(repo.default_template_type, WORKSHEET_DOCUMENT_TYPE)
+        self.assertEqual(data.print_profile.name, 'Рабочий лист')
         self.assertEqual(data.template.name, 'Рабочий лист')
 
     def test_returns_none_for_missing_default_template(self):
@@ -122,6 +123,7 @@ class GetDocumentTemplateListUseCaseTests(TestCase):
             ),
         )
 
+        self.assertIsNone(data.print_profile)
         self.assertIsNone(data.template)
 
     def test_returns_template_by_id(self):
@@ -135,6 +137,7 @@ class GetDocumentTemplateListUseCaseTests(TestCase):
             )
         )
 
+        self.assertEqual(data.print_profile.name, 'Рабочий лист')
         self.assertEqual(data.template.name, 'Рабочий лист')
         self.assertEqual(
             repo.requested_template_id,

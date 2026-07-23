@@ -1,8 +1,8 @@
-"""Get one document template for editing."""
+"""Get one document print profile for editing."""
 
 from dataclasses import dataclass
 
-from core_logic.entities.document import DocumentTemplateSpec
+from core_logic.entities.document import PrintSettingsSpec
 from core_logic.interfaces.document_template_repo import (
     IDocumentTemplateRepository,
 )
@@ -16,7 +16,11 @@ class GetDocumentTemplateRequest:
 
 @dataclass(frozen=True)
 class GetDocumentTemplateData:
-    template: DocumentTemplateSpec | None = None
+    print_profile: PrintSettingsSpec | None = None
+
+    @property
+    def template(self) -> PrintSettingsSpec | None:
+        return self.print_profile
 
 
 class GetDocumentTemplateUseCase:
@@ -31,7 +35,7 @@ class GetDocumentTemplateUseCase:
         request: GetDocumentTemplateRequest,
     ) -> GetDocumentTemplateData:
         return GetDocumentTemplateData(
-            template=self.document_template_repo.get_template_spec(
+            print_profile=self.document_template_repo.get_template_spec(
                 template_id=request.template_id,
                 template_type=request.template_type,
             )

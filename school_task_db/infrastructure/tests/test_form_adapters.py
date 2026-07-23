@@ -516,7 +516,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         )
         self.assertFalse(params.is_default)
 
-    def test_builds_form_initial_from_template(self):
+    def test_builds_form_initial_from_print_settings(self):
         template = DocumentTemplateSpec(
             name='Шаблон',
             template_type=WORK_DOCUMENT_TYPE,
@@ -526,10 +526,13 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
             sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
         )
 
-        initial = DocumentTemplateFormAdapter().form_initial_from_template(
+        adapter = DocumentTemplateFormAdapter()
+        initial = adapter.form_initial_from_print_settings(
             template,
         )
+        legacy_initial = adapter.form_initial_from_template(template)
 
+        self.assertEqual(legacy_initial, initial)
         self.assertEqual(initial['name'], 'Шаблон')
         self.assertEqual(initial['description'], 'Описание')
         self.assertEqual(initial['template_type'], WORK_DOCUMENT_TYPE)
@@ -553,7 +556,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
             ],
         )
 
-        initial = DocumentTemplateFormAdapter().form_initial_from_template(
+        initial = DocumentTemplateFormAdapter().form_initial_from_print_settings(
             template,
         )
 

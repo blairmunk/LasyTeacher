@@ -80,18 +80,21 @@ class DocumentTemplateFormAdapter:
         )
 
     def form_initial_from_template(self, template):
+        return self.form_initial_from_print_settings(template)
+
+    def form_initial_from_print_settings(self, print_settings):
         return {
-            'name': template.name,
-            'description': template.description,
-            'template_type': template.template_type,
-            'sections': template.section_types,
-            'section_order': ','.join(template.section_types),
+            'name': print_settings.name,
+            'description': print_settings.description,
+            'template_type': print_settings.template_type,
+            'sections': print_settings.section_types,
+            'section_order': ','.join(print_settings.section_types),
             'section_options': {
                 section.section_type: dict(section.options)
-                for section in template.sections
+                for section in print_settings.sections
                 if section.options
             },
-            'is_default': template.is_default,
+            'is_default': print_settings.is_default,
         }
 
     def create_context(self, form, document_types, sections):

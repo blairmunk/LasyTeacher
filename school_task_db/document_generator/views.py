@@ -118,7 +118,7 @@ class PrintSettingsUpdateView(PrintSettingsCreateView):
             initial=(
                 container
                 .print_settings_form_adapter
-                .form_initial_from_template(template)
+                .form_initial_from_print_settings(template)
             ),
         )
         context = super().get_context_data(

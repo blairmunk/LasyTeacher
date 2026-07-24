@@ -898,7 +898,7 @@ class ContainerTests(SimpleTestCase):
             container.print_settings_form_adapter,
             PrintSettingsFormAdapter,
         )
-        self.assertIs(
+        self.assertIsNot(
             container.document_template_form_adapter,
             container.print_settings_form_adapter,
         )

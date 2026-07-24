@@ -332,6 +332,9 @@ from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
 from infrastructure.forms.print_settings_forms import (
     PrintSettingsFormAdapter,
 )
+from infrastructure.forms.document_template_forms import (
+    DocumentTemplateFormAdapter,
+)
 from infrastructure.forms.event_forms import EventFormAdapter
 from infrastructure.forms.report_forms import ReportFormAdapter
 from infrastructure.forms.review_forms import ReviewFormAdapter
@@ -361,6 +364,7 @@ class Container:
         self._core_form_adapter = None
         self._curriculum_form_adapter = None
         self._document_template_form_adapter = None
+        self._print_settings_form_adapter = None
         self._event_form_adapter = None
         self._report_form_adapter = None
         self._review_form_adapter = None
@@ -462,13 +466,17 @@ class Container:
 
     @property
     def document_template_form_adapter(self):
-        return self.print_settings_form_adapter
+        if self._document_template_form_adapter is None:
+            self._document_template_form_adapter = (
+                DocumentTemplateFormAdapter()
+            )
+        return self._document_template_form_adapter
 
     @property
     def print_settings_form_adapter(self):
-        if self._document_template_form_adapter is None:
-            self._document_template_form_adapter = PrintSettingsFormAdapter()
-        return self._document_template_form_adapter
+        if self._print_settings_form_adapter is None:
+            self._print_settings_form_adapter = PrintSettingsFormAdapter()
+        return self._print_settings_form_adapter
 
     @property
     def event_form_adapter(self):

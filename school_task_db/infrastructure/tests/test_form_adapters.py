@@ -35,6 +35,10 @@ from core_logic.services.analytics_service import (
 from core_logic.use_cases.get_document_template_editor_data import (
     DocumentTemplateEditorData,
 )
+from core_logic.use_cases.get_print_settings_editor_data import (
+    GetPrintSettingsEditorDataRequest,
+    PrintSettingsEditorData,
+)
 from core_logic.value_objects.document_render_options import (
     WORK_DOCUMENT_STYLE_WORKSHEET,
     WorkDocumentRenderOptions,
@@ -252,9 +256,9 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
     def test_print_settings_form_is_template_form_subclass(self):
         self.assertTrue(issubclass(PrintSettingsForm, DocumentTemplateForm))
 
-    def test_print_settings_form_adapter_is_template_adapter_subclass(self):
+    def test_template_adapter_is_print_settings_adapter_subclass(self):
         self.assertTrue(
-            issubclass(PrintSettingsFormAdapter, DocumentTemplateFormAdapter)
+            issubclass(DocumentTemplateFormAdapter, PrintSettingsFormAdapter)
         )
 
     def _template_form(self, *args, sections=None, **kwargs):
@@ -338,6 +342,34 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         )
         self.assertTrue(context['print_profiles'][0]['has_customization'])
         self.assertEqual(context['templates'][0]['template_id'], 'template-work')
+
+    def test_clean_editor_context_has_only_print_settings_names(self):
+        request = GetPrintSettingsEditorDataRequest(
+            document_type=WORK_DOCUMENT_TYPE,
+        )
+        editor_data = PrintSettingsEditorData(
+            document_types=(),
+            sections=(),
+            print_profiles=[
+                DocumentTemplateSpec(
+                    name='Профиль',
+                    template_type=WORK_DOCUMENT_TYPE,
+                    template_id='profile-1',
+                ),
+            ],
+        )
+
+        context = PrintSettingsFormAdapter().editor_context(
+            editor_data,
+            request,
+        )
+
+        self.assertNotIn('templates', context)
+        self.assertNotIn('template_id', context['print_profiles'][0])
+        self.assertEqual(
+            context['print_profiles'][0]['print_settings_id'],
+            'profile-1',
+        )
 
     def test_editor_context_preserves_filter_flags_in_document_type_urls(self):
         request = (

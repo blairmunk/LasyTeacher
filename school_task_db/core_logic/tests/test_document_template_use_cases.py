@@ -2,13 +2,19 @@ from unittest import TestCase
 
 from core_logic.entities.document import (
     CreateDocumentTemplateParams,
+    CreatePrintSettingsParams,
     DocumentSectionSpec,
     DocumentTemplateSpec,
     UpdateDocumentTemplateParams,
+    UpdatePrintSettingsParams,
 )
 from core_logic.use_cases.create_document_template import (
     CreateDocumentTemplateUseCase,
     DOCUMENT_TEMPLATE_CREATE_STATUS_INVALID,
+)
+from core_logic.use_cases.create_print_settings import (
+    PRINT_SETTINGS_CREATE_STATUS_CREATED,
+    CreatePrintSettingsUseCase,
 )
 from core_logic.use_cases.get_default_document_template import (
     GetDefaultDocumentTemplateRequest,
@@ -38,6 +44,10 @@ from core_logic.use_cases.update_document_template import (
     DOCUMENT_TEMPLATE_UPDATE_STATUS_INVALID,
     DOCUMENT_TEMPLATE_UPDATE_STATUS_NOT_FOUND,
     UpdateDocumentTemplateUseCase,
+)
+from core_logic.use_cases.update_print_settings import (
+    PRINT_SETTINGS_UPDATE_STATUS_UPDATED,
+    UpdatePrintSettingsUseCase,
 )
 from core_logic.use_cases.document_template_selection import (
     resolve_document_print_settings_spec as legacy_resolve_print_settings_spec,
@@ -360,6 +370,20 @@ class CreateDocumentTemplateUseCaseTests(TestCase):
         )
         self.assertIsNone(repo.created_params)
 
+    def test_clean_use_case_creates_print_settings(self):
+        repo = FakeDocumentTemplateRepository()
+        params = CreatePrintSettingsParams(
+            name='Профиль',
+            template_type=WORKSHEET_DOCUMENT_TYPE,
+            section_types=('header', 'task_list'),
+        )
+
+        result = CreatePrintSettingsUseCase(repo).execute(params)
+
+        self.assertEqual(result.status, PRINT_SETTINGS_CREATE_STATUS_CREATED)
+        self.assertEqual(result.print_settings_id, 'created-template')
+        self.assertIs(repo.created_params, params)
+
 
 class UpdateDocumentTemplateUseCaseTests(TestCase):
     def test_updates_template_from_valid_params(self):
@@ -414,3 +438,18 @@ class UpdateDocumentTemplateUseCaseTests(TestCase):
 
         self.assertEqual(result.status, DOCUMENT_TEMPLATE_UPDATE_STATUS_INVALID)
         self.assertIsNone(repo.updated_params)
+
+    def test_clean_use_case_updates_print_settings(self):
+        repo = FakeDocumentTemplateRepository()
+        params = UpdatePrintSettingsParams(
+            template_id='template-1',
+            name='Профиль',
+            template_type=WORKSHEET_DOCUMENT_TYPE,
+            section_types=('header', 'task_list'),
+        )
+
+        result = UpdatePrintSettingsUseCase(repo).execute(params)
+
+        self.assertEqual(result.status, PRINT_SETTINGS_UPDATE_STATUS_UPDATED)
+        self.assertEqual(result.print_settings_id, 'template-1')
+        self.assertIs(repo.updated_params, params)

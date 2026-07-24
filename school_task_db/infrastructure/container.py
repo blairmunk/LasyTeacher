@@ -69,8 +69,14 @@ from core_logic.use_cases.render_work_document import RenderWorkDocumentUseCase
 from core_logic.use_cases.create_print_settings import (
     CreatePrintSettingsUseCase,
 )
+from core_logic.use_cases.create_document_template import (
+    CreateDocumentTemplateUseCase,
+)
 from core_logic.use_cases.update_print_settings import (
     UpdatePrintSettingsUseCase,
+)
+from core_logic.use_cases.update_document_template import (
+    UpdateDocumentTemplateUseCase,
 )
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.get_add_tasks_to_group import GetAddTasksToGroupUseCase
@@ -737,7 +743,9 @@ class Container:
         )
 
     def create_document_template_use_case(self):
-        return self.create_print_settings_use_case()
+        return CreateDocumentTemplateUseCase(
+            document_template_repo=self.document_template_repo,
+        )
 
     def create_print_settings_use_case(self):
         return CreatePrintSettingsUseCase(
@@ -745,7 +753,9 @@ class Container:
         )
 
     def update_document_template_use_case(self):
-        return self.update_print_settings_use_case()
+        return UpdateDocumentTemplateUseCase(
+            document_template_repo=self.document_template_repo,
+        )
 
     def update_print_settings_use_case(self):
         return UpdatePrintSettingsUseCase(

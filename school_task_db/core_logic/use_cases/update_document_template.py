@@ -1,84 +1,46 @@
-"""Update a document print profile.
-
-The module name is legacy; persistence is still backed by document templates.
-"""
+"""Legacy adapter for updating document print settings."""
 
 from core_logic.entities.document import (
-    UpdatePrintSettingsParams,
-    UpdatePrintSettingsResult,
+    UpdateDocumentTemplateParams,
+    UpdateDocumentTemplateResult,
 )
 from core_logic.interfaces.print_settings_repo import (
     IPrintSettingsRepository,
 )
-from core_logic.value_objects.document_section_catalog import (
-    validate_document_section_types,
+from core_logic.use_cases.update_print_settings import (
+    PRINT_SETTINGS_UPDATE_STATUS_INVALID,
+    PRINT_SETTINGS_UPDATE_STATUS_NOT_FOUND,
+    PRINT_SETTINGS_UPDATE_STATUS_UPDATED,
+    UpdatePrintSettingsUseCase,
 )
-from core_logic.value_objects.document_type_catalog import validate_document_type
 
 
-DOCUMENT_TEMPLATE_UPDATE_STATUS_UPDATED = 'updated'
-DOCUMENT_TEMPLATE_UPDATE_STATUS_INVALID = 'invalid'
-DOCUMENT_TEMPLATE_UPDATE_STATUS_NOT_FOUND = 'not_found'
+DOCUMENT_TEMPLATE_UPDATE_STATUS_UPDATED = PRINT_SETTINGS_UPDATE_STATUS_UPDATED
+DOCUMENT_TEMPLATE_UPDATE_STATUS_INVALID = PRINT_SETTINGS_UPDATE_STATUS_INVALID
+DOCUMENT_TEMPLATE_UPDATE_STATUS_NOT_FOUND = (
+    PRINT_SETTINGS_UPDATE_STATUS_NOT_FOUND
+)
 
 
-class UpdateDocumentTemplateUseCase:
+class UpdateDocumentTemplateUseCase(UpdatePrintSettingsUseCase):
+    """Adapt the former template-oriented update contract."""
+
     def __init__(
         self,
-        print_settings_repo: IPrintSettingsRepository | None = None,
         document_template_repo: IPrintSettingsRepository | None = None,
+        print_settings_repo: IPrintSettingsRepository | None = None,
     ):
-        self.print_settings_repo = print_settings_repo or document_template_repo
-        self.document_template_repo = self.print_settings_repo
+        repository = print_settings_repo or document_template_repo
+        super().__init__(print_settings_repo=repository)
+        self.document_template_repo = repository
 
     def execute(
         self,
-        params: UpdatePrintSettingsParams,
-    ) -> UpdatePrintSettingsResult:
-        errors = self._validate(params)
-        if errors:
-            return UpdatePrintSettingsResult(
-                status=DOCUMENT_TEMPLATE_UPDATE_STATUS_INVALID,
-                template_id=params.print_settings_id,
-                errors=tuple(errors),
-            )
-
-        updated = self.print_settings_repo.update_print_settings(params)
-        if not updated:
-            return UpdatePrintSettingsResult(
-                status=DOCUMENT_TEMPLATE_UPDATE_STATUS_NOT_FOUND,
-                template_id=params.print_settings_id,
-            )
-        return UpdatePrintSettingsResult(
-            status=DOCUMENT_TEMPLATE_UPDATE_STATUS_UPDATED,
-            template_id=params.print_settings_id,
+        params: UpdateDocumentTemplateParams,
+    ) -> UpdateDocumentTemplateResult:
+        result = super().execute(params)
+        return UpdateDocumentTemplateResult(
+            status=result.status,
+            template_id=result.print_settings_id,
+            errors=result.errors,
         )
-
-    def _validate(self, params: UpdatePrintSettingsParams) -> list[str]:
-        errors = []
-        if not params.print_settings_id:
-            errors.append('ID профиля печати обязателен.')
-        if not params.name:
-            errors.append('Название профиля печати обязательно.')
-        if not params.document_type:
-            errors.append('Тип документа обязателен.')
-        if not params.section_types:
-            errors.append('Выберите хотя бы одну секцию.')
-
-        try:
-            validate_document_type(params.document_type)
-        except ValueError as error:
-            errors.append(str(error))
-
-        try:
-            validate_document_section_types(
-                params.document_type,
-                params.section_types,
-                include_legacy=False,
-            )
-        except ValueError as error:
-            errors.append(str(error))
-
-        return errors
-
-
-UpdatePrintSettingsUseCase = UpdateDocumentTemplateUseCase

@@ -38,7 +38,7 @@ class UpdateDocumentTemplateUseCase:
         if errors:
             return UpdatePrintSettingsResult(
                 status=DOCUMENT_TEMPLATE_UPDATE_STATUS_INVALID,
-                template_id=params.template_id,
+                template_id=params.print_settings_id,
                 errors=tuple(errors),
             )
 
@@ -46,32 +46,32 @@ class UpdateDocumentTemplateUseCase:
         if not updated:
             return UpdatePrintSettingsResult(
                 status=DOCUMENT_TEMPLATE_UPDATE_STATUS_NOT_FOUND,
-                template_id=params.template_id,
+                template_id=params.print_settings_id,
             )
         return UpdatePrintSettingsResult(
             status=DOCUMENT_TEMPLATE_UPDATE_STATUS_UPDATED,
-            template_id=params.template_id,
+            template_id=params.print_settings_id,
         )
 
     def _validate(self, params: UpdatePrintSettingsParams) -> list[str]:
         errors = []
-        if not params.template_id:
+        if not params.print_settings_id:
             errors.append('ID профиля печати обязателен.')
         if not params.name:
             errors.append('Название профиля печати обязательно.')
-        if not params.template_type:
+        if not params.document_type:
             errors.append('Тип документа обязателен.')
         if not params.section_types:
             errors.append('Выберите хотя бы одну секцию.')
 
         try:
-            validate_document_type(params.template_type)
+            validate_document_type(params.document_type)
         except ValueError as error:
             errors.append(str(error))
 
         try:
             validate_document_section_types(
-                params.template_type,
+                params.document_type,
                 params.section_types,
                 include_legacy=False,
             )

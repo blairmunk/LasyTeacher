@@ -50,19 +50,19 @@ class CreateDocumentTemplateUseCase:
         errors = []
         if not params.name:
             errors.append('Название профиля печати обязательно.')
-        if not params.template_type:
+        if not params.document_type:
             errors.append('Тип документа обязателен.')
         if not params.section_types:
             errors.append('Выберите хотя бы одну секцию.')
 
         try:
-            validate_document_type(params.template_type)
+            validate_document_type(params.document_type)
         except ValueError as error:
             errors.append(str(error))
 
         try:
             validate_document_section_types(
-                params.template_type,
+                params.document_type,
                 params.section_types,
                 include_legacy=False,
             )

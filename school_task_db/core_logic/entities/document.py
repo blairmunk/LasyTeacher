@@ -252,6 +252,10 @@ class CreateDocumentTemplateParams:
         object.__setattr__(self, 'sections', sections)
         object.__setattr__(self, 'description', self.description.strip())
 
+    @property
+    def document_type(self) -> str:
+        return self.template_type
+
 
 @dataclass(frozen=True)
 class CreateDocumentTemplateResult:
@@ -303,6 +307,14 @@ class UpdateDocumentTemplateParams:
         object.__setattr__(self, 'section_types', section_types)
         object.__setattr__(self, 'sections', sections)
         object.__setattr__(self, 'description', self.description.strip())
+
+    @property
+    def print_settings_id(self) -> str:
+        return self.template_id
+
+    @property
+    def document_type(self) -> str:
+        return self.template_type
 
 
 @dataclass(frozen=True)

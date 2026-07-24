@@ -288,6 +288,9 @@ class DocumentModelTests(TestCase):
 
         self.assertIsInstance(create_params, CreateDocumentTemplateParams)
         self.assertIsInstance(update_params, UpdateDocumentTemplateParams)
+        self.assertEqual(create_params.document_type, 'work')
+        self.assertEqual(update_params.document_type, 'work')
+        self.assertEqual(update_params.print_settings_id, 'profile-1')
 
     def test_print_settings_types_are_template_compatible_subclasses(self):
         self.assertTrue(issubclass(PrintSettingsSpec, DocumentTemplateSpec))

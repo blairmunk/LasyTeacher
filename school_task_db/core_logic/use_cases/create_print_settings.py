@@ -3,5 +3,9 @@
 from core_logic.use_cases.create_document_template import (
     DOCUMENT_TEMPLATE_CREATE_STATUS_CREATED,
     DOCUMENT_TEMPLATE_CREATE_STATUS_INVALID,
-    CreatePrintSettingsUseCase,
+    CreateDocumentTemplateUseCase,
 )
+
+
+class CreatePrintSettingsUseCase(CreateDocumentTemplateUseCase):
+    """Create document print settings."""

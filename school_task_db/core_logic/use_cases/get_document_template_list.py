@@ -1,4 +1,4 @@
-"""Build document print profile list data."""
+"""Legacy adapter for document print profile list data."""
 
 from dataclasses import dataclass
 from typing import List
@@ -6,6 +6,11 @@ from typing import List
 from core_logic.entities.document import PrintSettingsSpec
 from core_logic.interfaces.print_settings_repo import (
     IPrintSettingsRepository,
+)
+from core_logic.use_cases.get_print_settings_list import (
+    GetPrintSettingsListRequest,
+    GetPrintSettingsListUseCase,
+    PrintSettingsListData,
 )
 
 
@@ -28,27 +33,26 @@ class DocumentTemplateListData:
         return self.print_profiles
 
 
-class GetDocumentTemplateListUseCase:
+class GetDocumentTemplateListUseCase(GetPrintSettingsListUseCase):
+    """Adapt the former template-oriented list contract."""
+
     def __init__(
         self,
-        print_settings_repo: IPrintSettingsRepository | None = None,
         document_template_repo: IPrintSettingsRepository | None = None,
+        print_settings_repo: IPrintSettingsRepository | None = None,
     ):
-        self.print_settings_repo = print_settings_repo or document_template_repo
-        self.document_template_repo = self.print_settings_repo
+        repository = print_settings_repo or document_template_repo
+        super().__init__(print_settings_repo=repository)
+        self.document_template_repo = repository
 
     def execute(
         self,
         request: GetDocumentTemplateListRequest | None = None,
     ) -> DocumentTemplateListData:
         request = request or GetDocumentTemplateListRequest()
-        return DocumentTemplateListData(
-            print_profiles=self.print_settings_repo.list_print_settings_specs(
+        data = super().execute(
+            GetPrintSettingsListRequest(
                 document_type=request.selected_document_type,
             ),
         )
-
-
-GetPrintSettingsListRequest = GetDocumentTemplateListRequest
-PrintSettingsListData = DocumentTemplateListData
-GetPrintSettingsListUseCase = GetDocumentTemplateListUseCase
+        return DocumentTemplateListData(print_profiles=data.print_profiles)

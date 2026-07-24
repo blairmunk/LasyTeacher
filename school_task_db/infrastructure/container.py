@@ -82,11 +82,20 @@ from core_logic.use_cases.get_dashboard_summary import GetDashboardSummaryUseCas
 from core_logic.use_cases.get_default_print_settings import (
     GetDefaultPrintSettingsUseCase,
 )
+from core_logic.use_cases.get_default_document_template import (
+    GetDefaultDocumentTemplateUseCase,
+)
 from core_logic.use_cases.get_print_settings import (
     GetPrintSettingsUseCase,
 )
+from core_logic.use_cases.get_document_template import (
+    GetDocumentTemplateUseCase,
+)
 from core_logic.use_cases.get_print_settings_list import (
     GetPrintSettingsListUseCase,
+)
+from core_logic.use_cases.get_document_template_list import (
+    GetDocumentTemplateListUseCase,
 )
 from core_logic.use_cases.get_document_section_catalog import (
     GetDocumentSectionCatalogUseCase,
@@ -702,7 +711,9 @@ class Container:
         )
 
     def get_document_template_list_use_case(self):
-        return self.get_print_settings_list_use_case()
+        return GetDocumentTemplateListUseCase(
+            document_template_repo=self.document_template_repo,
+        )
 
     def get_print_settings_list_use_case(self):
         return GetPrintSettingsListUseCase(
@@ -710,7 +721,9 @@ class Container:
         )
 
     def get_document_template_use_case(self):
-        return self.get_print_settings_use_case()
+        return GetDocumentTemplateUseCase(
+            document_template_repo=self.document_template_repo,
+        )
 
     def get_print_settings_use_case(self):
         return GetPrintSettingsUseCase(
@@ -756,7 +769,9 @@ class Container:
         return GetDocumentTypeCatalogUseCase()
 
     def get_default_document_template_use_case(self):
-        return self.get_default_print_settings_use_case()
+        return GetDefaultDocumentTemplateUseCase(
+            document_template_repo=self.document_template_repo,
+        )
 
     def get_default_print_settings_use_case(self):
         return GetDefaultPrintSettingsUseCase(

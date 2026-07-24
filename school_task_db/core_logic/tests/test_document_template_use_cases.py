@@ -26,6 +26,14 @@ from core_logic.use_cases.get_print_settings import (
     GetPrintSettingsRequest,
     GetPrintSettingsUseCase,
 )
+from core_logic.use_cases.get_print_settings_list import (
+    GetPrintSettingsListRequest,
+    GetPrintSettingsListUseCase,
+)
+from core_logic.use_cases.get_default_print_settings import (
+    GetDefaultPrintSettingsRequest,
+    GetDefaultPrintSettingsUseCase,
+)
 from core_logic.use_cases.update_document_template import (
     DOCUMENT_TEMPLATE_UPDATE_STATUS_INVALID,
     DOCUMENT_TEMPLATE_UPDATE_STATUS_NOT_FOUND,
@@ -190,6 +198,32 @@ class GetDocumentTemplateListUseCaseTests(TestCase):
             repo.requested_template_id,
             ('template-1', WORKSHEET_DOCUMENT_TYPE),
         )
+
+    def test_returns_clean_print_settings_list(self):
+        repo = FakeDocumentTemplateRepository()
+
+        data = GetPrintSettingsListUseCase(repo).execute(
+            GetPrintSettingsListRequest(
+                document_type=WORKSHEET_DOCUMENT_TYPE,
+            ),
+        )
+
+        self.assertEqual(repo.requested_template_type, WORKSHEET_DOCUMENT_TYPE)
+        self.assertEqual(data.print_profiles[0].name, 'Рабочий лист')
+        self.assertFalse(hasattr(data, 'templates'))
+
+    def test_returns_clean_default_print_settings(self):
+        repo = FakeDocumentTemplateRepository()
+
+        data = GetDefaultPrintSettingsUseCase(repo).execute(
+            GetDefaultPrintSettingsRequest(
+                document_type=WORKSHEET_DOCUMENT_TYPE,
+            ),
+        )
+
+        self.assertEqual(repo.default_template_type, WORKSHEET_DOCUMENT_TYPE)
+        self.assertEqual(data.print_profile.name, 'Рабочий лист')
+        self.assertFalse(hasattr(data, 'template'))
 
 
 class DocumentTemplateSelectionTests(TestCase):

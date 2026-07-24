@@ -1,10 +1,15 @@
-"""Find the default document print profile for a document type."""
+"""Legacy adapter for default document print settings."""
 
 from dataclasses import dataclass
 
 from core_logic.entities.document import PrintSettingsSpec
 from core_logic.interfaces.print_settings_repo import (
     IPrintSettingsRepository,
+)
+from core_logic.use_cases.get_default_print_settings import (
+    DefaultPrintSettingsData,
+    GetDefaultPrintSettingsRequest,
+    GetDefaultPrintSettingsUseCase,
 )
 
 
@@ -27,28 +32,25 @@ class DefaultDocumentTemplateData:
         return self.print_profile
 
 
-class GetDefaultDocumentTemplateUseCase:
+class GetDefaultDocumentTemplateUseCase(GetDefaultPrintSettingsUseCase):
+    """Adapt the former template-oriented default lookup contract."""
+
     def __init__(
         self,
-        print_settings_repo: IPrintSettingsRepository | None = None,
         document_template_repo: IPrintSettingsRepository | None = None,
+        print_settings_repo: IPrintSettingsRepository | None = None,
     ):
-        self.print_settings_repo = print_settings_repo or document_template_repo
-        self.document_template_repo = self.print_settings_repo
+        repository = print_settings_repo or document_template_repo
+        super().__init__(print_settings_repo=repository)
+        self.document_template_repo = repository
 
     def execute(
         self,
         request: GetDefaultDocumentTemplateRequest,
     ) -> DefaultDocumentTemplateData:
-        return DefaultDocumentTemplateData(
-            print_profile=(
-                self.print_settings_repo.get_default_print_settings_spec(
-                    request.selected_document_type,
-                )
+        data = super().execute(
+            GetDefaultPrintSettingsRequest(
+                document_type=request.selected_document_type,
             ),
         )
-
-
-GetDefaultPrintSettingsRequest = GetDefaultDocumentTemplateRequest
-DefaultPrintSettingsData = DefaultDocumentTemplateData
-GetDefaultPrintSettingsUseCase = GetDefaultDocumentTemplateUseCase
+        return DefaultDocumentTemplateData(print_profile=data.print_profile)

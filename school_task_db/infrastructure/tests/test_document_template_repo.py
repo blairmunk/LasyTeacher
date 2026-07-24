@@ -8,6 +8,12 @@ from core_logic.entities.document import (
     UpdatePrintSettingsParams,
     UpdateDocumentTemplateParams,
 )
+from core_logic.interfaces.document_template_repo import (
+    IDocumentTemplateRepository,
+)
+from core_logic.interfaces.print_settings_repo import (
+    IPrintSettingsRepository,
+)
 from document_generator.models import DocumentTemplate
 from infrastructure.repositories.django_document_template_repo import (
     DjangoDocumentTemplateRepository,
@@ -18,12 +24,26 @@ from infrastructure.repositories.django_print_settings_repo import (
 
 
 class DjangoDocumentTemplateRepositoryTests(TestCase):
+    def test_legacy_interface_extends_print_settings_port(self):
+        self.assertTrue(
+            issubclass(
+                IDocumentTemplateRepository,
+                IPrintSettingsRepository,
+            )
+        )
+
     def test_print_settings_repository_is_template_repository_subclass(self):
         self.assertTrue(
             issubclass(
                 DjangoPrintSettingsRepository,
                 DjangoDocumentTemplateRepository,
             )
+        )
+
+    def test_print_settings_repository_implements_clean_port(self):
+        self.assertIsInstance(
+            DjangoPrintSettingsRepository(),
+            IPrintSettingsRepository,
         )
 
     def test_lists_template_specs_filtered_by_type(self):

@@ -11,9 +11,14 @@ from core_logic.entities.document import (
     UpdateDocumentTemplateParams,
     UpdatePrintSettingsParams,
 )
+from core_logic.interfaces.print_settings_repo import (
+    IPrintSettingsRepository,
+)
 
 
-class IDocumentTemplateRepository(ABC):
+class IDocumentTemplateRepository(IPrintSettingsRepository, ABC):
+    """Legacy template repository contract over the print settings port."""
+
     def list_print_settings_specs(
         self,
         document_type: str = '',
@@ -83,6 +88,3 @@ class IDocumentTemplateRepository(ABC):
         params: UpdateDocumentTemplateParams,
     ) -> bool:
         """Update a document template and return whether it existed."""
-
-
-IPrintSettingsRepository = IDocumentTemplateRepository

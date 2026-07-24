@@ -62,9 +62,6 @@ from core_logic.use_cases.render_document import RenderDocumentUseCase
 from core_logic.use_cases.render_document_from_print_settings import (
     RenderDocumentFromPrintSettingsUseCase,
 )
-from core_logic.use_cases.render_document_from_template import (
-    RenderDocumentFromTemplateUseCase,
-)
 from core_logic.use_cases.render_document_from_recipe import (
     RenderDocumentFromRecipeUseCase,
 )
@@ -72,14 +69,8 @@ from core_logic.use_cases.render_work_document import RenderWorkDocumentUseCase
 from core_logic.use_cases.create_print_settings import (
     CreatePrintSettingsUseCase,
 )
-from core_logic.use_cases.create_document_template import (
-    CreateDocumentTemplateUseCase,
-)
 from core_logic.use_cases.update_print_settings import (
     UpdatePrintSettingsUseCase,
-)
-from core_logic.use_cases.update_document_template import (
-    UpdateDocumentTemplateUseCase,
 )
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.get_add_tasks_to_group import GetAddTasksToGroupUseCase
@@ -91,20 +82,11 @@ from core_logic.use_cases.get_dashboard_summary import GetDashboardSummaryUseCas
 from core_logic.use_cases.get_default_print_settings import (
     GetDefaultPrintSettingsUseCase,
 )
-from core_logic.use_cases.get_default_document_template import (
-    GetDefaultDocumentTemplateUseCase,
-)
 from core_logic.use_cases.get_print_settings import (
     GetPrintSettingsUseCase,
 )
-from core_logic.use_cases.get_document_template import (
-    GetDocumentTemplateUseCase,
-)
 from core_logic.use_cases.get_print_settings_list import (
     GetPrintSettingsListUseCase,
-)
-from core_logic.use_cases.get_document_template_list import (
-    GetDocumentTemplateListUseCase,
 )
 from core_logic.use_cases.get_document_section_catalog import (
     GetDocumentSectionCatalogUseCase,
@@ -112,14 +94,8 @@ from core_logic.use_cases.get_document_section_catalog import (
 from core_logic.use_cases.get_print_settings_editor_data import (
     GetPrintSettingsEditorDataUseCase,
 )
-from core_logic.use_cases.get_document_template_editor_data import (
-    GetDocumentTemplateEditorDataUseCase,
-)
 from core_logic.use_cases.get_print_settings_form_data import (
     GetPrintSettingsFormDataUseCase,
-)
-from core_logic.use_cases.get_document_template_form_data import (
-    GetDocumentTemplateFormDataUseCase,
 )
 from core_logic.use_cases.get_document_type_catalog import (
     GetDocumentTypeCatalogUseCase,
@@ -315,9 +291,6 @@ from infrastructure.repositories.django_curriculum_repo import (
 from infrastructure.repositories.django_print_settings_repo import (
     DjangoPrintSettingsRepository,
 )
-from infrastructure.repositories.django_document_template_repo import (
-    DjangoDocumentTemplateRepository,
-)
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
 from infrastructure.repositories.django_report_repo import DjangoReportRepository
@@ -334,9 +307,6 @@ from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
 from infrastructure.forms.print_settings_forms import (
     PrintSettingsFormAdapter,
-)
-from infrastructure.forms.document_template_forms import (
-    DocumentTemplateFormAdapter,
 )
 from infrastructure.forms.event_forms import EventFormAdapter
 from infrastructure.forms.report_forms import ReportFormAdapter
@@ -362,12 +332,10 @@ class Container:
         self._codifier_repo = None
         self._core_repo = None
         self._settings_repo = None
-        self._document_template_repo = None
         self._print_settings_repo = None
         self._codifier_form_adapter = None
         self._core_form_adapter = None
         self._curriculum_form_adapter = None
-        self._document_template_form_adapter = None
         self._print_settings_form_adapter = None
         self._event_form_adapter = None
         self._report_form_adapter = None
@@ -441,12 +409,6 @@ class Container:
         return self._settings_repo
 
     @property
-    def document_template_repo(self):
-        if self._document_template_repo is None:
-            self._document_template_repo = DjangoDocumentTemplateRepository()
-        return self._document_template_repo
-
-    @property
     def print_settings_repo(self):
         if self._print_settings_repo is None:
             self._print_settings_repo = DjangoPrintSettingsRepository()
@@ -469,14 +431,6 @@ class Container:
         if self._curriculum_form_adapter is None:
             self._curriculum_form_adapter = CurriculumFormAdapter()
         return self._curriculum_form_adapter
-
-    @property
-    def document_template_form_adapter(self):
-        if self._document_template_form_adapter is None:
-            self._document_template_form_adapter = (
-                DocumentTemplateFormAdapter()
-            )
-        return self._document_template_form_adapter
 
     @property
     def print_settings_form_adapter(self):
@@ -739,19 +693,9 @@ class Container:
             core_repo=self.core_repo,
         )
 
-    def get_document_template_list_use_case(self):
-        return GetDocumentTemplateListUseCase(
-            document_template_repo=self.document_template_repo,
-        )
-
     def get_print_settings_list_use_case(self):
         return GetPrintSettingsListUseCase(
             print_settings_repo=self.print_settings_repo,
-        )
-
-    def get_document_template_use_case(self):
-        return GetDocumentTemplateUseCase(
-            document_template_repo=self.document_template_repo,
         )
 
     def get_print_settings_use_case(self):
@@ -759,19 +703,9 @@ class Container:
             print_settings_repo=self.print_settings_repo,
         )
 
-    def create_document_template_use_case(self):
-        return CreateDocumentTemplateUseCase(
-            document_template_repo=self.document_template_repo,
-        )
-
     def create_print_settings_use_case(self):
         return CreatePrintSettingsUseCase(
             print_settings_repo=self.print_settings_repo,
-        )
-
-    def update_document_template_use_case(self):
-        return UpdateDocumentTemplateUseCase(
-            document_template_repo=self.document_template_repo,
         )
 
     def update_print_settings_use_case(self):
@@ -782,19 +716,9 @@ class Container:
     def get_document_section_catalog_use_case(self):
         return GetDocumentSectionCatalogUseCase()
 
-    def get_document_template_editor_data_use_case(self):
-        return GetDocumentTemplateEditorDataUseCase(
-            document_template_repo=self.document_template_repo,
-        )
-
     def get_print_settings_editor_data_use_case(self):
         return GetPrintSettingsEditorDataUseCase(
             print_settings_repo=self.print_settings_repo,
-        )
-
-    def get_document_template_form_data_use_case(self):
-        return GetDocumentTemplateFormDataUseCase(
-            document_template_repo=self.document_template_repo,
         )
 
     def get_print_settings_form_data_use_case(self):
@@ -804,11 +728,6 @@ class Container:
 
     def get_document_type_catalog_use_case(self):
         return GetDocumentTypeCatalogUseCase()
-
-    def get_default_document_template_use_case(self):
-        return GetDefaultDocumentTemplateUseCase(
-            document_template_repo=self.document_template_repo,
-        )
 
     def get_default_print_settings_use_case(self):
         return GetDefaultPrintSettingsUseCase(
@@ -1215,13 +1134,6 @@ class Container:
     def render_document_use_case(self):
         return RenderDocumentUseCase(
             document_engine=self.document_engine,
-        )
-
-    def render_document_from_template_use_case(self):
-        return RenderDocumentFromTemplateUseCase(
-            render_document_from_recipe_use_case=(
-                self.render_document_from_recipe_use_case()
-            ),
         )
 
     def render_document_from_print_settings_use_case(self):

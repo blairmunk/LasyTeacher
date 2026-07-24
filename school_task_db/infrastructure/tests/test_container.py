@@ -26,9 +26,6 @@ from core_logic.use_cases.create_source import CreateSourceUseCase
 from core_logic.use_cases.create_remedial_wizard_work import (
     CreateRemedialWizardWorkUseCase,
 )
-from core_logic.use_cases.create_document_template import (
-    CreateDocumentTemplateUseCase,
-)
 from core_logic.use_cases.create_print_settings import (
     CreatePrintSettingsUseCase,
 )
@@ -45,9 +42,6 @@ from core_logic.use_cases.create_work_from_tasks import CreateWorkFromTasksUseCa
 from core_logic.use_cases.delete_task_groups import DeleteTaskGroupsUseCase
 from core_logic.use_cases.delete_task import DeleteTaskUseCase
 from core_logic.use_cases.delete_variant import DeleteVariantUseCase
-from core_logic.use_cases.update_document_template import (
-    UpdateDocumentTemplateUseCase,
-)
 from core_logic.use_cases.update_print_settings import (
     UpdatePrintSettingsUseCase,
 )
@@ -67,14 +61,8 @@ from core_logic.use_cases.get_course_list import GetCourseListUseCase
 from core_logic.use_cases.get_topic_detail import GetTopicDetailUseCase
 from core_logic.use_cases.get_topic_list import GetTopicListUseCase
 from core_logic.use_cases.get_dashboard_summary import GetDashboardSummaryUseCase
-from core_logic.use_cases.get_default_document_template import (
-    GetDefaultDocumentTemplateUseCase,
-)
 from core_logic.use_cases.get_default_print_settings import (
     GetDefaultPrintSettingsUseCase,
-)
-from core_logic.use_cases.get_document_template_list import (
-    GetDocumentTemplateListUseCase,
 )
 from core_logic.use_cases.get_print_settings_list import (
     GetPrintSettingsListUseCase,
@@ -82,14 +70,8 @@ from core_logic.use_cases.get_print_settings_list import (
 from core_logic.use_cases.get_document_section_catalog import (
     GetDocumentSectionCatalogUseCase,
 )
-from core_logic.use_cases.get_document_template_editor_data import (
-    GetDocumentTemplateEditorDataUseCase,
-)
 from core_logic.use_cases.get_print_settings_editor_data import (
     GetPrintSettingsEditorDataUseCase,
-)
-from core_logic.use_cases.get_document_template_form_data import (
-    GetDocumentTemplateFormDataUseCase,
 )
 from core_logic.use_cases.get_print_settings_form_data import (
     GetPrintSettingsFormDataUseCase,
@@ -166,9 +148,6 @@ from core_logic.use_cases.render_remedial_sheet_document import (
 from core_logic.use_cases.render_document import RenderDocumentUseCase
 from core_logic.use_cases.render_document_from_print_settings import (
     RenderDocumentFromPrintSettingsUseCase,
-)
-from core_logic.use_cases.render_document_from_template import (
-    RenderDocumentFromTemplateUseCase,
 )
 from core_logic.use_cases.render_document_from_recipe import (
     RenderDocumentFromRecipeUseCase,
@@ -265,9 +244,6 @@ from infrastructure.repositories.django_core_repo import DjangoCoreRepository
 from infrastructure.repositories.django_curriculum_repo import (
     DjangoCurriculumRepository,
 )
-from infrastructure.repositories.django_document_template_repo import (
-    DjangoDocumentTemplateRepository,
-)
 from infrastructure.repositories.django_print_settings_repo import (
     DjangoPrintSettingsRepository,
 )
@@ -282,9 +258,6 @@ from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from infrastructure.forms.codifier_forms import CodifierFormAdapter
 from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
-from infrastructure.forms.document_template_forms import (
-    DocumentTemplateFormAdapter,
-)
 from infrastructure.forms.print_settings_forms import PrintSettingsFormAdapter
 from infrastructure.forms.report_forms import ReportFormAdapter
 from infrastructure.forms.review_forms import ReviewFormAdapter
@@ -334,21 +307,9 @@ class ContainerTests(SimpleTestCase):
         subtopic_options_use_case = container.get_subtopic_options_use_case()
         codifier_elements_use_case = container.get_codifier_elements_use_case()
         source_list_use_case = container.get_source_list_use_case()
-        create_document_template_use_case = (
-            container.create_document_template_use_case()
-        )
         create_print_settings_use_case = container.create_print_settings_use_case()
-        update_document_template_use_case = (
-            container.update_document_template_use_case()
-        )
         update_print_settings_use_case = container.update_print_settings_use_case()
-        document_template_list_use_case = (
-            container.get_document_template_list_use_case()
-        )
         print_settings_list_use_case = container.get_print_settings_list_use_case()
-        default_document_template_use_case = (
-            container.get_default_document_template_use_case()
-        )
         default_print_settings_use_case = (
             container.get_default_print_settings_use_case()
         )
@@ -507,9 +468,6 @@ class ContainerTests(SimpleTestCase):
         render_from_recipe_use_case = (
             container.render_document_from_recipe_use_case()
         )
-        render_from_template_use_case = (
-            container.render_document_from_template_use_case()
-        )
         render_from_print_settings_use_case = (
             container.render_document_from_print_settings_use_case()
         )
@@ -521,14 +479,8 @@ class ContainerTests(SimpleTestCase):
         document_section_catalog_use_case = (
             container.get_document_section_catalog_use_case()
         )
-        document_template_editor_data_use_case = (
-            container.get_document_template_editor_data_use_case()
-        )
         print_settings_editor_data_use_case = (
             container.get_print_settings_editor_data_use_case()
-        )
-        document_template_form_data_use_case = (
-            container.get_document_template_form_data_use_case()
         )
         print_settings_form_data_use_case = (
             container.get_print_settings_form_data_use_case()
@@ -557,32 +509,16 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(codifier_elements_use_case, GetCodifierElementsUseCase)
         self.assertIsInstance(source_list_use_case, GetSourceListUseCase)
         self.assertIsInstance(
-            create_document_template_use_case,
-            CreateDocumentTemplateUseCase,
-        )
-        self.assertIsInstance(
             create_print_settings_use_case,
             CreatePrintSettingsUseCase,
-        )
-        self.assertIsInstance(
-            update_document_template_use_case,
-            UpdateDocumentTemplateUseCase,
         )
         self.assertIsInstance(
             update_print_settings_use_case,
             UpdatePrintSettingsUseCase,
         )
         self.assertIsInstance(
-            document_template_list_use_case,
-            GetDocumentTemplateListUseCase,
-        )
-        self.assertIsInstance(
             print_settings_list_use_case,
             GetPrintSettingsListUseCase,
-        )
-        self.assertIsInstance(
-            default_document_template_use_case,
-            GetDefaultDocumentTemplateUseCase,
         )
         self.assertIsInstance(
             default_print_settings_use_case,
@@ -593,16 +529,8 @@ class ContainerTests(SimpleTestCase):
             GetDocumentSectionCatalogUseCase,
         )
         self.assertIsInstance(
-            document_template_editor_data_use_case,
-            GetDocumentTemplateEditorDataUseCase,
-        )
-        self.assertIsInstance(
             print_settings_editor_data_use_case,
             GetPrintSettingsEditorDataUseCase,
-        )
-        self.assertIsInstance(
-            document_template_form_data_use_case,
-            GetDocumentTemplateFormDataUseCase,
         )
         self.assertIsInstance(
             print_settings_form_data_use_case,
@@ -838,10 +766,6 @@ class ContainerTests(SimpleTestCase):
             RenderDocumentFromRecipeUseCase,
         )
         self.assertIsInstance(
-            render_from_template_use_case,
-            RenderDocumentFromTemplateUseCase,
-        )
-        self.assertIsInstance(
             render_from_print_settings_use_case,
             RenderDocumentFromPrintSettingsUseCase,
         )
@@ -873,16 +797,8 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(container.core_repo, DjangoCoreRepository)
         self.assertIsInstance(container.settings_repo, DjangoSettingsRepository)
         self.assertIsInstance(
-            container.document_template_repo,
-            DjangoDocumentTemplateRepository,
-        )
-        self.assertIsInstance(
             container.print_settings_repo,
             DjangoPrintSettingsRepository,
-        )
-        self.assertIsNot(
-            container.document_template_repo,
-            container.print_settings_repo,
         )
         self.assertIsInstance(
             container.codifier_form_adapter,
@@ -894,16 +810,8 @@ class ContainerTests(SimpleTestCase):
             CurriculumFormAdapter,
         )
         self.assertIsInstance(
-            container.document_template_form_adapter,
-            DocumentTemplateFormAdapter,
-        )
-        self.assertIsInstance(
             container.print_settings_form_adapter,
             PrintSettingsFormAdapter,
-        )
-        self.assertIsNot(
-            container.document_template_form_adapter,
-            container.print_settings_form_adapter,
         )
         self.assertIsInstance(container.report_form_adapter, ReportFormAdapter)
         self.assertIsInstance(container.review_form_adapter, ReviewFormAdapter)

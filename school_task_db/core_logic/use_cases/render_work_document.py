@@ -1,6 +1,6 @@
 """Render document files for a work."""
 
-from dataclasses import dataclass
+from dataclasses import InitVar, dataclass
 
 from core_logic.entities.document import PrintSettingsSpec
 from core_logic.entities.document_rendering import (
@@ -33,18 +33,16 @@ from core_logic.value_objects.document_recipes import WORK_DOCUMENT_TYPE
 class RenderWorkDocumentRequest:
     work_id: str
     options: WorkDocumentRenderOptions
-    template_spec: PrintSettingsSpec | None = None
-    template_id: str = ''
     print_settings_spec: PrintSettingsSpec | None = None
     print_settings_id: str = ''
+    template_spec: InitVar[PrintSettingsSpec | None] = None
+    template_id: InitVar[str] = ''
 
-    @property
-    def selected_print_settings_spec(self) -> PrintSettingsSpec | None:
-        return self.print_settings_spec or self.template_spec
-
-    @property
-    def selected_print_settings_id(self) -> str:
-        return self.print_settings_id or self.template_id
+    def __post_init__(self, template_spec, template_id):
+        if self.print_settings_spec is None and template_spec is not None:
+            object.__setattr__(self, 'print_settings_spec', template_spec)
+        if not self.print_settings_id and template_id:
+            object.__setattr__(self, 'print_settings_id', template_id)
 
 
 class RenderWorkDocumentUseCase:
@@ -88,10 +86,10 @@ class RenderWorkDocumentUseCase:
                     print_settings_spec=resolve_document_print_settings_spec(
                         document_type=WORK_DOCUMENT_TYPE,
                         request_print_settings_spec=(
-                            request.selected_print_settings_spec
+                            request.print_settings_spec
                         ),
                         request_print_settings_id=(
-                            request.selected_print_settings_id
+                            request.print_settings_id
                         ),
                         print_settings_repo=self.print_settings_repo,
                     ),

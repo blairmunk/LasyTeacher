@@ -41,17 +41,17 @@ class FakeDocumentEngine:
 
 
 class RenderDocumentFromTemplateUseCaseTests(TestCase):
-    def test_print_settings_render_use_case_types_are_template_compatible(self):
+    def test_legacy_render_types_are_print_settings_compatible(self):
         self.assertTrue(
             issubclass(
-                RenderDocumentFromPrintSettingsRequest,
                 RenderDocumentFromTemplateRequest,
+                RenderDocumentFromPrintSettingsRequest,
             )
         )
         self.assertTrue(
             issubclass(
-                RenderDocumentFromPrintSettingsUseCase,
                 RenderDocumentFromTemplateUseCase,
+                RenderDocumentFromPrintSettingsUseCase,
             )
         )
 
@@ -87,7 +87,9 @@ class RenderDocumentFromTemplateUseCaseTests(TestCase):
 
     def test_renders_document_from_print_settings_spec(self):
         engine = FakeDocumentEngine()
-        use_case = RenderDocumentFromTemplateUseCase(document_engine=engine)
+        use_case = RenderDocumentFromPrintSettingsUseCase(
+            document_engine=engine,
+        )
         print_settings_spec = DocumentTemplateSpec(
             name='Work print profile',
             template_type=WORK_DOCUMENT_TYPE,
@@ -98,7 +100,7 @@ class RenderDocumentFromTemplateUseCaseTests(TestCase):
         )
 
         result = use_case.execute(
-            RenderDocumentFromTemplateRequest(
+            RenderDocumentFromPrintSettingsRequest(
                 source=DocumentSourceRef(
                     source_type='work',
                     source_id='work-1',

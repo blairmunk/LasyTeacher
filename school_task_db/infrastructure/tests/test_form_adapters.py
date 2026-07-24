@@ -1772,7 +1772,7 @@ class WorkFormAdapterTests(SimpleTestCase):
 
         self.assertEqual(request.work_id, 'w1')
         self.assertEqual(request.print_settings_id, 'template-work')
-        self.assertEqual(request.selected_print_settings_id, 'template-work')
+        self.assertEqual(request.print_settings_id, 'template-work')
         self.assertEqual(request.options.renderer_type, 'html')
         self.assertEqual(request.options.pdf_format, 'A5')
         self.assertEqual(request.options.answer_type, 'with_short_solutions')
@@ -1792,7 +1792,7 @@ class WorkFormAdapterTests(SimpleTestCase):
 
         self.assertEqual(request.variant_id, 'v1')
         self.assertEqual(request.print_settings_id, 'template-rno')
-        self.assertEqual(request.selected_print_settings_id, 'template-rno')
+        self.assertEqual(request.print_settings_id, 'template-rno')
         self.assertEqual(request.options.renderer_type, 'pdf')
         self.assertEqual(request.options.pdf_format, 'A4')
         self.assertEqual(request.options.answer_type, 'with_full_solutions')
@@ -1805,7 +1805,7 @@ class WorkFormAdapterTests(SimpleTestCase):
 
         self.assertEqual(request.work_id, 'w1')
         self.assertEqual(request.print_settings_id, 'template-rno')
-        self.assertEqual(request.selected_print_settings_id, 'template-rno')
+        self.assertEqual(request.print_settings_id, 'template-rno')
         self.assertEqual(request.options.renderer_type, 'html')
 
     def test_render_document_requests_accept_legacy_template_id_post_key(self):

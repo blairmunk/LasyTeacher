@@ -167,6 +167,9 @@ from core_logic.use_cases.render_document import RenderDocumentUseCase
 from core_logic.use_cases.render_document_from_print_settings import (
     RenderDocumentFromPrintSettingsUseCase,
 )
+from core_logic.use_cases.render_document_from_template import (
+    RenderDocumentFromTemplateUseCase,
+)
 from core_logic.use_cases.render_document_from_recipe import (
     RenderDocumentFromRecipeUseCase,
 )
@@ -836,7 +839,7 @@ class ContainerTests(SimpleTestCase):
         )
         self.assertIsInstance(
             render_from_template_use_case,
-            RenderDocumentFromPrintSettingsUseCase,
+            RenderDocumentFromTemplateUseCase,
         )
         self.assertIsInstance(
             render_from_print_settings_use_case,

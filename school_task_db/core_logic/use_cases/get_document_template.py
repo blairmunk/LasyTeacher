@@ -1,10 +1,15 @@
-"""Get one document print profile for editing."""
+"""Legacy adapter for reading one document print profile."""
 
 from dataclasses import dataclass
 
 from core_logic.entities.document import PrintSettingsSpec
 from core_logic.interfaces.print_settings_repo import (
     IPrintSettingsRepository,
+)
+from core_logic.use_cases.get_print_settings import (
+    GetPrintSettingsData,
+    GetPrintSettingsRequest,
+    GetPrintSettingsUseCase,
 )
 
 
@@ -33,27 +38,26 @@ class GetDocumentTemplateData:
         return self.print_profile
 
 
-class GetDocumentTemplateUseCase:
+class GetDocumentTemplateUseCase(GetPrintSettingsUseCase):
+    """Adapt the former template-oriented request and response."""
+
     def __init__(
         self,
-        print_settings_repo: IPrintSettingsRepository | None = None,
         document_template_repo: IPrintSettingsRepository | None = None,
+        print_settings_repo: IPrintSettingsRepository | None = None,
     ):
-        self.print_settings_repo = print_settings_repo or document_template_repo
-        self.document_template_repo = self.print_settings_repo
+        repository = print_settings_repo or document_template_repo
+        super().__init__(print_settings_repo=repository)
+        self.document_template_repo = repository
 
     def execute(
         self,
         request: GetDocumentTemplateRequest,
     ) -> GetDocumentTemplateData:
-        return GetDocumentTemplateData(
-            print_profile=self.print_settings_repo.get_print_settings_spec(
+        data = super().execute(
+            GetPrintSettingsRequest(
                 print_settings_id=request.selected_print_settings_id,
                 document_type=request.selected_document_type,
-            )
+            ),
         )
-
-
-GetPrintSettingsRequest = GetDocumentTemplateRequest
-GetPrintSettingsData = GetDocumentTemplateData
-GetPrintSettingsUseCase = GetDocumentTemplateUseCase
+        return GetDocumentTemplateData(print_profile=data.print_profile)

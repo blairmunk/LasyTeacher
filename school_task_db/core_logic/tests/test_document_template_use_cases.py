@@ -22,6 +22,10 @@ from core_logic.use_cases.get_document_template_list import (
     GetDocumentTemplateListRequest,
     GetDocumentTemplateListUseCase,
 )
+from core_logic.use_cases.get_print_settings import (
+    GetPrintSettingsRequest,
+    GetPrintSettingsUseCase,
+)
 from core_logic.use_cases.update_document_template import (
     DOCUMENT_TEMPLATE_UPDATE_STATUS_INVALID,
     DOCUMENT_TEMPLATE_UPDATE_STATUS_NOT_FOUND,
@@ -165,6 +169,23 @@ class GetDocumentTemplateListUseCaseTests(TestCase):
 
         self.assertEqual(data.print_profile.name, 'Рабочий лист')
         self.assertEqual(data.template.name, 'Рабочий лист')
+        self.assertEqual(
+            repo.requested_template_id,
+            ('template-1', WORKSHEET_DOCUMENT_TYPE),
+        )
+
+    def test_returns_print_settings_by_clean_identifiers(self):
+        repo = FakeDocumentTemplateRepository()
+        use_case = GetPrintSettingsUseCase(print_settings_repo=repo)
+
+        data = use_case.execute(
+            GetPrintSettingsRequest(
+                print_settings_id='template-1',
+                document_type=WORKSHEET_DOCUMENT_TYPE,
+            )
+        )
+
+        self.assertEqual(data.print_profile.name, 'Рабочий лист')
         self.assertEqual(
             repo.requested_template_id,
             ('template-1', WORKSHEET_DOCUMENT_TYPE),

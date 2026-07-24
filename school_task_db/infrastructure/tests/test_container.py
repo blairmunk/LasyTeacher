@@ -880,7 +880,10 @@ class ContainerTests(SimpleTestCase):
             container.print_settings_repo,
             DjangoPrintSettingsRepository,
         )
-        self.assertIs(container.document_template_repo, container.print_settings_repo)
+        self.assertIsNot(
+            container.document_template_repo,
+            container.print_settings_repo,
+        )
         self.assertIsInstance(
             container.codifier_form_adapter,
             CodifierFormAdapter,

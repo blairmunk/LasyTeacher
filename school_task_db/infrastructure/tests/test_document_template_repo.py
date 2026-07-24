@@ -32,11 +32,11 @@ class DjangoDocumentTemplateRepositoryTests(TestCase):
             )
         )
 
-    def test_print_settings_repository_is_template_repository_subclass(self):
+    def test_template_repository_is_print_settings_repository_subclass(self):
         self.assertTrue(
             issubclass(
-                DjangoPrintSettingsRepository,
                 DjangoDocumentTemplateRepository,
+                DjangoPrintSettingsRepository,
             )
         )
 
@@ -46,7 +46,7 @@ class DjangoDocumentTemplateRepositoryTests(TestCase):
             IPrintSettingsRepository,
         )
 
-    def test_lists_template_specs_filtered_by_type(self):
+    def test_lists_print_settings_filtered_by_type(self):
         DocumentTemplate.objects.create(
             name='Рабочий лист',
             template_type=DocumentTemplate.TemplateType.WORKSHEET,
@@ -58,7 +58,7 @@ class DjangoDocumentTemplateRepositoryTests(TestCase):
             sections_config=[{'type': 'answers'}],
         )
 
-        templates = DjangoDocumentTemplateRepository().list_print_settings_specs(
+        templates = DjangoPrintSettingsRepository().list_print_settings_specs(
             document_type=DocumentTemplate.TemplateType.WORKSHEET,
         )
 
@@ -82,7 +82,7 @@ class DjangoDocumentTemplateRepositoryTests(TestCase):
             sections_config=[{'type': 'task_list'}],
         )
 
-        template = DjangoDocumentTemplateRepository().get_default_print_settings_spec(
+        template = DjangoPrintSettingsRepository().get_default_print_settings_spec(
             DocumentTemplate.TemplateType.WORKSHEET,
         )
 
@@ -103,7 +103,7 @@ class DjangoDocumentTemplateRepositoryTests(TestCase):
             sections_config=[{'type': 'header'}],
         )
 
-        template = DjangoDocumentTemplateRepository().get_print_settings_spec(
+        template = DjangoPrintSettingsRepository().get_print_settings_spec(
             print_settings_id=str(template_model.pk),
             document_type=DocumentTemplate.TemplateType.WORKSHEET,
         )
@@ -126,7 +126,7 @@ class DjangoDocumentTemplateRepositoryTests(TestCase):
         self.assertIsNone(template)
 
     def test_creates_template_from_clean_params(self):
-        template_id = DjangoDocumentTemplateRepository().create_print_settings(
+        template_id = DjangoPrintSettingsRepository().create_print_settings(
             CreatePrintSettingsParams(
                 name='Шаблон работы',
                 description='Для печати',
@@ -206,7 +206,7 @@ class DjangoDocumentTemplateRepositoryTests(TestCase):
             sections_config=[{'type': 'header'}],
         )
 
-        updated = DjangoDocumentTemplateRepository().update_print_settings(
+        updated = DjangoPrintSettingsRepository().update_print_settings(
             UpdatePrintSettingsParams(
                 print_settings_id=str(template.pk),
                 name='Новый шаблон',

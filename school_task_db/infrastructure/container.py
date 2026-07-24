@@ -315,6 +315,9 @@ from infrastructure.repositories.django_curriculum_repo import (
 from infrastructure.repositories.django_print_settings_repo import (
     DjangoPrintSettingsRepository,
 )
+from infrastructure.repositories.django_document_template_repo import (
+    DjangoDocumentTemplateRepository,
+)
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
 from infrastructure.repositories.django_report_repo import DjangoReportRepository
@@ -360,6 +363,7 @@ class Container:
         self._core_repo = None
         self._settings_repo = None
         self._document_template_repo = None
+        self._print_settings_repo = None
         self._codifier_form_adapter = None
         self._core_form_adapter = None
         self._curriculum_form_adapter = None
@@ -438,13 +442,15 @@ class Container:
 
     @property
     def document_template_repo(self):
-        return self.print_settings_repo
+        if self._document_template_repo is None:
+            self._document_template_repo = DjangoDocumentTemplateRepository()
+        return self._document_template_repo
 
     @property
     def print_settings_repo(self):
-        if self._document_template_repo is None:
-            self._document_template_repo = DjangoPrintSettingsRepository()
-        return self._document_template_repo
+        if self._print_settings_repo is None:
+            self._print_settings_repo = DjangoPrintSettingsRepository()
+        return self._print_settings_repo
 
     @property
     def core_form_adapter(self):

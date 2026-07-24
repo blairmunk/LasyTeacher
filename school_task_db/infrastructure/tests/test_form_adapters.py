@@ -249,11 +249,13 @@ class CurriculumFormAdapterTests(SimpleTestCase):
 
 
 class DocumentTemplateFormAdapterTests(SimpleTestCase):
-    def test_print_settings_form_is_template_form_alias(self):
-        self.assertIs(PrintSettingsForm, DocumentTemplateForm)
+    def test_print_settings_form_is_template_form_subclass(self):
+        self.assertTrue(issubclass(PrintSettingsForm, DocumentTemplateForm))
 
-    def test_print_settings_form_adapter_is_template_adapter_alias(self):
-        self.assertIs(PrintSettingsFormAdapter, DocumentTemplateFormAdapter)
+    def test_print_settings_form_adapter_is_template_adapter_subclass(self):
+        self.assertTrue(
+            issubclass(PrintSettingsFormAdapter, DocumentTemplateFormAdapter)
+        )
 
     def _template_form(self, *args, sections=None, **kwargs):
         return PrintSettingsForm(

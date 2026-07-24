@@ -132,7 +132,6 @@ class DjangoDocumentTemplateRepository(IDocumentTemplateRepository):
         return self.update_print_settings(params)
 
 
-DjangoPrintSettingsRepository = DjangoDocumentTemplateRepository
 
 
 def _sections_config_from_specs(

@@ -18,8 +18,13 @@ from infrastructure.repositories.django_print_settings_repo import (
 
 
 class DjangoDocumentTemplateRepositoryTests(TestCase):
-    def test_print_settings_repository_is_template_repository_alias(self):
-        self.assertIs(DjangoPrintSettingsRepository, DjangoDocumentTemplateRepository)
+    def test_print_settings_repository_is_template_repository_subclass(self):
+        self.assertTrue(
+            issubclass(
+                DjangoPrintSettingsRepository,
+                DjangoDocumentTemplateRepository,
+            )
+        )
 
     def test_lists_template_specs_filtered_by_type(self):
         DocumentTemplate.objects.create(

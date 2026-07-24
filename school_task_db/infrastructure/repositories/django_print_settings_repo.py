@@ -5,5 +5,9 @@ current infrastructure name for clean-architecture wiring.
 """
 
 from infrastructure.repositories.django_document_template_repo import (
-    DjangoPrintSettingsRepository,
+    DjangoDocumentTemplateRepository,
 )
+
+
+class DjangoPrintSettingsRepository(DjangoDocumentTemplateRepository):
+    """Django implementation of print settings repository."""

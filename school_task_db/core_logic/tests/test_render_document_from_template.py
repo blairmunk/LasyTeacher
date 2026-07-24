@@ -15,6 +15,10 @@ from core_logic.use_cases.render_document_from_template import (
     RenderDocumentFromTemplateRequest,
     RenderDocumentFromTemplateUseCase,
 )
+from core_logic.use_cases.render_document_from_print_settings import (
+    RenderDocumentFromPrintSettingsRequest,
+    RenderDocumentFromPrintSettingsUseCase,
+)
 from core_logic.value_objects.document_render_options import RenderTarget
 from core_logic.value_objects.document_recipes import (
     HEADER_SECTION,
@@ -37,6 +41,20 @@ class FakeDocumentEngine:
 
 
 class RenderDocumentFromTemplateUseCaseTests(TestCase):
+    def test_print_settings_render_use_case_types_are_template_compatible(self):
+        self.assertTrue(
+            issubclass(
+                RenderDocumentFromPrintSettingsRequest,
+                RenderDocumentFromTemplateRequest,
+            )
+        )
+        self.assertTrue(
+            issubclass(
+                RenderDocumentFromPrintSettingsUseCase,
+                RenderDocumentFromTemplateUseCase,
+            )
+        )
+
     def test_delegates_to_recipe_render_use_case(self):
         recipe_use_case = FakeRenderDocumentFromRecipeUseCase()
         use_case = RenderDocumentFromTemplateUseCase(

@@ -59,8 +59,8 @@ from core_logic.use_cases.render_remedial_sheet_batch_document import (
     RenderRemedialSheetBatchDocumentUseCase,
 )
 from core_logic.use_cases.render_document import RenderDocumentUseCase
-from core_logic.use_cases.render_document_from_template import (
-    RenderDocumentFromTemplateUseCase,
+from core_logic.use_cases.render_document_from_print_settings import (
+    RenderDocumentFromPrintSettingsUseCase,
 )
 from core_logic.use_cases.render_document_from_recipe import (
     RenderDocumentFromRecipeUseCase,
@@ -1166,7 +1166,10 @@ class Container:
         )
 
     def render_document_from_template_use_case(self):
-        return RenderDocumentFromTemplateUseCase(
+        return self.render_document_from_print_settings_use_case()
+
+    def render_document_from_print_settings_use_case(self):
+        return RenderDocumentFromPrintSettingsUseCase(
             render_document_from_recipe_use_case=(
                 self.render_document_from_recipe_use_case()
             ),

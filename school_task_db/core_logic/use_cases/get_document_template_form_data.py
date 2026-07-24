@@ -1,4 +1,4 @@
-"""Prepare data for the sectioned document print profile form."""
+"""Legacy adapter for document print settings form data."""
 
 from dataclasses import dataclass
 from typing import Tuple
@@ -7,13 +7,16 @@ from core_logic.entities.document import PrintSettingsSpec
 from core_logic.interfaces.print_settings_repo import (
     IPrintSettingsRepository,
 )
+from core_logic.use_cases.get_print_settings_form_data import (
+    GetPrintSettingsFormDataRequest,
+    GetPrintSettingsFormDataUseCase,
+    PrintSettingsFormData,
+)
 from core_logic.value_objects.document_section_catalog import (
     DocumentSectionCatalogItem,
-    get_document_section_catalog,
 )
 from core_logic.value_objects.document_type_catalog import (
     DocumentTypeCatalogItem,
-    get_document_type_catalog,
 )
 
 
@@ -40,41 +43,32 @@ class DocumentTemplateFormData:
         return self.print_profile
 
 
-class GetDocumentTemplateFormDataUseCase:
+class GetDocumentTemplateFormDataUseCase(GetPrintSettingsFormDataUseCase):
+    """Adapt the former template-oriented form data contract."""
+
     def __init__(
         self,
-        print_settings_repo: IPrintSettingsRepository | None = None,
         document_template_repo: IPrintSettingsRepository | None = None,
+        print_settings_repo: IPrintSettingsRepository | None = None,
     ):
-        self.print_settings_repo = print_settings_repo or document_template_repo
-        self.document_template_repo = self.print_settings_repo
+        repository = print_settings_repo or document_template_repo
+        super().__init__(print_settings_repo=repository)
+        self.document_template_repo = repository
 
     def execute(
         self,
         request: GetDocumentTemplateFormDataRequest | None = None,
     ) -> DocumentTemplateFormData:
         request = request or GetDocumentTemplateFormDataRequest()
+        data = super().execute(
+            GetPrintSettingsFormDataRequest(
+                print_settings_id=request.selected_print_settings_id,
+                renderable_only=request.renderable_only,
+                include_legacy_sections=request.include_legacy_sections,
+            ),
+        )
         return DocumentTemplateFormData(
-            document_types=get_document_type_catalog(
-                renderable_only=request.renderable_only,
-            ),
-            sections=get_document_section_catalog(
-                include_legacy=request.include_legacy_sections,
-                renderable_only=request.renderable_only,
-            ),
-            print_profile=self._print_profile(
-                request.selected_print_settings_id,
-            ),
+            document_types=data.document_types,
+            sections=data.sections,
+            print_profile=data.print_profile,
         )
-
-    def _print_profile(self, print_settings_id: str) -> PrintSettingsSpec | None:
-        if not print_settings_id or self.print_settings_repo is None:
-            return None
-        return self.print_settings_repo.get_print_settings_spec(
-            print_settings_id=print_settings_id,
-        )
-
-
-GetPrintSettingsFormDataRequest = GetDocumentTemplateFormDataRequest
-PrintSettingsFormData = DocumentTemplateFormData
-GetPrintSettingsFormDataUseCase = GetDocumentTemplateFormDataUseCase

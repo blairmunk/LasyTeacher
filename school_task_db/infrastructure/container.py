@@ -103,8 +103,14 @@ from core_logic.use_cases.get_document_section_catalog import (
 from core_logic.use_cases.get_print_settings_editor_data import (
     GetPrintSettingsEditorDataUseCase,
 )
+from core_logic.use_cases.get_document_template_editor_data import (
+    GetDocumentTemplateEditorDataUseCase,
+)
 from core_logic.use_cases.get_print_settings_form_data import (
     GetPrintSettingsFormDataUseCase,
+)
+from core_logic.use_cases.get_document_template_form_data import (
+    GetDocumentTemplateFormDataUseCase,
 )
 from core_logic.use_cases.get_document_type_catalog import (
     GetDocumentTypeCatalogUseCase,
@@ -750,7 +756,9 @@ class Container:
         return GetDocumentSectionCatalogUseCase()
 
     def get_document_template_editor_data_use_case(self):
-        return self.get_print_settings_editor_data_use_case()
+        return GetDocumentTemplateEditorDataUseCase(
+            document_template_repo=self.document_template_repo,
+        )
 
     def get_print_settings_editor_data_use_case(self):
         return GetPrintSettingsEditorDataUseCase(
@@ -758,7 +766,9 @@ class Container:
         )
 
     def get_document_template_form_data_use_case(self):
-        return self.get_print_settings_form_data_use_case()
+        return GetDocumentTemplateFormDataUseCase(
+            document_template_repo=self.document_template_repo,
+        )
 
     def get_print_settings_form_data_use_case(self):
         return GetPrintSettingsFormDataUseCase(

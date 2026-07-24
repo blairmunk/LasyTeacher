@@ -8,6 +8,10 @@ from core_logic.use_cases.get_document_template_editor_data import (
     GetDocumentTemplateEditorDataRequest,
     GetDocumentTemplateEditorDataUseCase,
 )
+from core_logic.use_cases.get_print_settings_editor_data import (
+    GetPrintSettingsEditorDataRequest,
+    GetPrintSettingsEditorDataUseCase,
+)
 from core_logic.value_objects.document_recipes import (
     HEADER_SECTION,
     ORIGINAL_MISTAKES_SECTION,
@@ -95,3 +99,15 @@ class GetDocumentTemplateEditorDataUseCaseTests(TestCase):
         )
 
         self.assertTrue(any(section.is_legacy for section in data.sections))
+
+    def test_clean_editor_data_has_no_template_alias(self):
+        repo = FakeDocumentTemplateRepository()
+
+        data = GetPrintSettingsEditorDataUseCase(repo).execute(
+            GetPrintSettingsEditorDataRequest(
+                document_type=WORK_DOCUMENT_TYPE,
+            ),
+        )
+
+        self.assertEqual(data.print_profiles[0].name, 'Work template')
+        self.assertFalse(hasattr(data, 'templates'))

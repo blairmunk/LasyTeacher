@@ -106,19 +106,19 @@ class PrintSettingsUpdateView(PrintSettingsCreateView):
 
     def _form_data(self, template_id=''):
         form_data = super()._form_data(template_id or str(self.kwargs['pk']))
-        if form_data.template is None:
+        if form_data.print_profile is None:
             raise Http404('Настройки печати не найдены')
         return form_data
 
     def get_context_data(self, **kwargs):
         form_data = kwargs.pop('form_data', None) or self._form_data()
-        template = form_data.template
+        print_profile = form_data.print_profile
         form = kwargs.get('form') or self._form(
             form_data=form_data,
             initial=(
                 container
                 .print_settings_form_adapter
-                .form_initial_from_print_settings(template)
+                .form_initial_from_print_settings(print_profile)
             ),
         )
         context = super().get_context_data(
@@ -126,7 +126,7 @@ class PrintSettingsUpdateView(PrintSettingsCreateView):
             form_data=form_data,
             **kwargs,
         )
-        context['template'] = template
+        context['template'] = print_profile
         context['page_title'] = self.page_title
         context['submit_label'] = 'Сохранить изменения'
         return context

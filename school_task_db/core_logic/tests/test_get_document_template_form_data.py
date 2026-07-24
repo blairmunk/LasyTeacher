@@ -8,6 +8,10 @@ from core_logic.use_cases.get_document_template_form_data import (
     GetDocumentTemplateFormDataRequest,
     GetDocumentTemplateFormDataUseCase,
 )
+from core_logic.use_cases.get_print_settings_form_data import (
+    GetPrintSettingsFormDataRequest,
+    GetPrintSettingsFormDataUseCase,
+)
 from core_logic.value_objects.document_recipes import (
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     WORK_DOCUMENT_TYPE,
@@ -63,3 +67,21 @@ class GetDocumentTemplateFormDataUseCaseTests(TestCase):
         self.assertEqual(repo.template_id, 'template-1')
         self.assertEqual(data.print_profile, template)
         self.assertEqual(data.template, template)
+
+    def test_clean_form_data_has_no_template_alias(self):
+        print_profile = DocumentTemplateSpec(
+            template_id='template-1',
+            name='Профиль',
+            template_type=WORK_DOCUMENT_TYPE,
+            sections=(DocumentSectionSpec(section_type='header'),),
+        )
+        repo = FakeDocumentTemplateRepository(template=print_profile)
+
+        data = GetPrintSettingsFormDataUseCase(repo).execute(
+            GetPrintSettingsFormDataRequest(
+                print_settings_id='template-1',
+            ),
+        )
+
+        self.assertEqual(data.print_profile, print_profile)
+        self.assertFalse(hasattr(data, 'template'))

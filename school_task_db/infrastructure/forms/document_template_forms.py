@@ -58,7 +58,7 @@ class DocumentTemplateFormAdapter:
         return CreatePrintSettingsParams(
             name=form.cleaned_data['name'],
             description=form.cleaned_data.get('description', ''),
-            template_type=form.cleaned_data['template_type'],
+            document_type=form.cleaned_data['template_type'],
             sections=self._section_specs_from_form(form),
             is_default=form.cleaned_data.get('is_default', False),
         )
@@ -71,10 +71,10 @@ class DocumentTemplateFormAdapter:
 
     def update_print_settings_params_from_form(self, form, print_settings_id):
         return UpdatePrintSettingsParams(
-            template_id=print_settings_id,
+            print_settings_id=print_settings_id,
             name=form.cleaned_data['name'],
             description=form.cleaned_data.get('description', ''),
-            template_type=form.cleaned_data['template_type'],
+            document_type=form.cleaned_data['template_type'],
             sections=self._section_specs_from_form(form),
             is_default=form.cleaned_data.get('is_default', False),
         )

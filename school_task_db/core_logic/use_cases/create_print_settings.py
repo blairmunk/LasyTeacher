@@ -39,7 +39,7 @@ class CreatePrintSettingsUseCase:
         )
         return CreatePrintSettingsResult(
             status=PRINT_SETTINGS_CREATE_STATUS_CREATED,
-            template_id=print_settings_id,
+            print_settings_id=print_settings_id,
         )
 
     def _validate(self, params: CreatePrintSettingsParams) -> list[str]:

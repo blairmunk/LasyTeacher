@@ -32,7 +32,7 @@ class UpdatePrintSettingsUseCase:
         if errors:
             return UpdatePrintSettingsResult(
                 status=PRINT_SETTINGS_UPDATE_STATUS_INVALID,
-                template_id=params.print_settings_id,
+                print_settings_id=params.print_settings_id,
                 errors=tuple(errors),
             )
 
@@ -40,11 +40,11 @@ class UpdatePrintSettingsUseCase:
         if not updated:
             return UpdatePrintSettingsResult(
                 status=PRINT_SETTINGS_UPDATE_STATUS_NOT_FOUND,
-                template_id=params.print_settings_id,
+                print_settings_id=params.print_settings_id,
             )
         return UpdatePrintSettingsResult(
             status=PRINT_SETTINGS_UPDATE_STATUS_UPDATED,
-            template_id=params.print_settings_id,
+            print_settings_id=params.print_settings_id,
         )
 
     def _validate(self, params: UpdatePrintSettingsParams) -> list[str]:

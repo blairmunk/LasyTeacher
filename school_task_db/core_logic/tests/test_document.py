@@ -273,38 +273,38 @@ class DocumentModelTests(TestCase):
         self.assertEqual(params.sections[1].title, 'Черновик')
         self.assertEqual(params.sections[1].options, {'rows': 8})
 
-    def test_print_settings_params_are_template_params_aliases(self):
+    def test_print_settings_params_expose_legacy_aliases(self):
         create_params = CreatePrintSettingsParams(
             name='Профиль печати',
-            template_type='work',
+            document_type='work',
             section_types=('header',),
         )
         update_params = UpdatePrintSettingsParams(
-            template_id='profile-1',
+            print_settings_id='profile-1',
             name='Профиль печати',
-            template_type='work',
+            document_type='work',
             section_types=('header',),
         )
 
-        self.assertIsInstance(create_params, CreateDocumentTemplateParams)
-        self.assertIsInstance(update_params, UpdateDocumentTemplateParams)
         self.assertEqual(create_params.document_type, 'work')
+        self.assertEqual(create_params.template_type, 'work')
         self.assertEqual(update_params.document_type, 'work')
         self.assertEqual(update_params.print_settings_id, 'profile-1')
+        self.assertEqual(update_params.template_id, 'profile-1')
 
-    def test_print_settings_types_are_template_compatible_subclasses(self):
+    def test_legacy_types_are_print_settings_compatible_subclasses(self):
         self.assertTrue(issubclass(PrintSettingsSpec, DocumentTemplateSpec))
         self.assertTrue(
-            issubclass(CreatePrintSettingsParams, CreateDocumentTemplateParams)
+            issubclass(CreateDocumentTemplateParams, CreatePrintSettingsParams)
         )
         self.assertTrue(
-            issubclass(CreatePrintSettingsResult, CreateDocumentTemplateResult)
+            issubclass(CreateDocumentTemplateResult, CreatePrintSettingsResult)
         )
         self.assertTrue(
-            issubclass(UpdatePrintSettingsParams, UpdateDocumentTemplateParams)
+            issubclass(UpdateDocumentTemplateParams, UpdatePrintSettingsParams)
         )
         self.assertTrue(
-            issubclass(UpdatePrintSettingsResult, UpdateDocumentTemplateResult)
+            issubclass(UpdateDocumentTemplateResult, UpdatePrintSettingsResult)
         )
 
     def test_update_template_params_preserve_full_section_specs(self):

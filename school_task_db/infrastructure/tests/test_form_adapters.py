@@ -378,7 +378,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
 
         self.assertEqual(params.name, 'Шаблон')
         self.assertEqual(params.description, 'Описание')
-        self.assertEqual(params.template_type, 'work')
+        self.assertEqual(params.document_type, 'work')
         self.assertEqual(params.section_types, ('header', 'task_list'))
         self.assertEqual(
             [section.section_type for section in params.sections],
@@ -509,7 +509,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
             )
         )
 
-        self.assertEqual(params.template_id, 'template-1')
+        self.assertEqual(params.print_settings_id, 'template-1')
         self.assertEqual(params.name, 'Шаблон')
         self.assertEqual(params.section_types, ('header',))
         self.assertEqual(

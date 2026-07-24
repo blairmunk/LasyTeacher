@@ -374,7 +374,7 @@ class CreateDocumentTemplateUseCaseTests(TestCase):
         repo = FakeDocumentTemplateRepository()
         params = CreatePrintSettingsParams(
             name='Профиль',
-            template_type=WORKSHEET_DOCUMENT_TYPE,
+            document_type=WORKSHEET_DOCUMENT_TYPE,
             section_types=('header', 'task_list'),
         )
 
@@ -442,9 +442,9 @@ class UpdateDocumentTemplateUseCaseTests(TestCase):
     def test_clean_use_case_updates_print_settings(self):
         repo = FakeDocumentTemplateRepository()
         params = UpdatePrintSettingsParams(
-            template_id='template-1',
+            print_settings_id='template-1',
             name='Профиль',
-            template_type=WORKSHEET_DOCUMENT_TYPE,
+            document_type=WORKSHEET_DOCUMENT_TYPE,
             section_types=('header', 'task_list'),
         )
 

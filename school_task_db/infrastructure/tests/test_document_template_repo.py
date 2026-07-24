@@ -130,7 +130,7 @@ class DjangoDocumentTemplateRepositoryTests(TestCase):
             CreatePrintSettingsParams(
                 name='Шаблон работы',
                 description='Для печати',
-                template_type=DocumentTemplate.TemplateType.WORK,
+                document_type=DocumentTemplate.TemplateType.WORK,
                 section_types=('header', 'task_list'),
                 is_default=True,
             )
@@ -139,7 +139,7 @@ class DjangoDocumentTemplateRepositoryTests(TestCase):
         template = DocumentTemplate.objects.get(pk=template_id)
         self.assertEqual(template.name, 'Шаблон работы')
         self.assertEqual(template.description, 'Для печати')
-        self.assertEqual(template.template_type, DocumentTemplate.TemplateType.WORK)
+        self.assertEqual(template.document_type, DocumentTemplate.TemplateType.WORK)
         self.assertEqual(
             template.sections_config,
             [{'type': 'header'}, {'type': 'task_list'}],
@@ -208,10 +208,10 @@ class DjangoDocumentTemplateRepositoryTests(TestCase):
 
         updated = DjangoDocumentTemplateRepository().update_print_settings(
             UpdatePrintSettingsParams(
-                template_id=str(template.pk),
+                print_settings_id=str(template.pk),
                 name='Новый шаблон',
                 description='Новое описание',
-                template_type=DocumentTemplate.TemplateType.WORK,
+                document_type=DocumentTemplate.TemplateType.WORK,
                 section_types=('header', 'task_list'),
                 is_default=True,
             )

@@ -81,14 +81,14 @@ class DjangoDocumentTemplateRepository(IDocumentTemplateRepository):
     ) -> str:
         if params.is_default:
             DocumentTemplate.objects.filter(
-                template_type=params.template_type,
+                template_type=params.document_type,
                 is_default=True,
             ).update(is_default=False)
 
         template = DocumentTemplate(
             name=params.name,
             description=params.description,
-            template_type=params.template_type,
+            template_type=params.document_type,
             sections_config=_sections_config_from_specs(params.sections),
             is_default=params.is_default,
         )
@@ -106,19 +106,21 @@ class DjangoDocumentTemplateRepository(IDocumentTemplateRepository):
         self,
         params: UpdatePrintSettingsParams,
     ) -> bool:
-        template = DocumentTemplate.objects.filter(pk=params.template_id).first()
+        template = DocumentTemplate.objects.filter(
+            pk=params.print_settings_id,
+        ).first()
         if template is None:
             return False
 
         if params.is_default:
             DocumentTemplate.objects.filter(
-                template_type=params.template_type,
+                template_type=params.document_type,
                 is_default=True,
             ).exclude(pk=template.pk).update(is_default=False)
 
         template.name = params.name
         template.description = params.description
-        template.template_type = params.template_type
+        template.template_type = params.document_type
         template.sections_config = _sections_config_from_specs(params.sections)
         template.is_default = params.is_default
         template.full_clean()

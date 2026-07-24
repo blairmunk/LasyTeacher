@@ -15,7 +15,7 @@ from core_logic.value_objects.document_section_catalog import (
     order_document_section_types,
 )
 from core_logic.value_objects.document_render_options import FILE_TYPE_LABELS
-from infrastructure.forms.document_template_django_forms import (
+from infrastructure.forms.print_settings_django_forms import (
     section_options_field_name,
 )
 

@@ -4,7 +4,7 @@ from django.shortcuts import redirect
 from django.views.generic import TemplateView
 
 from infrastructure.container import container
-from infrastructure.forms.document_template_django_forms import (
+from infrastructure.forms.print_settings_django_forms import (
     PrintSettingsForm,
 )
 from core_logic.use_cases.get_print_settings_form_data import (

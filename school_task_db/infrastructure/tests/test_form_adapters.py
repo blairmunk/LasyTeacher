@@ -6,8 +6,8 @@ from django.test import SimpleTestCase
 
 from infrastructure.forms.document_template_django_forms import (
     DocumentTemplateForm,
-    PrintSettingsForm,
 )
+from infrastructure.forms.print_settings_django_forms import PrintSettingsForm
 from core_logic.entities.document import (
     DocumentPresentation,
     DocumentSectionSpec,
@@ -61,8 +61,8 @@ from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
 from infrastructure.forms.document_template_forms import (
     DocumentTemplateFormAdapter,
-    PrintSettingsFormAdapter,
 )
+from infrastructure.forms.print_settings_forms import PrintSettingsFormAdapter
 from infrastructure.forms.event_forms import EventFormAdapter
 from infrastructure.forms.report_forms import ReportFormAdapter
 from infrastructure.forms.review_forms import ReviewFormAdapter

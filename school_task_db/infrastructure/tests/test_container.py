@@ -269,8 +269,8 @@ from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
 from infrastructure.forms.document_template_forms import (
     DocumentTemplateFormAdapter,
-    PrintSettingsFormAdapter,
 )
+from infrastructure.forms.print_settings_forms import PrintSettingsFormAdapter
 from infrastructure.forms.report_forms import ReportFormAdapter
 from infrastructure.forms.review_forms import ReviewFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter

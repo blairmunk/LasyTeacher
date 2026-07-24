@@ -305,8 +305,7 @@ from infrastructure.services.task_import_service import DjangoTaskImportService
 from infrastructure.forms.codifier_forms import CodifierFormAdapter
 from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
-from infrastructure.forms.document_template_forms import (
-    DocumentTemplateFormAdapter,
+from infrastructure.forms.print_settings_forms import (
     PrintSettingsFormAdapter,
 )
 from infrastructure.forms.event_forms import EventFormAdapter

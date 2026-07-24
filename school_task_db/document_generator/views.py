@@ -7,7 +7,7 @@ from infrastructure.container import container
 from infrastructure.forms.document_template_django_forms import (
     PrintSettingsForm,
 )
-from core_logic.use_cases.get_document_template_form_data import (
+from core_logic.use_cases.get_print_settings_form_data import (
     GetPrintSettingsFormDataRequest,
 )
 from core_logic.value_objects.document_recipes import WORK_DOCUMENT_TYPE

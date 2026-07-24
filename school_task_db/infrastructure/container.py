@@ -66,10 +66,10 @@ from core_logic.use_cases.render_document_from_recipe import (
     RenderDocumentFromRecipeUseCase,
 )
 from core_logic.use_cases.render_work_document import RenderWorkDocumentUseCase
-from core_logic.use_cases.create_document_template import (
+from core_logic.use_cases.create_print_settings import (
     CreatePrintSettingsUseCase,
 )
-from core_logic.use_cases.update_document_template import (
+from core_logic.use_cases.update_print_settings import (
     UpdatePrintSettingsUseCase,
 )
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
@@ -79,22 +79,22 @@ from core_logic.use_cases.get_codifier_list import GetCodifierListUseCase
 from core_logic.use_cases.get_course_detail import GetCourseDetailUseCase
 from core_logic.use_cases.get_course_list import GetCourseListUseCase
 from core_logic.use_cases.get_dashboard_summary import GetDashboardSummaryUseCase
-from core_logic.use_cases.get_default_document_template import (
+from core_logic.use_cases.get_default_print_settings import (
     GetDefaultPrintSettingsUseCase,
 )
-from core_logic.use_cases.get_document_template import (
+from core_logic.use_cases.get_print_settings import (
     GetPrintSettingsUseCase,
 )
-from core_logic.use_cases.get_document_template_list import (
+from core_logic.use_cases.get_print_settings_list import (
     GetPrintSettingsListUseCase,
 )
 from core_logic.use_cases.get_document_section_catalog import (
     GetDocumentSectionCatalogUseCase,
 )
-from core_logic.use_cases.get_document_template_editor_data import (
+from core_logic.use_cases.get_print_settings_editor_data import (
     GetPrintSettingsEditorDataUseCase,
 )
-from core_logic.use_cases.get_document_template_form_data import (
+from core_logic.use_cases.get_print_settings_form_data import (
     GetPrintSettingsFormDataUseCase,
 )
 from core_logic.use_cases.get_document_type_catalog import (

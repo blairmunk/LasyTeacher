@@ -8,8 +8,8 @@ from core_logic.entities.document import (
     DocumentSectionSpec,
     UpdatePrintSettingsParams,
 )
-from core_logic.use_cases.get_document_template_editor_data import (
-    GetDocumentTemplateEditorDataRequest,
+from core_logic.use_cases.get_print_settings_editor_data import (
+    GetPrintSettingsEditorDataRequest,
 )
 from core_logic.value_objects.document_section_catalog import (
     order_document_section_types,
@@ -22,7 +22,7 @@ from infrastructure.forms.document_template_django_forms import (
 
 class DocumentTemplateFormAdapter:
     def editor_data_request_from_query(self, query_data):
-        return GetDocumentTemplateEditorDataRequest(
+        return GetPrintSettingsEditorDataRequest(
             document_type=query_data.get('type', ''),
             renderable_only=query_data.get('renderable') == '1',
             include_legacy_sections=query_data.get('legacy') == '1',

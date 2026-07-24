@@ -86,7 +86,7 @@ class DocumentTemplateFormAdapter:
         return {
             'name': print_settings.name,
             'description': print_settings.description,
-            'template_type': print_settings.template_type,
+            'template_type': print_settings.document_type,
             'sections': print_settings.section_types,
             'section_order': ','.join(print_settings.section_types),
             'section_options': {
@@ -172,7 +172,7 @@ class DocumentTemplateFormAdapter:
             'template_id': template.template_id,
             'name': template.name,
             'document_type': template.document_type,
-            'template_type': template.template_type,
+            'template_type': template.document_type,
             'section_types': template.section_types,
             'sections_count': len(template.sections),
             'default_content_config': template.default_content_config,

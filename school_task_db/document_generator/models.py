@@ -97,8 +97,8 @@ class DocumentTemplate(BaseModel):
     def to_print_settings_spec(self):
         return build_print_settings_spec_from_config(
             name=self.name,
-            template_type=self.template_type,
-            template_id=str(self.pk),
+            document_type=self.template_type,
+            print_settings_id=str(self.pk),
             description=self.description,
             is_default=self.is_default,
             sections_config=self.sections_config,

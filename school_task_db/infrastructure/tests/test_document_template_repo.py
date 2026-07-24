@@ -139,7 +139,7 @@ class DjangoDocumentTemplateRepositoryTests(TestCase):
         template = DocumentTemplate.objects.get(pk=template_id)
         self.assertEqual(template.name, 'Шаблон работы')
         self.assertEqual(template.description, 'Для печати')
-        self.assertEqual(template.document_type, DocumentTemplate.TemplateType.WORK)
+        self.assertEqual(template.template_type, DocumentTemplate.TemplateType.WORK)
         self.assertEqual(
             template.sections_config,
             [{'type': 'header'}, {'type': 'task_list'}],

@@ -59,7 +59,7 @@ def build_document_recipe_from_sections_config(
 
 def build_print_settings_spec_from_config(
     name: str,
-    template_type: str,
+    document_type: str,
     sections_config: (
         Mapping[str, Any]
         | Sequence[Mapping[str, Any] | DocumentSectionSpec]
@@ -69,18 +69,18 @@ def build_print_settings_spec_from_config(
     latex_template_override: str = '',
     custom_css: str = '',
     custom_latex_preamble: str = '',
-    template_id: str = '',
+    print_settings_id: str = '',
     description: str = '',
     is_default: bool = False,
 ) -> PrintSettingsSpec:
     recipe = build_document_recipe_from_sections_config(
-        document_type=template_type,
+        document_type=document_type,
         sections_config=sections_config,
     )
     return PrintSettingsSpec(
         name=name,
-        template_type=template_type,
-        template_id=template_id,
+        document_type=document_type,
+        print_settings_id=print_settings_id,
         description=description,
         is_default=is_default,
         sections=recipe.sections,
@@ -112,14 +112,14 @@ def build_document_template_spec_from_config(
 ) -> PrintSettingsSpec:
     return build_print_settings_spec_from_config(
         name=name,
-        template_type=template_type,
+        document_type=template_type,
         sections_config=sections_config,
         default_content_config=default_content_config,
         html_template_override=html_template_override,
         latex_template_override=latex_template_override,
         custom_css=custom_css,
         custom_latex_preamble=custom_latex_preamble,
-        template_id=template_id,
+        print_settings_id=template_id,
         description=description,
         is_default=is_default,
     )

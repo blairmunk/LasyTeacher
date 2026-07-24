@@ -83,7 +83,7 @@ class DocumentRecipeTests(TestCase):
     def test_builds_print_settings_spec_from_sections_config(self):
         print_settings = build_print_settings_spec_from_config(
             name='Рабочий лист',
-            template_type=WORKSHEET_DOCUMENT_TYPE,
+            document_type=WORKSHEET_DOCUMENT_TYPE,
             sections_config={
                 'sections': [
                     {'type': HEADER_SECTION},
@@ -97,7 +97,7 @@ class DocumentRecipeTests(TestCase):
         )
 
         self.assertEqual(print_settings.name, 'Рабочий лист')
-        self.assertEqual(print_settings.template_type, WORKSHEET_DOCUMENT_TYPE)
+        self.assertEqual(print_settings.document_type, WORKSHEET_DOCUMENT_TYPE)
         self.assertEqual(
             print_settings.section_types,
             (HEADER_SECTION, TASK_LIST_SECTION),
@@ -123,7 +123,7 @@ class DocumentRecipeTests(TestCase):
     def test_builds_print_settings_spec_with_presentation_overrides(self):
         print_settings = build_print_settings_spec_from_config(
             name='Рабочий лист',
-            template_type=WORKSHEET_DOCUMENT_TYPE,
+            document_type=WORKSHEET_DOCUMENT_TYPE,
             sections_config=[{'type': HEADER_SECTION}],
             html_template_override='<html>{{ body_content }}</html>',
             latex_template_override='\\begin{document}{{ body_content }}',

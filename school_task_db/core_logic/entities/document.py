@@ -158,16 +158,12 @@ class DocumentRecipe:
 
 
 @dataclass(frozen=True)
-class DocumentTemplateSpec:
-    """Saved print settings for a sectioned document.
-
-    The class name is kept for compatibility with the current persistence layer.
-    Conceptually it is a print profile: section recipe plus presentation options.
-    """
+class PrintSettingsSpec:
+    """Saved print settings for a sectioned document."""
 
     name: str
-    template_type: str
-    template_id: str = ''
+    document_type: str
+    print_settings_id: str = ''
     description: str = ''
     is_default: bool = False
     sections: Tuple[DocumentSectionSpec, ...] = field(default_factory=tuple)
@@ -177,8 +173,8 @@ class DocumentTemplateSpec:
     )
 
     def __post_init__(self):
-        if not self.template_type:
-            raise ValueError('template_type is required')
+        if not self.document_type:
+            raise ValueError('document_type is required')
         object.__setattr__(self, 'sections', tuple(self.sections))
         object.__setattr__(
             self,
@@ -191,16 +187,16 @@ class DocumentTemplateSpec:
         return tuple(section.section_type for section in self.sections)
 
     @property
-    def print_settings_id(self) -> str:
-        return self.template_id
+    def template_id(self) -> str:
+        return self.print_settings_id
 
     @property
-    def document_type(self) -> str:
-        return self.template_type
+    def template_type(self) -> str:
+        return self.document_type
 
     def to_print_recipe(self, document_type: str = '') -> DocumentRecipe:
         return DocumentRecipe(
-            document_type=document_type or self.template_type,
+            document_type=document_type or self.document_type,
             sections=self.sections,
             presentation=self.presentation,
         )
@@ -209,8 +205,30 @@ class DocumentTemplateSpec:
         return self.to_print_recipe(document_type=document_type)
 
 
-class PrintSettingsSpec(DocumentTemplateSpec):
-    """Saved print settings for a sectioned document."""
+class DocumentTemplateSpec(PrintSettingsSpec):
+    """Legacy constructor for saved document print settings."""
+
+    def __init__(
+        self,
+        name: str,
+        template_type: str,
+        template_id: str = '',
+        description: str = '',
+        is_default: bool = False,
+        sections: Tuple[DocumentSectionSpec, ...] = (),
+        default_content_config: Mapping[str, Any] | None = None,
+        presentation: DocumentPresentation | None = None,
+    ):
+        super().__init__(
+            name=name,
+            document_type=template_type,
+            print_settings_id=template_id,
+            description=description,
+            is_default=is_default,
+            sections=sections,
+            default_content_config=default_content_config or {},
+            presentation=presentation or DocumentPresentation(),
+        )
 
 
 def _clean_section_types(section_types) -> Tuple[str, ...]:

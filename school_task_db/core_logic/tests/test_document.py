@@ -293,7 +293,7 @@ class DocumentModelTests(TestCase):
         self.assertEqual(update_params.template_id, 'profile-1')
 
     def test_legacy_types_are_print_settings_compatible_subclasses(self):
-        self.assertTrue(issubclass(PrintSettingsSpec, DocumentTemplateSpec))
+        self.assertTrue(issubclass(DocumentTemplateSpec, PrintSettingsSpec))
         self.assertTrue(
             issubclass(CreateDocumentTemplateParams, CreatePrintSettingsParams)
         )

@@ -287,7 +287,7 @@ class VariantDetailTaskRow:
 
 @dataclass(frozen=True)
 class RemedialOriginalTaskRow:
-    task: Any
+    task: "RemedialTaskRef"
     order: int
     points: Any
     max_points: Any
@@ -297,13 +297,61 @@ class RemedialOriginalTaskRow:
 
 
 @dataclass(frozen=True)
+class RemedialTaskRef:
+    pk: str
+    text: str
+    answer: str = ''
+    short_solution: str = ''
+    full_solution: str = ''
+    hint: str = ''
+    instruction: str = ''
+    task_type: str = ''
+    difficulty: int = 0
+    topic: str = ''
+    subtopic: str = ''
+    source: str = ''
+    source_detail: str = ''
+
+    @property
+    def id(self) -> str:
+        return self.pk
+
+
+@dataclass(frozen=True)
+class RemedialTrainingTaskRow:
+    pk: str
+    task_id: str
+    task: RemedialTaskRef
+    order: int
+    max_points: int
+    bank_role: str = TASK_BANK_ROLE_CONTROL
+    render_mode: str = TASK_RENDER_MODE_TASK_ONLY
+    is_assessable: bool = True
+    blank_cells_after: bool = False
+    blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
+
+
+@dataclass(frozen=True)
+class RemedialMarkRef:
+    score: Any = None
+    points: Any = None
+    max_points: Any = None
+
+
+@dataclass(frozen=True)
+class RemedialVariantRef:
+    pk: str
+    work: Optional[VariantDetailRef] = None
+
+
+@dataclass(frozen=True)
 class RemedialSheetData:
-    variant: Any
-    student: Any
-    source_work: Any
-    mark: Any
+    variant: Optional[RemedialVariantRef]
+    student: Optional[VariantDetailStudentRef]
+    source_work: Optional[VariantDetailRef]
+    mark: Optional[RemedialMarkRef]
     original_tasks: List[RemedialOriginalTaskRow] = field(default_factory=list)
-    new_tasks: Any = None
+    new_tasks: List[RemedialTrainingTaskRow] = field(default_factory=list)
     status: str = 'ready'
     message: str = ''
     redirect_work_id: str = ''

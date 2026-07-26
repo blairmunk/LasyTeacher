@@ -24,5 +24,8 @@ class IWorkDocumentRepository(ABC):
         """Return variant type, or None when the variant does not exist."""
 
     @abstractmethod
-    def get_remedial_sheet_data(self, variant_id: str) -> RemedialSheetData:
-        """Return source data for rendering one remedial sheet."""
+    def get_remedial_sheet_data(
+        self,
+        variant_id: str,
+    ) -> Optional[RemedialSheetData]:
+        """Return remedial sheet source data, or None when it is missing."""

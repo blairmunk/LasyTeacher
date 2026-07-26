@@ -145,8 +145,8 @@ def build_task_payload(task):
         'instruction': task.instruction,
         'task_type': task.task_type,
         'difficulty': task.difficulty,
-        'topic': task.topic.name if task.topic else '',
-        'subtopic': task.subtopic.name if task.subtopic else '',
+        'topic': _related_name(task.topic),
+        'subtopic': _related_name(task.subtopic),
         'source': str(task.source) if task.source else '',
         'source_detail': task.source_detail,
     }
@@ -168,6 +168,14 @@ def format_text_payload(text, task_payload_formatter=None, request=None):
         {'text': text},
         request=request,
     )['text']
+
+
+def _related_name(value):
+    if not value:
+        return ''
+    if isinstance(value, str):
+        return value
+    return value.name
 
 
 def _variant_content_item(variant_task):

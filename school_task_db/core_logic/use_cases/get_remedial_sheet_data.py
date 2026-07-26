@@ -9,7 +9,8 @@ class GetRemedialSheetDataUseCase:
         self.work_repo = work_repo
 
     def execute(self, variant_id: str) -> RemedialSheetData:
-        if self.work_repo.get_variant_type(variant_id) is None:
+        sheet_data = self.work_repo.get_remedial_sheet_data(variant_id)
+        if sheet_data is None:
             return RemedialSheetData(
                 variant=None,
                 student=None,
@@ -19,7 +20,6 @@ class GetRemedialSheetDataUseCase:
                 message='Вариант не найден.',
             )
 
-        sheet_data = self.work_repo.get_remedial_sheet_data(variant_id)
         if not sheet_data.source_work:
             variant = sheet_data.variant
             work_id = str(variant.work.pk) if getattr(variant, 'work', None) else ''

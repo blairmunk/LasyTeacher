@@ -934,6 +934,13 @@ class DjangoRemedialRepositoryTests(TestCase):
             [str(first_variant.pk), str(second_variant.pk)],
         )
 
+    def test_work_repository_returns_none_for_missing_remedial_sheet(self):
+        sheet_data = DjangoWorkRepository().get_remedial_sheet_data(
+            '00000000-0000-0000-0000-000000000000',
+        )
+
+        self.assertIsNone(sheet_data)
+
     def test_work_repository_returns_detail_page_data(self):
         repo = DjangoWorkRepository()
 

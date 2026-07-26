@@ -9,8 +9,12 @@ from core_logic.entities.work import (
     OrphanVariantRef,
     OrphanVariantListItem,
     OrphanVariantStudentRef,
+    RemedialMarkRef,
     RemedialOriginalTaskRow,
     RemedialSheetData,
+    RemedialTaskRef,
+    RemedialTrainingTaskRow,
+    RemedialVariantRef,
     VariantDeleteInfo,
     VariantDetailImage,
     VariantDetailRef,
@@ -379,11 +383,17 @@ class DjangoWorkRepository(IWorkRepository, IWorkDocumentRepository):
             .first()
         )
 
-    def get_remedial_sheet_data(self, variant_id: str) -> RemedialSheetData:
+    def get_remedial_sheet_data(
+        self,
+        variant_id: str,
+    ) -> Optional[RemedialSheetData]:
         variant = Variant.objects.select_related(
             'assigned_student',
             'source_work',
-        ).get(pk=variant_id)
+            'work',
+        ).filter(pk=variant_id).first()
+        if variant is None:
+            return None
         student = variant.assigned_student
         source_work = variant.source_work
         mark = None
@@ -404,7 +414,12 @@ class DjangoWorkRepository(IWorkRepository, IWorkDocumentRepository):
                 if original_ep.variant:
                     original_variant_tasks = VariantTask.objects.filter(
                         variant=original_ep.variant,
-                    ).select_related('task').order_by('order')
+                    ).select_related(
+                        'task',
+                        'task__topic',
+                        'task__subtopic',
+                        'task__source',
+                    ).order_by('order')
 
                     for variant_task in original_variant_tasks:
                         task = variant_task.task
@@ -420,7 +435,7 @@ class DjangoWorkRepository(IWorkRepository, IWorkDocumentRepository):
 
                         original_tasks.append(
                             RemedialOriginalTaskRow(
-                                task=task,
+                                task=self._remedial_task_ref(task),
                                 order=variant_task.order,
                                 points=points,
                                 max_points=max_points,
@@ -436,10 +451,25 @@ class DjangoWorkRepository(IWorkRepository, IWorkDocumentRepository):
 
         new_tasks = VariantTask.objects.filter(
             variant=variant,
-        ).select_related('task').order_by('order')
+        ).select_related(
+            'task',
+            'task__topic',
+            'task__subtopic',
+            'task__source',
+        ).order_by('order')
 
         return RemedialSheetData(
-            variant=variant,
+            variant=RemedialVariantRef(
+                pk=str(variant.pk),
+                work=(
+                    VariantDetailRef(
+                        pk=str(variant.work.pk),
+                        name=variant.work.name,
+                    )
+                    if variant.work
+                    else None
+                ),
+            ),
             student=(
                 VariantDetailStudentRef(
                     pk=str(student.pk),
@@ -449,10 +479,57 @@ class DjangoWorkRepository(IWorkRepository, IWorkDocumentRepository):
                 if student
                 else None
             ),
-            source_work=source_work,
-            mark=mark,
+            source_work=(
+                VariantDetailRef(
+                    pk=str(source_work.pk),
+                    name=source_work.name,
+                )
+                if source_work
+                else None
+            ),
+            mark=(
+                RemedialMarkRef(
+                    score=mark.score,
+                    points=mark.points,
+                    max_points=mark.max_points,
+                )
+                if mark
+                else None
+            ),
             original_tasks=original_tasks,
-            new_tasks=new_tasks,
+            new_tasks=[
+                RemedialTrainingTaskRow(
+                    pk=str(variant_task.pk),
+                    task_id=str(variant_task.task_id),
+                    task=self._remedial_task_ref(variant_task.task),
+                    order=variant_task.order,
+                    max_points=variant_task.max_points,
+                    bank_role=variant_task.bank_role,
+                    render_mode=variant_task.render_mode,
+                    is_assessable=variant_task.is_assessable,
+                    blank_cells_after=variant_task.blank_cells_after,
+                    blank_cells_rows=variant_task.blank_cells_rows,
+                )
+                for variant_task in new_tasks
+            ],
+        )
+
+    @staticmethod
+    def _remedial_task_ref(task):
+        return RemedialTaskRef(
+            pk=str(task.pk),
+            text=task.text,
+            answer=task.answer,
+            short_solution=task.short_solution,
+            full_solution=task.full_solution,
+            hint=task.hint,
+            instruction=task.instruction,
+            task_type=task.task_type,
+            difficulty=task.difficulty,
+            topic=task.topic.name if task.topic else '',
+            subtopic=task.subtopic.name if task.subtopic else '',
+            source=str(task.source) if task.source else '',
+            source_detail=task.source_detail,
         )
 
     def get_work_remedial_variant_ids(self, work_id: str) -> List[str]:

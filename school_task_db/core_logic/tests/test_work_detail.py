@@ -411,20 +411,19 @@ class WorkDetailTests(TestCase):
 
         result = use_case.execute('variant-1')
 
-        self.assertEqual(repo.variant_type_request, 'variant-1')
         self.assertEqual(repo.remedial_sheet_variant_id, 'variant-1')
         self.assertEqual(result, repo.remedial_sheet_data)
 
     def test_get_remedial_sheet_data_use_case_handles_missing_variant(self):
         repo = FakeWorkRepository()
-        repo.variant_type = None
+        repo.remedial_sheet_data = None
         use_case = GetRemedialSheetDataUseCase(work_repo=repo)
 
         result = use_case.execute('missing')
 
         self.assertEqual(result.status, 'not_found')
         self.assertIsNone(result.variant)
-        self.assertIsNone(repo.remedial_sheet_variant_id)
+        self.assertEqual(repo.remedial_sheet_variant_id, 'missing')
 
     def test_get_remedial_sheet_data_use_case_handles_missing_source(self):
         repo = FakeWorkRepository()

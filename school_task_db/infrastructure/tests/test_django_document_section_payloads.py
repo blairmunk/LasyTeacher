@@ -41,12 +41,16 @@ from core_logic.value_objects.variant_print_plan import (
 )
 from curriculum.models import SubTopic, Topic
 from infrastructure.services.django_document_section_payloads import (
+    build_remedial_sheet_section_payload_builder_registry,
+    build_work_section_payload_builder_registry,
+)
+from infrastructure.services.django_remedial_document_payloads import (
+    RemedialSheetDataProvider,
+)
+from infrastructure.services.django_work_document_payloads import (
     DjangoWorkHeaderPayloadBuilder,
     DjangoWorkTaskListPayloadBuilder,
     DjangoWorkTheoryPayloadBuilder,
-    RemedialSheetDataProvider,
-    build_remedial_sheet_section_payload_builder_registry,
-    build_work_section_payload_builder_registry,
 )
 from tasks.models import Source, Task
 from works.models import Variant, VariantTask, Work

@@ -47,6 +47,10 @@ from core_logic.interfaces.work_repo import (
     IWorkRepository,
 )
 from core_logic.services.work_spec_sync_service import WorkSpecSyncService
+from core_logic.services.work_score_allocation_service import (
+    WorkScoreAllocationService,
+    WorkScoreSpecRow,
+)
 from core_logic.services.work_variant_composition_service import (
     AvailableVariantTask,
     WorkVariantCompositionInput,
@@ -206,14 +210,51 @@ class DjangoWorkRepository(IWorkRepository):
 
     def get_spec_preview(self, work_id: str):
         work = Work.objects.get(pk=work_id)
+        work_groups = list(
+            WorkAnalogGroup.objects.filter(
+                work_id=work_id,
+            ).select_related(
+                'analog_group',
+            ).order_by('order', 'pk')
+        )
+        groups_by_id = {
+            str(work_group.pk): work_group
+            for work_group in work_groups
+        }
+        preview_by_group_id = {}
+        for allocation in WorkScoreAllocationService().allocate(
+            max_score=work.max_score,
+            spec_rows=(
+                WorkScoreSpecRow(
+                    spec_row_id=str(work_group.pk),
+                    count=work_group.count,
+                    weight=work_group.weight,
+                    is_assessable=work_group.is_assessable,
+                )
+                for work_group in work_groups
+            ),
+        ):
+            preview = preview_by_group_id.setdefault(
+                allocation.spec_row_id,
+                {
+                    'per_task': allocation.points,
+                    'total_points': 0,
+                },
+            )
+            preview['total_points'] += allocation.points
+
         return [
             WorkDetailSpecPreviewItem(
-                wg=self._build_work_detail_spec_group(item['wg']),
-                per_task=item['per_task'],
-                total_points=item['total_points'],
-                available_count=self._count_available_group_tasks(item['wg']),
+                wg=self._build_work_detail_spec_group(
+                    groups_by_id[group_id],
+                ),
+                per_task=preview['per_task'],
+                total_points=preview['total_points'],
+                available_count=self._count_available_group_tasks(
+                    groups_by_id[group_id],
+                ),
             )
-            for item in work.get_spec_preview()
+            for group_id, preview in preview_by_group_id.items()
         ]
 
     def _build_work_detail_spec_group(self, work_group):

@@ -2,10 +2,6 @@ from django.db import models
 from django.urls import reverse
 
 from core.models import BaseModel
-from core_logic.services.work_score_allocation_service import (
-    WorkScoreAllocationService,
-    WorkScoreSpecRow,
-)
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_ANY,
@@ -62,43 +58,6 @@ class Work(BaseModel):
 
     def get_absolute_url(self):
         return reverse('works:detail', kwargs={'pk': self.pk})
-
-    def _calc_points_distribution(self):
-        """Map clean score allocations back to specification rows."""
-        work_groups = list(self.workanaloggroup_set.order_by('order', 'pk'))
-        groups_by_id = {str(group.pk): group for group in work_groups}
-        allocations = WorkScoreAllocationService().allocate(
-            max_score=self.max_score,
-            spec_rows=(
-                WorkScoreSpecRow(
-                    spec_row_id=str(group.pk),
-                    count=group.count,
-                    weight=group.weight,
-                    is_assessable=group.is_assessable,
-                )
-                for group in work_groups
-            ),
-        )
-        return [
-            (allocation.points, groups_by_id[allocation.spec_row_id])
-            for allocation in allocations
-        ]
-
-
-    def get_spec_preview(self):
-        """Превью баллов для UI: [{wg, per_task, total_points}, ...]"""
-        distribution = self._calc_points_distribution()
-        if not distribution:
-            return []
-
-        from collections import OrderedDict
-        groups = OrderedDict()
-        for points, wg in distribution:
-            if wg.pk not in groups:
-                groups[wg.pk] = {'wg': wg, 'per_task': points, 'total_points': 0}
-            groups[wg.pk]['total_points'] += points
-
-        return list(groups.values())
 
 class WorkAnalogGroup(BaseModel):
     """Спецификация работы: группа аналогов + количество + вес"""

@@ -39,7 +39,7 @@ class PrintSettingsCreateView(TemplateView):
         form = kwargs.get('form') or self._form(
             form_data=form_data,
             initial={
-                'template_type': self.request.GET.get(
+                'document_type': self.request.GET.get(
                     'type',
                     WORK_DOCUMENT_TYPE,
                 ),
@@ -88,13 +88,13 @@ class PrintSettingsCreateView(TemplateView):
             **kwargs,
         )
 
-    def _form_data(self, template_id=''):
+    def _form_data(self, print_settings_id=''):
         return (
             container
             .get_print_settings_form_data_use_case()
             .execute(
                 GetPrintSettingsFormDataRequest(
-                    print_settings_id=template_id,
+                    print_settings_id=print_settings_id,
                     renderable_only=True,
                 ),
             )
@@ -104,8 +104,10 @@ class PrintSettingsCreateView(TemplateView):
 class PrintSettingsUpdateView(PrintSettingsCreateView):
     page_title = 'Редактирование настроек печати'
 
-    def _form_data(self, template_id=''):
-        form_data = super()._form_data(template_id or str(self.kwargs['pk']))
+    def _form_data(self, print_settings_id=''):
+        form_data = super()._form_data(
+            print_settings_id or str(self.kwargs['pk']),
+        )
         if form_data.print_profile is None:
             raise Http404('Настройки печати не найдены')
         return form_data
@@ -126,7 +128,6 @@ class PrintSettingsUpdateView(PrintSettingsCreateView):
             form_data=form_data,
             **kwargs,
         )
-        context['template'] = print_profile
         context['page_title'] = self.page_title
         context['submit_label'] = 'Сохранить изменения'
         return context
@@ -157,8 +158,3 @@ class PrintSettingsUpdateView(PrintSettingsCreateView):
 
         messages.success(request, 'Настройки печати обновлены.')
         return redirect('document_generator:print-profile-editor')
-
-
-DocumentTemplateEditorView = PrintSettingsEditorView
-DocumentTemplateCreateView = PrintSettingsCreateView
-DocumentTemplateUpdateView = PrintSettingsUpdateView

@@ -343,7 +343,6 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
         )
 
         self.assertNotIn('templates', context)
-        self.assertNotIn('template_id', context['print_profiles'][0])
         self.assertEqual(
             context['print_profiles'][0]['print_settings_id'],
             'profile-1',
@@ -375,7 +374,7 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
     def test_builds_create_params_from_template_form(self):
         form = self._template_form(
             data=QueryDict(
-                'name=Шаблон&description=Описание&template_type=work'
+                'name=Шаблон&description=Описание&document_type=work'
                 '&sections=header&sections=task_list&is_default=on',
             ),
         )
@@ -399,7 +398,7 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
     def test_builds_create_params_preserving_section_order(self):
         form = self._template_form(
             data=QueryDict(
-                'name=Шаблон&template_type=work'
+                'name=Шаблон&document_type=work'
                 '&sections=header&sections=task_list'
                 '&section_order=task_list,header',
             ),
@@ -417,7 +416,7 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
     def test_builds_create_params_with_common_header_fixed_first(self):
         form = self._template_form(
             data=QueryDict(
-                'name=Шаблон&template_type=work'
+                'name=Шаблон&document_type=work'
                 '&sections=header&sections=common_header&sections=task_list'
                 '&section_order=task_list,header,common_header',
             ),
@@ -434,7 +433,7 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
     def test_builds_create_params_with_repeated_sections_from_order(self):
         form = self._template_form(
             data=QueryDict(
-                'name=Шаблон&template_type=work'
+                'name=Шаблон&document_type=work'
                 '&sections=header&sections=task_list&sections=page_break'
                 '&section_order=header,task_list,page_break,header,task_list',
             ),
@@ -450,7 +449,7 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
 
     def test_builds_create_params_with_section_options(self):
         data = QueryDict('', mutable=True)
-        data.update({'name': 'Шаблон', 'template_type': 'work'})
+        data.update({'name': 'Шаблон', 'document_type': 'work'})
         data.setlist('sections', ['header', 'task_list'])
         data['section_options__task_list'] = (
             '{"hidden_roles": ["demo"], "role_blank_cells": {"practice": 6}}'
@@ -474,7 +473,7 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
 
     def test_template_form_rejects_invalid_section_options_json(self):
         data = QueryDict('', mutable=True)
-        data.update({'name': 'Шаблон', 'template_type': 'work'})
+        data.update({'name': 'Шаблон', 'document_type': 'work'})
         data.setlist('sections', ['task_list'])
         data['section_options__task_list'] = '{"hidden_roles":'
         form = self._template_form(
@@ -489,7 +488,7 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
 
     def test_template_form_rejects_non_object_section_options_json(self):
         data = QueryDict('', mutable=True)
-        data.update({'name': 'Шаблон', 'template_type': 'work'})
+        data.update({'name': 'Шаблон', 'document_type': 'work'})
         data.setlist('sections', ['task_list'])
         data['section_options__task_list'] = '["demo"]'
         form = self._template_form(
@@ -505,7 +504,7 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
     def test_builds_update_params_from_template_form(self):
         form = self._template_form(
             data=QueryDict(
-                'name=Шаблон&description=Описание&template_type=work'
+                'name=Шаблон&description=Описание&document_type=work'
                 '&sections=header',
             ),
         )
@@ -544,7 +543,7 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
         )
         self.assertEqual(initial['name'], 'Шаблон')
         self.assertEqual(initial['description'], 'Описание')
-        self.assertEqual(initial['template_type'], WORK_DOCUMENT_TYPE)
+        self.assertEqual(initial['document_type'], WORK_DOCUMENT_TYPE)
         self.assertEqual(initial['sections'], (HEADER_SECTION,))
         self.assertEqual(initial['section_order'], HEADER_SECTION)
         self.assertTrue(initial['is_default'])
@@ -581,7 +580,7 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
 
     def test_builds_create_context(self):
         form = self._template_form(
-            data=QueryDict('template_type=work&sections=header'),
+            data=QueryDict('document_type=work&sections=header'),
         )
 
         context = PrintSettingsFormAdapter().create_context(
@@ -620,7 +619,7 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
     def test_builds_create_context_with_section_options_json(self):
         form = self._template_form(
             initial={
-                'template_type': WORK_DOCUMENT_TYPE,
+                'document_type': WORK_DOCUMENT_TYPE,
                 'sections': ['task_list'],
                 'section_options': {
                     'task_list': {
@@ -1806,14 +1805,6 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertEqual(request.print_settings_id, 'template-rno')
         self.assertEqual(request.print_settings_id, 'template-rno')
         self.assertEqual(request.options.renderer_type, 'html')
-
-    def test_render_document_requests_accept_legacy_template_id_post_key(self):
-        request = WorkFormAdapter().render_work_document_request_from_post(
-            QueryDict('renderer_type=html&template_id=template-work'),
-            work_id='w1',
-        )
-
-        self.assertEqual(request.print_settings_id, 'template-work')
 
     def test_builds_rendered_document_file_request(self):
         request = WorkFormAdapter().rendered_document_file_request(

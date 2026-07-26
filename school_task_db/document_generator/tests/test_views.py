@@ -2,22 +2,9 @@ from django.test import TestCase
 from django.urls import reverse
 
 from document_generator.models import DocumentTemplate
-from document_generator.views import (
-    DocumentTemplateCreateView,
-    DocumentTemplateEditorView,
-    DocumentTemplateUpdateView,
-    PrintSettingsCreateView,
-    PrintSettingsEditorView,
-    PrintSettingsUpdateView,
-)
 
 
-class DocumentTemplateEditorViewTests(TestCase):
-    def test_legacy_view_names_are_print_settings_aliases(self):
-        self.assertIs(DocumentTemplateEditorView, PrintSettingsEditorView)
-        self.assertIs(DocumentTemplateCreateView, PrintSettingsCreateView)
-        self.assertIs(DocumentTemplateUpdateView, PrintSettingsUpdateView)
-
+class PrintSettingsViewTests(TestCase):
     def test_template_editor_shows_catalog_and_saved_templates(self):
         DocumentTemplate.objects.create(
             name='Шаблон работы',
@@ -53,13 +40,6 @@ class DocumentTemplateEditorViewTests(TestCase):
             ),
         )
 
-    def test_legacy_template_editor_route_still_works(self):
-        response = self.client.get(
-            reverse('document_generator:template-editor'),
-        )
-
-        self.assertEqual(response.status_code, 200)
-
     def test_template_editor_passes_query_filters_to_clean_use_case(self):
         response = self.client.get(
             reverse('document_generator:print-profile-editor'),
@@ -87,7 +67,7 @@ class DocumentTemplateEditorViewTests(TestCase):
             'document_generator/template_form.html',
         )
         self.assertContains(response, 'Новые настройки печати')
-        self.assertContains(response, 'name="template_type"')
+        self.assertContains(response, 'name="document_type"')
         self.assertContains(response, 'value="header"')
         self.assertContains(response, 'value="task_list"')
         self.assertContains(response, 'name="section_options__task_list"')
@@ -107,7 +87,7 @@ class DocumentTemplateEditorViewTests(TestCase):
             {
                 'name': 'Шаблон работы',
                 'description': 'Для печати',
-                'template_type': 'work',
+                'document_type': 'work',
                 'sections': ['header', 'task_list'],
                 'is_default': 'on',
             },
@@ -130,7 +110,7 @@ class DocumentTemplateEditorViewTests(TestCase):
             reverse('document_generator:print-profile-create'),
             {
                 'name': 'Рабочий лист',
-                'template_type': 'work',
+                'document_type': 'work',
                 'sections': ['header', 'task_list'],
                 'section_order': 'task_list,header',
             },
@@ -151,7 +131,7 @@ class DocumentTemplateEditorViewTests(TestCase):
             reverse('document_generator:print-profile-create'),
             {
                 'name': 'Рабочий лист',
-                'template_type': 'work',
+                'document_type': 'work',
                 'sections': ['header', 'task_list'],
                 'section_options__task_list': (
                     '{"hidden_roles": ["demo"], '
@@ -184,7 +164,7 @@ class DocumentTemplateEditorViewTests(TestCase):
             reverse('document_generator:print-profile-create'),
             {
                 'name': 'Рабочий лист',
-                'template_type': 'work',
+                'document_type': 'work',
                 'sections': ['task_list'],
                 'section_options__task_list': '{"hidden_roles":',
             },
@@ -202,7 +182,7 @@ class DocumentTemplateEditorViewTests(TestCase):
             reverse('document_generator:print-profile-create'),
             {
                 'name': 'Шаблон РнО',
-                'template_type': 'remedial_sheet',
+                'document_type': 'remedial_sheet',
                 'sections': ['task_list'],
             },
         )
@@ -275,7 +255,7 @@ class DocumentTemplateEditorViewTests(TestCase):
             {
                 'name': 'Новый шаблон',
                 'description': 'Новое описание',
-                'template_type': 'work',
+                'document_type': 'work',
                 'sections': ['header', 'task_list'],
                 'is_default': 'on',
             },
@@ -305,7 +285,7 @@ class DocumentTemplateEditorViewTests(TestCase):
             reverse('document_generator:print-profile-update', args=[template.pk]),
             {
                 'name': 'Новый шаблон',
-                'template_type': 'work',
+                'document_type': 'work',
                 'sections': ['header', 'task_list'],
                 'section_order': 'task_list,header',
             },

@@ -50,7 +50,7 @@ class DocumentRecipeTests(TestCase):
         recipe = build_document_recipe_from_sections_config(
             document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
             sections_config={
-                'template_type': 'remedial',
+                'document_type': 'remedial',
                 'sections': [
                     {'type': HEADER_SECTION},
                     {

@@ -259,11 +259,7 @@ class WorkFormAdapter:
         )
 
     def _print_settings_id_from_post(self, post_data):
-        return (
-            post_data.get('print_settings_id')
-            or post_data.get('template_id')
-            or ''
-        ).strip()
+        return post_data.get('print_settings_id', '').strip()
 
     def rendered_document_file_request(self, file_type, filename):
         return GetRenderedDocumentFileRequest(

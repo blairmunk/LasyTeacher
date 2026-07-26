@@ -51,7 +51,7 @@ class PrintSettingsFormAdapter:
         return CreatePrintSettingsParams(
             name=form.cleaned_data['name'],
             description=form.cleaned_data.get('description', ''),
-            document_type=form.cleaned_data['template_type'],
+            document_type=form.cleaned_data['document_type'],
             sections=self._section_specs_from_form(form),
             is_default=form.cleaned_data.get('is_default', False),
         )
@@ -61,7 +61,7 @@ class PrintSettingsFormAdapter:
             print_settings_id=print_settings_id,
             name=form.cleaned_data['name'],
             description=form.cleaned_data.get('description', ''),
-            document_type=form.cleaned_data['template_type'],
+            document_type=form.cleaned_data['document_type'],
             sections=self._section_specs_from_form(form),
             is_default=form.cleaned_data.get('is_default', False),
         )
@@ -70,7 +70,7 @@ class PrintSettingsFormAdapter:
         return {
             'name': print_settings.name,
             'description': print_settings.description,
-            'template_type': print_settings.document_type,
+            'document_type': print_settings.document_type,
             'sections': print_settings.section_types,
             'section_order': ','.join(print_settings.section_types),
             'section_options': {
@@ -110,9 +110,9 @@ class PrintSettingsFormAdapter:
             ),
             'selected_section_order': self._selected_section_order(form),
             'selected_document_type': (
-                form.data.get('template_type')
+                form.data.get('document_type')
                 if form.is_bound
-                else form.initial.get('template_type', '')
+                else form.initial.get('document_type', '')
             ),
         }
 

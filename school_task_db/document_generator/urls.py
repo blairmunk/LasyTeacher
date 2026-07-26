@@ -25,19 +25,4 @@ urlpatterns = [
         PrintSettingsUpdateView.as_view(),
         name='print-profile-update',
     ),
-    path(
-        'templates/',
-        PrintSettingsEditorView.as_view(),
-        name='template-editor',
-    ),
-    path(
-        'templates/create/',
-        PrintSettingsCreateView.as_view(),
-        name='template-create',
-    ),
-    path(
-        'templates/<uuid:pk>/edit/',
-        PrintSettingsUpdateView.as_view(),
-        name='template-update',
-    ),
 ]

@@ -11,7 +11,7 @@
         </a>
     </div>
 
-    <form method="post" class="card border-0 shadow-sm" data-document-template-form>
+    <form method="post" class="card border-0 shadow-sm" data-print-settings-form>
         {% csrf_token %}
         <div class="card-body">
             {% if form.non_field_errors %}
@@ -27,9 +27,9 @@
                     {{ form.name.errors }}
                 </div>
                 <div class="col-md-5">
-                    <label class="form-label" for="{{ form.template_type.id_for_label }}">{{ form.template_type.label }}</label>
-                    {{ form.template_type }}
-                    {{ form.template_type.errors }}
+                    <label class="form-label" for="{{ form.document_type.id_for_label }}">{{ form.document_type.label }}</label>
+                    {{ form.document_type }}
+                    {{ form.document_type.errors }}
                 </div>
                 <div class="col-12">
                     <label class="form-label" for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
@@ -173,9 +173,9 @@
 {% block extra_js %}
 <script>
 (function() {
-    var form = document.querySelector('[data-document-template-form]');
+    var form = document.querySelector('[data-print-settings-form]');
     if (!form) return;
-    var typeSelect = form.querySelector('[name="template_type"]');
+    var typeSelect = form.querySelector('[name="document_type"]');
     var orderInput = form.querySelector('[name="section_order"]');
     var sectionOptions = Array.prototype.slice.call(
         form.querySelectorAll('[data-section-option]')

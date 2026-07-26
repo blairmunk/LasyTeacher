@@ -16,7 +16,7 @@ class PrintSettingsForm(forms.Form):
         required=False,
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
     )
-    template_type = forms.ChoiceField(
+    document_type = forms.ChoiceField(
         label='Тип документа',
         choices=(),
         widget=forms.Select(attrs={'class': 'form-select'}),
@@ -49,7 +49,7 @@ class PrintSettingsForm(forms.Form):
 
     def __init__(self, *args, document_types=None, sections=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['template_type'].choices = [
+        self.fields['document_type'].choices = [
             (item.document_type, item.title)
             for item in (document_types or [])
         ]

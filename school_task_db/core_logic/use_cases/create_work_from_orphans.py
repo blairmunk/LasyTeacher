@@ -4,10 +4,9 @@ from dataclasses import dataclass
 from typing import List
 
 from core_logic.entities.work import CreateWorkFromOrphansResult
-from core_logic.interfaces.work_repo import (
+from core_logic.interfaces.orphan_variant_repo import (
     CreateWorkFromOrphanVariantsParams,
-    CreateWorkParams,
-    IWorkRepository,
+    IOrphanVariantRepository,
 )
 
 
@@ -21,8 +20,8 @@ class CreateWorkFromOrphansRequest:
 
 
 class CreateWorkFromOrphansUseCase:
-    def __init__(self, work_repo: IWorkRepository):
-        self.work_repo = work_repo
+    def __init__(self, orphan_variant_repo: IOrphanVariantRepository):
+        self.orphan_variant_repo = orphan_variant_repo
 
     def execute(
         self,
@@ -31,22 +30,21 @@ class CreateWorkFromOrphansUseCase:
         if not request.variant_ids:
             return CreateWorkFromOrphansResult(status='empty_selection')
 
-        variants = self.work_repo.get_orphan_variant_refs(request.variant_ids)
+        variants = self.orphan_variant_repo.get_orphan_variant_refs(
+            request.variant_ids,
+        )
         if not variants:
             return CreateWorkFromOrphansResult(status='not_found')
 
         work_name = request.work_name.strip() or DEFAULT_ORPHAN_WORK_NAME
         max_score = max(variant.total_max_points for variant in variants)
-        created = self.work_repo.create_work_from_orphan_variants(
+        created = self.orphan_variant_repo.create_work_from_orphan_variants(
             CreateWorkFromOrphanVariantsParams(
-                work=CreateWorkParams(
-                    name=work_name,
-                    work_type=self._detect_work_type(
-                        [variant.variant_type for variant in variants],
-                    ),
-                    max_score=max_score,
-                    variant_counter=len(variants),
+                name=work_name,
+                work_type=self._detect_work_type(
+                    [variant.variant_type for variant in variants],
                 ),
+                max_score=max_score,
                 variant_ids=[variant.pk for variant in variants],
             )
         )

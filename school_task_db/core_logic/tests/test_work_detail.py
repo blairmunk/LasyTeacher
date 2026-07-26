@@ -11,7 +11,9 @@ from core_logic.entities.work import (
     WorkDetailWork,
     WorkListFilters,
 )
-from core_logic.interfaces.work_repo import CreatedWorkFromOrphanVariantsRef
+from core_logic.interfaces.orphan_variant_repo import (
+    CreatedWorkFromOrphanVariantsRef,
+)
 from core_logic.services.work_service import WorkService
 from core_logic.use_cases.bulk_delete_variants import (
     BulkDeleteVariantsRequest,
@@ -463,7 +465,7 @@ class WorkDetailTests(TestCase):
         repo = FakeWorkRepository()
         repo.orphan_variants = FakeQuerySet(['variant-1'])
         repo.orphan_variant_count = 1
-        use_case = GetOrphanVariantListUseCase(work_repo=repo)
+        use_case = GetOrphanVariantListUseCase(orphan_variant_repo=repo)
 
         result = use_case.execute()
 
@@ -522,7 +524,7 @@ class WorkDetailTests(TestCase):
             OrphanVariantRef(pk='variant-1', variant_type='individual', total_max_points=3),
             OrphanVariantRef(pk='variant-2', variant_type='remedial', total_max_points=5),
         ]
-        use_case = CreateWorkFromOrphansUseCase(work_repo=repo)
+        use_case = CreateWorkFromOrphansUseCase(orphan_variant_repo=repo)
 
         result = use_case.execute(
             CreateWorkFromOrphansRequest(
@@ -535,13 +537,9 @@ class WorkDetailTests(TestCase):
         self.assertEqual(result.work_id, 'created-work')
         self.assertEqual(result.work_name, 'Повторение')
         self.assertEqual(result.variant_count, 2)
-        self.assertEqual(repo.created_from_orphans_params.work.name, 'Повторение')
-        self.assertEqual(
-            repo.created_from_orphans_params.work.work_type,
-            'remedial',
-        )
-        self.assertEqual(repo.created_from_orphans_params.work.max_score, 5)
-        self.assertEqual(repo.created_from_orphans_params.work.variant_counter, 2)
+        self.assertEqual(repo.created_from_orphans_params.name, 'Повторение')
+        self.assertEqual(repo.created_from_orphans_params.work_type, 'remedial')
+        self.assertEqual(repo.created_from_orphans_params.max_score, 5)
         self.assertEqual(
             repo.created_from_orphans_params.variant_ids,
             ['variant-1', 'variant-2'],
@@ -549,7 +547,7 @@ class WorkDetailTests(TestCase):
 
     def test_create_work_from_orphans_use_case_handles_empty_and_missing_selection(self):
         repo = FakeWorkRepository()
-        use_case = CreateWorkFromOrphansUseCase(work_repo=repo)
+        use_case = CreateWorkFromOrphansUseCase(orphan_variant_repo=repo)
 
         empty_result = use_case.execute(CreateWorkFromOrphansRequest(variant_ids=[]))
         missing_result = use_case.execute(
@@ -567,7 +565,7 @@ class WorkDetailTests(TestCase):
         repo.orphan_variant_refs = [
             OrphanVariantRef(pk='variant-1', variant_type='regular', total_max_points=0),
         ]
-        use_case = CreateWorkFromOrphansUseCase(work_repo=repo)
+        use_case = CreateWorkFromOrphansUseCase(orphan_variant_repo=repo)
 
         result = use_case.execute(
             CreateWorkFromOrphansRequest(variant_ids=['variant-1'], work_name=' ')
@@ -575,7 +573,7 @@ class WorkDetailTests(TestCase):
 
         self.assertEqual(result.status, 'created')
         self.assertEqual(result.work_name, DEFAULT_ORPHAN_WORK_NAME)
-        self.assertEqual(repo.created_from_orphans_params.work.work_type, 'test')
+        self.assertEqual(repo.created_from_orphans_params.work_type, 'test')
 
     def test_create_work_from_orphans_handles_concurrent_variant_attachment(self):
         repo = FakeWorkRepository()
@@ -588,7 +586,7 @@ class WorkDetailTests(TestCase):
         ]
         repo.create_from_orphans_result = None
 
-        result = CreateWorkFromOrphansUseCase(work_repo=repo).execute(
+        result = CreateWorkFromOrphansUseCase(orphan_variant_repo=repo).execute(
             CreateWorkFromOrphansRequest(variant_ids=['variant-1'])
         )
 

@@ -40,12 +40,15 @@ from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_REMEDIAL,
 )
 from core_logic.value_objects.task_scores import task_score_records_by_task_id
-from core_logic.interfaces.work_repo import (
+from core_logic.interfaces.orphan_variant_repo import (
     CreatedWorkFromOrphanVariantsRef,
+    CreateWorkFromOrphanVariantsParams,
+    IOrphanVariantRepository,
+)
+from core_logic.interfaces.work_repo import (
     CreatedWorkWithVariantsRef,
     CreatedWorkVariantRef,
     CreateVariantParams,
-    CreateWorkFromOrphanVariantsParams,
     CreateWorkParams,
     CreateWorkWithSpecificationParams,
     CreateWorkWithVariantsParams,
@@ -78,6 +81,7 @@ class DjangoWorkRepository(
     IWorkRepository,
     IWorkDocumentRepository,
     IWorkVariantGenerationRepository,
+    IOrphanVariantRepository,
 ):
     def get_list_works(self, filters=None):
         queryset = Work.objects.annotate(
@@ -788,14 +792,21 @@ class DjangoWorkRepository(
             if len(variants) != len(params.variant_ids):
                 return None
 
-            work_id = self.create_work(params.work)
+            work_id = self.create_work(
+                CreateWorkParams(
+                    name=params.name,
+                    work_type=params.work_type,
+                    max_score=params.max_score,
+                    variant_counter=len(variants),
+                )
+            )
             variant_by_id = {str(variant.pk): variant for variant in variants}
             for number, variant_id in enumerate(params.variant_ids, 1):
                 variant = variant_by_id[variant_id]
                 variant.work_id = work_id
                 variant.number = number
-                variant.work_name_snapshot = params.work.name
-                variant.max_score_snapshot = params.work.max_score
+                variant.work_name_snapshot = params.name
+                variant.max_score_snapshot = params.max_score
             Variant.objects.bulk_update(
                 variants,
                 [

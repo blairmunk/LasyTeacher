@@ -11,8 +11,10 @@ from core_logic.interfaces.event_repo import (
     CreateEventParams,
     GradeParticipationParams,
 )
-from core_logic.interfaces.work_repo import (
+from core_logic.interfaces.orphan_variant_repo import (
     CreateWorkFromOrphanVariantsParams,
+)
+from core_logic.interfaces.work_repo import (
     CreateWorkParams,
     CreateWorkWithSpecificationParams,
     CreateWorkWithVariantsParams,
@@ -1654,7 +1656,9 @@ class DjangoRemedialRepositoryTests(TestCase):
             max_points=6,
             weight=6,
         )
-        use_case = CreateWorkFromOrphansUseCase(work_repo=DjangoWorkRepository())
+        use_case = CreateWorkFromOrphansUseCase(
+            orphan_variant_repo=DjangoWorkRepository(),
+        )
 
         result = use_case.execute(
             CreateWorkFromOrphansRequest(
@@ -1684,11 +1688,9 @@ class DjangoRemedialRepositoryTests(TestCase):
 
         created = DjangoWorkRepository().create_work_from_orphan_variants(
             CreateWorkFromOrphanVariantsParams(
-                work=CreateWorkParams(
-                    name='Не должна сохраниться',
-                    work_type='remedial',
-                    variant_counter=1,
-                ),
+                name='Не должна сохраниться',
+                work_type='remedial',
+                max_score=0,
                 variant_ids=[str(self.source_variant.pk)],
             )
         )

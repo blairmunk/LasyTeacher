@@ -1110,7 +1110,7 @@ class Container:
 
     def get_orphan_variant_list_use_case(self):
         return GetOrphanVariantListUseCase(
-            work_repo=self.work_repo,
+            orphan_variant_repo=self.work_repo,
         )
 
     def get_remedial_sheet_data_use_case(self):
@@ -1173,7 +1173,7 @@ class Container:
 
     def create_work_from_orphans_use_case(self):
         return CreateWorkFromOrphansUseCase(
-            work_repo=self.work_repo,
+            orphan_variant_repo=self.work_repo,
         )
 
     def create_work_from_groups_use_case(self):

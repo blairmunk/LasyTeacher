@@ -5,8 +5,6 @@ from dataclasses import dataclass
 from typing import Any, List, Optional, Set
 
 from core_logic.entities.work import (
-    OrphanVariantListItem,
-    OrphanVariantRef,
     WorkDetailSpecGroup,
     WorkDetailSpecPreviewItem,
     WorkDetailVariant,
@@ -44,18 +42,6 @@ class CreateVariantParams:
     max_score_snapshot: int
     source_work_id: Optional[str] = None
     variant_type: str = 'remedial'
-
-
-@dataclass(frozen=True)
-class CreateWorkFromOrphanVariantsParams:
-    work: CreateWorkParams
-    variant_ids: List[str]
-
-
-@dataclass(frozen=True)
-class CreatedWorkFromOrphanVariantsRef:
-    work_id: str
-    variant_count: int
 
 
 @dataclass(frozen=True)
@@ -153,25 +139,6 @@ class IWorkRepository(ABC):
     @abstractmethod
     def get_variant_total_max_points(self, variant_id: str) -> int:
         """Return total max points for a variant."""
-
-    @abstractmethod
-    def get_orphan_variants(self) -> List[OrphanVariantListItem]:
-        """Return orphan variants for the orphan list page."""
-
-    @abstractmethod
-    def count_orphan_variants(self) -> int:
-        """Return orphan variant count."""
-
-    @abstractmethod
-    def get_orphan_variant_refs(self, variant_ids: List[str]) -> List[OrphanVariantRef]:
-        """Return selected orphan variant refs ordered for attaching to work."""
-
-    @abstractmethod
-    def create_work_from_orphan_variants(
-        self,
-        params: CreateWorkFromOrphanVariantsParams,
-    ) -> Optional[CreatedWorkFromOrphanVariantsRef]:
-        """Create a work and attach all selected orphan variants atomically."""
 
     @abstractmethod
     def get_variant_delete_info(self, variant_id: str) -> Optional[VariantDeleteInfo]:

@@ -425,6 +425,8 @@ class RemedialFromEventViewTests(TestCase):
         self.assertEqual(row['weak_tasks_count'], 1)
         self.assertEqual(row['weak_tasks'], [str(self.weak_original.pk)])
         self.assertEqual(row['status'], 'weak')
+        self.assertContains(response, 'name="tasks_per_group"')
+        self.assertContains(response, 'name="max_total_tasks"')
 
     def test_post_creates_remedial_work_variant_and_event_from_weak_groups(self):
         response = self.client.post(
@@ -469,6 +471,74 @@ class RemedialFromEventViewTests(TestCase):
         self.assertEqual(variant_task.order, 1)
         self.assertEqual(variant_task.max_points, self.replacement_easy.difficulty)
         self.assertEqual(variant_task.weight, self.replacement_easy.difficulty)
+
+    def test_checked_remedial_event_can_create_next_remedial_generation(self):
+        self.client.post(
+            reverse('students:remedial-from-event', args=[self.event.pk]),
+            {
+                'selected_students': [str(self.student.pk)],
+                'work_name': 'Первая РнО',
+                'create_event': '1',
+                'event_date': '2026-03-10',
+            },
+        )
+        first_remedial_work = Work.objects.get(name='Первая РнО')
+        first_remedial_event = Event.objects.get(work=first_remedial_work)
+        first_participation = EventParticipation.objects.get(
+            event=first_remedial_event,
+            student=self.student,
+        )
+        first_remedial_variant = first_participation.variant
+        first_variant_task = VariantTask.objects.get(
+            variant=first_remedial_variant,
+        )
+        Mark.objects.create(
+            participation=first_participation,
+            score=2,
+            points=0,
+            max_points=first_variant_task.max_points,
+            task_scores={
+                str(first_variant_task.task_id): {
+                    'points': 0,
+                    'max_points': first_variant_task.max_points,
+                },
+            },
+        )
+        first_participation.status = 'graded'
+        first_participation.save()
+        first_remedial_event.status = 'graded'
+        first_remedial_event.save()
+
+        response = self.client.post(
+            reverse(
+                'students:remedial-from-event',
+                args=[first_remedial_event.pk],
+            ),
+            {
+                'selected_students': [str(self.student.pk)],
+                'work_name': 'Вторая РнО',
+                'tasks_per_group': '2',
+                'max_total_tasks': '5',
+            },
+        )
+
+        second_remedial_work = Work.objects.get(name='Вторая РнО')
+        second_variant = Variant.objects.get(work=second_remedial_work)
+        second_task_ids = set(
+            VariantTask.objects.filter(
+                variant=second_variant,
+            ).values_list('task_id', flat=True)
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('works:detail', args=[second_remedial_work.pk]),
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(second_variant.source_work, first_remedial_work)
+        self.assertEqual(second_task_ids, {self.replacement_hard.pk})
+        self.assertNotIn(self.weak_original.pk, second_task_ids)
+        self.assertNotIn(self.replacement_easy.pk, second_task_ids)
 
     def test_post_without_selected_students_redirects_without_creating_remedial_work(self):
         response = self.client.post(

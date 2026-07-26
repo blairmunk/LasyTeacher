@@ -174,7 +174,6 @@ class DjangoRemedialRepositoryTests(TestCase):
         selection = service.select_tasks_for_student(
             student_id=str(self.student.pk),
             event_id=str(self.event.pk),
-            source_work_id=str(self.source_work.pk),
             mark_score=2,
         )
 

@@ -17,6 +17,8 @@ class PrepareRemedialFromEventSubmissionUseCaseTests(TestCase):
                     'work_name': ['Работа над ошибками'],
                     'create_event': ['1'],
                     'event_date': ['2026-03-10'],
+                    'tasks_per_group': ['3'],
+                    'max_total_tasks': ['12'],
                 },
             )
         )
@@ -29,8 +31,24 @@ class PrepareRemedialFromEventSubmissionUseCaseTests(TestCase):
                 work_name='Работа над ошибками',
                 create_event=True,
                 event_date='2026-03-10',
+                tasks_per_group=3,
+                max_total_tasks=12,
             ),
         )
+
+    def test_execute_bounds_invalid_task_limits(self):
+        result = PrepareRemedialFromEventSubmissionUseCase().execute(
+            PrepareRemedialFromEventSubmissionRequest(
+                event_id='event-1',
+                data={
+                    'tasks_per_group': ['0'],
+                    'max_total_tasks': ['500'],
+                },
+            )
+        )
+
+        self.assertEqual(result.tasks_per_group, 1)
+        self.assertEqual(result.max_total_tasks, 50)
 
     def test_execute_uses_empty_defaults(self):
         result = PrepareRemedialFromEventSubmissionUseCase().execute(

@@ -26,6 +26,18 @@ class PrepareRemedialFromEventSubmissionUseCase:
             work_name=_first(data, 'work_name'),
             create_event=_first(data, 'create_event') == '1',
             event_date=_first(data, 'event_date'),
+            tasks_per_group=_bounded_int(
+                _first(data, 'tasks_per_group', '1'),
+                default=1,
+                minimum=1,
+                maximum=10,
+            ),
+            max_total_tasks=_bounded_int(
+                _first(data, 'max_total_tasks', '10'),
+                default=10,
+                minimum=1,
+                maximum=50,
+            ),
         )
 
 
@@ -45,3 +57,16 @@ def _list(data: Mapping[str, Sequence[str]], key: str):
     if not values:
         return []
     return [str(value) for value in values]
+
+
+def _bounded_int(
+    value: str,
+    default: int,
+    minimum: int,
+    maximum: int,
+) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return default
+    return min(max(parsed, minimum), maximum)

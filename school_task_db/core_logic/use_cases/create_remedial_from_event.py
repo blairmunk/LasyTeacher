@@ -13,6 +13,8 @@ from core_logic.interfaces.work_repo import (
     NewWorkVariantParams,
 )
 from core_logic.services.remedial_service import (
+    REMEDIAL_SOURCE_EVENT_STATUSES,
+    RemedialSelectionLimits,
     RemedialService,
     RemedialTaskSelection,
 )
@@ -25,6 +27,8 @@ class RemedialFromEventRequest:
     work_name: str = ''
     create_event: bool = False
     event_date: Optional[str] = None
+    tasks_per_group: int = 1
+    max_total_tasks: int = 10
 
 
 @dataclass(frozen=True)
@@ -33,6 +37,9 @@ class RemedialFromEventResult:
     work_id: Optional[str] = None
     event_id: Optional[str] = None
     variants_created: int = 0
+    students_without_tasks: int = 0
+    students_without_review: int = 0
+    students_with_shortage: int = 0
     message: str = ''
     errors: List[str] = field(default_factory=list)
 
@@ -68,23 +75,66 @@ class CreateRemedialFromEventUseCase:
                 success=False,
                 message='Событие не найдено.',
             )
+        if event.status not in REMEDIAL_SOURCE_EVENT_STATUSES:
+            return RemedialFromEventResult(
+                success=False,
+                message=(
+                    'Работу над ошибками можно создать только после '
+                    'начала проверки события.'
+                ),
+            )
 
         selections = []
+        students_without_tasks = 0
+        students_without_review = 0
+        students_with_shortage = 0
+        try:
+            limits = RemedialSelectionLimits(
+                tasks_per_group=request.tasks_per_group,
+                max_total_tasks=request.max_total_tasks,
+            )
+        except ValueError:
+            return RemedialFromEventResult(
+                success=False,
+                message='Количество заданий должно быть больше нуля.',
+            )
         for student_id in request.selected_student_ids:
             mark = self.event_repo.get_student_mark(request.event_id, student_id)
+            if mark is None:
+                students_without_review += 1
+                continue
             selection = self.remedial_service.select_tasks_for_student(
                 student_id=student_id,
                 event_id=request.event_id,
-                source_work_id=event.work_id,
-                mark_score=mark.score if mark else None,
+                mark_score=mark.score,
+                limits=limits,
             )
+            if selection.shortage_count:
+                students_with_shortage += 1
             if selection.task_ids:
                 selections.append(selection)
+            else:
+                students_without_tasks += 1
 
         if not selections:
+            if students_without_tasks and students_without_review:
+                message = (
+                    'Для проверенных работ не осталось доступных '
+                    'заданий-аналогов; часть выбранных работ ещё не проверена.'
+                )
+            elif students_without_tasks:
+                message = (
+                    'Для выбранных проверенных работ не осталось '
+                    'доступных заданий-аналогов.'
+                )
+            else:
+                message = 'У выбранных учеников нет проверенных результатов.'
             return RemedialFromEventResult(
                 success=False,
-                message='Нет доступных заданий для выбранных учеников.',
+                students_without_tasks=students_without_tasks,
+                students_without_review=students_without_review,
+                students_with_shortage=students_with_shortage,
+                message=message,
             )
 
         work_name = request.work_name or f'Работа над ошибками — {event.work_name}'
@@ -148,12 +198,30 @@ class CreateRemedialFromEventUseCase:
         message = f'Создана работа «{work_name}» с {len(selections)} вариантами.'
         if new_event_id:
             message += ' Событие создано.'
+        if students_without_tasks:
+            message += (
+                f' Для {students_without_tasks} учеников не осталось '
+                'доступных аналогов.'
+            )
+        if students_without_review:
+            message += (
+                f' Для {students_without_review} учеников проверка '
+                'ещё не завершена.'
+            )
+        if students_with_shortage and not students_without_tasks:
+            message += (
+                f' Для {students_with_shortage} учеников доступно меньше '
+                'заданий, чем запрошено.'
+            )
 
         return RemedialFromEventResult(
             success=True,
             work_id=work_id,
             event_id=new_event_id,
             variants_created=len(selections),
+            students_without_tasks=students_without_tasks,
+            students_without_review=students_without_review,
+            students_with_shortage=students_with_shortage,
             message=message,
         )
 

@@ -1,19 +1,28 @@
+from types import SimpleNamespace
 from unittest import TestCase
 
 from core_logic.entities.student import TaskResult
 from core_logic.entities.task import TaskEntity
 from core_logic.services.remedial_service import (
     RemedialConfig,
+    RemedialSelectionLimits,
     RemedialService,
 )
 
 
 class FakeStudentRepository:
-    def __init__(self, results=None):
+    def __init__(self, results=None, attempted_task_ids=None):
         self.results = results or []
+        self.attempted_task_ids = attempted_task_ids or set()
 
     def get_task_results_for_event(self, student_id, event_id):
         return self.results
+
+    def get_task_logs(self, student_id):
+        return [
+            SimpleNamespace(task=SimpleNamespace(pk=task_id))
+            for task_id in self.attempted_task_ids
+        ]
 
 
 class FakeTaskRepository:
@@ -55,17 +64,17 @@ class FakeTaskRepository:
 
 
 class FakeWorkRepository:
-    def get_variant_task_ids(self, work_id):
-        return {'t1', 't2'}
-
-    def get_student_variant_task_ids(self, work_id, student_id, event_id):
+    def get_event_variant_task_ids(self, event_id, student_id):
         return {'t1', 't2'}
 
 
 class RemedialServiceTests(TestCase):
-    def service(self, results=None):
+    def service(self, results=None, attempted_task_ids=None):
         return RemedialService(
-            student_repo=FakeStudentRepository(results),
+            student_repo=FakeStudentRepository(
+                results,
+                attempted_task_ids=attempted_task_ids,
+            ),
             task_repo=FakeTaskRepository(),
             remedial_source_repo=FakeWorkRepository(),
             config=RemedialConfig(max_tasks_per_group=1, max_total_tasks=5),
@@ -101,13 +110,13 @@ class RemedialServiceTests(TestCase):
         selection = service.select_tasks_for_student(
             student_id='s1',
             event_id='e1',
-            source_work_id='w1',
             mark_score=2,
         )
 
         self.assertEqual(selection.task_ids, ['t10'])
         self.assertEqual(selection.weak_group_ids, {'g1'})
         self.assertEqual(selection.target_difficulty, 3)
+        self.assertEqual(selection.shortage_count, 0)
 
     def test_select_tasks_falls_back_to_all_work_groups_without_task_scores(self):
         service = self.service([])
@@ -115,9 +124,62 @@ class RemedialServiceTests(TestCase):
         selection = service.select_tasks_for_student(
             student_id='s1',
             event_id='e1',
-            source_work_id='w1',
             mark_score=None,
         )
 
         self.assertEqual(selection.task_ids, ['t10', 't20'])
         self.assertEqual(selection.weak_group_ids, {'g1', 'g2'})
+
+    def test_select_tasks_applies_request_limits(self):
+        service = self.service([
+            TaskResult(task_id='t1', points=0, max_points=2),
+        ])
+
+        selection = service.select_tasks_for_student(
+            student_id='s1',
+            event_id='e1',
+            mark_score=4,
+            limits=RemedialSelectionLimits(
+                tasks_per_group=2,
+                max_total_tasks=2,
+            ),
+        )
+
+        self.assertEqual(selection.task_ids, ['t10', 't11'])
+        self.assertEqual(selection.requested_tasks_count, 2)
+        self.assertEqual(selection.shortage_count, 0)
+
+    def test_select_tasks_excludes_all_attempted_student_tasks(self):
+        service = self.service(
+            [TaskResult(task_id='t1', points=0, max_points=2)],
+            attempted_task_ids={'t10'},
+        )
+
+        selection = service.select_tasks_for_student(
+            student_id='s1',
+            event_id='e1',
+            mark_score=4,
+        )
+
+        self.assertEqual(selection.task_ids, ['t11'])
+
+    def test_select_tasks_reports_exhausted_weak_groups(self):
+        service = self.service(
+            [TaskResult(task_id='t1', points=0, max_points=2)],
+            attempted_task_ids={'t10', 't11'},
+        )
+
+        selection = service.select_tasks_for_student(
+            student_id='s1',
+            event_id='e1',
+            mark_score=2,
+            limits=RemedialSelectionLimits(
+                tasks_per_group=2,
+                max_total_tasks=5,
+            ),
+        )
+
+        self.assertEqual(selection.task_ids, [])
+        self.assertEqual(selection.exhausted_group_ids, {'g1'})
+        self.assertEqual(selection.requested_tasks_count, 2)
+        self.assertEqual(selection.shortage_count, 2)

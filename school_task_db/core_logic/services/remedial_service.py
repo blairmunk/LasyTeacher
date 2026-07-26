@@ -14,6 +14,8 @@ from core_logic.interfaces.remedial_source_repo import (
 from core_logic.interfaces.student_repo import IStudentRepository
 from core_logic.interfaces.task_repo import ITaskRepository
 
+REMEDIAL_SOURCE_EVENT_STATUSES = frozenset(('reviewing', 'graded', 'closed'))
+
 
 @dataclass(frozen=True)
 class RemedialConfig:
@@ -25,11 +27,29 @@ class RemedialConfig:
 
 
 @dataclass(frozen=True)
+class RemedialSelectionLimits:
+    tasks_per_group: int = 1
+    max_total_tasks: int = 10
+
+    def __post_init__(self):
+        if self.tasks_per_group < 1:
+            raise ValueError('tasks_per_group must be positive')
+        if self.max_total_tasks < 1:
+            raise ValueError('max_total_tasks must be positive')
+
+
+@dataclass(frozen=True)
 class RemedialTaskSelection:
     student_id: str
     task_ids: List[str]
     weak_group_ids: Set[str] = field(default_factory=set)
+    exhausted_group_ids: Set[str] = field(default_factory=set)
     target_difficulty: int = 3
+    requested_tasks_count: int = 0
+
+    @property
+    def shortage_count(self) -> int:
+        return max(0, self.requested_tasks_count - len(self.task_ids))
 
 
 class RemedialService:
@@ -49,20 +69,22 @@ class RemedialService:
         self,
         student_id: str,
         event_id: str,
-        source_work_id: str,
         mark_score: Optional[int] = None,
+        limits: Optional[RemedialSelectionLimits] = None,
     ) -> RemedialTaskSelection:
-        work_task_ids = self.remedial_source_repo.get_variant_task_ids(
-            source_work_id,
+        limits = limits or RemedialSelectionLimits(
+            tasks_per_group=self.config.max_tasks_per_group,
+            max_total_tasks=self.config.max_total_tasks,
         )
-        work_group_ids = self.task_repo.get_group_ids_for_tasks(work_task_ids)
-
-        student_variant_task_ids = (
-            self.remedial_source_repo.get_student_variant_task_ids(
-                source_work_id,
-                student_id,
+        event_variant_task_ids = (
+            self.remedial_source_repo.get_event_variant_task_ids(
                 event_id,
+                student_id,
             )
+        )
+        attempted_task_ids = (
+            event_variant_task_ids
+            | self._student_attempted_task_ids(student_id)
         )
 
         task_results = self.student_repo.get_task_results_for_event(
@@ -72,20 +94,31 @@ class RemedialService:
         weak_task_ids = self.find_weak_tasks(task_results)
 
         if weak_task_ids:
-            weak_group_ids = (
-                self.task_repo.get_group_ids_for_tasks(weak_task_ids)
-                & work_group_ids
+            weak_group_ids = self.task_repo.get_group_ids_for_tasks(
+                weak_task_ids,
             )
         else:
-            weak_group_ids = set(work_group_ids)
+            weak_group_ids = self.task_repo.get_group_ids_for_tasks(
+                event_variant_task_ids,
+            )
 
         target_difficulty = self.target_difficulty(mark_score)
         candidate_ids: List[str] = []
+        exhausted_group_ids = set()
+        requested_tasks_count = min(
+            limits.max_total_tasks,
+            len(weak_group_ids) * limits.tasks_per_group,
+        )
 
         for group_id in sorted(weak_group_ids):
             group_task_ids = self.task_repo.get_tasks_in_group(group_id)
-            available_ids = group_task_ids - student_variant_task_ids
+            available_ids = (
+                group_task_ids
+                - attempted_task_ids
+                - set(candidate_ids)
+            )
             if not available_ids:
+                exhausted_group_ids.add(group_id)
                 continue
 
             tasks = self.task_repo.get_tasks_by_difficulty(
@@ -98,21 +131,35 @@ class RemedialService:
                     self.config.fallback_max_difficulty,
                 )
 
-            for task in tasks[:self.config.max_tasks_per_group]:
+            remaining_total = limits.max_total_tasks - len(candidate_ids)
+            group_limit = min(limits.tasks_per_group, remaining_total)
+            selected_for_group = tasks[:group_limit]
+            if len(selected_for_group) < group_limit:
+                exhausted_group_ids.add(group_id)
+
+            for task in selected_for_group:
                 if task.id not in candidate_ids:
                     candidate_ids.append(task.id)
-                if len(candidate_ids) >= self.config.max_total_tasks:
+                if len(candidate_ids) >= limits.max_total_tasks:
                     break
 
-            if len(candidate_ids) >= self.config.max_total_tasks:
+            if len(candidate_ids) >= limits.max_total_tasks:
                 break
 
         return RemedialTaskSelection(
             student_id=student_id,
             task_ids=candidate_ids,
             weak_group_ids=weak_group_ids,
+            exhausted_group_ids=exhausted_group_ids,
             target_difficulty=target_difficulty,
+            requested_tasks_count=requested_tasks_count,
         )
+
+    def _student_attempted_task_ids(self, student_id: str) -> Set[str]:
+        return {
+            str(log.task.pk)
+            for log in self.student_repo.get_task_logs(student_id)
+        }
 
     def find_weak_tasks(self, results: List[TaskResult]) -> Set[str]:
         weak = set()

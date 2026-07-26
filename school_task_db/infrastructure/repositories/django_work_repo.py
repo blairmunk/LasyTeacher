@@ -871,24 +871,14 @@ class DjangoWorkRepository(
     def count_work_variants(self, work_id: str) -> int:
         return Variant.objects.filter(work_id=work_id).count()
 
-    def get_variant_task_ids(self, work_id: str) -> Set[str]:
-        return {
-            str(task_id)
-            for task_id in VariantTask.objects.filter(
-                variant__work_id=work_id
-            ).values_list('task_id', flat=True)
-        }
-
-    def get_student_variant_task_ids(
+    def get_event_variant_task_ids(
         self,
-        work_id: str,
-        student_id: str,
         event_id: str,
+        student_id: str,
     ) -> Set[str]:
         participation = EventParticipation.objects.filter(
             event_id=event_id,
             student_id=student_id,
-            variant__work_id=work_id,
         ).select_related('variant').first()
         if not participation or not participation.variant_id:
             return set()

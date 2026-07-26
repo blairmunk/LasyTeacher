@@ -20,6 +20,7 @@ class FakeEventRepository:
             name='КР',
             work_id='work-1',
             work_name='Контрольная',
+            status='graded',
         )
 
     def get_participation_marks(self, event_id):
@@ -76,3 +77,21 @@ class GetRemedialEventPreviewUseCaseTests(TestCase):
 
         self.assertFalse(result.success)
         self.assertEqual(result.message, 'Событие не найдено.')
+
+    def test_execute_rejects_event_before_review(self):
+        repo = FakeEventRepository()
+        event = repo.get_by_id('event-1')
+        repo.get_by_id = lambda event_id: EventEntity(
+            id=event.id,
+            name=event.name,
+            work_id=event.work_id,
+            work_name=event.work_name,
+            status='completed',
+        )
+
+        result = GetRemedialEventPreviewUseCase(
+            event_repo=repo,
+        ).execute('event-1')
+
+        self.assertFalse(result.success)
+        self.assertIn('после начала проверки', result.message)

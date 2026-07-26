@@ -5,6 +5,7 @@ from typing import List, Optional
 
 from core_logic.entities.event import EventEntity, WorkSummary
 from core_logic.interfaces.event_repo import IEventRepository
+from core_logic.services.remedial_service import REMEDIAL_SOURCE_EVENT_STATUSES
 from core_logic.value_objects.task_scores import normalize_task_scores
 
 
@@ -28,6 +29,14 @@ class GetRemedialEventPreviewUseCase:
             return RemedialEventPreviewResult(
                 success=False,
                 message='Событие не найдено.',
+            )
+        if event.status not in REMEDIAL_SOURCE_EVENT_STATUSES:
+            return RemedialEventPreviewResult(
+                success=False,
+                message=(
+                    'Работу над ошибками можно создать только после '
+                    'начала проверки события.'
+                ),
             )
 
         analysis = [

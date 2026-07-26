@@ -8,7 +8,10 @@ from core_logic.interfaces.work_repo import (
     CreateWorkParams,
     CreateWorkWithVariantsParams,
 )
-from core_logic.services.remedial_service import RemedialTaskSelection
+from core_logic.services.remedial_service import (
+    RemedialSelectionLimits,
+    RemedialTaskSelection,
+)
 from core_logic.use_cases.create_remedial_from_event import (
     CreateRemedialFromEventUseCase,
     RemedialFromEventRequest,
@@ -23,10 +26,12 @@ class FakeRemedialService:
         self,
         student_id,
         event_id,
-        source_work_id,
         mark_score=None,
+        limits=None,
     ):
-        self.calls.append((student_id, event_id, source_work_id, mark_score))
+        self.calls.append(
+            (student_id, event_id, mark_score, limits)
+        )
         return RemedialTaskSelection(
             student_id=student_id,
             task_ids=['t10'],
@@ -68,6 +73,7 @@ class FakeEventRepository:
             name='КР',
             work_id='source-work',
             work_name='Контрольная',
+            status='graded',
             course_id='course-1',
         )
 
@@ -115,6 +121,8 @@ class CreateRemedialFromEventUseCaseTests(TestCase):
                 work_name='Работа над ошибками',
                 create_event=True,
                 event_date='2026-03-10',
+                tasks_per_group=2,
+                max_total_tasks=6,
             )
         )
 
@@ -124,7 +132,17 @@ class CreateRemedialFromEventUseCaseTests(TestCase):
         self.assertEqual(result.variants_created, 1)
         self.assertEqual(
             remedial_service.calls,
-            [('student-1', 'event-1', 'source-work', 2)],
+            [
+                (
+                    'student-1',
+                    'event-1',
+                    2,
+                    RemedialSelectionLimits(
+                        tasks_per_group=2,
+                        max_total_tasks=6,
+                    ),
+                )
+            ],
         )
         self.assertEqual(
             work_repo.created_work,
@@ -165,3 +183,45 @@ class CreateRemedialFromEventUseCaseTests(TestCase):
         self.assertFalse(result.success)
         self.assertEqual(result.message, 'Не выбрано ни одного ученика.')
         self.assertEqual(transaction_manager.entered, 0)
+
+    def test_execute_skips_student_without_checked_result(self):
+        event_repo = FakeEventRepository()
+        event_repo.get_student_mark = lambda event_id, student_id: None
+        use_case = CreateRemedialFromEventUseCase(
+            remedial_service=FakeRemedialService(),
+            task_repo=FakeTaskRepository(),
+            work_repo=FakeWorkRepository(),
+            event_repo=event_repo,
+            transaction_manager=FakeTransactionManager(),
+        )
+
+        result = use_case.execute(
+            RemedialFromEventRequest(
+                event_id='event-1',
+                selected_student_ids=['student-1'],
+            )
+        )
+
+        self.assertFalse(result.success)
+        self.assertEqual(result.students_without_review, 1)
+        self.assertIn('нет проверенных результатов', result.message)
+
+    def test_execute_rejects_non_positive_task_limits(self):
+        use_case = CreateRemedialFromEventUseCase(
+            remedial_service=FakeRemedialService(),
+            task_repo=FakeTaskRepository(),
+            work_repo=FakeWorkRepository(),
+            event_repo=FakeEventRepository(),
+            transaction_manager=FakeTransactionManager(),
+        )
+
+        result = use_case.execute(
+            RemedialFromEventRequest(
+                event_id='event-1',
+                selected_student_ids=['student-1'],
+                tasks_per_group=0,
+            )
+        )
+
+        self.assertFalse(result.success)
+        self.assertIn('больше нуля', result.message)

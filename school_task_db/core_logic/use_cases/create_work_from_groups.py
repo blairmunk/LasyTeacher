@@ -7,14 +7,13 @@ from core_logic.interfaces.task_repo import ITaskRepository
 from core_logic.interfaces.work_repo import (
     CreateWorkParams,
     CreateWorkWithSpecificationParams,
-    IWorkRepository,
     WorkSpecificationRowParams,
 )
 from core_logic.use_cases.compose_work_variants import (
     ComposeWorkVariantsRequest,
     ComposeWorkVariantsUseCase,
 )
-from core_logic.use_cases.save_work import validate_work_specification_specs
+from core_logic.use_cases.save_work import CreateWorkWithSpecificationUseCase
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_ANY,
@@ -118,11 +117,13 @@ class CreateWorkFromGroupsUseCase:
     def __init__(
         self,
         task_repo: ITaskRepository,
-        work_repo: IWorkRepository,
+        create_work_with_specification_use_case: CreateWorkWithSpecificationUseCase,
         compose_work_variants_use_case: ComposeWorkVariantsUseCase,
     ):
         self.task_repo = task_repo
-        self.work_repo = work_repo
+        self.create_work_with_specification_use_case = (
+            create_work_with_specification_use_case
+        )
         self.compose_work_variants_use_case = compose_work_variants_use_case
 
     def execute(
@@ -168,14 +169,7 @@ class CreateWorkFromGroupsUseCase:
                 )
             )
 
-        specification_errors = validate_work_specification_specs(specs)
-        if specification_errors:
-            return CreateWorkFromGroupsResult(
-                status='invalid_group_spec',
-                message=specification_errors[0],
-            )
-
-        work_id = self.work_repo.create_work_with_specification(
+        create_result = self.create_work_with_specification_use_case.execute(
             CreateWorkWithSpecificationParams(
                 work=CreateWorkParams(
                     name=work_name,
@@ -185,6 +179,12 @@ class CreateWorkFromGroupsUseCase:
                 specs=specs,
             )
         )
+        if create_result.status == 'invalid':
+            return CreateWorkFromGroupsResult(
+                status='invalid_group_spec',
+                message=create_result.errors[0],
+            )
+        work_id = create_result.work_id
 
         message = (
             f'Создана работа «{work_name}» '

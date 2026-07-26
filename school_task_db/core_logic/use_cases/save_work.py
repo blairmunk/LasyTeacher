@@ -5,6 +5,7 @@ from typing import List
 
 from core_logic.interfaces.work_repo import (
     CreateWorkParams,
+    CreateWorkWithSpecificationParams,
     IWorkRepository,
     WorkSpecificationRowParams,
 )
@@ -15,6 +16,7 @@ from core_logic.value_objects.work_specification import WorkTaskRoleSpec
 class SaveWorkResult:
     status: str
     work_id: str = ''
+    errors: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -36,6 +38,22 @@ class CreateWorkUseCase:
 
     def execute(self, params: CreateWorkParams) -> SaveWorkResult:
         work_id = self.work_repo.create_work(params)
+        return SaveWorkResult(status='created', work_id=work_id)
+
+
+class CreateWorkWithSpecificationUseCase:
+    def __init__(self, work_repo: IWorkRepository):
+        self.work_repo = work_repo
+
+    def execute(
+        self,
+        params: CreateWorkWithSpecificationParams,
+    ) -> SaveWorkResult:
+        errors = validate_work_specification_specs(params.specs)
+        if errors:
+            return SaveWorkResult(status='invalid', errors=errors)
+
+        work_id = self.work_repo.create_work_with_specification(params)
         return SaveWorkResult(status='created', work_id=work_id)
 
 

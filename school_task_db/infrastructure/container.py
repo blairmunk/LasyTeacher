@@ -265,6 +265,7 @@ from core_logic.use_cases.save_task import (
     UpdateTaskUseCase,
 )
 from core_logic.use_cases.save_work import (
+    CreateWorkWithSpecificationUseCase,
     CreateWorkUseCase,
     SaveWorkSpecificationUseCase,
     UpdateWorkUseCase,
@@ -1167,7 +1168,9 @@ class Container:
     def create_work_from_groups_use_case(self):
         return CreateWorkFromGroupsUseCase(
             task_repo=self.task_repo,
-            work_repo=self.work_repo,
+            create_work_with_specification_use_case=(
+                self.create_work_with_specification_use_case()
+            ),
             compose_work_variants_use_case=(
                 self.compose_work_variants_use_case()
             ),
@@ -1184,6 +1187,11 @@ class Container:
 
     def create_work_use_case(self):
         return CreateWorkUseCase(
+            work_repo=self.work_repo,
+        )
+
+    def create_work_with_specification_use_case(self):
+        return CreateWorkWithSpecificationUseCase(
             work_repo=self.work_repo,
         )
 

@@ -2,9 +2,11 @@ from unittest import TestCase
 
 from core_logic.interfaces.work_repo import (
     CreateWorkParams,
+    CreateWorkWithSpecificationParams,
     WorkSpecificationRowParams,
 )
 from core_logic.use_cases.save_work import (
+    CreateWorkWithSpecificationUseCase,
     CreateWorkUseCase,
     SaveWorkSpecificationRequest,
     SaveWorkSpecificationUseCase,
@@ -18,11 +20,16 @@ class FakeWorkRepository:
         self.created_params = None
         self.updated_params = None
         self.replaced_specs = None
+        self.created_with_specification = None
         self.update_result = update_result
 
     def create_work(self, params):
         self.created_params = params
         return 'work-1'
+
+    def create_work_with_specification(self, params):
+        self.created_with_specification = params
+        return 'work-with-specification'
 
     def update_work(self, params):
         self.updated_params = params
@@ -64,6 +71,47 @@ class SaveWorkUseCaseTests(TestCase):
         self.assertEqual(result.status, 'updated')
         self.assertEqual(result.work_id, 'work-1')
         self.assertEqual(repo.updated_params, params)
+
+    def test_create_work_with_specification_validates_and_delegates(self):
+        repo = FakeWorkRepository()
+        params = CreateWorkWithSpecificationParams(
+            work=CreateWorkParams(name='Рабочий лист'),
+            specs=[
+                WorkSpecificationRowParams(
+                    analog_group_id='group-1',
+                    order=1,
+                    count=2,
+                    weight=3,
+                )
+            ],
+        )
+
+        result = CreateWorkWithSpecificationUseCase(repo).execute(params)
+
+        self.assertEqual(result.status, 'created')
+        self.assertEqual(result.work_id, 'work-with-specification')
+        self.assertEqual(repo.created_with_specification, params)
+
+    def test_create_work_with_specification_rejects_invalid_specs(self):
+        repo = FakeWorkRepository()
+        params = CreateWorkWithSpecificationParams(
+            work=CreateWorkParams(name='Рабочий лист'),
+            specs=[
+                WorkSpecificationRowParams(
+                    analog_group_id='group-1',
+                    order=1,
+                    count=1,
+                    weight=1,
+                    blank_cells_rows=0,
+                )
+            ],
+        )
+
+        result = CreateWorkWithSpecificationUseCase(repo).execute(params)
+
+        self.assertEqual(result.status, 'invalid')
+        self.assertIn('blank_cells_rows must be positive', result.errors[0])
+        self.assertIsNone(repo.created_with_specification)
 
     def test_update_work_returns_not_found(self):
         params = CreateWorkParams(work_id='missing', name='КР')

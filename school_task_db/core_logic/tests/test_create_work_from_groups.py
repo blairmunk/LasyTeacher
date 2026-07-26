@@ -6,6 +6,7 @@ from core_logic.interfaces.work_repo import (
     WorkSpecificationRowParams,
 )
 from core_logic.entities.work import ComposeWorkVariantsResult
+from core_logic.use_cases.save_work import CreateWorkWithSpecificationUseCase
 from core_logic.use_cases.create_work_from_groups import (
     CreateWorkFromGroupsRequest,
     CreateWorkFromGroupsUseCase,
@@ -153,7 +154,9 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         compose_use_case = FakeComposeWorkVariantsUseCase()
         use_case = CreateWorkFromGroupsUseCase(
             task_repo=task_repo,
-            work_repo=work_repo,
+            create_work_with_specification_use_case=(
+                CreateWorkWithSpecificationUseCase(work_repo)
+            ),
             compose_work_variants_use_case=compose_use_case,
         )
 
@@ -208,7 +211,9 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         work_repo = FakeWorkRepository()
         use_case = CreateWorkFromGroupsUseCase(
             task_repo=task_repo,
-            work_repo=work_repo,
+            create_work_with_specification_use_case=(
+                CreateWorkWithSpecificationUseCase(work_repo)
+            ),
             compose_work_variants_use_case=FakeComposeWorkVariantsUseCase(),
         )
 
@@ -236,7 +241,9 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         work_repo = FakeWorkRepository()
         use_case = CreateWorkFromGroupsUseCase(
             task_repo=task_repo,
-            work_repo=work_repo,
+            create_work_with_specification_use_case=(
+                CreateWorkWithSpecificationUseCase(work_repo)
+            ),
             compose_work_variants_use_case=FakeComposeWorkVariantsUseCase(
                 error=RuntimeError('generation failed'),
             ),
@@ -261,7 +268,9 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         work_repo = FakeWorkRepository()
         use_case = CreateWorkFromGroupsUseCase(
             task_repo=task_repo,
-            work_repo=work_repo,
+            create_work_with_specification_use_case=(
+                CreateWorkWithSpecificationUseCase(work_repo)
+            ),
             compose_work_variants_use_case=FakeComposeWorkVariantsUseCase(),
         )
 
@@ -296,7 +305,9 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         work_repo = FakeWorkRepository()
         use_case = CreateWorkFromGroupsUseCase(
             task_repo=task_repo,
-            work_repo=work_repo,
+            create_work_with_specification_use_case=(
+                CreateWorkWithSpecificationUseCase(work_repo)
+            ),
             compose_work_variants_use_case=FakeComposeWorkVariantsUseCase(),
         )
 
@@ -322,7 +333,9 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         work_repo = FakeWorkRepository()
         use_case = CreateWorkFromGroupsUseCase(
             task_repo=task_repo,
-            work_repo=work_repo,
+            create_work_with_specification_use_case=(
+                CreateWorkWithSpecificationUseCase(work_repo)
+            ),
             compose_work_variants_use_case=FakeComposeWorkVariantsUseCase(),
         )
 
@@ -343,9 +356,12 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         self.assertIsNone(work_repo.created_work)
 
     def test_execute_rejects_empty_groups(self):
+        work_repo = FakeWorkRepository()
         use_case = CreateWorkFromGroupsUseCase(
             task_repo=FakeTaskRepository(),
-            work_repo=FakeWorkRepository(),
+            create_work_with_specification_use_case=(
+                CreateWorkWithSpecificationUseCase(work_repo)
+            ),
             compose_work_variants_use_case=FakeComposeWorkVariantsUseCase(),
         )
 
@@ -362,7 +378,9 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         work_repo = FakeWorkRepository()
         use_case = CreateWorkFromGroupsUseCase(
             task_repo=task_repo,
-            work_repo=work_repo,
+            create_work_with_specification_use_case=(
+                CreateWorkWithSpecificationUseCase(work_repo)
+            ),
             compose_work_variants_use_case=FakeComposeWorkVariantsUseCase(),
         )
 

@@ -4,12 +4,12 @@ from django.http import Http404, JsonResponse
 from django.views.generic import TemplateView
 from django.views.decorators.http import require_http_methods
 
+from core_logic.interfaces.work_repo import CreateWorkWithSpecificationParams
 from core_logic.use_cases.prepare_work_variant_submission import (
     PrepareVariantActionSubmissionRequest,
 )
 from core_logic.use_cases.save_work import (
     SaveWorkSpecificationRequest,
-    validate_work_specification_specs,
 )
 from core_logic.use_cases.sync_work_analog_groups import (
     SyncWorkAnalogGroupsRequest,
@@ -82,24 +82,14 @@ class WorkCreateView(TemplateView):
         specs = container.work_form_adapter.work_specs_from_formset(
             formset,
         )
-        spec_errors = validate_work_specification_specs(specs)
-        if spec_errors:
-            messages.error(request, '; '.join(spec_errors))
-            return self.render_to_response(
-                self.get_context_data(form=form, formset=formset),
-            )
-
-        result = container.create_work_use_case().execute(
-            container.work_form_adapter.work_params_from_form(form),
-        )
-        specification_result = container.save_work_specification_use_case().execute(
-            SaveWorkSpecificationRequest(
-                work_id=result.work_id,
+        result = container.create_work_with_specification_use_case().execute(
+            CreateWorkWithSpecificationParams(
+                work=container.work_form_adapter.work_params_from_form(form),
                 specs=specs,
             )
         )
-        if specification_result.status == 'invalid':
-            messages.error(request, '; '.join(specification_result.errors))
+        if result.status == 'invalid':
+            messages.error(request, '; '.join(result.errors))
             return self.render_to_response(
                 self.get_context_data(form=form, formset=formset),
             )

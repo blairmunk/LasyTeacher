@@ -14,7 +14,6 @@ from core_logic.entities.work import (
     WorkListItem,
     VariantListItem,
     VariantGenerationGroup,
-    VariantGenerationInfo,
     VariantGenerationWork,
     VariantDeleteInfo,
     VariantDetailTaskRow,
@@ -139,13 +138,6 @@ class IWorkRepository(ABC):
     @abstractmethod
     def get_variant_total_max_points(self, variant_id: str) -> int:
         """Return total max points for a variant."""
-
-    @abstractmethod
-    def get_variant_generation_info(
-        self,
-        variant_id: str,
-    ) -> Optional[VariantGenerationInfo]:
-        """Return variant info for variant document generation."""
 
     @abstractmethod
     def get_orphan_variants(self) -> List[OrphanVariantListItem]:

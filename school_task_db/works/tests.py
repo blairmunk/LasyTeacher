@@ -994,44 +994,6 @@ class WorkDetailViewTests(TestCase):
             filename='work.html',
         )
 
-    def test_render_variant_ajax_uses_clean_placeholder(self):
-        response = self.client.post(
-            reverse('works:render_variant_ajax', args=[self.variant.pk])
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.json(),
-            {
-                'success': True,
-                'message': (
-                    'Вариант 1 работы "Контрольная" '
-                    'будет добавлен в следующей версии'
-                ),
-                'files': [],
-            },
-        )
-
-    def test_render_variant_ajax_handles_orphan_variant(self):
-        orphan = Variant.objects.create(
-            work=None,
-            number=7,
-            work_name_snapshot='Индивидуальная подборка',
-        )
-
-        response = self.client.post(
-            reverse('works:render_variant_ajax', args=[orphan.pk])
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.json()['message'],
-            (
-                'Вариант 7 работы "Индивидуальная подборка" '
-                'будет добавлен в следующей версии'
-            ),
-        )
-
     def test_render_status_ajax_reports_ready(self):
         response = self.client.get(reverse('works:render_status_ajax'))
 

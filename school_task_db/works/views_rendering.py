@@ -95,20 +95,6 @@ def render_status_ajax(request):
     """Ajax status check for document rendering."""
     return JsonResponse(container.work_form_adapter.render_status_payload())
 
-# Дополнительные views для вариантов
-@require_http_methods(["POST"])
-def render_variant_ajax(request, variant_id):
-    """Ajax rendering placeholder for a specific variant."""
-    result = container.get_variant_generation_placeholder_use_case().execute(
-        str(variant_id),
-    )
-    if result.status == DOCUMENT_RENDER_STATUS_NOT_FOUND:
-        raise Http404("Вариант не найден")
-    
-    return JsonResponse(
-        container.work_form_adapter.variant_placeholder_response_payload(result)
-    )
-
 @require_http_methods(["POST"])
 def render_remedial_sheet_ajax(request, variant_id):
     """Ajax rendering for remedial sheet documents."""

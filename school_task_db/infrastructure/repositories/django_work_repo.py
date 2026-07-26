@@ -19,7 +19,6 @@ from core_logic.entities.work import (
     VariantDetailTaskRow,
     VariantDetailVariant,
     VariantGenerationGroup,
-    VariantGenerationInfo,
     VariantGenerationWork,
     VariantListItem,
     VariantListStudentRef,
@@ -378,23 +377,6 @@ class DjangoWorkRepository(IWorkRepository, IWorkDocumentRepository):
             Variant.objects.filter(pk=variant_id)
             .values_list('variant_type', flat=True)
             .first()
-        )
-
-    def get_variant_generation_info(self, variant_id: str):
-        variant = Variant.objects.select_related('work').filter(
-            pk=variant_id,
-        ).first()
-        if not variant:
-            return None
-
-        work_name = (
-            variant.work.name
-            if variant.work
-            else variant.work_name_snapshot or 'Без работы'
-        )
-        return VariantGenerationInfo(
-            number=variant.number,
-            work_name=work_name,
         )
 
     def get_remedial_sheet_data(self, variant_id: str) -> RemedialSheetData:

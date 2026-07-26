@@ -177,13 +177,6 @@ class WorkFormAdapter:
             'message': 'Система готова к рендерингу',
         }
 
-    def variant_placeholder_response_payload(self, result):
-        return {
-            'success': True,
-            'message': result.message,
-            'files': [],
-        }
-
     def remedial_sheet_error_payload(self, message):
         return {
             'status': 'error',

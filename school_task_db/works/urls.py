@@ -45,11 +45,6 @@ urlpatterns = [
         name='render_work_ajax',
     ),
     path(
-        'ajax/render/variant/<pk:variant_id>/',
-        views_rendering.render_variant_ajax,
-        name='render_variant_ajax',
-    ),
-    path(
         'ajax/render-status/',
         views_rendering.render_status_ajax,
         name='render_status_ajax',

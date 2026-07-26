@@ -195,9 +195,6 @@ from core_logic.use_cases.get_topic_subtopics import GetTopicSubtopicsUseCase
 from core_logic.use_cases.get_topic_detail import GetTopicDetailUseCase
 from core_logic.use_cases.get_topic_list import GetTopicListUseCase
 from core_logic.use_cases.get_variant_detail import GetVariantDetailUseCase
-from core_logic.use_cases.get_variant_generation_placeholder import (
-    GetVariantGenerationPlaceholderUseCase,
-)
 from core_logic.use_cases.get_variant_generation_form import (
     GetVariantGenerationFormUseCase,
 )
@@ -1086,11 +1083,6 @@ class Container:
 
     def get_variant_detail_use_case(self):
         return GetVariantDetailUseCase(
-            work_repo=self.work_repo,
-        )
-
-    def get_variant_generation_placeholder_use_case(self):
-        return GetVariantGenerationPlaceholderUseCase(
             work_repo=self.work_repo,
         )
 

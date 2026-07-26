@@ -286,18 +286,6 @@ class VariantDetailTaskRow:
 
 
 @dataclass(frozen=True)
-class VariantGenerationInfo:
-    number: int
-    work_name: str
-
-
-@dataclass(frozen=True)
-class VariantGenerationPlaceholderResult:
-    status: str
-    message: str = ''
-
-
-@dataclass(frozen=True)
 class RemedialOriginalTaskRow:
     task: Any
     order: int

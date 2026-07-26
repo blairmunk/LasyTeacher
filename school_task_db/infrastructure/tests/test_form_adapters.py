@@ -1680,17 +1680,6 @@ class WorkFormAdapterTests(SimpleTestCase):
                 'message': 'Система готова к рендерингу',
             },
         )
-        self.assertEqual(
-            adapter.variant_placeholder_response_payload(
-                SimpleNamespace(message='Пока не реализовано'),
-            ),
-            {
-                'success': True,
-                'message': 'Пока не реализовано',
-                'files': [],
-            },
-        )
-
     def test_builds_remedial_rendering_error_payloads(self):
         adapter = WorkFormAdapter()
 

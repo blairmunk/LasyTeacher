@@ -8,7 +8,6 @@ from core_logic.entities.work import (
     VariantDetailTask,
     VariantDetailTaskRow,
     VariantDetailVariant,
-    VariantGenerationInfo,
     WorkDetailWork,
     WorkListFilters,
 )
@@ -33,9 +32,6 @@ from core_logic.use_cases.compose_work_variants import (
 )
 from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUseCase
 from core_logic.use_cases.get_variant_detail import GetVariantDetailUseCase
-from core_logic.use_cases.get_variant_generation_placeholder import (
-    GetVariantGenerationPlaceholderUseCase,
-)
 from core_logic.use_cases.get_variant_list import GetVariantListUseCase
 from core_logic.use_cases.get_orphan_variant_list import GetOrphanVariantListUseCase
 from core_logic.use_cases.get_remedial_sheet_data import (
@@ -110,11 +106,6 @@ class FakeWorkRepository:
             new_tasks=['new-task'],
         )
         self.remedial_sheet_variant_id = None
-        self.variant_generation_info = VariantGenerationInfo(
-            number=3,
-            work_name='Контрольная',
-        )
-        self.variant_generation_id = None
         self.work_name = 'Контрольная'
         self.work_name_request = None
         self.work_exists_for_spec_sync = True
@@ -179,10 +170,6 @@ class FakeWorkRepository:
     def get_work_variant_ids(self, work_id):
         self.work_variant_ids_request = work_id
         return self.work_variant_ids
-
-    def get_variant_generation_info(self, variant_id):
-        self.variant_generation_id = variant_id
-        return self.variant_generation_info
 
     def get_remedial_sheet_data(self, variant_id):
         self.remedial_sheet_variant_id = variant_id
@@ -417,28 +404,6 @@ class WorkDetailTests(TestCase):
 
         self.assertIsNone(result.variant)
         self.assertEqual(result.variant_tasks, [])
-
-    def test_get_variant_generation_placeholder_builds_message(self):
-        repo = FakeWorkRepository()
-        use_case = GetVariantGenerationPlaceholderUseCase(work_repo=repo)
-
-        result = use_case.execute('variant-1')
-
-        self.assertEqual(repo.variant_generation_id, 'variant-1')
-        self.assertEqual(result.status, 'ready')
-        self.assertEqual(
-            result.message,
-            'Вариант 3 работы "Контрольная" будет добавлен в следующей версии',
-        )
-
-    def test_get_variant_generation_placeholder_handles_missing_variant(self):
-        repo = FakeWorkRepository()
-        repo.variant_generation_info = None
-        use_case = GetVariantGenerationPlaceholderUseCase(work_repo=repo)
-
-        result = use_case.execute('missing')
-
-        self.assertEqual(result.status, 'not_found')
 
     def test_get_remedial_sheet_data_use_case_returns_repository_data(self):
         repo = FakeWorkRepository()

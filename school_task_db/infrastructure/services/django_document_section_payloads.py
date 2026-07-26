@@ -18,23 +18,6 @@ from core_logic.value_objects.document_recipes import (
     TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
 )
-from core_logic.value_objects.variant_content_snapshot import (
-    VariantContentItem,
-    build_variant_content_snapshot,
-)
-from core_logic.value_objects.task_print_settings import (
-    DEFAULT_BLANK_CELLS_COLUMNS,
-    DEFAULT_BLANK_CELLS_ROW_HEIGHT,
-    DEFAULT_BLANK_CELLS_ROWS,
-    TASK_BANK_ROLE_CONTROL,
-    TASK_RENDER_MODE_TASK_ONLY,
-)
-from core_logic.value_objects.variant_print_plan import (
-    VARIANT_PRINT_BLOCK_BLANK_CELLS,
-    VARIANT_PRINT_BLOCK_TASK,
-    build_variant_print_profile_from_options,
-    build_variant_print_plan_from_snapshot,
-)
 from core_logic.entities.document import (
     REMEDIAL_WORK_SOURCE_TYPE,
     REMEDIAL_VARIANT_SOURCE_TYPE,
@@ -44,6 +27,15 @@ from core_logic.use_cases.get_remedial_sheet_data import (
     GetRemedialSheetDataUseCase,
 )
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
+from infrastructure.services.blank_cells_payload import (
+    build_blank_cells_payload,
+)
+from infrastructure.services.django_variant_document_payloads import (
+    DjangoVariantDocumentPayloadBuilder,
+    build_original_task_payload,
+    build_variant_task_payload,
+    format_text_payload,
+)
 from works.models import Work
 
 
@@ -71,16 +63,25 @@ class DjangoWorkHeaderPayloadBuilder:
 
 
 class DjangoWorkTaskListPayloadBuilder:
-    def __init__(self, get_work_source=None, task_payload_formatter=None):
+    def __init__(
+        self,
+        get_work_source=None,
+        task_payload_formatter=None,
+        variant_payload_builder=None,
+    ):
         self.get_work_source = get_work_source or _get_work_source
-        self.task_payload_formatter = task_payload_formatter
+        self.variant_payload_builder = (
+            variant_payload_builder
+            or DjangoVariantDocumentPayloadBuilder(
+                task_payload_formatter=task_payload_formatter,
+            )
+        )
 
     def build_payload(self, request):
         work = self.get_work_source(request.source.source_id)
         variants = [
-            _work_variant_payload(
+            self.variant_payload_builder.build(
                 variant,
-                task_payload_formatter=self.task_payload_formatter,
                 request=request,
             )
             for variant in _work_variants_from_request(work, request)
@@ -151,7 +152,7 @@ class DjangoWorkTheoryPayloadBuilder:
 
     def _format_block_payload(self, block, request=None):
         block_payload = dict(block)
-        block_payload['content'] = _format_text_payload(
+        block_payload['content'] = format_text_payload(
             block_payload['content'],
             self.task_payload_formatter,
             request=request,
@@ -159,7 +160,7 @@ class DjangoWorkTheoryPayloadBuilder:
         block_payload['subtopics'] = [
             {
                 **subtopic,
-                'content': _format_text_payload(
+                'content': format_text_payload(
                     subtopic['content'],
                     self.task_payload_formatter,
                     request=request,
@@ -211,7 +212,7 @@ class DjangoRemedialOriginalMistakesPayloadBuilder:
         return {
             **dict(request.section.options),
             'tasks': [
-                _original_task_payload(
+                build_original_task_payload(
                     task_row,
                     task_payload_formatter=self.task_payload_formatter,
                     request=request,
@@ -231,7 +232,7 @@ class DjangoRemedialTrainingTasksPayloadBuilder:
         return {
             **dict(request.section.options),
             'tasks': [
-                _variant_task_payload(
+                build_variant_task_payload(
                     variant_task,
                     task_payload_formatter=self.task_payload_formatter,
                     request=request,
@@ -243,7 +244,7 @@ class DjangoRemedialTrainingTasksPayloadBuilder:
 
 class BlankCellsPayloadBuilder:
     def build_payload(self, request):
-        return _blank_cells_payload(request.section.options)
+        return build_blank_cells_payload(request.section.options)
 
 
 def build_work_section_payload_builder_registry(
@@ -380,244 +381,6 @@ def _work_variant_from_request(work, request):
 
 def _remedial_variant_id(request):
     return request.section.options.get('variant_id') or request.source.source_id
-
-
-def _positive_int(value, default, max_value):
-    try:
-        parsed = int(value)
-    except (TypeError, ValueError):
-        return default
-    if parsed < 1:
-        return default
-    return min(parsed, max_value)
-
-
-def _blank_cells_payload(options):
-    options = dict(options)
-    rows = _positive_int(
-        options.get('rows'),
-        default=DEFAULT_BLANK_CELLS_ROWS,
-        max_value=40,
-    )
-    columns = _positive_int(
-        options.get('columns'),
-        default=DEFAULT_BLANK_CELLS_COLUMNS,
-        max_value=40,
-    )
-    row_height = _positive_int(
-        options.get('row_height'),
-        default=DEFAULT_BLANK_CELLS_ROW_HEIGHT,
-        max_value=120,
-    )
-    return {
-        **options,
-        'rows': rows,
-        'columns': columns,
-        'row_height': row_height,
-        'rows_range': range(rows),
-        'cells_range': range(rows * columns),
-        'latex_cells': _blank_cells_latex_cells(columns, row_height),
-    }
-
-
-def _blank_cells_latex_cells(columns, row_height):
-    cells = [''] * columns
-    cells[0] = rf'\rule{{0pt}}{{{row_height / 3:.1f}mm}}'
-    return cells
-
-
-def _work_variant_payload(variant, task_payload_formatter=None, request=None):
-    variant_tasks = list(
-        variant.varianttask_set
-        .select_related(
-            'task',
-            'task__topic',
-            'task__subtopic',
-            'task__source',
-        )
-        .order_by('order', 'pk')
-    )
-    content_snapshot = build_variant_content_snapshot(
-        variant_id=str(variant.pk),
-        items=[
-            _variant_content_item(variant_task)
-            for variant_task in variant_tasks
-        ],
-    )
-    print_profile = build_variant_print_profile_from_options(
-        request.section.options if request else {},
-    )
-    print_plan = build_variant_print_plan_from_snapshot(
-        content_snapshot,
-        profile=print_profile,
-    )
-    task_payloads = [
-        _variant_task_payload(
-            variant_task,
-            task_payload_formatter=task_payload_formatter,
-            request=request,
-        )
-        for variant_task in variant_tasks
-    ]
-    task_payloads_by_variant_task_id = {
-        task_payload['variant_task_id']: task_payload
-        for task_payload in task_payloads
-    }
-    return {
-        'id': str(variant.pk),
-        'number': variant.number,
-        'title': f'Вариант {variant.number}',
-        'max_score': variant.display_max_score,
-        'duration': variant.display_duration,
-        'print_blocks': _variant_print_blocks_payload(
-            print_plan,
-            task_payloads_by_variant_task_id,
-        ),
-        'tasks': task_payloads,
-    }
-
-
-def _variant_content_item(variant_task):
-    print_settings = _variant_task_print_settings(variant_task)
-    return VariantContentItem(
-        variant_task_id=str(variant_task.pk),
-        task_id=str(variant_task.task_id),
-        order=variant_task.order,
-        max_points=variant_task.max_points,
-        bank_role=print_settings['bank_role'],
-        render_mode=print_settings['render_mode'],
-        is_assessable=print_settings['is_assessable'],
-        blank_cells_after=print_settings['blank_cells_after'],
-        blank_cells_rows=print_settings['blank_cells_rows'],
-    )
-
-
-def _variant_print_blocks_payload(print_plan, task_payloads_by_variant_task_id):
-    print_blocks = []
-    for block in print_plan.blocks:
-        block_payload = {
-            'block_type': block.block_type,
-            'variant_task_id': block.variant_task_id,
-            'task_id': block.task_id,
-            'order': block.order,
-            'content_role': block.content_role,
-            'source_render_mode': block.source_render_mode,
-            'render_mode': block.render_mode,
-            'options': dict(block.options),
-        }
-        if block.block_type == VARIANT_PRINT_BLOCK_TASK:
-            task_payload = task_payloads_by_variant_task_id.get(
-                block.variant_task_id,
-            )
-            if task_payload:
-                block_payload['task'] = {
-                    **task_payload,
-                    **dict(block.options),
-                }
-        elif block.block_type == VARIANT_PRINT_BLOCK_BLANK_CELLS:
-            block_payload['blank_cells'] = _blank_cells_payload(block.options)
-        print_blocks.append(block_payload)
-    return print_blocks
-
-
-def _variant_task_payload(
-    variant_task,
-    task_payload_formatter=None,
-    request=None,
-):
-    task = variant_task.task
-    payload = {
-        **_task_payload(task),
-        **_variant_task_print_settings(variant_task),
-        'variant_task_id': str(variant_task.pk),
-        'order': variant_task.order,
-        'max_points': variant_task.max_points,
-    }
-    if payload['blank_cells_after']:
-        payload['blank_cells'] = _blank_cells_payload(
-            {
-                'rows': payload['blank_cells_rows'],
-                'columns': getattr(
-                    variant_task,
-                    'blank_cells_columns',
-                    DEFAULT_BLANK_CELLS_COLUMNS,
-                ),
-                'row_height': getattr(
-                    variant_task,
-                    'blank_cells_row_height',
-                    DEFAULT_BLANK_CELLS_ROW_HEIGHT,
-                ),
-            }
-        )
-    return _format_task_payload(payload, task_payload_formatter, request=request)
-
-
-def _variant_task_print_settings(variant_task):
-    return {
-        'bank_role': getattr(
-            variant_task,
-            'bank_role',
-            TASK_BANK_ROLE_CONTROL,
-        ),
-        'render_mode': getattr(
-            variant_task,
-            'render_mode',
-            TASK_RENDER_MODE_TASK_ONLY,
-        ),
-        'is_assessable': getattr(variant_task, 'is_assessable', True),
-        'blank_cells_after': getattr(variant_task, 'blank_cells_after', False),
-        'blank_cells_rows': getattr(
-            variant_task,
-            'blank_cells_rows',
-            DEFAULT_BLANK_CELLS_ROWS,
-        ),
-    }
-
-
-def _original_task_payload(task_row, task_payload_formatter=None, request=None):
-    payload = {
-        **_task_payload(task_row.task),
-        'order': task_row.order,
-        'points': task_row.points,
-        'max_points': task_row.max_points,
-        'pct': task_row.pct,
-        'status': task_row.status,
-        'group_name': task_row.group_name,
-    }
-    return _format_task_payload(payload, task_payload_formatter, request=request)
-
-
-def _task_payload(task):
-    return {
-        'id': str(task.pk),
-        'text': task.text,
-        'answer': task.answer,
-        'short_solution': task.short_solution,
-        'full_solution': task.full_solution,
-        'hint': task.hint,
-        'instruction': task.instruction,
-        'task_type': task.task_type,
-        'difficulty': task.difficulty,
-        'topic': task.topic.name if task.topic else '',
-        'subtopic': task.subtopic.name if task.subtopic else '',
-        'source': str(task.source) if task.source else '',
-        'source_detail': task.source_detail,
-    }
-
-
-def _format_task_payload(payload, task_payload_formatter=None, request=None):
-    if task_payload_formatter is None:
-        return payload
-    return task_payload_formatter.format_task_payload(payload, request=request)
-
-
-def _format_text_payload(text, task_payload_formatter=None, request=None):
-    if task_payload_formatter is None:
-        return text
-    return task_payload_formatter.format_task_payload(
-        {'text': text},
-        request=request,
-    )['text']
 
 
 def _append_unique_subtopic(subtopics, subtopic):

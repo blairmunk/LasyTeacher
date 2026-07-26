@@ -4,14 +4,11 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import QueryDict
 from django.test import SimpleTestCase
 
-from infrastructure.forms.document_template_django_forms import (
-    DocumentTemplateForm,
-)
 from infrastructure.forms.print_settings_django_forms import PrintSettingsForm
 from core_logic.entities.document import (
     DocumentPresentation,
     DocumentSectionSpec,
-    DocumentTemplateSpec,
+    PrintSettingsSpec,
 )
 from core_logic.entities.core import (
     DashboardSummaryData,
@@ -31,9 +28,6 @@ from core_logic.entities.student import StudentRemedialWorkData
 from core_logic.services.analytics_service import (
     ScoreTimelinePoint,
     StudentProfileData,
-)
-from core_logic.use_cases.get_document_template_editor_data import (
-    DocumentTemplateEditorData,
 )
 from core_logic.use_cases.get_print_settings_editor_data import (
     GetPrintSettingsEditorDataRequest,
@@ -63,9 +57,6 @@ from core_logic.value_objects.document_type_catalog import (
 from infrastructure.forms.codifier_forms import CodifierFormAdapter
 from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
-from infrastructure.forms.document_template_forms import (
-    DocumentTemplateFormAdapter,
-)
 from infrastructure.forms.print_settings_forms import PrintSettingsFormAdapter
 from infrastructure.forms.event_forms import EventFormAdapter
 from infrastructure.forms.report_forms import ReportFormAdapter
@@ -252,15 +243,7 @@ class CurriculumFormAdapterTests(SimpleTestCase):
         )
 
 
-class DocumentTemplateFormAdapterTests(SimpleTestCase):
-    def test_template_form_is_print_settings_form_subclass(self):
-        self.assertTrue(issubclass(DocumentTemplateForm, PrintSettingsForm))
-
-    def test_template_adapter_is_print_settings_adapter_subclass(self):
-        self.assertTrue(
-            issubclass(DocumentTemplateFormAdapter, PrintSettingsFormAdapter)
-        )
-
+class PrintSettingsFormAdapterTests(SimpleTestCase):
     def _template_form(self, *args, sections=None, **kwargs):
         return PrintSettingsForm(
             *args,
@@ -275,7 +258,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
 
     def test_builds_editor_data_request_from_query(self):
         request = (
-            DocumentTemplateFormAdapter()
+            PrintSettingsFormAdapter()
             .editor_data_request_from_query(
                 QueryDict('type=work&renderable=1&legacy=1'),
             )
@@ -287,17 +270,17 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
 
     def test_builds_editor_context(self):
         request = (
-            DocumentTemplateFormAdapter()
+            PrintSettingsFormAdapter()
             .editor_data_request_from_query(QueryDict('type=work'))
         )
-        editor_data = DocumentTemplateEditorData(
+        editor_data = PrintSettingsEditorData(
             document_types=get_document_type_catalog(renderable_only=True),
             sections=get_document_section_catalog(document_type=WORK_DOCUMENT_TYPE),
             print_profiles=[
-                DocumentTemplateSpec(
+                PrintSettingsSpec(
                     name='Шаблон работы',
-                    template_type=WORK_DOCUMENT_TYPE,
-                    template_id='template-work',
+                    document_type=WORK_DOCUMENT_TYPE,
+                    print_settings_id='profile-work',
                     sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
                     default_content_config={'answer_type': 'tasks_only'},
                     presentation=DocumentPresentation(custom_css='body {}'),
@@ -305,7 +288,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
             ],
         )
 
-        context = DocumentTemplateFormAdapter().editor_context(
+        context = PrintSettingsFormAdapter().editor_context(
             editor_data,
             request,
         )
@@ -326,12 +309,8 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         self.assertTrue(context['sections'][0]['is_fixed_order'])
         self.assertEqual(context['sections'][1]['section_type'], HEADER_SECTION)
         self.assertEqual(
-            context['print_profiles'][0]['template_id'],
-            'template-work',
-        )
-        self.assertEqual(
             context['print_profiles'][0]['print_settings_id'],
-            'template-work',
+            'profile-work',
         )
         self.assertEqual(context['print_profiles'][0]['name'], 'Шаблон работы')
         self.assertEqual(context['print_profiles'][0]['document_type'], 'work')
@@ -341,9 +320,8 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
             {'answer_type': 'tasks_only'},
         )
         self.assertTrue(context['print_profiles'][0]['has_customization'])
-        self.assertEqual(context['templates'][0]['template_id'], 'template-work')
 
-    def test_clean_editor_context_has_only_print_settings_names(self):
+    def test_editor_context_has_only_print_settings_names(self):
         request = GetPrintSettingsEditorDataRequest(
             document_type=WORK_DOCUMENT_TYPE,
         )
@@ -351,10 +329,10 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
             document_types=(),
             sections=(),
             print_profiles=[
-                DocumentTemplateSpec(
+                PrintSettingsSpec(
                     name='Профиль',
-                    template_type=WORK_DOCUMENT_TYPE,
-                    template_id='profile-1',
+                    document_type=WORK_DOCUMENT_TYPE,
+                    print_settings_id='profile-1',
                 ),
             ],
         )
@@ -373,18 +351,18 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
 
     def test_editor_context_preserves_filter_flags_in_document_type_urls(self):
         request = (
-            DocumentTemplateFormAdapter()
+            PrintSettingsFormAdapter()
             .editor_data_request_from_query(
                 QueryDict('type=work&renderable=1&legacy=1'),
             )
         )
-        editor_data = DocumentTemplateEditorData(
+        editor_data = PrintSettingsEditorData(
             document_types=get_document_type_catalog(renderable_only=True),
             sections=(),
             print_profiles=[],
         )
 
-        context = DocumentTemplateFormAdapter().editor_context(
+        context = PrintSettingsFormAdapter().editor_context(
             editor_data,
             request,
         )
@@ -404,7 +382,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         self.assertTrue(form.is_valid(), form.errors)
 
         params = (
-            DocumentTemplateFormAdapter()
+            PrintSettingsFormAdapter()
             .create_print_settings_params_from_form(form)
         )
 
@@ -428,7 +406,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         )
         self.assertTrue(form.is_valid(), form.errors)
 
-        params = DocumentTemplateFormAdapter().create_params_from_form(form)
+        params = PrintSettingsFormAdapter().create_print_settings_params_from_form(form)
 
         self.assertEqual(params.section_types, ('task_list', 'header'))
         self.assertEqual(
@@ -446,7 +424,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         )
         self.assertTrue(form.is_valid(), form.errors)
 
-        params = DocumentTemplateFormAdapter().create_params_from_form(form)
+        params = PrintSettingsFormAdapter().create_print_settings_params_from_form(form)
 
         self.assertEqual(
             params.section_types,
@@ -463,7 +441,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         )
         self.assertTrue(form.is_valid(), form.errors)
 
-        params = DocumentTemplateFormAdapter().create_params_from_form(form)
+        params = PrintSettingsFormAdapter().create_print_settings_params_from_form(form)
 
         self.assertEqual(
             params.section_types,
@@ -482,7 +460,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         )
         self.assertTrue(form.is_valid(), form.errors)
 
-        params = DocumentTemplateFormAdapter().create_params_from_form(form)
+        params = PrintSettingsFormAdapter().create_print_settings_params_from_form(form)
 
         self.assertEqual(params.section_types, ('header', 'task_list'))
         self.assertEqual(params.sections[0].options, {})
@@ -534,7 +512,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         self.assertTrue(form.is_valid(), form.errors)
 
         params = (
-            DocumentTemplateFormAdapter()
+            PrintSettingsFormAdapter()
             .update_print_settings_params_from_form(
                 form,
                 print_settings_id='template-1',
@@ -551,22 +529,19 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         self.assertFalse(params.is_default)
 
     def test_builds_form_initial_from_print_settings(self):
-        template = DocumentTemplateSpec(
+        template = PrintSettingsSpec(
             name='Шаблон',
-            template_type=WORK_DOCUMENT_TYPE,
-            template_id='template-1',
+            document_type=WORK_DOCUMENT_TYPE,
+            print_settings_id='profile-1',
             description='Описание',
             is_default=True,
             sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
         )
 
-        adapter = DocumentTemplateFormAdapter()
+        adapter = PrintSettingsFormAdapter()
         initial = adapter.form_initial_from_print_settings(
             template,
         )
-        legacy_initial = adapter.form_initial_from_template(template)
-
-        self.assertEqual(legacy_initial, initial)
         self.assertEqual(initial['name'], 'Шаблон')
         self.assertEqual(initial['description'], 'Описание')
         self.assertEqual(initial['template_type'], WORK_DOCUMENT_TYPE)
@@ -575,9 +550,9 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
         self.assertTrue(initial['is_default'])
 
     def test_builds_form_initial_with_section_options_from_template(self):
-        template = DocumentTemplateSpec(
+        template = PrintSettingsSpec(
             name='Шаблон',
-            template_type=WORK_DOCUMENT_TYPE,
+            document_type=WORK_DOCUMENT_TYPE,
             sections=[
                 DocumentSectionSpec(section_type=HEADER_SECTION),
                 DocumentSectionSpec(
@@ -590,7 +565,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
             ],
         )
 
-        initial = DocumentTemplateFormAdapter().form_initial_from_print_settings(
+        initial = PrintSettingsFormAdapter().form_initial_from_print_settings(
             template,
         )
 
@@ -609,7 +584,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
             data=QueryDict('template_type=work&sections=header'),
         )
 
-        context = DocumentTemplateFormAdapter().create_context(
+        context = PrintSettingsFormAdapter().create_context(
             form=form,
             document_types=get_document_type_catalog(renderable_only=True),
             sections=get_document_section_catalog(renderable_only=True),
@@ -656,7 +631,7 @@ class DocumentTemplateFormAdapterTests(SimpleTestCase):
             },
         )
 
-        context = DocumentTemplateFormAdapter().create_context(
+        context = PrintSettingsFormAdapter().create_context(
             form=form,
             document_types=get_document_type_catalog(renderable_only=True),
             sections=get_document_section_catalog(renderable_only=True),

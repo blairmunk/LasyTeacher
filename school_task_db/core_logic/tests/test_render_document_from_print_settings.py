@@ -3,17 +3,13 @@ from unittest import TestCase
 from core_logic.entities.document import (
     DocumentSectionSpec,
     DocumentSourceRef,
-    DocumentTemplateSpec,
+    PrintSettingsSpec,
 )
 from core_logic.entities.document_rendering import (
     DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
     DocumentRenderResult,
     GeneratedDocument,
     GeneratedDocumentFile,
-)
-from core_logic.use_cases.render_document_from_template import (
-    RenderDocumentFromTemplateRequest,
-    RenderDocumentFromTemplateUseCase,
 )
 from core_logic.use_cases.render_document_from_print_settings import (
     RenderDocumentFromPrintSettingsRequest,
@@ -40,40 +36,26 @@ class FakeDocumentEngine:
         return self.document
 
 
-class RenderDocumentFromTemplateUseCaseTests(TestCase):
-    def test_legacy_render_types_are_print_settings_compatible(self):
-        self.assertTrue(
-            issubclass(
-                RenderDocumentFromTemplateRequest,
-                RenderDocumentFromPrintSettingsRequest,
-            )
-        )
-        self.assertTrue(
-            issubclass(
-                RenderDocumentFromTemplateUseCase,
-                RenderDocumentFromPrintSettingsUseCase,
-            )
-        )
-
+class RenderDocumentFromPrintSettingsUseCaseTests(TestCase):
     def test_delegates_to_recipe_render_use_case(self):
         recipe_use_case = FakeRenderDocumentFromRecipeUseCase()
-        use_case = RenderDocumentFromTemplateUseCase(
+        use_case = RenderDocumentFromPrintSettingsUseCase(
             render_document_from_recipe_use_case=recipe_use_case,
         )
-        template_spec = DocumentTemplateSpec(
-            name='Work template',
-            template_type=WORK_DOCUMENT_TYPE,
+        print_settings = PrintSettingsSpec(
+            name='Work profile',
+            document_type=WORK_DOCUMENT_TYPE,
             sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
         )
 
         result = use_case.execute(
-            RenderDocumentFromTemplateRequest(
+            RenderDocumentFromPrintSettingsRequest(
                 source=DocumentSourceRef(
                     source_type='work',
                     source_id='work-1',
                     title='Контрольная',
                 ),
-                template_spec=template_spec,
+                print_settings_spec=print_settings,
                 render_target=RenderTarget(renderer_type='html'),
             )
         )
@@ -85,14 +67,14 @@ class RenderDocumentFromTemplateUseCaseTests(TestCase):
         )
         self.assertEqual(recipe_use_case.request.source_name, 'Контрольная')
 
-    def test_renders_document_from_print_settings_spec(self):
+    def test_renders_document_from_print_settings(self):
         engine = FakeDocumentEngine()
         use_case = RenderDocumentFromPrintSettingsUseCase(
             document_engine=engine,
         )
-        print_settings_spec = DocumentTemplateSpec(
-            name='Work print profile',
-            template_type=WORK_DOCUMENT_TYPE,
+        print_settings = PrintSettingsSpec(
+            name='Work profile',
+            document_type=WORK_DOCUMENT_TYPE,
             sections=[
                 DocumentSectionSpec(section_type=HEADER_SECTION),
                 DocumentSectionSpec(section_type=TASK_LIST_SECTION),
@@ -107,55 +89,35 @@ class RenderDocumentFromTemplateUseCaseTests(TestCase):
                     title='Контрольная',
                 ),
                 render_target=RenderTarget(renderer_type='html'),
-                print_settings_spec=print_settings_spec,
+                print_settings_spec=print_settings,
             )
         )
 
         self.assertTrue(result.success)
         self.assertEqual(result.file_type, 'html')
         self.assertEqual(result.source_name, 'Контрольная')
-        render_plan = engine.render_request
-        self.assertEqual(render_plan.source.source_id, 'work-1')
-        self.assertEqual(render_plan.recipe.document_type, WORK_DOCUMENT_TYPE)
+        self.assertEqual(engine.render_request.source.source_id, 'work-1')
         self.assertEqual(
-            render_plan.recipe.section_types,
+            engine.render_request.recipe.section_types,
             (HEADER_SECTION, TASK_LIST_SECTION),
         )
-        self.assertEqual(render_plan.render_target.renderer_type, 'html')
-
-    def test_rejects_missing_print_settings_spec(self):
-        use_case = RenderDocumentFromTemplateUseCase(
-            render_document_from_recipe_use_case=(
-                FakeRenderDocumentFromRecipeUseCase()
-            ),
-        )
-
-        with self.assertRaises(ValueError):
-            use_case.execute(
-                RenderDocumentFromTemplateRequest(
-                    source=DocumentSourceRef(
-                        source_type='work',
-                        source_id='work-1',
-                    ),
-                    render_target=RenderTarget(renderer_type='html'),
-                )
-            )
 
     def test_explicit_source_name_overrides_source_title(self):
         engine = FakeDocumentEngine()
-        use_case = RenderDocumentFromTemplateUseCase(document_engine=engine)
+        use_case = RenderDocumentFromPrintSettingsUseCase(
+            document_engine=engine,
+        )
 
         result = use_case.execute(
-            RenderDocumentFromTemplateRequest(
+            RenderDocumentFromPrintSettingsRequest(
                 source=DocumentSourceRef(
                     source_type='work',
                     source_id='work-1',
                     title='Source title',
                 ),
-                template_spec=DocumentTemplateSpec(
-                    name='Work template',
-                    template_type=WORK_DOCUMENT_TYPE,
-                    sections=[],
+                print_settings_spec=PrintSettingsSpec(
+                    name='Work profile',
+                    document_type=WORK_DOCUMENT_TYPE,
                 ),
                 render_target=RenderTarget(renderer_type='html'),
                 source_name='Display title',
@@ -166,15 +128,19 @@ class RenderDocumentFromTemplateUseCaseTests(TestCase):
 
     def test_rejects_unsupported_renderer_without_engine_call(self):
         engine = FakeDocumentEngine()
-        use_case = RenderDocumentFromTemplateUseCase(document_engine=engine)
+        use_case = RenderDocumentFromPrintSettingsUseCase(
+            document_engine=engine,
+        )
 
         result = use_case.execute(
-            RenderDocumentFromTemplateRequest(
-                source=DocumentSourceRef(source_type='work', source_id='work-1'),
-                template_spec=DocumentTemplateSpec(
-                    name='Work template',
-                    template_type=WORK_DOCUMENT_TYPE,
-                    sections=[],
+            RenderDocumentFromPrintSettingsRequest(
+                source=DocumentSourceRef(
+                    source_type='work',
+                    source_id='work-1',
+                ),
+                print_settings_spec=PrintSettingsSpec(
+                    name='Work profile',
+                    document_type=WORK_DOCUMENT_TYPE,
                 ),
                 render_target=RenderTarget(renderer_type='docx'),
                 source_name='Контрольная',

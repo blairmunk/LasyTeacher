@@ -14,7 +14,9 @@ from core_logic.interfaces.event_repo import (
 from core_logic.interfaces.work_repo import (
     CreateWorkParams,
     CreateWorkWithSpecificationParams,
+    CreateWorkWithVariantsParams,
     CreateWorkWithVariantFromTasksParams,
+    NewWorkVariantParams,
     WorkSpecificationRowParams,
 )
 from core_logic.entities.task import (
@@ -389,6 +391,103 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(work.work_type, 'quiz')
         self.assertEqual(work.duration, 30)
         self.assertEqual(work.max_score, 12)
+
+    def test_work_repository_creates_work_with_variants(self):
+        repo = DjangoWorkRepository()
+
+        created = repo.create_work_with_variants(
+            CreateWorkWithVariantsParams(
+                work=CreateWorkParams(
+                    name='Работа над ошибками',
+                    work_type='remedial',
+                    max_score=5,
+                    variant_counter=2,
+                ),
+                variants=[
+                    NewWorkVariantParams(
+                        number=1,
+                        student_id=str(self.student.pk),
+                        task_ids=[str(self.original_weak.pk)],
+                        max_score_snapshot=2,
+                        source_work_id=str(self.source_work.pk),
+                    ),
+                    NewWorkVariantParams(
+                        number=2,
+                        student_id=str(self.student.pk),
+                        task_ids=[str(self.original_ok.pk)],
+                        max_score_snapshot=5,
+                    ),
+                ],
+            )
+        )
+
+        work = Work.objects.get(pk=created.work_id)
+        variants = list(
+            Variant.objects.filter(work=work).order_by('number')
+        )
+        variant_tasks = list(
+            VariantTask.objects.filter(variant__work=work).order_by(
+                'variant__number',
+                'order',
+            )
+        )
+
+        self.assertEqual(len(created.variant_ids), 2)
+        self.assertEqual(work.variant_counter, 2)
+        self.assertEqual(
+            [str(variant.pk) for variant in variants],
+            created.variant_ids,
+        )
+        self.assertEqual(
+            [variant.max_score_snapshot for variant in variants],
+            [2, 5],
+        )
+        self.assertEqual(variants[0].source_work, self.source_work)
+        self.assertEqual(
+            [variant_task.task for variant_task in variant_tasks],
+            [self.original_weak, self.original_ok],
+        )
+
+    def test_work_repository_rolls_back_work_when_variant_creation_fails(self):
+        repo = DjangoWorkRepository()
+        original_create_variant = repo._create_variant_with_tasks
+        work_count = Work.objects.count()
+        variant_count = Variant.objects.count()
+
+        def create_variant_or_fail(params):
+            if params.number == 2:
+                raise RuntimeError('variant creation failed')
+            return original_create_variant(params)
+
+        repo._create_variant_with_tasks = create_variant_or_fail
+
+        with self.assertRaises(RuntimeError):
+            repo.create_work_with_variants(
+                CreateWorkWithVariantsParams(
+                    work=CreateWorkParams(
+                        name='Незавершённая работа',
+                        work_type='remedial',
+                        variant_counter=2,
+                    ),
+                    variants=[
+                        NewWorkVariantParams(
+                            number=1,
+                            student_id=str(self.student.pk),
+                            task_ids=[str(self.original_weak.pk)],
+                            max_score_snapshot=2,
+                        ),
+                        NewWorkVariantParams(
+                            number=2,
+                            student_id=str(self.student.pk),
+                            task_ids=[str(self.original_ok.pk)],
+                            max_score_snapshot=5,
+                        ),
+                    ],
+                )
+            )
+
+        self.assertEqual(Work.objects.count(), work_count)
+        self.assertEqual(Variant.objects.count(), variant_count)
 
     def test_work_repository_replaces_work_analog_groups(self):
         repo = DjangoWorkRepository()

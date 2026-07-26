@@ -1,7 +1,11 @@
 from unittest import TestCase
 
 from core_logic.entities.task import TaskEntity
-from core_logic.interfaces.work_repo import CreateVariantParams, CreateWorkParams
+from core_logic.interfaces.work_repo import (
+    CreatedWorkWithVariantsRef,
+    CreateWorkParams,
+    CreateWorkWithVariantsParams,
+)
 from core_logic.use_cases.create_remedial_wizard_work import (
     CreateRemedialWizardWorkRequest,
     CreateRemedialWizardWorkUseCase,
@@ -31,13 +35,16 @@ class FakeWorkRepository:
         self.created_work = None
         self.created_variants = []
 
-    def create_work(self, params: CreateWorkParams):
-        self.created_work = params
-        return 'work-1'
-
-    def create_variant_with_tasks(self, params: CreateVariantParams):
-        self.created_variants.append(params)
-        return f'variant-{params.number}'
+    def create_work_with_variants(self, params: CreateWorkWithVariantsParams):
+        self.created_work = params.work
+        self.created_variants = params.variants
+        return CreatedWorkWithVariantsRef(
+            work_id='work-1',
+            variant_ids=[
+                f'variant-{variant.number}'
+                for variant in params.variants
+            ],
+        )
 
 
 class FakeEventRepository:

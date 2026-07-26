@@ -42,10 +42,12 @@ from core_logic.value_objects.task_print_settings import (
 from core_logic.value_objects.task_scores import task_score_records_by_task_id
 from core_logic.interfaces.work_repo import (
     AttachVariantsToWorkParams,
+    CreatedWorkWithVariantsRef,
     CreatedWorkVariantRef,
     CreateVariantParams,
     CreateWorkParams,
     CreateWorkWithSpecificationParams,
+    CreateWorkWithVariantsParams,
     CreateWorkWithVariantFromTasksParams,
     IWorkRepository,
     WorkSpecificationRowParams,
@@ -911,6 +913,32 @@ class DjangoWorkRepository(
             ])
         return str(work.pk)
 
+    def create_work_with_variants(
+        self,
+        params: CreateWorkWithVariantsParams,
+    ) -> CreatedWorkWithVariantsRef:
+        with transaction.atomic():
+            work_id = self.create_work(params.work)
+            variant_ids = [
+                self._create_variant_with_tasks(
+                    CreateVariantParams(
+                        work_id=work_id,
+                        number=variant.number,
+                        student_id=variant.student_id,
+                        task_ids=variant.task_ids,
+                        work_name_snapshot=params.work.name,
+                        max_score_snapshot=variant.max_score_snapshot,
+                        source_work_id=variant.source_work_id,
+                        variant_type=variant.variant_type,
+                    )
+                )
+                for variant in params.variants
+            ]
+        return CreatedWorkWithVariantsRef(
+            work_id=work_id,
+            variant_ids=variant_ids,
+        )
+
     def replace_work_analog_groups(
         self,
         work_id: str,
@@ -939,6 +967,10 @@ class DjangoWorkRepository(
         return True
 
     def create_variant_with_tasks(self, params: CreateVariantParams) -> str:
+        with transaction.atomic():
+            return self._create_variant_with_tasks(params)
+
+    def _create_variant_with_tasks(self, params: CreateVariantParams) -> str:
         variant = Variant.objects.create(
             work_id=params.work_id,
             number=params.number,

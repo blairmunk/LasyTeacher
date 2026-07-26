@@ -6,9 +6,10 @@ from typing import List, Optional
 from core_logic.interfaces.event_repo import CreateEventParams, IEventRepository
 from core_logic.interfaces.task_repo import ITaskRepository
 from core_logic.interfaces.work_repo import (
-    CreateVariantParams,
     CreateWorkParams,
+    CreateWorkWithVariantsParams,
     IWorkRepository,
+    NewWorkVariantParams,
 )
 from core_logic.services.remedial_service import (
     RemedialService,
@@ -90,31 +91,37 @@ class CreateRemedialFromEventUseCase:
         ]
         max_score = max(selection_scores) if selection_scores else 0
 
-        work_id = self.work_repo.create_work(
-            CreateWorkParams(
-                name=work_name,
-                work_type='remedial',
-                max_score=max_score,
-                variant_counter=len(selections),
+        created_work = self.work_repo.create_work_with_variants(
+            CreateWorkWithVariantsParams(
+                work=CreateWorkParams(
+                    name=work_name,
+                    work_type='remedial',
+                    max_score=max_score,
+                    variant_counter=len(selections),
+                ),
+                variants=[
+                    NewWorkVariantParams(
+                        number=number,
+                        student_id=selection.student_id,
+                        task_ids=selection.task_ids,
+                        max_score_snapshot=score,
+                        source_work_id=event.work_id,
+                    )
+                    for number, (selection, score) in enumerate(
+                        zip(selections, selection_scores),
+                        1,
+                    )
+                ],
             )
         )
-
-        variant_ids = []
-        for number, selection in enumerate(selections, 1):
-            total_score = self._total_difficulty(selection)
-            variant_id = self.work_repo.create_variant_with_tasks(
-                CreateVariantParams(
-                    work_id=work_id,
-                    number=number,
-                    student_id=selection.student_id,
-                    task_ids=selection.task_ids,
-                    work_name_snapshot=work_name,
-                    max_score_snapshot=total_score,
-                    source_work_id=event.work_id,
-                    variant_type='remedial',
-                )
+        work_id = created_work.work_id
+        variant_ids = [
+            (selection.student_id, variant_id)
+            for selection, variant_id in zip(
+                selections,
+                created_work.variant_ids,
             )
-            variant_ids.append((selection.student_id, variant_id))
+        ]
 
         new_event_id = None
         if request.create_event:

@@ -74,6 +74,28 @@ class CreateWorkWithSpecificationParams:
 
 
 @dataclass(frozen=True)
+class NewWorkVariantParams:
+    number: int
+    student_id: str
+    task_ids: List[str]
+    max_score_snapshot: int
+    source_work_id: Optional[str] = None
+    variant_type: str = 'remedial'
+
+
+@dataclass(frozen=True)
+class CreateWorkWithVariantsParams:
+    work: CreateWorkParams
+    variants: List[NewWorkVariantParams]
+
+
+@dataclass(frozen=True)
+class CreatedWorkWithVariantsRef:
+    work_id: str
+    variant_ids: List[str]
+
+
+@dataclass(frozen=True)
 class CreateWorkWithVariantFromTasksParams:
     name: str
     work_type: str
@@ -191,6 +213,13 @@ class IWorkRepository(ABC):
         params: CreateWorkWithSpecificationParams,
     ) -> str:
         """Create a work and its specification atomically."""
+
+    @abstractmethod
+    def create_work_with_variants(
+        self,
+        params: CreateWorkWithVariantsParams,
+    ) -> CreatedWorkWithVariantsRef:
+        """Create a work and all supplied variants atomically."""
 
     @abstractmethod
     def replace_work_analog_groups(

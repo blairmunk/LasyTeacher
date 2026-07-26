@@ -7,9 +7,10 @@ from core_logic.interfaces.event_repo import CreateEventParams, IEventRepository
 from core_logic.interfaces.student_repo import IStudentRepository
 from core_logic.interfaces.task_repo import ITaskRepository
 from core_logic.interfaces.work_repo import (
-    CreateVariantParams,
     CreateWorkParams,
+    CreateWorkWithVariantsParams,
     IWorkRepository,
+    NewWorkVariantParams,
 )
 
 
@@ -76,36 +77,41 @@ class CreateRemedialWizardWorkUseCase:
                 status='empty_tasks',
             )
 
-        max_score = max(
-            self._total_difficulty(task_ids)
-            for task_ids in student_task_ids.values()
-        )
-        work_id = self.work_repo.create_work(
-            CreateWorkParams(
-                name=request.work_name,
-                work_type='remedial',
-                max_score=max_score,
-                variant_counter=len(student_task_ids),
+        student_scores = {
+            student_id: self._total_difficulty(task_ids)
+            for student_id, task_ids in student_task_ids.items()
+        }
+        max_score = max(student_scores.values())
+        created_work = self.work_repo.create_work_with_variants(
+            CreateWorkWithVariantsParams(
+                work=CreateWorkParams(
+                    name=request.work_name,
+                    work_type='remedial',
+                    max_score=max_score,
+                    variant_counter=len(student_task_ids),
+                ),
+                variants=[
+                    NewWorkVariantParams(
+                        number=number,
+                        student_id=student_id,
+                        task_ids=task_ids,
+                        max_score_snapshot=student_scores[student_id],
+                    )
+                    for number, (student_id, task_ids) in enumerate(
+                        student_task_ids.items(),
+                        1,
+                    )
+                ],
             )
         )
-
-        variant_ids = []
-        for number, (student_id, task_ids) in enumerate(
-            student_task_ids.items(),
-            1,
-        ):
-            variant_id = self.work_repo.create_variant_with_tasks(
-                CreateVariantParams(
-                    work_id=work_id,
-                    number=number,
-                    student_id=student_id,
-                    task_ids=task_ids,
-                    work_name_snapshot=request.work_name,
-                    max_score_snapshot=self._total_difficulty(task_ids),
-                    variant_type='remedial',
-                )
+        work_id = created_work.work_id
+        variant_ids = [
+            (student_id, variant_id)
+            for student_id, variant_id in zip(
+                student_task_ids,
+                created_work.variant_ids,
             )
-            variant_ids.append((student_id, variant_id))
+        ]
 
         event_id = None
         if request.create_event:

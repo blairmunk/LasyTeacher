@@ -57,6 +57,9 @@ from infrastructure.repositories.django_review_repo import DjangoReviewRepositor
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
+from infrastructure.services.django_transaction_manager import (
+    DjangoTransactionManager,
+)
 from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Source, Task, TaskImage
@@ -971,6 +974,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             task_repo=task_repo,
             work_repo=work_repo,
             event_repo=event_repo,
+            transaction_manager=DjangoTransactionManager(),
         )
 
         result = use_case.execute(
@@ -1011,6 +1015,44 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(variant_task.task, self.replacement)
         self.assertEqual(variant_task.max_points, self.replacement.difficulty)
         self.assertEqual(variant_task.weight, self.replacement.difficulty)
+
+    def test_remedial_transaction_rolls_back_work_when_participation_fails(self):
+        student_repo = DjangoStudentRepository()
+        task_repo = DjangoTaskRepository()
+        work_repo = DjangoWorkRepository()
+        event_repo = DjangoEventRepository()
+        service = RemedialService(
+            student_repo=student_repo,
+            task_repo=task_repo,
+            work_repo=work_repo,
+        )
+
+        def fail_participation(**kwargs):
+            raise RuntimeError('participation creation failed')
+
+        event_repo.create_participation = fail_participation
+        use_case = CreateRemedialFromEventUseCase(
+            remedial_service=service,
+            task_repo=task_repo,
+            work_repo=work_repo,
+            event_repo=event_repo,
+            transaction_manager=DjangoTransactionManager(),
+        )
+        work_name = 'Откатываемая работа над ошибками'
+
+        with self.assertRaises(RuntimeError):
+            use_case.execute(
+                RemedialFromEventRequest(
+                    event_id=str(self.event.pk),
+                    selected_student_ids=[str(self.student.pk)],
+                    work_name=work_name,
+                    create_event=True,
+                    event_date='2026-03-10',
+                )
+            )
+
+        self.assertFalse(Work.objects.filter(name=work_name).exists())
+        self.assertFalse(Event.objects.filter(name=work_name).exists())
 
     def test_work_repository_returns_remedial_variant_ids_for_work(self):
         remedial_work = Work.objects.create(

@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from unittest import TestCase
 
 from core_logic.entities.event import EventEntity, MarkEntity
@@ -82,17 +83,29 @@ class FakeEventRepository:
         return 'participation-1'
 
 
+class FakeTransactionManager:
+    def __init__(self):
+        self.entered = 0
+
+    @contextmanager
+    def atomic(self):
+        self.entered += 1
+        yield
+
+
 class CreateRemedialFromEventUseCaseTests(TestCase):
     def test_execute_creates_work_variants_event_and_participations(self):
         remedial_service = FakeRemedialService()
         task_repo = FakeTaskRepository()
         work_repo = FakeWorkRepository()
         event_repo = FakeEventRepository()
+        transaction_manager = FakeTransactionManager()
         use_case = CreateRemedialFromEventUseCase(
             remedial_service=remedial_service,
             task_repo=task_repo,
             work_repo=work_repo,
             event_repo=event_repo,
+            transaction_manager=transaction_manager,
         )
 
         result = use_case.execute(
@@ -130,13 +143,16 @@ class CreateRemedialFromEventUseCaseTests(TestCase):
             event_repo.created_participations,
             [('new-event', 'student-1', 'variant-1')],
         )
+        self.assertEqual(transaction_manager.entered, 1)
 
     def test_execute_without_selected_students_returns_warning_result(self):
+        transaction_manager = FakeTransactionManager()
         use_case = CreateRemedialFromEventUseCase(
             remedial_service=FakeRemedialService(),
             task_repo=FakeTaskRepository(),
             work_repo=FakeWorkRepository(),
             event_repo=FakeEventRepository(),
+            transaction_manager=transaction_manager,
         )
 
         result = use_case.execute(
@@ -148,3 +164,4 @@ class CreateRemedialFromEventUseCaseTests(TestCase):
 
         self.assertFalse(result.success)
         self.assertEqual(result.message, 'Не выбрано ни одного ученика.')
+        self.assertEqual(transaction_manager.entered, 0)

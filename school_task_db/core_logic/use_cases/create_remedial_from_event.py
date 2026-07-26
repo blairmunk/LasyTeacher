@@ -5,6 +5,7 @@ from typing import List, Optional
 
 from core_logic.interfaces.event_repo import CreateEventParams, IEventRepository
 from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.interfaces.transaction_manager import ITransactionManager
 from core_logic.interfaces.work_repo import (
     CreateWorkParams,
     CreateWorkWithVariantsParams,
@@ -43,11 +44,13 @@ class CreateRemedialFromEventUseCase:
         task_repo: ITaskRepository,
         work_repo: IWorkRepository,
         event_repo: IEventRepository,
+        transaction_manager: ITransactionManager,
     ):
         self.remedial_service = remedial_service
         self.task_repo = task_repo
         self.work_repo = work_repo
         self.event_repo = event_repo
+        self.transaction_manager = transaction_manager
 
     def execute(
         self,
@@ -91,55 +94,56 @@ class CreateRemedialFromEventUseCase:
         ]
         max_score = max(selection_scores) if selection_scores else 0
 
-        created_work = self.work_repo.create_work_with_variants(
-            CreateWorkWithVariantsParams(
-                work=CreateWorkParams(
-                    name=work_name,
-                    work_type='remedial',
-                    max_score=max_score,
-                    variant_counter=len(selections),
-                ),
-                variants=[
-                    NewWorkVariantParams(
-                        number=number,
-                        student_id=selection.student_id,
-                        task_ids=selection.task_ids,
-                        max_score_snapshot=score,
-                        source_work_id=event.work_id,
-                    )
-                    for number, (selection, score) in enumerate(
-                        zip(selections, selection_scores),
-                        1,
-                    )
-                ],
+        with self.transaction_manager.atomic():
+            created_work = self.work_repo.create_work_with_variants(
+                CreateWorkWithVariantsParams(
+                    work=CreateWorkParams(
+                        name=work_name,
+                        work_type='remedial',
+                        max_score=max_score,
+                        variant_counter=len(selections),
+                    ),
+                    variants=[
+                        NewWorkVariantParams(
+                            number=number,
+                            student_id=selection.student_id,
+                            task_ids=selection.task_ids,
+                            max_score_snapshot=score,
+                            source_work_id=event.work_id,
+                        )
+                        for number, (selection, score) in enumerate(
+                            zip(selections, selection_scores),
+                            1,
+                        )
+                    ],
+                )
             )
-        )
-        work_id = created_work.work_id
-        variant_ids = [
-            (selection.student_id, variant_id)
-            for selection, variant_id in zip(
-                selections,
-                created_work.variant_ids,
-            )
-        ]
+            work_id = created_work.work_id
+            variant_ids = [
+                (selection.student_id, variant_id)
+                for selection, variant_id in zip(
+                    selections,
+                    created_work.variant_ids,
+                )
+            ]
 
-        new_event_id = None
-        if request.create_event:
-            new_event_id = self.event_repo.create_event(
-                CreateEventParams(
-                    name=work_name,
-                    work_id=work_id,
-                    date=request.event_date,
-                    course_id=event.course_id,
-                    description=f'Работа над ошибками по: {event.work_name}',
+            new_event_id = None
+            if request.create_event:
+                new_event_id = self.event_repo.create_event(
+                    CreateEventParams(
+                        name=work_name,
+                        work_id=work_id,
+                        date=request.event_date,
+                        course_id=event.course_id,
+                        description=f'Работа над ошибками по: {event.work_name}',
+                    )
                 )
-            )
-            for student_id, variant_id in variant_ids:
-                self.event_repo.create_participation(
-                    event_id=new_event_id,
-                    student_id=student_id,
-                    variant_id=variant_id,
-                )
+                for student_id, variant_id in variant_ids:
+                    self.event_repo.create_participation(
+                        event_id=new_event_id,
+                        student_id=student_id,
+                        variant_id=variant_id,
+                    )
 
         message = f'Создана работа «{work_name}» с {len(selections)} вариантами.'
         if new_event_id:

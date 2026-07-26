@@ -263,6 +263,9 @@ from infrastructure.forms.work_forms import WorkFormAdapter
 from infrastructure.services.document_engine import (
     DjangoDocumentEngine,
 )
+from infrastructure.services.django_transaction_manager import (
+    DjangoTransactionManager,
+)
 from infrastructure.services.task_import_service import DjangoTaskImportService
 
 
@@ -293,6 +296,7 @@ class ContainerTests(SimpleTestCase):
 
         use_case = container.create_remedial_from_event_use_case()
         wizard_create_use_case = container.create_remedial_wizard_work_use_case()
+        transaction_manager = container.transaction_manager
         preview_use_case = container.get_remedial_event_preview_use_case()
         create_event_use_case = container.create_event_use_case()
         update_event_use_case = container.update_event_use_case()
@@ -487,6 +491,9 @@ class ContainerTests(SimpleTestCase):
 
         self.assertIsInstance(use_case, CreateRemedialFromEventUseCase)
         self.assertIsInstance(wizard_create_use_case, CreateRemedialWizardWorkUseCase)
+        self.assertIsInstance(transaction_manager, DjangoTransactionManager)
+        self.assertIs(use_case.transaction_manager, transaction_manager)
+        self.assertIs(wizard_create_use_case.transaction_manager, transaction_manager)
         self.assertIsInstance(preview_use_case, GetRemedialEventPreviewUseCase)
         self.assertIsInstance(create_event_use_case, CreateEventUseCase)
         self.assertIsInstance(update_event_use_case, UpdateEventUseCase)

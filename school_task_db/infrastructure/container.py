@@ -298,6 +298,9 @@ from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from infrastructure.services.document_engine import (
     DjangoDocumentEngine,
 )
+from infrastructure.services.django_transaction_manager import (
+    DjangoTransactionManager,
+)
 from infrastructure.services.task_import_service import DjangoTaskImportService
 from infrastructure.forms.codifier_forms import CodifierFormAdapter
 from infrastructure.forms.core_forms import CoreFormAdapter
@@ -344,6 +347,7 @@ class Container:
         self._task_form_adapter = None
         self._document_engine = None
         self._task_import_service = None
+        self._transaction_manager = None
 
     @property
     def student_repo(self):
@@ -368,6 +372,12 @@ class Container:
         if self._event_repo is None:
             self._event_repo = DjangoEventRepository()
         return self._event_repo
+
+    @property
+    def transaction_manager(self):
+        if self._transaction_manager is None:
+            self._transaction_manager = DjangoTransactionManager()
+        return self._transaction_manager
 
     @property
     def review_repo(self):
@@ -527,6 +537,7 @@ class Container:
             task_repo=self.task_repo,
             work_repo=self.work_repo,
             event_repo=self.event_repo,
+            transaction_manager=self.transaction_manager,
         )
 
     def create_student_remedial_variant_use_case(self):
@@ -542,6 +553,7 @@ class Container:
             task_repo=self.task_repo,
             work_repo=self.work_repo,
             event_repo=self.event_repo,
+            transaction_manager=self.transaction_manager,
         )
 
     def get_remedial_event_preview_use_case(self):

@@ -5,7 +5,7 @@ from typing import List
 
 from core_logic.entities.work import CreateWorkFromOrphansResult
 from core_logic.interfaces.work_repo import (
-    AttachVariantsToWorkParams,
+    CreateWorkFromOrphanVariantsParams,
     CreateWorkParams,
     IWorkRepository,
 )
@@ -37,30 +37,27 @@ class CreateWorkFromOrphansUseCase:
 
         work_name = request.work_name.strip() or DEFAULT_ORPHAN_WORK_NAME
         max_score = max(variant.total_max_points for variant in variants)
-        work_id = self.work_repo.create_work(
-            CreateWorkParams(
-                name=work_name,
-                work_type=self._detect_work_type(
-                    [variant.variant_type for variant in variants],
+        created = self.work_repo.create_work_from_orphan_variants(
+            CreateWorkFromOrphanVariantsParams(
+                work=CreateWorkParams(
+                    name=work_name,
+                    work_type=self._detect_work_type(
+                        [variant.variant_type for variant in variants],
+                    ),
+                    max_score=max_score,
+                    variant_counter=len(variants),
                 ),
-                max_score=max_score,
-                variant_counter=len(variants),
-            )
-        )
-        attached_count = self.work_repo.attach_variants_to_work(
-            AttachVariantsToWorkParams(
-                work_id=work_id,
                 variant_ids=[variant.pk for variant in variants],
-                work_name_snapshot=work_name,
-                max_score_snapshot=max_score,
             )
         )
+        if created is None:
+            return CreateWorkFromOrphansResult(status='not_found')
 
         return CreateWorkFromOrphansResult(
             status='created',
-            work_id=work_id,
+            work_id=created.work_id,
             work_name=work_name,
-            variant_count=attached_count,
+            variant_count=created.variant_count,
         )
 
     def _detect_work_type(self, variant_types: List[str]) -> str:

@@ -47,11 +47,15 @@ class CreateVariantParams:
 
 
 @dataclass(frozen=True)
-class AttachVariantsToWorkParams:
-    work_id: str
+class CreateWorkFromOrphanVariantsParams:
+    work: CreateWorkParams
     variant_ids: List[str]
-    work_name_snapshot: str
-    max_score_snapshot: int
+
+
+@dataclass(frozen=True)
+class CreatedWorkFromOrphanVariantsRef:
+    work_id: str
+    variant_count: int
 
 
 @dataclass(frozen=True)
@@ -163,8 +167,11 @@ class IWorkRepository(ABC):
         """Return selected orphan variant refs ordered for attaching to work."""
 
     @abstractmethod
-    def attach_variants_to_work(self, params: AttachVariantsToWorkParams) -> int:
-        """Attach variants to a work and return attached count."""
+    def create_work_from_orphan_variants(
+        self,
+        params: CreateWorkFromOrphanVariantsParams,
+    ) -> Optional[CreatedWorkFromOrphanVariantsRef]:
+        """Create a work and attach all selected orphan variants atomically."""
 
     @abstractmethod
     def get_variant_delete_info(self, variant_id: str) -> Optional[VariantDeleteInfo]:

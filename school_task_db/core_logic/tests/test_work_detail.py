@@ -11,7 +11,7 @@ from core_logic.entities.work import (
     WorkDetailWork,
     WorkListFilters,
 )
-from core_logic.interfaces.work_repo import CreateWorkParams
+from core_logic.interfaces.work_repo import CreatedWorkFromOrphanVariantsRef
 from core_logic.services.work_service import WorkService
 from core_logic.use_cases.bulk_delete_variants import (
     BulkDeleteVariantsRequest,
@@ -90,8 +90,11 @@ class FakeWorkRepository:
         self.synced_work_id = None
         self.generated_variants_request = None
         self.orphan_variant_refs = []
-        self.created_work_params = None
-        self.attached_variants_params = None
+        self.created_from_orphans_params = None
+        self.create_from_orphans_result = CreatedWorkFromOrphanVariantsRef(
+            work_id='created-work',
+            variant_count=0,
+        )
         self.variant_delete_info = VariantDeleteInfo(task_count=0)
         self.detached_variant_id = None
         self.deleted_variant_id = None
@@ -197,13 +200,14 @@ class FakeWorkRepository:
             if variant.pk in requested_ids
         ]
 
-    def attach_variants_to_work(self, params):
-        self.attached_variants_params = params
-        return len(params.variant_ids)
-
-    def create_work(self, params: CreateWorkParams):
-        self.created_work_params = params
-        return 'created-work'
+    def create_work_from_orphan_variants(self, params):
+        self.created_from_orphans_params = params
+        if self.create_from_orphans_result is None:
+            return None
+        return CreatedWorkFromOrphanVariantsRef(
+            work_id=self.create_from_orphans_result.work_id,
+            variant_count=len(params.variant_ids),
+        )
 
     def get_variant_delete_info(self, variant_id):
         return self.variant_delete_info
@@ -531,13 +535,15 @@ class WorkDetailTests(TestCase):
         self.assertEqual(result.work_id, 'created-work')
         self.assertEqual(result.work_name, 'Повторение')
         self.assertEqual(result.variant_count, 2)
-        self.assertEqual(repo.created_work_params.name, 'Повторение')
-        self.assertEqual(repo.created_work_params.work_type, 'remedial')
-        self.assertEqual(repo.created_work_params.max_score, 5)
-        self.assertEqual(repo.created_work_params.variant_counter, 2)
-        self.assertEqual(repo.attached_variants_params.work_id, 'created-work')
+        self.assertEqual(repo.created_from_orphans_params.work.name, 'Повторение')
         self.assertEqual(
-            repo.attached_variants_params.variant_ids,
+            repo.created_from_orphans_params.work.work_type,
+            'remedial',
+        )
+        self.assertEqual(repo.created_from_orphans_params.work.max_score, 5)
+        self.assertEqual(repo.created_from_orphans_params.work.variant_counter, 2)
+        self.assertEqual(
+            repo.created_from_orphans_params.variant_ids,
             ['variant-1', 'variant-2'],
         )
 
@@ -569,7 +575,24 @@ class WorkDetailTests(TestCase):
 
         self.assertEqual(result.status, 'created')
         self.assertEqual(result.work_name, DEFAULT_ORPHAN_WORK_NAME)
-        self.assertEqual(repo.created_work_params.work_type, 'test')
+        self.assertEqual(repo.created_from_orphans_params.work.work_type, 'test')
+
+    def test_create_work_from_orphans_handles_concurrent_variant_attachment(self):
+        repo = FakeWorkRepository()
+        repo.orphan_variant_refs = [
+            OrphanVariantRef(
+                pk='variant-1',
+                variant_type='remedial',
+                total_max_points=3,
+            ),
+        ]
+        repo.create_from_orphans_result = None
+
+        result = CreateWorkFromOrphansUseCase(work_repo=repo).execute(
+            CreateWorkFromOrphansRequest(variant_ids=['variant-1'])
+        )
+
+        self.assertEqual(result.status, 'not_found')
 
     def test_get_variant_delete_info_use_case_delegates_to_repository(self):
         repo = FakeWorkRepository()

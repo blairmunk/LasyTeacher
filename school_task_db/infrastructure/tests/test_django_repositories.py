@@ -12,6 +12,7 @@ from core_logic.interfaces.event_repo import (
     GradeParticipationParams,
 )
 from core_logic.interfaces.work_repo import (
+    CreateWorkFromOrphanVariantsParams,
     CreateWorkParams,
     CreateWorkWithSpecificationParams,
     CreateWorkWithVariantsParams,
@@ -1635,6 +1636,23 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(second_orphan.number, 2)
         self.assertEqual(first_orphan.max_score_snapshot, 6)
         self.assertEqual(second_orphan.work_name_snapshot, work.name)
+
+    def test_work_repository_does_not_create_work_for_non_orphan_variant(self):
+        work_count = Work.objects.count()
+
+        created = DjangoWorkRepository().create_work_from_orphan_variants(
+            CreateWorkFromOrphanVariantsParams(
+                work=CreateWorkParams(
+                    name='Не должна сохраниться',
+                    work_type='remedial',
+                    variant_counter=1,
+                ),
+                variant_ids=[str(self.source_variant.pk)],
+            )
+        )
+
+        self.assertIsNone(created)
+        self.assertEqual(Work.objects.count(), work_count)
 
     def test_work_repository_creates_work_with_variant_from_tasks(self):
         repo = DjangoWorkRepository()

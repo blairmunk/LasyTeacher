@@ -41,10 +41,11 @@ from core_logic.value_objects.task_print_settings import (
 )
 from core_logic.value_objects.task_scores import task_score_records_by_task_id
 from core_logic.interfaces.work_repo import (
-    AttachVariantsToWorkParams,
+    CreatedWorkFromOrphanVariantsRef,
     CreatedWorkWithVariantsRef,
     CreatedWorkVariantRef,
     CreateVariantParams,
+    CreateWorkFromOrphanVariantsParams,
     CreateWorkParams,
     CreateWorkWithSpecificationParams,
     CreateWorkWithVariantsParams,
@@ -773,7 +774,10 @@ class DjangoWorkRepository(
             ).order_by('created_at')
         ]
 
-    def attach_variants_to_work(self, params: AttachVariantsToWorkParams) -> int:
+    def create_work_from_orphan_variants(
+        self,
+        params: CreateWorkFromOrphanVariantsParams,
+    ) -> Optional[CreatedWorkFromOrphanVariantsRef]:
         with transaction.atomic():
             variants = list(
                 Variant.objects.select_for_update().filter(
@@ -781,19 +785,30 @@ class DjangoWorkRepository(
                     work__isnull=True,
                 ).order_by('created_at')
             )
+            if len(variants) != len(params.variant_ids):
+                return None
+
+            work_id = self.create_work(params.work)
             variant_by_id = {str(variant.pk): variant for variant in variants}
-            attached_count = 0
             for number, variant_id in enumerate(params.variant_ids, 1):
-                variant = variant_by_id.get(variant_id)
-                if not variant:
-                    continue
-                variant.work_id = params.work_id
+                variant = variant_by_id[variant_id]
+                variant.work_id = work_id
                 variant.number = number
-                variant.work_name_snapshot = params.work_name_snapshot
-                variant.max_score_snapshot = params.max_score_snapshot
-                variant.save()
-                attached_count += 1
-        return attached_count
+                variant.work_name_snapshot = params.work.name
+                variant.max_score_snapshot = params.work.max_score
+            Variant.objects.bulk_update(
+                variants,
+                [
+                    'work',
+                    'number',
+                    'work_name_snapshot',
+                    'max_score_snapshot',
+                ],
+            )
+        return CreatedWorkFromOrphanVariantsRef(
+            work_id=work_id,
+            variant_count=len(variants),
+        )
 
     def get_variant_delete_info(self, variant_id: str) -> Optional[VariantDeleteInfo]:
         variant = Variant.objects.select_related('work').filter(pk=variant_id).first()

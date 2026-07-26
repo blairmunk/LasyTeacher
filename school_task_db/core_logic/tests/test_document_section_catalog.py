@@ -194,6 +194,11 @@ class DocumentSectionCatalogTests(TestCase):
         )
         self.assertTrue(section_by_type[BLANK_CELLS_SECTION].has_options)
         self.assertIn('rows', section_by_type[BLANK_CELLS_SECTION].options_example)
+        self.assertTrue(section_by_type[THEORY_SECTION].has_options)
+        self.assertIn(
+            'include_subtopics',
+            section_by_type[THEORY_SECTION].options_example,
+        )
         self.assertFalse(section_by_type[HEADER_SECTION].has_options)
 
     def test_validates_supported_sections(self):

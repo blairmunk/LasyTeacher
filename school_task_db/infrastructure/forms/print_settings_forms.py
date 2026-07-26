@@ -19,6 +19,7 @@ from core_logic.value_objects.document_render_options import FILE_TYPE_LABELS
 from core_logic.value_objects.document_recipes import (
     BLANK_CELLS_SECTION,
     TASK_LIST_SECTION,
+    THEORY_SECTION,
 )
 from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_SPECIFIC_CHOICES,
@@ -119,6 +120,9 @@ class PrintSettingsFormAdapter:
                         if section.section_type == TASK_LIST_SECTION
                         else ()
                     ),
+                    'has_theory_controls': (
+                        section.section_type == THEORY_SECTION
+                    ),
                 }
                 for section in sections
             ],
@@ -175,6 +179,7 @@ class PrintSettingsFormAdapter:
                 section.section_type in (
                     BLANK_CELLS_SECTION,
                     TASK_LIST_SECTION,
+                    THEORY_SECTION,
                 )
             ),
             'has_blank_cells_controls': (

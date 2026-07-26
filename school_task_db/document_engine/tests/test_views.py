@@ -85,6 +85,10 @@ class PrintSettingsViewTests(TestCase):
         self.assertContains(response, 'name="blank_cells_rows"')
         self.assertContains(response, 'name="blank_cells_columns"')
         self.assertContains(response, 'name="blank_cells_row_height"')
+        self.assertNotContains(response, 'name="section_options__theory"')
+        self.assertContains(response, 'name="theory_structured_options"')
+        self.assertContains(response, 'name="theory_section_title"')
+        self.assertContains(response, 'name="theory_include_subtopics"')
         self.assertNotContains(response, 'name="section_options__header"')
         self.assertContains(response, 'Порядок секций')
         self.assertContains(response, 'можно повторять')
@@ -274,6 +278,39 @@ class PrintSettingsViewTests(TestCase):
             ],
         )
 
+    def test_print_settings_create_view_saves_theory_controls(self):
+        response = self.client.post(
+            reverse('document_engine:print-profile-create'),
+            {
+                'name': 'Лист с теорией',
+                'document_type': 'work',
+                'sections': ['header', 'theory', 'task_list'],
+                'theory_structured_options': '1',
+                'theory_section_title': 'Перед началом работы',
+                'theory_include_subtopics': 'on',
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('document_engine:print-profile-editor'),
+        )
+        template = PrintSettings.objects.get(name='Лист с теорией')
+        self.assertEqual(
+            template.sections_config,
+            [
+                {'type': 'header'},
+                {
+                    'type': 'theory',
+                    'params': {
+                        'section_title': 'Перед началом работы',
+                        'include_subtopics': True,
+                    },
+                },
+                {'type': 'task_list'},
+            ],
+        )
+
     def test_print_settings_create_view_shows_invalid_section_options_error(self):
         response = self.client.post(
             reverse('document_engine:print-profile-create'),
@@ -378,6 +415,34 @@ class PrintSettingsViewTests(TestCase):
             form['task_list_practice_blank_cells_rows'].value(),
             6,
         )
+
+    def test_print_settings_update_view_shows_existing_theory_options(self):
+        template = PrintSettings.objects.create(
+            name='Теоретический лист',
+            document_type=PrintSettings.DocumentType.WORK,
+            sections_config=[
+                {
+                    'type': 'theory',
+                    'params': {
+                        'section_title': 'Опорный конспект',
+                        'include_subtopics': True,
+                    },
+                },
+                {'type': 'task_list'},
+            ],
+        )
+
+        response = self.client.get(
+            reverse('document_engine:print-profile-update', args=[template.pk]),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        self.assertEqual(
+            form['theory_section_title'].value(),
+            'Опорный конспект',
+        )
+        self.assertTrue(form['theory_include_subtopics'].value())
 
     def test_print_settings_update_view_updates_template(self):
         template = PrintSettings.objects.create(

@@ -205,6 +205,13 @@ DOCUMENT_SECTION_CATALOG = (
         ),
         renderable_document_types=(WORK_DOCUMENT_TYPE,),
         description='Теоретическая справка или опорный материал.',
+        options_hint=(
+            'Можно изменить заголовок блока и включить описания подтем.'
+        ),
+        options_example={
+            'section_title': 'Теоретическая справка',
+            'include_subtopics': True,
+        },
     ),
     DocumentSectionCatalogItem(
         section_type=PAGE_BREAK_SECTION,

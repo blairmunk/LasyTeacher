@@ -178,7 +178,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=WorkDocumentRenderOptions(renderer_type='html'),
-                    template_spec=DocumentTemplateSpec(
+                    print_settings_spec=DocumentTemplateSpec(
                         name='Вариантная работа',
                         template_type='work',
                         sections=[
@@ -239,7 +239,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=options,
-                    template_spec=DocumentTemplateSpec(
+                    print_settings_spec=DocumentTemplateSpec(
                         name='Legacy work template',
                         template_type='work',
                         sections=[
@@ -291,7 +291,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=options,
-                    template_spec=DocumentTemplateSpec(
+                    print_settings_spec=DocumentTemplateSpec(
                         name='Legacy answer template',
                         template_type='work',
                         sections=[
@@ -355,7 +355,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=WorkDocumentRenderOptions(renderer_type='html'),
-                    template_spec=DocumentTemplateSpec(
+                    print_settings_spec=DocumentTemplateSpec(
                         name='Work with theory',
                         template_type='work',
                         sections=[

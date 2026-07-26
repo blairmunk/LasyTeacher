@@ -1,6 +1,6 @@
 """Render document files for a remedial sheet."""
 
-from dataclasses import InitVar, dataclass
+from dataclasses import dataclass
 
 from core_logic.entities.document import PrintSettingsSpec
 from core_logic.entities.document_rendering import (
@@ -36,14 +36,6 @@ class RenderRemedialSheetDocumentRequest:
     options: RemedialSheetDocumentRenderOptions
     print_settings_spec: PrintSettingsSpec | None = None
     print_settings_id: str = ''
-    template_spec: InitVar[PrintSettingsSpec | None] = None
-    template_id: InitVar[str] = ''
-
-    def __post_init__(self, template_spec, template_id):
-        if self.print_settings_spec is None and template_spec is not None:
-            object.__setattr__(self, 'print_settings_spec', template_spec)
-        if not self.print_settings_id and template_id:
-            object.__setattr__(self, 'print_settings_id', template_id)
 
 
 class RenderRemedialSheetDocumentUseCase:
@@ -51,7 +43,6 @@ class RenderRemedialSheetDocumentUseCase:
         self,
         work_repo: IWorkRepository | None = None,
         print_settings_repo: IPrintSettingsRepository | None = None,
-        document_template_repo: IPrintSettingsRepository | None = None,
         document_engine: IDocumentEngine | None = None,
         render_document_use_case: RenderDocumentUseCase | None = None,
     ):
@@ -62,8 +53,7 @@ class RenderRemedialSheetDocumentUseCase:
                 document_engine=document_engine,
             )
         self.work_repo = work_repo
-        self.print_settings_repo = print_settings_repo or document_template_repo
-        self.document_template_repo = self.print_settings_repo
+        self.print_settings_repo = print_settings_repo
 
     def execute(
         self,

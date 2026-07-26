@@ -268,7 +268,6 @@ class DocumentRenderingUseCaseTests(TestCase):
             print_settings_repo=template_repo,
         )
         self.assertIs(use_case.print_settings_repo, template_repo)
-        self.assertIs(use_case.document_template_repo, template_repo)
         template_spec = DocumentTemplateSpec(
             name='Кастомная работа',
             template_type='work',
@@ -285,7 +284,7 @@ class DocumentRenderingUseCaseTests(TestCase):
             RenderWorkDocumentRequest(
                 work_id='work-1',
                 options=WorkDocumentRenderOptions(renderer_type='html'),
-                template_spec=template_spec,
+                print_settings_spec=template_spec,
             )
         )
 
@@ -307,7 +306,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         use_case = RenderWorkDocumentUseCase(
             document_engine=service,
             work_repo=FakeWorkRepository(),
-            document_template_repo=template_repo,
+            print_settings_repo=template_repo,
         )
         print_settings_spec = DocumentTemplateSpec(
             name='Профиль печати',
@@ -338,7 +337,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         use_case = RenderWorkDocumentUseCase(
             document_engine=service,
             work_repo=FakeWorkRepository(),
-            document_template_repo=template_repo,
+            print_settings_repo=template_repo,
         )
 
         result = use_case.execute(
@@ -353,7 +352,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         render_plan = service.render_request
         self.assertEqual(render_plan.recipe.section_types, (TASK_LIST_SECTION,))
 
-    def test_render_work_document_uses_template_id(self):
+    def test_render_work_document_uses_print_settings_id(self):
         service = FakeDocumentEngine()
         template_repo = FakeDocumentTemplateRepository()
         template_repo.templates_by_id[('template-work', 'work')] = (
@@ -367,14 +366,14 @@ class DocumentRenderingUseCaseTests(TestCase):
         use_case = RenderWorkDocumentUseCase(
             document_engine=service,
             work_repo=FakeWorkRepository(),
-            document_template_repo=template_repo,
+            print_settings_repo=template_repo,
         )
 
         result = use_case.execute(
             RenderWorkDocumentRequest(
                 work_id='work-1',
                 options=WorkDocumentRenderOptions(renderer_type='html'),
-                template_id='template-work',
+                print_settings_id='template-work',
             )
         )
 
@@ -467,7 +466,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         use_case = RenderRemedialSheetDocumentUseCase(
             document_engine=service,
             work_repo=FakeWorkRepository(),
-            document_template_repo=template_repo,
+            print_settings_repo=template_repo,
         )
         template_spec = DocumentTemplateSpec(
             name='Кастомная работа над ошибками',
@@ -482,7 +481,7 @@ class DocumentRenderingUseCaseTests(TestCase):
             RenderRemedialSheetDocumentRequest(
                 variant_id='variant-1',
                 options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
-                template_spec=template_spec,
+                print_settings_spec=template_spec,
             )
         )
 
@@ -505,7 +504,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         use_case = RenderRemedialSheetDocumentUseCase(
             document_engine=service,
             work_repo=FakeWorkRepository(),
-            document_template_repo=template_repo,
+            print_settings_repo=template_repo,
         )
 
         result = use_case.execute(
@@ -523,7 +522,9 @@ class DocumentRenderingUseCaseTests(TestCase):
         render_plan = service.render_request
         self.assertEqual(render_plan.recipe.section_types, (TASK_LIST_SECTION,))
 
-    def test_render_remedial_sheet_document_uses_template_id(self):
+    def test_render_remedial_sheet_document_uses_selected_print_settings_id(
+        self,
+    ):
         service = FakeDocumentEngine()
         template_repo = FakeDocumentTemplateRepository()
         template_repo.templates_by_id[('template-rno', 'remedial_sheet')] = (
@@ -537,14 +538,14 @@ class DocumentRenderingUseCaseTests(TestCase):
         use_case = RenderRemedialSheetDocumentUseCase(
             document_engine=service,
             work_repo=FakeWorkRepository(),
-            document_template_repo=template_repo,
+            print_settings_repo=template_repo,
         )
 
         result = use_case.execute(
             RenderRemedialSheetDocumentRequest(
                 variant_id='variant-1',
                 options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
-                template_id='template-rno',
+                print_settings_id='template-rno',
             )
         )
 
@@ -569,7 +570,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         use_case = RenderRemedialSheetDocumentUseCase(
             document_engine=service,
             work_repo=FakeWorkRepository(),
-            document_template_repo=template_repo,
+            print_settings_repo=template_repo,
         )
 
         result = use_case.execute(

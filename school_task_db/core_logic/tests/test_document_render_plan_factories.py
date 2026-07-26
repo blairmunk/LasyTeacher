@@ -89,7 +89,7 @@ class DocumentRenderPlanFactoriesTests(TestCase):
 
         recipe = build_work_document_recipe_for_render(
             WorkDocumentRenderOptions(renderer_type='html'),
-            template_spec=template_spec,
+            print_settings_spec=template_spec,
         )
 
         self.assertEqual(recipe.section_types, (HEADER_SECTION,))
@@ -120,7 +120,7 @@ class DocumentRenderPlanFactoriesTests(TestCase):
                 renderer_type='html',
                 document_style=WORK_DOCUMENT_STYLE_WORKSHEET,
             ),
-            template_spec=template_spec,
+            print_settings_spec=template_spec,
         )
 
         self.assertEqual(recipe.section_types, (HEADER_SECTION,))
@@ -172,7 +172,7 @@ class DocumentRenderPlanFactoriesTests(TestCase):
             work_id='work-1',
             work_name='Контрольная',
             options=WorkDocumentRenderOptions(renderer_type='html'),
-            template_spec=template_spec,
+            print_settings_spec=template_spec,
         )
 
         self.assertEqual(plan.recipe.document_type, 'work')
@@ -200,7 +200,7 @@ class DocumentRenderPlanFactoriesTests(TestCase):
             work_id='work-1',
             work_name='Контрольная',
             options=WorkDocumentRenderOptions(renderer_type='html'),
-            template_spec=template_spec,
+            print_settings_spec=template_spec,
             variant_ids=['variant-1', 'variant-2'],
         )
 
@@ -240,7 +240,7 @@ class DocumentRenderPlanFactoriesTests(TestCase):
                 renderer_type='html',
                 break_between_variants=False,
             ),
-            template_spec=template_spec,
+            print_settings_spec=template_spec,
             variant_ids=['variant-1', 'variant-2'],
         )
 
@@ -294,7 +294,7 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         plan = build_remedial_sheet_document_render_plan(
             variant_id='variant-1',
             options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
-            template_spec=template_spec,
+            print_settings_spec=template_spec,
         )
 
         self.assertEqual(plan.recipe.document_type, 'remedial_sheet')

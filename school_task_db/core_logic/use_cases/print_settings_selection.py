@@ -11,9 +11,7 @@ def resolve_document_print_settings_spec(
     request_print_settings_spec: PrintSettingsSpec | None = None,
     request_print_settings_id: str = '',
     print_settings_repo: IPrintSettingsRepository | None = None,
-    document_template_repo: IPrintSettingsRepository | None = None,
 ) -> PrintSettingsSpec | None:
-    print_settings_repo = print_settings_repo or document_template_repo
     if request_print_settings_spec is not None:
         return request_print_settings_spec
     if print_settings_repo is None:

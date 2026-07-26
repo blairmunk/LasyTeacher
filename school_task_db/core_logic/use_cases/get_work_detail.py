@@ -21,12 +21,10 @@ class GetWorkDetailUseCase:
         work_repo: IWorkRepository,
         work_service: WorkService,
         print_settings_repo: IPrintSettingsRepository | None = None,
-        document_template_repo: IPrintSettingsRepository | None = None,
     ):
         self.work_repo = work_repo
         self.work_service = work_service
-        self.print_settings_repo = print_settings_repo or document_template_repo
-        self.document_template_repo = self.print_settings_repo
+        self.print_settings_repo = print_settings_repo
 
     def execute(self, work_id: str) -> WorkDetailData:
         work = self.work_repo.get_work_detail(work_id)

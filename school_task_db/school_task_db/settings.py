@@ -51,10 +51,6 @@ DOCUMENT_ENGINE_PDF_SETTINGS = {
     'OUTPUT_DIR': 'pdf_output',
 }
 
-# Legacy alias for external/local settings that still import the old name.
-PDF_GENERATOR_SETTINGS = DOCUMENT_ENGINE_PDF_SETTINGS
-
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

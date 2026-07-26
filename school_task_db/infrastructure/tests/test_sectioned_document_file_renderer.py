@@ -152,18 +152,6 @@ class SectionedHtmlToPdfDocumentRendererTests(SimpleTestCase):
         self.assertEqual(renderer.options['format'], 'Letter')
         self.assertFalse(renderer.options['print_background'])
 
-    @override_settings(
-        DOCUMENT_ENGINE_PDF_SETTINGS=None,
-        PDF_GENERATOR_SETTINGS={
-            'DEFAULT_FORMAT': 'Legal',
-        },
-    )
-    def test_html_to_pdf_renderer_falls_back_to_legacy_settings_name(self):
-        renderer = HtmlToPdfRenderer()
-
-        self.assertEqual(renderer.options['format'], 'Legal')
-
-
 class FakeContentRenderer:
     def __init__(self, content='content'):
         self.content = content

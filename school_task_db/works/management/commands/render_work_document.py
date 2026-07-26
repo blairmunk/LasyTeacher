@@ -23,7 +23,16 @@ class Command(BaseCommand):
             choices=['A4', 'A5', 'Letter'],
             default='A4',
         )
-        parser.add_argument('--with-answers', action='store_true')
+        parser.add_argument(
+            '--answer-type',
+            choices=[
+                'tasks_only',
+                'with_answers',
+                'with_short_solutions',
+                'with_full_solutions',
+            ],
+            default='tasks_only',
+        )
 
     def handle(self, *args, **options):
         result = render_work_document_with_container(
@@ -31,7 +40,7 @@ class Command(BaseCommand):
             work_id=options['work_id'],
             renderer_type=options['renderer'],
             page_format=options['page_format'],
-            with_answers=options['with_answers'],
+            answer_type=options['answer_type'],
         )
 
         raise_for_work_document_render_error(

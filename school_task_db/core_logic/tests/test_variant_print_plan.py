@@ -14,8 +14,6 @@ from core_logic.value_objects.task_print_settings import (
 from core_logic.value_objects.variant_print_plan import (
     VARIANT_PRINT_BLOCK_BLANK_CELLS,
     VARIANT_PRINT_BLOCK_TASK,
-    VariantTaskPrintRow,
-    build_variant_print_plan,
     build_variant_print_profile_from_options,
     build_variant_print_plan_from_content_plan,
 )
@@ -209,24 +207,9 @@ class VariantPrintPlanTests(TestCase):
             ['vt-2'],
         )
 
-    def test_build_variant_print_plan_keeps_legacy_row_api(self):
-        plan = build_variant_print_plan(
-            variant_id='variant-1',
-            task_rows=[
-                VariantTaskPrintRow(
-                    variant_task_id='vt-1',
-                    task_id='task-1',
-                    order=1,
-                ),
-            ],
-        )
-
-        self.assertEqual(plan.variant_id, 'variant-1')
-        self.assertEqual(plan.blocks[0].variant_task_id, 'vt-1')
-
     def test_rejects_any_role_for_concrete_variant_task_row(self):
         with self.assertRaisesRegex(ValueError, 'Unsupported specific task bank role'):
-            VariantTaskPrintRow(
+            VariantContentItem(
                 variant_task_id='vt-1',
                 task_id='task-1',
                 order=1,
@@ -235,7 +218,7 @@ class VariantPrintPlanTests(TestCase):
 
     def test_rejects_non_positive_blank_cells_rows(self):
         with self.assertRaisesRegex(ValueError, 'blank_cells_rows must be positive'):
-            VariantTaskPrintRow(
+            VariantContentItem(
                 variant_task_id='vt-1',
                 task_id='task-1',
                 order=1,

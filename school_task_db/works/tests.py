@@ -82,7 +82,8 @@ class RenderWorkDocumentCommandTests(TestCase):
                 'html',
                 '--page-format',
                 'A5',
-                '--with-answers',
+                '--answer-type',
+                'with_answers',
                 stdout=stdout,
             )
 

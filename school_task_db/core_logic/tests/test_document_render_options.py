@@ -114,16 +114,6 @@ class DocumentRenderOptionsTests(TestCase):
             'рабочий лист: с ответами + подсказки',
         )
 
-    def test_supports_legacy_with_answers_flag(self):
-        options = build_work_render_options({
-            'answer_type': 'tasks_only',
-            'with_answers': '1',
-        })
-
-        self.assertEqual(options.answer_type, 'with_answers')
-        self.assertEqual(options.content_description, 'с ответами')
-        self.assertTrue(options.content_config['include_answers'])
-
     def test_builds_full_solution_work_render_options(self):
         options = build_work_render_options({
             'renderer_type': 'html',

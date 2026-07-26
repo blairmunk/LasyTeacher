@@ -284,13 +284,9 @@ class RemedialSheetDocumentRenderOptions:
 def build_work_render_options(
     data: Mapping[str, str],
 ) -> WorkDocumentRenderOptions:
-    answer_type = data.get('answer_type', 'tasks_only')
-    if data.get('with_answers', '0') == '1' and answer_type == 'tasks_only':
-        answer_type = 'with_answers'
-
     return WorkDocumentRenderOptions(
         render_target=build_render_target_from_data(data),
-        answer_type=answer_type,
+        answer_type=data.get('answer_type', 'tasks_only'),
         include_hints=data.get('include_hints', '0') == '1',
         include_instructions=data.get('include_instructions', '0') == '1',
         break_between_variants=data.get('break_between_variants', '1') == '1',

@@ -214,15 +214,12 @@ class DocumentModelTests(TestCase):
         )
 
         recipe = print_settings.to_print_recipe()
-        compatible_recipe = print_settings.to_recipe()
         overridden_recipe = print_settings.to_print_recipe(
             document_type=CUSTOM_DOCUMENT_TYPE,
         )
 
         self.assertEqual(recipe.document_type, REMEDIAL_SHEET_DOCUMENT_TYPE)
         self.assertEqual(recipe.section_types, ('header', 'answers'))
-        self.assertEqual(compatible_recipe.document_type, recipe.document_type)
-        self.assertEqual(compatible_recipe.section_types, recipe.section_types)
         self.assertEqual(overridden_recipe.document_type, CUSTOM_DOCUMENT_TYPE)
 
     def test_print_settings_spec_preserves_identity(self):

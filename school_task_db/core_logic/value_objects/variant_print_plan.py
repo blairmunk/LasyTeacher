@@ -10,7 +10,6 @@ from core_logic.value_objects.task_print_settings import (
 from core_logic.value_objects.variant_content_plan import (
     VariantContentItem,
     VariantContentPlan,
-    build_variant_content_plan,
 )
 
 VARIANT_PRINT_BLOCK_TASK = 'task'
@@ -22,10 +21,6 @@ VARIANT_PRINT_BLOCK_TYPES = frozenset(
         VARIANT_PRINT_BLOCK_BLANK_CELLS,
     )
 )
-
-
-VariantTaskPrintRow = VariantContentItem
-
 
 @dataclass(frozen=True)
 class VariantPrintProfile:
@@ -111,18 +106,6 @@ class VariantPrintPlan:
             for block in self.task_blocks
             if block.options.get('is_assessable')
         )
-
-
-def build_variant_print_plan(
-    variant_id: str,
-    task_rows,
-) -> VariantPrintPlan:
-    return build_variant_print_plan_from_content_plan(
-        build_variant_content_plan(
-            variant_id=variant_id,
-            items=task_rows,
-        )
-    )
 
 
 def build_variant_print_plan_from_content_plan(

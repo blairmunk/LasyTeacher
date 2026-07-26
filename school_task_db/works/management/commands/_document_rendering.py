@@ -22,7 +22,7 @@ def render_work_document_with_container(
     work_id: str,
     renderer_type: str,
     page_format: str = 'A4',
-    with_answers: bool = False,
+    answer_type: str = 'tasks_only',
 ):
     return render_container.render_work_document_use_case().execute(
         RenderWorkDocumentRequest(
@@ -30,11 +30,7 @@ def render_work_document_with_container(
             options=WorkDocumentRenderOptions(
                 renderer_type=renderer_type,
                 pdf_format=page_format,
-                answer_type=(
-                    'with_answers'
-                    if with_answers
-                    else 'tasks_only'
-                ),
+                answer_type=answer_type,
             ),
         )
     )

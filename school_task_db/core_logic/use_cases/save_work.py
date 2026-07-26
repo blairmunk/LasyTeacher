@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from typing import List
 
 from core_logic.interfaces.work_repo import (
-    CreateWorkAnalogGroupParams,
     CreateWorkParams,
     IWorkRepository,
+    WorkSpecificationRowParams,
 )
 from core_logic.value_objects.work_specification import WorkTaskRoleSpec
 
@@ -20,7 +20,7 @@ class SaveWorkResult:
 @dataclass(frozen=True)
 class SaveWorkSpecificationRequest:
     work_id: str
-    specs: List[CreateWorkAnalogGroupParams]
+    specs: List[WorkSpecificationRowParams]
 
 
 @dataclass(frozen=True)
@@ -52,7 +52,7 @@ class UpdateWorkUseCase:
 
 
 def validate_work_specification_specs(
-    specs: List[CreateWorkAnalogGroupParams],
+    specs: List[WorkSpecificationRowParams],
 ) -> tuple[str, ...]:
     errors = []
     for index, spec in enumerate(specs, start=1):

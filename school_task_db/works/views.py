@@ -1,5 +1,3 @@
-from dataclasses import replace
-
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.http import Http404, JsonResponse
@@ -83,7 +81,6 @@ class WorkCreateView(TemplateView):
 
         specs = container.work_form_adapter.work_specs_from_formset(
             formset,
-            work_id='',
         )
         spec_errors = validate_work_specification_specs(specs)
         if spec_errors:
@@ -95,10 +92,6 @@ class WorkCreateView(TemplateView):
         result = container.create_work_use_case().execute(
             container.work_form_adapter.work_params_from_form(form),
         )
-        specs = [
-            replace(spec, work_id=result.work_id)
-            for spec in specs
-        ]
         specification_result = container.save_work_specification_use_case().execute(
             SaveWorkSpecificationRequest(
                 work_id=result.work_id,
@@ -174,7 +167,6 @@ class WorkUpdateView(TemplateView):
 
         specs = container.work_form_adapter.work_specs_from_formset(
             formset,
-            result.work_id,
         )
         specification_result = container.save_work_specification_use_case().execute(
             SaveWorkSpecificationRequest(

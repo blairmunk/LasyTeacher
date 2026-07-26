@@ -12,9 +12,10 @@ from core_logic.interfaces.event_repo import (
     GradeParticipationParams,
 )
 from core_logic.interfaces.work_repo import (
-    CreateWorkAnalogGroupParams,
     CreateWorkParams,
+    CreateWorkWithSpecificationParams,
     CreateWorkWithVariantFromTasksParams,
+    WorkSpecificationRowParams,
 )
 from core_logic.entities.task import (
     SourceCreateParams,
@@ -404,8 +405,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         updated = repo.replace_work_analog_groups(
             work_id=str(self.source_work.pk),
             specs=[
-                CreateWorkAnalogGroupParams(
-                    work_id=str(self.source_work.pk),
+                WorkSpecificationRowParams(
                     analog_group_id=str(new_group.pk),
                     order=2,
                     count=3,
@@ -426,6 +426,37 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(specs[0].order, 2)
         self.assertEqual(specs[0].count, 3)
         self.assertEqual(specs[0].weight, 4)
+
+    def test_work_repository_creates_work_with_specification(self):
+        group = AnalogGroup.objects.create(name='Спецификация новой работы')
+
+        work_id = DjangoWorkRepository().create_work_with_specification(
+            CreateWorkWithSpecificationParams(
+                work=CreateWorkParams(
+                    name='Работа со спецификацией',
+                    work_type='practice',
+                    duration=35,
+                    max_score=6,
+                ),
+                specs=[
+                    WorkSpecificationRowParams(
+                        analog_group_id=str(group.pk),
+                        order=1,
+                        count=2,
+                        weight=3,
+                    ),
+                ],
+            )
+        )
+
+        work = Work.objects.get(pk=work_id)
+        spec = WorkAnalogGroup.objects.get(work=work)
+        self.assertEqual(work.name, 'Работа со спецификацией')
+        self.assertEqual(work.work_type, 'practice')
+        self.assertEqual(work.duration, 35)
+        self.assertEqual(spec.analog_group, group)
+        self.assertEqual(spec.count, 2)
+        self.assertEqual(spec.weight, 3)
 
     def test_student_repository_creates_and_updates_student(self):
         repo = DjangoStudentRepository()

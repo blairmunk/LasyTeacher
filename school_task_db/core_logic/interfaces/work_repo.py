@@ -57,8 +57,7 @@ class AttachVariantsToWorkParams:
 
 
 @dataclass(frozen=True)
-class CreateWorkAnalogGroupParams:
-    work_id: str
+class WorkSpecificationRowParams:
     analog_group_id: str
     order: int
     count: int
@@ -68,6 +67,12 @@ class CreateWorkAnalogGroupParams:
     is_assessable: bool = True
     blank_cells_after: bool = False
     blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
+
+
+@dataclass(frozen=True)
+class CreateWorkWithSpecificationParams:
+    work: CreateWorkParams
+    specs: List[WorkSpecificationRowParams]
 
 
 @dataclass(frozen=True)
@@ -208,14 +213,17 @@ class IWorkRepository(ABC):
         """Update a work and return whether it was found."""
 
     @abstractmethod
-    def create_work_analog_group(self, params: CreateWorkAnalogGroupParams) -> None:
-        """Create one work analog-group specification row."""
+    def create_work_with_specification(
+        self,
+        params: CreateWorkWithSpecificationParams,
+    ) -> str:
+        """Create a work and its specification atomically."""
 
     @abstractmethod
     def replace_work_analog_groups(
         self,
         work_id: str,
-        specs: List[CreateWorkAnalogGroupParams],
+        specs: List[WorkSpecificationRowParams],
     ) -> bool:
         """Replace a work specification and return whether the work was found."""
 

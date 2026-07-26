@@ -43,11 +43,12 @@ from core_logic.value_objects.task_scores import task_score_records_by_task_id
 from core_logic.interfaces.work_repo import (
     AttachVariantsToWorkParams,
     CreatedWorkVariantRef,
-    CreateWorkAnalogGroupParams,
     CreateVariantParams,
     CreateWorkParams,
+    CreateWorkWithSpecificationParams,
     CreateWorkWithVariantFromTasksParams,
     IWorkRepository,
+    WorkSpecificationRowParams,
 )
 from core_logic.interfaces.work_document_repo import IWorkDocumentRepository
 from core_logic.services.work_spec_sync_service import WorkSpecSyncService
@@ -874,24 +875,39 @@ class DjangoWorkRepository(IWorkRepository, IWorkDocumentRepository):
         work.save()
         return True
 
-    def create_work_analog_group(self, params: CreateWorkAnalogGroupParams) -> None:
-        WorkAnalogGroup.objects.create(
-            work_id=params.work_id,
-            analog_group_id=params.analog_group_id,
-            order=params.order,
-            count=params.count,
-            weight=params.weight,
-            bank_role_filter=params.bank_role_filter,
-            render_mode=params.render_mode,
-            is_assessable=params.is_assessable,
-            blank_cells_after=params.blank_cells_after,
-            blank_cells_rows=params.blank_cells_rows,
-        )
+    def create_work_with_specification(
+        self,
+        params: CreateWorkWithSpecificationParams,
+    ) -> str:
+        with transaction.atomic():
+            work = Work.objects.create(
+                name=params.work.name,
+                work_type=params.work.work_type,
+                duration=params.work.duration,
+                max_score=params.work.max_score,
+                variant_counter=params.work.variant_counter,
+            )
+            WorkAnalogGroup.objects.bulk_create([
+                WorkAnalogGroup(
+                    work=work,
+                    analog_group_id=spec.analog_group_id,
+                    order=spec.order,
+                    count=spec.count,
+                    weight=spec.weight,
+                    bank_role_filter=spec.bank_role_filter,
+                    render_mode=spec.render_mode,
+                    is_assessable=spec.is_assessable,
+                    blank_cells_after=spec.blank_cells_after,
+                    blank_cells_rows=spec.blank_cells_rows,
+                )
+                for spec in params.specs
+            ])
+        return str(work.pk)
 
     def replace_work_analog_groups(
         self,
         work_id: str,
-        specs: List[CreateWorkAnalogGroupParams],
+        specs: List[WorkSpecificationRowParams],
     ) -> bool:
         if not Work.objects.filter(pk=work_id).exists():
             return False

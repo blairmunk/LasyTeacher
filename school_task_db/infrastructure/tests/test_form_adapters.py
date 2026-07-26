@@ -1712,10 +1712,9 @@ class WorkFormAdapterTests(SimpleTestCase):
             ],
         )
 
-        specs = WorkFormAdapter().work_specs_from_formset(formset, work_id='work-1')
+        specs = WorkFormAdapter().work_specs_from_formset(formset)
 
         self.assertEqual(len(specs), 1)
-        self.assertEqual(specs[0].work_id, 'work-1')
         self.assertEqual(specs[0].analog_group_id, 'group-1')
         self.assertEqual(specs[0].order, 2)
         self.assertEqual(specs[0].weight, 1)

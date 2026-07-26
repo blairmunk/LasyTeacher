@@ -4,8 +4,8 @@ from django.urls import reverse
 from django.core.paginator import Paginator
 
 from core_logic.interfaces.work_repo import (
-    CreateWorkAnalogGroupParams,
     CreateWorkParams,
+    WorkSpecificationRowParams,
 )
 from core_logic.entities.work import WorkListFilters
 from core_logic.use_cases.render_remedial_sheet_document import (
@@ -189,7 +189,7 @@ class WorkFormAdapter:
             'error': message,
         }
 
-    def work_specs_from_formset(self, formset, work_id):
+    def work_specs_from_formset(self, formset):
         specs = []
         for row in formset.cleaned_data:
             if not row or row.get('DELETE'):
@@ -200,8 +200,7 @@ class WorkFormAdapter:
                 continue
 
             specs.append(
-                CreateWorkAnalogGroupParams(
-                    work_id=work_id,
+                WorkSpecificationRowParams(
                     analog_group_id=str(analog_group.pk),
                     order=row.get('order') or 0,
                     count=row.get('count') or 1,

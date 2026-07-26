@@ -5,16 +5,17 @@ from typing import Any, Mapping, List
 
 from core_logic.interfaces.task_repo import ITaskRepository
 from core_logic.interfaces.work_repo import (
-    CreateWorkAnalogGroupParams,
     CreateWorkParams,
+    CreateWorkWithSpecificationParams,
     IWorkRepository,
+    WorkSpecificationRowParams,
 )
+from core_logic.use_cases.save_work import validate_work_specification_specs
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_ANY,
     TASK_RENDER_MODE_TASK_ONLY,
 )
-from core_logic.value_objects.work_specification import WorkTaskRoleSpec
 
 
 @dataclass(frozen=True)
@@ -142,41 +143,13 @@ class CreateWorkFromGroupsUseCase:
                 message='Некоторые группы не найдены',
             )
 
-        for group in request.groups:
-            try:
-                WorkTaskRoleSpec(
-                    analog_group_id=group.id,
-                    count=group.count,
-                    order=group.order,
-                    bank_role_filter=group.bank_role_filter,
-                    render_mode=group.render_mode,
-                    is_assessable=group.is_assessable,
-                    blank_cells_after=group.blank_cells_after,
-                    blank_cells_rows=group.blank_cells_rows,
-                    weight=group.weight,
-                )
-            except ValueError as error:
-                return CreateWorkFromGroupsResult(
-                    status='invalid_group_spec',
-                    message=str(error),
-                )
-
-        work_id = self.work_repo.create_work(
-            CreateWorkParams(
-                name=work_name,
-                work_type=request.work_type,
-                max_score=max(0, int(request.max_score)),
-            )
-        )
-
+        specs = []
         for position, group in enumerate(request.groups, 1):
             weight = group.weight
             if weight <= 0:
                 weight = self.task_repo.get_first_task_difficulty_for_group(group.id)
-
-            self.work_repo.create_work_analog_group(
-                CreateWorkAnalogGroupParams(
-                    work_id=work_id,
+            specs.append(
+                WorkSpecificationRowParams(
                     analog_group_id=group.id,
                     order=group.order or position,
                     count=group.count,
@@ -188,6 +161,24 @@ class CreateWorkFromGroupsUseCase:
                     blank_cells_rows=group.blank_cells_rows,
                 )
             )
+
+        specification_errors = validate_work_specification_specs(specs)
+        if specification_errors:
+            return CreateWorkFromGroupsResult(
+                status='invalid_group_spec',
+                message=specification_errors[0],
+            )
+
+        work_id = self.work_repo.create_work_with_specification(
+            CreateWorkWithSpecificationParams(
+                work=CreateWorkParams(
+                    name=work_name,
+                    work_type=request.work_type,
+                    max_score=max(0, int(request.max_score)),
+                ),
+                specs=specs,
+            )
+        )
 
         message = (
             f'Создана работа «{work_name}» '

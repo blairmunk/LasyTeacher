@@ -1,8 +1,9 @@
 from unittest import TestCase
 
 from core_logic.interfaces.work_repo import (
-    CreateWorkAnalogGroupParams,
     CreateWorkParams,
+    CreateWorkWithSpecificationParams,
+    WorkSpecificationRowParams,
 )
 from core_logic.use_cases.create_work_from_groups import (
     CreateWorkFromGroupsRequest,
@@ -37,12 +38,13 @@ class FakeWorkRepository:
         self.created_groups = []
         self.generated_variants = None
 
-    def create_work(self, params: CreateWorkParams):
-        self.created_work = params
+    def create_work_with_specification(
+        self,
+        params: CreateWorkWithSpecificationParams,
+    ):
+        self.created_work = params.work
+        self.created_groups = params.specs
         return 'work-1'
-
-    def create_work_analog_group(self, params: CreateWorkAnalogGroupParams):
-        self.created_groups.append(params)
 
     def compose_variants(self, work_id, count):
         self.generated_variants = (work_id, count)
@@ -170,16 +172,14 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         self.assertEqual(
             work_repo.created_groups,
             [
-                CreateWorkAnalogGroupParams(
-                    work_id='work-1',
+                WorkSpecificationRowParams(
                     analog_group_id='group-1',
                     order=1,
                     count=2,
                     weight=3,
                     bank_role_filter='any',
                 ),
-                CreateWorkAnalogGroupParams(
-                    work_id='work-1',
+                WorkSpecificationRowParams(
                     analog_group_id='group-2',
                     order=2,
                     count=1,

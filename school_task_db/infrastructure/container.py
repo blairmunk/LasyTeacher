@@ -1078,19 +1078,19 @@ class Container:
 
     def get_work_detail_use_case(self):
         return GetWorkDetailUseCase(
-            work_repo=self.work_repo,
+            work_read_repo=self.work_repo,
             work_service=self.work_service(),
             print_settings_repo=self.print_settings_repo,
         )
 
     def get_work_list_use_case(self):
         return GetWorkListUseCase(
-            work_repo=self.work_repo,
+            work_read_repo=self.work_repo,
         )
 
     def get_work_form_data_use_case(self):
         return GetWorkFormDataUseCase(
-            work_repo=self.work_repo,
+            work_read_repo=self.work_repo,
         )
 
     def get_variant_detail_use_case(self):

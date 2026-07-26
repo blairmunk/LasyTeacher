@@ -2,15 +2,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, List, Optional, Set
-
-from core_logic.entities.work import (
-    WorkDetailSpecGroup,
-    WorkDetailSpecPreviewItem,
-    WorkDetailVariant,
-    WorkDetailWork,
-    WorkListItem,
-)
+from typing import List, Optional, Set
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_ANY,
@@ -96,30 +88,6 @@ class CreatedWorkVariantRef:
 
 
 class IWorkRepository(ABC):
-    @abstractmethod
-    def get_list_works(self, filters=None) -> List[WorkListItem]:
-        """Return works for the work list page."""
-
-    @abstractmethod
-    def get_work_form_analog_group_options(self) -> Any:
-        """Return analog group options for the work form page."""
-
-    @abstractmethod
-    def get_work_detail(self, work_id: str) -> Optional[WorkDetailWork]:
-        """Return one work detail read model, or None."""
-
-    @abstractmethod
-    def get_detail_variants(self, work_id: str) -> List[WorkDetailVariant]:
-        """Return variant read models for the work detail page."""
-
-    @abstractmethod
-    def get_detail_analog_groups(self, work_id: str) -> List[WorkDetailSpecGroup]:
-        """Return work specification read models for the work detail page."""
-
-    @abstractmethod
-    def get_spec_preview(self, work_id: str) -> List[WorkDetailSpecPreviewItem]:
-        """Return points specification preview read models for the work detail page."""
-
     @abstractmethod
     def get_variant_task_ids(self, work_id: str) -> Set[str]:
         """Return task IDs used in all variants of a work."""

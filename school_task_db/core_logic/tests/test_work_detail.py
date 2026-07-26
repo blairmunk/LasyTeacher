@@ -287,7 +287,7 @@ class WorkDetailTests(TestCase):
     def test_get_work_detail_use_case_builds_detail_context_data(self):
         print_settings_repo = FakePrintSettingsRepository()
         use_case = GetWorkDetailUseCase(
-            work_repo=FakeWorkRepository(
+            work_read_repo=FakeWorkRepository(
                 variants=['variant-1'],
                 analog_groups=[],
                 spec_preview=['spec-1'],
@@ -323,7 +323,7 @@ class WorkDetailTests(TestCase):
     def test_get_work_detail_use_case_returns_empty_data_for_missing_work(self):
         repo = FakeWorkRepository()
         use_case = GetWorkDetailUseCase(
-            work_repo=repo,
+            work_read_repo=repo,
             work_service=WorkService(),
         )
 
@@ -335,7 +335,7 @@ class WorkDetailTests(TestCase):
     def test_get_work_list_use_case_builds_list_context_data(self):
         repo = FakeWorkRepository()
         repo.works = FakeQuerySet(['work-1'])
-        use_case = GetWorkListUseCase(work_repo=repo)
+        use_case = GetWorkListUseCase(work_read_repo=repo)
 
         result = use_case.execute()
 
@@ -350,7 +350,7 @@ class WorkDetailTests(TestCase):
             variant_status='with_variants',
             hide_remedial=True,
         )
-        use_case = GetWorkListUseCase(work_repo=repo)
+        use_case = GetWorkListUseCase(work_read_repo=repo)
 
         result = use_case.execute(filters)
 
@@ -369,7 +369,7 @@ class WorkDetailTests(TestCase):
     def test_get_work_form_data_use_case_builds_form_context_data(self):
         repo = FakeWorkRepository()
         repo.work_form_analog_group_options = ['group-1']
-        use_case = GetWorkFormDataUseCase(work_repo=repo)
+        use_case = GetWorkFormDataUseCase(work_read_repo=repo)
 
         result = use_case.execute()
 

@@ -60,6 +60,7 @@ from core_logic.interfaces.work_repo import (
     IWorkRepository,
     WorkSpecificationRowParams,
 )
+from core_logic.interfaces.work_read_repo import IWorkReadRepository
 from core_logic.interfaces.work_document_repo import IWorkDocumentRepository
 from core_logic.interfaces.work_variant_generation_repo import (
     IWorkVariantGenerationRepository,
@@ -83,6 +84,7 @@ from works.models import Variant, VariantTask, Work, WorkAnalogGroup
 
 class DjangoWorkRepository(
     IWorkRepository,
+    IWorkReadRepository,
     IWorkDocumentRepository,
     IWorkVariantGenerationRepository,
     IOrphanVariantRepository,

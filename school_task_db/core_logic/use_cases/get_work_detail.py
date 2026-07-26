@@ -4,7 +4,7 @@ from core_logic.entities.work import WorkDetailData
 from core_logic.interfaces.print_settings_repo import (
     IPrintSettingsRepository,
 )
-from core_logic.interfaces.work_repo import IWorkRepository
+from core_logic.interfaces.work_read_repo import IWorkReadRepository
 from core_logic.services.work_service import WorkService
 from core_logic.value_objects.document_recipes import (
     REMEDIAL_SHEET_DOCUMENT_TYPE,
@@ -18,22 +18,22 @@ from core_logic.value_objects.document_render_options import (
 class GetWorkDetailUseCase:
     def __init__(
         self,
-        work_repo: IWorkRepository,
+        work_read_repo: IWorkReadRepository,
         work_service: WorkService,
         print_settings_repo: IPrintSettingsRepository | None = None,
     ):
-        self.work_repo = work_repo
+        self.work_read_repo = work_read_repo
         self.work_service = work_service
         self.print_settings_repo = print_settings_repo
 
     def execute(self, work_id: str) -> WorkDetailData:
-        work = self.work_repo.get_work_detail(work_id)
+        work = self.work_read_repo.get_work_detail(work_id)
         if work is None:
             return WorkDetailData()
 
-        variants = self.work_repo.get_detail_variants(work_id)
-        analog_groups = self.work_repo.get_detail_analog_groups(work_id)
-        spec_preview = self.work_repo.get_spec_preview(work_id)
+        variants = self.work_read_repo.get_detail_variants(work_id)
+        analog_groups = self.work_read_repo.get_detail_analog_groups(work_id)
+        spec_preview = self.work_read_repo.get_spec_preview(work_id)
 
         return WorkDetailData(
             work=work,

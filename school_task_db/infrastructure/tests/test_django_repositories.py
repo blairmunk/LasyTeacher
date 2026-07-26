@@ -1373,6 +1373,14 @@ class DjangoRemedialRepositoryTests(TestCase):
             1,
         )
 
+    def test_work_repository_returns_none_when_composition_work_is_missing(self):
+        created_count = DjangoWorkRepository().compose_variants(
+            '00000000-0000-0000-0000-000000000000',
+            count=2,
+        )
+
+        self.assertIsNone(created_count)
+
     def test_work_repository_composes_variant_with_role_filtered_snapshot_rows(self):
         work = Work.objects.create(
             name='Рабочий лист',

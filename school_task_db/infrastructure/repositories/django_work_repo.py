@@ -594,9 +594,11 @@ class DjangoWorkRepository(IWorkRepository):
                 created_count += 1
         return created_count
 
-    def compose_variants(self, work_id: str, count: int) -> int:
+    def compose_variants(self, work_id: str, count: int) -> Optional[int]:
         with transaction.atomic():
-            work = Work.objects.select_for_update().get(pk=work_id)
+            work = Work.objects.select_for_update().filter(pk=work_id).first()
+            if work is None:
+                return None
             work_groups = list(
                 WorkAnalogGroup.objects.filter(
                     work_id=work_id,

@@ -117,6 +117,7 @@ class FakeWorkRepository:
         self.variant_generation_id = None
         self.work_name = 'Контрольная'
         self.work_name_request = None
+        self.work_exists_for_composition = True
         self.work_list_filters = None
         self.variant_type = 'remedial'
         self.variant_type_request = None
@@ -198,7 +199,7 @@ class FakeWorkRepository:
 
     def compose_variants(self, work_id, count):
         self.generated_variants_request = (work_id, count)
-        return count
+        return count if self.work_exists_for_composition else None
 
     def get_orphan_variant_refs(self, variant_ids):
         requested_ids = set(variant_ids)
@@ -532,12 +533,11 @@ class WorkDetailTests(TestCase):
 
         self.assertEqual(result.status, 'generated')
         self.assertEqual(result.created_count, 3)
-        self.assertEqual(repo.work_name_request, 'work-1')
         self.assertEqual(repo.generated_variants_request, ('work-1', 3))
 
     def test_compose_work_variants_use_case_handles_missing_work(self):
         repo = FakeWorkRepository()
-        repo.work_name = None
+        repo.work_exists_for_composition = False
         use_case = ComposeWorkVariantsUseCase(work_repo=repo)
 
         result = use_case.execute(
@@ -546,7 +546,7 @@ class WorkDetailTests(TestCase):
 
         self.assertEqual(result.status, 'not_found')
         self.assertEqual(result.created_count, 0)
-        self.assertIsNone(repo.generated_variants_request)
+        self.assertEqual(repo.generated_variants_request, ('missing', 3))
 
     def test_create_work_from_orphans_use_case_creates_work_and_attaches_variants(self):
         repo = FakeWorkRepository()

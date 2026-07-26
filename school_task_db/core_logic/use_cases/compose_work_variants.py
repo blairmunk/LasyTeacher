@@ -20,15 +20,16 @@ class ComposeWorkVariantsUseCase:
         self,
         request: ComposeWorkVariantsRequest,
     ) -> ComposeWorkVariantsResult:
-        if self.work_repo.get_work_name(request.work_id) is None:
+        created_count = self.work_repo.compose_variants(
+            work_id=request.work_id,
+            count=request.count,
+        )
+        if created_count is None:
             return ComposeWorkVariantsResult(
                 created_count=0,
                 status='not_found',
             )
 
         return ComposeWorkVariantsResult(
-            created_count=self.work_repo.compose_variants(
-                work_id=request.work_id,
-                count=request.count,
-            )
+            created_count=created_count,
         )

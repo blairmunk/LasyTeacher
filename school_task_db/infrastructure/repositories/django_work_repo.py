@@ -550,49 +550,56 @@ class DjangoWorkRepository(IWorkRepository):
     def count_orphan_variants(self) -> int:
         return Variant.objects.filter(work__isnull=True).count()
 
-    def sync_analog_groups_from_variants(self, work_id: str) -> int:
-        task_rows = list(
-            VariantTask.objects.filter(
-                variant__work_id=work_id,
-            ).order_by(
-                'variant__number',
-                'variant_id',
-                'order',
-            ).values_list(
-                'variant_id',
-                'task_id',
+    def sync_analog_groups_from_variants(
+        self,
+        work_id: str,
+    ) -> Optional[int]:
+        with transaction.atomic():
+            work = Work.objects.select_for_update().filter(pk=work_id).first()
+            if work is None:
+                return None
+            task_rows = list(
+                VariantTask.objects.filter(
+                    variant__work=work,
+                ).order_by(
+                    'variant__number',
+                    'variant_id',
+                    'order',
+                ).values_list(
+                    'variant_id',
+                    'task_id',
+                )
             )
-        )
-        group_ids_by_task_id = {}
-        for task_id, group_id in (
-            TaskGroup.objects.filter(
-                task_id__in={task_id for _, task_id in task_rows},
-            ).order_by('pk').values_list('task_id', 'group_id')
-        ):
-            group_ids_by_task_id.setdefault(task_id, []).append(group_id)
+            group_ids_by_task_id = {}
+            for task_id, group_id in (
+                TaskGroup.objects.filter(
+                    task_id__in={task_id for _, task_id in task_rows},
+                ).order_by('pk').values_list('task_id', 'group_id')
+            ):
+                group_ids_by_task_id.setdefault(task_id, []).append(group_id)
 
-        group_ids_by_variant_id = {}
-        for variant_id, task_id in task_rows:
-            group_ids_by_variant_id.setdefault(variant_id, []).extend(
-                group_ids_by_task_id.get(task_id, ()),
-            )
+            group_ids_by_variant_id = {}
+            for variant_id, task_id in task_rows:
+                group_ids_by_variant_id.setdefault(variant_id, []).extend(
+                    group_ids_by_task_id.get(task_id, ()),
+                )
 
-        plan = WorkSpecSyncService().build_plan(
-            group_ids_by_variant_id.values(),
-        )
-        created_count = 0
-        for item in plan:
-            _, was_created = WorkAnalogGroup.objects.update_or_create(
-                work_id=work_id,
-                analog_group_id=item.analog_group_id,
-                defaults={
-                    'count': item.count,
-                    'order': item.order,
-                },
+            plan = WorkSpecSyncService().build_plan(
+                group_ids_by_variant_id.values(),
             )
-            if was_created:
-                created_count += 1
-        return created_count
+            created_count = 0
+            for item in plan:
+                _, was_created = WorkAnalogGroup.objects.update_or_create(
+                    work=work,
+                    analog_group_id=item.analog_group_id,
+                    defaults={
+                        'count': item.count,
+                        'order': item.order,
+                    },
+                )
+                if was_created:
+                    created_count += 1
+            return created_count
 
     def compose_variants(self, work_id: str, count: int) -> Optional[int]:
         with transaction.atomic():

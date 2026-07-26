@@ -117,6 +117,7 @@ class FakeWorkRepository:
         self.variant_generation_id = None
         self.work_name = 'Контрольная'
         self.work_name_request = None
+        self.work_exists_for_spec_sync = True
         self.work_exists_for_composition = True
         self.work_list_filters = None
         self.variant_type = 'remedial'
@@ -195,7 +196,7 @@ class FakeWorkRepository:
 
     def sync_analog_groups_from_variants(self, work_id):
         self.synced_work_id = work_id
-        return 2
+        return 2 if self.work_exists_for_spec_sync else None
 
     def compose_variants(self, work_id, count):
         self.generated_variants_request = (work_id, count)
@@ -509,19 +510,18 @@ class WorkDetailTests(TestCase):
 
         self.assertEqual(result.status, 'synced')
         self.assertEqual(result.created_count, 2)
-        self.assertEqual(repo.work_name_request, 'work-1')
         self.assertEqual(repo.synced_work_id, 'work-1')
 
     def test_sync_work_analog_groups_use_case_handles_missing_work(self):
         repo = FakeWorkRepository()
-        repo.work_name = None
+        repo.work_exists_for_spec_sync = False
         use_case = SyncWorkAnalogGroupsUseCase(work_repo=repo)
 
         result = use_case.execute(SyncWorkAnalogGroupsRequest(work_id='missing'))
 
         self.assertEqual(result.status, 'not_found')
         self.assertEqual(result.created_count, 0)
-        self.assertIsNone(repo.synced_work_id)
+        self.assertEqual(repo.synced_work_id, 'missing')
 
     def test_compose_work_variants_use_case_delegates_to_repository(self):
         repo = FakeWorkRepository()

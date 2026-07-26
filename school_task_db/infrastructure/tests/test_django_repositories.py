@@ -1270,6 +1270,13 @@ class DjangoRemedialRepositoryTests(TestCase):
             {self.weak_group, self.ok_group},
         )
 
+    def test_work_repository_does_not_sync_missing_work(self):
+        created_count = DjangoWorkRepository().sync_analog_groups_from_variants(
+            '00000000-0000-0000-0000-000000000000',
+        )
+
+        self.assertIsNone(created_count)
+
     def test_task_repository_mutates_bulk_group_memberships(self):
         repo = DjangoTaskRepository()
         new_group_id = repo.create_analog_group(

@@ -177,8 +177,11 @@ class IWorkRepository(ABC):
         """Return orphan variant count."""
 
     @abstractmethod
-    def sync_analog_groups_from_variants(self, work_id: str) -> int:
-        """Sync work analog groups from existing variants and return created count."""
+    def sync_analog_groups_from_variants(
+        self,
+        work_id: str,
+    ) -> Optional[int]:
+        """Sync specification atomically, or return None for a missing work."""
 
     @abstractmethod
     def compose_variants(self, work_id: str, count: int) -> Optional[int]:

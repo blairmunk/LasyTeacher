@@ -69,13 +69,3 @@ class GetPrintSettingsEditorDataUseCaseTests(TestCase):
         )
         self.assertNotIn(THEORY_SECTION, section_types)
         self.assertEqual(data.print_profiles, [])
-
-    def test_can_include_legacy_sections(self):
-        data = GetPrintSettingsEditorDataUseCase().execute(
-            GetPrintSettingsEditorDataRequest(
-                document_type=WORK_DOCUMENT_TYPE,
-                include_legacy_sections=True,
-            )
-        )
-
-        self.assertTrue(any(section.is_legacy for section in data.sections))

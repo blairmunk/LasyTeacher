@@ -260,13 +260,12 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
         request = (
             PrintSettingsFormAdapter()
             .editor_data_request_from_query(
-                QueryDict('type=work&renderable=1&legacy=1'),
+                QueryDict('type=work&renderable=1'),
             )
         )
 
         self.assertEqual(request.document_type, WORK_DOCUMENT_TYPE)
         self.assertTrue(request.renderable_only)
-        self.assertTrue(request.include_legacy_sections)
 
     def test_builds_editor_context(self):
         request = (
@@ -295,7 +294,6 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
 
         self.assertEqual(context['current_document_type'], WORK_DOCUMENT_TYPE)
         self.assertFalse(context['renderable_only'])
-        self.assertFalse(context['include_legacy_sections'])
         self.assertEqual(context['document_types'][0]['document_type'], 'work')
         self.assertEqual(
             context['document_types'][0]['renderer_labels'],
@@ -348,11 +346,11 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
             'profile-1',
         )
 
-    def test_editor_context_preserves_filter_flags_in_document_type_urls(self):
+    def test_editor_context_preserves_filter_in_document_type_urls(self):
         request = (
             PrintSettingsFormAdapter()
             .editor_data_request_from_query(
-                QueryDict('type=work&renderable=1&legacy=1'),
+                QueryDict('type=work&renderable=1'),
             )
         )
         editor_data = PrintSettingsEditorData(
@@ -368,7 +366,7 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
 
         self.assertEqual(
             context['document_types'][0]['url'],
-            '?type=work&renderable=1&legacy=1',
+            '?type=work&renderable=1',
         )
 
     def test_builds_create_params_from_template_form(self):

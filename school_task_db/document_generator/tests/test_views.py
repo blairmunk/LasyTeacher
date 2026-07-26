@@ -43,17 +43,16 @@ class PrintSettingsViewTests(TestCase):
     def test_template_editor_passes_query_filters_to_clean_use_case(self):
         response = self.client.get(
             reverse('document_generator:print-profile-editor'),
-            {'type': 'work', 'renderable': '1', 'legacy': '1'},
+            {'type': 'work', 'renderable': '1'},
         )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['current_document_type'], 'work')
         self.assertTrue(response.context['renderable_only'])
-        self.assertTrue(response.context['include_legacy_sections'])
         self.assertContains(response, 'value="work" selected')
         self.assertContains(
             response,
-            'href="?type=remedial_sheet&amp;renderable=1&amp;legacy=1"',
+            'href="?type=remedial_sheet&amp;renderable=1"',
         )
 
     def test_template_create_view_shows_section_form(self):

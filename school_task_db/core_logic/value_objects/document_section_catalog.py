@@ -14,7 +14,6 @@ from core_logic.value_objects.document_recipes import (
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
     HOMEWORK_DOCUMENT_TYPE,
-    LEGACY_TASK_VARIANTS_SECTION,
     ORIGINAL_MISTAKES_SECTION,
     PAGE_BREAK_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
@@ -44,7 +43,6 @@ class DocumentSectionCatalogItem:
     supported_document_types: Tuple[str, ...]
     renderable_document_types: Tuple[str, ...] = ()
     description: str = ''
-    is_legacy: bool = False
     is_repeatable: bool = False
     is_fixed_order: bool = False
     options_hint: str = ''
@@ -249,36 +247,25 @@ DOCUMENT_SECTION_CATALOG = (
         renderable_document_types=(WORK_DOCUMENT_TYPE,),
         description='Таблица шкалы и критериев оценивания.',
     ),
-    DocumentSectionCatalogItem(
-        section_type=LEGACY_TASK_VARIANTS_SECTION,
-        title='Варианты заданий',
-        supported_document_types=(WORK_DOCUMENT_TYPE,),
-        renderable_document_types=(WORK_DOCUMENT_TYPE,),
-        description='Старое имя секции списка вариантов.',
-        is_legacy=True,
-    ),
 )
 
 
 def get_document_section_catalog(
     document_type: str = '',
-    include_legacy: bool = False,
     renderable_only: bool = False,
 ) -> Tuple[DocumentSectionCatalogItem, ...]:
     return tuple(
         item
         for item in DOCUMENT_SECTION_CATALOG
-        if (include_legacy or not item.is_legacy)
-        and item.supports_document_type(document_type)
+        if item.supports_document_type(document_type)
         and (not renderable_only or item.is_renderable_for(document_type))
     )
 
 
 def get_document_section_catalog_item(
     section_type: str,
-    include_legacy: bool = True,
 ) -> DocumentSectionCatalogItem | None:
-    for item in get_document_section_catalog(include_legacy=include_legacy):
+    for item in get_document_section_catalog():
         if item.section_type == section_type:
             return item
     return None
@@ -322,13 +309,9 @@ def order_document_section_types(
 def validate_document_section_types(
     document_type: str,
     section_types,
-    include_legacy: bool = True,
 ) -> None:
     for section_type in section_types:
-        item = get_document_section_catalog_item(
-            section_type,
-            include_legacy=include_legacy,
-        )
+        item = get_document_section_catalog_item(section_type)
         if item is None:
             raise ValueError(f'Unsupported document section: {section_type}')
         if not item.supports_document_type(document_type):

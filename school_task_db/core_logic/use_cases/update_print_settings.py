@@ -67,7 +67,6 @@ class UpdatePrintSettingsUseCase:
             validate_document_section_types(
                 params.document_type,
                 params.section_types,
-                include_legacy=False,
             )
         except ValueError as error:
             errors.append(str(error))

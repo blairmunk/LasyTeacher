@@ -12,7 +12,6 @@ from core_logic.value_objects.document_section_catalog import (
 @dataclass(frozen=True)
 class GetDocumentSectionCatalogRequest:
     document_type: str = ''
-    include_legacy: bool = False
     renderable_only: bool = False
 
 
@@ -30,7 +29,6 @@ class GetDocumentSectionCatalogUseCase:
         return DocumentSectionCatalogData(
             sections=get_document_section_catalog(
                 document_type=request.document_type,
-                include_legacy=request.include_legacy,
                 renderable_only=request.renderable_only,
             ),
         )

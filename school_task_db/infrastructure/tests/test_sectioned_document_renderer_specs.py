@@ -52,7 +52,6 @@ def _renderable_section_types(document_type):
         section.section_type
         for section in get_document_section_catalog(
             document_type=document_type,
-            include_legacy=True,
             renderable_only=True,
         )
     }

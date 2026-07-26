@@ -21,7 +21,6 @@ from core_logic.value_objects.document_type_catalog import (
 class GetPrintSettingsFormDataRequest:
     print_settings_id: str = ''
     renderable_only: bool = True
-    include_legacy_sections: bool = False
 
 
 @dataclass(frozen=True)
@@ -50,7 +49,6 @@ class GetPrintSettingsFormDataUseCase:
                 renderable_only=request.renderable_only,
             ),
             sections=get_document_section_catalog(
-                include_legacy=request.include_legacy_sections,
                 renderable_only=request.renderable_only,
             ),
             print_profile=self._print_profile(request.print_settings_id),

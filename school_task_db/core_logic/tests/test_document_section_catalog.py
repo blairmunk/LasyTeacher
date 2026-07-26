@@ -11,7 +11,6 @@ from core_logic.value_objects.document_recipes import (
     COMMON_HEADER_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
-    LEGACY_TASK_VARIANTS_SECTION,
     ORIGINAL_MISTAKES_SECTION,
     PAGE_BREAK_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
@@ -40,32 +39,6 @@ class DocumentSectionCatalogTests(TestCase):
         self.assertIn(TASK_LIST_SECTION, section_types)
         self.assertIn(THEORY_SECTION, section_types)
         self.assertNotIn(ORIGINAL_MISTAKES_SECTION, section_types)
-
-    def test_hides_legacy_sections_by_default(self):
-        sections = get_document_section_catalog(
-            document_type=WORK_DOCUMENT_TYPE,
-        )
-
-        section_types = [section.section_type for section in sections]
-
-        self.assertNotIn(LEGACY_TASK_VARIANTS_SECTION, section_types)
-
-    def test_can_include_legacy_sections(self):
-        sections = get_document_section_catalog(
-            document_type=WORK_DOCUMENT_TYPE,
-            include_legacy=True,
-        )
-
-        section_types = [section.section_type for section in sections]
-
-        self.assertIn(LEGACY_TASK_VARIANTS_SECTION, section_types)
-        self.assertTrue(
-            any(
-                section.section_type == LEGACY_TASK_VARIANTS_SECTION
-                and section.is_legacy
-                for section in sections
-            )
-        )
 
     def test_marks_repeatable_rendering_sections(self):
         sections_by_type = {

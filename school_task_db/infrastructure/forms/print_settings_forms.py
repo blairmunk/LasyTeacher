@@ -25,7 +25,6 @@ class PrintSettingsFormAdapter:
         return GetPrintSettingsEditorDataRequest(
             document_type=query_data.get('type', ''),
             renderable_only=query_data.get('renderable') == '1',
-            include_legacy_sections=query_data.get('legacy') == '1',
         )
 
     def editor_context(self, editor_data, request):
@@ -44,7 +43,6 @@ class PrintSettingsFormAdapter:
             ],
             'current_document_type': request.document_type,
             'renderable_only': request.renderable_only,
-            'include_legacy_sections': request.include_legacy_sections,
         }
 
     def create_print_settings_params_from_form(self, form):
@@ -140,7 +138,6 @@ class PrintSettingsFormAdapter:
             'description': section.description,
             'supported_document_types': section.supported_document_types,
             'renderable_document_types': section.renderable_document_types,
-            'is_legacy': section.is_legacy,
             'is_repeatable': section.is_repeatable,
             'is_fixed_order': section.is_fixed_order,
             'has_options': section.has_options,
@@ -169,9 +166,6 @@ class PrintSettingsFormAdapter:
             params.append(('type', document_type))
         if request.renderable_only:
             params.append(('renderable', '1'))
-        if request.include_legacy_sections:
-            params.append(('legacy', '1'))
-
         query = urlencode(params)
         if not query:
             return '?'

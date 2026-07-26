@@ -33,7 +33,7 @@ from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
     COMMON_HEADER_SECTION,
     HEADER_SECTION,
-    LEGACY_ANSWER_KEY_SECTION,
+    ANSWER_KEY_SECTION,
     PAGE_BREAK_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     TASK_LIST_SECTION,
@@ -296,7 +296,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                         document_type='work',
                         sections=[
                             DocumentSectionSpec(
-                                section_type=LEGACY_ANSWER_KEY_SECTION,
+                                section_type=ANSWER_KEY_SECTION,
                             ),
                         ],
                     ),

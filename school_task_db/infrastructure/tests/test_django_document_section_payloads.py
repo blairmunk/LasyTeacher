@@ -19,8 +19,7 @@ from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
     BLANK_CELLS_SECTION,
     HEADER_SECTION,
-    LEGACY_ANSWER_KEY_SECTION,
-    LEGACY_TASK_VARIANTS_SECTION,
+    ANSWER_KEY_SECTION,
     ORIGINAL_MISTAKES_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     TASK_LIST_SECTION,
@@ -385,18 +384,14 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
 
         self.assertEqual(payload['variants'], [])
 
-    def test_registry_supports_work_section_aliases(self):
+    def test_registry_supports_answer_key_section(self):
         work = Work.objects.create(name='Контрольная')
         registry = build_work_section_payload_builder_registry()
 
-        task_variants_payload = registry.build_payload(
-            build_request(work, LEGACY_TASK_VARIANTS_SECTION)
-        )
         answer_key_payload = registry.build_payload(
-            build_request(work, LEGACY_ANSWER_KEY_SECTION)
+            build_request(work, ANSWER_KEY_SECTION)
         )
 
-        self.assertEqual(task_variants_payload['variants'], [])
         self.assertEqual(answer_key_payload['variants'], [])
 
     def create_task(self, **overrides):

@@ -3,7 +3,11 @@ from tempfile import TemporaryDirectory
 
 from django.test import SimpleTestCase
 
-from core_logic.entities.document import Document, DocumentSection
+from core_logic.entities.document import (
+    Document,
+    DocumentPresentation,
+    DocumentSection,
+)
 from core_logic.value_objects.document_render_options import RenderTarget
 from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
@@ -55,6 +59,12 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
             document = Document(
                 title='Контрольная',
                 document_type='work',
+                presentation=DocumentPresentation(
+                    custom_latex_preamble=(
+                        r'\renewenvironment{schooltheory}'
+                        r'{\begin{quote}}{\end{quote}}'
+                    ),
+                ),
                 sections=[
                     DocumentSection(
                         section_type=HEADER_SECTION,
@@ -179,7 +189,32 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
             self.assertEqual(result.file_type, 'latex')
             self.assertEqual(result.files[0].filename, 'work.tex')
             self.assertIn(r'\documentclass', latex)
+            self.assertIn(r'\newenvironment{schooltheory}{}{}', latex)
+            self.assertIn(
+                (
+                    r'\renewenvironment{schooltheory}'
+                    r'{\begin{quote}}{\end{quote}}'
+                ),
+                latex,
+            )
             self.assertIn(r'\begin{document}', latex)
+            self.assertIn(r'\begin{schoolheader}', latex)
+            self.assertIn(r'\begin{schooltheory}', latex)
+            self.assertIn(r'\end{schooltheory}', latex)
+            self.assertIn(r'\begin{schooltasklist}', latex)
+            self.assertIn(r'\begin{schoolpagebreak}', latex)
+            self.assertIn(r'\begin{schoolblankcells}', latex)
+            self.assertIn(r'\begin{schoolscoretable}', latex)
+            self.assertIn(r'\begin{schoolanswers}', latex)
+            self.assertIn(r'\begin{schoolshortsolutions}', latex)
+            self.assertLess(
+                latex.index(r'\newenvironment{schooltheory}{}{}'),
+                latex.index(r'\renewenvironment{schooltheory}'),
+            )
+            self.assertLess(
+                latex.index(r'\renewenvironment{schooltheory}'),
+                latex.index(r'\begin{schooltheory}'),
+            )
             self.assertIn(r'{\LARGE\bfseries Контрольная}', latex)
             self.assertIn(r'\section*{\centering Теоретическая справка}', latex)
             self.assertIn(r'Формула \(F=ma\)', latex)

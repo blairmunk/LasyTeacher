@@ -1,3 +1,6 @@
+{% if section.section_type == 'common_header' %}\begin{schoolcommonheader}
+{% else %}\begin{schoolheader}
+{% endif %}
 \begin{center}
 {\LARGE\bfseries {{ payload.title }}}
 {% if payload.duration %}
@@ -11,3 +14,6 @@
 \end{center}
 
 \vspace{0.5cm}
+{% if section.section_type == 'common_header' %}\end{schoolcommonheader}
+{% else %}\end{schoolheader}
+{% endif %}

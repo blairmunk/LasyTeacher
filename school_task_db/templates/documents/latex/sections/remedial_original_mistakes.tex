@@ -1,3 +1,4 @@
+\begin{schooloriginalmistakes}
 \section*{Часть 1. Разбор ошибок}
 {% for task in payload.tasks %}
 \subsection*{Задание {{ task.order }}{% if task.group_name %} \hfill {\normalfont\normalsize {{ task.group_name }}}{% endif %}}
@@ -18,3 +19,4 @@
 {% empty %}
 \textit{Ошибки не найдены.}
 {% endfor %}
+\end{schooloriginalmistakes}

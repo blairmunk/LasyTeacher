@@ -1,3 +1,6 @@
+{% if section.section_type == 'answer_key' %}\begin{schoolanswerkey}
+{% else %}\begin{schoolanswers}
+{% endif %}
 \newpage
 \section*{\centering Ответы}
 {% for variant in payload.variants %}
@@ -10,3 +13,6 @@
 {% empty %}
 \textit{Нет ответов для печати.}
 {% endfor %}
+{% if section.section_type == 'answer_key' %}\end{schoolanswerkey}
+{% else %}\end{schoolanswers}
+{% endif %}

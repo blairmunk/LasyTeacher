@@ -1,3 +1,4 @@
+\begin{schooltheory}
 \section*{\centering {{ payload.section_title|default:"Теоретическая справка" }}}
 {% for block in payload.blocks %}
 \subsection*{ {{ block.topic_name }} }
@@ -13,3 +14,4 @@
 {% empty %}
 \textit{Теоретическая справка не задана.}
 {% endfor %}
+\end{schooltheory}

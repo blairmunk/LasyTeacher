@@ -151,38 +151,14 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
         self.assertEqual(variant_payload['max_score'], 8)
         self.assertEqual(variant_payload['duration'], 40)
         self.assertEqual(
-            variant_payload['assessable_variant_task_ids'],
-            (str(variant_task.pk),),
-        )
-        self.assertEqual(
-            variant_payload['content_plan']['assessable_variant_task_ids'],
-            (str(variant_task.pk),),
-        )
-        self.assertEqual(
             [
-                item['variant_task_id']
-                for item in variant_payload['content_plan']['items']
+                task_payload['variant_task_id']
+                for task_payload in variant_payload['tasks']
             ],
             [str(variant_task.pk), str(demo_variant_task.pk)],
         )
         self.assertFalse(
-            variant_payload['content_plan']['items'][1]['is_assessable'],
-        )
-        self.assertEqual(
-            [block['block_type'] for block in variant_payload['print_plan']['blocks']],
-            [
-                VARIANT_PRINT_BLOCK_TASK,
-                VARIANT_PRINT_BLOCK_TASK,
-                VARIANT_PRINT_BLOCK_BLANK_CELLS,
-            ],
-        )
-        self.assertEqual(
-            variant_payload['print_plan']['blocks'][2]['variant_task_id'],
-            str(demo_variant_task.pk),
-        )
-        self.assertEqual(
-            variant_payload['print_plan']['blocks'][2]['options'],
-            {'rows': 7},
+            variant_payload['tasks'][1]['is_assessable'],
         )
         self.assertEqual(
             [block['block_type'] for block in variant_payload['print_blocks']],
@@ -278,7 +254,7 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
 
         variant_payload = payload['variants'][0]
         self.assertEqual(
-            variant_payload['content_plan']['items'][0]['render_mode'],
+            variant_payload['tasks'][0]['render_mode'],
             TASK_RENDER_MODE_TASK_ONLY,
         )
         self.assertEqual(
@@ -306,7 +282,7 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             5,
         )
 
-    def test_hidden_roles_do_not_change_assessable_content_snapshot(self):
+    def test_hidden_roles_do_not_remove_source_tasks(self):
         work = Work.objects.create(name='Рабочий лист', duration=45)
         variant = Variant.objects.create(work=work, number=1)
         task = self.create_task(text='Самостоятельная задача')
@@ -330,14 +306,9 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
 
         variant_payload = payload['variants'][0]
         self.assertEqual(
-            variant_payload['assessable_variant_task_ids'],
-            (str(variant_task.pk),),
+            [task['variant_task_id'] for task in variant_payload['tasks']],
+            [str(variant_task.pk)],
         )
-        self.assertEqual(
-            variant_payload['content_plan']['assessable_variant_task_ids'],
-            (str(variant_task.pk),),
-        )
-        self.assertEqual(variant_payload['print_plan']['blocks'], [])
         self.assertEqual(variant_payload['print_blocks'], [])
 
     def test_builds_registry_for_work_sections(self):

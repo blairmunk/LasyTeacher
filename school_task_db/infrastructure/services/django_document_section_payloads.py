@@ -469,13 +469,10 @@ def _work_variant_payload(variant, task_payload_formatter=None, request=None):
         'title': f'Вариант {variant.number}',
         'max_score': variant.display_max_score,
         'duration': variant.display_duration,
-        'content_plan': _variant_content_plan_payload(content_plan),
-        'print_plan': _variant_print_plan_payload(print_plan),
         'print_blocks': _variant_print_blocks_payload(
             print_plan,
             task_payloads_by_variant_task_id,
         ),
-        'assessable_variant_task_ids': content_plan.assessable_variant_task_ids,
         'tasks': task_payloads,
     }
 
@@ -493,49 +490,6 @@ def _variant_content_item(variant_task):
         blank_cells_after=print_settings['blank_cells_after'],
         blank_cells_rows=print_settings['blank_cells_rows'],
     )
-
-
-def _variant_content_plan_payload(content_plan):
-    return {
-        'variant_id': content_plan.variant_id,
-        'assessable_variant_task_ids': (
-            content_plan.assessable_variant_task_ids
-        ),
-        'items': [
-            {
-                'variant_task_id': item.variant_task_id,
-                'task_id': item.task_id,
-                'order': item.order,
-                'max_points': item.max_points,
-                'bank_role': item.bank_role,
-                'render_mode': item.render_mode,
-                'is_assessable': item.is_assessable,
-                'blank_cells_after': item.blank_cells_after,
-                'blank_cells_rows': item.blank_cells_rows,
-            }
-            for item in content_plan.items
-        ],
-    }
-
-
-def _variant_print_plan_payload(print_plan):
-    return {
-        'variant_id': print_plan.variant_id,
-        'assessable_variant_task_ids': print_plan.assessable_variant_task_ids,
-        'blocks': [
-            {
-                'block_type': block.block_type,
-                'variant_task_id': block.variant_task_id,
-                'task_id': block.task_id,
-                'order': block.order,
-                'content_role': block.content_role,
-                'source_render_mode': block.source_render_mode,
-                'render_mode': block.render_mode,
-                'options': dict(block.options),
-            }
-            for block in print_plan.blocks
-        ],
-    }
 
 
 def _variant_print_blocks_payload(print_plan, task_payloads_by_variant_task_id):

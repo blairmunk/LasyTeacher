@@ -78,7 +78,12 @@ class FakeEventRepository:
         )
 
     def get_student_mark(self, event_id, student_id):
-        return MarkEntity(student_id=student_id, event_id=event_id, score=2)
+        return MarkEntity(
+            student_id=student_id,
+            event_id=event_id,
+            score=2,
+            participation_id=f'participation-{student_id}',
+        )
 
     def create_event(self, params):
         self.created_event = params
@@ -156,6 +161,10 @@ class CreateRemedialFromEventUseCaseTests(TestCase):
         self.assertEqual(len(work_repo.created_variants), 1)
         self.assertEqual(work_repo.created_variants[0].task_ids, ['t10'])
         self.assertEqual(work_repo.created_variants[0].max_score_snapshot, 3)
+        self.assertEqual(
+            work_repo.created_variants[0].source_participation_id,
+            'participation-student-1',
+        )
         self.assertEqual(event_repo.created_event.work_id, 'new-work')
         self.assertEqual(
             event_repo.created_participations,

@@ -29,6 +29,7 @@ class CreateVariantParams:
     work_name_snapshot: str
     max_score_snapshot: int
     source_work_id: Optional[str] = None
+    source_participation_id: Optional[str] = None
     variant_type: str = 'remedial'
 
 
@@ -58,6 +59,7 @@ class NewWorkVariantParams:
     task_ids: List[str]
     max_score_snapshot: int
     source_work_id: Optional[str] = None
+    source_participation_id: Optional[str] = None
     variant_type: str = 'remedial'
 
 

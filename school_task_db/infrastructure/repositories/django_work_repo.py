@@ -417,20 +417,33 @@ class DjangoWorkRepository(
         variant = Variant.objects.select_related(
             'assigned_student',
             'source_work',
+            'source_participation__event__work',
+            'source_participation__student',
+            'source_participation__variant',
             'work',
         ).filter(pk=variant_id).first()
         if variant is None:
             return None
-        student = variant.assigned_student
-        source_work = variant.source_work
+        original_ep = variant.source_participation
+        student = (
+            original_ep.student
+            if original_ep is not None
+            else variant.assigned_student
+        )
+        source_work = (
+            original_ep.event.work
+            if original_ep is not None
+            else variant.source_work
+        )
         mark = None
         original_tasks = []
 
         if source_work and student:
-            original_ep = EventParticipation.objects.filter(
-                event__work=source_work,
-                student=student,
-            ).select_related('variant').first()
+            if original_ep is None:
+                original_ep = EventParticipation.objects.filter(
+                    event__work=source_work,
+                    student=student,
+                ).select_related('variant').first()
 
             if original_ep:
                 mark = Mark.objects.filter(participation=original_ep).first()
@@ -957,6 +970,9 @@ class DjangoWorkRepository(
                         work_name_snapshot=params.work.name,
                         max_score_snapshot=variant.max_score_snapshot,
                         source_work_id=variant.source_work_id,
+                        source_participation_id=(
+                            variant.source_participation_id
+                        ),
                         variant_type=variant.variant_type,
                     )
                 )
@@ -1007,6 +1023,7 @@ class DjangoWorkRepository(
             variant_type=params.variant_type,
             assigned_student_id=params.student_id,
             source_work_id=params.source_work_id,
+            source_participation_id=params.source_participation_id,
         )
 
         task_map = {

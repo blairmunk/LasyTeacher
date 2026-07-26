@@ -240,6 +240,7 @@ class DjangoEventRepository(IEventRepository):
             student_id=str(student_id),
             event_id=str(event_id),
             score=mark.score,
+            participation_id=str(mark.participation_id),
         )
 
     def get_participation_marks(self, event_id: str):

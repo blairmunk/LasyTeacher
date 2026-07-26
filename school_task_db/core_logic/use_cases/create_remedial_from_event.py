@@ -85,6 +85,7 @@ class CreateRemedialFromEventUseCase:
             )
 
         selections = []
+        marks_by_student_id = {}
         students_without_tasks = 0
         students_without_review = 0
         students_with_shortage = 0
@@ -103,6 +104,7 @@ class CreateRemedialFromEventUseCase:
             if mark is None:
                 students_without_review += 1
                 continue
+            marks_by_student_id[student_id] = mark
             selection = self.remedial_service.select_tasks_for_student(
                 student_id=student_id,
                 event_id=request.event_id,
@@ -160,6 +162,12 @@ class CreateRemedialFromEventUseCase:
                             task_ids=selection.task_ids,
                             max_score_snapshot=score,
                             source_work_id=event.work_id,
+                            source_participation_id=(
+                                marks_by_student_id[
+                                    selection.student_id
+                                ].participation_id
+                                or None
+                            ),
                         )
                         for number, (selection, score) in enumerate(
                             zip(selections, selection_scores),

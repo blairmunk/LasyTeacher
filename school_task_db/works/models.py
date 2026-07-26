@@ -136,6 +136,14 @@ class Variant(BaseModel):
         null=True, blank=True, related_name='remedial_variants',
         verbose_name='Работа-источник ошибок'
     )
+    source_participation = models.ForeignKey(
+        'events.EventParticipation',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='derived_remedial_variants',
+        verbose_name='Исходная попытка ученика',
+    )
 
     class Meta:
         verbose_name = 'Вариант'

@@ -1006,6 +1006,10 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(remedial_work.max_score, self.replacement.difficulty)
         self.assertEqual(remedial_work.variant_counter, 1)
         self.assertEqual(remedial_variant.source_work, self.source_work)
+        self.assertEqual(
+            remedial_variant.source_participation,
+            self.participation,
+        )
         self.assertEqual(remedial_variant.max_score_snapshot, self.replacement.difficulty)
         self.assertEqual(remedial_event.status, 'planned')
         self.assertEqual(remedial_event.description, f'Работа над ошибками по: {self.source_work.name}')
@@ -1114,6 +1118,65 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
 
         self.assertIsNone(sheet_data)
+
+    def test_remedial_sheet_uses_exact_source_participation(self):
+        second_source_variant = Variant.objects.create(
+            work=self.source_work,
+            number=2,
+            work_name_snapshot=self.source_work.name,
+        )
+        VariantTask.objects.create(
+            variant=second_source_variant,
+            task=self.replacement,
+            order=1,
+            max_points=3,
+        )
+        second_event = Event.objects.create(
+            name='Повторное проведение',
+            work=self.source_work,
+            planned_date=self.event.planned_date,
+            status='graded',
+        )
+        second_participation = EventParticipation.objects.create(
+            event=second_event,
+            student=self.student,
+            variant=second_source_variant,
+            status='graded',
+        )
+        Mark.objects.create(
+            participation=second_participation,
+            score=4,
+            points=3,
+            max_points=3,
+            task_scores={
+                str(self.replacement.pk): {
+                    'points': 3,
+                    'max_points': 3,
+                },
+            },
+        )
+        remedial_work = Work.objects.create(
+            name='РнО по повторной попытке',
+            work_type='remedial',
+        )
+        remedial_variant = Variant.objects.create(
+            work=remedial_work,
+            number=1,
+            variant_type='remedial',
+            assigned_student=self.student,
+            source_work=self.source_work,
+            source_participation=second_participation,
+        )
+
+        sheet_data = DjangoWorkRepository().get_remedial_sheet_data(
+            str(remedial_variant.pk),
+        )
+
+        self.assertEqual(sheet_data.mark.score, 4)
+        self.assertEqual(
+            sheet_data.original_tasks[0].task.pk,
+            str(self.replacement.pk),
+        )
 
     def test_work_repository_returns_detail_page_data(self):
         repo = DjangoWorkRepository()

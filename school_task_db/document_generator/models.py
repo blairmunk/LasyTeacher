@@ -19,8 +19,8 @@ from core_logic.value_objects.document_section_catalog import (
 from core_logic.value_objects.document_type_catalog import validate_document_type
 
 
-class DocumentTemplate(BaseModel):
-    class TemplateType(models.TextChoices):
+class PrintSettings(BaseModel):
+    class DocumentType(models.TextChoices):
         WORK = WORK_DOCUMENT_TYPE, 'Контрольная / самостоятельная'
         REMEDIAL = REMEDIAL_SHEET_DOCUMENT_TYPE, 'Работа над ошибками'
         WORKSHEET = WORKSHEET_DOCUMENT_TYPE, 'Рабочий лист'
@@ -31,10 +31,10 @@ class DocumentTemplate(BaseModel):
 
     name = models.CharField('Название', max_length=200)
     description = models.TextField('Описание', blank=True)
-    template_type = models.CharField(
+    document_type = models.CharField(
         'Тип документа',
         max_length=50,
-        choices=TemplateType.choices,
+        choices=DocumentType.choices,
     )
 
     sections_config = models.JSONField(
@@ -71,25 +71,25 @@ class DocumentTemplate(BaseModel):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='document_templates',
+        related_name='print_settings_profiles',
     )
 
     class Meta:
         verbose_name = 'Профиль печати'
         verbose_name_plural = 'Профили печати'
-        ordering = ['-is_default', 'template_type', 'name']
+        ordering = ['-is_default', 'document_type', 'name']
 
     def __str__(self):
-        return f'{self.name} ({self.get_template_type_display()})'
+        return f'{self.name} ({self.get_document_type_display()})'
 
     def clean(self):
         super().clean()
         try:
-            validate_document_type(self.template_type)
-            template_spec = self.to_print_settings_spec()
+            validate_document_type(self.document_type)
+            print_settings_spec = self.to_print_settings_spec()
             validate_document_section_types(
-                self.template_type,
-                template_spec.section_types,
+                self.document_type,
+                print_settings_spec.section_types,
             )
         except ValueError as error:
             raise ValidationError({'sections_config': str(error)}) from error
@@ -97,7 +97,7 @@ class DocumentTemplate(BaseModel):
     def to_print_settings_spec(self):
         return build_print_settings_spec_from_config(
             name=self.name,
-            document_type=self.template_type,
+            document_type=self.document_type,
             print_settings_id=str(self.pk),
             description=self.description,
             is_default=self.is_default,

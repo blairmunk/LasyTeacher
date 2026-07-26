@@ -3,15 +3,15 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from core_logic.entities.document import PrintSettingsSpec
-from document_generator.models import DocumentTemplate
+from document_generator.models import PrintSettings
 
 
-class DocumentTemplateModelTests(TestCase):
+class PrintSettingsModelTests(TestCase):
     def test_converts_model_to_print_settings_spec(self):
         user = User.objects.create_user(username='teacher')
-        template = DocumentTemplate.objects.create(
+        template = PrintSettings.objects.create(
             name='Рабочий лист',
-            template_type=DocumentTemplate.TemplateType.WORKSHEET,
+            document_type=PrintSettings.DocumentType.WORKSHEET,
             created_by=user,
             sections_config=[
                 {
@@ -61,17 +61,17 @@ class DocumentTemplateModelTests(TestCase):
         )
 
     def test_string_representation_contains_name_and_type(self):
-        template = DocumentTemplate(
+        template = PrintSettings(
             name='Ключ',
-            template_type=DocumentTemplate.TemplateType.ANSWER_KEY,
+            document_type=PrintSettings.DocumentType.ANSWER_KEY,
         )
 
         self.assertEqual(str(template), 'Ключ (Ключ для проверки)')
 
     def test_full_clean_accepts_valid_sections_config(self):
-        template = DocumentTemplate(
+        template = PrintSettings(
             name='Рабочий лист',
-            template_type=DocumentTemplate.TemplateType.WORKSHEET,
+            document_type=PrintSettings.DocumentType.WORKSHEET,
             sections_config=[
                 {
                     'type': 'task_list',
@@ -83,9 +83,9 @@ class DocumentTemplateModelTests(TestCase):
         template.full_clean()
 
     def test_full_clean_rejects_invalid_sections_config(self):
-        template = DocumentTemplate(
+        template = PrintSettings(
             name='Сломанный шаблон',
-            template_type=DocumentTemplate.TemplateType.WORKSHEET,
+            document_type=PrintSettings.DocumentType.WORKSHEET,
             sections_config=[
                 {
                     'type': 'task_list',
@@ -100,9 +100,9 @@ class DocumentTemplateModelTests(TestCase):
         self.assertIn('sections_config', context.exception.error_dict)
 
     def test_full_clean_rejects_unknown_section_type(self):
-        template = DocumentTemplate(
+        template = PrintSettings(
             name='Сломанный шаблон',
-            template_type=DocumentTemplate.TemplateType.WORKSHEET,
+            document_type=PrintSettings.DocumentType.WORKSHEET,
             sections_config=[
                 {
                     'type': 'unknown_section',
@@ -116,23 +116,23 @@ class DocumentTemplateModelTests(TestCase):
 
         self.assertIn('sections_config', context.exception.error_dict)
 
-    def test_full_clean_rejects_unknown_template_type(self):
-        template = DocumentTemplate(
+    def test_full_clean_rejects_unknown_document_type(self):
+        template = PrintSettings(
             name='Сломанный шаблон',
-            template_type='unknown_document_type',
+            document_type='unknown_document_type',
             sections_config=[],
         )
 
         with self.assertRaises(ValidationError) as context:
             template.full_clean()
 
-        self.assertIn('template_type', context.exception.error_dict)
+        self.assertIn('document_type', context.exception.error_dict)
         self.assertIn('sections_config', context.exception.error_dict)
 
-    def test_full_clean_rejects_section_for_wrong_template_type(self):
-        template = DocumentTemplate(
+    def test_full_clean_rejects_section_for_wrong_document_type(self):
+        template = PrintSettings(
             name='Сломанный шаблон',
-            template_type=DocumentTemplate.TemplateType.WORKSHEET,
+            document_type=PrintSettings.DocumentType.WORKSHEET,
             sections_config=[
                 {
                     'type': 'original_mistakes',

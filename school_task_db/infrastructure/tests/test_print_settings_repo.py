@@ -9,7 +9,7 @@ from core_logic.entities.document import (
 from core_logic.interfaces.print_settings_repo import (
     IPrintSettingsRepository,
 )
-from document_generator.models import DocumentTemplate
+from document_generator.models import PrintSettings
 from infrastructure.repositories.django_print_settings_repo import (
     DjangoPrintSettingsRepository,
 )
@@ -23,19 +23,19 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
         )
 
     def test_lists_profiles_filtered_by_document_type(self):
-        DocumentTemplate.objects.create(
+        PrintSettings.objects.create(
             name='Рабочий лист',
-            template_type=DocumentTemplate.TemplateType.WORKSHEET,
+            document_type=PrintSettings.DocumentType.WORKSHEET,
             sections_config=[{'type': 'header'}],
         )
-        DocumentTemplate.objects.create(
+        PrintSettings.objects.create(
             name='Ключ',
-            template_type=DocumentTemplate.TemplateType.ANSWER_KEY,
+            document_type=PrintSettings.DocumentType.ANSWER_KEY,
             sections_config=[{'type': 'answers'}],
         )
 
         profiles = DjangoPrintSettingsRepository().list_print_settings_specs(
-            document_type=DocumentTemplate.TemplateType.WORKSHEET,
+            document_type=PrintSettings.DocumentType.WORKSHEET,
         )
 
         self.assertEqual(len(profiles), 1)
@@ -45,15 +45,15 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
         self.assertEqual(profiles[0].section_types, ('header',))
 
     def test_returns_default_profile(self):
-        DocumentTemplate.objects.create(
+        PrintSettings.objects.create(
             name='Обычный профиль',
-            template_type=DocumentTemplate.TemplateType.WORKSHEET,
+            document_type=PrintSettings.DocumentType.WORKSHEET,
             is_default=False,
             sections_config=[{'type': 'header'}],
         )
-        DocumentTemplate.objects.create(
+        PrintSettings.objects.create(
             name='Основной профиль',
-            template_type=DocumentTemplate.TemplateType.WORKSHEET,
+            document_type=PrintSettings.DocumentType.WORKSHEET,
             is_default=True,
             sections_config=[{'type': 'task_list'}],
         )
@@ -61,7 +61,7 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
         profile = (
             DjangoPrintSettingsRepository()
             .get_default_print_settings_spec(
-                DocumentTemplate.TemplateType.WORKSHEET,
+                PrintSettings.DocumentType.WORKSHEET,
             )
         )
 
@@ -72,37 +72,37 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
         profile = (
             DjangoPrintSettingsRepository()
             .get_default_print_settings_spec(
-                DocumentTemplate.TemplateType.WORKSHEET,
+                PrintSettings.DocumentType.WORKSHEET,
             )
         )
 
         self.assertIsNone(profile)
 
     def test_returns_profile_by_id_and_type(self):
-        model = DocumentTemplate.objects.create(
+        model = PrintSettings.objects.create(
             name='Рабочий лист',
-            template_type=DocumentTemplate.TemplateType.WORKSHEET,
+            document_type=PrintSettings.DocumentType.WORKSHEET,
             sections_config=[{'type': 'header'}],
         )
 
         profile = DjangoPrintSettingsRepository().get_print_settings_spec(
             print_settings_id=str(model.pk),
-            document_type=DocumentTemplate.TemplateType.WORKSHEET,
+            document_type=PrintSettings.DocumentType.WORKSHEET,
         )
 
         self.assertEqual(profile.print_settings_id, str(model.pk))
         self.assertEqual(profile.name, 'Рабочий лист')
 
     def test_returns_none_when_profile_has_wrong_type(self):
-        model = DocumentTemplate.objects.create(
+        model = PrintSettings.objects.create(
             name='Рабочий лист',
-            template_type=DocumentTemplate.TemplateType.WORKSHEET,
+            document_type=PrintSettings.DocumentType.WORKSHEET,
             sections_config=[{'type': 'header'}],
         )
 
         profile = DjangoPrintSettingsRepository().get_print_settings_spec(
             print_settings_id=str(model.pk),
-            document_type=DocumentTemplate.TemplateType.ANSWER_KEY,
+            document_type=PrintSettings.DocumentType.ANSWER_KEY,
         )
 
         self.assertIsNone(profile)
@@ -111,7 +111,7 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
         profile_id = DjangoPrintSettingsRepository().create_print_settings(
             CreatePrintSettingsParams(
                 name='Рабочий лист',
-                document_type=DocumentTemplate.TemplateType.WORK,
+                document_type=PrintSettings.DocumentType.WORK,
                 sections=(
                     DocumentSectionSpec(section_type='header'),
                     DocumentSectionSpec(
@@ -125,7 +125,7 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
             )
         )
 
-        model = DocumentTemplate.objects.get(pk=profile_id)
+        model = PrintSettings.objects.get(pk=profile_id)
         self.assertEqual(
             model.sections_config,
             [
@@ -141,9 +141,9 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
         self.assertTrue(model.is_default)
 
     def test_creating_default_profile_clears_previous_default(self):
-        old_default = DocumentTemplate.objects.create(
+        old_default = PrintSettings.objects.create(
             name='Старый профиль',
-            template_type=DocumentTemplate.TemplateType.WORK,
+            document_type=PrintSettings.DocumentType.WORK,
             sections_config=[{'type': 'header'}],
             is_default=True,
         )
@@ -151,7 +151,7 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
         DjangoPrintSettingsRepository().create_print_settings(
             CreatePrintSettingsParams(
                 name='Новый профиль',
-                document_type=DocumentTemplate.TemplateType.WORK,
+                document_type=PrintSettings.DocumentType.WORK,
                 section_types=('header', 'task_list'),
                 is_default=True,
             )
@@ -161,9 +161,9 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
         self.assertFalse(old_default.is_default)
 
     def test_updates_profile_preserving_section_specs(self):
-        model = DocumentTemplate.objects.create(
+        model = PrintSettings.objects.create(
             name='Старый профиль',
-            template_type=DocumentTemplate.TemplateType.WORK,
+            document_type=PrintSettings.DocumentType.WORK,
             sections_config=[{'type': 'header'}],
         )
 
@@ -172,7 +172,7 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
                 print_settings_id=str(model.pk),
                 name='Новый профиль',
                 description='Новое описание',
-                document_type=DocumentTemplate.TemplateType.WORK,
+                document_type=PrintSettings.DocumentType.WORK,
                 sections=(
                     DocumentSectionSpec(section_type='page_break'),
                     DocumentSectionSpec(
@@ -202,7 +202,7 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
             UpdatePrintSettingsParams(
                 print_settings_id='550e8400-e29b-41d4-a716-446655440000',
                 name='Профиль',
-                document_type=DocumentTemplate.TemplateType.WORK,
+                document_type=PrintSettings.DocumentType.WORK,
                 section_types=('header',),
             )
         )

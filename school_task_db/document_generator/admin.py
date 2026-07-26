@@ -1,19 +1,19 @@
 from django.contrib import admin
 
-from .models import DocumentTemplate
+from .models import PrintSettings
 
 
-@admin.register(DocumentTemplate)
-class DocumentTemplateAdmin(admin.ModelAdmin):
+@admin.register(PrintSettings)
+class PrintSettingsAdmin(admin.ModelAdmin):
     list_display = [
         'name',
-        'template_type',
+        'document_type',
         'is_default',
         'is_public',
         'created_by',
         'updated_at',
     ]
-    list_filter = ['template_type', 'is_default', 'is_public']
+    list_filter = ['document_type', 'is_default', 'is_public']
     search_fields = ['name', 'description']
     readonly_fields = ['id', 'created_at', 'updated_at']
     fieldsets = [
@@ -21,7 +21,7 @@ class DocumentTemplateAdmin(admin.ModelAdmin):
             'fields': [
                 'name',
                 'description',
-                'template_type',
+                'document_type',
                 'created_by',
                 'is_default',
                 'is_public',

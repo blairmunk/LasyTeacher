@@ -18,7 +18,7 @@ from core_logic.entities.document_rendering import (
     GeneratedFileResult,
 )
 from curriculum.models import Topic
-from document_generator.models import DocumentTemplate
+from document_generator.models import PrintSettings
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from students.models import Student
@@ -226,9 +226,9 @@ class WorkDetailViewTests(TestCase):
         self.assertContains(response, 'break_between_variants')
 
     def test_detail_exposes_work_template_selector(self):
-        template = DocumentTemplate.objects.create(
+        template = PrintSettings.objects.create(
             name='Кастомный шаблон работы',
-            template_type=DocumentTemplate.TemplateType.WORK,
+            document_type=PrintSettings.DocumentType.WORK,
             sections_config=[{'type': 'header'}],
             custom_latex_preamble='\\usepackage{multicol}',
         )
@@ -248,9 +248,9 @@ class WorkDetailViewTests(TestCase):
             name='Работа над ошибками',
             work_type='remedial',
         )
-        template = DocumentTemplate.objects.create(
+        template = PrintSettings.objects.create(
             name='Шаблон листа РнО',
-            template_type=DocumentTemplate.TemplateType.REMEDIAL,
+            document_type=PrintSettings.DocumentType.REMEDIAL,
             sections_config=[{'type': 'header'}],
         )
 

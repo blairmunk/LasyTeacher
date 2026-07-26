@@ -1,14 +1,14 @@
 from django.test import TestCase
 from django.urls import reverse
 
-from document_generator.models import DocumentTemplate
+from document_generator.models import PrintSettings
 
 
 class PrintSettingsViewTests(TestCase):
     def test_template_editor_shows_catalog_and_saved_templates(self):
-        DocumentTemplate.objects.create(
+        PrintSettings.objects.create(
             name='Шаблон работы',
-            template_type=DocumentTemplate.TemplateType.WORK,
+            document_type=PrintSettings.DocumentType.WORK,
             sections_config=[{'type': 'header'}],
         )
 
@@ -36,7 +36,7 @@ class PrintSettingsViewTests(TestCase):
             response,
             reverse(
                 'document_generator:print-profile-update',
-                args=[DocumentTemplate.objects.get(name='Шаблон работы').pk],
+                args=[PrintSettings.objects.get(name='Шаблон работы').pk],
             ),
         )
 
@@ -96,7 +96,7 @@ class PrintSettingsViewTests(TestCase):
             response,
             reverse('document_generator:print-profile-editor'),
         )
-        template = DocumentTemplate.objects.get(name='Шаблон работы')
+        template = PrintSettings.objects.get(name='Шаблон работы')
         self.assertEqual(template.description, 'Для печати')
         self.assertEqual(
             template.sections_config,
@@ -119,7 +119,7 @@ class PrintSettingsViewTests(TestCase):
             response,
             reverse('document_generator:print-profile-editor'),
         )
-        template = DocumentTemplate.objects.get(name='Рабочий лист')
+        template = PrintSettings.objects.get(name='Рабочий лист')
         self.assertEqual(
             template.sections_config,
             [{'type': 'task_list'}, {'type': 'header'}],
@@ -143,7 +143,7 @@ class PrintSettingsViewTests(TestCase):
             response,
             reverse('document_generator:print-profile-editor'),
         )
-        template = DocumentTemplate.objects.get(name='Рабочий лист')
+        template = PrintSettings.objects.get(name='Рабочий лист')
         self.assertEqual(
             template.sections_config,
             [
@@ -174,7 +174,7 @@ class PrintSettingsViewTests(TestCase):
             response,
             'Настройки секции task_list: некорректный JSON.',
         )
-        self.assertFalse(DocumentTemplate.objects.exists())
+        self.assertFalse(PrintSettings.objects.exists())
 
     def test_template_create_view_shows_clean_validation_errors(self):
         response = self.client.post(
@@ -191,13 +191,13 @@ class PrintSettingsViewTests(TestCase):
             response,
             'Section task_list is not supported for document type remedial_sheet',
         )
-        self.assertFalse(DocumentTemplate.objects.exists())
+        self.assertFalse(PrintSettings.objects.exists())
 
     def test_template_update_view_shows_existing_template(self):
-        template = DocumentTemplate.objects.create(
+        template = PrintSettings.objects.create(
             name='Шаблон работы',
             description='Описание',
-            template_type=DocumentTemplate.TemplateType.WORK,
+            document_type=PrintSettings.DocumentType.WORK,
             sections_config=[{'type': 'header'}],
             is_default=True,
         )
@@ -218,9 +218,9 @@ class PrintSettingsViewTests(TestCase):
         self.assertContains(response, 'checked')
 
     def test_template_update_view_shows_existing_section_options(self):
-        template = DocumentTemplate.objects.create(
+        template = PrintSettings.objects.create(
             name='Шаблон работы',
-            template_type=DocumentTemplate.TemplateType.WORK,
+            document_type=PrintSettings.DocumentType.WORK,
             sections_config=[
                 {'type': 'header'},
                 {
@@ -243,9 +243,9 @@ class PrintSettingsViewTests(TestCase):
         self.assertContains(response, '&quot;rows&quot;: 6')
 
     def test_template_update_view_updates_template(self):
-        template = DocumentTemplate.objects.create(
+        template = PrintSettings.objects.create(
             name='Старый шаблон',
-            template_type=DocumentTemplate.TemplateType.WORK,
+            document_type=PrintSettings.DocumentType.WORK,
             sections_config=[{'type': 'header'}],
         )
 
@@ -274,9 +274,9 @@ class PrintSettingsViewTests(TestCase):
         self.assertTrue(template.is_default)
 
     def test_template_update_view_preserves_section_order(self):
-        template = DocumentTemplate.objects.create(
+        template = PrintSettings.objects.create(
             name='Старый шаблон',
-            template_type=DocumentTemplate.TemplateType.WORK,
+            document_type=PrintSettings.DocumentType.WORK,
             sections_config=[{'type': 'header'}],
         )
 

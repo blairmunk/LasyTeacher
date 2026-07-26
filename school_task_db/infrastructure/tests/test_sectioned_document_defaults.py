@@ -7,7 +7,7 @@ from core_logic.entities.document import (
     DocumentRecipe,
     DocumentSectionSpec,
     DocumentSourceRef,
-    DocumentTemplateSpec,
+    PrintSettingsSpec,
     REMEDIAL_VARIANT_SOURCE_TYPE,
     WORK_SOURCE_TYPE,
 )
@@ -178,9 +178,9 @@ class SectionedDocumentDefaultsTests(TestCase):
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=WorkDocumentRenderOptions(renderer_type='html'),
-                    print_settings_spec=DocumentTemplateSpec(
+                    print_settings_spec=PrintSettingsSpec(
                         name='Вариантная работа',
-                        template_type='work',
+                        document_type='work',
                         sections=[
                             DocumentSectionSpec(section_type=COMMON_HEADER_SECTION),
                             DocumentSectionSpec(section_type=HEADER_SECTION),
@@ -239,9 +239,9 @@ class SectionedDocumentDefaultsTests(TestCase):
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=options,
-                    print_settings_spec=DocumentTemplateSpec(
+                    print_settings_spec=PrintSettingsSpec(
                         name='Legacy work template',
-                        template_type='work',
+                        document_type='work',
                         sections=[
                             DocumentSectionSpec(section_type=TASK_LIST_SECTION),
                             DocumentSectionSpec(section_type=ANSWERS_SECTION),
@@ -291,9 +291,9 @@ class SectionedDocumentDefaultsTests(TestCase):
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=options,
-                    print_settings_spec=DocumentTemplateSpec(
+                    print_settings_spec=PrintSettingsSpec(
                         name='Legacy answer template',
-                        template_type='work',
+                        document_type='work',
                         sections=[
                             DocumentSectionSpec(
                                 section_type=LEGACY_ANSWER_KEY_SECTION,
@@ -355,9 +355,9 @@ class SectionedDocumentDefaultsTests(TestCase):
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=WorkDocumentRenderOptions(renderer_type='html'),
-                    print_settings_spec=DocumentTemplateSpec(
+                    print_settings_spec=PrintSettingsSpec(
                         name='Work with theory',
-                        template_type='work',
+                        document_type='work',
                         sections=[
                             DocumentSectionSpec(section_type=THEORY_SECTION),
                             DocumentSectionSpec(section_type=TASK_LIST_SECTION),

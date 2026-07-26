@@ -5,7 +5,7 @@ from unittest import TestCase
 from core_logic.entities.document import (
     DocumentPresentation,
     DocumentSectionSpec,
-    DocumentTemplateSpec,
+    PrintSettingsSpec,
 )
 from core_logic.entities.document_rendering import (
     DocumentRenderResult,
@@ -133,34 +133,26 @@ class FakeRenderRemedialSheetDocumentUseCase:
         )
 
 
-class FakeDocumentTemplateRepository:
+class FakePrintSettingsRepository:
     def __init__(self):
-        self.requested_template_types = []
-        self.requested_template_ids = []
-        self.default_templates = {}
-        self.templates_by_id = {}
-
-    def list_template_specs(self, template_type=''):
-        return []
+        self.requested_document_types = []
+        self.requested_print_settings_ids = []
+        self.default_print_settings = {}
+        self.print_settings_by_id = {}
 
     def list_print_settings_specs(self, document_type=''):
-        return self.list_template_specs(template_type=document_type)
-
-    def get_default_template_spec(self, template_type):
-        self.requested_template_types.append(template_type)
-        return self.default_templates.get(template_type)
+        return []
 
     def get_default_print_settings_spec(self, document_type):
-        return self.get_default_template_spec(template_type=document_type)
-
-    def get_template_spec(self, template_id, template_type=''):
-        self.requested_template_ids.append((template_id, template_type))
-        return self.templates_by_id.get((template_id, template_type))
+        self.requested_document_types.append(document_type)
+        return self.default_print_settings.get(document_type)
 
     def get_print_settings_spec(self, print_settings_id, document_type=''):
-        return self.get_template_spec(
-            template_id=print_settings_id,
-            template_type=document_type,
+        self.requested_print_settings_ids.append(
+            (print_settings_id, document_type),
+        )
+        return self.print_settings_by_id.get(
+            (print_settings_id, document_type),
         )
 
 
@@ -254,23 +246,23 @@ class DocumentRenderingUseCaseTests(TestCase):
         self.assertTrue(result.success)
         self.assertEqual(service.render_request.source.source_id, 'work-1')
 
-    def test_render_work_document_uses_request_template_spec(self):
+    def test_render_work_document_uses_request_print_settings_spec(self):
         service = FakeDocumentEngine()
-        template_repo = FakeDocumentTemplateRepository()
-        template_repo.default_templates['work'] = DocumentTemplateSpec(
+        print_settings_repo = FakePrintSettingsRepository()
+        print_settings_repo.default_print_settings['work'] = PrintSettingsSpec(
             name='Default work',
-            template_type='work',
+            document_type='work',
             sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
         )
         use_case = RenderWorkDocumentUseCase(
             document_engine=service,
             work_repo=FakeWorkRepository(),
-            print_settings_repo=template_repo,
+            print_settings_repo=print_settings_repo,
         )
-        self.assertIs(use_case.print_settings_repo, template_repo)
-        template_spec = DocumentTemplateSpec(
+        self.assertIs(use_case.print_settings_repo, print_settings_repo)
+        print_settings_spec = PrintSettingsSpec(
             name='Кастомная работа',
-            template_type='work',
+            document_type='work',
             sections=[
                 DocumentSectionSpec(section_type=TASK_LIST_SECTION),
                 DocumentSectionSpec(section_type=ANSWERS_SECTION),
@@ -284,12 +276,12 @@ class DocumentRenderingUseCaseTests(TestCase):
             RenderWorkDocumentRequest(
                 work_id='work-1',
                 options=WorkDocumentRenderOptions(renderer_type='html'),
-                print_settings_spec=template_spec,
+                print_settings_spec=print_settings_spec,
             )
         )
 
         self.assertTrue(result.success)
-        self.assertEqual(template_repo.requested_template_types, [])
+        self.assertEqual(print_settings_repo.requested_document_types, [])
         render_plan = service.render_request
         self.assertEqual(
             render_plan.recipe.section_types,
@@ -302,15 +294,15 @@ class DocumentRenderingUseCaseTests(TestCase):
 
     def test_render_work_document_uses_request_print_settings_spec(self):
         service = FakeDocumentEngine()
-        template_repo = FakeDocumentTemplateRepository()
+        print_settings_repo = FakePrintSettingsRepository()
         use_case = RenderWorkDocumentUseCase(
             document_engine=service,
             work_repo=FakeWorkRepository(),
-            print_settings_repo=template_repo,
+            print_settings_repo=print_settings_repo,
         )
-        print_settings_spec = DocumentTemplateSpec(
+        print_settings_spec = PrintSettingsSpec(
             name='Профиль печати',
-            template_type='work',
+            document_type='work',
             sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
         )
 
@@ -323,21 +315,21 @@ class DocumentRenderingUseCaseTests(TestCase):
         )
 
         self.assertTrue(result.success)
-        self.assertEqual(template_repo.requested_template_types, [])
+        self.assertEqual(print_settings_repo.requested_document_types, [])
         self.assertEqual(service.render_request.recipe.section_types, (ANSWERS_SECTION,))
 
-    def test_render_work_document_uses_default_template_spec(self):
+    def test_render_work_document_uses_default_print_settings_spec(self):
         service = FakeDocumentEngine()
-        template_repo = FakeDocumentTemplateRepository()
-        template_repo.default_templates['work'] = DocumentTemplateSpec(
+        print_settings_repo = FakePrintSettingsRepository()
+        print_settings_repo.default_print_settings['work'] = PrintSettingsSpec(
             name='Default work',
-            template_type='work',
+            document_type='work',
             sections=[DocumentSectionSpec(section_type=TASK_LIST_SECTION)],
         )
         use_case = RenderWorkDocumentUseCase(
             document_engine=service,
             work_repo=FakeWorkRepository(),
-            print_settings_repo=template_repo,
+            print_settings_repo=print_settings_repo,
         )
 
         result = use_case.execute(
@@ -348,25 +340,25 @@ class DocumentRenderingUseCaseTests(TestCase):
         )
 
         self.assertTrue(result.success)
-        self.assertEqual(template_repo.requested_template_types, ['work'])
+        self.assertEqual(print_settings_repo.requested_document_types, ['work'])
         render_plan = service.render_request
         self.assertEqual(render_plan.recipe.section_types, (TASK_LIST_SECTION,))
 
     def test_render_work_document_uses_print_settings_id(self):
         service = FakeDocumentEngine()
-        template_repo = FakeDocumentTemplateRepository()
-        template_repo.templates_by_id[('template-work', 'work')] = (
-            DocumentTemplateSpec(
+        print_settings_repo = FakePrintSettingsRepository()
+        print_settings_repo.print_settings_by_id[('template-work', 'work')] = (
+            PrintSettingsSpec(
                 name='Selected work',
-                template_type='work',
-                template_id='template-work',
+                document_type='work',
+                print_settings_id='template-work',
                 sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
             )
         )
         use_case = RenderWorkDocumentUseCase(
             document_engine=service,
             work_repo=FakeWorkRepository(),
-            print_settings_repo=template_repo,
+            print_settings_repo=print_settings_repo,
         )
 
         result = use_case.execute(
@@ -379,7 +371,7 @@ class DocumentRenderingUseCaseTests(TestCase):
 
         self.assertTrue(result.success)
         self.assertEqual(
-            template_repo.requested_template_ids,
+            print_settings_repo.requested_print_settings_ids,
             [('template-work', 'work')],
         )
         self.assertEqual(service.render_request.recipe.section_types, (ANSWERS_SECTION,))
@@ -455,22 +447,22 @@ class DocumentRenderingUseCaseTests(TestCase):
         self.assertTrue(result.success)
         self.assertEqual(service.render_request.source.source_id, 'variant-1')
 
-    def test_render_remedial_sheet_document_uses_request_template_spec(self):
+    def test_render_remedial_sheet_document_uses_request_print_settings_spec(self):
         service = FakeDocumentEngine()
-        template_repo = FakeDocumentTemplateRepository()
-        template_repo.default_templates['remedial_sheet'] = DocumentTemplateSpec(
+        print_settings_repo = FakePrintSettingsRepository()
+        print_settings_repo.default_print_settings['remedial_sheet'] = PrintSettingsSpec(
             name='Default remedial',
-            template_type='remedial_sheet',
+            document_type='remedial_sheet',
             sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
         )
         use_case = RenderRemedialSheetDocumentUseCase(
             document_engine=service,
             work_repo=FakeWorkRepository(),
-            print_settings_repo=template_repo,
+            print_settings_repo=print_settings_repo,
         )
-        template_spec = DocumentTemplateSpec(
+        print_settings_spec = PrintSettingsSpec(
             name='Кастомная работа над ошибками',
-            template_type='remedial_sheet',
+            document_type='remedial_sheet',
             sections=[
                 DocumentSectionSpec(section_type=HEADER_SECTION),
                 DocumentSectionSpec(section_type=TASK_LIST_SECTION),
@@ -481,30 +473,30 @@ class DocumentRenderingUseCaseTests(TestCase):
             RenderRemedialSheetDocumentRequest(
                 variant_id='variant-1',
                 options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
-                print_settings_spec=template_spec,
+                print_settings_spec=print_settings_spec,
             )
         )
 
         self.assertTrue(result.success)
-        self.assertEqual(template_repo.requested_template_types, [])
+        self.assertEqual(print_settings_repo.requested_document_types, [])
         render_plan = service.render_request
         self.assertEqual(
             render_plan.recipe.section_types,
             (HEADER_SECTION, TASK_LIST_SECTION),
         )
 
-    def test_render_remedial_sheet_document_uses_default_template_spec(self):
+    def test_render_remedial_sheet_document_uses_default_print_settings_spec(self):
         service = FakeDocumentEngine()
-        template_repo = FakeDocumentTemplateRepository()
-        template_repo.default_templates['remedial_sheet'] = DocumentTemplateSpec(
+        print_settings_repo = FakePrintSettingsRepository()
+        print_settings_repo.default_print_settings['remedial_sheet'] = PrintSettingsSpec(
             name='Default remedial',
-            template_type='remedial_sheet',
+            document_type='remedial_sheet',
             sections=[DocumentSectionSpec(section_type=TASK_LIST_SECTION)],
         )
         use_case = RenderRemedialSheetDocumentUseCase(
             document_engine=service,
             work_repo=FakeWorkRepository(),
-            print_settings_repo=template_repo,
+            print_settings_repo=print_settings_repo,
         )
 
         result = use_case.execute(
@@ -516,7 +508,7 @@ class DocumentRenderingUseCaseTests(TestCase):
 
         self.assertTrue(result.success)
         self.assertEqual(
-            template_repo.requested_template_types,
+            print_settings_repo.requested_document_types,
             ['remedial_sheet'],
         )
         render_plan = service.render_request
@@ -526,19 +518,19 @@ class DocumentRenderingUseCaseTests(TestCase):
         self,
     ):
         service = FakeDocumentEngine()
-        template_repo = FakeDocumentTemplateRepository()
-        template_repo.templates_by_id[('template-rno', 'remedial_sheet')] = (
-            DocumentTemplateSpec(
+        print_settings_repo = FakePrintSettingsRepository()
+        print_settings_repo.print_settings_by_id[('template-rno', 'remedial_sheet')] = (
+            PrintSettingsSpec(
                 name='Selected remedial',
-                template_type='remedial_sheet',
-                template_id='template-rno',
+                document_type='remedial_sheet',
+                print_settings_id='template-rno',
                 sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
             )
         )
         use_case = RenderRemedialSheetDocumentUseCase(
             document_engine=service,
             work_repo=FakeWorkRepository(),
-            print_settings_repo=template_repo,
+            print_settings_repo=print_settings_repo,
         )
 
         result = use_case.execute(
@@ -551,26 +543,26 @@ class DocumentRenderingUseCaseTests(TestCase):
 
         self.assertTrue(result.success)
         self.assertEqual(
-            template_repo.requested_template_ids,
+            print_settings_repo.requested_print_settings_ids,
             [('template-rno', 'remedial_sheet')],
         )
         self.assertEqual(service.render_request.recipe.section_types, (ANSWERS_SECTION,))
 
     def test_render_remedial_sheet_document_uses_print_settings_id(self):
         service = FakeDocumentEngine()
-        template_repo = FakeDocumentTemplateRepository()
-        template_repo.templates_by_id[('profile-rno', 'remedial_sheet')] = (
-            DocumentTemplateSpec(
+        print_settings_repo = FakePrintSettingsRepository()
+        print_settings_repo.print_settings_by_id[('profile-rno', 'remedial_sheet')] = (
+            PrintSettingsSpec(
                 name='Selected remedial',
-                template_type='remedial_sheet',
-                template_id='profile-rno',
+                document_type='remedial_sheet',
+                print_settings_id='profile-rno',
                 sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
             )
         )
         use_case = RenderRemedialSheetDocumentUseCase(
             document_engine=service,
             work_repo=FakeWorkRepository(),
-            print_settings_repo=template_repo,
+            print_settings_repo=print_settings_repo,
         )
 
         result = use_case.execute(
@@ -583,7 +575,7 @@ class DocumentRenderingUseCaseTests(TestCase):
 
         self.assertTrue(result.success)
         self.assertEqual(
-            template_repo.requested_template_ids,
+            print_settings_repo.requested_print_settings_ids,
             [('profile-rno', 'remedial_sheet')],
         )
         self.assertEqual(service.render_request.recipe.section_types, (ANSWERS_SECTION,))
@@ -734,9 +726,9 @@ class DocumentRenderingUseCaseTests(TestCase):
             work_repo=work_repo,
             document_engine=service,
         )
-        print_settings_spec = DocumentTemplateSpec(
+        print_settings_spec = PrintSettingsSpec(
             name='Профиль РнО',
-            template_type='remedial_sheet',
+            document_type='remedial_sheet',
             sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
         )
 

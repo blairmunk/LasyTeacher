@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from core_logic.entities.document import (
     DocumentSectionSpec,
-    DocumentTemplateSpec,
+    PrintSettingsSpec,
     REMEDIAL_WORK_SOURCE_TYPE,
     REMEDIAL_VARIANT_SOURCE_TYPE,
     WORK_SOURCE_TYPE,
@@ -81,9 +81,9 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         self.assertIn('role_blank_cells', recipe.sections[1].options)
 
     def test_build_work_document_recipe_for_render_uses_template_spec(self):
-        template_spec = DocumentTemplateSpec(
+        template_spec = PrintSettingsSpec(
             name='Кастомная работа',
-            template_type=WORK_DOCUMENT_TYPE,
+            document_type=WORK_DOCUMENT_TYPE,
             sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
         )
 
@@ -95,9 +95,9 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         self.assertEqual(recipe.section_types, (HEADER_SECTION,))
 
     def test_build_work_document_recipe_for_render_uses_print_settings_spec(self):
-        print_settings_spec = DocumentTemplateSpec(
+        print_settings_spec = PrintSettingsSpec(
             name='Профиль печати',
-            template_type=WORK_DOCUMENT_TYPE,
+            document_type=WORK_DOCUMENT_TYPE,
             sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
         )
 
@@ -109,9 +109,9 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         self.assertEqual(recipe.section_types, (ANSWERS_SECTION,))
 
     def test_template_spec_takes_priority_over_worksheet_style(self):
-        template_spec = DocumentTemplateSpec(
+        template_spec = PrintSettingsSpec(
             name='Кастомная работа',
-            template_type=WORK_DOCUMENT_TYPE,
+            document_type=WORK_DOCUMENT_TYPE,
             sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
         )
 
@@ -156,9 +156,9 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         )
 
     def test_build_work_document_render_plan_uses_template_spec(self):
-        template_spec = DocumentTemplateSpec(
+        template_spec = PrintSettingsSpec(
             name='Рабочий лист',
-            template_type='work',
+            document_type='work',
             sections=[
                 DocumentSectionSpec(
                     section_type=TASK_LIST_SECTION,
@@ -186,9 +186,9 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         )
 
     def test_build_work_document_render_plan_repeats_sections_per_variant(self):
-        template_spec = DocumentTemplateSpec(
+        template_spec = PrintSettingsSpec(
             name='Работа по вариантам',
-            template_type='work',
+            document_type='work',
             sections=[
                 DocumentSectionSpec(section_type=COMMON_HEADER_SECTION),
                 DocumentSectionSpec(section_type=HEADER_SECTION),
@@ -224,9 +224,9 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         )
 
     def test_build_work_document_render_plan_can_disable_variant_breaks(self):
-        template_spec = DocumentTemplateSpec(
+        template_spec = PrintSettingsSpec(
             name='Сплошная работа',
-            template_type='work',
+            document_type='work',
             sections=[
                 DocumentSectionSpec(section_type=HEADER_SECTION),
                 DocumentSectionSpec(section_type=TASK_LIST_SECTION),
@@ -282,9 +282,9 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         )
 
     def test_build_remedial_sheet_document_render_plan_uses_template_spec(self):
-        template_spec = DocumentTemplateSpec(
+        template_spec = PrintSettingsSpec(
             name='Кастомная работа над ошибками',
-            template_type='remedial_sheet',
+            document_type='remedial_sheet',
             sections=[
                 DocumentSectionSpec(section_type=HEADER_SECTION),
                 DocumentSectionSpec(section_type=TASK_LIST_SECTION),
@@ -335,9 +335,9 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         self.assertEqual(plan.recipe.sections[5].options['variant_id'], 'variant-2')
 
     def test_build_remedial_sheet_batch_document_render_plan_uses_print_settings_spec(self):
-        print_settings_spec = DocumentTemplateSpec(
+        print_settings_spec = PrintSettingsSpec(
             name='Профиль РнО',
-            template_type='remedial_sheet',
+            document_type='remedial_sheet',
             sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
         )
 

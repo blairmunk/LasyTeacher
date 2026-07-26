@@ -186,14 +186,6 @@ class PrintSettingsSpec:
     def section_types(self) -> Tuple[str, ...]:
         return tuple(section.section_type for section in self.sections)
 
-    @property
-    def template_id(self) -> str:
-        return self.print_settings_id
-
-    @property
-    def template_type(self) -> str:
-        return self.document_type
-
     def to_print_recipe(self, document_type: str = '') -> DocumentRecipe:
         return DocumentRecipe(
             document_type=document_type or self.document_type,
@@ -203,32 +195,6 @@ class PrintSettingsSpec:
 
     def to_recipe(self, document_type: str = '') -> DocumentRecipe:
         return self.to_print_recipe(document_type=document_type)
-
-
-class DocumentTemplateSpec(PrintSettingsSpec):
-    """Legacy constructor for saved document print settings."""
-
-    def __init__(
-        self,
-        name: str,
-        template_type: str,
-        template_id: str = '',
-        description: str = '',
-        is_default: bool = False,
-        sections: Tuple[DocumentSectionSpec, ...] = (),
-        default_content_config: Mapping[str, Any] | None = None,
-        presentation: DocumentPresentation | None = None,
-    ):
-        super().__init__(
-            name=name,
-            document_type=template_type,
-            print_settings_id=template_id,
-            description=description,
-            is_default=is_default,
-            sections=sections,
-            default_content_config=default_content_config or {},
-            presentation=presentation or DocumentPresentation(),
-        )
 
 
 def _clean_section_types(section_types) -> Tuple[str, ...]:
@@ -270,11 +236,6 @@ class CreatePrintSettingsParams:
         object.__setattr__(self, 'sections', sections)
         object.__setattr__(self, 'description', self.description.strip())
 
-    @property
-    def template_type(self) -> str:
-        return self.document_type
-
-
 @dataclass(frozen=True)
 class CreatePrintSettingsResult:
     status: str
@@ -282,50 +243,8 @@ class CreatePrintSettingsResult:
     errors: Tuple[str, ...] = field(default_factory=tuple)
 
     @property
-    def template_id(self) -> str:
-        return self.print_settings_id
-
-    @property
     def success(self) -> bool:
         return self.status == 'created'
-
-
-class CreateDocumentTemplateParams(CreatePrintSettingsParams):
-    """Legacy parameters for creating a document template."""
-
-    def __init__(
-        self,
-        name: str,
-        template_type: str,
-        section_types: Tuple[str, ...] = (),
-        sections: Tuple[DocumentSectionSpec, ...] = (),
-        description: str = '',
-        is_default: bool = False,
-    ):
-        super().__init__(
-            name=name,
-            document_type=template_type,
-            section_types=section_types,
-            sections=sections,
-            description=description,
-            is_default=is_default,
-        )
-
-
-class CreateDocumentTemplateResult(CreatePrintSettingsResult):
-    """Legacy result of creating a document template."""
-
-    def __init__(
-        self,
-        status: str,
-        template_id: str = '',
-        errors: Tuple[str, ...] = (),
-    ):
-        super().__init__(
-            status=status,
-            print_settings_id=template_id,
-            errors=errors,
-        )
 
 
 @dataclass(frozen=True)
@@ -360,15 +279,6 @@ class UpdatePrintSettingsParams:
         object.__setattr__(self, 'sections', sections)
         object.__setattr__(self, 'description', self.description.strip())
 
-    @property
-    def template_id(self) -> str:
-        return self.print_settings_id
-
-    @property
-    def template_type(self) -> str:
-        return self.document_type
-
-
 @dataclass(frozen=True)
 class UpdatePrintSettingsResult:
     status: str
@@ -376,49 +286,5 @@ class UpdatePrintSettingsResult:
     errors: Tuple[str, ...] = field(default_factory=tuple)
 
     @property
-    def template_id(self) -> str:
-        return self.print_settings_id
-
-    @property
     def success(self) -> bool:
         return self.status == 'updated'
-
-
-class UpdateDocumentTemplateParams(UpdatePrintSettingsParams):
-    """Legacy parameters for updating a document template."""
-
-    def __init__(
-        self,
-        template_id: str,
-        name: str,
-        template_type: str,
-        section_types: Tuple[str, ...] = (),
-        sections: Tuple[DocumentSectionSpec, ...] = (),
-        description: str = '',
-        is_default: bool = False,
-    ):
-        super().__init__(
-            print_settings_id=template_id,
-            name=name,
-            document_type=template_type,
-            section_types=section_types,
-            sections=sections,
-            description=description,
-            is_default=is_default,
-        )
-
-
-class UpdateDocumentTemplateResult(UpdatePrintSettingsResult):
-    """Legacy result of updating a document template."""
-
-    def __init__(
-        self,
-        status: str,
-        template_id: str = '',
-        errors: Tuple[str, ...] = (),
-    ):
-        super().__init__(
-            status=status,
-            print_settings_id=template_id,
-            errors=errors,
-        )

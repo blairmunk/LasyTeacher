@@ -98,8 +98,6 @@ class WorkFormAdapter:
             'remedial_sheet_print_settings': (
                 detail.remedial_sheet_print_settings
             ),
-            'work_document_templates': detail.work_print_settings,
-            'remedial_sheet_templates': detail.remedial_sheet_print_settings,
             'work_document_style_options': detail.work_document_style_options,
             'show_sync_button': detail.show_sync_button,
         }

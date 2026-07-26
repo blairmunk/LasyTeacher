@@ -7,7 +7,7 @@ from document_generator.models import DocumentTemplate
 
 
 class DocumentTemplateModelTests(TestCase):
-    def test_converts_model_to_template_spec(self):
+    def test_converts_model_to_print_settings_spec(self):
         user = User.objects.create_user(username='teacher')
         template = DocumentTemplate.objects.create(
             name='Рабочий лист',
@@ -34,8 +34,8 @@ class DocumentTemplateModelTests(TestCase):
 
         self.assertIsInstance(spec, PrintSettingsSpec)
         self.assertEqual(spec.name, 'Рабочий лист')
-        self.assertEqual(spec.template_id, str(template.pk))
-        self.assertEqual(spec.template_type, 'worksheet')
+        self.assertEqual(spec.print_settings_id, str(template.pk))
+        self.assertEqual(spec.document_type, 'worksheet')
         self.assertEqual(spec.section_types, ('header', 'task_list'))
         self.assertEqual(
             spec.sections[1].options,
@@ -59,7 +59,6 @@ class DocumentTemplateModelTests(TestCase):
             spec.presentation.custom_latex_preamble,
             '\\usepackage{multicol}',
         )
-        self.assertEqual(template.to_template_spec(), spec)
 
     def test_string_representation_contains_name_and_type(self):
         template = DocumentTemplate(

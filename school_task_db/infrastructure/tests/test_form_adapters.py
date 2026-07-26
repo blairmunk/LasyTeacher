@@ -1579,14 +1579,6 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertEqual(detail_context['analog_groups'], ['group-1'])
         self.assertEqual(detail_context['spec_preview'], ['spec-1'])
         self.assertEqual(
-            detail_context['work_document_templates'],
-            ['work-template-1'],
-        )
-        self.assertEqual(
-            detail_context['remedial_sheet_templates'],
-            ['remedial-template-1'],
-        )
-        self.assertEqual(
             detail_context['work_print_settings'],
             ['work-template-1'],
         )

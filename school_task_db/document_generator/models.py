@@ -108,6 +108,3 @@ class DocumentTemplate(BaseModel):
             custom_css=self.custom_css,
             custom_latex_preamble=self.custom_latex_preamble,
         )
-
-    def to_template_spec(self):
-        return self.to_print_settings_spec()

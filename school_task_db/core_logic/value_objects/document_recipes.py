@@ -94,37 +94,6 @@ def build_print_settings_spec_from_config(
     )
 
 
-def build_document_template_spec_from_config(
-    name: str,
-    template_type: str,
-    sections_config: (
-        Mapping[str, Any]
-        | Sequence[Mapping[str, Any] | DocumentSectionSpec]
-    ),
-    default_content_config: Mapping[str, Any] | None = None,
-    html_template_override: str = '',
-    latex_template_override: str = '',
-    custom_css: str = '',
-    custom_latex_preamble: str = '',
-    template_id: str = '',
-    description: str = '',
-    is_default: bool = False,
-) -> PrintSettingsSpec:
-    return build_print_settings_spec_from_config(
-        name=name,
-        document_type=template_type,
-        sections_config=sections_config,
-        default_content_config=default_content_config,
-        html_template_override=html_template_override,
-        latex_template_override=latex_template_override,
-        custom_css=custom_css,
-        custom_latex_preamble=custom_latex_preamble,
-        print_settings_id=template_id,
-        description=description,
-        is_default=is_default,
-    )
-
-
 def _section_spec_from_config(
     section_config: Mapping[str, Any] | DocumentSectionSpec,
 ) -> DocumentSectionSpec:

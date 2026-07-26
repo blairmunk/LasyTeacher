@@ -29,15 +29,6 @@ class WorkDetailData:
     )
     show_sync_button: bool = False
 
-    @property
-    def work_document_templates(self) -> List[PrintSettingsSpec]:
-        return self.work_print_settings
-
-    @property
-    def remedial_sheet_templates(self) -> List[PrintSettingsSpec]:
-        return self.remedial_sheet_print_settings
-
-
 @dataclass(frozen=True)
 class WorkDetailWork:
     pk: str

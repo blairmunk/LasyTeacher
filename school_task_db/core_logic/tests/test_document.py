@@ -1,21 +1,14 @@
 from unittest import TestCase
 
 from core_logic.entities.document import (
-    CreateDocumentTemplateParams,
     CreatePrintSettingsParams,
-    CreatePrintSettingsResult,
     Document,
     DocumentRecipe,
     DocumentSection,
     DocumentSectionSpec,
     DocumentSourceRef,
-    DocumentTemplateSpec,
     PrintSettingsSpec,
-    CreateDocumentTemplateResult,
-    UpdateDocumentTemplateParams,
-    UpdateDocumentTemplateResult,
     UpdatePrintSettingsParams,
-    UpdatePrintSettingsResult,
 )
 from core_logic.value_objects.document_recipes import (
     ANSWER_KEY_DOCUMENT_TYPE,
@@ -167,10 +160,10 @@ class DocumentModelTests(TestCase):
         )
         self.assertIsNone(recipe.first_section('answers'))
 
-    def test_template_spec_preserves_ordered_sections(self):
-        template = DocumentTemplateSpec(
+    def test_print_settings_spec_preserves_ordered_sections(self):
+        print_settings = PrintSettingsSpec(
             name='Тренировочный лист',
-            template_type=WORKSHEET_DOCUMENT_TYPE,
+            document_type=WORKSHEET_DOCUMENT_TYPE,
             sections=[
                 DocumentSectionSpec(section_type='header'),
                 DocumentSectionSpec(
@@ -181,80 +174,86 @@ class DocumentModelTests(TestCase):
             default_content_config={'answer_type': 'tasks_only'},
         )
 
-        self.assertEqual(template.name, 'Тренировочный лист')
-        self.assertEqual(template.template_type, WORKSHEET_DOCUMENT_TYPE)
-        self.assertEqual(template.section_types, ('header', 'task_list'))
+        self.assertEqual(print_settings.name, 'Тренировочный лист')
         self.assertEqual(
-            template.default_content_config,
+            print_settings.document_type,
+            WORKSHEET_DOCUMENT_TYPE,
+        )
+        self.assertEqual(
+            print_settings.section_types,
+            ('header', 'task_list'),
+        )
+        self.assertEqual(
+            print_settings.default_content_config,
             {'answer_type': 'tasks_only'},
         )
 
-    def test_template_spec_copies_default_content_config(self):
+    def test_print_settings_spec_copies_default_content_config(self):
         default_content_config = {'answer_type': 'with_answers'}
-        template = DocumentTemplateSpec(
+        print_settings = PrintSettingsSpec(
             name='Ключ',
-            template_type=ANSWER_KEY_DOCUMENT_TYPE,
+            document_type=ANSWER_KEY_DOCUMENT_TYPE,
             default_content_config=default_content_config,
         )
 
         default_content_config['answer_type'] = 'tasks_only'
 
         self.assertEqual(
-            template.default_content_config,
+            print_settings.default_content_config,
             {'answer_type': 'with_answers'},
         )
 
-    def test_template_spec_converts_to_recipe(self):
-        template = DocumentTemplateSpec(
+    def test_print_settings_spec_converts_to_recipe(self):
+        print_settings = PrintSettingsSpec(
             name='Работа над ошибками',
-            template_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
+            document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
             sections=[
                 DocumentSectionSpec(section_type='header'),
                 DocumentSectionSpec(section_type='answers'),
             ],
         )
 
-        recipe = template.to_print_recipe()
-        legacy_recipe = template.to_recipe()
-        overridden_recipe = template.to_print_recipe(
+        recipe = print_settings.to_print_recipe()
+        compatible_recipe = print_settings.to_recipe()
+        overridden_recipe = print_settings.to_print_recipe(
             document_type=CUSTOM_DOCUMENT_TYPE,
         )
 
         self.assertEqual(recipe.document_type, REMEDIAL_SHEET_DOCUMENT_TYPE)
         self.assertEqual(recipe.section_types, ('header', 'answers'))
-        self.assertEqual(legacy_recipe.document_type, recipe.document_type)
-        self.assertEqual(legacy_recipe.section_types, recipe.section_types)
+        self.assertEqual(compatible_recipe.document_type, recipe.document_type)
+        self.assertEqual(compatible_recipe.section_types, recipe.section_types)
         self.assertEqual(overridden_recipe.document_type, CUSTOM_DOCUMENT_TYPE)
 
-    def test_print_settings_spec_exposes_print_profile_aliases(self):
-        print_settings = DocumentTemplateSpec(
+    def test_print_settings_spec_preserves_identity(self):
+        print_settings = PrintSettingsSpec(
             name='Профиль печати',
-            template_type=WORKSHEET_DOCUMENT_TYPE,
-            template_id='profile-1',
+            document_type=WORKSHEET_DOCUMENT_TYPE,
+            print_settings_id='profile-1',
         )
 
         self.assertEqual(print_settings.print_settings_id, 'profile-1')
         self.assertEqual(print_settings.document_type, WORKSHEET_DOCUMENT_TYPE)
 
-    def test_create_template_params_build_sections_from_legacy_section_types(self):
-        params = CreateDocumentTemplateParams(
+    def test_create_print_settings_params_build_sections_from_section_types(self):
+        params = CreatePrintSettingsParams(
             name=' Шаблон ',
-            template_type=' work ',
+            document_type=' work ',
             section_types=(' header ', 'task_list'),
         )
 
         self.assertEqual(params.name, 'Шаблон')
-        self.assertEqual(params.template_type, 'work')
+        self.assertEqual(params.document_type, 'work')
         self.assertEqual(params.section_types, ('header', 'task_list'))
         self.assertEqual(
             tuple(section.section_type for section in params.sections),
             ('header', 'task_list'),
         )
 
-    def test_create_template_params_preserve_full_section_specs(self):
-        params = CreateDocumentTemplateParams(
+    def test_create_print_settings_params_preserve_full_section_specs(self):
+        params = CreatePrintSettingsParams(
             name='Шаблон',
-            template_type='work',
+            document_type='work',
             sections=(
                 DocumentSectionSpec(section_type='page_break'),
                 DocumentSectionSpec(
@@ -273,7 +272,7 @@ class DocumentModelTests(TestCase):
         self.assertEqual(params.sections[1].title, 'Черновик')
         self.assertEqual(params.sections[1].options, {'rows': 8})
 
-    def test_print_settings_params_expose_legacy_aliases(self):
+    def test_print_settings_params_preserve_clean_identifiers(self):
         create_params = CreatePrintSettingsParams(
             name='Профиль печати',
             document_type='work',
@@ -287,31 +286,14 @@ class DocumentModelTests(TestCase):
         )
 
         self.assertEqual(create_params.document_type, 'work')
-        self.assertEqual(create_params.template_type, 'work')
         self.assertEqual(update_params.document_type, 'work')
         self.assertEqual(update_params.print_settings_id, 'profile-1')
-        self.assertEqual(update_params.template_id, 'profile-1')
 
-    def test_legacy_types_are_print_settings_compatible_subclasses(self):
-        self.assertTrue(issubclass(DocumentTemplateSpec, PrintSettingsSpec))
-        self.assertTrue(
-            issubclass(CreateDocumentTemplateParams, CreatePrintSettingsParams)
-        )
-        self.assertTrue(
-            issubclass(CreateDocumentTemplateResult, CreatePrintSettingsResult)
-        )
-        self.assertTrue(
-            issubclass(UpdateDocumentTemplateParams, UpdatePrintSettingsParams)
-        )
-        self.assertTrue(
-            issubclass(UpdateDocumentTemplateResult, UpdatePrintSettingsResult)
-        )
-
-    def test_update_template_params_preserve_full_section_specs(self):
-        params = UpdateDocumentTemplateParams(
-            template_id=' template-1 ',
+    def test_update_print_settings_params_preserve_full_section_specs(self):
+        params = UpdatePrintSettingsParams(
+            print_settings_id=' template-1 ',
             name='Шаблон',
-            template_type='work',
+            document_type='work',
             sections=(
                 DocumentSectionSpec(section_type='header'),
                 DocumentSectionSpec(
@@ -321,7 +303,7 @@ class DocumentModelTests(TestCase):
             ),
         )
 
-        self.assertEqual(params.template_id, 'template-1')
+        self.assertEqual(params.print_settings_id, 'template-1')
         self.assertEqual(params.section_types, ('header', 'blank_cells'))
         self.assertEqual(params.sections[1].options, {'rows': 4})
 
@@ -335,4 +317,4 @@ class DocumentModelTests(TestCase):
         with self.assertRaises(ValueError):
             DocumentRecipe(document_type='')
         with self.assertRaises(ValueError):
-            DocumentTemplateSpec(name='Invalid', template_type='')
+            PrintSettingsSpec(name='Invalid', document_type='')

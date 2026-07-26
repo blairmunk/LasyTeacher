@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from core_logic.entities.document import DocumentTemplateSpec
+from core_logic.entities.document import PrintSettingsSpec
 from core_logic.entities.work import (
     OrphanVariantRef,
     RemedialSheetData,
@@ -235,47 +235,35 @@ class FakeWorkRepository:
         return self.remaining_variant_count
 
 
-class FakeDocumentTemplateRepository:
+class FakePrintSettingsRepository:
     def __init__(self):
-        self.requested_template_types = []
-        self.templates_by_type = {
+        self.requested_document_types = []
+        self.print_settings_by_type = {
             'work': [
-                DocumentTemplateSpec(
+                PrintSettingsSpec(
                     name='Шаблон работы',
-                    template_type='work',
-                    template_id='template-work',
+                    document_type='work',
+                    print_settings_id='template-work',
                 ),
             ],
             'remedial_sheet': [
-                DocumentTemplateSpec(
+                PrintSettingsSpec(
                     name='Шаблон РнО',
-                    template_type='remedial_sheet',
-                    template_id='template-remedial',
+                    document_type='remedial_sheet',
+                    print_settings_id='template-remedial',
                 ),
             ],
         }
 
-    def list_template_specs(self, template_type=''):
-        self.requested_template_types.append(template_type)
-        return self.templates_by_type.get(template_type, [])
-
     def list_print_settings_specs(self, document_type=''):
-        return self.list_template_specs(template_type=document_type)
-
-    def get_default_template_spec(self, template_type):
-        return None
+        self.requested_document_types.append(document_type)
+        return self.print_settings_by_type.get(document_type, [])
 
     def get_default_print_settings_spec(self, document_type):
-        return self.get_default_template_spec(template_type=document_type)
-
-    def get_template_spec(self, template_id, template_type=''):
         return None
 
     def get_print_settings_spec(self, print_settings_id, document_type=''):
-        return self.get_template_spec(
-            template_id=print_settings_id,
-            template_type=document_type,
-        )
+        return None
 
 
 class WorkDetailTests(TestCase):
@@ -302,7 +290,7 @@ class WorkDetailTests(TestCase):
         )
 
     def test_get_work_detail_use_case_builds_detail_context_data(self):
-        template_repo = FakeDocumentTemplateRepository()
+        print_settings_repo = FakePrintSettingsRepository()
         use_case = GetWorkDetailUseCase(
             work_repo=FakeWorkRepository(
                 variants=['variant-1'],
@@ -310,9 +298,9 @@ class WorkDetailTests(TestCase):
                 spec_preview=['spec-1'],
             ),
             work_service=WorkService(),
-            print_settings_repo=template_repo,
+            print_settings_repo=print_settings_repo,
         )
-        self.assertIs(use_case.print_settings_repo, template_repo)
+        self.assertIs(use_case.print_settings_repo, print_settings_repo)
 
         result = use_case.execute('work-1')
 
@@ -320,19 +308,15 @@ class WorkDetailTests(TestCase):
         self.assertEqual(result.variants, ['variant-1'])
         self.assertEqual(result.spec_preview, ['spec-1'])
         self.assertEqual(
-            result.work_print_settings[0].template_id,
+            result.work_print_settings[0].print_settings_id,
             'template-work',
         )
         self.assertEqual(
-            result.remedial_sheet_print_settings[0].template_id,
+            result.remedial_sheet_print_settings[0].print_settings_id,
             'template-remedial',
         )
         self.assertEqual(
-            result.work_document_templates[0].template_id,
-            'template-work',
-        )
-        self.assertEqual(
-            template_repo.requested_template_types,
+            print_settings_repo.requested_document_types,
             ['work', 'remedial_sheet'],
         )
         self.assertIn(

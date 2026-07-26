@@ -7,7 +7,6 @@ from core_logic.value_objects.document_recipes import (
     TASK_LIST_SECTION,
     WORKSHEET_DOCUMENT_TYPE,
     build_document_recipe_from_sections_config,
-    build_document_template_spec_from_config,
     build_print_settings_spec_from_config,
 )
 
@@ -110,15 +109,6 @@ class DocumentRecipeTests(TestCase):
             print_settings.to_print_recipe().document_type,
             WORKSHEET_DOCUMENT_TYPE,
         )
-
-    def test_legacy_template_spec_factory_uses_print_settings_builder(self):
-        print_settings = build_document_template_spec_from_config(
-            name='Рабочий лист',
-            template_type=WORKSHEET_DOCUMENT_TYPE,
-            sections_config=[{'type': HEADER_SECTION}],
-        )
-
-        self.assertEqual(print_settings.section_types, (HEADER_SECTION,))
 
     def test_builds_print_settings_spec_with_presentation_overrides(self):
         print_settings = build_print_settings_spec_from_config(

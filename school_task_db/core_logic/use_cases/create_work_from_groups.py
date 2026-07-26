@@ -10,6 +10,10 @@ from core_logic.interfaces.work_repo import (
     IWorkRepository,
     WorkSpecificationRowParams,
 )
+from core_logic.use_cases.compose_work_variants import (
+    ComposeWorkVariantsRequest,
+    ComposeWorkVariantsUseCase,
+)
 from core_logic.use_cases.save_work import validate_work_specification_specs
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
@@ -115,9 +119,11 @@ class CreateWorkFromGroupsUseCase:
         self,
         task_repo: ITaskRepository,
         work_repo: IWorkRepository,
+        compose_work_variants_use_case: ComposeWorkVariantsUseCase,
     ):
         self.task_repo = task_repo
         self.work_repo = work_repo
+        self.compose_work_variants_use_case = compose_work_variants_use_case
 
     def execute(
         self,
@@ -188,9 +194,18 @@ class CreateWorkFromGroupsUseCase:
         variants_generated = 0
         if request.auto_generate:
             try:
-                variants_generated = min(int(request.variant_count), 10)
-                self.work_repo.compose_variants(work_id, variants_generated)
-                message += f' и {variants_generated} вариантами'
+                requested_count = min(int(request.variant_count), 10)
+                composition_result = self.compose_work_variants_use_case.execute(
+                    ComposeWorkVariantsRequest(
+                        work_id=work_id,
+                        count=requested_count,
+                    )
+                )
+                variants_generated = composition_result.created_count
+                if composition_result.status == 'generated':
+                    message += f' и {variants_generated} вариантами'
+                else:
+                    warning = 'Работа создана, но не найдена для генерации вариантов'
             except Exception as error:
                 warning = (
                     'Работа создана, но генерация вариантов не удалась: '

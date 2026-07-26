@@ -5,6 +5,7 @@ from core_logic.interfaces.work_repo import (
     CreateWorkWithSpecificationParams,
     WorkSpecificationRowParams,
 )
+from core_logic.entities.work import ComposeWorkVariantsResult
 from core_logic.use_cases.create_work_from_groups import (
     CreateWorkFromGroupsRequest,
     CreateWorkFromGroupsUseCase,
@@ -36,7 +37,6 @@ class FakeWorkRepository:
     def __init__(self):
         self.created_work = None
         self.created_groups = []
-        self.generated_variants = None
 
     def create_work_with_specification(
         self,
@@ -46,9 +46,17 @@ class FakeWorkRepository:
         self.created_groups = params.specs
         return 'work-1'
 
-    def compose_variants(self, work_id, count):
-        self.generated_variants = (work_id, count)
-        return count
+
+class FakeComposeWorkVariantsUseCase:
+    def __init__(self, error=None):
+        self.request = None
+        self.error = error
+
+    def execute(self, request):
+        self.request = request
+        if self.error:
+            raise self.error
+        return ComposeWorkVariantsResult(created_count=request.count)
 
 
 class CreateWorkFromGroupsUseCaseTests(TestCase):
@@ -142,9 +150,11 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
     def test_execute_creates_work_spec_and_generates_variants(self):
         task_repo = FakeTaskRepository()
         work_repo = FakeWorkRepository()
+        compose_use_case = FakeComposeWorkVariantsUseCase()
         use_case = CreateWorkFromGroupsUseCase(
             task_repo=task_repo,
             work_repo=work_repo,
+            compose_work_variants_use_case=compose_use_case,
         )
 
         result = use_case.execute(
@@ -188,7 +198,8 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
                 ),
             ],
         )
-        self.assertEqual(work_repo.generated_variants, ('work-1', 3))
+        self.assertEqual(compose_use_case.request.work_id, 'work-1')
+        self.assertEqual(compose_use_case.request.count, 3)
         self.assertIn('3 вариантами', result.message)
 
     def test_execute_preserves_group_role_filter(self):
@@ -198,6 +209,7 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         use_case = CreateWorkFromGroupsUseCase(
             task_repo=task_repo,
             work_repo=work_repo,
+            compose_work_variants_use_case=FakeComposeWorkVariantsUseCase(),
         )
 
         result = use_case.execute(
@@ -218,6 +230,31 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
             TASK_BANK_ROLE_DEMO,
         )
 
+    def test_execute_keeps_created_work_when_variant_generation_fails(self):
+        task_repo = FakeTaskRepository()
+        task_repo.existing_count = 1
+        work_repo = FakeWorkRepository()
+        use_case = CreateWorkFromGroupsUseCase(
+            task_repo=task_repo,
+            work_repo=work_repo,
+            compose_work_variants_use_case=FakeComposeWorkVariantsUseCase(
+                error=RuntimeError('generation failed'),
+            ),
+        )
+
+        result = use_case.execute(
+            CreateWorkFromGroupsRequest(
+                groups=[GroupSpecRequest(id='group-1')],
+                work_name='Работа с ошибкой генерации',
+                auto_generate=True,
+            )
+        )
+
+        self.assertTrue(result.success)
+        self.assertEqual(result.variants_generated, 0)
+        self.assertIn('generation failed', result.warning)
+        self.assertIsNotNone(work_repo.created_work)
+
     def test_execute_preserves_group_print_settings(self):
         task_repo = FakeTaskRepository()
         task_repo.existing_count = 1
@@ -225,6 +262,7 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         use_case = CreateWorkFromGroupsUseCase(
             task_repo=task_repo,
             work_repo=work_repo,
+            compose_work_variants_use_case=FakeComposeWorkVariantsUseCase(),
         )
 
         result = use_case.execute(
@@ -259,6 +297,7 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         use_case = CreateWorkFromGroupsUseCase(
             task_repo=task_repo,
             work_repo=work_repo,
+            compose_work_variants_use_case=FakeComposeWorkVariantsUseCase(),
         )
 
         result = use_case.execute(
@@ -284,6 +323,7 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         use_case = CreateWorkFromGroupsUseCase(
             task_repo=task_repo,
             work_repo=work_repo,
+            compose_work_variants_use_case=FakeComposeWorkVariantsUseCase(),
         )
 
         result = use_case.execute(
@@ -306,6 +346,7 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         use_case = CreateWorkFromGroupsUseCase(
             task_repo=FakeTaskRepository(),
             work_repo=FakeWorkRepository(),
+            compose_work_variants_use_case=FakeComposeWorkVariantsUseCase(),
         )
 
         result = use_case.execute(
@@ -322,6 +363,7 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         use_case = CreateWorkFromGroupsUseCase(
             task_repo=task_repo,
             work_repo=work_repo,
+            compose_work_variants_use_case=FakeComposeWorkVariantsUseCase(),
         )
 
         result = use_case.execute(

@@ -3,7 +3,9 @@
 from dataclasses import dataclass
 
 from core_logic.entities.work import ComposeWorkVariantsResult
-from core_logic.interfaces.work_repo import IWorkRepository
+from core_logic.interfaces.work_variant_generation_repo import (
+    IWorkVariantGenerationRepository,
+)
 
 
 @dataclass(frozen=True)
@@ -13,7 +15,7 @@ class ComposeWorkVariantsRequest:
 
 
 class ComposeWorkVariantsUseCase:
-    def __init__(self, work_repo: IWorkRepository):
+    def __init__(self, work_repo: IWorkVariantGenerationRepository):
         self.work_repo = work_repo
 
     def execute(

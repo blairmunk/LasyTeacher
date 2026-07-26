@@ -1,11 +1,13 @@
 """Build data for the work variant generation form."""
 
 from core_logic.entities.work import VariantGenerationFormData
-from core_logic.interfaces.work_repo import IWorkRepository
+from core_logic.interfaces.work_variant_generation_repo import (
+    IWorkVariantGenerationRepository,
+)
 
 
 class GetVariantGenerationFormUseCase:
-    def __init__(self, work_repo: IWorkRepository):
+    def __init__(self, work_repo: IWorkVariantGenerationRepository):
         self.work_repo = work_repo
 
     def execute(self, work_id: str) -> VariantGenerationFormData:

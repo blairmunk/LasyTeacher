@@ -13,8 +13,6 @@ from core_logic.entities.work import (
     WorkDetailWork,
     WorkListItem,
     VariantListItem,
-    VariantGenerationGroup,
-    VariantGenerationWork,
     VariantDeleteInfo,
     VariantDetailTaskRow,
     VariantDetailVariant,
@@ -103,20 +101,6 @@ class IWorkRepository(ABC):
         """Return analog group options for the work form page."""
 
     @abstractmethod
-    def get_work_generation_target(
-        self,
-        work_id: str,
-    ) -> Optional[VariantGenerationWork]:
-        """Return a work read model for the variant generation form."""
-
-    @abstractmethod
-    def get_variant_generation_groups(
-        self,
-        work_id: str,
-    ) -> List[VariantGenerationGroup]:
-        """Return work group specs for the variant generation form."""
-
-    @abstractmethod
     def get_work_detail(self, work_id: str) -> Optional[WorkDetailWork]:
         """Return one work detail read model, or None."""
 
@@ -151,17 +135,6 @@ class IWorkRepository(ABC):
     @abstractmethod
     def count_orphan_variants(self) -> int:
         """Return orphan variant count."""
-
-    @abstractmethod
-    def sync_analog_groups_from_variants(
-        self,
-        work_id: str,
-    ) -> Optional[int]:
-        """Sync specification atomically, or return None for a missing work."""
-
-    @abstractmethod
-    def compose_variants(self, work_id: str, count: int) -> Optional[int]:
-        """Compose variants atomically, or return None when the work is missing."""
 
     @abstractmethod
     def get_orphan_variant_refs(self, variant_ids: List[str]) -> List[OrphanVariantRef]:

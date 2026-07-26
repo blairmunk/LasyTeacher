@@ -1168,6 +1168,9 @@ class Container:
         return CreateWorkFromGroupsUseCase(
             task_repo=self.task_repo,
             work_repo=self.work_repo,
+            compose_work_variants_use_case=(
+                self.compose_work_variants_use_case()
+            ),
         )
 
     def prepare_create_work_from_groups_submission_use_case(self):

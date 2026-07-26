@@ -11,7 +11,6 @@ from core_logic.entities.work import (
     WorkDetailWork,
     WorkListItem,
     VariantListItem,
-    VariantDeleteInfo,
     VariantDetailTaskRow,
     VariantDetailVariant,
 )
@@ -139,26 +138,6 @@ class IWorkRepository(ABC):
     @abstractmethod
     def get_variant_total_max_points(self, variant_id: str) -> int:
         """Return total max points for a variant."""
-
-    @abstractmethod
-    def get_variant_delete_info(self, variant_id: str) -> Optional[VariantDeleteInfo]:
-        """Return delete screen information for a variant."""
-
-    @abstractmethod
-    def detach_variant_from_work(self, variant_id: str) -> str:
-        """Detach a variant from its work and return the variant short ID."""
-
-    @abstractmethod
-    def delete_variant(self, variant_id: str) -> str:
-        """Delete a variant and return its previous work ID, if any."""
-
-    @abstractmethod
-    def bulk_delete_work_variants(self, work_id: str, variant_ids: List[str]) -> int:
-        """Delete selected variants of a work and return deleted object count."""
-
-    @abstractmethod
-    def count_work_variants(self, work_id: str) -> int:
-        """Return variant count for a work."""
 
     @abstractmethod
     def get_variant_task_ids(self, work_id: str) -> Set[str]:

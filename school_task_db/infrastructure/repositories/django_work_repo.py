@@ -45,6 +45,9 @@ from core_logic.interfaces.orphan_variant_repo import (
     CreateWorkFromOrphanVariantsParams,
     IOrphanVariantRepository,
 )
+from core_logic.interfaces.variant_lifecycle_repo import (
+    IVariantLifecycleRepository,
+)
 from core_logic.interfaces.work_repo import (
     CreatedWorkWithVariantsRef,
     CreatedWorkVariantRef,
@@ -82,6 +85,7 @@ class DjangoWorkRepository(
     IWorkDocumentRepository,
     IWorkVariantGenerationRepository,
     IOrphanVariantRepository,
+    IVariantLifecycleRepository,
 ):
     def get_list_works(self, filters=None):
         queryset = Work.objects.annotate(

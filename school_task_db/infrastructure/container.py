@@ -1213,12 +1213,12 @@ class Container:
 
     def get_variant_delete_info_use_case(self):
         return GetVariantDeleteInfoUseCase(
-            work_repo=self.work_repo,
+            variant_repo=self.work_repo,
         )
 
     def delete_variant_use_case(self):
         return DeleteVariantUseCase(
-            work_repo=self.work_repo,
+            variant_repo=self.work_repo,
         )
 
     def delete_task_groups_use_case(self):
@@ -1263,7 +1263,7 @@ class Container:
 
     def bulk_delete_variants_use_case(self):
         return BulkDeleteVariantsUseCase(
-            work_repo=self.work_repo,
+            variant_repo=self.work_repo,
         )
 
 

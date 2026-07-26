@@ -18,9 +18,9 @@ from core_logic.value_objects.document_recipes import (
     TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
 )
-from core_logic.value_objects.variant_content_plan import (
+from core_logic.value_objects.variant_content_snapshot import (
     VariantContentItem,
-    build_variant_content_plan,
+    build_variant_content_snapshot,
 )
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_COLUMNS,
@@ -33,7 +33,7 @@ from core_logic.value_objects.variant_print_plan import (
     VARIANT_PRINT_BLOCK_BLANK_CELLS,
     VARIANT_PRINT_BLOCK_TASK,
     build_variant_print_profile_from_options,
-    build_variant_print_plan_from_content_plan,
+    build_variant_print_plan_from_snapshot,
 )
 from core_logic.entities.document import (
     REMEDIAL_WORK_SOURCE_TYPE,
@@ -437,7 +437,7 @@ def _work_variant_payload(variant, task_payload_formatter=None, request=None):
         )
         .order_by('order', 'pk')
     )
-    content_plan = build_variant_content_plan(
+    content_snapshot = build_variant_content_snapshot(
         variant_id=str(variant.pk),
         items=[
             _variant_content_item(variant_task)
@@ -447,8 +447,8 @@ def _work_variant_payload(variant, task_payload_formatter=None, request=None):
     print_profile = build_variant_print_profile_from_options(
         request.section.options if request else {},
     )
-    print_plan = build_variant_print_plan_from_content_plan(
-        content_plan,
+    print_plan = build_variant_print_plan_from_snapshot(
+        content_snapshot,
         profile=print_profile,
     )
     task_payloads = [

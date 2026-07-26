@@ -42,7 +42,7 @@ class VariantContentItem:
 
 
 @dataclass(frozen=True)
-class VariantContentPlan:
+class VariantContentSnapshot:
     """Ordered content snapshot for one variant."""
 
     variant_id: str
@@ -66,11 +66,11 @@ class VariantContentPlan:
         )
 
 
-def build_variant_content_plan(
+def build_variant_content_snapshot(
     variant_id: str,
     items,
-) -> VariantContentPlan:
-    return VariantContentPlan(
+) -> VariantContentSnapshot:
+    return VariantContentSnapshot(
         variant_id=variant_id,
         items=tuple(items),
     )

@@ -7,9 +7,9 @@ from core_logic.value_objects.task_print_settings import (
     validate_task_render_mode,
     validate_task_specific_bank_role,
 )
-from core_logic.value_objects.variant_content_plan import (
+from core_logic.value_objects.variant_content_snapshot import (
     VariantContentItem,
-    VariantContentPlan,
+    VariantContentSnapshot,
 )
 
 VARIANT_PRINT_BLOCK_TASK = 'task'
@@ -24,7 +24,7 @@ VARIANT_PRINT_BLOCK_TYPES = frozenset(
 
 @dataclass(frozen=True)
 class VariantPrintProfile:
-    """Presentation rules applied to a variant content plan."""
+    """Presentation rules applied to a variant content snapshot."""
 
     hidden_roles: Tuple[str, ...] = field(default_factory=tuple)
     render_modes_by_role: Mapping[str, str] = field(default_factory=dict)
@@ -108,13 +108,13 @@ class VariantPrintPlan:
         )
 
 
-def build_variant_print_plan_from_content_plan(
-    content_plan: VariantContentPlan,
+def build_variant_print_plan_from_snapshot(
+    content_snapshot: VariantContentSnapshot,
     profile: VariantPrintProfile | None = None,
 ) -> VariantPrintPlan:
     profile = profile or VariantPrintProfile()
     blocks = []
-    for row in content_plan.items:
+    for row in content_snapshot.items:
         if not profile.includes_item(row):
             continue
         blocks.append(
@@ -132,7 +132,7 @@ def build_variant_print_plan_from_content_plan(
                     options=blank_cells_options,
                 )
             )
-    return VariantPrintPlan(variant_id=content_plan.variant_id, blocks=blocks)
+    return VariantPrintPlan(variant_id=content_snapshot.variant_id, blocks=blocks)
 
 
 def _task_print_block(

@@ -1,8 +1,8 @@
 from unittest import TestCase
 
-from core_logic.value_objects.variant_content_plan import (
+from core_logic.value_objects.variant_content_snapshot import (
     VariantContentItem,
-    build_variant_content_plan,
+    build_variant_content_snapshot,
 )
 from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_ANY,
@@ -15,13 +15,13 @@ from core_logic.value_objects.variant_print_plan import (
     VARIANT_PRINT_BLOCK_BLANK_CELLS,
     VARIANT_PRINT_BLOCK_TASK,
     build_variant_print_profile_from_options,
-    build_variant_print_plan_from_content_plan,
+    build_variant_print_plan_from_snapshot,
 )
 
 
 class VariantPrintPlanTests(TestCase):
-    def test_builds_content_plan_from_variant_snapshot_rows(self):
-        plan = build_variant_content_plan(
+    def test_builds_content_snapshot_from_variant_snapshot_rows(self):
+        snapshot = build_variant_content_snapshot(
             variant_id='variant-1',
             items=[
                 VariantContentItem(
@@ -47,15 +47,15 @@ class VariantPrintPlanTests(TestCase):
             ],
         )
 
-        self.assertEqual(plan.variant_id, 'variant-1')
+        self.assertEqual(snapshot.variant_id, 'variant-1')
         self.assertEqual(
-            [item.variant_task_id for item in plan.items],
+            [item.variant_task_id for item in snapshot.items],
             ['vt-1', 'vt-2'],
         )
-        self.assertEqual(plan.assessable_variant_task_ids, ('vt-2',))
+        self.assertEqual(snapshot.assessable_variant_task_ids, ('vt-2',))
 
-    def test_builds_print_blocks_from_content_plan(self):
-        content_plan = build_variant_content_plan(
+    def test_builds_print_blocks_from_content_snapshot(self):
+        content_snapshot = build_variant_content_snapshot(
             variant_id='variant-1',
             items=[
                 VariantContentItem(
@@ -81,7 +81,7 @@ class VariantPrintPlanTests(TestCase):
             ],
         )
 
-        plan = build_variant_print_plan_from_content_plan(content_plan)
+        plan = build_variant_print_plan_from_snapshot(content_snapshot)
 
         self.assertEqual(plan.variant_id, 'variant-1')
         self.assertEqual(
@@ -114,7 +114,7 @@ class VariantPrintPlanTests(TestCase):
         self.assertEqual(plan.blocks[2].options, {'rows': 8})
 
     def test_print_profile_overrides_rendering_without_changing_content(self):
-        content_plan = build_variant_content_plan(
+        content_snapshot = build_variant_content_snapshot(
             variant_id='variant-1',
             items=[
                 VariantContentItem(
@@ -144,12 +144,12 @@ class VariantPrintPlanTests(TestCase):
             },
         })
 
-        plan = build_variant_print_plan_from_content_plan(
-            content_plan,
+        plan = build_variant_print_plan_from_snapshot(
+            content_snapshot,
             profile=profile,
         )
 
-        self.assertEqual(content_plan.assessable_variant_task_ids, ('vt-2',))
+        self.assertEqual(content_snapshot.assessable_variant_task_ids, ('vt-2',))
         self.assertEqual(
             [block.block_type for block in plan.blocks],
             [
@@ -175,7 +175,7 @@ class VariantPrintPlanTests(TestCase):
         self.assertEqual(plan.blocks[2].options['rows'], 9)
 
     def test_print_profile_can_hide_roles(self):
-        content_plan = build_variant_content_plan(
+        content_snapshot = build_variant_content_snapshot(
             variant_id='variant-1',
             items=[
                 VariantContentItem(
@@ -197,8 +197,8 @@ class VariantPrintPlanTests(TestCase):
             'hidden_roles': TASK_BANK_ROLE_DEMO,
         })
 
-        plan = build_variant_print_plan_from_content_plan(
-            content_plan,
+        plan = build_variant_print_plan_from_snapshot(
+            content_snapshot,
             profile=profile,
         )
 

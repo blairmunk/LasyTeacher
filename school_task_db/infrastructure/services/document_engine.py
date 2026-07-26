@@ -11,9 +11,6 @@ from core_logic.services.document_renderer_registry import (
 )
 from core_logic.value_objects.document_render_plan import DocumentRenderPlan
 from core_logic.value_objects.document_render_requests import DocumentRenderRequest
-from infrastructure.services.django_document_source_provider import (
-    DjangoDocumentSourceProvider,
-)
 from infrastructure.services.rendered_document_file_store import (
     RenderedDocumentFileStore,
 )
@@ -27,12 +24,11 @@ class DjangoDocumentEngine(IDocumentEngine):
     def with_sectioned_renderers(
         cls,
         get_remedial_sheet_data_use_case=None,
-        source_provider=None,
+        get_work_source=None,
         file_store=None,
         template_renderer=None,
         html_to_pdf_renderer_factory=None,
     ):
-        source_provider = source_provider or DjangoDocumentSourceProvider()
         file_store = file_store or RenderedDocumentFileStore()
         get_remedial_sheet_data = (
             get_remedial_sheet_data_use_case.execute
@@ -41,7 +37,7 @@ class DjangoDocumentEngine(IDocumentEngine):
         )
         components = build_sectioned_document_components(
             file_store=file_store,
-            get_work_source=source_provider.get_work_source,
+            get_work_source=get_work_source,
             get_remedial_sheet_data=get_remedial_sheet_data,
             template_renderer=template_renderer,
             html_to_pdf_renderer_factory=html_to_pdf_renderer_factory,

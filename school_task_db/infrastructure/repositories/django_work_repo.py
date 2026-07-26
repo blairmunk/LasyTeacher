@@ -47,6 +47,12 @@ from core_logic.interfaces.work_repo import (
     IWorkRepository,
 )
 from core_logic.services.work_spec_sync_service import WorkSpecSyncService
+from core_logic.services.work_variant_composition_service import (
+    AvailableVariantTask,
+    WorkVariantCompositionInput,
+    WorkVariantCompositionService,
+    WorkVariantSpecRow,
+)
 from events.models import EventParticipation, Mark
 from task_groups.models import TaskGroup
 from tasks.models import Task
@@ -548,8 +554,88 @@ class DjangoWorkRepository(IWorkRepository):
         return created_count
 
     def compose_variants(self, work_id: str, count: int) -> int:
-        work = Work.objects.get(pk=work_id)
-        return len(work.compose_variants(count=count))
+        with transaction.atomic():
+            work = Work.objects.select_for_update().get(pk=work_id)
+            work_groups = list(
+                WorkAnalogGroup.objects.filter(
+                    work_id=work_id,
+                ).order_by('order', 'pk')
+            )
+            composition_plan = WorkVariantCompositionService().compose(
+                WorkVariantCompositionInput(
+                    work_name=work.name,
+                    duration=work.duration,
+                    max_score=work.max_score,
+                    effective_max_score=(
+                        work.max_score
+                        or sum(
+                            group.weight * group.count
+                            for group in work_groups
+                            if group.is_assessable
+                        )
+                    ),
+                    variant_counter=work.variant_counter,
+                    spec_rows=tuple(
+                        self._variant_composition_spec_row(work_group)
+                        for work_group in work_groups
+                    ),
+                ),
+                count=count,
+            )
+            for variant_plan in composition_plan.variants:
+                variant = Variant.objects.create(
+                    work=work,
+                    number=variant_plan.number,
+                    work_name_snapshot=variant_plan.work_name_snapshot,
+                    max_score_snapshot=variant_plan.max_score_snapshot,
+                    duration_snapshot=variant_plan.duration_snapshot,
+                )
+                VariantTask.objects.bulk_create(
+                    [
+                        VariantTask(
+                            variant=variant,
+                            task_id=task_plan.task_id,
+                            order=task_plan.order,
+                            max_points=task_plan.max_points,
+                            weight=task_plan.weight,
+                            bank_role=task_plan.bank_role,
+                            render_mode=task_plan.render_mode,
+                            is_assessable=task_plan.is_assessable,
+                            blank_cells_after=task_plan.blank_cells_after,
+                            blank_cells_rows=task_plan.blank_cells_rows,
+                        )
+                        for task_plan in variant_plan.tasks
+                    ]
+                )
+
+            work.variant_counter = composition_plan.next_variant_counter
+            work.save()
+            return len(composition_plan.variants)
+
+    def _variant_composition_spec_row(self, work_group):
+        task_groups = TaskGroup.objects.filter(
+            group=work_group.analog_group,
+        )
+        if work_group.bank_role_filter != TASK_BANK_ROLE_ANY:
+            task_groups = task_groups.filter(
+                bank_role=work_group.bank_role_filter,
+            )
+        return WorkVariantSpecRow(
+            spec_row_id=str(work_group.pk),
+            count=work_group.count,
+            weight=work_group.weight,
+            available_tasks=tuple(
+                AvailableVariantTask(
+                    task_id=str(task_group.task_id),
+                    bank_role=task_group.bank_role,
+                )
+                for task_group in task_groups.order_by('pk')
+            ),
+            render_mode=work_group.render_mode,
+            is_assessable=work_group.is_assessable,
+            blank_cells_after=work_group.blank_cells_after,
+            blank_cells_rows=work_group.blank_cells_rows,
+        )
 
     def get_orphan_variant_refs(
         self,

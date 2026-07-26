@@ -1,5 +1,3 @@
-import random
-
 from django.db import models
 from django.urls import reverse
 
@@ -101,69 +99,6 @@ class Work(BaseModel):
             groups[wg.pk]['total_points'] += points
 
         return list(groups.values())
-
-    def compose_variants(self, count=1):
-        """Сборка вариантов: баллы рассчитываются из спецификации"""
-        variants = []
-        distribution = self._calc_points_distribution()
-        work_groups = list(self.workanaloggroup_set.order_by('order', 'pk'))
-
-        for i in range(count):
-            self.variant_counter += 1
-            variant = Variant.objects.create(
-                work=self,
-                number=self.variant_counter,
-                work_name_snapshot=self.name,
-                max_score_snapshot=self.effective_max_score,
-                duration_snapshot=self.duration,
-            )
-
-
-            task_idx = 0
-            task_order = 1
-            for work_group in work_groups:
-                from task_groups.models import TaskGroup
-                available_task_groups = TaskGroup.objects.filter(
-                    group=work_group.analog_group
-                )
-                if work_group.bank_role_filter != TASK_BANK_ROLE_ANY:
-                    available_task_groups = available_task_groups.filter(
-                        bank_role=work_group.bank_role_filter,
-                    )
-                available_task_groups = list(
-                    available_task_groups.select_related('task')
-                )
-
-                if len(available_task_groups) >= work_group.count:
-                    selected_task_groups = random.sample(
-                        available_task_groups,
-                        work_group.count,
-                    )
-                else:
-                    selected_task_groups = available_task_groups
-
-                for task_group in selected_task_groups:
-                    task = task_group.task
-                    max_pts = distribution[task_idx][0] if task_idx < len(distribution) else 0
-                    VariantTask.objects.create(
-                        variant=variant,
-                        task=task,
-                        order=task_order,
-                        max_points=max_pts,
-                        weight=work_group.weight,  # deprecated, для обратной совместимости
-                        bank_role=task_group.bank_role,
-                        render_mode=work_group.render_mode,
-                        is_assessable=work_group.is_assessable,
-                        blank_cells_after=work_group.blank_cells_after,
-                        blank_cells_rows=work_group.blank_cells_rows,
-                    )
-                    task_order += 1
-                    task_idx += 1
-
-            variants.append(variant)
-
-        self.save()
-        return variants
 
 class WorkAnalogGroup(BaseModel):
     """Спецификация работы: группа аналогов + количество + вес"""

@@ -1,4 +1,4 @@
-"""Django-backed payload builders for document sections."""
+"""Wire Django-backed section payload builders into document registries."""
 
 from core_logic.services.document_builder import (
     DocumentSectionPayloadBuilderRegistry,

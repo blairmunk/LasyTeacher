@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from core_logic.services.document_builder import RecipeDocumentBuilder
 from core_logic.services.document_renderer_registry import DocumentRendererRegistry
-from infrastructure.services.django_document_section_payloads import (
+from infrastructure.services.django_document_payload_registry import (
     build_remedial_sheet_section_payload_builder_registry,
     build_work_section_payload_builder_registry,
 )

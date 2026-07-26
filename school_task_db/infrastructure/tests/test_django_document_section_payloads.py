@@ -40,7 +40,7 @@ from core_logic.value_objects.variant_print_plan import (
     VARIANT_PRINT_BLOCK_TASK,
 )
 from curriculum.models import SubTopic, Topic
-from infrastructure.services.django_document_section_payloads import (
+from infrastructure.services.django_document_payload_registry import (
     build_remedial_sheet_section_payload_builder_registry,
     build_work_section_payload_builder_registry,
 )

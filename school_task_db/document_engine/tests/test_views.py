@@ -72,7 +72,10 @@ class PrintSettingsViewTests(TestCase):
         self.assertContains(response, 'name="section_options__task_list"')
         self.assertContains(response, 'role_render_modes')
         self.assertContains(response, 'data-section-options-example')
-        self.assertContains(response, 'name="section_options__blank_cells"')
+        self.assertNotContains(response, 'name="section_options__blank_cells"')
+        self.assertContains(response, 'name="blank_cells_rows"')
+        self.assertContains(response, 'name="blank_cells_columns"')
+        self.assertContains(response, 'name="blank_cells_row_height"')
         self.assertNotContains(response, 'name="section_options__header"')
         self.assertContains(response, 'Порядок секций')
         self.assertContains(response, 'можно повторять')
@@ -177,6 +180,39 @@ class PrintSettingsViewTests(TestCase):
                     'params': {
                         'hidden_roles': ['demo'],
                         'role_blank_cells': {'practice': {'rows': 6}},
+                    },
+                },
+            ],
+        )
+
+    def test_print_settings_create_view_saves_blank_cells_controls(self):
+        response = self.client.post(
+            reverse('document_engine:print-profile-create'),
+            {
+                'name': 'Лист с полем решения',
+                'document_type': 'work',
+                'sections': ['header', 'blank_cells'],
+                'blank_cells_rows': '9',
+                'blank_cells_columns': '18',
+                'blank_cells_row_height': '28',
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('document_engine:print-profile-editor'),
+        )
+        template = PrintSettings.objects.get(name='Лист с полем решения')
+        self.assertEqual(
+            template.sections_config,
+            [
+                {'type': 'header'},
+                {
+                    'type': 'blank_cells',
+                    'params': {
+                        'rows': 9,
+                        'columns': 18,
+                        'row_height': 28,
                     },
                 },
             ],

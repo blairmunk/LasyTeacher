@@ -38,6 +38,7 @@ from core_logic.value_objects.document_render_options import (
     WorkDocumentRenderOptions,
 )
 from core_logic.value_objects.document_recipes import (
+    BLANK_CELLS_SECTION,
     COMMON_HEADER_SECTION,
     HEADER_SECTION,
     WORK_DOCUMENT_TYPE,
@@ -508,6 +509,53 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
                 'role_blank_cells': {'practice': 6},
             },
         )
+
+    def test_builds_blank_cells_options_from_structured_fields(self):
+        data = QueryDict('', mutable=True)
+        data.update(
+            {
+                'name': 'Шаблон',
+                'document_type': 'work',
+                'blank_cells_rows': '9',
+                'blank_cells_columns': '18',
+                'blank_cells_row_height': '28',
+            }
+        )
+        data.setlist('sections', [BLANK_CELLS_SECTION])
+        form = self._template_form(data=data)
+        self.assertTrue(form.is_valid(), form.errors)
+
+        params = (
+            PrintSettingsFormAdapter()
+            .create_print_settings_params_from_form(form)
+        )
+
+        self.assertEqual(
+            params.sections[0].options,
+            {
+                'rows': 9,
+                'columns': 18,
+                'row_height': 28,
+            },
+        )
+
+    def test_blank_cells_controls_use_saved_section_options_as_initial(self):
+        form = self._template_form(
+            initial={
+                'sections': [BLANK_CELLS_SECTION],
+                'section_options': {
+                    BLANK_CELLS_SECTION: {
+                        'rows': 8,
+                        'columns': 16,
+                        'row_height': 30,
+                    },
+                },
+            },
+        )
+
+        self.assertEqual(form['blank_cells_rows'].value(), 8)
+        self.assertEqual(form['blank_cells_columns'].value(), 16)
+        self.assertEqual(form['blank_cells_row_height'].value(), 30)
 
     def test_print_settings_form_rejects_invalid_section_options_json(self):
         data = QueryDict('', mutable=True)

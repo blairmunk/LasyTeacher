@@ -16,6 +16,7 @@ from core_logic.value_objects.document_section_catalog import (
     order_document_section_types,
 )
 from core_logic.value_objects.document_render_options import FILE_TYPE_LABELS
+from core_logic.value_objects.document_recipes import BLANK_CELLS_SECTION
 from infrastructure.forms.print_settings_django_forms import (
     section_options_field_name,
 )
@@ -157,6 +158,9 @@ class PrintSettingsFormAdapter:
             'options_hint': section.options_hint,
             'options_example_json': self._format_section_options_json(
                 section.options_example,
+            ),
+            'has_structured_options': (
+                section.section_type == BLANK_CELLS_SECTION
             ),
         }
 

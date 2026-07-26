@@ -93,6 +93,13 @@
                             </div>
                             <div class="small text-muted mt-2">{{ section.description }}</div>
                             <code class="small">{{ section.section_type }}</code>
+                            {% if section.has_distinct_instance_settings %}
+                            <div class="alert alert-warning small py-2 mt-2 mb-0">
+                                Повторы этой секции имеют разные настройки.
+                                Пока поля ниже показывают первый экземпляр;
+                                их изменение будет применено ко всем повторам.
+                            </div>
+                            {% endif %}
                             {% if section.task_list_role_controls %}
                             <input type="hidden" name="task_list_structured_options" value="1">
                             <div class="table-responsive mt-2">

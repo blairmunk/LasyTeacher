@@ -77,17 +77,18 @@ class PrintSettingsFormAdapter:
         )
 
     def form_initial_from_print_settings(self, print_settings):
+        section_options = {}
+        for section in print_settings.sections:
+            if section.options and section.section_type not in section_options:
+                section_options[section.section_type] = dict(section.options)
         return {
             'name': print_settings.name,
             'description': print_settings.description,
             'document_type': print_settings.document_type,
             'sections': print_settings.section_types,
             'section_order': ','.join(print_settings.section_types),
-            'section_options': {
-                section.section_type: dict(section.options)
-                for section in print_settings.sections
-                if section.options
-            },
+            'section_options': section_options,
+            'section_specs': tuple(print_settings.sections),
             'custom_css': print_settings.presentation.custom_css,
             'custom_latex_preamble': (
                 print_settings.presentation.custom_latex_preamble
@@ -122,6 +123,12 @@ class PrintSettingsFormAdapter:
                     ),
                     'has_theory_controls': (
                         section.section_type == THEORY_SECTION
+                    ),
+                    'has_distinct_instance_settings': (
+                        self._has_distinct_instance_settings(
+                            form,
+                            section.section_type,
+                        )
                     ),
                 }
                 for section in sections
@@ -242,13 +249,35 @@ class PrintSettingsFormAdapter:
 
     def _section_specs_from_form(self, form):
         section_options = form.cleaned_data.get('section_options', {})
-        return tuple(
-            DocumentSectionSpec(
-                section_type=section_type,
-                options=section_options.get(section_type, {}),
-            )
-            for section_type in self._section_types_from_form(form)
+        touched_section_options = form.cleaned_data.get(
+            'touched_section_options',
+            (),
         )
+        initial_specs_by_type = self._initial_specs_by_type(form)
+        initial_options = form.initial.get('section_options', {})
+        specs = []
+        for section_type in self._section_types_from_form(form):
+            existing_specs = initial_specs_by_type.get(section_type, [])
+            existing_spec = existing_specs.pop(0) if existing_specs else None
+            submitted_options = section_options.get(section_type, {})
+            options_changed = (
+                section_type in touched_section_options
+                and submitted_options != initial_options.get(section_type, {})
+            )
+            if existing_spec is not None and not options_changed:
+                options = existing_spec.options
+                title = existing_spec.title
+            else:
+                options = submitted_options
+                title = existing_spec.title if existing_spec is not None else ''
+            specs.append(
+                DocumentSectionSpec(
+                    section_type=section_type,
+                    title=title,
+                    options=options,
+                )
+            )
+        return tuple(specs)
 
     def _presentation_from_form(self, form):
         return DocumentPresentation(
@@ -301,6 +330,27 @@ class PrintSettingsFormAdapter:
                 for section_type, _label in form.fields['sections'].choices
             }
         return form.initial.get('section_options', {})
+
+    def _initial_specs_by_type(self, form):
+        specs_by_type = {}
+        for section in form.initial.get('section_specs', ()):
+            specs_by_type.setdefault(section.section_type, []).append(section)
+        return specs_by_type
+
+    def _has_distinct_instance_settings(self, form, section_type):
+        instance_settings = {
+            (
+                section.title,
+                json.dumps(
+                    dict(section.options),
+                    ensure_ascii=False,
+                    sort_keys=True,
+                ),
+            )
+            for section in form.initial.get('section_specs', ())
+            if section.section_type == section_type
+        }
+        return len(instance_settings) > 1
 
     def _format_section_options_json(self, value):
         if not value:

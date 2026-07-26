@@ -444,6 +444,86 @@ class PrintSettingsViewTests(TestCase):
         )
         self.assertTrue(form['theory_include_subtopics'].value())
 
+    def test_update_preserves_distinct_repeated_section_settings(self):
+        template = PrintSettings.objects.create(
+            name='Лист с двумя полями',
+            document_type=PrintSettings.DocumentType.WORK,
+            sections_config=[
+                {
+                    'type': 'blank_cells',
+                    'title': 'Короткое решение',
+                    'params': {
+                        'rows': 4,
+                        'columns': 12,
+                        'row_height': 20,
+                    },
+                },
+                {
+                    'type': 'blank_cells',
+                    'title': 'Большое решение',
+                    'params': {
+                        'rows': 10,
+                        'columns': 24,
+                        'row_height': 30,
+                    },
+                },
+            ],
+        )
+        update_url = reverse(
+            'document_engine:print-profile-update',
+            args=[template.pk],
+        )
+
+        get_response = self.client.get(update_url)
+
+        self.assertEqual(get_response.status_code, 200)
+        self.assertContains(
+            get_response,
+            'Повторы этой секции имеют разные настройки.',
+        )
+
+        response = self.client.post(
+            update_url,
+            {
+                'name': 'Лист с двумя полями',
+                'document_type': 'work',
+                'sections': ['blank_cells'],
+                'section_order': 'blank_cells,blank_cells',
+                'blank_cells_rows': '4',
+                'blank_cells_columns': '12',
+                'blank_cells_row_height': '20',
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('document_engine:print-profile-editor'),
+        )
+        template.refresh_from_db()
+        self.assertEqual(
+            template.sections_config,
+            [
+                {
+                    'type': 'blank_cells',
+                    'title': 'Короткое решение',
+                    'params': {
+                        'rows': 4,
+                        'columns': 12,
+                        'row_height': 20,
+                    },
+                },
+                {
+                    'type': 'blank_cells',
+                    'title': 'Большое решение',
+                    'params': {
+                        'rows': 10,
+                        'columns': 24,
+                        'row_height': 30,
+                    },
+                },
+            ],
+        )
+
     def test_print_settings_update_view_updates_template(self):
         template = PrintSettings.objects.create(
             name='Старый шаблон',

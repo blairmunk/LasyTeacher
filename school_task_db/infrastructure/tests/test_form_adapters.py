@@ -41,6 +41,7 @@ from core_logic.value_objects.document_recipes import (
     BLANK_CELLS_SECTION,
     COMMON_HEADER_SECTION,
     HEADER_SECTION,
+    PAGE_BREAK_SECTION,
     TASK_LIST_SECTION,
     THEORY_SECTION,
     WORK_DOCUMENT_TYPE,
@@ -836,6 +837,168 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
                     'role_blank_cells': {'practice': {'rows': 6}},
                 },
             },
+        )
+        self.assertEqual(initial['section_specs'], template.sections)
+
+    def test_update_preserves_distinct_repeated_section_options(self):
+        template = PrintSettingsSpec(
+            name='Шаблон',
+            document_type=WORK_DOCUMENT_TYPE,
+            sections=[
+                DocumentSectionSpec(
+                    section_type=BLANK_CELLS_SECTION,
+                    title='Короткое решение',
+                    options={'rows': 4, 'columns': 12, 'row_height': 20},
+                ),
+                DocumentSectionSpec(
+                    section_type=BLANK_CELLS_SECTION,
+                    title='Большое решение',
+                    options={'rows': 10, 'columns': 24, 'row_height': 30},
+                ),
+            ],
+        )
+        adapter = PrintSettingsFormAdapter()
+        initial = adapter.form_initial_from_print_settings(template)
+        data = QueryDict('', mutable=True)
+        data.update(
+            {
+                'name': 'Шаблон',
+                'document_type': 'work',
+                'section_order': 'blank_cells,blank_cells',
+                'blank_cells_rows': '4',
+                'blank_cells_columns': '12',
+                'blank_cells_row_height': '20',
+            }
+        )
+        data.setlist('sections', [BLANK_CELLS_SECTION])
+        form = self._template_form(data=data, initial=initial)
+        self.assertTrue(form.is_valid(), form.errors)
+
+        params = adapter.update_print_settings_params_from_form(
+            form,
+            print_settings_id='profile-1',
+        )
+
+        self.assertEqual(params.sections, template.sections)
+
+    def test_changed_type_options_apply_to_all_repeated_sections(self):
+        template = PrintSettingsSpec(
+            name='Шаблон',
+            document_type=WORK_DOCUMENT_TYPE,
+            sections=[
+                DocumentSectionSpec(
+                    section_type=BLANK_CELLS_SECTION,
+                    options={'rows': 4, 'columns': 12, 'row_height': 20},
+                ),
+                DocumentSectionSpec(
+                    section_type=BLANK_CELLS_SECTION,
+                    options={'rows': 10, 'columns': 24, 'row_height': 30},
+                ),
+            ],
+        )
+        adapter = PrintSettingsFormAdapter()
+        initial = adapter.form_initial_from_print_settings(template)
+        data = QueryDict('', mutable=True)
+        data.update(
+            {
+                'name': 'Шаблон',
+                'document_type': 'work',
+                'section_order': 'blank_cells,blank_cells',
+                'blank_cells_rows': '8',
+                'blank_cells_columns': '18',
+                'blank_cells_row_height': '24',
+            }
+        )
+        data.setlist('sections', [BLANK_CELLS_SECTION])
+        form = self._template_form(data=data, initial=initial)
+        self.assertTrue(form.is_valid(), form.errors)
+
+        params = adapter.update_print_settings_params_from_form(
+            form,
+            print_settings_id='profile-1',
+        )
+
+        self.assertEqual(
+            [dict(section.options) for section in params.sections],
+            [
+                {'rows': 8, 'columns': 18, 'row_height': 24},
+                {'rows': 8, 'columns': 18, 'row_height': 24},
+            ],
+        )
+
+    def test_empty_json_clears_options_for_repeated_section_type(self):
+        template = PrintSettingsSpec(
+            name='Шаблон',
+            document_type=WORK_DOCUMENT_TYPE,
+            sections=[
+                DocumentSectionSpec(
+                    section_type=PAGE_BREAK_SECTION,
+                    options={'label': 'first'},
+                ),
+                DocumentSectionSpec(
+                    section_type=PAGE_BREAK_SECTION,
+                    options={'label': 'second'},
+                ),
+            ],
+        )
+        adapter = PrintSettingsFormAdapter()
+        initial = adapter.form_initial_from_print_settings(template)
+        data = QueryDict('', mutable=True)
+        data.update(
+            {
+                'name': 'Шаблон',
+                'document_type': 'work',
+                'section_order': 'page_break,page_break',
+                'section_options__page_break': '',
+            }
+        )
+        data.setlist('sections', [PAGE_BREAK_SECTION])
+        form = self._template_form(data=data, initial=initial)
+        self.assertTrue(form.is_valid(), form.errors)
+
+        params = adapter.update_print_settings_params_from_form(
+            form,
+            print_settings_id='profile-1',
+        )
+
+        self.assertEqual(
+            [dict(section.options) for section in params.sections],
+            [{}, {}],
+        )
+
+    def test_context_marks_distinct_repeated_section_settings(self):
+        template = PrintSettingsSpec(
+            name='Шаблон',
+            document_type=WORK_DOCUMENT_TYPE,
+            sections=[
+                DocumentSectionSpec(
+                    section_type=BLANK_CELLS_SECTION,
+                    options={'rows': 4},
+                ),
+                DocumentSectionSpec(
+                    section_type=BLANK_CELLS_SECTION,
+                    options={'rows': 10},
+                ),
+            ],
+        )
+        adapter = PrintSettingsFormAdapter()
+        form = self._template_form(
+            initial=adapter.form_initial_from_print_settings(template),
+        )
+
+        context = adapter.create_context(
+            form=form,
+            document_types=get_document_type_catalog(renderable_only=True),
+            sections=get_document_section_catalog(renderable_only=True),
+        )
+        blank_cells_context = next(
+            section
+            for section in context['section_options']
+            if section['section_type'] == BLANK_CELLS_SECTION
+        )
+
+        self.assertTrue(
+            blank_cells_context['has_distinct_instance_settings'],
         )
 
     def test_builds_create_context(self):

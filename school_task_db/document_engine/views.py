@@ -134,7 +134,15 @@ class PrintSettingsUpdateView(PrintSettingsCreateView):
 
     def post(self, request, *args, **kwargs):
         form_data = self._form_data()
-        form = self._form(data=request.POST, form_data=form_data)
+        form = self._form(
+            data=request.POST,
+            form_data=form_data,
+            initial=(
+                container
+                .print_settings_form_adapter
+                .form_initial_from_print_settings(form_data.print_profile)
+            ),
+        )
         if not form.is_valid():
             return self.render_to_response(
                 self.get_context_data(form=form, form_data=form_data),

@@ -267,12 +267,13 @@ class PrintSettingsForm(forms.Form):
         cleaned_data = super().clean()
         selected_sections = cleaned_data.get('sections') or ()
         section_options = {}
+        touched_section_options = set()
 
         for section_type in selected_sections:
-            raw_options = self.data.get(
-                section_options_field_name(section_type),
-                '',
-            ).strip()
+            field_name = section_options_field_name(section_type)
+            if field_name in self.data:
+                touched_section_options.add(section_type)
+            raw_options = self.data.get(field_name, '').strip()
             if not raw_options:
                 continue
             try:
@@ -288,6 +289,7 @@ class PrintSettingsForm(forms.Form):
             section_options[section_type] = parsed_options
 
         if BLANK_CELLS_SECTION in selected_sections:
+            touched_section_options.add(BLANK_CELLS_SECTION)
             structured_options = {
                 option_name: cleaned_data.get(field_name)
                 for option_name, field_name in (
@@ -307,6 +309,7 @@ class PrintSettingsForm(forms.Form):
             TASK_LIST_SECTION in selected_sections
             and self.data.get('task_list_structured_options') == '1'
         ):
+            touched_section_options.add(TASK_LIST_SECTION)
             section_options[TASK_LIST_SECTION] = (
                 self._clean_task_list_role_options(cleaned_data)
             )
@@ -315,6 +318,7 @@ class PrintSettingsForm(forms.Form):
             THEORY_SECTION in selected_sections
             and self.data.get('theory_structured_options') == '1'
         ):
+            touched_section_options.add(THEORY_SECTION)
             theory_options = {}
             section_title = cleaned_data.get('theory_section_title', '').strip()
             if section_title:
@@ -324,6 +328,9 @@ class PrintSettingsForm(forms.Form):
             section_options[THEORY_SECTION] = theory_options
 
         cleaned_data['section_options'] = section_options
+        cleaned_data['touched_section_options'] = frozenset(
+            touched_section_options,
+        )
         return cleaned_data
 
     def _clean_task_list_role_options(self, cleaned_data):

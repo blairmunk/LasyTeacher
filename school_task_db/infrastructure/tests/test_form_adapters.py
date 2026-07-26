@@ -411,6 +411,46 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
             ['task_list', 'header'],
         )
 
+    def test_builds_create_params_with_document_presentation(self):
+        data = QueryDict('', mutable=True)
+        data.update(
+            {
+                'name': 'Шаблон',
+                'document_type': 'work',
+                'custom_css': 'body { color: black; }',
+                'custom_latex_preamble': '\\usepackage{geometry}',
+                'html_template_override': '<main>{{ body_content }}</main>',
+                'latex_template_override': (
+                    '\\begin{document}{{ body_content }}'
+                ),
+            }
+        )
+        data.setlist('sections', ['header'])
+        form = self._template_form(data=data)
+        self.assertTrue(form.is_valid(), form.errors)
+
+        params = (
+            PrintSettingsFormAdapter()
+            .create_print_settings_params_from_form(form)
+        )
+
+        self.assertEqual(
+            params.presentation.custom_css,
+            'body { color: black; }',
+        )
+        self.assertEqual(
+            params.presentation.custom_latex_preamble,
+            '\\usepackage{geometry}',
+        )
+        self.assertEqual(
+            params.presentation.html_template_override,
+            '<main>{{ body_content }}</main>',
+        )
+        self.assertEqual(
+            params.presentation.latex_template_override,
+            '\\begin{document}{{ body_content }}',
+        )
+
     def test_builds_create_params_with_common_header_fixed_first(self):
         form = self._template_form(
             data=QueryDict(
@@ -533,6 +573,12 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
             description='Описание',
             is_default=True,
             sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
+            presentation=DocumentPresentation(
+                custom_css='body { font-size: 12pt; }',
+                custom_latex_preamble='\\usepackage{multicol}',
+                html_template_override='<main>{{ body_content }}</main>',
+                latex_template_override='\\begin{document}{{ body_content }}',
+            ),
         )
 
         adapter = PrintSettingsFormAdapter()
@@ -544,6 +590,19 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
         self.assertEqual(initial['document_type'], WORK_DOCUMENT_TYPE)
         self.assertEqual(initial['sections'], (HEADER_SECTION,))
         self.assertEqual(initial['section_order'], HEADER_SECTION)
+        self.assertEqual(initial['custom_css'], 'body { font-size: 12pt; }')
+        self.assertEqual(
+            initial['custom_latex_preamble'],
+            '\\usepackage{multicol}',
+        )
+        self.assertEqual(
+            initial['html_template_override'],
+            '<main>{{ body_content }}</main>',
+        )
+        self.assertEqual(
+            initial['latex_template_override'],
+            '\\begin{document}{{ body_content }}',
+        )
         self.assertTrue(initial['is_default'])
 
     def test_builds_form_initial_with_section_options_from_template(self):

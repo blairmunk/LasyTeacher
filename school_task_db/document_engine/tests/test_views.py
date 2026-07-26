@@ -79,6 +79,11 @@ class PrintSettingsViewTests(TestCase):
         self.assertContains(response, 'Повторяемые:')
         self.assertContains(response, 'common_header,header,task_list,page_break')
         self.assertContains(response, 'header,theory,full_solutions,task_list')
+        self.assertContains(response, 'Оформление документа')
+        self.assertContains(response, 'name="custom_css"')
+        self.assertContains(response, 'name="custom_latex_preamble"')
+        self.assertContains(response, 'name="html_template_override"')
+        self.assertContains(response, 'name="latex_template_override"')
 
     def test_print_settings_create_view_creates_template(self):
         response = self.client.post(
@@ -89,6 +94,12 @@ class PrintSettingsViewTests(TestCase):
                 'document_type': 'work',
                 'sections': ['header', 'task_list'],
                 'is_default': 'on',
+                'custom_css': 'body { font-size: 12pt; }',
+                'custom_latex_preamble': '\\usepackage{multicol}',
+                'html_template_override': '<main>{{ body_content }}</main>',
+                'latex_template_override': (
+                    '\\begin{document}{{ body_content }}'
+                ),
             },
         )
 
@@ -103,6 +114,19 @@ class PrintSettingsViewTests(TestCase):
             [{'type': 'header'}, {'type': 'task_list'}],
         )
         self.assertTrue(template.is_default)
+        self.assertEqual(template.custom_css, 'body { font-size: 12pt; }')
+        self.assertEqual(
+            template.custom_latex_preamble,
+            '\\usepackage{multicol}',
+        )
+        self.assertEqual(
+            template.html_template_override,
+            '<main>{{ body_content }}</main>',
+        )
+        self.assertEqual(
+            template.latex_template_override,
+            '\\begin{document}{{ body_content }}',
+        )
 
     def test_print_settings_create_view_preserves_section_order(self):
         response = self.client.post(
@@ -200,6 +224,10 @@ class PrintSettingsViewTests(TestCase):
             document_type=PrintSettings.DocumentType.WORK,
             sections_config=[{'type': 'header'}],
             is_default=True,
+            custom_css='body { color: black; }',
+            custom_latex_preamble='\\usepackage{geometry}',
+            html_template_override='<main>{{ body_content }}</main>',
+            latex_template_override='\\begin{document}{{ body_content }}',
         )
 
         response = self.client.get(
@@ -215,6 +243,16 @@ class PrintSettingsViewTests(TestCase):
         self.assertContains(response, 'value="Шаблон работы"')
         self.assertContains(response, 'Описание')
         self.assertContains(response, 'value="header"')
+        self.assertContains(response, 'body { color: black; }')
+        self.assertContains(response, '\\usepackage{geometry}')
+        self.assertContains(
+            response,
+            '&lt;main&gt;{{ body_content }}&lt;/main&gt;',
+        )
+        self.assertContains(
+            response,
+            '\\begin{document}{{ body_content }}',
+        )
         self.assertContains(response, 'checked')
 
     def test_print_settings_update_view_shows_existing_section_options(self):
@@ -257,6 +295,10 @@ class PrintSettingsViewTests(TestCase):
                 'document_type': 'work',
                 'sections': ['header', 'task_list'],
                 'is_default': 'on',
+                'custom_css': '.task { margin: 1rem; }',
+                'custom_latex_preamble': '\\usepackage{multicol}',
+                'html_template_override': '<article>{{ body_content }}</article>',
+                'latex_template_override': '\\section*{Лист}{{ body_content }}',
             },
         )
 
@@ -272,6 +314,19 @@ class PrintSettingsViewTests(TestCase):
             [{'type': 'header'}, {'type': 'task_list'}],
         )
         self.assertTrue(template.is_default)
+        self.assertEqual(template.custom_css, '.task { margin: 1rem; }')
+        self.assertEqual(
+            template.custom_latex_preamble,
+            '\\usepackage{multicol}',
+        )
+        self.assertEqual(
+            template.html_template_override,
+            '<article>{{ body_content }}</article>',
+        )
+        self.assertEqual(
+            template.latex_template_override,
+            '\\section*{Лист}{{ body_content }}',
+        )
 
     def test_print_settings_update_view_preserves_section_order(self):
         template = PrintSettings.objects.create(

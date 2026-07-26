@@ -2,6 +2,7 @@ from django.test import TestCase
 
 from core_logic.entities.document import (
     CreatePrintSettingsParams,
+    DocumentPresentation,
     DocumentSectionSpec,
     PrintSettingsSpec,
     UpdatePrintSettingsParams,
@@ -122,6 +123,12 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
                     DocumentSectionSpec(section_type='page_break'),
                 ),
                 is_default=True,
+                presentation=DocumentPresentation(
+                    custom_css='body { font-size: 12pt; }',
+                    custom_latex_preamble='\\usepackage{multicol}',
+                    html_template_override='<main>{{ body_content }}</main>',
+                    latex_template_override='\\begin{document}{{ body_content }}',
+                ),
             )
         )
 
@@ -139,6 +146,19 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
             ],
         )
         self.assertTrue(model.is_default)
+        self.assertEqual(model.custom_css, 'body { font-size: 12pt; }')
+        self.assertEqual(
+            model.custom_latex_preamble,
+            '\\usepackage{multicol}',
+        )
+        self.assertEqual(
+            model.html_template_override,
+            '<main>{{ body_content }}</main>',
+        )
+        self.assertEqual(
+            model.latex_template_override,
+            '\\begin{document}{{ body_content }}',
+        )
 
     def test_creating_default_profile_clears_previous_default(self):
         old_default = PrintSettings.objects.create(
@@ -181,6 +201,12 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
                     ),
                 ),
                 is_default=True,
+                presentation=DocumentPresentation(
+                    custom_css='.task { margin: 1rem; }',
+                    custom_latex_preamble='\\usepackage{geometry}',
+                    html_template_override='<article>{{ body_content }}</article>',
+                    latex_template_override='\\section*{Лист}{{ body_content }}',
+                ),
             )
         )
 
@@ -196,6 +222,19 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
             ],
         )
         self.assertTrue(model.is_default)
+        self.assertEqual(model.custom_css, '.task { margin: 1rem; }')
+        self.assertEqual(
+            model.custom_latex_preamble,
+            '\\usepackage{geometry}',
+        )
+        self.assertEqual(
+            model.html_template_override,
+            '<article>{{ body_content }}</article>',
+        )
+        self.assertEqual(
+            model.latex_template_override,
+            '\\section*{Лист}{{ body_content }}',
+        )
 
     def test_update_returns_false_for_missing_profile(self):
         updated = DjangoPrintSettingsRepository().update_print_settings(

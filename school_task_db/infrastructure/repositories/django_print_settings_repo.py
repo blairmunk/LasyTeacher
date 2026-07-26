@@ -71,6 +71,14 @@ class DjangoPrintSettingsRepository(IPrintSettingsRepository):
             document_type=params.document_type,
             sections_config=_sections_config_from_specs(params.sections),
             is_default=params.is_default,
+            custom_css=params.presentation.custom_css,
+            custom_latex_preamble=params.presentation.custom_latex_preamble,
+            html_template_override=(
+                params.presentation.html_template_override
+            ),
+            latex_template_override=(
+                params.presentation.latex_template_override
+            ),
         )
         print_settings.full_clean()
         print_settings.save()
@@ -99,6 +107,16 @@ class DjangoPrintSettingsRepository(IPrintSettingsRepository):
             params.sections,
         )
         print_settings.is_default = params.is_default
+        print_settings.custom_css = params.presentation.custom_css
+        print_settings.custom_latex_preamble = (
+            params.presentation.custom_latex_preamble
+        )
+        print_settings.html_template_override = (
+            params.presentation.html_template_override
+        )
+        print_settings.latex_template_override = (
+            params.presentation.latex_template_override
+        )
         print_settings.full_clean()
         print_settings.save()
         return True

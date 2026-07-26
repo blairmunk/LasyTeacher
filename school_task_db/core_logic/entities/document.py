@@ -214,6 +214,9 @@ class CreatePrintSettingsParams:
     sections: Tuple[DocumentSectionSpec, ...] = field(default_factory=tuple)
     description: str = ''
     is_default: bool = False
+    presentation: DocumentPresentation = field(
+        default_factory=DocumentPresentation,
+    )
 
     def __post_init__(self):
         object.__setattr__(self, 'name', self.name.strip())
@@ -252,6 +255,9 @@ class UpdatePrintSettingsParams:
     sections: Tuple[DocumentSectionSpec, ...] = field(default_factory=tuple)
     description: str = ''
     is_default: bool = False
+    presentation: DocumentPresentation = field(
+        default_factory=DocumentPresentation,
+    )
 
     def __post_init__(self):
         object.__setattr__(

@@ -41,6 +41,50 @@ class PrintSettingsForm(forms.Form):
             },
         ),
     )
+    custom_css = forms.CharField(
+        label='Дополнительные стили CSS',
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                'class': 'form-control font-monospace',
+                'rows': 5,
+                'spellcheck': 'false',
+            },
+        ),
+    )
+    custom_latex_preamble = forms.CharField(
+        label='Дополнительная LaTeX-преамбула',
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                'class': 'form-control font-monospace',
+                'rows': 5,
+                'spellcheck': 'false',
+            },
+        ),
+    )
+    html_template_override = forms.CharField(
+        label='HTML-обёртка документа',
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                'class': 'form-control font-monospace',
+                'rows': 7,
+                'spellcheck': 'false',
+            },
+        ),
+    )
+    latex_template_override = forms.CharField(
+        label='LaTeX-обёртка документа',
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                'class': 'form-control font-monospace',
+                'rows': 7,
+                'spellcheck': 'false',
+            },
+        ),
+    )
     is_default = forms.BooleanField(
         label='Использовать по умолчанию для этого типа',
         required=False,

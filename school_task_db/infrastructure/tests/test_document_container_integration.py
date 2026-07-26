@@ -18,6 +18,7 @@ from core_logic.value_objects.document_render_options import (
     WorkDocumentRenderOptions,
 )
 from curriculum.models import Topic
+from document_engine.models import PrintSettings
 from events.models import Event, EventParticipation, Mark
 from infrastructure.container import Container
 from infrastructure.services.rendered_document_file_store import (
@@ -57,6 +58,21 @@ class DocumentContainerIntegrationTests(TestCase):
             order=1,
             max_points=4,
         )
+        print_settings = PrintSettings.objects.create(
+            name='Пользовательское оформление',
+            document_type=PrintSettings.DocumentType.WORK,
+            sections_config=[
+                {'type': 'header'},
+                {'type': 'task_list'},
+                {'type': 'answers'},
+                {'type': 'short_solutions'},
+            ],
+            custom_css='.document-task { margin: 12px; }',
+            html_template_override=(
+                '<html><head><style>{{ custom_css }}</style></head>'
+                '<body data-custom-wrapper>{{ body_content }}</body></html>'
+            ),
+        )
 
         with TemporaryDirectory() as output_dir:
             old_output_dirs = RenderedDocumentFileStore.default_output_dirs
@@ -79,6 +95,7 @@ class DocumentContainerIntegrationTests(TestCase):
                         renderer_type='html',
                         answer_type='with_short_solutions',
                     ),
+                    print_settings_id=str(print_settings.pk),
                 )
             )
 
@@ -94,6 +111,8 @@ class DocumentContainerIntegrationTests(TestCase):
         self.assertIn('Ответы', html)
         self.assertIn('10 Н', html)
         self.assertIn('Краткие решения', html)
+        self.assertIn('data-custom-wrapper', html)
+        self.assertIn('.document-task { margin: 12px; }', html)
 
     def test_container_renders_remedial_html_with_sectioned_engine(self):
         student = Student.objects.create(

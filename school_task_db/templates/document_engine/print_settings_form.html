@@ -151,6 +151,40 @@
                 </div>
             </div>
 
+            <details class="border rounded mt-4 p-3">
+                <summary class="fw-semibold">Оформление документа</summary>
+                <div class="row g-3 mt-1">
+                    <div class="col-lg-6">
+                        <label class="form-label" for="{{ form.custom_css.id_for_label }}">
+                            {{ form.custom_css.label }}
+                        </label>
+                        {{ form.custom_css }}
+                        {{ form.custom_css.errors }}
+                    </div>
+                    <div class="col-lg-6">
+                        <label class="form-label" for="{{ form.custom_latex_preamble.id_for_label }}">
+                            {{ form.custom_latex_preamble.label }}
+                        </label>
+                        {{ form.custom_latex_preamble }}
+                        {{ form.custom_latex_preamble.errors }}
+                    </div>
+                    <div class="col-lg-6">
+                        <label class="form-label" for="{{ form.html_template_override.id_for_label }}">
+                            {{ form.html_template_override.label }}
+                        </label>
+                        {{ form.html_template_override }}
+                        {{ form.html_template_override.errors }}
+                    </div>
+                    <div class="col-lg-6">
+                        <label class="form-label" for="{{ form.latex_template_override.id_for_label }}">
+                            {{ form.latex_template_override.label }}
+                        </label>
+                        {{ form.latex_template_override }}
+                        {{ form.latex_template_override.errors }}
+                    </div>
+                </div>
+            </details>
+
             <div class="form-check mt-4">
                 {{ form.is_default }}
                 <label class="form-check-label" for="{{ form.is_default.id_for_label }}">

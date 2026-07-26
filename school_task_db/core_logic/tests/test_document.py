@@ -3,6 +3,7 @@ from unittest import TestCase
 from core_logic.entities.document import (
     CreatePrintSettingsParams,
     Document,
+    DocumentPresentation,
     DocumentRecipe,
     DocumentSection,
     DocumentSectionSpec,
@@ -274,6 +275,7 @@ class DocumentModelTests(TestCase):
             name='Профиль печати',
             document_type='work',
             section_types=('header',),
+            presentation=DocumentPresentation(custom_css='body {}'),
         )
         update_params = UpdatePrintSettingsParams(
             print_settings_id='profile-1',
@@ -283,6 +285,7 @@ class DocumentModelTests(TestCase):
         )
 
         self.assertEqual(create_params.document_type, 'work')
+        self.assertEqual(create_params.presentation.custom_css, 'body {}')
         self.assertEqual(update_params.document_type, 'work')
         self.assertEqual(update_params.print_settings_id, 'profile-1')
 

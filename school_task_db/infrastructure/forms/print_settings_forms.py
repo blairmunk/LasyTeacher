@@ -5,6 +5,7 @@ from urllib.parse import urlencode
 
 from core_logic.entities.document import (
     CreatePrintSettingsParams,
+    DocumentPresentation,
     DocumentSectionSpec,
     UpdatePrintSettingsParams,
 )
@@ -52,6 +53,7 @@ class PrintSettingsFormAdapter:
             document_type=form.cleaned_data['document_type'],
             sections=self._section_specs_from_form(form),
             is_default=form.cleaned_data.get('is_default', False),
+            presentation=self._presentation_from_form(form),
         )
 
     def update_print_settings_params_from_form(self, form, print_settings_id):
@@ -62,6 +64,7 @@ class PrintSettingsFormAdapter:
             document_type=form.cleaned_data['document_type'],
             sections=self._section_specs_from_form(form),
             is_default=form.cleaned_data.get('is_default', False),
+            presentation=self._presentation_from_form(form),
         )
 
     def form_initial_from_print_settings(self, print_settings):
@@ -76,6 +79,16 @@ class PrintSettingsFormAdapter:
                 for section in print_settings.sections
                 if section.options
             },
+            'custom_css': print_settings.presentation.custom_css,
+            'custom_latex_preamble': (
+                print_settings.presentation.custom_latex_preamble
+            ),
+            'html_template_override': (
+                print_settings.presentation.html_template_override
+            ),
+            'latex_template_override': (
+                print_settings.presentation.latex_template_override
+            ),
             'is_default': print_settings.is_default,
         }
 
@@ -187,6 +200,23 @@ class PrintSettingsFormAdapter:
                 options=section_options.get(section_type, {}),
             )
             for section_type in self._section_types_from_form(form)
+        )
+
+    def _presentation_from_form(self, form):
+        return DocumentPresentation(
+            custom_css=form.cleaned_data.get('custom_css', ''),
+            custom_latex_preamble=form.cleaned_data.get(
+                'custom_latex_preamble',
+                '',
+            ),
+            html_template_override=form.cleaned_data.get(
+                'html_template_override',
+                '',
+            ),
+            latex_template_override=form.cleaned_data.get(
+                'latex_template_override',
+                '',
+            ),
         )
 
     def _selected_section_order(self, form):

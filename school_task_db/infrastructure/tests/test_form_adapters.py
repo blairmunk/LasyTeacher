@@ -41,6 +41,7 @@ from core_logic.value_objects.document_recipes import (
     BLANK_CELLS_SECTION,
     COMMON_HEADER_SECTION,
     HEADER_SECTION,
+    TASK_LIST_SECTION,
     WORK_DOCUMENT_TYPE,
 )
 from core_logic.value_objects.task_print_settings import (
@@ -509,6 +510,112 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
                 'role_blank_cells': {'practice': 6},
             },
         )
+
+    def test_builds_task_list_options_from_structured_role_fields(self):
+        data = QueryDict('', mutable=True)
+        data.update(
+            {
+                'name': 'Шаблон',
+                'document_type': 'work',
+                'task_list_structured_options': '1',
+                'task_list_demo_visible': 'on',
+                'task_list_demo_render_mode': 'with_full_solution',
+                'task_list_demo_blank_cells_mode': 'hide',
+                'task_list_practice_visible': 'on',
+                'task_list_practice_render_mode': 'task_only',
+                'task_list_practice_blank_cells_mode': 'show',
+                'task_list_practice_blank_cells_rows': '8',
+                'task_list_control_visible': 'on',
+            }
+        )
+        data.setlist('sections', [TASK_LIST_SECTION])
+        form = self._template_form(data=data)
+        self.assertTrue(form.is_valid(), form.errors)
+
+        params = (
+            PrintSettingsFormAdapter()
+            .create_print_settings_params_from_form(form)
+        )
+
+        self.assertEqual(
+            params.sections[0].options,
+            {
+                'hidden_roles': ['remedial'],
+                'role_render_modes': {
+                    'demo': 'with_full_solution',
+                    'practice': 'task_only',
+                },
+                'role_blank_cells': {
+                    'demo': False,
+                    'practice': {'rows': 8},
+                },
+            },
+        )
+
+    def test_task_list_role_controls_use_saved_options_as_initial(self):
+        form = self._template_form(
+            initial={
+                'sections': [TASK_LIST_SECTION],
+                'section_options': {
+                    TASK_LIST_SECTION: {
+                        'hidden_roles': ['demo'],
+                        'role_render_modes': {
+                            'demo': 'with_full_solution',
+                        },
+                        'role_blank_cells': {
+                            'practice': {'rows': 9},
+                            'control': False,
+                        },
+                    },
+                },
+            },
+        )
+
+        self.assertFalse(form['task_list_demo_visible'].value())
+        self.assertEqual(
+            form['task_list_demo_render_mode'].value(),
+            'with_full_solution',
+        )
+        self.assertEqual(
+            form['task_list_practice_blank_cells_mode'].value(),
+            'show',
+        )
+        self.assertEqual(
+            form['task_list_practice_blank_cells_rows'].value(),
+            9,
+        )
+        self.assertEqual(
+            form['task_list_control_blank_cells_mode'].value(),
+            'hide',
+        )
+        self.assertEqual(
+            form['task_list_remedial_blank_cells_mode'].value(),
+            '',
+        )
+
+    def test_task_list_role_controls_omit_default_options(self):
+        data = QueryDict('', mutable=True)
+        data.update(
+            {
+                'name': 'Шаблон',
+                'document_type': 'work',
+                'task_list_structured_options': '1',
+                'task_list_demo_visible': 'on',
+                'task_list_practice_visible': 'on',
+                'task_list_control_visible': 'on',
+                'task_list_remedial_visible': 'on',
+            }
+        )
+        data.setlist('sections', [TASK_LIST_SECTION])
+        form = self._template_form(data=data)
+        self.assertTrue(form.is_valid(), form.errors)
+
+        params = (
+            PrintSettingsFormAdapter()
+            .create_print_settings_params_from_form(form)
+        )
+
+        self.assertEqual(params.sections[0].options, {})
 
     def test_builds_blank_cells_options_from_structured_fields(self):
         data = QueryDict('', mutable=True)

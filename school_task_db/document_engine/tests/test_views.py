@@ -69,9 +69,18 @@ class PrintSettingsViewTests(TestCase):
         self.assertContains(response, 'name="document_type"')
         self.assertContains(response, 'value="header"')
         self.assertContains(response, 'value="task_list"')
-        self.assertContains(response, 'name="section_options__task_list"')
-        self.assertContains(response, 'role_render_modes')
-        self.assertContains(response, 'data-section-options-example')
+        self.assertNotContains(response, 'name="section_options__task_list"')
+        self.assertContains(response, 'name="task_list_structured_options"')
+        self.assertContains(response, 'name="task_list_demo_visible"')
+        self.assertContains(response, 'name="task_list_demo_render_mode"')
+        self.assertContains(
+            response,
+            'name="task_list_practice_blank_cells_mode"',
+        )
+        self.assertContains(
+            response,
+            'name="task_list_practice_blank_cells_rows"',
+        )
         self.assertNotContains(response, 'name="section_options__blank_cells"')
         self.assertContains(response, 'name="blank_cells_rows"')
         self.assertContains(response, 'name="blank_cells_columns"')
@@ -218,6 +227,53 @@ class PrintSettingsViewTests(TestCase):
             ],
         )
 
+    def test_print_settings_create_view_saves_task_list_role_controls(self):
+        response = self.client.post(
+            reverse('document_engine:print-profile-create'),
+            {
+                'name': 'Ролевой рабочий лист',
+                'document_type': 'work',
+                'sections': ['header', 'task_list'],
+                'task_list_structured_options': '1',
+                'task_list_demo_visible': 'on',
+                'task_list_demo_render_mode': 'with_full_solution',
+                'task_list_demo_blank_cells_mode': 'hide',
+                'task_list_practice_visible': 'on',
+                'task_list_practice_render_mode': 'task_only',
+                'task_list_practice_blank_cells_mode': 'show',
+                'task_list_practice_blank_cells_rows': '8',
+                'task_list_control_visible': 'on',
+                'task_list_control_blank_cells_mode': '',
+                'task_list_remedial_blank_cells_mode': '',
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('document_engine:print-profile-editor'),
+        )
+        template = PrintSettings.objects.get(name='Ролевой рабочий лист')
+        self.assertEqual(
+            template.sections_config,
+            [
+                {'type': 'header'},
+                {
+                    'type': 'task_list',
+                    'params': {
+                        'hidden_roles': ['remedial'],
+                        'role_render_modes': {
+                            'demo': 'with_full_solution',
+                            'practice': 'task_only',
+                        },
+                        'role_blank_cells': {
+                            'demo': False,
+                            'practice': {'rows': 8},
+                        },
+                    },
+                },
+            ],
+        )
+
     def test_print_settings_create_view_shows_invalid_section_options_error(self):
         response = self.client.post(
             reverse('document_engine:print-profile-create'),
@@ -312,9 +368,16 @@ class PrintSettingsViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, '&quot;hidden_roles&quot;: [')
-        self.assertContains(response, '&quot;role_blank_cells&quot;: {')
-        self.assertContains(response, '&quot;rows&quot;: 6')
+        form = response.context['form']
+        self.assertFalse(form['task_list_demo_visible'].value())
+        self.assertEqual(
+            form['task_list_practice_blank_cells_mode'].value(),
+            'show',
+        )
+        self.assertEqual(
+            form['task_list_practice_blank_cells_rows'].value(),
+            6,
+        )
 
     def test_print_settings_update_view_updates_template(self):
         template = PrintSettings.objects.create(

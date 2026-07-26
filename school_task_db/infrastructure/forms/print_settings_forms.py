@@ -16,9 +16,16 @@ from core_logic.value_objects.document_section_catalog import (
     order_document_section_types,
 )
 from core_logic.value_objects.document_render_options import FILE_TYPE_LABELS
-from core_logic.value_objects.document_recipes import BLANK_CELLS_SECTION
+from core_logic.value_objects.document_recipes import (
+    BLANK_CELLS_SECTION,
+    TASK_LIST_SECTION,
+)
+from core_logic.value_objects.task_print_settings import (
+    TASK_BANK_ROLE_SPECIFIC_CHOICES,
+)
 from infrastructure.forms.print_settings_django_forms import (
     section_options_field_name,
+    task_list_role_field_name,
 )
 
 
@@ -107,6 +114,11 @@ class PrintSettingsFormAdapter:
                     'options_json': self._format_section_options_json(
                         section_options_by_type.get(section.section_type, {}),
                     ),
+                    'task_list_role_controls': (
+                        self._task_list_role_controls(form)
+                        if section.section_type == TASK_LIST_SECTION
+                        else ()
+                    ),
                 }
                 for section in sections
             ],
@@ -160,9 +172,36 @@ class PrintSettingsFormAdapter:
                 section.options_example,
             ),
             'has_structured_options': (
+                section.section_type in (
+                    BLANK_CELLS_SECTION,
+                    TASK_LIST_SECTION,
+                )
+            ),
+            'has_blank_cells_controls': (
                 section.section_type == BLANK_CELLS_SECTION
             ),
         }
+
+    def _task_list_role_controls(self, form):
+        return [
+            {
+                'role': role,
+                'label': label,
+                'visible': form[
+                    task_list_role_field_name(role, 'visible')
+                ],
+                'render_mode': form[
+                    task_list_role_field_name(role, 'render_mode')
+                ],
+                'blank_cells_mode': form[
+                    task_list_role_field_name(role, 'blank_cells_mode')
+                ],
+                'blank_cells_rows': form[
+                    task_list_role_field_name(role, 'blank_cells_rows')
+                ],
+            }
+            for role, label in TASK_BANK_ROLE_SPECIFIC_CHOICES
+        ]
 
     def _print_profile_context(self, print_profile):
         return {

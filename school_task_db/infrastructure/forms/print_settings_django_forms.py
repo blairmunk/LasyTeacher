@@ -4,11 +4,25 @@ import json
 
 from django import forms
 
-from core_logic.value_objects.document_recipes import BLANK_CELLS_SECTION
+from core_logic.value_objects.document_recipes import (
+    BLANK_CELLS_SECTION,
+    TASK_LIST_SECTION,
+)
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_COLUMNS,
     DEFAULT_BLANK_CELLS_ROW_HEIGHT,
     DEFAULT_BLANK_CELLS_ROWS,
+    TASK_BANK_ROLE_SPECIFIC_CHOICES,
+    TASK_RENDER_MODE_CHOICES,
+)
+
+TASK_LIST_BLANK_CELLS_DEFAULT = ''
+TASK_LIST_BLANK_CELLS_SHOW = 'show'
+TASK_LIST_BLANK_CELLS_HIDE = 'hide'
+TASK_LIST_BLANK_CELLS_MODE_CHOICES = (
+    (TASK_LIST_BLANK_CELLS_DEFAULT, 'По спецификации'),
+    (TASK_LIST_BLANK_CELLS_SHOW, 'Показывать'),
+    (TASK_LIST_BLANK_CELLS_HIDE, 'Скрывать'),
 )
 
 
@@ -135,6 +149,7 @@ class PrintSettingsForm(forms.Form):
             )
             for item in (sections or [])
         ]
+        self._add_task_list_role_fields()
         blank_cells_options = (
             self.initial.get('section_options', {})
             .get(BLANK_CELLS_SECTION, {})
@@ -157,6 +172,72 @@ class PrintSettingsForm(forms.Form):
                 DEFAULT_BLANK_CELLS_ROW_HEIGHT,
             ),
         )
+
+    def _add_task_list_role_fields(self):
+        task_list_options = (
+            self.initial.get('section_options', {})
+            .get(TASK_LIST_SECTION, {})
+        )
+        hidden_roles = set(task_list_options.get('hidden_roles') or ())
+        render_modes = dict(
+            task_list_options.get('role_render_modes') or {}
+        )
+        blank_cells = dict(
+            task_list_options.get('role_blank_cells') or {}
+        )
+        for role, label in TASK_BANK_ROLE_SPECIFIC_CHOICES:
+            self.fields[task_list_role_field_name(role, 'visible')] = (
+                forms.BooleanField(
+                    label='Показывать',
+                    required=False,
+                    initial=role not in hidden_roles,
+                )
+            )
+            self.fields[task_list_role_field_name(role, 'render_mode')] = (
+                forms.ChoiceField(
+                    label='Содержимое',
+                    required=False,
+                    choices=(('', 'По спецификации'), *TASK_RENDER_MODE_CHOICES),
+                    initial=render_modes.get(role, ''),
+                )
+            )
+            blank_cells_mode, blank_cells_rows = (
+                _blank_cells_role_initial(blank_cells.get(role))
+                if role in blank_cells
+                else (TASK_LIST_BLANK_CELLS_DEFAULT, DEFAULT_BLANK_CELLS_ROWS)
+            )
+            self.fields[
+                task_list_role_field_name(role, 'blank_cells_mode')
+            ] = forms.ChoiceField(
+                label='Клетки',
+                required=False,
+                choices=TASK_LIST_BLANK_CELLS_MODE_CHOICES,
+                initial=blank_cells_mode,
+            )
+            self.fields[
+                task_list_role_field_name(role, 'blank_cells_rows')
+            ] = forms.IntegerField(
+                label='Строки',
+                required=False,
+                min_value=1,
+                max_value=40,
+                initial=blank_cells_rows,
+            )
+            for suffix in (
+                'visible',
+                'render_mode',
+                'blank_cells_mode',
+                'blank_cells_rows',
+            ):
+                self.fields[
+                    task_list_role_field_name(role, suffix)
+                ].widget.attrs['class'] = (
+                    'form-check-input'
+                    if suffix == 'visible'
+                    else 'form-select'
+                    if suffix in ('render_mode', 'blank_cells_mode')
+                    else 'form-control'
+                )
 
     def clean(self):
         cleaned_data = super().clean()
@@ -198,9 +279,81 @@ class PrintSettingsForm(forms.Form):
                     **structured_options,
                 }
 
+        if (
+            TASK_LIST_SECTION in selected_sections
+            and self.data.get('task_list_structured_options') == '1'
+        ):
+            section_options[TASK_LIST_SECTION] = (
+                self._clean_task_list_role_options(cleaned_data)
+            )
+
         cleaned_data['section_options'] = section_options
         return cleaned_data
+
+    def _clean_task_list_role_options(self, cleaned_data):
+        hidden_roles = []
+        render_modes = {}
+        blank_cells = {}
+        for role, _label in TASK_BANK_ROLE_SPECIFIC_CHOICES:
+            if not cleaned_data.get(
+                task_list_role_field_name(role, 'visible'),
+            ):
+                hidden_roles.append(role)
+
+            render_mode = cleaned_data.get(
+                task_list_role_field_name(role, 'render_mode'),
+            )
+            if render_mode:
+                render_modes[role] = render_mode
+
+            blank_cells_mode = cleaned_data.get(
+                task_list_role_field_name(role, 'blank_cells_mode'),
+            )
+            if blank_cells_mode == TASK_LIST_BLANK_CELLS_HIDE:
+                blank_cells[role] = False
+            elif blank_cells_mode == TASK_LIST_BLANK_CELLS_SHOW:
+                blank_cells[role] = {
+                    'rows': (
+                        cleaned_data.get(
+                            task_list_role_field_name(
+                                role,
+                                'blank_cells_rows',
+                            ),
+                        )
+                        or DEFAULT_BLANK_CELLS_ROWS
+                    ),
+                }
+
+        options = {}
+        if hidden_roles:
+            options['hidden_roles'] = hidden_roles
+        if render_modes:
+            options['role_render_modes'] = render_modes
+        if blank_cells:
+            options['role_blank_cells'] = blank_cells
+        return options
 
 
 def section_options_field_name(section_type):
     return f'section_options__{section_type}'
+
+
+def task_list_role_field_name(role, suffix):
+    return f'task_list_{role}_{suffix}'
+
+
+def _blank_cells_role_initial(value):
+    if value is False or value is None:
+        return TASK_LIST_BLANK_CELLS_HIDE, DEFAULT_BLANK_CELLS_ROWS
+    if value is True:
+        return TASK_LIST_BLANK_CELLS_SHOW, DEFAULT_BLANK_CELLS_ROWS
+    if isinstance(value, int):
+        return TASK_LIST_BLANK_CELLS_SHOW, value
+    if not isinstance(value, dict):
+        return TASK_LIST_BLANK_CELLS_DEFAULT, DEFAULT_BLANK_CELLS_ROWS
+    if value.get('enabled', True) is False:
+        return TASK_LIST_BLANK_CELLS_HIDE, DEFAULT_BLANK_CELLS_ROWS
+    return (
+        TASK_LIST_BLANK_CELLS_SHOW,
+        value.get('rows', DEFAULT_BLANK_CELLS_ROWS),
+    )

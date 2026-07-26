@@ -44,7 +44,7 @@
                 <div class="row g-3" data-section-list>
                     {% for section in section_options %}
                     <div
-                        class="col-md-6"
+                        class="{% if section.task_list_role_controls %}col-12{% else %}col-md-6{% endif %}"
                         data-section-option
                         data-section-type="{{ section.section_type }}"
                         {% if section.is_fixed_order %}data-fixed-order="1"{% endif %}
@@ -93,7 +93,45 @@
                             </div>
                             <div class="small text-muted mt-2">{{ section.description }}</div>
                             <code class="small">{{ section.section_type }}</code>
-                            {% if section.has_structured_options %}
+                            {% if section.task_list_role_controls %}
+                            <input type="hidden" name="task_list_structured_options" value="1">
+                            <div class="table-responsive mt-2">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Роль</th>
+                                            <th class="text-center">Показывать</th>
+                                            <th>Содержимое</th>
+                                            <th>Клетки</th>
+                                            <th style="width: 6rem;">Строки</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for role_control in section.task_list_role_controls %}
+                                        <tr>
+                                            <td>
+                                                <span class="fw-semibold">{{ role_control.label }}</span>
+                                                <div><code class="small">{{ role_control.role }}</code></div>
+                                            </td>
+                                            <td class="text-center">{{ role_control.visible }}</td>
+                                            <td>
+                                                {{ role_control.render_mode }}
+                                                {{ role_control.render_mode.errors }}
+                                            </td>
+                                            <td>
+                                                {{ role_control.blank_cells_mode }}
+                                                {{ role_control.blank_cells_mode.errors }}
+                                            </td>
+                                            <td>
+                                                {{ role_control.blank_cells_rows }}
+                                                {{ role_control.blank_cells_rows.errors }}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% elif section.has_blank_cells_controls %}
                             <div class="row g-2 mt-2">
                                 <div class="col-4">
                                     <label class="form-label small" for="{{ form.blank_cells_rows.id_for_label }}">

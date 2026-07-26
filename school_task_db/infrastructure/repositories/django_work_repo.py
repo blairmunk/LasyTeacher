@@ -46,6 +46,7 @@ from core_logic.interfaces.work_repo import (
     CreateWorkWithVariantFromTasksParams,
     IWorkRepository,
 )
+from core_logic.services.work_spec_sync_service import WorkSpecSyncService
 from events.models import EventParticipation, Mark
 from task_groups.models import TaskGroup
 from tasks.models import Task
@@ -503,8 +504,48 @@ class DjangoWorkRepository(IWorkRepository):
         return Variant.objects.filter(work__isnull=True).count()
 
     def sync_analog_groups_from_variants(self, work_id: str) -> int:
-        work = Work.objects.get(pk=work_id)
-        return work.sync_analog_groups_from_variants()
+        task_rows = list(
+            VariantTask.objects.filter(
+                variant__work_id=work_id,
+            ).order_by(
+                'variant__number',
+                'variant_id',
+                'order',
+            ).values_list(
+                'variant_id',
+                'task_id',
+            )
+        )
+        group_ids_by_task_id = {}
+        for task_id, group_id in (
+            TaskGroup.objects.filter(
+                task_id__in={task_id for _, task_id in task_rows},
+            ).order_by('pk').values_list('task_id', 'group_id')
+        ):
+            group_ids_by_task_id.setdefault(task_id, []).append(group_id)
+
+        group_ids_by_variant_id = {}
+        for variant_id, task_id in task_rows:
+            group_ids_by_variant_id.setdefault(variant_id, []).extend(
+                group_ids_by_task_id.get(task_id, ()),
+            )
+
+        plan = WorkSpecSyncService().build_plan(
+            group_ids_by_variant_id.values(),
+        )
+        created_count = 0
+        for item in plan:
+            _, was_created = WorkAnalogGroup.objects.update_or_create(
+                work_id=work_id,
+                analog_group_id=item.analog_group_id,
+                defaults={
+                    'count': item.count,
+                    'order': item.order,
+                },
+            )
+            if was_created:
+                created_count += 1
+        return created_count
 
     def compose_variants(self, work_id: str, count: int) -> int:
         work = Work.objects.get(pk=work_id)

@@ -165,43 +165,6 @@ class Work(BaseModel):
         self.save()
         return variants
 
-    def sync_analog_groups_from_variants(self):
-        """Анализирует варианты и создаёт WorkAnalogGroup автоматически."""
-        from task_groups.models import TaskGroup, AnalogGroup
-
-        group_max_counts = {}
-
-        for variant in self.variant_set.all():
-            variant_tasks = list(variant.tasks.all())
-            group_counts = {}
-
-            for task in variant_tasks:
-                task_group_links = TaskGroup.objects.filter(
-                    task=task
-                ).select_related('group')
-                for tgl in task_group_links:
-                    gid = tgl.group_id
-                    group_counts[gid] = group_counts.get(gid, 0) + 1
-
-            for gid, cnt in group_counts.items():
-                group_max_counts[gid] = max(group_max_counts.get(gid, 0), cnt)
-
-        if not group_max_counts:
-            return 0
-
-        created = 0
-        for order, (gid, cnt) in enumerate(group_max_counts.items(), 1):
-            _, was_created = WorkAnalogGroup.objects.update_or_create(
-                work=self,
-                analog_group_id=gid,
-                defaults={'count': cnt, 'order': order}
-            )
-            if was_created:
-                created += 1
-
-        return created
-
-
 class WorkAnalogGroup(BaseModel):
     """Спецификация работы: группа аналогов + количество + вес"""
     work = models.ForeignKey(Work, on_delete=models.CASCADE, verbose_name='Работа')

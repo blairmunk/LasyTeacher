@@ -13,7 +13,7 @@ from core_logic.interfaces.document_engine import IDocumentEngine
 from core_logic.interfaces.print_settings_repo import (
     IPrintSettingsRepository,
 )
-from core_logic.interfaces.work_repo import IWorkRepository
+from core_logic.interfaces.work_document_repo import IWorkDocumentRepository
 from core_logic.use_cases.print_settings_selection import (
     resolve_document_print_settings_spec,
 )
@@ -41,7 +41,7 @@ class RenderRemedialSheetDocumentRequest:
 class RenderRemedialSheetDocumentUseCase:
     def __init__(
         self,
-        work_repo: IWorkRepository | None = None,
+        work_repo: IWorkDocumentRepository | None = None,
         print_settings_repo: IPrintSettingsRepository | None = None,
         document_engine: IDocumentEngine | None = None,
         render_document_use_case: RenderDocumentUseCase | None = None,

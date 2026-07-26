@@ -46,6 +46,7 @@ from core_logic.interfaces.work_repo import (
     CreateWorkWithVariantFromTasksParams,
     IWorkRepository,
 )
+from core_logic.interfaces.work_document_repo import IWorkDocumentRepository
 from core_logic.services.work_spec_sync_service import WorkSpecSyncService
 from core_logic.services.work_score_allocation_service import (
     WorkScoreAllocationService,
@@ -63,7 +64,7 @@ from tasks.models import Task
 from works.models import Variant, VariantTask, Work, WorkAnalogGroup
 
 
-class DjangoWorkRepository(IWorkRepository):
+class DjangoWorkRepository(IWorkRepository, IWorkDocumentRepository):
     def get_list_works(self, filters=None):
         queryset = Work.objects.annotate(
             variant_count=Count('variant'),

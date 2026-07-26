@@ -4,6 +4,10 @@ from dataclasses import dataclass
 
 from core_logic.services.document_builder import RecipeDocumentBuilder
 from core_logic.services.document_renderer_registry import DocumentRendererRegistry
+from core_logic.use_cases.get_remedial_sheet_data import (
+    GetRemedialSheetDataUseCase,
+)
+from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from infrastructure.services.django_document_payload_registry import (
     build_remedial_sheet_section_payload_builder_registry,
     build_work_section_payload_builder_registry,
@@ -119,6 +123,10 @@ def build_sectioned_document_payload_builder_registry(
     get_remedial_sheet_data=None,
     task_payload_formatter=None,
 ):
+    get_remedial_sheet_data = (
+        get_remedial_sheet_data
+        or _default_get_remedial_sheet_data()
+    )
     payload_registry = build_work_section_payload_builder_registry(
         get_work_source=get_work_source,
         task_payload_formatter=task_payload_formatter,
@@ -138,3 +146,9 @@ def _sectioned_task_payload_formatter():
             'latex': LatexTaskPayloadFormatter(),
         },
     )
+
+
+def _default_get_remedial_sheet_data():
+    return GetRemedialSheetDataUseCase(
+        work_repo=DjangoWorkRepository(),
+    ).execute

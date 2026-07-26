@@ -102,7 +102,7 @@ def build_work_section_payload_builder_registry(
 
 
 def build_remedial_sheet_section_payload_builder_registry(
-    get_remedial_sheet_data=None,
+    get_remedial_sheet_data,
     task_payload_formatter=None,
 ) -> DocumentSectionPayloadBuilderRegistry:
     sheet_data_provider = RemedialSheetDataProvider(

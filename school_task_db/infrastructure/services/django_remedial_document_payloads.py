@@ -1,9 +1,5 @@
 """Django-backed document payload builders for remedial sheets."""
 
-from core_logic.use_cases.get_remedial_sheet_data import (
-    GetRemedialSheetDataUseCase,
-)
-from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from infrastructure.services.django_variant_document_payloads import (
     build_original_task_payload,
     build_variant_task_payload,
@@ -12,12 +8,9 @@ from infrastructure.services.django_variant_document_payloads import (
 
 class RemedialSheetDataProvider:
     def __init__(self, get_remedial_sheet_data=None):
-        self.get_remedial_sheet_data = (
-            get_remedial_sheet_data
-            or GetRemedialSheetDataUseCase(
-                work_repo=DjangoWorkRepository(),
-            ).execute
-        )
+        if get_remedial_sheet_data is None:
+            raise ValueError('get_remedial_sheet_data is required')
+        self.get_remedial_sheet_data = get_remedial_sheet_data
         self._cache = {}
 
     def get(self, variant_id):

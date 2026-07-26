@@ -726,6 +726,13 @@ class DjangoRemedialSectionPayloadBuilderTests(TestCase):
 
         self.assertEqual(calls, ['variant-1'])
 
+    def test_provider_requires_data_loader(self):
+        with self.assertRaisesRegex(
+            ValueError,
+            'get_remedial_sheet_data is required',
+        ):
+            RemedialSheetDataProvider()
+
     def create_task(self, **overrides):
         topic = Topic.objects.create(
             name=f"Тема {overrides.get('text', '')}",

@@ -1,6 +1,13 @@
+import random
+
 from django.db import models
 from django.urls import reverse
 
+from core.models import BaseModel
+from core_logic.services.work_score_allocation_service import (
+    WorkScoreAllocationService,
+    WorkScoreSpecRow,
+)
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_ANY,
@@ -10,8 +17,6 @@ from core_logic.value_objects.task_print_settings import (
     TASK_RENDER_MODE_CHOICES,
     TASK_RENDER_MODE_TASK_ONLY,
 )
-from core.models import BaseModel
-import random
 
 
 class Work(BaseModel):
@@ -61,41 +66,25 @@ class Work(BaseModel):
         return reverse('works:detail', kwargs={'pk': self.pk})
 
     def _calc_points_distribution(self):
-        """Рассчитать распределение баллов по спецификации.
-        Если max_score=0 — баллы = вес напрямую (без нормировки).
-        Иначе — нормировка пропорционально к max_score.
-        """
+        """Map clean score allocations back to specification rows."""
         work_groups = list(self.workanaloggroup_set.order_by('order', 'pk'))
-        if not work_groups:
-            return []
-
-        # Расширяем: каждый слот задания = вес группы
-        task_slots = []
-        for wg in work_groups:
-            for _ in range(wg.count):
-                task_slots.append((wg.weight if wg.is_assessable else 0, wg))
-
-        total_weight = sum(w for w, _ in task_slots)
-
-        # Если max_score=0 — без нормировки, баллы = вес напрямую
-        if not self.max_score:
-            return [(w, wg) for w, wg in task_slots]
-
-        scale = self.max_score
-
-        if total_weight <= 0:
-            return [(0, wg) for _, wg in task_slots]
-
-        # Пропорциональное распределение с корректным округлением
-        raw = [w / total_weight * scale for w, _ in task_slots]
-        floors = [int(p) for p in raw]
-        remainder = scale - sum(floors)
-
-        fracs = sorted(range(len(raw)), key=lambda i: raw[i] - floors[i], reverse=True)
-        for i in range(remainder):
-            floors[fracs[i]] += 1
-
-        return [(floors[i], task_slots[i][1]) for i in range(len(task_slots))]
+        groups_by_id = {str(group.pk): group for group in work_groups}
+        allocations = WorkScoreAllocationService().allocate(
+            max_score=self.max_score,
+            spec_rows=(
+                WorkScoreSpecRow(
+                    spec_row_id=str(group.pk),
+                    count=group.count,
+                    weight=group.weight,
+                    is_assessable=group.is_assessable,
+                )
+                for group in work_groups
+            ),
+        )
+        return [
+            (allocation.points, groups_by_id[allocation.spec_row_id])
+            for allocation in allocations
+        ]
 
 
     def get_spec_preview(self):

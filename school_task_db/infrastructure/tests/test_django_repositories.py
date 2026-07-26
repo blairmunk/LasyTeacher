@@ -168,7 +168,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         service = RemedialService(
             student_repo=DjangoStudentRepository(),
             task_repo=DjangoTaskRepository(),
-            work_repo=DjangoWorkRepository(),
+            remedial_source_repo=DjangoWorkRepository(),
         )
 
         selection = service.select_tasks_for_student(
@@ -969,7 +969,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         service = RemedialService(
             student_repo=student_repo,
             task_repo=task_repo,
-            work_repo=work_repo,
+            remedial_source_repo=work_repo,
         )
         use_case = CreateRemedialFromEventUseCase(
             remedial_service=service,
@@ -1026,7 +1026,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         service = RemedialService(
             student_repo=student_repo,
             task_repo=task_repo,
-            work_repo=work_repo,
+            remedial_source_repo=work_repo,
         )
 
         def fail_participation(**kwargs):

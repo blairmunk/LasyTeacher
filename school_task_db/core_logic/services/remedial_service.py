@@ -8,9 +8,11 @@ from dataclasses import dataclass, field
 from typing import List, Optional, Set
 
 from core_logic.entities.student import TaskResult
+from core_logic.interfaces.remedial_source_repo import (
+    IRemedialSourceRepository,
+)
 from core_logic.interfaces.student_repo import IStudentRepository
 from core_logic.interfaces.task_repo import ITaskRepository
-from core_logic.interfaces.work_repo import IWorkRepository
 
 
 @dataclass(frozen=True)
@@ -35,12 +37,12 @@ class RemedialService:
         self,
         student_repo: IStudentRepository,
         task_repo: ITaskRepository,
-        work_repo: IWorkRepository,
+        remedial_source_repo: IRemedialSourceRepository,
         config: Optional[RemedialConfig] = None,
     ):
         self.student_repo = student_repo
         self.task_repo = task_repo
-        self.work_repo = work_repo
+        self.remedial_source_repo = remedial_source_repo
         self.config = config or RemedialConfig()
 
     def select_tasks_for_student(
@@ -50,13 +52,17 @@ class RemedialService:
         source_work_id: str,
         mark_score: Optional[int] = None,
     ) -> RemedialTaskSelection:
-        work_task_ids = self.work_repo.get_variant_task_ids(source_work_id)
+        work_task_ids = self.remedial_source_repo.get_variant_task_ids(
+            source_work_id,
+        )
         work_group_ids = self.task_repo.get_group_ids_for_tasks(work_task_ids)
 
-        student_variant_task_ids = self.work_repo.get_student_variant_task_ids(
-            source_work_id,
-            student_id,
-            event_id,
+        student_variant_task_ids = (
+            self.remedial_source_repo.get_student_variant_task_ids(
+                source_work_id,
+                student_id,
+                event_id,
+            )
         )
 
         task_results = self.student_repo.get_task_results_for_event(
@@ -138,4 +144,3 @@ class RemedialService:
         if mark_score == 3:
             return 4
         return 6
-

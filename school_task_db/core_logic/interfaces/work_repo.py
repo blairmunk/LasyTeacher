@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Optional, Set
+from typing import List, Optional
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_ANY,
@@ -88,19 +88,6 @@ class CreatedWorkVariantRef:
 
 
 class IWorkRepository(ABC):
-    @abstractmethod
-    def get_variant_task_ids(self, work_id: str) -> Set[str]:
-        """Return task IDs used in all variants of a work."""
-
-    @abstractmethod
-    def get_student_variant_task_ids(
-        self,
-        work_id: str,
-        student_id: str,
-        event_id: str,
-    ) -> Set[str]:
-        """Return task IDs from a concrete student's variant for an event."""
-
     @abstractmethod
     def create_work(self, params: CreateWorkParams) -> str:
         """Create a work and return its ID."""

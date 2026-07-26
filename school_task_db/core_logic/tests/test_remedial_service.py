@@ -67,7 +67,7 @@ class RemedialServiceTests(TestCase):
         return RemedialService(
             student_repo=FakeStudentRepository(results),
             task_repo=FakeTaskRepository(),
-            work_repo=FakeWorkRepository(),
+            remedial_source_repo=FakeWorkRepository(),
             config=RemedialConfig(max_tasks_per_group=1, max_total_tasks=5),
         )
 

@@ -513,7 +513,7 @@ class Container:
         return RemedialService(
             student_repo=self.student_repo,
             task_repo=self.task_repo,
-            work_repo=self.work_repo,
+            remedial_source_repo=self.work_repo,
         )
 
     def analytics_service(self):

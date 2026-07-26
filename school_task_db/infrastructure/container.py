@@ -1095,7 +1095,7 @@ class Container:
 
     def get_variant_detail_use_case(self):
         return GetVariantDetailUseCase(
-            work_repo=self.work_repo,
+            variant_repo=self.work_repo,
         )
 
     def get_variant_generation_form_use_case(self):
@@ -1105,7 +1105,7 @@ class Container:
 
     def get_variant_list_use_case(self):
         return GetVariantListUseCase(
-            work_repo=self.work_repo,
+            variant_repo=self.work_repo,
         )
 
     def get_orphan_variant_list_use_case(self):

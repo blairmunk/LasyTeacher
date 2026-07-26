@@ -10,9 +10,6 @@ from core_logic.entities.work import (
     WorkDetailVariant,
     WorkDetailWork,
     WorkListItem,
-    VariantListItem,
-    VariantDetailTaskRow,
-    VariantDetailVariant,
 )
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
@@ -104,10 +101,6 @@ class IWorkRepository(ABC):
         """Return works for the work list page."""
 
     @abstractmethod
-    def get_list_variants(self) -> List[VariantListItem]:
-        """Return variants for the variant list page."""
-
-    @abstractmethod
     def get_work_form_analog_group_options(self) -> Any:
         """Return analog group options for the work form page."""
 
@@ -126,18 +119,6 @@ class IWorkRepository(ABC):
     @abstractmethod
     def get_spec_preview(self, work_id: str) -> List[WorkDetailSpecPreviewItem]:
         """Return points specification preview read models for the work detail page."""
-
-    @abstractmethod
-    def get_variant_detail(self, variant_id: str) -> Optional[VariantDetailVariant]:
-        """Return one variant detail read model, or None."""
-
-    @abstractmethod
-    def get_variant_detail_tasks(self, variant_id: str) -> List[VariantDetailTaskRow]:
-        """Return ordered task read models for the variant detail page."""
-
-    @abstractmethod
-    def get_variant_total_max_points(self, variant_id: str) -> int:
-        """Return total max points for a variant."""
 
     @abstractmethod
     def get_variant_task_ids(self, work_id: str) -> Set[str]:

@@ -360,7 +360,7 @@ class WorkDetailTests(TestCase):
     def test_get_variant_list_use_case_builds_list_context_data(self):
         repo = FakeWorkRepository()
         repo.list_variants = FakeQuerySet(['variant-1'])
-        use_case = GetVariantListUseCase(work_repo=repo)
+        use_case = GetVariantListUseCase(variant_repo=repo)
 
         result = use_case.execute()
 
@@ -394,7 +394,7 @@ class WorkDetailTests(TestCase):
             )
         ]
         repo.variant_total_max_points = 7
-        use_case = GetVariantDetailUseCase(work_repo=repo)
+        use_case = GetVariantDetailUseCase(variant_repo=repo)
 
         result = use_case.execute('variant-1')
 
@@ -404,7 +404,7 @@ class WorkDetailTests(TestCase):
 
     def test_get_variant_detail_use_case_returns_empty_data_for_missing_variant(self):
         repo = FakeWorkRepository()
-        use_case = GetVariantDetailUseCase(work_repo=repo)
+        use_case = GetVariantDetailUseCase(variant_repo=repo)
 
         result = use_case.execute('missing-variant')
 

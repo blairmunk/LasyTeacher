@@ -7,7 +7,7 @@ from .views import (
 )
 
 
-app_name = 'document_generator'
+app_name = 'document_engine'
 
 urlpatterns = [
     path(

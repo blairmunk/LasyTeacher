@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from core_logic.entities.document import PrintSettingsSpec
-from document_generator.models import PrintSettings
+from document_engine.models import PrintSettings
 
 
 class PrintSettingsModelTests(TestCase):

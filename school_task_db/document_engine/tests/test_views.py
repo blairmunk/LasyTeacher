@@ -1,11 +1,11 @@
 from django.test import TestCase
 from django.urls import reverse
 
-from document_generator.models import PrintSettings
+from document_engine.models import PrintSettings
 
 
 class PrintSettingsViewTests(TestCase):
-    def test_template_editor_shows_catalog_and_saved_templates(self):
+    def test_print_settings_editor_shows_catalog_and_saved_templates(self):
         PrintSettings.objects.create(
             name='Шаблон работы',
             document_type=PrintSettings.DocumentType.WORK,
@@ -13,13 +13,13 @@ class PrintSettingsViewTests(TestCase):
         )
 
         response = self.client.get(
-            reverse('document_generator:print-profile-editor'),
+            reverse('document_engine:print-profile-editor'),
         )
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(
             response,
-            'document_generator/template_editor.html',
+            'document_engine/print_settings_editor.html',
         )
         self.assertContains(response, 'Настройки печати')
         self.assertContains(response, 'Контрольная / самостоятельная')
@@ -30,19 +30,19 @@ class PrintSettingsViewTests(TestCase):
         self.assertContains(response, 'LaTeX')
         self.assertContains(
             response,
-            reverse('document_generator:print-profile-create'),
+            reverse('document_engine:print-profile-create'),
         )
         self.assertContains(
             response,
             reverse(
-                'document_generator:print-profile-update',
+                'document_engine:print-profile-update',
                 args=[PrintSettings.objects.get(name='Шаблон работы').pk],
             ),
         )
 
-    def test_template_editor_passes_query_filters_to_clean_use_case(self):
+    def test_print_settings_editor_passes_query_filters_to_clean_use_case(self):
         response = self.client.get(
-            reverse('document_generator:print-profile-editor'),
+            reverse('document_engine:print-profile-editor'),
             {'type': 'work', 'renderable': '1'},
         )
 
@@ -55,15 +55,15 @@ class PrintSettingsViewTests(TestCase):
             'href="?type=remedial_sheet&amp;renderable=1"',
         )
 
-    def test_template_create_view_shows_section_form(self):
+    def test_print_settings_create_view_shows_section_form(self):
         response = self.client.get(
-            reverse('document_generator:print-profile-create'),
+            reverse('document_engine:print-profile-create'),
         )
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(
             response,
-            'document_generator/template_form.html',
+            'document_engine/print_settings_form.html',
         )
         self.assertContains(response, 'Новые настройки печати')
         self.assertContains(response, 'name="document_type"')
@@ -80,9 +80,9 @@ class PrintSettingsViewTests(TestCase):
         self.assertContains(response, 'common_header,header,task_list,page_break')
         self.assertContains(response, 'header,theory,full_solutions,task_list')
 
-    def test_template_create_view_creates_template(self):
+    def test_print_settings_create_view_creates_template(self):
         response = self.client.post(
-            reverse('document_generator:print-profile-create'),
+            reverse('document_engine:print-profile-create'),
             {
                 'name': 'Шаблон работы',
                 'description': 'Для печати',
@@ -94,7 +94,7 @@ class PrintSettingsViewTests(TestCase):
 
         self.assertRedirects(
             response,
-            reverse('document_generator:print-profile-editor'),
+            reverse('document_engine:print-profile-editor'),
         )
         template = PrintSettings.objects.get(name='Шаблон работы')
         self.assertEqual(template.description, 'Для печати')
@@ -104,9 +104,9 @@ class PrintSettingsViewTests(TestCase):
         )
         self.assertTrue(template.is_default)
 
-    def test_template_create_view_preserves_section_order(self):
+    def test_print_settings_create_view_preserves_section_order(self):
         response = self.client.post(
-            reverse('document_generator:print-profile-create'),
+            reverse('document_engine:print-profile-create'),
             {
                 'name': 'Рабочий лист',
                 'document_type': 'work',
@@ -117,7 +117,7 @@ class PrintSettingsViewTests(TestCase):
 
         self.assertRedirects(
             response,
-            reverse('document_generator:print-profile-editor'),
+            reverse('document_engine:print-profile-editor'),
         )
         template = PrintSettings.objects.get(name='Рабочий лист')
         self.assertEqual(
@@ -125,9 +125,9 @@ class PrintSettingsViewTests(TestCase):
             [{'type': 'task_list'}, {'type': 'header'}],
         )
 
-    def test_template_create_view_saves_section_options(self):
+    def test_print_settings_create_view_saves_section_options(self):
         response = self.client.post(
-            reverse('document_generator:print-profile-create'),
+            reverse('document_engine:print-profile-create'),
             {
                 'name': 'Рабочий лист',
                 'document_type': 'work',
@@ -141,7 +141,7 @@ class PrintSettingsViewTests(TestCase):
 
         self.assertRedirects(
             response,
-            reverse('document_generator:print-profile-editor'),
+            reverse('document_engine:print-profile-editor'),
         )
         template = PrintSettings.objects.get(name='Рабочий лист')
         self.assertEqual(
@@ -158,9 +158,9 @@ class PrintSettingsViewTests(TestCase):
             ],
         )
 
-    def test_template_create_view_shows_invalid_section_options_error(self):
+    def test_print_settings_create_view_shows_invalid_section_options_error(self):
         response = self.client.post(
-            reverse('document_generator:print-profile-create'),
+            reverse('document_engine:print-profile-create'),
             {
                 'name': 'Рабочий лист',
                 'document_type': 'work',
@@ -176,9 +176,9 @@ class PrintSettingsViewTests(TestCase):
         )
         self.assertFalse(PrintSettings.objects.exists())
 
-    def test_template_create_view_shows_clean_validation_errors(self):
+    def test_print_settings_create_view_shows_clean_validation_errors(self):
         response = self.client.post(
-            reverse('document_generator:print-profile-create'),
+            reverse('document_engine:print-profile-create'),
             {
                 'name': 'Шаблон РнО',
                 'document_type': 'remedial_sheet',
@@ -193,7 +193,7 @@ class PrintSettingsViewTests(TestCase):
         )
         self.assertFalse(PrintSettings.objects.exists())
 
-    def test_template_update_view_shows_existing_template(self):
+    def test_print_settings_update_view_shows_existing_template(self):
         template = PrintSettings.objects.create(
             name='Шаблон работы',
             description='Описание',
@@ -203,13 +203,13 @@ class PrintSettingsViewTests(TestCase):
         )
 
         response = self.client.get(
-            reverse('document_generator:print-profile-update', args=[template.pk]),
+            reverse('document_engine:print-profile-update', args=[template.pk]),
         )
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(
             response,
-            'document_generator/template_form.html',
+            'document_engine/print_settings_form.html',
         )
         self.assertContains(response, 'Редактирование настроек печати')
         self.assertContains(response, 'value="Шаблон работы"')
@@ -217,7 +217,7 @@ class PrintSettingsViewTests(TestCase):
         self.assertContains(response, 'value="header"')
         self.assertContains(response, 'checked')
 
-    def test_template_update_view_shows_existing_section_options(self):
+    def test_print_settings_update_view_shows_existing_section_options(self):
         template = PrintSettings.objects.create(
             name='Шаблон работы',
             document_type=PrintSettings.DocumentType.WORK,
@@ -234,7 +234,7 @@ class PrintSettingsViewTests(TestCase):
         )
 
         response = self.client.get(
-            reverse('document_generator:print-profile-update', args=[template.pk]),
+            reverse('document_engine:print-profile-update', args=[template.pk]),
         )
 
         self.assertEqual(response.status_code, 200)
@@ -242,7 +242,7 @@ class PrintSettingsViewTests(TestCase):
         self.assertContains(response, '&quot;role_blank_cells&quot;: {')
         self.assertContains(response, '&quot;rows&quot;: 6')
 
-    def test_template_update_view_updates_template(self):
+    def test_print_settings_update_view_updates_template(self):
         template = PrintSettings.objects.create(
             name='Старый шаблон',
             document_type=PrintSettings.DocumentType.WORK,
@@ -250,7 +250,7 @@ class PrintSettingsViewTests(TestCase):
         )
 
         response = self.client.post(
-            reverse('document_generator:print-profile-update', args=[template.pk]),
+            reverse('document_engine:print-profile-update', args=[template.pk]),
             {
                 'name': 'Новый шаблон',
                 'description': 'Новое описание',
@@ -262,7 +262,7 @@ class PrintSettingsViewTests(TestCase):
 
         self.assertRedirects(
             response,
-            reverse('document_generator:print-profile-editor'),
+            reverse('document_engine:print-profile-editor'),
         )
         template.refresh_from_db()
         self.assertEqual(template.name, 'Новый шаблон')
@@ -273,7 +273,7 @@ class PrintSettingsViewTests(TestCase):
         )
         self.assertTrue(template.is_default)
 
-    def test_template_update_view_preserves_section_order(self):
+    def test_print_settings_update_view_preserves_section_order(self):
         template = PrintSettings.objects.create(
             name='Старый шаблон',
             document_type=PrintSettings.DocumentType.WORK,
@@ -281,7 +281,7 @@ class PrintSettingsViewTests(TestCase):
         )
 
         response = self.client.post(
-            reverse('document_generator:print-profile-update', args=[template.pk]),
+            reverse('document_engine:print-profile-update', args=[template.pk]),
             {
                 'name': 'Новый шаблон',
                 'document_type': 'work',
@@ -292,7 +292,7 @@ class PrintSettingsViewTests(TestCase):
 
         self.assertRedirects(
             response,
-            reverse('document_generator:print-profile-editor'),
+            reverse('document_engine:print-profile-editor'),
         )
         template.refresh_from_db()
         self.assertEqual(
@@ -300,10 +300,10 @@ class PrintSettingsViewTests(TestCase):
             [{'type': 'task_list'}, {'type': 'header'}],
         )
 
-    def test_template_update_view_returns_404_for_missing_template(self):
+    def test_print_settings_update_view_returns_404_for_missing_template(self):
         response = self.client.get(
             reverse(
-                'document_generator:print-profile-update',
+                'document_engine:print-profile-update',
                 args=['550e8400-e29b-41d4-a716-446655440000'],
             ),
         )

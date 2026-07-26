@@ -11,7 +11,7 @@ from core_logic.entities.document import (
 from core_logic.interfaces.print_settings_repo import (
     IPrintSettingsRepository,
 )
-from document_generator.models import PrintSettings
+from document_engine.models import PrintSettings
 
 
 class DjangoPrintSettingsRepository(IPrintSettingsRepository):

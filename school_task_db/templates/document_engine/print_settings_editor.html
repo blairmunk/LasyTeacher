@@ -10,7 +10,7 @@
             <p class="text-muted mb-0">Типы документов, секции рендера и сохранённые профили печати.</p>
         </div>
         <div class="d-flex gap-2">
-            <a class="btn btn-primary" href="{% url 'document_generator:print-profile-create' %}">
+            <a class="btn btn-primary" href="{% url 'document_engine:print-profile-create' %}">
                 <i class="fas fa-plus"></i> Создать настройки
             </a>
             <a class="btn btn-outline-secondary" href="{% url 'admin:document_generator_printsettings_changelist' %}">
@@ -78,7 +78,7 @@
                     <div class="list-group-item">
                         <div class="d-flex justify-content-between">
                             <strong>
-                                <a href="{% url 'document_generator:print-profile-update' print_profile.print_settings_id %}">
+                                <a href="{% url 'document_engine:print-profile-update' print_profile.print_settings_id %}">
                                     {{ print_profile.name }}
                                 </a>
                             </strong>

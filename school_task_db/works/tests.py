@@ -18,7 +18,7 @@ from core_logic.entities.document_rendering import (
     GeneratedFileResult,
 )
 from curriculum.models import Topic
-from document_generator.models import PrintSettings
+from document_engine.models import PrintSettings
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from students.models import Student

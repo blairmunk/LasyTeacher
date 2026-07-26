@@ -34,7 +34,7 @@ INSTALLED_APPS = [
     'reports',        # Отчеты
     'curriculum',     # Учебные курсы
     'review',
-    'document_generator',
+    'document_engine.apps.DocumentEngineConfig',
     'codifier',            # Кодификатор заданий
     'site_settings',       # Настройки
 ]

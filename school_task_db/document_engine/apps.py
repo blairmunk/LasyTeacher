@@ -1,7 +1,8 @@
 from django.apps import AppConfig
 
 
-class DocumentTemplateConfig(AppConfig):
+class DocumentEngineConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'document_generator'
+    name = 'document_engine'
+    label = 'document_generator'
     verbose_name = 'Профили печати'

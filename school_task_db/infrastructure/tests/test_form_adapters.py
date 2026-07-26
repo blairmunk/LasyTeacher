@@ -469,7 +469,7 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
             },
         )
 
-    def test_template_form_rejects_invalid_section_options_json(self):
+    def test_print_settings_form_rejects_invalid_section_options_json(self):
         data = QueryDict('', mutable=True)
         data.update({'name': 'Шаблон', 'document_type': 'work'})
         data.setlist('sections', ['task_list'])
@@ -484,7 +484,7 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
             form.non_field_errors(),
         )
 
-    def test_template_form_rejects_non_object_section_options_json(self):
+    def test_print_settings_form_rejects_non_object_section_options_json(self):
         data = QueryDict('', mutable=True)
         data.update({'name': 'Шаблон', 'document_type': 'work'})
         data.setlist('sections', ['task_list'])

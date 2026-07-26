@@ -266,7 +266,6 @@ from core_logic.use_cases.save_task import (
 )
 from core_logic.use_cases.save_work import (
     CreateWorkWithSpecificationUseCase,
-    CreateWorkUseCase,
     SaveWorkSpecificationUseCase,
     UpdateWorkUseCase,
 )
@@ -1182,11 +1181,6 @@ class Container:
     def create_work_from_tasks_use_case(self):
         return CreateWorkFromTasksUseCase(
             task_repo=self.task_repo,
-            work_repo=self.work_repo,
-        )
-
-    def create_work_use_case(self):
-        return CreateWorkUseCase(
             work_repo=self.work_repo,
         )
 

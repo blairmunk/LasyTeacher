@@ -224,7 +224,6 @@ from core_logic.use_cases.save_task import (
 )
 from core_logic.use_cases.save_work import (
     CreateWorkWithSpecificationUseCase,
-    CreateWorkUseCase,
     SaveWorkSpecificationUseCase,
     UpdateWorkUseCase,
 )
@@ -438,7 +437,6 @@ class ContainerTests(SimpleTestCase):
         create_from_orphans_use_case = container.create_work_from_orphans_use_case()
         create_from_groups_use_case = container.create_work_from_groups_use_case()
         create_from_tasks_use_case = container.create_work_from_tasks_use_case()
-        create_work_use_case = container.create_work_use_case()
         create_work_with_specification_use_case = (
             container.create_work_with_specification_use_case()
         )
@@ -726,7 +724,6 @@ class ContainerTests(SimpleTestCase):
         )
         self.assertIsInstance(create_from_groups_use_case, CreateWorkFromGroupsUseCase)
         self.assertIsInstance(create_from_tasks_use_case, CreateWorkFromTasksUseCase)
-        self.assertIsInstance(create_work_use_case, CreateWorkUseCase)
         self.assertIsInstance(
             create_work_with_specification_use_case,
             CreateWorkWithSpecificationUseCase,

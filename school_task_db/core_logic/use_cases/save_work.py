@@ -32,15 +32,6 @@ class SaveWorkSpecificationResult:
     errors: tuple[str, ...] = ()
 
 
-class CreateWorkUseCase:
-    def __init__(self, work_repo: IWorkRepository):
-        self.work_repo = work_repo
-
-    def execute(self, params: CreateWorkParams) -> SaveWorkResult:
-        work_id = self.work_repo.create_work(params)
-        return SaveWorkResult(status='created', work_id=work_id)
-
-
 class CreateWorkWithSpecificationUseCase:
     def __init__(self, work_repo: IWorkRepository):
         self.work_repo = work_repo

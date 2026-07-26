@@ -7,7 +7,6 @@ from core_logic.interfaces.work_repo import (
 )
 from core_logic.use_cases.save_work import (
     CreateWorkWithSpecificationUseCase,
-    CreateWorkUseCase,
     SaveWorkSpecificationRequest,
     SaveWorkSpecificationUseCase,
     UpdateWorkUseCase,
@@ -17,15 +16,10 @@ from core_logic.value_objects.task_print_settings import TASK_BANK_ROLE_DEMO
 
 class FakeWorkRepository:
     def __init__(self, update_result=True):
-        self.created_params = None
         self.updated_params = None
         self.replaced_specs = None
         self.created_with_specification = None
         self.update_result = update_result
-
-    def create_work(self, params):
-        self.created_params = params
-        return 'work-1'
 
     def create_work_with_specification(self, params):
         self.created_with_specification = params
@@ -41,21 +35,6 @@ class FakeWorkRepository:
 
 
 class SaveWorkUseCaseTests(TestCase):
-    def test_create_work_delegates_to_repository(self):
-        repo = FakeWorkRepository()
-        params = CreateWorkParams(
-            name='КР',
-            work_type='test',
-            duration=45,
-            max_score=10,
-        )
-
-        result = CreateWorkUseCase(repo).execute(params)
-
-        self.assertEqual(result.status, 'created')
-        self.assertEqual(result.work_id, 'work-1')
-        self.assertEqual(repo.created_params, params)
-
     def test_update_work_delegates_to_repository(self):
         repo = FakeWorkRepository()
         params = CreateWorkParams(

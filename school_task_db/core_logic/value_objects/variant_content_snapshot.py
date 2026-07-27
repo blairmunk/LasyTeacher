@@ -19,6 +19,7 @@ class VariantContentItem:
     variant_task_id: str
     task_id: str
     order: int
+    source_selection_id: str = ''
     max_points: int = 0
     bank_role: str = TASK_BANK_ROLE_CONTROL
     render_mode: str = TASK_RENDER_MODE_TASK_ONLY

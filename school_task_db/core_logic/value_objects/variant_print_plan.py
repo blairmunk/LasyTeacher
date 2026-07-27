@@ -69,6 +69,7 @@ class VariantPrintBlock:
     block_type: str
     variant_task_id: str = ''
     task_id: str = ''
+    source_selection_id: str = ''
     order: int = 0
     content_role: str = ''
     source_render_mode: str = ''
@@ -127,6 +128,7 @@ def build_variant_print_plan_from_snapshot(
                     block_type=VARIANT_PRINT_BLOCK_BLANK_CELLS,
                     variant_task_id=row.variant_task_id,
                     task_id=row.task_id,
+                    source_selection_id=row.source_selection_id,
                     order=row.order,
                     content_role=row.bank_role,
                     options=blank_cells_options,
@@ -144,6 +146,7 @@ def _task_print_block(
         block_type=VARIANT_PRINT_BLOCK_TASK,
         variant_task_id=row.variant_task_id,
         task_id=row.task_id,
+        source_selection_id=row.source_selection_id,
         order=row.order,
         content_role=row.bank_role,
         source_render_mode=row.render_mode,

@@ -1651,7 +1651,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             group=analog_group,
             bank_role=TASK_BANK_ROLE_PRACTICE,
         )
-        WorkAnalogGroup.objects.create(
+        demo_selection = WorkAnalogGroup.objects.create(
             work=work,
             analog_group=analog_group,
             order=1,
@@ -1663,7 +1663,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             blank_cells_after=True,
             blank_cells_rows=9,
         )
-        WorkAnalogGroup.objects.create(
+        practice_selection = WorkAnalogGroup.objects.create(
             work=work,
             analog_group=analog_group,
             order=2,
@@ -1681,12 +1681,20 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(variant.max_score_snapshot, 3)
         self.assertEqual([row.task for row in rows], [demo_task, practice_task])
         self.assertEqual(rows[0].bank_role, TASK_BANK_ROLE_DEMO)
+        self.assertEqual(
+            rows[0].source_selection_id,
+            str(demo_selection.pk),
+        )
         self.assertEqual(rows[0].render_mode, TASK_RENDER_MODE_WITH_FULL_SOLUTION)
         self.assertFalse(rows[0].is_assessable)
         self.assertTrue(rows[0].blank_cells_after)
         self.assertEqual(rows[0].blank_cells_rows, 9)
         self.assertEqual(rows[0].max_points, 0)
         self.assertEqual(rows[1].bank_role, TASK_BANK_ROLE_PRACTICE)
+        self.assertEqual(
+            rows[1].source_selection_id,
+            str(practice_selection.pk),
+        )
         self.assertTrue(rows[1].is_assessable)
         self.assertEqual(rows[1].blank_cells_rows, DEFAULT_BLANK_CELLS_ROWS)
         self.assertEqual(rows[1].max_points, 3)

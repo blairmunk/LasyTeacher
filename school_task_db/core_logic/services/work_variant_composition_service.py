@@ -54,6 +54,7 @@ class WorkVariantCompositionInput:
 @dataclass(frozen=True)
 class VariantTaskCreationPlan:
     task_id: str
+    source_selection_id: str
     order: int
     max_points: int
     weight: int
@@ -143,6 +144,7 @@ class WorkVariantCompositionService:
                 tasks.append(
                     VariantTaskCreationPlan(
                         task_id=task.task_id,
+                        source_selection_id=row.spec_row_id,
                         order=task_order,
                         max_points=max_points,
                         weight=row.weight,

@@ -40,6 +40,7 @@ class WorkVariantCompositionServiceTests(TestCase):
 
         demo_task, practice_task = plan.variants[0].tasks
         self.assertEqual(demo_task.task_id, 'demo-2')
+        self.assertEqual(demo_task.source_selection_id, 'demo-row')
         self.assertEqual(demo_task.order, 1)
         self.assertEqual(demo_task.max_points, 0)
         self.assertEqual(demo_task.weight, 4)
@@ -53,6 +54,10 @@ class WorkVariantCompositionServiceTests(TestCase):
         self.assertEqual(demo_task.blank_cells_rows, 9)
 
         self.assertEqual(practice_task.task_id, 'practice-2')
+        self.assertEqual(
+            practice_task.source_selection_id,
+            'practice-row',
+        )
         self.assertEqual(practice_task.order, 2)
         self.assertEqual(practice_task.max_points, 3)
         self.assertEqual(practice_task.bank_role, TASK_BANK_ROLE_PRACTICE)

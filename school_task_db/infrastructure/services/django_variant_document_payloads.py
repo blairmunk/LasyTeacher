@@ -185,6 +185,7 @@ def _variant_content_item(variant_task):
         task_id=str(variant_task.task_id),
         order=variant_task.order,
         max_points=variant_task.max_points,
+        source_selection_id=print_settings['source_selection_id'],
         bank_role=print_settings['bank_role'],
         render_mode=print_settings['render_mode'],
         is_assessable=print_settings['is_assessable'],
@@ -203,6 +204,7 @@ def _variant_print_blocks_payload(
             'block_type': block.block_type,
             'variant_task_id': block.variant_task_id,
             'task_id': block.task_id,
+            'source_selection_id': block.source_selection_id,
             'order': block.order,
             'content_role': block.content_role,
             'source_render_mode': block.source_render_mode,
@@ -228,6 +230,11 @@ def _variant_print_blocks_payload(
 
 def _variant_task_print_settings(variant_task):
     return {
+        'source_selection_id': getattr(
+            variant_task,
+            'source_selection_id',
+            '',
+        ),
         'bank_role': getattr(
             variant_task,
             'bank_role',

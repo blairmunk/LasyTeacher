@@ -745,6 +745,9 @@ class DjangoWorkRepository(
                         VariantTask(
                             variant=variant,
                             task_id=task_plan.task_id,
+                            source_selection_id=(
+                                task_plan.source_selection_id
+                            ),
                             order=task_plan.order,
                             max_points=task_plan.max_points,
                             weight=task_plan.weight,

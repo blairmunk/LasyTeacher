@@ -130,6 +130,7 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
         demo_variant_task = VariantTask.objects.create(
             variant=variant,
             task=demo_task,
+            source_selection_id='selection-demo',
             order=2,
             max_points=0,
             bank_role=TASK_BANK_ROLE_DEMO,
@@ -175,6 +176,16 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
         self.assertEqual(
             variant_payload['print_blocks'][1]['task']['variant_task_id'],
             str(demo_variant_task.pk),
+        )
+        self.assertEqual(
+            variant_payload['print_blocks'][1]['source_selection_id'],
+            'selection-demo',
+        )
+        self.assertEqual(
+            variant_payload['print_blocks'][1]['task'][
+                'source_selection_id'
+            ],
+            'selection-demo',
         )
         self.assertEqual(
             variant_payload['print_blocks'][2]['blank_cells']['rows'],

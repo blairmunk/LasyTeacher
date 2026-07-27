@@ -28,6 +28,7 @@ class VariantPrintPlanTests(TestCase):
                     variant_task_id='vt-2',
                     task_id='task-2',
                     order=2,
+                    source_selection_id='selection-practice',
                     bank_role=TASK_BANK_ROLE_PRACTICE,
                     render_mode=TASK_RENDER_MODE_TASK_ONLY,
                     is_assessable=True,
@@ -39,6 +40,7 @@ class VariantPrintPlanTests(TestCase):
                     variant_task_id='vt-1',
                     task_id='task-1',
                     order=1,
+                    source_selection_id='selection-demo',
                     bank_role=TASK_BANK_ROLE_DEMO,
                     render_mode=TASK_RENDER_MODE_WITH_FULL_SOLUTION,
                     is_assessable=False,
@@ -62,6 +64,7 @@ class VariantPrintPlanTests(TestCase):
                     variant_task_id='vt-2',
                     task_id='task-2',
                     order=2,
+                    source_selection_id='selection-practice',
                     bank_role=TASK_BANK_ROLE_PRACTICE,
                     render_mode=TASK_RENDER_MODE_TASK_ONLY,
                     is_assessable=True,
@@ -73,6 +76,7 @@ class VariantPrintPlanTests(TestCase):
                     variant_task_id='vt-1',
                     task_id='task-1',
                     order=1,
+                    source_selection_id='selection-demo',
                     bank_role=TASK_BANK_ROLE_DEMO,
                     render_mode=TASK_RENDER_MODE_WITH_FULL_SOLUTION,
                     is_assessable=False,
@@ -110,7 +114,15 @@ class VariantPrintPlanTests(TestCase):
             plan.blocks[0].render_mode,
             TASK_RENDER_MODE_WITH_FULL_SOLUTION,
         )
+        self.assertEqual(
+            plan.blocks[0].source_selection_id,
+            'selection-demo',
+        )
         self.assertFalse(plan.blocks[0].options['is_assessable'])
+        self.assertEqual(
+            plan.blocks[2].source_selection_id,
+            'selection-practice',
+        )
         self.assertEqual(plan.blocks[2].options, {'rows': 8})
 
     def test_print_profile_overrides_rendering_without_changing_content(self):

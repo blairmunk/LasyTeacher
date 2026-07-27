@@ -198,6 +198,16 @@ class VariantTask(BaseModel):
     """Задание в варианте — иммутабельная запись с баллами"""
     variant = models.ForeignKey(Variant, on_delete=models.CASCADE, verbose_name='Вариант')
     task = models.ForeignKey('tasks.Task', on_delete=models.CASCADE, verbose_name='Задание')
+    source_selection_id = models.CharField(
+        'Исходный блок выбора заданий (снимок)',
+        max_length=36,
+        blank=True,
+        default='',
+        help_text=(
+            'Идентификатор блока спецификации на момент генерации; '
+            'не является внешним ключом.'
+        ),
+    )
     order = models.PositiveIntegerField('Номер задания', default=0)
     max_points = models.PositiveIntegerField('Макс. баллов', default=0,
                                               help_text='Рассчитано при генерации из спецификации')

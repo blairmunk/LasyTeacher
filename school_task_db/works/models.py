@@ -260,6 +260,10 @@ class VariantTask(BaseModel):
             'не является внешним ключом.'
         ),
     )
+    content_order = models.PositiveIntegerField(
+        'Порядок исходного блока (снимок)',
+        default=0,
+    )
     order = models.PositiveIntegerField('Номер задания', default=0)
     max_points = models.PositiveIntegerField('Макс. баллов', default=0,
                                               help_text='Рассчитано при генерации из спецификации')
@@ -295,3 +299,37 @@ class VariantTask(BaseModel):
 
     def __str__(self):
         return f"Вариант {self.variant.number} — #{self.order} ({self.max_points} балл.)"
+
+
+class VariantContentBlockSnapshot(BaseModel):
+    """Иммутабельный снимок незаданийного содержимого варианта."""
+
+    variant = models.ForeignKey(
+        Variant,
+        on_delete=models.CASCADE,
+        related_name='content_block_snapshots',
+        verbose_name='Вариант',
+    )
+    source_content_id = models.CharField(
+        'Исходный содержательный блок',
+        max_length=36,
+        blank=True,
+        default='',
+    )
+    content_type = models.CharField(
+        'Тип содержимого',
+        max_length=20,
+        choices=WorkContentBlock.CONTENT_TYPE_CHOICES,
+    )
+    order = models.PositiveIntegerField('Порядок в варианте', default=0)
+    title = models.CharField('Заголовок (снимок)', max_length=200, blank=True)
+    content = models.JSONField('Содержимое (снимок)', default=dict, blank=True)
+
+    class Meta:
+        verbose_name = 'Снимок содержательного блока варианта'
+        verbose_name_plural = 'Снимки содержательных блоков вариантов'
+        ordering = ['order', 'pk']
+
+    def __str__(self):
+        title = self.title or self.get_content_type_display()
+        return f'{self.variant} — #{self.order} {title}'

@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 import random
-from typing import Callable, Tuple
+from typing import Any, Callable, Mapping, Tuple
 
 from core_logic.services.work_score_allocation_service import (
     WorkScoreAllocationService,
@@ -26,6 +26,7 @@ class WorkVariantSpecRow:
     spec_row_id: str
     count: int
     weight: int
+    content_order: int = 0
     available_tasks: Tuple[AvailableVariantTask, ...] = field(
         default_factory=tuple,
     )
@@ -46,15 +47,36 @@ class WorkVariantCompositionInput:
     effective_max_score: int
     variant_counter: int
     spec_rows: Tuple[WorkVariantSpecRow, ...] = field(default_factory=tuple)
+    content_blocks: Tuple["WorkVariantContentBlock", ...] = field(
+        default_factory=tuple,
+    )
 
     def __post_init__(self):
         object.__setattr__(self, 'spec_rows', tuple(self.spec_rows))
+        object.__setattr__(
+            self,
+            'content_blocks',
+            tuple(self.content_blocks),
+        )
+
+
+@dataclass(frozen=True)
+class WorkVariantContentBlock:
+    source_content_id: str
+    content_type: str
+    order: int
+    title: str = ''
+    content: Mapping[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self):
+        object.__setattr__(self, 'content', dict(self.content))
 
 
 @dataclass(frozen=True)
 class VariantTaskCreationPlan:
     task_id: str
     source_selection_id: str
+    content_order: int
     order: int
     max_points: int
     weight: int
@@ -72,6 +94,21 @@ class VariantCreationPlan:
     max_score_snapshot: int
     duration_snapshot: int
     tasks: Tuple[VariantTaskCreationPlan, ...] = field(default_factory=tuple)
+    content_blocks: Tuple["VariantContentBlockCreationPlan", ...] = field(
+        default_factory=tuple,
+    )
+
+
+@dataclass(frozen=True)
+class VariantContentBlockCreationPlan:
+    source_content_id: str
+    content_type: str
+    order: int
+    title: str = ''
+    content: Mapping[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self):
+        object.__setattr__(self, 'content', dict(self.content))
 
 
 @dataclass(frozen=True)
@@ -145,6 +182,7 @@ class WorkVariantCompositionService:
                     VariantTaskCreationPlan(
                         task_id=task.task_id,
                         source_selection_id=row.spec_row_id,
+                        content_order=row.content_order,
                         order=task_order,
                         max_points=max_points,
                         weight=row.weight,
@@ -164,6 +202,16 @@ class WorkVariantCompositionService:
             max_score_snapshot=composition_input.effective_max_score,
             duration_snapshot=composition_input.duration,
             tasks=tuple(tasks),
+            content_blocks=tuple(
+                VariantContentBlockCreationPlan(
+                    source_content_id=block.source_content_id,
+                    content_type=block.content_type,
+                    order=block.order,
+                    title=block.title,
+                    content=block.content,
+                )
+                for block in composition_input.content_blocks
+            ),
         )
 
     def _select_tasks(self, row):

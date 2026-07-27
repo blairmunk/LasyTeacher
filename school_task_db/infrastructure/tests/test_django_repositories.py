@@ -67,6 +67,7 @@ from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Source, Task, TaskImage
 from works.models import (
     Variant,
+    VariantContentBlockSnapshot,
     VariantTask,
     Work,
     WorkAnalogGroup,
@@ -1662,6 +1663,18 @@ class DjangoRemedialRepositoryTests(TestCase):
         analog_group = AnalogGroup.objects.create(name='Один закон, разные роли')
         demo_task = self._task('Демо задача', difficulty=4)
         practice_task = self._task('Самостоятельная задача', difficulty=3)
+        theory_topic = Topic.objects.create(
+            name='Импульс',
+            subject='Физика',
+            section='Механика',
+            grade_level=9,
+            description='Импульс равен произведению массы на скорость.',
+        )
+        theory_subtopic = SubTopic.objects.create(
+            topic=theory_topic,
+            name='Закон сохранения импульса',
+            description='Суммарный импульс замкнутой системы сохраняется.',
+        )
         TaskGroup.objects.create(
             task=demo_task,
             group=analog_group,
@@ -1675,7 +1688,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         demo_selection = WorkAnalogGroup.objects.create(
             work=work,
             analog_group=analog_group,
-            order=1,
+            order=10,
             count=1,
             weight=4,
             bank_role_filter=TASK_BANK_ROLE_DEMO,
@@ -1687,10 +1700,25 @@ class DjangoRemedialRepositoryTests(TestCase):
         practice_selection = WorkAnalogGroup.objects.create(
             work=work,
             analog_group=analog_group,
-            order=2,
+            order=30,
             count=1,
             weight=3,
             bank_role_filter=TASK_BANK_ROLE_PRACTICE,
+        )
+        theory_block = WorkContentBlock.objects.create(
+            work=work,
+            content_type='theory',
+            order=5,
+            title='Опорная теория',
+            include_subtopics=True,
+        )
+        theory_block.topics.add(theory_topic)
+        text_block = WorkContentBlock.objects.create(
+            work=work,
+            content_type='text',
+            order=15,
+            title='Инструкция',
+            body='Покажите ход решения.',
         )
         repo = DjangoWorkRepository()
 
@@ -1706,6 +1734,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             rows[0].source_selection_id,
             str(demo_selection.pk),
         )
+        self.assertEqual(rows[0].content_order, demo_selection.order)
         self.assertEqual(rows[0].render_mode, TASK_RENDER_MODE_WITH_FULL_SOLUTION)
         self.assertFalse(rows[0].is_assessable)
         self.assertTrue(rows[0].blank_cells_after)
@@ -1716,9 +1745,51 @@ class DjangoRemedialRepositoryTests(TestCase):
             rows[1].source_selection_id,
             str(practice_selection.pk),
         )
+        self.assertEqual(rows[1].content_order, practice_selection.order)
         self.assertTrue(rows[1].is_assessable)
         self.assertEqual(rows[1].blank_cells_rows, DEFAULT_BLANK_CELLS_ROWS)
         self.assertEqual(rows[1].max_points, 3)
+
+        snapshots = list(
+            VariantContentBlockSnapshot.objects.filter(
+                variant=variant,
+            ).order_by('order')
+        )
+        self.assertEqual(
+            [snapshot.source_content_id for snapshot in snapshots],
+            [str(theory_block.pk), str(text_block.pk)],
+        )
+        self.assertEqual(snapshots[0].title, 'Опорная теория')
+        self.assertEqual(
+            snapshots[0].content['topics'][0]['content'],
+            'Импульс равен произведению массы на скорость.',
+        )
+        self.assertEqual(
+            snapshots[0].content['topics'][0]['subtopics'][0]['content'],
+            'Суммарный импульс замкнутой системы сохраняется.',
+        )
+        self.assertEqual(
+            snapshots[1].content,
+            {'body': 'Покажите ход решения.'},
+        )
+
+        theory_topic.description = 'Изменённая теория'
+        theory_topic.save(update_fields=['description'])
+        theory_subtopic.description = 'Изменённая подтема'
+        theory_subtopic.save(update_fields=['description'])
+        text_block.body = 'Изменённая инструкция'
+        text_block.save(update_fields=['body'])
+        snapshots[0].refresh_from_db()
+        snapshots[1].refresh_from_db()
+
+        self.assertEqual(
+            snapshots[0].content['topics'][0]['content'],
+            'Импульс равен произведению массы на скорость.',
+        )
+        self.assertEqual(
+            snapshots[1].content['body'],
+            'Покажите ход решения.',
+        )
 
     def test_work_repository_creates_work_from_orphan_variants(self):
         first_orphan = Variant.objects.create(

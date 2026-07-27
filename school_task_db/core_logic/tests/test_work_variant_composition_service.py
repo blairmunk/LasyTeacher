@@ -3,6 +3,7 @@ from unittest import TestCase
 from core_logic.services.work_variant_composition_service import (
     AvailableVariantTask,
     WorkVariantCompositionInput,
+    WorkVariantContentBlock,
     WorkVariantCompositionService,
     WorkVariantSpecRow,
 )
@@ -41,6 +42,7 @@ class WorkVariantCompositionServiceTests(TestCase):
         demo_task, practice_task = plan.variants[0].tasks
         self.assertEqual(demo_task.task_id, 'demo-2')
         self.assertEqual(demo_task.source_selection_id, 'demo-row')
+        self.assertEqual(demo_task.content_order, 10)
         self.assertEqual(demo_task.order, 1)
         self.assertEqual(demo_task.max_points, 0)
         self.assertEqual(demo_task.weight, 4)
@@ -58,10 +60,21 @@ class WorkVariantCompositionServiceTests(TestCase):
             practice_task.source_selection_id,
             'practice-row',
         )
+        self.assertEqual(practice_task.content_order, 30)
         self.assertEqual(practice_task.order, 2)
         self.assertEqual(practice_task.max_points, 3)
         self.assertEqual(practice_task.bank_role, TASK_BANK_ROLE_PRACTICE)
         self.assertTrue(practice_task.is_assessable)
+
+        theory, text = plan.variants[0].content_blocks
+        self.assertEqual(theory.source_content_id, 'theory-block')
+        self.assertEqual(theory.content_type, 'theory')
+        self.assertEqual(theory.order, 5)
+        self.assertEqual(
+            theory.content['topics'][0]['content'],
+            'Сила изменяет скорость.',
+        )
+        self.assertEqual(text.content, {'body': 'Покажите ход решения.'})
 
     def test_selects_tasks_for_each_row_and_variant(self):
         self.service.compose(self._composition_input(), count=2)
@@ -117,6 +130,7 @@ class WorkVariantCompositionServiceTests(TestCase):
                     spec_row_id='demo-row',
                     count=1,
                     weight=4,
+                    content_order=10,
                     available_tasks=(
                         AvailableVariantTask(
                             'demo-1',
@@ -136,6 +150,7 @@ class WorkVariantCompositionServiceTests(TestCase):
                     spec_row_id='practice-row',
                     count=1,
                     weight=3,
+                    content_order=30,
                     available_tasks=(
                         AvailableVariantTask(
                             'practice-1',
@@ -146,6 +161,29 @@ class WorkVariantCompositionServiceTests(TestCase):
                             bank_role=TASK_BANK_ROLE_PRACTICE,
                         ),
                     ),
+                ),
+            ),
+            content_blocks=(
+                WorkVariantContentBlock(
+                    source_content_id='theory-block',
+                    content_type='theory',
+                    order=5,
+                    title='Опорная теория',
+                    content={
+                        'topics': [
+                            {
+                                'name': 'Динамика',
+                                'content': 'Сила изменяет скорость.',
+                            },
+                        ],
+                    },
+                ),
+                WorkVariantContentBlock(
+                    source_content_id='text-block',
+                    content_type='text',
+                    order=20,
+                    title='Инструкция',
+                    content={'body': 'Покажите ход решения.'},
                 ),
             ),
         )

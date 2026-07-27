@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import (
     Variant,
+    VariantContentBlockSnapshot,
     VariantTask,
     Work,
     WorkAnalogGroup,
@@ -20,6 +21,20 @@ class VariantTaskInline(admin.TabularInline):
     ordering = ['order']
     autocomplete_fields = ['task']
     readonly_fields = ['order']
+
+
+class VariantContentBlockSnapshotInline(admin.TabularInline):
+    model = VariantContentBlockSnapshot
+    extra = 0
+    ordering = ['order']
+    readonly_fields = [
+        'source_content_id',
+        'content_type',
+        'order',
+        'title',
+        'content',
+    ]
+    can_delete = False
 
 
 class WorkContentBlockInline(admin.TabularInline):
@@ -47,7 +62,7 @@ class VariantAdmin(admin.ModelAdmin):
     list_filter = ['work', 'work__work_type', 'created_at']
     search_fields = ['work__name', 'number', 'uuid']
     readonly_fields = ['uuid']
-    inlines = [VariantTaskInline]
+    inlines = [VariantTaskInline, VariantContentBlockSnapshotInline]
 
     def get_short_uuid(self, obj):
         return obj.get_short_uuid()

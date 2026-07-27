@@ -77,6 +77,7 @@ from core_logic.services.work_score_allocation_service import (
 from core_logic.services.work_variant_composition_service import (
     AvailableVariantTask,
     WorkVariantCompositionInput,
+    WorkVariantContentBlock,
     WorkVariantCompositionService,
     WorkVariantSpecRow,
 )
@@ -89,6 +90,7 @@ from works.models import (
     Work,
     WorkAnalogGroup,
     WorkContentBlock,
+    VariantContentBlockSnapshot,
 )
 
 
@@ -737,6 +739,13 @@ class DjangoWorkRepository(
                     work_id=work_id,
                 ).order_by('order', 'pk')
             )
+            content_blocks = list(
+                WorkContentBlock.objects.filter(
+                    work_id=work_id,
+                ).prefetch_related(
+                    'topics__subtopics',
+                ).order_by('order', 'pk')
+            )
             composition_plan = WorkVariantCompositionService().compose(
                 WorkVariantCompositionInput(
                     work_name=work.name,
@@ -754,6 +763,10 @@ class DjangoWorkRepository(
                     spec_rows=tuple(
                         self._variant_composition_spec_row(work_group)
                         for work_group in work_groups
+                    ),
+                    content_blocks=tuple(
+                        self._variant_composition_content_block(block)
+                        for block in content_blocks
                     ),
                 ),
                 count=count,
@@ -774,6 +787,7 @@ class DjangoWorkRepository(
                             source_selection_id=(
                                 task_plan.source_selection_id
                             ),
+                            content_order=task_plan.content_order,
                             order=task_plan.order,
                             max_points=task_plan.max_points,
                             weight=task_plan.weight,
@@ -784,6 +798,19 @@ class DjangoWorkRepository(
                             blank_cells_rows=task_plan.blank_cells_rows,
                         )
                         for task_plan in variant_plan.tasks
+                    ]
+                )
+                VariantContentBlockSnapshot.objects.bulk_create(
+                    [
+                        VariantContentBlockSnapshot(
+                            variant=variant,
+                            source_content_id=block.source_content_id,
+                            content_type=block.content_type,
+                            order=block.order,
+                            title=block.title,
+                            content=dict(block.content),
+                        )
+                        for block in variant_plan.content_blocks
                     ]
                 )
 
@@ -803,6 +830,7 @@ class DjangoWorkRepository(
             spec_row_id=str(work_group.pk),
             count=work_group.count,
             weight=work_group.weight,
+            content_order=work_group.order,
             available_tasks=tuple(
                 AvailableVariantTask(
                     task_id=str(task_group.task_id),
@@ -814,6 +842,44 @@ class DjangoWorkRepository(
             is_assessable=work_group.is_assessable,
             blank_cells_after=work_group.blank_cells_after,
             blank_cells_rows=work_group.blank_cells_rows,
+        )
+
+    def _variant_composition_content_block(self, block):
+        content = {'body': block.body}
+        if block.content_type == 'theory':
+            content = {
+                'topics': [
+                    {
+                        'id': str(topic.pk),
+                        'name': topic.name,
+                        'subject': topic.subject,
+                        'section': topic.section,
+                        'grade_level': topic.grade_level,
+                        'content': topic.description,
+                        'subtopics': [
+                            {
+                                'id': str(subtopic.pk),
+                                'name': subtopic.name,
+                                'content': subtopic.description,
+                            }
+                            for subtopic in topic.subtopics.all()
+                            if (
+                                block.include_subtopics
+                                and subtopic.description
+                            )
+                        ],
+                    }
+                    for topic in block.topics.all()
+                    if topic.description
+                ],
+                'include_subtopics': block.include_subtopics,
+            }
+        return WorkVariantContentBlock(
+            source_content_id=str(block.pk),
+            content_type=block.content_type,
+            order=block.order,
+            title=block.title,
+            content=content,
         )
 
     def get_orphan_variant_refs(

@@ -3,7 +3,7 @@ from unittest import TestCase
 from core_logic.interfaces.work_repo import (
     CreateWorkParams,
     CreateWorkWithSpecificationParams,
-    WorkSpecificationRowParams,
+    WorkTaskSelectionParams,
 )
 from core_logic.use_cases.save_work import (
     CreateWorkWithSpecificationUseCase,
@@ -56,7 +56,7 @@ class SaveWorkUseCaseTests(TestCase):
         params = CreateWorkWithSpecificationParams(
             work=CreateWorkParams(name='Рабочий лист'),
             specs=[
-                WorkSpecificationRowParams(
+                WorkTaskSelectionParams(
                     analog_group_id='group-1',
                     order=1,
                     count=2,
@@ -76,7 +76,7 @@ class SaveWorkUseCaseTests(TestCase):
         params = CreateWorkWithSpecificationParams(
             work=CreateWorkParams(name='Рабочий лист'),
             specs=[
-                WorkSpecificationRowParams(
+                WorkTaskSelectionParams(
                     analog_group_id='group-1',
                     order=1,
                     count=1,
@@ -102,7 +102,7 @@ class SaveWorkUseCaseTests(TestCase):
     def test_save_work_specification_replaces_specs(self):
         repo = FakeWorkRepository()
         specs = [
-            WorkSpecificationRowParams(
+            WorkTaskSelectionParams(
                 analog_group_id='group-1',
                 order=1,
                 count=2,
@@ -125,7 +125,7 @@ class SaveWorkUseCaseTests(TestCase):
             SaveWorkSpecificationRequest(
                 work_id='work-1',
                 specs=[
-                    WorkSpecificationRowParams(
+                    WorkTaskSelectionParams(
                         analog_group_id='group-1',
                         order=1,
                         count=1,

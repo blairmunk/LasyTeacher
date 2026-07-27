@@ -3,7 +3,7 @@ from unittest import TestCase
 from core_logic.interfaces.work_repo import (
     CreateWorkParams,
     CreateWorkWithSpecificationParams,
-    WorkSpecificationRowParams,
+    WorkTaskSelectionParams,
 )
 from core_logic.entities.work import ComposeWorkVariantsResult
 from core_logic.use_cases.save_work import CreateWorkWithSpecificationUseCase
@@ -185,14 +185,14 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         self.assertEqual(
             work_repo.created_groups,
             [
-                WorkSpecificationRowParams(
+                WorkTaskSelectionParams(
                     analog_group_id='group-1',
                     order=1,
                     count=2,
                     weight=3,
                     bank_role_filter='any',
                 ),
-                WorkSpecificationRowParams(
+                WorkTaskSelectionParams(
                     analog_group_id='group-2',
                     order=2,
                     count=1,

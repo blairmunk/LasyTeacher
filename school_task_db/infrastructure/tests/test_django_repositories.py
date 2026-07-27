@@ -20,7 +20,7 @@ from core_logic.interfaces.work_repo import (
     CreateWorkWithVariantsParams,
     CreateWorkWithVariantFromTasksParams,
     NewWorkVariantParams,
-    WorkSpecificationRowParams,
+    WorkTaskSelectionParams,
 )
 from core_logic.entities.task import (
     SourceCreateParams,
@@ -509,7 +509,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         updated = repo.replace_work_analog_groups(
             work_id=str(self.source_work.pk),
             specs=[
-                WorkSpecificationRowParams(
+                WorkTaskSelectionParams(
                     analog_group_id=str(new_group.pk),
                     order=2,
                     count=3,
@@ -543,7 +543,7 @@ class DjangoRemedialRepositoryTests(TestCase):
                     max_score=6,
                 ),
                 specs=[
-                    WorkSpecificationRowParams(
+                    WorkTaskSelectionParams(
                         analog_group_id=str(group.pk),
                         order=1,
                         count=2,

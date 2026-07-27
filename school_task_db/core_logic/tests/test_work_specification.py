@@ -5,12 +5,12 @@ from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_DEMO,
     TASK_RENDER_MODE_WITH_FULL_SOLUTION,
 )
-from core_logic.value_objects.work_specification import WorkTaskRoleSpec
+from core_logic.value_objects.work_specification import WorkTaskSelectionSpec
 
 
-class WorkTaskRoleSpecTests(TestCase):
+class WorkTaskSelectionSpecTests(TestCase):
     def test_accepts_demo_spec_row_for_same_analog_group_use_case(self):
-        spec = WorkTaskRoleSpec(
+        spec = WorkTaskSelectionSpec(
             analog_group_id='group-1',
             count=2,
             bank_role_filter=TASK_BANK_ROLE_DEMO,
@@ -26,7 +26,7 @@ class WorkTaskRoleSpecTests(TestCase):
 
     def test_rejects_unknown_bank_role(self):
         with self.assertRaisesRegex(ValueError, 'Unsupported task bank role'):
-            WorkTaskRoleSpec(
+            WorkTaskSelectionSpec(
                 analog_group_id='group-1',
                 count=1,
                 bank_role_filter='unknown',
@@ -34,14 +34,14 @@ class WorkTaskRoleSpecTests(TestCase):
 
     def test_rejects_unknown_render_mode(self):
         with self.assertRaisesRegex(ValueError, 'Unsupported task render mode'):
-            WorkTaskRoleSpec(
+            WorkTaskSelectionSpec(
                 analog_group_id='group-1',
                 count=1,
                 render_mode='unknown',
             )
 
     def test_accepts_any_as_spec_filter_only(self):
-        spec = WorkTaskRoleSpec(
+        spec = WorkTaskSelectionSpec(
             analog_group_id='group-1',
             count=1,
             bank_role_filter=TASK_BANK_ROLE_ANY,
@@ -51,7 +51,7 @@ class WorkTaskRoleSpecTests(TestCase):
 
     def test_rejects_non_positive_blank_cells_rows(self):
         with self.assertRaisesRegex(ValueError, 'blank_cells_rows must be positive'):
-            WorkTaskRoleSpec(
+            WorkTaskSelectionSpec(
                 analog_group_id='group-1',
                 count=1,
                 blank_cells_rows=0,

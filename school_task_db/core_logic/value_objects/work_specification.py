@@ -12,7 +12,7 @@ from core_logic.value_objects.task_print_settings import (
 
 
 @dataclass(frozen=True)
-class WorkTaskRoleSpec:
+class WorkTaskSelectionSpec:
     """Specification row for selecting tasks from a bank group."""
 
     analog_group_id: str

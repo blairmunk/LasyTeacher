@@ -7,7 +7,7 @@ from core_logic.interfaces.task_repo import ITaskRepository
 from core_logic.interfaces.work_repo import (
     CreateWorkParams,
     CreateWorkWithSpecificationParams,
-    WorkSpecificationRowParams,
+    WorkTaskSelectionParams,
 )
 from core_logic.use_cases.compose_work_variants import (
     ComposeWorkVariantsRequest,
@@ -156,7 +156,7 @@ class CreateWorkFromGroupsUseCase:
             if weight <= 0:
                 weight = self.task_repo.get_first_task_difficulty_for_group(group.id)
             specs.append(
-                WorkSpecificationRowParams(
+                WorkTaskSelectionParams(
                     analog_group_id=group.id,
                     order=group.order or position,
                     count=group.count,

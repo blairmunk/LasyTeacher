@@ -61,7 +61,7 @@ from core_logic.interfaces.work_repo import (
     CreateWorkWithVariantsParams,
     CreateWorkWithVariantFromTasksParams,
     IWorkRepository,
-    WorkSpecificationRowParams,
+    WorkTaskSelectionParams,
 )
 from core_logic.interfaces.work_read_repo import IWorkReadRepository
 from core_logic.interfaces.work_document_repo import IWorkDocumentRepository
@@ -986,7 +986,7 @@ class DjangoWorkRepository(
     def replace_work_analog_groups(
         self,
         work_id: str,
-        specs: List[WorkSpecificationRowParams],
+        specs: List[WorkTaskSelectionParams],
     ) -> bool:
         if not Work.objects.filter(pk=work_id).exists():
             return False

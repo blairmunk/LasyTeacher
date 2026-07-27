@@ -5,7 +5,7 @@ from django.core.paginator import Paginator
 
 from core_logic.interfaces.work_repo import (
     CreateWorkParams,
-    WorkSpecificationRowParams,
+    WorkTaskSelectionParams,
 )
 from core_logic.entities.work import WorkListFilters
 from core_logic.use_cases.render_remedial_sheet_document import (
@@ -200,7 +200,7 @@ class WorkFormAdapter:
                 continue
 
             specs.append(
-                WorkSpecificationRowParams(
+                WorkTaskSelectionParams(
                     analog_group_id=str(analog_group.pk),
                     order=row.get('order') or 0,
                     count=row.get('count') or 1,

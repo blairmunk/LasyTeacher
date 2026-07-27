@@ -7,9 +7,9 @@ from core_logic.interfaces.work_repo import (
     CreateWorkParams,
     CreateWorkWithSpecificationParams,
     IWorkRepository,
-    WorkSpecificationRowParams,
+    WorkTaskSelectionParams,
 )
-from core_logic.value_objects.work_specification import WorkTaskRoleSpec
+from core_logic.value_objects.work_specification import WorkTaskSelectionSpec
 
 
 @dataclass(frozen=True)
@@ -22,7 +22,7 @@ class SaveWorkResult:
 @dataclass(frozen=True)
 class SaveWorkSpecificationRequest:
     work_id: str
-    specs: List[WorkSpecificationRowParams]
+    specs: List[WorkTaskSelectionParams]
 
 
 @dataclass(frozen=True)
@@ -61,12 +61,12 @@ class UpdateWorkUseCase:
 
 
 def validate_work_specification_specs(
-    specs: List[WorkSpecificationRowParams],
+    specs: List[WorkTaskSelectionParams],
 ) -> tuple[str, ...]:
     errors = []
     for index, spec in enumerate(specs, start=1):
         try:
-            WorkTaskRoleSpec(
+            WorkTaskSelectionSpec(
                 analog_group_id=spec.analog_group_id,
                 count=spec.count,
                 order=spec.order,

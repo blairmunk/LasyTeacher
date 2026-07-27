@@ -34,7 +34,7 @@ class CreateVariantParams:
 
 
 @dataclass(frozen=True)
-class WorkSpecificationRowParams:
+class WorkTaskSelectionParams:
     analog_group_id: str
     order: int
     count: int
@@ -49,7 +49,7 @@ class WorkSpecificationRowParams:
 @dataclass(frozen=True)
 class CreateWorkWithSpecificationParams:
     work: CreateWorkParams
-    specs: List[WorkSpecificationRowParams]
+    specs: List[WorkTaskSelectionParams]
 
 
 @dataclass(frozen=True)
@@ -116,7 +116,7 @@ class IWorkRepository(ABC):
     def replace_work_analog_groups(
         self,
         work_id: str,
-        specs: List[WorkSpecificationRowParams],
+        specs: List[WorkTaskSelectionParams],
     ) -> bool:
         """Replace a work specification and return whether the work was found."""
 

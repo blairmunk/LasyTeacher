@@ -6,6 +6,7 @@ from typing import Any, List, Optional
 
 from core_logic.entities.document import PrintSettingsSpec
 from core_logic.value_objects.document_render_options import WorkDocumentStyleOption
+from core_logic.value_objects.work_content_plan import WorkContentPlan
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_LABELS,
@@ -22,6 +23,7 @@ class WorkDetailData:
     variants: List["WorkDetailVariant"] = field(default_factory=list)
     analog_groups: List["WorkDetailSpecGroup"] = field(default_factory=list)
     spec_preview: List["WorkDetailSpecPreviewItem"] = field(default_factory=list)
+    content_plan: WorkContentPlan = field(default_factory=WorkContentPlan)
     work_print_settings: List[PrintSettingsSpec] = field(default_factory=list)
     remedial_sheet_print_settings: List[PrintSettingsSpec] = field(default_factory=list)
     work_document_style_options: List[WorkDocumentStyleOption] = field(

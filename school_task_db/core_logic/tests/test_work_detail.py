@@ -8,6 +8,8 @@ from core_logic.entities.work import (
     VariantDetailTask,
     VariantDetailTaskRow,
     VariantDetailVariant,
+    WorkDetailAnalogGroup,
+    WorkDetailSpecGroup,
     WorkDetailWork,
     WorkListFilters,
 )
@@ -319,6 +321,31 @@ class WorkDetailTests(TestCase):
             [option.value for option in result.work_document_style_options],
         )
         self.assertTrue(result.show_sync_button)
+
+    def test_get_work_detail_builds_task_selection_content_plan(self):
+        spec_row = WorkDetailSpecGroup(
+            order=3,
+            analog_group=WorkDetailAnalogGroup(
+                pk='group-1',
+                name='Законы Ньютона',
+            ),
+            count=2,
+            weight=4,
+        )
+        use_case = GetWorkDetailUseCase(
+            work_read_repo=FakeWorkRepository(
+                analog_groups=[spec_row],
+            ),
+            work_service=WorkService(),
+        )
+
+        result = use_case.execute('work-1')
+
+        selection = result.content_plan.task_selections[0]
+        self.assertEqual(selection.analog_group_id, 'group-1')
+        self.assertEqual(selection.count, 2)
+        self.assertEqual(selection.order, 3)
+        self.assertEqual(selection.weight, 4)
 
     def test_get_work_detail_use_case_returns_empty_data_for_missing_work(self):
         repo = FakeWorkRepository()

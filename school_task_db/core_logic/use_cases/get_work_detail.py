@@ -13,6 +13,9 @@ from core_logic.value_objects.document_recipes import (
 from core_logic.value_objects.document_render_options import (
     WORK_DOCUMENT_STYLE_OPTIONS,
 )
+from core_logic.value_objects.work_content_plan import (
+    build_work_content_plan_from_task_rows,
+)
 
 
 class GetWorkDetailUseCase:
@@ -40,6 +43,9 @@ class GetWorkDetailUseCase:
             variants=variants,
             analog_groups=analog_groups,
             spec_preview=spec_preview,
+            content_plan=build_work_content_plan_from_task_rows(
+                analog_groups,
+            ),
             work_print_settings=self._print_settings(WORK_DOCUMENT_TYPE),
             remedial_sheet_print_settings=self._print_settings(
                 REMEDIAL_SHEET_DOCUMENT_TYPE,

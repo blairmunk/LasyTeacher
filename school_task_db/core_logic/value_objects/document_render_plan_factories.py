@@ -26,8 +26,14 @@ from core_logic.value_objects.document_recipe_factories import (
     build_work_document_recipe,
 )
 from core_logic.value_objects.document_recipes import (
+    ANSWER_KEY_SECTION,
+    ANSWERS_SECTION,
+    BLANK_CELLS_SECTION,
     COMMON_HEADER_SECTION,
+    HEADER_SECTION,
     PAGE_BREAK_SECTION,
+    TASK_LIST_SECTION,
+    THEORY_SECTION,
 )
 
 
@@ -131,6 +137,7 @@ def build_work_document_recipe_for_render(
             lambda: _build_default_work_recipe(options)
         ),
     )
+    recipe = apply_work_document_print_overrides(recipe, options)
     return expand_work_document_recipe_per_variant(
         recipe,
         variant_ids,
@@ -156,21 +163,83 @@ def expand_work_document_recipe_per_variant(
         for section in recipe.sections
         if section.section_type != COMMON_HEADER_SECTION
     ]
+    has_variant_header = any(
+        section.section_type == HEADER_SECTION
+        for section in repeated_sections
+    )
     sections = list(common_sections)
     last_index = len(variant_ids) - 1
     for index, variant_id in enumerate(variant_ids):
         for section in repeated_sections:
+            section_options = {
+                **dict(section.options),
+                'variant_id': variant_id,
+            }
+            if (
+                section.section_type == TASK_LIST_SECTION
+                and has_variant_header
+            ):
+                section_options['show_variant_heading'] = False
             sections.append(
                 _section_with_options(
                     section,
-                    {
-                        **dict(section.options),
-                        'variant_id': variant_id,
-                    },
+                    section_options,
                 )
             )
         if break_between_variants and index < last_index:
             sections.append(DocumentSectionSpec(section_type=PAGE_BREAK_SECTION))
+    return DocumentRecipe(
+        document_type=recipe.document_type,
+        sections=sections,
+        presentation=recipe.presentation,
+    )
+
+
+def apply_work_document_print_overrides(
+    recipe: DocumentRecipe,
+    options: WorkDocumentRenderOptions,
+) -> DocumentRecipe:
+    overrides = options.print_overrides
+    sections = []
+    for section in recipe.sections:
+        if (
+            overrides.hide_theory
+            and section.section_type == THEORY_SECTION
+        ):
+            continue
+        if (
+            overrides.hide_blank_cells
+            and section.section_type == BLANK_CELLS_SECTION
+        ):
+            continue
+        if section.section_type != TASK_LIST_SECTION:
+            sections.append(section)
+            continue
+
+        section_options = dict(section.options)
+        hidden_content_types = _content_types_option(
+            section_options.get('hidden_content_types'),
+        )
+        for content_type in overrides.hidden_content_types:
+            if content_type not in hidden_content_types:
+                hidden_content_types.append(content_type)
+        if hidden_content_types:
+            section_options['hidden_content_types'] = hidden_content_types
+        if overrides.hide_blank_cells:
+            section_options['hide_blank_cells'] = True
+        sections.append(_section_with_options(section, section_options))
+
+    if overrides.append_answers:
+        sections = [
+            section
+            for section in sections
+            if section.section_type not in (
+                ANSWERS_SECTION,
+                ANSWER_KEY_SECTION,
+            )
+        ]
+        sections.append(DocumentSectionSpec(section_type=ANSWERS_SECTION))
+
     return DocumentRecipe(
         document_type=recipe.document_type,
         sections=sections,
@@ -248,3 +317,15 @@ def _section_with_options(
         title=section.title,
         options=options,
     )
+
+
+def _content_types_option(value) -> list[str]:
+    if not value:
+        return []
+    if isinstance(value, str):
+        return [
+            item.strip()
+            for item in value.split(',')
+            if item.strip()
+        ]
+    return list(value)

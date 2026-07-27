@@ -188,6 +188,8 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
             self.assertEqual(result.file_type, 'html')
             self.assertEqual(result.files[0].filename, 'work.html')
             self.assertIn('<title>Контрольная</title>', html)
+            self.assertIn('id="MathJax-script"', html)
+            self.assertIn('tex-chtml.js', html)
             self.assertIn('<h1>Контрольная</h1>', html)
             self.assertIn('Теоретическая справка', html)
             self.assertIn('Второй закон Ньютона', html)

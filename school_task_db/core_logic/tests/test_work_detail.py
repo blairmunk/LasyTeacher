@@ -49,9 +49,6 @@ from core_logic.use_cases.sync_work_analog_groups import (
     SyncWorkAnalogGroupsRequest,
     SyncWorkAnalogGroupsUseCase,
 )
-from core_logic.value_objects.document_render_options import (
-    WORK_DOCUMENT_STYLE_WORKSHEET,
-)
 
 
 class FakeQuerySet(list):
@@ -326,10 +323,6 @@ class WorkDetailTests(TestCase):
         self.assertEqual(
             print_settings_repo.requested_document_types,
             ['work', 'remedial_sheet'],
-        )
-        self.assertIn(
-            WORK_DOCUMENT_STYLE_WORKSHEET,
-            [option.value for option in result.work_document_style_options],
         )
         self.assertTrue(result.show_sync_button)
 

@@ -37,6 +37,7 @@ class VariantPrintProfile:
         field(default_factory=dict)
     )
     hidden_content_types: Tuple[str, ...] = field(default_factory=tuple)
+    hide_blank_cells: bool = False
 
     def __post_init__(self):
         hidden_roles = tuple(self.hidden_roles)
@@ -63,6 +64,8 @@ class VariantPrintProfile:
         return self.render_modes_by_role.get(item.bank_role, item.render_mode)
 
     def blank_cells_options(self, item: VariantContentItem) -> Mapping[str, Any]:
+        if self.hide_blank_cells:
+            return {}
         if item.bank_role in self.blank_cells_by_role:
             return _blank_cells_override_options(
                 self.blank_cells_by_role[item.bank_role],
@@ -225,6 +228,7 @@ def build_variant_print_profile_from_options(options) -> VariantPrintProfile:
         hidden_content_types=_tuple_option(
             options.get('hidden_content_types'),
         ),
+        hide_blank_cells=bool(options.get('hide_blank_cells', False)),
     )
 
 

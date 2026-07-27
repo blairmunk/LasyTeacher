@@ -3,6 +3,23 @@
 <head>
     <meta charset="utf-8">
     <title>{{ document.title }}</title>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+            }
+        };
+    </script>
+    <script
+        id="MathJax-script"
+        defer
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"
+    ></script>
     {% if custom_css %}
     <style>
 {{ custom_css|safe }}

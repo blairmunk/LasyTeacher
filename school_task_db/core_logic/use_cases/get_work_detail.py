@@ -10,9 +10,6 @@ from core_logic.value_objects.document_recipes import (
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     WORK_DOCUMENT_TYPE,
 )
-from core_logic.value_objects.document_render_options import (
-    WORK_DOCUMENT_STYLE_OPTIONS,
-)
 from core_logic.value_objects.work_content_plan import (
     build_work_content_plan,
 )
@@ -52,7 +49,6 @@ class GetWorkDetailUseCase:
             remedial_sheet_print_settings=self._print_settings(
                 REMEDIAL_SHEET_DOCUMENT_TYPE,
             ),
-            work_document_style_options=list(WORK_DOCUMENT_STYLE_OPTIONS),
             show_sync_button=self.work_service.should_show_sync_button(
                 has_variants=self._has_items(variants),
                 has_analog_groups=self._has_items(analog_groups),

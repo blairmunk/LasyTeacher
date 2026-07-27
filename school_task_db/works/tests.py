@@ -220,14 +220,16 @@ class WorkDetailViewTests(TestCase):
         self.assertContains(response, 'advanced-rendering-form')
         self.assertContains(response, 'data-print-settings-select')
         self.assertContains(response, 'data-print-settings-selection-notice')
-        self.assertContains(response, 'data-print-settings-controlled-options')
         self.assertContains(
             response,
-            'Выбранные настройки печати задают состав, порядок секций и оформление документа.',
+            'Профиль задаёт порядок секций и оформление.',
         )
-        self.assertContains(response, 'Состав по умолчанию')
-        self.assertContains(response, 'document_style')
-        self.assertContains(response, 'Рабочий лист')
+        self.assertNotContains(response, 'PDF + ответы')
+        self.assertNotContains(response, 'name="document_style"')
+        self.assertContains(response, 'hide_theory')
+        self.assertContains(response, 'hide_text')
+        self.assertContains(response, 'hide_blank_cells')
+        self.assertContains(response, 'append_answers')
         self.assertContains(response, 'Печать')
         self.assertContains(response, 'break_between_variants')
 

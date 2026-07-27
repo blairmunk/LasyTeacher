@@ -218,6 +218,33 @@ class VariantPrintPlanTests(TestCase):
         )
         self.assertEqual(plan.blocks[2].options, {'rows': 8})
 
+    def test_print_profile_can_hide_all_blank_cells(self):
+        content_snapshot = build_variant_content_snapshot(
+            variant_id='variant-1',
+            items=[
+                VariantContentItem(
+                    variant_task_id='vt-1',
+                    task_id='task-1',
+                    order=1,
+                    blank_cells_after=True,
+                    blank_cells_rows=8,
+                ),
+            ],
+        )
+        profile = build_variant_print_profile_from_options({
+            'hide_blank_cells': True,
+        })
+
+        plan = build_variant_print_plan_from_snapshot(
+            content_snapshot,
+            profile,
+        )
+
+        self.assertEqual(
+            [block.block_type for block in plan.blocks],
+            [VARIANT_PRINT_BLOCK_TASK],
+        )
+
     def test_print_profile_overrides_rendering_without_changing_content(self):
         content_snapshot = build_variant_content_snapshot(
             variant_id='variant-1',

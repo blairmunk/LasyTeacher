@@ -35,6 +35,7 @@ class RenderWorkDocumentRequest:
     options: WorkDocumentRenderOptions
     print_settings_spec: PrintSettingsSpec | None = None
     print_settings_id: str = ''
+    variant_id: str = ''
 
 
 class RenderWorkDocumentUseCase:
@@ -66,6 +67,13 @@ class RenderWorkDocumentUseCase:
                 renderer_type=renderer_type,
             )
         variant_ids = self.work_repo.get_work_variant_ids(request.work_id)
+        if request.variant_id:
+            if request.variant_id not in variant_ids:
+                return DocumentRenderResult(
+                    status=DOCUMENT_RENDER_STATUS_NOT_FOUND,
+                    renderer_type=renderer_type,
+                )
+            variant_ids = [request.variant_id]
 
         return self.render_document_use_case.execute(
             RenderDocumentRequest(

@@ -1,8 +1,10 @@
 \begin{schooltasklist}
 {% for variant in payload.variants %}
+{% if payload.show_variant_heading != False %}
 \section*{ {{ variant.title }} }
 {% if variant.duration %}{\small Время: {{ variant.duration }} минут}{% endif %}
 {% if variant.max_score %}{\small \hfill Максимальный балл: {{ variant.max_score }}}{% endif %}
+{% endif %}
 
 {% if variant.print_blocks %}
 {% for block in variant.print_blocks %}

@@ -125,7 +125,6 @@ class WorkFormAdapter:
             'remedial_sheet_print_settings': (
                 detail.remedial_sheet_print_settings
             ),
-            'work_document_style_options': detail.work_document_style_options,
             'show_sync_button': detail.show_sync_button,
         }
 
@@ -311,6 +310,7 @@ class WorkFormAdapter:
             work_id=work_id,
             options=build_work_render_options(post_data),
             print_settings_id=self._print_settings_id_from_post(post_data),
+            variant_id=self._variant_id_from_post(post_data),
         )
 
     def document_renderer_type_from_post(self, post_data, default='pdf'):
@@ -332,6 +332,10 @@ class WorkFormAdapter:
 
     def _print_settings_id_from_post(self, post_data):
         return post_data.get('print_settings_id', '').strip()
+
+    def _variant_id_from_post(self, post_data):
+        variant_id = post_data.get('variant_selection', '').strip()
+        return '' if variant_id == 'all' else variant_id
 
     def rendered_document_file_request(self, file_type, filename):
         return GetRenderedDocumentFileRequest(

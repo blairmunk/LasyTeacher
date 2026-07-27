@@ -139,6 +139,25 @@ class WorkDocumentBuildOptions:
 
 
 @dataclass(frozen=True)
+class WorkDocumentPrintOverrides:
+    """Temporary changes applied to one document render request."""
+
+    hide_theory: bool = False
+    hide_text: bool = False
+    hide_blank_cells: bool = False
+    append_answers: bool = False
+
+    @property
+    def hidden_content_types(self) -> tuple[str, ...]:
+        hidden_types = []
+        if self.hide_theory:
+            hidden_types.append('theory')
+        if self.hide_text:
+            hidden_types.append('text')
+        return tuple(hidden_types)
+
+
+@dataclass(frozen=True)
 class RemedialSheetBuildOptions:
     answer_type: str = 'with_short_solutions'
 
@@ -158,6 +177,7 @@ class RemedialSheetBuildOptions:
 class WorkDocumentRenderOptions:
     render_target: RenderTarget
     build_options: WorkDocumentBuildOptions
+    print_overrides: WorkDocumentPrintOverrides
 
     def __init__(
         self,
@@ -168,8 +188,13 @@ class WorkDocumentRenderOptions:
         include_instructions: bool = False,
         break_between_variants: bool = True,
         document_style: str = WORK_DOCUMENT_STYLE_STANDARD,
+        hide_theory: bool = False,
+        hide_text: bool = False,
+        hide_blank_cells: bool = False,
+        append_answers: bool = False,
         render_target: Optional[RenderTarget] = None,
         build_options: Optional[WorkDocumentBuildOptions] = None,
+        print_overrides: Optional[WorkDocumentPrintOverrides] = None,
     ):
         object.__setattr__(
             self,
@@ -189,6 +214,16 @@ class WorkDocumentRenderOptions:
                 include_instructions=include_instructions,
                 break_between_variants=break_between_variants,
                 document_style=_supported_work_document_style(document_style),
+            ),
+        )
+        object.__setattr__(
+            self,
+            'print_overrides',
+            print_overrides or WorkDocumentPrintOverrides(
+                hide_theory=hide_theory,
+                hide_text=hide_text,
+                hide_blank_cells=hide_blank_cells,
+                append_answers=append_answers,
             ),
         )
 
@@ -230,7 +265,13 @@ class WorkDocumentRenderOptions:
 
     @property
     def content_description(self) -> str:
-        return self.build_options.content_description
+        description = self.build_options.content_description
+        if (
+            self.print_overrides.append_answers
+            and self.answer_type not in ANSWER_TYPES_WITH_ANSWERS
+        ):
+            return f'{description} + ответы в конце'
+        return description
 
 
 @dataclass(frozen=True, init=False)
@@ -291,6 +332,13 @@ def build_work_render_options(
         include_instructions=data.get('include_instructions', '0') == '1',
         break_between_variants=data.get('break_between_variants', '1') == '1',
         document_style=data.get('document_style', WORK_DOCUMENT_STYLE_STANDARD),
+        hide_theory=data.get('hide_theory', '0') == '1',
+        hide_text=data.get('hide_text', '0') == '1',
+        hide_blank_cells=data.get('hide_blank_cells', '0') == '1',
+        append_answers=(
+            data.get('append_answers', '0') == '1'
+            or data.get('with_answers', '0') == '1'
+        ),
     )
 
 

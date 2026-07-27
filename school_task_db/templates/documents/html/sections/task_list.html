@@ -1,7 +1,9 @@
 <section class="document-task-variants">
     {% for variant in payload.variants %}
         <article class="document-variant">
+            {% if payload.show_variant_heading != False %}
             <h2>{{ variant.title }}</h2>
+            {% endif %}
             {% if variant.print_blocks %}
                 <div class="task-list">
                     {% for block in variant.print_blocks %}

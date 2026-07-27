@@ -2026,7 +2026,6 @@ class WorkFormAdapterTests(SimpleTestCase):
             spec_preview=['spec-1'],
             work_print_settings=['work-template-1'],
             remedial_sheet_print_settings=['remedial-template-1'],
-            work_document_style_options=['style-1'],
             show_sync_button=True,
             content_plan=SimpleNamespace(
                 blocks=[
@@ -2268,6 +2267,8 @@ class WorkFormAdapterTests(SimpleTestCase):
                 'renderer_type=html&format=A5&answer_type=with_short_solutions'
                 '&include_hints=1&include_instructions=1'
                 '&document_style=worksheet'
+                '&variant_selection=variant-1'
+                '&hide_theory=1&hide_blank_cells=1&append_answers=1'
                 '&print_settings_id=template-work',
             ),
             work_id='w1',
@@ -2282,6 +2283,10 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertTrue(request.options.include_hints)
         self.assertTrue(request.options.include_instructions)
         self.assertEqual(request.options.document_style, WORK_DOCUMENT_STYLE_WORKSHEET)
+        self.assertEqual(request.variant_id, 'variant-1')
+        self.assertTrue(request.options.print_overrides.hide_theory)
+        self.assertTrue(request.options.print_overrides.hide_blank_cells)
+        self.assertTrue(request.options.print_overrides.append_answers)
 
     def test_builds_render_remedial_sheet_request_from_post(self):
         request = WorkFormAdapter().render_remedial_sheet_request_from_post(

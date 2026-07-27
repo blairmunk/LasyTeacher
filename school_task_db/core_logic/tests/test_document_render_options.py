@@ -9,6 +9,7 @@ from core_logic.value_objects.document_render_options import (
     WORK_DOCUMENT_STYLE_STANDARD,
     WORK_DOCUMENT_STYLE_WORKSHEET,
     WorkDocumentBuildOptions,
+    WorkDocumentPrintOverrides,
     WorkDocumentRenderOptions,
     build_render_target,
     build_render_target_from_data,
@@ -145,6 +146,37 @@ class DocumentRenderOptionsTests(TestCase):
                 'document_style': WORK_DOCUMENT_STYLE_STANDARD,
             },
         )
+
+    def test_builds_temporary_work_print_overrides(self):
+        options = build_work_render_options({
+            'hide_theory': '1',
+            'hide_text': '1',
+            'hide_blank_cells': '1',
+            'append_answers': '1',
+        })
+
+        self.assertEqual(
+            options.print_overrides,
+            WorkDocumentPrintOverrides(
+                hide_theory=True,
+                hide_text=True,
+                hide_blank_cells=True,
+                append_answers=True,
+            ),
+        )
+        self.assertEqual(
+            options.print_overrides.hidden_content_types,
+            ('theory', 'text'),
+        )
+        self.assertEqual(
+            options.content_description,
+            'только задания + ответы в конце',
+        )
+
+    def test_legacy_with_answers_flag_appends_answer_section(self):
+        options = build_work_render_options({'with_answers': '1'})
+
+        self.assertTrue(options.print_overrides.append_answers)
 
     def test_builds_work_document_style_from_data(self):
         options = build_work_render_options({

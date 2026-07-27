@@ -394,6 +394,51 @@ class DocumentRenderingUseCaseTests(TestCase):
         self.assertEqual(result.status, 'not_found')
         self.assertIsNone(service.render_request)
 
+    def test_render_work_document_can_select_one_work_variant(self):
+        service = FakeDocumentEngine()
+        use_case = RenderWorkDocumentUseCase(
+            document_engine=service,
+            work_repo=FakeWorkRepository(
+                variant_ids=['variant-1', 'variant-2'],
+            ),
+        )
+
+        result = use_case.execute(
+            RenderWorkDocumentRequest(
+                work_id='work-1',
+                variant_id='variant-2',
+                options=WorkDocumentRenderOptions(renderer_type='html'),
+            )
+        )
+
+        self.assertTrue(result.success)
+        self.assertEqual(
+            [
+                section.options.get('variant_id')
+                for section in service.render_request.recipe.sections
+            ],
+            ['variant-2', 'variant-2'],
+        )
+
+    def test_render_work_document_rejects_foreign_variant(self):
+        service = FakeDocumentEngine()
+        use_case = RenderWorkDocumentUseCase(
+            document_engine=service,
+            work_repo=FakeWorkRepository(variant_ids=['variant-1']),
+        )
+
+        result = use_case.execute(
+            RenderWorkDocumentRequest(
+                work_id='work-1',
+                variant_id='foreign-variant',
+                options=WorkDocumentRenderOptions(renderer_type='html'),
+            )
+        )
+
+        self.assertFalse(result.success)
+        self.assertEqual(result.status, 'not_found')
+        self.assertIsNone(service.render_request)
+
     def test_render_remedial_sheet_document_delegates_to_service(self):
         service = FakeDocumentEngine()
         work_repo = FakeWorkRepository()

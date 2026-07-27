@@ -38,6 +38,8 @@ from core_logic.value_objects.task_print_settings import (
 from core_logic.value_objects.variant_print_plan import (
     VARIANT_PRINT_BLOCK_BLANK_CELLS,
     VARIANT_PRINT_BLOCK_TASK,
+    VARIANT_PRINT_BLOCK_TEXT,
+    VARIANT_PRINT_BLOCK_THEORY,
 )
 from curriculum.models import SubTopic, Topic
 from infrastructure.services.django_document_payload_registry import (
@@ -53,7 +55,12 @@ from infrastructure.services.django_work_document_payloads import (
     DjangoWorkTheoryPayloadBuilder,
 )
 from tasks.models import Source, Task
-from works.models import Variant, VariantTask, Work
+from works.models import (
+    Variant,
+    VariantContentBlockSnapshot,
+    VariantTask,
+    Work,
+)
 
 
 class DjangoWorkHeaderPayloadBuilderTests(TestCase):
@@ -83,6 +90,92 @@ class DjangoWorkHeaderPayloadBuilderTests(TestCase):
 
 
 class DjangoWorkTaskListPayloadBuilderTests(TestCase):
+    def test_builds_mixed_variant_content_from_immutable_snapshots(self):
+        work = Work.objects.create(name='Рабочий лист')
+        variant = Variant.objects.create(work=work, number=1)
+        topic = Topic.objects.create(
+            name='Динамика',
+            subject='Физика',
+            section='Механика',
+            grade_level=9,
+        )
+        task = Task.objects.create(
+            text='Решите задачу',
+            answer='Ответ',
+            topic=topic,
+            task_type='computational',
+            difficulty=2,
+        )
+        variant_task = VariantTask.objects.create(
+            variant=variant,
+            task=task,
+            source_selection_id='selection-1',
+            content_order=20,
+            order=1,
+        )
+        theory = VariantContentBlockSnapshot.objects.create(
+            variant=variant,
+            source_content_id='content-theory',
+            content_type='theory',
+            order=10,
+            title='Опорная теория',
+            content={
+                'topics': [
+                    {
+                        'name': 'Динамика',
+                        'content': 'Сила изменяет скорость.',
+                        'subtopics': [],
+                    },
+                ],
+            },
+        )
+        VariantContentBlockSnapshot.objects.create(
+            variant=variant,
+            source_content_id='content-text',
+            content_type='text',
+            order=30,
+            title='Самопроверка',
+            content={'body': 'Проверьте единицы измерения.'},
+        )
+        formatter = FakeTaskPayloadFormatter()
+        builder = DjangoWorkTaskListPayloadBuilder(
+            task_payload_formatter=formatter,
+        )
+
+        payload = builder.build_payload(
+            build_request(work, TASK_LIST_SECTION),
+        )
+
+        blocks = payload['variants'][0]['print_blocks']
+        self.assertEqual(
+            [block['block_type'] for block in blocks],
+            [
+                VARIANT_PRINT_BLOCK_THEORY,
+                VARIANT_PRINT_BLOCK_TASK,
+                VARIANT_PRINT_BLOCK_TEXT,
+            ],
+        )
+        self.assertEqual(blocks[0]['snapshot_id'], str(theory.pk))
+        self.assertEqual(blocks[0]['title'], 'Опорная теория')
+        self.assertEqual(
+            blocks[0]['content']['topics'][0]['content'],
+            'Сила изменяет скорость.',
+        )
+        self.assertEqual(
+            blocks[1]['task']['variant_task_id'],
+            str(variant_task.pk),
+        )
+        self.assertEqual(
+            blocks[2]['content']['body'],
+            'Проверьте единицы измерения.',
+        )
+        formatted_texts = [
+            request.get('text')
+            for request in formatter.requests
+        ]
+        self.assertIn('Сила изменяет скорость.', formatted_texts)
+        self.assertIn('Проверьте единицы измерения.', formatted_texts)
+
     def test_builds_task_list_payload(self):
         work = Work.objects.create(name='Контрольная', duration=45)
         variant = Variant.objects.create(
@@ -399,6 +492,39 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
 
 
 class DjangoWorkTheoryPayloadBuilderTests(TestCase):
+    def test_defers_snapshot_theory_to_variant_content_section(self):
+        work = Work.objects.create(name='Рабочий лист')
+        variant = Variant.objects.create(work=work, number=1)
+        VariantContentBlockSnapshot.objects.create(
+            variant=variant,
+            content_type='theory',
+            order=10,
+            title='Опорная теория',
+            content={'topics': []},
+        )
+        theory_section = DocumentSectionSpec(section_type=THEORY_SECTION)
+        recipe = DocumentRecipe(
+            document_type=WORK_DOCUMENT_TYPE,
+            sections=[
+                theory_section,
+                DocumentSectionSpec(section_type=TASK_LIST_SECTION),
+            ],
+        )
+        request = DocumentSectionPayloadBuildRequest(
+            source=DocumentSourceRef(
+                source_type=WORK_SOURCE_TYPE,
+                source_id=str(work.pk),
+                title=work.name,
+            ),
+            recipe=recipe,
+            section=theory_section,
+        )
+
+        payload = DjangoWorkTheoryPayloadBuilder().build_payload(request)
+
+        self.assertTrue(payload['embedded_in_variants'])
+        self.assertEqual(payload['blocks'], [])
+
     def test_builds_theory_payload_from_work_task_topics(self):
         work = Work.objects.create(name='Контрольная')
         variant = Variant.objects.create(work=work, number=1)

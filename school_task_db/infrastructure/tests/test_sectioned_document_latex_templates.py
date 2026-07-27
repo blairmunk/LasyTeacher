@@ -95,6 +95,52 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                                     'title': 'Вариант 1',
                                     'duration': 45,
                                     'max_score': 10,
+                                    'print_blocks': [
+                                        {
+                                            'block_type': 'theory',
+                                            'title': 'Теория варианта',
+                                            'content': {
+                                                'topics': [
+                                                    {
+                                                        'name': 'Импульс',
+                                                        'content': (
+                                                            'Импульс сохраняется'
+                                                        ),
+                                                        'subtopics': [],
+                                                    },
+                                                ],
+                                            },
+                                        },
+                                        {
+                                            'block_type': 'task',
+                                            'task': {
+                                                'order': 1,
+                                                'text': 'Найдите силу',
+                                                'latex_content': (
+                                                    'Найдите силу'
+                                                ),
+                                                'hint': 'F = ma',
+                                                'max_points': 2,
+                                                'answer': '10 Н',
+                                                'short_solution': 'F = ma',
+                                                'full_solution': (
+                                                    'Подставим в формулу'
+                                                ),
+                                                'render_mode': (
+                                                    TASK_RENDER_MODE_WITH_FULL_SOLUTION
+                                                ),
+                                            },
+                                        },
+                                        {
+                                            'block_type': 'text',
+                                            'title': 'Самопроверка',
+                                            'content': {
+                                                'body': (
+                                                    'Проверьте единицы измерения'
+                                                ),
+                                            },
+                                        },
+                                    ],
                                     'tasks': [
                                         {
                                             'order': 1,
@@ -219,6 +265,10 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
             self.assertIn(r'\section*{\centering Теоретическая справка}', latex)
             self.assertIn(r'Формула \(F=ma\)', latex)
             self.assertIn(r'\section*{ Вариант 1 }', latex)
+            self.assertIn(r'\subsection*{ Теория варианта }', latex)
+            self.assertIn('Импульс сохраняется', latex)
+            self.assertIn(r'\subsection*{ Самопроверка }', latex)
+            self.assertIn('Проверьте единицы измерения', latex)
             self.assertIn('Найдите силу', latex)
             self.assertIn('Подсказка: F = ma', latex)
             self.assertIn(r'\textbf{Решение.}', latex)

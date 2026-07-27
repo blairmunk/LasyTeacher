@@ -1,3 +1,4 @@
+{% if not payload.embedded_in_variants %}
 \begin{schooltheory}
 \section*{\centering {{ payload.section_title|default:"Теоретическая справка" }}}
 {% for block in payload.blocks %}
@@ -15,3 +16,4 @@
 \textit{Теоретическая справка не задана.}
 {% endfor %}
 \end{schooltheory}
+{% endif %}

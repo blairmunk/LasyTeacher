@@ -1,5 +1,8 @@
 """Django-backed document payload builders for regular works."""
 
+from core_logic.value_objects.document_recipes import (
+    TASK_LIST_SECTION,
+)
 from infrastructure.services.django_variant_document_payloads import (
     DjangoVariantDocumentPayloadBuilder,
     format_text_payload,
@@ -69,6 +72,16 @@ class DjangoWorkTheoryPayloadBuilder:
         work = self.get_work_source(request.source.source_id)
         options = dict(request.section.options)
         include_subtopics = options.get('include_subtopics', False)
+        if self._is_embedded_in_variant_content(work, request):
+            return {
+                **options,
+                'section_title': options.get(
+                    'section_title',
+                    'Теоретическая справка',
+                ),
+                'blocks': [],
+                'embedded_in_variants': True,
+            }
         return {
             **options,
             'section_title': options.get(
@@ -81,6 +94,19 @@ class DjangoWorkTheoryPayloadBuilder:
                 include_subtopics=include_subtopics,
             ),
         }
+
+    def _is_embedded_in_variant_content(self, work, request):
+        if TASK_LIST_SECTION not in {
+            section.section_type
+            for section in request.recipe.sections
+        }:
+            return False
+        return any(
+            variant.content_block_snapshots.filter(
+                content_type='theory',
+            ).exists()
+            for variant in _work_variants_from_request(work, request)
+        )
 
     def _topic_blocks(self, work, request=None, include_subtopics=False):
         topic_map = {}

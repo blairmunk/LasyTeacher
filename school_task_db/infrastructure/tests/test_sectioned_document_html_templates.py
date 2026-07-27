@@ -102,6 +102,56 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
                             'variants': [
                                 {
                                     'title': 'Вариант 1',
+                                    'print_blocks': [
+                                        {
+                                            'block_type': 'theory',
+                                            'title': 'Теория варианта',
+                                            'content': {
+                                                'topics': [
+                                                    {
+                                                        'name': 'Импульс',
+                                                        'content': (
+                                                            'Импульс сохраняется'
+                                                        ),
+                                                        'subtopics': [],
+                                                    },
+                                                ],
+                                            },
+                                        },
+                                        {
+                                            'block_type': 'task',
+                                            'task': {
+                                                'order': 1,
+                                                'text': 'Найдите силу',
+                                                'hint': 'F = ma',
+                                                'instruction': '',
+                                                'max_points': 2,
+                                                'full_solution': (
+                                                    'Подставим в формулу'
+                                                ),
+                                                'render_mode': (
+                                                    TASK_RENDER_MODE_WITH_FULL_SOLUTION
+                                                ),
+                                            },
+                                        },
+                                        {
+                                            'block_type': 'blank_cells',
+                                            'blank_cells': {
+                                                'columns': 3,
+                                                'row_height': 18,
+                                                'cells_range': range(6),
+                                            },
+                                        },
+                                        {
+                                            'block_type': 'text',
+                                            'title': 'Самопроверка',
+                                            'content': {
+                                                'body': (
+                                                    'Проверьте единицы измерения'
+                                                ),
+                                            },
+                                        },
+                                    ],
                                     'tasks': [
                                         {
                                             'text': 'Найдите силу',
@@ -148,6 +198,10 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
             self.assertIn('Критерии оценивания', html)
             self.assertIn('<td>85%</td>', html)
             self.assertIn('Вариант 1', html)
+            self.assertIn('Теория варианта', html)
+            self.assertIn('Импульс сохраняется', html)
+            self.assertIn('Самопроверка', html)
+            self.assertIn('Проверьте единицы измерения', html)
             self.assertIn('Найдите силу', html)
             self.assertIn('Подсказка: F = ma', html)
             self.assertIn('Решение:', html)

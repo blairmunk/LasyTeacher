@@ -8,6 +8,7 @@ from core_logic.value_objects.task_print_settings import (
     TASK_RENDER_MODE_TASK_ONLY,
 )
 from core_logic.value_objects.variant_content_snapshot import (
+    VariantContentBlockItem,
     VariantContentItem,
     build_variant_content_snapshot,
 )
@@ -43,6 +44,13 @@ class DjangoVariantDocumentPayloadBuilder:
                 _variant_content_item(variant_task)
                 for variant_task in variant_tasks
             ],
+            content_blocks=[
+                _variant_content_block_item(block)
+                for block in variant.content_block_snapshots.order_by(
+                    'order',
+                    'pk',
+                )
+            ],
         )
         print_profile = build_variant_print_profile_from_options(
             request.section.options if request else {},
@@ -72,6 +80,8 @@ class DjangoVariantDocumentPayloadBuilder:
             'print_blocks': _variant_print_blocks_payload(
                 print_plan,
                 task_payloads_by_variant_task_id,
+                task_payload_formatter=self.task_payload_formatter,
+                request=request,
             ),
             'tasks': task_payloads,
         }
@@ -186,6 +196,7 @@ def _variant_content_item(variant_task):
         order=variant_task.order,
         max_points=variant_task.max_points,
         source_selection_id=print_settings['source_selection_id'],
+        content_order=print_settings['content_order'],
         bank_role=print_settings['bank_role'],
         render_mode=print_settings['render_mode'],
         is_assessable=print_settings['is_assessable'],
@@ -197,6 +208,8 @@ def _variant_content_item(variant_task):
 def _variant_print_blocks_payload(
     print_plan,
     task_payloads_by_variant_task_id,
+    task_payload_formatter=None,
+    request=None,
 ):
     print_blocks = []
     for block in print_plan.blocks:
@@ -205,8 +218,12 @@ def _variant_print_blocks_payload(
             'variant_task_id': block.variant_task_id,
             'task_id': block.task_id,
             'source_selection_id': block.source_selection_id,
+            'snapshot_id': block.snapshot_id,
+            'source_content_id': block.source_content_id,
             'order': block.order,
+            'content_order': block.content_order,
             'content_role': block.content_role,
+            'title': block.title,
             'source_render_mode': block.source_render_mode,
             'render_mode': block.render_mode,
             'options': dict(block.options),
@@ -224,6 +241,13 @@ def _variant_print_blocks_payload(
             block_payload['blank_cells'] = build_blank_cells_payload(
                 block.options,
             )
+        elif block.block_type in ('theory', 'text'):
+            block_payload['content'] = _format_static_content(
+                block.block_type,
+                block.content,
+                task_payload_formatter=task_payload_formatter,
+                request=request,
+            )
         print_blocks.append(block_payload)
     return print_blocks
 
@@ -235,6 +259,7 @@ def _variant_task_print_settings(variant_task):
             'source_selection_id',
             '',
         ),
+        'content_order': getattr(variant_task, 'content_order', 0),
         'bank_role': getattr(
             variant_task,
             'bank_role',
@@ -253,3 +278,53 @@ def _variant_task_print_settings(variant_task):
             DEFAULT_BLANK_CELLS_ROWS,
         ),
     }
+
+
+def _variant_content_block_item(block):
+    return VariantContentBlockItem(
+        snapshot_id=str(block.pk),
+        source_content_id=block.source_content_id,
+        content_type=block.content_type,
+        order=block.order,
+        title=block.title,
+        content=block.content,
+    )
+
+
+def _format_static_content(
+    content_type,
+    content,
+    task_payload_formatter=None,
+    request=None,
+):
+    content = dict(content)
+    if content_type == 'text':
+        content['body'] = format_text_payload(
+            content.get('body', ''),
+            task_payload_formatter,
+            request=request,
+        )
+        return content
+    content['topics'] = [
+        {
+            **topic,
+            'content': format_text_payload(
+                topic.get('content', ''),
+                task_payload_formatter,
+                request=request,
+            ),
+            'subtopics': [
+                {
+                    **subtopic,
+                    'content': format_text_payload(
+                        subtopic.get('content', ''),
+                        task_payload_formatter,
+                        request=request,
+                    ),
+                }
+                for subtopic in topic.get('subtopics', ())
+            ],
+        }
+        for topic in content.get('topics', ())
+    ]
+    return content

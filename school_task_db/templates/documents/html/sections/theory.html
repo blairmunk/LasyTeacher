@@ -1,3 +1,4 @@
+{% if not payload.embedded_in_variants %}
 <section class="document-theory">
     <h2>{{ payload.section_title|default:"Теоретическая справка" }}</h2>
     {% for block in payload.blocks %}
@@ -19,3 +20,4 @@
         <p>Теоретическая справка не задана.</p>
     {% endfor %}
 </section>
+{% endif %}

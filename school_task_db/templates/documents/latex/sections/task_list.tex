@@ -6,7 +6,28 @@
 
 {% if variant.print_blocks %}
 {% for block in variant.print_blocks %}
-{% if block.block_type == 'task' and block.task %}
+{% if block.block_type == 'theory' %}
+\begin{schooltheory}
+{% if block.title %}\subsection*{ {{ block.title }} }{% endif %}
+{% for topic in block.content.topics %}
+\subsubsection*{ {{ topic.name }} }
+{{ topic.content|safe }}
+
+{% if topic.subtopics %}
+\begin{itemize}
+{% for subtopic in topic.subtopics %}
+\item \textbf{ {{ subtopic.name }} } {{ subtopic.content|safe }}
+{% endfor %}
+\end{itemize}
+{% endif %}
+{% endfor %}
+\end{schooltheory}
+
+{% elif block.block_type == 'text' %}
+{% if block.title %}\subsection*{ {{ block.title }} }{% endif %}
+{{ block.content.body|safe }}
+
+{% elif block.block_type == 'task' and block.task %}
 \subsection*{Задание {{ block.task.order }}{% if block.task.max_points %} \hfill {\normalfont\normalsize ({{ block.task.max_points }} балл.)}{% endif %}}
 {{ block.task.latex_content|default:block.task.text|safe }}
 

@@ -8,17 +8,22 @@ from core_logic.value_objects.task_print_settings import (
     validate_task_specific_bank_role,
 )
 from core_logic.value_objects.variant_content_snapshot import (
+    VariantContentBlockItem,
     VariantContentItem,
     VariantContentSnapshot,
 )
 
 VARIANT_PRINT_BLOCK_TASK = 'task'
 VARIANT_PRINT_BLOCK_BLANK_CELLS = 'blank_cells'
+VARIANT_PRINT_BLOCK_THEORY = 'theory'
+VARIANT_PRINT_BLOCK_TEXT = 'text'
 
 VARIANT_PRINT_BLOCK_TYPES = frozenset(
     (
         VARIANT_PRINT_BLOCK_TASK,
         VARIANT_PRINT_BLOCK_BLANK_CELLS,
+        VARIANT_PRINT_BLOCK_THEORY,
+        VARIANT_PRINT_BLOCK_TEXT,
     )
 )
 
@@ -31,11 +36,13 @@ class VariantPrintProfile:
     blank_cells_by_role: Mapping[str, Mapping[str, Any] | bool | int] = (
         field(default_factory=dict)
     )
+    hidden_content_types: Tuple[str, ...] = field(default_factory=tuple)
 
     def __post_init__(self):
         hidden_roles = tuple(self.hidden_roles)
         render_modes_by_role = dict(self.render_modes_by_role)
         blank_cells_by_role = dict(self.blank_cells_by_role)
+        hidden_content_types = tuple(self.hidden_content_types)
         for role in hidden_roles:
             validate_task_specific_bank_role(role)
         for role, render_mode in render_modes_by_role.items():
@@ -46,6 +53,11 @@ class VariantPrintProfile:
         object.__setattr__(self, 'hidden_roles', hidden_roles)
         object.__setattr__(self, 'render_modes_by_role', render_modes_by_role)
         object.__setattr__(self, 'blank_cells_by_role', blank_cells_by_role)
+        object.__setattr__(
+            self,
+            'hidden_content_types',
+            hidden_content_types,
+        )
 
     def task_render_mode(self, item: VariantContentItem) -> str:
         return self.render_modes_by_role.get(item.bank_role, item.render_mode)
@@ -63,6 +75,9 @@ class VariantPrintProfile:
     def includes_item(self, item: VariantContentItem) -> bool:
         return item.bank_role not in self.hidden_roles
 
+    def includes_content_block(self, block: VariantContentBlockItem) -> bool:
+        return block.content_type not in self.hidden_content_types
+
 
 @dataclass(frozen=True)
 class VariantPrintBlock:
@@ -70,8 +85,13 @@ class VariantPrintBlock:
     variant_task_id: str = ''
     task_id: str = ''
     source_selection_id: str = ''
+    snapshot_id: str = ''
+    source_content_id: str = ''
     order: int = 0
+    content_order: int = 0
     content_role: str = ''
+    title: str = ''
+    content: Mapping[str, Any] = field(default_factory=dict)
     source_render_mode: str = ''
     render_mode: str = ''
     options: Mapping[str, Any] = field(default_factory=dict)
@@ -80,6 +100,7 @@ class VariantPrintBlock:
         if self.block_type not in VARIANT_PRINT_BLOCK_TYPES:
             raise ValueError(f'Unsupported variant print block: {self.block_type}')
         object.__setattr__(self, 'options', dict(self.options))
+        object.__setattr__(self, 'content', dict(self.content))
 
 
 @dataclass(frozen=True)
@@ -114,27 +135,61 @@ def build_variant_print_plan_from_snapshot(
     profile: VariantPrintProfile | None = None,
 ) -> VariantPrintPlan:
     profile = profile or VariantPrintProfile()
-    blocks = []
+    ordered_block_groups = []
     for row in content_snapshot.items:
         if not profile.includes_item(row):
             continue
-        blocks.append(
-            _task_print_block(row, profile)
-        )
+        task_blocks = [_task_print_block(row, profile)]
         blank_cells_options = profile.blank_cells_options(row)
         if blank_cells_options:
-            blocks.append(
+            task_blocks.append(
                 VariantPrintBlock(
                     block_type=VARIANT_PRINT_BLOCK_BLANK_CELLS,
                     variant_task_id=row.variant_task_id,
                     task_id=row.task_id,
                     source_selection_id=row.source_selection_id,
                     order=row.order,
+                    content_order=_task_content_order(row),
                     content_role=row.bank_role,
                     options=blank_cells_options,
                 )
             )
-    return VariantPrintPlan(variant_id=content_snapshot.variant_id, blocks=blocks)
+        ordered_block_groups.append(
+            (
+                _task_content_order(row),
+                row.order,
+                task_blocks,
+            )
+        )
+    for block in content_snapshot.content_blocks:
+        if not profile.includes_content_block(block):
+            continue
+        ordered_block_groups.append(
+            (
+                block.order,
+                0,
+                [
+                    VariantPrintBlock(
+                        block_type=block.content_type,
+                        snapshot_id=block.snapshot_id,
+                        source_content_id=block.source_content_id,
+                        order=block.order,
+                        content_order=block.order,
+                        title=block.title,
+                        content=block.content,
+                    ),
+                ],
+            )
+        )
+    ordered_block_groups.sort(key=lambda group: (group[0], group[1]))
+    return VariantPrintPlan(
+        variant_id=content_snapshot.variant_id,
+        blocks=tuple(
+            block
+            for _, _, group in ordered_block_groups
+            for block in group
+        ),
+    )
 
 
 def _task_print_block(
@@ -148,6 +203,7 @@ def _task_print_block(
         task_id=row.task_id,
         source_selection_id=row.source_selection_id,
         order=row.order,
+        content_order=_task_content_order(row),
         content_role=row.bank_role,
         source_render_mode=row.render_mode,
         render_mode=render_mode,
@@ -166,7 +222,14 @@ def build_variant_print_profile_from_options(options) -> VariantPrintProfile:
         hidden_roles=_tuple_option(options.get('hidden_roles')),
         render_modes_by_role=_mapping_option(options.get('role_render_modes')),
         blank_cells_by_role=_mapping_option(options.get('role_blank_cells')),
+        hidden_content_types=_tuple_option(
+            options.get('hidden_content_types'),
+        ),
     )
+
+
+def _task_content_order(row: VariantContentItem) -> int:
+    return row.content_order or row.order
 
 
 def _tuple_option(value) -> Tuple[str, ...]:

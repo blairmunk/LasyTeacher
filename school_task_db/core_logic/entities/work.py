@@ -84,6 +84,17 @@ class WorkDetailSpecGroup:
 
 
 @dataclass(frozen=True)
+class WorkDetailContentBlock:
+    pk: str
+    content_type: str
+    order: int
+    title: str = ''
+    body: str = ''
+    topic_ids: tuple[str, ...] = field(default_factory=tuple)
+    include_subtopics: bool = False
+
+
+@dataclass(frozen=True)
 class WorkDetailSpecPreviewItem:
     wg: WorkDetailSpecGroup
     per_task: int

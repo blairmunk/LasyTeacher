@@ -9,6 +9,7 @@ from core_logic.entities.work import (
     VariantDetailTaskRow,
     VariantDetailVariant,
     WorkDetailAnalogGroup,
+    WorkDetailContentBlock,
     WorkDetailSpecGroup,
     WorkDetailWork,
     WorkListFilters,
@@ -68,12 +69,19 @@ class FakeWork:
 
 
 class FakeWorkRepository:
-    def __init__(self, variants=None, analog_groups=None, spec_preview=None):
+    def __init__(
+        self,
+        variants=None,
+        analog_groups=None,
+        spec_preview=None,
+        content_blocks=None,
+    ):
         self.variants = FakeQuerySet(variants or [])
         self.list_variants = FakeQuerySet()
         self.works = FakeQuerySet()
         self.work_form_analog_group_options = []
         self.analog_groups = analog_groups or []
+        self.content_blocks = content_blocks or []
         self.spec_preview = spec_preview or []
         self.variant_detail_tasks = []
         self.variant_detail = VariantDetailVariant(
@@ -157,6 +165,9 @@ class FakeWorkRepository:
 
     def get_detail_analog_groups(self, work_id):
         return self.analog_groups
+
+    def get_detail_content_blocks(self, work_id):
+        return self.content_blocks
 
     def get_spec_preview(self, work_id):
         return self.spec_preview
@@ -346,6 +357,42 @@ class WorkDetailTests(TestCase):
         self.assertEqual(selection.count, 2)
         self.assertEqual(selection.order, 3)
         self.assertEqual(selection.weight, 4)
+
+    def test_get_work_detail_merges_persistent_content_in_pedagogical_order(self):
+        content_blocks = [
+            WorkDetailContentBlock(
+                pk='content-2',
+                content_type='text',
+                order=20,
+                title='Инструкция',
+                body='Решите самостоятельно.',
+            ),
+            WorkDetailContentBlock(
+                pk='content-1',
+                content_type='theory',
+                order=5,
+                title='Теория',
+                topic_ids=('topic-1', 'topic-2'),
+                include_subtopics=True,
+            ),
+        ]
+        use_case = GetWorkDetailUseCase(
+            work_read_repo=FakeWorkRepository(
+                content_blocks=content_blocks,
+            ),
+            work_service=WorkService(),
+        )
+
+        result = use_case.execute('work-1')
+
+        self.assertEqual(
+            [block.content_type for block in result.content_plan.blocks],
+            ['theory', 'text'],
+        )
+        theory, text = result.content_plan.blocks
+        self.assertEqual(theory.topic_ids, ('topic-1', 'topic-2'))
+        self.assertTrue(theory.include_subtopics)
+        self.assertEqual(text.body, 'Решите самостоятельно.')
 
     def test_get_work_detail_use_case_returns_empty_data_for_missing_work(self):
         repo = FakeWorkRepository()

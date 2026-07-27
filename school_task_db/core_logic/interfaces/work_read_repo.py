@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Any, List, Optional
 
 from core_logic.entities.work import (
+    WorkDetailContentBlock,
     WorkDetailSpecGroup,
     WorkDetailSpecPreviewItem,
     WorkDetailVariant,
@@ -35,6 +36,13 @@ class IWorkReadRepository(ABC):
         work_id: str,
     ) -> List[WorkDetailSpecGroup]:
         """Return work specification read models for the work detail page."""
+
+    @abstractmethod
+    def get_detail_content_blocks(
+        self,
+        work_id: str,
+    ) -> List[WorkDetailContentBlock]:
+        """Return persistent non-task content in pedagogical order."""
 
     @abstractmethod
     def get_spec_preview(

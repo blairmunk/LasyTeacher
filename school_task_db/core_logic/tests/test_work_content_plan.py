@@ -10,6 +10,7 @@ from core_logic.value_objects.work_content_plan import (
     WorkTaskSelectionBlock,
     WorkTextBlock,
     WorkTheoryBlock,
+    build_work_content_plan,
     build_work_content_plan_from_task_rows,
 )
 from core_logic.value_objects.work_specification import (
@@ -92,3 +93,40 @@ class WorkContentPlanTests(TestCase):
         )
         self.assertFalse(block.selection.is_assessable)
         self.assertEqual(block.selection.blank_cells_rows, 8)
+
+    def test_builds_plan_from_persistent_content_rows(self):
+        theory_row = type(
+            'ContentRow',
+            (),
+            {
+                'content_type': 'theory',
+                'order': 10,
+                'title': 'Основные формулы',
+                'body': '',
+                'topic_ids': ('topic-1',),
+                'include_subtopics': True,
+            },
+        )()
+        text_row = type(
+            'ContentRow',
+            (),
+            {
+                'content_type': 'text',
+                'order': 20,
+                'title': 'Инструкция',
+                'body': 'Покажите ход решения.',
+                'topic_ids': (),
+                'include_subtopics': False,
+            },
+        )()
+
+        plan = build_work_content_plan(
+            content_rows=[text_row, theory_row],
+        )
+
+        theory, text = plan.blocks
+        self.assertIsInstance(theory, WorkTheoryBlock)
+        self.assertEqual(theory.topic_ids, ('topic-1',))
+        self.assertTrue(theory.include_subtopics)
+        self.assertIsInstance(text, WorkTextBlock)
+        self.assertEqual(text.body, 'Покажите ход решения.')

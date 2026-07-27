@@ -11,6 +11,10 @@ from core_logic.value_objects.task_print_settings import (
     TASK_RENDER_MODE_CHOICES,
     TASK_RENDER_MODE_TASK_ONLY,
 )
+from core_logic.value_objects.work_content_plan import (
+    WORK_CONTENT_TEXT,
+    WORK_CONTENT_THEORY,
+)
 
 
 class Work(BaseModel):
@@ -102,6 +106,54 @@ class WorkAnalogGroup(BaseModel):
             f"{self.work.name} — #{self.order} {self.analog_group.name} "
             f"(×{self.count}, вес={self.weight})"
         )
+
+
+class WorkContentBlock(BaseModel):
+    """Постоянный содержательный блок в педагогическом плане работы."""
+
+    CONTENT_TYPE_CHOICES = [
+        (WORK_CONTENT_THEORY, 'Теория'),
+        (WORK_CONTENT_TEXT, 'Текст'),
+    ]
+
+    work = models.ForeignKey(
+        Work,
+        on_delete=models.CASCADE,
+        related_name='content_blocks',
+        verbose_name='Работа',
+    )
+    content_type = models.CharField(
+        'Тип содержимого',
+        max_length=20,
+        choices=CONTENT_TYPE_CHOICES,
+    )
+    order = models.PositiveIntegerField('Порядок в работе', default=0)
+    title = models.CharField('Заголовок', max_length=200, blank=True)
+    body = models.TextField(
+        'Текст',
+        blank=True,
+        help_text='Произвольный текст для текстового блока.',
+    )
+    topics = models.ManyToManyField(
+        'curriculum.Topic',
+        blank=True,
+        related_name='work_content_blocks',
+        verbose_name='Темы',
+        help_text='Источники содержания для теоретического блока.',
+    )
+    include_subtopics = models.BooleanField(
+        'Включать подтемы',
+        default=False,
+    )
+
+    class Meta:
+        verbose_name = 'Содержательный блок работы'
+        verbose_name_plural = 'Содержательные блоки работы'
+        ordering = ['order', 'pk']
+
+    def __str__(self):
+        title = self.title or self.get_content_type_display()
+        return f'{self.work.name} — #{self.order} {title}'
 
 
 class Variant(BaseModel):

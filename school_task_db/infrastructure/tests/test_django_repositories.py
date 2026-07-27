@@ -65,7 +65,13 @@ from infrastructure.services.django_transaction_manager import (
 from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Source, Task, TaskImage
-from works.models import Variant, VariantTask, Work, WorkAnalogGroup
+from works.models import (
+    Variant,
+    VariantTask,
+    Work,
+    WorkAnalogGroup,
+    WorkContentBlock,
+)
 from review.models import ReviewComment, ReviewSession
 
 
@@ -1180,6 +1186,14 @@ class DjangoRemedialRepositoryTests(TestCase):
 
     def test_work_repository_returns_detail_page_data(self):
         repo = DjangoWorkRepository()
+        content_block = WorkContentBlock.objects.create(
+            work=self.source_work,
+            content_type='theory',
+            order=2,
+            title='Опорная теория',
+            include_subtopics=True,
+        )
+        content_block.topics.add(self.topic)
 
         work = repo.get_work_detail(str(self.source_work.pk))
         missing_work = repo.get_work_detail(
@@ -1187,6 +1201,9 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
         variants = repo.get_detail_variants(str(self.source_work.pk))
         analog_groups = repo.get_detail_analog_groups(str(self.source_work.pk))
+        content_blocks = repo.get_detail_content_blocks(
+            str(self.source_work.pk),
+        )
         spec_preview = repo.get_spec_preview(str(self.source_work.pk))
 
         self.assertEqual(work.pk, str(self.source_work.pk))
@@ -1195,6 +1212,10 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(len(variants), 1)
         self.assertEqual(variants[0].pk, str(self.source_variant.pk))
         self.assertEqual(analog_groups[0].analog_group.name, self.weak_group.name)
+        self.assertEqual(content_blocks[0].content_type, 'theory')
+        self.assertEqual(content_blocks[0].title, 'Опорная теория')
+        self.assertEqual(content_blocks[0].topic_ids, (str(self.topic.pk),))
+        self.assertTrue(content_blocks[0].include_subtopics)
         self.assertEqual(spec_preview[0].wg.analog_group.name, self.weak_group.name)
         self.assertEqual(spec_preview[0].total_points, 7)
 

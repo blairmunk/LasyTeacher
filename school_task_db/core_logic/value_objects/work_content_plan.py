@@ -117,23 +117,55 @@ class WorkContentPlan:
         )
 
 
-def build_work_content_plan_from_task_rows(rows) -> WorkContentPlan:
+def build_work_content_plan(
+    task_rows=(),
+    content_rows=(),
+) -> WorkContentPlan:
     return WorkContentPlan(
-        blocks=tuple(
-            WorkTaskSelectionBlock(
-                title=row.analog_group.name,
-                selection=WorkTaskSelectionSpec(
-                    analog_group_id=str(row.analog_group.pk),
-                    count=row.count,
-                    order=row.order,
-                    bank_role_filter=row.bank_role_filter,
-                    render_mode=row.render_mode,
-                    is_assessable=row.is_assessable,
-                    blank_cells_after=row.blank_cells_after,
-                    blank_cells_rows=row.blank_cells_rows,
-                    weight=row.weight,
-                ),
+        blocks=(
+            tuple(
+                WorkTaskSelectionBlock(
+                    title=row.analog_group.name,
+                    selection=WorkTaskSelectionSpec(
+                        analog_group_id=str(row.analog_group.pk),
+                        count=row.count,
+                        order=row.order,
+                        bank_role_filter=row.bank_role_filter,
+                        render_mode=row.render_mode,
+                        is_assessable=row.is_assessable,
+                        blank_cells_after=row.blank_cells_after,
+                        blank_cells_rows=row.blank_cells_rows,
+                        weight=row.weight,
+                    ),
+                )
+                for row in task_rows
             )
-            for row in rows
+            + tuple(
+                _persistent_content_block(row)
+                for row in content_rows
+            )
         ),
+    )
+
+
+def build_work_content_plan_from_task_rows(rows) -> WorkContentPlan:
+    return build_work_content_plan(task_rows=rows)
+
+
+def _persistent_content_block(row) -> WorkContentBlock:
+    if row.content_type == WORK_CONTENT_THEORY:
+        return WorkTheoryBlock(
+            order=row.order,
+            title=row.title,
+            topic_ids=tuple(row.topic_ids),
+            include_subtopics=row.include_subtopics,
+        )
+    if row.content_type == WORK_CONTENT_TEXT:
+        return WorkTextBlock(
+            order=row.order,
+            title=row.title,
+            body=row.body,
+        )
+    raise ValueError(
+        f'Unsupported persistent work content: {row.content_type}',
     )

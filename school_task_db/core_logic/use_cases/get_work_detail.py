@@ -14,7 +14,7 @@ from core_logic.value_objects.document_render_options import (
     WORK_DOCUMENT_STYLE_OPTIONS,
 )
 from core_logic.value_objects.work_content_plan import (
-    build_work_content_plan_from_task_rows,
+    build_work_content_plan,
 )
 
 
@@ -36,6 +36,7 @@ class GetWorkDetailUseCase:
 
         variants = self.work_read_repo.get_detail_variants(work_id)
         analog_groups = self.work_read_repo.get_detail_analog_groups(work_id)
+        content_blocks = self.work_read_repo.get_detail_content_blocks(work_id)
         spec_preview = self.work_read_repo.get_spec_preview(work_id)
 
         return WorkDetailData(
@@ -43,8 +44,9 @@ class GetWorkDetailUseCase:
             variants=variants,
             analog_groups=analog_groups,
             spec_preview=spec_preview,
-            content_plan=build_work_content_plan_from_task_rows(
-                analog_groups,
+            content_plan=build_work_content_plan(
+                task_rows=analog_groups,
+                content_rows=content_blocks,
             ),
             work_print_settings=self._print_settings(WORK_DOCUMENT_TYPE),
             remedial_sheet_print_settings=self._print_settings(

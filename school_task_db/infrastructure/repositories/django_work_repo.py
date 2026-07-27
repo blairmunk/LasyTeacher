@@ -28,6 +28,7 @@ from core_logic.entities.work import (
     VariantListStudentRef,
     VariantListWorkRef,
     WorkDetailAnalogGroup,
+    WorkDetailContentBlock,
     WorkDetailSpecGroup,
     WorkDetailSpecPreviewItem,
     WorkDetailVariant,
@@ -82,7 +83,13 @@ from core_logic.services.work_variant_composition_service import (
 from events.models import EventParticipation, Mark
 from task_groups.models import TaskGroup
 from tasks.models import Task
-from works.models import Variant, VariantTask, Work, WorkAnalogGroup
+from works.models import (
+    Variant,
+    VariantTask,
+    Work,
+    WorkAnalogGroup,
+    WorkContentBlock,
+)
 
 
 class DjangoWorkRepository(
@@ -237,6 +244,25 @@ class DjangoWorkRepository(
             ).select_related(
                 'analog_group',
             ).order_by('order', 'pk')
+        ]
+
+    def get_detail_content_blocks(self, work_id: str):
+        return [
+            WorkDetailContentBlock(
+                pk=str(block.pk),
+                content_type=block.content_type,
+                order=block.order,
+                title=block.title,
+                body=block.body,
+                topic_ids=tuple(
+                    str(topic.pk)
+                    for topic in block.topics.all()
+                ),
+                include_subtopics=block.include_subtopics,
+            )
+            for block in WorkContentBlock.objects.filter(
+                work_id=work_id,
+            ).prefetch_related('topics').order_by('order', 'pk')
         ]
 
     def get_spec_preview(self, work_id: str):

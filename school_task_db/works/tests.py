@@ -24,7 +24,13 @@ from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from students.models import Student
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
-from works.models import Variant, VariantTask, Work, WorkAnalogGroup
+from works.models import (
+    Variant,
+    VariantTask,
+    Work,
+    WorkAnalogGroup,
+    WorkContentBlock,
+)
 
 
 class FakeDocumentRenderContainer:
@@ -376,8 +382,17 @@ class WorkDetailViewTests(TestCase):
                 'workanaloggroup_set-MAX_NUM_FORMS': '1000',
                 'workanaloggroup_set-0-analog_group': str(group.pk),
                 'workanaloggroup_set-0-count': '2',
-                'workanaloggroup_set-0-order': '1',
+                'workanaloggroup_set-0-order': '20',
                 'workanaloggroup_set-0-weight': '3',
+                'content_blocks-TOTAL_FORMS': '1',
+                'content_blocks-INITIAL_FORMS': '0',
+                'content_blocks-MIN_NUM_FORMS': '0',
+                'content_blocks-MAX_NUM_FORMS': '1000',
+                'content_blocks-0-content_type': 'theory',
+                'content_blocks-0-order': '10',
+                'content_blocks-0-title': 'Опорная теория',
+                'content_blocks-0-topics': [str(self.topic.pk)],
+                'content_blocks-0-include_subtopics': 'on',
             },
         )
 
@@ -390,8 +405,57 @@ class WorkDetailViewTests(TestCase):
         spec = WorkAnalogGroup.objects.get(work=work)
         self.assertEqual(spec.analog_group, group)
         self.assertEqual(spec.count, 2)
-        self.assertEqual(spec.order, 1)
+        self.assertEqual(spec.order, 20)
         self.assertEqual(spec.weight, 3)
+        content_block = WorkContentBlock.objects.get(work=work)
+        self.assertEqual(content_block.content_type, 'theory')
+        self.assertEqual(content_block.order, 10)
+        self.assertEqual(content_block.title, 'Опорная теория')
+        self.assertEqual(list(content_block.topics.all()), [self.topic])
+        self.assertTrue(content_block.include_subtopics)
+
+    def test_update_form_exposes_existing_content_blocks(self):
+        block = WorkContentBlock.objects.create(
+            work=self.work,
+            content_type='text',
+            order=15,
+            title='Инструкция',
+            body='Покажите ход решения.',
+        )
+
+        response = self.client.get(
+            reverse('works:update', args=[self.work.pk]),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id_content_blocks-TOTAL_FORMS')
+        self.assertContains(response, 'Теория и текст')
+        self.assertContains(response, 'Покажите ход решения.')
+        self.assertEqual(
+            response.context['content_formset'].forms[0].instance,
+            block,
+        )
+
+    def test_detail_shows_persistent_content_plan_blocks(self):
+        WorkContentBlock.objects.create(
+            work=self.work,
+            content_type='text',
+            order=15,
+            title='Самопроверка',
+            body='Проверьте единицы измерения.',
+        )
+
+        response = self.client.get(
+            reverse('works:detail', args=[self.work.pk]),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context['content_blocks'][0].content_type,
+            'text',
+        )
+        self.assertContains(response, 'Самопроверка')
+        self.assertContains(response, 'Проверьте единицы измерения.')
 
     def test_update_view_saves_work_and_specification_formset(self):
         old_group = AnalogGroup.objects.create(name='Старая группа')
@@ -420,6 +484,10 @@ class WorkDetailViewTests(TestCase):
                 'workanaloggroup_set-0-count': '3',
                 'workanaloggroup_set-0-order': '1',
                 'workanaloggroup_set-0-weight': '4',
+                'content_blocks-TOTAL_FORMS': '0',
+                'content_blocks-INITIAL_FORMS': '0',
+                'content_blocks-MIN_NUM_FORMS': '0',
+                'content_blocks-MAX_NUM_FORMS': '1000',
             },
         )
 
@@ -437,6 +505,47 @@ class WorkDetailViewTests(TestCase):
         self.assertEqual(updated_spec.analog_group, new_group)
         self.assertEqual(updated_spec.count, 3)
         self.assertEqual(updated_spec.weight, 4)
+
+    def test_update_rejects_duplicate_content_order_before_changing_work(self):
+        group = AnalogGroup.objects.create(name='Динамика')
+
+        response = self.client.post(
+            reverse('works:update', args=[self.work.pk]),
+            {
+                'name': 'Не должно сохраниться',
+                'work_type': 'quiz',
+                'duration': '30',
+                'max_score': '12',
+                'workanaloggroup_set-TOTAL_FORMS': '1',
+                'workanaloggroup_set-INITIAL_FORMS': '0',
+                'workanaloggroup_set-MIN_NUM_FORMS': '0',
+                'workanaloggroup_set-MAX_NUM_FORMS': '1000',
+                'workanaloggroup_set-0-analog_group': str(group.pk),
+                'workanaloggroup_set-0-count': '1',
+                'workanaloggroup_set-0-order': '10',
+                'workanaloggroup_set-0-weight': '2',
+                'content_blocks-TOTAL_FORMS': '1',
+                'content_blocks-INITIAL_FORMS': '0',
+                'content_blocks-MIN_NUM_FORMS': '0',
+                'content_blocks-MAX_NUM_FORMS': '1000',
+                'content_blocks-0-content_type': 'text',
+                'content_blocks-0-order': '10',
+                'content_blocks-0-title': 'Инструкция',
+                'content_blocks-0-body': 'Решите задачу.',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Порядок блоков должен быть уникальным')
+        self.work.refresh_from_db()
+        self.assertEqual(self.work.name, 'Контрольная')
+        self.assertEqual(self.work.work_type, 'test')
+        self.assertFalse(
+            WorkAnalogGroup.objects.filter(work=self.work).exists(),
+        )
+        self.assertFalse(
+            WorkContentBlock.objects.filter(work=self.work).exists(),
+        )
 
     def test_update_view_returns_404_for_missing_work(self):
         response = self.client.get(

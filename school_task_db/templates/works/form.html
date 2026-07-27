@@ -91,9 +91,11 @@
                                 <!-- Номер -->
                                 <div class="col-auto">
                                     <span class="badge bg-primary fs-6 row-number">{{ forloop.counter }}</span>
-                                    <input type="hidden" name="workanaloggroup_set-{{ forloop.counter0 }}-order"
-                                           id="id_workanaloggroup_set-{{ forloop.counter0 }}-order"
-                                           value="{{ forloop.counter }}" class="order-field">
+                                </div>
+                                <div class="col-auto">
+                                    <label for="{{ f.order.id_for_label }}" class="form-label small text-muted mb-1">Порядок</label>
+                                    {{ f.order }}
+                                    {% if f.order.errors %}<div class="text-danger small">{{ f.order.errors }}</div>{% endif %}
                                 </div>
                                 <!-- Группа аналогов -->
                                 <div class="col">
@@ -170,6 +172,129 @@
                         <strong><i class="fas fa-weight-hanging"></i></strong> — вес (чем больше, тем больше баллов).
                         Неоцениваемые строки печатаются в варианте, но не попадают в проверку и сумму баллов.
                     </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if content_formset %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-align-left"></i> Теория и текст</h5>
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-primary add-content-block" data-content-type="theory">
+                            <i class="fas fa-book-open"></i> Теория
+                        </button>
+                        <button type="button" class="btn btn-outline-primary add-content-block" data-content-type="text">
+                            <i class="fas fa-paragraph"></i> Текст
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {{ content_formset.management_form }}
+                    {% if content_formset.non_form_errors %}
+                    <div class="alert alert-danger">{{ content_formset.non_form_errors }}</div>
+                    {% endif %}
+
+                    <div id="content-block-formset">
+                        {% for f in content_formset %}
+                        <div class="content-formset-row border rounded p-3 mb-2 {% if f.DELETE.value %}d-none{% endif %}">
+                            {% if f.non_field_errors %}
+                            <div class="alert alert-danger py-1">{{ f.non_field_errors }}</div>
+                            {% endif %}
+                            <div class="row gx-2 align-items-end">
+                                <div class="col-md-2">
+                                    <label for="{{ f.order.id_for_label }}" class="form-label small text-muted">Порядок</label>
+                                    {{ f.order }}
+                                    {% if f.order.errors %}<div class="text-danger small">{{ f.order.errors }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="{{ f.content_type.id_for_label }}" class="form-label small text-muted">Тип</label>
+                                    {{ f.content_type }}
+                                </div>
+                                <div class="col">
+                                    <label for="{{ f.title.id_for_label }}" class="form-label small text-muted">Заголовок</label>
+                                    {{ f.title }}
+                                </div>
+                                <div class="col-auto">
+                                    <button type="button" class="btn btn-outline-danger btn-sm remove-content-block" title="Удалить">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <div class="d-none">{{ f.DELETE }}</div>
+                                </div>
+                            </div>
+                            <div class="content-theory-fields mt-3">
+                                <div class="row gx-3">
+                                    <div class="col-md-8">
+                                        <label for="{{ f.topics.id_for_label }}" class="form-label small text-muted">Темы</label>
+                                        {{ f.topics }}
+                                        {% if f.topics.errors %}<div class="text-danger small">{{ f.topics.errors }}</div>{% endif %}
+                                    </div>
+                                    <div class="col-md-4 d-flex align-items-end">
+                                        <div class="form-check mb-2">
+                                            {{ f.include_subtopics }}
+                                            <label for="{{ f.include_subtopics.id_for_label }}" class="form-check-label">Включить подтемы</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="content-text-fields mt-3">
+                                <label for="{{ f.body.id_for_label }}" class="form-label small text-muted">Текст</label>
+                                {{ f.body }}
+                                {% if f.body.errors %}<div class="text-danger small">{{ f.body.errors }}</div>{% endif %}
+                            </div>
+                            {{ f.id }}
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div id="content-block-empty" class="text-center text-muted py-3 {% if content_formset.forms %}d-none{% endif %}">
+                        <i class="fas fa-file-alt fa-2x mb-2"></i>
+                        <p class="mb-0">Нет теоретических или текстовых блоков.</p>
+                    </div>
+
+                    <template id="content-block-empty-template">
+                        <div class="content-formset-row border rounded p-3 mb-2">
+                            <div class="row gx-2 align-items-end">
+                                <div class="col-md-2">
+                                    <label for="{{ content_formset.empty_form.order.id_for_label }}" class="form-label small text-muted">Порядок</label>
+                                    {{ content_formset.empty_form.order }}
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="{{ content_formset.empty_form.content_type.id_for_label }}" class="form-label small text-muted">Тип</label>
+                                    {{ content_formset.empty_form.content_type }}
+                                </div>
+                                <div class="col">
+                                    <label for="{{ content_formset.empty_form.title.id_for_label }}" class="form-label small text-muted">Заголовок</label>
+                                    {{ content_formset.empty_form.title }}
+                                </div>
+                                <div class="col-auto">
+                                    <button type="button" class="btn btn-outline-danger btn-sm remove-content-block" title="Удалить">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <div class="d-none">{{ content_formset.empty_form.DELETE }}</div>
+                                </div>
+                            </div>
+                            <div class="content-theory-fields mt-3">
+                                <div class="row gx-3">
+                                    <div class="col-md-8">
+                                        <label for="{{ content_formset.empty_form.topics.id_for_label }}" class="form-label small text-muted">Темы</label>
+                                        {{ content_formset.empty_form.topics }}
+                                    </div>
+                                    <div class="col-md-4 d-flex align-items-end">
+                                        <div class="form-check mb-2">
+                                            {{ content_formset.empty_form.include_subtopics }}
+                                            <label for="{{ content_formset.empty_form.include_subtopics.id_for_label }}" class="form-check-label">Включить подтемы</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="content-text-fields mt-3">
+                                <label for="{{ content_formset.empty_form.body.id_for_label }}" class="form-label small text-muted">Текст</label>
+                                {{ content_formset.empty_form.body }}
+                            </div>
+                            {{ content_formset.empty_form.id }}
+                        </div>
+                    </template>
                 </div>
             </div>
             {% endif %}
@@ -328,7 +453,9 @@
             const badge = row.querySelector('.row-number');
             const orderField = row.querySelector('.order-field');
             if (badge) badge.textContent = num;
-            if (orderField) orderField.value = num;
+            if (orderField && orderField.value === '') {
+                orderField.value = num * 10;
+            }
         });
         updateArrowStates();
         updateEmptyMessage();
@@ -352,6 +479,13 @@
         let prev = row.previousElementSibling;
         while (prev && prev.classList.contains('d-none')) prev = prev.previousElementSibling;
         if (prev && prev.classList.contains('formset-row')) {
+            const rowOrder = row.querySelector('.order-field');
+            const prevOrder = prev.querySelector('.order-field');
+            if (rowOrder && prevOrder) {
+                const value = rowOrder.value;
+                rowOrder.value = prevOrder.value;
+                prevOrder.value = value;
+            }
             const rowH = row.offsetHeight + 8;
             row.style.transition = 'transform 0.2s'; prev.style.transition = 'transform 0.2s';
             row.style.transform = 'translateY(-' + rowH + 'px)'; prev.style.transform = 'translateY(' + rowH + 'px)';
@@ -366,6 +500,13 @@
         let next = row.nextElementSibling;
         while (next && next.classList.contains('d-none')) next = next.nextElementSibling;
         if (next && next.classList.contains('formset-row')) {
+            const rowOrder = row.querySelector('.order-field');
+            const nextOrder = next.querySelector('.order-field');
+            if (rowOrder && nextOrder) {
+                const value = rowOrder.value;
+                rowOrder.value = nextOrder.value;
+                nextOrder.value = value;
+            }
             const rowH = row.offsetHeight + 8;
             row.style.transition = 'transform 0.2s'; next.style.transition = 'transform 0.2s';
             row.style.transform = 'translateY(' + rowH + 'px)'; next.style.transform = 'translateY(-' + rowH + 'px)';
@@ -400,6 +541,14 @@
     addBtn.addEventListener('click', function() {
         const idx = parseInt(totalForms.value);
         const prefix = 'workanaloggroup_set-' + idx;
+        const existingOrders = Array.from(
+            document.querySelectorAll(
+                '.order-field, .content-order-field'
+            )
+        ).map(function(field) {
+            return parseInt(field.value) || 0;
+        });
+        const nextOrder = Math.max(0, ...existingOrders) + 10;
 
         const rowHtml = `
         <div class="formset-row border rounded p-3 mb-2" data-index="${idx}">
@@ -412,7 +561,11 @@
                 </div>
                 <div class="col-auto">
                     <span class="badge bg-primary fs-6 row-number">${idx + 1}</span>
-                    <input type="hidden" name="${prefix}-order" id="id_${prefix}-order" value="${idx + 1}" class="order-field">
+                </div>
+                <div class="col-auto">
+                    <label for="id_${prefix}-order" class="form-label small text-muted mb-1">Порядок</label>
+                    <input type="number" name="${prefix}-order" id="id_${prefix}-order"
+                           value="${nextOrder}" min="0" class="form-control order-field" style="width: 80px">
                 </div>
                 <div class="col">
                     <select name="${prefix}-analog_group" id="id_${prefix}-analog_group" class="form-select">
@@ -481,6 +634,83 @@
     // Инициализация
     renumberRows();
     updatePointsPreview();
+})();
+
+(function() {
+    const container = document.getElementById('content-block-formset');
+    const template = document.getElementById('content-block-empty-template');
+    const totalForms = document.getElementById('id_content_blocks-TOTAL_FORMS');
+    const emptyMessage = document.getElementById('content-block-empty');
+    const addButtons = document.querySelectorAll('.add-content-block');
+    if (!container || !template || !totalForms) return;
+
+    function updateEmptyMessage() {
+        const visibleRows = container.querySelectorAll(
+            '.content-formset-row:not(.d-none)'
+        );
+        if (emptyMessage) {
+            emptyMessage.classList.toggle('d-none', visibleRows.length > 0);
+        }
+    }
+
+    function updateRowMode(row) {
+        const typeField = row.querySelector('.content-type-field');
+        const theoryFields = row.querySelector('.content-theory-fields');
+        const textFields = row.querySelector('.content-text-fields');
+        const isTheory = typeField && typeField.value === 'theory';
+        if (theoryFields) theoryFields.classList.toggle('d-none', !isTheory);
+        if (textFields) textFields.classList.toggle('d-none', isTheory);
+    }
+
+    function nextOrder() {
+        const values = Array.from(
+            document.querySelectorAll(
+                '.order-field, .content-order-field'
+            )
+        ).map(function(field) {
+            return parseInt(field.value) || 0;
+        });
+        return Math.max(0, ...values) + 10;
+    }
+
+    addButtons.forEach(function(button) {
+        button.addEventListener('click', function() {
+            const index = parseInt(totalForms.value);
+            const html = template.innerHTML.replaceAll('__prefix__', index);
+            container.insertAdjacentHTML('beforeend', html);
+            totalForms.value = index + 1;
+            const row = container.lastElementChild;
+            const typeField = row.querySelector('.content-type-field');
+            const orderField = row.querySelector('.content-order-field');
+            if (typeField) typeField.value = button.dataset.contentType;
+            if (orderField) orderField.value = nextOrder();
+            updateRowMode(row);
+            updateEmptyMessage();
+        });
+    });
+
+    container.addEventListener('change', function(event) {
+        if (event.target.classList.contains('content-type-field')) {
+            updateRowMode(event.target.closest('.content-formset-row'));
+        }
+    });
+
+    container.addEventListener('click', function(event) {
+        const button = event.target.closest('.remove-content-block');
+        if (!button) return;
+        const row = button.closest('.content-formset-row');
+        const deleteField = row.querySelector('input[name$="-DELETE"]');
+        if (deleteField) {
+            deleteField.checked = true;
+            row.classList.add('d-none');
+        } else {
+            row.remove();
+        }
+        updateEmptyMessage();
+    });
+
+    container.querySelectorAll('.content-formset-row').forEach(updateRowMode);
+    updateEmptyMessage();
 })();
 </script>
 {% endblock %}

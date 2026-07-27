@@ -62,6 +62,7 @@ from core_logic.interfaces.work_repo import (
     CreateWorkWithVariantsParams,
     CreateWorkWithVariantFromTasksParams,
     IWorkRepository,
+    WorkContentBlockParams,
     WorkTaskSelectionParams,
 )
 from core_logic.interfaces.work_read_repo import IWorkReadRepository
@@ -1047,6 +1048,10 @@ class DjangoWorkRepository(
                 )
                 for spec in params.specs
             ])
+            self._create_work_content_blocks(
+                str(work.pk),
+                params.content_blocks,
+            )
         return str(work.pk)
 
     def create_work_with_variants(
@@ -1104,6 +1109,53 @@ class DjangoWorkRepository(
                 for spec in specs
             ])
         return True
+
+    def replace_work_content_plan(
+        self,
+        work_id: str,
+        specs: List[WorkTaskSelectionParams],
+        content_blocks: List[WorkContentBlockParams],
+    ) -> bool:
+        if not Work.objects.filter(pk=work_id).exists():
+            return False
+
+        with transaction.atomic():
+            WorkAnalogGroup.objects.filter(work_id=work_id).delete()
+            WorkContentBlock.objects.filter(work_id=work_id).delete()
+            WorkAnalogGroup.objects.bulk_create([
+                WorkAnalogGroup(
+                    work_id=work_id,
+                    analog_group_id=spec.analog_group_id,
+                    order=spec.order,
+                    count=spec.count,
+                    weight=spec.weight,
+                    bank_role_filter=spec.bank_role_filter,
+                    render_mode=spec.render_mode,
+                    is_assessable=spec.is_assessable,
+                    blank_cells_after=spec.blank_cells_after,
+                    blank_cells_rows=spec.blank_cells_rows,
+                )
+                for spec in specs
+            ])
+            self._create_work_content_blocks(work_id, content_blocks)
+        return True
+
+    @staticmethod
+    def _create_work_content_blocks(
+        work_id: str,
+        content_blocks: List[WorkContentBlockParams],
+    ):
+        for params in content_blocks:
+            block = WorkContentBlock.objects.create(
+                work_id=work_id,
+                content_type=params.content_type,
+                order=params.order,
+                title=params.title,
+                body=params.body,
+                include_subtopics=params.include_subtopics,
+            )
+            if params.topic_ids:
+                block.topics.set(params.topic_ids)
 
     def create_variant_with_tasks(self, params: CreateVariantParams) -> str:
         with transaction.atomic():

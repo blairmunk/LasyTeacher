@@ -1,7 +1,7 @@
 """Work repository interface."""
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Optional
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
@@ -47,9 +47,22 @@ class WorkTaskSelectionParams:
 
 
 @dataclass(frozen=True)
+class WorkContentBlockParams:
+    content_type: str
+    order: int
+    title: str = ''
+    body: str = ''
+    topic_ids: List[str] = field(default_factory=list)
+    include_subtopics: bool = False
+
+
+@dataclass(frozen=True)
 class CreateWorkWithSpecificationParams:
     work: CreateWorkParams
     specs: List[WorkTaskSelectionParams]
+    content_blocks: List[WorkContentBlockParams] = field(
+        default_factory=list,
+    )
 
 
 @dataclass(frozen=True)
@@ -119,6 +132,15 @@ class IWorkRepository(ABC):
         specs: List[WorkTaskSelectionParams],
     ) -> bool:
         """Replace a work specification and return whether the work was found."""
+
+    @abstractmethod
+    def replace_work_content_plan(
+        self,
+        work_id: str,
+        specs: List[WorkTaskSelectionParams],
+        content_blocks: List[WorkContentBlockParams],
+    ) -> bool:
+        """Replace all persistent work content atomically."""
 
     @abstractmethod
     def create_variant_with_tasks(self, params: CreateVariantParams) -> str:

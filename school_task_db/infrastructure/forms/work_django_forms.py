@@ -6,7 +6,7 @@ from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_ANY,
     TASK_RENDER_MODE_TASK_ONLY,
 )
-from works.models import Work, WorkAnalogGroup
+from works.models import Work, WorkAnalogGroup, WorkContentBlock
 
 
 class WorkForm(forms.ModelForm):
@@ -44,7 +44,9 @@ class WorkAnalogGroupForm(forms.ModelForm):
                 'class': 'form-control', 'min': 1, 'style': 'width: 80px',
             }),
             'order': forms.NumberInput(attrs={
-                'class': 'form-control', 'min': 0, 'style': 'width: 80px',
+                'class': 'form-control order-field',
+                'min': 0,
+                'style': 'width: 80px',
             }),
             'weight': forms.NumberInput(attrs={
                 'class': 'form-control', 'min': 1, 'style': 'width: 70px',
@@ -82,6 +84,75 @@ WorkAnalogGroupFormSet = inlineformset_factory(
     Work,
     WorkAnalogGroup,
     form=WorkAnalogGroupForm,
+    extra=0,
+    can_delete=True,
+)
+
+
+class WorkContentBlockForm(forms.ModelForm):
+    class Meta:
+        model = WorkContentBlock
+        fields = [
+            'content_type',
+            'order',
+            'title',
+            'body',
+            'topics',
+            'include_subtopics',
+        ]
+        widgets = {
+            'content_type': forms.Select(
+                attrs={'class': 'form-select content-type-field'},
+            ),
+            'order': forms.NumberInput(
+                attrs={
+                    'class': 'form-control content-order-field',
+                    'min': 0,
+                },
+            ),
+            'title': forms.TextInput(
+                attrs={'class': 'form-control'},
+            ),
+            'body': forms.Textarea(
+                attrs={'class': 'form-control', 'rows': 3},
+            ),
+            'topics': forms.SelectMultiple(
+                attrs={
+                    'class': 'form-select',
+                    'size': 5,
+                },
+            ),
+            'include_subtopics': forms.CheckboxInput(
+                attrs={'class': 'form-check-input'},
+            ),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        content_type = cleaned_data.get('content_type')
+        if (
+            content_type == 'theory'
+            and not cleaned_data.get('topics')
+        ):
+            self.add_error(
+                'topics',
+                'Выберите хотя бы одну тему.',
+            )
+        if (
+            content_type == 'text'
+            and not (cleaned_data.get('body') or '').strip()
+        ):
+            self.add_error(
+                'body',
+                'Введите текст блока.',
+            )
+        return cleaned_data
+
+
+WorkContentBlockFormSet = inlineformset_factory(
+    Work,
+    WorkContentBlock,
+    form=WorkContentBlockForm,
     extra=0,
     can_delete=True,
 )

@@ -121,6 +121,11 @@ class PrintSettingsFormAdapter:
                         if section.section_type == TASK_LIST_SECTION
                         else ()
                     ),
+                    'task_list_content_controls': (
+                        self._task_list_content_controls(form)
+                        if section.section_type == TASK_LIST_SECTION
+                        else ()
+                    ),
                     'has_theory_controls': (
                         section.section_type == THEORY_SECTION
                     ),
@@ -213,6 +218,19 @@ class PrintSettingsFormAdapter:
                 ],
             }
             for role, label in TASK_BANK_ROLE_SPECIFIC_CHOICES
+        ]
+
+    @staticmethod
+    def _task_list_content_controls(form):
+        return [
+            {
+                'label': form.fields['task_list_theory_visible'].label,
+                'visible': form['task_list_theory_visible'],
+            },
+            {
+                'label': form.fields['task_list_text_visible'].label,
+                'visible': form['task_list_text_visible'],
+            },
         ]
 
     def _print_profile_context(self, print_profile):

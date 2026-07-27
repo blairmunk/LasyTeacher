@@ -595,6 +595,50 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
             '',
         )
 
+    def test_task_list_content_visibility_uses_saved_options(self):
+        form = self._template_form(
+            initial={
+                'sections': [TASK_LIST_SECTION],
+                'section_options': {
+                    TASK_LIST_SECTION: {
+                        'hidden_content_types': ['theory'],
+                    },
+                },
+            },
+        )
+
+        self.assertFalse(form['task_list_theory_visible'].value())
+        self.assertTrue(form['task_list_text_visible'].value())
+
+    def test_task_list_content_visibility_builds_hidden_types(self):
+        data = QueryDict('', mutable=True)
+        data.update(
+            {
+                'name': 'Шаблон',
+                'document_type': 'work',
+                'task_list_structured_options': '1',
+                'task_list_content_visibility_options': '1',
+                'task_list_text_visible': 'on',
+                'task_list_demo_visible': 'on',
+                'task_list_practice_visible': 'on',
+                'task_list_control_visible': 'on',
+                'task_list_remedial_visible': 'on',
+            }
+        )
+        data.setlist('sections', [TASK_LIST_SECTION])
+        form = self._template_form(data=data)
+        self.assertTrue(form.is_valid(), form.errors)
+
+        params = (
+            PrintSettingsFormAdapter()
+            .create_print_settings_params_from_form(form)
+        )
+
+        self.assertEqual(
+            params.sections[0].options,
+            {'hidden_content_types': ['theory']},
+        )
+
     def test_task_list_role_controls_omit_default_options(self):
         data = QueryDict('', mutable=True)
         data.update(
@@ -1984,6 +2028,12 @@ class WorkFormAdapterTests(SimpleTestCase):
             remedial_sheet_print_settings=['remedial-template-1'],
             work_document_style_options=['style-1'],
             show_sync_button=True,
+            content_plan=SimpleNamespace(
+                blocks=[
+                    SimpleNamespace(content_type='theory'),
+                    SimpleNamespace(content_type='task_selection'),
+                ],
+            ),
         )
 
         detail_context = adapter.work_detail_context(detail)
@@ -2001,6 +2051,10 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertEqual(detail_context['analog_groups'], ['group-1'])
         self.assertEqual(detail_context['spec_preview'], ['spec-1'])
         self.assertEqual(
+            [block.content_type for block in detail_context['content_blocks']],
+            ['theory'],
+        )
+        self.assertEqual(
             detail_context['work_print_settings'],
             ['work-template-1'],
         )
@@ -2011,6 +2065,7 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertTrue(detail_context['show_sync_button'])
         self.assertEqual(create_context['form'], form)
         self.assertEqual(create_context['formset'], formset)
+        self.assertIsNone(create_context['content_formset'])
         self.assertEqual(create_context['analog_group_options'], ['group-option-1'])
         self.assertEqual(update_context['object'], work)
         self.assertEqual(update_context['form'], form)
@@ -2148,6 +2203,45 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertFalse(specs[0].is_assessable)
         self.assertTrue(specs[0].blank_cells_after)
         self.assertEqual(specs[0].blank_cells_rows, 8)
+
+    def test_builds_work_content_blocks_from_formset(self):
+        first_topic = SimpleNamespace(pk='topic-1')
+        second_topic = SimpleNamespace(pk='topic-2')
+        formset = SimpleNamespace(
+            cleaned_data=[
+                {
+                    'content_type': 'theory',
+                    'order': 10,
+                    'title': '  Опорная теория  ',
+                    'topics': [first_topic, second_topic],
+                    'include_subtopics': True,
+                },
+                {
+                    'content_type': 'text',
+                    'order': 30,
+                    'title': '  Инструкция  ',
+                    'body': '  Покажите ход решения.  ',
+                },
+                {'DELETE': True, 'content_type': 'text'},
+                {},
+            ],
+        )
+
+        blocks = WorkFormAdapter().work_content_blocks_from_formset(
+            formset,
+        )
+
+        self.assertEqual(len(blocks), 2)
+        self.assertEqual(blocks[0].content_type, 'theory')
+        self.assertEqual(blocks[0].order, 10)
+        self.assertEqual(blocks[0].title, 'Опорная теория')
+        self.assertEqual(
+            blocks[0].topic_ids,
+            ['topic-1', 'topic-2'],
+        )
+        self.assertTrue(blocks[0].include_subtopics)
+        self.assertEqual(blocks[1].content_type, 'text')
+        self.assertEqual(blocks[1].body, 'Покажите ход решения.')
 
     def test_reads_document_renderer_type_from_post(self):
         adapter = WorkFormAdapter()

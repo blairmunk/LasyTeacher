@@ -20,6 +20,7 @@ from core_logic.interfaces.work_repo import (
     CreateWorkWithVariantsParams,
     CreateWorkWithVariantFromTasksParams,
     NewWorkVariantParams,
+    WorkContentBlockParams,
     WorkTaskSelectionParams,
 )
 from core_logic.entities.task import (
@@ -540,6 +541,13 @@ class DjangoRemedialRepositoryTests(TestCase):
 
     def test_work_repository_creates_work_with_specification(self):
         group = AnalogGroup.objects.create(name='Спецификация новой работы')
+        topic = Topic.objects.create(
+            name='Энергия',
+            subject='Физика',
+            section='Механика',
+            grade_level=8,
+            description='Энергия характеризует способность совершать работу.',
+        )
 
         work_id = DjangoWorkRepository().create_work_with_specification(
             CreateWorkWithSpecificationParams(
@@ -557,6 +565,20 @@ class DjangoRemedialRepositoryTests(TestCase):
                         weight=3,
                     ),
                 ],
+                content_blocks=[
+                    WorkContentBlockParams(
+                        content_type='theory',
+                        order=10,
+                        title='Теория',
+                        topic_ids=[str(topic.pk)],
+                    ),
+                    WorkContentBlockParams(
+                        content_type='text',
+                        order=30,
+                        title='Инструкция',
+                        body='Покажите вычисления.',
+                    ),
+                ],
             )
         )
 
@@ -568,6 +590,68 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(spec.analog_group, group)
         self.assertEqual(spec.count, 2)
         self.assertEqual(spec.weight, 3)
+        content_blocks = list(work.content_blocks.order_by('order'))
+        self.assertEqual(
+            [block.content_type for block in content_blocks],
+            ['theory', 'text'],
+        )
+        self.assertEqual(
+            list(content_blocks[0].topics.values_list('pk', flat=True)),
+            [topic.pk],
+        )
+        self.assertEqual(content_blocks[1].body, 'Покажите вычисления.')
+
+    def test_work_repository_replaces_complete_content_plan(self):
+        old_group = AnalogGroup.objects.create(name='Старая механика')
+        new_group = AnalogGroup.objects.create(name='Новая механика')
+        topic = Topic.objects.create(
+            name='Работа',
+            subject='Физика',
+            section='Механика',
+            grade_level=8,
+        )
+        WorkAnalogGroup.objects.create(
+            work=self.source_work,
+            analog_group=old_group,
+            order=10,
+        )
+        WorkContentBlock.objects.create(
+            work=self.source_work,
+            content_type='text',
+            order=20,
+            body='Старый текст',
+        )
+
+        updated = DjangoWorkRepository().replace_work_content_plan(
+            work_id=str(self.source_work.pk),
+            specs=[
+                WorkTaskSelectionParams(
+                    analog_group_id=str(new_group.pk),
+                    order=20,
+                    count=2,
+                    weight=3,
+                ),
+            ],
+            content_blocks=[
+                WorkContentBlockParams(
+                    content_type='theory',
+                    order=10,
+                    title='Новая теория',
+                    topic_ids=[str(topic.pk)],
+                    include_subtopics=True,
+                ),
+            ],
+        )
+
+        self.assertTrue(updated)
+        spec = WorkAnalogGroup.objects.get(work=self.source_work)
+        block = WorkContentBlock.objects.get(work=self.source_work)
+        self.assertEqual(spec.analog_group, new_group)
+        self.assertEqual(spec.order, 20)
+        self.assertEqual(block.content_type, 'theory')
+        self.assertEqual(block.title, 'Новая теория')
+        self.assertEqual(list(block.topics.all()), [topic])
+        self.assertTrue(block.include_subtopics)
 
     def test_student_repository_creates_and_updates_student(self):
         repo = DjangoStudentRepository()

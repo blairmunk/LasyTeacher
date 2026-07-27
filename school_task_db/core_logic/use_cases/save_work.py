@@ -1,13 +1,18 @@
 """Create and update works."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List
 
 from core_logic.interfaces.work_repo import (
     CreateWorkParams,
     CreateWorkWithSpecificationParams,
     IWorkRepository,
+    WorkContentBlockParams,
     WorkTaskSelectionParams,
+)
+from core_logic.value_objects.work_content_plan import (
+    WORK_CONTENT_TEXT,
+    WORK_CONTENT_THEORY,
 )
 from core_logic.value_objects.work_specification import WorkTaskSelectionSpec
 
@@ -23,6 +28,9 @@ class SaveWorkResult:
 class SaveWorkSpecificationRequest:
     work_id: str
     specs: List[WorkTaskSelectionParams]
+    content_blocks: List[WorkContentBlockParams] = field(
+        default_factory=list,
+    )
 
 
 @dataclass(frozen=True)
@@ -40,7 +48,10 @@ class CreateWorkWithSpecificationUseCase:
         self,
         params: CreateWorkWithSpecificationParams,
     ) -> SaveWorkResult:
-        errors = validate_work_specification_specs(params.specs)
+        errors = validate_work_content_plan(
+            params.specs,
+            params.content_blocks,
+        )
         if errors:
             return SaveWorkResult(status='invalid', errors=errors)
 
@@ -82,6 +93,66 @@ def validate_work_specification_specs(
     return tuple(errors)
 
 
+def validate_work_content_blocks(
+    content_blocks: List[WorkContentBlockParams],
+) -> tuple[str, ...]:
+    errors = []
+    for index, block in enumerate(content_blocks, start=1):
+        if block.content_type not in (
+            WORK_CONTENT_THEORY,
+            WORK_CONTENT_TEXT,
+        ):
+            errors.append(
+                f'Содержательный блок {index}: unsupported content type',
+            )
+            continue
+        if block.order < 0:
+            errors.append(
+                f'Содержательный блок {index}: order must be non-negative',
+            )
+        if (
+            block.content_type == WORK_CONTENT_THEORY
+            and not block.topic_ids
+        ):
+            errors.append(
+                f'Содержательный блок {index}: theory topics are required',
+            )
+        if (
+            block.content_type == WORK_CONTENT_TEXT
+            and not block.body.strip()
+        ):
+            errors.append(
+                f'Содержательный блок {index}: text body is required',
+            )
+    return tuple(errors)
+
+
+def validate_work_content_plan(
+    specs: List[WorkTaskSelectionParams],
+    content_blocks: List[WorkContentBlockParams],
+) -> tuple[str, ...]:
+    errors = list(validate_work_specification_specs(specs))
+    errors.extend(validate_work_content_blocks(content_blocks))
+    orders = [
+        spec.order
+        for spec in specs
+    ] + [
+        block.order
+        for block in content_blocks
+    ]
+    duplicate_orders = sorted({
+        order
+        for order in orders
+        if orders.count(order) > 1
+    })
+    if duplicate_orders:
+        errors.append(
+            'Порядок блоков должен быть уникальным: '
+            + ', '.join(str(order) for order in duplicate_orders),
+        )
+    return tuple(errors)
+
+
 class SaveWorkSpecificationUseCase:
     def __init__(self, work_repo: IWorkRepository):
         self.work_repo = work_repo
@@ -90,21 +161,28 @@ class SaveWorkSpecificationUseCase:
         self,
         request: SaveWorkSpecificationRequest,
     ) -> SaveWorkSpecificationResult:
-        errors = validate_work_specification_specs(request.specs)
+        errors = validate_work_content_plan(
+            request.specs,
+            request.content_blocks,
+        )
         if errors:
             return SaveWorkSpecificationResult(
                 status='invalid',
                 errors=errors,
             )
 
-        updated = self.work_repo.replace_work_analog_groups(
+        updated = self.work_repo.replace_work_content_plan(
             work_id=request.work_id,
             specs=request.specs,
+            content_blocks=request.content_blocks,
         )
         if not updated:
             return SaveWorkSpecificationResult(status='not_found')
 
         return SaveWorkSpecificationResult(
             status='saved',
-            saved_count=len(request.specs),
+            saved_count=(
+                len(request.specs)
+                + len(request.content_blocks)
+            ),
         )

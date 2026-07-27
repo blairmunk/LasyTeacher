@@ -102,6 +102,17 @@
                             {% endif %}
                             {% if section.task_list_role_controls %}
                             <input type="hidden" name="task_list_structured_options" value="1">
+                            <input type="hidden" name="task_list_content_visibility_options" value="1">
+                            <div class="d-flex flex-wrap gap-4 mt-3 mb-2">
+                                {% for content_control in section.task_list_content_controls %}
+                                <div class="form-check">
+                                    {{ content_control.visible }}
+                                    <label class="form-check-label" for="{{ content_control.visible.id_for_label }}">
+                                        {{ content_control.label }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
                             <div class="table-responsive mt-2">
                                 <table class="table table-sm align-middle mb-0">
                                     <thead>

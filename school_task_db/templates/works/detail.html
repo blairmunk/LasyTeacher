@@ -122,6 +122,7 @@
                         </tfoot>
                     </table>
                     {% else %}
+                    {% if not content_blocks %}
                     <div class="p-4 text-center">
                         <div class="text-muted mb-3">
                             <i class="fas fa-inbox fa-3x"></i>
@@ -143,6 +144,36 @@
                             <i class="fas fa-plus"></i> Добавить группы заданий
                         </a>
                         {% endif %}
+                    </div>
+                    {% endif %}
+                    {% endif %}
+
+                    {% if content_blocks %}
+                    <div class="{% if analog_groups %}border-top{% endif %}">
+                        <div class="px-3 py-2 bg-light fw-semibold">
+                            Теория и текст
+                        </div>
+                        {% for block in content_blocks %}
+                        <div class="d-flex align-items-start gap-3 px-3 py-3 border-top">
+                            <span class="badge bg-secondary">{{ block.order }}</span>
+                            <span class="badge {% if block.content_type == 'theory' %}bg-info text-dark{% else %}bg-light text-dark border{% endif %}">
+                                {% if block.content_type == 'theory' %}Теория{% else %}Текст{% endif %}
+                            </span>
+                            <div>
+                                <div class="fw-semibold">
+                                    {{ block.title|default:"Без заголовка" }}
+                                </div>
+                                {% if block.content_type == 'theory' %}
+                                <small class="text-muted">
+                                    Тем: {{ block.topic_ids|length }}
+                                    {% if block.include_subtopics %} · с подтемами{% endif %}
+                                </small>
+                                {% else %}
+                                <small class="text-muted">{{ block.body|truncatechars:140 }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
                     {% endif %}
                 </div>

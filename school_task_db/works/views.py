@@ -65,6 +65,11 @@ class WorkCreateView(TemplateView):
                 kwargs.get('formset')
                 or container.work_form_adapter.build_analog_group_formset(),
                 form_data,
+                content_formset=(
+                    kwargs.get('content_formset')
+                    or container.work_form_adapter
+                    .build_content_block_formset()
+                ),
             )
         )
         return context
@@ -74,9 +79,22 @@ class WorkCreateView(TemplateView):
         formset = container.work_form_adapter.build_analog_group_formset(
             data=request.POST,
         )
-        if not form.is_valid() or not formset.is_valid():
+        content_formset = (
+            container.work_form_adapter.build_content_block_formset(
+                data=request.POST,
+            )
+        )
+        if (
+            not form.is_valid()
+            or not formset.is_valid()
+            or not content_formset.is_valid()
+        ):
             return self.render_to_response(
-                self.get_context_data(form=form, formset=formset),
+                self.get_context_data(
+                    form=form,
+                    formset=formset,
+                    content_formset=content_formset,
+                ),
             )
 
         specs = container.work_form_adapter.work_specs_from_formset(
@@ -86,12 +104,20 @@ class WorkCreateView(TemplateView):
             CreateWorkWithSpecificationParams(
                 work=container.work_form_adapter.work_params_from_form(form),
                 specs=specs,
+                content_blocks=(
+                    container.work_form_adapter
+                    .work_content_blocks_from_formset(content_formset)
+                ),
             )
         )
         if result.status == 'invalid':
             messages.error(request, '; '.join(result.errors))
             return self.render_to_response(
-                self.get_context_data(form=form, formset=formset),
+                self.get_context_data(
+                    form=form,
+                    formset=formset,
+                    content_formset=content_formset,
+                ),
             )
         messages.success(request, 'Работа успешно создана!')
         return redirect('works:detail', pk=result.work_id)
@@ -119,6 +145,12 @@ class WorkUpdateView(TemplateView):
                 work_id=str(work.pk),
             )
         )
+        content_formset = (
+            kwargs.get('content_formset')
+            or container.work_form_adapter.build_content_block_formset(
+                work_id=str(work.pk),
+            )
+        )
         form_data = container.get_work_form_data_use_case().execute()
         context.update(
             container.work_form_adapter.work_update_context(
@@ -126,6 +158,7 @@ class WorkUpdateView(TemplateView):
                 form,
                 formset,
                 form_data,
+                content_formset=content_formset,
             )
         )
         return context
@@ -137,14 +170,51 @@ class WorkUpdateView(TemplateView):
             data=request.POST,
             work_id=str(work.pk),
         )
-        if not form.is_valid() or not formset.is_valid():
+        content_formset = (
+            container.work_form_adapter.build_content_block_formset(
+                data=request.POST,
+                work_id=str(work.pk),
+            )
+        )
+        if (
+            not form.is_valid()
+            or not formset.is_valid()
+            or not content_formset.is_valid()
+        ):
             return self.render_to_response(
                 self.get_context_data(
                     form=form,
                     formset=formset,
+                    content_formset=content_formset,
                     object=work,
                 ),
             )
+
+        specs = container.work_form_adapter.work_specs_from_formset(
+            formset,
+        )
+        specification_result = container.save_work_specification_use_case().execute(
+            SaveWorkSpecificationRequest(
+                work_id=str(work.pk),
+                specs=specs,
+                content_blocks=(
+                    container.work_form_adapter
+                    .work_content_blocks_from_formset(content_formset)
+                ),
+            )
+        )
+        if specification_result.status == 'invalid':
+            messages.error(request, '; '.join(specification_result.errors))
+            return self.render_to_response(
+                self.get_context_data(
+                    form=form,
+                    formset=formset,
+                    content_formset=content_formset,
+                    object=work,
+                ),
+            )
+        if specification_result.status == 'not_found':
+            raise Http404('Работа не найдена')
 
         result = container.update_work_use_case().execute(
             container.work_form_adapter.work_params_from_form(
@@ -154,25 +224,6 @@ class WorkUpdateView(TemplateView):
         )
         if result.status == 'not_found':
             raise Http404('Работа не найдена')
-
-        specs = container.work_form_adapter.work_specs_from_formset(
-            formset,
-        )
-        specification_result = container.save_work_specification_use_case().execute(
-            SaveWorkSpecificationRequest(
-                work_id=result.work_id,
-                specs=specs,
-            )
-        )
-        if specification_result.status == 'invalid':
-            messages.error(request, '; '.join(specification_result.errors))
-            return self.render_to_response(
-                self.get_context_data(
-                    form=form,
-                    formset=formset,
-                    object=work,
-                ),
-            )
         messages.success(request, 'Работа успешно обновлена!')
         return redirect('works:detail', pk=result.work_id)
 

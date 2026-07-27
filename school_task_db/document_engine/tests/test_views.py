@@ -72,6 +72,18 @@ class PrintSettingsViewTests(TestCase):
         self.assertNotContains(response, 'name="section_options__task_list"')
         self.assertContains(response, 'name="task_list_structured_options"')
         self.assertContains(response, 'name="task_list_demo_visible"')
+        self.assertContains(
+            response,
+            'name="task_list_theory_visible"',
+        )
+        self.assertContains(
+            response,
+            'name="task_list_text_visible"',
+        )
+        self.assertContains(
+            response,
+            'name="task_list_content_visibility_options"',
+        )
         self.assertContains(response, 'name="task_list_demo_render_mode"')
         self.assertContains(
             response,

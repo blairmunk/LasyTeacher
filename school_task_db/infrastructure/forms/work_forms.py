@@ -5,6 +5,7 @@ from django.core.paginator import Paginator
 
 from core_logic.interfaces.work_repo import (
     CreateWorkParams,
+    WorkContentBlockParams,
     WorkTaskSelectionParams,
 )
 from core_logic.entities.work import WorkListFilters
@@ -29,7 +30,10 @@ from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_ANY,
     TASK_RENDER_MODE_TASK_ONLY,
 )
-from infrastructure.forms.work_django_forms import WorkAnalogGroupFormSet
+from infrastructure.forms.work_django_forms import (
+    WorkAnalogGroupFormSet,
+    WorkContentBlockFormSet,
+)
 from works.models import Work
 
 
@@ -45,6 +49,22 @@ class WorkFormAdapter:
         if data is not None:
             return WorkAnalogGroupFormSet(data, instance=instance)
         return WorkAnalogGroupFormSet(instance=instance)
+
+    def build_content_block_formset(
+        self,
+        data=None,
+        instance=None,
+        work_id=None,
+    ):
+        if instance is None:
+            instance = self._get_work_instance(work_id)
+        kwargs = {
+            'instance': instance,
+            'prefix': 'content_blocks',
+        }
+        if data is not None:
+            kwargs['data'] = data
+        return WorkContentBlockFormSet(**kwargs)
 
     def work_params_from_form(self, form, work_id=''):
         return CreateWorkParams(
@@ -88,12 +108,19 @@ class WorkFormAdapter:
         }
 
     def work_detail_context(self, detail):
+        content_plan = getattr(detail, 'content_plan', None)
         return {
             'work': detail.work,
             'object': detail.work,
             'variants': detail.variants,
             'analog_groups': detail.analog_groups,
             'spec_preview': detail.spec_preview,
+            'content_plan': content_plan,
+            'content_blocks': [
+                block
+                for block in getattr(content_plan, 'blocks', ())
+                if block.content_type in ('theory', 'text')
+            ],
             'work_print_settings': detail.work_print_settings,
             'remedial_sheet_print_settings': (
                 detail.remedial_sheet_print_settings
@@ -102,15 +129,34 @@ class WorkFormAdapter:
             'show_sync_button': detail.show_sync_button,
         }
 
-    def work_create_context(self, form, formset, form_data):
+    def work_create_context(
+        self,
+        form,
+        formset,
+        form_data,
+        content_formset=None,
+    ):
         return {
             'form': form,
             'formset': formset,
+            'content_formset': content_formset,
             'analog_group_options': form_data.analog_group_options,
         }
 
-    def work_update_context(self, work, form, formset, form_data):
-        context = self.work_create_context(form, formset, form_data)
+    def work_update_context(
+        self,
+        work,
+        form,
+        formset,
+        form_data,
+        content_formset=None,
+    ):
+        context = self.work_create_context(
+            form,
+            formset,
+            form_data,
+            content_formset=content_formset,
+        )
         context['object'] = work
         return context
 
@@ -219,6 +265,40 @@ class WorkFormAdapter:
                 )
             )
         return specs
+
+    def work_content_blocks_from_formset(self, formset):
+        content_blocks = []
+        for row in formset.cleaned_data:
+            if not row or row.get('DELETE'):
+                continue
+
+            content_type = row.get('content_type')
+            if not content_type:
+                continue
+
+            is_theory = content_type == 'theory'
+            content_blocks.append(
+                WorkContentBlockParams(
+                    content_type=content_type,
+                    order=row.get('order') or 0,
+                    title=(row.get('title') or '').strip(),
+                    body=(
+                        ''
+                        if is_theory
+                        else (row.get('body') or '').strip()
+                    ),
+                    topic_ids=[
+                        str(topic.pk)
+                        for topic in row.get('topics') or ()
+                    ] if is_theory else [],
+                    include_subtopics=(
+                        row.get('include_subtopics', False)
+                        if is_theory
+                        else False
+                    ),
+                )
+            )
+        return content_blocks
 
     def compose_variants_request_from_form(self, form, work_id):
         return ComposeWorkVariantsRequest(

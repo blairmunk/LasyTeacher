@@ -142,6 +142,18 @@ class PrintSettingsForm(forms.Form):
         required=False,
         widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
     )
+    task_list_theory_visible = forms.BooleanField(
+        label='Теория',
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+    )
+    task_list_text_visible = forms.BooleanField(
+        label='Текстовые блоки',
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+    )
     is_default = forms.BooleanField(
         label='Использовать по умолчанию для этого типа',
         required=False,
@@ -195,6 +207,21 @@ class PrintSettingsForm(forms.Form):
         self.initial.setdefault(
             'theory_include_subtopics',
             theory_options.get('include_subtopics', False),
+        )
+        task_list_options = (
+            self.initial.get('section_options', {})
+            .get(TASK_LIST_SECTION, {})
+        )
+        hidden_content_types = set(
+            task_list_options.get('hidden_content_types') or (),
+        )
+        self.initial.setdefault(
+            'task_list_theory_visible',
+            'theory' not in hidden_content_types,
+        )
+        self.initial.setdefault(
+            'task_list_text_visible',
+            'text' not in hidden_content_types,
         )
 
     def _add_task_list_role_fields(self):
@@ -310,9 +337,25 @@ class PrintSettingsForm(forms.Form):
             and self.data.get('task_list_structured_options') == '1'
         ):
             touched_section_options.add(TASK_LIST_SECTION)
-            section_options[TASK_LIST_SECTION] = (
-                self._clean_task_list_role_options(cleaned_data)
+            task_list_options = self._clean_task_list_role_options(
+                cleaned_data,
             )
+            if (
+                self.data.get(
+                    'task_list_content_visibility_options',
+                )
+                == '1'
+            ):
+                hidden_content_types = []
+                if not cleaned_data.get('task_list_theory_visible'):
+                    hidden_content_types.append('theory')
+                if not cleaned_data.get('task_list_text_visible'):
+                    hidden_content_types.append('text')
+                if hidden_content_types:
+                    task_list_options['hidden_content_types'] = (
+                        hidden_content_types
+                    )
+            section_options[TASK_LIST_SECTION] = task_list_options
 
         if (
             THEORY_SECTION in selected_sections

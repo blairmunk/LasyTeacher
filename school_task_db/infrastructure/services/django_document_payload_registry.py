@@ -14,7 +14,6 @@ from core_logic.value_objects.document_recipes import (
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     SHORT_SOLUTIONS_SECTION,
     TASK_LIST_SECTION,
-    THEORY_SECTION,
     TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
 )
@@ -35,7 +34,6 @@ from infrastructure.services.django_remedial_document_payloads import (
 from infrastructure.services.django_work_document_payloads import (
     DjangoWorkHeaderPayloadBuilder,
     DjangoWorkTaskListPayloadBuilder,
-    DjangoWorkTheoryPayloadBuilder,
 )
 
 
@@ -68,15 +66,6 @@ def build_work_section_payload_builder_registry(
     registry.register(
         TASK_LIST_SECTION,
         task_list_builder,
-        document_type=WORK_DOCUMENT_TYPE,
-        source_type=WORK_SOURCE_TYPE,
-    )
-    registry.register(
-        THEORY_SECTION,
-        DjangoWorkTheoryPayloadBuilder(
-            get_work_source=get_work_source,
-            task_payload_formatter=task_payload_formatter,
-        ),
         document_type=WORK_DOCUMENT_TYPE,
         source_type=WORK_SOURCE_TYPE,
     )

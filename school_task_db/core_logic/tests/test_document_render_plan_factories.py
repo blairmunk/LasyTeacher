@@ -28,7 +28,6 @@ from core_logic.value_objects.document_recipes import (
     PAGE_BREAK_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     TASK_LIST_SECTION,
-    THEORY_SECTION,
     WORK_DOCUMENT_TYPE,
 )
 
@@ -229,12 +228,11 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         )
         self.assertTrue(recipe.sections[0].options['hide_blank_cells'])
 
-    def test_work_print_overrides_remove_standalone_theory_and_cells(self):
+    def test_work_print_overrides_remove_standalone_cells(self):
         print_settings_spec = PrintSettingsSpec(
             name='Профиль',
             document_type=WORK_DOCUMENT_TYPE,
             sections=[
-                DocumentSectionSpec(section_type=THEORY_SECTION),
                 DocumentSectionSpec(section_type=TASK_LIST_SECTION),
                 DocumentSectionSpec(section_type=BLANK_CELLS_SECTION),
             ],

@@ -7,7 +7,6 @@ from django import forms
 from core_logic.value_objects.document_recipes import (
     BLANK_CELLS_SECTION,
     TASK_LIST_SECTION,
-    THEORY_SECTION,
 )
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_COLUMNS,
@@ -120,17 +119,6 @@ class PrintSettingsForm(forms.Form):
         initial=DEFAULT_BLANK_CELLS_ROW_HEIGHT,
         widget=forms.NumberInput(attrs={'class': 'form-control'}),
     )
-    theory_section_title = forms.CharField(
-        label='Заголовок блока',
-        required=False,
-        max_length=200,
-        widget=forms.TextInput(attrs={'class': 'form-control'}),
-    )
-    theory_include_subtopics = forms.BooleanField(
-        label='Добавлять описания подтем',
-        required=False,
-        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-    )
     task_list_theory_visible = forms.BooleanField(
         label='Теория',
         required=False,
@@ -183,18 +171,6 @@ class PrintSettingsForm(forms.Form):
                 'row_height',
                 DEFAULT_BLANK_CELLS_ROW_HEIGHT,
             ),
-        )
-        theory_options = (
-            self.initial.get('section_options', {})
-            .get(THEORY_SECTION, {})
-        )
-        self.initial.setdefault(
-            'theory_section_title',
-            theory_options.get('section_title', ''),
-        )
-        self.initial.setdefault(
-            'theory_include_subtopics',
-            theory_options.get('include_subtopics', False),
         )
         task_list_options = (
             self.initial.get('section_options', {})
@@ -270,19 +246,6 @@ class PrintSettingsForm(forms.Form):
                     hidden_content_types
                 )
             section_options[TASK_LIST_SECTION] = task_list_options
-
-        if (
-            THEORY_SECTION in selected_sections
-            and self.data.get('theory_structured_options') == '1'
-        ):
-            touched_section_options.add(THEORY_SECTION)
-            theory_options = {}
-            section_title = cleaned_data.get('theory_section_title', '').strip()
-            if section_title:
-                theory_options['section_title'] = section_title
-            if cleaned_data.get('theory_include_subtopics'):
-                theory_options['include_subtopics'] = True
-            section_options[THEORY_SECTION] = theory_options
 
         cleaned_data['section_options'] = section_options
         cleaned_data['touched_section_options'] = frozenset(

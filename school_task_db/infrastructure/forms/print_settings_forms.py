@@ -19,7 +19,6 @@ from core_logic.value_objects.document_render_options import FILE_TYPE_LABELS
 from core_logic.value_objects.document_recipes import (
     BLANK_CELLS_SECTION,
     TASK_LIST_SECTION,
-    THEORY_SECTION,
 )
 from infrastructure.forms.print_settings_django_forms import (
     section_options_field_name,
@@ -117,9 +116,6 @@ class PrintSettingsFormAdapter:
                         if section.section_type == TASK_LIST_SECTION
                         else ()
                     ),
-                    'has_theory_controls': (
-                        section.section_type == THEORY_SECTION
-                    ),
                     'has_distinct_instance_settings': (
                         self._has_distinct_instance_settings(
                             form,
@@ -182,7 +178,6 @@ class PrintSettingsFormAdapter:
                 section.section_type in (
                     BLANK_CELLS_SECTION,
                     TASK_LIST_SECTION,
-                    THEORY_SECTION,
                 )
             ),
             'has_blank_cells_controls': (

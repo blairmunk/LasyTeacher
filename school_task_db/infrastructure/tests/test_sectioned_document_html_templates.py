@@ -11,7 +11,6 @@ from core_logic.value_objects.document_recipes import (
     PAGE_BREAK_SECTION,
     SCORE_TABLE_SECTION,
     TASK_LIST_SECTION,
-    THEORY_SECTION,
 )
 from core_logic.value_objects.document_render_requests import DocumentRenderRequest
 from core_logic.value_objects.task_print_settings import (
@@ -35,7 +34,6 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
                     PAGE_BREAK_SECTION: 'documents/html/sections/page_break.html',
                     SCORE_TABLE_SECTION: 'documents/html/sections/score_table.html',
                     TASK_LIST_SECTION: 'documents/html/sections/task_list.html',
-                    THEORY_SECTION: 'documents/html/sections/theory.html',
                     BLANK_CELLS_SECTION: (
                         'documents/html/sections/blank_cells.html'
                     ),
@@ -56,18 +54,6 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
                             'title': 'Контрольная',
                             'duration': 45,
                             'max_score': 10,
-                        },
-                    ),
-                    DocumentSection(
-                        section_type=THEORY_SECTION,
-                        payload={
-                            'blocks': [
-                                {
-                                    'topic_name': 'Динамика',
-                                    'content': 'Второй закон Ньютона',
-                                    'subtopics': [],
-                                },
-                            ],
                         },
                     ),
                     DocumentSection(
@@ -191,8 +177,6 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
             self.assertIn('id="MathJax-script"', html)
             self.assertIn('tex-chtml.js', html)
             self.assertIn('<h1>Контрольная</h1>', html)
-            self.assertIn('Теоретическая справка', html)
-            self.assertIn('Второй закон Ньютона', html)
             self.assertIn('page-break-after: always', html)
             self.assertIn('Черновик', html)
             self.assertIn('grid-template-columns: repeat(3', html)

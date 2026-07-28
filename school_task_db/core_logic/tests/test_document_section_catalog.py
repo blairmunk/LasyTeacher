@@ -16,7 +16,6 @@ from core_logic.value_objects.document_recipes import (
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     SCORE_TABLE_SECTION,
     TASK_LIST_SECTION,
-    THEORY_SECTION,
     WORK_DOCUMENT_TYPE,
     WORKSHEET_DOCUMENT_TYPE,
 )
@@ -37,7 +36,6 @@ class DocumentSectionCatalogTests(TestCase):
 
         self.assertIn(HEADER_SECTION, section_types)
         self.assertIn(TASK_LIST_SECTION, section_types)
-        self.assertIn(THEORY_SECTION, section_types)
         self.assertNotIn(ORIGINAL_MISTAKES_SECTION, section_types)
 
     def test_marks_repeatable_rendering_sections(self):
@@ -132,25 +130,6 @@ class DocumentSectionCatalogTests(TestCase):
             [section.section_type for section in worksheet_sections],
         )
 
-    def test_theory_is_renderable_for_work_only(self):
-        work_sections = get_document_section_catalog(
-            document_type=WORK_DOCUMENT_TYPE,
-            renderable_only=True,
-        )
-        worksheet_sections = get_document_section_catalog(
-            document_type=WORKSHEET_DOCUMENT_TYPE,
-            renderable_only=True,
-        )
-
-        self.assertIn(
-            THEORY_SECTION,
-            [section.section_type for section in work_sections],
-        )
-        self.assertNotIn(
-            THEORY_SECTION,
-            [section.section_type for section in worksheet_sections],
-        )
-
     def test_can_return_renderable_sections_only(self):
         sections = get_document_section_catalog(
             document_type=WORKSHEET_DOCUMENT_TYPE,
@@ -159,7 +138,6 @@ class DocumentSectionCatalogTests(TestCase):
 
         section_types = [section.section_type for section in sections]
 
-        self.assertNotIn(THEORY_SECTION, section_types)
         self.assertNotIn(TASK_LIST_SECTION, section_types)
 
     def test_reports_section_renderability_for_document_type(self):
@@ -194,11 +172,6 @@ class DocumentSectionCatalogTests(TestCase):
         )
         self.assertTrue(section_by_type[BLANK_CELLS_SECTION].has_options)
         self.assertIn('rows', section_by_type[BLANK_CELLS_SECTION].options_example)
-        self.assertTrue(section_by_type[THEORY_SECTION].has_options)
-        self.assertIn(
-            'include_subtopics',
-            section_by_type[THEORY_SECTION].options_example,
-        )
         self.assertFalse(section_by_type[HEADER_SECTION].has_options)
 
     def test_validates_supported_sections(self):

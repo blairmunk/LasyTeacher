@@ -20,7 +20,6 @@ from core_logic.value_objects.document_recipes import (
     SCORE_TABLE_SECTION,
     SHORT_SOLUTIONS_SECTION,
     TASK_LIST_SECTION,
-    THEORY_SECTION,
     TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
     WORKSHEET_DOCUMENT_TYPE,
@@ -181,26 +180,6 @@ DOCUMENT_SECTION_CATALOG = (
         supported_document_types=(REMEDIAL_SHEET_DOCUMENT_TYPE,),
         renderable_document_types=(REMEDIAL_SHEET_DOCUMENT_TYPE,),
         description='Новые задания для работы над ошибками.',
-    ),
-    DocumentSectionCatalogItem(
-        section_type=THEORY_SECTION,
-        title='Теория',
-        supported_document_types=(
-            WORK_DOCUMENT_TYPE,
-            WORKSHEET_DOCUMENT_TYPE,
-            HOMEWORK_DOCUMENT_TYPE,
-            DIAGNOSTIC_DOCUMENT_TYPE,
-            CUSTOM_DOCUMENT_TYPE,
-        ),
-        renderable_document_types=(WORK_DOCUMENT_TYPE,),
-        description='Теоретическая справка или опорный материал.',
-        options_hint=(
-            'Можно изменить заголовок блока и включить описания подтем.'
-        ),
-        options_example={
-            'section_title': 'Теоретическая справка',
-            'include_subtopics': True,
-        },
     ),
     DocumentSectionCatalogItem(
         section_type=PAGE_BREAK_SECTION,

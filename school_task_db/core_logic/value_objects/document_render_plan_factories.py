@@ -31,7 +31,6 @@ from core_logic.value_objects.document_recipes import (
     HEADER_SECTION,
     PAGE_BREAK_SECTION,
     TASK_LIST_SECTION,
-    THEORY_SECTION,
 )
 
 
@@ -198,11 +197,6 @@ def apply_work_document_print_overrides(
     overrides = options.print_overrides
     sections = []
     for section in recipe.sections:
-        if (
-            overrides.hide_theory
-            and section.section_type == THEORY_SECTION
-        ):
-            continue
         if (
             overrides.hide_blank_cells
             and section.section_type == BLANK_CELLS_SECTION

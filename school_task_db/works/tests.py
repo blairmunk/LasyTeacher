@@ -430,6 +430,7 @@ class WorkDetailViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'id_content_blocks-TOTAL_FORMS')
+        self.assertContains(response, 'id="content-plan-blocks"')
         self.assertContains(response, 'Теория и текст')
         self.assertContains(response, 'Покажите ход решения.')
         self.assertEqual(
@@ -457,6 +458,27 @@ class WorkDetailViewTests(TestCase):
         )
         self.assertContains(response, 'Самопроверка')
         self.assertContains(response, 'Проверьте единицы измерения.')
+        self.assertContains(
+            response,
+            reverse('works:update', args=[self.work.pk])
+            + '#content-plan-blocks',
+        )
+
+    def test_detail_exposes_content_plan_controls_when_blocks_are_empty(self):
+        response = self.client.get(
+            reverse('works:detail', args=[self.work.pk]),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            'Теоретические и текстовые блоки не заданы.',
+        )
+        self.assertContains(
+            response,
+            reverse('works:update', args=[self.work.pk])
+            + '#content-plan-blocks',
+        )
 
     def test_update_view_saves_work_and_specification_formset(self):
         old_group = AnalogGroup.objects.create(name='Старая группа')

@@ -148,11 +148,17 @@
                     {% endif %}
                     {% endif %}
 
-                    {% if content_blocks %}
-                    <div class="{% if analog_groups %}border-top{% endif %}">
-                        <div class="px-3 py-2 bg-light fw-semibold">
-                            Теория и текст
+                    <div class="border-top">
+                        <div class="px-3 py-2 bg-light d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold">Теория и текст</span>
+                            <a
+                                href="{% url 'works:update' work.pk %}#content-plan-blocks"
+                                class="btn btn-sm btn-outline-primary"
+                            >
+                                <i class="fas fa-edit"></i> Изменить
+                            </a>
                         </div>
+                        {% if content_blocks %}
                         {% for block in content_blocks %}
                         <div class="d-flex align-items-start gap-3 px-3 py-3 border-top">
                             <span class="badge bg-secondary">{{ block.order }}</span>
@@ -174,8 +180,15 @@
                             </div>
                         </div>
                         {% endfor %}
+                        {% else %}
+                        <div class="px-3 py-4 text-center text-muted border-top">
+                            Теоретические и текстовые блоки не заданы.
+                            <a href="{% url 'works:update' work.pk %}#content-plan-blocks">
+                                Добавить блок
+                            </a>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
                 </div>
             </div>
 

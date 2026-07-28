@@ -40,7 +40,6 @@ from core_logic.value_objects.document_recipes import (
     HEADER_SECTION,
     PAGE_BREAK_SECTION,
     TASK_LIST_SECTION,
-    THEORY_SECTION,
     WORK_DOCUMENT_TYPE,
 )
 from core_logic.value_objects.task_print_settings import (
@@ -544,53 +543,6 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
             params.sections[0].options,
             {'hidden_content_types': ['theory']},
         )
-
-    def test_builds_theory_options_from_structured_fields(self):
-        data = QueryDict('', mutable=True)
-        data.update(
-            {
-                'name': 'Шаблон',
-                'document_type': 'work',
-                'theory_structured_options': '1',
-                'theory_section_title': 'Краткая теория',
-                'theory_include_subtopics': 'on',
-            }
-        )
-        data.setlist('sections', [THEORY_SECTION])
-        form = self._template_form(data=data)
-        self.assertTrue(form.is_valid(), form.errors)
-
-        params = (
-            PrintSettingsFormAdapter()
-            .create_print_settings_params_from_form(form)
-        )
-
-        self.assertEqual(
-            params.sections[0].options,
-            {
-                'section_title': 'Краткая теория',
-                'include_subtopics': True,
-            },
-        )
-
-    def test_theory_controls_use_saved_options_as_initial(self):
-        form = self._template_form(
-            initial={
-                'sections': [THEORY_SECTION],
-                'section_options': {
-                    THEORY_SECTION: {
-                        'section_title': 'Опорный конспект',
-                        'include_subtopics': True,
-                    },
-                },
-            },
-        )
-
-        self.assertEqual(
-            form['theory_section_title'].value(),
-            'Опорный конспект',
-        )
-        self.assertTrue(form['theory_include_subtopics'].value())
 
     def test_builds_blank_cells_options_from_structured_fields(self):
         data = QueryDict('', mutable=True)

@@ -23,7 +23,6 @@ from core_logic.value_objects.document_recipes import (
     ORIGINAL_MISTAKES_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     TASK_LIST_SECTION,
-    THEORY_SECTION,
     TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
 )
@@ -52,7 +51,6 @@ from infrastructure.services.django_remedial_document_payloads import (
 from infrastructure.services.django_work_document_payloads import (
     DjangoWorkHeaderPayloadBuilder,
     DjangoWorkTaskListPayloadBuilder,
-    DjangoWorkTheoryPayloadBuilder,
 )
 from tasks.models import Source, Task
 from works.models import (
@@ -491,158 +489,7 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
         return Task.objects.create(**defaults)
 
 
-class DjangoWorkTheoryPayloadBuilderTests(TestCase):
-    def test_defers_snapshot_theory_to_variant_content_section(self):
-        work = Work.objects.create(name='Рабочий лист')
-        variant = Variant.objects.create(work=work, number=1)
-        VariantContentBlockSnapshot.objects.create(
-            variant=variant,
-            content_type='theory',
-            order=10,
-            title='Опорная теория',
-            content={'topics': []},
-        )
-        theory_section = DocumentSectionSpec(section_type=THEORY_SECTION)
-        recipe = DocumentRecipe(
-            document_type=WORK_DOCUMENT_TYPE,
-            sections=[
-                theory_section,
-                DocumentSectionSpec(section_type=TASK_LIST_SECTION),
-            ],
-        )
-        request = DocumentSectionPayloadBuildRequest(
-            source=DocumentSourceRef(
-                source_type=WORK_SOURCE_TYPE,
-                source_id=str(work.pk),
-                title=work.name,
-            ),
-            recipe=recipe,
-            section=theory_section,
-        )
-
-        payload = DjangoWorkTheoryPayloadBuilder().build_payload(request)
-
-        self.assertTrue(payload['embedded_in_variants'])
-        self.assertEqual(payload['blocks'], [])
-
-    def test_builds_theory_payload_from_work_task_topics(self):
-        work = Work.objects.create(name='Контрольная')
-        variant = Variant.objects.create(work=work, number=1)
-        topic = Topic.objects.create(
-            name='Динамика',
-            subject='Физика',
-            section='Механика',
-            grade_level=9,
-            description='Второй закон Ньютона: F = ma',
-        )
-        task = Task.objects.create(
-            text='Задание',
-            answer='Ответ',
-            topic=topic,
-            task_type='computational',
-            difficulty=2,
-        )
-        second_task = Task.objects.create(
-            text='Второе задание',
-            answer='Ответ',
-            topic=topic,
-            task_type='computational',
-            difficulty=2,
-        )
-        VariantTask.objects.create(variant=variant, task=task, order=1)
-        VariantTask.objects.create(variant=variant, task=second_task, order=2)
-        builder = DjangoWorkTheoryPayloadBuilder()
-
-        payload = builder.build_payload(build_request(work, THEORY_SECTION))
-
-        self.assertEqual(payload['section_title'], 'Теоретическая справка')
-        self.assertEqual(len(payload['blocks']), 1)
-        self.assertEqual(payload['blocks'][0]['topic_name'], 'Динамика')
-        self.assertEqual(
-            payload['blocks'][0]['content'],
-            'Второй закон Ньютона: F = ma',
-        )
-
-    def test_skips_topics_without_description(self):
-        work = Work.objects.create(name='Контрольная')
-        variant = Variant.objects.create(work=work, number=1)
-        task = self.create_task(description='')
-        VariantTask.objects.create(variant=variant, task=task, order=1)
-        builder = DjangoWorkTheoryPayloadBuilder()
-
-        payload = builder.build_payload(build_request(work, THEORY_SECTION))
-
-        self.assertEqual(payload['blocks'], [])
-
-    def test_can_include_subtopic_descriptions(self):
-        work = Work.objects.create(name='Контрольная')
-        variant = Variant.objects.create(work=work, number=1)
-        topic = Topic.objects.create(
-            name='Динамика',
-            subject='Физика',
-            section='Механика',
-            grade_level=9,
-            description='Теория темы',
-        )
-        subtopic = SubTopic.objects.create(
-            topic=topic,
-            name='Силы',
-            description='Теория подтемы',
-        )
-        task = Task.objects.create(
-            text='Задание',
-            answer='Ответ',
-            topic=topic,
-            subtopic=subtopic,
-            task_type='computational',
-            difficulty=2,
-        )
-        VariantTask.objects.create(variant=variant, task=task, order=1)
-        builder = DjangoWorkTheoryPayloadBuilder()
-
-        payload = builder.build_payload(
-            build_request(
-                work,
-                THEORY_SECTION,
-                options={'include_subtopics': True},
-            )
-        )
-
-        self.assertEqual(payload['blocks'][0]['subtopics'][0]['name'], 'Силы')
-        self.assertEqual(
-            payload['blocks'][0]['subtopics'][0]['content'],
-            'Теория подтемы',
-        )
-
-    def test_formats_theory_text_with_task_formatter(self):
-        work = Work.objects.create(name='Контрольная')
-        variant = Variant.objects.create(work=work, number=1)
-        task = self.create_task(description='Закон $F=ma$')
-        VariantTask.objects.create(variant=variant, task=task, order=1)
-        formatter = FakeTaskPayloadFormatter()
-        builder = DjangoWorkTheoryPayloadBuilder(
-            task_payload_formatter=formatter,
-        )
-
-        payload = builder.build_payload(build_request(work, THEORY_SECTION))
-
-        self.assertEqual(
-            payload['blocks'][0]['content'],
-            'Закон $F=ma$',
-        )
-        self.assertEqual(formatter.requests[0]['text'], 'Закон $F=ma$')
-
-    def test_registry_supports_work_theory_section(self):
-        work = Work.objects.create(name='Контрольная')
-        variant = Variant.objects.create(work=work, number=1)
-        task = self.create_task(description='Теория')
-        VariantTask.objects.create(variant=variant, task=task, order=1)
-        registry = build_work_section_payload_builder_registry()
-
-        payload = registry.build_payload(build_request(work, THEORY_SECTION))
-
-        self.assertEqual(payload['blocks'][0]['content'], 'Теория')
-
+class DjangoWorkTechnicalPayloadBuilderTests(TestCase):
     def test_registry_supports_work_blank_cells_section(self):
         work = Work.objects.create(name='Контрольная')
         registry = build_work_section_payload_builder_registry()

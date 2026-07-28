@@ -12,7 +12,6 @@ from core_logic.value_objects.document_recipes import (
     ORIGINAL_MISTAKES_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     TASK_LIST_SECTION,
-    THEORY_SECTION,
     WORK_DOCUMENT_TYPE,
     WORKSHEET_DOCUMENT_TYPE,
 )
@@ -67,5 +66,5 @@ class GetPrintSettingsEditorDataUseCaseTests(TestCase):
             document_types,
             [WORK_DOCUMENT_TYPE, REMEDIAL_SHEET_DOCUMENT_TYPE],
         )
-        self.assertNotIn(THEORY_SECTION, section_types)
+        self.assertNotIn('theory', section_types)
         self.assertEqual(data.print_profiles, [])

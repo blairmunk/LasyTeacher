@@ -38,7 +38,6 @@ from core_logic.value_objects.document_recipes import (
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     SHORT_SOLUTIONS_SECTION,
     TASK_LIST_SECTION,
-    THEORY_SECTION,
     WORK_DOCUMENT_TYPE,
 )
 from curriculum.models import Topic
@@ -59,7 +58,12 @@ from infrastructure.services.sectioned_document_filenames import (
     work_latex_filename,
 )
 from tasks.models import Task
-from works.models import Variant, VariantTask, Work
+from works.models import (
+    Variant,
+    VariantContentBlockSnapshot,
+    VariantTask,
+    Work,
+)
 
 
 class SectionedDocumentDefaultsTests(TestCase):
@@ -322,7 +326,7 @@ class SectionedDocumentDefaultsTests(TestCase):
             self.assertIn('Ответы', html)
             self.assertIn('10 Н', html)
 
-    def test_work_html_supports_theory_section(self):
+    def test_work_html_renders_theory_from_variant_content_snapshot(self):
         work = Work.objects.create(name='Контрольная', duration=45, max_score=4)
         variant = Variant.objects.create(
             work=work,
@@ -331,25 +335,22 @@ class SectionedDocumentDefaultsTests(TestCase):
             max_score_snapshot=4,
             duration_snapshot=45,
         )
-        topic = Topic.objects.create(
-            name='Динамика',
-            subject='Физика',
-            section='Механика',
-            grade_level=9,
-            description='Сила равна произведению массы на ускорение.',
-        )
-        task = Task.objects.create(
-            text='Найдите силу',
-            answer='10 Н',
-            topic=topic,
-            task_type='computational',
-            difficulty=3,
-        )
-        VariantTask.objects.create(
+        VariantContentBlockSnapshot.objects.create(
             variant=variant,
-            task=task,
+            content_type='theory',
             order=1,
-            max_points=4,
+            title='Теоретическая справка',
+            content={
+                'topics': [
+                    {
+                        'name': 'Динамика',
+                        'content': (
+                            'Сила равна произведению массы на ускорение.'
+                        ),
+                        'subtopics': [],
+                    },
+                ],
+            },
         )
 
         with TemporaryDirectory() as output_dir:
@@ -372,7 +373,6 @@ class SectionedDocumentDefaultsTests(TestCase):
                         name='Work with theory',
                         document_type='work',
                         sections=[
-                            DocumentSectionSpec(section_type=THEORY_SECTION),
                             DocumentSectionSpec(section_type=TASK_LIST_SECTION),
                         ],
                     ),

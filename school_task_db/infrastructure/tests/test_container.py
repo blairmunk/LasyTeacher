@@ -146,9 +146,6 @@ from core_logic.use_cases.render_remedial_sheet_document import (
     RenderRemedialSheetDocumentUseCase,
 )
 from core_logic.use_cases.render_document import RenderDocumentUseCase
-from core_logic.use_cases.render_document_from_print_settings import (
-    RenderDocumentFromPrintSettingsUseCase,
-)
 from core_logic.use_cases.render_document_from_recipe import (
     RenderDocumentFromRecipeUseCase,
 )
@@ -468,9 +465,6 @@ class ContainerTests(SimpleTestCase):
         render_from_recipe_use_case = (
             container.render_document_from_recipe_use_case()
         )
-        render_from_print_settings_use_case = (
-            container.render_document_from_print_settings_use_case()
-        )
         render_work_document_use_case = container.render_work_document_use_case()
         render_remedial_sheet_use_case = (
             container.render_remedial_sheet_document_use_case()
@@ -766,10 +760,6 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             render_from_recipe_use_case,
             RenderDocumentFromRecipeUseCase,
-        )
-        self.assertIsInstance(
-            render_from_print_settings_use_case,
-            RenderDocumentFromPrintSettingsUseCase,
         )
         self.assertIsInstance(
             render_work_document_use_case,

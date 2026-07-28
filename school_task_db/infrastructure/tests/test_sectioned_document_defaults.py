@@ -36,6 +36,7 @@ from core_logic.value_objects.document_recipes import (
     ANSWER_KEY_SECTION,
     PAGE_BREAK_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
+    SHORT_SOLUTIONS_SECTION,
     TASK_LIST_SECTION,
     THEORY_SECTION,
     WORK_DOCUMENT_TYPE,
@@ -104,10 +105,21 @@ class SectionedDocumentDefaultsTests(TestCase):
                 document_builder=components.document_builder,
                 document_renderer_registry=components.document_renderer_registry,
             )
-            options = WorkDocumentRenderOptions(
-                renderer_type='html',
-                answer_type='with_short_solutions',
-                include_hints=True,
+            options = WorkDocumentRenderOptions(renderer_type='html')
+            print_settings_spec = PrintSettingsSpec(
+                name='Профиль с подсказками и решениями',
+                document_type=WORK_DOCUMENT_TYPE,
+                sections=[
+                    DocumentSectionSpec(section_type=HEADER_SECTION),
+                    DocumentSectionSpec(
+                        section_type=TASK_LIST_SECTION,
+                        options={'include_hints': True},
+                    ),
+                    DocumentSectionSpec(section_type=ANSWERS_SECTION),
+                    DocumentSectionSpec(
+                        section_type=SHORT_SOLUTIONS_SECTION,
+                    ),
+                ],
             )
 
             result = engine.render_document(
@@ -115,6 +127,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=options,
+                    print_settings_spec=print_settings_spec,
                 ),
             )
 
@@ -405,10 +418,20 @@ class SectionedDocumentDefaultsTests(TestCase):
                 document_builder=components.document_builder,
                 document_renderer_registry=components.document_renderer_registry,
             )
-            options = WorkDocumentRenderOptions(
-                renderer_type='latex',
-                answer_type='with_short_solutions',
-                include_hints=True,
+            options = WorkDocumentRenderOptions(renderer_type='latex')
+            print_settings_spec = PrintSettingsSpec(
+                name='Профиль с подсказками и решениями',
+                document_type=WORK_DOCUMENT_TYPE,
+                sections=[
+                    DocumentSectionSpec(section_type=HEADER_SECTION),
+                    DocumentSectionSpec(
+                        section_type=TASK_LIST_SECTION,
+                        options={'include_hints': True},
+                    ),
+                    DocumentSectionSpec(
+                        section_type=SHORT_SOLUTIONS_SECTION,
+                    ),
+                ],
             )
 
             result = engine.render_document(
@@ -416,6 +439,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=options,
+                    print_settings_spec=print_settings_spec,
                 ),
             )
 

@@ -13,7 +13,6 @@ from core_logic.entities.document import (
 )
 from core_logic.value_objects.document_render_options import (
     RemedialSheetDocumentRenderOptions,
-    WORK_DOCUMENT_STYLE_WORKSHEET,
     WorkDocumentRenderOptions,
 )
 from core_logic.value_objects.document_render_plan import (
@@ -22,7 +21,6 @@ from core_logic.value_objects.document_render_plan import (
 )
 from core_logic.value_objects.document_recipe_factories import (
     build_remedial_sheet_document_recipe,
-    build_worksheet_work_document_recipe,
     build_work_document_recipe,
 )
 from core_logic.value_objects.document_recipes import (
@@ -133,9 +131,7 @@ def build_work_document_recipe_for_render(
 ) -> DocumentRecipe:
     recipe = _recipe_from_print_settings_or_default(
         print_settings_spec=print_settings_spec,
-        default_recipe_builder=(
-            lambda: _build_default_work_recipe(options)
-        ),
+        default_recipe_builder=build_work_document_recipe,
     )
     recipe = apply_work_document_print_overrides(recipe, options)
     return expand_work_document_recipe_per_variant(
@@ -245,14 +241,6 @@ def apply_work_document_print_overrides(
         sections=sections,
         presentation=recipe.presentation,
     )
-
-
-def _build_default_work_recipe(
-    options: WorkDocumentRenderOptions,
-) -> DocumentRecipe:
-    if options.document_style == WORK_DOCUMENT_STYLE_WORKSHEET:
-        return build_worksheet_work_document_recipe(options.build_options)
-    return build_work_document_recipe(options.build_options)
 
 
 def build_remedial_sheet_document_recipe_for_render(

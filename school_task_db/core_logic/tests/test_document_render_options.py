@@ -6,9 +6,6 @@ from core_logic.value_objects.document_render_options import (
     RemedialSheetBuildOptions,
     RenderTarget,
     SUPPORTED_DOCUMENT_RENDERER_TYPES,
-    WORK_DOCUMENT_STYLE_STANDARD,
-    WORK_DOCUMENT_STYLE_WORKSHEET,
-    WorkDocumentBuildOptions,
     WorkDocumentPrintOverrides,
     WorkDocumentRenderOptions,
     build_render_target,
@@ -76,46 +73,30 @@ class DocumentRenderOptionsTests(TestCase):
 
         self.assertEqual(options.renderer_type, 'pdf')
         self.assertEqual(options.pdf_format, 'A4')
-        self.assertEqual(options.answer_type, 'tasks_only')
-        self.assertEqual(options.content_description, 'только задания')
         self.assertEqual(
-            options.content_config,
-            {
-                'include_answers': False,
-                'include_short_solutions': False,
-                'include_full_solutions': False,
-                'answer_type': 'tasks_only',
-                'include_hints': False,
-                'include_instructions': False,
-                'break_between_variants': True,
-                'document_style': WORK_DOCUMENT_STYLE_STANDARD,
-            },
+            options.print_overrides,
+            WorkDocumentPrintOverrides(),
         )
+        self.assertEqual(options.content_description, 'по спецификации')
 
-    def test_work_render_options_can_wrap_target_and_build_options(self):
+    def test_work_render_options_can_wrap_target_and_print_overrides(self):
         options = WorkDocumentRenderOptions(
             render_target=RenderTarget(renderer_type='html', page_format='A5'),
-            build_options=WorkDocumentBuildOptions(
-                answer_type='with_answers',
-                include_hints=True,
+            print_overrides=WorkDocumentPrintOverrides(
+                append_answers=True,
                 break_between_variants=False,
-                document_style=WORK_DOCUMENT_STYLE_WORKSHEET,
             ),
         )
 
         self.assertEqual(options.renderer_type, 'html')
         self.assertEqual(options.pdf_format, 'A5')
-        self.assertEqual(options.answer_type, 'with_answers')
-        self.assertTrue(options.include_hints)
-        self.assertFalse(options.include_instructions)
         self.assertFalse(options.break_between_variants)
-        self.assertEqual(options.document_style, WORK_DOCUMENT_STYLE_WORKSHEET)
         self.assertEqual(
             options.content_description,
-            'рабочий лист: с ответами + подсказки',
+            'по спецификации + ответы в конце',
         )
 
-    def test_builds_full_solution_work_render_options(self):
+    def test_legacy_content_fields_do_not_change_work_render_options(self):
         options = build_work_render_options({
             'renderer_type': 'html',
             'format': 'A5',
@@ -129,23 +110,8 @@ class DocumentRenderOptionsTests(TestCase):
         self.assertEqual(options.render_target.renderer_type, 'html')
         self.assertEqual(options.render_target.page_format, 'A5')
         self.assertEqual(options.pdf_format, 'A5')
-        self.assertEqual(
-            options.content_description,
-            'с полными решениями + подсказки + инструкции',
-        )
-        self.assertEqual(
-            options.content_config,
-            {
-                'include_answers': True,
-                'include_short_solutions': True,
-                'include_full_solutions': True,
-                'answer_type': 'with_full_solutions',
-                'include_hints': True,
-                'include_instructions': True,
-                'break_between_variants': True,
-                'document_style': WORK_DOCUMENT_STYLE_STANDARD,
-            },
-        )
+        self.assertEqual(options.content_description, 'по спецификации')
+        self.assertEqual(options.print_overrides, WorkDocumentPrintOverrides())
 
     def test_builds_temporary_work_print_overrides(self):
         options = build_work_render_options({
@@ -162,6 +128,7 @@ class DocumentRenderOptionsTests(TestCase):
                 hide_text=True,
                 hide_blank_cells=True,
                 append_answers=True,
+                break_between_variants=True,
             ),
         )
         self.assertEqual(
@@ -170,30 +137,7 @@ class DocumentRenderOptionsTests(TestCase):
         )
         self.assertEqual(
             options.content_description,
-            'только задания + ответы в конце',
-        )
-
-    def test_legacy_with_answers_flag_appends_answer_section(self):
-        options = build_work_render_options({'with_answers': '1'})
-
-        self.assertTrue(options.print_overrides.append_answers)
-
-    def test_builds_work_document_style_from_data(self):
-        options = build_work_render_options({
-            'document_style': WORK_DOCUMENT_STYLE_WORKSHEET,
-        })
-        fallback_options = build_work_render_options({
-            'document_style': 'unsupported',
-        })
-
-        self.assertEqual(options.document_style, WORK_DOCUMENT_STYLE_WORKSHEET)
-        self.assertEqual(
-            options.content_config['document_style'],
-            WORK_DOCUMENT_STYLE_WORKSHEET,
-        )
-        self.assertEqual(
-            fallback_options.document_style,
-            WORK_DOCUMENT_STYLE_STANDARD,
+            'по спецификации + ответы в конце',
         )
 
     def test_can_disable_work_variant_page_breaks_from_data(self):
@@ -202,7 +146,9 @@ class DocumentRenderOptionsTests(TestCase):
         })
 
         self.assertFalse(options.break_between_variants)
-        self.assertFalse(options.content_config['break_between_variants'])
+        self.assertFalse(
+            options.print_overrides.break_between_variants,
+        )
 
     def test_builds_default_remedial_sheet_render_options(self):
         options = build_remedial_sheet_render_options({})

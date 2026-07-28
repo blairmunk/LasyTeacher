@@ -8,55 +8,12 @@ ANSWER_TYPES_WITH_ANSWERS = {
     'with_full_solutions',
 }
 
-CONTENT_DESCRIPTIONS = {
-    'tasks_only': 'только задания',
-    'with_answers': 'с ответами',
-    'with_short_solutions': 'с краткими решениями',
-    'with_full_solutions': 'с полными решениями',
-}
-
 FILE_TYPE_LABELS = {
     'latex': 'LaTeX',
     'html': 'HTML',
     'pdf': 'PDF',
 }
 SUPPORTED_DOCUMENT_RENDERER_TYPES = frozenset(FILE_TYPE_LABELS)
-WORK_DOCUMENT_STYLE_STANDARD = 'standard'
-WORK_DOCUMENT_STYLE_WORKSHEET = 'worksheet'
-WORK_DOCUMENT_STYLES = frozenset(
-    (
-        WORK_DOCUMENT_STYLE_STANDARD,
-        WORK_DOCUMENT_STYLE_WORKSHEET,
-    )
-)
-
-
-@dataclass(frozen=True)
-class WorkDocumentStyleOption:
-    value: str
-    label: str
-    description: str = ''
-
-
-WORK_DOCUMENT_STYLE_OPTIONS = (
-    WorkDocumentStyleOption(
-        value=WORK_DOCUMENT_STYLE_STANDARD,
-        label='Обычная работа',
-        description='Стандартная печать вариантов с заданиями и решениями.',
-    ),
-    WorkDocumentStyleOption(
-        value=WORK_DOCUMENT_STYLE_WORKSHEET,
-        label='Рабочий лист',
-        description=(
-            'Печать демонстрационных заданий с решениями и '
-            'заданий для самостоятельной работы.'
-        ),
-    ),
-)
-WORK_DOCUMENT_STYLE_LABELS = {
-    option.value: option.label
-    for option in WORK_DOCUMENT_STYLE_OPTIONS
-}
 
 
 def is_supported_document_renderer_type(renderer_type: str) -> bool:
@@ -95,50 +52,6 @@ def build_render_target_from_data(
 
 
 @dataclass(frozen=True)
-class WorkDocumentBuildOptions:
-    answer_type: str = 'tasks_only'
-    include_hints: bool = False
-    include_instructions: bool = False
-    break_between_variants: bool = True
-    document_style: str = WORK_DOCUMENT_STYLE_STANDARD
-
-    @property
-    def content_config(self) -> dict:
-        return {
-            'include_answers': self.answer_type in ANSWER_TYPES_WITH_ANSWERS,
-            'include_short_solutions': self.answer_type in {
-                'with_short_solutions',
-                'with_full_solutions',
-            },
-            'include_full_solutions': self.answer_type == 'with_full_solutions',
-            'answer_type': self.answer_type,
-            'include_hints': self.include_hints,
-            'include_instructions': self.include_instructions,
-            'break_between_variants': self.break_between_variants,
-            'document_style': self.document_style,
-        }
-
-    @property
-    def content_description(self) -> str:
-        base_description = CONTENT_DESCRIPTIONS[self.answer_type]
-        if self.document_style != WORK_DOCUMENT_STYLE_STANDARD:
-            base_description = (
-                f'{WORK_DOCUMENT_STYLE_LABELS[self.document_style].lower()}: '
-                f'{base_description}'
-            )
-        additional_content = []
-        if self.include_hints:
-            additional_content.append('подсказки')
-        if self.include_instructions:
-            additional_content.append('инструкции')
-
-        if not additional_content:
-            return base_description
-
-        return f"{base_description} + {' + '.join(additional_content)}"
-
-
-@dataclass(frozen=True)
 class WorkDocumentPrintOverrides:
     """Temporary changes applied to one document render request."""
 
@@ -146,6 +59,7 @@ class WorkDocumentPrintOverrides:
     hide_text: bool = False
     hide_blank_cells: bool = False
     append_answers: bool = False
+    break_between_variants: bool = True
 
     @property
     def hidden_content_types(self) -> tuple[str, ...]:
@@ -176,24 +90,18 @@ class RemedialSheetBuildOptions:
 @dataclass(frozen=True, init=False)
 class WorkDocumentRenderOptions:
     render_target: RenderTarget
-    build_options: WorkDocumentBuildOptions
     print_overrides: WorkDocumentPrintOverrides
 
     def __init__(
         self,
         renderer_type: Optional[str] = None,
         pdf_format: str = 'A4',
-        answer_type: str = 'tasks_only',
-        include_hints: bool = False,
-        include_instructions: bool = False,
         break_between_variants: bool = True,
-        document_style: str = WORK_DOCUMENT_STYLE_STANDARD,
         hide_theory: bool = False,
         hide_text: bool = False,
         hide_blank_cells: bool = False,
         append_answers: bool = False,
         render_target: Optional[RenderTarget] = None,
-        build_options: Optional[WorkDocumentBuildOptions] = None,
         print_overrides: Optional[WorkDocumentPrintOverrides] = None,
     ):
         object.__setattr__(
@@ -207,23 +115,13 @@ class WorkDocumentRenderOptions:
         )
         object.__setattr__(
             self,
-            'build_options',
-            build_options or WorkDocumentBuildOptions(
-                answer_type=answer_type,
-                include_hints=include_hints,
-                include_instructions=include_instructions,
-                break_between_variants=break_between_variants,
-                document_style=_supported_work_document_style(document_style),
-            ),
-        )
-        object.__setattr__(
-            self,
             'print_overrides',
             print_overrides or WorkDocumentPrintOverrides(
                 hide_theory=hide_theory,
                 hide_text=hide_text,
                 hide_blank_cells=hide_blank_cells,
                 append_answers=append_answers,
+                break_between_variants=break_between_variants,
             ),
         )
 
@@ -236,28 +134,8 @@ class WorkDocumentRenderOptions:
         return self.render_target.page_format
 
     @property
-    def answer_type(self) -> str:
-        return self.build_options.answer_type
-
-    @property
-    def include_hints(self) -> bool:
-        return self.build_options.include_hints
-
-    @property
-    def include_instructions(self) -> bool:
-        return self.build_options.include_instructions
-
-    @property
     def break_between_variants(self) -> bool:
-        return self.build_options.break_between_variants
-
-    @property
-    def document_style(self) -> str:
-        return self.build_options.document_style
-
-    @property
-    def content_config(self) -> dict:
-        return self.build_options.content_config
+        return self.print_overrides.break_between_variants
 
     @property
     def file_type_label(self) -> str:
@@ -265,13 +143,9 @@ class WorkDocumentRenderOptions:
 
     @property
     def content_description(self) -> str:
-        description = self.build_options.content_description
-        if (
-            self.print_overrides.append_answers
-            and self.answer_type not in ANSWER_TYPES_WITH_ANSWERS
-        ):
-            return f'{description} + ответы в конце'
-        return description
+        if self.print_overrides.append_answers:
+            return 'по спецификации + ответы в конце'
+        return 'по спецификации'
 
 
 @dataclass(frozen=True, init=False)
@@ -327,18 +201,11 @@ def build_work_render_options(
 ) -> WorkDocumentRenderOptions:
     return WorkDocumentRenderOptions(
         render_target=build_render_target_from_data(data),
-        answer_type=data.get('answer_type', 'tasks_only'),
-        include_hints=data.get('include_hints', '0') == '1',
-        include_instructions=data.get('include_instructions', '0') == '1',
         break_between_variants=data.get('break_between_variants', '1') == '1',
-        document_style=data.get('document_style', WORK_DOCUMENT_STYLE_STANDARD),
         hide_theory=data.get('hide_theory', '0') == '1',
         hide_text=data.get('hide_text', '0') == '1',
         hide_blank_cells=data.get('hide_blank_cells', '0') == '1',
-        append_answers=(
-            data.get('append_answers', '0') == '1'
-            or data.get('with_answers', '0') == '1'
-        ),
+        append_answers=data.get('append_answers', '0') == '1',
     )
 
 
@@ -353,9 +220,3 @@ def build_remedial_sheet_render_options(
 
 def renderer_type_from_data(data: Mapping[str, str], default='pdf') -> str:
     return data.get('renderer_type', default)
-
-
-def _supported_work_document_style(document_style: str) -> str:
-    if document_style not in WORK_DOCUMENT_STYLES:
-        return WORK_DOCUMENT_STYLE_STANDARD
-    return document_style

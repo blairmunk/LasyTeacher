@@ -9,7 +9,6 @@ from core_logic.entities.document import (
 )
 from core_logic.value_objects.document_render_options import (
     RemedialSheetDocumentRenderOptions,
-    WORK_DOCUMENT_STYLE_WORKSHEET,
     WorkDocumentRenderOptions,
 )
 from core_logic.value_objects.document_render_plan_factories import (
@@ -56,7 +55,7 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         recipe = build_work_document_recipe_for_render(
             WorkDocumentRenderOptions(
                 renderer_type='html',
-                answer_type='with_answers',
+                append_answers=True,
             ),
         )
 
@@ -65,22 +64,6 @@ class DocumentRenderPlanFactoriesTests(TestCase):
             recipe.section_types,
             (HEADER_SECTION, TASK_LIST_SECTION, ANSWERS_SECTION),
         )
-
-    def test_build_work_document_recipe_for_render_supports_worksheet_style(self):
-        recipe = build_work_document_recipe_for_render(
-            WorkDocumentRenderOptions(
-                renderer_type='html',
-                document_style=WORK_DOCUMENT_STYLE_WORKSHEET,
-            ),
-        )
-
-        self.assertEqual(recipe.document_type, WORK_DOCUMENT_TYPE)
-        self.assertEqual(
-            recipe.section_types,
-            (HEADER_SECTION, TASK_LIST_SECTION),
-        )
-        self.assertIn('role_render_modes', recipe.sections[1].options)
-        self.assertIn('role_blank_cells', recipe.sections[1].options)
 
     def test_build_work_document_recipe_for_render_uses_template_spec(self):
         template_spec = PrintSettingsSpec(
@@ -110,23 +93,6 @@ class DocumentRenderPlanFactoriesTests(TestCase):
 
         self.assertEqual(recipe.section_types, (ANSWERS_SECTION,))
 
-    def test_template_spec_takes_priority_over_worksheet_style(self):
-        template_spec = PrintSettingsSpec(
-            name='Кастомная работа',
-            document_type=WORK_DOCUMENT_TYPE,
-            sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
-        )
-
-        recipe = build_work_document_recipe_for_render(
-            WorkDocumentRenderOptions(
-                renderer_type='html',
-                document_style=WORK_DOCUMENT_STYLE_WORKSHEET,
-            ),
-            print_settings_spec=template_spec,
-        )
-
-        self.assertEqual(recipe.section_types, (HEADER_SECTION,))
-
     def test_build_remedial_sheet_document_recipe_for_render(self):
         recipe = build_remedial_sheet_document_recipe_for_render(
             RemedialSheetDocumentRenderOptions(
@@ -144,7 +110,7 @@ class DocumentRenderPlanFactoriesTests(TestCase):
             work_name='Контрольная',
             options=WorkDocumentRenderOptions(
                 renderer_type='html',
-                answer_type='with_answers',
+                append_answers=True,
             ),
         )
 

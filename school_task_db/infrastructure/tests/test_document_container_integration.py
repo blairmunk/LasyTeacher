@@ -93,7 +93,6 @@ class DocumentContainerIntegrationTests(TestCase):
                     work_id=str(work.pk),
                     options=WorkDocumentRenderOptions(
                         renderer_type='html',
-                        answer_type='with_short_solutions',
                     ),
                     print_settings_id=str(print_settings.pk),
                 )

@@ -33,10 +33,7 @@ from core_logic.use_cases.get_print_settings_editor_data import (
     GetPrintSettingsEditorDataRequest,
     PrintSettingsEditorData,
 )
-from core_logic.value_objects.document_render_options import (
-    WORK_DOCUMENT_STYLE_WORKSHEET,
-    WorkDocumentRenderOptions,
-)
+from core_logic.value_objects.document_render_options import WorkDocumentRenderOptions
 from core_logic.value_objects.document_recipes import (
     BLANK_CELLS_SECTION,
     COMMON_HEADER_SECTION,
@@ -2279,10 +2276,6 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertEqual(request.print_settings_id, 'template-work')
         self.assertEqual(request.options.renderer_type, 'html')
         self.assertEqual(request.options.pdf_format, 'A5')
-        self.assertEqual(request.options.answer_type, 'with_short_solutions')
-        self.assertTrue(request.options.include_hints)
-        self.assertTrue(request.options.include_instructions)
-        self.assertEqual(request.options.document_style, WORK_DOCUMENT_STYLE_WORKSHEET)
         self.assertEqual(request.variant_id, 'variant-1')
         self.assertTrue(request.options.print_overrides.hide_theory)
         self.assertTrue(request.options.print_overrides.hide_blank_cells)
@@ -2335,13 +2328,16 @@ class WorkFormAdapterTests(SimpleTestCase):
             ),
             WorkDocumentRenderOptions(
                 renderer_type='html',
-                answer_type='with_answers',
+                append_answers=True,
             ),
         )
 
         self.assertEqual(payload, {
             'success': True,
-            'message': 'HTML документ создан (с ответами)',
+            'message': (
+                'HTML документ создан '
+                '(по спецификации + ответы в конце)'
+            ),
             'files': [
                 {
                     'name': 'work.html',

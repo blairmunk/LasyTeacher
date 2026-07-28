@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 @require_http_methods(["POST"])
 def render_work_ajax(request, work_id):
-    """Ajax rendering for work documents with hints/instructions support."""
+    """Render a work document from its snapshot and print settings."""
     renderer_type = container.work_form_adapter.document_renderer_type_from_post(
         request.POST,
     )
@@ -32,12 +32,10 @@ def render_work_ajax(request, work_id):
         options = document_request.options
         renderer_type = options.renderer_type
 
-        logger.info(f"🌐 Веб-рендер {renderer_type} для работы {work_id}")
-        logger.info(f"   Тип контента: {options.answer_type}")
+        logger.info("Web render %s for work %s", renderer_type, work_id)
         logger.info(
-            "   Дополнительно: hints=%s, instructions=%s",
-            options.include_hints,
-            options.include_instructions,
+            "Print overrides: %s",
+            options.print_overrides,
         )
 
         result = container.render_work_document_use_case().execute(

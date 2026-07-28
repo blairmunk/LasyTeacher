@@ -24,14 +24,9 @@ class Command(BaseCommand):
             default='A4',
         )
         parser.add_argument(
-            '--answer-type',
-            choices=[
-                'tasks_only',
-                'with_answers',
-                'with_short_solutions',
-                'with_full_solutions',
-            ],
-            default='tasks_only',
+            '--append-answers',
+            action='store_true',
+            help='Append an answer key after each variant',
         )
 
     def handle(self, *args, **options):
@@ -40,7 +35,7 @@ class Command(BaseCommand):
             work_id=options['work_id'],
             renderer_type=options['renderer'],
             page_format=options['page_format'],
-            answer_type=options['answer_type'],
+            append_answers=options['append_answers'],
         )
 
         raise_for_work_document_render_error(

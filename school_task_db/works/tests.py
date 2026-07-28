@@ -88,8 +88,7 @@ class RenderWorkDocumentCommandTests(TestCase):
                 'html',
                 '--page-format',
                 'A5',
-                '--answer-type',
-                'with_answers',
+                '--append-answers',
                 stdout=stdout,
             )
 
@@ -97,7 +96,7 @@ class RenderWorkDocumentCommandTests(TestCase):
         self.assertEqual(request.work_id, 'work-1')
         self.assertEqual(request.options.renderer_type, 'html')
         self.assertEqual(request.options.pdf_format, 'A5')
-        self.assertEqual(request.options.answer_type, 'with_answers')
+        self.assertTrue(request.options.print_overrides.append_answers)
         self.assertIn('Created html document for Контрольная', stdout.getvalue())
         self.assertIn('work_1.html', stdout.getvalue())
 
@@ -989,7 +988,7 @@ class WorkDetailViewTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'error': 'Не выбраны варианты'})
 
-    def test_render_work_ajax_uses_clean_content_config(self):
+    def test_render_work_ajax_uses_specification_and_print_overrides(self):
         with patch(
             'infrastructure.services.document_engine.'
             'DjangoDocumentEngine.render_document',
@@ -1003,13 +1002,17 @@ class WorkDetailViewTests(TestCase):
                     'answer_type': 'with_full_solutions',
                     'include_hints': '1',
                     'include_instructions': '1',
+                    'append_answers': '1',
                 },
             )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json()['message'],
-            'HTML документ создан (с полными решениями + подсказки + инструкции)',
+            (
+                'HTML документ создан '
+                '(по спецификации + ответы в конце)'
+            ),
         )
         render_document.assert_called_once()
         render_plan = render_document.call_args.args[0]
@@ -1019,19 +1022,15 @@ class WorkDetailViewTests(TestCase):
                 'header',
                 'task_list',
                 'answers',
-                'short_solutions',
-                'full_solutions',
             ),
         )
-        self.assertEqual(
-            {
-                key: render_plan.recipe.sections[1].options[key]
-                for key in ('include_hints', 'include_instructions')
-            },
-            {
-                'include_hints': True,
-                'include_instructions': True,
-            },
+        self.assertNotIn(
+            'include_hints',
+            render_plan.recipe.sections[1].options,
+        )
+        self.assertNotIn(
+            'include_instructions',
+            render_plan.recipe.sections[1].options,
         )
         self.assertEqual(
             render_plan.recipe.sections[1].options['variant_id'],

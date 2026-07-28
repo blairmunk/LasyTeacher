@@ -4,6 +4,10 @@ from infrastructure.services.django_variant_document_payloads import (
     build_original_task_payload,
     build_variant_task_payload,
 )
+from infrastructure.services.document_build_cache import (
+    document_payload_cache,
+    document_section_input_key,
+)
 
 
 class RemedialSheetDataProvider:
@@ -68,11 +72,19 @@ class DjangoRemedialTrainingTasksPayloadBuilder:
         self.task_payload_formatter = task_payload_formatter
 
     def build_payload(self, request):
+        cache = document_payload_cache(
+            request,
+            namespace='remedial_training_task_payloads',
+        )
+        cache_key = document_section_input_key(request)
+        if cache_key in cache:
+            return cache[cache_key]
+
         sheet_data = self.sheet_data_provider.get(
             _remedial_variant_id(request),
             request.build_context,
         )
-        return {
+        payload = {
             **dict(request.section.options),
             'tasks': [
                 build_variant_task_payload(
@@ -83,6 +95,8 @@ class DjangoRemedialTrainingTasksPayloadBuilder:
                 for variant_task in sheet_data.new_tasks or []
             ],
         }
+        cache[cache_key] = payload
+        return payload
 
 
 def _remedial_variant_id(request):

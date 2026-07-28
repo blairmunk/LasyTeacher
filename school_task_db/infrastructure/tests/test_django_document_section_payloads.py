@@ -741,6 +741,72 @@ class DjangoRemedialSectionPayloadBuilderTests(TestCase):
         self.assertEqual(task_payload['answer'], 'Новый ответ')
         self.assertEqual(task_payload['short_solution'], 'Краткое решение')
 
+    def test_reuses_remedial_training_payload_for_identical_inputs(self):
+        remedial_work = Work.objects.create(name='Работа над ошибками')
+        variant = Variant.objects.create(
+            work=remedial_work,
+            number=1,
+            variant_type='remedial',
+        )
+        task = self.create_task(text='Новое задание')
+        variant_task = VariantTask.objects.create(
+            variant=variant,
+            task=task,
+            order=1,
+            max_points=2,
+        )
+        formatter = FakeTaskPayloadFormatter()
+        sheet_data = RemedialSheetData(
+            variant=variant,
+            student=None,
+            source_work=None,
+            mark=None,
+            new_tasks=[variant_task],
+        )
+        registry = build_remedial_sheet_section_payload_builder_registry(
+            get_remedial_sheet_data=lambda variant_id: sheet_data,
+            task_payload_formatter=formatter,
+        )
+        build_context = {}
+        training_recipe = remedial_recipe(TRAINING_TASKS_SECTION)
+        answers_recipe = remedial_recipe(ANSWERS_SECTION)
+
+        first_payload = registry.build_payload(
+            remedial_build_request(
+                recipe=training_recipe,
+                section=training_recipe.sections[0],
+                build_context=build_context,
+            )
+        )
+        second_payload = registry.build_payload(
+            remedial_build_request(
+                recipe=answers_recipe,
+                section=answers_recipe.sections[0],
+                build_context=build_context,
+            )
+        )
+        distinct_recipe = remedial_recipe(
+            TRAINING_TASKS_SECTION,
+            options={'include_scores': False},
+        )
+        registry.build_payload(
+            remedial_build_request(
+                recipe=distinct_recipe,
+                section=distinct_recipe.sections[0],
+                build_context=build_context,
+            )
+        )
+        registry.build_payload(
+            remedial_build_request(
+                recipe=training_recipe,
+                section=training_recipe.sections[0],
+                build_context={},
+            )
+        )
+
+        self.assertIs(first_payload, second_payload)
+        self.assertEqual(len(formatter.requests), 3)
+
     def test_builds_remedial_payload_with_task_formatter(self):
         task = self.create_task(text='Исходное задание', answer='Ответ')
         formatter = FakeTaskPayloadFormatter()
@@ -856,14 +922,23 @@ class FakeVariantPayloadBuilder:
         return {'id': str(variant.pk)}
 
 
-def remedial_recipe(section_type):
+def remedial_recipe(section_type, options=None):
     return DocumentRecipe(
         document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
-        sections=[DocumentSectionSpec(section_type=section_type)],
+        sections=[
+            DocumentSectionSpec(
+                section_type=section_type,
+                options=options or {},
+            )
+        ],
     )
 
 
-def remedial_build_request(recipe, section):
+def remedial_build_request(
+    recipe,
+    section,
+    build_context=None,
+):
     return DocumentSectionPayloadBuildRequest(
         source=DocumentSourceRef(
             source_type=REMEDIAL_VARIANT_SOURCE_TYPE,
@@ -872,6 +947,11 @@ def remedial_build_request(recipe, section):
         ),
         recipe=recipe,
         section=section,
+        build_context=(
+            build_context
+            if build_context is not None
+            else {}
+        ),
     )
 
 

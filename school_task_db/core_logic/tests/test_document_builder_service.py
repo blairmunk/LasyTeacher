@@ -134,6 +134,35 @@ class RecipeDocumentBuilderTests(TestCase):
 
         self.assertEqual(payload_builder.request.render_target, render_target)
 
+    def test_shares_build_context_only_between_sections_of_one_document(self):
+        registry = DocumentSectionPayloadBuilderRegistry()
+        payload_builder = FakeSectionPayloadBuilder(payload={})
+        registry.register('header', payload_builder, document_type='work')
+        builder = RecipeDocumentBuilder(
+            section_payload_builder_registry=registry,
+        )
+        source = DocumentSourceRef(source_type='work', source_id='work-1')
+        recipe = DocumentRecipe(
+            document_type='work',
+            sections=[
+                DocumentSectionSpec(section_type='header'),
+                DocumentSectionSpec(section_type='header'),
+            ],
+        )
+
+        builder.build(source, recipe)
+        first_build_requests = tuple(payload_builder.requests)
+        builder.build(source, recipe)
+
+        self.assertIs(
+            first_build_requests[0].build_context,
+            first_build_requests[1].build_context,
+        )
+        self.assertIsNot(
+            first_build_requests[0].build_context,
+            payload_builder.requests[2].build_context,
+        )
+
     def test_keeps_section_options_for_unregistered_payload_builder(self):
         builder = RecipeDocumentBuilder(
             section_payload_builder_registry=DocumentSectionPayloadBuilderRegistry(),
@@ -235,9 +264,11 @@ class FakeSectionPayloadBuilder:
     def __init__(self, payload=None):
         self.payload = payload or {}
         self.request = None
+        self.requests = []
 
     def build_payload(self, request):
         self.request = request
+        self.requests.append(request)
         return self.payload
 
 

@@ -77,6 +77,7 @@ class RecipeDocumentBuilder(IDocumentBuilder):
         recipe: DocumentRecipe,
         render_target=None,
     ) -> Document:
+        build_context = {}
         return Document(
             title=source.title,
             document_type=recipe.document_type,
@@ -91,13 +92,21 @@ class RecipeDocumentBuilder(IDocumentBuilder):
                         recipe,
                         section,
                         render_target,
+                        build_context,
                     ),
                 )
                 for section in recipe.sections
             ],
         )
 
-    def _section_payload(self, source, recipe, section, render_target=None):
+    def _section_payload(
+        self,
+        source,
+        recipe,
+        section,
+        render_target=None,
+        build_context=None,
+    ):
         if self.section_payload_builder_registry is None:
             return dict(section.options)
 
@@ -109,6 +118,11 @@ class RecipeDocumentBuilder(IDocumentBuilder):
                         recipe=recipe,
                         section=section,
                         render_target=render_target,
+                        build_context=(
+                            build_context
+                            if build_context is not None
+                            else {}
+                        ),
                     )
                 )
             )

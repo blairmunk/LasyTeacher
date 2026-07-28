@@ -692,7 +692,7 @@ class DjangoRemedialSectionPayloadBuilderTests(TestCase):
         self.assertTrue(payload['tasks'][0]['formatted'])
         self.assertEqual(formatter.requests[0]['text'], 'Исходное задание')
 
-    def test_provider_caches_sheet_data_per_variant(self):
+    def test_provider_caches_sheet_data_only_in_build_context(self):
         calls = []
         sheet_data = RemedialSheetData(
             variant='variant',
@@ -704,11 +704,19 @@ class DjangoRemedialSectionPayloadBuilderTests(TestCase):
             get_remedial_sheet_data=lambda variant_id:
                 calls.append(variant_id) or sheet_data,
         )
+        first_build_context = {}
 
-        self.assertEqual(provider.get('variant-1'), sheet_data)
-        self.assertEqual(provider.get('variant-1'), sheet_data)
+        self.assertEqual(
+            provider.get('variant-1', first_build_context),
+            sheet_data,
+        )
+        self.assertEqual(
+            provider.get('variant-1', first_build_context),
+            sheet_data,
+        )
+        self.assertEqual(provider.get('variant-1', {}), sheet_data)
 
-        self.assertEqual(calls, ['variant-1'])
+        self.assertEqual(calls, ['variant-1', 'variant-1'])
 
     def test_provider_requires_data_loader(self):
         with self.assertRaisesRegex(

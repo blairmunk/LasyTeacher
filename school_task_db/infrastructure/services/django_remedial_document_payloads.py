@@ -11,12 +11,14 @@ class RemedialSheetDataProvider:
         if get_remedial_sheet_data is None:
             raise ValueError('get_remedial_sheet_data is required')
         self.get_remedial_sheet_data = get_remedial_sheet_data
-        self._cache = {}
 
-    def get(self, variant_id):
-        if variant_id not in self._cache:
-            self._cache[variant_id] = self.get_remedial_sheet_data(variant_id)
-        return self._cache[variant_id]
+    def get(self, variant_id, build_context=None):
+        if build_context is None:
+            return self.get_remedial_sheet_data(variant_id)
+        cache = build_context.setdefault('remedial_sheet_data_by_variant', {})
+        if variant_id not in cache:
+            cache[variant_id] = self.get_remedial_sheet_data(variant_id)
+        return cache[variant_id]
 
 
 class DjangoRemedialHeaderPayloadBuilder:
@@ -24,7 +26,10 @@ class DjangoRemedialHeaderPayloadBuilder:
         self.sheet_data_provider = sheet_data_provider
 
     def build_payload(self, request):
-        sheet_data = self.sheet_data_provider.get(_remedial_variant_id(request))
+        sheet_data = self.sheet_data_provider.get(
+            _remedial_variant_id(request),
+            request.build_context,
+        )
         return {
             **dict(request.section.options),
             'title': 'Работа над ошибками',
@@ -40,7 +45,10 @@ class DjangoRemedialOriginalMistakesPayloadBuilder:
         self.task_payload_formatter = task_payload_formatter
 
     def build_payload(self, request):
-        sheet_data = self.sheet_data_provider.get(_remedial_variant_id(request))
+        sheet_data = self.sheet_data_provider.get(
+            _remedial_variant_id(request),
+            request.build_context,
+        )
         return {
             **dict(request.section.options),
             'tasks': [
@@ -60,7 +68,10 @@ class DjangoRemedialTrainingTasksPayloadBuilder:
         self.task_payload_formatter = task_payload_formatter
 
     def build_payload(self, request):
-        sheet_data = self.sheet_data_provider.get(_remedial_variant_id(request))
+        sheet_data = self.sheet_data_provider.get(
+            _remedial_variant_id(request),
+            request.build_context,
+        )
         return {
             **dict(request.section.options),
             'tasks': [

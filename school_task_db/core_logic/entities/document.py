@@ -96,6 +96,7 @@ class Document:
             document_type=self.document_type,
             sections=(*self.sections, section),
             source=self.source,
+            presentation=self.presentation,
         )
 
 

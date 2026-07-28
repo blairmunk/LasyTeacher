@@ -278,6 +278,7 @@ def build_remedial_sheet_batch_document_recipe_for_render(
     return DocumentRecipe(
         document_type=base_recipe.document_type,
         sections=sections,
+        presentation=base_recipe.presentation,
     )
 
 

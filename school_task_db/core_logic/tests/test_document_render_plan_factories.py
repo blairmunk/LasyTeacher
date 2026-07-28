@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 from core_logic.entities.document import (
+    DocumentPresentation,
     DocumentSectionSpec,
     PrintSettingsSpec,
     REMEDIAL_WORK_SOURCE_TYPE,
@@ -362,10 +363,15 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         self.assertEqual(plan.recipe.sections[5].options['variant_id'], 'variant-2')
 
     def test_build_remedial_sheet_batch_document_render_plan_uses_print_settings_spec(self):
+        presentation = DocumentPresentation(
+            custom_css='.remedial-sheet { font-size: 12pt; }',
+            custom_latex_preamble='\\usepackage{multicol}',
+        )
         print_settings_spec = PrintSettingsSpec(
             name='Профиль РнО',
             document_type='remedial_sheet',
             sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
+            presentation=presentation,
         )
 
         plan = build_remedial_sheet_batch_document_render_plan(
@@ -378,3 +384,4 @@ class DocumentRenderPlanFactoriesTests(TestCase):
 
         self.assertEqual(plan.recipe.section_types, (ANSWERS_SECTION,))
         self.assertEqual(plan.recipe.sections[0].options['variant_id'], 'variant-1')
+        self.assertEqual(plan.recipe.presentation, presentation)

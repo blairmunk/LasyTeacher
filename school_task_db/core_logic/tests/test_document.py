@@ -44,7 +44,14 @@ class DocumentModelTests(TestCase):
         self.assertEqual(document.document_type, 'work')
 
     def test_document_can_be_extended_without_mutating_original(self):
-        document = Document(title='Разбор', document_type='remedial_sheet')
+        presentation = DocumentPresentation(
+            custom_css='.task { margin: 1rem; }',
+        )
+        document = Document(
+            title='Разбор',
+            document_type='remedial_sheet',
+            presentation=presentation,
+        )
 
         updated_document = document.with_section(
             DocumentSection(
@@ -60,6 +67,7 @@ class DocumentModelTests(TestCase):
             updated_document.sections[0].payload,
             {'task_ids': ['task-1']},
         )
+        self.assertEqual(updated_document.presentation, presentation)
 
     def test_document_finds_sections_by_type(self):
         document = Document(

@@ -14,7 +14,7 @@ from core_logic.value_objects.document_recipes import (
     build_print_settings_spec_from_config,
 )
 from core_logic.value_objects.document_section_catalog import (
-    validate_document_section_types,
+    validate_document_section_specs,
 )
 from core_logic.value_objects.document_type_catalog import validate_document_type
 
@@ -81,9 +81,9 @@ class PrintSettings(BaseModel):
         try:
             validate_document_type(self.document_type)
             print_settings_spec = self.to_print_settings_spec()
-            validate_document_section_types(
+            validate_document_section_specs(
                 self.document_type,
-                print_settings_spec.section_types,
+                print_settings_spec.sections,
             )
         except ValueError as error:
             raise ValidationError({'sections_config': str(error)}) from error

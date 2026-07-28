@@ -282,6 +282,26 @@ class PrintSettingsViewTests(TestCase):
         )
         self.assertFalse(PrintSettings.objects.exists())
 
+    def test_print_settings_create_view_rejects_invalid_known_option_type(self):
+        response = self.client.post(
+            reverse('document_engine:print-profile-create'),
+            {
+                'name': 'Рабочий лист',
+                'document_type': 'work',
+                'sections': ['task_list'],
+                'section_options__task_list': (
+                    '{"hide_blank_cells": "false"}'
+                ),
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            'Section task_list option hide_blank_cells must be boolean',
+        )
+        self.assertFalse(PrintSettings.objects.exists())
+
     def test_print_settings_create_view_shows_clean_validation_errors(self):
         response = self.client.post(
             reverse('document_engine:print-profile-create'),

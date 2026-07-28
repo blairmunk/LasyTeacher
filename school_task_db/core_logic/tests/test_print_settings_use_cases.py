@@ -250,6 +250,29 @@ class CreatePrintSettingsUseCaseTests(TestCase):
             result.errors,
         )
 
+    def test_rejects_invalid_section_options_without_persisting(self):
+        repo = FakePrintSettingsRepository()
+
+        result = CreatePrintSettingsUseCase(repo).execute(
+            CreatePrintSettingsParams(
+                name='Сломанные клетки',
+                document_type='work',
+                sections=(
+                    DocumentSectionSpec(
+                        section_type='blank_cells',
+                        options={'rows': 0},
+                    ),
+                ),
+            )
+        )
+
+        self.assertEqual(result.status, PRINT_SETTINGS_CREATE_STATUS_INVALID)
+        self.assertIn(
+            'Section blank_cells option rows must be between 1 and 40',
+            result.errors,
+        )
+        self.assertIsNone(repo.created_params)
+
 
 class UpdatePrintSettingsUseCaseTests(TestCase):
     def test_updates_profile_from_valid_params(self):
@@ -302,4 +325,28 @@ class UpdatePrintSettingsUseCaseTests(TestCase):
         )
 
         self.assertEqual(result.status, PRINT_SETTINGS_UPDATE_STATUS_INVALID)
+        self.assertIsNone(repo.updated_params)
+
+    def test_rejects_invalid_section_options_update(self):
+        repo = FakePrintSettingsRepository()
+
+        result = UpdatePrintSettingsUseCase(repo).execute(
+            UpdatePrintSettingsParams(
+                print_settings_id='profile-1',
+                name='Сломанный профиль',
+                document_type='work',
+                sections=(
+                    DocumentSectionSpec(
+                        section_type='task_list',
+                        options={'hide_blank_cells': 'false'},
+                    ),
+                ),
+            )
+        )
+
+        self.assertEqual(result.status, PRINT_SETTINGS_UPDATE_STATUS_INVALID)
+        self.assertIn(
+            'Section task_list option hide_blank_cells must be boolean',
+            result.errors,
+        )
         self.assertIsNone(repo.updated_params)

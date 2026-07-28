@@ -8,7 +8,7 @@ from core_logic.interfaces.print_settings_repo import (
     IPrintSettingsRepository,
 )
 from core_logic.value_objects.document_section_catalog import (
-    validate_document_section_types,
+    validate_document_section_specs,
 )
 from core_logic.value_objects.document_type_catalog import validate_document_type
 
@@ -57,9 +57,9 @@ class CreatePrintSettingsUseCase:
             errors.append(str(error))
 
         try:
-            validate_document_section_types(
+            validate_document_section_specs(
                 params.document_type,
-                params.section_types,
+                params.sections,
             )
         except ValueError as error:
             errors.append(str(error))

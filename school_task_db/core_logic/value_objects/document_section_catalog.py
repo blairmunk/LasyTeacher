@@ -296,6 +296,88 @@ def validate_document_section_types(
             )
 
 
+def validate_document_section_specs(
+    document_type: str,
+    sections,
+) -> None:
+    sections = tuple(sections)
+    validate_document_section_types(
+        document_type,
+        (section.section_type for section in sections),
+    )
+    for section in sections:
+        _validate_document_section_options(
+            section.section_type,
+            section.options,
+        )
+
+
+def _validate_document_section_options(section_type, options) -> None:
+    options = dict(options or {})
+    if section_type == BLANK_CELLS_SECTION:
+        _validate_blank_cells_options(options)
+    elif section_type == TASK_LIST_SECTION:
+        _validate_task_list_options(options)
+
+
+def _validate_blank_cells_options(options) -> None:
+    for option_name, max_value in (
+        ('rows', 40),
+        ('columns', 40),
+        ('row_height', 120),
+    ):
+        if option_name not in options:
+            continue
+        value = options[option_name]
+        try:
+            parsed_value = int(value)
+        except (TypeError, ValueError) as error:
+            raise ValueError(
+                f'Section {BLANK_CELLS_SECTION} option '
+                f'{option_name} must be an integer'
+            ) from error
+        if isinstance(value, bool) or not 1 <= parsed_value <= max_value:
+            raise ValueError(
+                f'Section {BLANK_CELLS_SECTION} option {option_name} '
+                f'must be between 1 and {max_value}'
+            )
+
+
+def _validate_task_list_options(options) -> None:
+    hidden_content_types = options.get('hidden_content_types')
+    if hidden_content_types is not None:
+        if isinstance(hidden_content_types, str):
+            hidden_content_types = [
+                item.strip()
+                for item in hidden_content_types.split(',')
+                if item.strip()
+            ]
+        elif isinstance(hidden_content_types, (list, tuple)):
+            hidden_content_types = list(hidden_content_types)
+        else:
+            raise ValueError(
+                f'Section {TASK_LIST_SECTION} option '
+                'hidden_content_types must be a list or string'
+            )
+        if any(
+            not isinstance(content_type, str)
+            for content_type in hidden_content_types
+        ):
+            raise ValueError(
+                f'Section {TASK_LIST_SECTION} option '
+                'hidden_content_types must contain strings'
+            )
+
+    if (
+        'hide_blank_cells' in options
+        and not isinstance(options['hide_blank_cells'], bool)
+    ):
+        raise ValueError(
+            f'Section {TASK_LIST_SECTION} option hide_blank_cells '
+            'must be boolean'
+        )
+
+
 def _section_order_items(section_order):
     if isinstance(section_order, str):
         return section_order.split(',')

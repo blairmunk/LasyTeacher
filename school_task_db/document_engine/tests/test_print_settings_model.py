@@ -94,6 +94,23 @@ class PrintSettingsModelTests(TestCase):
 
         self.assertIn('sections_config', context.exception.error_dict)
 
+    def test_full_clean_rejects_invalid_known_section_options(self):
+        template = PrintSettings(
+            name='Сломанные клетки',
+            document_type=PrintSettings.DocumentType.WORK,
+            sections_config=[
+                {
+                    'type': 'blank_cells',
+                    'params': {'rows': 0},
+                },
+            ],
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            template.full_clean()
+
+        self.assertIn('sections_config', context.exception.error_dict)
+
     def test_full_clean_rejects_unknown_section_type(self):
         template = PrintSettings(
             name='Сломанный шаблон',

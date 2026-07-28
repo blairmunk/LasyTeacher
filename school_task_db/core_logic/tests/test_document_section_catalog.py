@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+from core_logic.entities.document import DocumentSectionSpec
 from core_logic.use_cases.get_document_section_catalog import (
     GetDocumentSectionCatalogRequest,
     GetDocumentSectionCatalogUseCase,
@@ -22,6 +23,7 @@ from core_logic.value_objects.document_recipes import (
 from core_logic.value_objects.document_section_catalog import (
     get_document_section_catalog,
     order_document_section_types,
+    validate_document_section_specs,
     validate_document_section_types,
 )
 
@@ -193,6 +195,65 @@ class DocumentSectionCatalogTests(TestCase):
                 WORKSHEET_DOCUMENT_TYPE,
                 [ORIGINAL_MISTAKES_SECTION],
             )
+
+    def test_validates_known_section_options(self):
+        validate_document_section_specs(
+            WORK_DOCUMENT_TYPE,
+            [
+                DocumentSectionSpec(
+                    section_type=TASK_LIST_SECTION,
+                    options={
+                        'hidden_content_types': 'theory,text',
+                        'hide_blank_cells': False,
+                        'future_option': {'enabled': True},
+                    },
+                ),
+                DocumentSectionSpec(
+                    section_type=BLANK_CELLS_SECTION,
+                    options={
+                        'rows': '8',
+                        'columns': 20,
+                        'row_height': 30,
+                    },
+                ),
+            ],
+        )
+
+    def test_rejects_invalid_blank_cells_dimensions(self):
+        for option_name, value in (
+            ('rows', 0),
+            ('columns', 41),
+            ('row_height', 'large'),
+        ):
+            with self.subTest(option_name=option_name):
+                with self.assertRaises(ValueError):
+                    validate_document_section_specs(
+                        WORK_DOCUMENT_TYPE,
+                        [
+                            DocumentSectionSpec(
+                                section_type=BLANK_CELLS_SECTION,
+                                options={option_name: value},
+                            ),
+                        ],
+                    )
+
+    def test_rejects_invalid_task_list_option_types(self):
+        for options in (
+            {'hidden_content_types': 12},
+            {'hidden_content_types': ['theory', 12]},
+            {'hide_blank_cells': 'false'},
+        ):
+            with self.subTest(options=options):
+                with self.assertRaises(ValueError):
+                    validate_document_section_specs(
+                        WORK_DOCUMENT_TYPE,
+                        [
+                            DocumentSectionSpec(
+                                section_type=TASK_LIST_SECTION,
+                                options=options,
+                            ),
+                        ],
+                    )
 
 
 class GetDocumentSectionCatalogUseCaseTests(TestCase):

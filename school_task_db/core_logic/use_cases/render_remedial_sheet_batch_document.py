@@ -8,7 +8,6 @@ from core_logic.entities.document_rendering import (
     DOCUMENT_RENDER_STATUS_NOT_FOUND,
     DocumentRenderResult,
 )
-from core_logic.interfaces.document_engine import IDocumentEngine
 from core_logic.interfaces.print_settings_repo import (
     IPrintSettingsRepository,
 )
@@ -42,20 +41,14 @@ class RenderRemedialSheetBatchDocumentUseCase:
     def __init__(
         self,
         work_repo: IWorkDocumentRepository,
+        render_document_from_recipe_use_case: RenderDocumentFromRecipeUseCase,
         print_settings_repo: IPrintSettingsRepository | None = None,
-        document_engine: IDocumentEngine | None = None,
-        render_document_from_recipe_use_case: (
-            RenderDocumentFromRecipeUseCase | None
-        ) = None,
     ):
         self.work_repo = work_repo
-        self.print_settings_repo = print_settings_repo
         self.render_document_from_recipe_use_case = (
             render_document_from_recipe_use_case
-            or RenderDocumentFromRecipeUseCase(
-                document_engine=document_engine,
-            )
         )
+        self.print_settings_repo = print_settings_repo
 
     def execute(
         self,

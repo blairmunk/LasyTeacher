@@ -19,6 +19,9 @@ from core_logic.use_cases.get_rendered_document_file import (
     GetRenderedDocumentFileRequest,
     GetRenderedDocumentFileUseCase,
 )
+from core_logic.use_cases.render_document_from_recipe import (
+    RenderDocumentFromRecipeUseCase,
+)
 from core_logic.use_cases.render_remedial_sheet_document import (
     RenderRemedialSheetDocumentRequest,
     RenderRemedialSheetDocumentUseCase,
@@ -73,6 +76,12 @@ class FakeDocumentEngine:
     def get_rendered_file(self, file_type, filename):
         self.file_request = (file_type, filename)
         return self.file_result
+
+
+def recipe_renderer(document_engine):
+    return RenderDocumentFromRecipeUseCase(
+        document_engine=document_engine,
+    )
 
 
 class FakeWorkRepository:
@@ -165,7 +174,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         service = FakeDocumentEngine()
         work_repo = FakeWorkRepository()
         use_case = RenderWorkDocumentUseCase(
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=work_repo,
         )
 
@@ -187,7 +196,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         service = FakeDocumentEngine()
         work_repo = FakeWorkRepository()
         use_case = RenderWorkDocumentUseCase(
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=work_repo,
         )
         options = WorkDocumentRenderOptions(renderer_type='html')
@@ -212,10 +221,10 @@ class DocumentRenderingUseCaseTests(TestCase):
             (HEADER_SECTION, TASK_LIST_SECTION),
         )
 
-    def test_render_work_document_accepts_document_engine_keyword(self):
+    def test_render_work_document_uses_recipe_renderer_dependency(self):
         service = FakeDocumentEngine()
         use_case = RenderWorkDocumentUseCase(
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(),
         )
 
@@ -238,7 +247,7 @@ class DocumentRenderingUseCaseTests(TestCase):
             sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
         )
         use_case = RenderWorkDocumentUseCase(
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(),
             print_settings_repo=print_settings_repo,
         )
@@ -279,7 +288,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         service = FakeDocumentEngine()
         print_settings_repo = FakePrintSettingsRepository()
         use_case = RenderWorkDocumentUseCase(
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(),
             print_settings_repo=print_settings_repo,
         )
@@ -310,7 +319,7 @@ class DocumentRenderingUseCaseTests(TestCase):
             sections=[DocumentSectionSpec(section_type=TASK_LIST_SECTION)],
         )
         use_case = RenderWorkDocumentUseCase(
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(),
             print_settings_repo=print_settings_repo,
         )
@@ -339,7 +348,7 @@ class DocumentRenderingUseCaseTests(TestCase):
             )
         )
         use_case = RenderWorkDocumentUseCase(
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(),
             print_settings_repo=print_settings_repo,
         )
@@ -362,7 +371,7 @@ class DocumentRenderingUseCaseTests(TestCase):
     def test_render_work_document_handles_missing_work(self):
         service = FakeDocumentEngine()
         use_case = RenderWorkDocumentUseCase(
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(work_name=None),
         )
 
@@ -380,7 +389,7 @@ class DocumentRenderingUseCaseTests(TestCase):
     def test_render_work_document_can_select_one_work_variant(self):
         service = FakeDocumentEngine()
         use_case = RenderWorkDocumentUseCase(
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(
                 variant_ids=['variant-1', 'variant-2'],
             ),
@@ -406,7 +415,7 @@ class DocumentRenderingUseCaseTests(TestCase):
     def test_render_work_document_rejects_foreign_variant(self):
         service = FakeDocumentEngine()
         use_case = RenderWorkDocumentUseCase(
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(variant_ids=['variant-1']),
         )
 
@@ -426,7 +435,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         service = FakeDocumentEngine()
         work_repo = FakeWorkRepository()
         use_case = RenderRemedialSheetDocumentUseCase(
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=work_repo,
         )
         options = RemedialSheetDocumentRenderOptions(renderer_type='pdf')
@@ -458,10 +467,10 @@ class DocumentRenderingUseCaseTests(TestCase):
             ),
         )
 
-    def test_render_remedial_sheet_document_accepts_document_engine_keyword(self):
+    def test_render_remedial_sheet_uses_recipe_renderer_dependency(self):
         service = FakeDocumentEngine()
         use_case = RenderRemedialSheetDocumentUseCase(
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(),
         )
 
@@ -484,7 +493,7 @@ class DocumentRenderingUseCaseTests(TestCase):
             sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
         )
         use_case = RenderRemedialSheetDocumentUseCase(
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(),
             print_settings_repo=print_settings_repo,
         )
@@ -522,7 +531,7 @@ class DocumentRenderingUseCaseTests(TestCase):
             sections=[DocumentSectionSpec(section_type=TASK_LIST_SECTION)],
         )
         use_case = RenderRemedialSheetDocumentUseCase(
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(),
             print_settings_repo=print_settings_repo,
         )
@@ -556,7 +565,7 @@ class DocumentRenderingUseCaseTests(TestCase):
             )
         )
         use_case = RenderRemedialSheetDocumentUseCase(
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(),
             print_settings_repo=print_settings_repo,
         )
@@ -588,7 +597,7 @@ class DocumentRenderingUseCaseTests(TestCase):
             )
         )
         use_case = RenderRemedialSheetDocumentUseCase(
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(),
             print_settings_repo=print_settings_repo,
         )
@@ -612,7 +621,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         service = FakeDocumentEngine()
         service.remedial_document = GeneratedDocument(file_type='pdf')
         use_case = RenderRemedialSheetDocumentUseCase(
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(),
         )
 
@@ -629,7 +638,7 @@ class DocumentRenderingUseCaseTests(TestCase):
     def test_render_remedial_sheet_document_rejects_unsupported_renderer(self):
         service = FakeDocumentEngine()
         use_case = RenderRemedialSheetDocumentUseCase(
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(),
         )
 
@@ -648,7 +657,7 @@ class DocumentRenderingUseCaseTests(TestCase):
     def test_render_remedial_sheet_document_rejects_non_remedial_variant(self):
         service = FakeDocumentEngine()
         use_case = RenderRemedialSheetDocumentUseCase(
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(variant_type='regular'),
         )
 
@@ -666,7 +675,7 @@ class DocumentRenderingUseCaseTests(TestCase):
     def test_render_remedial_sheet_document_handles_missing_variant(self):
         service = FakeDocumentEngine()
         use_case = RenderRemedialSheetDocumentUseCase(
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(variant_type=None),
         )
 
@@ -689,7 +698,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         service = FakeDocumentEngine()
         use_case = RenderRemedialSheetBatchDocumentUseCase(
             work_repo=work_repo,
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
         )
 
         result = use_case.execute(
@@ -752,7 +761,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         service = FakeDocumentEngine()
         use_case = RenderRemedialSheetBatchDocumentUseCase(
             work_repo=work_repo,
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
         )
         print_settings_spec = PrintSettingsSpec(
             name='Профиль РнО',
@@ -775,7 +784,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         service = FakeDocumentEngine()
         use_case = RenderRemedialSheetBatchDocumentUseCase(
             work_repo=FakeWorkRepository(work_name=None),
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
         )
 
         result = use_case.execute(
@@ -797,7 +806,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         service = FakeDocumentEngine()
         use_case = RenderRemedialSheetBatchDocumentUseCase(
             work_repo=work_repo,
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
         )
 
         result = use_case.execute(
@@ -821,7 +830,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         service.remedial_document = GeneratedDocument(file_type='pdf')
         use_case = RenderRemedialSheetBatchDocumentUseCase(
             work_repo=work_repo,
-            document_engine=service,
+            render_document_from_recipe_use_case=recipe_renderer(service),
         )
 
         result = use_case.execute(

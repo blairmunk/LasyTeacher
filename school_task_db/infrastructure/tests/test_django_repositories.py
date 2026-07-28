@@ -6,6 +6,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from core.models import AcademicYear, ImportLog
+from core_logic.services.grading_service import GradingService
 from core_logic.services.remedial_service import RemedialService
 from core_logic.services.work_variant_composition_service import (
     WorkVariantCompositionService,
@@ -13,7 +14,6 @@ from core_logic.services.work_variant_composition_service import (
 from core_logic.services.work_spec_sync_service import WorkSpecSyncService
 from core_logic.interfaces.event_repo import (
     CreateEventParams,
-    GradeParticipationParams,
 )
 from core_logic.interfaces.orphan_variant_repo import (
     CreateWorkFromOrphanVariantsParams,
@@ -48,6 +48,10 @@ from core_logic.use_cases.create_work_from_orphans import (
 from core_logic.use_cases.compose_work_variants import (
     ComposeWorkVariantsRequest,
     ComposeWorkVariantsUseCase,
+)
+from core_logic.use_cases.grade_student_work import (
+    GradeStudentWorkRequest,
+    GradeStudentWorkUseCase,
 )
 from core_logic.use_cases.sync_work_analog_groups import (
     SyncWorkAnalogGroupsRequest,
@@ -2165,14 +2169,18 @@ class DjangoRemedialRepositoryTests(TestCase):
             task=self.original_weak,
         )
 
-        result = DjangoEventRepository().grade_participation(
-            GradeParticipationParams(
+        result = GradeStudentWorkUseCase(
+            event_repo=DjangoEventRepository(),
+            grading_service=GradingService(),
+            transaction_manager=DjangoTransactionManager(),
+        ).execute(
+            GradeStudentWorkRequest(
                 participation_id=str(self.participation.pk),
                 score=4,
                 points=6,
                 max_points=7,
                 teacher_comment='Хорошая работа',
-                checked_by='teacher',
+                checked_by_username='teacher',
                 task_scores={
                     str(variant_task.pk): {
                         'task_id': str(self.original_weak.pk),
@@ -2211,6 +2219,45 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(weak_log.points, 1)
         self.assertEqual(weak_log.max_points, 2)
         self.assertEqual(weak_log.comment, 'Повторить')
+
+    def test_grading_use_case_waits_for_all_active_participants(self):
+        self.event.status = 'completed'
+        self.event.save()
+        self.participation.status = 'completed'
+        self.participation.save()
+        second_student = Student.objects.create(
+            last_name='Сидоров',
+            first_name='Сидор',
+        )
+        second_participation = EventParticipation.objects.create(
+            event=self.event,
+            student=second_student,
+            variant=self.source_variant,
+            status='completed',
+        )
+        use_case = GradeStudentWorkUseCase(
+            event_repo=DjangoEventRepository(),
+            grading_service=GradingService(),
+            transaction_manager=DjangoTransactionManager(),
+        )
+
+        first_result = use_case.execute(
+            GradeStudentWorkRequest(
+                participation_id=str(self.participation.pk),
+                score=4,
+            )
+        )
+        second_result = use_case.execute(
+            GradeStudentWorkRequest(
+                participation_id=str(second_participation.pk),
+                score=5,
+            )
+        )
+
+        self.assertEqual(first_result.event_status, 'reviewing')
+        self.assertEqual(second_result.event_status, 'graded')
+        self.event.refresh_from_db()
+        self.assertEqual(self.event.status, 'graded')
 
     def test_event_repository_returns_list_and_detail_page_data(self):
         repo = DjangoEventRepository()

@@ -8,6 +8,7 @@ from core_logic.entities.event import (
     EventParticipationRow,
     EventEntity,
     EventParticipationRef,
+    ParticipationGradingContext,
     EventVariantAssignmentResult,
     EventVariantRef,
     MarkEntity,
@@ -42,7 +43,7 @@ class GradeParticipationParams:
     is_retake: bool = False
     is_excellent: bool = False
     needs_attention: bool = False
-    sync_event_status: bool = True
+    event_status: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -138,8 +139,15 @@ class IEventRepository(ABC):
         """Create an assigned event participation and return its ID."""
 
     @abstractmethod
-    def grade_participation(
+    def get_participation_grading_context(
+        self,
+        participation_id: str,
+    ) -> ParticipationGradingContext:
+        """Lock and return the state needed for grading decisions."""
+
+    @abstractmethod
+    def save_participation_grade(
         self,
         params: GradeParticipationParams,
     ) -> GradeParticipationResult:
-        """Persist a mark and update participation/event review state."""
+        """Persist a mark, participation state and optional event status."""

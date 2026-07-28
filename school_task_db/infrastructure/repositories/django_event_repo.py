@@ -19,6 +19,7 @@ from core_logic.entities.event import (
     EventVariantRef,
     EventWorkScanRef,
     MarkEntity,
+    ParticipationGradingContext,
     ParticipationMarkData,
     StudentSummary,
     VariantSummary,
@@ -30,16 +31,12 @@ from core_logic.interfaces.event_repo import (
     GradeParticipationResult,
     IEventRepository,
 )
-from core_logic.services.grading_service import GradingService
 from events.models import Event, EventParticipation, Mark
 from students.models import StudentGroup
 from works.models import Variant
 
 
 class DjangoEventRepository(IEventRepository):
-    def __init__(self, grading_service=None):
-        self.grading_service = grading_service or GradingService()
-
     def get_list_events(self):
         return [
             EventListItem(
@@ -328,15 +325,42 @@ class DjangoEventRepository(IEventRepository):
         )
         return str(participation.pk)
 
-    def grade_participation(
+    def get_participation_grading_context(
+        self,
+        participation_id: str,
+    ) -> ParticipationGradingContext:
+        participation = EventParticipation.objects.select_for_update().get(
+            pk=participation_id,
+        )
+        event = Event.objects.select_for_update().get(
+            pk=participation.event_id,
+        )
+        other_active = EventParticipation.objects.filter(
+            event_id=event.pk,
+        ).exclude(
+            pk=participation.pk,
+        ).exclude(
+            status='absent',
+        )
+        return ParticipationGradingContext(
+            event_status=event.status,
+            other_active_participants=other_active.count(),
+            other_graded_participants=other_active.filter(
+                status='graded',
+            ).count(),
+        )
+
+    def save_participation_grade(
         self,
         params: GradeParticipationParams,
     ) -> GradeParticipationResult:
         with transaction.atomic():
-            participation = EventParticipation.objects.select_related(
-                'student',
-                'event',
-            ).get(pk=params.participation_id)
+            participation = (
+                EventParticipation.objects.select_for_update().select_related(
+                    'student',
+                    'event',
+                ).get(pk=params.participation_id)
+            )
             mark, _ = Mark.objects.get_or_create(participation=participation)
 
             mark.score = params.score
@@ -363,19 +387,9 @@ class DjangoEventRepository(IEventRepository):
             participation.save()
 
             event = participation.event
-            if params.sync_event_status:
-                active_count = event.eventparticipation_set.exclude(
-                    status='absent',
-                ).count()
-                graded_count = event.eventparticipation_set.exclude(
-                    status='absent',
-                ).filter(status='graded').count()
-                event.status = self.grading_service.next_event_status(
-                    current_status=event.status,
-                    active_participants=active_count,
-                    graded_participants=graded_count,
-                )
-                event.save()
+            if params.event_status is not None:
+                event.status = params.event_status
+                event.save(update_fields=['status'])
 
             student = participation.student
             return GradeParticipationResult(

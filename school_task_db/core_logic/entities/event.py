@@ -141,6 +141,13 @@ class EventParticipationRef:
 
 
 @dataclass(frozen=True)
+class ParticipationGradingContext:
+    event_status: str
+    other_active_participants: int
+    other_graded_participants: int
+
+
+@dataclass(frozen=True)
 class MarkEntity:
     student_id: str
     event_id: str

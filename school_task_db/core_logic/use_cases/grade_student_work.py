@@ -8,6 +8,7 @@ from core_logic.interfaces.event_repo import (
     GradeParticipationResult,
     IEventRepository,
 )
+from core_logic.interfaces.transaction_manager import ITransactionManager
 from core_logic.services.grading_service import GradingService
 
 
@@ -35,30 +36,47 @@ class GradeStudentWorkUseCase:
         self,
         event_repo: IEventRepository,
         grading_service: GradingService,
+        transaction_manager: ITransactionManager,
     ):
         self.event_repo = event_repo
         self.grading_service = grading_service
+        self.transaction_manager = transaction_manager
 
     def execute(self, request: GradeStudentWorkRequest) -> GradeParticipationResult:
         checked_by = self.grading_service.checked_by_name(
             display_name=request.checked_by_display_name,
             username=request.checked_by_username,
         )
-        return self.event_repo.grade_participation(
-            GradeParticipationParams(
-                participation_id=request.participation_id,
-                score=request.score,
-                points=request.points,
-                max_points=request.max_points,
-                teacher_comment=request.teacher_comment,
-                mistakes_analysis=request.mistakes_analysis,
-                recommendations=request.recommendations,
-                checked_by=checked_by,
-                work_scan=request.work_scan,
-                task_scores=request.task_scores,
-                is_retake=request.is_retake,
-                is_excellent=request.is_excellent,
-                needs_attention=request.needs_attention,
-                sync_event_status=request.sync_event_status,
+        with self.transaction_manager.atomic():
+            context = self.event_repo.get_participation_grading_context(
+                request.participation_id,
             )
-        )
+            event_status = None
+            if request.sync_event_status:
+                event_status = self.grading_service.next_event_status(
+                    current_status=context.event_status,
+                    active_participants=(
+                        context.other_active_participants + 1
+                    ),
+                    graded_participants=(
+                        context.other_graded_participants + 1
+                    ),
+                )
+            return self.event_repo.save_participation_grade(
+                GradeParticipationParams(
+                    participation_id=request.participation_id,
+                    score=request.score,
+                    points=request.points,
+                    max_points=request.max_points,
+                    teacher_comment=request.teacher_comment,
+                    mistakes_analysis=request.mistakes_analysis,
+                    recommendations=request.recommendations,
+                    checked_by=checked_by,
+                    work_scan=request.work_scan,
+                    task_scores=request.task_scores,
+                    is_retake=request.is_retake,
+                    is_excellent=request.is_excellent,
+                    needs_attention=request.needs_attention,
+                    event_status=event_status,
+                )
+            )

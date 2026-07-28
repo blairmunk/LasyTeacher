@@ -1,5 +1,7 @@
+from contextlib import contextmanager
 from unittest import TestCase
 
+from core_logic.entities.event import ParticipationGradingContext
 from core_logic.interfaces.event_repo import GradeParticipationResult
 from core_logic.services.grading_service import GradingService
 from core_logic.use_cases.grade_student_work import (
@@ -11,8 +13,18 @@ from core_logic.use_cases.grade_student_work import (
 class FakeEventRepository:
     def __init__(self):
         self.graded_params = None
+        self.context_request = None
+        self.grading_context = ParticipationGradingContext(
+            event_status='completed',
+            other_active_participants=1,
+            other_graded_participants=0,
+        )
 
-    def grade_participation(self, params):
+    def get_participation_grading_context(self, participation_id):
+        self.context_request = participation_id
+        return self.grading_context
+
+    def save_participation_grade(self, params):
         self.graded_params = params
         return GradeParticipationResult(
             mark_id='mark-1',
@@ -20,16 +32,28 @@ class FakeEventRepository:
             event_id='event-1',
             student_name='Иванов Иван',
             score=params.score,
-            event_status='reviewing',
+            event_status=params.event_status or 'completed',
         )
+
+
+class FakeTransactionManager:
+    def __init__(self):
+        self.entered = 0
+
+    @contextmanager
+    def atomic(self):
+        self.entered += 1
+        yield
 
 
 class GradeStudentWorkUseCaseTests(TestCase):
     def test_execute_saves_grade_with_normalized_checked_by(self):
         repo = FakeEventRepository()
+        transaction_manager = FakeTransactionManager()
         use_case = GradeStudentWorkUseCase(
             event_repo=repo,
             grading_service=GradingService(),
+            transaction_manager=transaction_manager,
         )
 
         result = use_case.execute(
@@ -46,6 +70,8 @@ class GradeStudentWorkUseCaseTests(TestCase):
         )
 
         self.assertEqual(result.mark_id, 'mark-1')
+        self.assertEqual(result.event_status, 'reviewing')
+        self.assertEqual(repo.context_request, 'participation-1')
         self.assertEqual(repo.graded_params.participation_id, 'participation-1')
         self.assertEqual(repo.graded_params.score, 4)
         self.assertEqual(repo.graded_params.checked_by, 'teacher')
@@ -53,3 +79,47 @@ class GradeStudentWorkUseCaseTests(TestCase):
             repo.graded_params.task_scores,
             {'task-1': {'points': 8, 'max_points': 10}},
         )
+        self.assertEqual(repo.graded_params.event_status, 'reviewing')
+        self.assertEqual(transaction_manager.entered, 1)
+
+    def test_execute_marks_event_graded_when_all_active_work_is_graded(self):
+        repo = FakeEventRepository()
+        repo.grading_context = ParticipationGradingContext(
+            event_status='reviewing',
+            other_active_participants=2,
+            other_graded_participants=2,
+        )
+        use_case = GradeStudentWorkUseCase(
+            event_repo=repo,
+            grading_service=GradingService(),
+            transaction_manager=FakeTransactionManager(),
+        )
+
+        result = use_case.execute(
+            GradeStudentWorkRequest(
+                participation_id='participation-1',
+                score=5,
+            )
+        )
+
+        self.assertEqual(result.event_status, 'graded')
+        self.assertEqual(repo.graded_params.event_status, 'graded')
+
+    def test_execute_can_save_grade_without_syncing_event_status(self):
+        repo = FakeEventRepository()
+        use_case = GradeStudentWorkUseCase(
+            event_repo=repo,
+            grading_service=GradingService(),
+            transaction_manager=FakeTransactionManager(),
+        )
+
+        result = use_case.execute(
+            GradeStudentWorkRequest(
+                participation_id='participation-1',
+                score=3,
+                sync_event_status=False,
+            )
+        )
+
+        self.assertEqual(result.event_status, 'completed')
+        self.assertIsNone(repo.graded_params.event_status)

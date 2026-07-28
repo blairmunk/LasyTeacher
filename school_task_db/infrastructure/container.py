@@ -854,6 +854,7 @@ class Container:
         return GradeStudentWorkUseCase(
             event_repo=self.event_repo,
             grading_service=self.grading_service(),
+            transaction_manager=self.transaction_manager,
         )
 
     def get_participation_review_use_case(self):

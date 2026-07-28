@@ -34,6 +34,7 @@ from infrastructure.services.django_remedial_document_payloads import (
 from infrastructure.services.django_work_document_payloads import (
     DjangoWorkHeaderPayloadBuilder,
     DjangoWorkTaskListPayloadBuilder,
+    WorkDocumentSourceProvider,
 )
 
 
@@ -47,19 +48,25 @@ def build_work_section_payload_builder_registry(
     task_payload_formatter=None,
 ) -> DocumentSectionPayloadBuilderRegistry:
     registry = DocumentSectionPayloadBuilderRegistry()
-    task_list_builder = DjangoWorkTaskListPayloadBuilder(
+    work_source_provider = WorkDocumentSourceProvider(
         get_work_source=get_work_source,
+    )
+    task_list_builder = DjangoWorkTaskListPayloadBuilder(
         task_payload_formatter=task_payload_formatter,
+        work_source_provider=work_source_provider,
+    )
+    header_builder = DjangoWorkHeaderPayloadBuilder(
+        work_source_provider=work_source_provider,
     )
     registry.register(
         COMMON_HEADER_SECTION,
-        DjangoWorkHeaderPayloadBuilder(get_work_source=get_work_source),
+        header_builder,
         document_type=WORK_DOCUMENT_TYPE,
         source_type=WORK_SOURCE_TYPE,
     )
     registry.register(
         HEADER_SECTION,
-        DjangoWorkHeaderPayloadBuilder(get_work_source=get_work_source),
+        header_builder,
         document_type=WORK_DOCUMENT_TYPE,
         source_type=WORK_SOURCE_TYPE,
     )

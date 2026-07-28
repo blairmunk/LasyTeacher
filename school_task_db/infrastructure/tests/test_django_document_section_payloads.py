@@ -12,6 +12,7 @@ from core_logic.entities.work import (
     RemedialSheetData,
     VariantDetailStudentRef,
 )
+from core_logic.services.document_builder import RecipeDocumentBuilder
 from core_logic.value_objects.document_build_plan import (
     DocumentSectionPayloadBuildRequest,
 )
@@ -51,6 +52,7 @@ from infrastructure.services.django_remedial_document_payloads import (
 from infrastructure.services.django_work_document_payloads import (
     DjangoWorkHeaderPayloadBuilder,
     DjangoWorkTaskListPayloadBuilder,
+    WorkDocumentSourceProvider,
 )
 from tasks.models import Source, Task
 from works.models import (
@@ -62,6 +64,20 @@ from works.models import (
 
 
 class DjangoWorkHeaderPayloadBuilderTests(TestCase):
+    def test_work_source_provider_caches_only_in_build_context(self):
+        calls = []
+        work = object()
+        provider = WorkDocumentSourceProvider(
+            get_work_source=lambda work_id: calls.append(work_id) or work,
+        )
+        first_build_context = {}
+
+        self.assertIs(provider.get('work-1', first_build_context), work)
+        self.assertIs(provider.get('work-1', first_build_context), work)
+        self.assertIs(provider.get('work-1', {}), work)
+
+        self.assertEqual(calls, ['work-1', 'work-1'])
+
     def test_builds_work_header_payload(self):
         work = Work.objects.create(
             name='Контрольная',
@@ -438,6 +454,33 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
         )
 
         self.assertEqual(payload['title'], 'Контрольная')
+
+    def test_registry_loads_work_once_per_document_build(self):
+        work = Work.objects.create(name='Контрольная')
+        calls = []
+        registry = build_work_section_payload_builder_registry(
+            get_work_source=lambda work_id: calls.append(work_id) or work,
+        )
+        builder = RecipeDocumentBuilder(
+            section_payload_builder_registry=registry,
+        )
+        source = DocumentSourceRef(
+            source_type=WORK_SOURCE_TYPE,
+            source_id=str(work.pk),
+            title=work.name,
+        )
+        recipe = DocumentRecipe(
+            document_type=WORK_DOCUMENT_TYPE,
+            sections=[
+                DocumentSectionSpec(section_type=HEADER_SECTION),
+                DocumentSectionSpec(section_type=ANSWERS_SECTION),
+            ],
+        )
+
+        builder.build(source, recipe)
+        builder.build(source, recipe)
+
+        self.assertEqual(calls, [str(work.pk), str(work.pk)])
 
     def test_registry_uses_variant_payload_for_answer_sections(self):
         work = Work.objects.create(name='Контрольная')

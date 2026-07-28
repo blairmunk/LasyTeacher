@@ -9,12 +9,35 @@ from infrastructure.services.django_variant_document_payloads import (
 from works.models import Work
 
 
-class DjangoWorkHeaderPayloadBuilder:
+class WorkDocumentSourceProvider:
     def __init__(self, get_work_source=None):
         self.get_work_source = get_work_source or _get_work_source
 
+    def get(self, work_id, build_context=None):
+        if build_context is None:
+            return self.get_work_source(work_id)
+        cache = build_context.setdefault('work_document_source_by_id', {})
+        if work_id not in cache:
+            cache[work_id] = self.get_work_source(work_id)
+        return cache[work_id]
+
+
+class DjangoWorkHeaderPayloadBuilder:
+    def __init__(
+        self,
+        get_work_source=None,
+        work_source_provider=None,
+    ):
+        self.work_source_provider = (
+            work_source_provider
+            or WorkDocumentSourceProvider(get_work_source=get_work_source)
+        )
+
     def build_payload(self, request):
-        work = self.get_work_source(request.source.source_id)
+        work = self.work_source_provider.get(
+            request.source.source_id,
+            request.build_context,
+        )
         variant = _work_variant_from_request(work, request)
         title = work.name
         duration = work.duration
@@ -38,8 +61,12 @@ class DjangoWorkTaskListPayloadBuilder:
         get_work_source=None,
         task_payload_formatter=None,
         variant_payload_builder=None,
+        work_source_provider=None,
     ):
-        self.get_work_source = get_work_source or _get_work_source
+        self.work_source_provider = (
+            work_source_provider
+            or WorkDocumentSourceProvider(get_work_source=get_work_source)
+        )
         self.variant_payload_builder = (
             variant_payload_builder
             or DjangoVariantDocumentPayloadBuilder(
@@ -48,7 +75,10 @@ class DjangoWorkTaskListPayloadBuilder:
         )
 
     def build_payload(self, request):
-        work = self.get_work_source(request.source.source_id)
+        work = self.work_source_provider.get(
+            request.source.source_id,
+            request.build_context,
+        )
         variants = [
             self.variant_payload_builder.build(
                 variant,

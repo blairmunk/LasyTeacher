@@ -325,7 +325,7 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
         self.assertTrue(task_payload['formatted'])
         self.assertEqual(formatter.requests[0]['text'], 'Найдите силу')
 
-    def test_task_list_section_options_override_print_blocks_only(self):
+    def test_task_list_section_options_cannot_override_snapshot_tasks(self):
         work = Work.objects.create(name='Рабочий лист', duration=45)
         variant = Variant.objects.create(work=work, number=1)
         task = self.create_task(
@@ -367,7 +367,7 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
         )
         self.assertEqual(
             variant_payload['print_blocks'][0]['task']['render_mode'],
-            TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+            TASK_RENDER_MODE_TASK_ONLY,
         )
         self.assertEqual(
             variant_payload['print_blocks'][0]['content_role'],
@@ -379,18 +379,11 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
         )
         self.assertEqual(
             variant_payload['print_blocks'][0]['render_mode'],
-            TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+            TASK_RENDER_MODE_TASK_ONLY,
         )
-        self.assertEqual(
-            variant_payload['print_blocks'][1]['variant_task_id'],
-            str(variant_task.pk),
-        )
-        self.assertEqual(
-            variant_payload['print_blocks'][1]['blank_cells']['rows'],
-            5,
-        )
+        self.assertEqual(len(variant_payload['print_blocks']), 1)
 
-    def test_hidden_roles_do_not_remove_source_tasks(self):
+    def test_legacy_hidden_roles_do_not_remove_snapshot_tasks(self):
         work = Work.objects.create(name='Рабочий лист', duration=45)
         variant = Variant.objects.create(work=work, number=1)
         task = self.create_task(text='Самостоятельная задача')
@@ -417,7 +410,14 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             [task['variant_task_id'] for task in variant_payload['tasks']],
             [str(variant_task.pk)],
         )
-        self.assertEqual(variant_payload['print_blocks'], [])
+        self.assertEqual(
+            [
+                block['variant_task_id']
+                for block in variant_payload['print_blocks']
+                if block['block_type'] == 'task'
+            ],
+            [str(variant_task.pk)],
+        )
 
     def test_builds_registry_for_work_sections(self):
         work = Work.objects.create(name='Контрольная')

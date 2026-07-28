@@ -7,7 +7,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0">{{ page_title }}</h1>
         <a class="btn btn-outline-secondary" href="{% url 'document_engine:print-profile-editor' %}">
-            <i class="fas fa-arrow-left"></i> К настройкам печати
+            <i class="fas fa-arrow-left"></i> К профилям оформления
         </a>
     </div>
 
@@ -44,7 +44,7 @@
                 <div class="row g-3" data-section-list>
                     {% for section in section_options %}
                     <div
-                        class="{% if section.task_list_role_controls %}col-12{% else %}col-md-6{% endif %}"
+                        class="col-md-6"
                         data-section-option
                         data-section-type="{{ section.section_type }}"
                         {% if section.is_fixed_order %}data-fixed-order="1"{% endif %}
@@ -100,9 +100,12 @@
                                 их изменение будет применено ко всем повторам.
                             </div>
                             {% endif %}
-                            {% if section.task_list_role_controls %}
-                            <input type="hidden" name="task_list_structured_options" value="1">
+                            {% if section.task_list_content_controls %}
                             <input type="hidden" name="task_list_content_visibility_options" value="1">
+                            <div class="small text-muted mt-3">
+                                Состав и порядок заданий, режимы решений и клетки
+                                берутся из спецификации работы.
+                            </div>
                             <div class="d-flex flex-wrap gap-4 mt-3 mb-2">
                                 {% for content_control in section.task_list_content_controls %}
                                 <div class="form-check">
@@ -112,42 +115,6 @@
                                     </label>
                                 </div>
                                 {% endfor %}
-                            </div>
-                            <div class="table-responsive mt-2">
-                                <table class="table table-sm align-middle mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th>Роль</th>
-                                            <th class="text-center">Показывать</th>
-                                            <th>Содержимое</th>
-                                            <th>Клетки</th>
-                                            <th style="width: 6rem;">Строки</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for role_control in section.task_list_role_controls %}
-                                        <tr>
-                                            <td>
-                                                <span class="fw-semibold">{{ role_control.label }}</span>
-                                                <div><code class="small">{{ role_control.role }}</code></div>
-                                            </td>
-                                            <td class="text-center">{{ role_control.visible }}</td>
-                                            <td>
-                                                {{ role_control.render_mode }}
-                                                {{ role_control.render_mode.errors }}
-                                            </td>
-                                            <td>
-                                                {{ role_control.blank_cells_mode }}
-                                                {{ role_control.blank_cells_mode.errors }}
-                                            </td>
-                                            <td>
-                                                {{ role_control.blank_cells_rows }}
-                                                {{ role_control.blank_cells_rows.errors }}
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
                             </div>
                             {% elif section.has_blank_cells_controls %}
                             <div class="row g-2 mt-2">
@@ -242,10 +209,8 @@
                             Варианты с разрывом:
                             <code>common_header,header,task_list,page_break,header,task_list</code>
                         </div>
-                        <div>
-                            Рабочий лист:
-                            <code>header,theory,full_solutions,task_list,blank_cells</code>
-                        </div>
+                        Содержательные блоки внутри варианта сохраняют порядок
+                        из спецификации работы.
                     </div>
                 </div>
             </div>

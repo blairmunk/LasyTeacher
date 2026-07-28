@@ -21,12 +21,8 @@ from core_logic.value_objects.document_recipes import (
     TASK_LIST_SECTION,
     THEORY_SECTION,
 )
-from core_logic.value_objects.task_print_settings import (
-    TASK_BANK_ROLE_SPECIFIC_CHOICES,
-)
 from infrastructure.forms.print_settings_django_forms import (
     section_options_field_name,
-    task_list_role_field_name,
 )
 
 
@@ -34,7 +30,7 @@ class PrintSettingsFormAdapter:
     def editor_data_request_from_query(self, query_data):
         return GetPrintSettingsEditorDataRequest(
             document_type=query_data.get('type', ''),
-            renderable_only=query_data.get('renderable') == '1',
+            renderable_only=query_data.get('renderable', '1') == '1',
         )
 
     def editor_context(self, editor_data, request):
@@ -116,11 +112,6 @@ class PrintSettingsFormAdapter:
                     'options_json': self._format_section_options_json(
                         section_options_by_type.get(section.section_type, {}),
                     ),
-                    'task_list_role_controls': (
-                        self._task_list_role_controls(form)
-                        if section.section_type == TASK_LIST_SECTION
-                        else ()
-                    ),
                     'task_list_content_controls': (
                         self._task_list_content_controls(form)
                         if section.section_type == TASK_LIST_SECTION
@@ -199,27 +190,6 @@ class PrintSettingsFormAdapter:
             ),
         }
 
-    def _task_list_role_controls(self, form):
-        return [
-            {
-                'role': role,
-                'label': label,
-                'visible': form[
-                    task_list_role_field_name(role, 'visible')
-                ],
-                'render_mode': form[
-                    task_list_role_field_name(role, 'render_mode')
-                ],
-                'blank_cells_mode': form[
-                    task_list_role_field_name(role, 'blank_cells_mode')
-                ],
-                'blank_cells_rows': form[
-                    task_list_role_field_name(role, 'blank_cells_rows')
-                ],
-            }
-            for role, label in TASK_BANK_ROLE_SPECIFIC_CHOICES
-        ]
-
     @staticmethod
     def _task_list_content_controls(form):
         return [
@@ -240,7 +210,6 @@ class PrintSettingsFormAdapter:
             'document_type': print_profile.document_type,
             'section_types': print_profile.section_types,
             'sections_count': len(print_profile.sections),
-            'default_content_config': print_profile.default_content_config,
             'has_customization': (
                 print_profile.presentation.has_customization
             ),

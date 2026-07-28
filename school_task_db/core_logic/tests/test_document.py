@@ -12,7 +12,6 @@ from core_logic.entities.document import (
     UpdatePrintSettingsParams,
 )
 from core_logic.value_objects.document_recipes import (
-    ANSWER_KEY_DOCUMENT_TYPE,
     CUSTOM_DOCUMENT_TYPE,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     WORKSHEET_DOCUMENT_TYPE,
@@ -172,7 +171,6 @@ class DocumentModelTests(TestCase):
                     options={'source': 'new_tasks'},
                 ),
             ],
-            default_content_config={'answer_type': 'tasks_only'},
         )
 
         self.assertEqual(print_settings.name, 'Тренировочный лист')
@@ -183,25 +181,6 @@ class DocumentModelTests(TestCase):
         self.assertEqual(
             print_settings.section_types,
             ('header', 'task_list'),
-        )
-        self.assertEqual(
-            print_settings.default_content_config,
-            {'answer_type': 'tasks_only'},
-        )
-
-    def test_print_settings_spec_copies_default_content_config(self):
-        default_content_config = {'answer_type': 'with_answers'}
-        print_settings = PrintSettingsSpec(
-            name='Ключ',
-            document_type=ANSWER_KEY_DOCUMENT_TYPE,
-            default_content_config=default_content_config,
-        )
-
-        default_content_config['answer_type'] = 'tasks_only'
-
-        self.assertEqual(
-            print_settings.default_content_config,
-            {'answer_type': 'with_answers'},
         )
 
     def test_print_settings_spec_converts_to_recipe(self):

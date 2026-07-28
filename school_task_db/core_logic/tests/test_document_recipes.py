@@ -92,7 +92,6 @@ class DocumentRecipeTests(TestCase):
                     },
                 ],
             },
-            default_content_config={'answer_type': 'tasks_only'},
         )
 
         self.assertEqual(print_settings.name, 'Рабочий лист')
@@ -100,10 +99,6 @@ class DocumentRecipeTests(TestCase):
         self.assertEqual(
             print_settings.section_types,
             (HEADER_SECTION, TASK_LIST_SECTION),
-        )
-        self.assertEqual(
-            print_settings.default_content_config,
-            {'answer_type': 'tasks_only'},
         )
         self.assertEqual(
             print_settings.to_print_recipe().document_type,

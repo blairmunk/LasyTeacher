@@ -21,7 +21,7 @@ class PrintSettingsViewTests(TestCase):
             response,
             'document_engine/print_settings_editor.html',
         )
-        self.assertContains(response, 'Настройки печати')
+        self.assertContains(response, 'Профили оформления')
         self.assertContains(response, 'Контрольная / самостоятельная')
         self.assertContains(response, 'Шаблон работы')
         self.assertContains(response, 'header')
@@ -65,13 +65,13 @@ class PrintSettingsViewTests(TestCase):
             response,
             'document_engine/print_settings_form.html',
         )
-        self.assertContains(response, 'Новые настройки печати')
+        self.assertContains(response, 'Новый профиль оформления')
         self.assertContains(response, 'name="document_type"')
         self.assertContains(response, 'value="header"')
         self.assertContains(response, 'value="task_list"')
         self.assertNotContains(response, 'name="section_options__task_list"')
-        self.assertContains(response, 'name="task_list_structured_options"')
-        self.assertContains(response, 'name="task_list_demo_visible"')
+        self.assertNotContains(response, 'name="task_list_structured_options"')
+        self.assertNotContains(response, 'name="task_list_demo_visible"')
         self.assertContains(
             response,
             'name="task_list_theory_visible"',
@@ -84,14 +84,10 @@ class PrintSettingsViewTests(TestCase):
             response,
             'name="task_list_content_visibility_options"',
         )
-        self.assertContains(response, 'name="task_list_demo_render_mode"')
-        self.assertContains(
+        self.assertNotContains(response, 'name="task_list_demo_render_mode"')
+        self.assertNotContains(
             response,
             'name="task_list_practice_blank_cells_mode"',
-        )
-        self.assertContains(
-            response,
-            'name="task_list_practice_blank_cells_rows"',
         )
         self.assertNotContains(response, 'name="section_options__blank_cells"')
         self.assertContains(response, 'name="blank_cells_rows"')
@@ -106,7 +102,10 @@ class PrintSettingsViewTests(TestCase):
         self.assertContains(response, 'можно повторять')
         self.assertContains(response, 'Повторяемые:')
         self.assertContains(response, 'common_header,header,task_list,page_break')
-        self.assertContains(response, 'header,theory,full_solutions,task_list')
+        self.assertContains(
+            response,
+            'Содержательные блоки внутри варианта сохраняют порядок',
+        )
         self.assertContains(response, 'Оформление документа')
         self.assertContains(response, 'name="custom_css"')
         self.assertContains(response, 'name="custom_latex_preamble"')
@@ -185,8 +184,7 @@ class PrintSettingsViewTests(TestCase):
                 'document_type': 'work',
                 'sections': ['header', 'task_list'],
                 'section_options__task_list': (
-                    '{"hidden_roles": ["demo"], '
-                    '"role_blank_cells": {"practice": {"rows": 6}}}'
+                    '{"hidden_content_types": ["theory"]}'
                 ),
             },
         )
@@ -202,10 +200,7 @@ class PrintSettingsViewTests(TestCase):
                 {'type': 'header'},
                 {
                     'type': 'task_list',
-                    'params': {
-                        'hidden_roles': ['demo'],
-                        'role_blank_cells': {'practice': {'rows': 6}},
-                    },
+                    'params': {'hidden_content_types': ['theory']},
                 },
             ],
         )
@@ -243,24 +238,15 @@ class PrintSettingsViewTests(TestCase):
             ],
         )
 
-    def test_print_settings_create_view_saves_task_list_role_controls(self):
+    def test_print_settings_create_view_saves_task_list_visibility_controls(self):
         response = self.client.post(
             reverse('document_engine:print-profile-create'),
             {
-                'name': 'Ролевой рабочий лист',
+                'name': 'Рабочий лист без теории',
                 'document_type': 'work',
                 'sections': ['header', 'task_list'],
-                'task_list_structured_options': '1',
-                'task_list_demo_visible': 'on',
-                'task_list_demo_render_mode': 'with_full_solution',
-                'task_list_demo_blank_cells_mode': 'hide',
-                'task_list_practice_visible': 'on',
-                'task_list_practice_render_mode': 'task_only',
-                'task_list_practice_blank_cells_mode': 'show',
-                'task_list_practice_blank_cells_rows': '8',
-                'task_list_control_visible': 'on',
-                'task_list_control_blank_cells_mode': '',
-                'task_list_remedial_blank_cells_mode': '',
+                'task_list_content_visibility_options': '1',
+                'task_list_text_visible': 'on',
             },
         )
 
@@ -268,24 +254,14 @@ class PrintSettingsViewTests(TestCase):
             response,
             reverse('document_engine:print-profile-editor'),
         )
-        template = PrintSettings.objects.get(name='Ролевой рабочий лист')
+        template = PrintSettings.objects.get(name='Рабочий лист без теории')
         self.assertEqual(
             template.sections_config,
             [
                 {'type': 'header'},
                 {
                     'type': 'task_list',
-                    'params': {
-                        'hidden_roles': ['remedial'],
-                        'role_render_modes': {
-                            'demo': 'with_full_solution',
-                            'practice': 'task_only',
-                        },
-                        'role_blank_cells': {
-                            'demo': False,
-                            'practice': {'rows': 8},
-                        },
-                    },
+                    'params': {'hidden_content_types': ['theory']},
                 },
             ],
         )
@@ -330,7 +306,7 @@ class PrintSettingsViewTests(TestCase):
                 'name': 'Рабочий лист',
                 'document_type': 'work',
                 'sections': ['task_list'],
-                'section_options__task_list': '{"hidden_roles":',
+                'section_options__task_list': '{"hidden_content_types":',
             },
         )
 
@@ -380,7 +356,7 @@ class PrintSettingsViewTests(TestCase):
             response,
             'document_engine/print_settings_form.html',
         )
-        self.assertContains(response, 'Редактирование настроек печати')
+        self.assertContains(response, 'Редактирование профиля оформления')
         self.assertContains(response, 'value="Шаблон работы"')
         self.assertContains(response, 'Описание')
         self.assertContains(response, 'value="header"')
@@ -404,10 +380,7 @@ class PrintSettingsViewTests(TestCase):
                 {'type': 'header'},
                 {
                     'type': 'task_list',
-                    'params': {
-                        'hidden_roles': ['demo'],
-                        'role_blank_cells': {'practice': {'rows': 6}},
-                    },
+                    'params': {'hidden_content_types': ['theory']},
                 },
             ],
         )
@@ -418,15 +391,8 @@ class PrintSettingsViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         form = response.context['form']
-        self.assertFalse(form['task_list_demo_visible'].value())
-        self.assertEqual(
-            form['task_list_practice_blank_cells_mode'].value(),
-            'show',
-        )
-        self.assertEqual(
-            form['task_list_practice_blank_cells_rows'].value(),
-            6,
-        )
+        self.assertFalse(form['task_list_theory_visible'].value())
+        self.assertTrue(form['task_list_text_visible'].value())
 
     def test_print_settings_update_view_shows_existing_theory_options(self):
         template = PrintSettings.objects.create(

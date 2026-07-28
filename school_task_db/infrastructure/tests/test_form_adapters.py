@@ -282,7 +282,6 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
                     document_type=WORK_DOCUMENT_TYPE,
                     print_settings_id='profile-work',
                     sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
-                    default_content_config={'answer_type': 'tasks_only'},
                     presentation=DocumentPresentation(custom_css='body {}'),
                 )
             ],
@@ -294,13 +293,16 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
         )
 
         self.assertEqual(context['current_document_type'], WORK_DOCUMENT_TYPE)
-        self.assertFalse(context['renderable_only'])
+        self.assertTrue(context['renderable_only'])
         self.assertEqual(context['document_types'][0]['document_type'], 'work')
         self.assertEqual(
             context['document_types'][0]['renderer_labels'],
             ['HTML', 'PDF', 'LaTeX'],
         )
-        self.assertEqual(context['document_types'][0]['url'], '?type=work')
+        self.assertEqual(
+            context['document_types'][0]['url'],
+            '?type=work&renderable=1',
+        )
         self.assertEqual(
             context['sections'][0]['section_type'],
             COMMON_HEADER_SECTION,
@@ -314,10 +316,6 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
         self.assertEqual(context['print_profiles'][0]['name'], 'Шаблон работы')
         self.assertEqual(context['print_profiles'][0]['document_type'], 'work')
         self.assertEqual(context['print_profiles'][0]['sections_count'], 1)
-        self.assertEqual(
-            context['print_profiles'][0]['default_content_config'],
-            {'answer_type': 'tasks_only'},
-        )
         self.assertTrue(context['print_profiles'][0]['has_customization'])
 
     def test_editor_context_has_only_print_settings_names(self):
@@ -491,7 +489,7 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
         data.update({'name': 'Шаблон', 'document_type': 'work'})
         data.setlist('sections', ['header', 'task_list'])
         data['section_options__task_list'] = (
-            '{"hidden_roles": ["demo"], "role_blank_cells": {"practice": 6}}'
+            '{"hidden_content_types": ["theory"]}'
         )
         form = self._template_form(
             data=data,
@@ -504,92 +502,7 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
         self.assertEqual(params.sections[0].options, {})
         self.assertEqual(
             params.sections[1].options,
-            {
-                'hidden_roles': ['demo'],
-                'role_blank_cells': {'practice': 6},
-            },
-        )
-
-    def test_builds_task_list_options_from_structured_role_fields(self):
-        data = QueryDict('', mutable=True)
-        data.update(
-            {
-                'name': 'Шаблон',
-                'document_type': 'work',
-                'task_list_structured_options': '1',
-                'task_list_demo_visible': 'on',
-                'task_list_demo_render_mode': 'with_full_solution',
-                'task_list_demo_blank_cells_mode': 'hide',
-                'task_list_practice_visible': 'on',
-                'task_list_practice_render_mode': 'task_only',
-                'task_list_practice_blank_cells_mode': 'show',
-                'task_list_practice_blank_cells_rows': '8',
-                'task_list_control_visible': 'on',
-            }
-        )
-        data.setlist('sections', [TASK_LIST_SECTION])
-        form = self._template_form(data=data)
-        self.assertTrue(form.is_valid(), form.errors)
-
-        params = (
-            PrintSettingsFormAdapter()
-            .create_print_settings_params_from_form(form)
-        )
-
-        self.assertEqual(
-            params.sections[0].options,
-            {
-                'hidden_roles': ['remedial'],
-                'role_render_modes': {
-                    'demo': 'with_full_solution',
-                    'practice': 'task_only',
-                },
-                'role_blank_cells': {
-                    'demo': False,
-                    'practice': {'rows': 8},
-                },
-            },
-        )
-
-    def test_task_list_role_controls_use_saved_options_as_initial(self):
-        form = self._template_form(
-            initial={
-                'sections': [TASK_LIST_SECTION],
-                'section_options': {
-                    TASK_LIST_SECTION: {
-                        'hidden_roles': ['demo'],
-                        'role_render_modes': {
-                            'demo': 'with_full_solution',
-                        },
-                        'role_blank_cells': {
-                            'practice': {'rows': 9},
-                            'control': False,
-                        },
-                    },
-                },
-            },
-        )
-
-        self.assertFalse(form['task_list_demo_visible'].value())
-        self.assertEqual(
-            form['task_list_demo_render_mode'].value(),
-            'with_full_solution',
-        )
-        self.assertEqual(
-            form['task_list_practice_blank_cells_mode'].value(),
-            'show',
-        )
-        self.assertEqual(
-            form['task_list_practice_blank_cells_rows'].value(),
-            9,
-        )
-        self.assertEqual(
-            form['task_list_control_blank_cells_mode'].value(),
-            'hide',
-        )
-        self.assertEqual(
-            form['task_list_remedial_blank_cells_mode'].value(),
-            '',
+            {'hidden_content_types': ['theory']},
         )
 
     def test_task_list_content_visibility_uses_saved_options(self):
@@ -616,10 +529,6 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
                 'task_list_structured_options': '1',
                 'task_list_content_visibility_options': '1',
                 'task_list_text_visible': 'on',
-                'task_list_demo_visible': 'on',
-                'task_list_practice_visible': 'on',
-                'task_list_control_visible': 'on',
-                'task_list_remedial_visible': 'on',
             }
         )
         data.setlist('sections', [TASK_LIST_SECTION])
@@ -635,30 +544,6 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
             params.sections[0].options,
             {'hidden_content_types': ['theory']},
         )
-
-    def test_task_list_role_controls_omit_default_options(self):
-        data = QueryDict('', mutable=True)
-        data.update(
-            {
-                'name': 'Шаблон',
-                'document_type': 'work',
-                'task_list_structured_options': '1',
-                'task_list_demo_visible': 'on',
-                'task_list_practice_visible': 'on',
-                'task_list_control_visible': 'on',
-                'task_list_remedial_visible': 'on',
-            }
-        )
-        data.setlist('sections', [TASK_LIST_SECTION])
-        form = self._template_form(data=data)
-        self.assertTrue(form.is_valid(), form.errors)
-
-        params = (
-            PrintSettingsFormAdapter()
-            .create_print_settings_params_from_form(form)
-        )
-
-        self.assertEqual(params.sections[0].options, {})
 
     def test_builds_theory_options_from_structured_fields(self):
         data = QueryDict('', mutable=True)
@@ -758,7 +643,7 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
         data = QueryDict('', mutable=True)
         data.update({'name': 'Шаблон', 'document_type': 'work'})
         data.setlist('sections', ['task_list'])
-        data['section_options__task_list'] = '{"hidden_roles":'
+        data['section_options__task_list'] = '{"hidden_content_types":'
         form = self._template_form(
             data=data,
         )
@@ -858,10 +743,7 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
                 DocumentSectionSpec(section_type=HEADER_SECTION),
                 DocumentSectionSpec(
                     section_type='task_list',
-                    options={
-                        'hidden_roles': ['demo'],
-                        'role_blank_cells': {'practice': {'rows': 6}},
-                    },
+                    options={'hidden_content_types': ['theory']},
                 ),
             ],
         )
@@ -873,10 +755,7 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
         self.assertEqual(
             initial['section_options'],
             {
-                'task_list': {
-                    'hidden_roles': ['demo'],
-                    'role_blank_cells': {'practice': {'rows': 6}},
-                },
+                'task_list': {'hidden_content_types': ['theory']},
             },
         )
         self.assertEqual(initial['section_specs'], template.sections)
@@ -1075,10 +954,13 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
         self.assertTrue(task_list_context['has_options'])
         self.assertTrue(task_list_context['is_repeatable'])
         self.assertIn(
-            'role_render_modes',
+            'hidden_content_types',
             task_list_context['options_example_json'],
         )
-        self.assertIn('Можно скрывать роли', task_list_context['options_hint'])
+        self.assertIn(
+            'Можно скрыть теоретические или текстовые блоки',
+            task_list_context['options_hint'],
+        )
 
     def test_builds_create_context_with_section_options_json(self):
         form = self._template_form(
@@ -1087,8 +969,7 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
                 'sections': ['task_list'],
                 'section_options': {
                     'task_list': {
-                        'hidden_roles': ['demo'],
-                        'role_blank_cells': {'practice': 6},
+                        'hidden_content_types': ['theory'],
                     },
                 },
             },
@@ -1109,8 +990,10 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
             task_list_context['options_field_name'],
             'section_options__task_list',
         )
-        self.assertIn('"hidden_roles": [', task_list_context['options_json'])
-        self.assertIn('"role_blank_cells": {', task_list_context['options_json'])
+        self.assertIn(
+            '"hidden_content_types": [',
+            task_list_context['options_json'],
+        )
 
 
 class EventFormAdapterTests(SimpleTestCase):

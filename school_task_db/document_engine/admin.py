@@ -30,7 +30,6 @@ class PrintSettingsAdmin(admin.ModelAdmin):
         ('Секции', {
             'fields': [
                 'sections_config',
-                'default_content_config',
             ],
         }),
         ('Шаблоны оформления', {

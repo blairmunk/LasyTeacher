@@ -31,7 +31,7 @@ class PrintSettingsEditorView(TemplateView):
 
 class PrintSettingsCreateView(TemplateView):
     template_name = 'document_engine/print_settings_form.html'
-    page_title = 'Новые настройки печати'
+    page_title = 'Новый профиль оформления'
 
     def get_context_data(self, **kwargs):
         form_data = kwargs.pop('form_data', None) or self._form_data()
@@ -76,7 +76,7 @@ class PrintSettingsCreateView(TemplateView):
                 self.get_context_data(form=form, form_data=form_data),
             )
 
-        messages.success(request, 'Настройки печати созданы.')
+        messages.success(request, 'Профиль оформления создан.')
         return redirect('document_engine:print-profile-editor')
 
     def _form(self, *args, form_data=None, **kwargs):
@@ -102,14 +102,14 @@ class PrintSettingsCreateView(TemplateView):
 
 
 class PrintSettingsUpdateView(PrintSettingsCreateView):
-    page_title = 'Редактирование настроек печати'
+    page_title = 'Редактирование профиля оформления'
 
     def _form_data(self, print_settings_id=''):
         form_data = super()._form_data(
             print_settings_id or str(self.kwargs['pk']),
         )
         if form_data.print_profile is None:
-            raise Http404('Настройки печати не найдены')
+            raise Http404('Профиль оформления не найден')
         return form_data
 
     def get_context_data(self, **kwargs):
@@ -157,12 +157,12 @@ class PrintSettingsUpdateView(PrintSettingsCreateView):
         )
         if not result.success:
             if result.status == 'not_found':
-                raise Http404('Настройки печати не найдены')
+                raise Http404('Профиль оформления не найден')
             for error in result.errors:
                 form.add_error(None, error)
             return self.render_to_response(
                 self.get_context_data(form=form, form_data=form_data),
             )
 
-        messages.success(request, 'Настройки печати обновлены.')
+        messages.success(request, 'Профиль оформления обновлён.')
         return redirect('document_engine:print-profile-editor')

@@ -23,7 +23,6 @@ class PrintSettingsModelTests(TestCase):
                     'params': {'source': 'new_tasks'},
                 },
             ],
-            default_content_config={'answer_type': 'tasks_only'},
             html_template_override='<html>{{ body_content }}</html>',
             latex_template_override='\\begin{document}{{ body_content }}',
             custom_css='body { font-size: 14px; }',
@@ -40,10 +39,6 @@ class PrintSettingsModelTests(TestCase):
         self.assertEqual(
             spec.sections[1].options,
             {'source': 'new_tasks'},
-        )
-        self.assertEqual(
-            spec.default_content_config,
-            {'answer_type': 'tasks_only'},
         )
         self.assertTrue(spec.presentation.has_customization)
         self.assertEqual(

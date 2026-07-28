@@ -61,7 +61,6 @@ def build_print_settings_spec_from_config(
         Mapping[str, Any]
         | Sequence[Mapping[str, Any] | DocumentSectionSpec]
     ),
-    default_content_config: Mapping[str, Any] | None = None,
     html_template_override: str = '',
     latex_template_override: str = '',
     custom_css: str = '',
@@ -81,7 +80,6 @@ def build_print_settings_spec_from_config(
         description=description,
         is_default=is_default,
         sections=recipe.sections,
-        default_content_config=default_content_config or {},
         presentation=DocumentPresentation(
             html_template_override=html_template_override,
             latex_template_override=latex_template_override,

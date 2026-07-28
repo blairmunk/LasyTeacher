@@ -43,12 +43,6 @@ class PrintSettings(BaseModel):
         blank=True,
         help_text='JSON: [{"type": "header", "params": {...}}, ...]',
     )
-    default_content_config = models.JSONField(
-        'Параметры секций по умолчанию',
-        default=dict,
-        blank=True,
-    )
-
     latex_template_override = models.TextField(
         'Переопределение LaTeX-шаблона',
         blank=True,
@@ -75,8 +69,8 @@ class PrintSettings(BaseModel):
     )
 
     class Meta:
-        verbose_name = 'Профиль печати'
-        verbose_name_plural = 'Профили печати'
+        verbose_name = 'Профиль оформления'
+        verbose_name_plural = 'Профили оформления'
         ordering = ['-is_default', 'document_type', 'name']
 
     def __str__(self):
@@ -102,7 +96,6 @@ class PrintSettings(BaseModel):
             description=self.description,
             is_default=self.is_default,
             sections_config=self.sections_config,
-            default_content_config=self.default_content_config,
             html_template_override=self.html_template_override,
             latex_template_override=self.latex_template_override,
             custom_css=self.custom_css,

@@ -3,10 +3,6 @@
 from dataclasses import dataclass, field
 from typing import Any, Mapping, Tuple
 
-from core_logic.value_objects.task_print_settings import (
-    validate_task_render_mode,
-    validate_task_specific_bank_role,
-)
 from core_logic.value_objects.variant_content_snapshot import (
     VariantContentBlockItem,
     VariantContentItem,
@@ -31,29 +27,11 @@ VARIANT_PRINT_BLOCK_TYPES = frozenset(
 class VariantPrintProfile:
     """Presentation rules applied to a variant content snapshot."""
 
-    hidden_roles: Tuple[str, ...] = field(default_factory=tuple)
-    render_modes_by_role: Mapping[str, str] = field(default_factory=dict)
-    blank_cells_by_role: Mapping[str, Mapping[str, Any] | bool | int] = (
-        field(default_factory=dict)
-    )
     hidden_content_types: Tuple[str, ...] = field(default_factory=tuple)
     hide_blank_cells: bool = False
 
     def __post_init__(self):
-        hidden_roles = tuple(self.hidden_roles)
-        render_modes_by_role = dict(self.render_modes_by_role)
-        blank_cells_by_role = dict(self.blank_cells_by_role)
         hidden_content_types = tuple(self.hidden_content_types)
-        for role in hidden_roles:
-            validate_task_specific_bank_role(role)
-        for role, render_mode in render_modes_by_role.items():
-            validate_task_specific_bank_role(role)
-            validate_task_render_mode(render_mode)
-        for role in blank_cells_by_role:
-            validate_task_specific_bank_role(role)
-        object.__setattr__(self, 'hidden_roles', hidden_roles)
-        object.__setattr__(self, 'render_modes_by_role', render_modes_by_role)
-        object.__setattr__(self, 'blank_cells_by_role', blank_cells_by_role)
         object.__setattr__(
             self,
             'hidden_content_types',
@@ -61,22 +39,14 @@ class VariantPrintProfile:
         )
 
     def task_render_mode(self, item: VariantContentItem) -> str:
-        return self.render_modes_by_role.get(item.bank_role, item.render_mode)
+        return item.render_mode
 
     def blank_cells_options(self, item: VariantContentItem) -> Mapping[str, Any]:
         if self.hide_blank_cells:
             return {}
-        if item.bank_role in self.blank_cells_by_role:
-            return _blank_cells_override_options(
-                self.blank_cells_by_role[item.bank_role],
-                default_rows=item.blank_cells_rows,
-            )
         if not item.blank_cells_after:
             return {}
         return {'rows': item.blank_cells_rows}
-
-    def includes_item(self, item: VariantContentItem) -> bool:
-        return item.bank_role not in self.hidden_roles
 
     def includes_content_block(self, block: VariantContentBlockItem) -> bool:
         return block.content_type not in self.hidden_content_types
@@ -140,8 +110,6 @@ def build_variant_print_plan_from_snapshot(
     profile = profile or VariantPrintProfile()
     ordered_block_groups = []
     for row in content_snapshot.items:
-        if not profile.includes_item(row):
-            continue
         task_blocks = [_task_print_block(row, profile)]
         blank_cells_options = profile.blank_cells_options(row)
         if blank_cells_options:
@@ -222,9 +190,6 @@ def _task_print_block(
 def build_variant_print_profile_from_options(options) -> VariantPrintProfile:
     options = dict(options or {})
     return VariantPrintProfile(
-        hidden_roles=_tuple_option(options.get('hidden_roles')),
-        render_modes_by_role=_mapping_option(options.get('role_render_modes')),
-        blank_cells_by_role=_mapping_option(options.get('role_blank_cells')),
         hidden_content_types=_tuple_option(
             options.get('hidden_content_types'),
         ),
@@ -246,37 +211,3 @@ def _tuple_option(value) -> Tuple[str, ...]:
             if item.strip()
         )
     return tuple(value)
-
-
-def _mapping_option(value) -> Mapping[str, Any]:
-    if isinstance(value, Mapping):
-        return dict(value)
-    return {}
-
-
-def _blank_cells_override_options(value, default_rows: int) -> Mapping[str, Any]:
-    if value is False or value is None:
-        return {}
-    if value is True:
-        return {'rows': default_rows}
-    if isinstance(value, int):
-        if value < 1:
-            return {}
-        return {'rows': value}
-    if not isinstance(value, Mapping):
-        return {}
-
-    enabled = value.get('enabled', True)
-    if enabled is False:
-        return {}
-    rows = value.get('rows', default_rows)
-    try:
-        rows = int(rows)
-    except (TypeError, ValueError):
-        rows = default_rows
-    if rows < 1:
-        return {}
-    return {
-        **dict(value),
-        'rows': rows,
-    }

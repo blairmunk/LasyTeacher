@@ -159,7 +159,7 @@ class DocumentRecipe:
 
 @dataclass(frozen=True)
 class PrintSettingsSpec:
-    """Saved print settings for a sectioned document."""
+    """Saved presentation recipe for a sectioned document."""
 
     name: str
     document_type: str
@@ -167,7 +167,6 @@ class PrintSettingsSpec:
     description: str = ''
     is_default: bool = False
     sections: Tuple[DocumentSectionSpec, ...] = field(default_factory=tuple)
-    default_content_config: Mapping[str, Any] = field(default_factory=dict)
     presentation: DocumentPresentation = field(
         default_factory=DocumentPresentation,
     )
@@ -176,11 +175,6 @@ class PrintSettingsSpec:
         if not self.document_type:
             raise ValueError('document_type is required')
         object.__setattr__(self, 'sections', tuple(self.sections))
-        object.__setattr__(
-            self,
-            'default_content_config',
-            dict(self.default_content_config),
-        )
 
     @property
     def section_types(self) -> Tuple[str, ...]:

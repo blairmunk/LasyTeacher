@@ -189,7 +189,7 @@ class DocumentSectionCatalogTests(TestCase):
 
         self.assertTrue(section_by_type[TASK_LIST_SECTION].has_options)
         self.assertIn(
-            'role_render_modes',
+            'hidden_content_types',
             section_by_type[TASK_LIST_SECTION].options_example,
         )
         self.assertTrue(section_by_type[BLANK_CELLS_SECTION].has_options)

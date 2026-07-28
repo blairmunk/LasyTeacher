@@ -1,20 +1,23 @@
 {% extends 'base.html' %}
 
-{% block title %}Настройки печати{% endblock %}
+{% block title %}Профили оформления{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-start mb-4">
         <div>
-            <h1 class="h3 mb-1">Настройки печати</h1>
-            <p class="text-muted mb-0">Типы документов, секции рендера и сохранённые профили печати.</p>
+            <h1 class="h3 mb-1">Профили оформления</h1>
+            <p class="text-muted mb-0">
+                Порядок отображения секций, стили HTML и настройки LaTeX.
+                Содержание вариантов задаётся спецификацией работы.
+            </p>
         </div>
         <div class="d-flex gap-2">
             <a class="btn btn-primary" href="{% url 'document_engine:print-profile-create' %}">
-                <i class="fas fa-plus"></i> Создать настройки
+                <i class="fas fa-plus"></i> Создать профиль
             </a>
             <a class="btn btn-outline-secondary" href="{% url 'admin:document_generator_printsettings_changelist' %}">
-                <i class="fas fa-cog"></i> Админка настроек
+                <i class="fas fa-cog"></i> Админка профилей
             </a>
         </div>
     </div>
@@ -33,6 +36,7 @@
         </div>
         <div class="col-md-3">
             <div class="form-check">
+                <input type="hidden" name="renderable" value="0">
                 <input class="form-check-input" type="checkbox" id="renderable-only" name="renderable" value="1" {% if renderable_only %}checked{% endif %}>
                 <label class="form-check-label" for="renderable-only">Только готовые к печати</label>
             </div>
@@ -46,7 +50,7 @@
 
     <div class="row g-4">
         <div class="col-lg-5">
-            <h2 class="h5">Типы документов</h2>
+            <h2 class="h5">Поддерживаемые документы</h2>
             <div class="list-group mb-4">
                 {% for document_type in document_types %}
                     <a class="list-group-item list-group-item-action {% if document_type.document_type == current_document_type %}active{% endif %}" href="{{ document_type.url }}">
@@ -72,7 +76,7 @@
                 {% endfor %}
             </div>
 
-            <h2 class="h5">Сохранённые настройки печати</h2>
+            <h2 class="h5">Сохранённые профили</h2>
             <div class="list-group">
                 {% for print_profile in print_profiles %}
                     <div class="list-group-item">
@@ -95,7 +99,7 @@
                         <div class="small text-muted">{{ print_profile.document_type }}</div>
                     </div>
                 {% empty %}
-                    <div class="list-group-item text-muted">Настройки печати не найдены.</div>
+                    <div class="list-group-item text-muted">Профили оформления не найдены.</div>
                 {% endfor %}
             </div>
         </div>

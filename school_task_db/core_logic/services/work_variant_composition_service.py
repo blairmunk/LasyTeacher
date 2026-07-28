@@ -13,6 +13,10 @@ from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_CONTROL,
     TASK_RENDER_MODE_TASK_ONLY,
 )
+from core_logic.value_objects.work_content_plan import (
+    WORK_CONTENT_TEXT,
+    WORK_CONTENT_THEORY,
+)
 
 
 @dataclass(frozen=True)
@@ -61,15 +65,47 @@ class WorkVariantCompositionInput:
 
 
 @dataclass(frozen=True)
+class WorkTheorySubtopicSource:
+    subtopic_id: str
+    name: str
+    content: str = ''
+
+
+@dataclass(frozen=True)
+class WorkTheoryTopicSource:
+    topic_id: str
+    name: str
+    subject: str = ''
+    section: str = ''
+    grade_level: int = 0
+    content: str = ''
+    subtopics: Tuple[WorkTheorySubtopicSource, ...] = field(
+        default_factory=tuple,
+    )
+
+    def __post_init__(self):
+        object.__setattr__(self, 'subtopics', tuple(self.subtopics))
+
+
+@dataclass(frozen=True)
 class WorkVariantContentBlock:
     source_content_id: str
     content_type: str
     order: int
     title: str = ''
-    content: Mapping[str, Any] = field(default_factory=dict)
+    body: str = ''
+    topics: Tuple[WorkTheoryTopicSource, ...] = field(default_factory=tuple)
+    include_subtopics: bool = False
 
     def __post_init__(self):
-        object.__setattr__(self, 'content', dict(self.content))
+        if self.content_type not in (
+            WORK_CONTENT_THEORY,
+            WORK_CONTENT_TEXT,
+        ):
+            raise ValueError(
+                f'Unsupported work content type: {self.content_type}',
+            )
+        object.__setattr__(self, 'topics', tuple(self.topics))
 
 
 @dataclass(frozen=True)
@@ -208,7 +244,7 @@ class WorkVariantCompositionService:
                     content_type=block.content_type,
                     order=block.order,
                     title=block.title,
-                    content=block.content,
+                    content=_variant_content_snapshot(block),
                 )
                 for block in composition_input.content_blocks
             ),
@@ -218,3 +254,35 @@ class WorkVariantCompositionService:
         if len(row.available_tasks) < row.count:
             return row.available_tasks
         return tuple(self.task_selector(row.available_tasks, row.count))
+
+
+def _variant_content_snapshot(block: WorkVariantContentBlock):
+    if block.content_type == WORK_CONTENT_TEXT:
+        return {'body': block.body}
+    return {
+        'topics': [
+            {
+                'id': topic.topic_id,
+                'name': topic.name,
+                'subject': topic.subject,
+                'section': topic.section,
+                'grade_level': topic.grade_level,
+                'content': topic.content,
+                'subtopics': [
+                    {
+                        'id': subtopic.subtopic_id,
+                        'name': subtopic.name,
+                        'content': subtopic.content,
+                    }
+                    for subtopic in topic.subtopics
+                    if (
+                        block.include_subtopics
+                        and subtopic.content
+                    )
+                ],
+            }
+            for topic in block.topics
+            if topic.content
+        ],
+        'include_subtopics': block.include_subtopics,
+    }

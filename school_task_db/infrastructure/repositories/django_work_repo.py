@@ -81,6 +81,8 @@ from core_logic.services.work_variant_composition_service import (
     WorkVariantContentBlock,
     WorkVariantCompositionService,
     WorkVariantSpecRow,
+    WorkTheorySubtopicSource,
+    WorkTheoryTopicSource,
 )
 from events.models import EventParticipation, Mark
 from task_groups.models import TaskGroup
@@ -846,41 +848,32 @@ class DjangoWorkRepository(
         )
 
     def _variant_composition_content_block(self, block):
-        content = {'body': block.body}
-        if block.content_type == 'theory':
-            content = {
-                'topics': [
-                    {
-                        'id': str(topic.pk),
-                        'name': topic.name,
-                        'subject': topic.subject,
-                        'section': topic.section,
-                        'grade_level': topic.grade_level,
-                        'content': topic.description,
-                        'subtopics': [
-                            {
-                                'id': str(subtopic.pk),
-                                'name': subtopic.name,
-                                'content': subtopic.description,
-                            }
-                            for subtopic in topic.subtopics.all()
-                            if (
-                                block.include_subtopics
-                                and subtopic.description
-                            )
-                        ],
-                    }
-                    for topic in block.topics.all()
-                    if topic.description
-                ],
-                'include_subtopics': block.include_subtopics,
-            }
         return WorkVariantContentBlock(
             source_content_id=str(block.pk),
             content_type=block.content_type,
             order=block.order,
             title=block.title,
-            content=content,
+            body=block.body,
+            topics=tuple(
+                WorkTheoryTopicSource(
+                    topic_id=str(topic.pk),
+                    name=topic.name,
+                    subject=topic.subject,
+                    section=topic.section,
+                    grade_level=topic.grade_level,
+                    content=topic.description,
+                    subtopics=tuple(
+                        WorkTheorySubtopicSource(
+                            subtopic_id=str(subtopic.pk),
+                            name=subtopic.name,
+                            content=subtopic.description,
+                        )
+                        for subtopic in topic.subtopics.all()
+                    ),
+                )
+                for topic in block.topics.all()
+            ),
+            include_subtopics=block.include_subtopics,
         )
 
     def get_orphan_variant_refs(

@@ -6,6 +6,8 @@ from core_logic.services.work_variant_composition_service import (
     WorkVariantContentBlock,
     WorkVariantCompositionService,
     WorkVariantSpecRow,
+    WorkTheorySubtopicSource,
+    WorkTheoryTopicSource,
 )
 from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_DEMO,
@@ -74,7 +76,47 @@ class WorkVariantCompositionServiceTests(TestCase):
             theory.content['topics'][0]['content'],
             'Сила изменяет скорость.',
         )
+        self.assertEqual(
+            theory.content['topics'][0]['subtopics'][0]['content'],
+            'Равнодействующая определяет ускорение.',
+        )
         self.assertEqual(text.content, {'body': 'Покажите ход решения.'})
+
+    def test_theory_snapshot_filters_empty_content_in_clean_layer(self):
+        composition_input = self._composition_input()
+        theory_block = composition_input.content_blocks[0]
+        composition_input = WorkVariantCompositionInput(
+            work_name=composition_input.work_name,
+            duration=composition_input.duration,
+            max_score=composition_input.max_score,
+            effective_max_score=composition_input.effective_max_score,
+            variant_counter=composition_input.variant_counter,
+            spec_rows=composition_input.spec_rows,
+            content_blocks=(
+                WorkVariantContentBlock(
+                    source_content_id=theory_block.source_content_id,
+                    content_type='theory',
+                    order=theory_block.order,
+                    topics=(
+                        *theory_block.topics,
+                        WorkTheoryTopicSource(
+                            topic_id='empty-topic',
+                            name='Пустая тема',
+                        ),
+                    ),
+                    include_subtopics=False,
+                ),
+            ),
+        )
+
+        plan = self.service.compose(composition_input, count=1)
+        content = plan.variants[0].content_blocks[0].content
+
+        self.assertEqual(
+            [topic['name'] for topic in content['topics']],
+            ['Динамика'],
+        )
+        self.assertEqual(content['topics'][0]['subtopics'], [])
 
     def test_selects_tasks_for_each_row_and_variant(self):
         self.service.compose(self._composition_input(), count=2)
@@ -169,21 +211,31 @@ class WorkVariantCompositionServiceTests(TestCase):
                     content_type='theory',
                     order=5,
                     title='Опорная теория',
-                    content={
-                        'topics': [
-                            {
-                                'name': 'Динамика',
-                                'content': 'Сила изменяет скорость.',
-                            },
-                        ],
-                    },
+                    topics=(
+                        WorkTheoryTopicSource(
+                            topic_id='topic-1',
+                            name='Динамика',
+                            content='Сила изменяет скорость.',
+                            subtopics=(
+                                WorkTheorySubtopicSource(
+                                    subtopic_id='subtopic-1',
+                                    name='Силы',
+                                    content=(
+                                        'Равнодействующая определяет '
+                                        'ускорение.'
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                    include_subtopics=True,
                 ),
                 WorkVariantContentBlock(
                     source_content_id='text-block',
                     content_type='text',
                     order=20,
                     title='Инструкция',
-                    content={'body': 'Покажите ход решения.'},
+                    body='Покажите ход решения.',
                 ),
             ),
         )

@@ -1,6 +1,6 @@
 """Document payload builders for remedial sheets."""
 
-from infrastructure.services.django_variant_document_payloads import (
+from infrastructure.services.task_document_payloads import (
     build_original_task_payload,
     build_variant_task_payload,
 )

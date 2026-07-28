@@ -220,11 +220,11 @@ class DocumentModelTests(TestCase):
         self.assertEqual(print_settings.print_settings_id, 'profile-1')
         self.assertEqual(print_settings.document_type, WORKSHEET_DOCUMENT_TYPE)
 
-    def test_create_print_settings_params_build_sections_from_section_types(self):
+    def test_create_print_settings_params_normalize_section_values(self):
         params = CreatePrintSettingsParams(
             name=' Шаблон ',
             document_type=' work ',
-            section_types=(' header ', 'task_list'),
+            sections=(' header ', 'task_list'),
         )
 
         self.assertEqual(params.name, 'Шаблон')
@@ -261,14 +261,14 @@ class DocumentModelTests(TestCase):
         create_params = CreatePrintSettingsParams(
             name='Профиль печати',
             document_type='work',
-            section_types=('header',),
+            sections=('header',),
             presentation=DocumentPresentation(custom_css='body {}'),
         )
         update_params = UpdatePrintSettingsParams(
             print_settings_id='profile-1',
             name='Профиль печати',
             document_type='work',
-            section_types=('header',),
+            sections=('header',),
         )
 
         self.assertEqual(create_params.document_type, 'work')

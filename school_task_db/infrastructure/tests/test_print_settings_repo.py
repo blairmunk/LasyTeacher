@@ -172,7 +172,7 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
             CreatePrintSettingsParams(
                 name='Новый профиль',
                 document_type=PrintSettings.DocumentType.WORK,
-                section_types=('header', 'task_list'),
+                sections=('header', 'task_list'),
                 is_default=True,
             )
         )
@@ -242,7 +242,7 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
                 print_settings_id='550e8400-e29b-41d4-a716-446655440000',
                 name='Профиль',
                 document_type=PrintSettings.DocumentType.WORK,
-                section_types=('header',),
+                sections=('header',),
             )
         )
 

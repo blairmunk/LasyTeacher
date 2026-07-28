@@ -204,7 +204,7 @@ class CreatePrintSettingsUseCaseTests(TestCase):
             name='  Профиль работы  ',
             description='  Для печати  ',
             document_type='work',
-            section_types=('header', 'task_list'),
+            sections=('header', 'task_list'),
             is_default=True,
         )
 
@@ -223,7 +223,7 @@ class CreatePrintSettingsUseCaseTests(TestCase):
             CreatePrintSettingsParams(
                 name='',
                 document_type='',
-                section_types=(),
+                sections=(),
             )
         )
 
@@ -240,7 +240,7 @@ class CreatePrintSettingsUseCaseTests(TestCase):
             CreatePrintSettingsParams(
                 name='Профиль РнО',
                 document_type='remedial_sheet',
-                section_types=('task_list',),
+                sections=('task_list',),
             )
         )
 
@@ -282,7 +282,7 @@ class UpdatePrintSettingsUseCaseTests(TestCase):
             name='  Новый профиль  ',
             description='  Новое описание  ',
             document_type='work',
-            section_types=('header', 'task_list'),
+            sections=('header', 'task_list'),
             is_default=True,
         )
 
@@ -303,7 +303,7 @@ class UpdatePrintSettingsUseCaseTests(TestCase):
                 print_settings_id='missing',
                 name='Профиль',
                 document_type='work',
-                section_types=('header',),
+                sections=('header',),
             )
         )
 
@@ -320,7 +320,7 @@ class UpdatePrintSettingsUseCaseTests(TestCase):
                 print_settings_id='profile-1',
                 name='Профиль РнО',
                 document_type='remedial_sheet',
-                section_types=('task_list',),
+                sections=('task_list',),
             )
         )
 

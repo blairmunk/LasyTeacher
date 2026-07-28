@@ -188,9 +188,6 @@ class PrintSettingsSpec:
             presentation=self.presentation,
         )
 
-def _clean_section_types(section_types) -> Tuple[str, ...]:
-    return tuple(section_type.strip() for section_type in section_types)
-
 
 def _clean_section_specs(sections) -> Tuple[DocumentSectionSpec, ...]:
     return tuple(
@@ -205,7 +202,6 @@ def _clean_section_specs(sections) -> Tuple[DocumentSectionSpec, ...]:
 class CreatePrintSettingsParams:
     name: str
     document_type: str
-    section_types: Tuple[str, ...] = field(default_factory=tuple)
     sections: Tuple[DocumentSectionSpec, ...] = field(default_factory=tuple)
     description: str = ''
     is_default: bool = False
@@ -217,18 +213,13 @@ class CreatePrintSettingsParams:
         object.__setattr__(self, 'name', self.name.strip())
         object.__setattr__(self, 'document_type', self.document_type.strip())
         sections = _clean_section_specs(self.sections)
-        section_types = _clean_section_types(self.section_types)
-        if sections:
-            section_types = tuple(section.section_type for section in sections)
-        elif section_types:
-            sections = tuple(
-                DocumentSectionSpec(section_type=section_type)
-                for section_type in section_types
-            )
-
-        object.__setattr__(self, 'section_types', section_types)
         object.__setattr__(self, 'sections', sections)
         object.__setattr__(self, 'description', self.description.strip())
+
+    @property
+    def section_types(self) -> Tuple[str, ...]:
+        return tuple(section.section_type for section in self.sections)
+
 
 @dataclass(frozen=True)
 class CreatePrintSettingsResult:
@@ -246,7 +237,6 @@ class UpdatePrintSettingsParams:
     print_settings_id: str
     name: str
     document_type: str
-    section_types: Tuple[str, ...] = field(default_factory=tuple)
     sections: Tuple[DocumentSectionSpec, ...] = field(default_factory=tuple)
     description: str = ''
     is_default: bool = False
@@ -263,18 +253,13 @@ class UpdatePrintSettingsParams:
         object.__setattr__(self, 'name', self.name.strip())
         object.__setattr__(self, 'document_type', self.document_type.strip())
         sections = _clean_section_specs(self.sections)
-        section_types = _clean_section_types(self.section_types)
-        if sections:
-            section_types = tuple(section.section_type for section in sections)
-        elif section_types:
-            sections = tuple(
-                DocumentSectionSpec(section_type=section_type)
-                for section_type in section_types
-            )
-
-        object.__setattr__(self, 'section_types', section_types)
         object.__setattr__(self, 'sections', sections)
         object.__setattr__(self, 'description', self.description.strip())
+
+    @property
+    def section_types(self) -> Tuple[str, ...]:
+        return tuple(section.section_type for section in self.sections)
+
 
 @dataclass(frozen=True)
 class UpdatePrintSettingsResult:

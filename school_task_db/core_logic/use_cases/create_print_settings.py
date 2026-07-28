@@ -48,7 +48,7 @@ class CreatePrintSettingsUseCase:
             errors.append('Название профиля печати обязательно.')
         if not params.document_type:
             errors.append('Тип документа обязателен.')
-        if not params.section_types:
+        if not params.sections:
             errors.append('Выберите хотя бы одну секцию.')
 
         try:

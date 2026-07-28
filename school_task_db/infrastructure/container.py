@@ -1135,7 +1135,9 @@ class Container:
         return RenderWorkDocumentUseCase(
             work_repo=self.work_repo,
             print_settings_repo=self.print_settings_repo,
-            render_document_use_case=self.render_document_use_case(),
+            render_document_from_recipe_use_case=(
+                self.render_document_from_recipe_use_case()
+            ),
         )
 
     def render_document_use_case(self):
@@ -1159,14 +1161,18 @@ class Container:
         return RenderRemedialSheetDocumentUseCase(
             work_repo=self.work_repo,
             print_settings_repo=self.print_settings_repo,
-            render_document_use_case=self.render_document_use_case(),
+            render_document_from_recipe_use_case=(
+                self.render_document_from_recipe_use_case()
+            ),
         )
 
     def render_remedial_sheet_batch_document_use_case(self):
         return RenderRemedialSheetBatchDocumentUseCase(
             work_repo=self.work_repo,
             print_settings_repo=self.print_settings_repo,
-            render_document_use_case=self.render_document_use_case(),
+            render_document_from_recipe_use_case=(
+                self.render_document_from_recipe_use_case()
+            ),
         )
 
     def get_rendered_document_file_use_case(self):

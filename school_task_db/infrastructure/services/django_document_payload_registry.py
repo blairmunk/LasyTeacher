@@ -25,10 +25,10 @@ from core_logic.entities.document import (
 from infrastructure.services.blank_cells_payload import (
     build_blank_cells_payload,
 )
-from infrastructure.services.django_remedial_document_payloads import (
-    DjangoRemedialHeaderPayloadBuilder,
-    DjangoRemedialOriginalMistakesPayloadBuilder,
-    DjangoRemedialTrainingTasksPayloadBuilder,
+from infrastructure.services.remedial_document_payloads import (
+    RemedialHeaderPayloadBuilder,
+    RemedialOriginalMistakesPayloadBuilder,
+    RemedialTrainingTasksPayloadBuilder,
     RemedialSheetDataProvider,
 )
 from infrastructure.services.django_work_document_payloads import (
@@ -105,12 +105,12 @@ def build_remedial_sheet_section_payload_builder_registry(
         get_remedial_sheet_data=get_remedial_sheet_data,
     )
     registry = DocumentSectionPayloadBuilderRegistry()
-    header_builder = DjangoRemedialHeaderPayloadBuilder(sheet_data_provider)
-    original_mistakes_builder = DjangoRemedialOriginalMistakesPayloadBuilder(
+    header_builder = RemedialHeaderPayloadBuilder(sheet_data_provider)
+    original_mistakes_builder = RemedialOriginalMistakesPayloadBuilder(
         sheet_data_provider,
         task_payload_formatter=task_payload_formatter,
     )
-    training_tasks_builder = DjangoRemedialTrainingTasksPayloadBuilder(
+    training_tasks_builder = RemedialTrainingTasksPayloadBuilder(
         sheet_data_provider,
         task_payload_formatter=task_payload_formatter,
     )

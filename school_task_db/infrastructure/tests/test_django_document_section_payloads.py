@@ -46,7 +46,7 @@ from infrastructure.services.django_document_payload_registry import (
     build_remedial_sheet_section_payload_builder_registry,
     build_work_section_payload_builder_registry,
 )
-from infrastructure.services.django_remedial_document_payloads import (
+from infrastructure.services.remedial_document_payloads import (
     RemedialSheetDataProvider,
 )
 from infrastructure.services.django_work_document_payloads import (

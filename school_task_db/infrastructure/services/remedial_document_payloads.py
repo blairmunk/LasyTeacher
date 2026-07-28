@@ -1,4 +1,4 @@
-"""Django-backed document payload builders for remedial sheets."""
+"""Document payload builders for remedial sheets."""
 
 from infrastructure.services.django_variant_document_payloads import (
     build_original_task_payload,
@@ -25,7 +25,7 @@ class RemedialSheetDataProvider:
         return cache[variant_id]
 
 
-class DjangoRemedialHeaderPayloadBuilder:
+class RemedialHeaderPayloadBuilder:
     def __init__(self, sheet_data_provider):
         self.sheet_data_provider = sheet_data_provider
 
@@ -43,7 +43,7 @@ class DjangoRemedialHeaderPayloadBuilder:
         }
 
 
-class DjangoRemedialOriginalMistakesPayloadBuilder:
+class RemedialOriginalMistakesPayloadBuilder:
     def __init__(self, sheet_data_provider, task_payload_formatter=None):
         self.sheet_data_provider = sheet_data_provider
         self.task_payload_formatter = task_payload_formatter
@@ -66,7 +66,7 @@ class DjangoRemedialOriginalMistakesPayloadBuilder:
         }
 
 
-class DjangoRemedialTrainingTasksPayloadBuilder:
+class RemedialTrainingTasksPayloadBuilder:
     def __init__(self, sheet_data_provider, task_payload_formatter=None):
         self.sheet_data_provider = sheet_data_provider
         self.task_payload_formatter = task_payload_formatter

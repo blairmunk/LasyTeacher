@@ -10,6 +10,7 @@ from core_logic.services.remedial_service import RemedialService
 from core_logic.services.work_variant_composition_service import (
     WorkVariantCompositionService,
 )
+from core_logic.services.work_spec_sync_service import WorkSpecSyncService
 from core_logic.interfaces.event_repo import (
     CreateEventParams,
     GradeParticipationParams,
@@ -47,6 +48,10 @@ from core_logic.use_cases.create_work_from_orphans import (
 from core_logic.use_cases.compose_work_variants import (
     ComposeWorkVariantsRequest,
     ComposeWorkVariantsUseCase,
+)
+from core_logic.use_cases.sync_work_analog_groups import (
+    SyncWorkAnalogGroupsRequest,
+    SyncWorkAnalogGroupsUseCase,
 )
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
@@ -1617,10 +1622,18 @@ class DjangoRemedialRepositoryTests(TestCase):
         WorkAnalogGroup.objects.filter(work=self.source_work).delete()
         repo = DjangoWorkRepository()
 
-        created_count = repo.sync_analog_groups_from_variants(str(self.source_work.pk))
+        result = SyncWorkAnalogGroupsUseCase(
+            repo,
+            transaction_manager=DjangoTransactionManager(),
+        ).execute(
+            SyncWorkAnalogGroupsRequest(
+                work_id=str(self.source_work.pk),
+            )
+        )
         groups = WorkAnalogGroup.objects.filter(work=self.source_work)
 
-        self.assertEqual(created_count, 2)
+        self.assertEqual(result.status, 'synced')
+        self.assertEqual(result.created_count, 2)
         self.assertEqual(groups.count(), 2)
         self.assertEqual(
             {group.analog_group for group in groups},
@@ -1628,11 +1641,36 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
 
     def test_work_repository_does_not_sync_missing_work(self):
-        created_count = DjangoWorkRepository().sync_analog_groups_from_variants(
-            '00000000-0000-0000-0000-000000000000',
+        result = SyncWorkAnalogGroupsUseCase(
+            DjangoWorkRepository(),
+            transaction_manager=DjangoTransactionManager(),
+        ).execute(
+            SyncWorkAnalogGroupsRequest(
+                work_id='00000000-0000-0000-0000-000000000000',
+            )
         )
 
-        self.assertIsNone(created_count)
+        self.assertEqual(result.status, 'not_found')
+        self.assertEqual(result.created_count, 0)
+
+    def test_work_repository_rejects_stale_specification_sync_plan(self):
+        WorkAnalogGroup.objects.filter(work=self.source_work).delete()
+        repo = DjangoWorkRepository()
+        source = repo.get_work_spec_sync_source(str(self.source_work.pk))
+        plan = WorkSpecSyncService().build_plan(source.variant_group_ids)
+        self.source_work.variant_counter += 1
+        self.source_work.save()
+
+        result = repo.save_work_spec_sync_plan(
+            work_id=str(self.source_work.pk),
+            expected_variant_counter=source.variant_counter,
+            plan=plan,
+        )
+
+        self.assertEqual(result.status, 'conflict')
+        self.assertFalse(
+            WorkAnalogGroup.objects.filter(work=self.source_work).exists()
+        )
 
     def test_task_repository_mutates_bulk_group_memberships(self):
         repo = DjangoTaskRepository()
@@ -1725,7 +1763,10 @@ class DjangoRemedialRepositoryTests(TestCase):
         existing_count = Variant.objects.filter(work=self.source_work).count()
         existing_counter = self.source_work.variant_counter
 
-        result = ComposeWorkVariantsUseCase(repo).execute(
+        result = ComposeWorkVariantsUseCase(
+            repo,
+            transaction_manager=DjangoTransactionManager(),
+        ).execute(
             ComposeWorkVariantsRequest(
                 work_id=str(self.source_work.pk),
                 count=2,
@@ -1746,6 +1787,7 @@ class DjangoRemedialRepositoryTests(TestCase):
     def test_compose_variants_use_case_handles_missing_work(self):
         result = ComposeWorkVariantsUseCase(
             DjangoWorkRepository(),
+            transaction_manager=DjangoTransactionManager(),
         ).execute(
             ComposeWorkVariantsRequest(
                 work_id='00000000-0000-0000-0000-000000000000',
@@ -1849,7 +1891,10 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
         repo = DjangoWorkRepository()
 
-        result = ComposeWorkVariantsUseCase(repo).execute(
+        result = ComposeWorkVariantsUseCase(
+            repo,
+            transaction_manager=DjangoTransactionManager(),
+        ).execute(
             ComposeWorkVariantsRequest(
                 work_id=str(work.pk),
                 count=1,

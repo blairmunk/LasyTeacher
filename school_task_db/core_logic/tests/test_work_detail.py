@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from unittest import TestCase
 
 from core_logic.entities.document import PrintSettingsSpec
@@ -17,6 +18,10 @@ from core_logic.entities.work import (
 from core_logic.entities.work_variant_composition import (
     WorkVariantCompositionInput,
     WorkVariantCompositionSaveResult,
+)
+from core_logic.entities.work_spec_sync import (
+    WorkSpecSyncSaveResult,
+    WorkSpecSyncSource,
 )
 from core_logic.interfaces.orphan_variant_repo import (
     CreatedWorkFromOrphanVariantsRef,
@@ -69,6 +74,16 @@ class FakeWork:
     pk = 'work-1'
 
 
+class FakeTransactionManager:
+    def __init__(self):
+        self.entered = 0
+
+    @contextmanager
+    def atomic(self):
+        self.entered += 1
+        yield
+
+
 class FakeWorkRepository:
     def __init__(
         self,
@@ -101,6 +116,9 @@ class FakeWorkRepository:
         self.orphan_variants = FakeQuerySet()
         self.orphan_variant_count = 0
         self.synced_work_id = None
+        self.work_spec_sync_source_requests = []
+        self.work_spec_sync_save_requests = []
+        self.work_spec_sync_save_statuses = []
         self.generated_variants_request = None
         self.variant_composition_input_requests = []
         self.variant_composition_save_requests = []
@@ -203,9 +221,34 @@ class FakeWorkRepository:
     def count_orphan_variants(self):
         return self.orphan_variant_count
 
-    def sync_analog_groups_from_variants(self, work_id):
+    def get_work_spec_sync_source(self, work_id):
         self.synced_work_id = work_id
-        return 2 if self.work_exists_for_spec_sync else None
+        self.work_spec_sync_source_requests.append(work_id)
+        if not self.work_exists_for_spec_sync:
+            return None
+        return WorkSpecSyncSource(
+            variant_counter=len(self.work_spec_sync_source_requests) - 1,
+            variant_group_ids=(('group-1', 'group-1'),),
+        )
+
+    def save_work_spec_sync_plan(
+        self,
+        work_id,
+        expected_variant_counter,
+        plan,
+    ):
+        self.work_spec_sync_save_requests.append(
+            (work_id, expected_variant_counter, plan),
+        )
+        status = (
+            self.work_spec_sync_save_statuses.pop(0)
+            if self.work_spec_sync_save_statuses
+            else 'saved'
+        )
+        return WorkSpecSyncSaveResult(
+            status=status,
+            created_count=2 if status == 'saved' else 0,
+        )
 
     def get_variant_composition_input(self, work_id):
         self.variant_composition_input_requests.append(work_id)
@@ -573,7 +616,10 @@ class WorkDetailTests(TestCase):
 
     def test_sync_work_analog_groups_use_case_delegates_to_repository(self):
         repo = FakeWorkRepository()
-        use_case = SyncWorkAnalogGroupsUseCase(work_repo=repo)
+        use_case = SyncWorkAnalogGroupsUseCase(
+            work_repo=repo,
+            transaction_manager=FakeTransactionManager(),
+        )
 
         result = use_case.execute(SyncWorkAnalogGroupsRequest(work_id='work-1'))
 
@@ -584,7 +630,10 @@ class WorkDetailTests(TestCase):
     def test_sync_work_analog_groups_use_case_handles_missing_work(self):
         repo = FakeWorkRepository()
         repo.work_exists_for_spec_sync = False
-        use_case = SyncWorkAnalogGroupsUseCase(work_repo=repo)
+        use_case = SyncWorkAnalogGroupsUseCase(
+            work_repo=repo,
+            transaction_manager=FakeTransactionManager(),
+        )
 
         result = use_case.execute(SyncWorkAnalogGroupsRequest(work_id='missing'))
 
@@ -592,9 +641,58 @@ class WorkDetailTests(TestCase):
         self.assertEqual(result.created_count, 0)
         self.assertEqual(repo.synced_work_id, 'missing')
 
+    def test_sync_work_analog_groups_use_case_retries_counter_conflict(self):
+        repo = FakeWorkRepository()
+        repo.work_spec_sync_save_statuses = ['conflict', 'saved']
+        transaction_manager = FakeTransactionManager()
+        use_case = SyncWorkAnalogGroupsUseCase(
+            work_repo=repo,
+            transaction_manager=transaction_manager,
+        )
+
+        result = use_case.execute(
+            SyncWorkAnalogGroupsRequest(work_id='work-1')
+        )
+
+        self.assertEqual(result.status, 'synced')
+        self.assertEqual(result.created_count, 2)
+        self.assertEqual(
+            repo.work_spec_sync_source_requests,
+            ['work-1', 'work-1'],
+        )
+        self.assertEqual(
+            [
+                request[1]
+                for request in repo.work_spec_sync_save_requests
+            ],
+            [0, 1],
+        )
+        self.assertEqual(transaction_manager.entered, 2)
+
+    def test_sync_work_analog_groups_reports_repeated_conflict(self):
+        repo = FakeWorkRepository()
+        repo.work_spec_sync_save_statuses = ['conflict'] * 3
+        transaction_manager = FakeTransactionManager()
+        use_case = SyncWorkAnalogGroupsUseCase(
+            work_repo=repo,
+            transaction_manager=transaction_manager,
+        )
+
+        result = use_case.execute(
+            SyncWorkAnalogGroupsRequest(work_id='work-1')
+        )
+
+        self.assertEqual(result.status, 'conflict')
+        self.assertEqual(result.created_count, 0)
+        self.assertEqual(len(repo.work_spec_sync_save_requests), 3)
+        self.assertEqual(transaction_manager.entered, 3)
+
     def test_compose_work_variants_use_case_delegates_to_repository(self):
         repo = FakeWorkRepository()
-        use_case = ComposeWorkVariantsUseCase(work_repo=repo)
+        use_case = ComposeWorkVariantsUseCase(
+            work_repo=repo,
+            transaction_manager=FakeTransactionManager(),
+        )
 
         result = use_case.execute(
             ComposeWorkVariantsRequest(work_id='work-1', count=3)
@@ -608,7 +706,10 @@ class WorkDetailTests(TestCase):
     def test_compose_work_variants_use_case_handles_missing_work(self):
         repo = FakeWorkRepository()
         repo.work_exists_for_composition = False
-        use_case = ComposeWorkVariantsUseCase(work_repo=repo)
+        use_case = ComposeWorkVariantsUseCase(
+            work_repo=repo,
+            transaction_manager=FakeTransactionManager(),
+        )
 
         result = use_case.execute(
             ComposeWorkVariantsRequest(work_id='missing', count=3)
@@ -622,7 +723,10 @@ class WorkDetailTests(TestCase):
     def test_compose_work_variants_use_case_retries_counter_conflict(self):
         repo = FakeWorkRepository()
         repo.variant_composition_save_statuses = ['conflict', 'saved']
-        use_case = ComposeWorkVariantsUseCase(work_repo=repo)
+        use_case = ComposeWorkVariantsUseCase(
+            work_repo=repo,
+            transaction_manager=FakeTransactionManager(),
+        )
 
         result = use_case.execute(
             ComposeWorkVariantsRequest(work_id='work-1', count=2)
@@ -645,7 +749,10 @@ class WorkDetailTests(TestCase):
     def test_compose_work_variants_use_case_reports_repeated_conflict(self):
         repo = FakeWorkRepository()
         repo.variant_composition_save_statuses = ['conflict'] * 3
-        use_case = ComposeWorkVariantsUseCase(work_repo=repo)
+        use_case = ComposeWorkVariantsUseCase(
+            work_repo=repo,
+            transaction_manager=FakeTransactionManager(),
+        )
 
         result = use_case.execute(
             ComposeWorkVariantsRequest(work_id='work-1', count=2)

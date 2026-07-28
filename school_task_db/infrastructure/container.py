@@ -1121,11 +1121,13 @@ class Container:
     def sync_work_analog_groups_use_case(self):
         return SyncWorkAnalogGroupsUseCase(
             work_repo=self.work_repo,
+            transaction_manager=self.transaction_manager,
         )
 
     def compose_work_variants_use_case(self):
         return ComposeWorkVariantsUseCase(
             work_repo=self.work_repo,
+            transaction_manager=self.transaction_manager,
         )
 
     def render_work_document_use_case(self):

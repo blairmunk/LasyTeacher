@@ -279,6 +279,15 @@ def sync_analog_groups(request, work_id):
         )
         if result.status == 'not_found':
             raise Http404("Работа не найдена")
+        if result.status == 'conflict':
+            messages.error(
+                request,
+                (
+                    'Набор вариантов изменился параллельно. '
+                    'Повторите синхронизацию.'
+                ),
+            )
+            return redirect('works:detail', pk=work_id)
         if result.created_count > 0:
             messages.success(
                 request,

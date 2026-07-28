@@ -12,6 +12,11 @@ from core_logic.entities.work_variant_composition import (
     WorkVariantCompositionPlan,
     WorkVariantCompositionSaveResult,
 )
+from core_logic.entities.work_spec_sync import (
+    WorkSpecSyncItem,
+    WorkSpecSyncSaveResult,
+    WorkSpecSyncSource,
+)
 
 
 class IWorkVariantGenerationRepository(ABC):
@@ -46,8 +51,17 @@ class IWorkVariantGenerationRepository(ABC):
         """Persist a plan if the work counter still matches the source."""
 
     @abstractmethod
-    def sync_analog_groups_from_variants(
+    def get_work_spec_sync_source(
         self,
         work_id: str,
-    ) -> Optional[int]:
-        """Sync specification atomically, or return None when work is missing."""
+    ) -> Optional[WorkSpecSyncSource]:
+        """Return variant group snapshots used to restore a specification."""
+
+    @abstractmethod
+    def save_work_spec_sync_plan(
+        self,
+        work_id: str,
+        expected_variant_counter: int,
+        plan: tuple[WorkSpecSyncItem, ...],
+    ) -> WorkSpecSyncSaveResult:
+        """Persist a sync plan if its variant source is still current."""

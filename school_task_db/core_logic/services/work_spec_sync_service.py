@@ -1,14 +1,8 @@
 """Build a work specification sync plan from variant group snapshots."""
 
-from dataclasses import dataclass
 from typing import Tuple
 
-
-@dataclass(frozen=True)
-class WorkSpecSyncItem:
-    analog_group_id: str
-    count: int
-    order: int
+from core_logic.entities.work_spec_sync import WorkSpecSyncItem
 
 
 class WorkSpecSyncService:

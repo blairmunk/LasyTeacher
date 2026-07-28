@@ -45,6 +45,11 @@ from core_logic.entities.work_variant_composition import (
     WorkTheorySubtopicSource,
     WorkTheoryTopicSource,
 )
+from core_logic.entities.work_spec_sync import (
+    WorkSpecSyncItem,
+    WorkSpecSyncSaveResult,
+    WorkSpecSyncSource,
+)
 from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_ANY,
     TASK_BANK_ROLE_CONTROL,
@@ -80,7 +85,6 @@ from core_logic.interfaces.work_document_repo import IWorkDocumentRepository
 from core_logic.interfaces.work_variant_generation_repo import (
     IWorkVariantGenerationRepository,
 )
-from core_logic.services.work_spec_sync_service import WorkSpecSyncService
 from core_logic.services.work_score_allocation_service import (
     WorkScoreAllocationService,
     WorkScoreSpecRow,
@@ -682,43 +686,60 @@ class DjangoWorkRepository(
     def count_orphan_variants(self) -> int:
         return Variant.objects.filter(work__isnull=True).count()
 
-    def sync_analog_groups_from_variants(
+    def get_work_spec_sync_source(
         self,
         work_id: str,
-    ) -> Optional[int]:
+    ) -> Optional[WorkSpecSyncSource]:
+        work = Work.objects.select_for_update().filter(pk=work_id).first()
+        if work is None:
+            return None
+        task_rows = list(
+            VariantTask.objects.filter(
+                variant__work=work,
+            ).order_by(
+                'variant__number',
+                'variant_id',
+                'order',
+            ).values_list(
+                'variant_id',
+                'task_id',
+            )
+        )
+        group_ids_by_task_id = {}
+        for task_id, group_id in (
+            TaskGroup.objects.filter(
+                task_id__in={task_id for _, task_id in task_rows},
+            ).order_by('pk').values_list('task_id', 'group_id')
+        ):
+            group_ids_by_task_id.setdefault(task_id, []).append(group_id)
+
+        group_ids_by_variant_id = {}
+        for variant_id, task_id in task_rows:
+            group_ids_by_variant_id.setdefault(variant_id, []).extend(
+                group_ids_by_task_id.get(task_id, ()),
+            )
+
+        return WorkSpecSyncSource(
+            variant_counter=work.variant_counter,
+            variant_group_ids=tuple(
+                tuple(str(group_id) for group_id in group_ids)
+                for group_ids in group_ids_by_variant_id.values()
+            ),
+        )
+
+    def save_work_spec_sync_plan(
+        self,
+        work_id: str,
+        expected_variant_counter: int,
+        plan: tuple[WorkSpecSyncItem, ...],
+    ) -> WorkSpecSyncSaveResult:
         with transaction.atomic():
             work = Work.objects.select_for_update().filter(pk=work_id).first()
             if work is None:
-                return None
-            task_rows = list(
-                VariantTask.objects.filter(
-                    variant__work=work,
-                ).order_by(
-                    'variant__number',
-                    'variant_id',
-                    'order',
-                ).values_list(
-                    'variant_id',
-                    'task_id',
-                )
-            )
-            group_ids_by_task_id = {}
-            for task_id, group_id in (
-                TaskGroup.objects.filter(
-                    task_id__in={task_id for _, task_id in task_rows},
-                ).order_by('pk').values_list('task_id', 'group_id')
-            ):
-                group_ids_by_task_id.setdefault(task_id, []).append(group_id)
+                return WorkSpecSyncSaveResult(status='not_found')
+            if work.variant_counter != expected_variant_counter:
+                return WorkSpecSyncSaveResult(status='conflict')
 
-            group_ids_by_variant_id = {}
-            for variant_id, task_id in task_rows:
-                group_ids_by_variant_id.setdefault(variant_id, []).extend(
-                    group_ids_by_task_id.get(task_id, ()),
-                )
-
-            plan = WorkSpecSyncService().build_plan(
-                group_ids_by_variant_id.values(),
-            )
             created_count = 0
             for item in plan:
                 _, was_created = WorkAnalogGroup.objects.update_or_create(
@@ -731,13 +752,16 @@ class DjangoWorkRepository(
                 )
                 if was_created:
                     created_count += 1
-            return created_count
+            return WorkSpecSyncSaveResult(
+                status='saved',
+                created_count=created_count,
+            )
 
     def get_variant_composition_input(
         self,
         work_id: str,
     ) -> Optional[WorkVariantCompositionInput]:
-        work = Work.objects.filter(pk=work_id).first()
+        work = Work.objects.select_for_update().filter(pk=work_id).first()
         if work is None:
             return None
         work_groups = list(

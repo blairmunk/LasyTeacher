@@ -145,7 +145,6 @@ from core_logic.use_cases.get_remedial_wizard_start import (
 from core_logic.use_cases.render_remedial_sheet_document import (
     RenderRemedialSheetDocumentUseCase,
 )
-from core_logic.use_cases.render_document import RenderDocumentUseCase
 from core_logic.use_cases.render_document_from_recipe import (
     RenderDocumentFromRecipeUseCase,
 )
@@ -461,7 +460,6 @@ class ContainerTests(SimpleTestCase):
             container.bulk_remove_tasks_from_groups_use_case()
         )
         bulk_delete_variants_use_case = container.bulk_delete_variants_use_case()
-        render_document_use_case = container.render_document_use_case()
         render_from_recipe_use_case = (
             container.render_document_from_recipe_use_case()
         )
@@ -756,7 +754,6 @@ class ContainerTests(SimpleTestCase):
             BulkRemoveTasksFromGroupsUseCase,
         )
         self.assertIsInstance(bulk_delete_variants_use_case, BulkDeleteVariantsUseCase)
-        self.assertIsInstance(render_document_use_case, RenderDocumentUseCase)
         self.assertIsInstance(
             render_from_recipe_use_case,
             RenderDocumentFromRecipeUseCase,

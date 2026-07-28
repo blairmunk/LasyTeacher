@@ -15,7 +15,6 @@ from core_logic.entities.document_rendering import (
     GeneratedFile,
     GeneratedFileResult,
 )
-from core_logic.use_cases.document_engine_dependency import resolve_document_engine
 from core_logic.use_cases.get_rendered_document_file import (
     GetRenderedDocumentFileRequest,
     GetRenderedDocumentFileUseCase,
@@ -157,22 +156,6 @@ class FakePrintSettingsRepository:
 
 
 class DocumentRenderingUseCaseTests(TestCase):
-    def test_resolve_document_engine_prefers_engine_keyword(self):
-        document_engine = FakeDocumentEngine()
-
-        result = resolve_document_engine(
-            document_engine=document_engine,
-        )
-
-        self.assertIs(result, document_engine)
-
-    def test_resolve_document_engine_requires_dependency(self):
-        with self.assertRaisesRegex(
-            ValueError,
-            'Document engine dependency is required.',
-        ):
-            resolve_document_engine()
-
     def test_document_render_result_exposes_renderer_type(self):
         result = DocumentRenderResult(status='generated', renderer_type='html')
 
@@ -868,6 +851,13 @@ class DocumentRenderingUseCaseTests(TestCase):
         self.assertTrue(result.success)
         self.assertEqual(result.file.content, b'html')
         self.assertEqual(service.file_request, ('html', 'work.html'))
+
+    def test_get_rendered_document_file_requires_document_engine(self):
+        with self.assertRaisesRegex(
+            ValueError,
+            'Document engine dependency is required.',
+        ):
+            GetRenderedDocumentFileUseCase()
 
     def test_get_rendered_document_file_accepts_document_engine_keyword(self):
         service = FakeDocumentEngine()

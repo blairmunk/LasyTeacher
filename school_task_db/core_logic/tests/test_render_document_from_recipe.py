@@ -37,6 +37,13 @@ class FakeDocumentEngine:
 
 
 class RenderDocumentFromRecipeUseCaseTests(TestCase):
+    def test_requires_document_engine_dependency(self):
+        with self.assertRaisesRegex(
+            ValueError,
+            'Document engine dependency is required.',
+        ):
+            RenderDocumentFromRecipeUseCase()
+
     def test_renders_document_from_recipe(self):
         engine = FakeDocumentEngine()
         use_case = RenderDocumentFromRecipeUseCase(document_engine=engine)

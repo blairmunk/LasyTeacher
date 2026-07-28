@@ -4,7 +4,6 @@ from dataclasses import dataclass
 
 from core_logic.entities.document_rendering import GeneratedFileResult
 from core_logic.interfaces.document_engine import IDocumentEngine
-from core_logic.use_cases.document_engine_dependency import resolve_document_engine
 
 
 @dataclass(frozen=True)
@@ -18,9 +17,9 @@ class GetRenderedDocumentFileUseCase:
         self,
         document_engine: IDocumentEngine | None = None,
     ):
-        self.document_engine = resolve_document_engine(
-            document_engine=document_engine,
-        )
+        if document_engine is None:
+            raise ValueError('Document engine dependency is required.')
+        self.document_engine = document_engine
 
     def execute(
         self,

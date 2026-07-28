@@ -339,6 +339,48 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
         self.assertTrue(task_payload['formatted'])
         self.assertEqual(formatter.requests[0]['text'], 'Найдите силу')
 
+    def test_reuses_variant_payload_for_identical_section_inputs(self):
+        work = Work.objects.create(name='Контрольная')
+        Variant.objects.create(work=work, number=1)
+        variant_payload_builder = FakeVariantPayloadBuilder()
+        builder = DjangoWorkTaskListPayloadBuilder(
+            variant_payload_builder=variant_payload_builder,
+        )
+        build_context = {}
+
+        first_payload = builder.build_payload(
+            build_request(
+                work,
+                TASK_LIST_SECTION,
+                build_context=build_context,
+            )
+        )
+        second_payload = builder.build_payload(
+            build_request(
+                work,
+                ANSWERS_SECTION,
+                build_context=build_context,
+            )
+        )
+        builder.build_payload(
+            build_request(
+                work,
+                TASK_LIST_SECTION,
+                options={'hidden_content_types': ['theory']},
+                build_context=build_context,
+            )
+        )
+        builder.build_payload(
+            build_request(
+                work,
+                TASK_LIST_SECTION,
+                build_context={},
+            )
+        )
+
+        self.assertIs(first_payload, second_payload)
+        self.assertEqual(len(variant_payload_builder.requests), 3)
+
     def test_task_list_section_options_cannot_override_snapshot_tasks(self):
         work = Work.objects.create(name='Рабочий лист', duration=45)
         variant = Variant.objects.create(work=work, number=1)
@@ -805,6 +847,15 @@ class FakeTaskPayloadFormatter:
         }
 
 
+class FakeVariantPayloadBuilder:
+    def __init__(self):
+        self.requests = []
+
+    def build(self, variant, request=None):
+        self.requests.append((variant, request))
+        return {'id': str(variant.pk)}
+
+
 def remedial_recipe(section_type):
     return DocumentRecipe(
         document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
@@ -824,7 +875,12 @@ def remedial_build_request(recipe, section):
     )
 
 
-def build_request(work, section_type, options=None):
+def build_request(
+    work,
+    section_type,
+    options=None,
+    build_context=None,
+):
     recipe = DocumentRecipe(
         document_type=WORK_DOCUMENT_TYPE,
         sections=[
@@ -842,4 +898,9 @@ def build_request(work, section_type, options=None):
         ),
         recipe=recipe,
         section=recipe.sections[0],
+        build_context=(
+            build_context
+            if build_context is not None
+            else {}
+        ),
     )

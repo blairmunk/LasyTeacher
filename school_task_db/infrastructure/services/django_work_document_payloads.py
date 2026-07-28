@@ -1,5 +1,7 @@
 """Django-backed document payload builders for regular works."""
 
+import json
+
 from core_logic.value_objects.document_recipes import (
     TASK_LIST_SECTION,
 )
@@ -75,6 +77,14 @@ class DjangoWorkTaskListPayloadBuilder:
         )
 
     def build_payload(self, request):
+        cache = request.build_context.setdefault(
+            'work_section_payload_by_inputs',
+            {},
+        )
+        cache_key = _work_section_payload_cache_key(request)
+        if cache_key in cache:
+            return cache[cache_key]
+
         work = self.work_source_provider.get(
             request.source.source_id,
             request.build_context,
@@ -86,14 +96,31 @@ class DjangoWorkTaskListPayloadBuilder:
             )
             for variant in _work_variants_from_request(work, request)
         ]
-        return {
+        payload = {
             **dict(request.section.options),
             'variants': variants,
         }
+        cache[cache_key] = payload
+        return payload
 
 
 def _get_work_source(work_id):
     return Work.objects.get(pk=work_id)
+
+
+def _work_section_payload_cache_key(request):
+    render_target = request.render_target
+    return (
+        request.source.source_id,
+        render_target.renderer_type if render_target else '',
+        render_target.page_format if render_target else '',
+        json.dumps(
+            dict(request.section.options),
+            ensure_ascii=False,
+            sort_keys=True,
+            default=str,
+        ),
+    )
 
 
 def _work_variants_from_request(work, request):

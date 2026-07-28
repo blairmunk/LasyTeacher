@@ -7,6 +7,9 @@ from django.utils import timezone
 
 from core.models import AcademicYear, ImportLog
 from core_logic.services.remedial_service import RemedialService
+from core_logic.services.work_variant_composition_service import (
+    WorkVariantCompositionService,
+)
 from core_logic.interfaces.event_repo import (
     CreateEventParams,
     GradeParticipationParams,
@@ -40,6 +43,10 @@ from core_logic.use_cases.create_remedial_from_event import (
 from core_logic.use_cases.create_work_from_orphans import (
     CreateWorkFromOrphansRequest,
     CreateWorkFromOrphansUseCase,
+)
+from core_logic.use_cases.compose_work_variants import (
+    ComposeWorkVariantsRequest,
+    ComposeWorkVariantsUseCase,
 )
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
@@ -1718,11 +1725,17 @@ class DjangoRemedialRepositoryTests(TestCase):
         existing_count = Variant.objects.filter(work=self.source_work).count()
         existing_counter = self.source_work.variant_counter
 
-        created_count = repo.compose_variants(str(self.source_work.pk), count=2)
+        result = ComposeWorkVariantsUseCase(repo).execute(
+            ComposeWorkVariantsRequest(
+                work_id=str(self.source_work.pk),
+                count=2,
+            )
+        )
 
         self.source_work.refresh_from_db()
         variants = Variant.objects.filter(work=self.source_work)
-        self.assertEqual(created_count, 2)
+        self.assertEqual(result.status, 'generated')
+        self.assertEqual(result.created_count, 2)
         self.assertEqual(variants.count(), existing_count + 2)
         self.assertEqual(self.source_work.variant_counter, existing_counter + 2)
         self.assertEqual(
@@ -1730,13 +1743,43 @@ class DjangoRemedialRepositoryTests(TestCase):
             1,
         )
 
-    def test_work_repository_returns_none_when_composition_work_is_missing(self):
-        created_count = DjangoWorkRepository().compose_variants(
-            '00000000-0000-0000-0000-000000000000',
-            count=2,
+    def test_compose_variants_use_case_handles_missing_work(self):
+        result = ComposeWorkVariantsUseCase(
+            DjangoWorkRepository(),
+        ).execute(
+            ComposeWorkVariantsRequest(
+                work_id='00000000-0000-0000-0000-000000000000',
+                count=2,
+            )
         )
 
-        self.assertIsNone(created_count)
+        self.assertEqual(result.status, 'not_found')
+        self.assertEqual(result.created_count, 0)
+
+    def test_work_repository_rejects_stale_variant_composition_plan(self):
+        repo = DjangoWorkRepository()
+        composition_input = repo.get_variant_composition_input(
+            str(self.source_work.pk),
+        )
+        plan = WorkVariantCompositionService().compose(
+            composition_input,
+            count=2,
+        )
+        existing_count = Variant.objects.filter(work=self.source_work).count()
+        self.source_work.variant_counter += 1
+        self.source_work.save()
+
+        result = repo.save_variant_composition_plan(
+            work_id=str(self.source_work.pk),
+            expected_variant_counter=composition_input.variant_counter,
+            plan=plan,
+        )
+
+        self.assertEqual(result.status, 'conflict')
+        self.assertEqual(
+            Variant.objects.filter(work=self.source_work).count(),
+            existing_count,
+        )
 
     def test_work_repository_composes_variant_with_role_filtered_snapshot_rows(self):
         work = Work.objects.create(
@@ -1806,11 +1849,17 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
         repo = DjangoWorkRepository()
 
-        created_count = repo.compose_variants(str(work.pk), count=1)
+        result = ComposeWorkVariantsUseCase(repo).execute(
+            ComposeWorkVariantsRequest(
+                work_id=str(work.pk),
+                count=1,
+            )
+        )
 
         variant = Variant.objects.get(work=work)
         rows = list(variant.varianttask_set.select_related('task').order_by('order'))
-        self.assertEqual(created_count, 1)
+        self.assertEqual(result.status, 'generated')
+        self.assertEqual(result.created_count, 1)
         self.assertEqual(variant.max_score_snapshot, 3)
         self.assertEqual([row.task for row in rows], [demo_task, practice_task])
         self.assertEqual(rows[0].bank_role, TASK_BANK_ROLE_DEMO)

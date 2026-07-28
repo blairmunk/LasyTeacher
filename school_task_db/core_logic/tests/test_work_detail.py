@@ -14,6 +14,10 @@ from core_logic.entities.work import (
     WorkDetailWork,
     WorkListFilters,
 )
+from core_logic.entities.work_variant_composition import (
+    WorkVariantCompositionInput,
+    WorkVariantCompositionSaveResult,
+)
 from core_logic.interfaces.orphan_variant_repo import (
     CreatedWorkFromOrphanVariantsRef,
 )
@@ -98,6 +102,9 @@ class FakeWorkRepository:
         self.orphan_variant_count = 0
         self.synced_work_id = None
         self.generated_variants_request = None
+        self.variant_composition_input_requests = []
+        self.variant_composition_save_requests = []
+        self.variant_composition_save_statuses = []
         self.orphan_variant_refs = []
         self.created_from_orphans_params = None
         self.create_from_orphans_result = CreatedWorkFromOrphanVariantsRef(
@@ -200,9 +207,34 @@ class FakeWorkRepository:
         self.synced_work_id = work_id
         return 2 if self.work_exists_for_spec_sync else None
 
-    def compose_variants(self, work_id, count):
-        self.generated_variants_request = (work_id, count)
-        return count if self.work_exists_for_composition else None
+    def get_variant_composition_input(self, work_id):
+        self.variant_composition_input_requests.append(work_id)
+        if not self.work_exists_for_composition:
+            return None
+        return WorkVariantCompositionInput(
+            work_name='Контрольная',
+            duration=45,
+            max_score=0,
+            effective_max_score=0,
+            variant_counter=len(self.variant_composition_input_requests) - 1,
+        )
+
+    def save_variant_composition_plan(
+        self,
+        work_id,
+        expected_variant_counter,
+        plan,
+    ):
+        self.generated_variants_request = (work_id, len(plan.variants))
+        self.variant_composition_save_requests.append(
+            (work_id, expected_variant_counter, plan),
+        )
+        status = (
+            self.variant_composition_save_statuses.pop(0)
+            if self.variant_composition_save_statuses
+            else 'saved'
+        )
+        return WorkVariantCompositionSaveResult(status=status)
 
     def get_orphan_variant_refs(self, variant_ids):
         requested_ids = set(variant_ids)
@@ -570,6 +602,7 @@ class WorkDetailTests(TestCase):
 
         self.assertEqual(result.status, 'generated')
         self.assertEqual(result.created_count, 3)
+        self.assertEqual(repo.variant_composition_input_requests, ['work-1'])
         self.assertEqual(repo.generated_variants_request, ('work-1', 3))
 
     def test_compose_work_variants_use_case_handles_missing_work(self):
@@ -583,7 +616,44 @@ class WorkDetailTests(TestCase):
 
         self.assertEqual(result.status, 'not_found')
         self.assertEqual(result.created_count, 0)
-        self.assertEqual(repo.generated_variants_request, ('missing', 3))
+        self.assertEqual(repo.variant_composition_input_requests, ['missing'])
+        self.assertIsNone(repo.generated_variants_request)
+
+    def test_compose_work_variants_use_case_retries_counter_conflict(self):
+        repo = FakeWorkRepository()
+        repo.variant_composition_save_statuses = ['conflict', 'saved']
+        use_case = ComposeWorkVariantsUseCase(work_repo=repo)
+
+        result = use_case.execute(
+            ComposeWorkVariantsRequest(work_id='work-1', count=2)
+        )
+
+        self.assertEqual(result.status, 'generated')
+        self.assertEqual(result.created_count, 2)
+        self.assertEqual(
+            repo.variant_composition_input_requests,
+            ['work-1', 'work-1'],
+        )
+        self.assertEqual(
+            [
+                request[1]
+                for request in repo.variant_composition_save_requests
+            ],
+            [0, 1],
+        )
+
+    def test_compose_work_variants_use_case_reports_repeated_conflict(self):
+        repo = FakeWorkRepository()
+        repo.variant_composition_save_statuses = ['conflict'] * 3
+        use_case = ComposeWorkVariantsUseCase(work_repo=repo)
+
+        result = use_case.execute(
+            ComposeWorkVariantsRequest(work_id='work-1', count=2)
+        )
+
+        self.assertEqual(result.status, 'conflict')
+        self.assertEqual(result.created_count, 0)
+        self.assertEqual(len(repo.variant_composition_save_requests), 3)
 
     def test_create_work_from_orphans_use_case_creates_work_and_attaches_variants(self):
         repo = FakeWorkRepository()

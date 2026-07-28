@@ -35,6 +35,16 @@ from core_logic.entities.work import (
     WorkDetailWork,
     WorkListItem,
 )
+from core_logic.entities.work_variant_composition import (
+    AvailableVariantTask,
+    WorkVariantCompositionInput,
+    WorkVariantCompositionPlan,
+    WorkVariantCompositionSaveResult,
+    WorkVariantContentBlock,
+    WorkVariantSpecRow,
+    WorkTheorySubtopicSource,
+    WorkTheoryTopicSource,
+)
 from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_ANY,
     TASK_BANK_ROLE_CONTROL,
@@ -74,15 +84,6 @@ from core_logic.services.work_spec_sync_service import WorkSpecSyncService
 from core_logic.services.work_score_allocation_service import (
     WorkScoreAllocationService,
     WorkScoreSpecRow,
-)
-from core_logic.services.work_variant_composition_service import (
-    AvailableVariantTask,
-    WorkVariantCompositionInput,
-    WorkVariantContentBlock,
-    WorkVariantCompositionService,
-    WorkVariantSpecRow,
-    WorkTheorySubtopicSource,
-    WorkTheoryTopicSource,
 )
 from events.models import EventParticipation, Mark
 from task_groups.models import TaskGroup
@@ -732,49 +733,66 @@ class DjangoWorkRepository(
                     created_count += 1
             return created_count
 
-    def compose_variants(self, work_id: str, count: int) -> Optional[int]:
+    def get_variant_composition_input(
+        self,
+        work_id: str,
+    ) -> Optional[WorkVariantCompositionInput]:
+        work = Work.objects.filter(pk=work_id).first()
+        if work is None:
+            return None
+        work_groups = list(
+            WorkAnalogGroup.objects.filter(
+                work_id=work_id,
+            ).order_by('order', 'pk')
+        )
+        content_blocks = list(
+            WorkContentBlock.objects.filter(
+                work_id=work_id,
+            ).prefetch_related(
+                'topics__subtopics',
+            ).order_by('order', 'pk')
+        )
+        return WorkVariantCompositionInput(
+            work_name=work.name,
+            duration=work.duration,
+            max_score=work.max_score,
+            effective_max_score=(
+                work.max_score
+                or sum(
+                    group.weight * group.count
+                    for group in work_groups
+                    if group.is_assessable
+                )
+            ),
+            variant_counter=work.variant_counter,
+            spec_rows=tuple(
+                self._variant_composition_spec_row(work_group)
+                for work_group in work_groups
+            ),
+            content_blocks=tuple(
+                self._variant_composition_content_block(block)
+                for block in content_blocks
+            ),
+        )
+
+    def save_variant_composition_plan(
+        self,
+        work_id: str,
+        expected_variant_counter: int,
+        plan: WorkVariantCompositionPlan,
+    ) -> WorkVariantCompositionSaveResult:
         with transaction.atomic():
             work = Work.objects.select_for_update().filter(pk=work_id).first()
             if work is None:
-                return None
-            work_groups = list(
-                WorkAnalogGroup.objects.filter(
-                    work_id=work_id,
-                ).order_by('order', 'pk')
-            )
-            content_blocks = list(
-                WorkContentBlock.objects.filter(
-                    work_id=work_id,
-                ).prefetch_related(
-                    'topics__subtopics',
-                ).order_by('order', 'pk')
-            )
-            composition_plan = WorkVariantCompositionService().compose(
-                WorkVariantCompositionInput(
-                    work_name=work.name,
-                    duration=work.duration,
-                    max_score=work.max_score,
-                    effective_max_score=(
-                        work.max_score
-                        or sum(
-                            group.weight * group.count
-                            for group in work_groups
-                            if group.is_assessable
-                        )
-                    ),
-                    variant_counter=work.variant_counter,
-                    spec_rows=tuple(
-                        self._variant_composition_spec_row(work_group)
-                        for work_group in work_groups
-                    ),
-                    content_blocks=tuple(
-                        self._variant_composition_content_block(block)
-                        for block in content_blocks
-                    ),
-                ),
-                count=count,
-            )
-            for variant_plan in composition_plan.variants:
+                return WorkVariantCompositionSaveResult(
+                    status='not_found',
+                )
+            if work.variant_counter != expected_variant_counter:
+                return WorkVariantCompositionSaveResult(
+                    status='conflict',
+                )
+
+            for variant_plan in plan.variants:
                 variant = Variant.objects.create(
                     work=work,
                     number=variant_plan.number,
@@ -817,9 +835,9 @@ class DjangoWorkRepository(
                     ]
                 )
 
-            work.variant_counter = composition_plan.next_variant_counter
+            work.variant_counter = plan.next_variant_counter
             work.save()
-            return len(composition_plan.variants)
+            return WorkVariantCompositionSaveResult(status='saved')
 
     def _variant_composition_spec_row(self, work_group):
         task_groups = TaskGroup.objects.filter(

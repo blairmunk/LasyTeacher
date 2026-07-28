@@ -241,6 +241,15 @@ def compose_variants(request, work_id):
                 )
                 if result.status == 'not_found':
                     raise Http404("Работа не найдена")
+                if result.status == 'conflict':
+                    messages.error(
+                        request,
+                        (
+                            'Работа была изменена параллельно. '
+                            'Повторите создание вариантов.'
+                        ),
+                    )
+                    return redirect('works:detail', pk=work_id)
                 messages.success(
                     request,
                     f'Успешно создано {result.created_count} вариантов!',

@@ -1,13 +1,15 @@
 from unittest import TestCase
 
-from core_logic.services.work_variant_composition_service import (
+from core_logic.entities.work_variant_composition import (
     AvailableVariantTask,
     WorkVariantCompositionInput,
     WorkVariantContentBlock,
-    WorkVariantCompositionService,
     WorkVariantSpecRow,
     WorkTheorySubtopicSource,
     WorkTheoryTopicSource,
+)
+from core_logic.services.work_variant_composition_service import (
+    WorkVariantCompositionService,
 )
 from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_DEMO,

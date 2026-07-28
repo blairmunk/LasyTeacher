@@ -29,6 +29,9 @@ from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROW_HEIGHT,
     DEFAULT_BLANK_CELLS_ROWS,
 )
+from core_logic.value_objects.variant_content_snapshot import (
+    VARIANT_STATIC_CONTENT_TYPES,
+)
 
 
 @dataclass(frozen=True)
@@ -366,6 +369,15 @@ def _validate_task_list_options(options) -> None:
             raise ValueError(
                 f'Section {TASK_LIST_SECTION} option '
                 'hidden_content_types must contain strings'
+            )
+        unsupported_content_types = sorted(
+            set(hidden_content_types) - VARIANT_STATIC_CONTENT_TYPES
+        )
+        if unsupported_content_types:
+            raise ValueError(
+                f'Section {TASK_LIST_SECTION} option '
+                'hidden_content_types contains unsupported values: '
+                f'{", ".join(unsupported_content_types)}'
             )
 
     if (

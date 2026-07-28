@@ -255,6 +255,21 @@ class DocumentSectionCatalogTests(TestCase):
                         ],
                     )
 
+    def test_rejects_unknown_hidden_content_type(self):
+        with self.assertRaisesRegex(
+            ValueError,
+            'hidden_content_types contains unsupported values: typo',
+        ):
+            validate_document_section_specs(
+                WORK_DOCUMENT_TYPE,
+                [
+                    DocumentSectionSpec(
+                        section_type=TASK_LIST_SECTION,
+                        options={'hidden_content_types': ['theory', 'typo']},
+                    ),
+                ],
+            )
+
 
 class GetDocumentSectionCatalogUseCaseTests(TestCase):
     def test_returns_filtered_section_catalog(self):

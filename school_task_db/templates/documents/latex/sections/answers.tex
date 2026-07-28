@@ -1,7 +1,6 @@
 {% if section.section_type == 'answer_key' %}\begin{schoolanswerkey}
 {% else %}\begin{schoolanswers}
 {% endif %}
-\newpage
 \section*{\centering Ответы}
 {% for variant in payload.variants %}
 \subsection*{ {{ variant.title }} }

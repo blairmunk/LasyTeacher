@@ -12,6 +12,7 @@ from core_logic.value_objects.document_render_options import RenderTarget
 from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
     BLANK_CELLS_SECTION,
+    FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
     PAGE_BREAK_SECTION,
     SCORE_TABLE_SECTION,
@@ -46,6 +47,9 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                     ),
                     SHORT_SOLUTIONS_SECTION: (
                         'documents/latex/sections/short_solutions.tex'
+                    ),
+                    FULL_SOLUTIONS_SECTION: (
+                        'documents/latex/sections/full_solutions.tex'
                     ),
                 },
                 filename_builder=lambda request: 'work.tex',
@@ -207,6 +211,24 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                             ],
                         },
                     ),
+                    DocumentSection(
+                        section_type=FULL_SOLUTIONS_SECTION,
+                        payload={
+                            'variants': [
+                                {
+                                    'title': 'Вариант 1',
+                                    'tasks': [
+                                        {
+                                            'order': 1,
+                                            'full_solution': (
+                                                'Подставим в формулу'
+                                            ),
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ),
                 ],
             )
 
@@ -239,6 +261,8 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
             self.assertIn(r'\begin{schoolscoretable}', latex)
             self.assertIn(r'\begin{schoolanswers}', latex)
             self.assertIn(r'\begin{schoolshortsolutions}', latex)
+            self.assertIn(r'\begin{schoolfullsolutions}', latex)
+            self.assertNotIn(r'\newpage', latex)
             self.assertLess(
                 latex.index(r'\newenvironment{schooltheory}{}{}'),
                 latex.index(r'\renewenvironment{schooltheory}'),

@@ -1301,7 +1301,6 @@ class DjangoRemedialRepositoryTests(TestCase):
         content_blocks = repo.get_detail_content_blocks(
             str(self.source_work.pk),
         )
-        spec_preview = repo.get_spec_preview(str(self.source_work.pk))
 
         self.assertEqual(work.pk, str(self.source_work.pk))
         self.assertEqual(work.name, self.source_work.name)
@@ -1313,8 +1312,16 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(content_blocks[0].title, 'Опорная теория')
         self.assertEqual(content_blocks[0].topic_ids, (str(self.topic.pk),))
         self.assertTrue(content_blocks[0].include_subtopics)
-        self.assertEqual(spec_preview[0].wg.analog_group.name, self.weak_group.name)
-        self.assertEqual(spec_preview[0].total_points, 7)
+        self.assertEqual(
+            analog_groups[0].selection_id,
+            str(
+                WorkAnalogGroup.objects.get(
+                    work=self.source_work,
+                    analog_group=self.weak_group,
+                ).pk
+            ),
+        )
+        self.assertGreaterEqual(analog_groups[0].available_count, 1)
 
     def test_work_repository_returns_list_page_data(self):
         repo = DjangoWorkRepository()

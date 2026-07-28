@@ -58,6 +58,8 @@ class WorkDetailSpecGroup:
     analog_group: WorkDetailAnalogGroup
     count: int
     weight: int
+    selection_id: str = ''
+    available_count: int = 0
     bank_role_filter: str = TASK_BANK_ROLE_ANY
     render_mode: str = TASK_RENDER_MODE_TASK_ONLY
     is_assessable: bool = True

@@ -6,7 +6,6 @@ from typing import Any, List, Optional
 from core_logic.entities.work import (
     WorkDetailContentBlock,
     WorkDetailSpecGroup,
-    WorkDetailSpecPreviewItem,
     WorkDetailVariant,
     WorkDetailWork,
     WorkListItem,
@@ -43,10 +42,3 @@ class IWorkReadRepository(ABC):
         work_id: str,
     ) -> List[WorkDetailContentBlock]:
         """Return persistent non-task content in pedagogical order."""
-
-    @abstractmethod
-    def get_spec_preview(
-        self,
-        work_id: str,
-    ) -> List[WorkDetailSpecPreviewItem]:
-        """Return points specification preview rows for the work detail page."""

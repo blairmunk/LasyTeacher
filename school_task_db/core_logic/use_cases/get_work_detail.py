@@ -1,11 +1,18 @@
 """Build work detail page data."""
 
-from core_logic.entities.work import WorkDetailData
+from core_logic.entities.work import (
+    WorkDetailData,
+    WorkDetailSpecPreviewItem,
+)
 from core_logic.interfaces.print_settings_repo import (
     IPrintSettingsRepository,
 )
 from core_logic.interfaces.work_read_repo import IWorkReadRepository
 from core_logic.services.work_service import WorkService
+from core_logic.services.work_score_allocation_service import (
+    WorkScoreAllocationService,
+    WorkScoreSpecRow,
+)
 from core_logic.value_objects.document_recipes import (
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     WORK_DOCUMENT_TYPE,
@@ -21,10 +28,14 @@ class GetWorkDetailUseCase:
         work_read_repo: IWorkReadRepository,
         work_service: WorkService,
         print_settings_repo: IPrintSettingsRepository | None = None,
+        score_allocation_service=None,
     ):
         self.work_read_repo = work_read_repo
         self.work_service = work_service
         self.print_settings_repo = print_settings_repo
+        self.score_allocation_service = (
+            score_allocation_service or WorkScoreAllocationService()
+        )
 
     def execute(self, work_id: str) -> WorkDetailData:
         work = self.work_read_repo.get_work_detail(work_id)
@@ -34,7 +45,10 @@ class GetWorkDetailUseCase:
         variants = self.work_read_repo.get_detail_variants(work_id)
         analog_groups = self.work_read_repo.get_detail_analog_groups(work_id)
         content_blocks = self.work_read_repo.get_detail_content_blocks(work_id)
-        spec_preview = self.work_read_repo.get_spec_preview(work_id)
+        spec_preview = self._build_spec_preview(
+            max_score=work.max_score,
+            analog_groups=analog_groups,
+        )
 
         return WorkDetailData(
             work=work,
@@ -67,3 +81,43 @@ class GetWorkDetailUseCase:
         return self.print_settings_repo.list_print_settings_specs(
             document_type,
         )
+
+    def _build_spec_preview(self, max_score, analog_groups):
+        groups_by_id = {
+            (group.selection_id or group.analog_group.pk): group
+            for group in analog_groups
+        }
+        preview_by_group_id = {}
+        for allocation in self.score_allocation_service.allocate(
+            max_score=max_score,
+            spec_rows=(
+                WorkScoreSpecRow(
+                    spec_row_id=(
+                        group.selection_id or group.analog_group.pk
+                    ),
+                    count=group.count,
+                    weight=group.weight,
+                    is_assessable=group.is_assessable,
+                )
+                for group in analog_groups
+            ),
+        ):
+            preview = preview_by_group_id.setdefault(
+                allocation.spec_row_id,
+                {
+                    'per_task': allocation.points,
+                    'total_points': 0,
+                },
+            )
+            preview['per_task'] = allocation.points
+            preview['total_points'] += allocation.points
+
+        return [
+            WorkDetailSpecPreviewItem(
+                wg=groups_by_id[group_id],
+                per_task=preview['per_task'],
+                total_points=preview['total_points'],
+                available_count=groups_by_id[group_id].available_count,
+            )
+            for group_id, preview in preview_by_group_id.items()
+        ]

@@ -89,7 +89,6 @@ class FakeWorkRepository:
         self,
         variants=None,
         analog_groups=None,
-        spec_preview=None,
         content_blocks=None,
     ):
         self.variants = FakeQuerySet(variants or [])
@@ -98,7 +97,6 @@ class FakeWorkRepository:
         self.work_form_analog_group_options = []
         self.analog_groups = analog_groups or []
         self.content_blocks = content_blocks or []
-        self.spec_preview = spec_preview or []
         self.variant_detail_tasks = []
         self.variant_detail = VariantDetailVariant(
             pk='variant-1',
@@ -190,9 +188,6 @@ class FakeWorkRepository:
 
     def get_detail_content_blocks(self, work_id):
         return self.content_blocks
-
-    def get_spec_preview(self, work_id):
-        return self.spec_preview
 
     def get_variant_detail_tasks(self, variant_id):
         return self.variant_detail_tasks
@@ -375,7 +370,6 @@ class WorkDetailTests(TestCase):
             work_read_repo=FakeWorkRepository(
                 variants=['variant-1'],
                 analog_groups=[],
-                spec_preview=['spec-1'],
             ),
             work_service=WorkService(),
             print_settings_repo=print_settings_repo,
@@ -386,7 +380,7 @@ class WorkDetailTests(TestCase):
 
         self.assertEqual(result.work.name, 'Контрольная')
         self.assertEqual(result.variants, ['variant-1'])
-        self.assertEqual(result.spec_preview, ['spec-1'])
+        self.assertEqual(result.spec_preview, [])
         self.assertEqual(
             result.work_print_settings[0].print_settings_id,
             'template-work',
@@ -425,6 +419,9 @@ class WorkDetailTests(TestCase):
         self.assertEqual(selection.count, 2)
         self.assertEqual(selection.order, 3)
         self.assertEqual(selection.weight, 4)
+        self.assertEqual(result.spec_preview[0].wg, spec_row)
+        self.assertEqual(result.spec_preview[0].per_task, 4)
+        self.assertEqual(result.spec_preview[0].total_points, 8)
 
     def test_get_work_detail_merges_persistent_content_in_pedagogical_order(self):
         content_blocks = [

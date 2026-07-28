@@ -30,7 +30,6 @@ from core_logic.entities.work import (
     WorkDetailAnalogGroup,
     WorkDetailContentBlock,
     WorkDetailSpecGroup,
-    WorkDetailSpecPreviewItem,
     WorkDetailVariant,
     WorkDetailWork,
     WorkListItem,
@@ -84,10 +83,6 @@ from core_logic.interfaces.work_read_repo import IWorkReadRepository
 from core_logic.interfaces.work_document_repo import IWorkDocumentRepository
 from core_logic.interfaces.work_variant_generation_repo import (
     IWorkVariantGenerationRepository,
-)
-from core_logic.services.work_score_allocation_service import (
-    WorkScoreAllocationService,
-    WorkScoreSpecRow,
 )
 from events.models import EventParticipation, Mark
 from task_groups.models import TaskGroup
@@ -275,55 +270,6 @@ class DjangoWorkRepository(
             ).prefetch_related('topics').order_by('order', 'pk')
         ]
 
-    def get_spec_preview(self, work_id: str):
-        work = Work.objects.get(pk=work_id)
-        work_groups = list(
-            WorkAnalogGroup.objects.filter(
-                work_id=work_id,
-            ).select_related(
-                'analog_group',
-            ).order_by('order', 'pk')
-        )
-        groups_by_id = {
-            str(work_group.pk): work_group
-            for work_group in work_groups
-        }
-        preview_by_group_id = {}
-        for allocation in WorkScoreAllocationService().allocate(
-            max_score=work.max_score,
-            spec_rows=(
-                WorkScoreSpecRow(
-                    spec_row_id=str(work_group.pk),
-                    count=work_group.count,
-                    weight=work_group.weight,
-                    is_assessable=work_group.is_assessable,
-                )
-                for work_group in work_groups
-            ),
-        ):
-            preview = preview_by_group_id.setdefault(
-                allocation.spec_row_id,
-                {
-                    'per_task': allocation.points,
-                    'total_points': 0,
-                },
-            )
-            preview['total_points'] += allocation.points
-
-        return [
-            WorkDetailSpecPreviewItem(
-                wg=self._build_work_detail_spec_group(
-                    groups_by_id[group_id],
-                ),
-                per_task=preview['per_task'],
-                total_points=preview['total_points'],
-                available_count=self._count_available_group_tasks(
-                    groups_by_id[group_id],
-                ),
-            )
-            for group_id, preview in preview_by_group_id.items()
-        ]
-
     def _build_work_detail_spec_group(self, work_group):
         return WorkDetailSpecGroup(
             order=work_group.order,
@@ -336,6 +282,8 @@ class DjangoWorkRepository(
             ),
             count=work_group.count,
             weight=work_group.weight,
+            selection_id=str(work_group.pk),
+            available_count=self._count_available_group_tasks(work_group),
             bank_role_filter=work_group.bank_role_filter,
             render_mode=work_group.render_mode,
             is_assessable=work_group.is_assessable,

@@ -214,6 +214,10 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(selection.target_difficulty, 3)
 
     def test_student_repository_returns_task_level_mark_results(self):
+        weak_variant_task = VariantTask.objects.get(
+            variant=self.source_variant,
+            task=self.original_weak,
+        )
         ok_variant_task = VariantTask.objects.get(
             variant=self.source_variant,
             task=self.original_ok,
@@ -239,7 +243,33 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(weak_result.max_points, 2)
         self.assertEqual(weak_result.group_id, str(self.weak_group.pk))
         self.assertEqual(weak_result.group_name, self.weak_group.name)
+        self.assertEqual(
+            weak_result.variant_task_id,
+            str(weak_variant_task.pk),
+        )
         self.assertEqual(result_by_task[str(self.original_ok.pk)].points, 5)
+        self.assertEqual(
+            result_by_task[str(self.original_ok.pk)].variant_task_id,
+            str(ok_variant_task.pk),
+        )
+
+    def test_student_results_ignore_non_assessable_legacy_scores(self):
+        demo_variant_task = VariantTask.objects.get(
+            variant=self.source_variant,
+            task=self.original_ok,
+        )
+        demo_variant_task.is_assessable = False
+        demo_variant_task.save(update_fields=['is_assessable'])
+
+        results = DjangoStudentRepository().get_task_results_for_event(
+            student_id=str(self.student.pk),
+            event_id=str(self.event.pk),
+        )
+
+        self.assertEqual(
+            [result.task_id for result in results],
+            [str(self.original_weak.pk)],
+        )
 
     def test_student_repository_syncs_task_logs_from_mark(self):
         StudentTaskLog.objects.filter(mark=self.mark).delete()

@@ -2,8 +2,10 @@ from unittest import TestCase
 
 from core_logic.value_objects.task_scores import (
     normalize_task_scores,
+    resolve_task_score_record,
     task_score_records_by_score_key,
     task_score_records_by_task_id,
+    task_score_records_by_variant_task_id,
 )
 
 
@@ -61,10 +63,43 @@ class TaskScoreNormalizationTests(TestCase):
 
         by_task = task_score_records_by_task_id(task_scores)
         by_score_key = task_score_records_by_score_key(task_scores)
+        by_variant_task = task_score_records_by_variant_task_id(task_scores)
 
         self.assertEqual(by_task['task-1'].score_key, 'variant-task-1')
         self.assertEqual(by_task['task-2'].score_key, 'task-2')
         self.assertEqual(by_score_key['variant-task-1'].task_id, 'task-1')
+        self.assertEqual(
+            by_variant_task['variant-task-1'].task_id,
+            'task-1',
+        )
+
+    def test_resolves_variant_task_before_legacy_task_score(self):
+        task_scores = {
+            'task-1': {'points': 1},
+            'variant-task-1': {
+                'task_id': 'task-1',
+                'points': 3,
+            },
+        }
+
+        record = resolve_task_score_record(
+            task_scores,
+            variant_task_id='variant-task-1',
+            task_id='task-1',
+        )
+
+        self.assertEqual(record.score_key, 'variant-task-1')
+        self.assertEqual(record.points, 3)
+
+    def test_resolver_falls_back_to_legacy_task_score(self):
+        record = resolve_task_score_record(
+            {'task-1': {'points': 2}},
+            variant_task_id='missing-variant-task',
+            task_id='task-1',
+        )
+
+        self.assertEqual(record.score_key, 'task-1')
+        self.assertEqual(record.points, 2)
 
     def test_skips_invalid_scores(self):
         self.assertEqual(normalize_task_scores(None), ())

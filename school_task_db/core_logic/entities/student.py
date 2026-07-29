@@ -33,6 +33,7 @@ class TaskResult:
     """A student's result for one task."""
 
     task_id: str
+    variant_task_id: str = ''
     points: Optional[float] = None
     max_points: Optional[float] = None
     group_id: Optional[str] = None

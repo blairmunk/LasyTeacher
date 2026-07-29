@@ -54,7 +54,7 @@ from core_logic.entities.work_spec_sync import (
 from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_ANY,
 )
-from core_logic.value_objects.task_scores import task_score_records_by_task_id
+from core_logic.value_objects.task_scores import resolve_task_score_record
 from core_logic.interfaces.orphan_variant_repo import (
     CreatedWorkFromOrphanVariantsRef,
     CreateWorkFromOrphanVariantsParams,
@@ -466,10 +466,6 @@ class DjangoWorkRepository(
 
             if original_ep:
                 mark = Mark.objects.filter(participation=original_ep).first()
-                task_scores_by_task_id = task_score_records_by_task_id(
-                    mark.task_scores if mark else {},
-                )
-
                 if original_ep.variant:
                     original_variant_tasks = VariantTask.objects.filter(
                         variant=original_ep.variant,
@@ -482,7 +478,11 @@ class DjangoWorkRepository(
 
                     for variant_task in original_variant_tasks:
                         task = variant_task.task
-                        score_record = task_scores_by_task_id.get(str(task.pk))
+                        score_record = resolve_task_score_record(
+                            mark.task_scores if mark else {},
+                            variant_task_id=str(variant_task.pk),
+                            task_id=str(task.pk),
+                        )
                         points = score_record.points if score_record else None
                         max_points = (
                             score_record.max_points

@@ -28,13 +28,16 @@ from core_logic.entities.student import (
     WorkRef,
 )
 from core_logic.interfaces.student_repo import IStudentRepository
-from core_logic.value_objects.task_scores import normalize_task_scores
+from core_logic.value_objects.task_scores import (
+    normalize_task_scores,
+    resolve_task_score_record,
+)
 from events.models import EventParticipation, Mark
 from task_groups.models import AnalogGroup, TaskGroup
 from students.models import StudentGroup, StudentTaskLog
 from students.models import Student
 from tasks.models import Task
-from works.models import WorkAnalogGroup
+from works.models import VariantTask, WorkAnalogGroup
 
 
 class DjangoStudentRepository(IStudentRepository):
@@ -185,23 +188,30 @@ class DjangoStudentRepository(IStudentRepository):
         if not mark or not mark.task_scores:
             return []
 
-        score_records = normalize_task_scores(mark.task_scores)
-        if not score_records:
+        resolved_scores = self._resolved_task_scores(
+            participation,
+            mark.task_scores,
+        )
+        if not resolved_scores:
             return []
 
         results = []
         task_groups = {
             str(tg.task_id): tg
             for tg in TaskGroup.objects.filter(
-                task_id__in=[record.task_id for record in score_records]
+                task_id__in=[
+                    record.task_id
+                    for _, record in resolved_scores
+                ]
             ).select_related('group')
         }
 
-        for score_record in score_records:
+        for variant_task_id, score_record in resolved_scores:
             task_group = task_groups.get(score_record.task_id)
             results.append(
                 TaskResult(
                     task_id=score_record.task_id,
+                    variant_task_id=variant_task_id,
                     points=score_record.points,
                     max_points=score_record.max_points,
                     group_id=str(task_group.group_id) if task_group else None,
@@ -710,19 +720,25 @@ class DjangoStudentRepository(IStudentRepository):
         if mark is None:
             return 0
 
-        task_score_records = normalize_task_scores(mark.task_scores)
-        if not task_score_records:
+        participation = mark.participation
+        resolved_scores = self._resolved_task_scores(
+            participation,
+            mark.task_scores,
+        )
+        if not resolved_scores:
             return 0
 
-        participation = mark.participation
         tasks_by_id = {
             str(task.pk): task
             for task in Task.objects.select_related('topic').filter(
-                pk__in=[record.task_id for record in task_score_records],
+                pk__in=[
+                    record.task_id
+                    for _, record in resolved_scores
+                ],
             )
         }
         created_count = 0
-        for score_record in task_score_records:
+        for _, score_record in resolved_scores:
             task = tasks_by_id.get(score_record.task_id)
             if task is None:
                 continue
@@ -748,3 +764,28 @@ class DjangoStudentRepository(IStudentRepository):
                 created_count += 1
 
         return created_count
+
+    @staticmethod
+    def _resolved_task_scores(participation, task_scores):
+        if participation.variant_id:
+            resolved_scores = []
+            variant_tasks = VariantTask.objects.filter(
+                variant_id=participation.variant_id,
+                is_assessable=True,
+            ).order_by('order', 'pk')
+            for variant_task in variant_tasks:
+                score_record = resolve_task_score_record(
+                    task_scores,
+                    variant_task_id=str(variant_task.pk),
+                    task_id=str(variant_task.task_id),
+                )
+                if score_record:
+                    resolved_scores.append(
+                        (str(variant_task.pk), score_record)
+                    )
+            return resolved_scores
+
+        return [
+            (record.variant_task_id, record)
+            for record in normalize_task_scores(task_scores)
+        ]

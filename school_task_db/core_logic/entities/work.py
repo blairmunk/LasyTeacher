@@ -27,6 +27,14 @@ class WorkDetailData:
     remedial_sheet_print_settings: List[PrintSettingsSpec] = field(default_factory=list)
     show_sync_button: bool = False
 
+
+@dataclass(frozen=True)
+class WorkDocumentRef:
+    pk: str
+    name: str
+    work_type: str
+
+
 @dataclass(frozen=True)
 class WorkDetailWork:
     pk: str
@@ -109,7 +117,8 @@ class WorkDetailVariant:
     total_max_points: int
     created_at: datetime
     variant_type: str
-    has_assigned_student: bool = False
+    has_personal_student: bool = False
+    personal_student_name: str = ''
 
     @property
     def id(self) -> str:

@@ -6,6 +6,7 @@ from core_logic.entities.document import PrintSettingsSpec
 from core_logic.entities.document_rendering import (
     DOCUMENT_RENDER_STATUS_GENERATED,
     DOCUMENT_RENDER_STATUS_NOT_FOUND,
+    DOCUMENT_RENDER_STATUS_PERSONAL_REMEDIAL_REQUIRED,
     DocumentRenderResult,
 )
 from core_logic.interfaces.print_settings_repo import (
@@ -56,11 +57,17 @@ class RenderWorkDocumentUseCase:
         request: RenderWorkDocumentRequest,
     ) -> DocumentRenderResult:
         renderer_type = request.options.renderer_type
-        work_name = self.work_repo.get_work_name(request.work_id)
-        if work_name is None:
+        work = self.work_repo.get_work_document_ref(request.work_id)
+        if work is None:
             return DocumentRenderResult(
                 status=DOCUMENT_RENDER_STATUS_NOT_FOUND,
                 renderer_type=renderer_type,
+            )
+        if work.work_type == 'remedial':
+            return DocumentRenderResult(
+                status=DOCUMENT_RENDER_STATUS_PERSONAL_REMEDIAL_REQUIRED,
+                renderer_type=renderer_type,
+                source_name=work.name,
             )
         variant_ids = self.work_repo.get_work_variant_ids(request.work_id)
         if request.variant_id:
@@ -75,7 +82,7 @@ class RenderWorkDocumentUseCase:
             RenderDocumentFromRecipeRequest(
                 source=build_work_document_source(
                     work_id=request.work_id,
-                    work_name=work_name,
+                    work_name=work.name,
                 ),
                 recipe=build_work_document_recipe_for_render(
                     options=request.options,
@@ -88,7 +95,7 @@ class RenderWorkDocumentUseCase:
                     variant_ids=variant_ids,
                 ),
                 render_target=request.options.render_target,
-                source_name=work_name,
+                source_name=work.name,
                 empty_status=DOCUMENT_RENDER_STATUS_GENERATED,
             )
         )

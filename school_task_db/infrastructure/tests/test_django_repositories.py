@@ -1166,37 +1166,69 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertFalse(Work.objects.filter(name=work_name).exists())
         self.assertFalse(Event.objects.filter(name=work_name).exists())
 
-    def test_work_repository_returns_remedial_variant_ids_for_work(self):
+    def test_work_repository_returns_personal_remedial_variant_ids_for_work(
+        self,
+    ):
         remedial_work = Work.objects.create(
             name='Работа над ошибками',
             work_type='remedial',
+        )
+        first_student = Student.objects.create(
+            last_name='Иванов',
+            first_name='Иван',
+        )
+        second_student = Student.objects.create(
+            last_name='Петров',
+            first_name='Пётр',
         )
         second_variant = Variant.objects.create(
             work=remedial_work,
             number=2,
             work_name_snapshot=remedial_work.name,
             variant_type='remedial',
+            assigned_student=second_student,
         )
         first_variant = Variant.objects.create(
             work=remedial_work,
             number=1,
             work_name_snapshot=remedial_work.name,
             variant_type='remedial',
+            assigned_student=first_student,
         )
-        Variant.objects.create(
+        participation_variant = Variant.objects.create(
             work=remedial_work,
             number=3,
             work_name_snapshot=remedial_work.name,
+            variant_type='remedial',
+            source_participation=self.participation,
+        )
+        Variant.objects.create(
+            work=remedial_work,
+            number=4,
+            work_name_snapshot=remedial_work.name,
             variant_type='regular',
         )
+        Variant.objects.create(
+            work=remedial_work,
+            number=5,
+            work_name_snapshot=remedial_work.name,
+            variant_type='remedial',
+        )
 
-        variant_ids = DjangoWorkRepository().get_work_remedial_variant_ids(
-            str(remedial_work.pk),
+        variant_ids = (
+            DjangoWorkRepository()
+            .get_work_personal_remedial_variant_ids(
+                str(remedial_work.pk),
+            )
         )
 
         self.assertEqual(
             variant_ids,
-            [str(first_variant.pk), str(second_variant.pk)],
+            [
+                str(first_variant.pk),
+                str(second_variant.pk),
+                str(participation_variant.pk),
+            ],
         )
 
     def test_work_repository_returns_variant_ids_for_work(self):
@@ -1610,6 +1642,24 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(variant_tasks[0].task.pk, str(self.original_weak.pk))
         self.assertEqual(variant_tasks[0].task.text, self.original_weak.text)
         self.assertEqual(total_max_points, 7)
+
+    def test_variant_detail_resolves_student_from_source_participation(self):
+        remedial_variant = Variant.objects.create(
+            number=2,
+            work_name_snapshot='Работа над ошибками',
+            variant_type='remedial',
+            source_participation=self.participation,
+        )
+
+        variant = DjangoWorkRepository().get_variant_detail(
+            str(remedial_variant.pk),
+        )
+
+        self.assertEqual(variant.assigned_student.pk, str(self.student.pk))
+        self.assertEqual(
+            variant.assigned_student.full_name,
+            self.student.get_full_name(),
+        )
 
     def test_work_repository_returns_orphan_variant_list_data(self):
         orphan = Variant.objects.create(

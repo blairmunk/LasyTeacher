@@ -4,7 +4,9 @@ from core_logic.entities.document_rendering import (
     DOCUMENT_RENDER_STATUS_EMPTY,
     DOCUMENT_RENDER_STATUS_GENERATED,
     DOCUMENT_RENDER_STATUS_NOT_FOUND,
+    DOCUMENT_RENDER_STATUS_NOT_PERSONALIZED,
     DOCUMENT_RENDER_STATUS_NOT_REMEDIAL,
+    DOCUMENT_RENDER_STATUS_PERSONAL_REMEDIAL_REQUIRED,
     DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
 )
 from core_logic.use_cases.render_remedial_sheet_document import (
@@ -62,6 +64,10 @@ def raise_for_work_document_render_error(
 ):
     if result.status == DOCUMENT_RENDER_STATUS_NOT_FOUND:
         raise CommandError(f'Work {work_id} not found')
+    if result.status == DOCUMENT_RENDER_STATUS_PERSONAL_REMEDIAL_REQUIRED:
+        raise CommandError(
+            'Remedial works require personal remedial sheet rendering'
+        )
     if result.status == DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER:
         raise CommandError(f'Unsupported renderer: {renderer_type}')
     if result.status != DOCUMENT_RENDER_STATUS_GENERATED:
@@ -77,6 +83,10 @@ def raise_for_remedial_sheet_document_render_error(
         raise CommandError(f'Variant {variant_id} not found')
     if result.status == DOCUMENT_RENDER_STATUS_NOT_REMEDIAL:
         raise CommandError(f'Variant {variant_id} is not a remedial variant')
+    if result.status == DOCUMENT_RENDER_STATUS_NOT_PERSONALIZED:
+        raise CommandError(
+            f'Remedial variant {variant_id} is not assigned to a student'
+        )
     if result.status == DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER:
         raise CommandError(f'Unsupported renderer: {renderer_type}')
     if result.status == DOCUMENT_RENDER_STATUS_EMPTY:

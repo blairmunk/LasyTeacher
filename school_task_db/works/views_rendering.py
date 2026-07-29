@@ -8,7 +8,9 @@ from infrastructure.container import container
 from core_logic.entities.document_rendering import (
     DOCUMENT_RENDER_STATUS_EMPTY,
     DOCUMENT_RENDER_STATUS_NOT_FOUND,
+    DOCUMENT_RENDER_STATUS_NOT_PERSONALIZED,
     DOCUMENT_RENDER_STATUS_NOT_REMEDIAL,
+    DOCUMENT_RENDER_STATUS_PERSONAL_REMEDIAL_REQUIRED,
     DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
     GENERATED_FILE_STATUS_NOT_FOUND,
     GENERATED_FILE_STATUS_UNSUPPORTED_TYPE,
@@ -43,6 +45,14 @@ def render_work_ajax(request, work_id):
         )
         if result.status == DOCUMENT_RENDER_STATUS_NOT_FOUND:
             raise Http404("Работа не найдена")
+        if result.status == DOCUMENT_RENDER_STATUS_PERSONAL_REMEDIAL_REQUIRED:
+            return JsonResponse(
+                container.work_form_adapter.render_work_error_payload(
+                    'Для работы над ошибками используйте печать '
+                    'персональных листов.',
+                ),
+                status=400,
+            )
         if result.status == DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER:
             return JsonResponse(
                 container.work_form_adapter
@@ -121,6 +131,13 @@ def render_remedial_sheet_ajax(request, variant_id):
                 ),
                 status=400,
             )
+        if result.status == DOCUMENT_RENDER_STATUS_NOT_PERSONALIZED:
+            return JsonResponse(
+                container.work_form_adapter.remedial_sheet_error_payload(
+                    'Лист работы над ошибками не привязан к ученику',
+                ),
+                status=400,
+            )
         if result.status == DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER:
             return JsonResponse(
                 container.work_form_adapter.remedial_sheet_error_payload(
@@ -191,7 +208,8 @@ def render_remedial_sheet_batch_ajax(request, work_id):
         if result.status == DOCUMENT_RENDER_STATUS_EMPTY:
             return JsonResponse(
                 container.work_form_adapter.remedial_sheet_batch_error_payload(
-                    'В этой работе нет remedial-вариантов для печати.',
+                    'В этой работе нет персональных листов '
+                    'работы над ошибками для печати.',
                 ),
                 status=400,
             )

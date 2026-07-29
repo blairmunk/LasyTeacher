@@ -105,7 +105,7 @@
                     <input type="hidden" name="variant_ids" value="{{ variant.pk }}">
                     <input type="hidden" name="work_name" value="{{ variant.display_name }}">
                     <button type="submit" class="btn btn-sm btn-success">
-                        <i class="fas fa-plus-circle"></i> Создать работу → PDF
+                        <i class="fas fa-plus-circle"></i> Собрать в работу РнО
                     </button>
                 </form>
                 {% endif %}
@@ -113,7 +113,7 @@
         </div>
     </div>
 
-    {% if variant.source_work %}
+    {% if variant.assigned_student %}
     <!-- Рендеринг рабочего листа -->
     <div class="card mb-4" id="remedial-render">
         <div class="card-header bg-success bg-opacity-10">

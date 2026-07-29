@@ -3,7 +3,7 @@
 from typing import List, Optional, Set
 
 from django.db import transaction
-from django.db.models import Count, Sum
+from django.db.models import Count, Q, Sum
 
 from core_logic.entities.work import (
     OrphanVariantRef,
@@ -32,6 +32,7 @@ from core_logic.entities.work import (
     WorkDetailSpecGroup,
     WorkDetailVariant,
     WorkDetailWork,
+    WorkDocumentRef,
     WorkListItem,
 )
 from core_logic.entities.work_variant_composition import (
@@ -95,6 +96,14 @@ from works.models import (
     WorkContentBlock,
     VariantContentBlockSnapshot,
 )
+
+
+def _personal_student(variant):
+    if variant.assigned_student:
+        return variant.assigned_student
+    if variant.source_participation:
+        return variant.source_participation.student
+    return None
 
 
 class DjangoWorkRepository(
@@ -178,8 +187,19 @@ class DjangoWorkRepository(
 
         return AnalogGroup.objects.all()
 
-    def get_work_name(self, work_id: str):
-        return Work.objects.filter(pk=work_id).values_list('name', flat=True).first()
+    def get_work_document_ref(self, work_id: str):
+        work = Work.objects.filter(pk=work_id).only(
+            'pk',
+            'name',
+            'work_type',
+        ).first()
+        if work is None:
+            return None
+        return WorkDocumentRef(
+            pk=str(work.pk),
+            name=work.name,
+            work_type=work.work_type,
+        )
 
     def get_work_generation_target(self, work_id: str):
         work = Work.objects.filter(pk=work_id).first()
@@ -227,19 +247,33 @@ class DjangoWorkRepository(
         )
 
     def get_detail_variants(self, work_id: str):
-        return [
-            WorkDetailVariant(
-                pk=str(variant.pk),
-                number=variant.number,
-                short_uuid=variant.get_short_uuid(),
-                task_count=variant.tasks.count(),
-                total_max_points=variant.total_max_points,
-                created_at=variant.created_at,
-                variant_type=variant.variant_type,
-                has_assigned_student=bool(variant.assigned_student_id),
+        result = []
+        variants = Variant.objects.filter(
+            work_id=work_id,
+        ).select_related(
+            'assigned_student',
+            'source_participation__student',
+        )
+        for variant in variants:
+            personal_student = _personal_student(variant)
+            result.append(
+                WorkDetailVariant(
+                    pk=str(variant.pk),
+                    number=variant.number,
+                    short_uuid=variant.get_short_uuid(),
+                    task_count=variant.tasks.count(),
+                    total_max_points=variant.total_max_points,
+                    created_at=variant.created_at,
+                    variant_type=variant.variant_type,
+                    has_personal_student=bool(personal_student),
+                    personal_student_name=(
+                        personal_student.get_short_name()
+                        if personal_student
+                        else ''
+                    ),
+                )
             )
-            for variant in Variant.objects.filter(work_id=work_id)
-        ]
+        return result
 
     def get_detail_analog_groups(self, work_id: str):
         return [
@@ -296,9 +330,11 @@ class DjangoWorkRepository(
             'work',
             'assigned_student',
             'source_work',
+            'source_participation__student',
         ).filter(pk=variant_id).first()
         if variant is None:
             return None
+        personal_student = _personal_student(variant)
 
         return VariantDetailVariant(
             pk=str(variant.pk),
@@ -322,11 +358,11 @@ class DjangoWorkRepository(
             ),
             assigned_student=(
                 VariantDetailStudentRef(
-                    pk=str(variant.assigned_student.pk),
-                    full_name=variant.assigned_student.get_full_name(),
-                    short_name=variant.assigned_student.get_short_name(),
+                    pk=str(personal_student.pk),
+                    full_name=personal_student.get_full_name(),
+                    short_name=personal_student.get_short_name(),
                 )
-                if variant.assigned_student
+                if personal_student
                 else None
             ),
             source_work=(
@@ -556,12 +592,18 @@ class DjangoWorkRepository(
             source_detail=task.source_detail,
         )
 
-    def get_work_remedial_variant_ids(self, work_id: str) -> List[str]:
+    def get_work_personal_remedial_variant_ids(
+        self,
+        work_id: str,
+    ) -> List[str]:
         return [
             str(variant_id)
             for variant_id in Variant.objects.filter(
                 work_id=work_id,
                 variant_type='remedial',
+            ).filter(
+                Q(assigned_student_id__isnull=False)
+                | Q(source_participation_id__isnull=False),
             ).order_by(
                 'number',
                 'pk',

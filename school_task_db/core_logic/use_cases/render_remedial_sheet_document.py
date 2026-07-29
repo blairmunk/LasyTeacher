@@ -6,6 +6,7 @@ from core_logic.entities.document import PrintSettingsSpec
 from core_logic.entities.document_rendering import (
     DOCUMENT_RENDER_STATUS_EMPTY,
     DOCUMENT_RENDER_STATUS_NOT_FOUND,
+    DOCUMENT_RENDER_STATUS_NOT_PERSONALIZED,
     DOCUMENT_RENDER_STATUS_NOT_REMEDIAL,
     DocumentRenderResult,
 )
@@ -64,6 +65,19 @@ class RenderRemedialSheetDocumentUseCase:
         if variant_type != 'remedial':
             return DocumentRenderResult(
                 status=DOCUMENT_RENDER_STATUS_NOT_REMEDIAL,
+                renderer_type=request.options.renderer_type,
+            )
+        sheet_data = self.work_repo.get_remedial_sheet_data(
+            request.variant_id,
+        )
+        if sheet_data is None:
+            return DocumentRenderResult(
+                status=DOCUMENT_RENDER_STATUS_NOT_FOUND,
+                renderer_type=request.options.renderer_type,
+            )
+        if sheet_data.student is None:
+            return DocumentRenderResult(
+                status=DOCUMENT_RENDER_STATUS_NOT_PERSONALIZED,
                 renderer_type=request.options.renderer_type,
             )
         return self.render_document_from_recipe_use_case.execute(

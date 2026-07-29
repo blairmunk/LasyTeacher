@@ -13,6 +13,7 @@ from core_logic.entities.work import (
     WorkDetailContentBlock,
     WorkDetailSpecGroup,
     WorkDetailWork,
+    WorkDocumentRef,
     WorkListFilters,
 )
 from core_logic.entities.work_variant_composition import (
@@ -179,9 +180,13 @@ class FakeWorkRepository:
     def get_work_form_analog_group_options(self):
         return self.work_form_analog_group_options
 
-    def get_work_name(self, work_id):
+    def get_work_document_ref(self, work_id):
         self.work_name_request = work_id
-        return self.work_name
+        return WorkDocumentRef(
+            pk=work_id,
+            name=self.work_name,
+            work_type='test',
+        )
 
     def get_detail_analog_groups(self, work_id):
         return self.analog_groups

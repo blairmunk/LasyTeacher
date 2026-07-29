@@ -1,5 +1,6 @@
 """Document rendering use case tests."""
 
+from types import SimpleNamespace
 from unittest import TestCase
 
 from core_logic.entities.document import (
@@ -9,12 +10,15 @@ from core_logic.entities.document import (
 )
 from core_logic.entities.document_rendering import (
     DocumentRenderResult,
+    DOCUMENT_RENDER_STATUS_NOT_PERSONALIZED,
+    DOCUMENT_RENDER_STATUS_PERSONAL_REMEDIAL_REQUIRED,
     DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
     GeneratedDocument,
     GeneratedDocumentFile,
     GeneratedFile,
     GeneratedFileResult,
 )
+from core_logic.entities.work import WorkDocumentRef
 from core_logic.use_cases.get_rendered_document_file import (
     GetRenderedDocumentFileRequest,
     GetRenderedDocumentFileUseCase,
@@ -91,31 +95,48 @@ class FakeWorkRepository:
         work_name='Контрольная',
         variant_ids=None,
         remedial_variant_ids=None,
+        remedial_sheet_data=None,
+        work_type='test',
     ):
         self.variant_type = variant_type
         self.variant_type_request = None
         self.work_name = work_name
         self.work_name_request = None
+        self.work_type = work_type
         self.remedial_variant_ids = remedial_variant_ids or []
         self.remedial_variant_ids_request = None
+        self.remedial_sheet_data = (
+            remedial_sheet_data
+            if remedial_sheet_data is not None
+            else SimpleNamespace(student=object())
+        )
         self.variant_ids = variant_ids or ['variant-1']
         self.variant_ids_request = None
 
-    def get_work_name(self, work_id):
+    def get_work_document_ref(self, work_id):
         self.work_name_request = work_id
-        return self.work_name
+        if self.work_name is None:
+            return None
+        return WorkDocumentRef(
+            pk=work_id,
+            name=self.work_name,
+            work_type=self.work_type,
+        )
 
     def get_variant_type(self, variant_id):
         self.variant_type_request = variant_id
         return self.variant_type
 
-    def get_work_remedial_variant_ids(self, work_id):
+    def get_work_personal_remedial_variant_ids(self, work_id):
         self.remedial_variant_ids_request = work_id
         return self.remedial_variant_ids
 
     def get_work_variant_ids(self, work_id):
         self.variant_ids_request = work_id
         return self.variant_ids
+
+    def get_remedial_sheet_data(self, variant_id):
+        return self.remedial_sheet_data
 
 
 class FakeRenderRemedialSheetDocumentUseCase:
@@ -220,6 +241,26 @@ class DocumentRenderingUseCaseTests(TestCase):
             render_plan.recipe.section_types,
             (HEADER_SECTION, TASK_LIST_SECTION),
         )
+
+    def test_render_work_document_rejects_remedial_work(self):
+        service = FakeDocumentEngine()
+        use_case = RenderWorkDocumentUseCase(
+            render_document_from_recipe_use_case=recipe_renderer(service),
+            work_repo=FakeWorkRepository(work_type='remedial'),
+        )
+
+        result = use_case.execute(
+            RenderWorkDocumentRequest(
+                work_id='work-1',
+                options=WorkDocumentRenderOptions(renderer_type='pdf'),
+            )
+        )
+
+        self.assertEqual(
+            result.status,
+            DOCUMENT_RENDER_STATUS_PERSONAL_REMEDIAL_REQUIRED,
+        )
+        self.assertIsNone(service.render_request)
 
     def test_render_work_document_uses_recipe_renderer_dependency(self):
         service = FakeDocumentEngine()
@@ -670,6 +711,28 @@ class DocumentRenderingUseCaseTests(TestCase):
 
         self.assertFalse(result.success)
         self.assertEqual(result.status, 'not_remedial')
+        self.assertIsNone(service.render_request)
+
+    def test_render_remedial_sheet_document_rejects_unsigned_variant(self):
+        service = FakeDocumentEngine()
+        use_case = RenderRemedialSheetDocumentUseCase(
+            render_document_from_recipe_use_case=recipe_renderer(service),
+            work_repo=FakeWorkRepository(
+                remedial_sheet_data=SimpleNamespace(student=None),
+            ),
+        )
+
+        result = use_case.execute(
+            RenderRemedialSheetDocumentRequest(
+                variant_id='variant-1',
+                options=RemedialSheetDocumentRenderOptions(),
+            )
+        )
+
+        self.assertEqual(
+            result.status,
+            DOCUMENT_RENDER_STATUS_NOT_PERSONALIZED,
+        )
         self.assertIsNone(service.render_request)
 
     def test_render_remedial_sheet_document_handles_missing_variant(self):

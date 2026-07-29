@@ -54,28 +54,28 @@ class RenderRemedialSheetBatchDocumentUseCase:
         self,
         request: RenderRemedialSheetBatchDocumentRequest,
     ) -> DocumentRenderResult:
-        work_name = self.work_repo.get_work_name(request.work_id)
-        if work_name is None:
+        work = self.work_repo.get_work_document_ref(request.work_id)
+        if work is None:
             return DocumentRenderResult(
                 status=DOCUMENT_RENDER_STATUS_NOT_FOUND,
                 renderer_type=request.options.renderer_type,
             )
 
-        variant_ids = self.work_repo.get_work_remedial_variant_ids(
+        variant_ids = self.work_repo.get_work_personal_remedial_variant_ids(
             request.work_id,
         )
         if not variant_ids:
             return DocumentRenderResult(
                 status=DOCUMENT_RENDER_STATUS_EMPTY,
                 renderer_type=request.options.renderer_type,
-                source_name=work_name,
+                source_name=work.name,
             )
 
         return self.render_document_from_recipe_use_case.execute(
             RenderDocumentFromRecipeRequest(
                 source=build_remedial_sheet_batch_document_source(
                     work_id=request.work_id,
-                    work_name=work_name,
+                    work_name=work.name,
                 ),
                 recipe=build_remedial_sheet_batch_document_recipe_for_render(
                     variant_ids=variant_ids,
@@ -88,7 +88,7 @@ class RenderRemedialSheetBatchDocumentUseCase:
                     ),
                 ),
                 render_target=request.options.render_target,
-                source_name=work_name,
+                source_name=work.name,
                 empty_status=DOCUMENT_RENDER_STATUS_EMPTY,
             )
         )

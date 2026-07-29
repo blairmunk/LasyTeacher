@@ -255,6 +255,17 @@ class WorkDetailViewTests(TestCase):
             name='Работа над ошибками',
             work_type='remedial',
         )
+        student = Student.objects.create(
+            last_name='Сидорова',
+            first_name='Анна',
+        )
+        Variant.objects.create(
+            work=remedial_work,
+            number=1,
+            work_name_snapshot=remedial_work.name,
+            variant_type='remedial',
+            assigned_student=student,
+        )
         template = PrintSettings.objects.create(
             name='Шаблон листа РнО',
             document_type=PrintSettings.DocumentType.REMEDIAL,
@@ -276,7 +287,11 @@ class WorkDetailViewTests(TestCase):
         self.assertContains(response, 'data-remedial-batch-rendering-results')
         self.assertContains(response, 'data-print-settings-selection-notice')
         self.assertContains(response, 'Печать листов работы над ошибками')
+        self.assertContains(response, 'Создать персональные листы')
+        self.assertContains(response, student.get_short_name())
         self.assertContains(response, 'Шаблон листа РнО')
+        self.assertNotContains(response, 'id="generation"')
+        self.assertNotContains(response, 'id="advanced-rendering-form"')
 
     def test_detail_returns_404_for_missing_work(self):
         response = self.client.get(
@@ -796,11 +811,16 @@ class WorkDetailViewTests(TestCase):
         self.assertEqual(response.context['total_max_points'], 2)
 
     def test_remedial_variant_detail_exposes_rendering_dom_markers(self):
+        student = Student.objects.create(
+            last_name='Петров',
+            first_name='Пётр',
+        )
         remedial_variant = Variant.objects.create(
             work=None,
             number=2,
             variant_type='remedial',
             source_work=self.work,
+            assigned_student=student,
         )
 
         response = self.client.get(
@@ -1097,6 +1117,34 @@ class WorkDetailViewTests(TestCase):
         )
         render_document.assert_called_once()
 
+    def test_render_work_ajax_rejects_generic_print_for_remedial_work(self):
+        remedial_work = Work.objects.create(
+            name='Работа над ошибками',
+            work_type='remedial',
+        )
+
+        with patch(
+            'infrastructure.services.document_engine.'
+            'DjangoDocumentEngine.render_document',
+        ) as render_document:
+            response = self.client.post(
+                reverse('works:render_work_ajax', args=[remedial_work.pk]),
+                {'renderer_type': 'pdf'},
+            )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                'success': False,
+                'error': (
+                    'Для работы над ошибками используйте печать '
+                    'персональных листов.'
+                ),
+            },
+        )
+        render_document.assert_not_called()
+
     def test_download_rendered_file_uses_document_service(self):
         with patch(
             'infrastructure.services.document_engine.'
@@ -1139,11 +1187,16 @@ class WorkDetailViewTests(TestCase):
         )
 
     def test_render_remedial_sheet_ajax_uses_clean_use_case(self):
+        student = Student.objects.create(
+            last_name='Петров',
+            first_name='Пётр',
+        )
         remedial_variant = Variant.objects.create(
             work=self.work,
             number=2,
             work_name_snapshot=self.work.name,
             variant_type='remedial',
+            assigned_student=student,
         )
 
         with patch(
@@ -1206,12 +1259,49 @@ class WorkDetailViewTests(TestCase):
         )
         render_document.assert_not_called()
 
-    def test_render_remedial_sheet_ajax_rejects_unsupported_renderer(self):
+    def test_render_remedial_sheet_ajax_rejects_unsigned_variant(self):
         remedial_variant = Variant.objects.create(
             work=self.work,
             number=2,
             work_name_snapshot=self.work.name,
             variant_type='remedial',
+        )
+
+        with patch(
+            'infrastructure.services.document_engine.'
+            'DjangoDocumentEngine.render_document',
+        ) as render_document:
+            response = self.client.post(
+                reverse(
+                    'works:render-remedial-sheet',
+                    args=[remedial_variant.pk],
+                ),
+                {'renderer_type': 'pdf'},
+            )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                'status': 'error',
+                'message': (
+                    'Лист работы над ошибками не привязан к ученику'
+                ),
+            },
+        )
+        render_document.assert_not_called()
+
+    def test_render_remedial_sheet_ajax_rejects_unsupported_renderer(self):
+        student = Student.objects.create(
+            last_name='Петров',
+            first_name='Пётр',
+        )
+        remedial_variant = Variant.objects.create(
+            work=self.work,
+            number=2,
+            work_name_snapshot=self.work.name,
+            variant_type='remedial',
+            assigned_student=student,
         )
 
         with patch(
@@ -1241,17 +1331,27 @@ class WorkDetailViewTests(TestCase):
             name='Работа над ошибками',
             work_type='remedial',
         )
+        first_student = Student.objects.create(
+            last_name='Иванов',
+            first_name='Иван',
+        )
+        second_student = Student.objects.create(
+            last_name='Петров',
+            first_name='Пётр',
+        )
         first_variant = Variant.objects.create(
             work=remedial_work,
             number=1,
             work_name_snapshot=remedial_work.name,
             variant_type='remedial',
+            assigned_student=first_student,
         )
         second_variant = Variant.objects.create(
             work=remedial_work,
             number=2,
             work_name_snapshot=remedial_work.name,
             variant_type='remedial',
+            assigned_student=second_student,
         )
 
         with patch(
@@ -1299,7 +1399,10 @@ class WorkDetailViewTests(TestCase):
             response.json(),
             {
                 'success': False,
-                'error': 'В этой работе нет remedial-вариантов для печати.',
+                'error': (
+                    'В этой работе нет персональных листов '
+                    'работы над ошибками для печати.'
+                ),
             },
         )
 

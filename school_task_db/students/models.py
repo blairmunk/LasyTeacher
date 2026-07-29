@@ -104,6 +104,14 @@ class StudentTaskLog(BaseModel):
         'works.Variant', on_delete=models.SET_NULL,
         null=True, blank=True, verbose_name='Вариант'
     )
+    variant_task = models.ForeignKey(
+        'works.VariantTask',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='student_logs',
+        verbose_name='Строка задания варианта',
+    )
     mark = models.ForeignKey(
         'events.Mark', on_delete=models.SET_NULL,
         null=True, blank=True, verbose_name='Отметка'

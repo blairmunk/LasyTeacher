@@ -282,7 +282,12 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(created_count, 2)
         self.assertEqual(logs.count(), 2)
         weak_log = logs.get(task=self.original_weak)
+        weak_variant_task = VariantTask.objects.get(
+            variant=self.source_variant,
+            task=self.original_weak,
+        )
         self.assertEqual(weak_log.analog_group, self.weak_group)
+        self.assertEqual(weak_log.variant_task, weak_variant_task)
         self.assertEqual(weak_log.points, 0)
         self.assertEqual(weak_log.max_points, 2)
 
@@ -2421,6 +2426,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(weak_log.points, 1)
         self.assertEqual(weak_log.max_points, 2)
         self.assertEqual(weak_log.comment, 'Повторить')
+        self.assertEqual(weak_log.variant_task, variant_task)
         self.assertFalse(
             StudentTaskLog.objects.filter(
                 student=self.student,

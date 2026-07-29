@@ -738,7 +738,7 @@ class DjangoStudentRepository(IStudentRepository):
             )
         }
         created_count = 0
-        for _, score_record in resolved_scores:
+        for variant_task_id, score_record in resolved_scores:
             task = tasks_by_id.get(score_record.task_id)
             if task is None:
                 continue
@@ -750,6 +750,7 @@ class DjangoStudentRepository(IStudentRepository):
                 event=participation.event,
                 defaults={
                     'variant': participation.variant,
+                    'variant_task_id': variant_task_id or None,
                     'mark': mark,
                     'topic': task.topic,
                     'analog_group': task_group.group if task_group else None,
@@ -786,6 +787,6 @@ class DjangoStudentRepository(IStudentRepository):
             return resolved_scores
 
         return [
-            (record.variant_task_id, record)
+            ('', record)
             for record in normalize_task_scores(task_scores)
         ]

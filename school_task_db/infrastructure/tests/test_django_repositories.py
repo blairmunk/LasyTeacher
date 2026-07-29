@@ -11,6 +11,12 @@ from core_logic.services.remedial_service import RemedialService
 from core_logic.services.work_variant_composition_service import (
     WorkVariantCompositionService,
 )
+from core_logic.entities.work_variant_composition import (
+    VariantContentBlockCreationPlan,
+)
+from core_logic.services.remedial_variant_content_service import (
+    build_remedial_variant_creation_plan,
+)
 from core_logic.services.work_spec_sync_service import WorkSpecSyncService
 from core_logic.interfaces.event_repo import (
     CreateEventParams,
@@ -24,7 +30,6 @@ from core_logic.interfaces.work_repo import (
     CreateWorkWithVariantsParams,
     CreateWorkWithVariantFromTasksParams,
     NewWorkVariantParams,
-    VariantTaskSnapshotParams,
     WorkContentBlockParams,
     WorkTaskSelectionParams,
 )
@@ -458,29 +463,34 @@ class DjangoRemedialRepositoryTests(TestCase):
                 ),
                 variants=[
                     NewWorkVariantParams(
-                        number=1,
                         student_id=str(self.student.pk),
-                        task_snapshots=[
-                            VariantTaskSnapshotParams(
-                                task_id=str(self.original_weak.pk),
-                                order=1,
-                                max_points=2,
-                            ),
-                        ],
-                        max_score_snapshot=2,
+                        plan=build_remedial_variant_creation_plan(
+                            task_ids=[str(self.original_weak.pk)],
+                            tasks=[self.original_weak],
+                            number=1,
+                            work_name='Работа над ошибками',
+                            content_blocks=[
+                                VariantContentBlockCreationPlan(
+                                    source_content_id='content-1',
+                                    content_type='text',
+                                    order=0,
+                                    title='Памятка',
+                                    content={
+                                        'body': 'Проверьте вычисления.',
+                                    },
+                                ),
+                            ],
+                        ),
                         source_work_id=str(self.source_work.pk),
                     ),
                     NewWorkVariantParams(
-                        number=2,
                         student_id=str(self.student.pk),
-                        task_snapshots=[
-                            VariantTaskSnapshotParams(
-                                task_id=str(self.original_ok.pk),
-                                order=1,
-                                max_points=5,
-                            ),
-                        ],
-                        max_score_snapshot=5,
+                        plan=build_remedial_variant_creation_plan(
+                            task_ids=[str(self.original_ok.pk)],
+                            tasks=[self.original_ok],
+                            number=2,
+                            work_name='Работа над ошибками',
+                        ),
                     ),
                 ],
             )
@@ -512,19 +522,32 @@ class DjangoRemedialRepositoryTests(TestCase):
             [variant_task.task for variant_task in variant_tasks],
             [self.original_weak, self.original_ok],
         )
+        content_snapshot = VariantContentBlockSnapshot.objects.get(
+            variant=variants[0],
+        )
+        self.assertEqual(content_snapshot.title, 'Памятка')
+        self.assertEqual(
+            content_snapshot.content,
+            {'body': 'Проверьте вычисления.'},
+        )
+        self.assertFalse(
+            VariantContentBlockSnapshot.objects.filter(
+                variant=variants[1],
+            ).exists()
+        )
 
     def test_work_repository_rolls_back_work_when_variant_creation_fails(self):
         repo = DjangoWorkRepository()
-        original_create_variant = repo._create_variant_with_tasks
+        original_create_variant = repo._create_variant_from_plan
         work_count = Work.objects.count()
         variant_count = Variant.objects.count()
 
         def create_variant_or_fail(params):
-            if params.number == 2:
+            if params.plan.number == 2:
                 raise RuntimeError('variant creation failed')
             return original_create_variant(params)
 
-        repo._create_variant_with_tasks = create_variant_or_fail
+        repo._create_variant_from_plan = create_variant_or_fail
 
         with self.assertRaises(RuntimeError):
             repo.create_work_with_variants(
@@ -536,28 +559,22 @@ class DjangoRemedialRepositoryTests(TestCase):
                     ),
                     variants=[
                         NewWorkVariantParams(
-                            number=1,
                             student_id=str(self.student.pk),
-                            task_snapshots=[
-                                VariantTaskSnapshotParams(
-                                    task_id=str(self.original_weak.pk),
-                                    order=1,
-                                    max_points=2,
-                                ),
-                            ],
-                            max_score_snapshot=2,
+                            plan=build_remedial_variant_creation_plan(
+                                task_ids=[str(self.original_weak.pk)],
+                                tasks=[self.original_weak],
+                                number=1,
+                                work_name='Незавершённая работа',
+                            ),
                         ),
                         NewWorkVariantParams(
-                            number=2,
                             student_id=str(self.student.pk),
-                            task_snapshots=[
-                                VariantTaskSnapshotParams(
-                                    task_id=str(self.original_ok.pk),
-                                    order=1,
-                                    max_points=5,
-                                ),
-                            ],
-                            max_score_snapshot=5,
+                            plan=build_remedial_variant_creation_plan(
+                                task_ids=[str(self.original_ok.pk)],
+                                tasks=[self.original_ok],
+                                number=2,
+                                work_name='Незавершённая работа',
+                            ),
                         ),
                     ],
                 )

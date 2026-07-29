@@ -40,7 +40,7 @@ class FakeWorkRepository:
     def __init__(self):
         self.created_variant_params = None
 
-    def create_variant_with_tasks(self, params: CreateVariantParams):
+    def create_variant_from_plan(self, params: CreateVariantParams):
         self.created_variant_params = params
         return 'variant-1'
 
@@ -74,10 +74,13 @@ class CreateStudentRemedialVariantUseCaseTests(TestCase):
         self.assertEqual(work_repo.created_variant_params.work_id, None)
         self.assertEqual(work_repo.created_variant_params.student_id, 'student-1')
         self.assertEqual(
-            work_repo.created_variant_params.work_name_snapshot,
+            work_repo.created_variant_params.plan.work_name_snapshot,
             'Работа над ошибками — Иванов И.',
         )
-        self.assertEqual(work_repo.created_variant_params.max_score_snapshot, 5)
+        self.assertEqual(
+            work_repo.created_variant_params.plan.max_score_snapshot,
+            5,
+        )
         self.assertEqual(
             [
                 (
@@ -87,7 +90,7 @@ class CreateStudentRemedialVariantUseCaseTests(TestCase):
                     task.max_points,
                     task.bank_role,
                 )
-                for task in work_repo.created_variant_params.task_snapshots
+                for task in work_repo.created_variant_params.plan.tasks
             ],
             [
                 ('task-1', 1, 1, 2, 'remedial'),

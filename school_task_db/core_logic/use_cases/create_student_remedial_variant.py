@@ -7,7 +7,7 @@ from core_logic.interfaces.student_repo import IStudentRepository
 from core_logic.interfaces.task_repo import ITaskRepository
 from core_logic.interfaces.work_repo import CreateVariantParams, IWorkRepository
 from core_logic.services.remedial_variant_content_service import (
-    build_remedial_variant_task_snapshots,
+    build_remedial_variant_creation_plan,
 )
 
 
@@ -54,32 +54,29 @@ class CreateStudentRemedialVariantUseCase:
             return CreateStudentRemedialVariantResult(
                 success=False,
                 message='Нет доступных заданий для работы над ошибками.',
-            )
+        )
 
         tasks = self.task_repo.get_by_ids(set(task_ids))
-        task_snapshots = build_remedial_variant_task_snapshots(
-            task_ids,
-            tasks,
+        student_name = self.student_repo.get_student_short_name(request.student_id)
+        work_name = f'Работа над ошибками — {student_name}'
+        plan = build_remedial_variant_creation_plan(
+            task_ids=task_ids,
+            tasks=tasks,
+            number=1,
+            work_name=work_name,
         )
-        if not task_snapshots:
+        if not plan.tasks:
             return CreateStudentRemedialVariantResult(
                 success=False,
                 message='Нет доступных заданий для работы над ошибками.',
             )
 
-        total_score = sum(
-            task_snapshot.max_points
-            for task_snapshot in task_snapshots
-        )
-        student_name = self.student_repo.get_student_short_name(request.student_id)
-        variant_id = self.work_repo.create_variant_with_tasks(
+        total_score = plan.max_score_snapshot
+        variant_id = self.work_repo.create_variant_from_plan(
             CreateVariantParams(
                 work_id=None,
-                number=1,
                 student_id=request.student_id,
-                task_snapshots=task_snapshots,
-                work_name_snapshot=f'Работа над ошибками — {student_name}',
-                max_score_snapshot=total_score,
+                plan=plan,
                 variant_type='remedial',
             )
         )
@@ -87,10 +84,10 @@ class CreateStudentRemedialVariantUseCase:
         return CreateStudentRemedialVariantResult(
             success=True,
             variant_id=variant_id,
-            task_count=len(task_snapshots),
+            task_count=len(plan.tasks),
             total_score=total_score,
             message=(
                 f'Создан вариант «Работа над ошибками» для {student_name}: '
-                f'{len(task_snapshots)} заданий, макс. балл: {total_score}'
+                f'{len(plan.tasks)} заданий, макс. балл: {total_score}'
             ),
         )

@@ -3,10 +3,10 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import List, Optional
+from core_logic.entities.work_variant_composition import VariantCreationPlan
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_ANY,
-    TASK_BANK_ROLE_CONTROL,
     TASK_RENDER_MODE_TASK_ONLY,
 )
 
@@ -22,27 +22,10 @@ class CreateWorkParams:
 
 
 @dataclass(frozen=True)
-class VariantTaskSnapshotParams:
-    task_id: str
-    order: int
-    max_points: int
-    source_selection_id: str = ''
-    content_order: int = 0
-    bank_role: str = TASK_BANK_ROLE_CONTROL
-    render_mode: str = TASK_RENDER_MODE_TASK_ONLY
-    is_assessable: bool = True
-    blank_cells_after: bool = False
-    blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
-
-
-@dataclass(frozen=True)
 class CreateVariantParams:
     work_id: Optional[str]
-    number: int
     student_id: str
-    task_snapshots: List[VariantTaskSnapshotParams]
-    work_name_snapshot: str
-    max_score_snapshot: int
+    plan: VariantCreationPlan
     source_work_id: Optional[str] = None
     source_participation_id: Optional[str] = None
     variant_type: str = 'remedial'
@@ -82,10 +65,8 @@ class CreateWorkWithSpecificationParams:
 
 @dataclass(frozen=True)
 class NewWorkVariantParams:
-    number: int
     student_id: str
-    task_snapshots: List[VariantTaskSnapshotParams]
-    max_score_snapshot: int
+    plan: VariantCreationPlan
     source_work_id: Optional[str] = None
     source_participation_id: Optional[str] = None
     variant_type: str = 'remedial'
@@ -158,8 +139,8 @@ class IWorkRepository(ABC):
         """Replace all persistent work content atomically."""
 
     @abstractmethod
-    def create_variant_with_tasks(self, params: CreateVariantParams) -> str:
-        """Create a variant with VariantTask rows and return the variant ID."""
+    def create_variant_from_plan(self, params: CreateVariantParams) -> str:
+        """Persist one immutable variant creation plan and return its ID."""
 
     @abstractmethod
     def create_work_with_variant_from_tasks(

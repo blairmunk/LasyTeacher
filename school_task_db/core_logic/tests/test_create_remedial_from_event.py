@@ -56,7 +56,7 @@ class FakeWorkRepository:
         return CreatedWorkWithVariantsRef(
             work_id='new-work',
             variant_ids=[
-                f'variant-{variant.number}'
+                f'variant-{variant.plan.number}'
                 for variant in params.variants
             ],
         )
@@ -162,15 +162,18 @@ class CreateRemedialFromEventUseCaseTests(TestCase):
         self.assertEqual(
             [
                 task.task_id
-                for task in work_repo.created_variants[0].task_snapshots
+                for task in work_repo.created_variants[0].plan.tasks
             ],
             ['t10'],
         )
         self.assertEqual(
-            work_repo.created_variants[0].task_snapshots[0].bank_role,
+            work_repo.created_variants[0].plan.tasks[0].bank_role,
             'remedial',
         )
-        self.assertEqual(work_repo.created_variants[0].max_score_snapshot, 3)
+        self.assertEqual(
+            work_repo.created_variants[0].plan.max_score_snapshot,
+            3,
+        )
         self.assertEqual(
             work_repo.created_variants[0].source_participation_id,
             'participation-student-1',

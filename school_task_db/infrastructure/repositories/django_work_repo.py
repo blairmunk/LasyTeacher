@@ -833,40 +833,7 @@ class DjangoWorkRepository(
                     max_score_snapshot=variant_plan.max_score_snapshot,
                     duration_snapshot=variant_plan.duration_snapshot,
                 )
-                VariantTask.objects.bulk_create(
-                    [
-                        VariantTask(
-                            variant=variant,
-                            task_id=task_plan.task_id,
-                            source_selection_id=(
-                                task_plan.source_selection_id
-                            ),
-                            content_order=task_plan.content_order,
-                            order=task_plan.order,
-                            max_points=task_plan.max_points,
-                            weight=task_plan.weight,
-                            bank_role=task_plan.bank_role,
-                            render_mode=task_plan.render_mode,
-                            is_assessable=task_plan.is_assessable,
-                            blank_cells_after=task_plan.blank_cells_after,
-                            blank_cells_rows=task_plan.blank_cells_rows,
-                        )
-                        for task_plan in variant_plan.tasks
-                    ]
-                )
-                VariantContentBlockSnapshot.objects.bulk_create(
-                    [
-                        VariantContentBlockSnapshot(
-                            variant=variant,
-                            source_content_id=block.source_content_id,
-                            content_type=block.content_type,
-                            order=block.order,
-                            title=block.title,
-                            content=dict(block.content),
-                        )
-                        for block in variant_plan.content_blocks
-                    ]
-                )
+                self._persist_variant_content(variant, variant_plan)
 
             work.variant_counter = plan.next_variant_counter
             work.save()
@@ -1105,14 +1072,11 @@ class DjangoWorkRepository(
         with transaction.atomic():
             work_id = self.create_work(params.work)
             variant_ids = [
-                self._create_variant_with_tasks(
+                self._create_variant_from_plan(
                     CreateVariantParams(
                         work_id=work_id,
-                        number=variant.number,
                         student_id=variant.student_id,
-                        task_snapshots=variant.task_snapshots,
-                        work_name_snapshot=params.work.name,
-                        max_score_snapshot=variant.max_score_snapshot,
+                        plan=variant.plan,
                         source_work_id=variant.source_work_id,
                         source_participation_id=(
                             variant.source_participation_id
@@ -1201,51 +1165,60 @@ class DjangoWorkRepository(
             if params.topic_ids:
                 block.topics.set(params.topic_ids)
 
-    def create_variant_with_tasks(self, params: CreateVariantParams) -> str:
+    def create_variant_from_plan(self, params: CreateVariantParams) -> str:
         with transaction.atomic():
-            return self._create_variant_with_tasks(params)
+            return self._create_variant_from_plan(params)
 
-    def _create_variant_with_tasks(self, params: CreateVariantParams) -> str:
+    def _create_variant_from_plan(self, params: CreateVariantParams) -> str:
+        plan = params.plan
         variant = Variant.objects.create(
             work_id=params.work_id,
-            number=params.number,
-            work_name_snapshot=params.work_name_snapshot,
-            max_score_snapshot=params.max_score_snapshot,
+            number=plan.number,
+            work_name_snapshot=plan.work_name_snapshot,
+            max_score_snapshot=plan.max_score_snapshot,
+            duration_snapshot=plan.duration_snapshot,
             variant_type=params.variant_type,
             assigned_student_id=params.student_id,
             source_work_id=params.source_work_id,
             source_participation_id=params.source_participation_id,
         )
-
-        task_map = {
-            str(task.id): task
-            for task in Task.objects.filter(
-                id__in=[
-                    snapshot.task_id
-                    for snapshot in params.task_snapshots
-                ]
-            )
-        }
-        for snapshot in params.task_snapshots:
-            task = task_map.get(snapshot.task_id)
-            if not task:
-                continue
-            VariantTask.objects.create(
-                variant=variant,
-                task=task,
-                order=snapshot.order,
-                weight=snapshot.max_points,
-                max_points=snapshot.max_points,
-                source_selection_id=snapshot.source_selection_id,
-                content_order=snapshot.content_order,
-                bank_role=snapshot.bank_role,
-                render_mode=snapshot.render_mode,
-                is_assessable=snapshot.is_assessable,
-                blank_cells_after=snapshot.blank_cells_after,
-                blank_cells_rows=snapshot.blank_cells_rows,
-            )
-
+        self._persist_variant_content(variant, plan)
         return str(variant.pk)
+
+    @staticmethod
+    def _persist_variant_content(variant, plan):
+        VariantTask.objects.bulk_create(
+            [
+                VariantTask(
+                    variant=variant,
+                    task_id=task_plan.task_id,
+                    source_selection_id=task_plan.source_selection_id,
+                    content_order=task_plan.content_order,
+                    order=task_plan.order,
+                    max_points=task_plan.max_points,
+                    weight=task_plan.weight,
+                    bank_role=task_plan.bank_role,
+                    render_mode=task_plan.render_mode,
+                    is_assessable=task_plan.is_assessable,
+                    blank_cells_after=task_plan.blank_cells_after,
+                    blank_cells_rows=task_plan.blank_cells_rows,
+                )
+                for task_plan in plan.tasks
+            ]
+        )
+        VariantContentBlockSnapshot.objects.bulk_create(
+            [
+                VariantContentBlockSnapshot(
+                    variant=variant,
+                    source_content_id=block.source_content_id,
+                    content_type=block.content_type,
+                    order=block.order,
+                    title=block.title,
+                    content=dict(block.content),
+                )
+                for block in plan.content_blocks
+            ]
+        )
 
     def create_work_with_variant_from_tasks(
         self,

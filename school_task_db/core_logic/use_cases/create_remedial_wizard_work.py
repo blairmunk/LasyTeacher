@@ -14,7 +14,7 @@ from core_logic.interfaces.work_repo import (
     NewWorkVariantParams,
 )
 from core_logic.services.remedial_variant_content_service import (
-    build_remedial_variant_task_snapshots,
+    build_remedial_variant_creation_plan,
 )
 
 
@@ -83,32 +83,26 @@ class CreateRemedialWizardWorkUseCase:
                 status='empty_tasks',
             )
 
-        student_task_snapshots = {
-            student_id: build_remedial_variant_task_snapshots(
-                task_ids,
-                self.task_repo.get_by_ids(set(task_ids)),
+        student_plans = {}
+        for student_id, task_ids in student_task_ids.items():
+            plan = build_remedial_variant_creation_plan(
+                task_ids=task_ids,
+                tasks=self.task_repo.get_by_ids(set(task_ids)),
+                number=len(student_plans) + 1,
+                work_name=request.work_name,
             )
-            for student_id, task_ids in student_task_ids.items()
-        }
-        student_task_snapshots = {
-            student_id: task_snapshots
-            for student_id, task_snapshots in student_task_snapshots.items()
-            if task_snapshots
-        }
-        if not student_task_snapshots:
+            if plan.tasks:
+                student_plans[student_id] = plan
+        if not student_plans:
             return CreateRemedialWizardWorkResult(
                 success=False,
                 message='Нет заданий для выбранных учеников.',
                 status='empty_tasks',
             )
-        student_scores = {
-            student_id: sum(
-                task_snapshot.max_points
-                for task_snapshot in task_snapshots
-            )
-            for student_id, task_snapshots in student_task_snapshots.items()
-        }
-        max_score = max(student_scores.values())
+        max_score = max(
+            plan.max_score_snapshot
+            for plan in student_plans.values()
+        )
         with self.transaction_manager.atomic():
             created_work = self.work_repo.create_work_with_variants(
                 CreateWorkWithVariantsParams(
@@ -116,19 +110,14 @@ class CreateRemedialWizardWorkUseCase:
                         name=request.work_name,
                         work_type='remedial',
                         max_score=max_score,
-                        variant_counter=len(student_task_snapshots),
+                        variant_counter=len(student_plans),
                     ),
                     variants=[
                         NewWorkVariantParams(
-                            number=number,
                             student_id=student_id,
-                            task_snapshots=task_snapshots,
-                            max_score_snapshot=student_scores[student_id],
+                            plan=plan,
                         )
-                        for number, (student_id, task_snapshots) in enumerate(
-                            student_task_snapshots.items(),
-                            1,
-                        )
+                        for student_id, plan in student_plans.items()
                     ],
                 )
             )
@@ -136,7 +125,7 @@ class CreateRemedialWizardWorkUseCase:
             variant_ids = [
                 (student_id, variant_id)
                 for student_id, variant_id in zip(
-                    student_task_snapshots,
+                    student_plans,
                     created_work.variant_ids,
                 )
             ]
@@ -161,7 +150,7 @@ class CreateRemedialWizardWorkUseCase:
 
         message = (
             f'Создана работа «{request.work_name}» '
-            f'с {len(student_task_snapshots)} вариантами.'
+            f'с {len(student_plans)} вариантами.'
         )
         if event_id:
             message += f' Событие на {request.event_date} создано.'
@@ -171,5 +160,5 @@ class CreateRemedialWizardWorkUseCase:
             message=message,
             work_id=work_id,
             event_id=event_id,
-            variants_created=len(student_task_snapshots),
+            variants_created=len(student_plans),
         )

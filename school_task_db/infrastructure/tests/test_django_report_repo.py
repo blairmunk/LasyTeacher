@@ -462,6 +462,61 @@ class DjangoReportRepositoryTests(TestCase):
         self.assertEqual(data.rows[0]['cells'][0]['css'], 'good')
         self.assertEqual(data.col_averages, [{'pct': 80, 'css': 'good'}])
 
+    def test_heatmap_counts_repeated_task_in_distinct_variant_slots(self):
+        student = Student.objects.create(last_name='Иванов', first_name='Иван')
+        work = Work.objects.create(name='Контрольная')
+        topic = Topic.objects.create(
+            name='Скорость',
+            subject='Физика',
+            section='Кинематика',
+            grade_level=7,
+        )
+        task = Task.objects.create(
+            text='Повторяющаяся задача',
+            answer='Ответ',
+            topic=topic,
+            task_type='computational',
+            difficulty=2,
+        )
+        event = Event.objects.create(
+            name='КР',
+            work=work,
+            status='graded',
+            planned_date=timezone.now(),
+        )
+        participation = EventParticipation.objects.create(
+            event=event,
+            student=student,
+            status='graded',
+        )
+        Mark.objects.create(
+            participation=participation,
+            score=4,
+            points=3,
+            max_points=4,
+            task_scores={
+                'variant-task-1': {
+                    'task_id': str(task.pk),
+                    'points': 1,
+                    'max_points': 2,
+                },
+                'variant-task-2': {
+                    'task_id': str(task.pk),
+                    'points': 2,
+                    'max_points': 2,
+                },
+            },
+        )
+
+        data = DjangoReportRepository().get_heatmap_topic_matrix(
+            student_ids=[student.pk],
+            section_filter='Кинематика',
+        )
+
+        self.assertEqual(data.rows[0]['cells'][0]['points'], 3)
+        self.assertEqual(data.rows[0]['cells'][0]['max_points'], 4)
+        self.assertEqual(data.rows[0]['cells'][0]['pct'], 75)
+
     def test_get_heatmap_course_topic_matrix_returns_course_scores(self):
         student = Student.objects.create(last_name='Иванов', first_name='Иван')
         course_work = Work.objects.create(name='Работа курса')

@@ -34,7 +34,7 @@ from core_logic.entities.report import (
     WorkAnalysisReportData,
 )
 from core_logic.interfaces.report_repo import IReportRepository
-from core_logic.value_objects.task_scores import normalize_task_scores
+from core_logic.value_objects.task_scores import task_score_records_for_attempt
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
 from students.models import Student, StudentGroup
@@ -368,12 +368,8 @@ class DjangoReportRepository(IReportRepository):
 
         for mark in marks:
             student_id = mark.participation.student_id
-            seen = set()
             for score_record in self._task_score_records(mark):
                 task_id = score_record.task_id
-                if task_id in seen:
-                    continue
-                seen.add(task_id)
 
                 task = task_map.get(task_id)
                 if not task or not task.topic:
@@ -438,12 +434,8 @@ class DjangoReportRepository(IReportRepository):
 
         for mark in marks:
             student_id = mark.participation.student_id
-            seen = set()
             for score_record in self._task_score_records(mark):
                 task_id = score_record.task_id
-                if task_id in seen:
-                    continue
-                seen.add(task_id)
 
                 task = task_map.get(task_id)
                 if not task or not task.topic:
@@ -495,12 +487,7 @@ class DjangoReportRepository(IReportRepository):
             total_points = 0
             total_max = 0
             for mark in marks:
-                seen = set()
                 for score_record in self._task_score_records(mark):
-                    task_id = score_record.task_id
-                    if task_id in seen:
-                        continue
-                    seen.add(task_id)
                     total_points += score_record.points or 0
                     total_max += score_record.max_points or 0
 
@@ -545,12 +532,8 @@ class DjangoReportRepository(IReportRepository):
 
         for mark in marks:
             student_id = mark.participation.student_id
-            seen = set()
             for score_record in self._task_score_records(mark):
                 task_id = score_record.task_id
-                if task_id in seen:
-                    continue
-                seen.add(task_id)
 
                 task = task_map.get(task_id)
                 if not task:
@@ -620,12 +603,8 @@ class DjangoReportRepository(IReportRepository):
         for mark in marks:
             student_id = mark.participation.student_id
             event_name = mark.participation.event.name
-            seen = set()
             for score_record in self._task_score_records(mark):
                 task_id = score_record.task_id
-                if task_id in seen:
-                    continue
-                seen.add(task_id)
 
                 task = task_map.get(task_id)
                 if not task:
@@ -1088,7 +1067,9 @@ class DjangoReportRepository(IReportRepository):
         return task_ids
 
     def _task_score_records(self, mark):
-        return normalize_task_scores(getattr(mark, 'task_scores', None))
+        return task_score_records_for_attempt(
+            getattr(mark, 'task_scores', None),
+        )
 
     def _task_score_task_ids(self, marks):
         task_ids = set()
@@ -1117,12 +1098,8 @@ class DjangoReportRepository(IReportRepository):
         details = []
         for mark in marks:
             event = mark.participation.event
-            seen = set()
             for score_record in self._task_score_records(mark):
                 task_id = score_record.task_id
-                if task_id in seen:
-                    continue
-                seen.add(task_id)
 
                 task = task_map.get(task_id)
                 if not task:
@@ -1158,12 +1135,8 @@ class DjangoReportRepository(IReportRepository):
     ):
         aggregated = defaultdict(lambda: {'points': 0, 'max_points': 0})
         for mark in marks:
-            seen = set()
             for score_record in self._task_score_records(mark):
                 task_id = score_record.task_id
-                if task_id in seen:
-                    continue
-                seen.add(task_id)
                 task = task_map.get(task_id)
                 if not task or not task.subtopic:
                     continue

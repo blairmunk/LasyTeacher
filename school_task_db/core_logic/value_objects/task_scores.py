@@ -63,6 +63,39 @@ def normalize_task_scores(task_scores) -> Tuple[TaskScoreRecord, ...]:
     return tuple(records)
 
 
+def task_score_records_for_attempt(
+    task_scores,
+) -> Tuple[TaskScoreRecord, ...]:
+    """Return distinct score slots, preferring snapshot identity over legacy keys."""
+    records = normalize_task_scores(task_scores)
+    canonical_task_ids = {
+        record.task_id
+        for record in records
+        if record.variant_task_id
+    }
+    seen_variant_task_ids = set()
+    seen_legacy_task_ids = set()
+    result = []
+
+    for record in records:
+        if record.variant_task_id:
+            if record.variant_task_id in seen_variant_task_ids:
+                continue
+            seen_variant_task_ids.add(record.variant_task_id)
+            result.append(record)
+            continue
+
+        if (
+            record.task_id in canonical_task_ids
+            or record.task_id in seen_legacy_task_ids
+        ):
+            continue
+        seen_legacy_task_ids.add(record.task_id)
+        result.append(record)
+
+    return tuple(result)
+
+
 def task_score_records_by_task_id(task_scores) -> dict[str, TaskScoreRecord]:
     return {
         record.task_id: record

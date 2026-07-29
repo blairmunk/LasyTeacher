@@ -3,6 +3,7 @@ from unittest import TestCase
 from core_logic.value_objects.task_scores import (
     normalize_task_scores,
     resolve_task_score_record,
+    task_score_records_for_attempt,
     task_score_records_by_score_key,
     task_score_records_by_task_id,
     task_score_records_by_variant_task_id,
@@ -54,6 +55,44 @@ class TaskScoreNormalizationTests(TestCase):
         self.assertEqual(records[0].score_key, 'task-1')
         self.assertEqual(records[0].task_id, 'task-1')
         self.assertEqual(records[0].variant_task_id, 'variant-task-1')
+
+    def test_attempt_records_keep_repeated_task_in_distinct_snapshot_slots(self):
+        records = task_score_records_for_attempt({
+            'variant-task-1': {'task_id': 'task-1', 'points': 1},
+            'variant-task-2': {'task_id': 'task-1', 'points': 2},
+        })
+
+        self.assertEqual(
+            [record.variant_task_id for record in records],
+            ['variant-task-1', 'variant-task-2'],
+        )
+
+    def test_attempt_records_prefer_snapshot_score_over_legacy_duplicate(self):
+        records = task_score_records_for_attempt({
+            'task-1': {'points': 1},
+            'variant-task-1': {'task_id': 'task-1', 'points': 2},
+        })
+
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].variant_task_id, 'variant-task-1')
+        self.assertEqual(records[0].points, 2)
+
+    def test_attempt_records_deduplicate_repeated_snapshot_identity(self):
+        records = task_score_records_for_attempt({
+            'score-1': {
+                'task_id': 'task-1',
+                'variant_task_id': 'variant-task-1',
+                'points': 1,
+            },
+            'score-2': {
+                'task_id': 'task-1',
+                'variant_task_id': 'variant-task-1',
+                'points': 2,
+            },
+        })
+
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].points, 1)
 
     def test_indexes_normalized_scores(self):
         task_scores = {

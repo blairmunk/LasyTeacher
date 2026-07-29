@@ -1,12 +1,39 @@
 \begin{schooltrainingtasks}
 \section*{ {{ section.title|default:"Часть 2. Тренировочные задания" }} }
+{% if payload.print_blocks %}
+{% for block in payload.print_blocks %}
+{% if block.block_type == 'task' and block.task %}
+\subsection*{Задание {{ block.task.order }}{% if block.task.max_points %} \hfill {\normalfont\normalsize ({{ block.task.max_points }} балл.)}{% endif %}}
+{{ block.task.latex_content|default:block.task.text|safe }}
+
+{% if block.task.render_mode == 'with_answer' and block.task.answer %}
+\textbf{Ответ:} {{ block.task.answer|safe }}
+
+{% endif %}
+{% if block.task.render_mode == 'with_short_solution' and block.task.short_solution %}
+\textbf{Краткое решение:} {{ block.task.short_solution|safe }}
+
+{% endif %}
+{% if block.task.render_mode == 'with_full_solution' and block.task.full_solution %}
+\textbf{Решение.}
+
+{{ block.task.full_solution|safe }}
+
+{% endif %}
+{% elif block.block_type == 'blank_cells' %}
+\begin{center}
+\schoolgrid{ {{ block.blank_cells.rows }} }{ {{ block.blank_cells.columns }} }{ {{ block.blank_cells.latex_cell_size_mm }} }
+\end{center}
+
+{% endif %}
+{% endfor %}
+{% else %}
 {% for task in payload.tasks %}
 \subsection*{Задание {{ task.order }}{% if task.max_points %} \hfill {\normalfont\normalsize ({{ task.max_points }} балл.)}{% endif %}}
 {{ task.latex_content|default:task.text|safe }}
 
-\vspace{1cm}
-
 {% empty %}
 \textit{Тренировочные задания не созданы.}
 {% endfor %}
+{% endif %}
 \end{schooltrainingtasks}

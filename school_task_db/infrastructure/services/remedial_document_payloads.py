@@ -2,11 +2,13 @@
 
 from infrastructure.services.task_document_payloads import (
     build_original_task_payload,
-    build_variant_task_payload,
 )
 from infrastructure.services.document_build_cache import (
     document_payload_cache,
     document_section_input_key,
+)
+from infrastructure.services.variant_document_content_payloads import (
+    build_variant_document_content_payload,
 )
 
 
@@ -84,16 +86,16 @@ class RemedialTrainingTasksPayloadBuilder:
             _remedial_variant_id(request),
             request.build_context,
         )
+        content_payload = build_variant_document_content_payload(
+            variant_id=_remedial_variant_id(request),
+            variant_tasks=sheet_data.new_tasks or (),
+            options=request.section.options,
+            task_payload_formatter=self.task_payload_formatter,
+            request=request,
+        )
         payload = {
             **dict(request.section.options),
-            'tasks': [
-                build_variant_task_payload(
-                    variant_task,
-                    task_payload_formatter=self.task_payload_formatter,
-                    request=request,
-                )
-                for variant_task in sheet_data.new_tasks or []
-            ],
+            **content_payload,
         }
         cache[cache_key] = payload
         return payload

@@ -564,6 +564,12 @@ class DjangoWorkRepository(
                     task=self._remedial_task_ref(variant_task.task),
                     order=variant_task.order,
                     max_points=variant_task.max_points,
+                    source_selection_id=(
+                        str(variant_task.source_selection_id)
+                        if variant_task.source_selection_id
+                        else ''
+                    ),
+                    content_order=variant_task.content_order,
                     bank_role=variant_task.bank_role,
                     render_mode=variant_task.render_mode,
                     is_assessable=variant_task.is_assessable,

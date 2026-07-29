@@ -1,17 +1,60 @@
 <section class="document-section document-section-{{ section.section_type }} remedial-training-tasks">
     <h2>{{ section.title|default:"Часть 2. Тренировочные задания" }}</h2>
-    {% for task in payload.tasks %}
-        <article class="remedial-training-task">
-            <h3>
-                Задание {{ task.order }}
-                {% if task.max_points %}
-                    <small>{{ task.max_points }} балл.</small>
-                {% endif %}
-            </h3>
-            <div class="task-text">{{ task.text|linebreaksbr }}</div>
-            <div class="workspace"></div>
-        </article>
-    {% empty %}
-        <p>Тренировочные задания не созданы.</p>
-    {% endfor %}
+    {% if payload.print_blocks %}
+        {% for block in payload.print_blocks %}
+            {% if block.block_type == 'task' and block.task %}
+                <article class="remedial-training-task">
+                    <h3>
+                        Задание {{ block.task.order }}
+                        {% if block.task.max_points %}
+                            <small>{{ block.task.max_points }} балл.</small>
+                        {% endif %}
+                    </h3>
+                    <div class="task-text">{{ block.task.text|linebreaksbr }}</div>
+                    {% if block.task.render_mode == 'with_answer' and block.task.answer %}
+                        <div class="task-answer">
+                            <strong>Ответ:</strong> {{ block.task.answer|linebreaksbr }}
+                        </div>
+                    {% endif %}
+                    {% if block.task.render_mode == 'with_short_solution' and block.task.short_solution %}
+                        <div class="task-short-solution">
+                            <strong>Краткое решение:</strong>
+                            {{ block.task.short_solution|linebreaksbr }}
+                        </div>
+                    {% endif %}
+                    {% if block.task.render_mode == 'with_full_solution' and block.task.full_solution %}
+                        <div class="task-full-solution">
+                            <strong>Решение:</strong>
+                            {{ block.task.full_solution|linebreaksbr }}
+                        </div>
+                    {% endif %}
+                </article>
+            {% elif block.block_type == 'blank_cells' %}
+                <div
+                    class="blank-cells-grid task-blank-cells"
+                    style="display: grid; grid-template-columns: repeat({{ block.blank_cells.columns }}, minmax(0, 1fr)); border-left: 1px solid #999; border-top: 1px solid #999; margin-top: 0.75rem; margin-bottom: 1rem;"
+                >
+                    {% for cell in block.blank_cells.cells_range %}
+                    <span
+                        style="height: {{ block.blank_cells.row_height }}px; border-right: 1px solid #999; border-bottom: 1px solid #999;"
+                    ></span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        {% for task in payload.tasks %}
+            <article class="remedial-training-task">
+                <h3>
+                    Задание {{ task.order }}
+                    {% if task.max_points %}
+                        <small>{{ task.max_points }} балл.</small>
+                    {% endif %}
+                </h3>
+                <div class="task-text">{{ task.text|linebreaksbr }}</div>
+            </article>
+        {% empty %}
+            <p>Тренировочные задания не созданы.</p>
+        {% endfor %}
+    {% endif %}
 </section>

@@ -348,6 +348,8 @@ class RemedialTrainingTaskRow:
     task: RemedialTaskRef
     order: int
     max_points: int
+    source_selection_id: str = ''
+    content_order: int = 0
     bank_role: str = TASK_BANK_ROLE_CONTROL
     render_mode: str = TASK_RENDER_MODE_TASK_ONLY
     is_assessable: bool = True

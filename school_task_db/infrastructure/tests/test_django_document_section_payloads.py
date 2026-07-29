@@ -741,6 +741,126 @@ class DjangoRemedialSectionPayloadBuilderTests(TestCase):
         self.assertEqual(task_payload['answer'], 'Новый ответ')
         self.assertEqual(task_payload['short_solution'], 'Краткое решение')
 
+    def test_builds_remedial_training_print_plan_from_task_snapshots(self):
+        remedial_work = Work.objects.create(name='Работа над ошибками')
+        variant = Variant.objects.create(
+            work=remedial_work,
+            number=1,
+            variant_type='remedial',
+        )
+        first_task = self.create_task(text='Первое задание')
+        second_task = self.create_task(
+            text='Второе задание',
+            answer='Ответ',
+        )
+        first_variant_task = VariantTask.objects.create(
+            variant=variant,
+            task=first_task,
+            order=1,
+            content_order=20,
+            max_points=2,
+        )
+        second_variant_task = VariantTask.objects.create(
+            variant=variant,
+            task=second_task,
+            order=2,
+            content_order=10,
+            max_points=3,
+            render_mode=TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+            blank_cells_after=True,
+            blank_cells_rows=7,
+        )
+        sheet_data = RemedialSheetData(
+            variant=variant,
+            student=None,
+            source_work=None,
+            mark=None,
+            new_tasks=[first_variant_task, second_variant_task],
+        )
+        registry = build_remedial_sheet_section_payload_builder_registry(
+            get_remedial_sheet_data=lambda variant_id: sheet_data,
+        )
+        recipe = remedial_recipe(TRAINING_TASKS_SECTION)
+
+        payload = registry.build_payload(
+            remedial_build_request(
+                recipe=recipe,
+                section=recipe.sections[0],
+            )
+        )
+
+        self.assertEqual(
+            [
+                block['block_type']
+                for block in payload['print_blocks']
+            ],
+            [
+                VARIANT_PRINT_BLOCK_TASK,
+                VARIANT_PRINT_BLOCK_BLANK_CELLS,
+                VARIANT_PRINT_BLOCK_TASK,
+            ],
+        )
+        self.assertEqual(
+            payload['print_blocks'][0]['variant_task_id'],
+            str(second_variant_task.pk),
+        )
+        self.assertEqual(
+            payload['print_blocks'][0]['task']['render_mode'],
+            TASK_RENDER_MODE_WITH_FULL_SOLUTION,
+        )
+        self.assertEqual(
+            payload['print_blocks'][1]['blank_cells']['rows'],
+            7,
+        )
+        self.assertEqual(
+            payload['print_blocks'][2]['variant_task_id'],
+            str(first_variant_task.pk),
+        )
+
+    def test_remedial_print_override_can_hide_snapshot_blank_cells(self):
+        remedial_work = Work.objects.create(name='Работа над ошибками')
+        variant = Variant.objects.create(
+            work=remedial_work,
+            number=1,
+            variant_type='remedial',
+        )
+        task = self.create_task(text='Задание с клетками')
+        variant_task = VariantTask.objects.create(
+            variant=variant,
+            task=task,
+            order=1,
+            max_points=2,
+            blank_cells_after=True,
+            blank_cells_rows=6,
+        )
+        sheet_data = RemedialSheetData(
+            variant=variant,
+            student=None,
+            source_work=None,
+            mark=None,
+            new_tasks=[variant_task],
+        )
+        registry = build_remedial_sheet_section_payload_builder_registry(
+            get_remedial_sheet_data=lambda variant_id: sheet_data,
+        )
+        recipe = remedial_recipe(
+            TRAINING_TASKS_SECTION,
+            options={'hide_blank_cells': True},
+        )
+
+        payload = registry.build_payload(
+            remedial_build_request(
+                recipe=recipe,
+                section=recipe.sections[0],
+            )
+        )
+
+        self.assertEqual(
+            [block['block_type'] for block in payload['print_blocks']],
+            [VARIANT_PRINT_BLOCK_TASK],
+        )
+        self.assertTrue(payload['tasks'][0]['blank_cells_after'])
+
     def test_reuses_remedial_training_payload_for_identical_inputs(self):
         remedial_work = Work.objects.create(name='Работа над ошибками')
         variant = Variant.objects.create(

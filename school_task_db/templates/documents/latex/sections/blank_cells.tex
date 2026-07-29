@@ -1,13 +1,6 @@
 \begin{schoolblankcells}
 {% if payload.title %}\section*{\centering {{ payload.title }}}{% endif %}
 \begin{center}
-\setlength{\tabcolsep}{0pt}
-\renewcommand{\arraystretch}{1}
-\begin{tabular}{|*{ {{ payload.columns }} }{p{0.3cm}|}}
-\hline
-{% for row in payload.rows_range %}
-{% for cell in payload.latex_cells %}{% if not forloop.first %} & {% endif %}{{ cell|safe }}{% endfor %} \\ \hline
-{% endfor %}
-\end{tabular}
+\schoolgrid{ {{ payload.rows }} }{ {{ payload.columns }} }{ {{ payload.latex_cell_size_mm }} }
 \end{center}
 \end{schoolblankcells}

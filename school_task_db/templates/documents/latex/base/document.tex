@@ -6,6 +6,7 @@
 \usepackage{graphicx}
 \usepackage{enumitem}
 \usepackage{geometry}
+\usepackage{tikz}
 \geometry{margin=2cm}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{6pt}
@@ -23,6 +24,11 @@
 \newenvironment{schoolscoretable}{}{}
 \newenvironment{schooloriginalmistakes}{}{}
 \newenvironment{schooltrainingtasks}{}{}
+\newcommand{\schoolgrid}[3]{%
+\begin{tikzpicture}[x=#3mm,y=#3mm]
+\draw[step=1,draw=gray!65,line width=0.25pt] (0,0) grid (#2,-#1);
+\end{tikzpicture}%
+}
 {{ custom_latex_preamble|safe }}
 
 \begin{document}

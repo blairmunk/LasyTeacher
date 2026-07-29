@@ -57,14 +57,7 @@
 {% endif %}
 {% elif block.block_type == 'blank_cells' %}
 \begin{center}
-\setlength{\tabcolsep}{0pt}
-\renewcommand{\arraystretch}{1}
-\begin{tabular}{|*{ {{ block.blank_cells.columns }} }{p{0.3cm}|}}
-\hline
-{% for row in block.blank_cells.rows_range %}
-{% for cell in block.blank_cells.latex_cells %}{% if not forloop.first %} & {% endif %}{{ cell|safe }}{% endfor %} \\ \hline
-{% endfor %}
-\end{tabular}
+\schoolgrid{ {{ block.blank_cells.rows }} }{ {{ block.blank_cells.columns }} }{ {{ block.blank_cells.latex_cell_size_mm }} }
 \end{center}
 
 {% endif %}
@@ -98,14 +91,7 @@
 {% endif %}
 {% if task.blank_cells_after %}
 \begin{center}
-\setlength{\tabcolsep}{0pt}
-\renewcommand{\arraystretch}{1}
-\begin{tabular}{|*{ {{ task.blank_cells.columns }} }{p{0.3cm}|}}
-\hline
-{% for row in task.blank_cells.rows_range %}
-{% for cell in task.blank_cells.latex_cells %}{% if not forloop.first %} & {% endif %}{{ cell|safe }}{% endfor %} \\ \hline
-{% endfor %}
-\end{tabular}
+\schoolgrid{ {{ task.blank_cells.rows }} }{ {{ task.blank_cells.columns }} }{ {{ task.blank_cells.latex_cell_size_mm }} }
 \end{center}
 
 {% endif %}

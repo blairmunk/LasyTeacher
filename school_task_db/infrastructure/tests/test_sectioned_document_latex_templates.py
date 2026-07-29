@@ -130,6 +130,14 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                                                 ),
                                             },
                                         },
+                                        {
+                                            'block_type': 'blank_cells',
+                                            'blank_cells': {
+                                                'rows': 2,
+                                                'columns': 3,
+                                                'latex_cell_size_mm': '4.0',
+                                            },
+                                        },
                                     ],
                                     'tasks': [
                                         {
@@ -145,13 +153,9 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                                             ),
                                             'blank_cells_after': True,
                                             'blank_cells': {
+                                                'rows': 2,
                                                 'columns': 3,
-                                                'rows_range': range(2),
-                                                'latex_cells': [
-                                                    r'\rule{0pt}{6.0mm}',
-                                                    '',
-                                                    '',
-                                                ],
+                                                'latex_cell_size_mm': '4.0',
                                             },
                                         },
                                     ],
@@ -166,9 +170,9 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                         section_type=BLANK_CELLS_SECTION,
                         payload={
                             'title': 'Черновик',
+                            'rows': 2,
                             'columns': 3,
-                            'rows_range': range(2),
-                            'latex_cells': [r'\rule{0pt}{6.0mm}', '', ''],
+                            'latex_cell_size_mm': '4.0',
                         },
                     ),
                     DocumentSection(
@@ -258,6 +262,8 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
             self.assertIn(r'\begin{schooltasklist}', latex)
             self.assertIn(r'\begin{schoolpagebreak}', latex)
             self.assertIn(r'\begin{schoolblankcells}', latex)
+            self.assertIn(r'\usepackage{tikz}', latex)
+            self.assertIn(r'\newcommand{\schoolgrid}[3]', latex)
             self.assertIn(r'\begin{schoolscoretable}', latex)
             self.assertIn(r'\begin{schoolanswers}', latex)
             self.assertIn(r'\begin{schoolshortsolutions}', latex)
@@ -283,8 +289,11 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
             self.assertIn('Подставим в формулу', latex)
             self.assertIn(r'\clearpage', latex)
             self.assertIn(r'\section*{\centering Черновик}', latex)
-            self.assertIn(r'\begin{tabular}{|*{ 3 }{p{0.3cm}|}}', latex)
-            self.assertIn(r'\rule{0pt}{6.0mm}', latex)
+            self.assertEqual(
+                latex.count(r'\schoolgrid{ 2 }{ 3 }{ 4.0 }'),
+                2,
+            )
+            self.assertNotIn(r'\begin{tabular}{|*{ 3 }', latex)
             self.assertIn(r'\section*{\centering Критерии оценивания}', latex)
             self.assertIn(r'5 & 85\% & 8,5', latex)
             self.assertIn(r'\section*{\centering Ответы}', latex)

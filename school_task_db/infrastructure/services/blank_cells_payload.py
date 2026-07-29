@@ -31,7 +31,7 @@ def build_blank_cells_payload(options):
         'row_height': row_height,
         'rows_range': range(rows),
         'cells_range': range(rows * columns),
-        'latex_cells': _blank_cells_latex_cells(columns, row_height),
+        'latex_cell_size_mm': _latex_cell_size_mm(row_height),
     }
 
 
@@ -45,7 +45,6 @@ def _positive_int(value, default, max_value):
     return min(parsed, max_value)
 
 
-def _blank_cells_latex_cells(columns, row_height):
-    cells = [''] * columns
-    cells[0] = rf'\rule{{0pt}}{{{row_height / 3:.1f}mm}}'
-    return cells
+def _latex_cell_size_mm(row_height):
+    size = min(max(row_height / 6, 2.5), 6)
+    return f'{size:.1f}'

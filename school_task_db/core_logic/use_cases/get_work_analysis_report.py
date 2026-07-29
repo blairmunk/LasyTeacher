@@ -1,15 +1,15 @@
 """Build work analysis report."""
 
 from dataclasses import dataclass
-from typing import Any
 
+from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.report import WorkAnalysisReportData
 from core_logic.interfaces.report_repo import IReportRepository
 
 
 @dataclass(frozen=True)
 class WorkAnalysisReportRequest:
-    year: Any = None
+    year: AcademicYearRef | None = None
 
 
 class GetWorkAnalysisReportUseCase:

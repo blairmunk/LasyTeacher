@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import Any
 
+from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.report import JournalData
 from core_logic.interfaces.report_repo import IReportRepository
 
@@ -11,7 +12,7 @@ from core_logic.interfaces.report_repo import IReportRepository
 class JournalRequest:
     course_id: Any
     group_id: Any
-    year: Any = None
+    year: AcademicYearRef | None = None
     show_debts_only: bool = False
 
 

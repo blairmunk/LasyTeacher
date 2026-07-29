@@ -53,7 +53,9 @@ class DjangoStudentRepository(IStudentRepository):
     def get_list_students(self, year=None):
         students = Student.objects.all()
         if year:
-            students = students.filter(studentgroup__academic_year=year).distinct()
+            students = students.filter(
+                studentgroup__academic_year_id=year.pk,
+            ).distinct()
         return [
             StudentListItem(
                 pk=str(student.pk),
@@ -74,7 +76,7 @@ class DjangoStudentRepository(IStudentRepository):
             'academic_year',
         )
         if year:
-            groups = groups.filter(academic_year=year)
+            groups = groups.filter(academic_year_id=year.pk)
         return [
             StudentGroupListItem(
                 pk=str(group.pk),

@@ -1,8 +1,9 @@
 """Curriculum repository interface."""
 
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional
+from typing import List, Optional
 
+from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.curriculum import (
     CourseDetailAssignment,
     CourseDetailCourse,
@@ -16,7 +17,10 @@ from core_logic.entities.curriculum import (
 
 class ICurriculumRepository(ABC):
     @abstractmethod
-    def get_courses(self, year: Any = None) -> List[CourseListItem]:
+    def get_courses(
+        self,
+        year: AcademicYearRef | None = None,
+    ) -> List[CourseListItem]:
         """Return courses for the course list page."""
 
     @abstractmethod

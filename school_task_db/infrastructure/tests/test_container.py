@@ -233,6 +233,9 @@ from core_logic.use_cases.validate_task_import_json import (
 )
 from core_logic.use_cases.validate_review_work_scan import ValidateReviewWorkScanUseCase
 from infrastructure.repositories.django_codifier_repo import DjangoCodifierRepository
+from infrastructure.repositories.django_academic_year_repo import (
+    DjangoAcademicYearRepository,
+)
 from infrastructure.repositories.django_core_repo import DjangoCoreRepository
 from infrastructure.repositories.django_curriculum_repo import (
     DjangoCurriculumRepository,
@@ -776,6 +779,10 @@ class ContainerTests(SimpleTestCase):
         )
         self.assertIsInstance(rendered_file_use_case, GetRenderedDocumentFileUseCase)
         self.assertIsInstance(container.student_repo, DjangoStudentRepository)
+        self.assertIsInstance(
+            container.academic_year_repo,
+            DjangoAcademicYearRepository,
+        )
         self.assertIsInstance(container.task_repo, DjangoTaskRepository)
         self.assertIsInstance(container.work_repo, DjangoWorkRepository)
         self.assertIsInstance(container.event_repo, DjangoEventRepository)

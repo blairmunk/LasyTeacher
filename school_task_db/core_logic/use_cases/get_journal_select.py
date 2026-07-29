@@ -1,15 +1,15 @@
 """Build journal selection data."""
 
 from dataclasses import dataclass
-from typing import Any
 
+from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.report import JournalSelectData
 from core_logic.interfaces.report_repo import IReportRepository
 
 
 @dataclass(frozen=True)
 class JournalSelectRequest:
-    year: Any = None
+    year: AcademicYearRef | None = None
 
 
 class GetJournalSelectUseCase:

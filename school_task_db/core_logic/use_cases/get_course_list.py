@@ -1,5 +1,6 @@
 """Build course list screen data."""
 
+from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.curriculum import CourseListData
 from core_logic.interfaces.curriculum_repo import ICurriculumRepository
 
@@ -8,5 +9,8 @@ class GetCourseListUseCase:
     def __init__(self, curriculum_repo: ICurriculumRepository):
         self.curriculum_repo = curriculum_repo
 
-    def execute(self, year=None) -> CourseListData:
+    def execute(
+        self,
+        year: AcademicYearRef | None = None,
+    ) -> CourseListData:
         return CourseListData(courses=self.curriculum_repo.get_courses(year=year))

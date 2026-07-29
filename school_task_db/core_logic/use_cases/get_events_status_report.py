@@ -2,15 +2,15 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
 
+from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.report import EventsStatusReportData
 from core_logic.interfaces.report_repo import IReportRepository
 
 
 @dataclass(frozen=True)
 class EventsStatusReportRequest:
-    year: Any = None
+    year: AcademicYearRef | None = None
     current_date: datetime = None
 
 

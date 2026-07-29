@@ -953,7 +953,7 @@ class DjangoReportRepository(IReportRepository):
             participations = EventParticipation.objects.filter(
                 event__planned_date__range=date_range,
             )
-            courses = Course.objects.filter(year=year, is_active=True)
+            courses = Course.objects.filter(year_id=year.pk, is_active=True)
         else:
             events = Event.objects.all()
             participations = EventParticipation.objects.all()
@@ -964,9 +964,9 @@ class DjangoReportRepository(IReportRepository):
     def _get_student_scope(self, year):
         if year:
             return (
-                StudentGroup.objects.filter(academic_year=year),
+                StudentGroup.objects.filter(academic_year_id=year.pk),
                 Student.objects.filter(
-                    studentgroup__academic_year=year,
+                    studentgroup__academic_year_id=year.pk,
                 ).distinct(),
             )
         return StudentGroup.objects.all(), Student.objects.all()
@@ -1044,7 +1044,7 @@ class DjangoReportRepository(IReportRepository):
         heatmap_links = []
         linked_courses = student_group.courses.all()
         if year:
-            linked_courses = linked_courses.filter(year=year)
+            linked_courses = linked_courses.filter(year_id=year.pk)
         for course in linked_courses:
             heatmap_links.append({
                 'course_id': str(course.pk),

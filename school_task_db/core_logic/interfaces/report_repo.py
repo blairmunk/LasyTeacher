@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any
 
+from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.report import (
     EventsStatusReportData,
     HeatmapCourseOverviewData,
@@ -27,25 +28,31 @@ class IReportRepository(ABC):
     @abstractmethod
     def get_events_status_report(
         self,
-        year: Any,
+        year: AcademicYearRef | None,
         current_date: datetime,
     ) -> EventsStatusReportData:
         """Return events status report data."""
 
     @abstractmethod
-    def get_work_analysis_report(self, year: Any) -> WorkAnalysisReportData:
+    def get_work_analysis_report(
+        self,
+        year: AcademicYearRef | None,
+    ) -> WorkAnalysisReportData:
         """Return work analysis report data."""
 
     @abstractmethod
     def get_student_performance_report(
         self,
-        year: Any,
+        year: AcademicYearRef | None,
         group_id: Any,
     ) -> StudentPerformanceReportData:
         """Return student performance report data."""
 
     @abstractmethod
-    def get_journal_select(self, year: Any) -> JournalSelectData:
+    def get_journal_select(
+        self,
+        year: AcademicYearRef | None,
+    ) -> JournalSelectData:
         """Return course-group pairs available for journal view."""
 
     @abstractmethod
@@ -53,7 +60,7 @@ class IReportRepository(ABC):
         self,
         course_id: Any,
         group_id: Any,
-        year: Any,
+        year: AcademicYearRef | None,
         show_debts_only: bool,
     ) -> JournalData:
         """Return class journal data."""
@@ -65,7 +72,7 @@ class IReportRepository(ABC):
     @abstractmethod
     def get_reports_dashboard(
         self,
-        year: Any,
+        year: AcademicYearRef | None,
         current_date: datetime,
     ) -> ReportsDashboardData:
         """Return dashboard report data."""

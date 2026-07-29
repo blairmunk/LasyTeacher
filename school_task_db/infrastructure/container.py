@@ -70,6 +70,9 @@ from core_logic.use_cases.update_print_settings import (
 )
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.get_add_tasks_to_group import GetAddTasksToGroupUseCase
+from core_logic.use_cases.get_academic_year_list import (
+    GetAcademicYearListUseCase,
+)
 from core_logic.use_cases.get_codifier_detail import GetCodifierDetailUseCase
 from core_logic.use_cases.get_codifier_list import GetCodifierListUseCase
 from core_logic.use_cases.get_course_detail import GetCourseDetailUseCase
@@ -243,6 +246,7 @@ from core_logic.use_cases.prepare_task_import_file import (
     PrepareTaskImportFileUseCase,
 )
 from core_logic.use_cases.refresh_task_math_cache import RefreshTaskMathCacheUseCase
+from core_logic.use_cases.resolve_academic_year import ResolveAcademicYearUseCase
 from core_logic.use_cases.save_analog_group import (
     CreateAnalogGroupUseCase,
     UpdateAnalogGroupUseCase,
@@ -275,6 +279,9 @@ from core_logic.use_cases.validate_task_import_json import (
 )
 from core_logic.use_cases.validate_review_work_scan import (
     ValidateReviewWorkScanUseCase,
+)
+from infrastructure.repositories.django_academic_year_repo import (
+    DjangoAcademicYearRepository,
 )
 from infrastructure.repositories.django_codifier_repo import DjangoCodifierRepository
 from infrastructure.repositories.django_core_repo import DjangoCoreRepository
@@ -318,6 +325,7 @@ class Container:
     """Wires pure use cases to Django infrastructure adapters."""
 
     def __init__(self):
+        self._academic_year_repo = None
         self._student_repo = None
         self._task_repo = None
         self._work_repo = None
@@ -344,6 +352,12 @@ class Container:
         self._document_engine = None
         self._task_import_service = None
         self._transaction_manager = None
+
+    @property
+    def academic_year_repo(self):
+        if self._academic_year_repo is None:
+            self._academic_year_repo = DjangoAcademicYearRepository()
+        return self._academic_year_repo
 
     @property
     def student_repo(self):
@@ -596,6 +610,16 @@ class Container:
     def get_student_list_use_case(self):
         return GetStudentListUseCase(
             student_repo=self.student_repo,
+        )
+
+    def resolve_academic_year_use_case(self):
+        return ResolveAcademicYearUseCase(
+            academic_year_repo=self.academic_year_repo,
+        )
+
+    def get_academic_year_list_use_case(self):
+        return GetAcademicYearListUseCase(
+            academic_year_repo=self.academic_year_repo,
         )
 
     def get_student_group_list_use_case(self):

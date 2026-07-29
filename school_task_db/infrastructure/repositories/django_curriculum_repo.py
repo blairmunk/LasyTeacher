@@ -21,7 +21,7 @@ class DjangoCurriculumRepository(ICurriculumRepository):
     def get_courses(self, year=None):
         courses = Course.objects.select_related('year')
         if year:
-            courses = courses.filter(year=year)
+            courses = courses.filter(year_id=year.pk)
         return [
             CourseListItem(
                 pk=str(course.pk),

@@ -3,13 +3,14 @@
 from dataclasses import dataclass
 from typing import Any
 
+from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.report import StudentPerformanceReportData
 from core_logic.interfaces.report_repo import IReportRepository
 
 
 @dataclass(frozen=True)
 class StudentPerformanceReportRequest:
-    year: Any = None
+    year: AcademicYearRef | None = None
     group_id: Any = None
 
 

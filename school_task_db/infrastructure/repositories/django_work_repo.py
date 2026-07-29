@@ -52,8 +52,6 @@ from core_logic.entities.work_spec_sync import (
 )
 from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_ANY,
-    TASK_BANK_ROLE_CONTROL,
-    TASK_BANK_ROLE_REMEDIAL,
 )
 from core_logic.value_objects.task_scores import task_score_records_by_task_id
 from core_logic.interfaces.orphan_variant_repo import (
@@ -1097,7 +1095,7 @@ class DjangoWorkRepository(
                         work_id=work_id,
                         number=variant.number,
                         student_id=variant.student_id,
-                        task_ids=variant.task_ids,
+                        task_snapshots=variant.task_snapshots,
                         work_name_snapshot=params.work.name,
                         max_score_snapshot=variant.max_score_snapshot,
                         source_work_id=variant.source_work_id,
@@ -1206,25 +1204,30 @@ class DjangoWorkRepository(
 
         task_map = {
             str(task.id): task
-            for task in Task.objects.filter(id__in=params.task_ids)
+            for task in Task.objects.filter(
+                id__in=[
+                    snapshot.task_id
+                    for snapshot in params.task_snapshots
+                ]
+            )
         }
-        for order, task_id in enumerate(params.task_ids, 1):
-            task = task_map.get(task_id)
+        for snapshot in params.task_snapshots:
+            task = task_map.get(snapshot.task_id)
             if not task:
                 continue
-            points = task.difficulty or 1
-            bank_role = (
-                TASK_BANK_ROLE_REMEDIAL
-                if params.variant_type == 'remedial'
-                else TASK_BANK_ROLE_CONTROL
-            )
             VariantTask.objects.create(
                 variant=variant,
                 task=task,
-                order=order,
-                weight=points,
-                max_points=points,
-                bank_role=bank_role,
+                order=snapshot.order,
+                weight=snapshot.max_points,
+                max_points=snapshot.max_points,
+                source_selection_id=snapshot.source_selection_id,
+                content_order=snapshot.content_order,
+                bank_role=snapshot.bank_role,
+                render_mode=snapshot.render_mode,
+                is_assessable=snapshot.is_assessable,
+                blank_cells_after=snapshot.blank_cells_after,
+                blank_cells_rows=snapshot.blank_cells_rows,
             )
 
         return str(variant.pk)

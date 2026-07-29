@@ -6,6 +6,9 @@ from typing import List
 from core_logic.interfaces.student_repo import IStudentRepository
 from core_logic.interfaces.task_repo import ITaskRepository
 from core_logic.interfaces.work_repo import CreateVariantParams, IWorkRepository
+from core_logic.services.remedial_variant_content_service import (
+    build_remedial_variant_task_snapshots,
+)
 
 
 @dataclass(frozen=True)
@@ -54,20 +57,27 @@ class CreateStudentRemedialVariantUseCase:
             )
 
         tasks = self.task_repo.get_by_ids(set(task_ids))
-        if not tasks:
+        task_snapshots = build_remedial_variant_task_snapshots(
+            task_ids,
+            tasks,
+        )
+        if not task_snapshots:
             return CreateStudentRemedialVariantResult(
                 success=False,
                 message='Нет доступных заданий для работы над ошибками.',
             )
 
-        total_score = sum(task.difficulty or 1 for task in tasks)
+        total_score = sum(
+            task_snapshot.max_points
+            for task_snapshot in task_snapshots
+        )
         student_name = self.student_repo.get_student_short_name(request.student_id)
         variant_id = self.work_repo.create_variant_with_tasks(
             CreateVariantParams(
                 work_id=None,
                 number=1,
                 student_id=request.student_id,
-                task_ids=task_ids,
+                task_snapshots=task_snapshots,
                 work_name_snapshot=f'Работа над ошибками — {student_name}',
                 max_score_snapshot=total_score,
                 variant_type='remedial',
@@ -77,10 +87,10 @@ class CreateStudentRemedialVariantUseCase:
         return CreateStudentRemedialVariantResult(
             success=True,
             variant_id=variant_id,
-            task_count=len(tasks),
+            task_count=len(task_snapshots),
             total_score=total_score,
             message=(
                 f'Создан вариант «Работа над ошибками» для {student_name}: '
-                f'{len(tasks)} заданий, макс. балл: {total_score}'
+                f'{len(task_snapshots)} заданий, макс. балл: {total_score}'
             ),
         )

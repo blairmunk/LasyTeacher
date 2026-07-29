@@ -16,7 +16,9 @@ from core_logic.services.remedial_service import (
     REMEDIAL_SOURCE_EVENT_STATUSES,
     RemedialSelectionLimits,
     RemedialService,
-    RemedialTaskSelection,
+)
+from core_logic.services.remedial_variant_content_service import (
+    build_remedial_variant_task_snapshots,
 )
 
 
@@ -140,9 +142,19 @@ class CreateRemedialFromEventUseCase:
             )
 
         work_name = request.work_name or f'Работа над ошибками — {event.work_name}'
-        selection_scores = [
-            self._total_difficulty(selection)
+        selection_task_snapshots = [
+            build_remedial_variant_task_snapshots(
+                selection.task_ids,
+                self.task_repo.get_by_ids(set(selection.task_ids)),
+            )
             for selection in selections
+        ]
+        selection_scores = [
+            sum(
+                task_snapshot.max_points
+                for task_snapshot in task_snapshots
+            )
+            for task_snapshots in selection_task_snapshots
         ]
         max_score = max(selection_scores) if selection_scores else 0
 
@@ -159,7 +171,7 @@ class CreateRemedialFromEventUseCase:
                         NewWorkVariantParams(
                             number=number,
                             student_id=selection.student_id,
-                            task_ids=selection.task_ids,
+                            task_snapshots=task_snapshots,
                             max_score_snapshot=score,
                             source_work_id=event.work_id,
                             source_participation_id=(
@@ -169,8 +181,16 @@ class CreateRemedialFromEventUseCase:
                                 or None
                             ),
                         )
-                        for number, (selection, score) in enumerate(
-                            zip(selections, selection_scores),
+                        for number, (
+                            selection,
+                            task_snapshots,
+                            score,
+                        ) in enumerate(
+                            zip(
+                                selections,
+                                selection_task_snapshots,
+                                selection_scores,
+                            ),
                             1,
                         )
                     ],
@@ -232,7 +252,3 @@ class CreateRemedialFromEventUseCase:
             students_with_shortage=students_with_shortage,
             message=message,
         )
-
-    def _total_difficulty(self, selection: RemedialTaskSelection) -> int:
-        tasks = self.task_repo.get_by_ids(set(selection.task_ids))
-        return sum(task.difficulty or 1 for task in tasks)

@@ -6,6 +6,7 @@ from typing import List, Optional
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_ANY,
+    TASK_BANK_ROLE_CONTROL,
     TASK_RENDER_MODE_TASK_ONLY,
 )
 
@@ -21,11 +22,25 @@ class CreateWorkParams:
 
 
 @dataclass(frozen=True)
+class VariantTaskSnapshotParams:
+    task_id: str
+    order: int
+    max_points: int
+    source_selection_id: str = ''
+    content_order: int = 0
+    bank_role: str = TASK_BANK_ROLE_CONTROL
+    render_mode: str = TASK_RENDER_MODE_TASK_ONLY
+    is_assessable: bool = True
+    blank_cells_after: bool = False
+    blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
+
+
+@dataclass(frozen=True)
 class CreateVariantParams:
     work_id: Optional[str]
     number: int
     student_id: str
-    task_ids: List[str]
+    task_snapshots: List[VariantTaskSnapshotParams]
     work_name_snapshot: str
     max_score_snapshot: int
     source_work_id: Optional[str] = None
@@ -69,7 +84,7 @@ class CreateWorkWithSpecificationParams:
 class NewWorkVariantParams:
     number: int
     student_id: str
-    task_ids: List[str]
+    task_snapshots: List[VariantTaskSnapshotParams]
     max_score_snapshot: int
     source_work_id: Optional[str] = None
     source_participation_id: Optional[str] = None

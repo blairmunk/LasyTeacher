@@ -114,7 +114,20 @@ class CreateRemedialWizardWorkUseCaseTests(TestCase):
         )
         self.assertEqual(len(work_repo.created_variants), 2)
         self.assertEqual(work_repo.created_variants[0].student_id, 'student-1')
-        self.assertEqual(work_repo.created_variants[0].task_ids, ['task-1', 'task-2'])
+        self.assertEqual(
+            [
+                task.task_id
+                for task in work_repo.created_variants[0].task_snapshots
+            ],
+            ['task-1', 'task-2'],
+        )
+        self.assertEqual(
+            [
+                task.bank_role
+                for task in work_repo.created_variants[0].task_snapshots
+            ],
+            ['remedial', 'remedial'],
+        )
         self.assertEqual(work_repo.created_variants[1].student_id, 'student-2')
         self.assertEqual(work_repo.created_variants[1].max_score_snapshot, 5)
         self.assertEqual(event_repo.created_event.work_id, 'work-1')

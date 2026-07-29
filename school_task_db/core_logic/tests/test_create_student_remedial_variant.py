@@ -78,6 +78,22 @@ class CreateStudentRemedialVariantUseCaseTests(TestCase):
             'Работа над ошибками — Иванов И.',
         )
         self.assertEqual(work_repo.created_variant_params.max_score_snapshot, 5)
+        self.assertEqual(
+            [
+                (
+                    task.task_id,
+                    task.order,
+                    task.content_order,
+                    task.max_points,
+                    task.bank_role,
+                )
+                for task in work_repo.created_variant_params.task_snapshots
+            ],
+            [
+                ('task-1', 1, 1, 2, 'remedial'),
+                ('task-2', 2, 2, 3, 'remedial'),
+            ],
+        )
 
     def test_execute_handles_empty_selection(self):
         student_repo = FakeStudentRepository()

@@ -159,7 +159,17 @@ class CreateRemedialFromEventUseCaseTests(TestCase):
             ),
         )
         self.assertEqual(len(work_repo.created_variants), 1)
-        self.assertEqual(work_repo.created_variants[0].task_ids, ['t10'])
+        self.assertEqual(
+            [
+                task.task_id
+                for task in work_repo.created_variants[0].task_snapshots
+            ],
+            ['t10'],
+        )
+        self.assertEqual(
+            work_repo.created_variants[0].task_snapshots[0].bank_role,
+            'remedial',
+        )
         self.assertEqual(work_repo.created_variants[0].max_score_snapshot, 3)
         self.assertEqual(
             work_repo.created_variants[0].source_participation_id,

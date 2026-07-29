@@ -24,6 +24,7 @@ from core_logic.interfaces.work_repo import (
     CreateWorkWithVariantsParams,
     CreateWorkWithVariantFromTasksParams,
     NewWorkVariantParams,
+    VariantTaskSnapshotParams,
     WorkContentBlockParams,
     WorkTaskSelectionParams,
 )
@@ -61,6 +62,7 @@ from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_DEMO,
     TASK_BANK_ROLE_PRACTICE,
+    TASK_BANK_ROLE_REMEDIAL,
     TASK_RENDER_MODE_WITH_FULL_SOLUTION,
 )
 from codifier.models import CodifierSpec, ContentEntry, Requirement
@@ -458,14 +460,26 @@ class DjangoRemedialRepositoryTests(TestCase):
                     NewWorkVariantParams(
                         number=1,
                         student_id=str(self.student.pk),
-                        task_ids=[str(self.original_weak.pk)],
+                        task_snapshots=[
+                            VariantTaskSnapshotParams(
+                                task_id=str(self.original_weak.pk),
+                                order=1,
+                                max_points=2,
+                            ),
+                        ],
                         max_score_snapshot=2,
                         source_work_id=str(self.source_work.pk),
                     ),
                     NewWorkVariantParams(
                         number=2,
                         student_id=str(self.student.pk),
-                        task_ids=[str(self.original_ok.pk)],
+                        task_snapshots=[
+                            VariantTaskSnapshotParams(
+                                task_id=str(self.original_ok.pk),
+                                order=1,
+                                max_points=5,
+                            ),
+                        ],
                         max_score_snapshot=5,
                     ),
                 ],
@@ -524,13 +538,25 @@ class DjangoRemedialRepositoryTests(TestCase):
                         NewWorkVariantParams(
                             number=1,
                             student_id=str(self.student.pk),
-                            task_ids=[str(self.original_weak.pk)],
+                            task_snapshots=[
+                                VariantTaskSnapshotParams(
+                                    task_id=str(self.original_weak.pk),
+                                    order=1,
+                                    max_points=2,
+                                ),
+                            ],
                             max_score_snapshot=2,
                         ),
                         NewWorkVariantParams(
                             number=2,
                             student_id=str(self.student.pk),
-                            task_ids=[str(self.original_ok.pk)],
+                            task_snapshots=[
+                                VariantTaskSnapshotParams(
+                                    task_id=str(self.original_ok.pk),
+                                    order=1,
+                                    max_points=5,
+                                ),
+                            ],
                             max_score_snapshot=5,
                         ),
                     ],
@@ -1149,6 +1175,10 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(variant_task.task, self.replacement)
         self.assertEqual(variant_task.max_points, self.replacement.difficulty)
         self.assertEqual(variant_task.weight, self.replacement.difficulty)
+        self.assertEqual(variant_task.order, 1)
+        self.assertEqual(variant_task.content_order, 1)
+        self.assertEqual(variant_task.bank_role, TASK_BANK_ROLE_REMEDIAL)
+        self.assertTrue(variant_task.is_assessable)
 
     def test_remedial_transaction_rolls_back_work_when_participation_fails(self):
         student_repo = DjangoStudentRepository()

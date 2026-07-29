@@ -176,6 +176,8 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
             self.assertIn('<title>Контрольная</title>', html)
             self.assertIn('id="MathJax-script"', html)
             self.assertIn('tex-chtml.js', html)
+            self.assertIn('src="file://', html)
+            self.assertNotIn('cdn.jsdelivr.net', html)
             self.assertIn('<h1>Контрольная</h1>', html)
             self.assertIn('page-break-after: always', html)
             self.assertIn('Черновик', html)

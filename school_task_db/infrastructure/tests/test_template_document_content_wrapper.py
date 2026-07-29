@@ -39,6 +39,12 @@ class TemplateDocumentContentWrapperTests(TestCase):
         self.assertEqual(context['document'], document)
         self.assertEqual(context['render_target'], render_target)
         self.assertEqual(context['body_content'], '<section>body</section>')
+        self.assertTrue(context['mathjax_script_url'].startswith('file://'))
+        self.assertTrue(
+            context['mathjax_script_url'].endswith(
+                '/static/vendor/mathjax/es5/tex-chtml.js'
+            )
+        )
 
     def test_includes_extra_context(self):
         def template_renderer(template_name, context):

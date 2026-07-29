@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}{{ student.full_name }}{% endblock %}
 
@@ -464,7 +465,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script src="{% static 'vendor/plotly/plotly-2.27.0.min.js' %}"></script>
 <script>
 {% if dynamics_chart_json %}
 const dynConfig = {{ dynamics_chart_json|safe }};

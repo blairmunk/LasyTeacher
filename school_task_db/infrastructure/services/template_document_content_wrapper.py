@@ -8,6 +8,9 @@ from core_logic.interfaces.document_rendering import IDocumentContentWrapper
 from core_logic.value_objects.document_render_requests import (
     DocumentContentWrapRequest,
 )
+from infrastructure.services.document_asset_urls import (
+    document_asset_context,
+)
 
 
 class TemplateDocumentContentWrapper(IDocumentContentWrapper):
@@ -35,6 +38,8 @@ class TemplateDocumentContentWrapper(IDocumentContentWrapper):
             'custom_latex_preamble': presentation.custom_latex_preamble,
             **self.extra_context,
         }
+        if request.render_target.renderer_type == 'html':
+            context.update(document_asset_context())
         template_override = presentation.template_override_for_renderer(
             request.render_target.renderer_type,
         )

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Отчёты и аналитика{% endblock %}
 
@@ -197,7 +198,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script src="{% static 'vendor/plotly/plotly-2.27.0.min.js' %}"></script>
 <script>
     function renderChart(id, json) {
         if (json && json.data && json.data.length > 0) {

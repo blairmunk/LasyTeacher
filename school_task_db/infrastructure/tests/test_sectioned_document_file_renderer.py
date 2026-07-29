@@ -144,6 +144,9 @@ class SectionedHtmlToPdfDocumentRendererTests(SimpleTestCase):
         DOCUMENT_ENGINE_PDF_SETTINGS={
             'DEFAULT_FORMAT': 'Letter',
             'PRINT_BACKGROUND': False,
+            'MATHJAX_TIMEOUT': 1234,
+            'BROWSER_TIMEOUT': 5678,
+            'ALLOW_NETWORK_REQUESTS': True,
         },
     )
     def test_html_to_pdf_renderer_reads_document_engine_settings(self):
@@ -151,6 +154,14 @@ class SectionedHtmlToPdfDocumentRendererTests(SimpleTestCase):
 
         self.assertEqual(renderer.options['format'], 'Letter')
         self.assertFalse(renderer.options['print_background'])
+        self.assertEqual(renderer.options['mathjax_timeout'], 1234)
+        self.assertEqual(renderer.options['browser_timeout'], 5678)
+        self.assertTrue(renderer.options['allow_network_requests'])
+
+    def test_html_to_pdf_renderer_blocks_network_by_default(self):
+        renderer = HtmlToPdfRenderer()
+
+        self.assertFalse(renderer.options['allow_network_requests'])
 
 class FakeContentRenderer:
     def __init__(self, content='content'):

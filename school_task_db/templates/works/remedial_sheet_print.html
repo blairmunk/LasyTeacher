@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -26,7 +27,7 @@
     };
     </script>
     <script id="MathJax-script" async
-            src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+            src="{% static 'vendor/mathjax/es5/tex-svg.js' %}"></script>
 
     <style>
         body { font-family: 'Times New Roman', serif; max-width: 210mm; margin: 0 auto; padding: 20mm; }

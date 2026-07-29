@@ -3,6 +3,7 @@
 import asyncio
 import concurrent.futures
 import logging
+import re
 from pathlib import Path
 from typing import Any
 
@@ -33,8 +34,12 @@ class HtmlToPdfRenderer:
             'print_background': pdf_settings.get('PRINT_BACKGROUND', True),
             'wait_for_mathjax': pdf_settings.get('WAIT_FOR_MATHJAX', True),
             'mathjax_timeout': pdf_settings.get('MATHJAX_TIMEOUT', 10000),
-            'browser_timeout': 30000,
-            'headless': True,
+            'browser_timeout': pdf_settings.get('BROWSER_TIMEOUT', 30000),
+            'headless': pdf_settings.get('HEADLESS', True),
+            'allow_network_requests': pdf_settings.get(
+                'ALLOW_NETWORK_REQUESTS',
+                False,
+            ),
         }
 
     async def generate_pdf_async(
@@ -56,6 +61,11 @@ class HtmlToPdfRenderer:
             )
             try:
                 page = await browser.new_page()
+                if not self.options['allow_network_requests']:
+                    await page.route(
+                        re.compile(r'^https?://'),
+                        lambda route: route.abort(),
+                    )
                 await page.goto(
                     html_file_path.as_uri(),
                     timeout=self.options['browser_timeout'],
@@ -139,9 +149,10 @@ class HtmlToPdfRenderer:
             return
 
         try:
+            mathjax_timeout = self.options['mathjax_timeout']
             await page.wait_for_function(
                 "typeof window.MathJax !== 'undefined'",
-                timeout=5000,
+                timeout=mathjax_timeout,
             )
             await page.evaluate(
                 """
@@ -165,7 +176,10 @@ class HtmlToPdfRenderer:
             )
             await page.wait_for_function(
                 'window.mathJaxReady === true',
-                timeout=8000,
+                timeout=mathjax_timeout,
+            )
+            await page.evaluate(
+                'document.fonts ? document.fonts.ready : Promise.resolve()'
             )
             await page.wait_for_timeout(500)
         except Exception as exc:

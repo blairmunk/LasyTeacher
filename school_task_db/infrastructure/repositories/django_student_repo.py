@@ -747,14 +747,20 @@ class DjangoStudentRepository(IStudentRepository):
                 resolved_legacy_task_ids.add(score_record.task_id)
 
             task_group = task.taskgroup_set.select_related('group').first()
+            lookup = {'mark': mark, 'task': task}
+            if variant_task_id:
+                lookup = {
+                    'mark': mark,
+                    'variant_task_id': variant_task_id,
+                }
             _, created = StudentTaskLog.objects.update_or_create(
-                student=participation.student,
-                task=task,
-                event=participation.event,
+                **lookup,
                 defaults={
+                    'student': participation.student,
+                    'task': task,
+                    'event': participation.event,
                     'variant': participation.variant,
                     'variant_task_id': variant_task_id or None,
-                    'mark': mark,
                     'topic': task.topic,
                     'analog_group': task_group.group if task_group else None,
                     'difficulty': task.difficulty,

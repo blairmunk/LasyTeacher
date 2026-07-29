@@ -294,6 +294,32 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(weak_log.points, 0)
         self.assertEqual(weak_log.max_points, 2)
 
+    def test_task_log_sync_does_not_claim_unlinked_historical_log(self):
+        StudentTaskLog.objects.filter(mark=self.mark).delete()
+        historical_log = StudentTaskLog.objects.create(
+            student=self.student,
+            task=self.original_weak,
+            event=self.event,
+            variant=self.source_variant,
+            points=2,
+            max_points=2,
+            completed_at=timezone.now() - dt.timedelta(days=1),
+        )
+
+        created_count = DjangoStudentRepository().sync_student_task_logs(
+            str(self.mark.pk),
+        )
+
+        current_log = StudentTaskLog.objects.get(
+            mark=self.mark,
+            task=self.original_weak,
+        )
+        self.assertEqual(created_count, 2)
+        self.assertEqual(current_log.points, 0)
+        historical_log.refresh_from_db()
+        self.assertIsNone(historical_log.mark)
+        self.assertEqual(historical_log.points, 2)
+
     def test_student_repository_ignores_missing_mark_during_log_sync(self):
         created_count = DjangoStudentRepository().sync_student_task_logs(
             '00000000-0000-0000-0000-000000000000',

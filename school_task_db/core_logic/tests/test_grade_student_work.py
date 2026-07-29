@@ -2,6 +2,7 @@ from contextlib import contextmanager
 from unittest import TestCase
 
 from core_logic.entities.event import ParticipationGradingContext
+from core_logic.entities.review import ReviewTaskRef, ReviewVariantTaskRef
 from core_logic.interfaces.event_repo import GradeParticipationResult
 from core_logic.services.grading_service import GradingService
 from core_logic.use_cases.grade_student_work import (
@@ -46,12 +47,23 @@ class FakeTransactionManager:
         yield
 
 
+class FakeReviewRepository:
+    def __init__(self, variant_tasks=None):
+        self.variant_tasks = variant_tasks or []
+        self.request = None
+
+    def get_variant_tasks(self, participation_id):
+        self.request = participation_id
+        return self.variant_tasks
+
+
 class GradeStudentWorkUseCaseTests(TestCase):
     def test_execute_saves_grade_with_normalized_checked_by(self):
         repo = FakeEventRepository()
         transaction_manager = FakeTransactionManager()
         use_case = GradeStudentWorkUseCase(
             event_repo=repo,
+            review_repo=FakeReviewRepository(),
             grading_service=GradingService(),
             transaction_manager=transaction_manager,
         )
@@ -91,6 +103,7 @@ class GradeStudentWorkUseCaseTests(TestCase):
         )
         use_case = GradeStudentWorkUseCase(
             event_repo=repo,
+            review_repo=FakeReviewRepository(),
             grading_service=GradingService(),
             transaction_manager=FakeTransactionManager(),
         )
@@ -109,6 +122,7 @@ class GradeStudentWorkUseCaseTests(TestCase):
         repo = FakeEventRepository()
         use_case = GradeStudentWorkUseCase(
             event_repo=repo,
+            review_repo=FakeReviewRepository(),
             grading_service=GradingService(),
             transaction_manager=FakeTransactionManager(),
         )
@@ -123,3 +137,72 @@ class GradeStudentWorkUseCaseTests(TestCase):
 
         self.assertEqual(result.event_status, 'completed')
         self.assertIsNone(repo.graded_params.event_status)
+
+    def test_execute_derives_totals_from_assessable_variant_snapshots(self):
+        event_repo = FakeEventRepository()
+        review_repo = FakeReviewRepository(
+            variant_tasks=[
+                ReviewVariantTaskRef(
+                    task=ReviewTaskRef(id='task-1', text='Контрольное'),
+                    variant_task_id='variant-task-1',
+                    weight=3,
+                    is_assessable=True,
+                ),
+                ReviewVariantTaskRef(
+                    task=ReviewTaskRef(id='task-2', text='Демонстрация'),
+                    variant_task_id='variant-task-2',
+                    weight=5,
+                    is_assessable=False,
+                ),
+            ],
+        )
+        use_case = GradeStudentWorkUseCase(
+            event_repo=event_repo,
+            review_repo=review_repo,
+            grading_service=GradingService(),
+            transaction_manager=FakeTransactionManager(),
+        )
+
+        use_case.execute(
+            GradeStudentWorkRequest(
+                participation_id='participation-1',
+                score=4,
+                points=99,
+                max_points=99,
+                task_scores={
+                    'variant-task-1': {
+                        'task_id': 'task-1',
+                        'variant_task_id': 'variant-task-1',
+                        'points': 10,
+                        'max_points': 99,
+                        'comment': 'Проверено',
+                    },
+                    'variant-task-2': {
+                        'task_id': 'task-2',
+                        'variant_task_id': 'variant-task-2',
+                        'points': 5,
+                        'max_points': 5,
+                    },
+                    'foreign-task': {
+                        'points': 100,
+                        'max_points': 100,
+                    },
+                },
+            )
+        )
+
+        self.assertEqual(review_repo.request, 'participation-1')
+        self.assertEqual(event_repo.graded_params.points, 3)
+        self.assertEqual(event_repo.graded_params.max_points, 3)
+        self.assertEqual(
+            event_repo.graded_params.task_scores,
+            {
+                'variant-task-1': {
+                    'task_id': 'task-1',
+                    'variant_task_id': 'variant-task-1',
+                    'points': 3,
+                    'max_points': 3,
+                    'comment': 'Проверено',
+                },
+            },
+        )

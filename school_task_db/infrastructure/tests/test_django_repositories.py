@@ -2321,9 +2321,21 @@ class DjangoRemedialRepositoryTests(TestCase):
             variant=self.source_variant,
             task=self.original_weak,
         )
+        demo_variant_task = VariantTask.objects.get(
+            variant=self.source_variant,
+            task=self.original_ok,
+        )
+        demo_variant_task.is_assessable = False
+        demo_variant_task.save(update_fields=['is_assessable'])
+        StudentTaskLog.objects.filter(
+            student=self.student,
+            task=self.original_ok,
+            event=self.event,
+        ).delete()
 
         result = GradeStudentWorkUseCase(
             event_repo=DjangoEventRepository(),
+            review_repo=DjangoReviewRepository(),
             grading_service=GradingService(),
             transaction_manager=DjangoTransactionManager(),
         ).execute(
@@ -2341,6 +2353,12 @@ class DjangoRemedialRepositoryTests(TestCase):
                         'max_points': 2,
                         'comment': 'Повторить',
                     },
+                    str(demo_variant_task.pk): {
+                        'task_id': str(self.original_ok.pk),
+                        'points': 5,
+                        'max_points': 5,
+                        'comment': 'Не должно сохраниться',
+                    },
                 },
             )
         )
@@ -2357,14 +2375,15 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(result.score, 4)
         self.assertEqual(result.student_name, 'Петров Пётр')
         self.assertEqual(self.mark.score, 4)
-        self.assertEqual(self.mark.points, 6)
-        self.assertEqual(self.mark.max_points, 7)
+        self.assertEqual(self.mark.points, 1)
+        self.assertEqual(self.mark.max_points, 2)
         self.assertEqual(self.mark.teacher_comment, 'Хорошая работа')
         self.assertEqual(self.mark.checked_by, 'teacher')
         self.assertEqual(
             self.mark.task_scores[str(variant_task.pk)]['task_id'],
             str(self.original_weak.pk),
         )
+        self.assertNotIn(str(demo_variant_task.pk), self.mark.task_scores)
         self.assertIsNotNone(self.mark.checked_at)
         self.assertEqual(self.participation.status, 'graded')
         self.assertIsNotNone(self.participation.graded_at)
@@ -2372,6 +2391,13 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(weak_log.points, 1)
         self.assertEqual(weak_log.max_points, 2)
         self.assertEqual(weak_log.comment, 'Повторить')
+        self.assertFalse(
+            StudentTaskLog.objects.filter(
+                student=self.student,
+                task=self.original_ok,
+                event=self.event,
+            ).exists()
+        )
 
     def test_grading_use_case_waits_for_all_active_participants(self):
         self.event.status = 'completed'
@@ -2390,6 +2416,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
         use_case = GradeStudentWorkUseCase(
             event_repo=DjangoEventRepository(),
+            review_repo=DjangoReviewRepository(),
             grading_service=GradingService(),
             transaction_manager=DjangoTransactionManager(),
         )

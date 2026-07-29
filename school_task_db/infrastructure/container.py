@@ -873,6 +873,7 @@ class Container:
     def grade_student_work_use_case(self):
         return GradeStudentWorkUseCase(
             event_repo=self.event_repo,
+            review_repo=self.review_repo,
             grading_service=self.grading_service(),
             transaction_manager=self.transaction_manager,
         )

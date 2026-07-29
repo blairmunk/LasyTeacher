@@ -124,6 +124,13 @@ class ReviewScoreCalculation:
 
 
 @dataclass(frozen=True)
+class NormalizedReviewTaskScores:
+    task_scores: Dict[str, dict]
+    points: int
+    max_points: int
+
+
+@dataclass(frozen=True)
 class ReviewParticipationStatusChange:
     participation_id: str
     event_id: str

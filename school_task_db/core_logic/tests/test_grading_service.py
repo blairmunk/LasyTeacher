@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+from core_logic.entities.review import ReviewTaskRef, ReviewVariantTaskRef
 from core_logic.services.grading_service import GradingService
 
 
@@ -18,3 +19,34 @@ class GradingServiceTests(TestCase):
         self.assertEqual(service.next_event_status('reviewing', 2, 1), 'reviewing')
         self.assertEqual(service.next_event_status('completed', 2, 2), 'graded')
         self.assertEqual(service.next_event_status('planned', 0, 0), 'reviewing')
+
+    def test_normalize_task_scores_supports_legacy_task_keys(self):
+        result = GradingService().normalize_task_scores(
+            variant_tasks=[
+                ReviewVariantTaskRef(
+                    task=ReviewTaskRef(id='task-1', text='Задание'),
+                    weight=4,
+                ),
+            ],
+            submitted_scores={
+                'task-1': {
+                    'points': '3',
+                    'max_points': 100,
+                    'comment': 'Верно',
+                },
+            },
+        )
+
+        self.assertEqual(result.points, 3)
+        self.assertEqual(result.max_points, 4)
+        self.assertEqual(
+            result.task_scores,
+            {
+                'task-1': {
+                    'task_id': 'task-1',
+                    'points': 3,
+                    'max_points': 4,
+                    'comment': 'Верно',
+                },
+            },
+        )

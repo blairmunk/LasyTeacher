@@ -725,9 +725,6 @@ class DjangoStudentRepository(IStudentRepository):
             participation,
             mark.task_scores,
         )
-        if not resolved_scores:
-            return 0
-
         tasks_by_id = {
             str(task.pk): task
             for task in Task.objects.select_related('topic').filter(
@@ -738,10 +735,16 @@ class DjangoStudentRepository(IStudentRepository):
             )
         }
         created_count = 0
+        resolved_variant_task_ids = set()
+        resolved_legacy_task_ids = set()
         for variant_task_id, score_record in resolved_scores:
             task = tasks_by_id.get(score_record.task_id)
             if task is None:
                 continue
+            if variant_task_id:
+                resolved_variant_task_ids.add(variant_task_id)
+            else:
+                resolved_legacy_task_ids.add(score_record.task_id)
 
             task_group = task.taskgroup_set.select_related('group').first()
             _, created = StudentTaskLog.objects.update_or_create(
@@ -763,6 +766,22 @@ class DjangoStudentRepository(IStudentRepository):
             )
             if created:
                 created_count += 1
+
+        current_logs = StudentTaskLog.objects.filter(mark=mark)
+        keep_filter = Q()
+        if resolved_variant_task_ids:
+            keep_filter |= Q(
+                variant_task_id__in=resolved_variant_task_ids,
+            )
+        if resolved_legacy_task_ids:
+            keep_filter |= Q(
+                variant_task__isnull=True,
+                task_id__in=resolved_legacy_task_ids,
+            )
+        if keep_filter:
+            current_logs.exclude(keep_filter).delete()
+        else:
+            current_logs.delete()
 
         return created_count
 

@@ -185,6 +185,9 @@ class DjangoRemedialRepositoryTests(TestCase):
                 str(self.original_ok.pk): {'points': 5, 'max_points': 5},
             },
         )
+        DjangoStudentRepository().sync_student_task_logs(
+            str(self.mark.pk),
+        )
 
     def _task(self, text, difficulty):
         return Task.objects.create(
@@ -2367,10 +2370,22 @@ class DjangoRemedialRepositoryTests(TestCase):
             task=self.original_ok,
             event=self.event,
         ).delete()
+        StudentTaskLog.objects.create(
+            student=self.student,
+            task=self.original_ok,
+            event=self.event,
+            variant=self.source_variant,
+            variant_task=demo_variant_task,
+            mark=self.mark,
+            points=5,
+            max_points=5,
+            completed_at=timezone.now(),
+        )
 
         result = GradeStudentWorkUseCase(
             event_repo=DjangoEventRepository(),
             review_repo=DjangoReviewRepository(),
+            student_repo=DjangoStudentRepository(),
             grading_service=GradingService(),
             transaction_manager=DjangoTransactionManager(),
         ).execute(
@@ -2453,6 +2468,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         use_case = GradeStudentWorkUseCase(
             event_repo=DjangoEventRepository(),
             review_repo=DjangoReviewRepository(),
+            student_repo=DjangoStudentRepository(),
             grading_service=GradingService(),
             transaction_manager=DjangoTransactionManager(),
         )

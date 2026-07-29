@@ -11,6 +11,9 @@ from django.utils import timezone
 from core.models import AcademicYear
 from curriculum.models import Topic
 from events.models import Event, EventParticipation, Mark
+from infrastructure.repositories.django_student_repo import (
+    DjangoStudentRepository,
+)
 from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
@@ -266,7 +269,7 @@ class RemedialFromEventViewTests(TestCase):
             weight=5,
         )
 
-        Mark.objects.create(
+        source_mark = Mark.objects.create(
             participation=self.participation,
             score=2,
             points=5,
@@ -275,6 +278,9 @@ class RemedialFromEventViewTests(TestCase):
                 str(self.weak_original.pk): {'points': 0, 'max_points': 2},
                 str(self.ok_original.pk): {'points': 5, 'max_points': 5},
             },
+        )
+        DjangoStudentRepository().sync_student_task_logs(
+            str(source_mark.pk),
         )
 
     def _task(self, text, difficulty):
@@ -499,7 +505,7 @@ class RemedialFromEventViewTests(TestCase):
         first_variant_task = VariantTask.objects.get(
             variant=first_remedial_variant,
         )
-        Mark.objects.create(
+        first_remedial_mark = Mark.objects.create(
             participation=first_participation,
             score=2,
             points=0,
@@ -510,6 +516,9 @@ class RemedialFromEventViewTests(TestCase):
                     'max_points': first_variant_task.max_points,
                 },
             },
+        )
+        DjangoStudentRepository().sync_student_task_logs(
+            str(first_remedial_mark.pk),
         )
         first_participation.status = 'graded'
         first_participation.save()

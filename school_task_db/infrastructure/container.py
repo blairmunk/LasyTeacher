@@ -874,6 +874,7 @@ class Container:
         return GradeStudentWorkUseCase(
             event_repo=self.event_repo,
             review_repo=self.review_repo,
+            student_repo=self.student_repo,
             grading_service=self.grading_service(),
             transaction_manager=self.transaction_manager,
         )

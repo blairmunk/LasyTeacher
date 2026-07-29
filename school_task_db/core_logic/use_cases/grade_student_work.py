@@ -9,6 +9,7 @@ from core_logic.interfaces.event_repo import (
     IEventRepository,
 )
 from core_logic.interfaces.review_repo import IReviewRepository
+from core_logic.interfaces.student_repo import IStudentRepository
 from core_logic.interfaces.transaction_manager import ITransactionManager
 from core_logic.services.grading_service import GradingService
 
@@ -37,11 +38,13 @@ class GradeStudentWorkUseCase:
         self,
         event_repo: IEventRepository,
         review_repo: IReviewRepository,
+        student_repo: IStudentRepository,
         grading_service: GradingService,
         transaction_manager: ITransactionManager,
     ):
         self.event_repo = event_repo
         self.review_repo = review_repo
+        self.student_repo = student_repo
         self.grading_service = grading_service
         self.transaction_manager = transaction_manager
 
@@ -79,7 +82,7 @@ class GradeStudentWorkUseCase:
                         context.other_graded_participants + 1
                     ),
                 )
-            return self.event_repo.save_participation_grade(
+            result = self.event_repo.save_participation_grade(
                 GradeParticipationParams(
                     participation_id=request.participation_id,
                     score=request.score,
@@ -97,3 +100,5 @@ class GradeStudentWorkUseCase:
                     event_status=event_status,
                 )
             )
+            self.student_repo.sync_student_task_logs(result.mark_id)
+            return result

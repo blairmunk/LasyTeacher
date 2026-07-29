@@ -57,13 +57,24 @@ class FakeReviewRepository:
         return self.variant_tasks
 
 
+class FakeStudentRepository:
+    def __init__(self):
+        self.synced_mark_ids = []
+
+    def sync_student_task_logs(self, mark_id):
+        self.synced_mark_ids.append(mark_id)
+        return 0
+
+
 class GradeStudentWorkUseCaseTests(TestCase):
     def test_execute_saves_grade_with_normalized_checked_by(self):
         repo = FakeEventRepository()
+        student_repo = FakeStudentRepository()
         transaction_manager = FakeTransactionManager()
         use_case = GradeStudentWorkUseCase(
             event_repo=repo,
             review_repo=FakeReviewRepository(),
+            student_repo=student_repo,
             grading_service=GradingService(),
             transaction_manager=transaction_manager,
         )
@@ -92,6 +103,7 @@ class GradeStudentWorkUseCaseTests(TestCase):
             {'task-1': {'points': 8, 'max_points': 10}},
         )
         self.assertEqual(repo.graded_params.event_status, 'reviewing')
+        self.assertEqual(student_repo.synced_mark_ids, ['mark-1'])
         self.assertEqual(transaction_manager.entered, 1)
 
     def test_execute_marks_event_graded_when_all_active_work_is_graded(self):
@@ -104,6 +116,7 @@ class GradeStudentWorkUseCaseTests(TestCase):
         use_case = GradeStudentWorkUseCase(
             event_repo=repo,
             review_repo=FakeReviewRepository(),
+            student_repo=FakeStudentRepository(),
             grading_service=GradingService(),
             transaction_manager=FakeTransactionManager(),
         )
@@ -123,6 +136,7 @@ class GradeStudentWorkUseCaseTests(TestCase):
         use_case = GradeStudentWorkUseCase(
             event_repo=repo,
             review_repo=FakeReviewRepository(),
+            student_repo=FakeStudentRepository(),
             grading_service=GradingService(),
             transaction_manager=FakeTransactionManager(),
         )
@@ -159,6 +173,7 @@ class GradeStudentWorkUseCaseTests(TestCase):
         use_case = GradeStudentWorkUseCase(
             event_repo=event_repo,
             review_repo=review_repo,
+            student_repo=FakeStudentRepository(),
             grading_service=GradingService(),
             transaction_manager=FakeTransactionManager(),
         )

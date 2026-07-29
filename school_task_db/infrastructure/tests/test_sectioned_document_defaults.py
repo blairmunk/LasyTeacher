@@ -13,6 +13,7 @@ from core_logic.entities.document import (
     WORK_SOURCE_TYPE,
 )
 from core_logic.entities.work import (
+    RemedialContentBlockRow,
     RemedialOriginalTaskRow,
     RemedialSheetData,
     VariantDetailStudentRef,
@@ -451,6 +452,16 @@ class SectionedDocumentDefaultsTests(TestCase):
                 ),
             ],
             new_tasks=[training_variant_task],
+            content_blocks=[
+                RemedialContentBlockRow(
+                    pk='content-1',
+                    source_content_id='source-content-1',
+                    content_type='text',
+                    order=0,
+                    title='Памятка',
+                    content={'body': 'Сначала вспомните формулу $F=ma$.'},
+                ),
+            ],
         )
 
         with TemporaryDirectory() as output_dir:
@@ -486,6 +497,8 @@ class SectionedDocumentDefaultsTests(TestCase):
             self.assertIn('Исходная работа', html)
             self.assertIn('Исходное задание', html)
             self.assertIn('Разбор исходного задания', html)
+            self.assertIn('Памятка', html)
+            self.assertIn('Сначала вспомните формулу', html)
             self.assertIn('Тренировочное задание', html)
             self.assertIn('Тренировочный ответ', html)
             self.assertIn('Краткое решение тренировки', html)
@@ -534,6 +547,16 @@ class SectionedDocumentDefaultsTests(TestCase):
                 ),
             ],
             new_tasks=[training_variant_task],
+            content_blocks=[
+                RemedialContentBlockRow(
+                    pk='content-1',
+                    source_content_id='source-content-1',
+                    content_type='text',
+                    order=0,
+                    title='Памятка',
+                    content={'body': 'Формула $F=ma$ & единицы.'},
+                ),
+            ],
         )
 
         with TemporaryDirectory() as output_dir:
@@ -567,6 +590,8 @@ class SectionedDocumentDefaultsTests(TestCase):
             self.assertIn('Работа над ошибками', latex)
             self.assertIn(r'Ошибка \& формула \(F=ma\)', latex)
             self.assertIn(r'Ответ \& исходный', latex)
+            self.assertIn('Памятка', latex)
+            self.assertIn(r'Формула \(F=ma\) \& единицы.', latex)
             self.assertIn(r'Тренировка \& \(a=F/m\)', latex)
             self.assertIn(r'Кратко \(a=F/m\)', latex)
 

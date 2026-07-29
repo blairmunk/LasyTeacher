@@ -8,6 +8,7 @@ from core_logic.entities.document import (
     WORK_SOURCE_TYPE,
 )
 from core_logic.entities.work import (
+    RemedialContentBlockRow,
     RemedialOriginalTaskRow,
     RemedialSheetData,
     VariantDetailStudentRef,
@@ -860,6 +861,94 @@ class DjangoRemedialSectionPayloadBuilderTests(TestCase):
             [VARIANT_PRINT_BLOCK_TASK],
         )
         self.assertTrue(payload['tasks'][0]['blank_cells_after'])
+
+    def test_remedial_print_plan_includes_frozen_static_content(self):
+        remedial_work = Work.objects.create(name='Работа над ошибками')
+        variant = Variant.objects.create(
+            work=remedial_work,
+            number=1,
+            variant_type='remedial',
+        )
+        task = self.create_task(text='Тренировочное задание')
+        variant_task = VariantTask.objects.create(
+            variant=variant,
+            task=task,
+            order=1,
+            content_order=20,
+            max_points=2,
+        )
+        sheet_data = RemedialSheetData(
+            variant=variant,
+            student=None,
+            source_work=None,
+            mark=None,
+            new_tasks=[variant_task],
+            content_blocks=[
+                RemedialContentBlockRow(
+                    pk='block-1',
+                    source_content_id='source-1',
+                    content_type='text',
+                    order=10,
+                    title='Перед началом',
+                    content={'body': 'Вспомните правило.'},
+                ),
+            ],
+        )
+        registry = build_remedial_sheet_section_payload_builder_registry(
+            get_remedial_sheet_data=lambda variant_id: sheet_data,
+        )
+        recipe = remedial_recipe(TRAINING_TASKS_SECTION)
+
+        payload = registry.build_payload(
+            remedial_build_request(
+                recipe=recipe,
+                section=recipe.sections[0],
+            )
+        )
+
+        self.assertEqual(
+            [block['block_type'] for block in payload['print_blocks']],
+            [VARIANT_PRINT_BLOCK_TEXT, VARIANT_PRINT_BLOCK_TASK],
+        )
+        self.assertEqual(
+            payload['print_blocks'][0]['content']['body'],
+            'Вспомните правило.',
+        )
+
+    def test_remedial_print_override_can_hide_frozen_static_content(self):
+        sheet_data = RemedialSheetData(
+            variant='variant-1',
+            student=None,
+            source_work=None,
+            mark=None,
+            content_blocks=[
+                RemedialContentBlockRow(
+                    pk='block-1',
+                    source_content_id='source-1',
+                    content_type='theory',
+                    order=10,
+                    title='Теория',
+                    content={'topics': []},
+                ),
+            ],
+        )
+        registry = build_remedial_sheet_section_payload_builder_registry(
+            get_remedial_sheet_data=lambda variant_id: sheet_data,
+        )
+        recipe = remedial_recipe(
+            TRAINING_TASKS_SECTION,
+            options={'hidden_content_types': ['theory']},
+        )
+
+        payload = registry.build_payload(
+            remedial_build_request(
+                recipe=recipe,
+                section=recipe.sections[0],
+            )
+        )
+
+        self.assertEqual(payload['print_blocks'], [])
+        self.assertEqual(len(sheet_data.content_blocks), 1)
 
     def test_reuses_remedial_training_payload_for_identical_inputs(self):
         remedial_work = Work.objects.create(name='Работа над ошибками')

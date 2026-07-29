@@ -2,7 +2,32 @@
     <h2>{{ section.title|default:"Часть 2. Тренировочные задания" }}</h2>
     {% if payload.print_blocks %}
         {% for block in payload.print_blocks %}
-            {% if block.block_type == 'task' and block.task %}
+            {% if block.block_type == 'theory' %}
+                <article class="document-theory-block">
+                    {% if block.title %}<h3>{{ block.title }}</h3>{% endif %}
+                    {% for topic in block.content.topics %}
+                        <section class="document-theory-topic">
+                            <h4>{{ topic.name }}</h4>
+                            <div class="theory-content">{{ topic.content|linebreaksbr }}</div>
+                            {% if topic.subtopics %}
+                                <ul>
+                                    {% for subtopic in topic.subtopics %}
+                                        <li>
+                                            <strong>{{ subtopic.name }}</strong>
+                                            <div>{{ subtopic.content|linebreaksbr }}</div>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </section>
+                    {% endfor %}
+                </article>
+            {% elif block.block_type == 'text' %}
+                <article class="document-text-block">
+                    {% if block.title %}<h3>{{ block.title }}</h3>{% endif %}
+                    <div>{{ block.content.body|linebreaksbr }}</div>
+                </article>
+            {% elif block.block_type == 'task' and block.task %}
                 <article class="remedial-training-task">
                     <h3>
                         Задание {{ block.task.order }}

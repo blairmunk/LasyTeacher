@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any, List, Mapping, Optional
 
 from core_logic.entities.document import DocumentPresentationProfile
 from core_logic.value_objects.work_content_plan import WorkContentPlan
@@ -358,6 +358,19 @@ class RemedialTrainingTaskRow:
 
 
 @dataclass(frozen=True)
+class RemedialContentBlockRow:
+    pk: str
+    source_content_id: str
+    content_type: str
+    order: int
+    title: str = ''
+    content: Mapping[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self):
+        object.__setattr__(self, 'content', dict(self.content))
+
+
+@dataclass(frozen=True)
 class RemedialMarkRef:
     score: Any = None
     points: Any = None
@@ -378,6 +391,9 @@ class RemedialSheetData:
     mark: Optional[RemedialMarkRef]
     original_tasks: List[RemedialOriginalTaskRow] = field(default_factory=list)
     new_tasks: List[RemedialTrainingTaskRow] = field(default_factory=list)
+    content_blocks: List[RemedialContentBlockRow] = field(
+        default_factory=list,
+    )
     status: str = 'ready'
     message: str = ''
     redirect_work_id: str = ''

@@ -1310,6 +1310,40 @@ class DjangoRemedialRepositoryTests(TestCase):
 
         self.assertIsNone(sheet_data)
 
+    def test_remedial_sheet_returns_frozen_content_blocks(self):
+        remedial_work = Work.objects.create(
+            name='Работа над ошибками',
+            work_type='remedial',
+        )
+        remedial_variant = Variant.objects.create(
+            work=remedial_work,
+            number=1,
+            variant_type='remedial',
+            assigned_student=self.student,
+        )
+        content_block = VariantContentBlockSnapshot.objects.create(
+            variant=remedial_variant,
+            source_content_id='content-source-1',
+            content_type='text',
+            order=7,
+            title='Памятка',
+            content={'body': 'Проверьте вычисления.'},
+        )
+
+        sheet_data = DjangoWorkRepository().get_remedial_sheet_data(
+            str(remedial_variant.pk),
+        )
+
+        self.assertEqual(len(sheet_data.content_blocks), 1)
+        self.assertEqual(
+            sheet_data.content_blocks[0].pk,
+            str(content_block.pk),
+        )
+        self.assertEqual(
+            sheet_data.content_blocks[0].content,
+            {'body': 'Проверьте вычисления.'},
+        )
+
     def test_remedial_sheet_uses_exact_source_participation(self):
         second_source_variant = Variant.objects.create(
             work=self.source_work,

@@ -89,6 +89,7 @@ class RemedialTrainingTasksPayloadBuilder:
         content_payload = build_variant_document_content_payload(
             variant_id=_remedial_variant_id(request),
             variant_tasks=sheet_data.new_tasks or (),
+            content_blocks=sheet_data.content_blocks or (),
             options=request.section.options,
             task_payload_formatter=self.task_payload_formatter,
             request=request,

@@ -10,6 +10,7 @@ from core_logic.entities.work import (
     OrphanVariantListItem,
     OrphanVariantStudentRef,
     RemedialMarkRef,
+    RemedialContentBlockRow,
     RemedialOriginalTaskRow,
     RemedialSheetData,
     RemedialTaskRef,
@@ -575,6 +576,20 @@ class DjangoWorkRepository(
                     blank_cells_rows=variant_task.blank_cells_rows,
                 )
                 for variant_task in new_tasks
+            ],
+            content_blocks=[
+                RemedialContentBlockRow(
+                    pk=str(block.pk),
+                    source_content_id=block.source_content_id,
+                    content_type=block.content_type,
+                    order=block.order,
+                    title=block.title,
+                    content=block.content,
+                )
+                for block in variant.content_block_snapshots.order_by(
+                    'order',
+                    'pk',
+                )
             ],
         )
 

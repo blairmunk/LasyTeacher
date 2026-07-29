@@ -1,5 +1,5 @@
-<section class="document-full-solutions">
-    <h2>Полные решения</h2>
+<section class="document-section document-section-{{ section.section_type }} document-full-solutions">
+    <h2>{{ section.title|default:"Полные решения" }}</h2>
     {% for variant in payload.variants %}
         <article class="document-variant-full-solutions">
             <h3>{{ variant.title }}</h3>

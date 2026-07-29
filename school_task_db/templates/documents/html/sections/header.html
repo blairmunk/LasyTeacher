@@ -1,5 +1,5 @@
-<header class="document-header">
-    <h1>{{ payload.title|default:document.title }}</h1>
+<header class="document-section document-section-{{ section.section_type }} document-header">
+    <h1>{{ section.title|default:payload.title|default:document.title }}</h1>
     {% if payload.duration %}
         <p>Время выполнения: {{ payload.duration }} мин.</p>
     {% endif %}

@@ -61,6 +61,8 @@ class DocumentSectionCatalogTests(TestCase):
 
         self.assertTrue(sections_by_type[COMMON_HEADER_SECTION].is_fixed_order)
         self.assertFalse(sections_by_type[HEADER_SECTION].is_fixed_order)
+        self.assertTrue(sections_by_type[HEADER_SECTION].supports_title)
+        self.assertFalse(sections_by_type[PAGE_BREAK_SECTION].supports_title)
 
     def test_orders_document_sections_with_common_header_fixed_first(self):
         ordered = order_document_section_types(

@@ -1,6 +1,5 @@
 \begin{schoolanswers}
-\newpage
-\section*{\centering Ответы к тренировочным заданиям}
+\section*{\centering {{ section.title|default:"Ответы к тренировочным заданиям" }}}
 \begin{enumerate}
 {% for task in payload.tasks %}
 \item {{ task.answer|safe }}

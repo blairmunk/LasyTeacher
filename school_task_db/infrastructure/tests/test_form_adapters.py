@@ -647,6 +647,29 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
         )
         self.assertFalse(params.is_default)
 
+    def test_builds_custom_section_title_from_template_form(self):
+        data = QueryDict('', mutable=True)
+        data.update(
+            {
+                'name': 'Шаблон',
+                'document_type': 'work',
+                'section_title__header': 'Самостоятельная работа',
+            }
+        )
+        data.setlist('sections', [HEADER_SECTION])
+        form = self._template_form(data=data)
+        self.assertTrue(form.is_valid(), form.errors)
+
+        params = (
+            PrintSettingsFormAdapter()
+            .update_print_settings_params_from_form(
+                form,
+                print_settings_id='template-1',
+            )
+        )
+
+        self.assertEqual(params.sections[0].title, 'Самостоятельная работа')
+
     def test_builds_form_initial_from_print_settings(self):
         template = PrintSettingsSpec(
             name='Шаблон',
@@ -796,6 +819,46 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
                 {'rows': 8, 'columns': 18, 'row_height': 24},
                 {'rows': 8, 'columns': 18, 'row_height': 24},
             ],
+        )
+
+    def test_changed_title_applies_to_all_repeated_sections(self):
+        template = PrintSettingsSpec(
+            name='Шаблон',
+            document_type=WORK_DOCUMENT_TYPE,
+            sections=[
+                DocumentSectionSpec(
+                    section_type=BLANK_CELLS_SECTION,
+                    title='Короткое решение',
+                ),
+                DocumentSectionSpec(
+                    section_type=BLANK_CELLS_SECTION,
+                    title='Большое решение',
+                ),
+            ],
+        )
+        adapter = PrintSettingsFormAdapter()
+        initial = adapter.form_initial_from_print_settings(template)
+        data = QueryDict('', mutable=True)
+        data.update(
+            {
+                'name': 'Шаблон',
+                'document_type': 'work',
+                'section_order': 'blank_cells,blank_cells',
+                'section_title__blank_cells': 'Место для решения',
+            }
+        )
+        data.setlist('sections', [BLANK_CELLS_SECTION])
+        form = self._template_form(data=data, initial=initial)
+        self.assertTrue(form.is_valid(), form.errors)
+
+        params = adapter.update_print_settings_params_from_form(
+            form,
+            print_settings_id='profile-1',
+        )
+
+        self.assertEqual(
+            [section.title for section in params.sections],
+            ['Место для решения', 'Место для решения'],
         )
 
     def test_empty_json_clears_options_for_repeated_section_type(self):

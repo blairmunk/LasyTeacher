@@ -1,6 +1,5 @@
 \begin{schoolshortsolutions}
-\newpage
-\section*{\centering Краткие решения тренировочных заданий}
+\section*{\centering {{ section.title|default:"Краткие решения тренировочных заданий" }}}
 {% for task in payload.tasks %}
 \textbf{Задание {{ task.order }}.} {{ task.short_solution|safe }}
 

@@ -1,6 +1,5 @@
 \begin{schooltrainingtasks}
-\newpage
-\section*{Часть 2. Тренировочные задания}
+\section*{ {{ section.title|default:"Часть 2. Тренировочные задания" }} }
 {% for task in payload.tasks %}
 \subsection*{Задание {{ task.order }}{% if task.max_points %} \hfill {\normalfont\normalsize ({{ task.max_points }} балл.)}{% endif %}}
 {{ task.latex_content|default:task.text|safe }}

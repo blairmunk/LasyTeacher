@@ -139,6 +139,7 @@ class PrintSettingsForm(forms.Form):
 
     def __init__(self, *args, document_types=None, sections=None, **kwargs):
         super().__init__(*args, **kwargs)
+        sections = tuple(sections or ())
         self.fields['document_type'].choices = [
             (item.document_type, item.title)
             for item in (document_types or [])
@@ -148,8 +149,30 @@ class PrintSettingsForm(forms.Form):
                 item.section_type,
                 f'{item.title} ({item.section_type})',
             )
-            for item in (sections or [])
+            for item in sections
         ]
+        initial_titles = {}
+        for section in self.initial.get('section_specs', ()):
+            initial_titles.setdefault(section.section_type, section.title)
+        for section in sections:
+            if not section.supports_title:
+                continue
+            field_name = section_title_field_name(section.section_type)
+            self.fields[field_name] = forms.CharField(
+                label='Заголовок в документе',
+                required=False,
+                max_length=200,
+                widget=forms.TextInput(
+                    attrs={
+                        'class': 'form-control form-control-sm',
+                        'placeholder': 'По умолчанию',
+                    },
+                ),
+            )
+            self.initial.setdefault(
+                field_name,
+                initial_titles.get(section.section_type, ''),
+            )
         blank_cells_options = (
             self.initial.get('section_options', {})
             .get(BLANK_CELLS_SECTION, {})
@@ -255,3 +278,7 @@ class PrintSettingsForm(forms.Form):
 
 def section_options_field_name(section_type):
     return f'section_options__{section_type}'
+
+
+def section_title_field_name(section_type):
+    return f'section_title__{section_type}'

@@ -1,5 +1,5 @@
-<section class="remedial-original-mistakes">
-    <h2>Часть 1. Разбор ошибок</h2>
+<section class="document-section document-section-{{ section.section_type }} remedial-original-mistakes">
+    <h2>{{ section.title|default:"Часть 1. Разбор ошибок" }}</h2>
     {% for task in payload.tasks %}
         <article class="remedial-task remedial-task-{{ task.status }}">
             <h3>

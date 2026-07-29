@@ -14,10 +14,12 @@ from core_logic.value_objects.document_recipes import (
     BLANK_CELLS_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
+    ORIGINAL_MISTAKES_SECTION,
     PAGE_BREAK_SECTION,
     SCORE_TABLE_SECTION,
     SHORT_SOLUTIONS_SECTION,
     TASK_LIST_SECTION,
+    TRAINING_TASKS_SECTION,
 )
 from core_logic.value_objects.document_render_requests import DocumentRenderRequest
 from core_logic.value_objects.task_print_settings import (
@@ -190,6 +192,7 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                     ),
                     DocumentSection(
                         section_type=ANSWERS_SECTION,
+                        title='Ключ для самопроверки',
                         payload={
                             'variants': [
                                 {
@@ -296,6 +299,65 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
             self.assertNotIn(r'\begin{tabular}{|*{ 3 }', latex)
             self.assertIn(r'\section*{\centering Критерии оценивания}', latex)
             self.assertIn(r'5 & 85\% & 8,5', latex)
-            self.assertIn(r'\section*{\centering Ответы}', latex)
+            self.assertIn(
+                r'\section*{\centering Ключ для самопроверки}',
+                latex,
+            )
             self.assertIn('10 Н', latex)
             self.assertIn(r'\section*{\centering Краткие решения}', latex)
+
+    def test_remedial_page_breaks_and_titles_are_recipe_driven(self):
+        with TemporaryDirectory() as output_dir:
+            renderer = build_template_sectioned_text_document_renderer(
+                renderer_type='latex',
+                section_templates={
+                    ORIGINAL_MISTAKES_SECTION: (
+                        'documents/latex/sections/'
+                        'remedial_original_mistakes.tex'
+                    ),
+                    PAGE_BREAK_SECTION: (
+                        'documents/latex/sections/page_break.tex'
+                    ),
+                    TRAINING_TASKS_SECTION: (
+                        'documents/latex/sections/'
+                        'remedial_training_tasks.tex'
+                    ),
+                },
+                filename_builder=lambda request: 'remedial.tex',
+                file_store=RenderedDocumentFileStore(
+                    output_dirs={'latex': output_dir},
+                ),
+                wrapper_template_name='documents/latex/base/document.tex',
+            )
+            document = Document(
+                title='Работа над ошибками',
+                document_type='remedial_sheet',
+                sections=[
+                    DocumentSection(
+                        section_type=ORIGINAL_MISTAKES_SECTION,
+                        title='Мои ошибки',
+                        payload={'tasks': []},
+                    ),
+                    DocumentSection(section_type=PAGE_BREAK_SECTION),
+                    DocumentSection(
+                        section_type=TRAINING_TASKS_SECTION,
+                        title='Повторная попытка',
+                        payload={'tasks': []},
+                    ),
+                ],
+            )
+
+            renderer.render(
+                DocumentRenderRequest(
+                    document=document,
+                    render_target=RenderTarget(renderer_type='latex'),
+                )
+            )
+            latex = (Path(output_dir) / 'remedial.tex').read_text(
+                encoding='utf-8',
+            )
+
+        self.assertIn(r'\section*{ Мои ошибки }', latex)
+        self.assertIn(r'\section*{ Повторная попытка }', latex)
+        self.assertEqual(latex.count(r'\clearpage'), 1)
+        self.assertNotIn(r'\newpage', latex)

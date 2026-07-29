@@ -93,6 +93,15 @@
                             </div>
                             <div class="small text-muted mt-2">{{ section.description }}</div>
                             <code class="small">{{ section.section_type }}</code>
+                            {% if section.title_field %}
+                            <div class="mt-3">
+                                <label class="form-label small" for="{{ section.title_field.id_for_label }}">
+                                    {{ section.title_field.label }}
+                                </label>
+                                {{ section.title_field }}
+                                {{ section.title_field.errors }}
+                            </div>
+                            {% endif %}
                             {% if section.has_distinct_instance_settings %}
                             <div class="alert alert-warning small py-2 mt-2 mb-0">
                                 Повторы этой секции имеют разные настройки.

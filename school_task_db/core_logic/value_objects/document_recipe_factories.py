@@ -6,6 +6,7 @@ from core_logic.value_objects.document_recipes import (
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
     ORIGINAL_MISTAKES_SECTION,
+    PAGE_BREAK_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     SHORT_SOLUTIONS_SECTION,
     TASK_LIST_SECTION,
@@ -41,6 +42,7 @@ def build_remedial_sheet_document_recipe(
             section_type=ORIGINAL_MISTAKES_SECTION,
             options={'include_scores': True},
         ),
+        DocumentSectionSpec(section_type=PAGE_BREAK_SECTION),
         DocumentSectionSpec(
             section_type=TRAINING_TASKS_SECTION,
             options={'include_scores': False},
@@ -48,11 +50,20 @@ def build_remedial_sheet_document_recipe(
     ]
 
     if content_config['include_answers']:
-        sections.append(DocumentSectionSpec(section_type=ANSWERS_SECTION))
+        sections.extend((
+            DocumentSectionSpec(section_type=PAGE_BREAK_SECTION),
+            DocumentSectionSpec(section_type=ANSWERS_SECTION),
+        ))
     if content_config['include_short_solutions']:
-        sections.append(DocumentSectionSpec(section_type=SHORT_SOLUTIONS_SECTION))
+        sections.extend((
+            DocumentSectionSpec(section_type=PAGE_BREAK_SECTION),
+            DocumentSectionSpec(section_type=SHORT_SOLUTIONS_SECTION),
+        ))
     if content_config['include_full_solutions']:
-        sections.append(DocumentSectionSpec(section_type=FULL_SOLUTIONS_SECTION))
+        sections.extend((
+            DocumentSectionSpec(section_type=PAGE_BREAK_SECTION),
+            DocumentSectionSpec(section_type=FULL_SOLUTIONS_SECTION),
+        ))
 
     return build_document_recipe_from_sections_config(
         document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,

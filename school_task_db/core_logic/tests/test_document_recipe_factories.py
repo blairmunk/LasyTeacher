@@ -9,6 +9,7 @@ from core_logic.value_objects.document_recipes import (
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
     ORIGINAL_MISTAKES_SECTION,
+    PAGE_BREAK_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     SHORT_SOLUTIONS_SECTION,
     TASK_LIST_SECTION,
@@ -38,8 +39,11 @@ class DocumentRecipeFactoriesTests(TestCase):
             (
                 HEADER_SECTION,
                 ORIGINAL_MISTAKES_SECTION,
+                PAGE_BREAK_SECTION,
                 TRAINING_TASKS_SECTION,
+                PAGE_BREAK_SECTION,
                 ANSWERS_SECTION,
+                PAGE_BREAK_SECTION,
                 SHORT_SOLUTIONS_SECTION,
             ),
         )
@@ -48,7 +52,7 @@ class DocumentRecipeFactoriesTests(TestCase):
             {'include_scores': True},
         )
         self.assertEqual(
-            recipe.sections[2].options,
+            recipe.sections[3].options,
             {'include_scores': False},
         )
 
@@ -62,9 +66,13 @@ class DocumentRecipeFactoriesTests(TestCase):
             (
                 HEADER_SECTION,
                 ORIGINAL_MISTAKES_SECTION,
+                PAGE_BREAK_SECTION,
                 TRAINING_TASKS_SECTION,
+                PAGE_BREAK_SECTION,
                 ANSWERS_SECTION,
+                PAGE_BREAK_SECTION,
                 SHORT_SOLUTIONS_SECTION,
+                PAGE_BREAK_SECTION,
                 FULL_SOLUTIONS_SECTION,
             ),
         )

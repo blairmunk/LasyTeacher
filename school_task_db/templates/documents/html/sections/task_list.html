@@ -1,4 +1,5 @@
-<section class="document-task-variants">
+<section class="document-section document-section-{{ section.section_type }} document-task-variants">
+    {% if section.title %}<h2>{{ section.title }}</h2>{% endif %}
     {% for variant in payload.variants %}
         <article class="document-variant">
             {% if payload.show_variant_heading != False %}

@@ -45,6 +45,7 @@ from core_logic.value_objects.document_render_options import (
 from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
     HEADER_SECTION,
+    PAGE_BREAK_SECTION,
     SHORT_SOLUTIONS_SECTION,
     TASK_LIST_SECTION,
 )
@@ -502,8 +503,11 @@ class DocumentRenderingUseCaseTests(TestCase):
             (
                 HEADER_SECTION,
                 'original_mistakes',
+                PAGE_BREAK_SECTION,
                 'training_tasks',
+                PAGE_BREAK_SECTION,
                 ANSWERS_SECTION,
+                PAGE_BREAK_SECTION,
                 SHORT_SOLUTIONS_SECTION,
             ),
         )
@@ -785,14 +789,20 @@ class DocumentRenderingUseCaseTests(TestCase):
             (
                 HEADER_SECTION,
                 'original_mistakes',
+                PAGE_BREAK_SECTION,
                 'training_tasks',
+                PAGE_BREAK_SECTION,
                 ANSWERS_SECTION,
+                PAGE_BREAK_SECTION,
                 SHORT_SOLUTIONS_SECTION,
-                'page_break',
+                PAGE_BREAK_SECTION,
                 HEADER_SECTION,
                 'original_mistakes',
+                PAGE_BREAK_SECTION,
                 'training_tasks',
+                PAGE_BREAK_SECTION,
                 ANSWERS_SECTION,
+                PAGE_BREAK_SECTION,
                 SHORT_SOLUTIONS_SECTION,
             ),
         )

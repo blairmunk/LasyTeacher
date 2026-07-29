@@ -1,5 +1,5 @@
-<header class="document-header remedial-header">
-    <h1>{{ payload.title|default:document.title }}</h1>
+<header class="document-section document-section-{{ section.section_type }} document-header remedial-header">
+    <h1>{{ section.title|default:payload.title|default:document.title }}</h1>
     {% if payload.student %}
         <p><strong>{{ payload.student.full_name }}</strong></p>
     {% endif %}

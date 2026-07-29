@@ -1,5 +1,5 @@
-<section class="remedial-training-tasks">
-    <h2>Часть 2. Тренировочные задания</h2>
+<section class="document-section document-section-{{ section.section_type }} remedial-training-tasks">
+    <h2>{{ section.title|default:"Часть 2. Тренировочные задания" }}</h2>
     {% for task in payload.tasks %}
         <article class="remedial-training-task">
             <h3>

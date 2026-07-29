@@ -22,6 +22,7 @@ from core_logic.value_objects.document_recipes import (
 )
 from infrastructure.forms.print_settings_django_forms import (
     section_options_field_name,
+    section_title_field_name,
 )
 
 
@@ -108,6 +109,10 @@ class PrintSettingsFormAdapter:
                     'options_field_name': section_options_field_name(
                         section.section_type,
                     ),
+                    'title_field': self._section_title_field(
+                        form,
+                        section,
+                    ),
                     'options_json': self._format_section_options_json(
                         section_options_by_type.get(section.section_type, {}),
                     ),
@@ -170,6 +175,7 @@ class PrintSettingsFormAdapter:
             'is_repeatable': section.is_repeatable,
             'is_fixed_order': section.is_fixed_order,
             'has_options': section.has_options,
+            'supports_title': section.supports_title,
             'options_hint': section.options_hint,
             'options_example_json': self._format_section_options_json(
                 section.options_example,
@@ -237,6 +243,11 @@ class PrintSettingsFormAdapter:
         )
         initial_specs_by_type = self._initial_specs_by_type(form)
         initial_options = form.initial.get('section_options', {})
+        initial_titles = {
+            section_type: specs[0].title
+            for section_type, specs in initial_specs_by_type.items()
+            if specs
+        }
         specs = []
         for section_type in self._section_types_from_form(form):
             existing_specs = initial_specs_by_type.get(section_type, [])
@@ -248,10 +259,19 @@ class PrintSettingsFormAdapter:
             )
             if existing_spec is not None and not options_changed:
                 options = existing_spec.options
-                title = existing_spec.title
             else:
                 options = submitted_options
-                title = existing_spec.title if existing_spec is not None else ''
+            title_field_name = section_title_field_name(section_type)
+            submitted_title = form.cleaned_data.get(title_field_name, '')
+            title_changed = (
+                title_field_name in form.fields
+                and title_field_name in form.data
+                and submitted_title != initial_titles.get(section_type, '')
+            )
+            if existing_spec is not None and not title_changed:
+                title = existing_spec.title
+            else:
+                title = submitted_title
             specs.append(
                 DocumentSectionSpec(
                     section_type=section_type,
@@ -318,6 +338,13 @@ class PrintSettingsFormAdapter:
         for section in form.initial.get('section_specs', ()):
             specs_by_type.setdefault(section.section_type, []).append(section)
         return specs_by_type
+
+    @staticmethod
+    def _section_title_field(form, section):
+        if not section.supports_title:
+            return None
+        field_name = section_title_field_name(section.section_type)
+        return form[field_name] if field_name in form.fields else None
 
     def _has_distinct_instance_settings(self, form, section_type):
         instance_settings = {

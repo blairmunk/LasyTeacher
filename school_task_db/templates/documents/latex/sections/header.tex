@@ -2,7 +2,7 @@
 {% else %}\begin{schoolheader}
 {% endif %}
 \begin{center}
-{\LARGE\bfseries {{ payload.title }}}
+{\LARGE\bfseries {{ section.title|default:payload.title }}}
 {% if payload.duration %}
 
 {\large Время выполнения: {{ payload.duration }} минут}

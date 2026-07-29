@@ -70,6 +70,7 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
                     ),
                     DocumentSection(
                         section_type=SCORE_TABLE_SECTION,
+                        title='Шкала перевода баллов',
                         payload={
                             'max_score': 10,
                             'criteria': [
@@ -179,11 +180,13 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
             self.assertIn('src="file://', html)
             self.assertNotIn('cdn.jsdelivr.net', html)
             self.assertIn('<h1>Контрольная</h1>', html)
+            self.assertIn('document-section-header', html)
             self.assertIn('page-break-after: always', html)
             self.assertIn('Черновик', html)
             self.assertIn('grid-template-columns: repeat(3', html)
             self.assertIn('height: 18px', html)
-            self.assertIn('Критерии оценивания', html)
+            self.assertIn('Шкала перевода баллов', html)
+            self.assertIn('document-section-score_table', html)
             self.assertIn('<td>85%</td>', html)
             self.assertIn('Вариант 1', html)
             self.assertIn('Теория варианта', html)

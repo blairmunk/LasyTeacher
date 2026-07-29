@@ -1,6 +1,6 @@
-<section class="document-section document-section-blank-cells">
-    {% if payload.title %}
-    <h2>{{ payload.title }}</h2>
+<section class="document-section document-section-{{ section.section_type }}">
+    {% if section.title or payload.title %}
+    <h2>{{ section.title|default:payload.title }}</h2>
     {% endif %}
     <div
         class="blank-cells-grid"

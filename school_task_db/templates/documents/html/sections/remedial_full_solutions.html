@@ -1,5 +1,5 @@
-<section class="remedial-full-solutions">
-    <h2>Полные решения тренировочных заданий</h2>
+<section class="document-section document-section-{{ section.section_type }} remedial-full-solutions">
+    <h2>{{ section.title|default:"Полные решения тренировочных заданий" }}</h2>
     <ol>
         {% for task in payload.tasks %}
             <li>{{ task.full_solution|linebreaksbr }}</li>

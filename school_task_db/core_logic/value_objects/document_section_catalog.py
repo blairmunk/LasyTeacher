@@ -43,6 +43,7 @@ class DocumentSectionCatalogItem:
     description: str = ''
     is_repeatable: bool = False
     is_fixed_order: bool = False
+    supports_title: bool = True
     options_hint: str = ''
     options_example: Mapping[str, Any] = field(default_factory=dict)
 
@@ -194,6 +195,7 @@ DOCUMENT_SECTION_CATALOG = (
         ),
         description='Техническая секция для управления печатной версткой.',
         is_repeatable=True,
+        supports_title=False,
     ),
     DocumentSectionCatalogItem(
         section_type=BLANK_CELLS_SECTION,

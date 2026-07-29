@@ -302,9 +302,13 @@ class DocumentRenderPlanFactoriesTests(TestCase):
             (
                 'header',
                 'original_mistakes',
+                'page_break',
                 'training_tasks',
+                'page_break',
                 'answers',
+                'page_break',
                 'short_solutions',
+                'page_break',
                 'full_solutions',
             ),
         )
@@ -350,17 +354,21 @@ class DocumentRenderPlanFactoriesTests(TestCase):
             (
                 'header',
                 'original_mistakes',
+                'page_break',
                 'training_tasks',
+                'page_break',
                 'answers',
                 'page_break',
                 'header',
                 'original_mistakes',
+                'page_break',
                 'training_tasks',
+                'page_break',
                 'answers',
             ),
         )
         self.assertEqual(plan.recipe.sections[0].options['variant_id'], 'variant-1')
-        self.assertEqual(plan.recipe.sections[5].options['variant_id'], 'variant-2')
+        self.assertEqual(plan.recipe.sections[7].options['variant_id'], 'variant-2')
 
     def test_build_remedial_sheet_batch_document_render_plan_uses_print_settings_spec(self):
         presentation = DocumentPresentation(

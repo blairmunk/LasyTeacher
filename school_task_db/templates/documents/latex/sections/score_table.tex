@@ -1,5 +1,5 @@
 \begin{schoolscoretable}
-\section*{\centering {{ payload.section_title|default:"Критерии оценивания" }}}
+\section*{\centering {% if section.title %}{{ section.title }}{% elif payload.section_title %}{{ payload.section_title }}{% else %}Критерии оценивания{% endif %}}
 {% if payload.max_score %}
 Максимальный балл: {{ payload.max_score }}
 

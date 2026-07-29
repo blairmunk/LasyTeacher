@@ -1,6 +1,6 @@
 \begin{schoolheader}
 \begin{center}
-{\LARGE\bfseries {{ payload.title|default:document.title }}}
+{\LARGE\bfseries {{ section.title|default:payload.title|default:document.title }}}
 {% if payload.student %}
 
 {\large Ученик: {{ payload.student.full_name }}}

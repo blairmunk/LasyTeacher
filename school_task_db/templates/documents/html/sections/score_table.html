@@ -1,5 +1,9 @@
-<section class="document-score-table">
-    <h2>{{ payload.section_title|default:"Критерии оценивания" }}</h2>
+<section class="document-section document-section-{{ section.section_type }} document-score-table">
+    <h2>
+        {% if section.title %}{{ section.title }}
+        {% elif payload.section_title %}{{ payload.section_title }}
+        {% else %}Критерии оценивания{% endif %}
+    </h2>
     {% if payload.max_score %}
         <p>Максимальный балл: {{ payload.max_score }}</p>
     {% endif %}

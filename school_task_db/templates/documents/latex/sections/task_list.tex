@@ -1,4 +1,5 @@
 \begin{schooltasklist}
+{% if section.title %}\section*{ {{ section.title }} }{% endif %}
 {% for variant in payload.variants %}
 {% if payload.show_variant_heading != False %}
 \section*{ {{ variant.title }} }

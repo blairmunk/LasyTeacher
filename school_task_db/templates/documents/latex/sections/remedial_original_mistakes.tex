@@ -1,5 +1,5 @@
 \begin{schooloriginalmistakes}
-\section*{Часть 1. Разбор ошибок}
+\section*{ {{ section.title|default:"Часть 1. Разбор ошибок" }} }
 {% for task in payload.tasks %}
 \subsection*{Задание {{ task.order }}{% if task.group_name %} \hfill {\normalfont\normalsize {{ task.group_name }}}{% endif %}}
 {% if task.max_points is not None %}

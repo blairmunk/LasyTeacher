@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from unittest import TestCase
 
-from core_logic.entities.document import PrintSettingsSpec
+from core_logic.entities.document import DocumentPresentationProfile
 from core_logic.entities.work import (
     OrphanVariantRef,
     RemedialSheetData,
@@ -315,31 +315,31 @@ class FakeWorkRepository:
         return self.remaining_variant_count
 
 
-class FakePrintSettingsRepository:
+class FakePresentationProfileRepository:
     def __init__(self):
         self.requested_document_types = []
-        self.print_settings_by_type = {
+        self.presentation_profiles_by_type = {
             'work': [
-                PrintSettingsSpec(
+                DocumentPresentationProfile(
                     name='Шаблон работы',
                     document_type='work',
-                    print_settings_id='template-work',
+                    presentation_profile_id='template-work',
                 ),
             ],
             'remedial_sheet': [
-                PrintSettingsSpec(
+                DocumentPresentationProfile(
                     name='Шаблон РнО',
                     document_type='remedial_sheet',
-                    print_settings_id='template-remedial',
+                    presentation_profile_id='template-remedial',
                 ),
             ],
         }
 
-    def list_print_settings_specs(self, document_type=''):
+    def list_presentation_profiles(self, document_type=''):
         self.requested_document_types.append(document_type)
-        return self.print_settings_by_type.get(document_type, [])
+        return self.presentation_profiles_by_type.get(document_type, [])
 
-    def get_print_settings_spec(self, print_settings_id, document_type=''):
+    def get_presentation_profile(self, presentation_profile_id, document_type=''):
         return None
 
 
@@ -367,16 +367,16 @@ class WorkDetailTests(TestCase):
         )
 
     def test_get_work_detail_use_case_builds_detail_context_data(self):
-        print_settings_repo = FakePrintSettingsRepository()
+        presentation_profile_repo = FakePresentationProfileRepository()
         use_case = GetWorkDetailUseCase(
             work_read_repo=FakeWorkRepository(
                 variants=['variant-1'],
                 analog_groups=[],
             ),
             work_service=WorkService(),
-            print_settings_repo=print_settings_repo,
+            presentation_profile_repo=presentation_profile_repo,
         )
-        self.assertIs(use_case.print_settings_repo, print_settings_repo)
+        self.assertIs(use_case.presentation_profile_repo, presentation_profile_repo)
 
         result = use_case.execute('work-1')
 
@@ -384,15 +384,15 @@ class WorkDetailTests(TestCase):
         self.assertEqual(result.variants, ['variant-1'])
         self.assertEqual(result.spec_preview, [])
         self.assertEqual(
-            result.work_print_settings[0].print_settings_id,
+            result.work_presentation_profiles[0].presentation_profile_id,
             'template-work',
         )
         self.assertEqual(
-            result.remedial_sheet_print_settings[0].print_settings_id,
+            result.remedial_sheet_presentation_profiles[0].presentation_profile_id,
             'template-remedial',
         )
         self.assertEqual(
-            print_settings_repo.requested_document_types,
+            presentation_profile_repo.requested_document_types,
             ['work', 'remedial_sheet'],
         )
         self.assertTrue(result.show_sync_button)

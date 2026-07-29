@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, List, Optional
 
-from core_logic.entities.document import PrintSettingsSpec
+from core_logic.entities.document import DocumentPresentationProfile
 from core_logic.value_objects.work_content_plan import WorkContentPlan
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
@@ -23,8 +23,12 @@ class WorkDetailData:
     analog_groups: List["WorkDetailSpecGroup"] = field(default_factory=list)
     spec_preview: List["WorkDetailSpecPreviewItem"] = field(default_factory=list)
     content_plan: WorkContentPlan = field(default_factory=WorkContentPlan)
-    work_print_settings: List[PrintSettingsSpec] = field(default_factory=list)
-    remedial_sheet_print_settings: List[PrintSettingsSpec] = field(default_factory=list)
+    work_presentation_profiles: List[DocumentPresentationProfile] = field(
+        default_factory=list,
+    )
+    remedial_sheet_presentation_profiles: List[
+        DocumentPresentationProfile
+    ] = field(default_factory=list)
     show_sync_button: bool = False
 
 

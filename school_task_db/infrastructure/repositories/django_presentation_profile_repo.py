@@ -1,49 +1,49 @@
-"""Django implementation of the print settings repository."""
+"""Django implementation of the presentation profile repository."""
 
 from typing import List, Optional
 
 from core_logic.entities.document import (
-    CreatePrintSettingsParams,
-    PrintSettingsSpec,
-    UpdatePrintSettingsParams,
+    CreatePresentationProfileParams,
+    DocumentPresentationProfile,
+    UpdatePresentationProfileParams,
 )
-from core_logic.interfaces.print_settings_repo import (
-    IPrintSettingsRepository,
+from core_logic.interfaces.presentation_profile_repo import (
+    IPresentationProfileRepository,
 )
 from document_engine.models import PrintSettings
 
 
-class DjangoPrintSettingsRepository(IPrintSettingsRepository):
-    """Persist print settings through Django ORM."""
+class DjangoPresentationProfileRepository(IPresentationProfileRepository):
+    """Persist presentation profiles through the legacy Django model."""
 
-    def list_print_settings_specs(
+    def list_presentation_profiles(
         self,
         document_type: str = '',
-    ) -> List[PrintSettingsSpec]:
+    ) -> List[DocumentPresentationProfile]:
         queryset = PrintSettings.objects.all()
         if document_type:
             queryset = queryset.filter(document_type=document_type)
         return [
-            print_settings.to_print_settings_spec()
+            print_settings.to_presentation_profile()
             for print_settings in queryset
         ]
 
-    def get_print_settings_spec(
+    def get_presentation_profile(
         self,
-        print_settings_id: str,
+        presentation_profile_id: str,
         document_type: str = '',
-    ) -> Optional[PrintSettingsSpec]:
-        queryset = PrintSettings.objects.filter(pk=print_settings_id)
+    ) -> Optional[DocumentPresentationProfile]:
+        queryset = PrintSettings.objects.filter(pk=presentation_profile_id)
         if document_type:
             queryset = queryset.filter(document_type=document_type)
         print_settings = queryset.first()
         if print_settings is None:
             return None
-        return print_settings.to_print_settings_spec()
+        return print_settings.to_presentation_profile()
 
-    def create_print_settings(
+    def create_presentation_profile(
         self,
-        params: CreatePrintSettingsParams,
+        params: CreatePresentationProfileParams,
     ) -> str:
         if params.is_default:
             PrintSettings.objects.filter(
@@ -69,12 +69,12 @@ class DjangoPrintSettingsRepository(IPrintSettingsRepository):
         print_settings.save()
         return str(print_settings.pk)
 
-    def update_print_settings(
+    def update_presentation_profile(
         self,
-        params: UpdatePrintSettingsParams,
+        params: UpdatePresentationProfileParams,
     ) -> bool:
         print_settings = PrintSettings.objects.filter(
-            pk=params.print_settings_id,
+            pk=params.presentation_profile_id,
         ).first()
         if print_settings is None:
             return False

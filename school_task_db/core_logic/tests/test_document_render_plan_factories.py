@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from core_logic.entities.document import (
     DocumentPresentation,
-    PrintSettingsSpec,
+    DocumentPresentationProfile,
     REMEDIAL_WORK_SOURCE_TYPE,
     REMEDIAL_VARIANT_SOURCE_TYPE,
     WORK_SOURCE_TYPE,
@@ -64,7 +64,7 @@ class DocumentRenderPlanFactoriesTests(TestCase):
 
     def test_build_work_document_recipe_keeps_default_sections_with_profile(self):
         presentation = DocumentPresentation(custom_css='body {}')
-        print_settings = PrintSettingsSpec(
+        presentation_profile = DocumentPresentationProfile(
             name='Кастомная работа',
             document_type=WORK_DOCUMENT_TYPE,
             presentation=presentation,
@@ -72,7 +72,7 @@ class DocumentRenderPlanFactoriesTests(TestCase):
 
         recipe = build_work_document_recipe_for_render(
             WorkDocumentRenderOptions(renderer_type='html'),
-            print_settings_spec=print_settings,
+            presentation_profile=presentation_profile,
         )
 
         self.assertEqual(
@@ -113,7 +113,7 @@ class DocumentRenderPlanFactoriesTests(TestCase):
 
     def test_build_work_document_render_plan_uses_profile_presentation(self):
         presentation = DocumentPresentation(custom_css='.task {}')
-        print_settings = PrintSettingsSpec(
+        presentation_profile = DocumentPresentationProfile(
             name='Рабочий лист',
             document_type='work',
             presentation=presentation,
@@ -123,7 +123,7 @@ class DocumentRenderPlanFactoriesTests(TestCase):
             work_id='work-1',
             work_name='Контрольная',
             options=WorkDocumentRenderOptions(renderer_type='html'),
-            print_settings_spec=print_settings,
+            presentation_profile=presentation_profile,
         )
 
         self.assertEqual(plan.recipe.document_type, 'work')
@@ -166,7 +166,7 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         )
 
     def test_work_print_overrides_apply_on_top_of_default_recipe(self):
-        print_settings_spec = PrintSettingsSpec(
+        presentation_profile = DocumentPresentationProfile(
             name='Профиль',
             document_type=WORK_DOCUMENT_TYPE,
         )
@@ -178,7 +178,7 @@ class DocumentRenderPlanFactoriesTests(TestCase):
                 hide_blank_cells=True,
                 append_answers=True,
             ),
-            print_settings_spec=print_settings_spec,
+            presentation_profile=presentation_profile,
         )
 
         self.assertEqual(
@@ -246,7 +246,7 @@ class DocumentRenderPlanFactoriesTests(TestCase):
 
     def test_remedial_profile_does_not_replace_content_recipe(self):
         presentation = DocumentPresentation(custom_latex_preamble='\\small')
-        print_settings = PrintSettingsSpec(
+        presentation_profile = DocumentPresentationProfile(
             name='Кастомная работа над ошибками',
             document_type='remedial_sheet',
             presentation=presentation,
@@ -255,7 +255,7 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         plan = build_remedial_sheet_document_render_plan(
             variant_id='variant-1',
             options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
-            print_settings_spec=print_settings,
+            presentation_profile=presentation_profile,
         )
 
         self.assertEqual(plan.recipe.document_type, 'remedial_sheet')
@@ -309,12 +309,12 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         self.assertEqual(plan.recipe.sections[0].options['variant_id'], 'variant-1')
         self.assertEqual(plan.recipe.sections[7].options['variant_id'], 'variant-2')
 
-    def test_build_remedial_sheet_batch_document_render_plan_uses_print_settings_spec(self):
+    def test_build_remedial_sheet_batch_document_render_plan_uses_presentation_profile(self):
         presentation = DocumentPresentation(
             custom_css='.remedial-sheet { font-size: 12pt; }',
             custom_latex_preamble='\\usepackage{multicol}',
         )
-        print_settings_spec = PrintSettingsSpec(
+        presentation_profile = DocumentPresentationProfile(
             name='Профиль РнО',
             document_type='remedial_sheet',
             presentation=presentation,
@@ -325,7 +325,7 @@ class DocumentRenderPlanFactoriesTests(TestCase):
             work_name='Работа над ошибками',
             variant_ids=['variant-1'],
             options=RemedialSheetDocumentRenderOptions(renderer_type='html'),
-            print_settings_spec=print_settings_spec,
+            presentation_profile=presentation_profile,
         )
 
         self.assertEqual(

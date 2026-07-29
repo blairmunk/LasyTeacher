@@ -4,7 +4,7 @@ from .models import PrintSettings
 
 
 @admin.register(PrintSettings)
-class PrintSettingsAdmin(admin.ModelAdmin):
+class PresentationProfileAdmin(admin.ModelAdmin):
     list_display = [
         'name',
         'document_type',

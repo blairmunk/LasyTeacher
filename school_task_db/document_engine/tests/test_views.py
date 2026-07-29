@@ -4,7 +4,7 @@ from django.urls import reverse
 from document_engine.models import PrintSettings
 
 
-class PrintSettingsViewTests(TestCase):
+class PresentationProfileViewTests(TestCase):
     def test_editor_shows_presentation_profiles_without_section_controls(self):
         profile = PrintSettings.objects.create(
             name='Оформление работы',
@@ -20,7 +20,7 @@ class PrintSettingsViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(
             response,
-            'document_engine/print_settings_editor.html',
+            'document_engine/presentation_profile_editor.html',
         )
         self.assertContains(response, 'Профили оформления')
         self.assertContains(response, 'Оформление работы')

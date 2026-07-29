@@ -5,7 +5,7 @@ from django.db import models
 from core.models import BaseModel
 from core_logic.entities.document import (
     DocumentPresentation,
-    PrintSettingsSpec,
+    DocumentPresentationProfile,
 )
 from core_logic.value_objects.document_recipes import (
     ANSWER_KEY_DOCUMENT_TYPE,
@@ -20,6 +20,11 @@ from core_logic.value_objects.document_type_catalog import validate_document_typ
 
 
 class PrintSettings(BaseModel):
+    """Persistence model for presentation profiles.
+
+    The legacy class name is kept to avoid a database-table rename.
+    """
+
     class DocumentType(models.TextChoices):
         WORK = WORK_DOCUMENT_TYPE, 'Контрольная / самостоятельная'
         REMEDIAL = REMEDIAL_SHEET_DOCUMENT_TYPE, 'Работа над ошибками'
@@ -77,11 +82,11 @@ class PrintSettings(BaseModel):
         except ValueError as error:
             raise ValidationError({'document_type': str(error)}) from error
 
-    def to_print_settings_spec(self):
-        return PrintSettingsSpec(
+    def to_presentation_profile(self):
+        return DocumentPresentationProfile(
             name=self.name,
             document_type=self.document_type,
-            print_settings_id=str(self.pk),
+            presentation_profile_id=str(self.pk),
             description=self.description,
             is_default=self.is_default,
             presentation=DocumentPresentation(

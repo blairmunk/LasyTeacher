@@ -26,8 +26,8 @@ from core_logic.use_cases.create_source import CreateSourceUseCase
 from core_logic.use_cases.create_remedial_wizard_work import (
     CreateRemedialWizardWorkUseCase,
 )
-from core_logic.use_cases.create_print_settings import (
-    CreatePrintSettingsUseCase,
+from core_logic.use_cases.create_presentation_profile import (
+    CreatePresentationProfileUseCase,
 )
 from core_logic.use_cases.create_student_remedial_variant import (
     CreateStudentRemedialVariantUseCase,
@@ -42,8 +42,8 @@ from core_logic.use_cases.create_work_from_tasks import CreateWorkFromTasksUseCa
 from core_logic.use_cases.delete_task_groups import DeleteTaskGroupsUseCase
 from core_logic.use_cases.delete_task import DeleteTaskUseCase
 from core_logic.use_cases.delete_variant import DeleteVariantUseCase
-from core_logic.use_cases.update_print_settings import (
-    UpdatePrintSettingsUseCase,
+from core_logic.use_cases.update_presentation_profile import (
+    UpdatePresentationProfileUseCase,
 )
 from core_logic.use_cases.execute_task_import import ExecuteTaskImportUseCase
 from core_logic.use_cases.execute_task_import_submission import (
@@ -61,17 +61,17 @@ from core_logic.use_cases.get_course_list import GetCourseListUseCase
 from core_logic.use_cases.get_topic_detail import GetTopicDetailUseCase
 from core_logic.use_cases.get_topic_list import GetTopicListUseCase
 from core_logic.use_cases.get_dashboard_summary import GetDashboardSummaryUseCase
-from core_logic.use_cases.get_print_settings_list import (
-    GetPrintSettingsListUseCase,
+from core_logic.use_cases.get_presentation_profile_list import (
+    GetPresentationProfileListUseCase,
 )
 from core_logic.use_cases.get_document_section_catalog import (
     GetDocumentSectionCatalogUseCase,
 )
-from core_logic.use_cases.get_print_settings_editor_data import (
-    GetPrintSettingsEditorDataUseCase,
+from core_logic.use_cases.get_presentation_profile_editor_data import (
+    GetPresentationProfileEditorDataUseCase,
 )
-from core_logic.use_cases.get_print_settings_form_data import (
-    GetPrintSettingsFormDataUseCase,
+from core_logic.use_cases.get_presentation_profile_form_data import (
+    GetPresentationProfileFormDataUseCase,
 )
 from core_logic.use_cases.get_document_type_catalog import (
     GetDocumentTypeCatalogUseCase,
@@ -237,8 +237,8 @@ from infrastructure.repositories.django_core_repo import DjangoCoreRepository
 from infrastructure.repositories.django_curriculum_repo import (
     DjangoCurriculumRepository,
 )
-from infrastructure.repositories.django_print_settings_repo import (
-    DjangoPrintSettingsRepository,
+from infrastructure.repositories.django_presentation_profile_repo import (
+    DjangoPresentationProfileRepository,
 )
 from infrastructure.container import Container
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
@@ -251,7 +251,7 @@ from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from infrastructure.forms.codifier_forms import CodifierFormAdapter
 from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
-from infrastructure.forms.print_settings_forms import PrintSettingsFormAdapter
+from infrastructure.forms.presentation_profile_forms import PresentationProfileFormAdapter
 from infrastructure.forms.report_forms import ReportFormAdapter
 from infrastructure.forms.review_forms import ReviewFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
@@ -304,9 +304,9 @@ class ContainerTests(SimpleTestCase):
         subtopic_options_use_case = container.get_subtopic_options_use_case()
         codifier_elements_use_case = container.get_codifier_elements_use_case()
         source_list_use_case = container.get_source_list_use_case()
-        create_print_settings_use_case = container.create_print_settings_use_case()
-        update_print_settings_use_case = container.update_print_settings_use_case()
-        print_settings_list_use_case = container.get_print_settings_list_use_case()
+        create_presentation_profile_use_case = container.create_presentation_profile_use_case()
+        update_presentation_profile_use_case = container.update_presentation_profile_use_case()
+        print_settings_list_use_case = container.get_presentation_profile_list_use_case()
         refresh_math_cache_use_case = container.refresh_task_math_cache_use_case()
         create_task_use_case = container.create_task_use_case()
         update_task_use_case = container.update_task_use_case()
@@ -469,10 +469,10 @@ class ContainerTests(SimpleTestCase):
             container.get_document_section_catalog_use_case()
         )
         print_settings_editor_data_use_case = (
-            container.get_print_settings_editor_data_use_case()
+            container.get_presentation_profile_editor_data_use_case()
         )
         print_settings_form_data_use_case = (
-            container.get_print_settings_form_data_use_case()
+            container.get_presentation_profile_form_data_use_case()
         )
         document_type_catalog_use_case = (
             container.get_document_type_catalog_use_case()
@@ -501,16 +501,16 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(codifier_elements_use_case, GetCodifierElementsUseCase)
         self.assertIsInstance(source_list_use_case, GetSourceListUseCase)
         self.assertIsInstance(
-            create_print_settings_use_case,
-            CreatePrintSettingsUseCase,
+            create_presentation_profile_use_case,
+            CreatePresentationProfileUseCase,
         )
         self.assertIsInstance(
-            update_print_settings_use_case,
-            UpdatePrintSettingsUseCase,
+            update_presentation_profile_use_case,
+            UpdatePresentationProfileUseCase,
         )
         self.assertIsInstance(
             print_settings_list_use_case,
-            GetPrintSettingsListUseCase,
+            GetPresentationProfileListUseCase,
         )
         self.assertIsInstance(
             document_section_catalog_use_case,
@@ -518,11 +518,11 @@ class ContainerTests(SimpleTestCase):
         )
         self.assertIsInstance(
             print_settings_editor_data_use_case,
-            GetPrintSettingsEditorDataUseCase,
+            GetPresentationProfileEditorDataUseCase,
         )
         self.assertIsInstance(
             print_settings_form_data_use_case,
-            GetPrintSettingsFormDataUseCase,
+            GetPresentationProfileFormDataUseCase,
         )
         self.assertIsInstance(
             document_type_catalog_use_case,
@@ -783,8 +783,8 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(container.core_repo, DjangoCoreRepository)
         self.assertIsInstance(container.settings_repo, DjangoSettingsRepository)
         self.assertIsInstance(
-            container.print_settings_repo,
-            DjangoPrintSettingsRepository,
+            container.presentation_profile_repo,
+            DjangoPresentationProfileRepository,
         )
         self.assertIsInstance(
             container.codifier_form_adapter,
@@ -796,8 +796,8 @@ class ContainerTests(SimpleTestCase):
             CurriculumFormAdapter,
         )
         self.assertIsInstance(
-            container.print_settings_form_adapter,
-            PrintSettingsFormAdapter,
+            container.presentation_profile_form_adapter,
+            PresentationProfileFormAdapter,
         )
         self.assertIsInstance(container.report_form_adapter, ReportFormAdapter)
         self.assertIsInstance(container.review_form_adapter, ReviewFormAdapter)

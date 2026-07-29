@@ -4,8 +4,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import QueryDict
 from django.test import SimpleTestCase
 
-from infrastructure.forms.print_settings_django_forms import PrintSettingsForm
-from core_logic.entities.document import DocumentPresentation, PrintSettingsSpec
+from infrastructure.forms.presentation_profile_django_forms import PresentationProfileForm
+from core_logic.entities.document import DocumentPresentation, DocumentPresentationProfile
 from core_logic.entities.core import (
     DashboardSummaryData,
     GlobalSearchData,
@@ -25,8 +25,8 @@ from core_logic.services.analytics_service import (
     ScoreTimelinePoint,
     StudentProfileData,
 )
-from core_logic.use_cases.get_print_settings_editor_data import (
-    PrintSettingsEditorData,
+from core_logic.use_cases.get_presentation_profile_editor_data import (
+    PresentationProfileEditorData,
 )
 from core_logic.value_objects.document_render_options import WorkDocumentRenderOptions
 from core_logic.value_objects.document_recipes import WORK_DOCUMENT_TYPE
@@ -42,7 +42,7 @@ from core_logic.value_objects.document_type_catalog import (
 from infrastructure.forms.codifier_forms import CodifierFormAdapter
 from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
-from infrastructure.forms.print_settings_forms import PrintSettingsFormAdapter
+from infrastructure.forms.presentation_profile_forms import PresentationProfileFormAdapter
 from infrastructure.forms.event_forms import EventFormAdapter
 from infrastructure.forms.report_forms import ReportFormAdapter
 from infrastructure.forms.review_forms import ReviewFormAdapter
@@ -228,26 +228,26 @@ class CurriculumFormAdapterTests(SimpleTestCase):
         )
 
 
-class PrintSettingsFormAdapterTests(SimpleTestCase):
+class PresentationProfileFormAdapterTests(SimpleTestCase):
     def _form(self, *args, **kwargs):
-        return PrintSettingsForm(
+        return PresentationProfileForm(
             *args,
             document_types=get_document_type_catalog(renderable_only=True),
             **kwargs,
         )
 
     def test_builds_editor_request_and_context(self):
-        adapter = PrintSettingsFormAdapter()
+        adapter = PresentationProfileFormAdapter()
         request = adapter.editor_data_request_from_query(
             QueryDict('type=work&renderable=1'),
         )
-        editor_data = PrintSettingsEditorData(
+        editor_data = PresentationProfileEditorData(
             document_types=get_document_type_catalog(renderable_only=True),
-            print_profiles=[
-                PrintSettingsSpec(
+            presentation_profiles=[
+                DocumentPresentationProfile(
                     name='Строгий профиль',
                     document_type=WORK_DOCUMENT_TYPE,
-                    print_settings_id='profile-1',
+                    presentation_profile_id='profile-1',
                     is_default=True,
                     presentation=DocumentPresentation(
                         custom_css='body {}',
@@ -261,10 +261,10 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
 
         self.assertEqual(request.document_type, WORK_DOCUMENT_TYPE)
         self.assertTrue(request.renderable_only)
-        self.assertEqual(context['print_profiles'][0]['name'], 'Строгий профиль')
-        self.assertTrue(context['print_profiles'][0]['is_default'])
-        self.assertTrue(context['print_profiles'][0]['has_css'])
-        self.assertTrue(context['print_profiles'][0]['has_latex_preamble'])
+        self.assertEqual(context['presentation_profiles'][0]['name'], 'Строгий профиль')
+        self.assertTrue(context['presentation_profiles'][0]['is_default'])
+        self.assertTrue(context['presentation_profiles'][0]['has_css'])
+        self.assertTrue(context['presentation_profiles'][0]['has_latex_preamble'])
 
     def test_builds_create_params_with_presentation_only(self):
         form = self._form(
@@ -280,8 +280,8 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
         self.assertTrue(form.is_valid(), form.errors)
 
         params = (
-            PrintSettingsFormAdapter()
-            .create_print_settings_params_from_form(form)
+            PresentationProfileFormAdapter()
+            .create_presentation_profile_params_from_form(form)
         )
 
         self.assertEqual(params.name, 'Строгий профиль')
@@ -291,11 +291,11 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
         self.assertTrue(params.is_default)
 
     def test_builds_update_initial_from_profile(self):
-        profile = PrintSettingsSpec(
+        profile = DocumentPresentationProfile(
             name='Профиль',
             description='Описание',
             document_type='work',
-            print_settings_id='profile-1',
+            presentation_profile_id='profile-1',
             presentation=DocumentPresentation(
                 custom_css='.task-item {}',
                 html_template_override='<main>{{ body_content|safe }}</main>',
@@ -303,8 +303,8 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
         )
 
         initial = (
-            PrintSettingsFormAdapter()
-            .form_initial_from_print_settings(profile)
+            PresentationProfileFormAdapter()
+            .form_initial_from_profile(profile)
         )
 
         self.assertEqual(initial['name'], 'Профиль')
@@ -1233,8 +1233,8 @@ class WorkFormAdapterTests(SimpleTestCase):
             variants=['variant-1'],
             analog_groups=['group-1'],
             spec_preview=['spec-1'],
-            work_print_settings=['work-template-1'],
-            remedial_sheet_print_settings=['remedial-template-1'],
+            work_presentation_profiles=['work-template-1'],
+            remedial_sheet_presentation_profiles=['remedial-template-1'],
             show_sync_button=True,
             content_plan=SimpleNamespace(
                 blocks=[
@@ -1263,11 +1263,11 @@ class WorkFormAdapterTests(SimpleTestCase):
             ['theory'],
         )
         self.assertEqual(
-            detail_context['work_print_settings'],
+            detail_context['work_presentation_profiles'],
             ['work-template-1'],
         )
         self.assertEqual(
-            detail_context['remedial_sheet_print_settings'],
+            detail_context['remedial_sheet_presentation_profiles'],
             ['remedial-template-1'],
         )
         self.assertTrue(detail_context['show_sync_button'])
@@ -1478,14 +1478,14 @@ class WorkFormAdapterTests(SimpleTestCase):
                 '&document_style=worksheet'
                 '&variant_selection=variant-1'
                 '&hide_theory=1&hide_blank_cells=1&append_answers=1'
-                '&print_settings_id=template-work',
+                '&presentation_profile_id=template-work',
             ),
             work_id='w1',
         )
 
         self.assertEqual(request.work_id, 'w1')
-        self.assertEqual(request.print_settings_id, 'template-work')
-        self.assertEqual(request.print_settings_id, 'template-work')
+        self.assertEqual(request.presentation_profile_id, 'template-work')
+        self.assertEqual(request.presentation_profile_id, 'template-work')
         self.assertEqual(request.options.renderer_type, 'html')
         self.assertEqual(request.options.pdf_format, 'A5')
         self.assertEqual(request.variant_id, 'variant-1')
@@ -1498,27 +1498,27 @@ class WorkFormAdapterTests(SimpleTestCase):
             QueryDict(
                 'renderer_type=pdf&format=A4'
                 '&answer_type=with_full_solutions'
-                '&print_settings_id=template-rno',
+                '&presentation_profile_id=template-rno',
             ),
             variant_id='v1',
         )
 
         self.assertEqual(request.variant_id, 'v1')
-        self.assertEqual(request.print_settings_id, 'template-rno')
-        self.assertEqual(request.print_settings_id, 'template-rno')
+        self.assertEqual(request.presentation_profile_id, 'template-rno')
+        self.assertEqual(request.presentation_profile_id, 'template-rno')
         self.assertEqual(request.options.renderer_type, 'pdf')
         self.assertEqual(request.options.pdf_format, 'A4')
         self.assertEqual(request.options.answer_type, 'with_full_solutions')
 
     def test_builds_render_remedial_sheet_batch_request_from_post(self):
         request = WorkFormAdapter().render_remedial_sheet_batch_request_from_post(
-            QueryDict('renderer_type=html&print_settings_id=template-rno'),
+            QueryDict('renderer_type=html&presentation_profile_id=template-rno'),
             work_id='w1',
         )
 
         self.assertEqual(request.work_id, 'w1')
-        self.assertEqual(request.print_settings_id, 'template-rno')
-        self.assertEqual(request.print_settings_id, 'template-rno')
+        self.assertEqual(request.presentation_profile_id, 'template-rno')
+        self.assertEqual(request.presentation_profile_id, 'template-rno')
         self.assertEqual(request.options.renderer_type, 'html')
 
     def test_builds_rendered_document_file_request(self):

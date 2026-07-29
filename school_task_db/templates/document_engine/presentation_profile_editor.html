@@ -86,33 +86,33 @@
         <section class="col-lg-8">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <h2 class="h5 mb-0">Сохранённые профили</h2>
-                <span class="small text-muted">{{ print_profiles|length }} шт.</span>
+                <span class="small text-muted">{{ presentation_profiles|length }} шт.</span>
             </div>
             <div class="list-group">
-                {% for print_profile in print_profiles %}
-                <a class="list-group-item list-group-item-action" href="{% url 'document_engine:print-profile-update' print_profile.print_settings_id %}">
+                {% for presentation_profile in presentation_profiles %}
+                <a class="list-group-item list-group-item-action" href="{% url 'document_engine:print-profile-update' presentation_profile.presentation_profile_id %}">
                     <div class="d-flex justify-content-between align-items-start gap-3">
                         <div>
-                            <strong>{{ print_profile.name }}</strong>
-                            {% if print_profile.description %}
-                            <div class="small text-muted mt-1">{{ print_profile.description }}</div>
+                            <strong>{{ presentation_profile.name }}</strong>
+                            {% if presentation_profile.description %}
+                            <div class="small text-muted mt-1">{{ presentation_profile.description }}</div>
                             {% endif %}
                         </div>
                         <div class="text-end">
-                            {% if print_profile.is_default %}
+                            {% if presentation_profile.is_default %}
                             <span class="badge bg-success">предлагается при печати</span>
                             {% endif %}
-                            {% if not print_profile.has_customization %}
+                            {% if not presentation_profile.has_customization %}
                             <span class="badge bg-secondary">без изменений</span>
                             {% endif %}
                         </div>
                     </div>
                     <div class="d-flex flex-wrap gap-1 mt-2">
-                        {% if print_profile.has_css %}<span class="badge bg-info">CSS</span>{% endif %}
-                        {% if print_profile.has_latex_preamble %}<span class="badge bg-info">LaTeX</span>{% endif %}
-                        {% if print_profile.has_html_wrapper %}<span class="badge bg-warning text-dark">HTML-обёртка</span>{% endif %}
-                        {% if print_profile.has_latex_wrapper %}<span class="badge bg-warning text-dark">LaTeX-обёртка</span>{% endif %}
-                        <span class="badge bg-light text-dark">{{ print_profile.document_type }}</span>
+                        {% if presentation_profile.has_css %}<span class="badge bg-info">CSS</span>{% endif %}
+                        {% if presentation_profile.has_latex_preamble %}<span class="badge bg-info">LaTeX</span>{% endif %}
+                        {% if presentation_profile.has_html_wrapper %}<span class="badge bg-warning text-dark">HTML-обёртка</span>{% endif %}
+                        {% if presentation_profile.has_latex_wrapper %}<span class="badge bg-warning text-dark">LaTeX-обёртка</span>{% endif %}
+                        <span class="badge bg-light text-dark">{{ presentation_profile.document_type }}</span>
                     </div>
                 </a>
                 {% empty %}

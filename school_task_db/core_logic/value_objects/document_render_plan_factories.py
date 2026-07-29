@@ -6,7 +6,7 @@ from core_logic.entities.document import (
     DocumentRecipe,
     DocumentSectionSpec,
     DocumentSourceRef,
-    PrintSettingsSpec,
+    DocumentPresentationProfile,
     REMEDIAL_WORK_SOURCE_TYPE,
     REMEDIAL_VARIANT_SOURCE_TYPE,
     WORK_SOURCE_TYPE,
@@ -38,7 +38,7 @@ def build_work_document_render_plan(
     work_id: str,
     work_name: str,
     options: WorkDocumentRenderOptions,
-    print_settings_spec: PrintSettingsSpec | None = None,
+    presentation_profile: DocumentPresentationProfile | None = None,
     variant_ids: list[str] | None = None,
 ) -> DocumentRenderPlan:
     return build_document_render_plan(
@@ -48,7 +48,7 @@ def build_work_document_render_plan(
         ),
         recipe=build_work_document_recipe_for_render(
             options=options,
-            print_settings_spec=print_settings_spec,
+            presentation_profile=presentation_profile,
             variant_ids=variant_ids,
         ),
         render_target=options.render_target,
@@ -58,13 +58,13 @@ def build_work_document_render_plan(
 def build_remedial_sheet_document_render_plan(
     variant_id: str,
     options: RemedialSheetDocumentRenderOptions,
-    print_settings_spec: PrintSettingsSpec | None = None,
+    presentation_profile: DocumentPresentationProfile | None = None,
 ) -> DocumentRenderPlan:
     return build_document_render_plan(
         source=build_remedial_sheet_document_source(variant_id),
         recipe=build_remedial_sheet_document_recipe_for_render(
             options=options,
-            print_settings_spec=print_settings_spec,
+            presentation_profile=presentation_profile,
         ),
         render_target=options.render_target,
     )
@@ -75,7 +75,7 @@ def build_remedial_sheet_batch_document_render_plan(
     work_name: str,
     variant_ids: list[str],
     options: RemedialSheetDocumentRenderOptions,
-    print_settings_spec: PrintSettingsSpec | None = None,
+    presentation_profile: DocumentPresentationProfile | None = None,
 ) -> DocumentRenderPlan:
     return build_document_render_plan(
         source=build_remedial_sheet_batch_document_source(
@@ -85,7 +85,7 @@ def build_remedial_sheet_batch_document_render_plan(
         recipe=build_remedial_sheet_batch_document_recipe_for_render(
             variant_ids=variant_ids,
             options=options,
-            print_settings_spec=print_settings_spec,
+            presentation_profile=presentation_profile,
         ),
         render_target=options.render_target,
     )
@@ -125,11 +125,11 @@ def build_remedial_sheet_batch_document_source(
 
 def build_work_document_recipe_for_render(
     options: WorkDocumentRenderOptions,
-    print_settings_spec: PrintSettingsSpec | None = None,
+    presentation_profile: DocumentPresentationProfile | None = None,
     variant_ids: list[str] | None = None,
 ) -> DocumentRecipe:
     recipe = _recipe_with_profile_presentation(
-        print_settings_spec=print_settings_spec,
+        presentation_profile=presentation_profile,
         default_recipe_builder=build_work_document_recipe,
     )
     recipe = apply_work_document_print_overrides(recipe, options)
@@ -239,10 +239,10 @@ def apply_work_document_print_overrides(
 
 def build_remedial_sheet_document_recipe_for_render(
     options: RemedialSheetDocumentRenderOptions,
-    print_settings_spec: PrintSettingsSpec | None = None,
+    presentation_profile: DocumentPresentationProfile | None = None,
 ) -> DocumentRecipe:
     return _recipe_with_profile_presentation(
-        print_settings_spec=print_settings_spec,
+        presentation_profile=presentation_profile,
         default_recipe_builder=(
             lambda: build_remedial_sheet_document_recipe(
                 options.build_options,
@@ -254,11 +254,11 @@ def build_remedial_sheet_document_recipe_for_render(
 def build_remedial_sheet_batch_document_recipe_for_render(
     variant_ids: list[str],
     options: RemedialSheetDocumentRenderOptions,
-    print_settings_spec: PrintSettingsSpec | None = None,
+    presentation_profile: DocumentPresentationProfile | None = None,
 ) -> DocumentRecipe:
     base_recipe = build_remedial_sheet_document_recipe_for_render(
         options=options,
-        print_settings_spec=print_settings_spec,
+        presentation_profile=presentation_profile,
     )
     sections = []
     for index, variant_id in enumerate(variant_ids):
@@ -283,16 +283,16 @@ def build_remedial_sheet_batch_document_recipe_for_render(
 
 
 def _recipe_with_profile_presentation(
-    print_settings_spec: PrintSettingsSpec | None,
+    presentation_profile: DocumentPresentationProfile | None,
     default_recipe_builder: Callable[[], DocumentRecipe],
 ) -> DocumentRecipe:
     recipe = default_recipe_builder()
-    if print_settings_spec is None:
+    if presentation_profile is None:
         return recipe
     return DocumentRecipe(
         document_type=recipe.document_type,
         sections=recipe.sections,
-        presentation=print_settings_spec.presentation,
+        presentation=presentation_profile.presentation,
     )
 
 

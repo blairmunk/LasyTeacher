@@ -3,19 +3,19 @@
 from urllib.parse import urlencode
 
 from core_logic.entities.document import (
-    CreatePrintSettingsParams,
+    CreatePresentationProfileParams,
     DocumentPresentation,
-    UpdatePrintSettingsParams,
+    UpdatePresentationProfileParams,
 )
-from core_logic.use_cases.get_print_settings_editor_data import (
-    GetPrintSettingsEditorDataRequest,
+from core_logic.use_cases.get_presentation_profile_editor_data import (
+    GetPresentationProfileEditorDataRequest,
 )
 from core_logic.value_objects.document_render_options import FILE_TYPE_LABELS
 
 
-class PrintSettingsFormAdapter:
+class PresentationProfileFormAdapter:
     def editor_data_request_from_query(self, query_data):
-        return GetPrintSettingsEditorDataRequest(
+        return GetPresentationProfileEditorDataRequest(
             document_type=query_data.get('type', ''),
             renderable_only=query_data.get('renderable', '1') == '1',
         )
@@ -26,16 +26,16 @@ class PrintSettingsFormAdapter:
                 self._document_type_context(document_type, request)
                 for document_type in editor_data.document_types
             ],
-            'print_profiles': [
-                self._print_profile_context(print_profile)
-                for print_profile in editor_data.print_profiles
+            'presentation_profiles': [
+                self._presentation_profile_context(presentation_profile)
+                for presentation_profile in editor_data.presentation_profiles
             ],
             'current_document_type': request.document_type,
             'renderable_only': request.renderable_only,
         }
 
-    def create_print_settings_params_from_form(self, form):
-        return CreatePrintSettingsParams(
+    def create_presentation_profile_params_from_form(self, form):
+        return CreatePresentationProfileParams(
             name=form.cleaned_data['name'],
             description=form.cleaned_data.get('description', ''),
             document_type=form.cleaned_data['document_type'],
@@ -43,9 +43,13 @@ class PrintSettingsFormAdapter:
             presentation=self._presentation_from_form(form),
         )
 
-    def update_print_settings_params_from_form(self, form, print_settings_id):
-        return UpdatePrintSettingsParams(
-            print_settings_id=print_settings_id,
+    def update_presentation_profile_params_from_form(
+        self,
+        form,
+        presentation_profile_id,
+    ):
+        return UpdatePresentationProfileParams(
+            presentation_profile_id=presentation_profile_id,
             name=form.cleaned_data['name'],
             description=form.cleaned_data.get('description', ''),
             document_type=form.cleaned_data['document_type'],
@@ -53,26 +57,26 @@ class PrintSettingsFormAdapter:
             presentation=self._presentation_from_form(form),
         )
 
-    def form_initial_from_print_settings(self, print_settings):
+    def form_initial_from_profile(self, presentation_profile):
         return {
-            'name': print_settings.name,
-            'description': print_settings.description,
-            'document_type': print_settings.document_type,
-            'custom_css': print_settings.presentation.custom_css,
+            'name': presentation_profile.name,
+            'description': presentation_profile.description,
+            'document_type': presentation_profile.document_type,
+            'custom_css': presentation_profile.presentation.custom_css,
             'custom_latex_preamble': (
-                print_settings.presentation.custom_latex_preamble
+                presentation_profile.presentation.custom_latex_preamble
             ),
             'html_template_override': (
-                print_settings.presentation.html_template_override
+                presentation_profile.presentation.html_template_override
             ),
             'latex_template_override': (
-                print_settings.presentation.latex_template_override
+                presentation_profile.presentation.latex_template_override
             ),
-            'is_default': print_settings.is_default,
+            'is_default': presentation_profile.is_default,
         }
 
     @staticmethod
-    def create_context(form, document_types, sections=None):
+    def create_context(form, document_types):
         return {
             'form': form,
             'document_types': document_types,
@@ -96,14 +100,14 @@ class PrintSettingsFormAdapter:
         }
 
     @staticmethod
-    def _print_profile_context(print_profile):
-        presentation = print_profile.presentation
+    def _presentation_profile_context(presentation_profile):
+        presentation = presentation_profile.presentation
         return {
-            'print_settings_id': print_profile.print_settings_id,
-            'name': print_profile.name,
-            'description': print_profile.description,
-            'document_type': print_profile.document_type,
-            'is_default': print_profile.is_default,
+            'presentation_profile_id': presentation_profile.presentation_profile_id,
+            'name': presentation_profile.name,
+            'description': presentation_profile.description,
+            'document_type': presentation_profile.document_type,
+            'is_default': presentation_profile.is_default,
             'has_customization': presentation.has_customization,
             'has_css': bool(presentation.custom_css),
             'has_latex_preamble': bool(

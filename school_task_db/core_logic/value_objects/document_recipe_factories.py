@@ -12,7 +12,6 @@ from core_logic.value_objects.document_recipes import (
     TASK_LIST_SECTION,
     TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
-    build_document_recipe_from_sections_config,
 )
 from core_logic.value_objects.document_render_options import (
     RemedialSheetBuildOptions,
@@ -25,9 +24,9 @@ def build_work_document_recipe() -> DocumentRecipe:
         DocumentSectionSpec(section_type=TASK_LIST_SECTION),
     ]
 
-    return build_document_recipe_from_sections_config(
+    return DocumentRecipe(
         document_type=WORK_DOCUMENT_TYPE,
-        sections_config=sections,
+        sections=sections,
     )
 
 
@@ -65,7 +64,7 @@ def build_remedial_sheet_document_recipe(
             DocumentSectionSpec(section_type=FULL_SOLUTIONS_SECTION),
         ))
 
-    return build_document_recipe_from_sections_config(
+    return DocumentRecipe(
         document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
-        sections_config=sections,
+        sections=sections,
     )

@@ -8,7 +8,7 @@ from core_logic.entities.document import (
     DocumentRecipe,
     DocumentSectionSpec,
     DocumentSourceRef,
-    PrintSettingsSpec,
+    DocumentPresentationProfile,
     REMEDIAL_VARIANT_SOURCE_TYPE,
     WORK_SOURCE_TYPE,
 )
@@ -108,7 +108,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 renderer_type='html',
                 append_answers=True,
             )
-            print_settings_spec = PrintSettingsSpec(
+            presentation_profile = DocumentPresentationProfile(
                 name='Профиль оформления',
                 document_type=WORK_DOCUMENT_TYPE,
                 presentation=DocumentPresentation(
@@ -121,7 +121,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=options,
-                    print_settings_spec=print_settings_spec,
+                    presentation_profile=presentation_profile,
                 ),
             )
 
@@ -378,7 +378,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 document_renderer_registry=components.document_renderer_registry,
             )
             options = WorkDocumentRenderOptions(renderer_type='latex')
-            print_settings_spec = PrintSettingsSpec(
+            presentation_profile = DocumentPresentationProfile(
                 name='Профиль оформления',
                 document_type=WORK_DOCUMENT_TYPE,
                 presentation=DocumentPresentation(
@@ -391,7 +391,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=options,
-                    print_settings_spec=print_settings_spec,
+                    presentation_profile=presentation_profile,
                 ),
             )
 

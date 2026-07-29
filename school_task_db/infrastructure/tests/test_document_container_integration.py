@@ -89,7 +89,7 @@ class DocumentContainerIntegrationTests(TestCase):
                         renderer_type='html',
                         append_answers=True,
                     ),
-                    print_settings_id=str(print_settings.pk),
+                    presentation_profile_id=str(print_settings.pk),
                 )
             )
 

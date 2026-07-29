@@ -5,7 +5,7 @@ from unittest import TestCase
 
 from core_logic.entities.document import (
     DocumentPresentation,
-    PrintSettingsSpec,
+    DocumentPresentationProfile,
 )
 from core_logic.entities.document_rendering import (
     DocumentRenderResult,
@@ -162,20 +162,20 @@ class FakeRenderRemedialSheetDocumentUseCase:
         )
 
 
-class FakePrintSettingsRepository:
+class FakePresentationProfileRepository:
     def __init__(self):
-        self.requested_print_settings_ids = []
-        self.print_settings_by_id = {}
+        self.requested_presentation_profile_ids = []
+        self.presentation_profiles_by_id = {}
 
-    def list_print_settings_specs(self, document_type=''):
+    def list_presentation_profiles(self, document_type=''):
         return []
 
-    def get_print_settings_spec(self, print_settings_id, document_type=''):
-        self.requested_print_settings_ids.append(
-            (print_settings_id, document_type),
+    def get_presentation_profile(self, presentation_profile_id, document_type=''):
+        self.requested_presentation_profile_ids.append(
+            (presentation_profile_id, document_type),
         )
-        return self.print_settings_by_id.get(
-            (print_settings_id, document_type),
+        return self.presentation_profiles_by_id.get(
+            (presentation_profile_id, document_type),
         )
 
 
@@ -273,16 +273,16 @@ class DocumentRenderingUseCaseTests(TestCase):
         self.assertTrue(result.success)
         self.assertEqual(service.render_request.source.source_id, 'work-1')
 
-    def test_render_work_document_uses_request_print_settings_spec(self):
+    def test_render_work_document_uses_request_presentation_profile(self):
         service = FakeDocumentEngine()
-        print_settings_repo = FakePrintSettingsRepository()
+        presentation_profile_repo = FakePresentationProfileRepository()
         use_case = RenderWorkDocumentUseCase(
             render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(),
-            print_settings_repo=print_settings_repo,
+            presentation_profile_repo=presentation_profile_repo,
         )
-        self.assertIs(use_case.print_settings_repo, print_settings_repo)
-        print_settings_spec = PrintSettingsSpec(
+        self.assertIs(use_case.presentation_profile_repo, presentation_profile_repo)
+        presentation_profile = DocumentPresentationProfile(
             name='Кастомная работа',
             document_type='work',
             presentation=DocumentPresentation(
@@ -294,7 +294,7 @@ class DocumentRenderingUseCaseTests(TestCase):
             RenderWorkDocumentRequest(
                 work_id='work-1',
                 options=WorkDocumentRenderOptions(renderer_type='html'),
-                print_settings_spec=print_settings_spec,
+                presentation_profile=presentation_profile,
             )
         )
 
@@ -311,11 +311,11 @@ class DocumentRenderingUseCaseTests(TestCase):
 
     def test_render_work_document_without_profile_uses_builtin_presentation(self):
         service = FakeDocumentEngine()
-        print_settings_repo = FakePrintSettingsRepository()
+        presentation_profile_repo = FakePresentationProfileRepository()
         use_case = RenderWorkDocumentUseCase(
             render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(),
-            print_settings_repo=print_settings_repo,
+            presentation_profile_repo=presentation_profile_repo,
         )
 
         result = use_case.execute(
@@ -333,14 +333,14 @@ class DocumentRenderingUseCaseTests(TestCase):
         )
         self.assertEqual(render_plan.recipe.presentation.custom_css, '')
 
-    def test_render_work_document_uses_print_settings_id(self):
+    def test_render_work_document_uses_presentation_profile_id(self):
         service = FakeDocumentEngine()
-        print_settings_repo = FakePrintSettingsRepository()
-        print_settings_repo.print_settings_by_id[('template-work', 'work')] = (
-            PrintSettingsSpec(
+        presentation_profile_repo = FakePresentationProfileRepository()
+        presentation_profile_repo.presentation_profiles_by_id[('template-work', 'work')] = (
+            DocumentPresentationProfile(
                 name='Selected work',
                 document_type='work',
-                print_settings_id='template-work',
+                presentation_profile_id='template-work',
                 presentation=DocumentPresentation(
                     custom_css='.task { margin-bottom: 1rem; }',
                 ),
@@ -349,20 +349,20 @@ class DocumentRenderingUseCaseTests(TestCase):
         use_case = RenderWorkDocumentUseCase(
             render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(),
-            print_settings_repo=print_settings_repo,
+            presentation_profile_repo=presentation_profile_repo,
         )
 
         result = use_case.execute(
             RenderWorkDocumentRequest(
                 work_id='work-1',
                 options=WorkDocumentRenderOptions(renderer_type='html'),
-                print_settings_id='template-work',
+                presentation_profile_id='template-work',
             )
         )
 
         self.assertTrue(result.success)
         self.assertEqual(
-            print_settings_repo.requested_print_settings_ids,
+            presentation_profile_repo.requested_presentation_profile_ids,
             [('template-work', 'work')],
         )
         self.assertEqual(
@@ -493,15 +493,15 @@ class DocumentRenderingUseCaseTests(TestCase):
         self.assertTrue(result.success)
         self.assertEqual(service.render_request.source.source_id, 'variant-1')
 
-    def test_render_remedial_sheet_document_uses_request_print_settings_spec(self):
+    def test_render_remedial_sheet_document_uses_request_presentation_profile(self):
         service = FakeDocumentEngine()
-        print_settings_repo = FakePrintSettingsRepository()
+        presentation_profile_repo = FakePresentationProfileRepository()
         use_case = RenderRemedialSheetDocumentUseCase(
             render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(),
-            print_settings_repo=print_settings_repo,
+            presentation_profile_repo=presentation_profile_repo,
         )
-        print_settings_spec = PrintSettingsSpec(
+        presentation_profile = DocumentPresentationProfile(
             name='Кастомная работа над ошибками',
             document_type='remedial_sheet',
             presentation=DocumentPresentation(
@@ -513,7 +513,7 @@ class DocumentRenderingUseCaseTests(TestCase):
             RenderRemedialSheetDocumentRequest(
                 variant_id='variant-1',
                 options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
-                print_settings_spec=print_settings_spec,
+                presentation_profile=presentation_profile,
             )
         )
 
@@ -539,11 +539,11 @@ class DocumentRenderingUseCaseTests(TestCase):
 
     def test_render_remedial_sheet_without_profile_uses_builtin_presentation(self):
         service = FakeDocumentEngine()
-        print_settings_repo = FakePrintSettingsRepository()
+        presentation_profile_repo = FakePresentationProfileRepository()
         use_case = RenderRemedialSheetDocumentUseCase(
             render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(),
-            print_settings_repo=print_settings_repo,
+            presentation_profile_repo=presentation_profile_repo,
         )
 
         result = use_case.execute(
@@ -570,16 +570,16 @@ class DocumentRenderingUseCaseTests(TestCase):
         )
         self.assertEqual(render_plan.recipe.presentation.custom_css, '')
 
-    def test_render_remedial_sheet_document_uses_selected_print_settings_id(
+    def test_render_remedial_sheet_document_uses_selected_presentation_profile_id(
         self,
     ):
         service = FakeDocumentEngine()
-        print_settings_repo = FakePrintSettingsRepository()
-        print_settings_repo.print_settings_by_id[('template-rno', 'remedial_sheet')] = (
-            PrintSettingsSpec(
+        presentation_profile_repo = FakePresentationProfileRepository()
+        presentation_profile_repo.presentation_profiles_by_id[('template-rno', 'remedial_sheet')] = (
+            DocumentPresentationProfile(
                 name='Selected remedial',
                 document_type='remedial_sheet',
-                print_settings_id='template-rno',
+                presentation_profile_id='template-rno',
                 presentation=DocumentPresentation(
                     custom_css='.student-name { font-weight: bold; }',
                 ),
@@ -588,20 +588,20 @@ class DocumentRenderingUseCaseTests(TestCase):
         use_case = RenderRemedialSheetDocumentUseCase(
             render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(),
-            print_settings_repo=print_settings_repo,
+            presentation_profile_repo=presentation_profile_repo,
         )
 
         result = use_case.execute(
             RenderRemedialSheetDocumentRequest(
                 variant_id='variant-1',
                 options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
-                print_settings_id='template-rno',
+                presentation_profile_id='template-rno',
             )
         )
 
         self.assertTrue(result.success)
         self.assertEqual(
-            print_settings_repo.requested_print_settings_ids,
+            presentation_profile_repo.requested_presentation_profile_ids,
             [('template-rno', 'remedial_sheet')],
         )
         self.assertEqual(
@@ -786,7 +786,7 @@ class DocumentRenderingUseCaseTests(TestCase):
             ],
         )
 
-    def test_render_remedial_sheet_batch_document_uses_print_settings_spec(self):
+    def test_render_remedial_sheet_batch_document_uses_presentation_profile(self):
         work_repo = FakeWorkRepository(
             work_name='Работа над ошибками',
             remedial_variant_ids=['variant-1'],
@@ -796,7 +796,7 @@ class DocumentRenderingUseCaseTests(TestCase):
             work_repo=work_repo,
             render_document_from_recipe_use_case=recipe_renderer(service),
         )
-        print_settings_spec = PrintSettingsSpec(
+        presentation_profile = DocumentPresentationProfile(
             name='Профиль РнО',
             document_type='remedial_sheet',
             presentation=DocumentPresentation(
@@ -808,7 +808,7 @@ class DocumentRenderingUseCaseTests(TestCase):
             RenderRemedialSheetBatchDocumentRequest(
                 work_id='work-1',
                 options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
-                print_settings_spec=print_settings_spec,
+                presentation_profile=presentation_profile,
             )
         )
 

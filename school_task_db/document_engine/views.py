@@ -4,33 +4,33 @@ from django.shortcuts import redirect
 from django.views.generic import TemplateView
 
 from infrastructure.container import container
-from infrastructure.forms.print_settings_django_forms import (
-    PrintSettingsForm,
+from infrastructure.forms.presentation_profile_django_forms import (
+    PresentationProfileForm,
 )
-from core_logic.use_cases.get_print_settings_form_data import (
-    GetPrintSettingsFormDataRequest,
+from core_logic.use_cases.get_presentation_profile_form_data import (
+    GetPresentationProfileFormDataRequest,
 )
 from core_logic.value_objects.document_recipes import WORK_DOCUMENT_TYPE
 
 
-class PrintSettingsEditorView(TemplateView):
-    template_name = 'document_engine/print_settings_editor.html'
+class PresentationProfileEditorView(TemplateView):
+    template_name = 'document_engine/presentation_profile_editor.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        adapter = container.print_settings_form_adapter
+        adapter = container.presentation_profile_form_adapter
         request = adapter.editor_data_request_from_query(self.request.GET)
         editor_data = (
             container
-            .get_print_settings_editor_data_use_case()
+            .get_presentation_profile_editor_data_use_case()
             .execute(request)
         )
         context.update(adapter.editor_context(editor_data, request))
         return context
 
 
-class PrintSettingsCreateView(TemplateView):
-    template_name = 'document_engine/print_settings_form.html'
+class PresentationProfileCreateView(TemplateView):
+    template_name = 'document_engine/presentation_profile_form.html'
     page_title = 'Новый профиль оформления'
 
     def get_context_data(self, **kwargs):
@@ -46,7 +46,7 @@ class PrintSettingsCreateView(TemplateView):
             },
         )
         context.update(
-            container.print_settings_form_adapter.create_context(
+            container.presentation_profile_form_adapter.create_context(
                 form=form,
                 document_types=form_data.document_types,
             )
@@ -63,10 +63,10 @@ class PrintSettingsCreateView(TemplateView):
                 self.get_context_data(form=form, form_data=form_data),
             )
 
-        result = container.create_print_settings_use_case().execute(
+        result = container.create_presentation_profile_use_case().execute(
             container
-            .print_settings_form_adapter
-            .create_print_settings_params_from_form(form)
+            .presentation_profile_form_adapter
+            .create_presentation_profile_params_from_form(form)
         )
         if not result.success:
             for error in result.errors:
@@ -80,45 +80,45 @@ class PrintSettingsCreateView(TemplateView):
 
     def _form(self, *args, form_data=None, **kwargs):
         form_data = form_data or self._form_data()
-        return PrintSettingsForm(
+        return PresentationProfileForm(
             *args,
             document_types=form_data.document_types,
             **kwargs,
         )
 
-    def _form_data(self, print_settings_id=''):
+    def _form_data(self, presentation_profile_id=''):
         return (
             container
-            .get_print_settings_form_data_use_case()
+            .get_presentation_profile_form_data_use_case()
             .execute(
-                GetPrintSettingsFormDataRequest(
-                    print_settings_id=print_settings_id,
+                GetPresentationProfileFormDataRequest(
+                    presentation_profile_id=presentation_profile_id,
                     renderable_only=True,
                 ),
             )
         )
 
 
-class PrintSettingsUpdateView(PrintSettingsCreateView):
+class PresentationProfileUpdateView(PresentationProfileCreateView):
     page_title = 'Редактирование профиля оформления'
 
-    def _form_data(self, print_settings_id=''):
+    def _form_data(self, presentation_profile_id=''):
         form_data = super()._form_data(
-            print_settings_id or str(self.kwargs['pk']),
+            presentation_profile_id or str(self.kwargs['pk']),
         )
-        if form_data.print_profile is None:
+        if form_data.presentation_profile is None:
             raise Http404('Профиль оформления не найден')
         return form_data
 
     def get_context_data(self, **kwargs):
         form_data = kwargs.pop('form_data', None) or self._form_data()
-        print_profile = form_data.print_profile
+        presentation_profile = form_data.presentation_profile
         form = kwargs.get('form') or self._form(
             form_data=form_data,
             initial=(
                 container
-                .print_settings_form_adapter
-                .form_initial_from_print_settings(print_profile)
+                .presentation_profile_form_adapter
+                .form_initial_from_profile(presentation_profile)
             ),
         )
         context = super().get_context_data(
@@ -137,8 +137,8 @@ class PrintSettingsUpdateView(PrintSettingsCreateView):
             form_data=form_data,
             initial=(
                 container
-                .print_settings_form_adapter
-                .form_initial_from_print_settings(form_data.print_profile)
+                .presentation_profile_form_adapter
+                .form_initial_from_profile(form_data.presentation_profile)
             ),
         )
         if not form.is_valid():
@@ -146,11 +146,11 @@ class PrintSettingsUpdateView(PrintSettingsCreateView):
                 self.get_context_data(form=form, form_data=form_data),
             )
 
-        adapter = container.print_settings_form_adapter
-        result = container.update_print_settings_use_case().execute(
-            adapter.update_print_settings_params_from_form(
+        adapter = container.presentation_profile_form_adapter
+        result = container.update_presentation_profile_use_case().execute(
+            adapter.update_presentation_profile_params_from_form(
                 form,
-                print_settings_id=str(self.kwargs['pk']),
+                presentation_profile_id=str(self.kwargs['pk']),
             )
         )
         if not result.success:

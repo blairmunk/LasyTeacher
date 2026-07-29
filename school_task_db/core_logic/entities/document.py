@@ -116,6 +116,8 @@ class DocumentSectionSpec:
 
 @dataclass(frozen=True)
 class DocumentRecipe:
+    """Transient document-level assembly instructions for the engine."""
+
     document_type: str
     sections: Tuple[DocumentSectionSpec, ...] = field(default_factory=tuple)
     presentation: DocumentPresentation = field(
@@ -159,12 +161,12 @@ class DocumentRecipe:
 
 
 @dataclass(frozen=True)
-class PrintSettingsSpec:
+class DocumentPresentationProfile:
     """Saved presentation settings for a rendered document."""
 
     name: str
     document_type: str
-    print_settings_id: str = ''
+    presentation_profile_id: str = ''
     description: str = ''
     is_default: bool = False
     presentation: DocumentPresentation = field(
@@ -177,7 +179,7 @@ class PrintSettingsSpec:
 
 
 @dataclass(frozen=True)
-class CreatePrintSettingsParams:
+class CreatePresentationProfileParams:
     name: str
     document_type: str
     description: str = ''
@@ -193,9 +195,9 @@ class CreatePrintSettingsParams:
 
 
 @dataclass(frozen=True)
-class CreatePrintSettingsResult:
+class CreatePresentationProfileResult:
     status: str
-    print_settings_id: str = ''
+    presentation_profile_id: str = ''
     errors: Tuple[str, ...] = field(default_factory=tuple)
 
     @property
@@ -204,8 +206,8 @@ class CreatePrintSettingsResult:
 
 
 @dataclass(frozen=True)
-class UpdatePrintSettingsParams:
-    print_settings_id: str
+class UpdatePresentationProfileParams:
+    presentation_profile_id: str
     name: str
     document_type: str
     description: str = ''
@@ -217,8 +219,8 @@ class UpdatePrintSettingsParams:
     def __post_init__(self):
         object.__setattr__(
             self,
-            'print_settings_id',
-            self.print_settings_id.strip(),
+            'presentation_profile_id',
+            self.presentation_profile_id.strip(),
         )
         object.__setattr__(self, 'name', self.name.strip())
         object.__setattr__(self, 'document_type', self.document_type.strip())
@@ -226,9 +228,9 @@ class UpdatePrintSettingsParams:
 
 
 @dataclass(frozen=True)
-class UpdatePrintSettingsResult:
+class UpdatePresentationProfileResult:
     status: str
-    print_settings_id: str = ''
+    presentation_profile_id: str = ''
     errors: Tuple[str, ...] = field(default_factory=tuple)
 
     @property

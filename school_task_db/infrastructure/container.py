@@ -62,11 +62,11 @@ from core_logic.use_cases.render_document_from_recipe import (
     RenderDocumentFromRecipeUseCase,
 )
 from core_logic.use_cases.render_work_document import RenderWorkDocumentUseCase
-from core_logic.use_cases.create_print_settings import (
-    CreatePrintSettingsUseCase,
+from core_logic.use_cases.create_presentation_profile import (
+    CreatePresentationProfileUseCase,
 )
-from core_logic.use_cases.update_print_settings import (
-    UpdatePrintSettingsUseCase,
+from core_logic.use_cases.update_presentation_profile import (
+    UpdatePresentationProfileUseCase,
 )
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.get_add_tasks_to_group import GetAddTasksToGroupUseCase
@@ -78,20 +78,20 @@ from core_logic.use_cases.get_codifier_list import GetCodifierListUseCase
 from core_logic.use_cases.get_course_detail import GetCourseDetailUseCase
 from core_logic.use_cases.get_course_list import GetCourseListUseCase
 from core_logic.use_cases.get_dashboard_summary import GetDashboardSummaryUseCase
-from core_logic.use_cases.get_print_settings import (
-    GetPrintSettingsUseCase,
+from core_logic.use_cases.get_presentation_profile import (
+    GetPresentationProfileUseCase,
 )
-from core_logic.use_cases.get_print_settings_list import (
-    GetPrintSettingsListUseCase,
+from core_logic.use_cases.get_presentation_profile_list import (
+    GetPresentationProfileListUseCase,
 )
 from core_logic.use_cases.get_document_section_catalog import (
     GetDocumentSectionCatalogUseCase,
 )
-from core_logic.use_cases.get_print_settings_editor_data import (
-    GetPrintSettingsEditorDataUseCase,
+from core_logic.use_cases.get_presentation_profile_editor_data import (
+    GetPresentationProfileEditorDataUseCase,
 )
-from core_logic.use_cases.get_print_settings_form_data import (
-    GetPrintSettingsFormDataUseCase,
+from core_logic.use_cases.get_presentation_profile_form_data import (
+    GetPresentationProfileFormDataUseCase,
 )
 from core_logic.use_cases.get_document_type_catalog import (
     GetDocumentTypeCatalogUseCase,
@@ -288,8 +288,8 @@ from infrastructure.repositories.django_core_repo import DjangoCoreRepository
 from infrastructure.repositories.django_curriculum_repo import (
     DjangoCurriculumRepository,
 )
-from infrastructure.repositories.django_print_settings_repo import (
-    DjangoPrintSettingsRepository,
+from infrastructure.repositories.django_presentation_profile_repo import (
+    DjangoPresentationProfileRepository,
 )
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
@@ -308,8 +308,8 @@ from infrastructure.services.task_import_service import DjangoTaskImportService
 from infrastructure.forms.codifier_forms import CodifierFormAdapter
 from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
-from infrastructure.forms.print_settings_forms import (
-    PrintSettingsFormAdapter,
+from infrastructure.forms.presentation_profile_forms import (
+    PresentationProfileFormAdapter,
 )
 from infrastructure.forms.event_forms import EventFormAdapter
 from infrastructure.forms.report_forms import ReportFormAdapter
@@ -336,11 +336,11 @@ class Container:
         self._codifier_repo = None
         self._core_repo = None
         self._settings_repo = None
-        self._print_settings_repo = None
+        self._presentation_profile_repo = None
         self._codifier_form_adapter = None
         self._core_form_adapter = None
         self._curriculum_form_adapter = None
-        self._print_settings_form_adapter = None
+        self._presentation_profile_form_adapter = None
         self._event_form_adapter = None
         self._report_form_adapter = None
         self._review_form_adapter = None
@@ -426,10 +426,10 @@ class Container:
         return self._settings_repo
 
     @property
-    def print_settings_repo(self):
-        if self._print_settings_repo is None:
-            self._print_settings_repo = DjangoPrintSettingsRepository()
-        return self._print_settings_repo
+    def presentation_profile_repo(self):
+        if self._presentation_profile_repo is None:
+            self._presentation_profile_repo = DjangoPresentationProfileRepository()
+        return self._presentation_profile_repo
 
     @property
     def core_form_adapter(self):
@@ -450,10 +450,10 @@ class Container:
         return self._curriculum_form_adapter
 
     @property
-    def print_settings_form_adapter(self):
-        if self._print_settings_form_adapter is None:
-            self._print_settings_form_adapter = PrintSettingsFormAdapter()
-        return self._print_settings_form_adapter
+    def presentation_profile_form_adapter(self):
+        if self._presentation_profile_form_adapter is None:
+            self._presentation_profile_form_adapter = PresentationProfileFormAdapter()
+        return self._presentation_profile_form_adapter
 
     @property
     def event_form_adapter(self):
@@ -727,37 +727,37 @@ class Container:
             core_repo=self.core_repo,
         )
 
-    def get_print_settings_list_use_case(self):
-        return GetPrintSettingsListUseCase(
-            print_settings_repo=self.print_settings_repo,
+    def get_presentation_profile_list_use_case(self):
+        return GetPresentationProfileListUseCase(
+            presentation_profile_repo=self.presentation_profile_repo,
         )
 
-    def get_print_settings_use_case(self):
-        return GetPrintSettingsUseCase(
-            print_settings_repo=self.print_settings_repo,
+    def get_presentation_profile_use_case(self):
+        return GetPresentationProfileUseCase(
+            presentation_profile_repo=self.presentation_profile_repo,
         )
 
-    def create_print_settings_use_case(self):
-        return CreatePrintSettingsUseCase(
-            print_settings_repo=self.print_settings_repo,
+    def create_presentation_profile_use_case(self):
+        return CreatePresentationProfileUseCase(
+            presentation_profile_repo=self.presentation_profile_repo,
         )
 
-    def update_print_settings_use_case(self):
-        return UpdatePrintSettingsUseCase(
-            print_settings_repo=self.print_settings_repo,
+    def update_presentation_profile_use_case(self):
+        return UpdatePresentationProfileUseCase(
+            presentation_profile_repo=self.presentation_profile_repo,
         )
 
     def get_document_section_catalog_use_case(self):
         return GetDocumentSectionCatalogUseCase()
 
-    def get_print_settings_editor_data_use_case(self):
-        return GetPrintSettingsEditorDataUseCase(
-            print_settings_repo=self.print_settings_repo,
+    def get_presentation_profile_editor_data_use_case(self):
+        return GetPresentationProfileEditorDataUseCase(
+            presentation_profile_repo=self.presentation_profile_repo,
         )
 
-    def get_print_settings_form_data_use_case(self):
-        return GetPrintSettingsFormDataUseCase(
-            print_settings_repo=self.print_settings_repo,
+    def get_presentation_profile_form_data_use_case(self):
+        return GetPresentationProfileFormDataUseCase(
+            presentation_profile_repo=self.presentation_profile_repo,
         )
 
     def get_document_type_catalog_use_case(self):
@@ -1101,7 +1101,7 @@ class Container:
         return GetWorkDetailUseCase(
             work_read_repo=self.work_repo,
             work_service=self.work_service(),
-            print_settings_repo=self.print_settings_repo,
+            presentation_profile_repo=self.presentation_profile_repo,
         )
 
     def get_work_list_use_case(self):
@@ -1154,7 +1154,7 @@ class Container:
     def render_work_document_use_case(self):
         return RenderWorkDocumentUseCase(
             work_repo=self.work_repo,
-            print_settings_repo=self.print_settings_repo,
+            presentation_profile_repo=self.presentation_profile_repo,
             render_document_from_recipe_use_case=(
                 self.render_document_from_recipe_use_case()
             ),
@@ -1168,7 +1168,7 @@ class Container:
     def render_remedial_sheet_document_use_case(self):
         return RenderRemedialSheetDocumentUseCase(
             work_repo=self.work_repo,
-            print_settings_repo=self.print_settings_repo,
+            presentation_profile_repo=self.presentation_profile_repo,
             render_document_from_recipe_use_case=(
                 self.render_document_from_recipe_use_case()
             ),
@@ -1177,7 +1177,7 @@ class Container:
     def render_remedial_sheet_batch_document_use_case(self):
         return RenderRemedialSheetBatchDocumentUseCase(
             work_repo=self.work_repo,
-            print_settings_repo=self.print_settings_repo,
+            presentation_profile_repo=self.presentation_profile_repo,
             render_document_from_recipe_use_case=(
                 self.render_document_from_recipe_use_case()
             ),

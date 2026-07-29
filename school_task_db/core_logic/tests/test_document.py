@@ -1,15 +1,15 @@
 from unittest import TestCase
 
 from core_logic.entities.document import (
-    CreatePrintSettingsParams,
+    CreatePresentationProfileParams,
     Document,
     DocumentPresentation,
     DocumentRecipe,
     DocumentSection,
     DocumentSectionSpec,
     DocumentSourceRef,
-    PrintSettingsSpec,
-    UpdatePrintSettingsParams,
+    DocumentPresentationProfile,
+    UpdatePresentationProfileParams,
 )
 from core_logic.value_objects.document_recipes import (
     CUSTOM_DOCUMENT_TYPE,
@@ -168,33 +168,33 @@ class DocumentModelTests(TestCase):
         )
         self.assertIsNone(recipe.first_section('answers'))
 
-    def test_print_settings_spec_preserves_presentation(self):
+    def test_presentation_profile_preserves_presentation(self):
         presentation = DocumentPresentation(custom_css='body {}')
-        print_settings = PrintSettingsSpec(
+        presentation_profile = DocumentPresentationProfile(
             name='Тренировочный лист',
             document_type=WORKSHEET_DOCUMENT_TYPE,
             presentation=presentation,
         )
 
-        self.assertEqual(print_settings.name, 'Тренировочный лист')
+        self.assertEqual(presentation_profile.name, 'Тренировочный лист')
         self.assertEqual(
-            print_settings.document_type,
+            presentation_profile.document_type,
             WORKSHEET_DOCUMENT_TYPE,
         )
-        self.assertEqual(print_settings.presentation, presentation)
+        self.assertEqual(presentation_profile.presentation, presentation)
 
-    def test_print_settings_spec_preserves_identity(self):
-        print_settings = PrintSettingsSpec(
+    def test_presentation_profile_preserves_identity(self):
+        presentation_profile = DocumentPresentationProfile(
             name='Профиль печати',
             document_type=WORKSHEET_DOCUMENT_TYPE,
-            print_settings_id='profile-1',
+            presentation_profile_id='profile-1',
         )
 
-        self.assertEqual(print_settings.print_settings_id, 'profile-1')
-        self.assertEqual(print_settings.document_type, WORKSHEET_DOCUMENT_TYPE)
+        self.assertEqual(presentation_profile.presentation_profile_id, 'profile-1')
+        self.assertEqual(presentation_profile.document_type, WORKSHEET_DOCUMENT_TYPE)
 
-    def test_create_print_settings_params_normalize_values(self):
-        params = CreatePrintSettingsParams(
+    def test_create_presentation_profile_params_normalize_values(self):
+        params = CreatePresentationProfileParams(
             name=' Шаблон ',
             document_type=' work ',
         )
@@ -202,14 +202,14 @@ class DocumentModelTests(TestCase):
         self.assertEqual(params.name, 'Шаблон')
         self.assertEqual(params.document_type, 'work')
 
-    def test_print_settings_params_preserve_clean_identifiers(self):
-        create_params = CreatePrintSettingsParams(
+    def test_presentation_profile_params_preserve_clean_identifiers(self):
+        create_params = CreatePresentationProfileParams(
             name='Профиль печати',
             document_type='work',
             presentation=DocumentPresentation(custom_css='body {}'),
         )
-        update_params = UpdatePrintSettingsParams(
-            print_settings_id='profile-1',
+        update_params = UpdatePresentationProfileParams(
+            presentation_profile_id='profile-1',
             name='Профиль печати',
             document_type='work',
         )
@@ -217,16 +217,16 @@ class DocumentModelTests(TestCase):
         self.assertEqual(create_params.document_type, 'work')
         self.assertEqual(create_params.presentation.custom_css, 'body {}')
         self.assertEqual(update_params.document_type, 'work')
-        self.assertEqual(update_params.print_settings_id, 'profile-1')
+        self.assertEqual(update_params.presentation_profile_id, 'profile-1')
 
-    def test_update_print_settings_params_normalize_identifier(self):
-        params = UpdatePrintSettingsParams(
-            print_settings_id=' template-1 ',
+    def test_update_presentation_profile_params_normalize_identifier(self):
+        params = UpdatePresentationProfileParams(
+            presentation_profile_id=' template-1 ',
             name='Шаблон',
             document_type='work',
         )
 
-        self.assertEqual(params.print_settings_id, 'template-1')
+        self.assertEqual(params.presentation_profile_id, 'template-1')
 
     def test_rejects_empty_required_identifiers(self):
         with self.assertRaises(ValueError):
@@ -238,4 +238,4 @@ class DocumentModelTests(TestCase):
         with self.assertRaises(ValueError):
             DocumentRecipe(document_type='')
         with self.assertRaises(ValueError):
-            PrintSettingsSpec(name='Invalid', document_type='')
+            DocumentPresentationProfile(name='Invalid', document_type='')

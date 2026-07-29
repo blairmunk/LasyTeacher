@@ -1,23 +1,23 @@
 from django.test import TestCase
 
 from core_logic.entities.document import (
-    CreatePrintSettingsParams,
+    CreatePresentationProfileParams,
     DocumentPresentation,
-    PrintSettingsSpec,
-    UpdatePrintSettingsParams,
+    DocumentPresentationProfile,
+    UpdatePresentationProfileParams,
 )
-from core_logic.interfaces.print_settings_repo import IPrintSettingsRepository
+from core_logic.interfaces.presentation_profile_repo import IPresentationProfileRepository
 from document_engine.models import PrintSettings
-from infrastructure.repositories.django_print_settings_repo import (
-    DjangoPrintSettingsRepository,
+from infrastructure.repositories.django_presentation_profile_repo import (
+    DjangoPresentationProfileRepository,
 )
 
 
-class DjangoPrintSettingsRepositoryTests(TestCase):
+class DjangoPresentationProfileRepositoryTests(TestCase):
     def test_implements_clean_port(self):
         self.assertIsInstance(
-            DjangoPrintSettingsRepository(),
-            IPrintSettingsRepository,
+            DjangoPresentationProfileRepository(),
+            IPresentationProfileRepository,
         )
 
     def test_lists_profiles_filtered_by_document_type(self):
@@ -30,12 +30,12 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
             document_type=PrintSettings.DocumentType.ANSWER_KEY,
         )
 
-        profiles = DjangoPrintSettingsRepository().list_print_settings_specs(
+        profiles = DjangoPresentationProfileRepository().list_presentation_profiles(
             document_type=PrintSettings.DocumentType.WORKSHEET,
         )
 
         self.assertEqual(len(profiles), 1)
-        self.assertIsInstance(profiles[0], PrintSettingsSpec)
+        self.assertIsInstance(profiles[0], DocumentPresentationProfile)
         self.assertEqual(profiles[0].name, 'Рабочий лист')
         self.assertEqual(profiles[0].document_type, 'worksheet')
 
@@ -45,12 +45,12 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
             document_type=PrintSettings.DocumentType.WORKSHEET,
         )
 
-        profile = DjangoPrintSettingsRepository().get_print_settings_spec(
-            print_settings_id=str(model.pk),
+        profile = DjangoPresentationProfileRepository().get_presentation_profile(
+            presentation_profile_id=str(model.pk),
             document_type=PrintSettings.DocumentType.WORKSHEET,
         )
 
-        self.assertEqual(profile.print_settings_id, str(model.pk))
+        self.assertEqual(profile.presentation_profile_id, str(model.pk))
         self.assertEqual(profile.name, 'Рабочий лист')
 
     def test_returns_none_when_profile_has_wrong_type(self):
@@ -59,16 +59,16 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
             document_type=PrintSettings.DocumentType.WORKSHEET,
         )
 
-        profile = DjangoPrintSettingsRepository().get_print_settings_spec(
-            print_settings_id=str(model.pk),
+        profile = DjangoPresentationProfileRepository().get_presentation_profile(
+            presentation_profile_id=str(model.pk),
             document_type=PrintSettings.DocumentType.ANSWER_KEY,
         )
 
         self.assertIsNone(profile)
 
     def test_creates_profile_preserving_presentation(self):
-        profile_id = DjangoPrintSettingsRepository().create_print_settings(
-            CreatePrintSettingsParams(
+        profile_id = DjangoPresentationProfileRepository().create_presentation_profile(
+            CreatePresentationProfileParams(
                 name='Рабочий лист',
                 document_type=PrintSettings.DocumentType.WORK,
                 is_default=True,
@@ -104,8 +104,8 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
             is_default=True,
         )
 
-        DjangoPrintSettingsRepository().create_print_settings(
-            CreatePrintSettingsParams(
+        DjangoPresentationProfileRepository().create_presentation_profile(
+            CreatePresentationProfileParams(
                 name='Новый профиль',
                 document_type=PrintSettings.DocumentType.WORK,
                 is_default=True,
@@ -121,9 +121,9 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
             document_type=PrintSettings.DocumentType.WORK,
         )
 
-        updated = DjangoPrintSettingsRepository().update_print_settings(
-            UpdatePrintSettingsParams(
-                print_settings_id=str(model.pk),
+        updated = DjangoPresentationProfileRepository().update_presentation_profile(
+            UpdatePresentationProfileParams(
+                presentation_profile_id=str(model.pk),
                 name='Новый профиль',
                 description='Новое описание',
                 document_type=PrintSettings.DocumentType.WORK,
@@ -149,9 +149,9 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
         )
 
     def test_update_returns_false_for_missing_profile(self):
-        updated = DjangoPrintSettingsRepository().update_print_settings(
-            UpdatePrintSettingsParams(
-                print_settings_id='550e8400-e29b-41d4-a716-446655440000',
+        updated = DjangoPresentationProfileRepository().update_presentation_profile(
+            UpdatePresentationProfileParams(
+                presentation_profile_id='550e8400-e29b-41d4-a716-446655440000',
                 name='Профиль',
                 document_type=PrintSettings.DocumentType.WORK,
             )

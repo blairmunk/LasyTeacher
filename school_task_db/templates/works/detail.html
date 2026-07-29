@@ -238,18 +238,18 @@
                             <div class="col-md-8">
                                 <label class="form-label">Профиль оформления</label>
                                 <select
-                                    name="print_settings_id"
+                                    name="presentation_profile_id"
                                     class="form-select"
                                     data-print-settings-select
                                 >
                                     <option value="">Встроенное оформление</option>
-                                    {% for print_settings in remedial_sheet_print_settings %}
+                                    {% for presentation_profile in remedial_sheet_presentation_profiles %}
                                     <option
-                                        value="{{ print_settings.print_settings_id }}"
-                                        data-profile-name="{{ print_settings.name }}"
-                                        {% if print_settings.is_default %}selected{% endif %}
+                                        value="{{ presentation_profile.presentation_profile_id }}"
+                                        data-profile-name="{{ presentation_profile.name }}"
+                                        {% if presentation_profile.is_default %}selected{% endif %}
                                     >
-                                        {{ print_settings.name }}{% if print_settings.is_default %} (предлагается){% endif %}
+                                        {{ presentation_profile.name }}{% if presentation_profile.is_default %} (предлагается){% endif %}
                                     </option>
                                     {% endfor %}
                                 </select>
@@ -314,18 +314,18 @@
                                     <div class="col-12">
                                         <label class="form-label">Профиль оформления</label>
                                         <select
-                                            name="print_settings_id"
+                                            name="presentation_profile_id"
                                             class="form-select"
                                             data-print-settings-select
                                         >
                                             <option value="">Встроенное оформление</option>
-                                            {% for print_settings in work_print_settings %}
+                                            {% for presentation_profile in work_presentation_profiles %}
                                             <option
-                                                value="{{ print_settings.print_settings_id }}"
-                                                data-profile-name="{{ print_settings.name }}"
-                                                {% if print_settings.is_default %}selected{% endif %}
+                                                value="{{ presentation_profile.presentation_profile_id }}"
+                                                data-profile-name="{{ presentation_profile.name }}"
+                                                {% if presentation_profile.is_default %}selected{% endif %}
                                             >
-                                                {{ print_settings.name }}{% if print_settings.is_default %} (предлагается){% endif %}
+                                                {{ presentation_profile.name }}{% if presentation_profile.is_default %} (предлагается){% endif %}
                                             </option>
                                             {% endfor %}
                                         </select>

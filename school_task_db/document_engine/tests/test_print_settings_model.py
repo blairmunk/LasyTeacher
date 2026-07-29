@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
-from core_logic.entities.document import PrintSettingsSpec
+from core_logic.entities.document import DocumentPresentationProfile
 from document_engine.models import PrintSettings
 
 
@@ -19,11 +19,11 @@ class PrintSettingsModelTests(TestCase):
             custom_latex_preamble='\\usepackage{multicol}',
         )
 
-        spec = profile.to_print_settings_spec()
+        spec = profile.to_presentation_profile()
 
-        self.assertIsInstance(spec, PrintSettingsSpec)
+        self.assertIsInstance(spec, DocumentPresentationProfile)
         self.assertEqual(spec.name, 'Рабочий лист')
-        self.assertEqual(spec.print_settings_id, str(profile.pk))
+        self.assertEqual(spec.presentation_profile_id, str(profile.pk))
         self.assertEqual(spec.document_type, 'worksheet')
         self.assertTrue(spec.presentation.has_customization)
         self.assertEqual(

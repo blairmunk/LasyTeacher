@@ -4,8 +4,8 @@ from core_logic.entities.work import (
     WorkDetailData,
     WorkDetailSpecPreviewItem,
 )
-from core_logic.interfaces.print_settings_repo import (
-    IPrintSettingsRepository,
+from core_logic.interfaces.presentation_profile_repo import (
+    IPresentationProfileRepository,
 )
 from core_logic.interfaces.work_read_repo import IWorkReadRepository
 from core_logic.services.work_service import WorkService
@@ -27,12 +27,12 @@ class GetWorkDetailUseCase:
         self,
         work_read_repo: IWorkReadRepository,
         work_service: WorkService,
-        print_settings_repo: IPrintSettingsRepository | None = None,
+        presentation_profile_repo: IPresentationProfileRepository | None = None,
         score_allocation_service=None,
     ):
         self.work_read_repo = work_read_repo
         self.work_service = work_service
-        self.print_settings_repo = print_settings_repo
+        self.presentation_profile_repo = presentation_profile_repo
         self.score_allocation_service = (
             score_allocation_service or WorkScoreAllocationService()
         )
@@ -59,8 +59,10 @@ class GetWorkDetailUseCase:
                 task_rows=analog_groups,
                 content_rows=content_blocks,
             ),
-            work_print_settings=self._print_settings(WORK_DOCUMENT_TYPE),
-            remedial_sheet_print_settings=self._print_settings(
+            work_presentation_profiles=self._presentation_profiles(
+                WORK_DOCUMENT_TYPE,
+            ),
+            remedial_sheet_presentation_profiles=self._presentation_profiles(
                 REMEDIAL_SHEET_DOCUMENT_TYPE,
             ),
             show_sync_button=self.work_service.should_show_sync_button(
@@ -75,10 +77,10 @@ class GetWorkDetailUseCase:
             return items.exists()
         return bool(items)
 
-    def _print_settings(self, document_type: str):
-        if self.print_settings_repo is None:
+    def _presentation_profiles(self, document_type: str):
+        if self.presentation_profile_repo is None:
             return []
-        return self.print_settings_repo.list_print_settings_specs(
+        return self.presentation_profile_repo.list_presentation_profiles(
             document_type,
         )
 

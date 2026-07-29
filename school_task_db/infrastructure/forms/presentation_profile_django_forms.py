@@ -3,7 +3,7 @@
 from django import forms
 
 
-class PrintSettingsForm(forms.Form):
+class PresentationProfileForm(forms.Form):
     name = forms.CharField(
         label='Название',
         max_length=200,

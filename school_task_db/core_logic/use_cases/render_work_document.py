@@ -2,19 +2,19 @@
 
 from dataclasses import dataclass
 
-from core_logic.entities.document import PrintSettingsSpec
+from core_logic.entities.document import DocumentPresentationProfile
 from core_logic.entities.document_rendering import (
     DOCUMENT_RENDER_STATUS_GENERATED,
     DOCUMENT_RENDER_STATUS_NOT_FOUND,
     DOCUMENT_RENDER_STATUS_PERSONAL_REMEDIAL_REQUIRED,
     DocumentRenderResult,
 )
-from core_logic.interfaces.print_settings_repo import (
-    IPrintSettingsRepository,
+from core_logic.interfaces.presentation_profile_repo import (
+    IPresentationProfileRepository,
 )
 from core_logic.interfaces.work_document_repo import IWorkDocumentRepository
-from core_logic.use_cases.print_settings_selection import (
-    resolve_document_print_settings_spec,
+from core_logic.use_cases.presentation_profile_selection import (
+    resolve_document_presentation_profile,
 )
 from core_logic.use_cases.render_document_from_recipe import (
     RenderDocumentFromRecipeRequest,
@@ -34,8 +34,8 @@ from core_logic.value_objects.document_recipes import WORK_DOCUMENT_TYPE
 class RenderWorkDocumentRequest:
     work_id: str
     options: WorkDocumentRenderOptions
-    print_settings_spec: PrintSettingsSpec | None = None
-    print_settings_id: str = ''
+    presentation_profile: DocumentPresentationProfile | None = None
+    presentation_profile_id: str = ''
     variant_id: str = ''
 
 
@@ -44,13 +44,13 @@ class RenderWorkDocumentUseCase:
         self,
         work_repo: IWorkDocumentRepository,
         render_document_from_recipe_use_case: RenderDocumentFromRecipeUseCase,
-        print_settings_repo: IPrintSettingsRepository | None = None,
+        presentation_profile_repo: IPresentationProfileRepository | None = None,
     ):
         self.work_repo = work_repo
         self.render_document_from_recipe_use_case = (
             render_document_from_recipe_use_case
         )
-        self.print_settings_repo = print_settings_repo
+        self.presentation_profile_repo = presentation_profile_repo
 
     def execute(
         self,
@@ -86,11 +86,11 @@ class RenderWorkDocumentUseCase:
                 ),
                 recipe=build_work_document_recipe_for_render(
                     options=request.options,
-                    print_settings_spec=resolve_document_print_settings_spec(
+                    presentation_profile=resolve_document_presentation_profile(
                         document_type=WORK_DOCUMENT_TYPE,
-                        request_print_settings_spec=request.print_settings_spec,
-                        request_print_settings_id=request.print_settings_id,
-                        print_settings_repo=self.print_settings_repo,
+                        request_presentation_profile=request.presentation_profile,
+                        request_presentation_profile_id=request.presentation_profile_id,
+                        presentation_profile_repo=self.presentation_profile_repo,
                     ),
                     variant_ids=variant_ids,
                 ),

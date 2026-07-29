@@ -121,9 +121,9 @@ class WorkFormAdapter:
                 for block in getattr(content_plan, 'blocks', ())
                 if block.content_type in ('theory', 'text')
             ],
-            'work_print_settings': detail.work_print_settings,
-            'remedial_sheet_print_settings': (
-                detail.remedial_sheet_print_settings
+            'work_presentation_profiles': detail.work_presentation_profiles,
+            'remedial_sheet_presentation_profiles': (
+                detail.remedial_sheet_presentation_profiles
             ),
             'show_sync_button': detail.show_sync_button,
         }
@@ -309,7 +309,7 @@ class WorkFormAdapter:
         return RenderWorkDocumentRequest(
             work_id=work_id,
             options=build_work_render_options(post_data),
-            print_settings_id=self._print_settings_id_from_post(post_data),
+            presentation_profile_id=self._presentation_profile_id_from_post(post_data),
             variant_id=self._variant_id_from_post(post_data),
         )
 
@@ -320,18 +320,18 @@ class WorkFormAdapter:
         return RenderRemedialSheetDocumentRequest(
             variant_id=variant_id,
             options=build_remedial_sheet_render_options(post_data),
-            print_settings_id=self._print_settings_id_from_post(post_data),
+            presentation_profile_id=self._presentation_profile_id_from_post(post_data),
         )
 
     def render_remedial_sheet_batch_request_from_post(self, post_data, work_id):
         return RenderRemedialSheetBatchDocumentRequest(
             work_id=work_id,
             options=build_remedial_sheet_render_options(post_data),
-            print_settings_id=self._print_settings_id_from_post(post_data),
+            presentation_profile_id=self._presentation_profile_id_from_post(post_data),
         )
 
-    def _print_settings_id_from_post(self, post_data):
-        return post_data.get('print_settings_id', '').strip()
+    def _presentation_profile_id_from_post(self, post_data):
+        return post_data.get('presentation_profile_id', '').strip()
 
     def _variant_id_from_post(self, post_data):
         variant_id = post_data.get('variant_selection', '').strip()

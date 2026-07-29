@@ -8,7 +8,7 @@ from core_logic.value_objects.variant_content_snapshot import (
 from core_logic.value_objects.variant_print_plan import (
     VARIANT_PRINT_BLOCK_BLANK_CELLS,
     VARIANT_PRINT_BLOCK_TASK,
-    build_variant_print_profile_from_options,
+    build_variant_print_overrides_from_options,
     build_variant_print_plan_from_snapshot,
 )
 from infrastructure.services.blank_cells_payload import (
@@ -17,7 +17,7 @@ from infrastructure.services.blank_cells_payload import (
 from infrastructure.services.task_document_payloads import (
     build_variant_task_payload,
     format_text_payload,
-    variant_task_print_settings,
+    variant_task_snapshot_data,
 )
 
 
@@ -50,12 +50,12 @@ class DjangoVariantDocumentPayloadBuilder:
                 )
             ],
         )
-        print_profile = build_variant_print_profile_from_options(
+        print_overrides = build_variant_print_overrides_from_options(
             request.section.options if request else {},
         )
         print_plan = build_variant_print_plan_from_snapshot(
             content_snapshot,
-            profile=print_profile,
+            overrides=print_overrides,
         )
         task_payloads = [
             build_variant_task_payload(
@@ -86,19 +86,19 @@ class DjangoVariantDocumentPayloadBuilder:
 
 
 def _variant_content_item(variant_task):
-    print_settings = variant_task_print_settings(variant_task)
+    snapshot_data = variant_task_snapshot_data(variant_task)
     return VariantContentItem(
         variant_task_id=str(variant_task.pk),
         task_id=str(variant_task.task_id),
         order=variant_task.order,
         max_points=variant_task.max_points,
-        source_selection_id=print_settings['source_selection_id'],
-        content_order=print_settings['content_order'],
-        bank_role=print_settings['bank_role'],
-        render_mode=print_settings['render_mode'],
-        is_assessable=print_settings['is_assessable'],
-        blank_cells_after=print_settings['blank_cells_after'],
-        blank_cells_rows=print_settings['blank_cells_rows'],
+        source_selection_id=snapshot_data['source_selection_id'],
+        content_order=snapshot_data['content_order'],
+        bank_role=snapshot_data['bank_role'],
+        render_mode=snapshot_data['render_mode'],
+        is_assessable=snapshot_data['is_assessable'],
+        blank_cells_after=snapshot_data['blank_cells_after'],
+        blank_cells_rows=snapshot_data['blank_cells_rows'],
     )
 
 

@@ -20,7 +20,7 @@ def build_variant_task_payload(
     task = variant_task.task
     payload = {
         **build_task_payload(task),
-        **variant_task_print_settings(variant_task),
+        **variant_task_snapshot_data(variant_task),
         'variant_task_id': str(variant_task.pk),
         'order': variant_task.order,
         'max_points': variant_task.max_points,
@@ -105,7 +105,8 @@ def format_text_payload(text, task_payload_formatter=None, request=None):
     )['text']
 
 
-def variant_task_print_settings(variant_task):
+def variant_task_snapshot_data(variant_task):
+    """Return immutable content decisions stored on a variant task."""
     return {
         'source_selection_id': getattr(
             variant_task,

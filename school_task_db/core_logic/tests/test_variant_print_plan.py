@@ -17,7 +17,8 @@ from core_logic.value_objects.variant_print_plan import (
     VARIANT_PRINT_BLOCK_TASK,
     VARIANT_PRINT_BLOCK_TEXT,
     VARIANT_PRINT_BLOCK_THEORY,
-    build_variant_print_profile_from_options,
+    VariantPrintOverrides,
+    build_variant_print_overrides_from_options,
     build_variant_print_plan_from_snapshot,
 )
 
@@ -83,7 +84,7 @@ class VariantPrintPlanTests(TestCase):
             {'body': 'Решите самостоятельно.'},
         )
 
-    def test_print_profile_can_hide_static_content_types(self):
+    def test_print_overrides_can_hide_static_content_types(self):
         snapshot = build_variant_content_snapshot(
             variant_id='variant-1',
             items=[],
@@ -102,16 +103,33 @@ class VariantPrintPlanTests(TestCase):
                 ),
             ],
         )
-        profile = build_variant_print_profile_from_options({
+        overrides = build_variant_print_overrides_from_options({
             'hidden_content_types': 'theory',
         })
 
-        plan = build_variant_print_plan_from_snapshot(snapshot, profile)
+        plan = build_variant_print_plan_from_snapshot(snapshot, overrides)
 
         self.assertEqual(
             [block.block_type for block in plan.blocks],
             [VARIANT_PRINT_BLOCK_TEXT],
         )
+
+    def test_print_overrides_normalize_content_type_string(self):
+        overrides = VariantPrintOverrides(
+            hidden_content_types='theory, text',
+        )
+
+        self.assertEqual(
+            overrides.hidden_content_types,
+            ('theory', 'text'),
+        )
+
+    def test_print_overrides_reject_unknown_content_type(self):
+        with self.assertRaisesRegex(
+            ValueError,
+            'Unsupported hidden content types: answers',
+        ):
+            VariantPrintOverrides(hidden_content_types=('answers',))
 
     def test_builds_content_snapshot_from_variant_snapshot_rows(self):
         snapshot = build_variant_content_snapshot(
@@ -218,7 +236,7 @@ class VariantPrintPlanTests(TestCase):
         )
         self.assertEqual(plan.blocks[2].options, {'rows': 8})
 
-    def test_print_profile_can_hide_all_blank_cells(self):
+    def test_print_overrides_can_hide_all_blank_cells(self):
         content_snapshot = build_variant_content_snapshot(
             variant_id='variant-1',
             items=[
@@ -231,13 +249,13 @@ class VariantPrintPlanTests(TestCase):
                 ),
             ],
         )
-        profile = build_variant_print_profile_from_options({
+        overrides = build_variant_print_overrides_from_options({
             'hide_blank_cells': True,
         })
 
         plan = build_variant_print_plan_from_snapshot(
             content_snapshot,
-            profile,
+            overrides,
         )
 
         self.assertEqual(
@@ -245,7 +263,7 @@ class VariantPrintPlanTests(TestCase):
             [VARIANT_PRINT_BLOCK_TASK],
         )
 
-    def test_print_profile_cannot_override_snapshot_task_rendering(self):
+    def test_print_overrides_cannot_override_snapshot_task_rendering(self):
         content_snapshot = build_variant_content_snapshot(
             variant_id='variant-1',
             items=[
@@ -267,7 +285,7 @@ class VariantPrintPlanTests(TestCase):
                 ),
             ],
         )
-        profile = build_variant_print_profile_from_options({
+        overrides = build_variant_print_overrides_from_options({
             'role_render_modes': {
                 TASK_BANK_ROLE_DEMO: TASK_RENDER_MODE_WITH_FULL_SOLUTION,
             },
@@ -278,7 +296,7 @@ class VariantPrintPlanTests(TestCase):
 
         plan = build_variant_print_plan_from_snapshot(
             content_snapshot,
-            profile=profile,
+            overrides=overrides,
         )
 
         self.assertEqual(content_snapshot.assessable_variant_task_ids, ('vt-2',))
@@ -303,7 +321,7 @@ class VariantPrintPlanTests(TestCase):
             TASK_RENDER_MODE_TASK_ONLY,
         )
 
-    def test_print_profile_cannot_hide_snapshot_task_roles(self):
+    def test_print_overrides_cannot_hide_snapshot_task_roles(self):
         content_snapshot = build_variant_content_snapshot(
             variant_id='variant-1',
             items=[
@@ -322,13 +340,13 @@ class VariantPrintPlanTests(TestCase):
                 ),
             ],
         )
-        profile = build_variant_print_profile_from_options({
+        overrides = build_variant_print_overrides_from_options({
             'hidden_roles': TASK_BANK_ROLE_DEMO,
         })
 
         plan = build_variant_print_plan_from_snapshot(
             content_snapshot,
-            profile=profile,
+            overrides=overrides,
         )
 
         self.assertEqual(

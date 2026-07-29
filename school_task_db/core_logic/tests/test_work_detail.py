@@ -339,9 +339,6 @@ class FakePrintSettingsRepository:
         self.requested_document_types.append(document_type)
         return self.print_settings_by_type.get(document_type, [])
 
-    def get_default_print_settings_spec(self, document_type):
-        return None
-
     def get_print_settings_spec(self, print_settings_id, document_type=''):
         return None
 

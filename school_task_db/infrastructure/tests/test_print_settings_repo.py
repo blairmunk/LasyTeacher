@@ -39,37 +39,6 @@ class DjangoPrintSettingsRepositoryTests(TestCase):
         self.assertEqual(profiles[0].name, 'Рабочий лист')
         self.assertEqual(profiles[0].document_type, 'worksheet')
 
-    def test_returns_default_profile(self):
-        PrintSettings.objects.create(
-            name='Обычный профиль',
-            document_type=PrintSettings.DocumentType.WORKSHEET,
-            is_default=False,
-        )
-        PrintSettings.objects.create(
-            name='Основной профиль',
-            document_type=PrintSettings.DocumentType.WORKSHEET,
-            is_default=True,
-        )
-
-        profile = (
-            DjangoPrintSettingsRepository()
-            .get_default_print_settings_spec(
-                PrintSettings.DocumentType.WORKSHEET,
-            )
-        )
-
-        self.assertEqual(profile.name, 'Основной профиль')
-
-    def test_returns_none_when_default_profile_missing(self):
-        profile = (
-            DjangoPrintSettingsRepository()
-            .get_default_print_settings_spec(
-                PrintSettings.DocumentType.WORKSHEET,
-            )
-        )
-
-        self.assertIsNone(profile)
-
     def test_returns_profile_by_id_and_type(self):
         model = PrintSettings.objects.create(
             name='Рабочий лист',

@@ -28,19 +28,6 @@ class DjangoPrintSettingsRepository(IPrintSettingsRepository):
             for print_settings in queryset
         ]
 
-    def get_default_print_settings_spec(
-        self,
-        document_type: str,
-    ) -> Optional[PrintSettingsSpec]:
-        print_settings = (
-            PrintSettings.objects
-            .filter(document_type=document_type, is_default=True)
-            .first()
-        )
-        if print_settings is None:
-            return None
-        return print_settings.to_print_settings_spec()
-
     def get_print_settings_spec(
         self,
         print_settings_id: str,

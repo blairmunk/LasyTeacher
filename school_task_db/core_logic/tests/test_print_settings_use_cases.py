@@ -10,10 +10,6 @@ from core_logic.use_cases.create_print_settings import (
     PRINT_SETTINGS_CREATE_STATUS_INVALID,
     CreatePrintSettingsUseCase,
 )
-from core_logic.use_cases.get_default_print_settings import (
-    GetDefaultPrintSettingsRequest,
-    GetDefaultPrintSettingsUseCase,
-)
 from core_logic.use_cases.get_print_settings import (
     GetPrintSettingsRequest,
     GetPrintSettingsUseCase,
@@ -32,7 +28,6 @@ from core_logic.use_cases.update_print_settings import (
     UpdatePrintSettingsUseCase,
 )
 from core_logic.value_objects.document_recipes import (
-    ANSWER_KEY_DOCUMENT_TYPE,
     WORKSHEET_DOCUMENT_TYPE,
 )
 
@@ -40,7 +35,6 @@ from core_logic.value_objects.document_recipes import (
 class FakePrintSettingsRepository:
     def __init__(self):
         self.requested_document_type = None
-        self.default_document_type = None
         self.requested_print_settings_id = None
         self.created_params = None
         self.updated_params = None
@@ -56,12 +50,6 @@ class FakePrintSettingsRepository:
     def list_print_settings_specs(self, document_type=''):
         self.requested_document_type = document_type
         return self.print_profiles
-
-    def get_default_print_settings_spec(self, document_type):
-        self.default_document_type = document_type
-        if document_type == WORKSHEET_DOCUMENT_TYPE:
-            return self.print_profiles[0]
-        return None
 
     def get_print_settings_spec(self, print_settings_id, document_type=''):
         self.requested_print_settings_id = (
@@ -116,33 +104,6 @@ class GetPrintSettingsUseCaseTests(TestCase):
             ('profile-1', WORKSHEET_DOCUMENT_TYPE),
         )
 
-    def test_returns_default_profile(self):
-        repo = FakePrintSettingsRepository()
-
-        data = GetDefaultPrintSettingsUseCase(repo).execute(
-            GetDefaultPrintSettingsRequest(
-                document_type=WORKSHEET_DOCUMENT_TYPE,
-            ),
-        )
-
-        self.assertEqual(
-            repo.default_document_type,
-            WORKSHEET_DOCUMENT_TYPE,
-        )
-        self.assertEqual(data.print_profile.name, 'Рабочий лист')
-
-    def test_returns_none_when_default_profile_is_missing(self):
-        repo = FakePrintSettingsRepository()
-
-        data = GetDefaultPrintSettingsUseCase(repo).execute(
-            GetDefaultPrintSettingsRequest(
-                document_type=ANSWER_KEY_DOCUMENT_TYPE,
-            ),
-        )
-
-        self.assertIsNone(data.print_profile)
-
-
 class PrintSettingsSelectionTests(TestCase):
     def test_request_spec_takes_precedence(self):
         repo = FakePrintSettingsRepository()
@@ -158,7 +119,6 @@ class PrintSettingsSelectionTests(TestCase):
         )
 
         self.assertEqual(print_settings, request_spec)
-        self.assertIsNone(repo.default_document_type)
 
     def test_returns_profile_by_id(self):
         repo = FakePrintSettingsRepository()
@@ -174,7 +134,6 @@ class PrintSettingsSelectionTests(TestCase):
             repo.requested_print_settings_id,
             ('profile-1', WORKSHEET_DOCUMENT_TYPE),
         )
-        self.assertIsNone(repo.default_document_type)
 
     def test_returns_none_without_explicit_profile(self):
         repo = FakePrintSettingsRepository()
@@ -185,7 +144,6 @@ class PrintSettingsSelectionTests(TestCase):
         )
 
         self.assertIsNone(print_settings)
-        self.assertIsNone(repo.default_document_type)
 
     def test_returns_none_without_repository(self):
         print_settings = resolve_document_print_settings_spec(

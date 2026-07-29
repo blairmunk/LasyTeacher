@@ -61,9 +61,6 @@ from core_logic.use_cases.get_course_list import GetCourseListUseCase
 from core_logic.use_cases.get_topic_detail import GetTopicDetailUseCase
 from core_logic.use_cases.get_topic_list import GetTopicListUseCase
 from core_logic.use_cases.get_dashboard_summary import GetDashboardSummaryUseCase
-from core_logic.use_cases.get_default_print_settings import (
-    GetDefaultPrintSettingsUseCase,
-)
 from core_logic.use_cases.get_print_settings_list import (
     GetPrintSettingsListUseCase,
 )
@@ -310,9 +307,6 @@ class ContainerTests(SimpleTestCase):
         create_print_settings_use_case = container.create_print_settings_use_case()
         update_print_settings_use_case = container.update_print_settings_use_case()
         print_settings_list_use_case = container.get_print_settings_list_use_case()
-        default_print_settings_use_case = (
-            container.get_default_print_settings_use_case()
-        )
         refresh_math_cache_use_case = container.refresh_task_math_cache_use_case()
         create_task_use_case = container.create_task_use_case()
         update_task_use_case = container.update_task_use_case()
@@ -517,10 +511,6 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             print_settings_list_use_case,
             GetPrintSettingsListUseCase,
-        )
-        self.assertIsInstance(
-            default_print_settings_use_case,
-            GetDefaultPrintSettingsUseCase,
         )
         self.assertIsInstance(
             document_section_catalog_use_case,

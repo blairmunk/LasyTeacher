@@ -164,17 +164,11 @@ class FakeRenderRemedialSheetDocumentUseCase:
 
 class FakePrintSettingsRepository:
     def __init__(self):
-        self.requested_document_types = []
         self.requested_print_settings_ids = []
-        self.default_print_settings = {}
         self.print_settings_by_id = {}
 
     def list_print_settings_specs(self, document_type=''):
         return []
-
-    def get_default_print_settings_spec(self, document_type):
-        self.requested_document_types.append(document_type)
-        return self.default_print_settings.get(document_type)
 
     def get_print_settings_spec(self, print_settings_id, document_type=''):
         self.requested_print_settings_ids.append(
@@ -305,7 +299,6 @@ class DocumentRenderingUseCaseTests(TestCase):
         )
 
         self.assertTrue(result.success)
-        self.assertEqual(print_settings_repo.requested_document_types, [])
         render_plan = service.render_request
         self.assertEqual(
             render_plan.recipe.section_types,
@@ -316,14 +309,9 @@ class DocumentRenderingUseCaseTests(TestCase):
             '\\usepackage{multicol}',
         )
 
-    def test_render_work_document_does_not_apply_default_profile_implicitly(self):
+    def test_render_work_document_without_profile_uses_builtin_presentation(self):
         service = FakeDocumentEngine()
         print_settings_repo = FakePrintSettingsRepository()
-        print_settings_repo.default_print_settings['work'] = PrintSettingsSpec(
-            name='Default work',
-            document_type='work',
-            presentation=DocumentPresentation(custom_css='.task { color: red; }'),
-        )
         use_case = RenderWorkDocumentUseCase(
             render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(),
@@ -338,7 +326,6 @@ class DocumentRenderingUseCaseTests(TestCase):
         )
 
         self.assertTrue(result.success)
-        self.assertEqual(print_settings_repo.requested_document_types, [])
         render_plan = service.render_request
         self.assertEqual(
             render_plan.recipe.section_types,
@@ -531,7 +518,6 @@ class DocumentRenderingUseCaseTests(TestCase):
         )
 
         self.assertTrue(result.success)
-        self.assertEqual(print_settings_repo.requested_document_types, [])
         render_plan = service.render_request
         self.assertEqual(
             render_plan.recipe.section_types,
@@ -551,14 +537,9 @@ class DocumentRenderingUseCaseTests(TestCase):
             '\\usepackage{microtype}',
         )
 
-    def test_render_remedial_sheet_does_not_apply_default_profile_implicitly(self):
+    def test_render_remedial_sheet_without_profile_uses_builtin_presentation(self):
         service = FakeDocumentEngine()
         print_settings_repo = FakePrintSettingsRepository()
-        print_settings_repo.default_print_settings['remedial_sheet'] = PrintSettingsSpec(
-            name='Default remedial',
-            document_type='remedial_sheet',
-            presentation=DocumentPresentation(custom_css='.task { color: red; }'),
-        )
         use_case = RenderRemedialSheetDocumentUseCase(
             render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(),
@@ -573,7 +554,6 @@ class DocumentRenderingUseCaseTests(TestCase):
         )
 
         self.assertTrue(result.success)
-        self.assertEqual(print_settings_repo.requested_document_types, [])
         render_plan = service.render_request
         self.assertEqual(
             render_plan.recipe.section_types,

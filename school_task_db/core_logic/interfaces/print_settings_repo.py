@@ -19,13 +19,6 @@ class IPrintSettingsRepository(ABC):
         """Return print settings, optionally filtered by document type."""
 
     @abstractmethod
-    def get_default_print_settings_spec(
-        self,
-        document_type: str,
-    ) -> Optional[PrintSettingsSpec]:
-        """Return the default print settings for a document type."""
-
-    @abstractmethod
     def get_print_settings_spec(
         self,
         print_settings_id: str,

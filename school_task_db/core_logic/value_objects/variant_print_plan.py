@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping, Tuple
 
 from core_logic.value_objects.variant_content_snapshot import (
+    VARIANT_STATIC_CONTENT_TYPES,
     VariantContentBlockItem,
     VariantContentItem,
     VariantContentSnapshot,
@@ -24,22 +25,27 @@ VARIANT_PRINT_BLOCK_TYPES = frozenset(
 )
 
 @dataclass(frozen=True)
-class VariantPrintProfile:
-    """Presentation rules applied to a variant content snapshot."""
+class VariantPrintOverrides:
+    """Temporary visibility overrides for one variant render."""
 
     hidden_content_types: Tuple[str, ...] = field(default_factory=tuple)
     hide_blank_cells: bool = False
 
     def __post_init__(self):
-        hidden_content_types = tuple(self.hidden_content_types)
+        hidden_content_types = _tuple_option(self.hidden_content_types)
+        unsupported_types = (
+            set(hidden_content_types) - VARIANT_STATIC_CONTENT_TYPES
+        )
+        if unsupported_types:
+            unsupported = ', '.join(sorted(unsupported_types))
+            raise ValueError(
+                f'Unsupported hidden content types: {unsupported}',
+            )
         object.__setattr__(
             self,
             'hidden_content_types',
             hidden_content_types,
         )
-
-    def task_render_mode(self, item: VariantContentItem) -> str:
-        return item.render_mode
 
     def blank_cells_options(self, item: VariantContentItem) -> Mapping[str, Any]:
         if self.hide_blank_cells:
@@ -105,13 +111,13 @@ class VariantPrintPlan:
 
 def build_variant_print_plan_from_snapshot(
     content_snapshot: VariantContentSnapshot,
-    profile: VariantPrintProfile | None = None,
+    overrides: VariantPrintOverrides | None = None,
 ) -> VariantPrintPlan:
-    profile = profile or VariantPrintProfile()
+    overrides = overrides or VariantPrintOverrides()
     ordered_block_groups = []
     for row in content_snapshot.items:
-        task_blocks = [_task_print_block(row, profile)]
-        blank_cells_options = profile.blank_cells_options(row)
+        task_blocks = [_task_print_block(row)]
+        blank_cells_options = overrides.blank_cells_options(row)
         if blank_cells_options:
             task_blocks.append(
                 VariantPrintBlock(
@@ -133,7 +139,7 @@ def build_variant_print_plan_from_snapshot(
             )
         )
     for block in content_snapshot.content_blocks:
-        if not profile.includes_content_block(block):
+        if not overrides.includes_content_block(block):
             continue
         ordered_block_groups.append(
             (
@@ -163,11 +169,7 @@ def build_variant_print_plan_from_snapshot(
     )
 
 
-def _task_print_block(
-    row: VariantContentItem,
-    profile: VariantPrintProfile,
-) -> VariantPrintBlock:
-    render_mode = profile.task_render_mode(row)
+def _task_print_block(row: VariantContentItem) -> VariantPrintBlock:
     return VariantPrintBlock(
         block_type=VARIANT_PRINT_BLOCK_TASK,
         variant_task_id=row.variant_task_id,
@@ -177,19 +179,21 @@ def _task_print_block(
         content_order=_task_content_order(row),
         content_role=row.bank_role,
         source_render_mode=row.render_mode,
-        render_mode=render_mode,
+        render_mode=row.render_mode,
         options={
             'bank_role': row.bank_role,
-            'render_mode': render_mode,
+            'render_mode': row.render_mode,
             'is_assessable': row.is_assessable,
             'max_points': row.max_points,
         },
     )
 
 
-def build_variant_print_profile_from_options(options) -> VariantPrintProfile:
+def build_variant_print_overrides_from_options(
+    options,
+) -> VariantPrintOverrides:
     options = dict(options or {})
-    return VariantPrintProfile(
+    return VariantPrintOverrides(
         hidden_content_types=_tuple_option(
             options.get('hidden_content_types'),
         ),

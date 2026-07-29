@@ -133,3 +133,7 @@ class IStudentRepository(ABC):
     @abstractmethod
     def get_work_group_refs(self, work_ids: List[str]) -> List[WorkGroupRef]:
         """Return analog groups used by works."""
+
+    @abstractmethod
+    def sync_student_task_logs(self, mark_id: str) -> int:
+        """Synchronize learning-history rows from one saved mark."""

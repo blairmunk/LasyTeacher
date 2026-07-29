@@ -187,6 +187,13 @@ class BackfillTaskLogCommandTests(TestCase):
         self.assertIn('1 заданий', out.getvalue())
         self.assertEqual(StudentTaskLog.objects.count(), initial_log_count)
 
+        StudentTaskLog.objects.all().delete()
+        write_out = StringIO()
+        call_command('backfill_task_log', stdout=write_out)
+
+        self.assertEqual(StudentTaskLog.objects.count(), 1)
+        self.assertIn('Создано 1 записей', write_out.getvalue())
+
 
 class RemedialFromEventViewTests(TestCase):
     """Characterization tests for the current remedial-from-event flow."""

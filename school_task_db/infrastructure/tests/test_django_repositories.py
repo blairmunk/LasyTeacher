@@ -234,6 +234,28 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(weak_result.group_name, self.weak_group.name)
         self.assertEqual(result_by_task[str(self.original_ok.pk)].points, 5)
 
+    def test_student_repository_syncs_task_logs_from_mark(self):
+        StudentTaskLog.objects.filter(mark=self.mark).delete()
+
+        created_count = DjangoStudentRepository().sync_student_task_logs(
+            str(self.mark.pk),
+        )
+
+        logs = StudentTaskLog.objects.filter(mark=self.mark).order_by('task_id')
+        self.assertEqual(created_count, 2)
+        self.assertEqual(logs.count(), 2)
+        weak_log = logs.get(task=self.original_weak)
+        self.assertEqual(weak_log.analog_group, self.weak_group)
+        self.assertEqual(weak_log.points, 0)
+        self.assertEqual(weak_log.max_points, 2)
+
+    def test_student_repository_ignores_missing_mark_during_log_sync(self):
+        created_count = DjangoStudentRepository().sync_student_task_logs(
+            '00000000-0000-0000-0000-000000000000',
+        )
+
+        self.assertEqual(created_count, 0)
+
     def test_student_repository_returns_profile_data(self):
         repo = DjangoStudentRepository()
 

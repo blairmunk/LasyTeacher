@@ -10,11 +10,13 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender='events.Mark')
 def update_student_task_log_on_mark_save(sender, instance, **kwargs):
     """При сохранении Mark → обновляем StudentTaskLog"""
-    from .models import StudentTaskLog
+    from infrastructure.container import container
 
     if instance.task_scores:
         try:
-            count = StudentTaskLog.update_from_mark(instance)
+            count = container.sync_student_task_logs_use_case().execute(
+                str(instance.pk),
+            )
             if count > 0:
                 logger.info(
                     'StudentTaskLog: +%s records from Mark #%s',

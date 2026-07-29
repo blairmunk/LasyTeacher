@@ -700,3 +700,51 @@ class DjangoStudentRepository(IStudentRepository):
                 work_id__in=work_ids,
             ).select_related('analog_group')
         ]
+
+    def sync_student_task_logs(self, mark_id: str) -> int:
+        mark = Mark.objects.select_related(
+            'participation__student',
+            'participation__event',
+            'participation__variant',
+        ).filter(pk=mark_id).first()
+        if mark is None:
+            return 0
+
+        task_score_records = normalize_task_scores(mark.task_scores)
+        if not task_score_records:
+            return 0
+
+        participation = mark.participation
+        tasks_by_id = {
+            str(task.pk): task
+            for task in Task.objects.select_related('topic').filter(
+                pk__in=[record.task_id for record in task_score_records],
+            )
+        }
+        created_count = 0
+        for score_record in task_score_records:
+            task = tasks_by_id.get(score_record.task_id)
+            if task is None:
+                continue
+
+            task_group = task.taskgroup_set.select_related('group').first()
+            _, created = StudentTaskLog.objects.update_or_create(
+                student=participation.student,
+                task=task,
+                event=participation.event,
+                defaults={
+                    'variant': participation.variant,
+                    'mark': mark,
+                    'topic': task.topic,
+                    'analog_group': task_group.group if task_group else None,
+                    'difficulty': task.difficulty,
+                    'points': score_record.points,
+                    'max_points': score_record.max_points,
+                    'comment': score_record.comment,
+                    'completed_at': mark.checked_at or mark.created_at,
+                },
+            )
+            if created:
+                created_count += 1
+
+        return created_count

@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 
 from core_logic.value_objects.task_scores import normalize_task_scores
 from events.models import Mark
-from students.models import StudentTaskLog
+from infrastructure.container import container
 
 
 class Command(BaseCommand):
@@ -36,7 +36,9 @@ class Command(BaseCommand):
         
         total_created = 0
         for i, mark in enumerate(marks, 1):
-            created = StudentTaskLog.update_from_mark(mark)
+            created = container.sync_student_task_logs_use_case().execute(
+                str(mark.pk),
+            )
             total_created += created
             if i % 50 == 0:
                 self.stdout.write(f"  Обработано {i}/{total_marks}...")

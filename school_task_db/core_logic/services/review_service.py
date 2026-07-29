@@ -243,12 +243,23 @@ class ReviewService:
                 variant_task=variant_task,
                 task_id=task_id,
             )
+            max_points = max(
+                self._int_or_default(variant_task.weight, 0),
+                0,
+            )
+            points = min(
+                max(
+                    self._int_or_default(score_data.get('points'), 0),
+                    0,
+                ),
+                max_points,
+            )
             rows.append(
                 ReviewTaskScoreRow(
                     task=variant_task.task,
                     number=index,
-                    points=score_data.get('points', 0),
-                    max_points=score_data.get('max_points', variant_task.weight),
+                    points=points,
+                    max_points=max_points,
                     variant_task_id=variant_task.variant_task_id,
                     comment=score_data.get('comment', ''),
                 )

@@ -208,8 +208,8 @@ class ReviewServiceTests(TestCase):
             ],
             existing_scores={
                 'task-1': {
-                    'points': 2,
-                    'max_points': 3,
+                    'points': 10,
+                    'max_points': 99,
                     'comment': 'Верно',
                 }
             },
@@ -217,7 +217,7 @@ class ReviewServiceTests(TestCase):
 
         self.assertEqual(rows[0].task, task)
         self.assertEqual(rows[0].number, 1)
-        self.assertEqual(rows[0].points, 2)
+        self.assertEqual(rows[0].points, 3)
         self.assertEqual(rows[0].max_points, 3)
         self.assertEqual(rows[0].variant_task_id, 'variant-task-1')
         self.assertEqual(rows[0].score_key, 'variant-task-1')

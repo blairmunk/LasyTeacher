@@ -7,10 +7,6 @@ from core_logic.entities.document import PrintSettingsSpec
 from core_logic.interfaces.print_settings_repo import (
     IPrintSettingsRepository,
 )
-from core_logic.value_objects.document_section_catalog import (
-    DocumentSectionCatalogItem,
-    get_document_section_catalog,
-)
 from core_logic.value_objects.document_type_catalog import (
     DocumentTypeCatalogItem,
     get_document_type_catalog,
@@ -26,7 +22,6 @@ class GetPrintSettingsEditorDataRequest:
 @dataclass(frozen=True)
 class PrintSettingsEditorData:
     document_types: Tuple[DocumentTypeCatalogItem, ...]
-    sections: Tuple[DocumentSectionCatalogItem, ...]
     print_profiles: List[PrintSettingsSpec]
 
 
@@ -46,10 +41,6 @@ class GetPrintSettingsEditorDataUseCase:
         request = request or GetPrintSettingsEditorDataRequest()
         return PrintSettingsEditorData(
             document_types=get_document_type_catalog(
-                renderable_only=request.renderable_only,
-            ),
-            sections=get_document_section_catalog(
-                document_type=request.document_type,
                 renderable_only=request.renderable_only,
             ),
             print_profiles=self._print_profiles(request.document_type),

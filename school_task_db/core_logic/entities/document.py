@@ -160,14 +160,13 @@ class DocumentRecipe:
 
 @dataclass(frozen=True)
 class PrintSettingsSpec:
-    """Saved presentation recipe for a sectioned document."""
+    """Saved presentation settings for a rendered document."""
 
     name: str
     document_type: str
     print_settings_id: str = ''
     description: str = ''
     is_default: bool = False
-    sections: Tuple[DocumentSectionSpec, ...] = field(default_factory=tuple)
     presentation: DocumentPresentation = field(
         default_factory=DocumentPresentation,
     )
@@ -175,34 +174,12 @@ class PrintSettingsSpec:
     def __post_init__(self):
         if not self.document_type:
             raise ValueError('document_type is required')
-        object.__setattr__(self, 'sections', tuple(self.sections))
-
-    @property
-    def section_types(self) -> Tuple[str, ...]:
-        return tuple(section.section_type for section in self.sections)
-
-    def to_print_recipe(self, document_type: str = '') -> DocumentRecipe:
-        return DocumentRecipe(
-            document_type=document_type or self.document_type,
-            sections=self.sections,
-            presentation=self.presentation,
-        )
-
-
-def _clean_section_specs(sections) -> Tuple[DocumentSectionSpec, ...]:
-    return tuple(
-        section
-        if isinstance(section, DocumentSectionSpec)
-        else DocumentSectionSpec(section_type=str(section))
-        for section in sections
-    )
 
 
 @dataclass(frozen=True)
 class CreatePrintSettingsParams:
     name: str
     document_type: str
-    sections: Tuple[DocumentSectionSpec, ...] = field(default_factory=tuple)
     description: str = ''
     is_default: bool = False
     presentation: DocumentPresentation = field(
@@ -212,13 +189,7 @@ class CreatePrintSettingsParams:
     def __post_init__(self):
         object.__setattr__(self, 'name', self.name.strip())
         object.__setattr__(self, 'document_type', self.document_type.strip())
-        sections = _clean_section_specs(self.sections)
-        object.__setattr__(self, 'sections', sections)
         object.__setattr__(self, 'description', self.description.strip())
-
-    @property
-    def section_types(self) -> Tuple[str, ...]:
-        return tuple(section.section_type for section in self.sections)
 
 
 @dataclass(frozen=True)
@@ -237,7 +208,6 @@ class UpdatePrintSettingsParams:
     print_settings_id: str
     name: str
     document_type: str
-    sections: Tuple[DocumentSectionSpec, ...] = field(default_factory=tuple)
     description: str = ''
     is_default: bool = False
     presentation: DocumentPresentation = field(
@@ -252,13 +222,7 @@ class UpdatePrintSettingsParams:
         )
         object.__setattr__(self, 'name', self.name.strip())
         object.__setattr__(self, 'document_type', self.document_type.strip())
-        sections = _clean_section_specs(self.sections)
-        object.__setattr__(self, 'sections', sections)
         object.__setattr__(self, 'description', self.description.strip())
-
-    @property
-    def section_types(self) -> Tuple[str, ...]:
-        return tuple(section.section_type for section in self.sections)
 
 
 @dataclass(frozen=True)

@@ -211,7 +211,7 @@
                     >
                         {% csrf_token %}
                         <div class="row g-3 align-items-end">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <label class="form-label">Формат документа</label>
                                 <select name="renderer_type" class="form-select">
                                     <option value="pdf">PDF (Playwright)</option>
@@ -219,7 +219,7 @@
                                     <option value="latex">LaTeX</option>
                                 </select>
                             </div>
-                            <div class="col-md-3" data-print-settings-controlled-options>
+                            <div class="col-md-5">
                                 <label class="form-label">Контент</label>
                                 <select name="answer_type" class="form-select">
                                     <option value="with_short_solutions">С краткими решениями</option>
@@ -228,39 +228,43 @@
                                     <option value="tasks_only">Без решений</option>
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-3">
                                 <label class="form-label">Размер</label>
                                 <select name="format" class="form-select">
                                     <option value="A4">A4</option>
                                     <option value="A5">A5</option>
                                 </select>
                             </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Настройки печати</label>
+                            <div class="col-md-8">
+                                <label class="form-label">Профиль оформления</label>
                                 <select
                                     name="print_settings_id"
                                     class="form-select"
                                     data-print-settings-select
                                 >
-                                    <option value="">По умолчанию</option>
+                                    <option value="">Встроенное оформление</option>
                                     {% for print_settings in remedial_sheet_print_settings %}
-                                    <option value="{{ print_settings.print_settings_id }}">
-                                        {{ print_settings.name }}{% if print_settings.presentation.has_customization %} · кастом{% endif %}
+                                    <option
+                                        value="{{ print_settings.print_settings_id }}"
+                                        data-profile-name="{{ print_settings.name }}"
+                                        {% if print_settings.is_default %}selected{% endif %}
+                                    >
+                                        {{ print_settings.name }}{% if print_settings.is_default %} (предлагается){% endif %}
                                     </option>
                                     {% endfor %}
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-4">
                                 <button type="submit" class="btn btn-info w-100">
                                     <i class="fas fa-print"></i> Создать персональные листы
                                 </button>
                             </div>
                         </div>
                         <div
-                            class="alert alert-info py-2 mt-3 mb-0 d-none"
+                            class="border-start border-4 border-info bg-light px-3 py-2 mt-3"
                             data-print-settings-selection-notice
                         >
-                            Выбранные настройки печати задают состав, порядок секций и оформление документа.
+                            Встроенное оформление. Содержание листа определяется данными работы над ошибками.
                         </div>
                     </form>
                     <div class="mt-3" data-remedial-batch-rendering-results></div>
@@ -279,41 +283,11 @@
                     <h5 class="mb-0"><i class="fas fa-file-export"></i> Печать документов</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-12">
-                            <div class="btn-group me-3 mb-2">
-                                <button type="button" class="btn btn-primary btn-render-doc"
-                                        data-work-id="{{ work.id }}"
-                                        data-type="pdf">
-                                    <i class="fas fa-file-pdf"></i> PDF
-                                </button>
-                            </div>
-                            <div class="btn-group me-3 mb-2">
-                                <button type="button" class="btn btn-info btn-render-doc"
-                                        data-work-id="{{ work.id }}"
-                                        data-type="html">
-                                    <i class="fas fa-globe"></i> HTML
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary btn-render-doc"
-                                        data-work-id="{{ work.id }}"
-                                        data-type="latex">
-                                    <i class="fas fa-file-code"></i> LaTeX
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Расширенные настройки -->
-                    <details class="mt-3">
-                        <summary class="btn btn-sm btn-outline-secondary">
-                            <i class="fas fa-cogs"></i> Настройки печати
-                        </summary>
-                        <div class="mt-3 p-3 bg-light rounded">
-                            <form id="advanced-rendering-form" data-rendering-form>
+                    <form id="document-rendering-form" data-rendering-form>
                                 {% csrf_token %}
                                 <input type="hidden" name="work_id" value="{{ work.id }}">
-                                <div class="row">
-                                    <div class="col-md-3 mb-3">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
                                         <label class="form-label">Формат документа</label>
                                         <select name="renderer_type" id="renderer_type" class="form-select">
                                             <option value="pdf">PDF (Playwright)</option>
@@ -321,14 +295,14 @@
                                             <option value="latex">LaTeX</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-3 mb-3">
+                                    <div class="col-md-3">
                                         <label class="form-label">Формат страницы</label>
                                         <select name="format" id="format" class="form-select">
                                             <option value="A4">A4 (210×297 мм)</option>
                                             <option value="A5">A5 (148×210 мм)</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-3 mb-3">
+                                    <div class="col-md-6">
                                         <label class="form-label">Варианты</label>
                                         <select name="variant_selection" class="form-select">
                                             <option value="all">Все ({{ variants|length }} шт.)</option>
@@ -337,30 +311,35 @@
                                             {% endfor %}
                                         </select>
                                     </div>
-                                    <div class="col-md-3 mb-3">
+                                    <div class="col-12">
                                         <label class="form-label">Профиль оформления</label>
                                         <select
                                             name="print_settings_id"
                                             class="form-select"
                                             data-print-settings-select
                                         >
-                                            <option value="">По умолчанию</option>
+                                            <option value="">Встроенное оформление</option>
                                             {% for print_settings in work_print_settings %}
-                                            <option value="{{ print_settings.print_settings_id }}">
-                                                {{ print_settings.name }}{% if print_settings.presentation.has_customization %} · кастом{% endif %}
+                                            <option
+                                                value="{{ print_settings.print_settings_id }}"
+                                                data-profile-name="{{ print_settings.name }}"
+                                                {% if print_settings.is_default %}selected{% endif %}
+                                            >
+                                                {{ print_settings.name }}{% if print_settings.is_default %} (предлагается){% endif %}
                                             </option>
                                             {% endfor %}
                                         </select>
                                     </div>
                                 </div>
                                 <div
-                                    class="alert alert-info py-2 mb-3 d-none"
+                                    class="border-start border-4 border-info bg-light px-3 py-2 mb-3"
                                     data-print-settings-selection-notice
                                 >
-                                    Профиль задаёт порядок секций и оформление.
-                                    Временные отключения ниже применяются поверх него.
+                                    Встроенное оформление. Порядок контента берётся из спецификации работы.
                                 </div>
-                                <div class="row">
+                                <details class="border rounded p-3 mb-3">
+                                    <summary class="fw-semibold">Параметры этого документа</summary>
+                                <div class="row mt-1">
                                     <div class="col-md-5 mb-3">
                                         <label class="form-label">Временно не печатать</label>
                                         <div class="form-check">
@@ -392,12 +371,11 @@
                                         </div>
                                     </div>
                                 </div>
+                                </details>
                                 <button type="submit" class="btn btn-primary w-100">
-                                    <i class="fas fa-rocket"></i> Сформировать документ
+                                    <i class="fas fa-file-export"></i> Сформировать документ
                                 </button>
-                            </form>
-                        </div>
-                    </details>
+                    </form>
                 </div>
             </div>
             {% endif %}
@@ -602,46 +580,48 @@
         });
     }
 
-    // === Быстрые кнопки ===
-    document.querySelectorAll('.btn-render-doc').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (this.disabled) return; // Защита от двойного клика
-            renderDoc(this, {
-                renderer_type: this.dataset.type,
-                format: 'A4',
-                variant_selection: 'all'
-            });
-        });
-    });
-
-    function syncPrintSettingsControlledOptions(form) {
+    function syncPrintSettingsNotice(form) {
+        var isRemedial = form.hasAttribute(
+            'data-remedial-batch-rendering-form'
+        );
         var printSettingsSelect = (
             form.querySelector('[data-print-settings-select]')
             || form.querySelector('[data-document-template-select]')
         );
         if (!printSettingsSelect) return;
-        var usesPrintSettings = Boolean(printSettingsSelect.value);
         var notice = (
             form.querySelector('[data-print-settings-selection-notice]')
             || form.querySelector('[data-template-selection-notice]')
         );
-        if (notice) {
-            notice.classList.toggle('d-none', !usesPrintSettings);
-        }
-        form.querySelectorAll(
-            '[data-print-settings-controlled-options],'
-            + '[data-template-controlled-options]'
-        ).forEach(
-            function(block) {
-                block.classList.toggle('opacity-50', usesPrintSettings);
-                block.querySelectorAll('input, select, textarea, button').forEach(
-                    function(control) {
-                        control.disabled = usesPrintSettings;
-                    }
+        if (!notice) return;
+        var selectedOption = printSettingsSelect.options[
+            printSettingsSelect.selectedIndex
+        ];
+        if (!printSettingsSelect.value) {
+            notice.textContent = isRemedial
+                ? (
+                    'Встроенное оформление. Содержание листа определяется '
+                    + 'данными работы над ошибками.'
+                )
+                : (
+                    'Встроенное оформление. Порядок контента берётся из '
+                    + 'спецификации работы.'
                 );
-            }
-        );
+            return;
+        }
+        var profileName = selectedOption.dataset.profileName
+            || selectedOption.textContent.trim();
+        notice.textContent = isRemedial
+            ? (
+                'Будет применён профиль «' + profileName
+                + '». Он меняет только оформление; персональный контент '
+                + 'формируется из данных работы над ошибками.'
+            )
+            : (
+                'Будет применён профиль «' + profileName
+                + '». Он меняет только оформление; содержание и порядок '
+                + 'контента остаются в спецификации работы.'
+            );
     }
 
     document.querySelectorAll('form').forEach(function(form) {
@@ -651,9 +631,9 @@
         );
         if (!printSettingsSelect) return;
         printSettingsSelect.addEventListener('change', function() {
-            syncPrintSettingsControlledOptions(form);
+            syncPrintSettingsNotice(form);
         });
-        syncPrintSettingsControlledOptions(form);
+        syncPrintSettingsNotice(form);
     });
 
     // === Пакетная печать листов работы над ошибками ===
@@ -680,9 +660,9 @@
         });
     }
 
-    // === Расширенная форма ===
+    // === Печать работы ===
     var advForm = document.querySelector('[data-rendering-form]')
-        || document.getElementById('advanced-rendering-form');
+        || document.getElementById('document-rendering-form');
     if (advForm) {
         advForm.addEventListener('submit', function(e) {
             e.preventDefault();

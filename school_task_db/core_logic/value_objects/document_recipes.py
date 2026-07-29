@@ -4,10 +4,8 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from core_logic.entities.document import (
-    DocumentPresentation,
     DocumentRecipe,
     DocumentSectionSpec,
-    PrintSettingsSpec,
 )
 
 
@@ -50,41 +48,6 @@ def build_document_recipe_from_sections_config(
             _section_spec_from_config(section_config)
             for section_config in sections_config
         ],
-    )
-
-
-def build_print_settings_spec_from_config(
-    name: str,
-    document_type: str,
-    sections_config: (
-        Mapping[str, Any]
-        | Sequence[Mapping[str, Any] | DocumentSectionSpec]
-    ),
-    html_template_override: str = '',
-    latex_template_override: str = '',
-    custom_css: str = '',
-    custom_latex_preamble: str = '',
-    print_settings_id: str = '',
-    description: str = '',
-    is_default: bool = False,
-) -> PrintSettingsSpec:
-    recipe = build_document_recipe_from_sections_config(
-        document_type=document_type,
-        sections_config=sections_config,
-    )
-    return PrintSettingsSpec(
-        name=name,
-        document_type=document_type,
-        print_settings_id=print_settings_id,
-        description=description,
-        is_default=is_default,
-        sections=recipe.sections,
-        presentation=DocumentPresentation(
-            html_template_override=html_template_override,
-            latex_template_override=latex_template_override,
-            custom_css=custom_css,
-            custom_latex_preamble=custom_latex_preamble,
-        ),
     )
 
 

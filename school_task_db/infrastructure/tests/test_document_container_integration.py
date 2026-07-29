@@ -61,12 +61,6 @@ class DocumentContainerIntegrationTests(TestCase):
         print_settings = PrintSettings.objects.create(
             name='Пользовательское оформление',
             document_type=PrintSettings.DocumentType.WORK,
-            sections_config=[
-                {'type': 'header'},
-                {'type': 'task_list'},
-                {'type': 'answers'},
-                {'type': 'short_solutions'},
-            ],
             custom_css='.document-task { margin: 12px; }',
             html_template_override=(
                 '<html><head><style>{{ custom_css }}</style></head>'
@@ -93,6 +87,7 @@ class DocumentContainerIntegrationTests(TestCase):
                     work_id=str(work.pk),
                     options=WorkDocumentRenderOptions(
                         renderer_type='html',
+                        append_answers=True,
                     ),
                     print_settings_id=str(print_settings.pk),
                 )
@@ -109,7 +104,6 @@ class DocumentContainerIntegrationTests(TestCase):
         self.assertIn('Найдите силу', html)
         self.assertIn('Ответы', html)
         self.assertIn('10 Н', html)
-        self.assertIn('Краткие решения', html)
         self.assertIn('data-custom-wrapper', html)
         self.assertIn('.document-task { margin: 12px; }', html)
 

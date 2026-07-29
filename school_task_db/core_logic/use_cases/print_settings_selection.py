@@ -21,4 +21,4 @@ def resolve_document_print_settings_spec(
             print_settings_id=request_print_settings_id,
             document_type=document_type,
         )
-    return print_settings_repo.get_default_print_settings_spec(document_type)
+    return None

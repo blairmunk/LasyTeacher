@@ -4,6 +4,7 @@ from tempfile import TemporaryDirectory
 from django.test import TestCase
 
 from core_logic.entities.document import (
+    DocumentPresentation,
     DocumentRecipe,
     DocumentSectionSpec,
     DocumentSourceRef,
@@ -30,14 +31,8 @@ from core_logic.value_objects.document_render_plan_factories import (
     build_work_document_render_plan,
 )
 from core_logic.value_objects.document_recipes import (
-    ANSWERS_SECTION,
-    COMMON_HEADER_SECTION,
     HEADER_SECTION,
-    ANSWER_KEY_SECTION,
-    PAGE_BREAK_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
-    SHORT_SOLUTIONS_SECTION,
-    TASK_LIST_SECTION,
     WORK_DOCUMENT_TYPE,
 )
 from curriculum.models import Topic
@@ -109,21 +104,16 @@ class SectionedDocumentDefaultsTests(TestCase):
                 document_builder=components.document_builder,
                 document_renderer_registry=components.document_renderer_registry,
             )
-            options = WorkDocumentRenderOptions(renderer_type='html')
+            options = WorkDocumentRenderOptions(
+                renderer_type='html',
+                append_answers=True,
+            )
             print_settings_spec = PrintSettingsSpec(
-                name='Профиль с подсказками и решениями',
+                name='Профиль оформления',
                 document_type=WORK_DOCUMENT_TYPE,
-                sections=[
-                    DocumentSectionSpec(section_type=HEADER_SECTION),
-                    DocumentSectionSpec(
-                        section_type=TASK_LIST_SECTION,
-                        options={'include_hints': True},
-                    ),
-                    DocumentSectionSpec(section_type=ANSWERS_SECTION),
-                    DocumentSectionSpec(
-                        section_type=SHORT_SOLUTIONS_SECTION,
-                    ),
-                ],
+                presentation=DocumentPresentation(
+                    custom_css='.task-item { margin-bottom: 1rem; }',
+                ),
             )
 
             result = engine.render_document(
@@ -142,11 +132,9 @@ class SectionedDocumentDefaultsTests(TestCase):
             self.assertIn('<h1>Контрольная</h1>', html)
             self.assertIn('Вариант 1', html)
             self.assertIn('Найдите силу', html)
-            self.assertIn('Подсказка: F = ma', html)
             self.assertIn('Ответы', html)
             self.assertIn('10 Н', html)
-            self.assertIn('Краткие решения', html)
-            self.assertIn('Кратко: F = ma', html)
+            self.assertIn('.task-item { margin-bottom: 1rem; }', html)
 
     def test_work_html_can_render_sections_per_variant(self):
         work = Work.objects.create(name='Контрольная', duration=45, max_score=4)
@@ -195,16 +183,6 @@ class SectionedDocumentDefaultsTests(TestCase):
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=WorkDocumentRenderOptions(renderer_type='html'),
-                    print_settings_spec=PrintSettingsSpec(
-                        name='Вариантная работа',
-                        document_type='work',
-                        sections=[
-                            DocumentSectionSpec(section_type=COMMON_HEADER_SECTION),
-                            DocumentSectionSpec(section_type=HEADER_SECTION),
-                            DocumentSectionSpec(section_type=TASK_LIST_SECTION),
-                            DocumentSectionSpec(section_type=PAGE_BREAK_SECTION),
-                        ],
-                    ),
                     variant_ids=[
                         str(first_variant.pk),
                         str(second_variant.pk),
@@ -215,7 +193,6 @@ class SectionedDocumentDefaultsTests(TestCase):
             filename = work_html_filename_from_id(work.pk)
             html = (Path(output_dir) / filename).read_text(encoding='utf-8')
             self.assertEqual(result.files[0].filename, filename)
-            self.assertIn('<h1>Контрольная</h1>', html)
             self.assertIn('<h1>Контрольная. Вариант 1</h1>', html)
             self.assertIn('<h1>Контрольная. Вариант 2</h1>', html)
             self.assertIn('Первое задание', html)
@@ -249,21 +226,16 @@ class SectionedDocumentDefaultsTests(TestCase):
                 document_builder=components.document_builder,
                 document_renderer_registry=components.document_renderer_registry,
             )
-            options = WorkDocumentRenderOptions(renderer_type='html')
+            options = WorkDocumentRenderOptions(
+                renderer_type='html',
+                append_answers=True,
+            )
 
             result = engine.render_document(
                 build_work_document_render_plan(
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=options,
-                    print_settings_spec=PrintSettingsSpec(
-                        name='Legacy work template',
-                        document_type='work',
-                        sections=[
-                            DocumentSectionSpec(section_type=TASK_LIST_SECTION),
-                            DocumentSectionSpec(section_type=ANSWERS_SECTION),
-                        ],
-                    ),
                 ),
             )
 
@@ -301,22 +273,16 @@ class SectionedDocumentDefaultsTests(TestCase):
                 document_builder=components.document_builder,
                 document_renderer_registry=components.document_renderer_registry,
             )
-            options = WorkDocumentRenderOptions(renderer_type='html')
+            options = WorkDocumentRenderOptions(
+                renderer_type='html',
+                append_answers=True,
+            )
 
             result = engine.render_document(
                 build_work_document_render_plan(
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=options,
-                    print_settings_spec=PrintSettingsSpec(
-                        name='Legacy answer template',
-                        document_type='work',
-                        sections=[
-                            DocumentSectionSpec(
-                                section_type=ANSWER_KEY_SECTION,
-                            ),
-                        ],
-                    ),
                 ),
             )
 
@@ -369,13 +335,6 @@ class SectionedDocumentDefaultsTests(TestCase):
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=WorkDocumentRenderOptions(renderer_type='html'),
-                    print_settings_spec=PrintSettingsSpec(
-                        name='Work with theory',
-                        document_type='work',
-                        sections=[
-                            DocumentSectionSpec(section_type=TASK_LIST_SECTION),
-                        ],
-                    ),
                 ),
             )
 
@@ -420,18 +379,11 @@ class SectionedDocumentDefaultsTests(TestCase):
             )
             options = WorkDocumentRenderOptions(renderer_type='latex')
             print_settings_spec = PrintSettingsSpec(
-                name='Профиль с подсказками и решениями',
+                name='Профиль оформления',
                 document_type=WORK_DOCUMENT_TYPE,
-                sections=[
-                    DocumentSectionSpec(section_type=HEADER_SECTION),
-                    DocumentSectionSpec(
-                        section_type=TASK_LIST_SECTION,
-                        options={'include_hints': True},
-                    ),
-                    DocumentSectionSpec(
-                        section_type=SHORT_SOLUTIONS_SECTION,
-                    ),
-                ],
+                presentation=DocumentPresentation(
+                    custom_latex_preamble='\\renewcommand{\\familydefault}{\\sfdefault}',
+                ),
             )
 
             result = engine.render_document(
@@ -450,8 +402,10 @@ class SectionedDocumentDefaultsTests(TestCase):
             self.assertIn(r'\documentclass', latex)
             self.assertIn(r'\section*{ Вариант 1 }', latex)
             self.assertIn(r'Найдите силу \& ускорение \(F=ma\)', latex)
-            self.assertIn(r'Подсказка: масса \& ускорение', latex)
-            self.assertIn(r'Используем \(F=ma\)', latex)
+            self.assertIn(
+                r'\renewcommand{\familydefault}{\sfdefault}',
+                latex,
+            )
 
     def test_builds_sectioned_remedial_html_document_through_engine(self):
         remedial_variant = Variant.objects.create(

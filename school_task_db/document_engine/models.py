@@ -3,6 +3,10 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 from core.models import BaseModel
+from core_logic.entities.document import (
+    DocumentPresentation,
+    PrintSettingsSpec,
+)
 from core_logic.value_objects.document_recipes import (
     ANSWER_KEY_DOCUMENT_TYPE,
     CUSTOM_DOCUMENT_TYPE,
@@ -11,10 +15,6 @@ from core_logic.value_objects.document_recipes import (
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     WORK_DOCUMENT_TYPE,
     WORKSHEET_DOCUMENT_TYPE,
-    build_print_settings_spec_from_config,
-)
-from core_logic.value_objects.document_section_catalog import (
-    validate_document_section_specs,
 )
 from core_logic.value_objects.document_type_catalog import validate_document_type
 
@@ -37,12 +37,6 @@ class PrintSettings(BaseModel):
         choices=DocumentType.choices,
     )
 
-    sections_config = models.JSONField(
-        'Секции печати',
-        default=list,
-        blank=True,
-        help_text='JSON: [{"type": "header", "params": {...}}, ...]',
-    )
     latex_template_override = models.TextField(
         'Переопределение LaTeX-шаблона',
         blank=True,
@@ -80,24 +74,20 @@ class PrintSettings(BaseModel):
         super().clean()
         try:
             validate_document_type(self.document_type)
-            print_settings_spec = self.to_print_settings_spec()
-            validate_document_section_specs(
-                self.document_type,
-                print_settings_spec.sections,
-            )
         except ValueError as error:
-            raise ValidationError({'sections_config': str(error)}) from error
+            raise ValidationError({'document_type': str(error)}) from error
 
     def to_print_settings_spec(self):
-        return build_print_settings_spec_from_config(
+        return PrintSettingsSpec(
             name=self.name,
             document_type=self.document_type,
             print_settings_id=str(self.pk),
             description=self.description,
             is_default=self.is_default,
-            sections_config=self.sections_config,
-            html_template_override=self.html_template_override,
-            latex_template_override=self.latex_template_override,
-            custom_css=self.custom_css,
-            custom_latex_preamble=self.custom_latex_preamble,
+            presentation=DocumentPresentation(
+                html_template_override=self.html_template_override,
+                latex_template_override=self.latex_template_override,
+                custom_css=self.custom_css,
+                custom_latex_preamble=self.custom_latex_preamble,
+            ),
         )

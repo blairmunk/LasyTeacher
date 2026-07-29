@@ -49,7 +49,6 @@ class PrintSettingsCreateView(TemplateView):
             container.print_settings_form_adapter.create_context(
                 form=form,
                 document_types=form_data.document_types,
-                sections=form_data.sections,
             )
         )
         context['page_title'] = self.page_title
@@ -84,7 +83,6 @@ class PrintSettingsCreateView(TemplateView):
         return PrintSettingsForm(
             *args,
             document_types=form_data.document_types,
-            sections=form_data.sections,
             **kwargs,
         )
 

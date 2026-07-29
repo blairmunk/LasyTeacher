@@ -4,7 +4,6 @@ from typing import List, Optional
 
 from core_logic.entities.document import (
     CreatePrintSettingsParams,
-    DocumentSectionSpec,
     PrintSettingsSpec,
     UpdatePrintSettingsParams,
 )
@@ -69,7 +68,6 @@ class DjangoPrintSettingsRepository(IPrintSettingsRepository):
             name=params.name,
             description=params.description,
             document_type=params.document_type,
-            sections_config=_sections_config_from_specs(params.sections),
             is_default=params.is_default,
             custom_css=params.presentation.custom_css,
             custom_latex_preamble=params.presentation.custom_latex_preamble,
@@ -103,9 +101,6 @@ class DjangoPrintSettingsRepository(IPrintSettingsRepository):
         print_settings.name = params.name
         print_settings.description = params.description
         print_settings.document_type = params.document_type
-        print_settings.sections_config = _sections_config_from_specs(
-            params.sections,
-        )
         print_settings.is_default = params.is_default
         print_settings.custom_css = params.presentation.custom_css
         print_settings.custom_latex_preamble = (
@@ -120,17 +115,3 @@ class DjangoPrintSettingsRepository(IPrintSettingsRepository):
         print_settings.full_clean()
         print_settings.save()
         return True
-
-
-def _sections_config_from_specs(
-    sections: tuple[DocumentSectionSpec, ...],
-) -> list[dict]:
-    sections_config = []
-    for section in sections:
-        section_config = {'type': section.section_type}
-        if section.title:
-            section_config['title'] = section.title
-        if section.options:
-            section_config['params'] = dict(section.options)
-        sections_config.append(section_config)
-    return sections_config

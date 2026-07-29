@@ -7,9 +7,6 @@ from core_logic.entities.document import (
 from core_logic.interfaces.print_settings_repo import (
     IPrintSettingsRepository,
 )
-from core_logic.value_objects.document_section_catalog import (
-    validate_document_section_specs,
-)
 from core_logic.value_objects.document_type_catalog import validate_document_type
 
 
@@ -55,19 +52,8 @@ class UpdatePrintSettingsUseCase:
             errors.append('Название профиля печати обязательно.')
         if not params.document_type:
             errors.append('Тип документа обязателен.')
-        if not params.sections:
-            errors.append('Выберите хотя бы одну секцию.')
-
         try:
             validate_document_type(params.document_type)
-        except ValueError as error:
-            errors.append(str(error))
-
-        try:
-            validate_document_section_specs(
-                params.document_type,
-                params.sections,
-            )
         except ValueError as error:
             errors.append(str(error))
 

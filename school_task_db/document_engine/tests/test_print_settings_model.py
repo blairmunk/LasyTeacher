@@ -7,39 +7,24 @@ from document_engine.models import PrintSettings
 
 
 class PrintSettingsModelTests(TestCase):
-    def test_converts_model_to_print_settings_spec(self):
+    def test_converts_model_to_presentation_spec(self):
         user = User.objects.create_user(username='teacher')
-        template = PrintSettings.objects.create(
+        profile = PrintSettings.objects.create(
             name='Рабочий лист',
             document_type=PrintSettings.DocumentType.WORKSHEET,
             created_by=user,
-            sections_config=[
-                {
-                    'type': 'header',
-                    'params': {'show_date': True},
-                },
-                {
-                    'type': 'task_list',
-                    'params': {'source': 'new_tasks'},
-                },
-            ],
             html_template_override='<html>{{ body_content }}</html>',
             latex_template_override='\\begin{document}{{ body_content }}',
             custom_css='body { font-size: 14px; }',
             custom_latex_preamble='\\usepackage{multicol}',
         )
 
-        spec = template.to_print_settings_spec()
+        spec = profile.to_print_settings_spec()
 
         self.assertIsInstance(spec, PrintSettingsSpec)
         self.assertEqual(spec.name, 'Рабочий лист')
-        self.assertEqual(spec.print_settings_id, str(template.pk))
+        self.assertEqual(spec.print_settings_id, str(profile.pk))
         self.assertEqual(spec.document_type, 'worksheet')
-        self.assertEqual(spec.section_types, ('header', 'task_list'))
-        self.assertEqual(
-            spec.sections[1].options,
-            {'source': 'new_tasks'},
-        )
         self.assertTrue(spec.presentation.has_customization)
         self.assertEqual(
             spec.presentation.html_template_override,
@@ -56,104 +41,28 @@ class PrintSettingsModelTests(TestCase):
         )
 
     def test_string_representation_contains_name_and_type(self):
-        template = PrintSettings(
+        profile = PrintSettings(
             name='Ключ',
             document_type=PrintSettings.DocumentType.ANSWER_KEY,
         )
 
-        self.assertEqual(str(template), 'Ключ (Ключ для проверки)')
+        self.assertEqual(str(profile), 'Ключ (Ключ для проверки)')
 
-    def test_full_clean_accepts_valid_sections_config(self):
-        template = PrintSettings(
+    def test_full_clean_accepts_supported_document_type(self):
+        profile = PrintSettings(
             name='Рабочий лист',
             document_type=PrintSettings.DocumentType.WORKSHEET,
-            sections_config=[
-                {
-                    'type': 'task_list',
-                    'params': {'source': 'new_tasks'},
-                },
-            ],
         )
 
-        template.full_clean()
-
-    def test_full_clean_rejects_invalid_sections_config(self):
-        template = PrintSettings(
-            name='Сломанный шаблон',
-            document_type=PrintSettings.DocumentType.WORKSHEET,
-            sections_config=[
-                {
-                    'type': 'task_list',
-                    'params': ['not', 'a', 'mapping'],
-                },
-            ],
-        )
-
-        with self.assertRaises(ValidationError) as context:
-            template.full_clean()
-
-        self.assertIn('sections_config', context.exception.error_dict)
-
-    def test_full_clean_rejects_invalid_known_section_options(self):
-        template = PrintSettings(
-            name='Сломанные клетки',
-            document_type=PrintSettings.DocumentType.WORK,
-            sections_config=[
-                {
-                    'type': 'blank_cells',
-                    'params': {'rows': 0},
-                },
-            ],
-        )
-
-        with self.assertRaises(ValidationError) as context:
-            template.full_clean()
-
-        self.assertIn('sections_config', context.exception.error_dict)
-
-    def test_full_clean_rejects_unknown_section_type(self):
-        template = PrintSettings(
-            name='Сломанный шаблон',
-            document_type=PrintSettings.DocumentType.WORKSHEET,
-            sections_config=[
-                {
-                    'type': 'unknown_section',
-                    'params': {},
-                },
-            ],
-        )
-
-        with self.assertRaises(ValidationError) as context:
-            template.full_clean()
-
-        self.assertIn('sections_config', context.exception.error_dict)
+        profile.full_clean()
 
     def test_full_clean_rejects_unknown_document_type(self):
-        template = PrintSettings(
-            name='Сломанный шаблон',
+        profile = PrintSettings(
+            name='Сломанный профиль',
             document_type='unknown_document_type',
-            sections_config=[],
         )
 
         with self.assertRaises(ValidationError) as context:
-            template.full_clean()
+            profile.full_clean()
 
         self.assertIn('document_type', context.exception.error_dict)
-        self.assertIn('sections_config', context.exception.error_dict)
-
-    def test_full_clean_rejects_section_for_wrong_document_type(self):
-        template = PrintSettings(
-            name='Сломанный шаблон',
-            document_type=PrintSettings.DocumentType.WORKSHEET,
-            sections_config=[
-                {
-                    'type': 'original_mistakes',
-                    'params': {},
-                },
-            ],
-        )
-
-        with self.assertRaises(ValidationError) as context:
-            template.full_clean()
-
-        self.assertIn('sections_config', context.exception.error_dict)

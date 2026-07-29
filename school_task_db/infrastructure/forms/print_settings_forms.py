@@ -1,29 +1,16 @@
-"""Infrastructure helpers for document print settings screens."""
+"""Infrastructure helpers for document presentation profile screens."""
 
-import json
 from urllib.parse import urlencode
 
 from core_logic.entities.document import (
     CreatePrintSettingsParams,
     DocumentPresentation,
-    DocumentSectionSpec,
     UpdatePrintSettingsParams,
 )
 from core_logic.use_cases.get_print_settings_editor_data import (
     GetPrintSettingsEditorDataRequest,
 )
-from core_logic.value_objects.document_section_catalog import (
-    order_document_section_types,
-)
 from core_logic.value_objects.document_render_options import FILE_TYPE_LABELS
-from core_logic.value_objects.document_recipes import (
-    BLANK_CELLS_SECTION,
-    TASK_LIST_SECTION,
-)
-from infrastructure.forms.print_settings_django_forms import (
-    section_options_field_name,
-    section_title_field_name,
-)
 
 
 class PrintSettingsFormAdapter:
@@ -39,10 +26,6 @@ class PrintSettingsFormAdapter:
                 self._document_type_context(document_type, request)
                 for document_type in editor_data.document_types
             ],
-            'sections': [
-                self._section_context(section)
-                for section in editor_data.sections
-            ],
             'print_profiles': [
                 self._print_profile_context(print_profile)
                 for print_profile in editor_data.print_profiles
@@ -56,7 +39,6 @@ class PrintSettingsFormAdapter:
             name=form.cleaned_data['name'],
             description=form.cleaned_data.get('description', ''),
             document_type=form.cleaned_data['document_type'],
-            sections=self._section_specs_from_form(form),
             is_default=form.cleaned_data.get('is_default', False),
             presentation=self._presentation_from_form(form),
         )
@@ -67,24 +49,15 @@ class PrintSettingsFormAdapter:
             name=form.cleaned_data['name'],
             description=form.cleaned_data.get('description', ''),
             document_type=form.cleaned_data['document_type'],
-            sections=self._section_specs_from_form(form),
             is_default=form.cleaned_data.get('is_default', False),
             presentation=self._presentation_from_form(form),
         )
 
     def form_initial_from_print_settings(self, print_settings):
-        section_options = {}
-        for section in print_settings.sections:
-            if section.options and section.section_type not in section_options:
-                section_options[section.section_type] = dict(section.options)
         return {
             'name': print_settings.name,
             'description': print_settings.description,
             'document_type': print_settings.document_type,
-            'sections': print_settings.section_types,
-            'section_order': ','.join(print_settings.section_types),
-            'section_options': section_options,
-            'section_specs': tuple(print_settings.sections),
             'custom_css': print_settings.presentation.custom_css,
             'custom_latex_preamble': (
                 print_settings.presentation.custom_latex_preamble
@@ -98,54 +71,11 @@ class PrintSettingsFormAdapter:
             'is_default': print_settings.is_default,
         }
 
-    def create_context(self, form, document_types, sections):
-        section_options_by_type = self._section_options_by_type(form)
+    @staticmethod
+    def create_context(form, document_types, sections=None):
         return {
             'form': form,
             'document_types': document_types,
-            'section_options': [
-                {
-                    **self._section_context(section),
-                    'options_field_name': section_options_field_name(
-                        section.section_type,
-                    ),
-                    'title_field': self._section_title_field(
-                        form,
-                        section,
-                    ),
-                    'options_json': self._format_section_options_json(
-                        section_options_by_type.get(section.section_type, {}),
-                    ),
-                    'task_list_content_controls': (
-                        self._task_list_content_controls(form)
-                        if section.section_type == TASK_LIST_SECTION
-                        else ()
-                    ),
-                    'has_distinct_instance_settings': (
-                        self._has_distinct_instance_settings(
-                            form,
-                            section.section_type,
-                        )
-                    ),
-                }
-                for section in sections
-            ],
-            'repeatable_section_types': [
-                section.section_type
-                for section in sections
-                if section.is_repeatable
-            ],
-            'selected_sections': set(
-                form.data.getlist('sections')
-                if form.is_bound
-                else form.initial.get('sections', [])
-            ),
-            'selected_section_order': self._selected_section_order(form),
-            'selected_document_type': (
-                form.data.get('document_type')
-                if form.is_bound
-                else form.initial.get('document_type', '')
-            ),
         }
 
     def _document_type_context(self, document_type, request):
@@ -165,123 +95,30 @@ class PrintSettingsFormAdapter:
             ),
         }
 
-    def _section_context(self, section):
+    @staticmethod
+    def _print_profile_context(print_profile):
+        presentation = print_profile.presentation
         return {
-            'section_type': section.section_type,
-            'title': section.title,
-            'description': section.description,
-            'supported_document_types': section.supported_document_types,
-            'renderable_document_types': section.renderable_document_types,
-            'is_repeatable': section.is_repeatable,
-            'is_fixed_order': section.is_fixed_order,
-            'has_options': section.has_options,
-            'supports_title': section.supports_title,
-            'options_hint': section.options_hint,
-            'options_example_json': self._format_section_options_json(
-                section.options_example,
+            'print_settings_id': print_profile.print_settings_id,
+            'name': print_profile.name,
+            'description': print_profile.description,
+            'document_type': print_profile.document_type,
+            'is_default': print_profile.is_default,
+            'has_customization': presentation.has_customization,
+            'has_css': bool(presentation.custom_css),
+            'has_latex_preamble': bool(
+                presentation.custom_latex_preamble,
             ),
-            'has_structured_options': (
-                section.section_type in (
-                    BLANK_CELLS_SECTION,
-                    TASK_LIST_SECTION,
-                )
+            'has_html_wrapper': bool(
+                presentation.html_template_override,
             ),
-            'has_blank_cells_controls': (
-                section.section_type == BLANK_CELLS_SECTION
+            'has_latex_wrapper': bool(
+                presentation.latex_template_override,
             ),
         }
 
     @staticmethod
-    def _task_list_content_controls(form):
-        return [
-            {
-                'label': form.fields['task_list_theory_visible'].label,
-                'visible': form['task_list_theory_visible'],
-            },
-            {
-                'label': form.fields['task_list_text_visible'].label,
-                'visible': form['task_list_text_visible'],
-            },
-        ]
-
-    def _print_profile_context(self, print_profile):
-        return {
-            'print_settings_id': print_profile.print_settings_id,
-            'name': print_profile.name,
-            'document_type': print_profile.document_type,
-            'section_types': print_profile.section_types,
-            'sections_count': len(print_profile.sections),
-            'has_customization': (
-                print_profile.presentation.has_customization
-            ),
-        }
-
-    def _document_type_url(self, document_type, request):
-        params = []
-        if document_type:
-            params.append(('type', document_type))
-        if request.renderable_only:
-            params.append(('renderable', '1'))
-        query = urlencode(params)
-        if not query:
-            return '?'
-        return f'?{query}'
-
-    def _section_types_from_form(self, form):
-        selected_sections = tuple(form.cleaned_data['sections'])
-        ordered_sections = self._ordered_sections(
-            selected_sections=selected_sections,
-            section_order=form.cleaned_data.get('section_order', ''),
-        )
-        return tuple(ordered_sections)
-
-    def _section_specs_from_form(self, form):
-        section_options = form.cleaned_data.get('section_options', {})
-        touched_section_options = form.cleaned_data.get(
-            'touched_section_options',
-            (),
-        )
-        initial_specs_by_type = self._initial_specs_by_type(form)
-        initial_options = form.initial.get('section_options', {})
-        initial_titles = {
-            section_type: specs[0].title
-            for section_type, specs in initial_specs_by_type.items()
-            if specs
-        }
-        specs = []
-        for section_type in self._section_types_from_form(form):
-            existing_specs = initial_specs_by_type.get(section_type, [])
-            existing_spec = existing_specs.pop(0) if existing_specs else None
-            submitted_options = section_options.get(section_type, {})
-            options_changed = (
-                section_type in touched_section_options
-                and submitted_options != initial_options.get(section_type, {})
-            )
-            if existing_spec is not None and not options_changed:
-                options = existing_spec.options
-            else:
-                options = submitted_options
-            title_field_name = section_title_field_name(section_type)
-            submitted_title = form.cleaned_data.get(title_field_name, '')
-            title_changed = (
-                title_field_name in form.fields
-                and title_field_name in form.data
-                and submitted_title != initial_titles.get(section_type, '')
-            )
-            if existing_spec is not None and not title_changed:
-                title = existing_spec.title
-            else:
-                title = submitted_title
-            specs.append(
-                DocumentSectionSpec(
-                    section_type=section_type,
-                    title=title,
-                    options=options,
-                )
-            )
-        return tuple(specs)
-
-    def _presentation_from_form(self, form):
+    def _presentation_from_form(form):
         return DocumentPresentation(
             custom_css=form.cleaned_data.get('custom_css', ''),
             custom_latex_preamble=form.cleaned_data.get(
@@ -298,77 +135,12 @@ class PrintSettingsFormAdapter:
             ),
         )
 
-    def _selected_section_order(self, form):
-        selected_sections = (
-            form.data.getlist('sections')
-            if form.is_bound
-            else list(form.initial.get('sections', []))
-        )
-        section_order = (
-            form.data.get('section_order', '')
-            if form.is_bound
-            else form.initial.get('section_order', '')
-        )
-        return self._ordered_sections(
-            selected_sections=selected_sections,
-            section_order=section_order,
-        )
-
-    def _ordered_sections(self, selected_sections, section_order):
-        return list(
-            order_document_section_types(
-                selected_section_types=selected_sections,
-                section_order=section_order,
-            )
-        )
-
-    def _section_options_by_type(self, form):
-        if form.is_bound:
-            return {
-                section_type: form.data.get(
-                    section_options_field_name(section_type),
-                    '',
-                )
-                for section_type, _label in form.fields['sections'].choices
-            }
-        return form.initial.get('section_options', {})
-
-    def _initial_specs_by_type(self, form):
-        specs_by_type = {}
-        for section in form.initial.get('section_specs', ()):
-            specs_by_type.setdefault(section.section_type, []).append(section)
-        return specs_by_type
-
     @staticmethod
-    def _section_title_field(form, section):
-        if not section.supports_title:
-            return None
-        field_name = section_title_field_name(section.section_type)
-        return form[field_name] if field_name in form.fields else None
-
-    def _has_distinct_instance_settings(self, form, section_type):
-        instance_settings = {
-            (
-                section.title,
-                json.dumps(
-                    dict(section.options),
-                    ensure_ascii=False,
-                    sort_keys=True,
-                ),
-            )
-            for section in form.initial.get('section_specs', ())
-            if section.section_type == section_type
-        }
-        return len(instance_settings) > 1
-
-    def _format_section_options_json(self, value):
-        if not value:
-            return ''
-        if isinstance(value, str):
-            return value
-        return json.dumps(
-            value,
-            ensure_ascii=False,
-            indent=2,
-            sort_keys=True,
-        )
+    def _document_type_url(document_type, request):
+        params = []
+        if document_type:
+            params.append(('type', document_type))
+        if request.renderable_only:
+            params.append(('renderable', '1'))
+        query = urlencode(params)
+        return f'?{query}' if query else '?'

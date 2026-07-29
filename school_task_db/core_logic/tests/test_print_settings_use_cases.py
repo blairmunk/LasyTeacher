@@ -2,7 +2,6 @@ from unittest import TestCase
 
 from core_logic.entities.document import (
     CreatePrintSettingsParams,
-    DocumentSectionSpec,
     PrintSettingsSpec,
     UpdatePrintSettingsParams,
 )
@@ -51,7 +50,6 @@ class FakePrintSettingsRepository:
                 name='Рабочий лист',
                 document_type=WORKSHEET_DOCUMENT_TYPE,
                 print_settings_id='profile-1',
-                sections=[DocumentSectionSpec(section_type='header')],
             )
         ]
 
@@ -101,7 +99,6 @@ class GetPrintSettingsUseCaseTests(TestCase):
             WORKSHEET_DOCUMENT_TYPE,
         )
         self.assertEqual(data.print_profiles[0].name, 'Рабочий лист')
-        self.assertEqual(data.print_profiles[0].section_types, ('header',))
 
     def test_returns_profile_by_clean_identifiers(self):
         repo = FakePrintSettingsRepository()
@@ -179,7 +176,7 @@ class PrintSettingsSelectionTests(TestCase):
         )
         self.assertIsNone(repo.default_document_type)
 
-    def test_returns_default_profile(self):
+    def test_returns_none_without_explicit_profile(self):
         repo = FakePrintSettingsRepository()
 
         print_settings = resolve_document_print_settings_spec(
@@ -187,7 +184,8 @@ class PrintSettingsSelectionTests(TestCase):
             print_settings_repo=repo,
         )
 
-        self.assertEqual(print_settings.name, 'Рабочий лист')
+        self.assertIsNone(print_settings)
+        self.assertIsNone(repo.default_document_type)
 
     def test_returns_none_without_repository(self):
         print_settings = resolve_document_print_settings_spec(
@@ -204,7 +202,6 @@ class CreatePrintSettingsUseCaseTests(TestCase):
             name='  Профиль работы  ',
             description='  Для печати  ',
             document_type='work',
-            sections=('header', 'task_list'),
             is_default=True,
         )
 
@@ -223,55 +220,29 @@ class CreatePrintSettingsUseCaseTests(TestCase):
             CreatePrintSettingsParams(
                 name='',
                 document_type='',
-                sections=(),
             )
         )
 
         self.assertEqual(result.status, PRINT_SETTINGS_CREATE_STATUS_INVALID)
         self.assertIn('Название профиля печати обязательно.', result.errors)
         self.assertIn('Тип документа обязателен.', result.errors)
-        self.assertIn('Выберите хотя бы одну секцию.', result.errors)
         self.assertIsNone(repo.created_params)
 
-    def test_rejects_section_for_wrong_document_type(self):
+    def test_rejects_unknown_document_type(self):
         repo = FakePrintSettingsRepository()
 
         result = CreatePrintSettingsUseCase(repo).execute(
             CreatePrintSettingsParams(
                 name='Профиль РнО',
-                document_type='remedial_sheet',
-                sections=('task_list',),
+                document_type='unknown',
             )
         )
 
         self.assertEqual(result.status, PRINT_SETTINGS_CREATE_STATUS_INVALID)
         self.assertIn(
-            'Section task_list is not supported for document type remedial_sheet',
+            'Unsupported document type: unknown',
             result.errors,
         )
-
-    def test_rejects_invalid_section_options_without_persisting(self):
-        repo = FakePrintSettingsRepository()
-
-        result = CreatePrintSettingsUseCase(repo).execute(
-            CreatePrintSettingsParams(
-                name='Сломанные клетки',
-                document_type='work',
-                sections=(
-                    DocumentSectionSpec(
-                        section_type='blank_cells',
-                        options={'rows': 0},
-                    ),
-                ),
-            )
-        )
-
-        self.assertEqual(result.status, PRINT_SETTINGS_CREATE_STATUS_INVALID)
-        self.assertIn(
-            'Section blank_cells option rows must be between 1 and 40',
-            result.errors,
-        )
-        self.assertIsNone(repo.created_params)
 
 
 class UpdatePrintSettingsUseCaseTests(TestCase):
@@ -282,7 +253,6 @@ class UpdatePrintSettingsUseCaseTests(TestCase):
             name='  Новый профиль  ',
             description='  Новое описание  ',
             document_type='work',
-            sections=('header', 'task_list'),
             is_default=True,
         )
 
@@ -303,7 +273,6 @@ class UpdatePrintSettingsUseCaseTests(TestCase):
                 print_settings_id='missing',
                 name='Профиль',
                 document_type='work',
-                sections=('header',),
             )
         )
 
@@ -319,34 +288,9 @@ class UpdatePrintSettingsUseCaseTests(TestCase):
             UpdatePrintSettingsParams(
                 print_settings_id='profile-1',
                 name='Профиль РнО',
-                document_type='remedial_sheet',
-                sections=('task_list',),
+                document_type='unknown',
             )
         )
 
         self.assertEqual(result.status, PRINT_SETTINGS_UPDATE_STATUS_INVALID)
-        self.assertIsNone(repo.updated_params)
-
-    def test_rejects_invalid_section_options_update(self):
-        repo = FakePrintSettingsRepository()
-
-        result = UpdatePrintSettingsUseCase(repo).execute(
-            UpdatePrintSettingsParams(
-                print_settings_id='profile-1',
-                name='Сломанный профиль',
-                document_type='work',
-                sections=(
-                    DocumentSectionSpec(
-                        section_type='task_list',
-                        options={'hide_blank_cells': 'false'},
-                    ),
-                ),
-            )
-        )
-
-        self.assertEqual(result.status, PRINT_SETTINGS_UPDATE_STATUS_INVALID)
-        self.assertIn(
-            'Section task_list option hide_blank_cells must be boolean',
-            result.errors,
-        )
         self.assertIsNone(repo.updated_params)

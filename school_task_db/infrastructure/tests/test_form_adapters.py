@@ -5,11 +5,7 @@ from django.http import QueryDict
 from django.test import SimpleTestCase
 
 from infrastructure.forms.print_settings_django_forms import PrintSettingsForm
-from core_logic.entities.document import (
-    DocumentPresentation,
-    DocumentSectionSpec,
-    PrintSettingsSpec,
-)
+from core_logic.entities.document import DocumentPresentation, PrintSettingsSpec
 from core_logic.entities.core import (
     DashboardSummaryData,
     GlobalSearchData,
@@ -30,26 +26,15 @@ from core_logic.services.analytics_service import (
     StudentProfileData,
 )
 from core_logic.use_cases.get_print_settings_editor_data import (
-    GetPrintSettingsEditorDataRequest,
     PrintSettingsEditorData,
 )
 from core_logic.value_objects.document_render_options import WorkDocumentRenderOptions
-from core_logic.value_objects.document_recipes import (
-    BLANK_CELLS_SECTION,
-    COMMON_HEADER_SECTION,
-    HEADER_SECTION,
-    PAGE_BREAK_SECTION,
-    TASK_LIST_SECTION,
-    WORK_DOCUMENT_TYPE,
-)
+from core_logic.value_objects.document_recipes import WORK_DOCUMENT_TYPE
 from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_ANY,
     TASK_BANK_ROLE_CONTROL,
     TASK_BANK_ROLE_DEMO,
     TASK_RENDER_MODE_WITH_FULL_SOLUTION,
-)
-from core_logic.value_objects.document_section_catalog import (
-    get_document_section_catalog,
 )
 from core_logic.value_objects.document_type_catalog import (
     get_document_type_catalog,
@@ -244,135 +229,53 @@ class CurriculumFormAdapterTests(SimpleTestCase):
 
 
 class PrintSettingsFormAdapterTests(SimpleTestCase):
-    def _template_form(self, *args, sections=None, **kwargs):
+    def _form(self, *args, **kwargs):
         return PrintSettingsForm(
             *args,
             document_types=get_document_type_catalog(renderable_only=True),
-            sections=(
-                sections
-                if sections is not None
-                else get_document_section_catalog(renderable_only=True)
-            ),
             **kwargs,
         )
 
-    def test_builds_editor_data_request_from_query(self):
-        request = (
-            PrintSettingsFormAdapter()
-            .editor_data_request_from_query(
-                QueryDict('type=work&renderable=1'),
-            )
+    def test_builds_editor_request_and_context(self):
+        adapter = PrintSettingsFormAdapter()
+        request = adapter.editor_data_request_from_query(
+            QueryDict('type=work&renderable=1'),
         )
+        editor_data = PrintSettingsEditorData(
+            document_types=get_document_type_catalog(renderable_only=True),
+            print_profiles=[
+                PrintSettingsSpec(
+                    name='Строгий профиль',
+                    document_type=WORK_DOCUMENT_TYPE,
+                    print_settings_id='profile-1',
+                    is_default=True,
+                    presentation=DocumentPresentation(
+                        custom_css='body {}',
+                        custom_latex_preamble='\\small',
+                    ),
+                ),
+            ],
+        )
+
+        context = adapter.editor_context(editor_data, request)
 
         self.assertEqual(request.document_type, WORK_DOCUMENT_TYPE)
         self.assertTrue(request.renderable_only)
+        self.assertEqual(context['print_profiles'][0]['name'], 'Строгий профиль')
+        self.assertTrue(context['print_profiles'][0]['is_default'])
+        self.assertTrue(context['print_profiles'][0]['has_css'])
+        self.assertTrue(context['print_profiles'][0]['has_latex_preamble'])
 
-    def test_builds_editor_context(self):
-        request = (
-            PrintSettingsFormAdapter()
-            .editor_data_request_from_query(QueryDict('type=work'))
-        )
-        editor_data = PrintSettingsEditorData(
-            document_types=get_document_type_catalog(renderable_only=True),
-            sections=get_document_section_catalog(document_type=WORK_DOCUMENT_TYPE),
-            print_profiles=[
-                PrintSettingsSpec(
-                    name='Шаблон работы',
-                    document_type=WORK_DOCUMENT_TYPE,
-                    print_settings_id='profile-work',
-                    sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
-                    presentation=DocumentPresentation(custom_css='body {}'),
-                )
-            ],
-        )
-
-        context = PrintSettingsFormAdapter().editor_context(
-            editor_data,
-            request,
-        )
-
-        self.assertEqual(context['current_document_type'], WORK_DOCUMENT_TYPE)
-        self.assertTrue(context['renderable_only'])
-        self.assertEqual(context['document_types'][0]['document_type'], 'work')
-        self.assertEqual(
-            context['document_types'][0]['renderer_labels'],
-            ['HTML', 'PDF', 'LaTeX'],
-        )
-        self.assertEqual(
-            context['document_types'][0]['url'],
-            '?type=work&renderable=1',
-        )
-        self.assertEqual(
-            context['sections'][0]['section_type'],
-            COMMON_HEADER_SECTION,
-        )
-        self.assertTrue(context['sections'][0]['is_fixed_order'])
-        self.assertEqual(context['sections'][1]['section_type'], HEADER_SECTION)
-        self.assertEqual(
-            context['print_profiles'][0]['print_settings_id'],
-            'profile-work',
-        )
-        self.assertEqual(context['print_profiles'][0]['name'], 'Шаблон работы')
-        self.assertEqual(context['print_profiles'][0]['document_type'], 'work')
-        self.assertEqual(context['print_profiles'][0]['sections_count'], 1)
-        self.assertTrue(context['print_profiles'][0]['has_customization'])
-
-    def test_editor_context_has_only_print_settings_names(self):
-        request = GetPrintSettingsEditorDataRequest(
-            document_type=WORK_DOCUMENT_TYPE,
-        )
-        editor_data = PrintSettingsEditorData(
-            document_types=(),
-            sections=(),
-            print_profiles=[
-                PrintSettingsSpec(
-                    name='Профиль',
-                    document_type=WORK_DOCUMENT_TYPE,
-                    print_settings_id='profile-1',
-                ),
-            ],
-        )
-
-        context = PrintSettingsFormAdapter().editor_context(
-            editor_data,
-            request,
-        )
-
-        self.assertNotIn('templates', context)
-        self.assertEqual(
-            context['print_profiles'][0]['print_settings_id'],
-            'profile-1',
-        )
-
-    def test_editor_context_preserves_filter_in_document_type_urls(self):
-        request = (
-            PrintSettingsFormAdapter()
-            .editor_data_request_from_query(
-                QueryDict('type=work&renderable=1'),
-            )
-        )
-        editor_data = PrintSettingsEditorData(
-            document_types=get_document_type_catalog(renderable_only=True),
-            sections=(),
-            print_profiles=[],
-        )
-
-        context = PrintSettingsFormAdapter().editor_context(
-            editor_data,
-            request,
-        )
-
-        self.assertEqual(
-            context['document_types'][0]['url'],
-            '?type=work&renderable=1',
-        )
-
-    def test_builds_create_params_from_template_form(self):
-        form = self._template_form(
-            data=QueryDict(
-                'name=Шаблон&description=Описание&document_type=work'
-                '&sections=header&sections=task_list&is_default=on',
-            ),
+    def test_builds_create_params_with_presentation_only(self):
+        form = self._form(
+            data={
+                'name': 'Строгий профиль',
+                'description': 'Для контрольных',
+                'document_type': 'work',
+                'custom_css': 'body {}',
+                'custom_latex_preamble': '\\small',
+                'is_default': 'on',
+            },
         )
         self.assertTrue(form.is_valid(), form.errors)
 
@@ -381,634 +284,45 @@ class PrintSettingsFormAdapterTests(SimpleTestCase):
             .create_print_settings_params_from_form(form)
         )
 
-        self.assertEqual(params.name, 'Шаблон')
-        self.assertEqual(params.description, 'Описание')
+        self.assertEqual(params.name, 'Строгий профиль')
         self.assertEqual(params.document_type, 'work')
-        self.assertEqual(params.section_types, ('header', 'task_list'))
-        self.assertEqual(
-            [section.section_type for section in params.sections],
-            ['header', 'task_list'],
-        )
+        self.assertEqual(params.presentation.custom_css, 'body {}')
+        self.assertEqual(params.presentation.custom_latex_preamble, '\\small')
         self.assertTrue(params.is_default)
 
-    def test_builds_create_params_preserving_section_order(self):
-        form = self._template_form(
-            data=QueryDict(
-                'name=Шаблон&document_type=work'
-                '&sections=header&sections=task_list'
-                '&section_order=task_list,header',
-            ),
-        )
-        self.assertTrue(form.is_valid(), form.errors)
-
-        params = PrintSettingsFormAdapter().create_print_settings_params_from_form(form)
-
-        self.assertEqual(params.section_types, ('task_list', 'header'))
-        self.assertEqual(
-            [section.section_type for section in params.sections],
-            ['task_list', 'header'],
-        )
-
-    def test_builds_create_params_with_document_presentation(self):
-        data = QueryDict('', mutable=True)
-        data.update(
-            {
-                'name': 'Шаблон',
-                'document_type': 'work',
-                'custom_css': 'body { color: black; }',
-                'custom_latex_preamble': '\\usepackage{geometry}',
-                'html_template_override': '<main>{{ body_content }}</main>',
-                'latex_template_override': (
-                    '\\begin{document}{{ body_content }}'
-                ),
-            }
-        )
-        data.setlist('sections', ['header'])
-        form = self._template_form(data=data)
-        self.assertTrue(form.is_valid(), form.errors)
-
-        params = (
-            PrintSettingsFormAdapter()
-            .create_print_settings_params_from_form(form)
-        )
-
-        self.assertEqual(
-            params.presentation.custom_css,
-            'body { color: black; }',
-        )
-        self.assertEqual(
-            params.presentation.custom_latex_preamble,
-            '\\usepackage{geometry}',
-        )
-        self.assertEqual(
-            params.presentation.html_template_override,
-            '<main>{{ body_content }}</main>',
-        )
-        self.assertEqual(
-            params.presentation.latex_template_override,
-            '\\begin{document}{{ body_content }}',
-        )
-
-    def test_builds_create_params_with_common_header_fixed_first(self):
-        form = self._template_form(
-            data=QueryDict(
-                'name=Шаблон&document_type=work'
-                '&sections=header&sections=common_header&sections=task_list'
-                '&section_order=task_list,header,common_header',
-            ),
-        )
-        self.assertTrue(form.is_valid(), form.errors)
-
-        params = PrintSettingsFormAdapter().create_print_settings_params_from_form(form)
-
-        self.assertEqual(
-            params.section_types,
-            ('common_header', 'task_list', 'header'),
-        )
-
-    def test_builds_create_params_with_repeated_sections_from_order(self):
-        form = self._template_form(
-            data=QueryDict(
-                'name=Шаблон&document_type=work'
-                '&sections=header&sections=task_list&sections=page_break'
-                '&section_order=header,task_list,page_break,header,task_list',
-            ),
-        )
-        self.assertTrue(form.is_valid(), form.errors)
-
-        params = PrintSettingsFormAdapter().create_print_settings_params_from_form(form)
-
-        self.assertEqual(
-            params.section_types,
-            ('header', 'task_list', 'page_break', 'header', 'task_list'),
-        )
-
-    def test_builds_create_params_with_section_options(self):
-        data = QueryDict('', mutable=True)
-        data.update({'name': 'Шаблон', 'document_type': 'work'})
-        data.setlist('sections', ['header', 'task_list'])
-        data['section_options__task_list'] = (
-            '{"hidden_content_types": ["theory"]}'
-        )
-        form = self._template_form(
-            data=data,
-        )
-        self.assertTrue(form.is_valid(), form.errors)
-
-        params = PrintSettingsFormAdapter().create_print_settings_params_from_form(form)
-
-        self.assertEqual(params.section_types, ('header', 'task_list'))
-        self.assertEqual(params.sections[0].options, {})
-        self.assertEqual(
-            params.sections[1].options,
-            {'hidden_content_types': ['theory']},
-        )
-
-    def test_task_list_content_visibility_uses_saved_options(self):
-        form = self._template_form(
-            initial={
-                'sections': [TASK_LIST_SECTION],
-                'section_options': {
-                    TASK_LIST_SECTION: {
-                        'hidden_content_types': ['theory'],
-                    },
-                },
-            },
-        )
-
-        self.assertFalse(form['task_list_theory_visible'].value())
-        self.assertTrue(form['task_list_text_visible'].value())
-
-    def test_task_list_content_visibility_builds_hidden_types(self):
-        data = QueryDict('', mutable=True)
-        data.update(
-            {
-                'name': 'Шаблон',
-                'document_type': 'work',
-                'task_list_structured_options': '1',
-                'task_list_content_visibility_options': '1',
-                'task_list_text_visible': 'on',
-            }
-        )
-        data.setlist('sections', [TASK_LIST_SECTION])
-        form = self._template_form(data=data)
-        self.assertTrue(form.is_valid(), form.errors)
-
-        params = (
-            PrintSettingsFormAdapter()
-            .create_print_settings_params_from_form(form)
-        )
-
-        self.assertEqual(
-            params.sections[0].options,
-            {'hidden_content_types': ['theory']},
-        )
-
-    def test_builds_blank_cells_options_from_structured_fields(self):
-        data = QueryDict('', mutable=True)
-        data.update(
-            {
-                'name': 'Шаблон',
-                'document_type': 'work',
-                'blank_cells_rows': '9',
-                'blank_cells_columns': '18',
-                'blank_cells_row_height': '28',
-            }
-        )
-        data.setlist('sections', [BLANK_CELLS_SECTION])
-        form = self._template_form(data=data)
-        self.assertTrue(form.is_valid(), form.errors)
-
-        params = (
-            PrintSettingsFormAdapter()
-            .create_print_settings_params_from_form(form)
-        )
-
-        self.assertEqual(
-            params.sections[0].options,
-            {
-                'rows': 9,
-                'columns': 18,
-                'row_height': 28,
-            },
-        )
-
-    def test_blank_cells_controls_use_saved_section_options_as_initial(self):
-        form = self._template_form(
-            initial={
-                'sections': [BLANK_CELLS_SECTION],
-                'section_options': {
-                    BLANK_CELLS_SECTION: {
-                        'rows': 8,
-                        'columns': 16,
-                        'row_height': 30,
-                    },
-                },
-            },
-        )
-
-        self.assertEqual(form['blank_cells_rows'].value(), 8)
-        self.assertEqual(form['blank_cells_columns'].value(), 16)
-        self.assertEqual(form['blank_cells_row_height'].value(), 30)
-
-    def test_print_settings_form_rejects_invalid_section_options_json(self):
-        data = QueryDict('', mutable=True)
-        data.update({'name': 'Шаблон', 'document_type': 'work'})
-        data.setlist('sections', ['task_list'])
-        data['section_options__task_list'] = '{"hidden_content_types":'
-        form = self._template_form(
-            data=data,
-        )
-
-        self.assertFalse(form.is_valid())
-        self.assertIn(
-            'Настройки секции task_list: некорректный JSON.',
-            form.non_field_errors(),
-        )
-
-    def test_print_settings_form_rejects_non_object_section_options_json(self):
-        data = QueryDict('', mutable=True)
-        data.update({'name': 'Шаблон', 'document_type': 'work'})
-        data.setlist('sections', ['task_list'])
-        data['section_options__task_list'] = '["demo"]'
-        form = self._template_form(
-            data=data,
-        )
-
-        self.assertFalse(form.is_valid())
-        self.assertIn(
-            'Настройки секции task_list должны быть JSON-объектом.',
-            form.non_field_errors(),
-        )
-
-    def test_builds_update_params_from_template_form(self):
-        form = self._template_form(
-            data=QueryDict(
-                'name=Шаблон&description=Описание&document_type=work'
-                '&sections=header',
-            ),
-        )
-        self.assertTrue(form.is_valid(), form.errors)
-
-        params = (
-            PrintSettingsFormAdapter()
-            .update_print_settings_params_from_form(
-                form,
-                print_settings_id='template-1',
-            )
-        )
-
-        self.assertEqual(params.print_settings_id, 'template-1')
-        self.assertEqual(params.name, 'Шаблон')
-        self.assertEqual(params.section_types, ('header',))
-        self.assertEqual(
-            [section.section_type for section in params.sections],
-            ['header'],
-        )
-        self.assertFalse(params.is_default)
-
-    def test_builds_custom_section_title_from_template_form(self):
-        data = QueryDict('', mutable=True)
-        data.update(
-            {
-                'name': 'Шаблон',
-                'document_type': 'work',
-                'section_title__header': 'Самостоятельная работа',
-            }
-        )
-        data.setlist('sections', [HEADER_SECTION])
-        form = self._template_form(data=data)
-        self.assertTrue(form.is_valid(), form.errors)
-
-        params = (
-            PrintSettingsFormAdapter()
-            .update_print_settings_params_from_form(
-                form,
-                print_settings_id='template-1',
-            )
-        )
-
-        self.assertEqual(params.sections[0].title, 'Самостоятельная работа')
-
-    def test_builds_form_initial_from_print_settings(self):
-        template = PrintSettingsSpec(
-            name='Шаблон',
-            document_type=WORK_DOCUMENT_TYPE,
-            print_settings_id='profile-1',
+    def test_builds_update_initial_from_profile(self):
+        profile = PrintSettingsSpec(
+            name='Профиль',
             description='Описание',
-            is_default=True,
-            sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
+            document_type='work',
+            print_settings_id='profile-1',
             presentation=DocumentPresentation(
-                custom_css='body { font-size: 12pt; }',
-                custom_latex_preamble='\\usepackage{multicol}',
-                html_template_override='<main>{{ body_content }}</main>',
-                latex_template_override='\\begin{document}{{ body_content }}',
+                custom_css='.task-item {}',
+                html_template_override='<main>{{ body_content|safe }}</main>',
             ),
         )
 
-        adapter = PrintSettingsFormAdapter()
-        initial = adapter.form_initial_from_print_settings(
-            template,
-        )
-        self.assertEqual(initial['name'], 'Шаблон')
-        self.assertEqual(initial['description'], 'Описание')
-        self.assertEqual(initial['document_type'], WORK_DOCUMENT_TYPE)
-        self.assertEqual(initial['sections'], (HEADER_SECTION,))
-        self.assertEqual(initial['section_order'], HEADER_SECTION)
-        self.assertEqual(initial['custom_css'], 'body { font-size: 12pt; }')
-        self.assertEqual(
-            initial['custom_latex_preamble'],
-            '\\usepackage{multicol}',
-        )
-        self.assertEqual(
-            initial['html_template_override'],
-            '<main>{{ body_content }}</main>',
-        )
-        self.assertEqual(
-            initial['latex_template_override'],
-            '\\begin{document}{{ body_content }}',
-        )
-        self.assertTrue(initial['is_default'])
-
-    def test_builds_form_initial_with_section_options_from_template(self):
-        template = PrintSettingsSpec(
-            name='Шаблон',
-            document_type=WORK_DOCUMENT_TYPE,
-            sections=[
-                DocumentSectionSpec(section_type=HEADER_SECTION),
-                DocumentSectionSpec(
-                    section_type='task_list',
-                    options={'hidden_content_types': ['theory']},
-                ),
-            ],
+        initial = (
+            PrintSettingsFormAdapter()
+            .form_initial_from_print_settings(profile)
         )
 
-        initial = PrintSettingsFormAdapter().form_initial_from_print_settings(
-            template,
-        )
+        self.assertEqual(initial['name'], 'Профиль')
+        self.assertEqual(initial['custom_css'], '.task-item {}')
+        self.assertIn('body_content', initial['html_template_override'])
+        self.assertNotIn('sections', initial)
 
-        self.assertEqual(
-            initial['section_options'],
-            {
-                'task_list': {'hidden_content_types': ['theory']},
-            },
-        )
-        self.assertEqual(initial['section_specs'], template.sections)
-
-    def test_update_preserves_distinct_repeated_section_options(self):
-        template = PrintSettingsSpec(
-            name='Шаблон',
-            document_type=WORK_DOCUMENT_TYPE,
-            sections=[
-                DocumentSectionSpec(
-                    section_type=BLANK_CELLS_SECTION,
-                    title='Короткое решение',
-                    options={'rows': 4, 'columns': 12, 'row_height': 20},
-                ),
-                DocumentSectionSpec(
-                    section_type=BLANK_CELLS_SECTION,
-                    title='Большое решение',
-                    options={'rows': 10, 'columns': 24, 'row_height': 30},
-                ),
-            ],
-        )
-        adapter = PrintSettingsFormAdapter()
-        initial = adapter.form_initial_from_print_settings(template)
-        data = QueryDict('', mutable=True)
-        data.update(
-            {
-                'name': 'Шаблон',
+    def test_rejects_full_wrapper_without_body_content(self):
+        form = self._form(
+            data={
+                'name': 'Профиль',
                 'document_type': 'work',
-                'section_order': 'blank_cells,blank_cells',
-                'blank_cells_rows': '4',
-                'blank_cells_columns': '12',
-                'blank_cells_row_height': '20',
-            }
-        )
-        data.setlist('sections', [BLANK_CELLS_SECTION])
-        form = self._template_form(data=data, initial=initial)
-        self.assertTrue(form.is_valid(), form.errors)
-
-        params = adapter.update_print_settings_params_from_form(
-            form,
-            print_settings_id='profile-1',
-        )
-
-        self.assertEqual(params.sections, template.sections)
-
-    def test_changed_type_options_apply_to_all_repeated_sections(self):
-        template = PrintSettingsSpec(
-            name='Шаблон',
-            document_type=WORK_DOCUMENT_TYPE,
-            sections=[
-                DocumentSectionSpec(
-                    section_type=BLANK_CELLS_SECTION,
-                    options={'rows': 4, 'columns': 12, 'row_height': 20},
-                ),
-                DocumentSectionSpec(
-                    section_type=BLANK_CELLS_SECTION,
-                    options={'rows': 10, 'columns': 24, 'row_height': 30},
-                ),
-            ],
-        )
-        adapter = PrintSettingsFormAdapter()
-        initial = adapter.form_initial_from_print_settings(template)
-        data = QueryDict('', mutable=True)
-        data.update(
-            {
-                'name': 'Шаблон',
-                'document_type': 'work',
-                'section_order': 'blank_cells,blank_cells',
-                'blank_cells_rows': '8',
-                'blank_cells_columns': '18',
-                'blank_cells_row_height': '24',
-            }
-        )
-        data.setlist('sections', [BLANK_CELLS_SECTION])
-        form = self._template_form(data=data, initial=initial)
-        self.assertTrue(form.is_valid(), form.errors)
-
-        params = adapter.update_print_settings_params_from_form(
-            form,
-            print_settings_id='profile-1',
-        )
-
-        self.assertEqual(
-            [dict(section.options) for section in params.sections],
-            [
-                {'rows': 8, 'columns': 18, 'row_height': 24},
-                {'rows': 8, 'columns': 18, 'row_height': 24},
-            ],
-        )
-
-    def test_changed_title_applies_to_all_repeated_sections(self):
-        template = PrintSettingsSpec(
-            name='Шаблон',
-            document_type=WORK_DOCUMENT_TYPE,
-            sections=[
-                DocumentSectionSpec(
-                    section_type=BLANK_CELLS_SECTION,
-                    title='Короткое решение',
-                ),
-                DocumentSectionSpec(
-                    section_type=BLANK_CELLS_SECTION,
-                    title='Большое решение',
-                ),
-            ],
-        )
-        adapter = PrintSettingsFormAdapter()
-        initial = adapter.form_initial_from_print_settings(template)
-        data = QueryDict('', mutable=True)
-        data.update(
-            {
-                'name': 'Шаблон',
-                'document_type': 'work',
-                'section_order': 'blank_cells,blank_cells',
-                'section_title__blank_cells': 'Место для решения',
-            }
-        )
-        data.setlist('sections', [BLANK_CELLS_SECTION])
-        form = self._template_form(data=data, initial=initial)
-        self.assertTrue(form.is_valid(), form.errors)
-
-        params = adapter.update_print_settings_params_from_form(
-            form,
-            print_settings_id='profile-1',
-        )
-
-        self.assertEqual(
-            [section.title for section in params.sections],
-            ['Место для решения', 'Место для решения'],
-        )
-
-    def test_empty_json_clears_options_for_repeated_section_type(self):
-        template = PrintSettingsSpec(
-            name='Шаблон',
-            document_type=WORK_DOCUMENT_TYPE,
-            sections=[
-                DocumentSectionSpec(
-                    section_type=PAGE_BREAK_SECTION,
-                    options={'label': 'first'},
-                ),
-                DocumentSectionSpec(
-                    section_type=PAGE_BREAK_SECTION,
-                    options={'label': 'second'},
-                ),
-            ],
-        )
-        adapter = PrintSettingsFormAdapter()
-        initial = adapter.form_initial_from_print_settings(template)
-        data = QueryDict('', mutable=True)
-        data.update(
-            {
-                'name': 'Шаблон',
-                'document_type': 'work',
-                'section_order': 'page_break,page_break',
-                'section_options__page_break': '',
-            }
-        )
-        data.setlist('sections', [PAGE_BREAK_SECTION])
-        form = self._template_form(data=data, initial=initial)
-        self.assertTrue(form.is_valid(), form.errors)
-
-        params = adapter.update_print_settings_params_from_form(
-            form,
-            print_settings_id='profile-1',
-        )
-
-        self.assertEqual(
-            [dict(section.options) for section in params.sections],
-            [{}, {}],
-        )
-
-    def test_context_marks_distinct_repeated_section_settings(self):
-        template = PrintSettingsSpec(
-            name='Шаблон',
-            document_type=WORK_DOCUMENT_TYPE,
-            sections=[
-                DocumentSectionSpec(
-                    section_type=BLANK_CELLS_SECTION,
-                    options={'rows': 4},
-                ),
-                DocumentSectionSpec(
-                    section_type=BLANK_CELLS_SECTION,
-                    options={'rows': 10},
-                ),
-            ],
-        )
-        adapter = PrintSettingsFormAdapter()
-        form = self._template_form(
-            initial=adapter.form_initial_from_print_settings(template),
-        )
-
-        context = adapter.create_context(
-            form=form,
-            document_types=get_document_type_catalog(renderable_only=True),
-            sections=get_document_section_catalog(renderable_only=True),
-        )
-        blank_cells_context = next(
-            section
-            for section in context['section_options']
-            if section['section_type'] == BLANK_CELLS_SECTION
-        )
-
-        self.assertTrue(
-            blank_cells_context['has_distinct_instance_settings'],
-        )
-
-    def test_builds_create_context(self):
-        form = self._template_form(
-            data=QueryDict('document_type=work&sections=header'),
-        )
-
-        context = PrintSettingsFormAdapter().create_context(
-            form=form,
-            document_types=get_document_type_catalog(renderable_only=True),
-            sections=get_document_section_catalog(renderable_only=True),
-        )
-
-        self.assertEqual(context['form'], form)
-        self.assertEqual(context['selected_document_type'], 'work')
-        self.assertEqual(context['selected_sections'], {'header'})
-        self.assertEqual(context['selected_section_order'], ['header'])
-        self.assertEqual(
-            context['section_options'][0]['section_type'],
-            COMMON_HEADER_SECTION,
-        )
-        self.assertTrue(context['section_options'][0]['is_fixed_order'])
-        self.assertFalse(context['section_options'][0]['is_repeatable'])
-        self.assertFalse(context['section_options'][0]['has_options'])
-        self.assertIn('task_list', context['repeatable_section_types'])
-        self.assertIn('page_break', context['repeatable_section_types'])
-
-        task_list_context = next(
-            section
-            for section in context['section_options']
-            if section['section_type'] == 'task_list'
-        )
-        self.assertTrue(task_list_context['has_options'])
-        self.assertTrue(task_list_context['is_repeatable'])
-        self.assertIn(
-            'hidden_content_types',
-            task_list_context['options_example_json'],
-        )
-        self.assertIn(
-            'Можно скрыть теоретические или текстовые блоки',
-            task_list_context['options_hint'],
-        )
-
-    def test_builds_create_context_with_section_options_json(self):
-        form = self._template_form(
-            initial={
-                'document_type': WORK_DOCUMENT_TYPE,
-                'sections': ['task_list'],
-                'section_options': {
-                    'task_list': {
-                        'hidden_content_types': ['theory'],
-                    },
-                },
+                'html_template_override': '<html></html>',
             },
         )
 
-        context = PrintSettingsFormAdapter().create_context(
-            form=form,
-            document_types=get_document_type_catalog(renderable_only=True),
-            sections=get_document_section_catalog(renderable_only=True),
-        )
-        task_list_context = next(
-            section
-            for section in context['section_options']
-            if section['section_type'] == 'task_list'
-        )
-
-        self.assertEqual(
-            task_list_context['options_field_name'],
-            'section_options__task_list',
-        )
-        self.assertIn(
-            '"hidden_content_types": [',
-            task_list_context['options_json'],
-        )
+        self.assertFalse(form.is_valid())
+        self.assertIn('body_content', form.errors['html_template_override'][0])
 
 
 class EventFormAdapterTests(SimpleTestCase):

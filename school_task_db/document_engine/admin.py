@@ -27,11 +27,6 @@ class PrintSettingsAdmin(admin.ModelAdmin):
                 'is_public',
             ],
         }),
-        ('Секции', {
-            'fields': [
-                'sections_config',
-            ],
-        }),
         ('Шаблоны оформления', {
             'fields': [
                 'latex_template_override',

@@ -1,9 +1,6 @@
 from unittest import TestCase
 
-from core_logic.entities.document import (
-    DocumentSectionSpec,
-    PrintSettingsSpec,
-)
+from core_logic.entities.document import PrintSettingsSpec
 from core_logic.use_cases.get_print_settings_form_data import (
     GetPrintSettingsFormDataRequest,
     GetPrintSettingsFormDataUseCase,
@@ -25,16 +22,12 @@ class FakePrintSettingsRepository:
 
 
 class GetPrintSettingsFormDataUseCaseTests(TestCase):
-    def test_returns_renderable_types_and_sections_for_create_form(self):
+    def test_returns_renderable_types_for_create_form(self):
         data = GetPrintSettingsFormDataUseCase().execute()
 
         self.assertEqual(
             [item.document_type for item in data.document_types],
             [WORK_DOCUMENT_TYPE, REMEDIAL_SHEET_DOCUMENT_TYPE],
-        )
-        self.assertTrue(data.sections)
-        self.assertTrue(
-            all(section.renderable_document_types for section in data.sections),
         )
         self.assertIsNone(data.print_profile)
 
@@ -43,7 +36,6 @@ class GetPrintSettingsFormDataUseCaseTests(TestCase):
             print_settings_id='profile-1',
             name='Профиль',
             document_type=WORK_DOCUMENT_TYPE,
-            sections=(DocumentSectionSpec(section_type='header'),),
         )
         repo = FakePrintSettingsRepository(print_profile=print_profile)
 

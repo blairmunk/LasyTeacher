@@ -128,7 +128,7 @@ def build_work_document_recipe_for_render(
     print_settings_spec: PrintSettingsSpec | None = None,
     variant_ids: list[str] | None = None,
 ) -> DocumentRecipe:
-    recipe = _recipe_from_print_settings_or_default(
+    recipe = _recipe_with_profile_presentation(
         print_settings_spec=print_settings_spec,
         default_recipe_builder=build_work_document_recipe,
     )
@@ -241,7 +241,7 @@ def build_remedial_sheet_document_recipe_for_render(
     options: RemedialSheetDocumentRenderOptions,
     print_settings_spec: PrintSettingsSpec | None = None,
 ) -> DocumentRecipe:
-    return _recipe_from_print_settings_or_default(
+    return _recipe_with_profile_presentation(
         print_settings_spec=print_settings_spec,
         default_recipe_builder=(
             lambda: build_remedial_sheet_document_recipe(
@@ -282,13 +282,18 @@ def build_remedial_sheet_batch_document_recipe_for_render(
     )
 
 
-def _recipe_from_print_settings_or_default(
+def _recipe_with_profile_presentation(
     print_settings_spec: PrintSettingsSpec | None,
     default_recipe_builder: Callable[[], DocumentRecipe],
 ) -> DocumentRecipe:
-    if print_settings_spec:
-        return print_settings_spec.to_print_recipe()
-    return default_recipe_builder()
+    recipe = default_recipe_builder()
+    if print_settings_spec is None:
+        return recipe
+    return DocumentRecipe(
+        document_type=recipe.document_type,
+        sections=recipe.sections,
+        presentation=print_settings_spec.presentation,
+    )
 
 
 def _section_with_options(

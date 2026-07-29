@@ -213,16 +213,17 @@ class WorkDetailViewTests(TestCase):
         self.assertContains(response, 'document-rendering-block')
         self.assertContains(response, 'id="generation"')
         self.assertContains(response, 'data-rendering-block')
-        self.assertContains(response, 'btn-render-doc')
         self.assertContains(response, 'data-rendering-form')
         self.assertContains(response, 'render-toast-box')
-        self.assertContains(response, 'advanced-rendering-form')
+        self.assertContains(response, 'document-rendering-form')
         self.assertContains(response, 'data-print-settings-select')
         self.assertContains(response, 'data-print-settings-selection-notice')
         self.assertContains(
             response,
-            'Профиль задаёт порядок секций и оформление.',
+            'Порядок контента берётся из спецификации работы.',
         )
+        self.assertContains(response, 'Встроенное оформление')
+        self.assertNotContains(response, 'btn-render-doc')
         self.assertNotContains(response, 'PDF + ответы')
         self.assertNotContains(response, 'name="document_style"')
         self.assertContains(response, 'hide_theory')
@@ -236,8 +237,8 @@ class WorkDetailViewTests(TestCase):
         template = PrintSettings.objects.create(
             name='Кастомный шаблон работы',
             document_type=PrintSettings.DocumentType.WORK,
-            sections_config=[{'type': 'header'}],
             custom_latex_preamble='\\usepackage{multicol}',
+            is_default=True,
         )
 
         response = self.client.get(reverse('works:detail', args=[self.work.pk]))
@@ -248,7 +249,11 @@ class WorkDetailViewTests(TestCase):
         )
         self.assertContains(response, 'name="print_settings_id"')
         self.assertContains(response, 'Кастомный шаблон работы')
-        self.assertContains(response, 'кастом')
+        self.assertContains(response, '(предлагается)')
+        self.assertContains(
+            response,
+            f'value="{template.pk}"',
+        )
 
     def test_remedial_work_detail_exposes_batch_rendering_dom_markers(self):
         remedial_work = Work.objects.create(
@@ -269,7 +274,7 @@ class WorkDetailViewTests(TestCase):
         template = PrintSettings.objects.create(
             name='Шаблон листа РнО',
             document_type=PrintSettings.DocumentType.REMEDIAL,
-            sections_config=[{'type': 'header'}],
+            is_default=True,
         )
 
         response = self.client.get(reverse('works:detail', args=[remedial_work.pk]))
@@ -291,7 +296,7 @@ class WorkDetailViewTests(TestCase):
         self.assertContains(response, student.get_short_name())
         self.assertContains(response, 'Шаблон листа РнО')
         self.assertNotContains(response, 'id="generation"')
-        self.assertNotContains(response, 'id="advanced-rendering-form"')
+        self.assertNotContains(response, 'id="document-rendering-form"')
 
     def test_detail_returns_404_for_missing_work(self):
         response = self.client.get(

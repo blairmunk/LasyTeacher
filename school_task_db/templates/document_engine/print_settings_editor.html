@@ -3,13 +3,12 @@
 {% block title %}Профили оформления{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-start mb-4">
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
         <div>
             <h1 class="h3 mb-1">Профили оформления</h1>
             <p class="text-muted mb-0">
-                Порядок отображения секций, стили HTML и настройки LaTeX.
-                Содержание вариантов задаётся спецификацией работы.
+                Шрифты, отступы и оформление HTML/PDF и LaTeX без изменения содержания работы.
             </p>
         </div>
         <div class="d-flex gap-2">
@@ -17,28 +16,38 @@
                 <i class="fas fa-plus"></i> Создать профиль
             </a>
             <a class="btn btn-outline-secondary" href="{% url 'admin:document_generator_printsettings_changelist' %}">
-                <i class="fas fa-cog"></i> Админка профилей
+                <i class="fas fa-cog"></i> Админка
             </a>
         </div>
     </div>
 
+    <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 border-top border-bottom py-3 mb-4">
+        <span class="fw-semibold">Спецификация работы</span>
+        <i class="fas fa-arrow-right text-muted"></i>
+        <span class="fw-semibold">Снимок варианта</span>
+        <i class="fas fa-arrow-right text-muted"></i>
+        <span class="border border-info px-2 py-1">Профиль оформления</span>
+        <i class="fas fa-arrow-right text-muted"></i>
+        <span class="fw-semibold">HTML / PDF / LaTeX</span>
+    </div>
+
     <form method="get" class="row g-2 align-items-end mb-4">
-        <div class="col-md-7">
+        <div class="col-md-8">
             <label class="form-label" for="document-type-filter">Тип документа</label>
             <select class="form-select" id="document-type-filter" name="type">
                 <option value="">Все типы</option>
                 {% for document_type in document_types %}
-                    <option value="{{ document_type.document_type }}" {% if document_type.document_type == current_document_type %}selected{% endif %}>
-                        {{ document_type.title }}
-                    </option>
+                <option value="{{ document_type.document_type }}" {% if document_type.document_type == current_document_type %}selected{% endif %}>
+                    {{ document_type.title }}
+                </option>
                 {% endfor %}
             </select>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="form-check">
                 <input type="hidden" name="renderable" value="0">
                 <input class="form-check-input" type="checkbox" id="renderable-only" name="renderable" value="1" {% if renderable_only %}checked{% endif %}>
-                <label class="form-check-label" for="renderable-only">Только готовые к печати</label>
+                <label class="form-check-label" for="renderable-only">Только печать</label>
             </div>
         </div>
         <div class="col-md-2">
@@ -49,97 +58,70 @@
     </form>
 
     <div class="row g-4">
-        <div class="col-lg-5">
-            <h2 class="h5">Поддерживаемые документы</h2>
-            <div class="list-group mb-4">
+        <aside class="col-lg-4">
+            <h2 class="h5">Области применения</h2>
+            <div class="list-group">
                 {% for document_type in document_types %}
-                    <a class="list-group-item list-group-item-action {% if document_type.document_type == current_document_type %}active{% endif %}" href="{{ document_type.url }}">
-                        <div class="d-flex justify-content-between">
-                            <strong>{{ document_type.title }}</strong>
-                            {% if document_type.is_renderable %}
-                                <span class="badge bg-success">печать</span>
-                            {% else %}
-                                <span class="badge bg-secondary">план</span>
-                            {% endif %}
-                        </div>
-                        <div class="small {% if document_type.document_type == current_document_type %}text-white-50{% else %}text-muted{% endif %}">
-                            {{ document_type.document_type }}
-                        </div>
-                        {% if document_type.renderer_labels %}
-                            <div class="mt-2">
-                                {% for renderer_label in document_type.renderer_labels %}
-                                    <span class="badge bg-light text-dark">{{ renderer_label }}</span>
-                                {% endfor %}
-                            </div>
+                <a class="list-group-item list-group-item-action {% if document_type.document_type == current_document_type %}active{% endif %}" href="{{ document_type.url }}">
+                    <div class="d-flex justify-content-between gap-2">
+                        <strong>{{ document_type.title }}</strong>
+                        {% if document_type.is_renderable %}
+                        <span class="badge bg-success">готово</span>
+                        {% else %}
+                        <span class="badge bg-secondary">план</span>
                         {% endif %}
-                    </a>
+                    </div>
+                    {% if document_type.renderer_labels %}
+                    <div class="mt-2">
+                        {% for renderer_label in document_type.renderer_labels %}
+                        <span class="badge bg-light text-dark">{{ renderer_label }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </a>
                 {% endfor %}
             </div>
+        </aside>
 
-            <h2 class="h5">Сохранённые профили</h2>
+        <section class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h2 class="h5 mb-0">Сохранённые профили</h2>
+                <span class="small text-muted">{{ print_profiles|length }} шт.</span>
+            </div>
             <div class="list-group">
                 {% for print_profile in print_profiles %}
-                    <div class="list-group-item">
-                        <div class="d-flex justify-content-between">
-                            <strong>
-                                <a href="{% url 'document_engine:print-profile-update' print_profile.print_settings_id %}">
-                                    {{ print_profile.name }}
-                                </a>
-                            </strong>
-                            <span>
-                                {% if print_profile.is_default %}
-                                    <span class="badge bg-success">по умолчанию</span>
-                                {% endif %}
-                                {% if print_profile.has_customization %}
-                                    <span class="badge bg-info">кастом</span>
-                                {% endif %}
-                                <span class="badge bg-light text-dark">{{ print_profile.sections_count }}</span>
-                            </span>
+                <a class="list-group-item list-group-item-action" href="{% url 'document_engine:print-profile-update' print_profile.print_settings_id %}">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
+                        <div>
+                            <strong>{{ print_profile.name }}</strong>
+                            {% if print_profile.description %}
+                            <div class="small text-muted mt-1">{{ print_profile.description }}</div>
+                            {% endif %}
                         </div>
-                        <div class="small text-muted">{{ print_profile.document_type }}</div>
+                        <div class="text-end">
+                            {% if print_profile.is_default %}
+                            <span class="badge bg-success">предлагается при печати</span>
+                            {% endif %}
+                            {% if not print_profile.has_customization %}
+                            <span class="badge bg-secondary">без изменений</span>
+                            {% endif %}
+                        </div>
                     </div>
+                    <div class="d-flex flex-wrap gap-1 mt-2">
+                        {% if print_profile.has_css %}<span class="badge bg-info">CSS</span>{% endif %}
+                        {% if print_profile.has_latex_preamble %}<span class="badge bg-info">LaTeX</span>{% endif %}
+                        {% if print_profile.has_html_wrapper %}<span class="badge bg-warning text-dark">HTML-обёртка</span>{% endif %}
+                        {% if print_profile.has_latex_wrapper %}<span class="badge bg-warning text-dark">LaTeX-обёртка</span>{% endif %}
+                        <span class="badge bg-light text-dark">{{ print_profile.document_type }}</span>
+                    </div>
+                </a>
                 {% empty %}
-                    <div class="list-group-item text-muted">Профили оформления не найдены.</div>
+                <div class="list-group-item text-muted">
+                    Профили оформления не найдены.
+                </div>
                 {% endfor %}
             </div>
-        </div>
-
-        <div class="col-lg-7">
-            <h2 class="h5">Секции</h2>
-            <div class="table-responsive">
-                <table class="table table-sm align-middle">
-                    <thead>
-                        <tr>
-                            <th>Секция</th>
-                            <th>Код</th>
-                            <th>Статус</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for section in sections %}
-                            <tr>
-                                <td>
-                                    <strong>{{ section.title }}</strong>
-                                    <div class="small text-muted">{{ section.description }}</div>
-                                </td>
-                                <td><code>{{ section.section_type }}</code></td>
-                                <td>
-                                    {% if section.renderable_document_types %}
-                                        <span class="badge bg-success">печать</span>
-                                    {% else %}
-                                        <span class="badge bg-secondary">план</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="3" class="text-muted">Секции не найдены.</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        </section>
     </div>
 </div>
 {% endblock %}

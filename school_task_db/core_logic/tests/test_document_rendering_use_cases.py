@@ -5,7 +5,6 @@ from unittest import TestCase
 
 from core_logic.entities.document import (
     DocumentPresentation,
-    DocumentSectionSpec,
     PrintSettingsSpec,
 )
 from core_logic.entities.document_rendering import (
@@ -283,11 +282,6 @@ class DocumentRenderingUseCaseTests(TestCase):
     def test_render_work_document_uses_request_print_settings_spec(self):
         service = FakeDocumentEngine()
         print_settings_repo = FakePrintSettingsRepository()
-        print_settings_repo.default_print_settings['work'] = PrintSettingsSpec(
-            name='Default work',
-            document_type='work',
-            sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
-        )
         use_case = RenderWorkDocumentUseCase(
             render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(),
@@ -297,10 +291,6 @@ class DocumentRenderingUseCaseTests(TestCase):
         print_settings_spec = PrintSettingsSpec(
             name='Кастомная работа',
             document_type='work',
-            sections=[
-                DocumentSectionSpec(section_type=TASK_LIST_SECTION),
-                DocumentSectionSpec(section_type=ANSWERS_SECTION),
-            ],
             presentation=DocumentPresentation(
                 custom_latex_preamble='\\usepackage{multicol}',
             ),
@@ -319,46 +309,20 @@ class DocumentRenderingUseCaseTests(TestCase):
         render_plan = service.render_request
         self.assertEqual(
             render_plan.recipe.section_types,
-            (TASK_LIST_SECTION, ANSWERS_SECTION),
+            (HEADER_SECTION, TASK_LIST_SECTION),
         )
         self.assertEqual(
             render_plan.recipe.presentation.custom_latex_preamble,
             '\\usepackage{multicol}',
         )
 
-    def test_render_work_document_uses_request_print_settings_spec(self):
-        service = FakeDocumentEngine()
-        print_settings_repo = FakePrintSettingsRepository()
-        use_case = RenderWorkDocumentUseCase(
-            render_document_from_recipe_use_case=recipe_renderer(service),
-            work_repo=FakeWorkRepository(),
-            print_settings_repo=print_settings_repo,
-        )
-        print_settings_spec = PrintSettingsSpec(
-            name='Профиль печати',
-            document_type='work',
-            sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
-        )
-
-        result = use_case.execute(
-            RenderWorkDocumentRequest(
-                work_id='work-1',
-                options=WorkDocumentRenderOptions(renderer_type='html'),
-                print_settings_spec=print_settings_spec,
-            )
-        )
-
-        self.assertTrue(result.success)
-        self.assertEqual(print_settings_repo.requested_document_types, [])
-        self.assertEqual(service.render_request.recipe.section_types, (ANSWERS_SECTION,))
-
-    def test_render_work_document_uses_default_print_settings_spec(self):
+    def test_render_work_document_does_not_apply_default_profile_implicitly(self):
         service = FakeDocumentEngine()
         print_settings_repo = FakePrintSettingsRepository()
         print_settings_repo.default_print_settings['work'] = PrintSettingsSpec(
             name='Default work',
             document_type='work',
-            sections=[DocumentSectionSpec(section_type=TASK_LIST_SECTION)],
+            presentation=DocumentPresentation(custom_css='.task { color: red; }'),
         )
         use_case = RenderWorkDocumentUseCase(
             render_document_from_recipe_use_case=recipe_renderer(service),
@@ -374,9 +338,13 @@ class DocumentRenderingUseCaseTests(TestCase):
         )
 
         self.assertTrue(result.success)
-        self.assertEqual(print_settings_repo.requested_document_types, ['work'])
+        self.assertEqual(print_settings_repo.requested_document_types, [])
         render_plan = service.render_request
-        self.assertEqual(render_plan.recipe.section_types, (TASK_LIST_SECTION,))
+        self.assertEqual(
+            render_plan.recipe.section_types,
+            (HEADER_SECTION, TASK_LIST_SECTION),
+        )
+        self.assertEqual(render_plan.recipe.presentation.custom_css, '')
 
     def test_render_work_document_uses_print_settings_id(self):
         service = FakeDocumentEngine()
@@ -386,7 +354,9 @@ class DocumentRenderingUseCaseTests(TestCase):
                 name='Selected work',
                 document_type='work',
                 print_settings_id='template-work',
-                sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
+                presentation=DocumentPresentation(
+                    custom_css='.task { margin-bottom: 1rem; }',
+                ),
             )
         )
         use_case = RenderWorkDocumentUseCase(
@@ -408,7 +378,14 @@ class DocumentRenderingUseCaseTests(TestCase):
             print_settings_repo.requested_print_settings_ids,
             [('template-work', 'work')],
         )
-        self.assertEqual(service.render_request.recipe.section_types, (ANSWERS_SECTION,))
+        self.assertEqual(
+            service.render_request.recipe.section_types,
+            (HEADER_SECTION, TASK_LIST_SECTION),
+        )
+        self.assertEqual(
+            service.render_request.recipe.presentation.custom_css,
+            '.task { margin-bottom: 1rem; }',
+        )
 
     def test_render_work_document_handles_missing_work(self):
         service = FakeDocumentEngine()
@@ -532,11 +509,6 @@ class DocumentRenderingUseCaseTests(TestCase):
     def test_render_remedial_sheet_document_uses_request_print_settings_spec(self):
         service = FakeDocumentEngine()
         print_settings_repo = FakePrintSettingsRepository()
-        print_settings_repo.default_print_settings['remedial_sheet'] = PrintSettingsSpec(
-            name='Default remedial',
-            document_type='remedial_sheet',
-            sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
-        )
         use_case = RenderRemedialSheetDocumentUseCase(
             render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=FakeWorkRepository(),
@@ -545,10 +517,9 @@ class DocumentRenderingUseCaseTests(TestCase):
         print_settings_spec = PrintSettingsSpec(
             name='Кастомная работа над ошибками',
             document_type='remedial_sheet',
-            sections=[
-                DocumentSectionSpec(section_type=HEADER_SECTION),
-                DocumentSectionSpec(section_type=TASK_LIST_SECTION),
-            ],
+            presentation=DocumentPresentation(
+                custom_latex_preamble='\\usepackage{microtype}',
+            ),
         )
 
         result = use_case.execute(
@@ -564,16 +535,29 @@ class DocumentRenderingUseCaseTests(TestCase):
         render_plan = service.render_request
         self.assertEqual(
             render_plan.recipe.section_types,
-            (HEADER_SECTION, TASK_LIST_SECTION),
+            (
+                HEADER_SECTION,
+                'original_mistakes',
+                PAGE_BREAK_SECTION,
+                'training_tasks',
+                PAGE_BREAK_SECTION,
+                ANSWERS_SECTION,
+                PAGE_BREAK_SECTION,
+                SHORT_SOLUTIONS_SECTION,
+            ),
+        )
+        self.assertEqual(
+            render_plan.recipe.presentation.custom_latex_preamble,
+            '\\usepackage{microtype}',
         )
 
-    def test_render_remedial_sheet_document_uses_default_print_settings_spec(self):
+    def test_render_remedial_sheet_does_not_apply_default_profile_implicitly(self):
         service = FakeDocumentEngine()
         print_settings_repo = FakePrintSettingsRepository()
         print_settings_repo.default_print_settings['remedial_sheet'] = PrintSettingsSpec(
             name='Default remedial',
             document_type='remedial_sheet',
-            sections=[DocumentSectionSpec(section_type=TASK_LIST_SECTION)],
+            presentation=DocumentPresentation(custom_css='.task { color: red; }'),
         )
         use_case = RenderRemedialSheetDocumentUseCase(
             render_document_from_recipe_use_case=recipe_renderer(service),
@@ -589,12 +573,22 @@ class DocumentRenderingUseCaseTests(TestCase):
         )
 
         self.assertTrue(result.success)
-        self.assertEqual(
-            print_settings_repo.requested_document_types,
-            ['remedial_sheet'],
-        )
+        self.assertEqual(print_settings_repo.requested_document_types, [])
         render_plan = service.render_request
-        self.assertEqual(render_plan.recipe.section_types, (TASK_LIST_SECTION,))
+        self.assertEqual(
+            render_plan.recipe.section_types,
+            (
+                HEADER_SECTION,
+                'original_mistakes',
+                PAGE_BREAK_SECTION,
+                'training_tasks',
+                PAGE_BREAK_SECTION,
+                ANSWERS_SECTION,
+                PAGE_BREAK_SECTION,
+                SHORT_SOLUTIONS_SECTION,
+            ),
+        )
+        self.assertEqual(render_plan.recipe.presentation.custom_css, '')
 
     def test_render_remedial_sheet_document_uses_selected_print_settings_id(
         self,
@@ -606,7 +600,9 @@ class DocumentRenderingUseCaseTests(TestCase):
                 name='Selected remedial',
                 document_type='remedial_sheet',
                 print_settings_id='template-rno',
-                sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
+                presentation=DocumentPresentation(
+                    custom_css='.student-name { font-weight: bold; }',
+                ),
             )
         )
         use_case = RenderRemedialSheetDocumentUseCase(
@@ -628,39 +624,23 @@ class DocumentRenderingUseCaseTests(TestCase):
             print_settings_repo.requested_print_settings_ids,
             [('template-rno', 'remedial_sheet')],
         )
-        self.assertEqual(service.render_request.recipe.section_types, (ANSWERS_SECTION,))
-
-    def test_render_remedial_sheet_document_uses_print_settings_id(self):
-        service = FakeDocumentEngine()
-        print_settings_repo = FakePrintSettingsRepository()
-        print_settings_repo.print_settings_by_id[('profile-rno', 'remedial_sheet')] = (
-            PrintSettingsSpec(
-                name='Selected remedial',
-                document_type='remedial_sheet',
-                print_settings_id='profile-rno',
-                sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
-            )
-        )
-        use_case = RenderRemedialSheetDocumentUseCase(
-            render_document_from_recipe_use_case=recipe_renderer(service),
-            work_repo=FakeWorkRepository(),
-            print_settings_repo=print_settings_repo,
-        )
-
-        result = use_case.execute(
-            RenderRemedialSheetDocumentRequest(
-                variant_id='variant-1',
-                options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
-                print_settings_id='profile-rno',
-            )
-        )
-
-        self.assertTrue(result.success)
         self.assertEqual(
-            print_settings_repo.requested_print_settings_ids,
-            [('profile-rno', 'remedial_sheet')],
+            service.render_request.recipe.section_types,
+            (
+                HEADER_SECTION,
+                'original_mistakes',
+                PAGE_BREAK_SECTION,
+                'training_tasks',
+                PAGE_BREAK_SECTION,
+                ANSWERS_SECTION,
+                PAGE_BREAK_SECTION,
+                SHORT_SOLUTIONS_SECTION,
+            ),
         )
-        self.assertEqual(service.render_request.recipe.section_types, (ANSWERS_SECTION,))
+        self.assertEqual(
+            service.render_request.recipe.presentation.custom_css,
+            '.student-name { font-weight: bold; }',
+        )
 
     def test_render_remedial_sheet_document_handles_empty_files(self):
         service = FakeDocumentEngine()
@@ -839,7 +819,9 @@ class DocumentRenderingUseCaseTests(TestCase):
         print_settings_spec = PrintSettingsSpec(
             name='Профиль РнО',
             document_type='remedial_sheet',
-            sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
+            presentation=DocumentPresentation(
+                custom_css='.remedial-sheet { break-after: page; }',
+            ),
         )
 
         result = use_case.execute(
@@ -851,7 +833,23 @@ class DocumentRenderingUseCaseTests(TestCase):
         )
 
         self.assertTrue(result.success)
-        self.assertEqual(service.render_request.recipe.section_types, (ANSWERS_SECTION,))
+        self.assertEqual(
+            service.render_request.recipe.section_types,
+            (
+                HEADER_SECTION,
+                'original_mistakes',
+                PAGE_BREAK_SECTION,
+                'training_tasks',
+                PAGE_BREAK_SECTION,
+                ANSWERS_SECTION,
+                PAGE_BREAK_SECTION,
+                SHORT_SOLUTIONS_SECTION,
+            ),
+        )
+        self.assertEqual(
+            service.render_request.recipe.presentation.custom_css,
+            '.remedial-sheet { break-after: page; }',
+        )
 
     def test_render_remedial_sheet_batch_document_handles_missing_work(self):
         service = FakeDocumentEngine()

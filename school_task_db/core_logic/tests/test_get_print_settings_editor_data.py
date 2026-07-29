@@ -1,17 +1,12 @@
 from unittest import TestCase
 
-from core_logic.entities.document import (
-    DocumentSectionSpec,
-    PrintSettingsSpec,
-)
+from core_logic.entities.document import PrintSettingsSpec
 from core_logic.use_cases.get_print_settings_editor_data import (
     GetPrintSettingsEditorDataRequest,
     GetPrintSettingsEditorDataUseCase,
 )
 from core_logic.value_objects.document_recipes import (
-    ORIGINAL_MISTAKES_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
-    TASK_LIST_SECTION,
     WORK_DOCUMENT_TYPE,
     WORKSHEET_DOCUMENT_TYPE,
 )
@@ -24,7 +19,6 @@ class FakePrintSettingsRepository:
             PrintSettingsSpec(
                 name='Work profile',
                 document_type=WORK_DOCUMENT_TYPE,
-                sections=[DocumentSectionSpec(section_type='header')],
             )
         ]
 
@@ -34,7 +28,7 @@ class FakePrintSettingsRepository:
 
 
 class GetPrintSettingsEditorDataUseCaseTests(TestCase):
-    def test_returns_catalogs_and_profiles_for_document_type(self):
+    def test_returns_document_types_and_profiles(self):
         repo = FakePrintSettingsRepository()
 
         data = GetPrintSettingsEditorDataUseCase(repo).execute(
@@ -45,9 +39,6 @@ class GetPrintSettingsEditorDataUseCaseTests(TestCase):
 
         self.assertEqual(repo.document_type, REMEDIAL_SHEET_DOCUMENT_TYPE)
         self.assertEqual(data.print_profiles[0].name, 'Work profile')
-        section_types = [section.section_type for section in data.sections]
-        self.assertIn(ORIGINAL_MISTAKES_SECTION, section_types)
-        self.assertNotIn(TASK_LIST_SECTION, section_types)
 
     def test_can_return_renderable_editor_data_only(self):
         data = GetPrintSettingsEditorDataUseCase().execute(
@@ -61,10 +52,8 @@ class GetPrintSettingsEditorDataUseCaseTests(TestCase):
             document_type.document_type
             for document_type in data.document_types
         ]
-        section_types = [section.section_type for section in data.sections]
         self.assertEqual(
             document_types,
             [WORK_DOCUMENT_TYPE, REMEDIAL_SHEET_DOCUMENT_TYPE],
         )
-        self.assertNotIn('theory', section_types)
         self.assertEqual(data.print_profiles, [])

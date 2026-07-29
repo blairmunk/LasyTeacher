@@ -2,7 +2,6 @@ from unittest import TestCase
 
 from core_logic.entities.document import (
     DocumentPresentation,
-    DocumentSectionSpec,
     PrintSettingsSpec,
     REMEDIAL_WORK_SOURCE_TYPE,
     REMEDIAL_VARIANT_SOURCE_TYPE,
@@ -23,8 +22,6 @@ from core_logic.value_objects.document_render_plan_factories import (
 )
 from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
-    BLANK_CELLS_SECTION,
-    COMMON_HEADER_SECTION,
     HEADER_SECTION,
     PAGE_BREAK_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
@@ -65,33 +62,24 @@ class DocumentRenderPlanFactoriesTests(TestCase):
             (HEADER_SECTION, TASK_LIST_SECTION, ANSWERS_SECTION),
         )
 
-    def test_build_work_document_recipe_for_render_uses_template_spec(self):
-        template_spec = PrintSettingsSpec(
+    def test_build_work_document_recipe_keeps_default_sections_with_profile(self):
+        presentation = DocumentPresentation(custom_css='body {}')
+        print_settings = PrintSettingsSpec(
             name='Кастомная работа',
             document_type=WORK_DOCUMENT_TYPE,
-            sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
+            presentation=presentation,
         )
 
         recipe = build_work_document_recipe_for_render(
             WorkDocumentRenderOptions(renderer_type='html'),
-            print_settings_spec=template_spec,
+            print_settings_spec=print_settings,
         )
 
-        self.assertEqual(recipe.section_types, (HEADER_SECTION,))
-
-    def test_build_work_document_recipe_for_render_uses_print_settings_spec(self):
-        print_settings_spec = PrintSettingsSpec(
-            name='Профиль печати',
-            document_type=WORK_DOCUMENT_TYPE,
-            sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
+        self.assertEqual(
+            recipe.section_types,
+            (HEADER_SECTION, TASK_LIST_SECTION),
         )
-
-        recipe = build_work_document_recipe_for_render(
-            WorkDocumentRenderOptions(renderer_type='html'),
-            print_settings_spec=print_settings_spec,
-        )
-
-        self.assertEqual(recipe.section_types, (ANSWERS_SECTION,))
+        self.assertEqual(recipe.presentation, presentation)
 
     def test_build_remedial_sheet_document_recipe_for_render(self):
         recipe = build_remedial_sheet_document_recipe_for_render(
@@ -123,59 +111,39 @@ class DocumentRenderPlanFactoriesTests(TestCase):
             ('header', 'task_list', 'answers'),
         )
 
-    def test_build_work_document_render_plan_uses_template_spec(self):
-        template_spec = PrintSettingsSpec(
+    def test_build_work_document_render_plan_uses_profile_presentation(self):
+        presentation = DocumentPresentation(custom_css='.task {}')
+        print_settings = PrintSettingsSpec(
             name='Рабочий лист',
             document_type='work',
-            sections=[
-                DocumentSectionSpec(
-                    section_type=TASK_LIST_SECTION,
-                    options={'source': 'new_tasks'},
-                ),
-                DocumentSectionSpec(section_type=ANSWERS_SECTION),
-            ],
+            presentation=presentation,
         )
 
         plan = build_work_document_render_plan(
             work_id='work-1',
             work_name='Контрольная',
             options=WorkDocumentRenderOptions(renderer_type='html'),
-            print_settings_spec=template_spec,
+            print_settings_spec=print_settings,
         )
 
         self.assertEqual(plan.recipe.document_type, 'work')
         self.assertEqual(
             plan.recipe.section_types,
-            (TASK_LIST_SECTION, ANSWERS_SECTION),
+            (HEADER_SECTION, TASK_LIST_SECTION),
         )
-        self.assertEqual(
-            plan.recipe.sections[0].options,
-            {'source': 'new_tasks'},
-        )
+        self.assertEqual(plan.recipe.presentation, presentation)
 
     def test_build_work_document_render_plan_repeats_sections_per_variant(self):
-        template_spec = PrintSettingsSpec(
-            name='Работа по вариантам',
-            document_type='work',
-            sections=[
-                DocumentSectionSpec(section_type=COMMON_HEADER_SECTION),
-                DocumentSectionSpec(section_type=HEADER_SECTION),
-                DocumentSectionSpec(section_type=TASK_LIST_SECTION),
-            ],
-        )
-
         plan = build_work_document_render_plan(
             work_id='work-1',
             work_name='Контрольная',
             options=WorkDocumentRenderOptions(renderer_type='html'),
-            print_settings_spec=template_spec,
             variant_ids=['variant-1', 'variant-2'],
         )
 
         self.assertEqual(
             plan.recipe.section_types,
             (
-                COMMON_HEADER_SECTION,
                 HEADER_SECTION,
                 TASK_LIST_SECTION,
                 PAGE_BREAK_SECTION,
@@ -188,25 +156,19 @@ class DocumentRenderPlanFactoriesTests(TestCase):
                 section.options.get('variant_id')
                 for section in plan.recipe.sections
             ],
-            [None, 'variant-1', 'variant-1', None, 'variant-2', 'variant-2'],
+            ['variant-1', 'variant-1', None, 'variant-2', 'variant-2'],
         )
         self.assertFalse(
-            plan.recipe.sections[2].options['show_variant_heading'],
+            plan.recipe.sections[1].options['show_variant_heading'],
         )
         self.assertFalse(
-            plan.recipe.sections[5].options['show_variant_heading'],
+            plan.recipe.sections[4].options['show_variant_heading'],
         )
 
-    def test_work_print_overrides_apply_on_top_of_print_settings(self):
+    def test_work_print_overrides_apply_on_top_of_default_recipe(self):
         print_settings_spec = PrintSettingsSpec(
             name='Профиль',
             document_type=WORK_DOCUMENT_TYPE,
-            sections=[
-                DocumentSectionSpec(
-                    section_type=TASK_LIST_SECTION,
-                    options={'hidden_content_types': ['text']},
-                ),
-            ],
         )
 
         recipe = build_work_document_recipe_for_render(
@@ -221,46 +183,16 @@ class DocumentRenderPlanFactoriesTests(TestCase):
 
         self.assertEqual(
             recipe.section_types,
-            (TASK_LIST_SECTION, ANSWERS_SECTION),
+            (HEADER_SECTION, TASK_LIST_SECTION, ANSWERS_SECTION),
         )
         self.assertEqual(
-            recipe.sections[0].options['hidden_content_types'],
-            ['text', 'theory'],
+            recipe.sections[1].options['hidden_content_types'],
+            ['theory'],
         )
-        self.assertTrue(recipe.sections[0].options['hide_blank_cells'])
-
-    def test_work_print_overrides_remove_standalone_cells(self):
-        print_settings_spec = PrintSettingsSpec(
-            name='Профиль',
-            document_type=WORK_DOCUMENT_TYPE,
-            sections=[
-                DocumentSectionSpec(section_type=TASK_LIST_SECTION),
-                DocumentSectionSpec(section_type=BLANK_CELLS_SECTION),
-            ],
-        )
-
-        recipe = build_work_document_recipe_for_render(
-            WorkDocumentRenderOptions(
-                renderer_type='html',
-                hide_theory=True,
-                hide_blank_cells=True,
-            ),
-            print_settings_spec=print_settings_spec,
-        )
-
-        self.assertEqual(recipe.section_types, (TASK_LIST_SECTION,))
+        self.assertTrue(recipe.sections[1].options['hide_blank_cells'])
 
 
     def test_build_work_document_render_plan_can_disable_variant_breaks(self):
-        template_spec = PrintSettingsSpec(
-            name='Сплошная работа',
-            document_type='work',
-            sections=[
-                DocumentSectionSpec(section_type=HEADER_SECTION),
-                DocumentSectionSpec(section_type=TASK_LIST_SECTION),
-            ],
-        )
-
         plan = build_work_document_render_plan(
             work_id='work-1',
             work_name='Контрольная',
@@ -268,7 +200,6 @@ class DocumentRenderPlanFactoriesTests(TestCase):
                 renderer_type='html',
                 break_between_variants=False,
             ),
-            print_settings_spec=template_spec,
             variant_ids=['variant-1', 'variant-2'],
         )
 
@@ -313,27 +244,35 @@ class DocumentRenderPlanFactoriesTests(TestCase):
             ),
         )
 
-    def test_build_remedial_sheet_document_render_plan_uses_template_spec(self):
-        template_spec = PrintSettingsSpec(
+    def test_remedial_profile_does_not_replace_content_recipe(self):
+        presentation = DocumentPresentation(custom_latex_preamble='\\small')
+        print_settings = PrintSettingsSpec(
             name='Кастомная работа над ошибками',
             document_type='remedial_sheet',
-            sections=[
-                DocumentSectionSpec(section_type=HEADER_SECTION),
-                DocumentSectionSpec(section_type=TASK_LIST_SECTION),
-            ],
+            presentation=presentation,
         )
 
         plan = build_remedial_sheet_document_render_plan(
             variant_id='variant-1',
             options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
-            print_settings_spec=template_spec,
+            print_settings_spec=print_settings,
         )
 
         self.assertEqual(plan.recipe.document_type, 'remedial_sheet')
         self.assertEqual(
             plan.recipe.section_types,
-            (HEADER_SECTION, TASK_LIST_SECTION),
+            (
+                'header',
+                'original_mistakes',
+                'page_break',
+                'training_tasks',
+                'page_break',
+                'answers',
+                'page_break',
+                'short_solutions',
+            ),
         )
+        self.assertEqual(plan.recipe.presentation, presentation)
 
     def test_build_remedial_sheet_batch_document_render_plan_repeats_sections(self):
         plan = build_remedial_sheet_batch_document_render_plan(
@@ -378,7 +317,6 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         print_settings_spec = PrintSettingsSpec(
             name='Профиль РнО',
             document_type='remedial_sheet',
-            sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
             presentation=presentation,
         )
 
@@ -390,6 +328,18 @@ class DocumentRenderPlanFactoriesTests(TestCase):
             print_settings_spec=print_settings_spec,
         )
 
-        self.assertEqual(plan.recipe.section_types, (ANSWERS_SECTION,))
+        self.assertEqual(
+            plan.recipe.section_types,
+            (
+                'header',
+                'original_mistakes',
+                'page_break',
+                'training_tasks',
+                'page_break',
+                'answers',
+                'page_break',
+                'short_solutions',
+            ),
+        )
         self.assertEqual(plan.recipe.sections[0].options['variant_id'], 'variant-1')
         self.assertEqual(plan.recipe.presentation, presentation)

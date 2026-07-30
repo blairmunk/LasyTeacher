@@ -1,4 +1,5 @@
 import json
+from datetime import date
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -9,11 +10,11 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from core.models import ImportLog
+from core.models import AcademicYear, ImportLog
 from core.importers.tasks import TaskImporter
-from curriculum.models import Topic
-from events.models import Event
-from students.models import Student
+from curriculum.models import Course, Topic
+from events.models import Event, EventParticipation, Mark
+from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Source, Task
 from works.models import Variant, Work
@@ -314,6 +315,105 @@ class CoreViewsTests(TestCase):
         relation.group.refresh_from_db()
         self.assertEqual(relation.bank_role, 'practice')
         self.assertEqual(relation.group.difficulty, 4)
+
+    def test_build_test_scenario_is_idempotent_and_builds_learning_logs(self):
+        year = AcademicYear.objects.create(
+            name='2026-2027',
+            start_date=date(2026, 9, 1),
+            end_date=date(2027, 8, 31),
+            is_active=True,
+        )
+        student = Student.objects.create(
+            last_name='Иванов',
+            first_name='Иван',
+        )
+        student_group = StudentGroup.objects.create(
+            name='7А',
+            academic_year=year,
+        )
+        student_group.students.add(student)
+        topic = Topic.objects.create(
+            name='Скорость',
+            subject='Физика',
+            section='Механика',
+            grade_level=7,
+        )
+        task = Task.objects.create(
+            text='Найдите скорость.',
+            answer='5 м/с',
+            topic=topic,
+            task_type='computational',
+            difficulty=2,
+        )
+        group = AnalogGroup.objects.create(name='Скорость — контроль')
+        TaskGroup.objects.create(
+            task=task,
+            group=group,
+            bank_role='control',
+        )
+        manifest = {
+            'namespace': 'cc8e6d24-5d9b-4b4c-b0da-71cc6532aff6',
+            'academic_year': year.name,
+            'courses': [
+                {
+                    'key': 'physics-7',
+                    'name': 'Физика 7',
+                    'grade_level': 7,
+                    'student_groups': ['7А'],
+                },
+            ],
+            'works': [
+                {
+                    'key': 'speed-work',
+                    'name': 'Работа по скорости',
+                    'variant_count': 1,
+                    'specification': [
+                        {
+                            'analog_group_id': str(group.pk),
+                            'order': 1,
+                            'count': 1,
+                            'weight': 1,
+                            'bank_role_filter': 'control',
+                        },
+                    ],
+                    'course_assignment': {
+                        'course': 'physics-7',
+                    },
+                },
+            ],
+            'events': [
+                {
+                    'key': 'graded-speed',
+                    'name': 'Проверенная работа',
+                    'work': 'speed-work',
+                    'course': 'physics-7',
+                    'student_group': '7А',
+                    'planned_date': '2026-09-15T09:00:00',
+                    'status': 'graded',
+                    'graded_count': 1,
+                },
+            ],
+        }
+
+        with TemporaryDirectory() as temp_dir:
+            manifest_path = Path(temp_dir) / 'scenario.json'
+            manifest_path.write_text(
+                json.dumps(manifest, ensure_ascii=False),
+                encoding='utf-8',
+            )
+            call_command('build_test_scenario', str(manifest_path))
+            call_command('build_test_scenario', str(manifest_path))
+
+        self.assertEqual(Course.objects.count(), 1)
+        self.assertEqual(Work.objects.count(), 1)
+        self.assertEqual(Variant.objects.count(), 1)
+        self.assertEqual(Event.objects.count(), 1)
+        self.assertEqual(EventParticipation.objects.count(), 1)
+        self.assertEqual(Mark.objects.count(), 1)
+        task_log = StudentTaskLog.objects.get()
+        self.assertEqual(task_log.student, student)
+        self.assertEqual(task_log.task, task)
+        self.assertIsNotNone(task_log.variant_task)
 
     def test_download_sample_json_uses_clean_sample_data(self):
         response = self.client.get(reverse('core:import-sample'))

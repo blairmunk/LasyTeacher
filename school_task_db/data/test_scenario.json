@@ -1,0 +1,378 @@
+{
+  "version": "1.0",
+  "description": "Учебный сценарий для сквозной проверки интерфейса",
+  "namespace": "8f31a338-bf42-4ad3-98d4-b44c6b286401",
+  "academic_year": "2026-2027",
+  "site_settings": {
+    "school_name": "Тестовая школа",
+    "teacher_name": "Тестовый учитель",
+    "default_subject": "Физика",
+    "points_scale": 10,
+    "default_variants_count": 3,
+    "pdf_font_size": 12,
+    "pdf_margin_top": 15,
+    "pdf_margin_bottom": 15
+  },
+  "topic_content": [
+    {
+      "name": "Механическое движение",
+      "subject": "Физика",
+      "grade_level": 7,
+      "description": "При равномерном движении скорость постоянна: $v=\\frac{s}{t}$. Отсюда $s=vt$ и $t=\\frac{s}{v}$.",
+      "subtopics": {
+        "Скорость": "Скорость показывает, какой путь проходит тело за единицу времени. Перед вычислениями величины следует привести к согласованным единицам."
+      }
+    },
+    {
+      "name": "Масса и плотность",
+      "subject": "Физика",
+      "grade_level": 7,
+      "description": "Плотность вещества определяется формулой $\\rho=\\frac{m}{V}$. В СИ плотность измеряется в $\\text{кг/м}^3$.",
+      "subtopics": {
+        "Плотность вещества": "Из основной формулы следуют выражения $m=\\rho V$ и $V=\\frac{m}{\\rho}$."
+      }
+    },
+    {
+      "name": "Количество теплоты",
+      "subject": "Физика",
+      "grade_level": 8,
+      "description": "При нагревании или охлаждении без изменения агрегатного состояния количество теплоты вычисляется по формуле $Q=cm\\Delta T$.",
+      "subtopics": {
+        "Количество теплоты. Удельная теплоёмкость": "Удельная теплоёмкость показывает, сколько энергии нужно для нагревания $1\\,\\text{кг}$ вещества на $1\\,^{\\circ}\\text{C}$."
+      }
+    },
+    {
+      "name": "Постоянный ток",
+      "subject": "Физика",
+      "grade_level": 8,
+      "description": "Закон Ома для участка цепи: $I=\\frac{U}{R}$. Сила тока прямо пропорциональна напряжению и обратно пропорциональна сопротивлению.",
+      "subtopics": {
+        "Закон Ома для участка цепи": "Эквивалентные формы закона Ома: $U=IR$ и $R=\\frac{U}{I}$."
+      }
+    },
+    {
+      "name": "Равноускоренное движение",
+      "subject": "Физика",
+      "grade_level": 9,
+      "description": "Ускорение характеризует изменение скорости: $a=\\frac{v-v_0}{t}$. При постоянном ускорении $v=v_0+at$.",
+      "subtopics": {
+        "Ускорение": "Знак ускорения зависит от выбранного направления оси и характера изменения проекции скорости."
+      }
+    },
+    {
+      "name": "Законы Ньютона",
+      "subject": "Физика",
+      "grade_level": 9,
+      "description": "Второй закон Ньютона связывает равнодействующую сил с ускорением тела: $\\vec F=m\\vec a$.",
+      "subtopics": {
+        "Второй закон Ньютона": "Перед применением закона следует найти векторную сумму всех сил, действующих на тело."
+      }
+    }
+  ],
+  "print_profiles": [
+    {
+      "key": "compact-work",
+      "name": "Тестовый компактный",
+      "description": "Небольшой профиль для проверки CSS и LaTeX-настроек оформления.",
+      "document_type": "work",
+      "custom_css": ".document-section { margin-bottom: 0.8rem; } .task-item { break-inside: avoid; }",
+      "custom_latex_preamble": "\\setlength{\\parindent}{0pt}\\setlength{\\parskip}{0.4em}",
+      "is_default": false,
+      "is_public": true
+    }
+  ],
+  "courses": [
+    {
+      "key": "physics-7a",
+      "name": "Физика 7А — базовый курс",
+      "description": "Тестовый курс для проверки механики, работ и событий.",
+      "subject": "Физика",
+      "grade_level": 7,
+      "student_groups": ["7А"],
+      "start_date": "2026-09-01",
+      "end_date": "2027-05-31",
+      "total_hours": 68,
+      "hours_per_week": 2
+    },
+    {
+      "key": "physics-8a",
+      "name": "Физика 8А — базовый курс",
+      "description": "Тестовый курс с рабочим листом по тепловым и электрическим явлениям.",
+      "subject": "Физика",
+      "grade_level": 8,
+      "student_groups": ["8А"],
+      "start_date": "2026-09-01",
+      "end_date": "2027-05-31",
+      "total_hours": 68,
+      "hours_per_week": 2
+    },
+    {
+      "key": "physics-9a",
+      "name": "Физика 9А — подготовка к ОГЭ",
+      "description": "Тестовый курс для проверки диагностики и аналитики.",
+      "subject": "Физика",
+      "grade_level": 9,
+      "student_groups": ["9А"],
+      "start_date": "2026-09-01",
+      "end_date": "2027-05-31",
+      "total_hours": 102,
+      "hours_per_week": 3
+    }
+  ],
+  "works": [
+    {
+      "key": "mechanics-7",
+      "name": "7 класс — скорость и плотность",
+      "work_type": "quiz",
+      "duration": 35,
+      "max_score": 10,
+      "variant_count": 3,
+      "content_blocks": [
+        {
+          "content_type": "text",
+          "order": 0,
+          "title": "Инструкция",
+          "body": "Запишите формулы, подстановку численных значений и единицы измерения."
+        },
+        {
+          "content_type": "theory",
+          "order": 10,
+          "title": "Короткое повторение",
+          "topics": [
+            {"name": "Механическое движение", "subject": "Физика", "grade_level": 7}
+          ],
+          "include_subtopics": true
+        }
+      ],
+      "specification": [
+        {
+          "analog_group_id": "77000000-0000-0007-0000-000000000001",
+          "order": 20,
+          "count": 1,
+          "weight": 1,
+          "bank_role_filter": "demo",
+          "render_mode": "with_full_solution",
+          "is_assessable": false
+        },
+        {
+          "analog_group_id": "77000000-0000-0007-0000-000000000001",
+          "order": 30,
+          "count": 1,
+          "weight": 1,
+          "bank_role_filter": "control",
+          "render_mode": "task_only",
+          "is_assessable": true,
+          "blank_cells_after": true,
+          "blank_cells_rows": 5
+        },
+        {
+          "analog_group_id": "77000000-0000-0007-0000-000000000002",
+          "order": 40,
+          "count": 1,
+          "weight": 1,
+          "bank_role_filter": "control",
+          "render_mode": "task_only",
+          "is_assessable": true,
+          "blank_cells_after": true,
+          "blank_cells_rows": 7
+        }
+      ],
+      "course_assignment": {
+        "course": "physics-7a",
+        "order": 1,
+        "planned_date": "2026-09-25",
+        "weight": 1.0
+      }
+    },
+    {
+      "key": "worksheet-8",
+      "name": "8 класс — теплота и закон Ома",
+      "work_type": "practice",
+      "duration": 45,
+      "max_score": 12,
+      "variant_count": 3,
+      "content_blocks": [
+        {
+          "content_type": "text",
+          "order": 0,
+          "title": "Рабочий лист",
+          "body": "Разберите пример, затем выполните задания самостоятельно."
+        },
+        {
+          "content_type": "theory",
+          "order": 10,
+          "title": "Количество теплоты",
+          "topics": [
+            {"name": "Количество теплоты", "subject": "Физика", "grade_level": 8}
+          ],
+          "include_subtopics": true
+        },
+        {
+          "content_type": "theory",
+          "order": 40,
+          "title": "Закон Ома",
+          "topics": [
+            {"name": "Постоянный ток", "subject": "Физика", "grade_level": 8}
+          ],
+          "include_subtopics": true
+        }
+      ],
+      "specification": [
+        {
+          "analog_group_id": "77000000-0000-0008-0000-000000000001",
+          "order": 20,
+          "count": 1,
+          "weight": 1,
+          "bank_role_filter": "demo",
+          "render_mode": "with_full_solution",
+          "is_assessable": false
+        },
+        {
+          "analog_group_id": "77000000-0000-0008-0000-000000000001",
+          "order": 30,
+          "count": 1,
+          "weight": 1,
+          "bank_role_filter": "practice",
+          "render_mode": "task_only",
+          "is_assessable": true,
+          "blank_cells_after": true,
+          "blank_cells_rows": 6
+        },
+        {
+          "analog_group_id": "77000000-0000-0008-0000-000000000002",
+          "order": 50,
+          "count": 1,
+          "weight": 1,
+          "bank_role_filter": "control",
+          "render_mode": "task_only",
+          "is_assessable": true,
+          "blank_cells_after": true,
+          "blank_cells_rows": 8
+        }
+      ],
+      "course_assignment": {
+        "course": "physics-8a",
+        "order": 1,
+        "planned_date": "2026-10-16",
+        "weight": 1.0
+      }
+    },
+    {
+      "key": "diagnostic-9",
+      "name": "9 класс — диагностика по механике",
+      "work_type": "diagnostic",
+      "duration": 40,
+      "max_score": 12,
+      "variant_count": 3,
+      "content_blocks": [
+        {
+          "content_type": "text",
+          "order": 0,
+          "title": "Диагностическая работа",
+          "body": "Решения оформляйте последовательно. Калькулятор разрешён."
+        },
+        {
+          "content_type": "theory",
+          "order": 10,
+          "title": "Опорные формулы",
+          "topics": [
+            {"name": "Равноускоренное движение", "subject": "Физика", "grade_level": 9},
+            {"name": "Законы Ньютона", "subject": "Физика", "grade_level": 9}
+          ],
+          "include_subtopics": false
+        }
+      ],
+      "specification": [
+        {
+          "analog_group_id": "77000000-0000-0009-0000-000000000001",
+          "order": 20,
+          "count": 1,
+          "weight": 1,
+          "bank_role_filter": "control",
+          "render_mode": "task_only",
+          "is_assessable": true,
+          "blank_cells_after": true,
+          "blank_cells_rows": 7
+        },
+        {
+          "analog_group_id": "77000000-0000-0009-0000-000000000002",
+          "order": 30,
+          "count": 1,
+          "weight": 1,
+          "bank_role_filter": "control",
+          "render_mode": "task_only",
+          "is_assessable": true,
+          "blank_cells_after": true,
+          "blank_cells_rows": 7
+        }
+      ],
+      "course_assignment": {
+        "course": "physics-9a",
+        "order": 1,
+        "planned_date": "2026-11-13",
+        "weight": 1.5
+      }
+    }
+  ],
+  "events": [
+    {
+      "key": "planned-8a",
+      "name": "8А — рабочий лист (запланировано)",
+      "work": "worksheet-8",
+      "course": "physics-8a",
+      "student_group": "8А",
+      "planned_date": "2026-12-04T09:00:00",
+      "status": "planned",
+      "location": "Кабинет физики",
+      "description": "Событие для проверки планирования и назначения вариантов."
+    },
+    {
+      "key": "in-progress-7a",
+      "name": "7А — скорость и плотность (идёт сейчас)",
+      "work": "mechanics-7",
+      "course": "physics-7a",
+      "student_group": "7А",
+      "planned_date": "2026-11-20T10:00:00",
+      "status": "in_progress",
+      "location": "Кабинет 21",
+      "description": "Часть учеников имеет статус «начал»."
+    },
+    {
+      "key": "completed-8a",
+      "name": "8А — теплота и ток (ожидает проверки)",
+      "work": "worksheet-8",
+      "course": "physics-8a",
+      "student_group": "8А",
+      "planned_date": "2026-10-23T09:00:00",
+      "status": "completed",
+      "location": "Кабинет физики",
+      "description": "Все работы сданы, оценки ещё не выставлены."
+    },
+    {
+      "key": "reviewing-9a",
+      "name": "9А — диагностика по механике (на проверке)",
+      "work": "diagnostic-9",
+      "course": "physics-9a",
+      "student_group": "9А",
+      "planned_date": "2026-10-09T11:00:00",
+      "status": "reviewing",
+      "graded_count": 5,
+      "absent_indexes": [14],
+      "location": "Кабинет 21",
+      "description": "Пять работ проверены, одна отмечена как отсутствие."
+    },
+    {
+      "key": "graded-7a",
+      "name": "7А — итог по механике (проверено)",
+      "work": "mechanics-7",
+      "course": "physics-7a",
+      "student_group": "7А",
+      "planned_date": "2026-09-25T10:00:00",
+      "status": "graded",
+      "graded_count": 15,
+      "absent_indexes": [14],
+      "location": "Кабинет 21",
+      "description": "Полностью проверенное событие для аналитики и создания РнО."
+    }
+  ]
+}

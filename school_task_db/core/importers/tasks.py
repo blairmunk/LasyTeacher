@@ -186,12 +186,14 @@ class TaskImporter(BaseImporter):
         if source_data.get('short_name'):
             existing = Source.objects.filter(short_name=source_data['short_name']).first()
             if existing:
+                self._update_source(existing, source_data)
                 return existing
 
         # Поиск по name
         if source_data.get('name'):
             existing = Source.objects.filter(name=source_data['name']).first()
             if existing:
+                self._update_source(existing, source_data)
                 return existing
 
         # Создание нового источника
@@ -205,6 +207,7 @@ class TaskImporter(BaseImporter):
                     year=source_data.get('year'),
                     url=source_data.get('url', ''),
                     isbn=source_data.get('isbn', ''),
+                    notes=source_data.get('notes', ''),
                 )
                 self.log_success(f"Создан источник: {source}")
                 return source
@@ -212,6 +215,23 @@ class TaskImporter(BaseImporter):
                 self.log_error(f"Ошибка создания источника: {e}", e)
 
         return None
+
+    def _update_source(self, source, source_data):
+        if self.mode != 'update':
+            return
+        for field in (
+            'name',
+            'short_name',
+            'source_type',
+            'author',
+            'year',
+            'url',
+            'isbn',
+            'notes',
+        ):
+            if field in source_data:
+                setattr(source, field, source_data[field])
+        source.save()
 
 
     def _create_task(self, task_uuid: str, task_data: Dict[str, Any]) -> Optional[Task]:
@@ -792,6 +812,11 @@ class TaskImporter(BaseImporter):
                 topic = self._find_or_create_topic(topic_data)
                 if topic:
                     task.topic = topic
+                    if 'subtopic' in task_data:
+                        task.subtopic = self._find_or_create_subtopic(
+                            task_data['subtopic'],
+                            topic,
+                        )
 
             # Обновляем новые поля
             if 'source' in task_data:

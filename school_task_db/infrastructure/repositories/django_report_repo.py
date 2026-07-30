@@ -34,7 +34,6 @@ from core_logic.entities.report import (
     WorkAnalysisReportData,
 )
 from core_logic.interfaces.report_repo import IReportRepository
-from core_logic.value_objects.task_scores import task_score_records_for_attempt
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
 from students.models import Student, StudentGroup, StudentTaskLog
@@ -476,47 +475,29 @@ class DjangoReportRepository(IReportRepository):
                 'first_name',
             ),
         )
-        marks = Mark.objects.filter(
-            participation__student__in=students,
-        ).select_related('participation__student')
+        task_logs = StudentTaskLog.objects.filter(
+            student__in=students,
+            topic=topic,
+            subtopic__isnull=False,
+        ).select_related('subtopic')
 
-        all_task_ids = self._task_score_task_ids(marks)
-
-        if not all_task_ids:
+        if not task_logs.exists():
             return HeatmapSubtopicMatrixData(
                 columns=[],
                 rows=[],
                 col_averages=[],
             )
 
-        tasks_qs = Task.objects.filter(
-            pk__in=all_task_ids,
-            topic=topic,
-        ).select_related('subtopic')
-        task_map = {str(task.pk): task for task in tasks_qs}
         aggregated = defaultdict(lambda: {'points': 0, 'max_points': 0})
 
-        for mark in marks:
-            student_id = mark.participation.student_id
-            for score_record in self._task_score_records(mark):
-                task_id = score_record.task_id
-
-                task = task_map.get(task_id)
-                if not task:
-                    continue
-
-                col_key = (
-                    task.subtopic_id
-                    if task.subtopic_id
-                    else f'topic_{task.topic_id}'
-                )
-                key = (student_id, col_key)
-                aggregated[key]['points'] += score_record.points or 0
-                aggregated[key]['max_points'] += score_record.max_points or 0
+        for task_log in task_logs:
+            key = (task_log.student_id, task_log.subtopic_id)
+            aggregated[key]['points'] += task_log.points or 0
+            aggregated[key]['max_points'] += task_log.max_points or 0
 
         subtopic_ids = {
-            col_key for _, col_key in aggregated.keys()
-            if not str(col_key).startswith('topic_')
+            subtopic_id
+            for _, subtopic_id in aggregated.keys()
         }
         columns = list(
             SubTopic.objects.filter(pk__in=subtopic_ids).order_by(
@@ -550,40 +531,29 @@ class DjangoReportRepository(IReportRepository):
             selected_group = None
             students = list(Student.objects.all().order_by('last_name', 'first_name'))
 
-        marks = Mark.objects.filter(
-            participation__student__in=students,
-        ).select_related('participation__student', 'participation__event')
-
-        all_task_ids = self._task_score_task_ids(marks)
-
-        tasks_qs = Task.objects.filter(
-            pk__in=all_task_ids,
+        task_logs = StudentTaskLog.objects.filter(
+            student__in=students,
             subtopic=subtopic,
-        )
-        task_map = {str(task.pk): task for task in tasks_qs}
+        ).select_related('task', 'event')
+        task_ids = set(task_logs.values_list('task_id', flat=True))
+        tasks_qs = Task.objects.filter(pk__in=task_ids)
         student_agg = defaultdict(
             lambda: {'points': 0, 'max_points': 0, 'events': set()},
         )
         task_agg = defaultdict(lambda: {'points': 0, 'max_points': 0, 'count': 0})
 
-        for mark in marks:
-            student_id = mark.participation.student_id
-            event_name = mark.participation.event.name
-            for score_record in self._task_score_records(mark):
-                task_id = score_record.task_id
-
-                task = task_map.get(task_id)
-                if not task:
-                    continue
-
-                points = score_record.points or 0
-                max_points = score_record.max_points or 0
-                student_agg[student_id]['points'] += points
-                student_agg[student_id]['max_points'] += max_points
-                student_agg[student_id]['events'].add(event_name)
-                task_agg[task.id]['points'] += points
-                task_agg[task.id]['max_points'] += max_points
-                task_agg[task.id]['count'] += 1
+        for task_log in task_logs:
+            points = task_log.points or 0
+            max_points = task_log.max_points or 0
+            student_data = student_agg[task_log.student_id]
+            student_data['points'] += points
+            student_data['max_points'] += max_points
+            if task_log.event:
+                student_data['events'].add(task_log.event.name)
+            task_data = task_agg[task_log.task_id]
+            task_data['points'] += points
+            task_data['max_points'] += max_points
+            task_data['count'] += 1
 
         student_rows = self._build_subtopic_detail_student_rows(
             students,
@@ -621,21 +591,16 @@ class DjangoReportRepository(IReportRepository):
         if subtopic_id:
             selected_subtopic = SubTopic.objects.filter(pk=subtopic_id).first()
 
-        marks = Mark.objects.filter(
-            participation__student=student,
-        ).select_related(
-            'participation__event',
-            'participation__variant',
-        )
-        task_map = self._get_task_map_for_marks(marks, topic)
+        task_logs = StudentTaskLog.objects.filter(
+            student=student,
+            topic=topic,
+        ).select_related('task', 'event', 'subtopic')
         details = self._build_student_heatmap_details(
-            marks,
-            task_map,
+            task_logs,
             selected_subtopic,
         )
         subtopic_summary = self._build_student_subtopic_summary(
-            marks,
-            task_map,
+            task_logs,
             topic,
             selected_subtopic,
         )
@@ -1022,84 +987,53 @@ class DjangoReportRepository(IReportRepository):
                 box_data[short_name] = scores
         return box_data
 
-    def _task_score_records(self, mark):
-        return task_score_records_for_attempt(
-            getattr(mark, 'task_scores', None),
-        )
-
-    def _task_score_task_ids(self, marks):
-        task_ids = set()
-        for mark in marks:
-            task_ids.update(
-                record.task_id
-                for record in self._task_score_records(mark)
-            )
-        return task_ids
-
-    def _get_task_map_for_marks(self, marks, topic):
-        task_ids = self._task_score_task_ids(marks)
-
-        tasks = Task.objects.filter(
-            pk__in=task_ids,
-            topic=topic,
-        ).select_related('subtopic')
-        return {str(task.pk): task for task in tasks}
-
     def _build_student_heatmap_details(
         self,
-        marks,
-        task_map,
+        task_logs,
         selected_subtopic,
     ):
         details = []
-        for mark in marks:
-            event = mark.participation.event
-            for score_record in self._task_score_records(mark):
-                task_id = score_record.task_id
+        for task_log in task_logs:
+            if (
+                selected_subtopic
+                and task_log.subtopic_id != selected_subtopic.id
+            ):
+                continue
 
-                task = task_map.get(task_id)
-                if not task:
-                    continue
-                if selected_subtopic and task.subtopic_id != selected_subtopic.id:
-                    continue
-
-                points = score_record.points or 0
-                max_points = score_record.max_points or 0
-                pct = round(points / max_points * 100) if max_points > 0 else 0
-                details.append({
-                    'event': event,
-                    'task': task,
-                    'subtopic': task.subtopic,
-                    'points': points,
-                    'max_points': max_points,
-                    'pct': pct,
-                    'css': self._color_class(pct),
-                })
+            points = task_log.points or 0
+            max_points = task_log.max_points or 0
+            pct = round(points / max_points * 100) if max_points > 0 else 0
+            details.append({
+                'event': task_log.event,
+                'task': task_log.task,
+                'subtopic': task_log.subtopic,
+                'points': points,
+                'max_points': max_points,
+                'pct': pct,
+                'css': self._color_class(pct),
+            })
 
         details.sort(key=lambda detail: (
             detail['subtopic'].name if detail['subtopic'] else '',
-            detail['event'].planned_date,
+            detail['event'] is None,
+            detail['event'].planned_date if detail['event'] else None,
         ))
         return details
 
     def _build_student_subtopic_summary(
         self,
-        marks,
-        task_map,
+        task_logs,
         topic,
         selected_subtopic,
     ):
         aggregated = defaultdict(lambda: {'points': 0, 'max_points': 0})
-        for mark in marks:
-            for score_record in self._task_score_records(mark):
-                task_id = score_record.task_id
-                task = task_map.get(task_id)
-                if not task or not task.subtopic:
-                    continue
-                aggregated[task.subtopic.id]['points'] += score_record.points or 0
-                aggregated[task.subtopic.id]['max_points'] += (
-                    score_record.max_points or 0
-                )
+        for task_log in task_logs:
+            if not task_log.subtopic_id:
+                continue
+            aggregated[task_log.subtopic_id]['points'] += task_log.points or 0
+            aggregated[task_log.subtopic_id]['max_points'] += (
+                task_log.max_points or 0
+            )
 
         summary = []
         for subtopic in SubTopic.objects.filter(topic=topic).order_by('order'):

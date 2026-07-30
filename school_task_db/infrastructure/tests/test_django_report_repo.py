@@ -6,6 +6,9 @@ from django.utils import timezone
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_report_repo import DjangoReportRepository
+from infrastructure.repositories.django_student_repo import (
+    DjangoStudentRepository,
+)
 from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
@@ -110,6 +113,7 @@ class DjangoReportRepositoryTests(TestCase):
                 },
             },
         )
+        DjangoStudentRepository().sync_student_task_logs(str(mark.pk))
 
         data = DjangoReportRepository().get_heatmap_subtopic_matrix(
             student_ids=[student.pk],
@@ -189,7 +193,7 @@ class DjangoReportRepositoryTests(TestCase):
             student=selected_student,
             status='graded',
         )
-        Mark.objects.create(
+        mark = Mark.objects.create(
             participation=participation,
             score=4,
             points=10,
@@ -203,6 +207,7 @@ class DjangoReportRepositoryTests(TestCase):
                 str(other_task.pk): {'points': 2, 'max_points': 10},
             },
         )
+        DjangoStudentRepository().sync_student_task_logs(str(mark.pk))
 
         data = DjangoReportRepository().get_heatmap_subtopic_detail(
             subtopic_id=subtopic.pk,
@@ -275,7 +280,7 @@ class DjangoReportRepositoryTests(TestCase):
             student=student,
             status='graded',
         )
-        Mark.objects.create(
+        mark = Mark.objects.create(
             participation=participation,
             score=4,
             points=8,
@@ -288,6 +293,7 @@ class DjangoReportRepositoryTests(TestCase):
                 },
             },
         )
+        DjangoStudentRepository().sync_student_task_logs(str(mark.pk))
 
         data = DjangoReportRepository().get_heatmap_student_detail(
             topic_id=topic.pk,

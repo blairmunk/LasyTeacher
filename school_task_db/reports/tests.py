@@ -7,6 +7,9 @@ from django.utils import timezone
 
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
+from infrastructure.repositories.django_student_repo import (
+    DjangoStudentRepository,
+)
 from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
@@ -240,7 +243,7 @@ class ReportsViewsTests(TestCase):
             student=student,
             status='graded',
         )
-        Mark.objects.create(
+        mark = Mark.objects.create(
             participation=participation,
             score=4,
             points=8,
@@ -249,6 +252,7 @@ class ReportsViewsTests(TestCase):
                 str(task.pk): {'points': 8, 'max_points': 10},
             },
         )
+        DjangoStudentRepository().sync_student_task_logs(str(mark.pk))
 
         response = self.client.get(
             reverse('reports:heatmap-drilldown', args=[topic.pk]),
@@ -298,7 +302,7 @@ class ReportsViewsTests(TestCase):
             student=student,
             status='graded',
         )
-        Mark.objects.create(
+        mark = Mark.objects.create(
             participation=participation,
             score=4,
             points=8,
@@ -307,6 +311,7 @@ class ReportsViewsTests(TestCase):
                 str(task.pk): {'points': 8, 'max_points': 10},
             },
         )
+        DjangoStudentRepository().sync_student_task_logs(str(mark.pk))
 
         response = self.client.get(
             reverse('reports:heatmap-student', args=[topic.pk, student.pk]),
@@ -358,7 +363,7 @@ class ReportsViewsTests(TestCase):
             student=student,
             status='graded',
         )
-        Mark.objects.create(
+        mark = Mark.objects.create(
             participation=participation,
             score=4,
             points=8,
@@ -367,6 +372,7 @@ class ReportsViewsTests(TestCase):
                 str(task.pk): {'points': 8, 'max_points': 10},
             },
         )
+        DjangoStudentRepository().sync_student_task_logs(str(mark.pk))
 
         response = self.client.get(
             reverse('reports:heatmap-subtopic', args=[subtopic.pk]),

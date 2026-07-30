@@ -6,7 +6,7 @@ from django.utils import timezone
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_report_repo import DjangoReportRepository
-from students.models import Student, StudentGroup
+from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
 from works.models import Variant, VariantTask, Work, WorkAnalogGroup
@@ -429,7 +429,7 @@ class DjangoReportRepositoryTests(TestCase):
             student=student,
             status='graded',
         )
-        Mark.objects.create(
+        mark = Mark.objects.create(
             participation=participation,
             score=4,
             points=8,
@@ -442,6 +442,26 @@ class DjangoReportRepositoryTests(TestCase):
                 },
                 str(other_task.pk): {'points': 2, 'max_points': 10},
             },
+        )
+        StudentTaskLog.objects.create(
+            student=student,
+            task=task,
+            event=event,
+            mark=mark,
+            topic=topic,
+            points=8,
+            max_points=10,
+            completed_at=timezone.now(),
+        )
+        StudentTaskLog.objects.create(
+            student=student,
+            task=other_task,
+            event=event,
+            mark=mark,
+            topic=other_topic,
+            points=2,
+            max_points=10,
+            completed_at=timezone.now(),
         )
 
         data = DjangoReportRepository().get_heatmap_topic_matrix(
@@ -462,7 +482,7 @@ class DjangoReportRepositoryTests(TestCase):
         self.assertEqual(data.rows[0]['cells'][0]['css'], 'good')
         self.assertEqual(data.col_averages, [{'pct': 80, 'css': 'good'}])
 
-    def test_heatmap_counts_repeated_task_in_distinct_variant_slots(self):
+    def test_heatmap_reads_normalized_task_logs_instead_of_mark_json(self):
         student = Student.objects.create(last_name='Иванов', first_name='Иван')
         work = Work.objects.create(name='Контрольная')
         topic = Topic.objects.create(
@@ -489,23 +509,24 @@ class DjangoReportRepositoryTests(TestCase):
             student=student,
             status='graded',
         )
-        Mark.objects.create(
+        mark = Mark.objects.create(
             participation=participation,
             score=4,
             points=3,
             max_points=4,
             task_scores={
-                'variant-task-1': {
-                    'task_id': str(task.pk),
-                    'points': 1,
-                    'max_points': 2,
-                },
-                'variant-task-2': {
-                    'task_id': str(task.pk),
-                    'points': 2,
-                    'max_points': 2,
-                },
+                str(task.pk): {'points': 0, 'max_points': 100},
             },
+        )
+        StudentTaskLog.objects.create(
+            student=student,
+            task=task,
+            event=event,
+            mark=mark,
+            topic=topic,
+            points=3,
+            max_points=4,
+            completed_at=timezone.now(),
         )
 
         data = DjangoReportRepository().get_heatmap_topic_matrix(
@@ -758,12 +779,8 @@ class DjangoReportRepositoryTests(TestCase):
             max_points=10,
             task_scores={
                 '550e8400-e29b-41d4-a716-446655440001': {
-                    'points': 3,
-                    'max_points': 5,
-                },
-                '550e8400-e29b-41d4-a716-446655440002': {
-                    'points': 5,
-                    'max_points': 5,
+                    'points': 1,
+                    'max_points': 100,
                 },
             },
         )

@@ -3,7 +3,7 @@
 from collections import defaultdict
 from datetime import timedelta
 
-from django.db.models import Avg, Count
+from django.db.models import Avg, Count, Sum
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
@@ -37,7 +37,7 @@ from core_logic.interfaces.report_repo import IReportRepository
 from core_logic.value_objects.task_scores import task_score_records_for_attempt
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
-from students.models import Student, StudentGroup
+from students.models import Student, StudentGroup, StudentTaskLog
 from tasks.models import Task
 from task_groups.models import AnalogGroup, TaskGroup
 from works.models import Variant, Work, WorkAnalogGroup
@@ -350,36 +350,22 @@ class DjangoReportRepository(IReportRepository):
                 'first_name',
             ),
         )
-        marks = Mark.objects.filter(
-            participation__student__in=students,
-        ).select_related('participation__student')
+        task_logs = StudentTaskLog.objects.filter(
+            student__in=students,
+            topic__isnull=False,
+        ).select_related('topic')
+        if section_filter:
+            task_logs = task_logs.filter(topic__section=section_filter)
 
-        all_task_ids = self._task_score_task_ids(marks)
-
-        if not all_task_ids:
+        if not task_logs.exists():
             return HeatmapTopicMatrixData(columns=[], rows=[], col_averages=[])
 
-        tasks_qs = Task.objects.filter(pk__in=all_task_ids).select_related(
-            'topic',
-            'subtopic',
-        )
-        task_map = {str(task.pk): task for task in tasks_qs}
         aggregated = defaultdict(lambda: {'points': 0, 'max_points': 0})
 
-        for mark in marks:
-            student_id = mark.participation.student_id
-            for score_record in self._task_score_records(mark):
-                task_id = score_record.task_id
-
-                task = task_map.get(task_id)
-                if not task or not task.topic:
-                    continue
-                if section_filter and task.topic.section != section_filter:
-                    continue
-
-                key = (student_id, task.topic_id)
-                aggregated[key]['points'] += score_record.points or 0
-                aggregated[key]['max_points'] += score_record.max_points or 0
+        for task_log in task_logs:
+            key = (task_log.student_id, task_log.topic_id)
+            aggregated[key]['points'] += task_log.points or 0
+            aggregated[key]['max_points'] += task_log.max_points or 0
 
         topic_ids = {topic_id for _, topic_id in aggregated.keys()}
         columns = list(
@@ -800,7 +786,7 @@ class DjangoReportRepository(IReportRepository):
                 continue
 
             avg_score = work_marks.aggregate(avg=Avg('score'))['avg'] or 0
-            avg_pct = self._average_task_score_percentage(work_marks)
+            avg_pct = self._average_mark_percentage(work_marks)
             score_distribution = list(
                 work_marks.values('score').annotate(
                     count=Count('id'),
@@ -863,7 +849,7 @@ class DjangoReportRepository(IReportRepository):
             ).count()
             student_marks = marks.filter(participation__student=student)
             avg_score = student_marks.aggregate(avg=Avg('score'))['avg'] or 0
-            avg_pct = self._average_task_score_percentage(
+            avg_pct = self._average_mark_percentage(
                 student_marks,
                 default=None,
             )
@@ -1612,13 +1598,13 @@ class DjangoReportRepository(IReportRepository):
             return 'warning'
         return 'danger'
 
-    def _average_task_score_percentage(self, marks, default=0):
-        total_points = 0
-        total_max = 0
-        for mark in marks:
-            for score_record in self._task_score_records(mark):
-                total_points += score_record.points or 0
-                total_max += score_record.max_points or 0
+    def _average_mark_percentage(self, marks, default=0):
+        totals = marks.aggregate(
+            total_points=Sum('points'),
+            total_max=Sum('max_points'),
+        )
+        total_points = totals['total_points'] or 0
+        total_max = totals['total_max'] or 0
         return round(total_points / total_max * 100) if total_max > 0 else default
 
     def _assess_difficulty(self, avg_pct):

@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
-from students.models import Student, StudentGroup
+from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
 from works.models import Variant, VariantTask, Work, WorkAnalogGroup
@@ -66,7 +66,7 @@ class ReportsViewsTests(TestCase):
             student=student,
             status='graded',
         )
-        Mark.objects.create(
+        mark = Mark.objects.create(
             participation=participation,
             score=4,
             points=8,
@@ -74,6 +74,16 @@ class ReportsViewsTests(TestCase):
             task_scores={
                 str(task.pk): {'points': 8, 'max_points': 10},
             },
+        )
+        StudentTaskLog.objects.create(
+            student=student,
+            task=task,
+            event=event,
+            mark=mark,
+            topic=topic,
+            points=8,
+            max_points=10,
+            completed_at=timezone.now(),
         )
 
         response = self.client.get(

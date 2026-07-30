@@ -275,6 +275,8 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
 
     def test_student_repository_syncs_task_logs_from_mark(self):
+        self.original_weak.subtopic = self.subtopic
+        self.original_weak.save(update_fields=['subtopic'])
         StudentTaskLog.objects.filter(mark=self.mark).delete()
 
         created_count = DjangoStudentRepository().sync_student_task_logs(
@@ -291,6 +293,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
         self.assertEqual(weak_log.analog_group, self.weak_group)
         self.assertEqual(weak_log.variant_task, weak_variant_task)
+        self.assertEqual(weak_log.subtopic, self.subtopic)
         self.assertEqual(weak_log.points, 0)
         self.assertEqual(weak_log.max_points, 2)
 

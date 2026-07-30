@@ -727,7 +727,7 @@ class DjangoStudentRepository(IStudentRepository):
         )
         tasks_by_id = {
             str(task.pk): task
-            for task in Task.objects.select_related('topic').filter(
+            for task in Task.objects.select_related('topic', 'subtopic').filter(
                 pk__in=[
                     record.task_id
                     for _, record in resolved_scores
@@ -762,6 +762,7 @@ class DjangoStudentRepository(IStudentRepository):
                     'variant': participation.variant,
                     'variant_task_id': variant_task_id or None,
                     'topic': task.topic,
+                    'subtopic': task.subtopic,
                     'analog_group': task_group.group if task_group else None,
                     'difficulty': task.difficulty,
                     'points': score_record.points,

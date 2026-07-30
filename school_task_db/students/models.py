@@ -122,6 +122,13 @@ class StudentTaskLog(BaseModel):
         'curriculum.Topic', on_delete=models.SET_NULL,
         null=True, blank=True, verbose_name='Тема (кэш)'
     )
+    subtopic = models.ForeignKey(
+        'curriculum.SubTopic',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name='Подтема (кэш)',
+    )
     analog_group = models.ForeignKey(
         'task_groups.AnalogGroup', on_delete=models.SET_NULL,
         null=True, blank=True, verbose_name='Группа аналогов (кэш)'
@@ -147,6 +154,7 @@ class StudentTaskLog(BaseModel):
         indexes = [
             models.Index(fields=['student', 'task']),
             models.Index(fields=['student', 'topic']),
+            models.Index(fields=['student', 'subtopic']),
             models.Index(fields=['student', 'analog_group']),
             models.Index(fields=['student', 'completed_at']),
             models.Index(fields=['task', 'is_correct']),

@@ -13,7 +13,7 @@ from core_logic.entities.report import (
     HeatmapMatrixSource,
     HeatmapOverviewData,
     HeatmapStudentDetailData,
-    HeatmapSubtopicDetailData,
+    HeatmapSubtopicDetailSource,
     HeatmapTopicMatrixData,
     JournalData,
     JournalSelectData,
@@ -130,12 +130,12 @@ class IReportRepository(ABC):
         """Return normalized facts for the student-subtopic matrix."""
 
     @abstractmethod
-    def get_heatmap_subtopic_detail(
+    def get_heatmap_subtopic_detail_source(
         self,
         subtopic_id: Any,
         group_id: Any,
-    ) -> HeatmapSubtopicDetailData:
-        """Return detailed subtopic heatmap data."""
+    ) -> HeatmapSubtopicDetailSource:
+        """Return normalized facts for detailed subtopic analysis."""
 
     @abstractmethod
     def get_heatmap_student_detail(

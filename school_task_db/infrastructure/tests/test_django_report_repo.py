@@ -21,6 +21,10 @@ from core_logic.use_cases.get_heatmap_subtopic_matrix import (
     GetHeatmapSubtopicMatrixUseCase,
     HeatmapSubtopicMatrixRequest,
 )
+from core_logic.use_cases.get_heatmap_subtopic_detail import (
+    GetHeatmapSubtopicDetailUseCase,
+    HeatmapSubtopicDetailRequest,
+)
 from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
@@ -229,15 +233,22 @@ class DjangoReportRepositoryTests(TestCase):
         )
         DjangoStudentRepository().sync_student_task_logs(str(mark.pk))
 
-        data = DjangoReportRepository().get_heatmap_subtopic_detail(
-            subtopic_id=subtopic.pk,
-            group_id=selected_group.pk,
+        data = GetHeatmapSubtopicDetailUseCase(
+            DjangoReportRepository(),
+        ).execute(
+            HeatmapSubtopicDetailRequest(
+                subtopic_id=subtopic.pk,
+                group_id=selected_group.pk,
+            ),
         )
 
-        self.assertEqual(data.subtopic, subtopic)
-        self.assertEqual(data.topic, topic)
-        self.assertEqual(list(data.groups), [selected_group, other_group])
-        self.assertEqual(data.selected_group, selected_group)
+        self.assertEqual(data.subtopic.pk, str(subtopic.pk))
+        self.assertEqual(data.topic.pk, str(topic.pk))
+        self.assertEqual(
+            [group.pk for group in data.groups],
+            [str(selected_group.pk), str(other_group.pk)],
+        )
+        self.assertEqual(data.selected_group.pk, str(selected_group.pk))
         self.assertEqual(data.total_students, 2)
         self.assertEqual(data.students_with_data, 1)
         self.assertEqual(data.overall_pct, 80)

@@ -5,6 +5,7 @@ from typing import Any
 
 from core_logic.entities.report import HeatmapSubtopicDetailData
 from core_logic.interfaces.report_repo import IReportRepository
+from core_logic.services.heatmap_detail_service import HeatmapDetailService
 
 
 @dataclass(frozen=True)
@@ -14,14 +15,20 @@ class HeatmapSubtopicDetailRequest:
 
 
 class GetHeatmapSubtopicDetailUseCase:
-    def __init__(self, report_repo: IReportRepository):
+    def __init__(
+        self,
+        report_repo: IReportRepository,
+        detail_service: HeatmapDetailService | None = None,
+    ):
         self.report_repo = report_repo
+        self.detail_service = detail_service or HeatmapDetailService()
 
     def execute(
         self,
         request: HeatmapSubtopicDetailRequest,
     ) -> HeatmapSubtopicDetailData:
-        return self.report_repo.get_heatmap_subtopic_detail(
+        source = self.report_repo.get_heatmap_subtopic_detail_source(
             subtopic_id=request.subtopic_id,
             group_id=request.group_id,
         )
+        return self.detail_service.build_subtopic_detail(source)

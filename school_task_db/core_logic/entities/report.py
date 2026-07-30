@@ -55,6 +55,35 @@ class ReportTaskRef:
 
 
 @dataclass(frozen=True)
+class ReportActivityRef:
+    pk: str
+    name: str
+    planned_date: Any = None
+
+
+@dataclass(frozen=True)
+class HeatmapDetailScoreFact:
+    student_id: str
+    task_id: str
+    subtopic_id: str
+    points: float
+    max_points: float
+    event: ReportActivityRef | None = None
+
+
+@dataclass(frozen=True)
+class HeatmapSubtopicDetailSource:
+    subtopic: ReportHeatmapColumnRef
+    topic: ReportHeatmapColumnRef
+    groups: List[ReportGroupRef]
+    selected_group: ReportGroupRef | None
+    students: List[ReportStudentRef]
+    tasks: List[ReportTaskRef]
+    scores: List[HeatmapDetailScoreFact]
+    courses: List[ReportCourseRef]
+
+
+@dataclass(frozen=True)
 class ReportTaskUsageRef:
     pk: str
     short_uuid: str

@@ -381,9 +381,10 @@ class ReportsViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['active_report'], 'heatmap')
-        self.assertEqual(response.context['subtopic'], subtopic)
-        self.assertEqual(response.context['topic'], topic)
-        self.assertEqual(response.context['selected_group'], group)
+        self.assertEqual(response.context['subtopic'].pk, str(subtopic.pk))
+        self.assertEqual(response.context['subtopic'].name, subtopic.name)
+        self.assertEqual(response.context['topic'].pk, str(topic.pk))
+        self.assertEqual(response.context['selected_group'].pk, str(group.pk))
         self.assertEqual(response.context['group_param'], f'?group={group.pk}')
         self.assertEqual(response.context['overall_pct'], 80)
         self.assertEqual(response.context['students_with_data'], 1)

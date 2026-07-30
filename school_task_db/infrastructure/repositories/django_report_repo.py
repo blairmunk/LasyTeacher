@@ -12,16 +12,18 @@ from core_logic.entities.report import (
     HeatmapCourseOverviewData,
     HeatmapCourseTimelineData,
     HeatmapDrilldownOverviewData,
+    HeatmapDetailScoreFact,
     HeatmapMatrixSource,
     HeatmapOverviewData,
     HeatmapScoreFact,
     HeatmapStudentDetailData,
-    HeatmapSubtopicDetailData,
+    HeatmapSubtopicDetailSource,
     HeatmapTopicMatrixData,
     JournalData,
     JournalSelectData,
     ReportsDashboardData,
     ReportAnalogGroupRef,
+    ReportActivityRef,
     ReportCourseRef,
     ReportEventRef,
     ReportGroupRef,
@@ -516,17 +518,20 @@ class DjangoReportRepository(IReportRepository):
             ],
         )
 
-    def get_heatmap_subtopic_detail(self, subtopic_id, group_id):
+    def get_heatmap_subtopic_detail_source(self, subtopic_id, group_id):
         subtopic = get_object_or_404(SubTopic, pk=subtopic_id)
         topic = subtopic.topic
-        groups = StudentGroup.objects.all().order_by('name')
+        group_models = list(StudentGroup.objects.all().order_by('name'))
         if group_id:
-            selected_group = get_object_or_404(StudentGroup, pk=group_id)
+            selected_group_model = get_object_or_404(StudentGroup, pk=group_id)
             students = list(
-                selected_group.students.all().order_by('last_name', 'first_name'),
+                selected_group_model.students.all().order_by(
+                    'last_name',
+                    'first_name',
+                ),
             )
         else:
-            selected_group = None
+            selected_group_model = None
             students = list(Student.objects.all().order_by('last_name', 'first_name'))
 
         task_logs = StudentTaskLog.objects.filter(
@@ -534,52 +539,82 @@ class DjangoReportRepository(IReportRepository):
             subtopic=subtopic,
         ).select_related('task', 'event')
         task_ids = set(task_logs.values_list('task_id', flat=True))
-        tasks_qs = Task.objects.filter(pk__in=task_ids)
-        student_agg = defaultdict(
-            lambda: {'points': 0, 'max_points': 0, 'events': set()},
-        )
-        task_agg = defaultdict(lambda: {'points': 0, 'max_points': 0, 'count': 0})
-
-        for task_log in task_logs:
-            points = task_log.points or 0
-            max_points = task_log.max_points or 0
-            student_data = student_agg[task_log.student_id]
-            student_data['points'] += points
-            student_data['max_points'] += max_points
-            if task_log.event:
-                student_data['events'].add(task_log.event.name)
-            task_data = task_agg[task_log.task_id]
-            task_data['points'] += points
-            task_data['max_points'] += max_points
-            task_data['count'] += 1
-
-        student_rows = self._build_subtopic_detail_student_rows(
-            students,
-            student_agg,
-        )
-        task_rows = self._build_subtopic_detail_task_rows(tasks_qs, task_agg)
-        total_points = sum(data['points'] for data in student_agg.values())
-        total_max = sum(data['max_points'] for data in student_agg.values())
-        overall_pct = round(total_points / total_max * 100) if total_max > 0 else None
-
-        return HeatmapSubtopicDetailData(
-            subtopic=subtopic,
-            topic=topic,
-            groups=groups,
-            selected_group=selected_group,
-            student_rows=student_rows,
-            task_rows=task_rows,
-            overall_pct=overall_pct,
-            overall_css=self._color_class(overall_pct) if overall_pct else 'no-data',
-            total_students=len(students),
-            students_with_data=sum(
-                1 for row in student_rows
-                if row['pct'] is not None
+        task_models = list(
+            Task.objects.filter(pk__in=task_ids).order_by(
+                'difficulty',
+                'text',
             ),
-            courses=Course.objects.filter(is_active=True).order_by(
-                'grade_level',
-                'name',
+        )
+
+        return HeatmapSubtopicDetailSource(
+            subtopic=ReportHeatmapColumnRef(
+                pk=str(subtopic.pk),
+                name=subtopic.name,
             ),
+            topic=ReportHeatmapColumnRef(
+                pk=str(topic.pk),
+                name=topic.name,
+                section=topic.section,
+            ),
+            groups=[
+                ReportGroupRef(
+                    pk=str(group.pk),
+                    name=group.name,
+                    students_count=group.students.count(),
+                )
+                for group in group_models
+            ],
+            selected_group=(
+                ReportGroupRef(
+                    pk=str(selected_group_model.pk),
+                    name=selected_group_model.name,
+                    students_count=selected_group_model.students.count(),
+                )
+                if selected_group_model
+                else None
+            ),
+            students=[
+                self._report_student_ref(student)
+                for student in students
+            ],
+            tasks=[
+                ReportTaskRef(
+                    pk=str(task.pk),
+                    text=task.text,
+                    difficulty=task.difficulty,
+                    difficulty_display=task.get_difficulty_display(),
+                )
+                for task in task_models
+            ],
+            scores=[
+                HeatmapDetailScoreFact(
+                    student_id=str(task_log.student_id),
+                    task_id=str(task_log.task_id),
+                    subtopic_id=str(task_log.subtopic_id),
+                    points=task_log.points or 0,
+                    max_points=task_log.max_points or 0,
+                    event=(
+                        ReportActivityRef(
+                            pk=str(task_log.event.pk),
+                            name=task_log.event.name,
+                            planned_date=task_log.event.planned_date,
+                        )
+                        if task_log.event
+                        else None
+                    ),
+                )
+                for task_log in task_logs
+            ],
+            courses=[
+                ReportCourseRef(
+                    pk=str(course.pk),
+                    name=course.name,
+                )
+                for course in Course.objects.filter(is_active=True).order_by(
+                    'grade_level',
+                    'name',
+                )
+            ],
         )
 
     def get_heatmap_student_detail(self, topic_id, student_id, subtopic_id=None):
@@ -1058,54 +1093,6 @@ class DjangoReportRepository(IReportRepository):
                     'is_selected': is_selected,
                 })
         return summary
-
-    def _build_subtopic_detail_student_rows(
-        self,
-        students,
-        student_agg,
-    ):
-        rows = []
-        for student in students:
-            data = student_agg.get(student.id)
-            if data and data['max_points'] > 0:
-                pct = round(data['points'] / data['max_points'] * 100)
-                rows.append({
-                    'student': self._report_student_ref(student),
-                    'points': data['points'],
-                    'max_points': data['max_points'],
-                    'pct': pct,
-                    'css': self._color_class(pct),
-                    'events': sorted(data['events']),
-                })
-            else:
-                rows.append({
-                    'student': self._report_student_ref(student),
-                    'pct': None,
-                    'css': 'no-data',
-                    'events': [],
-                })
-        return rows
-
-    def _build_subtopic_detail_task_rows(self, tasks_qs, task_agg):
-        rows = []
-        for task in tasks_qs.order_by('difficulty', 'text'):
-            data = task_agg.get(task.id)
-            if data and data['max_points'] > 0:
-                avg_pct = round(data['points'] / data['max_points'] * 100)
-                rows.append({
-                    'task': ReportTaskRef(
-                        pk=str(task.pk),
-                        text=task.text,
-                        difficulty=task.difficulty,
-                        difficulty_display=task.get_difficulty_display(),
-                    ),
-                    'avg_pct': avg_pct,
-                    'css': self._color_class(avg_pct),
-                    'students_count': data['count'],
-                    'total_points': data['points'],
-                    'total_max': data['max_points'],
-                })
-        return rows
 
     def _build_journal_rows(
         self,

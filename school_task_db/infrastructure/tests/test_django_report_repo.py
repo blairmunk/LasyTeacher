@@ -97,7 +97,7 @@ class DjangoReportRepositoryTests(TestCase):
             student=student,
             status='graded',
         )
-        Mark.objects.create(
+        mark = Mark.objects.create(
             participation=participation,
             score=4,
             points=8,
@@ -597,7 +597,7 @@ class DjangoReportRepositoryTests(TestCase):
             student=student,
             status='graded',
         )
-        Mark.objects.create(
+        mark = Mark.objects.create(
             participation=participation,
             score=4,
             points=8,
@@ -611,7 +611,7 @@ class DjangoReportRepositoryTests(TestCase):
                 str(other_task.pk): {'points': 1, 'max_points': 10},
             },
         )
-        Mark.objects.create(
+        other_mark = Mark.objects.create(
             participation=other_participation,
             score=5,
             points=10,
@@ -619,6 +619,26 @@ class DjangoReportRepositoryTests(TestCase):
             task_scores={
                 str(other_task.pk): {'points': 10, 'max_points': 10},
             },
+        )
+        StudentTaskLog.objects.create(
+            student=student,
+            task=task,
+            event=course_event,
+            mark=mark,
+            topic=topic,
+            points=8,
+            max_points=10,
+            completed_at=timezone.now(),
+        )
+        StudentTaskLog.objects.create(
+            student=student,
+            task=other_task,
+            event=other_event,
+            mark=other_mark,
+            topic=other_topic,
+            points=10,
+            max_points=10,
+            completed_at=timezone.now(),
         )
 
         data = DjangoReportRepository().get_heatmap_course_topic_matrix(
@@ -670,8 +690,8 @@ class DjangoReportRepositoryTests(TestCase):
             max_points=10,
             task_scores={
                 '550e8400-e29b-41d4-a716-446655440001': {
-                    'points': 8,
-                    'max_points': 10,
+                    'points': 0,
+                    'max_points': 100,
                 },
             },
         )

@@ -10,6 +10,7 @@ from core_logic.entities.report import (
     HeatmapCourseOverviewData,
     HeatmapCourseTimelineData,
     HeatmapDrilldownOverviewData,
+    HeatmapMatrixSource,
     HeatmapOverviewData,
     HeatmapStudentDetailData,
     HeatmapSubtopicDetailData,
@@ -82,12 +83,12 @@ class IReportRepository(ABC):
         """Return base heatmap data."""
 
     @abstractmethod
-    def get_heatmap_topic_matrix(
+    def get_heatmap_topic_matrix_source(
         self,
         student_ids: list,
         section_filter: str,
-    ) -> HeatmapTopicMatrixData:
-        """Return student-topic heatmap matrix data."""
+    ) -> HeatmapMatrixSource:
+        """Return normalized facts for the student-topic matrix."""
 
     @abstractmethod
     def get_heatmap_course_overview(
@@ -98,12 +99,12 @@ class IReportRepository(ABC):
         """Return base course heatmap data."""
 
     @abstractmethod
-    def get_heatmap_course_topic_matrix(
+    def get_heatmap_course_topic_matrix_source(
         self,
         student_ids: list,
         work_ids: list,
-    ) -> HeatmapTopicMatrixData:
-        """Return student-topic heatmap matrix data for course works."""
+    ) -> HeatmapMatrixSource:
+        """Return normalized facts for a course student-topic matrix."""
 
     @abstractmethod
     def get_heatmap_course_timeline(

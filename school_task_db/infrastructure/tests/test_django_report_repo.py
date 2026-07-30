@@ -9,6 +9,14 @@ from infrastructure.repositories.django_report_repo import DjangoReportRepositor
 from infrastructure.repositories.django_student_repo import (
     DjangoStudentRepository,
 )
+from core_logic.use_cases.get_heatmap_course_topic_matrix import (
+    GetHeatmapCourseTopicMatrixUseCase,
+    HeatmapCourseTopicMatrixRequest,
+)
+from core_logic.use_cases.get_heatmap_topic_matrix import (
+    GetHeatmapTopicMatrixUseCase,
+    HeatmapTopicMatrixRequest,
+)
 from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
@@ -470,12 +478,17 @@ class DjangoReportRepositoryTests(TestCase):
             completed_at=timezone.now(),
         )
 
-        data = DjangoReportRepository().get_heatmap_topic_matrix(
-            student_ids=[student.pk],
-            section_filter='Кинематика',
+        data = GetHeatmapTopicMatrixUseCase(
+            DjangoReportRepository(),
+        ).execute(
+            HeatmapTopicMatrixRequest(
+                student_ids=[student.pk],
+                section_filter='Кинематика',
+            ),
         )
 
-        self.assertEqual(data.columns, [topic])
+        self.assertEqual(data.columns[0].pk, str(topic.pk))
+        self.assertEqual(data.columns[0].name, topic.name)
         self.assertEqual(len(data.rows), 1)
         self.assertEqual(data.rows[0]['student'].pk, str(student.pk))
         self.assertEqual(
@@ -535,9 +548,13 @@ class DjangoReportRepositoryTests(TestCase):
             completed_at=timezone.now(),
         )
 
-        data = DjangoReportRepository().get_heatmap_topic_matrix(
-            student_ids=[student.pk],
-            section_filter='Кинематика',
+        data = GetHeatmapTopicMatrixUseCase(
+            DjangoReportRepository(),
+        ).execute(
+            HeatmapTopicMatrixRequest(
+                student_ids=[student.pk],
+                section_filter='Кинематика',
+            ),
         )
 
         self.assertEqual(data.rows[0]['cells'][0]['points'], 3)
@@ -647,12 +664,17 @@ class DjangoReportRepositoryTests(TestCase):
             completed_at=timezone.now(),
         )
 
-        data = DjangoReportRepository().get_heatmap_course_topic_matrix(
-            student_ids=[student.pk],
-            work_ids=[course_work.pk],
+        data = GetHeatmapCourseTopicMatrixUseCase(
+            DjangoReportRepository(),
+        ).execute(
+            HeatmapCourseTopicMatrixRequest(
+                student_ids=[student.pk],
+                work_ids=[course_work.pk],
+            ),
         )
 
-        self.assertEqual(data.columns, [topic])
+        self.assertEqual(data.columns[0].pk, str(topic.pk))
+        self.assertEqual(data.columns[0].name, topic.name)
         self.assertEqual(len(data.rows), 1)
         self.assertEqual(data.rows[0]['student'].pk, str(student.pk))
         self.assertEqual(

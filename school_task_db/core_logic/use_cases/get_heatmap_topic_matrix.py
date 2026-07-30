@@ -5,6 +5,7 @@ from typing import Any, List
 
 from core_logic.entities.report import HeatmapTopicMatrixData
 from core_logic.interfaces.report_repo import IReportRepository
+from core_logic.services.heatmap_matrix_service import HeatmapMatrixService
 
 
 @dataclass(frozen=True)
@@ -14,14 +15,20 @@ class HeatmapTopicMatrixRequest:
 
 
 class GetHeatmapTopicMatrixUseCase:
-    def __init__(self, report_repo: IReportRepository):
+    def __init__(
+        self,
+        report_repo: IReportRepository,
+        matrix_service: HeatmapMatrixService | None = None,
+    ):
         self.report_repo = report_repo
+        self.matrix_service = matrix_service or HeatmapMatrixService()
 
     def execute(
         self,
         request: HeatmapTopicMatrixRequest,
     ) -> HeatmapTopicMatrixData:
-        return self.report_repo.get_heatmap_topic_matrix(
+        source = self.report_repo.get_heatmap_topic_matrix_source(
             student_ids=request.student_ids,
             section_filter=request.section_filter,
         )
+        return self.matrix_service.build_topic_matrix(source)

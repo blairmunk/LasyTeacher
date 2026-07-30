@@ -12,6 +12,28 @@ class ReportStudentRef:
 
 
 @dataclass(frozen=True)
+class ReportHeatmapColumnRef:
+    pk: str
+    name: str
+    section: str = ''
+
+
+@dataclass(frozen=True)
+class HeatmapScoreFact:
+    student_id: str
+    column_id: str
+    points: float
+    max_points: float
+
+
+@dataclass(frozen=True)
+class HeatmapMatrixSource:
+    students: List[ReportStudentRef]
+    columns: List[ReportHeatmapColumnRef]
+    scores: List[HeatmapScoreFact]
+
+
+@dataclass(frozen=True)
 class ReportCourseRef:
     pk: str
     name: str

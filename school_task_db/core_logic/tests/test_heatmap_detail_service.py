@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from core_logic.entities.report import (
     HeatmapDetailScoreFact,
+    HeatmapStudentDetailSource,
     HeatmapSubtopicDetailSource,
     ReportActivityRef,
     ReportCourseRef,
@@ -14,6 +15,72 @@ from core_logic.services.heatmap_detail_service import HeatmapDetailService
 
 
 class HeatmapDetailServiceTests(TestCase):
+    def test_builds_filtered_student_detail_and_full_subtopic_summary(self):
+        selected_subtopic = ReportHeatmapColumnRef(
+            pk='subtopic-1',
+            name='Средняя скорость',
+        )
+        other_subtopic = ReportHeatmapColumnRef(
+            pk='subtopic-2',
+            name='Путь',
+        )
+        first_task = ReportTaskRef(
+            pk='task-1',
+            text='Задача 1',
+            difficulty=2,
+            difficulty_display='Базовая',
+        )
+        second_task = ReportTaskRef(
+            pk='task-2',
+            text='Задача 2',
+            difficulty=3,
+            difficulty_display='Средняя',
+        )
+        source = HeatmapStudentDetailSource(
+            topic=ReportHeatmapColumnRef(
+                pk='topic-1',
+                name='Скорость',
+                section='Кинематика',
+            ),
+            student=ReportStudentRef(
+                pk='student-1',
+                full_name='Иванов Иван',
+            ),
+            selected_subtopic=selected_subtopic,
+            subtopics=[selected_subtopic, other_subtopic],
+            tasks=[first_task, second_task],
+            scores=[
+                HeatmapDetailScoreFact(
+                    'student-1',
+                    first_task.pk,
+                    selected_subtopic.pk,
+                    4,
+                    5,
+                    None,
+                ),
+                HeatmapDetailScoreFact(
+                    'student-1',
+                    second_task.pk,
+                    other_subtopic.pk,
+                    3,
+                    5,
+                    ReportActivityRef('event-1', 'КР 1'),
+                ),
+            ],
+            courses=[ReportCourseRef(pk='course-1', name='Физика 7')],
+        )
+
+        detail = HeatmapDetailService().build_student_detail(source)
+
+        self.assertEqual(len(detail.details), 1)
+        self.assertEqual(detail.details[0]['task'], first_task)
+        self.assertIsNone(detail.details[0]['event'])
+        self.assertEqual(detail.details[0]['pct'], 80)
+        self.assertEqual(detail.subtopic_summary[0]['pct'], 80)
+        self.assertTrue(detail.subtopic_summary[0]['is_selected'])
+        self.assertEqual(detail.subtopic_summary[1]['pct'], 60)
+        self.assertFalse(detail.subtopic_summary[1]['is_selected'])
+
     def test_builds_subtopic_detail_from_normalized_score_facts(self):
         task = ReportTaskRef(
             pk='task-1',

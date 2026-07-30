@@ -25,6 +25,10 @@ from core_logic.use_cases.get_heatmap_subtopic_detail import (
     GetHeatmapSubtopicDetailUseCase,
     HeatmapSubtopicDetailRequest,
 )
+from core_logic.use_cases.get_heatmap_student_detail import (
+    GetHeatmapStudentDetailUseCase,
+    HeatmapStudentDetailRequest,
+)
 from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
@@ -326,23 +330,33 @@ class DjangoReportRepositoryTests(TestCase):
         )
         DjangoStudentRepository().sync_student_task_logs(str(mark.pk))
 
-        data = DjangoReportRepository().get_heatmap_student_detail(
-            topic_id=topic.pk,
-            student_id=student.pk,
-            subtopic_id=subtopic.pk,
+        data = GetHeatmapStudentDetailUseCase(
+            DjangoReportRepository(),
+        ).execute(
+            HeatmapStudentDetailRequest(
+                topic_id=topic.pk,
+                student_id=student.pk,
+                subtopic_id=subtopic.pk,
+            ),
         )
 
-        self.assertEqual(data.topic, topic)
+        self.assertEqual(data.topic.pk, str(topic.pk))
         self.assertEqual(data.student.pk, str(student.pk))
         self.assertEqual(data.student.full_name, student.get_full_name())
-        self.assertEqual(data.selected_subtopic, subtopic)
+        self.assertEqual(data.selected_subtopic.pk, str(subtopic.pk))
         self.assertEqual(len(data.details), 1)
-        self.assertEqual(data.details[0]['task'], task)
+        self.assertEqual(data.details[0]['task'].pk, str(task.pk))
         self.assertEqual(data.details[0]['pct'], 80)
-        self.assertEqual(data.subtopic_summary[0]['subtopic'], subtopic)
+        self.assertEqual(
+            data.subtopic_summary[0]['subtopic'].pk,
+            str(subtopic.pk),
+        )
         self.assertEqual(data.subtopic_summary[0]['pct'], 80)
         self.assertTrue(data.subtopic_summary[0]['is_selected'])
-        self.assertEqual(data.subtopic_summary[1]['subtopic'], other_subtopic)
+        self.assertEqual(
+            data.subtopic_summary[1]['subtopic'].pk,
+            str(other_subtopic.pk),
+        )
         self.assertIsNone(data.subtopic_summary[1]['pct'])
         self.assertEqual(data.active_report, 'heatmap')
 

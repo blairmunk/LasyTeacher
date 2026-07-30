@@ -5,6 +5,7 @@ from typing import Any
 
 from core_logic.entities.report import HeatmapStudentDetailData
 from core_logic.interfaces.report_repo import IReportRepository
+from core_logic.services.heatmap_detail_service import HeatmapDetailService
 
 
 @dataclass(frozen=True)
@@ -15,15 +16,21 @@ class HeatmapStudentDetailRequest:
 
 
 class GetHeatmapStudentDetailUseCase:
-    def __init__(self, report_repo: IReportRepository):
+    def __init__(
+        self,
+        report_repo: IReportRepository,
+        detail_service: HeatmapDetailService | None = None,
+    ):
         self.report_repo = report_repo
+        self.detail_service = detail_service or HeatmapDetailService()
 
     def execute(
         self,
         request: HeatmapStudentDetailRequest,
     ) -> HeatmapStudentDetailData:
-        return self.report_repo.get_heatmap_student_detail(
+        source = self.report_repo.get_heatmap_student_detail_source(
             topic_id=request.topic_id,
             student_id=request.student_id,
             subtopic_id=request.subtopic_id,
         )
+        return self.detail_service.build_student_detail(source)

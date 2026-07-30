@@ -84,6 +84,17 @@ class HeatmapSubtopicDetailSource:
 
 
 @dataclass(frozen=True)
+class HeatmapStudentDetailSource:
+    topic: ReportHeatmapColumnRef
+    student: ReportStudentRef
+    selected_subtopic: ReportHeatmapColumnRef | None
+    subtopics: List[ReportHeatmapColumnRef]
+    tasks: List[ReportTaskRef]
+    scores: List[HeatmapDetailScoreFact]
+    courses: List[ReportCourseRef]
+
+
+@dataclass(frozen=True)
 class ReportTaskUsageRef:
     pk: str
     short_uuid: str

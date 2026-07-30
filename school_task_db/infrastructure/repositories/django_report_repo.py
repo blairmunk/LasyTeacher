@@ -16,7 +16,7 @@ from core_logic.entities.report import (
     HeatmapMatrixSource,
     HeatmapOverviewData,
     HeatmapScoreFact,
-    HeatmapStudentDetailData,
+    HeatmapStudentDetailSource,
     HeatmapSubtopicDetailSource,
     HeatmapTopicMatrixData,
     JournalData,
@@ -38,7 +38,6 @@ from core_logic.entities.report import (
     WorkAnalysisReportData,
 )
 from core_logic.interfaces.report_repo import IReportRepository
-from core_logic.services.heatmap_matrix_service import performance_color_class
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
 from students.models import Student, StudentGroup, StudentTaskLog
@@ -617,37 +616,98 @@ class DjangoReportRepository(IReportRepository):
             ],
         )
 
-    def get_heatmap_student_detail(self, topic_id, student_id, subtopic_id=None):
+    def get_heatmap_student_detail_source(
+        self,
+        topic_id,
+        student_id,
+        subtopic_id=None,
+    ):
         topic = get_object_or_404(Topic, pk=topic_id)
         student = get_object_or_404(Student, pk=student_id)
-        selected_subtopic = None
+        selected_subtopic_model = None
         if subtopic_id:
-            selected_subtopic = SubTopic.objects.filter(pk=subtopic_id).first()
+            selected_subtopic_model = SubTopic.objects.filter(
+                pk=subtopic_id,
+                topic=topic,
+            ).first()
 
-        task_logs = StudentTaskLog.objects.filter(
-            student=student,
-            topic=topic,
-        ).select_related('task', 'event', 'subtopic')
-        details = self._build_student_heatmap_details(
-            task_logs,
-            selected_subtopic,
+        task_logs = list(
+            StudentTaskLog.objects.filter(
+                student=student,
+                topic=topic,
+            ).select_related('task', 'event', 'subtopic'),
         )
-        subtopic_summary = self._build_student_subtopic_summary(
-            task_logs,
-            topic,
-            selected_subtopic,
-        )
-
-        return HeatmapStudentDetailData(
-            topic=topic,
-            student=self._report_student_ref(student),
-            selected_subtopic=selected_subtopic,
-            details=details,
-            subtopic_summary=subtopic_summary,
-            courses=Course.objects.filter(is_active=True).order_by(
-                'grade_level',
-                'name',
+        task_ids = {task_log.task_id for task_log in task_logs}
+        task_models = list(
+            Task.objects.filter(pk__in=task_ids).order_by(
+                'difficulty',
+                'text',
             ),
+        )
+        subtopic_models = list(
+            SubTopic.objects.filter(topic=topic).order_by('order', 'name'),
+        )
+
+        return HeatmapStudentDetailSource(
+            topic=ReportHeatmapColumnRef(
+                pk=str(topic.pk),
+                name=topic.name,
+                section=topic.section,
+            ),
+            student=self._report_student_ref(student),
+            selected_subtopic=(
+                ReportHeatmapColumnRef(
+                    pk=str(selected_subtopic_model.pk),
+                    name=selected_subtopic_model.name,
+                )
+                if selected_subtopic_model
+                else None
+            ),
+            subtopics=[
+                ReportHeatmapColumnRef(
+                    pk=str(subtopic.pk),
+                    name=subtopic.name,
+                )
+                for subtopic in subtopic_models
+            ],
+            tasks=[
+                ReportTaskRef(
+                    pk=str(task.pk),
+                    text=task.text,
+                    difficulty=task.difficulty,
+                    difficulty_display=task.get_difficulty_display(),
+                )
+                for task in task_models
+            ],
+            scores=[
+                HeatmapDetailScoreFact(
+                    student_id=str(task_log.student_id),
+                    task_id=str(task_log.task_id),
+                    subtopic_id=str(task_log.subtopic_id or ''),
+                    points=task_log.points or 0,
+                    max_points=task_log.max_points or 0,
+                    event=(
+                        ReportActivityRef(
+                            pk=str(task_log.event.pk),
+                            name=task_log.event.name,
+                            planned_date=task_log.event.planned_date,
+                        )
+                        if task_log.event
+                        else None
+                    ),
+                )
+                for task_log in task_logs
+            ],
+            courses=[
+                ReportCourseRef(
+                    pk=str(course.pk),
+                    name=course.name,
+                )
+                for course in Course.objects.filter(is_active=True).order_by(
+                    'grade_level',
+                    'name',
+                )
+            ],
         )
 
     def get_reports_dashboard(self, year, current_date):
@@ -1020,80 +1080,6 @@ class DjangoReportRepository(IReportRepository):
                 box_data[short_name] = scores
         return box_data
 
-    def _build_student_heatmap_details(
-        self,
-        task_logs,
-        selected_subtopic,
-    ):
-        details = []
-        for task_log in task_logs:
-            if (
-                selected_subtopic
-                and task_log.subtopic_id != selected_subtopic.id
-            ):
-                continue
-
-            points = task_log.points or 0
-            max_points = task_log.max_points or 0
-            pct = round(points / max_points * 100) if max_points > 0 else 0
-            details.append({
-                'event': task_log.event,
-                'task': task_log.task,
-                'subtopic': task_log.subtopic,
-                'points': points,
-                'max_points': max_points,
-                'pct': pct,
-                'css': self._color_class(pct),
-            })
-
-        details.sort(key=lambda detail: (
-            detail['subtopic'].name if detail['subtopic'] else '',
-            detail['event'] is None,
-            detail['event'].planned_date if detail['event'] else None,
-        ))
-        return details
-
-    def _build_student_subtopic_summary(
-        self,
-        task_logs,
-        topic,
-        selected_subtopic,
-    ):
-        aggregated = defaultdict(lambda: {'points': 0, 'max_points': 0})
-        for task_log in task_logs:
-            if not task_log.subtopic_id:
-                continue
-            aggregated[task_log.subtopic_id]['points'] += task_log.points or 0
-            aggregated[task_log.subtopic_id]['max_points'] += (
-                task_log.max_points or 0
-            )
-
-        summary = []
-        for subtopic in SubTopic.objects.filter(topic=topic).order_by('order'):
-            data = aggregated.get(subtopic.id)
-            is_selected = (
-                selected_subtopic
-                and subtopic.id == selected_subtopic.id
-            )
-            if data and data['max_points'] > 0:
-                pct = round(data['points'] / data['max_points'] * 100)
-                summary.append({
-                    'subtopic': subtopic,
-                    'points': data['points'],
-                    'max_points': data['max_points'],
-                    'pct': pct,
-                    'css': self._color_class(pct),
-                    'is_selected': is_selected,
-                })
-            else:
-                summary.append({
-                    'subtopic': subtopic,
-                    'pct': None,
-                    'css': 'no-data',
-                    'is_selected': is_selected,
-                })
-        return summary
-
     def _build_journal_rows(
         self,
         students,
@@ -1365,9 +1351,6 @@ class DjangoReportRepository(IReportRepository):
 
     def _pct(self, value, total):
         return round(value / total * 100, 1) if total else 0
-
-    def _color_class(self, pct):
-        return performance_color_class(pct)
 
     def _average_mark_percentage(self, marks, default=0):
         totals = marks.aggregate(

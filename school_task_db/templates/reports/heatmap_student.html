@@ -114,9 +114,13 @@
                 {% for d in details %}
                 <tr>
                     <td>
+                        {% if d.event %}
                         <a href="{% url 'events:detail' d.event.pk %}">
                             {{ d.event.name }}
                         </a>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
                     </td>
                     <td>
                         {% if d.subtopic %}

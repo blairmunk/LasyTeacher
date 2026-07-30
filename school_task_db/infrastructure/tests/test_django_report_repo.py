@@ -29,6 +29,10 @@ from core_logic.use_cases.get_heatmap_student_detail import (
     GetHeatmapStudentDetailUseCase,
     HeatmapStudentDetailRequest,
 )
+from core_logic.use_cases.get_work_analysis_report import (
+    GetWorkAnalysisReportUseCase,
+    WorkAnalysisReportRequest,
+)
 from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
@@ -870,7 +874,11 @@ class DjangoReportRepositoryTests(TestCase):
             },
         )
 
-        data = DjangoReportRepository().get_work_analysis_report(year=None)
+        data = GetWorkAnalysisReportUseCase(
+            DjangoReportRepository(),
+        ).execute(
+            WorkAnalysisReportRequest(year=None),
+        )
         work_stat = data.works_analysis[0]
 
         self.assertEqual(work_stat['work'].pk, str(work.pk))

@@ -28,6 +28,7 @@ from core_logic.entities.report import (
     ReportEventRef,
     ReportGroupRef,
     ReportHeatmapColumnRef,
+    ReportMarkFact,
     ReportStudentRef,
     ReportTaskRef,
     ReportTaskUsageRef,
@@ -35,7 +36,8 @@ from core_logic.entities.report import (
     ReportWorkRef,
     StudentPerformanceReportData,
     TaskDBHealthData,
-    WorkAnalysisReportData,
+    WorkAnalysisItemSource,
+    WorkAnalysisSource,
 )
 from core_logic.interfaces.report_repo import IReportRepository
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
@@ -808,11 +810,11 @@ class DjangoReportRepository(IReportRepository):
             courses=courses.order_by('grade_level', 'name'),
         )
 
-    def get_work_analysis_report(self, year):
+    def get_work_analysis_source(self, year):
         events, _, courses = self._get_event_scope(year)
         marks = self._get_marks_scope(year)
 
-        works_analysis = []
+        work_sources = []
         for work in Work.objects.all():
             work_events = events.filter(work=work)
             work_marks = marks.filter(
@@ -823,44 +825,27 @@ class DjangoReportRepository(IReportRepository):
             if work_events.count() == 0:
                 continue
 
-            avg_score = work_marks.aggregate(avg=Avg('score'))['avg'] or 0
-            avg_pct = self._average_mark_percentage(work_marks)
-            score_distribution = list(
-                work_marks.values('score').annotate(
-                    count=Count('id'),
-                ).order_by('score'),
+            work_sources.append(
+                WorkAnalysisItemSource(
+                    work=self._report_work_ref(work),
+                    events_count=work_events.count(),
+                    marks=[
+                        ReportMarkFact(
+                            score=mark.score,
+                            points=mark.points,
+                            max_points=mark.max_points,
+                        )
+                        for mark in work_marks
+                    ],
+                ),
             )
 
-            works_analysis.append({
-                'work': self._report_work_ref(work),
-                'events_count': work_events.count(),
-                'total_marks': work_marks.count(),
-                'average_score': round(avg_score, 2),
-                'average_percentage': avg_pct,
-                'score_distribution': score_distribution,
-                'difficulty_assessment': self._assess_difficulty(avg_pct),
-            })
-
-        return WorkAnalysisReportData(
-            works_analysis=works_analysis,
-            summary_stats={
-                'total_works': len(works_analysis),
-                'total_marks': sum(w['total_marks'] for w in works_analysis),
-                'easy_works': sum(
-                    1 for w in works_analysis
-                    if w['difficulty_assessment'] == 'Легкая'
-                ),
-                'hard_works': sum(
-                    1 for w in works_analysis
-                    if w['difficulty_assessment'] in ('Сложная', 'Очень сложная')
-                ),
-                'avg_score': round(
-                    sum(w['average_score'] for w in works_analysis)
-                    / len(works_analysis),
-                    2,
-                ) if works_analysis else 0,
-            },
-            courses=courses.order_by('grade_level', 'name'),
+        return WorkAnalysisSource(
+            works=work_sources,
+            courses=[
+                ReportCourseRef(pk=str(course.pk), name=course.name)
+                for course in courses.order_by('grade_level', 'name')
+            ],
         )
 
     def get_student_performance_report(self, year, group_id):
@@ -1360,12 +1345,3 @@ class DjangoReportRepository(IReportRepository):
         total_points = totals['total_points'] or 0
         total_max = totals['total_max'] or 0
         return round(total_points / total_max * 100) if total_max > 0 else default
-
-    def _assess_difficulty(self, avg_pct):
-        if avg_pct >= 85:
-            return 'Легкая'
-        if avg_pct >= 70:
-            return 'Средняя'
-        if avg_pct >= 50:
-            return 'Сложная'
-        return 'Очень сложная'

@@ -20,7 +20,7 @@ from core_logic.entities.report import (
     ReportsDashboardData,
     StudentPerformanceReportData,
     TaskDBHealthData,
-    WorkAnalysisReportData,
+    WorkAnalysisSource,
 )
 
 
@@ -34,11 +34,11 @@ class IReportRepository(ABC):
         """Return events status report data."""
 
     @abstractmethod
-    def get_work_analysis_report(
+    def get_work_analysis_source(
         self,
         year: AcademicYearRef | None,
-    ) -> WorkAnalysisReportData:
-        """Return work analysis report data."""
+    ) -> WorkAnalysisSource:
+        """Return normalized facts for work analysis."""
 
     @abstractmethod
     def get_student_performance_report(

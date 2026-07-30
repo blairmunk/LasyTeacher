@@ -127,6 +127,26 @@ class ReportWorkRef:
 
 
 @dataclass(frozen=True)
+class ReportMarkFact:
+    score: int | None
+    points: float | None
+    max_points: float | None
+
+
+@dataclass(frozen=True)
+class WorkAnalysisItemSource:
+    work: ReportWorkRef
+    events_count: int
+    marks: List[ReportMarkFact]
+
+
+@dataclass(frozen=True)
+class WorkAnalysisSource:
+    works: List[WorkAnalysisItemSource]
+    courses: List[ReportCourseRef]
+
+
+@dataclass(frozen=True)
 class ReportEventRef:
     pk: str
     name: str

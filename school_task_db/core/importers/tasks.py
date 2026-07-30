@@ -9,6 +9,10 @@ from .base import BaseImporter, ImportContext
 from tasks.models import Task, TaskImage, Source
 from task_groups.models import AnalogGroup, TaskGroup
 from curriculum.models import Topic, SubTopic
+from core_logic.value_objects.task_print_settings import (
+    TASK_BANK_ROLE_CONTROL,
+    validate_task_specific_bank_role,
+)
 
 class TaskImporter(BaseImporter):
     """Импортер заданий с полной поддержкой зависимостей"""
@@ -107,7 +111,8 @@ class TaskImporter(BaseImporter):
                     group = AnalogGroup.objects.create(
                         id=group_uuid,
                         name=group_data['name'],
-                        description=group_data.get('description', '')
+                        description=group_data.get('description', ''),
+                        difficulty=group_data.get('difficulty', 0),
                     )
                     
                     self.context.add_group(group_uuid, group)
@@ -336,15 +341,30 @@ class TaskImporter(BaseImporter):
             task = self.context.imported_tasks[task_uuid]
             
             # Связи через UUID групп
-            for group_uuid in task_data.get('groups', []):
+            for group_ref in task_data.get('groups', []):
+                group_uuid, bank_role = self._parse_group_reference(group_ref)
+                if not group_uuid:
+                    self.log_warning(
+                        f"Пропущена связь задания {task_uuid[-8:]} "
+                        "с группой без id"
+                    )
+                    continue
                 if group_uuid in self.context.imported_groups:
                     group = self.context.imported_groups[group_uuid]
-                    if self._create_task_group_relation(task, group):
+                    if self._create_task_group_relation(
+                        task,
+                        group,
+                        bank_role=bank_role,
+                    ):
                         relations_created += 1
                 else:
                     # Поиск группы в базе
                     existing_group = self.safe_get_by_uuid(AnalogGroup, group_uuid)
-                    if existing_group and self._create_task_group_relation(task, existing_group):
+                    if existing_group and self._create_task_group_relation(
+                        task,
+                        existing_group,
+                        bank_role=bank_role,
+                    ):
                         relations_created += 1
             
             # Связи через имя группы (fallback)
@@ -356,13 +376,38 @@ class TaskImporter(BaseImporter):
         
         self._write(f"  ✅ Создано связей: {relations_created}")
     
-    def _create_task_group_relation(self, task, group) -> bool:
+    @staticmethod
+    def _parse_group_reference(group_ref):
+        if isinstance(group_ref, str):
+            return group_ref, TASK_BANK_ROLE_CONTROL
+        if isinstance(group_ref, dict):
+            bank_role = group_ref.get(
+                'bank_role',
+                TASK_BANK_ROLE_CONTROL,
+            )
+            validate_task_specific_bank_role(bank_role)
+            return (
+                group_ref.get('id') or group_ref.get('group_id') or '',
+                bank_role,
+            )
+        return '', TASK_BANK_ROLE_CONTROL
+
+    def _create_task_group_relation(
+        self,
+        task,
+        group,
+        bank_role=TASK_BANK_ROLE_CONTROL,
+    ) -> bool:
         """Создание связи задание-группа"""
         try:
             relation, created = TaskGroup.objects.get_or_create(
                 task=task,
-                group=group
+                group=group,
+                defaults={'bank_role': bank_role},
             )
+            if not created and relation.bank_role != bank_role:
+                relation.bank_role = bank_role
+                relation.save(update_fields=['bank_role', 'updated_at'])
             
             if created:
                 self.log_info(f"Связь: {task.get_short_uuid()} ↔ {group.get_short_uuid()}")
@@ -711,6 +756,10 @@ class TaskImporter(BaseImporter):
         try:
             group.name = group_data.get('name', group.name)
             group.description = group_data.get('description', group.description)
+            group.difficulty = group_data.get(
+                'difficulty',
+                group.difficulty,
+            )
             group.save()
             
             self.log_success(f"Обновлена группа: {group.name} [{group.get_short_uuid()}]")

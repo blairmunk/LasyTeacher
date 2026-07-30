@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from core.models import ImportLog
+from core.importers.tasks import TaskImporter
 from curriculum.models import Topic
 from events.models import Event
 from students.models import Student
@@ -250,6 +251,69 @@ class CoreViewsTests(TestCase):
         self.assertEqual(payload['stats']['context_counts']['tasks'], 1)
         self.assertTrue(Task.objects.filter(text='Задача на силу').exists())
         self.assertTrue(ImportLog.objects.filter(pk=payload['log_id']).exists())
+
+    def test_task_importer_persists_and_updates_group_bank_role(self):
+        group_id = '770e8400-e29b-41d4-a716-446655440001'
+        task_id = '550e8400-e29b-41d4-a716-446655440001'
+        payload = {
+            'analog_groups': [
+                {
+                    'id': group_id,
+                    'name': 'Группа для демонстрации',
+                    'difficulty': 3,
+                },
+            ],
+            'topics': [
+                {
+                    'name': 'Динамика',
+                    'subject': 'Физика',
+                    'grade_level': 9,
+                    'section': 'Механика',
+                },
+            ],
+            'tasks': [
+                {
+                    'id': task_id,
+                    'text': 'Найдите ускорение.',
+                    'answer': '2 м/с²',
+                    'task_type': 'computational',
+                    'difficulty': 2,
+                    'topic': {
+                        'name': 'Динамика',
+                        'subject': 'Физика',
+                        'grade_level': 9,
+                    },
+                    'groups': [
+                        {
+                            'id': group_id,
+                            'bank_role': 'demo',
+                        },
+                    ],
+                },
+            ],
+        }
+
+        TaskImporter(mode='update', create_missing=True).import_tasks_from_json(
+            payload,
+        )
+
+        relation = TaskGroup.objects.get(
+            task_id=task_id,
+            group_id=group_id,
+        )
+        self.assertEqual(relation.bank_role, 'demo')
+        self.assertEqual(relation.group.difficulty, 3)
+
+        payload['tasks'][0]['groups'][0]['bank_role'] = 'practice'
+        payload['analog_groups'][0]['difficulty'] = 4
+        TaskImporter(mode='update', create_missing=True).import_tasks_from_json(
+            payload,
+        )
+
+        relation.refresh_from_db()
+        relation.group.refresh_from_db()
+        self.assertEqual(relation.bank_role, 'practice')
+        self.assertEqual(relation.group.difficulty, 4)
 
     def test_download_sample_json_uses_clean_sample_data(self):
         response = self.client.get(reverse('core:import-sample'))

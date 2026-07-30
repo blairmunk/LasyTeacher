@@ -4,6 +4,7 @@ from collections import defaultdict
 
 from core_logic.entities.report import (
     HeatmapMatrixSource,
+    HeatmapSubtopicMatrixData,
     HeatmapTopicMatrixData,
 )
 
@@ -29,12 +30,33 @@ class HeatmapMatrixService:
         self,
         source: HeatmapMatrixSource,
     ) -> HeatmapTopicMatrixData:
+        columns, rows, col_averages = self._build_matrix(
+            source,
+            column_key='topic',
+        )
+        return HeatmapTopicMatrixData(
+            columns=columns,
+            rows=rows,
+            col_averages=col_averages,
+        )
+
+    def build_subtopic_matrix(
+        self,
+        source: HeatmapMatrixSource,
+    ) -> HeatmapSubtopicMatrixData:
+        columns, rows, col_averages = self._build_matrix(
+            source,
+            column_key='subtopic',
+        )
+        return HeatmapSubtopicMatrixData(
+            columns=columns,
+            rows=rows,
+            col_averages=col_averages,
+        )
+
+    def _build_matrix(self, source, column_key):
         if not source.columns:
-            return HeatmapTopicMatrixData(
-                columns=[],
-                rows=[],
-                col_averages=[],
-            )
+            return [], [], []
 
         aggregated = defaultdict(lambda: {'points': 0, 'max_points': 0})
         for score in source.scores:
@@ -58,13 +80,13 @@ class HeatmapMatrixService:
                         'points': data['points'],
                         'max_points': data['max_points'],
                         'css': self.color_class(pct),
-                        'topic': column,
+                        column_key: column,
                     })
                 else:
                     cells.append({
                         'pct': None,
                         'css': 'no-data',
-                        'topic': column,
+                        column_key: column,
                     })
 
             avg = round(total_points / total_max * 100) if total_max > 0 else None
@@ -91,11 +113,7 @@ class HeatmapMatrixService:
                 'css': self.color_class(avg),
             })
 
-        return HeatmapTopicMatrixData(
-            columns=source.columns,
-            rows=rows,
-            col_averages=col_averages,
-        )
+        return source.columns, rows, col_averages
 
     @staticmethod
     def color_class(pct):

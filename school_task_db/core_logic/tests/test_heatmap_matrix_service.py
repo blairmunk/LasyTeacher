@@ -79,6 +79,28 @@ class HeatmapMatrixServiceTests(TestCase):
         self.assertEqual(data.rows, [])
         self.assertEqual(data.col_averages, [])
 
+    def test_builds_subtopic_cells_with_subtopic_reference(self):
+        subtopic = ReportHeatmapColumnRef(
+            pk='subtopic-1',
+            name='Средняя скорость',
+        )
+        source = HeatmapMatrixSource(
+            students=[
+                ReportStudentRef(pk='student-1', full_name='Иванов Иван'),
+            ],
+            columns=[subtopic],
+            scores=[
+                HeatmapScoreFact('student-1', 'subtopic-1', 4, 5),
+            ],
+        )
+
+        data = HeatmapMatrixService().build_subtopic_matrix(source)
+
+        self.assertEqual(data.columns, [subtopic])
+        self.assertEqual(data.rows[0]['cells'][0]['subtopic'], subtopic)
+        self.assertNotIn('topic', data.rows[0]['cells'][0])
+        self.assertEqual(data.rows[0]['cells'][0]['pct'], 80)
+
     def test_performance_color_thresholds_are_domain_owned(self):
         cases = (
             (None, 'no-data'),

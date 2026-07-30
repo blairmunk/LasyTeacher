@@ -1,6 +1,11 @@
 from unittest import TestCase
 
-from core_logic.entities.report import HeatmapSubtopicMatrixData
+from core_logic.entities.report import (
+    HeatmapMatrixSource,
+    HeatmapScoreFact,
+    ReportHeatmapColumnRef,
+    ReportStudentRef,
+)
 from core_logic.use_cases.get_heatmap_subtopic_matrix import (
     GetHeatmapSubtopicMatrixUseCase,
     HeatmapSubtopicMatrixRequest,
@@ -12,13 +17,30 @@ class FakeReportRepository:
         self.student_ids = None
         self.topic_id = None
 
-    def get_heatmap_subtopic_matrix(self, student_ids, topic_id):
+    def get_heatmap_subtopic_matrix_source(self, student_ids, topic_id):
         self.student_ids = student_ids
         self.topic_id = topic_id
-        return HeatmapSubtopicMatrixData(
-            columns=['subtopic'],
-            rows=[{'student': 'student'}],
-            col_averages=[{'pct': 80}],
+        return HeatmapMatrixSource(
+            students=[
+                ReportStudentRef(
+                    pk='student-1',
+                    full_name='Иванов Иван',
+                ),
+            ],
+            columns=[
+                ReportHeatmapColumnRef(
+                    pk='subtopic-1',
+                    name='Средняя скорость',
+                ),
+            ],
+            scores=[
+                HeatmapScoreFact(
+                    student_id='student-1',
+                    column_id='subtopic-1',
+                    points=8,
+                    max_points=10,
+                ),
+            ],
         )
 
 
@@ -36,5 +58,6 @@ class GetHeatmapSubtopicMatrixUseCaseTests(TestCase):
 
         self.assertEqual(repo.student_ids, ['student-1'])
         self.assertEqual(repo.topic_id, 'topic-1')
-        self.assertEqual(data.columns, ['subtopic'])
-        self.assertEqual(data.col_averages, [{'pct': 80}])
+        self.assertEqual(data.columns[0].pk, 'subtopic-1')
+        self.assertEqual(data.rows[0]['cells'][0]['subtopic'].pk, 'subtopic-1')
+        self.assertEqual(data.col_averages, [{'pct': 80, 'css': 'good'}])

@@ -17,6 +17,10 @@ from core_logic.use_cases.get_heatmap_topic_matrix import (
     GetHeatmapTopicMatrixUseCase,
     HeatmapTopicMatrixRequest,
 )
+from core_logic.use_cases.get_heatmap_subtopic_matrix import (
+    GetHeatmapSubtopicMatrixUseCase,
+    HeatmapSubtopicMatrixRequest,
+)
 from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
@@ -123,12 +127,17 @@ class DjangoReportRepositoryTests(TestCase):
         )
         DjangoStudentRepository().sync_student_task_logs(str(mark.pk))
 
-        data = DjangoReportRepository().get_heatmap_subtopic_matrix(
-            student_ids=[student.pk],
-            topic_id=topic.pk,
+        data = GetHeatmapSubtopicMatrixUseCase(
+            DjangoReportRepository(),
+        ).execute(
+            HeatmapSubtopicMatrixRequest(
+                student_ids=[student.pk],
+                topic_id=topic.pk,
+            ),
         )
 
-        self.assertEqual(data.columns, [subtopic])
+        self.assertEqual(data.columns[0].pk, str(subtopic.pk))
+        self.assertEqual(data.columns[0].name, subtopic.name)
         self.assertEqual(len(data.rows), 1)
         self.assertEqual(data.rows[0]['student'].pk, str(student.pk))
         self.assertEqual(
@@ -137,7 +146,10 @@ class DjangoReportRepositoryTests(TestCase):
         )
         self.assertEqual(data.rows[0]['avg'], 80)
         self.assertEqual(data.rows[0]['cells'][0]['pct'], 80)
-        self.assertEqual(data.rows[0]['cells'][0]['subtopic'], subtopic)
+        self.assertEqual(
+            data.rows[0]['cells'][0]['subtopic'].pk,
+            str(subtopic.pk),
+        )
         self.assertEqual(data.col_averages, [{'pct': 80, 'css': 'good'}])
 
     def test_get_heatmap_subtopic_detail_returns_student_and_task_rows(self):

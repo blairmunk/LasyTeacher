@@ -1,7 +1,6 @@
 """Report repository interface."""
 
 from abc import ABC, abstractmethod
-from datetime import datetime
 from typing import Any
 
 from core_logic.entities.academic_year import AcademicYearRef
@@ -17,7 +16,7 @@ from core_logic.entities.report import (
     HeatmapTopicMatrixData,
     JournalData,
     JournalSelectData,
-    ReportsDashboardData,
+    ReportsDashboardSource,
     StudentPerformanceSource,
     TaskDBHealthData,
     WorkAnalysisSource,
@@ -69,12 +68,11 @@ class IReportRepository(ABC):
         """Return task database health report data."""
 
     @abstractmethod
-    def get_reports_dashboard(
+    def get_reports_dashboard_source(
         self,
         year: AcademicYearRef | None,
-        current_date: datetime,
-    ) -> ReportsDashboardData:
-        """Return dashboard report data."""
+    ) -> ReportsDashboardSource:
+        """Return normalized facts for the reports dashboard."""
 
     @abstractmethod
     def get_heatmap_overview(self, group_id: Any) -> HeatmapOverviewData:

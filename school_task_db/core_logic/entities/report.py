@@ -298,6 +298,47 @@ class ReportsDashboardData:
 
 
 @dataclass(frozen=True)
+class DashboardParticipationFact:
+    student_id: str
+    event_id: str
+    status: str
+
+
+@dataclass(frozen=True)
+class DashboardMarkFact:
+    student_id: str
+    event_id: str
+    score: int | None
+    checked_at: Any = None
+
+
+@dataclass(frozen=True)
+class DashboardCourseGroupRef:
+    course_id: str
+    course_name: str
+    group_id: str
+    group_name: str
+
+
+@dataclass(frozen=True)
+class DashboardGroupSource:
+    group: ReportGroupRef
+    student_ids: List[str]
+    course_links: List[DashboardCourseGroupRef]
+
+
+@dataclass(frozen=True)
+class ReportsDashboardSource:
+    total_students: int
+    total_works: int
+    events: List[ReportEventRef]
+    participations: List[DashboardParticipationFact]
+    marks: List[DashboardMarkFact]
+    groups: List[DashboardGroupSource]
+    courses: List[ReportCourseRef]
+
+
+@dataclass(frozen=True)
 class HeatmapOverviewData:
     groups: Any
     selected_group: Any

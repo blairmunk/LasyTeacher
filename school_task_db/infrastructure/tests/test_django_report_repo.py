@@ -41,6 +41,10 @@ from core_logic.use_cases.get_events_status_report import (
     EventsStatusReportRequest,
     GetEventsStatusReportUseCase,
 )
+from core_logic.use_cases.get_reports_dashboard import (
+    GetReportsDashboardUseCase,
+    ReportsDashboardRequest,
+)
 from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
@@ -1219,9 +1223,13 @@ class DjangoReportRepositoryTests(TestCase):
             },
         )
 
-        data = DjangoReportRepository().get_reports_dashboard(
-            year=None,
-            current_date=now,
+        data = GetReportsDashboardUseCase(
+            DjangoReportRepository(),
+        ).execute(
+            ReportsDashboardRequest(
+                year=None,
+                current_date=now,
+            ),
         )
         class_stat = data.class_stats[0]
 

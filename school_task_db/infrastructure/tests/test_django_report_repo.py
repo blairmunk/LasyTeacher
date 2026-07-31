@@ -33,6 +33,10 @@ from core_logic.use_cases.get_work_analysis_report import (
     GetWorkAnalysisReportUseCase,
     WorkAnalysisReportRequest,
 )
+from core_logic.use_cases.get_student_performance_report import (
+    GetStudentPerformanceReportUseCase,
+    StudentPerformanceReportRequest,
+)
 from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
@@ -946,14 +950,18 @@ class DjangoReportRepositoryTests(TestCase):
             },
         )
 
-        data = DjangoReportRepository().get_student_performance_report(
-            year=None,
-            group_id=selected_group.pk,
+        data = GetStudentPerformanceReportUseCase(
+            DjangoReportRepository(),
+        ).execute(
+            StudentPerformanceReportRequest(
+                year=None,
+                group_id=selected_group.pk,
+            ),
         )
         stat = data.students_stats[0]
 
-        self.assertEqual(data.selected_group, selected_group)
-        self.assertEqual(data.groups.count(), 2)
+        self.assertEqual(data.selected_group.pk, str(selected_group.pk))
+        self.assertEqual(len(data.groups), 2)
         self.assertEqual(len(data.students_stats), 1)
         self.assertEqual(stat['student'].pk, str(selected_student.pk))
         self.assertEqual(stat['student'].full_name, selected_student.get_full_name())

@@ -560,7 +560,10 @@ class ReportsViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['active_report'], 'student-performance')
-        self.assertEqual(response.context['selected_group'], group)
+        self.assertEqual(
+            response.context['selected_group'].pk,
+            str(group.pk),
+        )
         self.assertEqual(student_stat['student'].pk, str(student.pk))
         self.assertEqual(student_stat['student'].full_name, student.get_full_name())
         self.assertEqual(student_stat['average_pct'], 70)

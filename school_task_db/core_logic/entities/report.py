@@ -134,6 +134,27 @@ class ReportMarkFact:
 
 
 @dataclass(frozen=True)
+class StudentPerformanceParticipationFact:
+    status: str
+    created_at: Any
+
+
+@dataclass(frozen=True)
+class StudentPerformanceItemSource:
+    student: ReportStudentRef
+    participations: List[StudentPerformanceParticipationFact]
+    marks: List[ReportMarkFact]
+
+
+@dataclass(frozen=True)
+class StudentPerformanceSource:
+    students: List[StudentPerformanceItemSource]
+    groups: List[ReportGroupRef]
+    selected_group: ReportGroupRef | None
+    courses: List[ReportCourseRef]
+
+
+@dataclass(frozen=True)
 class WorkAnalysisItemSource:
     work: ReportWorkRef
     events_count: int

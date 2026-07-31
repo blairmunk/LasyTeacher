@@ -18,7 +18,7 @@ from core_logic.entities.report import (
     JournalData,
     JournalSelectData,
     ReportsDashboardData,
-    StudentPerformanceReportData,
+    StudentPerformanceSource,
     TaskDBHealthData,
     WorkAnalysisSource,
 )
@@ -41,12 +41,12 @@ class IReportRepository(ABC):
         """Return normalized facts for work analysis."""
 
     @abstractmethod
-    def get_student_performance_report(
+    def get_student_performance_source(
         self,
         year: AcademicYearRef | None,
         group_id: Any,
-    ) -> StudentPerformanceReportData:
-        """Return student performance report data."""
+    ) -> StudentPerformanceSource:
+        """Return normalized facts for the student performance report."""
 
     @abstractmethod
     def get_journal_select(

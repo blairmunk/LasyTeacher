@@ -34,7 +34,9 @@ from core_logic.entities.report import (
     ReportTaskUsageRef,
     ReportVariantRef,
     ReportWorkRef,
-    StudentPerformanceReportData,
+    StudentPerformanceItemSource,
+    StudentPerformanceParticipationFact,
+    StudentPerformanceSource,
     TaskDBHealthData,
     WorkAnalysisItemSource,
     WorkAnalysisSource,
@@ -848,7 +850,7 @@ class DjangoReportRepository(IReportRepository):
             ],
         )
 
-    def get_student_performance_report(self, year, group_id):
+    def get_student_performance_source(self, year, group_id):
         _, participations, courses = self._get_event_scope(year)
         marks = self._get_marks_scope(year)
         groups, students = self._get_student_scope(year)
@@ -860,78 +862,61 @@ class DjangoReportRepository(IReportRepository):
             if selected_group:
                 students = selected_group.students.all()
 
-        students_stats = []
-        for student in students.order_by('last_name', 'first_name'):
-            student_participations = participations.filter(student=student)
-            total_participations = student_participations.count()
-            if total_participations == 0:
-                continue
-
-            completed_count = student_participations.filter(
-                status__in=['completed', 'graded'],
-            ).count()
-            student_marks = marks.filter(participation__student=student)
-            avg_score = student_marks.aggregate(avg=Avg('score'))['avg'] or 0
-            avg_pct = self._average_mark_percentage(
-                student_marks,
-                default=None,
+        students = list(students.order_by('last_name', 'first_name'))
+        student_ids = [student.pk for student in students]
+        participations_by_student = defaultdict(list)
+        for participation in participations.filter(
+            student_id__in=student_ids,
+        ).only('student_id', 'status', 'created_at'):
+            participations_by_student[participation.student_id].append(
+                StudentPerformanceParticipationFact(
+                    status=participation.status,
+                    created_at=participation.created_at,
+                )
             )
-            completion_rate = round(
-                completed_count / total_participations * 100,
-                1,
+        marks_by_student = defaultdict(list)
+        for mark in marks.filter(
+            participation__student_id__in=student_ids,
+        ).select_related('participation'):
+            marks_by_student[mark.participation.student_id].append(
+                ReportMarkFact(
+                    score=mark.score,
+                    points=mark.points,
+                    max_points=mark.max_points,
+                )
             )
 
-            students_stats.append({
-                'student': ReportStudentRef(
-                    pk=str(student.pk),
-                    full_name=student.get_full_name(),
-                    short_name=student.get_short_name(),
-                ),
-                'total_participations': total_participations,
-                'completed_participations': completed_count,
-                'completion_rate': completion_rate,
-                'total_marks': student_marks.count(),
-                'average_score': round(avg_score, 2) if avg_score else 0,
-                'average_pct': avg_pct,
-                'last_activity': student_participations.order_by(
-                    '-created_at',
-                ).first(),
-            })
-
-        return StudentPerformanceReportData(
-            students_stats=students_stats,
-            groups=groups,
-            selected_group=selected_group,
-            summary_stats={
-                'total_students': len(students_stats),
-                'high_performers': sum(
-                    1 for stat in students_stats
-                    if (stat['average_pct'] or 0) >= 85
-                ),
-                'need_attention': sum(
-                    1 for stat in students_stats
-                    if stat['average_pct'] is not None
-                    and stat['average_pct'] < 45
-                ),
-                'avg_completion_rate': round(
-                    sum(stat['completion_rate'] for stat in students_stats)
-                    / len(students_stats),
-                    1,
-                ) if students_stats else 0,
-                'avg_pct': round(
-                    sum(
-                        stat['average_pct'] for stat in students_stats
-                        if stat['average_pct'] is not None
-                    ) / max(
-                        sum(
-                            1 for stat in students_stats
-                            if stat['average_pct'] is not None
-                        ),
-                        1,
-                    ),
-                ),
-            },
-            courses=courses.order_by('grade_level', 'name'),
+        return StudentPerformanceSource(
+            students=[
+                StudentPerformanceItemSource(
+                    student=self._report_student_ref(student),
+                    participations=participations_by_student[student.pk],
+                    marks=marks_by_student[student.pk],
+                )
+                for student in students
+                if participations_by_student[student.pk]
+            ],
+            groups=[
+                ReportGroupRef(
+                    pk=str(group.pk),
+                    name=group.name,
+                    students_count=group.students.count(),
+                )
+                for group in groups
+            ],
+            selected_group=(
+                ReportGroupRef(
+                    pk=str(selected_group.pk),
+                    name=selected_group.name,
+                    students_count=selected_group.students.count(),
+                )
+                if selected_group
+                else None
+            ),
+            courses=[
+                ReportCourseRef(pk=str(course.pk), name=course.name)
+                for course in courses.order_by('grade_level', 'name')
+            ],
         )
 
     def _get_event_scope(self, year):

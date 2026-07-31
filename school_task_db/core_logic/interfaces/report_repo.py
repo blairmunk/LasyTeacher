@@ -6,7 +6,7 @@ from typing import Any
 
 from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.report import (
-    EventsStatusReportData,
+    EventsStatusSource,
     HeatmapCourseOverviewData,
     HeatmapCourseTimelineData,
     HeatmapDrilldownOverviewData,
@@ -26,12 +26,11 @@ from core_logic.entities.report import (
 
 class IReportRepository(ABC):
     @abstractmethod
-    def get_events_status_report(
+    def get_events_status_source(
         self,
         year: AcademicYearRef | None,
-        current_date: datetime,
-    ) -> EventsStatusReportData:
-        """Return events status report data."""
+    ) -> EventsStatusSource:
+        """Return normalized facts for the events status report."""
 
     @abstractmethod
     def get_work_analysis_source(

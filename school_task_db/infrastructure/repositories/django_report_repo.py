@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from core_logic.entities.report import (
-    EventsStatusReportData,
+    EventsStatusSource,
     HeatmapCourseOverviewData,
     HeatmapCourseTimelineData,
     HeatmapDrilldownOverviewData,
@@ -767,49 +767,20 @@ class DjangoReportRepository(IReportRepository):
             courses=courses.order_by('grade_level', 'name'),
         )
 
-    def get_events_status_report(self, year, current_date):
+    def get_events_status_source(self, year):
         events, participations, courses = self._get_event_scope(year)
-
-        events_by_status = list(
-            events.values('status').annotate(
-                count=Count('id'),
-            ).order_by('status'),
-        )
-        participation_stats = list(
-            participations.values('status').annotate(
-                count=Count('id'),
-            ).order_by('status'),
-        )
-
-        return EventsStatusReportData(
-            events_by_status=events_by_status,
-            overdue_events=[
-                self._report_event_ref(event)
-                for event in events.filter(
-                    status='planned',
-                    planned_date__lt=current_date - timedelta(days=1),
-                ).select_related('work')
-            ],
-            long_reviewing=[
-                self._report_event_ref(event)
-                for event in events.filter(
-                    status='reviewing',
-                    actual_end__lt=current_date - timedelta(days=7),
-                ).select_related('work')
-            ],
-            completed_unchecked=[
-                self._report_event_ref(event)
-                for event in events.filter(
-                    status='completed',
-                    actual_end__lt=current_date - timedelta(days=3),
-                ).select_related('work')
-            ],
-            participation_stats=participation_stats,
-            all_events=[
+        return EventsStatusSource(
+            events=[
                 self._report_event_ref(event)
                 for event in events.select_related('work').order_by('-planned_date')
             ],
-            courses=courses.order_by('grade_level', 'name'),
+            participation_statuses=list(
+                participations.values_list('status', flat=True)
+            ),
+            courses=[
+                ReportCourseRef(pk=str(course.pk), name=course.name)
+                for course in courses.order_by('grade_level', 'name')
+            ],
         )
 
     def get_work_analysis_source(self, year):

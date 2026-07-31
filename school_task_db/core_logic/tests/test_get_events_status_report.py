@@ -1,7 +1,10 @@
 from datetime import datetime
 from unittest import TestCase
 
-from core_logic.entities.report import EventsStatusReportData
+from core_logic.entities.report import (
+    EventsStatusSource,
+    ReportEventRef,
+)
 from core_logic.use_cases.get_events_status_report import (
     EventsStatusReportRequest,
     GetEventsStatusReportUseCase,
@@ -11,19 +14,21 @@ from core_logic.use_cases.get_events_status_report import (
 class FakeReportRepository:
     def __init__(self):
         self.year = None
-        self.current_date = None
 
-    def get_events_status_report(self, year, current_date):
+    def get_events_status_source(self, year):
         self.year = year
-        self.current_date = current_date
-        return EventsStatusReportData(
-            events_by_status=[{'status': 'planned', 'count': 1}],
-            overdue_events=['overdue'],
-            long_reviewing=[],
-            completed_unchecked=[],
-            participation_stats=[],
-            all_events=['event'],
-            courses=['course'],
+        return EventsStatusSource(
+            events=[
+                ReportEventRef(
+                    pk='event-1',
+                    name='Событие',
+                    status='planned',
+                    status_display='Запланировано',
+                    planned_date=datetime(2026, 7, 1, 12, 0),
+                ),
+            ],
+            participation_statuses=['assigned'],
+            courses=[],
         )
 
 
@@ -41,6 +46,9 @@ class GetEventsStatusReportUseCaseTests(TestCase):
         )
 
         self.assertEqual(repo.year, '2026')
-        self.assertEqual(repo.current_date, current_date)
         self.assertEqual(data.events_by_status, [{'status': 'planned', 'count': 1}])
-        self.assertEqual(data.all_events, ['event'])
+        self.assertEqual(data.participation_stats, [
+            {'status': 'assigned', 'count': 1},
+        ])
+        self.assertEqual(data.all_events[0].pk, 'event-1')
+        self.assertEqual(data.overdue_events[0].pk, 'event-1')

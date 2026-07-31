@@ -2,8 +2,10 @@ from datetime import datetime
 from unittest import TestCase
 
 from core_logic.entities.report import (
+    EventsStatusSource,
     ReportCourseRef,
     ReportGroupRef,
+    ReportEventRef,
     ReportMarkFact,
     ReportStudentRef,
     ReportWorkRef,
@@ -17,6 +19,47 @@ from core_logic.services.report_summary_service import ReportSummaryService
 
 
 class ReportSummaryServiceTests(TestCase):
+    def test_builds_events_status_and_time_based_attention_lists(self):
+        now = datetime(2026, 7, 20, 12, 0)
+        source = EventsStatusSource(
+            events=[
+                self._event(
+                    'planned',
+                    'planned',
+                    now.replace(day=18),
+                ),
+                self._event(
+                    'reviewing',
+                    'reviewing',
+                    now.replace(day=10),
+                    actual_end=now.replace(day=11),
+                ),
+                self._event(
+                    'completed',
+                    'completed',
+                    now.replace(day=14),
+                    actual_end=now.replace(day=16),
+                ),
+            ],
+            participation_statuses=['assigned', 'graded', 'graded'],
+            courses=[],
+        )
+
+        report = ReportSummaryService().build_events_status(source, now)
+
+        self.assertEqual(report.events_by_status, [
+            {'status': 'completed', 'count': 1},
+            {'status': 'planned', 'count': 1},
+            {'status': 'reviewing', 'count': 1},
+        ])
+        self.assertEqual(report.participation_stats, [
+            {'status': 'assigned', 'count': 1},
+            {'status': 'graded', 'count': 2},
+        ])
+        self.assertEqual(report.overdue_events[0].pk, 'planned')
+        self.assertEqual(report.long_reviewing[0].pk, 'reviewing')
+        self.assertEqual(report.completed_unchecked[0].pk, 'completed')
+
     def test_builds_student_performance_from_participation_facts(self):
         group = ReportGroupRef(pk='group-1', name='7А')
         latest = StudentPerformanceParticipationFact(
@@ -160,4 +203,15 @@ class ReportSummaryServiceTests(TestCase):
             work_type='control',
             work_type_display='Контрольная работа',
             duration=45,
+        )
+
+    @staticmethod
+    def _event(pk, status, planned_date, actual_end=None):
+        return ReportEventRef(
+            pk=pk,
+            name=pk,
+            status=status,
+            status_display=status,
+            planned_date=planned_date,
+            actual_end=actual_end,
         )

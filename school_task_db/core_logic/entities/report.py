@@ -183,6 +183,13 @@ class ReportEventRef:
 
 
 @dataclass(frozen=True)
+class EventsStatusSource:
+    events: List[ReportEventRef]
+    participation_statuses: List[str]
+    courses: List[ReportCourseRef]
+
+
+@dataclass(frozen=True)
 class EventsStatusReportData:
     events_by_status: List[dict]
     overdue_events: Any

@@ -7,6 +7,9 @@ from core_logic.services.remedial_service import RemedialService
 from core_logic.services.review_service import ReviewService
 from core_logic.services.work_service import WorkService
 from core_logic.use_cases.add_event_participants import AddEventParticipantsUseCase
+from core_logic.use_cases.activate_academic_year import (
+    ActivateAcademicYearUseCase,
+)
 from core_logic.use_cases.assign_event_variants import AssignEventVariantsUseCase
 from core_logic.use_cases.assign_single_event_variant import (
     AssignSingleEventVariantUseCase,
@@ -619,6 +622,11 @@ class Container:
 
     def get_academic_year_list_use_case(self):
         return GetAcademicYearListUseCase(
+            academic_year_repo=self.academic_year_repo,
+        )
+
+    def activate_academic_year_use_case(self):
+        return ActivateAcademicYearUseCase(
             academic_year_repo=self.academic_year_repo,
         )
 

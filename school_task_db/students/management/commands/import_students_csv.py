@@ -137,7 +137,7 @@ class Command(BaseCommand):
 
     def _get_or_create_year(self, name, dry_run, stats):
         if not name:
-            return AcademicYear.get_current()
+            return AcademicYear.objects.filter(is_active=True).first()
 
         academic_year = AcademicYear.objects.filter(name=name).first()
         if academic_year:
@@ -151,11 +151,12 @@ class Command(BaseCommand):
             return None
 
         stats.years_created += 1
+        has_active_year = AcademicYear.objects.filter(is_active=True).exists()
         return AcademicYear.objects.create(
             name=name,
             start_date=date(start_year, 9, 1),
             end_date=date(end_year, 8, 31),
-            is_active=AcademicYear.get_current() is None,
+            is_active=not has_active_year,
         )
 
     def _get_or_create_group(

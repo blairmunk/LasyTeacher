@@ -3,6 +3,9 @@ from unittest.mock import patch
 from django.test import SimpleTestCase
 
 from core_logic.use_cases.add_event_participants import AddEventParticipantsUseCase
+from core_logic.use_cases.activate_academic_year import (
+    ActivateAcademicYearUseCase,
+)
 from core_logic.use_cases.assign_event_variants import AssignEventVariantsUseCase
 from core_logic.use_cases.assign_single_event_variant import (
     AssignSingleEventVariantUseCase,
@@ -266,6 +269,15 @@ from infrastructure.services.task_import_service import DjangoTaskImportService
 
 
 class ContainerTests(SimpleTestCase):
+    def test_wires_academic_year_activation_use_case(self):
+        use_case = Container().activate_academic_year_use_case()
+
+        self.assertIsInstance(use_case, ActivateAcademicYearUseCase)
+        self.assertIsInstance(
+            use_case.academic_year_repo,
+            DjangoAcademicYearRepository,
+        )
+
     def test_document_engine_uses_sectioned_renderer_factory(self):
         container = Container()
         remedial_sheet_data_use_case = object()

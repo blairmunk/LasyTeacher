@@ -79,24 +79,16 @@ class AcademicYear(BaseModel):
         verbose_name = 'Учебный год'
         verbose_name_plural = 'Учебные годы'
         ordering = ['-start_date']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['is_active'],
+                condition=models.Q(is_active=True),
+                name='unique_active_academic_year',
+            ),
+        ]
 
     def __str__(self):
         return self.name
-
-    def save(self, *args, **kwargs):
-        # Гарантируем только один активный год
-        if self.is_active:
-            AcademicYear.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
-        super().save(*args, **kwargs)
-
-    @classmethod
-    def get_current(cls):
-        """Возвращает текущий активный год или None"""
-        return cls.objects.filter(is_active=True).first()
-
-    def contains_date(self, dt):
-        """Попадает ли дата в этот учебный год"""
-        return self.start_date <= dt <= self.end_date
 
 class ImportLog(BaseModel):
     """Лог операции импорта заданий"""

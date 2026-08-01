@@ -15,6 +15,9 @@ from core_logic.interfaces.work_repo import (
     WorkContentBlockParams,
     WorkTaskSelectionParams,
 )
+from core_logic.use_cases.activate_academic_year import (
+    ActivateAcademicYearRequest,
+)
 from core_logic.use_cases.grade_student_work import GradeStudentWorkRequest
 from core_logic.use_cases.save_work import SaveWorkSpecificationRequest
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
@@ -156,8 +159,14 @@ class Command(BaseCommand):
         settings.save()
 
         if not self.academic_year.is_active:
+            active_year = container.activate_academic_year_use_case().execute(
+                ActivateAcademicYearRequest(
+                    year_id=str(self.academic_year.pk),
+                ),
+            )
+            if active_year is None:
+                raise CommandError('Не удалось активировать учебный год.')
             self.academic_year.is_active = True
-            self.academic_year.save()
 
     def _update_topic_content(self, manifest):
         for topic_data in manifest.get('topic_content', []):

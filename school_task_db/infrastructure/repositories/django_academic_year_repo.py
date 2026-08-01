@@ -1,9 +1,11 @@
 """Django implementation of the academic year repository."""
 
+from django.core.exceptions import ValidationError
+from django.db import transaction
+
 from core.models import AcademicYear
 from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.interfaces.academic_year_repo import IAcademicYearRepository
-from django.core.exceptions import ValidationError
 
 
 class DjangoAcademicYearRepository(IAcademicYearRepository):
@@ -25,6 +27,33 @@ class DjangoAcademicYearRepository(IAcademicYearRepository):
             self._to_ref(year)
             for year in AcademicYear.objects.all().order_by('-start_date')
         ]
+
+    @transaction.atomic
+    def activate_academic_year(
+        self,
+        year_id: str,
+    ) -> AcademicYearRef | None:
+        try:
+            year = AcademicYear.objects.select_for_update().filter(
+                pk=year_id,
+            ).first()
+        except (ValidationError, ValueError):
+            return None
+        if year is None:
+            return None
+
+        list(
+            AcademicYear.objects.select_for_update()
+            .filter(is_active=True)
+            .values_list('pk', flat=True)
+        )
+        AcademicYear.objects.filter(is_active=True).exclude(
+            pk=year.pk,
+        ).update(is_active=False)
+        if not year.is_active:
+            AcademicYear.objects.filter(pk=year.pk).update(is_active=True)
+            year.is_active = True
+        return self._to_ref(year)
 
     @staticmethod
     def _to_ref(year: AcademicYear) -> AcademicYearRef:

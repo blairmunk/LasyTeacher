@@ -6,6 +6,10 @@ from core_logic.interfaces.academic_year_repo import IAcademicYearRepository
 from core_logic.use_cases.get_academic_year_list import (
     GetAcademicYearListUseCase,
 )
+from core_logic.use_cases.activate_academic_year import (
+    ActivateAcademicYearRequest,
+    ActivateAcademicYearUseCase,
+)
 from core_logic.use_cases.resolve_academic_year import (
     ResolveAcademicYearRequest,
     ResolveAcademicYearUseCase,
@@ -25,6 +29,11 @@ class FakeAcademicYearRepository(IAcademicYearRepository):
 
     def get_academic_years(self):
         return self.years
+
+    def activate_academic_year(self, year_id):
+        year = self.get_academic_year(year_id)
+        self.active_year = year
+        return year
 
 
 class AcademicYearSelectionTests(TestCase):
@@ -73,6 +82,14 @@ class AcademicYearSelectionTests(TestCase):
         self.assertIsNone(selection.current_year)
         self.assertEqual(selection.year_id, '')
         self.assertEqual(years.academic_years, [])
+
+    def test_activate_academic_year_delegates_to_repository(self):
+        result = ActivateAcademicYearUseCase(self.repo).execute(
+            ActivateAcademicYearRequest(year_id=self.selected_year.pk),
+        )
+
+        self.assertEqual(result, self.selected_year)
+        self.assertEqual(self.repo.active_year, self.selected_year)
 
 
 def _year(year_id, name, is_active=False):

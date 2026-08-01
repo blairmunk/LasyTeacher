@@ -18,3 +18,9 @@ class IAcademicYearRepository(ABC):
     def get_academic_years(self) -> list[AcademicYearRef]:
         """Return all academic years in display order."""
 
+    @abstractmethod
+    def activate_academic_year(
+        self,
+        year_id: str,
+    ) -> AcademicYearRef | None:
+        """Make one academic year globally active and return it."""

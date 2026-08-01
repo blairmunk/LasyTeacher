@@ -1,6 +1,10 @@
 from django.contrib import admin
 
 from core_logic.services.import_log_service import ImportLogService
+from core_logic.use_cases.activate_academic_year import (
+    ActivateAcademicYearRequest,
+)
+from infrastructure.container import container
 
 from .models import ImportLog, AcademicYear
 
@@ -11,6 +15,17 @@ class AcademicYearAdmin(admin.ModelAdmin):
     list_editable = ['is_active']
     list_filter = ['is_active']
     ordering = ['-start_date']
+
+    def save_model(self, request, obj, form, change):
+        should_activate = obj.is_active
+        if should_activate:
+            obj.is_active = False
+        super().save_model(request, obj, form, change)
+        if should_activate:
+            active_year = container.activate_academic_year_use_case().execute(
+                ActivateAcademicYearRequest(year_id=str(obj.pk)),
+            )
+            obj.is_active = bool(active_year and active_year.is_active)
 
 
 @admin.register(ImportLog)

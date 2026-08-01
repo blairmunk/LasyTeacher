@@ -1,5 +1,6 @@
 import datetime as dt
 
+from django.db import IntegrityError, transaction
 from django.test import TestCase
 from django.urls import reverse
 
@@ -41,6 +42,28 @@ class DjangoAcademicYearRepositoryTests(TestCase):
 
     def test_invalid_id_returns_none(self):
         self.assertIsNone(self.repo.get_academic_year('not-a-uuid'))
+
+    def test_activation_switches_the_single_active_year(self):
+        result = self.repo.activate_academic_year(str(self.older_year.pk))
+
+        self.active_year.refresh_from_db()
+        self.older_year.refresh_from_db()
+        self.assertFalse(self.active_year.is_active)
+        self.assertTrue(self.older_year.is_active)
+        self.assertTrue(result.is_active)
+        self.assertEqual(result.pk, str(self.older_year.pk))
+
+    def test_activation_returns_none_for_invalid_id(self):
+        self.assertIsNone(self.repo.activate_academic_year('not-a-uuid'))
+
+    def test_database_rejects_a_second_active_year(self):
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            AcademicYear.objects.create(
+                name='2027-2028',
+                start_date=dt.date(2027, 9, 1),
+                end_date=dt.date(2028, 8, 31),
+                is_active=True,
+            )
 
 
 class AcademicYearRequestIntegrationTests(TestCase):

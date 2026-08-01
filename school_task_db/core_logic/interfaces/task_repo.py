@@ -49,10 +49,6 @@ class ITaskRepository(ABC):
         """Return task read models for one analog group detail page."""
 
     @abstractmethod
-    def get_analog_group(self, group_id: str) -> Any:
-        """Return one analog group, or None when it does not exist."""
-
-    @abstractmethod
     def get_available_tasks_for_analog_group(
         self,
         group_id: str,

@@ -1,12 +1,14 @@
 """Pure preview rules for the class remedial-work wizard."""
 
 import random
-import statistics
 from collections import defaultdict
 
 from core_logic.entities.student import (
     RemedialWizardPreviewData,
     RemedialWizardPreviewSource,
+)
+from core_logic.value_objects.analog_group_difficulty import (
+    resolve_analog_group_difficulty,
 )
 
 
@@ -216,12 +218,13 @@ class RemedialWizardService:
     @staticmethod
     def _effective_difficulty(group_id, groups, tasks_by_group):
         group = groups.get(group_id)
-        if group and group.nominal_difficulty > 0:
-            return group.nominal_difficulty
-        difficulties = [task.difficulty for task in tasks_by_group[group_id]]
-        if difficulties:
-            return round(statistics.median(difficulties))
-        return 3
+        return resolve_analog_group_difficulty(
+            nominal_difficulty=(group.nominal_difficulty if group else 0),
+            task_difficulties=(
+                task.difficulty
+                for task in tasks_by_group[group_id]
+            ),
+        )
 
     @staticmethod
     def _unique_tasks(group_ids, tasks_by_group):

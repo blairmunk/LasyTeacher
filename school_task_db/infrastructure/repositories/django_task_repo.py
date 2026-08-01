@@ -282,9 +282,6 @@ class DjangoTaskRepository(ITaskRepository):
             for task_group in task_groups
         ]
 
-    def get_analog_group(self, group_id: str):
-        return AnalogGroup.objects.filter(pk=group_id).first()
-
     def get_available_tasks_for_analog_group(self, group_id: str, search: str):
         existing_task_ids = TaskGroup.objects.filter(
             group_id=group_id,

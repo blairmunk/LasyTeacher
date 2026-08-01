@@ -12,7 +12,7 @@ class FakeTaskRepository:
         self.available_tasks = ['task-2']
         self.available_request = None
 
-    def get_analog_group(self, group_id):
+    def get_analog_group_detail(self, group_id):
         return self.group
 
     def get_available_tasks_for_analog_group(self, group_id, search):

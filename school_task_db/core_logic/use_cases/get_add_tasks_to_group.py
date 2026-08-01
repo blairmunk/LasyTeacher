@@ -17,7 +17,7 @@ class GetAddTasksToGroupUseCase:
         self.task_repo = task_repo
 
     def execute(self, request: AddTasksToGroupFormRequest) -> AddTasksToGroupData:
-        group = self.task_repo.get_analog_group(request.group_id)
+        group = self.task_repo.get_analog_group_detail(request.group_id)
         if group is None:
             return AddTasksToGroupData(status='not_found', search=request.search)
 

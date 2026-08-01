@@ -158,7 +158,8 @@ class TaskGroupBulkActionTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['group'], self.group)
+        self.assertEqual(response.context['group'].pk, str(self.group.pk))
+        self.assertEqual(response.context['group'].name, self.group.name)
         self.assertEqual(response.context['available_tasks'][0].pk, str(second_task.pk))
         self.assertEqual(response.context['available_tasks'][0].text, second_task.text)
         self.assertEqual(response.context['search'], 'Вторая')

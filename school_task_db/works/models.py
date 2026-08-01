@@ -198,13 +198,6 @@ class Variant(BaseModel):
     def get_absolute_url(self):
         return reverse('works:variant-detail', kwargs={'pk': self.pk})
 
-    @property
-    def total_max_points(self):
-        result = self.varianttask_set.aggregate(models.Sum('max_points'))
-        return result['max_points__sum'] or 0
-
-
-
 class VariantTask(BaseModel):
     """Задание в варианте — иммутабельная запись с баллами"""
     variant = models.ForeignKey(Variant, on_delete=models.CASCADE, verbose_name='Вариант')

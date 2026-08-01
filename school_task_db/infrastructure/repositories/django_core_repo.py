@@ -1,6 +1,6 @@
 """Django implementation of the core repository."""
 
-from django.db.models import Q
+from django.db.models import Count, Q, Sum
 
 from core.models import ImportLog
 from core_logic.entities.core import (
@@ -217,6 +217,13 @@ class DjangoCoreRepository(ICoreRepository):
         ]
 
     def _variant_results(self, variants):
+        variants = variants.select_related(
+            'work',
+            'assigned_student',
+        ).annotate(
+            task_count_value=Count('varianttask'),
+            total_max_points_value=Sum('varianttask__max_points'),
+        )
         return [
             SearchVariantResult(
                 pk=str(variant.pk),
@@ -233,8 +240,8 @@ class DjangoCoreRepository(ICoreRepository):
                     ),
                 ),
                 number=variant.number,
-                task_count=variant.varianttask_set.count(),
-                total_max_points=variant.total_max_points,
+                task_count=variant.task_count_value,
+                total_max_points=variant.total_max_points_value or 0,
                 short_uuid=variant.get_short_uuid(),
                 has_work=variant.work_id is not None,
             )

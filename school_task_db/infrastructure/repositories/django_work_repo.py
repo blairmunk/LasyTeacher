@@ -265,6 +265,9 @@ class DjangoWorkRepository(
         ).select_related(
             'assigned_student',
             'source_participation__student',
+        ).annotate(
+            task_count_value=Count('varianttask'),
+            total_max_points_value=Sum('varianttask__max_points'),
         )
         for variant in variants:
             personal_student = _personal_student(variant)
@@ -273,8 +276,8 @@ class DjangoWorkRepository(
                     pk=str(variant.pk),
                     number=variant.number,
                     short_uuid=variant.get_short_uuid(),
-                    task_count=variant.tasks.count(),
-                    total_max_points=variant.total_max_points,
+                    task_count=variant.task_count_value,
+                    total_max_points=variant.total_max_points_value or 0,
                     created_at=variant.created_at,
                     variant_type=variant.variant_type,
                     has_personal_student=bool(personal_student),
@@ -434,8 +437,10 @@ class DjangoWorkRepository(
         ]
 
     def get_variant_total_max_points(self, variant_id: str) -> int:
-        variant = Variant.objects.get(pk=variant_id)
-        return variant.total_max_points
+        aggregate = VariantTask.objects.filter(
+            variant_id=variant_id,
+        ).aggregate(total=Sum('max_points'))
+        return aggregate['total'] or 0
 
     def get_variant_type(self, variant_id: str):
         return (
@@ -875,11 +880,13 @@ class DjangoWorkRepository(
             OrphanVariantRef(
                 pk=str(variant.pk),
                 variant_type=variant.variant_type,
-                total_max_points=variant.total_max_points,
+                total_max_points=variant.total_max_points_value or 0,
             )
             for variant in Variant.objects.filter(
                 pk__in=variant_ids,
                 work__isnull=True,
+            ).annotate(
+                total_max_points_value=Sum('varianttask__max_points'),
             ).order_by('created_at')
         ]
 
@@ -942,7 +949,12 @@ class DjangoWorkRepository(
             short_uuid=variant.get_short_uuid(),
             work_id=str(variant.work_id or ''),
             work_name=variant.work.name if variant.work else '',
-            total_max_points=variant.total_max_points,
+            total_max_points=(
+                VariantTask.objects.filter(
+                    variant_id=variant_id,
+                ).aggregate(total=Sum('max_points'))['total']
+                or 0
+            ),
         )
 
     def detach_variant_from_work(self, variant_id: str) -> str:

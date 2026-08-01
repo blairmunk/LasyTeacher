@@ -68,6 +68,69 @@ class TaskResultsSource:
 
 
 @dataclass(frozen=True)
+class TaskLogSyncVariantTask:
+    variant_task_id: str
+    task_id: str
+
+
+@dataclass(frozen=True)
+class TaskLogSyncTask:
+    task_id: str
+    topic_id: Optional[str] = None
+    subtopic_id: Optional[str] = None
+    analog_group_id: Optional[str] = None
+    difficulty: Optional[int] = None
+
+
+@dataclass(frozen=True)
+class TaskLogSyncSource:
+    mark_id: str
+    student_id: str
+    event_id: str
+    variant_id: Optional[str]
+    completed_at: datetime
+    task_scores: Mapping[str, Any]
+    variant_tasks: tuple[TaskLogSyncVariantTask, ...] = field(
+        default_factory=tuple,
+    )
+    tasks: tuple[TaskLogSyncTask, ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        object.__setattr__(self, 'task_scores', dict(self.task_scores))
+        object.__setattr__(self, 'variant_tasks', tuple(self.variant_tasks))
+        object.__setattr__(self, 'tasks', tuple(self.tasks))
+
+
+@dataclass(frozen=True)
+class TaskLogSyncEntry:
+    mark_id: str
+    student_id: str
+    task_id: str
+    event_id: str
+    variant_id: Optional[str]
+    variant_task_id: Optional[str]
+    topic_id: Optional[str]
+    subtopic_id: Optional[str]
+    analog_group_id: Optional[str]
+    difficulty: Optional[int]
+    points: Any
+    max_points: Any
+    comment: str
+    completed_at: datetime
+    percentage: Optional[float]
+    is_correct: Optional[bool]
+
+
+@dataclass(frozen=True)
+class TaskLogSyncPlan:
+    mark_id: str
+    entries: tuple[TaskLogSyncEntry, ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        object.__setattr__(self, 'entries', tuple(self.entries))
+
+
+@dataclass(frozen=True)
 class ObjectRef:
     """Small template-friendly reference to a related object."""
 

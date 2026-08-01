@@ -61,9 +61,12 @@ class FakeStudentRepository:
     def __init__(self):
         self.synced_mark_ids = []
 
-    def sync_student_task_logs(self, mark_id):
+    def get_task_log_sync_source(self, mark_id):
         self.synced_mark_ids.append(mark_id)
-        return 0
+        return None
+
+    def apply_task_log_sync(self, plan):
+        raise AssertionError('No plan is expected without a sync source')
 
 
 class GradeStudentWorkUseCaseTests(TestCase):

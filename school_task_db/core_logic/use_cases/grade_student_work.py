@@ -12,6 +12,9 @@ from core_logic.interfaces.review_repo import IReviewRepository
 from core_logic.interfaces.student_repo import IStudentRepository
 from core_logic.interfaces.transaction_manager import ITransactionManager
 from core_logic.services.grading_service import GradingService
+from core_logic.use_cases.sync_student_task_logs import (
+    SyncStudentTaskLogsUseCase,
+)
 
 
 @dataclass(frozen=True)
@@ -41,12 +44,16 @@ class GradeStudentWorkUseCase:
         student_repo: IStudentRepository,
         grading_service: GradingService,
         transaction_manager: ITransactionManager,
+        task_log_sync_use_case: SyncStudentTaskLogsUseCase | None = None,
     ):
         self.event_repo = event_repo
         self.review_repo = review_repo
-        self.student_repo = student_repo
         self.grading_service = grading_service
         self.transaction_manager = transaction_manager
+        self.task_log_sync_use_case = (
+            task_log_sync_use_case
+            or SyncStudentTaskLogsUseCase(student_repo)
+        )
 
     def execute(self, request: GradeStudentWorkRequest) -> GradeParticipationResult:
         checked_by = self.grading_service.checked_by_name(
@@ -100,5 +107,5 @@ class GradeStudentWorkUseCase:
                     event_status=event_status,
                 )
             )
-            self.student_repo.sync_student_task_logs(result.mark_id)
+            self.task_log_sync_use_case.execute(result.mark_id)
             return result

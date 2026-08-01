@@ -337,6 +337,25 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertIsNone(historical_log.mark)
         self.assertEqual(historical_log.points, 2)
 
+    def test_task_log_sync_recalculates_correctness_after_score_edit(self):
+        weak_log = StudentTaskLog.objects.get(
+            mark=self.mark,
+            task=self.original_weak,
+        )
+        self.assertFalse(weak_log.is_correct)
+        self.assertEqual(weak_log.percentage, 0)
+        self.mark.task_scores = {
+            str(self.original_weak.pk): {'points': 2, 'max_points': 2},
+            str(self.original_ok.pk): {'points': 5, 'max_points': 5},
+        }
+        self.mark.save(update_fields=['task_scores'])
+
+        DjangoStudentRepository().sync_student_task_logs(str(self.mark.pk))
+
+        weak_log.refresh_from_db()
+        self.assertTrue(weak_log.is_correct)
+        self.assertEqual(weak_log.percentage, 100)
+
     def test_student_repository_ignores_missing_mark_during_log_sync(self):
         created_count = DjangoStudentRepository().sync_student_task_logs(
             '00000000-0000-0000-0000-000000000000',

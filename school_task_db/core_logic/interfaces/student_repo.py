@@ -18,6 +18,8 @@ from core_logic.entities.student import (
     StudentGroupRef,
     StudentParticipationProfile,
     StudentTaskLogProfile,
+    TaskLogSyncPlan,
+    TaskLogSyncSource,
     TaskResultsSource,
     WorkGroupRef,
 )
@@ -118,5 +120,12 @@ class IStudentRepository(ABC):
         """Return analog groups used by works."""
 
     @abstractmethod
-    def sync_student_task_logs(self, mark_id: str) -> int:
-        """Synchronize learning-history rows from one saved mark."""
+    def get_task_log_sync_source(
+        self,
+        mark_id: str,
+    ) -> Optional[TaskLogSyncSource]:
+        """Return facts needed to synchronize logs from a mark."""
+
+    @abstractmethod
+    def apply_task_log_sync(self, plan: TaskLogSyncPlan) -> int:
+        """Apply a prepared task-log projection plan."""

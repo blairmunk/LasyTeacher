@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 
 from core_logic.entities.report import (
@@ -50,6 +50,7 @@ from core_logic.entities.report import (
     WorkAnalysisSource,
 )
 from core_logic.interfaces.report_repo import IReportRepository
+from core_logic.services.event_service import EventService
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
 from students.models import Student, StudentGroup, StudentTaskLog
@@ -111,10 +112,13 @@ class DjangoReportRepository(IReportRepository):
         )
         student_ids = [student.id for student in students]
 
-        events = Event.objects.filter(
+        event_ids = Event.objects.filter(
             course=course,
             eventparticipation__student__in=student_ids,
-        ).distinct().select_related('work').order_by('planned_date')
+        ).values_list('pk', flat=True).distinct()
+        events = self._event_summary_queryset(
+            Event.objects.filter(pk__in=event_ids),
+        ).order_by('planned_date')
         event_refs = {
             event.id: self._report_event_ref(event)
             for event in events
@@ -737,7 +741,7 @@ class DjangoReportRepository(IReportRepository):
         marks = self._get_marks_scope(year)
         groups, students = self._get_student_scope(year)
         event_rows = list(
-            events.select_related('work').order_by('-planned_date')
+            self._event_summary_queryset(events).order_by('-planned_date')
         )
         course_rows = list(courses.order_by('grade_level', 'name'))
         return ReportsDashboardSource(
@@ -808,7 +812,9 @@ class DjangoReportRepository(IReportRepository):
         return EventsStatusSource(
             events=[
                 self._report_event_ref(event)
-                for event in events.select_related('work').order_by('-planned_date')
+                for event in self._event_summary_queryset(events).order_by(
+                    '-planned_date',
+                )
             ],
             participation_statuses=list(
                 participations.values_list('status', flat=True)
@@ -995,6 +1001,10 @@ class DjangoReportRepository(IReportRepository):
         )
 
     def _report_event_ref(self, event):
+        progress_percentage = EventService.progress_percentage(
+            event.participants_count_value,
+            event.completed_count_value,
+        )
         return ReportEventRef(
             pk=str(event.pk),
             name=event.name,
@@ -1004,9 +1014,30 @@ class DjangoReportRepository(IReportRepository):
             actual_end=event.actual_end,
             location=event.location,
             work=self._report_work_ref(event.work),
-            participants_count=event.get_participants_count(),
-            graded_count=event.get_graded_count(),
-            progress_percentage=event.get_progress_percentage(),
+            participants_count=event.participants_count_value,
+            graded_count=event.graded_count_value,
+            progress_percentage=progress_percentage,
+        )
+
+    @staticmethod
+    def _event_summary_queryset(queryset):
+        return queryset.select_related('work').annotate(
+            participants_count_value=Count(
+                'eventparticipation',
+                distinct=True,
+            ),
+            completed_count_value=Count(
+                'eventparticipation',
+                filter=Q(
+                    eventparticipation__status__in=('completed', 'graded'),
+                ),
+                distinct=True,
+            ),
+            graded_count_value=Count(
+                'eventparticipation',
+                filter=Q(eventparticipation__status='graded'),
+                distinct=True,
+            ),
         )
 
     def _report_work_ref(self, work):

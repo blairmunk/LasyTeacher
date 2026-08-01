@@ -52,6 +52,15 @@ class EventService:
         'closed': ['graded'],
     }
 
+    @staticmethod
+    def progress_percentage(
+        participants_count: int,
+        completed_count: int,
+    ) -> int:
+        if participants_count <= 0:
+            return 0
+        return round(completed_count / participants_count * 100)
+
     def build_list_data(self, events: List[object]) -> EventListData:
         return EventListData(
             events=events,

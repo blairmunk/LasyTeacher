@@ -9,6 +9,12 @@ from core_logic.services.event_service import EventService
 
 
 class EventServiceTests(TestCase):
+    def test_calculates_event_progress_from_participation_counts(self):
+        service = EventService()
+
+        self.assertEqual(service.progress_percentage(3, 2), 67)
+        self.assertEqual(service.progress_percentage(0, 0), 0)
+
     def test_build_list_data_categorizes_events_by_status(self):
         class Event:
             def __init__(self, status):

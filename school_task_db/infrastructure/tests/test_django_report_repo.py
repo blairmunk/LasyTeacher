@@ -867,6 +867,9 @@ class DjangoReportRepositoryTests(TestCase):
         self.assertEqual(data.overdue_events[0].graded_count, 0)
         self.assertEqual(data.overdue_events[0].progress_percentage, 0)
         self.assertEqual(data.long_reviewing[0].pk, str(reviewing.pk))
+        self.assertEqual(data.long_reviewing[0].participants_count, 1)
+        self.assertEqual(data.long_reviewing[0].graded_count, 1)
+        self.assertEqual(data.long_reviewing[0].progress_percentage, 100)
         self.assertEqual(data.completed_unchecked[0].pk, str(completed.pk))
         self.assertEqual(
             [event.pk for event in data.all_events],

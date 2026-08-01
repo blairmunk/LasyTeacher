@@ -1,4 +1,7 @@
 from django.contrib import admin
+from django.db.models import Count, Q
+
+from core_logic.services.event_service import EventService
 from .models import Event, EventParticipation, Mark
 
 class EventParticipationInline(admin.TabularInline):
@@ -16,6 +19,21 @@ class EventAdmin(admin.ModelAdmin):
     search_fields = ['name', 'work__name', 'uuid']  # ОБЯЗАТЕЛЬНО для автокомплита
     readonly_fields = ['uuid', 'get_short_uuid']
     inlines = [EventParticipationInline]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(
+            participants_count_value=Count(
+                'eventparticipation',
+                distinct=True,
+            ),
+            completed_count_value=Count(
+                'eventparticipation',
+                filter=Q(
+                    eventparticipation__status__in=('completed', 'graded'),
+                ),
+                distinct=True,
+            ),
+        )
     
     fieldsets = [
         ('Основная информация', {
@@ -38,11 +56,15 @@ class EventAdmin(admin.ModelAdmin):
     get_short_uuid.short_description = 'UUID'
     
     def get_participants_count(self, obj):
-        return obj.get_participants_count()
+        return obj.participants_count_value
     get_participants_count.short_description = 'Участников'
     
     def get_progress(self, obj):
-        return f"{obj.get_progress_percentage()}%"
+        percentage = EventService.progress_percentage(
+            obj.participants_count_value,
+            obj.completed_count_value,
+        )
+        return f"{percentage}%"
     get_progress.short_description = 'Прогресс'
 
 @admin.register(EventParticipation)

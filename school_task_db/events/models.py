@@ -52,28 +52,6 @@ class Event(BaseModel):
     def get_absolute_url(self):
         return reverse('events:detail', kwargs={'pk': self.pk})
     
-    def get_participants_count(self):
-        """Количество участников"""
-        return self.students.count()
-    
-    def get_completed_count(self):
-        """Количество выполненных работ"""
-        return self.eventparticipation_set.filter(
-            status__in=['completed', 'graded']
-        ).count()
-    
-    def get_graded_count(self):
-        """Количество проверенных работ"""
-        return self.eventparticipation_set.filter(status='graded').count()
-    
-    def get_progress_percentage(self):
-        """Процент выполнения события"""
-        total = self.get_participants_count()
-        if total == 0:
-            return 0
-        completed = self.get_completed_count()
-        return round((completed / total) * 100)
-    
 class EventParticipation(BaseModel):
     """Участие ученика в событии (промежуточная модель)"""
     event = models.ForeignKey(Event, on_delete=models.CASCADE, verbose_name='Событие')

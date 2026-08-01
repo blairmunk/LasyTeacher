@@ -21,8 +21,10 @@ from core_logic.entities.report import (
     HeatmapStudentDetailSource,
     HeatmapSubtopicDetailSource,
     HeatmapTopicMatrixData,
-    JournalData,
+    JournalEntryFact,
+    JournalParticipationRef,
     JournalSelectData,
+    JournalSource,
     ReportsDashboardSource,
     ReportAnalogGroupRef,
     ReportActivityRef,
@@ -83,15 +85,27 @@ class DjangoReportRepository(IReportRepository):
 
         return JournalSelectData(
             journal_links=journal_links,
-            groups=groups,
-            courses=courses,
+            groups=[
+                ReportGroupRef(
+                    pk=str(group.pk),
+                    name=group.name,
+                    students_count=group.students.count(),
+                )
+                for group in groups
+            ],
+            courses=[
+                ReportCourseRef(pk=str(course.pk), name=course.name)
+                for course in courses
+            ],
         )
 
-    def get_journal(self, course_id, group_id, year, show_debts_only):
+    def get_journal_source(self, course_id, group_id, year):
         course = get_object_or_404(Course, pk=course_id)
         group = get_object_or_404(StudentGroup, pk=group_id)
-        students = group.students.all().order_by('last_name', 'first_name')
-        student_ids = list(students.values_list('id', flat=True))
+        students = list(
+            group.students.all().order_by('last_name', 'first_name')
+        )
+        student_ids = [student.id for student in students]
 
         events = Event.objects.filter(
             course=course,
@@ -109,42 +123,53 @@ class DjangoReportRepository(IReportRepository):
             participation__in=participations,
         ).select_related('participation')
 
-        part_lookup = {
-            (participation.student_id, participation.event_id): participation
-            for participation in participations
-        }
         mark_lookup = {
             mark.participation_id: mark
             for mark in marks
         }
-        all_rows = self._build_journal_rows(
-            students,
-            events,
-            part_lookup,
-            mark_lookup,
-            event_refs,
-        )
-        rows = (
-            [row for row in all_rows if row['debts'] > 0]
-            if show_debts_only
-            else all_rows
-        )
+        entries = []
+        for participation in participations:
+            mark = mark_lookup.get(participation.id)
+            entries.append(JournalEntryFact(
+                student_id=str(participation.student_id),
+                event_id=str(participation.event_id),
+                participation=JournalParticipationRef(
+                    pk=str(participation.pk),
+                    status=participation.status,
+                ),
+                mark=(
+                    ReportMarkFact(
+                        score=mark.score,
+                        points=mark.points,
+                        max_points=mark.max_points,
+                    )
+                    if mark
+                    else None
+                ),
+                variant=(
+                    self._report_variant_ref(participation.variant)
+                    if participation.variant
+                    else None
+                ),
+            ))
 
-        return JournalData(
-            course=course,
-            group=group,
-            events=[event_refs[event.id] for event in events],
-            event_stats=self._build_journal_event_stats(
-                events,
-                all_rows,
-                event_refs,
+        return JournalSource(
+            course=ReportCourseRef(pk=str(course.pk), name=course.name),
+            group=ReportGroupRef(
+                pk=str(group.pk),
+                name=group.name,
+                students_count=len(students),
             ),
-            rows=rows,
-            all_rows_count=len(all_rows),
-            show_debts_only=show_debts_only,
-            total_debts=sum(row['debts'] for row in all_rows),
-            students_with_debts=sum(1 for row in all_rows if row['debts'] > 0),
-            courses=self._get_event_scope(year)[2].order_by('grade_level', 'name'),
+            students=[self._report_student_ref(student) for student in students],
+            events=[event_refs[event.id] for event in events],
+            entries=entries,
+            courses=[
+                ReportCourseRef(pk=str(item.pk), name=item.name)
+                for item in self._get_event_scope(year)[2].order_by(
+                    'grade_level',
+                    'name',
+                )
+            ],
         )
 
     def get_task_db_health(self):
@@ -943,96 +968,13 @@ class DjangoReportRepository(IReportRepository):
             )
         return Mark.objects.all()
 
-    def _build_journal_rows(
-        self,
-        students,
-        events,
-        part_lookup,
-        mark_lookup,
-        event_refs,
-    ):
-        rows = []
-        for student in students:
-            cells = []
-            total_score = 0
-            score_count = 0
-            debts = 0
-
-            for event in events:
-                participation = part_lookup.get((student.id, event.id))
-                mark = mark_lookup.get(participation.id) if participation else None
-                cell = self._build_journal_cell(
-                    event_refs[event.id],
-                    participation,
-                    mark,
-                )
-
-                if cell['status'] == 'graded':
-                    total_score += mark.score
-                    score_count += 1
-                if cell['status'] in ('absent', 'missing'):
-                    debts += 1
-
-                cells.append(cell)
-
-            avg_score = (
-                round(total_score / score_count, 1)
-                if score_count > 0
-                else None
-            )
-            rows.append({
-                'student': student,
-                'cells': cells,
-                'avg_score': avg_score,
-                'score_count': score_count,
-                'debts': debts,
-            })
-        return rows
-
-    def _build_journal_cell(self, event, participation, mark):
-        cell = {
-            'event': event,
-            'participation': participation,
-            'mark': mark,
-            'score': None,
-            'status': 'missing',
-            'css_class': '',
-            'display': '',
-            'variant': participation.variant if participation else None,
-        }
-
-        if not participation:
-            cell['css_class'] = 'journal-missing'
-            return cell
-
-        if participation.status == 'absent':
-            cell['status'] = 'absent'
-            cell['display'] = 'Н'
-            cell['css_class'] = 'journal-absent'
-        elif mark and mark.score is not None:
-            cell['status'] = 'graded'
-            cell['score'] = mark.score
-            cell['display'] = str(mark.score)
-            cell['css_class'] = self._journal_score_css(mark.score)
-        elif participation.status in ('assigned', 'started'):
-            cell['status'] = 'in_progress'
-            cell['display'] = '…'
-            cell['css_class'] = 'journal-progress'
-        elif participation.status == 'completed':
-            cell['status'] = 'completed'
-            cell['display'] = '✓'
-            cell['css_class'] = 'journal-completed'
-        else:
-            cell['status'] = 'assigned'
-            cell['display'] = '–'
-
-        return cell
-
     def _report_student_ref(self, student):
         return ReportStudentRef(
             pk=str(student.pk),
             full_name=student.get_full_name(),
             short_name=student.get_short_name(),
+            last_name=student.last_name,
+            first_name=student.first_name,
         )
 
     def _report_event_ref(self, event):
@@ -1084,42 +1026,6 @@ class DjangoReportRepository(IReportRepository):
             text=task.text,
             variant_count=task.variant_count,
         )
-
-    def _journal_score_css(self, score):
-        if score >= 5:
-            return 'journal-5'
-        if score == 4:
-            return 'journal-4'
-        if score == 3:
-            return 'journal-3'
-        return 'journal-2'
-
-    def _build_journal_event_stats(self, events, rows, event_refs):
-        event_stats = []
-        for event in events:
-            graded = 0
-            absent = 0
-            missing = 0
-            total = 0
-            for row in rows:
-                for cell in row['cells']:
-                    if cell['event'].pk != str(event.pk):
-                        continue
-                    total += 1
-                    if cell['status'] == 'graded':
-                        graded += 1
-                    elif cell['status'] == 'absent':
-                        absent += 1
-                    elif cell['status'] == 'missing':
-                        missing += 1
-            event_stats.append({
-                'event': event_refs[event.id],
-                'graded': graded,
-                'absent': absent,
-                'missing': missing,
-                'total': total,
-            })
-        return event_stats
 
     def _build_coverage_issues(self):
         coverage_issues = []

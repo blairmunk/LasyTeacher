@@ -9,6 +9,8 @@ class ReportStudentRef:
     pk: str
     full_name: str
     short_name: str = ''
+    last_name: str = ''
+    first_name: str = ''
 
 
 @dataclass(frozen=True)
@@ -131,6 +133,31 @@ class ReportMarkFact:
     score: int | None
     points: float | None
     max_points: float | None
+
+
+@dataclass(frozen=True)
+class JournalParticipationRef:
+    pk: str
+    status: str
+
+
+@dataclass(frozen=True)
+class JournalEntryFact:
+    student_id: str
+    event_id: str
+    participation: JournalParticipationRef | None = None
+    mark: ReportMarkFact | None = None
+    variant: ReportVariantRef | None = None
+
+
+@dataclass(frozen=True)
+class JournalSource:
+    course: ReportCourseRef
+    group: ReportGroupRef
+    students: List[ReportStudentRef]
+    events: List['ReportEventRef']
+    entries: List[JournalEntryFact]
+    courses: List[ReportCourseRef]
 
 
 @dataclass(frozen=True)

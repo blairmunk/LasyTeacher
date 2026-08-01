@@ -1,6 +1,16 @@
 from unittest import TestCase
 
-from core_logic.entities.report import JournalData
+from core_logic.entities.report import (
+    JournalEntryFact,
+    JournalParticipationRef,
+    JournalSource,
+    ReportCourseRef,
+    ReportEventRef,
+    ReportGroupRef,
+    ReportMarkFact,
+    ReportStudentRef,
+    ReportWorkRef,
+)
 from core_logic.use_cases.get_journal import GetJournalUseCase, JournalRequest
 
 
@@ -9,24 +19,47 @@ class FakeReportRepository:
         self.course_id = None
         self.group_id = None
         self.year = None
-        self.show_debts_only = None
 
-    def get_journal(self, course_id, group_id, year, show_debts_only):
+    def get_journal_source(self, course_id, group_id, year):
         self.course_id = course_id
         self.group_id = group_id
         self.year = year
-        self.show_debts_only = show_debts_only
-        return JournalData(
-            course='course',
-            group='group',
-            events=['event'],
-            event_stats=[{'graded': 1}],
-            rows=[{'student': 'student'}],
-            all_rows_count=1,
-            show_debts_only=show_debts_only,
-            total_debts=0,
-            students_with_debts=0,
-            courses=['course'],
+        work = ReportWorkRef(
+            pk='work-1',
+            name='Контрольная',
+            work_type='control',
+            work_type_display='Контрольная',
+            duration=45,
+        )
+        return JournalSource(
+            course=ReportCourseRef(pk='course-1', name='Физика'),
+            group=ReportGroupRef(pk='group-1', name='7А'),
+            students=[
+                ReportStudentRef(pk='student-1', full_name='Иванов Иван'),
+                ReportStudentRef(pk='student-2', full_name='Петров Пётр'),
+            ],
+            events=[
+                ReportEventRef(
+                    pk='event-1',
+                    name='КР',
+                    status='graded',
+                    status_display='Проверено',
+                    planned_date='date',
+                    work=work,
+                ),
+            ],
+            entries=[
+                JournalEntryFact(
+                    student_id='student-1',
+                    event_id='event-1',
+                    participation=JournalParticipationRef(
+                        pk='participation-1',
+                        status='graded',
+                    ),
+                    mark=ReportMarkFact(score=4, points=8, max_points=10),
+                ),
+            ],
+            courses=[ReportCourseRef(pk='course-1', name='Физика')],
         )
 
 
@@ -47,6 +80,11 @@ class GetJournalUseCaseTests(TestCase):
         self.assertEqual(repo.course_id, 'course-1')
         self.assertEqual(repo.group_id, 'group-1')
         self.assertEqual(repo.year, 'year')
-        self.assertTrue(repo.show_debts_only)
-        self.assertEqual(data.rows, [{'student': 'student'}])
+        self.assertEqual(len(data.rows), 1)
+        self.assertEqual(data.rows[0]['student'].pk, 'student-2')
+        self.assertEqual(data.rows[0]['cells'][0]['status'], 'missing')
+        self.assertEqual(data.event_stats[0]['graded'], 1)
+        self.assertEqual(data.event_stats[0]['missing'], 1)
+        self.assertEqual(data.all_rows_count, 2)
+        self.assertEqual(data.total_debts, 1)
         self.assertEqual(data.active_report, 'journal')

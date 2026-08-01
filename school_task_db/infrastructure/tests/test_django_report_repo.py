@@ -1017,8 +1017,10 @@ class DjangoReportRepositoryTests(TestCase):
 
         data = DjangoReportRepository().get_journal_select(year=None)
 
-        self.assertEqual(list(data.groups), [group])
-        self.assertEqual(list(data.courses), [course])
+        self.assertEqual(data.groups[0].pk, str(group.pk))
+        self.assertEqual(data.groups[0].name, group.name)
+        self.assertEqual(data.courses[0].pk, str(course.pk))
+        self.assertEqual(data.courses[0].name, course.name)
         self.assertEqual(data.journal_links[0]['course'].pk, str(course.pk))
         self.assertEqual(data.journal_links[0]['group'].pk, str(group.pk))
         self.assertEqual(data.journal_links[0]['group'].students_count, 1)
@@ -1069,15 +1071,14 @@ class DjangoReportRepositoryTests(TestCase):
             },
         )
 
-        data = DjangoReportRepository().get_journal(
+        data = DjangoReportRepository().get_journal_source(
             course_id=course.pk,
             group_id=group.pk,
             year=None,
-            show_debts_only=True,
         )
 
-        self.assertEqual(data.course, course)
-        self.assertEqual(data.group, group)
+        self.assertEqual(data.course.pk, str(course.pk))
+        self.assertEqual(data.group.pk, str(group.pk))
         self.assertEqual(data.events[0].pk, str(event.pk))
         self.assertEqual(data.events[0].work.pk, str(work.pk))
         self.assertEqual(data.events[0].work.work_type, work.work_type)
@@ -1085,23 +1086,15 @@ class DjangoReportRepositoryTests(TestCase):
             data.events[0].work.work_type_display,
             work.get_work_type_display(),
         )
-        self.assertEqual(data.all_rows_count, 2)
-        self.assertTrue(data.show_debts_only)
-        self.assertEqual(data.total_debts, 1)
-        self.assertEqual(data.students_with_debts, 1)
-        self.assertEqual(len(data.rows), 1)
-        self.assertEqual(data.rows[0]['student'], missing_student)
-        self.assertEqual(data.rows[0]['cells'][0]['event'].pk, str(event.pk))
-        self.assertEqual(data.rows[0]['cells'][0]['status'], 'missing')
-        self.assertEqual(data.rows[0]['cells'][0]['css_class'], 'journal-missing')
-        self.assertEqual(data.event_stats, [{
-            'event': data.events[0],
-            'graded': 1,
-            'absent': 0,
-            'missing': 1,
-            'total': 2,
-        }])
-        self.assertEqual(data.active_report, 'journal')
+        self.assertEqual(len(data.students), 2)
+        self.assertEqual(data.students[0].pk, str(graded_student.pk))
+        self.assertEqual(data.students[1].pk, str(missing_student.pk))
+        self.assertEqual(len(data.entries), 1)
+        self.assertEqual(data.entries[0].student_id, str(graded_student.pk))
+        self.assertEqual(data.entries[0].event_id, str(event.pk))
+        self.assertEqual(data.entries[0].participation.status, 'graded')
+        self.assertEqual(data.entries[0].mark.score, 4)
+        self.assertEqual(data.entries[0].mark.points, 8)
 
     def test_get_task_db_health_returns_database_health_data(self):
         topic = Topic.objects.create(

@@ -14,7 +14,7 @@ from core_logic.entities.report import (
     HeatmapStudentDetailSource,
     HeatmapSubtopicDetailSource,
     HeatmapTopicMatrixData,
-    JournalData,
+    JournalSource,
     JournalSelectData,
     ReportsDashboardSource,
     StudentPerformanceSource,
@@ -54,14 +54,13 @@ class IReportRepository(ABC):
         """Return course-group pairs available for journal view."""
 
     @abstractmethod
-    def get_journal(
+    def get_journal_source(
         self,
         course_id: Any,
         group_id: Any,
         year: AcademicYearRef | None,
-        show_debts_only: bool,
-    ) -> JournalData:
-        """Return class journal data."""
+    ) -> JournalSource:
+        """Return normalized facts for the class journal."""
 
     @abstractmethod
     def get_task_db_health(self) -> TaskDBHealthData:

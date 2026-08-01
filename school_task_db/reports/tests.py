@@ -599,8 +599,8 @@ class ReportsViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['active_report'], 'journal')
-        self.assertEqual(list(response.context['courses']), [course])
-        self.assertEqual(list(response.context['groups']), [group])
+        self.assertEqual(response.context['courses'][0].pk, str(course.pk))
+        self.assertEqual(response.context['groups'][0].pk, str(group.pk))
         link = response.context['journal_links'][0]
         self.assertEqual(link['course'].pk, str(course.pk))
         self.assertEqual(link['group'].pk, str(group.pk))
@@ -658,8 +658,8 @@ class ReportsViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['active_report'], 'journal')
-        self.assertEqual(response.context['course'], course)
-        self.assertEqual(response.context['group'], group)
+        self.assertEqual(response.context['course'].pk, str(course.pk))
+        self.assertEqual(response.context['group'].pk, str(group.pk))
         self.assertEqual(response.context['events'][0].pk, str(event.pk))
         self.assertEqual(response.context['events'][0].work.pk, str(work.pk))
         self.assertTrue(response.context['show_debts_only'])
@@ -667,7 +667,10 @@ class ReportsViewsTests(TestCase):
         self.assertEqual(response.context['total_debts'], 1)
         self.assertEqual(response.context['students_with_debts'], 1)
         self.assertEqual(len(response.context['rows']), 1)
-        self.assertEqual(response.context['rows'][0]['student'], missing_student)
+        self.assertEqual(
+            response.context['rows'][0]['student'].pk,
+            str(missing_student.pk),
+        )
         self.assertEqual(response.context['rows'][0]['cells'][0]['status'], 'missing')
         self.assertEqual(response.context['event_stats'][0]['graded'], 1)
         self.assertEqual(response.context['event_stats'][0]['missing'], 1)

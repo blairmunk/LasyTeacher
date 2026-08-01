@@ -199,29 +199,6 @@ class Variant(BaseModel):
         return reverse('works:variant-detail', kwargs={'pk': self.pk})
 
     @property
-    def display_name(self):
-        if self.work:
-            return self.work.name
-        if self.work_name_snapshot:
-            return self.work_name_snapshot
-        if self.variant_type == 'remedial':
-            student_name = self.assigned_student.get_short_name() if self.assigned_student else '?'
-            return f"Работа над ошибками — {student_name}"
-        if self.variant_type == 'individual':
-            student_name = self.assigned_student.get_short_name() if self.assigned_student else '?'
-            return f"Индивидуальная — {student_name}"
-        return "Вариант без работы"
-
-
-    @property
-    def display_max_score(self):
-        return self.max_score_snapshot
-
-    @property
-    def display_duration(self):
-        return self.duration_snapshot
-
-    @property
     def total_max_points(self):
         result = self.varianttask_set.aggregate(models.Sum('max_points'))
         return result['max_points__sum'] or 0

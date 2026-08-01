@@ -11,6 +11,9 @@ from core_logic.entities.core import (
     SearchWorkResult,
 )
 from core_logic.interfaces.core_repo import ICoreRepository
+from core_logic.value_objects.variant_display import (
+    resolve_variant_display_name,
+)
 from events.models import Event
 from students.models import Student
 from task_groups.models import AnalogGroup
@@ -171,9 +174,17 @@ class DjangoCoreRepository(ICoreRepository):
                 variant_q &= Q(work_name_snapshot__icontains=word)
             if number_search:
                 variant_q &= Q(number=number_search)
-            return Variant.objects.filter(variant_q)[:20]
+            return Variant.objects.filter(variant_q).select_related(
+                'work',
+                'assigned_student',
+            )[:20]
         if number_search:
-            return Variant.objects.filter(number=number_search)[:20]
+            return Variant.objects.filter(
+                number=number_search,
+            ).select_related(
+                'work',
+                'assigned_student',
+            )[:20]
         return Variant.objects.none()
 
     def _search_groups_by_text(self, words):
@@ -209,7 +220,18 @@ class DjangoCoreRepository(ICoreRepository):
         return [
             SearchVariantResult(
                 pk=str(variant.pk),
-                display_name=variant.display_name,
+                display_name=resolve_variant_display_name(
+                    work_name=(
+                        variant.work.name if variant.work else ''
+                    ),
+                    work_name_snapshot=variant.work_name_snapshot,
+                    variant_type=variant.variant_type,
+                    assigned_student_name=(
+                        variant.assigned_student.get_short_name()
+                        if variant.assigned_student
+                        else ''
+                    ),
+                ),
                 number=variant.number,
                 task_count=variant.varianttask_set.count(),
                 total_max_points=variant.total_max_points,

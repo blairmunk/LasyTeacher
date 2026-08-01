@@ -71,8 +71,8 @@ class DjangoWorkHeaderPayloadBuilder:
             )
         else:
             title = f'{work.name}. Вариант {variant.number}'
-            duration = variant.display_duration
-            max_score = variant.display_max_score
+            duration = variant.duration_snapshot
+            max_score = variant.max_score_snapshot
         return {
             **dict(request.section.options),
             'title': title,

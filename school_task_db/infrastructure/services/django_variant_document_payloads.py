@@ -35,7 +35,7 @@ class DjangoVariantDocumentPayloadBuilder:
             'id': str(variant.pk),
             'number': variant.number,
             'title': f'Вариант {variant.number}',
-            'max_score': variant.display_max_score,
-            'duration': variant.display_duration,
+            'max_score': variant.max_score_snapshot,
+            'duration': variant.duration_snapshot,
             **content_payload,
         }

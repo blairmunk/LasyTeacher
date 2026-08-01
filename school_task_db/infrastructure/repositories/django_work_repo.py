@@ -80,6 +80,9 @@ from core_logic.interfaces.work_document_repo import IWorkDocumentRepository
 from core_logic.interfaces.work_variant_generation_repo import (
     IWorkVariantGenerationRepository,
 )
+from core_logic.value_objects.variant_display import (
+    resolve_variant_display_name,
+)
 from events.models import EventParticipation, Mark
 from task_groups.models import TaskGroup
 from tasks.models import Task
@@ -99,6 +102,19 @@ def _personal_student(variant):
     if variant.source_participation:
         return variant.source_participation.student
     return None
+
+
+def _variant_display_name(variant):
+    return resolve_variant_display_name(
+        work_name=variant.work.name if variant.work else '',
+        work_name_snapshot=variant.work_name_snapshot,
+        variant_type=variant.variant_type,
+        assigned_student_name=(
+            variant.assigned_student.get_short_name()
+            if variant.assigned_student
+            else ''
+        ),
+    )
 
 
 class DjangoWorkRepository(
@@ -147,7 +163,7 @@ class DjangoWorkRepository(
                 number=variant.number,
                 created_at=variant.created_at,
                 task_count=variant.task_count,
-                display_name=variant.display_name,
+                display_name=_variant_display_name(variant),
                 variant_type=variant.variant_type,
                 variant_type_display=variant.get_variant_type_display(),
                 work=(
@@ -337,13 +353,13 @@ class DjangoWorkRepository(
         return VariantDetailVariant(
             pk=str(variant.pk),
             number=variant.number,
-            display_name=variant.display_name,
+            display_name=_variant_display_name(variant),
             short_uuid=variant.get_short_uuid(),
             medium_uuid=variant.get_medium_uuid(),
             variant_type=variant.variant_type,
             variant_type_display=variant.get_variant_type_display(),
-            display_duration=variant.display_duration,
-            display_max_score=variant.display_max_score,
+            display_duration=variant.duration_snapshot,
+            display_max_score=variant.max_score_snapshot,
             created_at=variant.created_at,
             work=(
                 VariantDetailRef(
@@ -635,7 +651,7 @@ class DjangoWorkRepository(
         return [
             OrphanVariantListItem(
                 pk=str(variant.pk),
-                display_name=variant.display_name,
+                display_name=_variant_display_name(variant),
                 short_uuid=variant.get_short_uuid(),
                 variant_type=variant.variant_type,
                 task_count=variant.task_count,
@@ -911,7 +927,10 @@ class DjangoWorkRepository(
         )
 
     def get_variant_delete_info(self, variant_id: str) -> Optional[VariantDeleteInfo]:
-        variant = Variant.objects.select_related('work').filter(pk=variant_id).first()
+        variant = Variant.objects.select_related(
+            'work',
+            'assigned_student',
+        ).filter(pk=variant_id).first()
         if variant is None:
             return None
         return VariantDeleteInfo(
@@ -919,7 +938,7 @@ class DjangoWorkRepository(
             participation_count=EventParticipation.objects.filter(
                 variant_id=variant_id,
             ).count(),
-            display_name=variant.display_name,
+            display_name=_variant_display_name(variant),
             short_uuid=variant.get_short_uuid(),
             work_id=str(variant.work_id or ''),
             work_name=variant.work.name if variant.work else '',

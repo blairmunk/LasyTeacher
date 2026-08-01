@@ -1,4 +1,5 @@
 import json
+from unittest.mock import Mock, patch
 
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -7,7 +8,50 @@ from django.urls import reverse
 from curriculum.models import SubTopic, Topic
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Source, Task
+from tasks.utils import invalidate_task_math_cache_on_save
 from works.models import Variant, VariantTask, Work
+
+
+class TaskMathCacheSignalTests(TestCase):
+    @patch('tasks.utils.math_status_cache')
+    def test_invalidates_only_task_cache_for_non_text_update(self, cache):
+        task = Mock(id='task-1')
+
+        invalidate_task_math_cache_on_save(
+            sender=Task,
+            instance=task,
+            created=False,
+            update_fields={'answer'},
+        )
+
+        cache.invalidate_task_cache.assert_called_once_with('task-1')
+        cache.invalidate_all_cache.assert_not_called()
+
+    @patch('tasks.utils.math_status_cache')
+    def test_invalidates_all_cache_when_text_may_have_changed(self, cache):
+        task = Mock(id='task-1')
+
+        invalidate_task_math_cache_on_save(
+            sender=Task,
+            instance=task,
+            created=False,
+            update_fields={'text'},
+        )
+
+        cache.invalidate_all_cache.assert_called_once_with()
+
+    @patch('tasks.utils.math_status_cache')
+    def test_invalidates_all_cache_for_regular_save(self, cache):
+        task = Mock(id='task-1')
+
+        invalidate_task_math_cache_on_save(
+            sender=Task,
+            instance=task,
+            created=False,
+            update_fields=None,
+        )
+
+        cache.invalidate_all_cache.assert_called_once_with()
 
 
 class TaskBulkGroupAjaxTests(TestCase):

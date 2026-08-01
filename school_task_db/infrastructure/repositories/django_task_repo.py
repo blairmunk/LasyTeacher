@@ -309,7 +309,7 @@ class DjangoTaskRepository(ITaskRepository):
                 text=task.text,
                 task_type_display=task.get_task_type_display(),
                 difficulty_display=task.get_difficulty_display(),
-                section=task.section or '',
+                section=task.topic.section or '',
                 created_at=task.created_at,
                 image_count=task.image_count,
             )
@@ -335,7 +335,7 @@ class DjangoTaskRepository(ITaskRepository):
         return TaskDetailTask(
             pk=str(task.pk),
             topic=str(task.topic),
-            section=task.section or '',
+            section=task.topic.section or '',
             text=task.text,
             answer=task.answer,
             task_type_display=task.get_task_type_display(),

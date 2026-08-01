@@ -211,9 +211,13 @@ math_status_cache = MathStatusCache()
 def invalidate_task_math_cache_on_save(sender, instance, **kwargs):
     """Инвалидирует кэш при сохранении задания"""
     math_status_cache.invalidate_task_cache(instance.id)
-    
-    # Если это новое задание или изменился текст, инвалидируем общий кэш
-    if kwargs.get('created') or hasattr(instance, '_text_changed'):
+
+    update_fields = kwargs.get('update_fields')
+    text_may_have_changed = (
+        update_fields is None
+        or 'text' in update_fields
+    )
+    if kwargs.get('created') or text_may_have_changed:
         math_status_cache.invalidate_all_cache()
 
 @receiver(post_delete, sender='tasks.Task')

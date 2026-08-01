@@ -44,17 +44,6 @@ class Source(BaseModel):
             return self.short_name
         return self.name
 
-    @property
-    def display_name(self):
-        parts = []
-        if self.author:
-            parts.append(self.author)
-        parts.append(self.name)
-        if self.year:
-            parts.append(f'({self.year})')
-        return ' — '.join(parts) if len(parts) > 1 else parts[0]
-
-
 class Task(BaseModel):
     """Задание"""
     TASK_TYPES = [
@@ -160,35 +149,6 @@ class Task(BaseModel):
             if self.subtopic.topic != self.topic:
                 raise ValidationError('Подтема должна принадлежать выбранной основной теме')
 
-    def save(self, *args, **kwargs):
-        """Переопределенное сохранение для отслеживания изменений текста"""
-        # Проверяем изменился ли текст задания
-        if self.pk:
-            try:
-                old_instance = Task.objects.get(pk=self.pk)
-                if old_instance.text != self.text:
-                    self._text_changed = True
-            except Task.DoesNotExist:
-                pass
-        
-        super().save(*args, **kwargs)
-    
-    # Свойства для удобства
-    @property
-    def subject(self):
-        """Предмет через тему"""
-        return self.topic.subject if self.topic else None
-    
-    @property
-    def grade_level(self):
-        """Класс через тему"""
-        return self.topic.grade_level if self.topic else None
-    
-    @property
-    def section(self):
-        """Раздел через тему"""
-        return self.topic.section if self.topic else None
-    
 class TaskImage(BaseModel):
     """Изображение для задания"""
     POSITION_CHOICES = [

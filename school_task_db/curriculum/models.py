@@ -60,13 +60,12 @@ class Course(BaseModel):
     subject = models.CharField('Предмет', max_length=100, 
                              help_text='Предмет из справочника предметов')
     grade_level = models.PositiveIntegerField('Класс')
-    academic_year = models.CharField('Учебный год (старое)', max_length=20, default='2024-2025')
     year = models.ForeignKey(
         'core.AcademicYear',
         on_delete=models.PROTECT,
         verbose_name='Учебный год',
         related_name='courses',
-        null=True, blank=True,
+        null=True,
     )
 
     student_groups = models.ManyToManyField(
@@ -90,7 +89,7 @@ class Course(BaseModel):
         verbose_name = 'Курс'
         verbose_name_plural = 'Курсы'
         ordering = ['grade_level', 'subject', 'name']
-        unique_together = ['name', 'subject', 'grade_level', 'academic_year']
+        unique_together = ['name', 'subject', 'grade_level', 'year']
     
     def __str__(self):
         return f"[{self.get_short_uuid()}] {self.subject} {self.grade_level} класс - {self.name}"

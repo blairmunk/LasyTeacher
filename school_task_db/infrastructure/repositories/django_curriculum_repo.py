@@ -28,7 +28,7 @@ class DjangoCurriculumRepository(ICurriculumRepository):
                 name=course.name,
                 subject=course.subject,
                 grade_level=course.grade_level,
-                academic_year=str(course.year or course.academic_year),
+                academic_year=str(course.year or ''),
                 is_active=course.is_active,
                 description=course.description,
                 start_date=course.start_date,
@@ -92,7 +92,9 @@ class DjangoCurriculumRepository(ICurriculumRepository):
         ]
 
     def get_course(self, course_id: str):
-        course = Course.objects.filter(pk=course_id).first()
+        course = Course.objects.select_related('year').filter(
+            pk=course_id,
+        ).first()
         if course is None:
             return None
 
@@ -101,7 +103,7 @@ class DjangoCurriculumRepository(ICurriculumRepository):
             name=course.name,
             subject=course.subject,
             grade_level=course.grade_level,
-            academic_year=str(course.year or course.academic_year),
+            academic_year=str(course.year or ''),
             is_active=course.is_active,
             description=course.description,
             start_date=course.start_date,

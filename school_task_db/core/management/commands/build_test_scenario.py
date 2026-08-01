@@ -222,7 +222,6 @@ class Command(BaseCommand):
                     'description': data.get('description', ''),
                     'subject': data.get('subject', 'Физика'),
                     'grade_level': data['grade_level'],
-                    'academic_year': self.academic_year.name,
                     'year': self.academic_year,
                     'start_date': self._optional_date(
                         data.get('start_date')

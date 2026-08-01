@@ -11,6 +11,7 @@ from core_logic.entities.core import (
     SearchWorkResult,
 )
 from core_logic.interfaces.core_repo import ICoreRepository
+from core_logic.services.import_log_service import ImportLogService
 from core_logic.value_objects.variant_display import (
     resolve_variant_display_name,
 )
@@ -60,9 +61,13 @@ class DjangoCoreRepository(ICoreRepository):
                 tasks_skipped=log.tasks_skipped,
                 errors_count=log.errors_count,
                 duration_ms=log.duration_ms,
-                duration_human=log.duration_human,
-                file_size_human=log.file_size_human,
-                status_icon=log.status_icon,
+                duration_human=ImportLogService.duration_human(
+                    log.duration_ms,
+                ),
+                file_size_human=ImportLogService.file_size_human(
+                    log.file_size,
+                ),
+                status_icon=ImportLogService.status_icon(log.status),
                 created_at=log.created_at,
             )
             for log in logs

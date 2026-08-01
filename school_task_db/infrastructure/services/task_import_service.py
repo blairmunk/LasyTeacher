@@ -4,6 +4,7 @@ import time
 
 from core.importers.tasks import TaskImporter
 from core.models import ImportLog
+from core_logic.services.import_log_service import ImportLogService
 from core_logic.entities.task_import import (
     TaskImportPreviewRequest,
     TaskImportPreviewResult,
@@ -162,9 +163,10 @@ class DjangoTaskImportService(ITaskImportService):
         prefix = "🔍 ПРЕВЬЮ (dry-run)" if log.dry_run else "✅ ИМПОРТ ЗАВЕРШЁН"
         lines = [
             prefix,
-            f"Файл: {log.filename} ({log.file_size_human})",
+            f"Файл: {log.filename} ("
+            f"{ImportLogService.file_size_human(log.file_size)})",
             f"Режим: {log.get_mode_display()}",
-            f"Время: {log.duration_human}",
+            f"Время: {ImportLogService.duration_human(log.duration_ms)}",
             "",
             "📊 Результаты:",
             f"  Создано: {log.tasks_created}",

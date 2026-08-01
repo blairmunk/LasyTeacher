@@ -325,6 +325,8 @@ class DjangoTaskImportServiceTests(TestCase):
         self.assertEqual(log.status, ImportLog.Status.SUCCESS)
         self.assertEqual(log.filename, 'tasks.json')
         self.assertEqual(log.tasks_created, 1)
+        self.assertIn('Файл: tasks.json (256 Б)', result.message)
+        self.assertIn('Время:', result.message)
         self.assertTrue(Topic.objects.filter(name='Динамика').exists())
         self.assertTrue(Task.objects.filter(text='Задача на силу').exists())
 

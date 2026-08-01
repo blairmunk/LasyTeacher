@@ -151,36 +151,3 @@ class ImportLog(BaseModel):
             f'{self.filename} — {self.get_status_display()} '
             f'({self.created_at:%d.%m.%Y %H:%M})'
         )
-    
-    @property
-    def total_processed(self):
-        """Общее количество обработанных заданий"""
-        return self.tasks_created + self.tasks_updated + self.tasks_skipped
-    
-    @property
-    def status_icon(self):
-        """Иконка статуса для отображения"""
-        icons = {
-            self.Status.VALIDATING: '🔍',
-            self.Status.IMPORTING: '⏳',
-            self.Status.SUCCESS: '✅',
-            self.Status.PARTIAL: '⚠️',
-            self.Status.FAILED: '❌',
-        }
-        return icons.get(self.status, '❓')
-    
-    @property
-    def duration_human(self):
-        """Длительность в человекочитаемом виде"""
-        if self.duration_ms < 1000:
-            return f'{self.duration_ms} мс'
-        return f'{self.duration_ms / 1000:.1f} с'
-    
-    @property
-    def file_size_human(self):
-        """Размер файла в человекочитаемом виде"""
-        if self.file_size < 1024:
-            return f'{self.file_size} Б'
-        if self.file_size < 1024 * 1024:
-            return f'{self.file_size / 1024:.1f} КБ'
-        return f'{self.file_size / 1024 / 1024:.1f} МБ'

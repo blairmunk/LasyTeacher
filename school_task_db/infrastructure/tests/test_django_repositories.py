@@ -1233,7 +1233,12 @@ class DjangoRemedialRepositoryTests(TestCase):
 
     def test_core_repository_returns_import_logs(self):
         first = ImportLog.objects.create(filename='first.json')
-        second = ImportLog.objects.create(filename='second.json')
+        second = ImportLog.objects.create(
+            filename='second.json',
+            status=ImportLog.Status.SUCCESS,
+            duration_ms=1500,
+            file_size=1536,
+        )
         repo = DjangoCoreRepository()
 
         recent_logs = list(repo.get_recent_import_logs(limit=1))
@@ -1243,6 +1248,9 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(import_logs[0].filename, second.filename)
         self.assertEqual(import_logs[1].filename, first.filename)
         self.assertEqual(import_logs[0].mode_display, second.get_mode_display())
+        self.assertEqual(import_logs[0].status_icon, '✅')
+        self.assertEqual(import_logs[0].duration_human, '1.5 с')
+        self.assertEqual(import_logs[0].file_size_human, '1.5 КБ')
 
     def test_create_remedial_use_case_creates_django_objects(self):
         student_repo = DjangoStudentRepository()

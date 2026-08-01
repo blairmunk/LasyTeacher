@@ -1,4 +1,7 @@
 from django.contrib import admin
+
+from core_logic.services.import_log_service import ImportLogService
+
 from .models import ImportLog, AcademicYear
 
 
@@ -28,11 +31,14 @@ class ImportLogAdmin(admin.ModelAdmin):
     ordering = ['-created_at']
 
     def status_icon_display(self, obj):
-        return f'{obj.status_icon} {obj.get_status_display()}'
+        return (
+            f'{ImportLogService.status_icon(obj.status)} '
+            f'{obj.get_status_display()}'
+        )
     status_icon_display.short_description = 'Статус'
 
     def duration_human(self, obj):
-        return obj.duration_human
+        return ImportLogService.duration_human(obj.duration_ms)
     duration_human.short_description = 'Время'
 
     def has_add_permission(self, request):

@@ -41,7 +41,7 @@
                             <small class="text-muted">групп заданий</small>
                         </div>
                         <div class="col-md-3">
-                            <div class="fs-3 fw-bold text-warning">{{ work.effective_max_score }}</div>
+                            <div class="fs-3 fw-bold text-warning">{{ effective_max_score }}</div>
                             <small class="text-muted">макс. баллов{% if not work.max_score %} (Σ весов){% endif %}</small>
                         </div>
                     </div>
@@ -116,7 +116,7 @@
                         <tfoot class="table-light">
                             <tr>
                                 <td colspan="6" class="text-end fw-bold">Итого:</td>
-                                <td class="text-center fw-bold text-primary">{{ work.effective_max_score }}</td>
+                                <td class="text-center fw-bold text-primary">{{ effective_max_score }}</td>
                                 <td></td>
                             </tr>
                         </tfoot>

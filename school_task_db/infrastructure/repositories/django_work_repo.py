@@ -237,7 +237,6 @@ class DjangoWorkRepository(
             work_type_display=work.get_work_type_display(),
             duration=work.duration,
             max_score=work.max_score,
-            effective_max_score=work.effective_max_score,
             variant_count=Variant.objects.filter(work_id=work_id).count(),
             created_at=work.created_at,
             updated_at=work.updated_at,

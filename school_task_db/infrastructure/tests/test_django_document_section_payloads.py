@@ -56,11 +56,13 @@ from infrastructure.services.django_work_document_payloads import (
     WorkDocumentSourceProvider,
 )
 from tasks.models import Source, Task
+from task_groups.models import AnalogGroup
 from works.models import (
     Variant,
     VariantContentBlockSnapshot,
     VariantTask,
     Work,
+    WorkAnalogGroup,
 )
 
 
@@ -102,6 +104,34 @@ class DjangoWorkHeaderPayloadBuilderTests(TestCase):
                 'max_score': 12,
             },
         )
+
+    def test_derives_work_header_score_from_assessable_specification(self):
+        work = Work.objects.create(
+            name='Рабочий лист',
+            max_score=0,
+        )
+        demo_group = AnalogGroup.objects.create(name='Разбор')
+        practice_group = AnalogGroup.objects.create(name='Практика')
+        WorkAnalogGroup.objects.create(
+            work=work,
+            analog_group=demo_group,
+            count=2,
+            weight=5,
+            is_assessable=False,
+        )
+        WorkAnalogGroup.objects.create(
+            work=work,
+            analog_group=practice_group,
+            count=3,
+            weight=4,
+            is_assessable=True,
+        )
+
+        payload = DjangoWorkHeaderPayloadBuilder().build_payload(
+            build_request(work, HEADER_SECTION),
+        )
+
+        self.assertEqual(payload['max_score'], 12)
 
 
 class DjangoWorkTaskListPayloadBuilderTests(TestCase):

@@ -54,13 +54,31 @@ class GetWorkDetailUseCase:
             self.work_read_repo.get_detail_analog_groups(work_id),
         )
         content_blocks = self.work_read_repo.get_detail_content_blocks(work_id)
+        score_spec_rows = tuple(
+            WorkScoreSpecRow(
+                spec_row_id=(
+                    group.selection_id or group.analog_group.pk
+                ),
+                count=group.count,
+                weight=group.weight,
+                is_assessable=group.is_assessable,
+            )
+            for group in analog_groups
+        )
         spec_preview = self._build_spec_preview(
             max_score=work.max_score,
             analog_groups=analog_groups,
+            score_spec_rows=score_spec_rows,
         )
 
         return WorkDetailData(
             work=work,
+            effective_max_score=(
+                self.score_allocation_service.effective_max_score(
+                    max_score=work.max_score,
+                    spec_rows=score_spec_rows,
+                )
+            ),
             variants=variants,
             analog_groups=analog_groups,
             spec_preview=spec_preview,
@@ -93,7 +111,12 @@ class GetWorkDetailUseCase:
             document_type,
         )
 
-    def _build_spec_preview(self, max_score, analog_groups):
+    def _build_spec_preview(
+        self,
+        max_score,
+        analog_groups,
+        score_spec_rows,
+    ):
         groups_by_id = {
             (group.selection_id or group.analog_group.pk): group
             for group in analog_groups
@@ -101,17 +124,7 @@ class GetWorkDetailUseCase:
         preview_by_group_id = {}
         for allocation in self.score_allocation_service.allocate(
             max_score=max_score,
-            spec_rows=(
-                WorkScoreSpecRow(
-                    spec_row_id=(
-                        group.selection_id or group.analog_group.pk
-                    ),
-                    count=group.count,
-                    weight=group.weight,
-                    is_assessable=group.is_assessable,
-                )
-                for group in analog_groups
-            ),
+            spec_rows=score_spec_rows,
         ):
             preview = preview_by_group_id.setdefault(
                 allocation.spec_row_id,

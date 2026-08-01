@@ -27,6 +27,16 @@ class TaskScoreAllocation:
 
 
 class WorkScoreAllocationService:
+    @staticmethod
+    def effective_max_score(max_score: int, spec_rows) -> int:
+        if max_score > 0:
+            return max_score
+        return sum(
+            row.weight * row.count
+            for row in spec_rows
+            if row.is_assessable
+        )
+
     def allocate(
         self,
         max_score: int,

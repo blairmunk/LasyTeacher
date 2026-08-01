@@ -175,7 +175,6 @@ class FakeWorkRepository:
             work_type_display='Контрольная работа',
             duration=45,
             max_score=0,
-            effective_max_score=0,
             variant_count=0,
             created_at=None,
             updated_at=None,
@@ -446,6 +445,7 @@ class WorkDetailTests(TestCase):
         self.assertEqual(result.spec_preview[0].per_task, 4)
         self.assertEqual(result.spec_preview[0].total_points, 8)
         self.assertEqual(result.spec_preview[0].available_count, 2)
+        self.assertEqual(result.effective_max_score, 8)
 
     def test_get_work_detail_merges_persistent_content_in_pedagogical_order(self):
         content_blocks = [

@@ -44,13 +44,9 @@ class WorkVariantCompositionService:
             work_name=source.work_name,
             duration=source.duration,
             max_score=source.max_score,
-            effective_max_score=(
-                source.max_score
-                or sum(
-                    row.weight * row.count
-                    for row in source.spec_rows
-                    if row.is_assessable
-                )
+            effective_max_score=self.score_allocation_service.effective_max_score(
+                max_score=source.max_score,
+                spec_rows=source.spec_rows,
             ),
             variant_counter=source.variant_counter,
             spec_rows=tuple(

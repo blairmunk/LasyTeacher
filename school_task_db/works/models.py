@@ -40,17 +40,6 @@ class Work(BaseModel):
         'Максимальный балл', default=0,
         help_text='Шкала нормировки. 0 = сумма весов (без нормировки)'
     )
-    @property
-    def effective_max_score(self):
-        """Эффективный макс. балл: если max_score=0, считаем сумму весов"""
-        if self.max_score:
-            return self.max_score
-        return sum(
-            wg.weight * wg.count
-            for wg in self.workanaloggroup_set.all()
-            if wg.is_assessable
-        )
-
 
     class Meta:
         verbose_name = 'Работа'

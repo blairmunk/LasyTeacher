@@ -24,6 +24,25 @@ class WorkScoreAllocationServiceTests(TestCase):
             [('row-1', 3), ('row-1', 3), ('row-2', 5)],
         )
 
+    def test_derives_effective_max_score_from_assessable_rows(self):
+        score = self.service.effective_max_score(
+            max_score=0,
+            spec_rows=(
+                WorkScoreSpecRow('demo', count=2, weight=5, is_assessable=False),
+                WorkScoreSpecRow('practice', count=3, weight=4),
+            ),
+        )
+
+        self.assertEqual(score, 12)
+
+    def test_explicit_max_score_overrides_specification_weights(self):
+        score = self.service.effective_max_score(
+            max_score=20,
+            spec_rows=(WorkScoreSpecRow('row', count=3, weight=4),),
+        )
+
+        self.assertEqual(score, 20)
+
     def test_normalizes_points_and_preserves_total_score(self):
         allocations = self.service.allocate(
             max_score=10,

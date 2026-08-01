@@ -3,6 +3,10 @@
 from core_logic.value_objects.document_recipes import (
     TASK_LIST_SECTION,
 )
+from core_logic.services.work_score_allocation_service import (
+    WorkScoreAllocationService,
+    WorkScoreSpecRow,
+)
 from infrastructure.services.django_variant_document_payloads import (
     DjangoVariantDocumentPayloadBuilder,
 )
@@ -31,10 +35,14 @@ class DjangoWorkHeaderPayloadBuilder:
         self,
         get_work_source=None,
         work_source_provider=None,
+        score_allocation_service=None,
     ):
         self.work_source_provider = (
             work_source_provider
             or WorkDocumentSourceProvider(get_work_source=get_work_source)
+        )
+        self.score_allocation_service = (
+            score_allocation_service or WorkScoreAllocationService()
         )
 
     def build_payload(self, request):
@@ -45,8 +53,23 @@ class DjangoWorkHeaderPayloadBuilder:
         variant = _work_variant_from_request(work, request)
         title = work.name
         duration = work.duration
-        max_score = work.effective_max_score
-        if variant is not None:
+        if variant is None:
+            score_spec_rows = ()
+            if work.max_score <= 0:
+                score_spec_rows = (
+                    WorkScoreSpecRow(
+                        spec_row_id=str(row.pk),
+                        count=row.count,
+                        weight=row.weight,
+                        is_assessable=row.is_assessable,
+                    )
+                    for row in work.workanaloggroup_set.all()
+                )
+            max_score = self.score_allocation_service.effective_max_score(
+                max_score=work.max_score,
+                spec_rows=score_spec_rows,
+            )
+        else:
             title = f'{work.name}. Вариант {variant.number}'
             duration = variant.display_duration
             max_score = variant.display_max_score

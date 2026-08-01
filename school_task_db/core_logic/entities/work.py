@@ -19,6 +19,7 @@ from core_logic.value_objects.task_print_settings import (
 @dataclass(frozen=True)
 class WorkDetailData:
     work: Optional["WorkDetailWork"] = None
+    effective_max_score: int = 0
     variants: List["WorkDetailVariant"] = field(default_factory=list)
     analog_groups: List["WorkDetailSpecGroup"] = field(default_factory=list)
     spec_preview: List["WorkDetailSpecPreviewItem"] = field(default_factory=list)
@@ -47,7 +48,6 @@ class WorkDetailWork:
     work_type_display: str
     duration: int
     max_score: int
-    effective_max_score: int
     variant_count: int
     created_at: datetime
     updated_at: datetime

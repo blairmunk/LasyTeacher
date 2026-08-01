@@ -21,16 +21,6 @@ class ReviewSession(BaseModel):
     def __str__(self):
         return f"Проверка {self.event.name} - {self.reviewer.get_full_name()}"
     
-    @property
-    def progress_percentage(self):
-        if self.total_participations == 0:
-            return 0
-        return round((self.checked_participations / self.total_participations) * 100, 1)
-    
-    @property
-    def is_completed(self):
-        return self.finished_at is not None
-
 class ReviewComment(BaseModel):
     """Типовые комментарии для быстрого использования"""
     text = models.TextField('Текст комментария')

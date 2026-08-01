@@ -1,4 +1,10 @@
 from django.contrib import admin
+
+from core_logic.value_objects.review_session import (
+    review_session_is_completed,
+    review_session_progress_percentage,
+)
+
 from .models import ReviewSession, ReviewComment
 
 @admin.register(ReviewSession)
@@ -9,8 +15,17 @@ class ReviewSessionAdmin(admin.ModelAdmin):
     readonly_fields = ['started_at']
     
     def progress_percentage(self, obj):
-        return f"{obj.progress_percentage}%"
+        progress = review_session_progress_percentage(
+            total_participations=obj.total_participations,
+            checked_participations=obj.checked_participations,
+        )
+        return f"{progress}%"
     progress_percentage.short_description = 'Прогресс'
+
+    def is_completed(self, obj):
+        return review_session_is_completed(obj.finished_at)
+    is_completed.boolean = True
+    is_completed.short_description = 'Завершена'
 
 @admin.register(ReviewComment)
 class ReviewCommentAdmin(admin.ModelAdmin):

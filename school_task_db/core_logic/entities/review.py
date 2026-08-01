@@ -5,6 +5,10 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 from core_logic.entities.event import EventEntity
+from core_logic.value_objects.review_session import (
+    review_session_is_completed,
+    review_session_progress_percentage,
+)
 
 
 @dataclass(frozen=True)
@@ -212,16 +216,14 @@ class ReviewSessionRef:
 
     @property
     def progress_percentage(self) -> float:
-        if self.total_participations == 0:
-            return 0
-        return round(
-            self.checked_participations / self.total_participations * 100,
-            1,
+        return review_session_progress_percentage(
+            total_participations=self.total_participations,
+            checked_participations=self.checked_participations,
         )
 
     @property
     def is_completed(self) -> bool:
-        return self.finished_at is not None
+        return review_session_is_completed(self.finished_at)
 
 
 @dataclass(frozen=True)

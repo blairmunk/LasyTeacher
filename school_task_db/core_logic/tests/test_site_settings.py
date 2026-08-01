@@ -33,7 +33,6 @@ class SiteSettingsUseCaseTests(TestCase):
             school_name='Лицей',
             teacher_name='Иванова',
             default_subject='Физика',
-            current_academic_year='2026-2027',
         )
 
         result = SaveSiteSettingsUseCase(repo).execute(params)

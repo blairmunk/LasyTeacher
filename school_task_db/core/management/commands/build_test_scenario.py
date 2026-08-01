@@ -155,7 +155,6 @@ class Command(BaseCommand):
         ):
             if field in settings_data:
                 setattr(settings, field, settings_data[field])
-        settings.current_academic_year = self.academic_year.name
         settings.save()
 
         if not self.academic_year.is_active:

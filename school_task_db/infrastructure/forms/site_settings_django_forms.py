@@ -8,15 +8,13 @@ class SiteSettingsForm(forms.ModelForm):
         model = SiteSettings
         fields = [
             'school_name', 'teacher_name', 'default_subject',
-            'current_academic_year', 'points_scale',
-            'default_variants_count', 'logo',
+            'points_scale', 'default_variants_count', 'logo',
             'pdf_font_size', 'pdf_margin_top', 'pdf_margin_bottom',
         ]
         widgets = {
             'school_name': forms.TextInput(attrs={'class': 'form-control'}),
             'teacher_name': forms.TextInput(attrs={'class': 'form-control'}),
             'default_subject': forms.TextInput(attrs={'class': 'form-control'}),
-            'current_academic_year': forms.TextInput(attrs={'class': 'form-control'}),
             'points_scale': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
             'default_variants_count': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'max': 30}),
             'logo': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),

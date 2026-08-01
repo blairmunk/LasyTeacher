@@ -26,12 +26,6 @@ class SiteSettings(models.Model):
         help_text='Макс. балл за работу по умолчанию'
     )
 
-    # Учебный год
-    current_academic_year = models.CharField(
-        'Текущий учебный год', max_length=20, blank=True,
-        default='2025-2026'
-    )
-
     # Логотип для PDF
     logo = models.ImageField(
         'Логотип школы', upload_to='settings/',

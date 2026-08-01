@@ -9,7 +9,6 @@ class SiteSettingsData:
     school_name: str = ''
     teacher_name: str = ''
     default_subject: str = 'Физика'
-    current_academic_year: str = '2025-2026'
     points_scale: int = 100
     default_variants_count: int = 2
     logo: Any = None
@@ -23,7 +22,6 @@ class SaveSiteSettingsParams:
     school_name: str = ''
     teacher_name: str = ''
     default_subject: str = 'Физика'
-    current_academic_year: str = '2025-2026'
     points_scale: int = 100
     default_variants_count: int = 2
     logo: Any = None

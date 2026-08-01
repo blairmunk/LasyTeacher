@@ -15,7 +15,6 @@ class SettingsFormAdapter:
             'school_name': settings.school_name,
             'teacher_name': settings.teacher_name,
             'default_subject': settings.default_subject,
-            'current_academic_year': settings.current_academic_year,
             'points_scale': settings.points_scale,
             'default_variants_count': settings.default_variants_count,
             'logo': settings.logo,
@@ -30,10 +29,6 @@ class SettingsFormAdapter:
             school_name=form.cleaned_data.get('school_name', ''),
             teacher_name=form.cleaned_data.get('teacher_name', ''),
             default_subject=form.cleaned_data.get('default_subject', ''),
-            current_academic_year=form.cleaned_data.get(
-                'current_academic_year',
-                '',
-            ),
             points_scale=form.cleaned_data['points_scale'],
             default_variants_count=form.cleaned_data['default_variants_count'],
             logo=None if logo is False else logo,

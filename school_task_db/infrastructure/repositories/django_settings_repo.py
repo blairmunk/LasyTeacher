@@ -16,7 +16,6 @@ class DjangoSettingsRepository(ISettingsRepository):
             school_name=settings.school_name,
             teacher_name=settings.teacher_name,
             default_subject=settings.default_subject,
-            current_academic_year=settings.current_academic_year,
             points_scale=settings.points_scale,
             default_variants_count=settings.default_variants_count,
             logo=settings.logo,
@@ -33,7 +32,6 @@ class DjangoSettingsRepository(ISettingsRepository):
         settings.school_name = params.school_name
         settings.teacher_name = params.teacher_name
         settings.default_subject = params.default_subject
-        settings.current_academic_year = params.current_academic_year
         settings.points_scale = params.points_scale
         settings.default_variants_count = params.default_variants_count
         settings.pdf_font_size = params.pdf_font_size

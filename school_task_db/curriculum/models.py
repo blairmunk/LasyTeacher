@@ -1,6 +1,5 @@
 from django.db import models
 from django.urls import reverse
-from django.core.exceptions import ValidationError
 from core.models import BaseModel
 
 class Topic(BaseModel):
@@ -32,10 +31,6 @@ class Topic(BaseModel):
     def get_absolute_url(self):
         return reverse('curriculum:topic-detail', kwargs={'pk': self.pk})
     
-    def get_subtopics_count(self):
-        """Количество подтем"""
-        return self.subtopics.count()
-
 class SubTopic(BaseModel):
     """Подтема - простая связь с темой"""
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE, 
@@ -56,24 +51,6 @@ class SubTopic(BaseModel):
     def get_absolute_url(self):
         return reverse('curriculum:subtopic-detail', kwargs={'pk': self.pk})
     
-    # Свойства для удобства доступа к данным темы
-    @property
-    def subject(self):
-        return self.topic.subject
-    
-    @property
-    def grade_level(self):
-        return self.topic.grade_level
-    
-    @property
-    def section(self):
-        return self.topic.section
-    
-    def clean(self):
-        """Валидация подтемы"""
-        if not self.topic:
-            raise ValidationError('Подтема должна принадлежать основной теме')
-
 class Course(BaseModel):
     """Курс - набор работ для изучения"""
     name = models.CharField('Название курса', max_length=200)

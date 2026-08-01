@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.db.models import Count
+
 from .models import Topic, SubTopic, Course, CourseAssignment
 
 class SubTopicInline(admin.TabularInline):
@@ -14,6 +16,11 @@ class TopicAdmin(admin.ModelAdmin):
     list_editable = ['order']
     readonly_fields = ['uuid', 'get_short_uuid']
     inlines = [SubTopicInline]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(
+            subtopics_count_value=Count('subtopics', distinct=True),
+        )
     
     fieldsets = [
         ('Основная информация', {
@@ -33,8 +40,9 @@ class TopicAdmin(admin.ModelAdmin):
     get_short_uuid.short_description = 'UUID'
     
     def subtopics_count(self, obj):
-        return obj.get_subtopics_count()
+        return obj.subtopics_count_value
     subtopics_count.short_description = 'Подтем'
+    subtopics_count.admin_order_field = 'subtopics_count_value'
 
 @admin.register(SubTopic)
 class SubTopicAdmin(admin.ModelAdmin):

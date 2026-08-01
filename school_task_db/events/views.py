@@ -244,7 +244,7 @@ def grade_participation(request, participation_id):
     if request.method == 'POST':
         form = MarkForm(request.POST, request.FILES)
         if form.is_valid():
-            container.grade_student_work_use_case().execute(
+            result = container.grade_student_work_use_case().execute(
                 container.event_form_adapter.grade_student_work_request_from_form(
                     form,
                     participation_id=str(participation.pk),
@@ -257,6 +257,13 @@ def grade_participation(request, participation_id):
                     sync_event_status=False,
                 )
             )
+
+            if result.status == 'invalid':
+                messages.error(request, '; '.join(result.errors))
+                return redirect(
+                    'review:participation-review',
+                    pk=participation.pk,
+                )
 
             messages.success(request, 'Работа успешно оценена')
             return redirect('review:dashboard')

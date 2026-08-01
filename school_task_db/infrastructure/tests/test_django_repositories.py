@@ -2499,8 +2499,9 @@ class DjangoRemedialRepositoryTests(TestCase):
             event=self.event,
         )
 
-        self.assertEqual(result.score, 4)
-        self.assertEqual(result.student_name, 'Петров Пётр')
+        self.assertEqual(result.status, 'saved')
+        self.assertEqual(result.grade.score, 4)
+        self.assertEqual(result.grade.student_name, 'Петров Пётр')
         self.assertEqual(self.mark.score, 4)
         self.assertEqual(self.mark.points, 1)
         self.assertEqual(self.mark.max_points, 2)
@@ -2563,8 +2564,8 @@ class DjangoRemedialRepositoryTests(TestCase):
             )
         )
 
-        self.assertEqual(first_result.event_status, 'reviewing')
-        self.assertEqual(second_result.event_status, 'graded')
+        self.assertEqual(first_result.grade.event_status, 'reviewing')
+        self.assertEqual(second_result.grade.event_status, 'graded')
         self.event.refresh_from_db()
         self.assertEqual(self.event.status, 'graded')
 

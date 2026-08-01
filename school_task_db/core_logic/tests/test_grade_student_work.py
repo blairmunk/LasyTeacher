@@ -95,8 +95,9 @@ class GradeStudentWorkUseCaseTests(TestCase):
             )
         )
 
-        self.assertEqual(result.mark_id, 'mark-1')
-        self.assertEqual(result.event_status, 'reviewing')
+        self.assertEqual(result.status, 'saved')
+        self.assertEqual(result.grade.mark_id, 'mark-1')
+        self.assertEqual(result.grade.event_status, 'reviewing')
         self.assertEqual(repo.context_request, 'participation-1')
         self.assertEqual(repo.graded_params.participation_id, 'participation-1')
         self.assertEqual(repo.graded_params.score, 4)
@@ -131,7 +132,7 @@ class GradeStudentWorkUseCaseTests(TestCase):
             )
         )
 
-        self.assertEqual(result.event_status, 'graded')
+        self.assertEqual(result.grade.event_status, 'graded')
         self.assertEqual(repo.graded_params.event_status, 'graded')
 
     def test_execute_can_save_grade_without_syncing_event_status(self):
@@ -152,8 +153,37 @@ class GradeStudentWorkUseCaseTests(TestCase):
             )
         )
 
-        self.assertEqual(result.event_status, 'completed')
+        self.assertEqual(result.grade.event_status, 'completed')
         self.assertIsNone(repo.graded_params.event_status)
+
+    def test_execute_rejects_invalid_mark_before_persistence(self):
+        event_repo = FakeEventRepository()
+        student_repo = FakeStudentRepository()
+        use_case = GradeStudentWorkUseCase(
+            event_repo=event_repo,
+            review_repo=FakeReviewRepository(),
+            student_repo=student_repo,
+            grading_service=GradingService(),
+            transaction_manager=FakeTransactionManager(),
+        )
+
+        result = use_case.execute(
+            GradeStudentWorkRequest(
+                participation_id='participation-1',
+                score=6,
+                points=8,
+                max_points=10,
+            )
+        )
+
+        self.assertEqual(result.status, 'invalid')
+        self.assertEqual(
+            result.errors,
+            ('Оценка должна быть от 1 до 5',),
+        )
+        self.assertIsNone(event_repo.context_request)
+        self.assertIsNone(event_repo.graded_params)
+        self.assertEqual(student_repo.synced_mark_ids, [])
 
     def test_execute_derives_totals_from_assessable_variant_snapshots(self):
         event_repo = FakeEventRepository()

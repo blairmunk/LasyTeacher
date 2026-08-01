@@ -15,6 +15,7 @@ from core_logic.services.grading_service import GradingService
 from core_logic.use_cases.sync_student_task_logs import (
     SyncStudentTaskLogsUseCase,
 )
+from core_logic.value_objects.mark_validation import validate_mark_values
 
 
 @dataclass(frozen=True)
@@ -36,6 +37,13 @@ class GradeStudentWorkRequest:
     sync_event_status: bool = True
 
 
+@dataclass(frozen=True)
+class GradeStudentWorkResult:
+    status: str
+    grade: Optional[GradeParticipationResult] = None
+    errors: tuple[str, ...] = ()
+
+
 class GradeStudentWorkUseCase:
     def __init__(
         self,
@@ -55,7 +63,7 @@ class GradeStudentWorkUseCase:
             or SyncStudentTaskLogsUseCase(student_repo)
         )
 
-    def execute(self, request: GradeStudentWorkRequest) -> GradeParticipationResult:
+    def execute(self, request: GradeStudentWorkRequest) -> GradeStudentWorkResult:
         checked_by = self.grading_service.checked_by_name(
             display_name=request.checked_by_display_name,
             username=request.checked_by_username,
@@ -75,6 +83,17 @@ class GradeStudentWorkUseCase:
                 task_scores = normalized_scores.task_scores
                 points = normalized_scores.points
                 max_points = normalized_scores.max_points
+            try:
+                validate_mark_values(
+                    score=request.score,
+                    points=points,
+                    max_points=max_points,
+                )
+            except ValueError as error:
+                return GradeStudentWorkResult(
+                    status='invalid',
+                    errors=(str(error),),
+                )
             context = self.event_repo.get_participation_grading_context(
                 request.participation_id,
             )
@@ -89,7 +108,7 @@ class GradeStudentWorkUseCase:
                         context.other_graded_participants + 1
                     ),
                 )
-            result = self.event_repo.save_participation_grade(
+            grade = self.event_repo.save_participation_grade(
                 GradeParticipationParams(
                     participation_id=request.participation_id,
                     score=request.score,
@@ -107,5 +126,8 @@ class GradeStudentWorkUseCase:
                     event_status=event_status,
                 )
             )
-            self.task_log_sync_use_case.execute(result.mark_id)
-            return result
+            self.task_log_sync_use_case.execute(grade.mark_id)
+            return GradeStudentWorkResult(
+                status='saved',
+                grade=grade,
+            )

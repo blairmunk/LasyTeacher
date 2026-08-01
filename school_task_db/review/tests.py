@@ -207,6 +207,37 @@ class ParticipationReviewViewTests(TestCase):
         self.assertEqual(self.event.status, 'reviewing')
         self.assertEqual(task_log.percentage, 100)
 
+    def test_post_rejects_invalid_score_without_saving_mark(self):
+        response = self.client.post(
+            reverse(
+                'review:participation-review',
+                args=[self.participation.pk],
+            ),
+            {
+                'score': '6',
+                f'task_{self.variant_task.pk}': '2',
+                f'task_{self.variant_task.pk}_max': '2',
+                f'task_{self.variant_task.pk}_task_id': str(self.task.pk),
+                f'task_{self.variant_task.pk}_variant_task_id': str(
+                    self.variant_task.pk,
+                ),
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                'review:participation-review',
+                args=[self.participation.pk],
+            ),
+            fetch_redirect_response=False,
+        )
+        self.assertFalse(
+            Mark.objects.filter(participation=self.participation).exists(),
+        )
+        self.participation.refresh_from_db()
+        self.assertEqual(self.participation.status, 'completed')
+
     def test_post_save_and_next_uses_clean_navigation(self):
         response = self.client.post(
             reverse('review:participation-review', args=[self.participation.pk]),

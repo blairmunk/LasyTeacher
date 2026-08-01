@@ -162,12 +162,20 @@ class ParticipationReviewView(TemplateView):
             )
         )
 
+        if result.status == 'invalid':
+            messages.error(request, '; '.join(result.errors))
+            return redirect(
+                'review:participation-review',
+                pk=participation_id,
+            )
+        grade = result.grade
+
         scan_msg = ''
         if uploaded_file is not None:
             scan_msg = ' + скан загружен'
         messages.success(
             request,
-            f'Работа {result.student_name} проверена (оценка: {result.score}){scan_msg}',
+            f'Работа {grade.student_name} проверена (оценка: {grade.score}){scan_msg}',
         )
 
         if 'save_and_next' in request.POST:
@@ -183,7 +191,7 @@ class ParticipationReviewView(TemplateView):
                 messages.info(request, '✅ Все работы проверены!')
             return redirect('review:event-review', pk=navigation.event_id)
 
-        return redirect('review:event-review', pk=result.event_id)
+        return redirect('review:event-review', pk=grade.event_id)
 
 
 

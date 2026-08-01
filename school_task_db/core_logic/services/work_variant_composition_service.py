@@ -3,13 +3,16 @@
 import random
 from typing import Callable
 
+from core_logic.entities.work import VariantGenerationGroup
 from core_logic.entities.work_variant_composition import (
     VariantContentBlockCreationPlan,
     VariantCreationPlan,
     VariantTaskCreationPlan,
     WorkVariantCompositionInput,
     WorkVariantCompositionPlan,
+    WorkVariantCompositionSource,
     WorkVariantContentBlock,
+    WorkVariantSpecRow,
 )
 from core_logic.services.work_score_allocation_service import (
     WorkScoreAllocationService,
@@ -18,6 +21,7 @@ from core_logic.services.work_score_allocation_service import (
 from core_logic.value_objects.work_content_plan import (
     WORK_CONTENT_TEXT,
 )
+from core_logic.value_objects.task_print_settings import TASK_BANK_ROLE_ANY
 
 
 class WorkVariantCompositionService:
@@ -30,6 +34,66 @@ class WorkVariantCompositionService:
         self.score_allocation_service = (
             score_allocation_service or WorkScoreAllocationService()
         )
+
+    def build_input(
+        self,
+        source: WorkVariantCompositionSource,
+    ) -> WorkVariantCompositionInput:
+        return WorkVariantCompositionInput(
+            work_name=source.work_name,
+            duration=source.duration,
+            max_score=source.max_score,
+            effective_max_score=(
+                source.max_score
+                or sum(
+                    row.weight * row.count
+                    for row in source.spec_rows
+                    if row.is_assessable
+                )
+            ),
+            variant_counter=source.variant_counter,
+            spec_rows=tuple(
+                WorkVariantSpecRow(
+                    spec_row_id=row.spec_row_id,
+                    count=row.count,
+                    weight=row.weight,
+                    content_order=row.content_order,
+                    available_tasks=tuple(
+                        task
+                        for task in row.available_tasks
+                        if (
+                            row.bank_role_filter == TASK_BANK_ROLE_ANY
+                            or task.bank_role == row.bank_role_filter
+                        )
+                    ),
+                    render_mode=row.render_mode,
+                    is_assessable=row.is_assessable,
+                    blank_cells_after=row.blank_cells_after,
+                    blank_cells_rows=row.blank_cells_rows,
+                )
+                for row in source.spec_rows
+            ),
+            content_blocks=source.content_blocks,
+        )
+
+    @staticmethod
+    def build_generation_groups(sources):
+        return [
+            VariantGenerationGroup(
+                group_name=source.group_name,
+                requested_count=source.requested_count,
+                available_count=sum(
+                    1
+                    for role in source.task_bank_roles
+                    if (
+                        source.bank_role_filter == TASK_BANK_ROLE_ANY
+                        or role == source.bank_role_filter
+                    )
+                ),
+                bank_role_filter=source.bank_role_filter,
+            )
+            for source in sources
+        ]
 
     def compose(
         self,

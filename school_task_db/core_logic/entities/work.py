@@ -235,6 +235,17 @@ class VariantGenerationGroup:
 
 
 @dataclass(frozen=True)
+class VariantGenerationGroupSource:
+    group_name: str
+    requested_count: int
+    bank_role_filter: str = TASK_BANK_ROLE_ANY
+    task_bank_roles: tuple[str, ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        object.__setattr__(self, 'task_bank_roles', tuple(self.task_bank_roles))
+
+
+@dataclass(frozen=True)
 class VariantDetailData:
     variant: Optional["VariantDetailVariant"] = None
     variant_tasks: List["VariantDetailTaskRow"] = field(default_factory=list)

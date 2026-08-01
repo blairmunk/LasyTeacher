@@ -3,8 +3,10 @@ from unittest import TestCase
 from core_logic.entities.work_variant_composition import (
     AvailableVariantTask,
     WorkVariantCompositionInput,
+    WorkVariantCompositionSource,
     WorkVariantContentBlock,
     WorkVariantSpecRow,
+    WorkVariantSpecSourceRow,
     WorkTheorySubtopicSource,
     WorkTheoryTopicSource,
 )
@@ -39,6 +41,65 @@ class WorkVariantCompositionServiceTests(TestCase):
         self.assertEqual(plan.variants[0].work_name_snapshot, 'Рабочий лист')
         self.assertEqual(plan.variants[0].max_score_snapshot, 7)
         self.assertEqual(plan.variants[0].duration_snapshot, 40)
+
+    def test_build_input_filters_bank_roles_and_derives_assessable_score(self):
+        tasks = (
+            AvailableVariantTask('demo', bank_role=TASK_BANK_ROLE_DEMO),
+            AvailableVariantTask(
+                'practice',
+                bank_role=TASK_BANK_ROLE_PRACTICE,
+            ),
+        )
+        source = WorkVariantCompositionSource(
+            work_name='Рабочий лист',
+            duration=40,
+            max_score=0,
+            variant_counter=2,
+            spec_rows=(
+                WorkVariantSpecSourceRow(
+                    spec_row_id='demo-row',
+                    count=1,
+                    weight=4,
+                    available_tasks=tasks,
+                    bank_role_filter=TASK_BANK_ROLE_DEMO,
+                    is_assessable=False,
+                ),
+                WorkVariantSpecSourceRow(
+                    spec_row_id='practice-row',
+                    count=2,
+                    weight=3,
+                    available_tasks=tasks,
+                    bank_role_filter=TASK_BANK_ROLE_PRACTICE,
+                ),
+            ),
+        )
+
+        result = self.service.build_input(source)
+
+        self.assertEqual(result.effective_max_score, 6)
+        self.assertEqual(
+            [task.task_id for task in result.spec_rows[0].available_tasks],
+            ['demo'],
+        )
+        self.assertEqual(
+            [task.task_id for task in result.spec_rows[1].available_tasks],
+            ['practice'],
+        )
+
+    def test_build_input_preserves_explicit_work_max_score(self):
+        result = self.service.build_input(WorkVariantCompositionSource(
+            work_name='Контрольная',
+            duration=45,
+            max_score=20,
+            variant_counter=0,
+            spec_rows=(WorkVariantSpecSourceRow(
+                spec_row_id='row',
+                count=2,
+                weight=3,
+            ),),
+        ))
+
+        self.assertEqual(result.effective_max_score, 20)
 
     def test_copies_specification_and_bank_roles_to_task_snapshots(self):
         plan = self.service.compose(self._composition_input(), count=1)

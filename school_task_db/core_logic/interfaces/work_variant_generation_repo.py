@@ -4,13 +4,13 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 
 from core_logic.entities.work import (
-    VariantGenerationGroup,
+    VariantGenerationGroupSource,
     VariantGenerationWork,
 )
 from core_logic.entities.work_variant_composition import (
-    WorkVariantCompositionInput,
     WorkVariantCompositionPlan,
     WorkVariantCompositionSaveResult,
+    WorkVariantCompositionSource,
 )
 from core_logic.entities.work_spec_sync import (
     WorkSpecSyncItem,
@@ -28,18 +28,18 @@ class IWorkVariantGenerationRepository(ABC):
         """Return a work read model for the variant generation form."""
 
     @abstractmethod
-    def get_variant_generation_groups(
+    def get_variant_generation_group_sources(
         self,
         work_id: str,
-    ) -> List[VariantGenerationGroup]:
-        """Return work specification rows for the generation form."""
+    ) -> List[VariantGenerationGroupSource]:
+        """Return unfiltered specification facts for the generation form."""
 
     @abstractmethod
-    def get_variant_composition_input(
+    def get_variant_composition_source(
         self,
         work_id: str,
-    ) -> Optional[WorkVariantCompositionInput]:
-        """Return an immutable source snapshot for variant composition."""
+    ) -> Optional[WorkVariantCompositionSource]:
+        """Return unfiltered facts used to compose work variants."""
 
     @abstractmethod
     def save_variant_composition_plan(

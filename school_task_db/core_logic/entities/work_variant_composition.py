@@ -5,6 +5,7 @@ from typing import Any, Mapping, Tuple
 
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
+    TASK_BANK_ROLE_ANY,
     TASK_BANK_ROLE_CONTROL,
     TASK_RENDER_MODE_TASK_ONLY,
 )
@@ -29,6 +30,25 @@ class WorkVariantSpecRow:
     available_tasks: Tuple[AvailableVariantTask, ...] = field(
         default_factory=tuple,
     )
+    render_mode: str = TASK_RENDER_MODE_TASK_ONLY
+    is_assessable: bool = True
+    blank_cells_after: bool = False
+    blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
+
+    def __post_init__(self):
+        object.__setattr__(self, 'available_tasks', tuple(self.available_tasks))
+
+
+@dataclass(frozen=True)
+class WorkVariantSpecSourceRow:
+    spec_row_id: str
+    count: int
+    weight: int
+    content_order: int = 0
+    available_tasks: Tuple[AvailableVariantTask, ...] = field(
+        default_factory=tuple,
+    )
+    bank_role_filter: str = TASK_BANK_ROLE_ANY
     render_mode: str = TASK_RENDER_MODE_TASK_ONLY
     is_assessable: bool = True
     blank_cells_after: bool = False
@@ -104,6 +124,24 @@ class WorkVariantCompositionInput:
 
 
 @dataclass(frozen=True)
+class WorkVariantCompositionSource:
+    work_name: str
+    duration: int
+    max_score: int
+    variant_counter: int
+    spec_rows: Tuple[WorkVariantSpecSourceRow, ...] = field(
+        default_factory=tuple,
+    )
+    content_blocks: Tuple[WorkVariantContentBlock, ...] = field(
+        default_factory=tuple,
+    )
+
+    def __post_init__(self):
+        object.__setattr__(self, 'spec_rows', tuple(self.spec_rows))
+        object.__setattr__(self, 'content_blocks', tuple(self.content_blocks))
+
+
+@dataclass(frozen=True)
 class VariantTaskCreationPlan:
     task_id: str
     source_selection_id: str
@@ -151,4 +189,3 @@ class WorkVariantCompositionPlan:
 @dataclass(frozen=True)
 class WorkVariantCompositionSaveResult:
     status: str
-

@@ -21,7 +21,7 @@ from core_logic.entities.work import (
     WorkListFilters,
 )
 from core_logic.entities.work_variant_composition import (
-    WorkVariantCompositionInput,
+    WorkVariantCompositionSource,
     WorkVariantCompositionSaveResult,
 )
 from core_logic.entities.work_spec_sync import (
@@ -267,15 +267,14 @@ class FakeWorkRepository:
             created_count=2 if status == 'saved' else 0,
         )
 
-    def get_variant_composition_input(self, work_id):
+    def get_variant_composition_source(self, work_id):
         self.variant_composition_input_requests.append(work_id)
         if not self.work_exists_for_composition:
             return None
-        return WorkVariantCompositionInput(
+        return WorkVariantCompositionSource(
             work_name='Контрольная',
             duration=45,
             max_score=0,
-            effective_max_score=0,
             variant_counter=len(self.variant_composition_input_requests) - 1,
         )
 

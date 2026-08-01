@@ -40,16 +40,19 @@ class ComposeWorkVariantsUseCase:
     ) -> ComposeWorkVariantsResult:
         for _attempt in range(MAX_COMPOSITION_ATTEMPTS):
             with self.transaction_manager.atomic():
-                composition_input = (
-                    self.work_repo.get_variant_composition_input(
+                composition_source = (
+                    self.work_repo.get_variant_composition_source(
                         request.work_id,
                     )
                 )
-                if composition_input is None:
+                if composition_source is None:
                     return ComposeWorkVariantsResult(
                         created_count=0,
                         status='not_found',
                     )
+                composition_input = self.composition_service.build_input(
+                    composition_source,
+                )
 
                 plan = self.composition_service.compose(
                     composition_input,

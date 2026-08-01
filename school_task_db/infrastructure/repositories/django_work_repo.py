@@ -23,7 +23,7 @@ from core_logic.entities.work import (
     VariantDetailTask,
     VariantDetailTaskRow,
     VariantDetailVariant,
-    VariantGenerationGroup,
+    VariantGenerationGroupSource,
     VariantGenerationWork,
     VariantListItem,
     VariantListStudentRef,
@@ -38,11 +38,11 @@ from core_logic.entities.work import (
 )
 from core_logic.entities.work_variant_composition import (
     AvailableVariantTask,
-    WorkVariantCompositionInput,
     WorkVariantCompositionPlan,
     WorkVariantCompositionSaveResult,
+    WorkVariantCompositionSource,
     WorkVariantContentBlock,
-    WorkVariantSpecRow,
+    WorkVariantSpecSourceRow,
     WorkTheorySubtopicSource,
     WorkTheoryTopicSource,
 )
@@ -211,13 +211,17 @@ class DjangoWorkRepository(
             variant_counter=work.variant_counter,
         )
 
-    def get_variant_generation_groups(self, work_id: str):
+    def get_variant_generation_group_sources(self, work_id: str):
         return [
-            VariantGenerationGroup(
+            VariantGenerationGroupSource(
                 group_name=work_group.analog_group.name,
                 requested_count=work_group.count,
-                available_count=self._count_available_group_tasks(work_group),
                 bank_role_filter=work_group.bank_role_filter,
+                task_bank_roles=tuple(
+                    TaskGroup.objects.filter(
+                        group=work_group.analog_group,
+                    ).order_by('pk').values_list('bank_role', flat=True)
+                ),
             )
             for work_group in WorkAnalogGroup.objects.filter(
                 work_id=work_id,
@@ -734,10 +738,10 @@ class DjangoWorkRepository(
                 created_count=created_count,
             )
 
-    def get_variant_composition_input(
+    def get_variant_composition_source(
         self,
         work_id: str,
-    ) -> Optional[WorkVariantCompositionInput]:
+    ) -> Optional[WorkVariantCompositionSource]:
         work = Work.objects.select_for_update().filter(pk=work_id).first()
         if work is None:
             return None
@@ -753,21 +757,13 @@ class DjangoWorkRepository(
                 'topics__subtopics',
             ).order_by('order', 'pk')
         )
-        return WorkVariantCompositionInput(
+        return WorkVariantCompositionSource(
             work_name=work.name,
             duration=work.duration,
             max_score=work.max_score,
-            effective_max_score=(
-                work.max_score
-                or sum(
-                    group.weight * group.count
-                    for group in work_groups
-                    if group.is_assessable
-                )
-            ),
             variant_counter=work.variant_counter,
             spec_rows=tuple(
-                self._variant_composition_spec_row(work_group)
+                self._variant_composition_spec_source_row(work_group)
                 for work_group in work_groups
             ),
             content_blocks=tuple(
@@ -807,15 +803,11 @@ class DjangoWorkRepository(
             work.save()
             return WorkVariantCompositionSaveResult(status='saved')
 
-    def _variant_composition_spec_row(self, work_group):
+    def _variant_composition_spec_source_row(self, work_group):
         task_groups = TaskGroup.objects.filter(
             group=work_group.analog_group,
         )
-        if work_group.bank_role_filter != TASK_BANK_ROLE_ANY:
-            task_groups = task_groups.filter(
-                bank_role=work_group.bank_role_filter,
-            )
-        return WorkVariantSpecRow(
+        return WorkVariantSpecSourceRow(
             spec_row_id=str(work_group.pk),
             count=work_group.count,
             weight=work_group.weight,
@@ -827,6 +819,7 @@ class DjangoWorkRepository(
                 )
                 for task_group in task_groups.order_by('pk')
             ),
+            bank_role_filter=work_group.bank_role_filter,
             render_mode=work_group.render_mode,
             is_assessable=work_group.is_assessable,
             blank_cells_after=work_group.blank_cells_after,

@@ -1537,7 +1537,7 @@ class DjangoRemedialRepositoryTests(TestCase):
 
         works = repo.get_list_works()
         work = repo.get_work_generation_target(str(self.source_work.pk))
-        generation_groups = repo.get_variant_generation_groups(
+        generation_groups = repo.get_variant_generation_group_sources(
             str(self.source_work.pk),
         )
         missing_work = repo.get_work_generation_target(
@@ -1556,7 +1556,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(work.pk, str(self.source_work.pk))
         self.assertEqual(work.variant_counter, self.source_work.variant_counter)
         self.assertEqual(generation_groups[0].group_name, self.weak_group.name)
-        self.assertEqual(generation_groups[0].available_count, 3)
+        self.assertEqual(len(generation_groups[0].task_bank_roles), 3)
         self.assertIsNone(missing_work)
 
     def test_work_repository_filters_list_page_data(self):
@@ -2034,8 +2034,11 @@ class DjangoRemedialRepositoryTests(TestCase):
 
     def test_work_repository_rejects_stale_variant_composition_plan(self):
         repo = DjangoWorkRepository()
-        composition_input = repo.get_variant_composition_input(
+        composition_source = repo.get_variant_composition_source(
             str(self.source_work.pk),
+        )
+        composition_input = WorkVariantCompositionService().build_input(
+            composition_source,
         )
         plan = WorkVariantCompositionService().compose(
             composition_input,

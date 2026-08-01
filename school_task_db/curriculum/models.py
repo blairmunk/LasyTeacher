@@ -32,10 +32,6 @@ class Topic(BaseModel):
     def get_absolute_url(self):
         return reverse('curriculum:topic-detail', kwargs={'pk': self.pk})
     
-    def get_subtopics(self):
-        """Получить все подтемы этой темы"""
-        return self.subtopics.all().order_by('order')
-    
     def get_subtopics_count(self):
         """Количество подтем"""
         return self.subtopics.count()
@@ -125,28 +121,6 @@ class Course(BaseModel):
     def get_absolute_url(self):
         return reverse('curriculum:course-detail', kwargs={'pk': self.pk})
     
-    def get_covered_topics(self):
-        """Темы, покрываемые курсом (через работы)"""
-        from tasks.models import Task
-        from django.db.models import Q
-        
-        # Получаем все задания из всех работ курса
-        tasks = Task.objects.filter(
-            Q(taskgroup__analog_group__workanaloggroup__work__courseassignment__course=self)
-        ).distinct()
-        
-        # Извлекаем уникальные темы
-        topics = set()
-        for task in tasks:
-            if task.topic:
-                topics.add(task.topic)
-        
-        return list(topics)
-    
-    def get_works(self):
-        """Работы курса"""
-        return self.courseassignment_set.all().order_by('order')
-
 class CourseAssignment(BaseModel):
     """Назначение работы в курс"""
     course = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name='Курс')

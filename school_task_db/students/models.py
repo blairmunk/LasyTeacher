@@ -69,13 +69,6 @@ class StudentGroup(BaseModel):
         """Получить активных учеников класса"""
         return self.students.all().order_by('last_name', 'first_name')
     
-    def get_grade_level(self):
-        """Извлечь номер класса из названия"""
-        try:
-            return int(self.name[0]) if self.name and self.name[0].isdigit() else None
-        except (ValueError, IndexError):
-            return None
-
 class StudentTaskLog(BaseModel):
     """Лог: ученик X выполнил задание Y с результатом Z.
     

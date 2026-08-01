@@ -189,12 +189,6 @@ class Task(BaseModel):
         """Раздел через тему"""
         return self.topic.section if self.topic else None
     
-    def get_full_topic_path(self):
-        """Полный путь темы для отображения"""
-        if self.subtopic:
-            return f"{self.topic.name} → {self.subtopic.name}"
-        return self.topic.name
-
 class TaskImage(BaseModel):
     """Изображение для задания"""
     POSITION_CHOICES = [
@@ -232,11 +226,6 @@ class TaskImage(BaseModel):
             return 'task-image-bottom-70 task-image-no-position'
         return css_classes.get(self.position, 'task-image-bottom-70')
     
-    @property
-    def needs_position(self):
-        """True если позиция не задана"""
-        return not bool(self.position)
-    
     def get_position_status(self):
         """Статус позиции для отчётов"""
         if self.position:
@@ -270,11 +259,6 @@ class TaskImage(BaseModel):
         except ValueError:
             return None
 
-    @property  
-    def is_image_uploaded(self):
-        """True если файл изображения существует — ИСПРАВЛЕНО"""
-        return self.has_file
-
     @property
     def file_size_human(self):
         """Размер файла в человекочитаемом виде"""
@@ -285,16 +269,3 @@ class TaskImage(BaseModel):
             return filesizeformat(self.image.size)
         except (OSError, ValueError):
             return "Неизвестно"
-
-    def get_upload_status(self):
-        """Статус загрузки для отображения"""
-        if self.has_file:
-            return "✅ Загружено"
-        elif self.image.name:
-            return "❌ Файл не найден на диске"
-        elif self.pk:
-            return "⚠️ Не загружено" 
-        else:
-            return "🆕 Новое"
-
-

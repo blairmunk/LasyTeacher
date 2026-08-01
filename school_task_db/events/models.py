@@ -2,7 +2,6 @@ from django.db import models
 from django.urls import reverse
 from django.core.exceptions import ValidationError
 from core.models import BaseModel
-import os
 
 def work_scan_upload_path(instance, filename):
     """Путь для загрузки сканов работ"""
@@ -53,14 +52,6 @@ class Event(BaseModel):
     def get_absolute_url(self):
         return reverse('events:detail', kwargs={'pk': self.pk})
     
-    def get_student_groups(self):
-        """Получить уникальные классы участников"""
-        groups = set()
-        for participation in self.eventparticipation_set.select_related('student').all():
-            student_groups = participation.student.studentgroup_set.all()
-            groups.update(student_groups)
-        return list(groups)
-    
     def get_participants_count(self):
         """Количество участников"""
         return self.students.count()
@@ -83,24 +74,6 @@ class Event(BaseModel):
         completed = self.get_completed_count()
         return round((completed / total) * 100)
     
-    def assign_variants_randomly(self):
-        """Назначить варианты случайным образом"""
-        from works.models import Variant
-        import random
-        
-        variants = list(Variant.objects.filter(work=self.work))
-        if not variants:
-            return False
-            
-        participations = self.eventparticipation_set.filter(variant__isnull=True)
-        
-        for participation in participations:
-            variant = random.choice(variants)
-            participation.variant = variant
-            participation.save()
-        
-        return True
-
 class EventParticipation(BaseModel):
     """Участие ученика в событии (промежуточная модель)"""
     event = models.ForeignKey(Event, on_delete=models.CASCADE, verbose_name='Событие')
@@ -190,19 +163,6 @@ class Mark(BaseModel):
         if self.points and self.max_points and self.max_points > 0:
             return round((self.points / self.max_points) * 100, 1)
         return None
-    
-    def get_grade_color(self):
-        """CSS класс для оценки"""
-        if self.score:
-            if self.score == 5:
-                return 'success'
-            elif self.score == 4:
-                return 'info'
-            elif self.score == 3:
-                return 'warning'
-            else:
-                return 'danger'
-        return 'secondary'
     
     # Удобные свойства для доступа
     @property

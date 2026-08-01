@@ -232,17 +232,10 @@ class Variant(BaseModel):
     def display_duration(self):
         return self.duration_snapshot
 
-    def ordered_tasks(self):
-        return self.tasks.order_by('varianttask__order')
-
     @property
     def total_max_points(self):
         result = self.varianttask_set.aggregate(models.Sum('max_points'))
         return result['max_points__sum'] or 0
-    @property
-    def is_points_frozen(self):
-        """Варианты всегда иммутабельны после генерации"""
-        return True
 
 
 

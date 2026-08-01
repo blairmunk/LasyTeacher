@@ -1,6 +1,9 @@
 from django import forms
 from curriculum.models import Topic, SubTopic
 from tasks.models import Task, TaskImage, Source
+from core_logic.value_objects.task_validation import (
+    validate_task_topic_selection,
+)
 
 
 class SourceForm(forms.ModelForm):
@@ -115,11 +118,15 @@ class TaskForm(forms.ModelForm):
         topic = cleaned_data.get('topic')
         subtopic = cleaned_data.get('subtopic')
 
-        if not topic:
-            raise forms.ValidationError('Тема обязательна для выбора')
-
-        if subtopic and topic and subtopic.topic != topic:
-            raise forms.ValidationError('Выбранная подтема не принадлежит выбранной теме')
+        errors = validate_task_topic_selection(
+            topic_id=str(topic.pk) if topic else '',
+            subtopic_id=str(subtopic.pk) if subtopic else None,
+            subtopic_topic_id=(
+                str(subtopic.topic_id) if subtopic else None
+            ),
+        )
+        if errors:
+            raise forms.ValidationError(errors)
 
         return cleaned_data
 

@@ -18,6 +18,10 @@ class FakeTaskRepository:
         self.created_params = None
         self.updated_params = None
         self.saved_images = None
+        self.subtopic_topics = {}
+
+    def get_subtopic_topic_id(self, subtopic_id):
+        return self.subtopic_topics.get(subtopic_id)
 
     def create_task(self, params):
         self.created_params = params
@@ -63,6 +67,27 @@ class SaveTaskUseCaseTests(TestCase):
 
         self.assertEqual(result.status, 'updated')
         self.assertEqual(repo.updated_params, params)
+
+    def test_create_task_rejects_subtopic_from_another_topic(self):
+        repo = FakeTaskRepository()
+        repo.subtopic_topics['subtopic-1'] = 'topic-2'
+        params = TaskSaveParams(
+            text='Задача',
+            answer='Ответ',
+            topic_id='topic-1',
+            subtopic_id='subtopic-1',
+            task_type='computational',
+            difficulty=2,
+        )
+
+        result = CreateTaskUseCase(repo).execute(params)
+
+        self.assertEqual(result.status, 'invalid')
+        self.assertEqual(
+            result.errors,
+            ('Выбранная подтема не принадлежит выбранной теме',),
+        )
+        self.assertIsNone(repo.created_params)
 
     def test_save_task_images_delegates_to_repository(self):
         repo = FakeTaskRepository()

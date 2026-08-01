@@ -380,6 +380,13 @@ class DjangoTaskRepository(ITaskRepository):
         task.save()
         return TaskSaveResult(status='updated', task_id=str(task.pk))
 
+    def get_subtopic_topic_id(self, subtopic_id: str):
+        topic_id = SubTopic.objects.filter(pk=subtopic_id).values_list(
+            'topic_id',
+            flat=True,
+        ).first()
+        return str(topic_id) if topic_id else None
+
     def save_task_images(
         self,
         task_id: str,

@@ -3,6 +3,9 @@ from .models import Source
 from django import forms
 from .models import Task, TaskImage
 from curriculum.models import Topic, SubTopic
+from core_logic.value_objects.task_validation import (
+    validate_task_topic_selection,
+)
 
 class TaskAdminForm(forms.ModelForm):
     """Кастомная форма для админки с фильтрацией подтем"""
@@ -26,11 +29,15 @@ class TaskAdminForm(forms.ModelForm):
         topic = cleaned_data.get('topic')
         subtopic = cleaned_data.get('subtopic')
         
-        if not topic:
-            raise forms.ValidationError('Тема обязательна для выбора')
-        
-        if subtopic and topic and subtopic.topic != topic:
-            raise forms.ValidationError('Выбранная подтема не принадлежит выбранной теме')
+        errors = validate_task_topic_selection(
+            topic_id=str(topic.pk) if topic else '',
+            subtopic_id=str(subtopic.pk) if subtopic else None,
+            subtopic_topic_id=(
+                str(subtopic.topic_id) if subtopic else None
+            ),
+        )
+        if errors:
+            raise forms.ValidationError(errors)
         
         return cleaned_data
 
@@ -108,4 +115,3 @@ class TaskImageAdmin(admin.ModelAdmin):
     list_display = ['task', 'position', 'caption', 'order', 'created_at']
     list_filter = ['position', 'created_at']
     search_fields = ['task__text', 'caption']
-

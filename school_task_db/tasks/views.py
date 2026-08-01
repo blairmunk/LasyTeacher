@@ -86,6 +86,14 @@ class TaskCreateView(TemplateView):
         task_result = container.create_task_use_case().execute(
             container.task_form_adapter.task_params_from_form(form),
         )
+        if task_result.status == 'invalid':
+            messages.error(request, '; '.join(task_result.errors))
+            return self.render_to_response(
+                self.get_context_data(
+                    form=form,
+                    image_formset=image_formset,
+                ),
+            )
         image_result = container.save_task_images_use_case().execute(
             task_id=task_result.task_id,
             images=container.task_form_adapter.task_image_params_from_formset(
@@ -166,6 +174,15 @@ class TaskUpdateView(TemplateView):
         )
         if task_result.status == 'not_found':
             raise Http404('Задание не найдено')
+        if task_result.status == 'invalid':
+            messages.error(request, '; '.join(task_result.errors))
+            return self.render_to_response(
+                self.get_context_data(
+                    form=form,
+                    image_formset=image_formset,
+                    object=task,
+                ),
+            )
 
         image_result = container.save_task_images_use_case().execute(
             task_id=task_result.task_id,

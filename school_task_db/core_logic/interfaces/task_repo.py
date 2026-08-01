@@ -69,6 +69,10 @@ class ITaskRepository(ABC):
         """Update a task, or return not_found status."""
 
     @abstractmethod
+    def get_subtopic_topic_id(self, subtopic_id: str) -> Optional[str]:
+        """Return the parent topic ID for a subtopic, or None."""
+
+    @abstractmethod
     def save_task_images(
         self,
         task_id: str,

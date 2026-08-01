@@ -2,6 +2,9 @@ from django.db import models
 from django.urls import reverse
 from django.core.exceptions import ValidationError
 from core.models import BaseModel
+from core_logic.value_objects.task_validation import (
+    validate_task_topic_selection,
+)
 
 
 def task_image_upload_path(instance, filename):
@@ -144,10 +147,17 @@ class Task(BaseModel):
         return reverse('tasks:detail', kwargs={'pk': self.pk})
     
     def clean(self):
-        """Валидация: подтема должна принадлежать выбранной теме"""
-        if self.subtopic and self.topic:
-            if self.subtopic.topic != self.topic:
-                raise ValidationError('Подтема должна принадлежать выбранной основной теме')
+        errors = validate_task_topic_selection(
+            topic_id=str(self.topic_id or ''),
+            subtopic_id=str(self.subtopic_id or ''),
+            subtopic_topic_id=(
+                str(self.subtopic.topic_id)
+                if self.subtopic_id
+                else None
+            ),
+        )
+        if errors:
+            raise ValidationError(errors)
 
 class TaskImage(BaseModel):
     """Изображение для задания"""

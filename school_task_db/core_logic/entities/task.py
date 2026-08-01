@@ -328,6 +328,7 @@ class TaskSaveParams:
 class TaskSaveResult:
     status: str
     task_id: str = ''
+    errors: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

@@ -83,11 +83,14 @@ class DjangoReportRepositoryTests(TestCase):
             group_id=selected_group.pk,
         )
 
-        self.assertEqual(data.topic, topic)
-        self.assertEqual(list(data.groups), [selected_group, other_group])
-        self.assertEqual(data.selected_group, selected_group)
-        self.assertEqual(data.students, [selected_student])
-        self.assertEqual(list(data.courses), [course])
+        self.assertEqual(data.topic.pk, str(topic.pk))
+        self.assertEqual(
+            [group.pk for group in data.groups],
+            [str(selected_group.pk), str(other_group.pk)],
+        )
+        self.assertEqual(data.selected_group.pk, str(selected_group.pk))
+        self.assertEqual(data.students[0].pk, str(selected_student.pk))
+        self.assertEqual(data.courses[0].pk, str(course.pk))
         self.assertEqual(data.active_report, 'heatmap')
 
     def test_get_heatmap_subtopic_matrix_returns_subtopic_scores(self):
@@ -404,14 +407,14 @@ class DjangoReportRepositoryTests(TestCase):
             group_id=selected_group.pk,
         )
 
-        self.assertEqual(data.course, course)
-        self.assertEqual(list(data.groups), [selected_group])
-        self.assertEqual(data.selected_group, selected_group)
-        self.assertEqual(data.students, [selected_student])
-        self.assertEqual(data.course_works, [work])
-        self.assertEqual(list(data.courses), [course])
+        self.assertEqual(data.course.pk, str(course.pk))
+        self.assertEqual(data.groups[0].pk, str(selected_group.pk))
+        self.assertEqual(data.selected_group.pk, str(selected_group.pk))
+        self.assertEqual(data.students[0].pk, str(selected_student.pk))
+        self.assertEqual(data.course_works[0].pk, str(work.pk))
+        self.assertEqual(data.courses[0].pk, str(course.pk))
         self.assertEqual(data.active_report, 'heatmap-course')
-        self.assertEqual(data.active_course_pk, course.pk)
+        self.assertEqual(data.active_course_pk, str(course.pk))
 
     def test_get_heatmap_overview_returns_groups_students_and_sections(self):
         selected_student = Student.objects.create(
@@ -449,11 +452,14 @@ class DjangoReportRepositoryTests(TestCase):
             group_id=selected_group.pk,
         )
 
-        self.assertEqual(list(data.groups), [selected_group, other_group])
-        self.assertEqual(data.selected_group, selected_group)
-        self.assertEqual(data.students, [selected_student])
+        self.assertEqual(
+            [group.pk for group in data.groups],
+            [str(selected_group.pk), str(other_group.pk)],
+        )
+        self.assertEqual(data.selected_group.pk, str(selected_group.pk))
+        self.assertEqual(data.students[0].pk, str(selected_student.pk))
         self.assertEqual(data.sections, ['Кинематика'])
-        self.assertEqual(list(data.courses), [course])
+        self.assertEqual(data.courses[0].pk, str(course.pk))
         self.assertEqual(data.active_report, 'heatmap')
 
     def test_get_heatmap_topic_matrix_returns_topic_scores(self):
@@ -777,14 +783,17 @@ class DjangoReportRepositoryTests(TestCase):
             },
         )
 
-        data = DjangoReportRepository().get_heatmap_course_timeline(
+        data = DjangoReportRepository().get_heatmap_course_timeline_source(
             student_ids=[student.pk],
             work_ids=[work.pk],
         )
 
-        self.assertEqual(data.dates, [now.strftime('%Y-%m-%d')])
-        self.assertEqual(data.averages, [80])
-        self.assertEqual(data.labels, ['КР'])
+        self.assertEqual(data.events[0].pk, str(event.pk))
+        self.assertEqual(data.events[0].planned_date, now)
+        self.assertEqual(data.events[0].name, 'КР')
+        self.assertEqual(data.marks[0].event_id, str(event.pk))
+        self.assertEqual(data.marks[0].points, 8)
+        self.assertEqual(data.marks[0].max_points, 10)
 
     def test_get_events_status_report_returns_status_context(self):
         now = timezone.now()

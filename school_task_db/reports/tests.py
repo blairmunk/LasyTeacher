@@ -35,7 +35,10 @@ class ReportsViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['active_report'], 'heatmap')
-        self.assertEqual(response.context['selected_group'], group)
+        self.assertEqual(
+            response.context['selected_group'].pk,
+            str(group.pk),
+        )
         self.assertEqual(response.context['selected_section'], 'Кинематика')
         self.assertEqual(response.context['sections'], ['Кинематика'])
         self.assertFalse(response.context['has_data'])
@@ -122,9 +125,12 @@ class ReportsViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['active_report'], 'heatmap-course')
-        self.assertEqual(response.context['active_course_pk'], course.pk)
-        self.assertEqual(response.context['course'], course)
-        self.assertEqual(response.context['selected_group'], group)
+        self.assertEqual(response.context['active_course_pk'], str(course.pk))
+        self.assertEqual(response.context['course'].pk, str(course.pk))
+        self.assertEqual(
+            response.context['selected_group'].pk,
+            str(group.pk),
+        )
         self.assertFalse(response.context['has_data'])
 
     def test_heatmap_course_view_uses_clean_topic_matrix_data(self):
@@ -261,8 +267,11 @@ class ReportsViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['active_report'], 'heatmap')
-        self.assertEqual(response.context['topic'], topic)
-        self.assertEqual(response.context['selected_group'], group)
+        self.assertEqual(response.context['topic'].pk, str(topic.pk))
+        self.assertEqual(
+            response.context['selected_group'].pk,
+            str(group.pk),
+        )
         self.assertTrue(response.context['has_data'])
         self.assertEqual(response.context['grid_rows'][0]['avg'], 80)
         self.assertEqual(response.context['grid_col_averages'], [

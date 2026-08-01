@@ -411,11 +411,11 @@ class ReportsDashboardSource:
 
 @dataclass(frozen=True)
 class HeatmapOverviewData:
-    groups: Any
-    selected_group: Any
-    students: List[Any]
+    groups: List[ReportGroupRef]
+    selected_group: ReportGroupRef | None
+    students: List[ReportStudentRef]
     sections: List[str]
-    courses: Any
+    courses: List[ReportCourseRef]
     active_report: str = 'heatmap'
     active_course_pk: Any = None
 
@@ -429,12 +429,12 @@ class HeatmapTopicMatrixData:
 
 @dataclass(frozen=True)
 class HeatmapCourseOverviewData:
-    course: Any
-    groups: Any
-    selected_group: Any
-    students: List[Any]
-    course_works: List[Any]
-    courses: Any
+    course: ReportCourseRef
+    groups: List[ReportGroupRef]
+    selected_group: ReportGroupRef | None
+    students: List[ReportStudentRef]
+    course_works: List[ReportWorkRef]
+    courses: List[ReportCourseRef]
     active_report: str = 'heatmap-course'
     active_course_pk: Any = None
 
@@ -447,12 +447,32 @@ class HeatmapCourseTimelineData:
 
 
 @dataclass(frozen=True)
+class HeatmapTimelineEventRef:
+    pk: str
+    name: str
+    planned_date: Any
+
+
+@dataclass(frozen=True)
+class HeatmapTimelineMarkFact:
+    event_id: str
+    points: float
+    max_points: float
+
+
+@dataclass(frozen=True)
+class HeatmapCourseTimelineSource:
+    events: List[HeatmapTimelineEventRef]
+    marks: List[HeatmapTimelineMarkFact]
+
+
+@dataclass(frozen=True)
 class HeatmapDrilldownOverviewData:
-    topic: Any
-    groups: Any
-    selected_group: Any
-    students: List[Any]
-    courses: Any
+    topic: ReportHeatmapColumnRef
+    groups: List[ReportGroupRef]
+    selected_group: ReportGroupRef | None
+    students: List[ReportStudentRef]
+    courses: List[ReportCourseRef]
     active_report: str = 'heatmap'
     active_course_pk: Any = None
 

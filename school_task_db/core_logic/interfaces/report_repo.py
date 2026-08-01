@@ -7,7 +7,7 @@ from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.report import (
     EventsStatusSource,
     HeatmapCourseOverviewData,
-    HeatmapCourseTimelineData,
+    HeatmapCourseTimelineSource,
     HeatmapDrilldownOverviewData,
     HeatmapMatrixSource,
     HeatmapOverviewData,
@@ -102,12 +102,12 @@ class IReportRepository(ABC):
         """Return normalized facts for a course student-topic matrix."""
 
     @abstractmethod
-    def get_heatmap_course_timeline(
+    def get_heatmap_course_timeline_source(
         self,
         student_ids: list,
         work_ids: list,
-    ) -> HeatmapCourseTimelineData:
-        """Return course timeline chart source data."""
+    ) -> HeatmapCourseTimelineSource:
+        """Return normalized facts for a course timeline chart."""
 
     @abstractmethod
     def get_heatmap_drilldown_overview(

@@ -3,6 +3,8 @@
 from collections import defaultdict
 
 from core_logic.entities.report import (
+    HeatmapCourseTimelineData,
+    HeatmapCourseTimelineSource,
     HeatmapMatrixSource,
     HeatmapSubtopicMatrixData,
     HeatmapTopicMatrixData,
@@ -26,6 +28,33 @@ def performance_color_class(pct):
 
 
 class HeatmapMatrixService:
+    def build_course_timeline(
+        self,
+        source: HeatmapCourseTimelineSource,
+    ) -> HeatmapCourseTimelineData:
+        marks_by_event = defaultdict(list)
+        for mark in source.marks:
+            marks_by_event[mark.event_id].append(mark)
+
+        dates = []
+        averages = []
+        labels = []
+        for event in source.events:
+            marks = marks_by_event[event.pk]
+            total_points = sum(mark.points for mark in marks)
+            total_max = sum(mark.max_points for mark in marks)
+            if total_max <= 0:
+                continue
+            dates.append(event.planned_date.strftime('%Y-%m-%d'))
+            averages.append(round(total_points / total_max * 100))
+            labels.append(event.name)
+
+        return HeatmapCourseTimelineData(
+            dates=dates,
+            averages=averages,
+            labels=labels,
+        )
+
     def build_topic_matrix(
         self,
         source: HeatmapMatrixSource,

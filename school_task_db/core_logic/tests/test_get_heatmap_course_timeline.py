@@ -1,6 +1,12 @@
 from unittest import TestCase
 
-from core_logic.entities.report import HeatmapCourseTimelineData
+from datetime import datetime
+
+from core_logic.entities.report import (
+    HeatmapCourseTimelineSource,
+    HeatmapTimelineEventRef,
+    HeatmapTimelineMarkFact,
+)
 from core_logic.use_cases.get_heatmap_course_timeline import (
     GetHeatmapCourseTimelineUseCase,
     HeatmapCourseTimelineRequest,
@@ -12,13 +18,24 @@ class FakeReportRepository:
         self.student_ids = None
         self.work_ids = None
 
-    def get_heatmap_course_timeline(self, student_ids, work_ids):
+    def get_heatmap_course_timeline_source(self, student_ids, work_ids):
         self.student_ids = student_ids
         self.work_ids = work_ids
-        return HeatmapCourseTimelineData(
-            dates=['2026-01-01'],
-            averages=[80],
-            labels=['КР'],
+        return HeatmapCourseTimelineSource(
+            events=[
+                HeatmapTimelineEventRef(
+                    pk='event-1',
+                    name='КР',
+                    planned_date=datetime(2026, 1, 1),
+                ),
+            ],
+            marks=[
+                HeatmapTimelineMarkFact(
+                    event_id='event-1',
+                    points=8,
+                    max_points=10,
+                ),
+            ],
         )
 
 

@@ -1,9 +1,14 @@
 from django import forms
+from django.utils.functional import cached_property
+
 from curriculum.models import Topic, SubTopic
-from tasks.models import Task, TaskImage, Source
 from core_logic.value_objects.task_validation import (
     validate_task_topic_selection,
 )
+from infrastructure.services.task_image_presentation import (
+    TaskImagePresentationService,
+)
+from tasks.models import Task, TaskImage, Source
 
 
 class SourceForm(forms.ModelForm):
@@ -132,6 +137,10 @@ class TaskForm(forms.ModelForm):
 
 
 class TaskImageForm(forms.ModelForm):
+    @cached_property
+    def image_display(self):
+        return TaskImagePresentationService.build(self.instance)
+
     class Meta:
         model = TaskImage
         fields = ['image', 'position', 'caption', 'order']

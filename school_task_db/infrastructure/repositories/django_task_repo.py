@@ -39,6 +39,9 @@ from core_logic.entities.task import (
 from core_logic.interfaces.task_repo import ITaskRepository
 from core_logic.value_objects.task_print_settings import TASK_BANK_ROLE_CONTROL
 from curriculum.models import SubTopic, Topic
+from infrastructure.services.task_image_presentation import (
+    TaskImagePresentationService,
+)
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Source, Task, TaskImage
 from tasks.utils import math_status_cache
@@ -357,9 +360,13 @@ class DjangoTaskRepository(ITaskRepository):
                 TaskDetailImage(
                     caption=image.caption,
                     position=image.position,
-                    safe_url=image.safe_url,
+                    safe_url=TaskImagePresentationService.safe_url(
+                        image.image,
+                    ),
                     image_name=image.image.name if image.image else '',
-                    css_class=image.get_css_class(),
+                    css_class=TaskImagePresentationService.css_class(
+                        image.position,
+                    ),
                 )
                 for image in task.images.all()
             ],
@@ -844,7 +851,7 @@ class DjangoTaskRepository(ITaskRepository):
     def _task_export_images(task):
         result = []
         for image in task.images.all():
-            if not image.has_file:
+            if not TaskImagePresentationService.has_file(image.image):
                 continue
             try:
                 with image.image.open('rb') as image_file:

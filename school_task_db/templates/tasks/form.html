@@ -272,12 +272,12 @@
                                     <!-- Превью существующего изображения -->
                                     {% if form.instance.image %}
                                         <div class="mt-2">
-                                            {% if form.instance.safe_url %}
-                                                <img src="{{ form.instance.safe_url }}" class="img-thumbnail" style="max-width: 150px;">
+                                            {% if form.image_display.safe_url %}
+                                                <img src="{{ form.image_display.safe_url }}" class="img-thumbnail" style="max-width: 150px;">
                                                 <small class="text-success d-block">
                                                     <i class="fas fa-info-circle"></i> 
                                                     Текущее изображение
-                                                    ({{ form.instance.file_size_human }})
+                                                    ({{ form.image_display.file_size_human }})
                                                 </small>
                                             {% else %}
                                                 <div class="p-2 bg-light border border-warning rounded">
@@ -329,8 +329,8 @@
                                     <!-- УЛУЧШЕННЫЙ показ статуса -->
                                     {% if form.instance.pk %}
                                         <small class="text-muted">
-                                            {% if form.instance.has_file %}
-                                                <i class="fas fa-check text-success"></i> {{ form.instance.get_position_status }}
+                                            {% if form.image_display.has_file %}
+                                                <i class="fas fa-check text-success"></i> {{ form.image_display.position_status }}
                                             {% elif form.instance.image.name %}
                                                 <i class="fas fa-unlink text-danger"></i> Файл потерян
                                             {% else %}
@@ -338,9 +338,9 @@
                                             {% endif %}
                                         </small>
                                         
-                                        {% if form.instance.has_file %}
+                                        {% if form.image_display.has_file %}
                                             <small class="text-muted d-block">
-                                                Размер: {{ form.instance.file_size_human }}
+                                                Размер: {{ form.image_display.file_size_human }}
                                             </small>
                                         {% endif %}
                                     {% else %}
@@ -360,10 +360,10 @@
                                 
                                 <!-- РАСШИРЕННАЯ подсказка -->
                                 {% if form.instance.pk and form.instance.image.name %}
-                                    <small class="form-text {% if form.instance.has_file %}text-success{% else %}text-warning{% endif %}">
+                                    <small class="form-text {% if form.image_display.has_file %}text-success{% else %}text-warning{% endif %}">
                                         <i class="fas fa-info-circle"></i> 
                                         Файл: {{ form.instance.image.name|default:"неизвестно" }}
-                                        {% if not form.instance.has_file %}
+                                        {% if not form.image_display.has_file %}
                                             <span class="text-danger">(не найден на диске)</span>
                                         {% endif %}
                                         {% if form.instance.created_at %}

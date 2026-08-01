@@ -84,6 +84,9 @@ from core_logic.value_objects.variant_display import (
     resolve_variant_display_name,
 )
 from events.models import EventParticipation, Mark
+from infrastructure.services.task_image_presentation import (
+    TaskImagePresentationService,
+)
 from task_groups.models import TaskGroup
 from tasks.models import Task
 from works.models import (
@@ -419,8 +422,12 @@ class DjangoWorkRepository(
                         VariantDetailImage(
                             caption=image.caption,
                             position=image.position,
-                            safe_url=image.safe_url,
-                            css_class=image.get_css_class(),
+                            safe_url=TaskImagePresentationService.safe_url(
+                                image.image,
+                            ),
+                            css_class=TaskImagePresentationService.css_class(
+                                image.position,
+                            ),
                         )
                         for image in variant_task.task.images.all()
                     ],

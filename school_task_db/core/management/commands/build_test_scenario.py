@@ -370,7 +370,7 @@ class Command(BaseCommand):
             students = list(
                 self._get_student_group(
                     data['student_group']
-                ).get_active_students()
+                ).students.all().order_by('last_name', 'first_name')
             )
             limit = data.get('participant_limit')
             if limit:

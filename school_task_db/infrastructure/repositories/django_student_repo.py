@@ -417,7 +417,9 @@ class DjangoStudentRepository(IStudentRepository):
         if not group:
             return None
 
-        students = list(group.get_active_students())
+        students = list(
+            group.students.all().order_by('last_name', 'first_name')
+        )
         task_logs = list(
             StudentTaskLog.objects.filter(
                 student__in=students,

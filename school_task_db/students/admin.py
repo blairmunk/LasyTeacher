@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.db.models import Count
+
 from .models import Student, StudentGroup
 
 @admin.register(Student)
@@ -28,6 +30,11 @@ class StudentGroupAdmin(admin.ModelAdmin):
     search_fields = ['name', 'uuid']
     filter_horizontal = ['students']
     readonly_fields = ['uuid', 'get_short_uuid']
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(
+            students_count=Count('students', distinct=True),
+        )
     
     fieldsets = [
         ('Основная информация', {
@@ -46,11 +53,7 @@ class StudentGroupAdmin(admin.ModelAdmin):
         return obj.get_short_uuid()
     get_short_uuid.short_description = 'UUID'
     
-    def get_students_count_safe(self, obj):  # ПЕРЕИМЕНОВАННЫЙ МЕТОД для избежания конфликтов
-        """Безопасное получение количества учеников"""
-        try:
-            return obj.get_students_count()
-        except AttributeError:
-            return obj.students.count()
+    def get_students_count_safe(self, obj):
+        return obj.students_count
     get_students_count_safe.short_description = 'Количество учеников'
-    get_students_count_safe.admin_order_field = 'students'
+    get_students_count_safe.admin_order_field = 'students_count'

@@ -61,14 +61,6 @@ class StudentGroup(BaseModel):
     def get_absolute_url(self):
         return reverse('students:group-detail', kwargs={'pk': self.pk})
     
-    def get_students_count(self):
-        """Количество учеников в классе"""
-        return self.students.count()
-    
-    def get_active_students(self):
-        """Получить активных учеников класса"""
-        return self.students.all().order_by('last_name', 'first_name')
-    
 class StudentTaskLog(BaseModel):
     """Лог: ученик X выполнил задание Y с результатом Z.
     
@@ -157,11 +149,3 @@ class StudentTaskLog(BaseModel):
     def __str__(self):
         result = f"{self.percentage:.0f}%" if self.percentage is not None else "?"
         return f"[{self.get_short_uuid()}] {self.student} → {self.task} [{result}]"
-    
-    def save(self, *args, **kwargs):
-        # Авто-расчёт percentage и is_correct
-        if self.points is not None and self.max_points and self.max_points > 0:
-            self.percentage = round((self.points / self.max_points) * 100, 1)
-            if self.is_correct is None:
-                self.is_correct = self.percentage >= 70
-        super().save(*args, **kwargs)

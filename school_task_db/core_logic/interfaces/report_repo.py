@@ -18,7 +18,7 @@ from core_logic.entities.report import (
     JournalSelectData,
     ReportsDashboardSource,
     StudentPerformanceSource,
-    TaskDBHealthData,
+    TaskDBHealthSource,
     WorkAnalysisSource,
 )
 
@@ -63,8 +63,8 @@ class IReportRepository(ABC):
         """Return normalized facts for the class journal."""
 
     @abstractmethod
-    def get_task_db_health(self) -> TaskDBHealthData:
-        """Return task database health report data."""
+    def get_task_db_health_source(self) -> TaskDBHealthSource:
+        """Return normalized facts for task database diagnostics."""
 
     @abstractmethod
     def get_reports_dashboard_source(

@@ -298,6 +298,50 @@ class TaskDBHealthData:
 
 
 @dataclass(frozen=True)
+class TaskGroupSizeFact:
+    group: ReportAnalogGroupRef
+    task_count: int
+
+
+@dataclass(frozen=True)
+class TaskCoverageFact:
+    work: ReportWorkRef
+    group: ReportAnalogGroupRef
+    needed: int
+    available: int
+
+
+@dataclass(frozen=True)
+class TaskDistributionFact:
+    key: Any
+    count: int
+    label: str = ''
+
+
+@dataclass(frozen=True)
+class TaskDBHealthSource:
+    total_tasks: int
+    total_works: int
+    total_variants: int
+    orphan_variants_count: int
+    orphan_variant_samples: List[ReportVariantRef]
+    group_sizes: List[TaskGroupSizeFact]
+    coverage: List[TaskCoverageFact]
+    ungrouped_tasks_count: int
+    works_no_variants_count: int
+    works_no_variant_samples: List[ReportWorkRef]
+    works_no_spec_count: int
+    works_no_spec_samples: List[ReportWorkRef]
+    difficulty_counts: List[TaskDistributionFact]
+    type_counts: List[TaskDistributionFact]
+    most_used_tasks: List[ReportTaskUsageRef]
+    unverified_tasks_count: int
+    no_source_tasks_count: int
+    no_grade_tasks_count: int
+    courses: List[ReportCourseRef]
+
+
+@dataclass(frozen=True)
 class ReportsDashboardData:
     total_students: int
     total_events: int

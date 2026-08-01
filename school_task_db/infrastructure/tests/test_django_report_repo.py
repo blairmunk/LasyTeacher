@@ -1130,52 +1130,39 @@ class DjangoReportRepositoryTests(TestCase):
             is_active=True,
         )
 
-        data = DjangoReportRepository().get_task_db_health()
+        data = DjangoReportRepository().get_task_db_health_source()
 
-        self.assertEqual(data.stats, {
-            'total_tasks': 1,
-            'total_groups': 2,
-            'total_works': 2,
-            'total_variants': 1,
-        })
-        self.assertEqual(data.orphan_variants['count'], 1)
-        self.assertEqual(data.empty_groups['count'], 1)
-        self.assertEqual(data.orphan_variants['items'][0].number, 1)
+        self.assertEqual(data.total_tasks, 1)
+        self.assertEqual(len(data.group_sizes), 2)
+        self.assertEqual(data.total_works, 2)
+        self.assertEqual(data.total_variants, 1)
+        self.assertEqual(data.orphan_variants_count, 1)
+        self.assertEqual(data.orphan_variant_samples[0].number, 1)
         self.assertEqual(
-            data.orphan_variants['items'][0].short_uuid,
+            data.orphan_variant_samples[0].short_uuid,
             Variant.objects.get(work__isnull=True).get_short_uuid(),
         )
-        self.assertEqual(data.empty_groups['items'][0].pk, str(empty_group.pk))
-        self.assertEqual(data.empty_groups['items'][0].name, 'Пустая группа')
-        self.assertEqual(data.fragile_groups['count'], 1)
-        self.assertEqual(data.fragile_groups['items'][0].pk, str(fragile_group.pk))
-        self.assertEqual(data.fragile_groups['items'][0].name, 'Хрупкая группа')
-        self.assertEqual(data.coverage_issues['items'][0]['work'].pk, str(spec_work.pk))
-        self.assertEqual(data.coverage_issues['items'][0]['work'].name, 'Со спецификацией')
+        groups_by_id = {item.group.pk: item for item in data.group_sizes}
+        self.assertEqual(groups_by_id[str(empty_group.pk)].task_count, 0)
+        self.assertEqual(groups_by_id[str(fragile_group.pk)].task_count, 1)
+        self.assertEqual(data.coverage[0].work.pk, str(spec_work.pk))
+        self.assertEqual(data.coverage[0].work.name, 'Со спецификацией')
         self.assertEqual(
-            data.coverage_issues['items'][0]['group'].pk,
+            data.coverage[0].group.pk,
             str(fragile_group.pk),
         )
-        self.assertEqual(data.coverage_issues['items'][0]['needed'], 2)
-        self.assertEqual(data.coverage_issues['items'][0]['available'], 1)
-        self.assertEqual(data.ungrouped_tasks, {'count': 0, 'pct': 0.0})
-        self.assertEqual(data.works_no_variants['count'], 2)
-        self.assertEqual(data.works_no_spec['items'][0].pk, str(work_no_spec.pk))
-        self.assertEqual(data.works_no_spec['items'][0].name, 'Без спецификации')
-        self.assertEqual(data.difficulty_dist, [{
-            'difficulty': 2,
-            'count': 1,
-            'pct': 100.0,
-        }])
-        self.assertEqual(data.type_dist[0]['task_type'], 'computational')
-        self.assertEqual(data.type_dist[0]['pct'], 100.0)
-        self.assertEqual(data.unverified_tasks, {'count': 1, 'pct': 100.0})
-        self.assertEqual(data.no_source_tasks, {'count': 1, 'pct': 100.0})
-        self.assertEqual(data.no_grade_tasks, {'count': 1, 'pct': 100.0})
-        self.assertEqual(data.health['issues'], 7)
-        self.assertEqual(data.health['label'], 'Есть замечания')
-        self.assertEqual(list(data.courses), [course])
-        self.assertEqual(data.active_report, 'db-health')
+        self.assertEqual(data.coverage[0].needed, 2)
+        self.assertEqual(data.coverage[0].available, 1)
+        self.assertEqual(data.ungrouped_tasks_count, 0)
+        self.assertEqual(data.works_no_variants_count, 2)
+        self.assertEqual(data.works_no_spec_samples[0].pk, str(work_no_spec.pk))
+        self.assertEqual(data.difficulty_counts[0].key, 2)
+        self.assertEqual(data.difficulty_counts[0].count, 1)
+        self.assertEqual(data.type_counts[0].key, 'computational')
+        self.assertEqual(data.unverified_tasks_count, 1)
+        self.assertEqual(data.no_source_tasks_count, 1)
+        self.assertEqual(data.no_grade_tasks_count, 1)
+        self.assertEqual(data.courses[0].pk, str(course.pk))
 
     def test_get_reports_dashboard_returns_dashboard_data(self):
         now = timezone.now()

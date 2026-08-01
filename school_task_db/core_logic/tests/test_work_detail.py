@@ -422,6 +422,8 @@ class WorkDetailTests(TestCase):
             ),
             count=2,
             weight=4,
+            bank_role_filter='practice',
+            task_bank_roles=('demo', 'practice', 'practice'),
         )
         use_case = GetWorkDetailUseCase(
             work_read_repo=FakeWorkRepository(
@@ -437,9 +439,13 @@ class WorkDetailTests(TestCase):
         self.assertEqual(selection.count, 2)
         self.assertEqual(selection.order, 3)
         self.assertEqual(selection.weight, 4)
-        self.assertEqual(result.spec_preview[0].wg, spec_row)
+        self.assertEqual(
+            result.spec_preview[0].wg.selection_id,
+            spec_row.selection_id,
+        )
         self.assertEqual(result.spec_preview[0].per_task, 4)
         self.assertEqual(result.spec_preview[0].total_points, 8)
+        self.assertEqual(result.spec_preview[0].available_count, 2)
 
     def test_get_work_detail_merges_persistent_content_in_pedagogical_order(self):
         content_blocks = [

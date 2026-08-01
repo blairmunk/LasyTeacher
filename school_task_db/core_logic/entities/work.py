@@ -77,6 +77,10 @@ class WorkDetailSpecGroup:
     is_assessable: bool = True
     blank_cells_after: bool = False
     blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
+    task_bank_roles: tuple[str, ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        object.__setattr__(self, 'task_bank_roles', tuple(self.task_bank_roles))
 
     @property
     def bank_role_filter_label(self) -> str:

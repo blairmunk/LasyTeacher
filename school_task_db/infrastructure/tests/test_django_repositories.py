@@ -1530,7 +1530,7 @@ class DjangoRemedialRepositoryTests(TestCase):
                 ).pk
             ),
         )
-        self.assertGreaterEqual(analog_groups[0].available_count, 1)
+        self.assertGreaterEqual(len(analog_groups[0].task_bank_roles), 1)
 
     def test_work_repository_returns_list_page_data(self):
         repo = DjangoWorkRepository()

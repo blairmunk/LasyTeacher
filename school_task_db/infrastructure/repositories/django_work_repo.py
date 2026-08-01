@@ -51,9 +51,6 @@ from core_logic.entities.work_spec_sync import (
     WorkSpecSyncSaveResult,
     WorkSpecSyncSource,
 )
-from core_logic.value_objects.task_print_settings import (
-    TASK_BANK_ROLE_ANY,
-)
 from core_logic.interfaces.orphan_variant_repo import (
     CreatedWorkFromOrphanVariantsRef,
     CreateWorkFromOrphanVariantsParams,
@@ -217,10 +214,8 @@ class DjangoWorkRepository(
                 group_name=work_group.analog_group.name,
                 requested_count=work_group.count,
                 bank_role_filter=work_group.bank_role_filter,
-                task_bank_roles=tuple(
-                    TaskGroup.objects.filter(
-                        group=work_group.analog_group,
-                    ).order_by('pk').values_list('bank_role', flat=True)
+                task_bank_roles=self._task_bank_roles(
+                    work_group.analog_group_id,
                 ),
             )
             for work_group in WorkAnalogGroup.objects.filter(
@@ -319,12 +314,14 @@ class DjangoWorkRepository(
             count=work_group.count,
             weight=work_group.weight,
             selection_id=str(work_group.pk),
-            available_count=self._count_available_group_tasks(work_group),
             bank_role_filter=work_group.bank_role_filter,
             render_mode=work_group.render_mode,
             is_assessable=work_group.is_assessable,
             blank_cells_after=work_group.blank_cells_after,
             blank_cells_rows=work_group.blank_cells_rows,
+            task_bank_roles=self._task_bank_roles(
+                work_group.analog_group_id,
+            ),
         )
 
     def get_variant_detail(self, variant_id: str):
@@ -1224,8 +1221,10 @@ class DjangoWorkRepository(
             tasks_count=len(ordered_tasks),
         )
 
-    def _count_available_group_tasks(self, work_group) -> int:
-        queryset = TaskGroup.objects.filter(group=work_group.analog_group)
-        if work_group.bank_role_filter != TASK_BANK_ROLE_ANY:
-            queryset = queryset.filter(bank_role=work_group.bank_role_filter)
-        return queryset.count()
+    @staticmethod
+    def _task_bank_roles(analog_group_id):
+        return tuple(
+            TaskGroup.objects.filter(
+                group_id=analog_group_id,
+            ).order_by('pk').values_list('bank_role', flat=True)
+        )

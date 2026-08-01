@@ -1,6 +1,7 @@
 """Build immutable variant creation plans from a work specification."""
 
 import random
+from dataclasses import replace
 from typing import Callable
 
 from core_logic.entities.work import VariantGenerationGroup
@@ -61,9 +62,9 @@ class WorkVariantCompositionService:
                     available_tasks=tuple(
                         task
                         for task in row.available_tasks
-                        if (
-                            row.bank_role_filter == TASK_BANK_ROLE_ANY
-                            or task.bank_role == row.bank_role_filter
+                        if self.bank_role_matches(
+                            task.bank_role,
+                            row.bank_role_filter,
                         )
                     ),
                     render_mode=row.render_mode,
@@ -85,15 +86,36 @@ class WorkVariantCompositionService:
                 available_count=sum(
                     1
                     for role in source.task_bank_roles
-                    if (
-                        source.bank_role_filter == TASK_BANK_ROLE_ANY
-                        or role == source.bank_role_filter
+                    if WorkVariantCompositionService.bank_role_matches(
+                        role,
+                        source.bank_role_filter,
                     )
                 ),
                 bank_role_filter=source.bank_role_filter,
             )
             for source in sources
         ]
+
+    @classmethod
+    def build_work_detail_groups(cls, groups):
+        return [
+            replace(
+                group,
+                available_count=sum(
+                    1
+                    for role in group.task_bank_roles
+                    if cls.bank_role_matches(role, group.bank_role_filter)
+                ),
+            )
+            for group in groups
+        ]
+
+    @staticmethod
+    def bank_role_matches(task_role, bank_role_filter):
+        return (
+            bank_role_filter == TASK_BANK_ROLE_ANY
+            or task_role == bank_role_filter
+        )
 
     def compose(
         self,

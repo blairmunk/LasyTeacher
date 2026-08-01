@@ -13,6 +13,9 @@ from core_logic.services.work_score_allocation_service import (
     WorkScoreAllocationService,
     WorkScoreSpecRow,
 )
+from core_logic.services.work_variant_composition_service import (
+    WorkVariantCompositionService,
+)
 from core_logic.value_objects.document_recipes import (
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     WORK_DOCUMENT_TYPE,
@@ -29,12 +32,16 @@ class GetWorkDetailUseCase:
         work_service: WorkService,
         presentation_profile_repo: IPresentationProfileRepository | None = None,
         score_allocation_service=None,
+        composition_service=None,
     ):
         self.work_read_repo = work_read_repo
         self.work_service = work_service
         self.presentation_profile_repo = presentation_profile_repo
         self.score_allocation_service = (
             score_allocation_service or WorkScoreAllocationService()
+        )
+        self.composition_service = (
+            composition_service or WorkVariantCompositionService()
         )
 
     def execute(self, work_id: str) -> WorkDetailData:
@@ -43,7 +50,9 @@ class GetWorkDetailUseCase:
             return WorkDetailData()
 
         variants = self.work_read_repo.get_detail_variants(work_id)
-        analog_groups = self.work_read_repo.get_detail_analog_groups(work_id)
+        analog_groups = self.composition_service.build_work_detail_groups(
+            self.work_read_repo.get_detail_analog_groups(work_id),
+        )
         content_blocks = self.work_read_repo.get_detail_content_blocks(work_id)
         spec_preview = self._build_spec_preview(
             max_score=work.max_score,

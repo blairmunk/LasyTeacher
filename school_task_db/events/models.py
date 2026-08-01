@@ -2,6 +2,7 @@ from django.db import models
 from django.urls import reverse
 from django.core.exceptions import ValidationError
 from core.models import BaseModel
+from core_logic.value_objects.mark_validation import validate_mark_values
 
 def work_scan_upload_path(instance, filename):
     """Путь для загрузки сканов работ"""
@@ -137,9 +138,11 @@ class Mark(BaseModel):
         return reverse('events:mark-detail', kwargs={'pk': self.pk})
     
     def clean(self):
-        """Валидация отметки"""
-        if self.score and (self.score < 1 or self.score > 5):
-            raise ValidationError('Оценка должна быть от 1 до 5')
-        
-        if self.points and self.max_points and self.points > self.max_points:
-            raise ValidationError('Набранные баллы не могут превышать максимум')
+        try:
+            validate_mark_values(
+                score=self.score,
+                points=self.points,
+                max_points=self.max_points,
+            )
+        except ValueError as error:
+            raise ValidationError(str(error)) from error

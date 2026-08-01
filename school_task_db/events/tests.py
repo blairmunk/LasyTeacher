@@ -1,6 +1,7 @@
 import datetime as dt
 
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -10,6 +11,17 @@ from events.models import Event, EventParticipation, Mark
 from students.models import Student, StudentGroup
 from tasks.models import Task
 from works.models import Variant, VariantTask, Work
+
+
+class MarkModelValidationTests(TestCase):
+    def test_clean_translates_domain_validation_error(self):
+        mark = Mark(score=6, points=8, max_points=10)
+
+        with self.assertRaisesRegex(
+            ValidationError,
+            'Оценка должна быть от 1 до 5',
+        ):
+            mark.clean()
 
 
 class GradeParticipationViewTests(TestCase):

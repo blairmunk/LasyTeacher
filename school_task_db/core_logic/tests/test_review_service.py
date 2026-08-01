@@ -24,6 +24,14 @@ class ReviewServiceTests(TestCase):
         self.assertEqual(service.calculate_score(4, 10).score, 2)
         self.assertEqual(service.calculate_score(1, 0).percentage, 0)
 
+    def test_score_percentage_handles_missing_and_zero_maximum(self):
+        service = ReviewService()
+
+        self.assertEqual(service.score_percentage(7, 10), 70.0)
+        self.assertEqual(service.score_percentage(None, 10), 0)
+        self.assertEqual(service.score_percentage(7, None), 0)
+        self.assertEqual(service.score_percentage(7, 0), 0)
+
     def test_parse_submission_returns_grade_fields_and_task_scores(self):
         service = ReviewService()
 

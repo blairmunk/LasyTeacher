@@ -103,6 +103,12 @@ class MarkAdmin(admin.ModelAdmin):
     search_fields = ['participation__student__last_name', 'participation__student__first_name', 
                     'participation__event__name', 'teacher_comment', 'uuid']  # ОБЯЗАТЕЛЬНО для автокомплита
     readonly_fields = ['uuid', 'get_short_uuid', 'get_percentage']
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            'participation__student',
+            'participation__event',
+        )
     
     fieldsets = [
         ('Основная информация', {
@@ -133,16 +139,19 @@ class MarkAdmin(admin.ModelAdmin):
     get_short_uuid.short_description = 'UUID'
     
     def get_student_name(self, obj):
-        return obj.student.get_full_name()
+        return obj.participation.student.get_full_name()
     get_student_name.short_description = 'Ученик'
     get_student_name.admin_order_field = 'participation__student__last_name'
     
     def get_event_name(self, obj):
-        return obj.event.name
+        return obj.participation.event.name
     get_event_name.short_description = 'Событие'
     get_event_name.admin_order_field = 'participation__event__name'
     
     def get_percentage(self, obj):
-        percentage = obj.get_percentage()
+        percentage = ReviewService.score_percentage(
+            obj.points,
+            obj.max_points,
+        )
         return f"{percentage}%" if percentage else "—"
     get_percentage.short_description = '% выполнения'

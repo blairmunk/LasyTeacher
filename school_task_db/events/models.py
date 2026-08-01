@@ -136,29 +136,6 @@ class Mark(BaseModel):
     def get_absolute_url(self):
         return reverse('events:mark-detail', kwargs={'pk': self.pk})
     
-    def get_percentage(self):
-        """Процент выполнения"""
-        if self.points and self.max_points and self.max_points > 0:
-            return round((self.points / self.max_points) * 100, 1)
-        return None
-    
-    # Удобные свойства для доступа
-    @property
-    def student(self):
-        return self.participation.student
-    
-    @property
-    def event(self):
-        return self.participation.event
-    
-    @property
-    def variant(self):
-        return self.participation.variant
-    
-    @property
-    def work(self):
-        return self.participation.event.work
-    
     def clean(self):
         """Валидация отметки"""
         if self.score and (self.score < 1 or self.score > 5):

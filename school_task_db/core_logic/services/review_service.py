@@ -39,8 +39,17 @@ class ReviewService:
         'image/webp',
     }
 
+    @staticmethod
+    def score_percentage(
+        points: Optional[int],
+        max_points: Optional[int],
+    ) -> float:
+        if points is None or max_points is None or max_points <= 0:
+            return 0
+        return round(points / max_points * 100, 1)
+
     def calculate_score(self, points: int, max_points: int) -> ReviewScoreCalculation:
-        percentage = (points / max_points) * 100 if max_points > 0 else 0
+        percentage = self.score_percentage(points, max_points)
 
         if percentage >= 85:
             score = 5
@@ -53,7 +62,7 @@ class ReviewService:
 
         return ReviewScoreCalculation(
             score=score,
-            percentage=round(percentage, 1),
+            percentage=percentage,
         )
 
     def parse_submission(self, data: Mapping[str, object]) -> ReviewSubmissionData:

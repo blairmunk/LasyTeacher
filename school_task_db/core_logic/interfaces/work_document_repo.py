@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from core_logic.entities.work import RemedialSheetData, WorkDocumentRef
+from core_logic.entities.work import RemedialSheetSource, WorkDocumentRef
 
 
 class IWorkDocumentRepository(ABC):
@@ -30,8 +30,8 @@ class IWorkDocumentRepository(ABC):
         """Return variant type, or None when the variant does not exist."""
 
     @abstractmethod
-    def get_remedial_sheet_data(
+    def get_remedial_sheet_source(
         self,
         variant_id: str,
-    ) -> Optional[RemedialSheetData]:
-        """Return remedial sheet source data, or None when it is missing."""
+    ) -> Optional[RemedialSheetSource]:
+        """Return normalized remedial facts, or None when variant is missing."""

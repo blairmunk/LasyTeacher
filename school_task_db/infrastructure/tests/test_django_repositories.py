@@ -51,6 +51,9 @@ from core_logic.use_cases.create_work_from_orphans import (
     CreateWorkFromOrphansRequest,
     CreateWorkFromOrphansUseCase,
 )
+from core_logic.use_cases.get_remedial_sheet_data import (
+    GetRemedialSheetDataUseCase,
+)
 from core_logic.use_cases.compose_work_variants import (
     ComposeWorkVariantsRequest,
     ComposeWorkVariantsUseCase,
@@ -1388,7 +1391,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
 
     def test_work_repository_returns_none_for_missing_remedial_sheet(self):
-        sheet_data = DjangoWorkRepository().get_remedial_sheet_data(
+        sheet_data = DjangoWorkRepository().get_remedial_sheet_source(
             '00000000-0000-0000-0000-000000000000',
         )
 
@@ -1414,9 +1417,9 @@ class DjangoRemedialRepositoryTests(TestCase):
             content={'body': 'Проверьте вычисления.'},
         )
 
-        sheet_data = DjangoWorkRepository().get_remedial_sheet_data(
-            str(remedial_variant.pk),
-        )
+        sheet_data = GetRemedialSheetDataUseCase(
+            DjangoWorkRepository(),
+        ).execute(str(remedial_variant.pk))
 
         self.assertEqual(len(sheet_data.content_blocks), 1)
         self.assertEqual(
@@ -1477,9 +1480,9 @@ class DjangoRemedialRepositoryTests(TestCase):
             source_participation=second_participation,
         )
 
-        sheet_data = DjangoWorkRepository().get_remedial_sheet_data(
-            str(remedial_variant.pk),
-        )
+        sheet_data = GetRemedialSheetDataUseCase(
+            DjangoWorkRepository(),
+        ).execute(str(remedial_variant.pk))
 
         self.assertEqual(sheet_data.mark.score, 4)
         self.assertEqual(

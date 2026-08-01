@@ -17,7 +17,7 @@ from core_logic.entities.document_rendering import (
     GeneratedFile,
     GeneratedFileResult,
 )
-from core_logic.entities.work import WorkDocumentRef
+from core_logic.entities.work import RemedialSheetSource, WorkDocumentRef
 from core_logic.use_cases.get_rendered_document_file import (
     GetRenderedDocumentFileRequest,
     GetRenderedDocumentFileUseCase,
@@ -105,10 +105,15 @@ class FakeWorkRepository:
         self.work_type = work_type
         self.remedial_variant_ids = remedial_variant_ids or []
         self.remedial_variant_ids_request = None
-        self.remedial_sheet_data = (
+        self.remedial_sheet_source = (
             remedial_sheet_data
             if remedial_sheet_data is not None
-            else SimpleNamespace(student=object())
+            else RemedialSheetSource(
+                variant=None,
+                student=object(),
+                source_work=None,
+                mark=None,
+            )
         )
         self.variant_ids = variant_ids or ['variant-1']
         self.variant_ids_request = None
@@ -135,8 +140,16 @@ class FakeWorkRepository:
         self.variant_ids_request = work_id
         return self.variant_ids
 
-    def get_remedial_sheet_data(self, variant_id):
-        return self.remedial_sheet_data
+    def get_remedial_sheet_source(self, variant_id):
+        source = self.remedial_sheet_source
+        if source is None or isinstance(source, RemedialSheetSource):
+            return source
+        return RemedialSheetSource(
+            variant=getattr(source, 'variant', None),
+            student=getattr(source, 'student', None),
+            source_work=getattr(source, 'source_work', None),
+            mark=getattr(source, 'mark', None),
+        )
 
 
 class FakeRenderRemedialSheetDocumentUseCase:

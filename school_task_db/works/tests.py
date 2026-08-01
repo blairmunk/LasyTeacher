@@ -17,6 +17,9 @@ from core_logic.entities.document_rendering import (
     GeneratedFile,
     GeneratedFileResult,
 )
+from core_logic.use_cases.get_remedial_sheet_data import (
+    GetRemedialSheetDataUseCase,
+)
 from curriculum.models import Topic
 from document_engine.models import PrintSettings
 from events.models import Event, EventParticipation, Mark
@@ -1484,9 +1487,9 @@ class WorkDetailViewTests(TestCase):
             },
         )
 
-        sheet_data = DjangoWorkRepository().get_remedial_sheet_data(
-            str(remedial_variant.pk),
-        )
+        sheet_data = GetRemedialSheetDataUseCase(
+            DjangoWorkRepository(),
+        ).execute(str(remedial_variant.pk))
 
         self.assertEqual(sheet_data.variant.pk, str(remedial_variant.pk))
         self.assertEqual(sheet_data.variant.work.pk, str(remedial_work.pk))

@@ -4,7 +4,11 @@ from unittest import TestCase
 from core_logic.entities.document import DocumentPresentationProfile
 from core_logic.entities.work import (
     OrphanVariantRef,
-    RemedialSheetData,
+    RemedialMarkRef,
+    RemedialOriginalTaskSource,
+    RemedialSheetSource,
+    RemedialTaskRef,
+    RemedialTrainingTaskRow,
     VariantDeleteInfo,
     VariantDetailTask,
     VariantDetailTaskRow,
@@ -133,13 +137,26 @@ class FakeWorkRepository:
         self.deleted_variant_id = None
         self.bulk_deleted_request = None
         self.remaining_variant_count = 0
-        self.remedial_sheet_data = RemedialSheetData(
+        self.remedial_sheet_source = RemedialSheetSource(
             variant='remedial-variant',
             student='student',
             source_work='source-work',
-            mark='mark',
-            original_tasks=['original-task'],
-            new_tasks=['new-task'],
+            mark=RemedialMarkRef(score=3, points=2, max_points=5),
+            task_scores={
+                'variant-task-1': {'points': 2, 'max_points': 5},
+            },
+            original_tasks=[RemedialOriginalTaskSource(
+                task=RemedialTaskRef(pk='task-1', text='Задание'),
+                variant_task_id='variant-task-1',
+                order=1,
+            )],
+            new_tasks=[RemedialTrainingTaskRow(
+                pk='new-row-1',
+                task_id='task-2',
+                task=RemedialTaskRef(pk='task-2', text='Тренировка'),
+                order=1,
+                max_points=1,
+            )],
         )
         self.remedial_sheet_variant_id = None
         self.work_name = 'Контрольная'
@@ -211,9 +228,9 @@ class FakeWorkRepository:
         self.work_variant_ids_request = work_id
         return self.work_variant_ids
 
-    def get_remedial_sheet_data(self, variant_id):
+    def get_remedial_sheet_source(self, variant_id):
         self.remedial_sheet_variant_id = variant_id
-        return self.remedial_sheet_data
+        return self.remedial_sheet_source
 
     def get_orphan_variants(self):
         return self.orphan_variants
@@ -559,11 +576,14 @@ class WorkDetailTests(TestCase):
         result = use_case.execute('variant-1')
 
         self.assertEqual(repo.remedial_sheet_variant_id, 'variant-1')
-        self.assertEqual(result, repo.remedial_sheet_data)
+        self.assertEqual(result.variant, repo.remedial_sheet_source.variant)
+        self.assertEqual(result.mark.score, 3)
+        self.assertEqual(result.original_tasks[0].status, 'partial')
+        self.assertEqual(result.new_tasks, repo.remedial_sheet_source.new_tasks)
 
     def test_get_remedial_sheet_data_use_case_handles_missing_variant(self):
         repo = FakeWorkRepository()
-        repo.remedial_sheet_data = None
+        repo.remedial_sheet_source = None
         use_case = GetRemedialSheetDataUseCase(work_repo=repo)
 
         result = use_case.execute('missing')
@@ -574,7 +594,7 @@ class WorkDetailTests(TestCase):
 
     def test_get_remedial_sheet_data_use_case_handles_missing_source(self):
         repo = FakeWorkRepository()
-        repo.remedial_sheet_data = RemedialSheetData(
+        repo.remedial_sheet_source = RemedialSheetSource(
             variant=FakeVariant(work=FakeWork()),
             student='student',
             source_work=None,
@@ -589,7 +609,7 @@ class WorkDetailTests(TestCase):
 
     def test_get_remedial_sheet_data_use_case_handles_missing_student(self):
         repo = FakeWorkRepository()
-        repo.remedial_sheet_data = RemedialSheetData(
+        repo.remedial_sheet_source = RemedialSheetSource(
             variant=FakeVariant(),
             student=None,
             source_work='source-work',

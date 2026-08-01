@@ -17,6 +17,9 @@ from core_logic.interfaces.work_document_repo import IWorkDocumentRepository
 from core_logic.use_cases.presentation_profile_selection import (
     resolve_document_presentation_profile,
 )
+from core_logic.use_cases.get_remedial_sheet_data import (
+    GetRemedialSheetDataUseCase,
+)
 from core_logic.use_cases.render_document_from_recipe import (
     RenderDocumentFromRecipeRequest,
     RenderDocumentFromRecipeUseCase,
@@ -51,6 +54,7 @@ class RenderRemedialSheetDocumentUseCase:
             render_document_from_recipe_use_case
         )
         self.presentation_profile_repo = presentation_profile_repo
+        self.get_sheet_data = GetRemedialSheetDataUseCase(work_repo)
 
     def execute(
         self,
@@ -67,10 +71,8 @@ class RenderRemedialSheetDocumentUseCase:
                 status=DOCUMENT_RENDER_STATUS_NOT_REMEDIAL,
                 renderer_type=request.options.renderer_type,
             )
-        sheet_data = self.work_repo.get_remedial_sheet_data(
-            request.variant_id,
-        )
-        if sheet_data is None:
+        sheet_data = self.get_sheet_data.execute(request.variant_id)
+        if sheet_data.status == 'not_found':
             return DocumentRenderResult(
                 status=DOCUMENT_RENDER_STATUS_NOT_FOUND,
                 renderer_type=request.options.renderer_type,

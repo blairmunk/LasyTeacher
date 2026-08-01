@@ -11,8 +11,8 @@ from core_logic.entities.work import (
     OrphanVariantStudentRef,
     RemedialMarkRef,
     RemedialContentBlockRow,
-    RemedialOriginalTaskRow,
-    RemedialSheetData,
+    RemedialOriginalTaskSource,
+    RemedialSheetSource,
     RemedialTaskRef,
     RemedialTrainingTaskRow,
     RemedialVariantRef,
@@ -54,7 +54,6 @@ from core_logic.entities.work_spec_sync import (
 from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_ANY,
 )
-from core_logic.value_objects.task_scores import resolve_task_score_record
 from core_logic.interfaces.orphan_variant_repo import (
     CreatedWorkFromOrphanVariantsRef,
     CreateWorkFromOrphanVariantsParams,
@@ -429,10 +428,10 @@ class DjangoWorkRepository(
             .first()
         )
 
-    def get_remedial_sheet_data(
+    def get_remedial_sheet_source(
         self,
         variant_id: str,
-    ) -> Optional[RemedialSheetData]:
+    ) -> Optional[RemedialSheetSource]:
         variant = Variant.objects.select_related(
             'assigned_student',
             'source_work',
@@ -478,28 +477,13 @@ class DjangoWorkRepository(
 
                     for variant_task in original_variant_tasks:
                         task = variant_task.task
-                        score_record = resolve_task_score_record(
-                            mark.task_scores if mark else {},
-                            variant_task_id=str(variant_task.pk),
-                            task_id=str(task.pk),
-                        )
-                        points = score_record.points if score_record else None
-                        max_points = (
-                            score_record.max_points
-                            if score_record
-                            else None
-                        )
-                        pct, status = self._score_status(points, max_points)
                         task_group = TaskGroup.objects.filter(task=task).first()
 
                         original_tasks.append(
-                            RemedialOriginalTaskRow(
+                            RemedialOriginalTaskSource(
                                 task=self._remedial_task_ref(task),
+                                variant_task_id=str(variant_task.pk),
                                 order=variant_task.order,
-                                points=points,
-                                max_points=max_points,
-                                pct=pct,
-                                status=status,
                                 group_name=(
                                     task_group.group.name
                                     if task_group
@@ -517,7 +501,7 @@ class DjangoWorkRepository(
             'task__source',
         ).order_by('order')
 
-        return RemedialSheetData(
+        return RemedialSheetSource(
             variant=RemedialVariantRef(
                 pk=str(variant.pk),
                 work=(
@@ -555,6 +539,7 @@ class DjangoWorkRepository(
                 if mark
                 else None
             ),
+            task_scores=mark.task_scores if mark else {},
             original_tasks=original_tasks,
             new_tasks=[
                 RemedialTrainingTaskRow(
@@ -645,23 +630,6 @@ class DjangoWorkRepository(
                 flat=True,
             )
         ]
-
-    def _score_status(self, points, max_points):
-        if (
-            isinstance(points, (int, float))
-            and isinstance(max_points, (int, float))
-            and max_points > 0
-        ):
-            pct = points / max_points * 100
-            if pct >= 70:
-                status = 'ok'
-            elif pct > 0:
-                status = 'partial'
-            else:
-                status = 'fail'
-            return round(pct, 1), status
-
-        return 0, 'unknown'
 
     def get_orphan_variants(self):
         return [

@@ -45,6 +45,9 @@ from core_logic.use_cases.get_reports_dashboard import (
     GetReportsDashboardUseCase,
     ReportsDashboardRequest,
 )
+from core_logic.use_cases.sync_student_task_logs import (
+    SyncStudentTaskLogsUseCase,
+)
 from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
@@ -152,7 +155,7 @@ class DjangoReportRepositoryTests(TestCase):
                 },
             },
         )
-        DjangoStudentRepository().sync_student_task_logs(str(mark.pk))
+        SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(str(mark.pk))
 
         data = GetHeatmapSubtopicMatrixUseCase(
             DjangoReportRepository(),
@@ -254,7 +257,7 @@ class DjangoReportRepositoryTests(TestCase):
                 str(other_task.pk): {'points': 2, 'max_points': 10},
             },
         )
-        DjangoStudentRepository().sync_student_task_logs(str(mark.pk))
+        SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(str(mark.pk))
 
         data = GetHeatmapSubtopicDetailUseCase(
             DjangoReportRepository(),
@@ -347,7 +350,7 @@ class DjangoReportRepositoryTests(TestCase):
                 },
             },
         )
-        DjangoStudentRepository().sync_student_task_logs(str(mark.pk))
+        SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(str(mark.pk))
 
         data = GetHeatmapStudentDetailUseCase(
             DjangoReportRepository(),

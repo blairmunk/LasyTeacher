@@ -5,6 +5,9 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from core_logic.use_cases.sync_student_task_logs import (
+    SyncStudentTaskLogsUseCase,
+)
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_student_repo import (
@@ -258,7 +261,7 @@ class ReportsViewsTests(TestCase):
                 str(task.pk): {'points': 8, 'max_points': 10},
             },
         )
-        DjangoStudentRepository().sync_student_task_logs(str(mark.pk))
+        SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(str(mark.pk))
 
         response = self.client.get(
             reverse('reports:heatmap-drilldown', args=[topic.pk]),
@@ -320,7 +323,7 @@ class ReportsViewsTests(TestCase):
                 str(task.pk): {'points': 8, 'max_points': 10},
             },
         )
-        DjangoStudentRepository().sync_student_task_logs(str(mark.pk))
+        SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(str(mark.pk))
 
         response = self.client.get(
             reverse('reports:heatmap-student', args=[topic.pk, student.pk]),
@@ -387,7 +390,7 @@ class ReportsViewsTests(TestCase):
                 str(task.pk): {'points': 8, 'max_points': 10},
             },
         )
-        DjangoStudentRepository().sync_student_task_logs(str(mark.pk))
+        SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(str(mark.pk))
 
         response = self.client.get(
             reverse('reports:heatmap-subtopic', args=[subtopic.pk]),

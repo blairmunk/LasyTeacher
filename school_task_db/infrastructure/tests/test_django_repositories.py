@@ -73,6 +73,9 @@ from core_logic.use_cases.sync_work_analog_groups import (
     SyncWorkAnalogGroupsRequest,
     SyncWorkAnalogGroupsUseCase,
 )
+from core_logic.use_cases.sync_student_task_logs import (
+    SyncStudentTaskLogsUseCase,
+)
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_DEMO,
@@ -195,7 +198,7 @@ class DjangoRemedialRepositoryTests(TestCase):
                 str(self.original_ok.pk): {'points': 5, 'max_points': 5},
             },
         )
-        DjangoStudentRepository().sync_student_task_logs(
+        SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(
             str(self.mark.pk),
         )
 
@@ -293,7 +296,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.original_weak.save(update_fields=['subtopic'])
         StudentTaskLog.objects.filter(mark=self.mark).delete()
 
-        created_count = DjangoStudentRepository().sync_student_task_logs(
+        created_count = SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(
             str(self.mark.pk),
         )
 
@@ -323,7 +326,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             completed_at=timezone.now() - dt.timedelta(days=1),
         )
 
-        created_count = DjangoStudentRepository().sync_student_task_logs(
+        created_count = SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(
             str(self.mark.pk),
         )
 
@@ -350,14 +353,14 @@ class DjangoRemedialRepositoryTests(TestCase):
         }
         self.mark.save(update_fields=['task_scores'])
 
-        DjangoStudentRepository().sync_student_task_logs(str(self.mark.pk))
+        SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(str(self.mark.pk))
 
         weak_log.refresh_from_db()
         self.assertTrue(weak_log.is_correct)
         self.assertEqual(weak_log.percentage, 100)
 
     def test_student_repository_ignores_missing_mark_during_log_sync(self):
-        created_count = DjangoStudentRepository().sync_student_task_logs(
+        created_count = SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(
             '00000000-0000-0000-0000-000000000000',
         )
 

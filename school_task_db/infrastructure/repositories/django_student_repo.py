@@ -629,11 +629,3 @@ class DjangoStudentRepository(IStudentRepository):
                 continue
             task_ids.add(str(score_data.get('task_id') or score_key))
         return task_ids
-
-    def sync_student_task_logs(self, mark_id: str) -> int:
-        """Compatibility facade for callers not yet using the use case."""
-        from core_logic.use_cases.sync_student_task_logs import (
-            SyncStudentTaskLogsUseCase,
-        )
-
-        return SyncStudentTaskLogsUseCase(self).execute(mark_id)

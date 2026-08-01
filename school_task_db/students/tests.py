@@ -9,6 +9,9 @@ from django.urls import reverse
 from django.utils import timezone
 
 from core.models import AcademicYear
+from core_logic.use_cases.sync_student_task_logs import (
+    SyncStudentTaskLogsUseCase,
+)
 from curriculum.models import Topic
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_student_repo import (
@@ -279,7 +282,7 @@ class RemedialFromEventViewTests(TestCase):
                 str(self.ok_original.pk): {'points': 5, 'max_points': 5},
             },
         )
-        DjangoStudentRepository().sync_student_task_logs(
+        SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(
             str(source_mark.pk),
         )
 
@@ -517,7 +520,7 @@ class RemedialFromEventViewTests(TestCase):
                 },
             },
         )
-        DjangoStudentRepository().sync_student_task_logs(
+        SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(
             str(first_remedial_mark.pk),
         )
         first_participation.status = 'graded'

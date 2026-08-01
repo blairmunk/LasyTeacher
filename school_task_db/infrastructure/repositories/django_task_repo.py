@@ -468,10 +468,16 @@ class DjangoTaskRepository(ITaskRepository):
         ]
 
     def get_list_topics(self):
-        return Topic.objects.all().order_by('section', 'name')
+        return [
+            SelectOption(id=str(topic.pk), name=topic.name)
+            for topic in Topic.objects.all().order_by('section', 'name')
+        ]
 
     def get_list_analog_groups(self):
-        return AnalogGroup.objects.all().order_by('name')
+        return [
+            SelectOption(id=str(group.pk), name=group.name)
+            for group in AnalogGroup.objects.all().order_by('name')
+        ]
 
     def count_analog_groups(self) -> int:
         return AnalogGroup.objects.count()
@@ -485,7 +491,10 @@ class DjangoTaskRepository(ITaskRepository):
         return TaskGroup.objects.count()
 
     def get_list_sources(self):
-        return Source.objects.all()
+        return [
+            SelectOption(id=str(source.pk), name=str(source))
+            for source in Source.objects.all().order_by('name')
+        ]
 
     def get_task_export_sources(
         self,
@@ -531,9 +540,14 @@ class DjangoTaskRepository(ITaskRepository):
 
     def get_subtopics_for_topic(self, topic_id: str):
         if not topic_id:
-            return SubTopic.objects.none()
+            return []
 
-        return SubTopic.objects.filter(topic_id=topic_id).order_by('order', 'name')
+        return [
+            SelectOption(id=str(subtopic.pk), name=subtopic.name)
+            for subtopic in SubTopic.objects.filter(
+                topic_id=topic_id,
+            ).order_by('order', 'name')
+        ]
 
     def get_subtopic_options(self, topic_id: str) -> List[SelectOption]:
         if not topic_id:

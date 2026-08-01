@@ -111,7 +111,10 @@ class TaskGroupBulkActionTests(TestCase):
         self.assertEqual(response.context['analog_groups'][0].pk, str(self.group.pk))
         self.assertEqual(response.context['analog_groups'][0].name, self.group.name)
         self.assertEqual(response.context['analog_groups'][0].task_count, 1)
-        self.assertEqual(response.context['topics'][0], self.topic)
+        self.assertEqual(
+            response.context['topics'][0].pk,
+            str(self.topic.pk),
+        )
         self.assertEqual(response.context['total_groups'], 1)
         self.assertEqual(response.context['empty_groups'], 0)
         self.assertEqual(response.context['total_tasks_in_groups'], 1)

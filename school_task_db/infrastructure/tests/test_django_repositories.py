@@ -902,8 +902,14 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(repo.count_tasks(), 4)
         self.assertEqual(repo.count_ungrouped_tasks(), 0)
         self.assertEqual(list(repo.get_subtopics_for_topic('')), [])
-        self.assertIn(self.topic, list(repo.get_list_topics()))
-        self.assertIn(self.weak_group, list(repo.get_list_analog_groups()))
+        self.assertIn(
+            str(self.topic.pk),
+            [option.pk for option in repo.get_list_topics()],
+        )
+        self.assertIn(
+            str(self.weak_group.pk),
+            [option.pk for option in repo.get_list_analog_groups()],
+        )
 
     def test_task_repository_returns_filtered_analog_group_list_data(self):
         repo = DjangoTaskRepository()

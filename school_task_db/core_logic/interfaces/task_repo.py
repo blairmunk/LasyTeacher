@@ -85,11 +85,11 @@ class ITaskRepository(ABC):
         """Return analog-group read models for one task detail page."""
 
     @abstractmethod
-    def get_list_topics(self) -> Any:
+    def get_list_topics(self) -> List[SelectOption]:
         """Return topic options for the task list page."""
 
     @abstractmethod
-    def get_list_analog_groups(self) -> Any:
+    def get_list_analog_groups(self) -> List[SelectOption]:
         """Return analog-group options for the task list page."""
 
     @abstractmethod
@@ -105,7 +105,7 @@ class ITaskRepository(ABC):
         """Return total task-to-group memberships."""
 
     @abstractmethod
-    def get_list_sources(self) -> Any:
+    def get_list_sources(self) -> List[SelectOption]:
         """Return source options for the task list page."""
 
     @abstractmethod
@@ -124,7 +124,7 @@ class ITaskRepository(ABC):
         """Create a task source and return its read model."""
 
     @abstractmethod
-    def get_subtopics_for_topic(self, topic_id: str) -> Any:
+    def get_subtopics_for_topic(self, topic_id: str) -> List[SelectOption]:
         """Return subtopic options for a topic."""
 
     @abstractmethod

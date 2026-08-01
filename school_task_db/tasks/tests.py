@@ -190,7 +190,10 @@ class TaskBulkGroupAjaxTests(TestCase):
         self.assertEqual(response.context['tasks'][0].group_count, 1)
         self.assertEqual(response.context['total_tasks'], 2)
         self.assertEqual(response.context['ungrouped_count'], 1)
-        self.assertIn(self.group, list(response.context['analog_groups']))
+        self.assertIn(
+            str(self.group.pk),
+            [option.pk for option in response.context['analog_groups']],
+        )
         self.assertEqual(response.context['current_topic'], str(self.topic.pk))
         self.assertEqual(response.context['current_group_filter'], 'has_group')
 

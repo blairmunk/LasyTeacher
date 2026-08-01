@@ -35,10 +35,10 @@ class TaskListFilters:
 @dataclass(frozen=True)
 class TaskListData:
     tasks: List["TaskListItem"]
-    topics: Any
-    analog_groups: Any
-    sources: Any
-    subtopics: Any
+    topics: List["SelectOption"]
+    analog_groups: List["SelectOption"]
+    sources: List["SelectOption"]
+    subtopics: List["SelectOption"]
     task_types: List[Tuple[str, str]]
     difficulties: List[Tuple[int, str]]
     grade_choices: List[Tuple[int, str]]
@@ -177,8 +177,8 @@ class TaskGroupListFilters:
 @dataclass(frozen=True)
 class TaskGroupListData:
     analog_groups: List["TaskGroupListItem"]
-    topics: Any
-    subtopics: Any
+    topics: List["SelectOption"]
+    subtopics: List["SelectOption"]
     difficulties: List[Tuple[int, str]]
     total_groups: int
     empty_groups: int
@@ -351,6 +351,13 @@ class TaskImagesSaveResult:
 class SelectOption:
     id: str
     name: str
+
+    @property
+    def pk(self) -> str:
+        return self.id
+
+    def __str__(self) -> str:
+        return self.name
 
 
 @dataclass(frozen=True)

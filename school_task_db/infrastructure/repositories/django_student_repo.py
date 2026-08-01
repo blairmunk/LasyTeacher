@@ -23,7 +23,9 @@ from core_logic.entities.student import (
     StudentParticipationProfile,
     StudentRemedialWorkData,
     StudentTaskLogProfile,
-    TaskResult,
+    TaskResultGroupRef,
+    TaskResultsSource,
+    TaskResultVariantRow,
     WorkGroupRef,
     WorkRef,
 )
@@ -172,54 +174,54 @@ class DjangoStudentRepository(IStudentRepository):
         group.students.set(params.student_ids)
         return SaveStudentGroupResult(status='updated', group_id=str(group.pk))
 
-    def get_task_results_for_event(
+    def get_task_results_source_for_event(
         self,
         student_id: str,
         event_id: str,
-    ) -> List[TaskResult]:
+    ):
         participation = EventParticipation.objects.filter(
             student_id=student_id,
             event_id=event_id,
         ).first()
         if not participation:
-            return []
+            return None
 
         mark = Mark.objects.filter(participation=participation).first()
         if not mark or not mark.task_scores:
-            return []
+            return None
 
-        resolved_scores = self._resolved_task_scores(
-            participation,
-            mark.task_scores,
+        variant_tasks = []
+        if participation.variant_id:
+            variant_tasks = list(VariantTask.objects.filter(
+                variant_id=participation.variant_id,
+                is_assessable=True,
+            ).order_by('order', 'pk'))
+        candidate_task_ids = (
+            [row.task_id for row in variant_tasks]
+            if variant_tasks
+            else list(mark.task_scores)
         )
-        if not resolved_scores:
-            return []
-
-        results = []
-        task_groups = {
-            str(tg.task_id): tg
-            for tg in TaskGroup.objects.filter(
-                task_id__in=[
-                    record.task_id
-                    for _, record in resolved_scores
-                ]
-            ).select_related('group')
-        }
-
-        for variant_task_id, score_record in resolved_scores:
-            task_group = task_groups.get(score_record.task_id)
-            results.append(
-                TaskResult(
-                    task_id=score_record.task_id,
-                    variant_task_id=variant_task_id,
-                    points=score_record.points,
-                    max_points=score_record.max_points,
-                    group_id=str(task_group.group_id) if task_group else None,
-                    group_name=task_group.group.name if task_group else '',
+        task_groups = TaskGroup.objects.filter(
+            task_id__in=candidate_task_ids,
+        ).select_related('group')
+        return TaskResultsSource(
+            task_scores=mark.task_scores,
+            variant_tasks=tuple(
+                TaskResultVariantRow(
+                    variant_task_id=str(row.pk),
+                    task_id=str(row.task_id),
                 )
-            )
-
-        return results
+                for row in variant_tasks
+            ),
+            groups=tuple(
+                TaskResultGroupRef(
+                    task_id=str(membership.task_id),
+                    group_id=str(membership.group_id),
+                    group_name=membership.group.name,
+                )
+                for membership in task_groups
+            ),
+        )
 
     def get_student_groups(self, student_id: str) -> List[StudentGroupRef]:
         return [

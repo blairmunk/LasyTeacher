@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, List, Optional
+from typing import Any, List, Mapping, Optional
 
 
 class StudentLevel(Enum):
@@ -38,6 +38,33 @@ class TaskResult:
     max_points: Optional[float] = None
     group_id: Optional[str] = None
     group_name: str = ''
+
+
+@dataclass(frozen=True)
+class TaskResultVariantRow:
+    variant_task_id: str
+    task_id: str
+
+
+@dataclass(frozen=True)
+class TaskResultGroupRef:
+    task_id: str
+    group_id: str
+    group_name: str
+
+
+@dataclass(frozen=True)
+class TaskResultsSource:
+    task_scores: Mapping[str, Any]
+    variant_tasks: tuple[TaskResultVariantRow, ...] = field(
+        default_factory=tuple,
+    )
+    groups: tuple[TaskResultGroupRef, ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        object.__setattr__(self, 'task_scores', dict(self.task_scores))
+        object.__setattr__(self, 'variant_tasks', tuple(self.variant_tasks))
+        object.__setattr__(self, 'groups', tuple(self.groups))
 
 
 @dataclass(frozen=True)

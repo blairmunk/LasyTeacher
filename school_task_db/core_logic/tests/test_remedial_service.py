@@ -1,7 +1,11 @@
 from types import SimpleNamespace
 from unittest import TestCase
 
-from core_logic.entities.student import TaskResult
+from core_logic.entities.student import (
+    TaskResult,
+    TaskResultGroupRef,
+    TaskResultsSource,
+)
 from core_logic.entities.task import TaskEntity
 from core_logic.services.remedial_service import (
     RemedialConfig,
@@ -15,8 +19,26 @@ class FakeStudentRepository:
         self.results = results or []
         self.attempted_task_ids = attempted_task_ids or set()
 
-    def get_task_results_for_event(self, student_id, event_id):
-        return self.results
+    def get_task_results_source_for_event(self, student_id, event_id):
+        return TaskResultsSource(
+            task_scores={
+                result.task_id: {
+                    'task_id': result.task_id,
+                    'points': result.points,
+                    'max_points': result.max_points,
+                }
+                for result in self.results
+            },
+            groups=tuple(
+                TaskResultGroupRef(
+                    task_id=result.task_id,
+                    group_id=result.group_id,
+                    group_name=result.group_name,
+                )
+                for result in self.results
+                if result.group_id
+            ),
+        )
 
     def get_task_logs(self, student_id):
         return [

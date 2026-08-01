@@ -51,8 +51,8 @@ class FakeStudentRepository:
         self.requested_work_ids = work_ids
         return [WorkGroupRef(work_id='w1', group_id='ag1', group_name='Скорость')]
 
-    def get_task_results_for_event(self, student_id, event_id):
-        return []
+    def get_task_results_source_for_event(self, student_id, event_id):
+        return None
 
 
 class GetStudentProfileUseCaseTests(TestCase):

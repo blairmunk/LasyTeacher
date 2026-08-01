@@ -8,6 +8,9 @@ from django.utils import timezone
 from core.models import AcademicYear, ImportLog
 from core_logic.services.grading_service import GradingService
 from core_logic.services.remedial_service import RemedialService
+from core_logic.services.student_task_result_service import (
+    StudentTaskResultService,
+)
 from core_logic.services.work_variant_composition_service import (
     WorkVariantCompositionService,
 )
@@ -242,9 +245,11 @@ class DjangoRemedialRepositoryTests(TestCase):
         }
         self.mark.save()
 
-        results = DjangoStudentRepository().get_task_results_for_event(
-            student_id=str(self.student.pk),
-            event_id=str(self.event.pk),
+        results = StudentTaskResultService().build(
+            DjangoStudentRepository().get_task_results_source_for_event(
+                student_id=str(self.student.pk),
+                event_id=str(self.event.pk),
+            ),
         )
         result_by_task = {result.task_id: result for result in results}
 
@@ -271,9 +276,11 @@ class DjangoRemedialRepositoryTests(TestCase):
         demo_variant_task.is_assessable = False
         demo_variant_task.save(update_fields=['is_assessable'])
 
-        results = DjangoStudentRepository().get_task_results_for_event(
-            student_id=str(self.student.pk),
-            event_id=str(self.event.pk),
+        results = StudentTaskResultService().build(
+            DjangoStudentRepository().get_task_results_source_for_event(
+                student_id=str(self.student.pk),
+                event_id=str(self.event.pk),
+            ),
         )
 
         self.assertEqual(

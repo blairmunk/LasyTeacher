@@ -13,6 +13,9 @@ from core_logic.interfaces.remedial_source_repo import (
 )
 from core_logic.interfaces.student_repo import IStudentRepository
 from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.services.student_task_result_service import (
+    StudentTaskResultService,
+)
 
 REMEDIAL_SOURCE_EVENT_STATUSES = frozenset(('reviewing', 'graded', 'closed'))
 
@@ -59,11 +62,15 @@ class RemedialService:
         task_repo: ITaskRepository,
         remedial_source_repo: IRemedialSourceRepository,
         config: Optional[RemedialConfig] = None,
+        task_result_service=None,
     ):
         self.student_repo = student_repo
         self.task_repo = task_repo
         self.remedial_source_repo = remedial_source_repo
         self.config = config or RemedialConfig()
+        self.task_result_service = (
+            task_result_service or StudentTaskResultService()
+        )
 
     def select_tasks_for_student(
         self,
@@ -87,9 +94,11 @@ class RemedialService:
             | self._student_attempted_task_ids(student_id)
         )
 
-        task_results = self.student_repo.get_task_results_for_event(
-            student_id,
-            event_id,
+        task_results = self.task_result_service.build(
+            self.student_repo.get_task_results_source_for_event(
+                student_id,
+                event_id,
+            ),
         )
         weak_task_ids = self.find_weak_tasks(task_results)
 

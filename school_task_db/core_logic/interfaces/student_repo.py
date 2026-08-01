@@ -18,7 +18,7 @@ from core_logic.entities.student import (
     StudentGroupRef,
     StudentParticipationProfile,
     StudentTaskLogProfile,
-    TaskResult,
+    TaskResultsSource,
     WorkGroupRef,
 )
 
@@ -69,12 +69,12 @@ class IStudentRepository(ABC):
         """Update a student group/class, or return not_found status."""
 
     @abstractmethod
-    def get_task_results_for_event(
+    def get_task_results_source_for_event(
         self,
         student_id: str,
         event_id: str,
-    ) -> List[TaskResult]:
-        """Return the student's task-level results for an event."""
+    ) -> Optional[TaskResultsSource]:
+        """Return raw task-level grading facts for an event."""
 
     @abstractmethod
     def get_student_groups(self, student_id: str) -> List[StudentGroupRef]:

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from core_logic.entities.student import RemedialWizardPreviewData
 from core_logic.interfaces.student_repo import IStudentRepository
+from core_logic.services.remedial_wizard_service import RemedialWizardService
 
 
 @dataclass(frozen=True)
@@ -16,15 +17,22 @@ class RemedialWizardPreviewRequest:
 
 
 class GetRemedialWizardPreviewUseCase:
-    def __init__(self, student_repo: IStudentRepository):
+    def __init__(
+        self,
+        student_repo: IStudentRepository,
+        service: RemedialWizardService | None = None,
+    ):
         self.student_repo = student_repo
+        self.service = service or RemedialWizardService()
 
     def execute(
         self,
         request: RemedialWizardPreviewRequest,
     ) -> RemedialWizardPreviewData:
-        return self.student_repo.get_remedial_wizard_preview_data(
-            group_id=request.group_id,
+        return self.service.build(
+            self.student_repo.get_remedial_wizard_preview_source(
+                request.group_id,
+            ),
             threshold=request.threshold,
             limit_type=request.limit_type,
             limit_value=request.limit_value,

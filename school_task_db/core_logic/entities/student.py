@@ -259,9 +259,55 @@ class StudentRemedialWorkData:
 
 
 @dataclass(frozen=True)
+class RemedialWizardTaskLog:
+    student_id: str
+    task_id: str
+    analog_group_id: Optional[str] = None
+    percentage: Optional[float] = None
+
+
+@dataclass(frozen=True)
+class RemedialWizardTask:
+    task_id: str
+    difficulty: int
+    estimated_time: int = 0
+    analog_group_ids: tuple[str, ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        object.__setattr__(
+            self,
+            'analog_group_ids',
+            tuple(self.analog_group_ids),
+        )
+
+
+@dataclass(frozen=True)
+class RemedialWizardAnalogGroup:
+    group_id: str
+    nominal_difficulty: int = 0
+
+
+@dataclass(frozen=True)
+class RemedialWizardPreviewSource:
+    group: StudentGroupRef
+    students: tuple[StudentDetail, ...] = field(default_factory=tuple)
+    task_logs: tuple[RemedialWizardTaskLog, ...] = field(default_factory=tuple)
+    tasks: tuple[RemedialWizardTask, ...] = field(default_factory=tuple)
+    analog_groups: tuple[RemedialWizardAnalogGroup, ...] = field(
+        default_factory=tuple,
+    )
+
+    def __post_init__(self):
+        object.__setattr__(self, 'students', tuple(self.students))
+        object.__setattr__(self, 'task_logs', tuple(self.task_logs))
+        object.__setattr__(self, 'tasks', tuple(self.tasks))
+        object.__setattr__(self, 'analog_groups', tuple(self.analog_groups))
+
+
+@dataclass(frozen=True)
 class RemedialWizardPreviewData:
     status: str = 'ready'
-    group: Any = None
+    group: Optional[StudentGroupRef] = None
     preview: List[dict] = field(default_factory=list)
     threshold: int = 70
     limit_type: str = 'tasks'

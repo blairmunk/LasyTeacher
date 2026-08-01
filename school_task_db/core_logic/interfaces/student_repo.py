@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.student import (
-    RemedialWizardPreviewData,
+    RemedialWizardPreviewSource,
     SaveStudentGroupParams,
     SaveStudentGroupResult,
     SaveStudentParams,
@@ -120,15 +120,11 @@ class IStudentRepository(ABC):
         """Return task IDs for a single-student remedial variant."""
 
     @abstractmethod
-    def get_remedial_wizard_preview_data(
+    def get_remedial_wizard_preview_source(
         self,
         group_id: str,
-        threshold: int,
-        limit_type: str,
-        limit_value: int,
-        work_name: str,
-    ) -> RemedialWizardPreviewData:
-        """Return preview data for class remedial wizard step 2."""
+    ) -> Optional[RemedialWizardPreviewSource]:
+        """Return facts needed to build the class remedial preview."""
 
     @abstractmethod
     def get_work_group_refs(self, work_ids: List[str]) -> List[WorkGroupRef]:

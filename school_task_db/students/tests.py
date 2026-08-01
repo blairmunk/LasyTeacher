@@ -649,7 +649,8 @@ class RemedialFromEventViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['group'], group)
+        self.assertEqual(response.context['group'].pk, str(group.pk))
+        self.assertEqual(response.context['group'].name, group.name)
         self.assertEqual(response.context['work_name'], 'Работа над ошибками 9А')
         self.assertEqual(response.context['students_with_tasks'], 1)
         self.assertEqual(response.context['total_tasks'], 1)

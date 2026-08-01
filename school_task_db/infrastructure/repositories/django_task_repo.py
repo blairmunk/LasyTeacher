@@ -14,6 +14,11 @@ from core_logic.entities.task import (
     SourceListItem,
     TaskEntity,
     TaskExportFilters,
+    TaskExportGroupRef,
+    TaskExportImageSource,
+    TaskExportSourceRef,
+    TaskExportTaskSource,
+    TaskExportTopicRef,
     TaskGroupDetailGroup,
     TaskGroupDetailTask,
     TaskGroupListItem,
@@ -482,35 +487,14 @@ class DjangoTaskRepository(ITaskRepository):
     def get_list_sources(self):
         return Source.objects.all()
 
-    def build_task_export_payload(
+    def get_task_export_sources(
         self,
         filters: TaskExportFilters,
-        export_date: str,
-    ) -> dict:
-        tasks = list(self._get_export_tasks(filters))
-        all_groups = {}
-        all_topics = {}
-        all_sources = {}
-        tasks_data = []
-        images_data = []
-
-        for task in tasks:
-            task_dict = self._build_export_task_dict(task)
-            self._add_export_topic(task, all_topics, task_dict)
-            self._add_export_source(task, all_sources, task_dict)
-            self._add_export_groups(task, all_groups, task_dict)
-            self._add_export_images(task, images_data)
-            tasks_data.append(task_dict)
-
-        return {
-            'version': '1.1',
-            'export_date': export_date,
-            'analog_groups': list(all_groups.values()),
-            'topics': list(all_topics.values()),
-            'sources': list(all_sources.values()),
-            'tasks': tasks_data,
-            'task_images': images_data,
-        }
+    ):
+        return [
+            self._task_export_source(task)
+            for task in self._get_export_tasks(filters)
+        ]
 
     def get_source_list_sources(self):
         return [
@@ -782,89 +766,65 @@ class DjangoTaskRepository(ITaskRepository):
 
         return tasks
 
-    def _build_export_task_dict(self, task):
-        return {
-            'id': str(task.id),
-            'text': task.text,
-            'answer': task.answer or '',
-            'short_solution': task.short_solution or '',
-            'full_solution': task.full_solution or '',
-            'hint': task.hint or '',
-            'instruction': task.instruction or '',
-            'difficulty': task.difficulty,
-            'task_type': task.task_type,
-            'cognitive_level': getattr(task, 'cognitive_level', ''),
-            'content_element': getattr(task, 'content_element', ''),
-            'requirement_element': getattr(task, 'requirement_element', ''),
-            'estimated_time': getattr(task, 'estimated_time', None),
-            'grade': task.grade,
-            'year': task.year,
-            'is_verified': task.is_verified,
-            'teacher_notes': task.teacher_notes or '',
-            'source_detail': task.source_detail or '',
-            'source': None,
-            'groups': [],
-        }
+    def _task_export_source(self, task):
+        return TaskExportTaskSource(
+            pk=str(task.pk),
+            text=task.text,
+            answer=task.answer or '',
+            short_solution=task.short_solution or '',
+            full_solution=task.full_solution or '',
+            hint=task.hint or '',
+            instruction=task.instruction or '',
+            difficulty=task.difficulty,
+            task_type=task.task_type,
+            cognitive_level=getattr(task, 'cognitive_level', ''),
+            content_element=getattr(task, 'content_element', ''),
+            requirement_element=getattr(task, 'requirement_element', ''),
+            estimated_time=getattr(task, 'estimated_time', None),
+            grade=task.grade,
+            year=task.year,
+            is_verified=task.is_verified,
+            teacher_notes=task.teacher_notes or '',
+            source_detail=task.source_detail or '',
+            topic=(
+                TaskExportTopicRef(
+                    name=task.topic.name,
+                    subject=task.topic.subject,
+                    grade_level=task.topic.grade_level,
+                    section=getattr(task.topic, 'section', ''),
+                    description=getattr(task.topic, 'description', ''),
+                )
+                if task.topic
+                else None
+            ),
+            source=(
+                TaskExportSourceRef(
+                    pk=str(task.source.pk),
+                    name=task.source.name,
+                    short_name=task.source.short_name or '',
+                    source_type=task.source.source_type,
+                    author=task.source.author or '',
+                    year=task.source.year,
+                    url=task.source.url or '',
+                    isbn=task.source.isbn or '',
+                )
+                if task.source
+                else None
+            ),
+            groups=tuple(
+                TaskExportGroupRef(
+                    pk=str(membership.group.pk),
+                    name=membership.group.name,
+                    description=getattr(membership.group, 'description', ''),
+                )
+                for membership in task.taskgroup_set.all()
+            ),
+            images=self._task_export_images(task),
+        )
 
-    def _add_export_topic(self, task, all_topics, task_dict):
-        if not task.topic:
-            return
-
-        task_dict['topic'] = {
-            'name': task.topic.name,
-            'subject': task.topic.subject,
-            'grade_level': task.topic.grade_level,
-            'section': getattr(task.topic, 'section', ''),
-        }
-        topic_key = f'{task.topic.subject}_{task.topic.grade_level}_{task.topic.name}'
-        if topic_key not in all_topics:
-            all_topics[topic_key] = {
-                'name': task.topic.name,
-                'subject': task.topic.subject,
-                'grade_level': task.topic.grade_level,
-                'section': getattr(task.topic, 'section', ''),
-                'description': getattr(task.topic, 'description', ''),
-            }
-
-    def _add_export_source(self, task, all_sources, task_dict):
-        if not task.source:
-            return
-
-        task_dict['source'] = {
-            'name': task.source.name,
-            'short_name': task.source.short_name or '',
-            'source_type': task.source.source_type,
-            'author': task.source.author or '',
-            'year': task.source.year,
-        }
-
-        source_id = str(task.source.id)
-        if source_id not in all_sources:
-            all_sources[source_id] = {
-                'id': source_id,
-                'name': task.source.name,
-                'short_name': task.source.short_name or '',
-                'source_type': task.source.source_type,
-                'author': task.source.author or '',
-                'year': task.source.year,
-                'url': task.source.url or '',
-                'isbn': task.source.isbn or '',
-            }
-
-    def _add_export_groups(self, task, all_groups, task_dict):
-        for task_group in task.taskgroup_set.all():
-            group = task_group.group
-            group_id = str(group.id)
-            task_dict['groups'].append(group_id)
-
-            if group_id not in all_groups:
-                all_groups[group_id] = {
-                    'id': group_id,
-                    'name': group.name,
-                    'description': getattr(group, 'description', ''),
-                }
-
-    def _add_export_images(self, task, images_data):
+    @staticmethod
+    def _task_export_images(task):
+        result = []
         for image in task.images.all():
             if not image.has_file:
                 continue
@@ -873,13 +833,13 @@ class DjangoTaskRepository(ITaskRepository):
                     base64_data = base64.b64encode(image_file.read()).decode('ascii')
             except Exception:
                 continue
-
-            images_data.append({
-                'id': str(image.id),
-                'task_id': str(task.id),
-                'filename': image.image.name.split('/')[-1],
-                'position': image.position or '',
-                'caption': image.caption or '',
-                'order': image.order,
-                'base64_data': base64_data,
-            })
+            result.append(TaskExportImageSource(
+                pk=str(image.pk),
+                task_id=str(task.pk),
+                filename=image.image.name.split('/')[-1],
+                position=image.position or '',
+                caption=image.caption or '',
+                order=image.order,
+                base64_data=base64_data,
+            ))
+        return tuple(result)

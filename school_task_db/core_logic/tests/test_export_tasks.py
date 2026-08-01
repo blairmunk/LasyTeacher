@@ -1,18 +1,41 @@
 from unittest import TestCase
 
-from core_logic.entities.task import TaskExportFilters
+from core_logic.entities.task import (
+    TaskExportFilters,
+    TaskExportGroupRef,
+    TaskExportSourceRef,
+    TaskExportTaskSource,
+    TaskExportTopicRef,
+)
 from core_logic.use_cases.export_tasks import ExportTasksRequest, ExportTasksUseCase
 
 
 class FakeTaskRepository:
     def __init__(self):
         self.filters = None
-        self.export_date = None
+        topic = TaskExportTopicRef('Динамика', 'Физика', 9)
+        source = TaskExportSourceRef(pk='source-1', name='Сборник')
+        groups = (TaskExportGroupRef(pk='group-1', name='Группа'),)
+        self.sources = [
+            TaskExportTaskSource(
+                pk='task-1',
+                text='Задание 1',
+                topic=topic,
+                source=source,
+                groups=groups,
+            ),
+            TaskExportTaskSource(
+                pk='task-2',
+                text='Задание 2',
+                topic=topic,
+                source=source,
+                groups=groups,
+            ),
+        ]
 
-    def build_task_export_payload(self, filters, export_date):
+    def get_task_export_sources(self, filters):
         self.filters = filters
-        self.export_date = export_date
-        return {'version': '1.1', 'tasks': []}
+        return self.sources
 
 
 class ExportTasksUseCaseTests(TestCase):
@@ -26,5 +49,11 @@ class ExportTasksUseCaseTests(TestCase):
         )
 
         self.assertEqual(repo.filters, filters)
-        self.assertEqual(repo.export_date, '2026-07-17')
-        self.assertEqual(data.payload, {'version': '1.1', 'tasks': []})
+        self.assertEqual(data.payload['version'], '1.1')
+        self.assertEqual(data.payload['export_date'], '2026-07-17')
+        self.assertEqual(data.payload['tasks'][0]['id'], 'task-1')
+        self.assertEqual(data.payload['tasks'][0]['groups'], ['group-1'])
+        self.assertEqual(len(data.payload['tasks']), 2)
+        self.assertEqual(len(data.payload['topics']), 1)
+        self.assertEqual(len(data.payload['sources']), 1)
+        self.assertEqual(len(data.payload['analog_groups']), 1)

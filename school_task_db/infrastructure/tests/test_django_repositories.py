@@ -54,6 +54,10 @@ from core_logic.use_cases.create_work_from_orphans import (
 from core_logic.use_cases.get_remedial_sheet_data import (
     GetRemedialSheetDataUseCase,
 )
+from core_logic.use_cases.export_tasks import (
+    ExportTasksRequest,
+    ExportTasksUseCase,
+)
 from core_logic.use_cases.compose_work_variants import (
     ComposeWorkVariantsRequest,
     ComposeWorkVariantsUseCase,
@@ -1145,10 +1149,10 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.original_weak.save()
         repo = DjangoTaskRepository()
 
-        payload = repo.build_task_export_payload(
+        payload = ExportTasksUseCase(repo).execute(ExportTasksRequest(
             filters=TaskExportFilters(topic_id=str(self.topic.pk)),
             export_date='2026-07-17',
-        )
+        )).payload
         tasks_by_id = {task['id']: task for task in payload['tasks']}
         weak_task = tasks_by_id[str(self.original_weak.pk)]
 

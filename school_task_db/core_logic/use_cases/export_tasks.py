@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from core_logic.entities.task import TaskExportData, TaskExportFilters
 from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.services.task_export_service import TaskExportService
 
 
 @dataclass(frozen=True)
@@ -13,13 +14,18 @@ class ExportTasksRequest:
 
 
 class ExportTasksUseCase:
-    def __init__(self, task_repo: ITaskRepository):
+    def __init__(
+        self,
+        task_repo: ITaskRepository,
+        export_service: TaskExportService | None = None,
+    ):
         self.task_repo = task_repo
+        self.export_service = export_service or TaskExportService()
 
     def execute(self, request: ExportTasksRequest) -> TaskExportData:
         return TaskExportData(
-            payload=self.task_repo.build_task_export_payload(
-                filters=request.filters,
+            payload=self.export_service.build(
+                self.task_repo.get_task_export_sources(request.filters),
                 export_date=request.export_date,
             ),
         )

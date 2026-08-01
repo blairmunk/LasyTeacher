@@ -109,12 +109,11 @@ class ITaskRepository(ABC):
         """Return source options for the task list page."""
 
     @abstractmethod
-    def build_task_export_payload(
+    def get_task_export_sources(
         self,
         filters: TaskExportFilters,
-        export_date: str,
-    ) -> dict:
-        """Return TaskImporter-compatible task export payload."""
+    ) -> list:
+        """Return normalized task records for portable export."""
 
     @abstractmethod
     def get_source_list_sources(self) -> List[SourceListItem]:

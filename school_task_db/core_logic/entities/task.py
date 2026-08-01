@@ -1,6 +1,6 @@
 """Task-related domain entities."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
 from core_logic.value_objects.task_print_settings import (
@@ -91,6 +91,75 @@ class TaskExportFilters:
 @dataclass(frozen=True)
 class TaskExportData:
     payload: Dict[str, Any]
+
+
+@dataclass(frozen=True)
+class TaskExportTopicRef:
+    name: str
+    subject: str
+    grade_level: int
+    section: str = ''
+    description: str = ''
+
+
+@dataclass(frozen=True)
+class TaskExportSourceRef:
+    pk: str
+    name: str
+    short_name: str = ''
+    source_type: str = ''
+    author: str = ''
+    year: Any = None
+    url: str = ''
+    isbn: str = ''
+
+
+@dataclass(frozen=True)
+class TaskExportGroupRef:
+    pk: str
+    name: str
+    description: str = ''
+
+
+@dataclass(frozen=True)
+class TaskExportImageSource:
+    pk: str
+    task_id: str
+    filename: str
+    position: str
+    caption: str
+    order: int
+    base64_data: str
+
+
+@dataclass(frozen=True)
+class TaskExportTaskSource:
+    pk: str
+    text: str
+    answer: str = ''
+    short_solution: str = ''
+    full_solution: str = ''
+    hint: str = ''
+    instruction: str = ''
+    difficulty: int = 0
+    task_type: str = ''
+    cognitive_level: str = ''
+    content_element: str = ''
+    requirement_element: str = ''
+    estimated_time: Any = None
+    grade: Any = None
+    year: Any = None
+    is_verified: bool = False
+    teacher_notes: str = ''
+    source_detail: str = ''
+    topic: Optional[TaskExportTopicRef] = None
+    source: Optional[TaskExportSourceRef] = None
+    groups: tuple[TaskExportGroupRef, ...] = field(default_factory=tuple)
+    images: tuple[TaskExportImageSource, ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        object.__setattr__(self, 'groups', tuple(self.groups))
+        object.__setattr__(self, 'images', tuple(self.images))
 
 
 @dataclass(frozen=True)

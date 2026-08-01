@@ -14,7 +14,7 @@ from core_logic.entities.student import (
     StudentListItem,
     StudentGroupDetail,
     StudentGroupListItem,
-    StudentRemedialWorkData,
+    StudentRemedialSource,
     StudentGroupRef,
     StudentParticipationProfile,
     StudentTaskLogProfile,
@@ -96,28 +96,15 @@ class IStudentRepository(ABC):
         """Return task-level learning history for a student."""
 
     @abstractmethod
-    def get_student_remedial_work_data(
+    def get_student_remedial_source(
         self,
         student_id: str,
-    ) -> StudentRemedialWorkData:
-        """Return data for a student's remedial work page."""
-
-    @abstractmethod
-    def get_student_short_name(self, student_id: str) -> str:
-        """Return student's short display name."""
+    ) -> StudentRemedialSource:
+        """Return task history and candidates for student remedial work."""
 
     @abstractmethod
     def get_group_name(self, group_id: str) -> Optional[str]:
         """Return a student group name."""
-
-    @abstractmethod
-    def select_student_remedial_task_ids(
-        self,
-        student_id: str,
-        max_tasks: int,
-        selected_group_ids: List[str],
-    ) -> List[str]:
-        """Return task IDs for a single-student remedial variant."""
 
     @abstractmethod
     def get_remedial_wizard_preview_source(

@@ -259,6 +259,43 @@ class StudentRemedialWorkData:
 
 
 @dataclass(frozen=True)
+class StudentRemedialTaskLog:
+    task_id: str
+    analog_group: Optional[ObjectRef] = None
+    topic: Optional[ObjectRef] = None
+    percentage: Optional[float] = None
+    is_correct: Optional[bool] = None
+
+
+@dataclass(frozen=True)
+class StudentRemedialCandidateTask:
+    task_id: str
+    text: str
+    analog_group_ids: tuple[str, ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        object.__setattr__(
+            self,
+            'analog_group_ids',
+            tuple(self.analog_group_ids),
+        )
+
+
+@dataclass(frozen=True)
+class StudentRemedialSource:
+    task_logs: tuple[StudentRemedialTaskLog, ...] = field(
+        default_factory=tuple,
+    )
+    tasks: tuple[StudentRemedialCandidateTask, ...] = field(
+        default_factory=tuple,
+    )
+
+    def __post_init__(self):
+        object.__setattr__(self, 'task_logs', tuple(self.task_logs))
+        object.__setattr__(self, 'tasks', tuple(self.tasks))
+
+
+@dataclass(frozen=True)
 class RemedialWizardTaskLog:
     student_id: str
     task_id: str

@@ -1,10 +1,9 @@
 """Django implementation of the student repository."""
 
-import random
 from collections import defaultdict
 from typing import List
 
-from django.db.models import Avg, Count, Q
+from django.db.models import Count, Q
 
 from core_logic.entities.student import (
     EventRef,
@@ -18,6 +17,9 @@ from core_logic.entities.student import (
     SaveStudentGroupResult,
     SaveStudentParams,
     SaveStudentResult,
+    StudentRemedialCandidateTask,
+    StudentRemedialSource,
+    StudentRemedialTaskLog,
     StudentDetail,
     StudentGroupDetail,
     StudentGroupDetailStudent,
@@ -25,7 +27,6 @@ from core_logic.entities.student import (
     StudentGroupRef,
     StudentListItem,
     StudentParticipationProfile,
-    StudentRemedialWorkData,
     StudentTaskLogProfile,
     TaskResultGroupRef,
     TaskResultsSource,
@@ -344,124 +345,69 @@ class DjangoStudentRepository(IStudentRepository):
             for log in logs
         ]
 
-    def get_student_remedial_work_data(
+    def get_student_remedial_source(
         self,
         student_id: str,
-    ) -> StudentRemedialWorkData:
-        task_logs = StudentTaskLog.objects.filter(student_id=student_id)
-        if not task_logs.exists():
-            return StudentRemedialWorkData(no_data=True)
-
-        weak_groups = task_logs.exclude(
-            analog_group__isnull=True,
-        ).values(
-            'analog_group',
-            'analog_group__name',
-        ).annotate(
-            total=Count('id'),
-            correct=Count('id', filter=Q(is_correct=True)),
-            wrong=Count('id', filter=Q(is_correct=False)),
-            avg_pct=Avg('percentage'),
-        ).filter(
-            avg_pct__lt=70,
-        ).order_by('avg_pct')
-
-        done_task_ids = set(task_logs.values_list('task_id', flat=True))
-        remedial_groups = []
-        total_available = 0
-
-        for weak_group in weak_groups:
-            group_id = weak_group['analog_group']
-            group = AnalogGroup.objects.get(pk=group_id)
-            group_task_ids = set(
-                TaskGroup.objects.filter(group=group).values_list(
-                    'task_id',
-                    flat=True,
-                )
-            )
-            available_ids = group_task_ids - done_task_ids
-            available_tasks = Task.objects.filter(id__in=available_ids)
-
-            remedial_groups.append({
-                'group': group,
-                'avg_pct': round(weak_group['avg_pct'] or 0, 1),
-                'total_done': weak_group['total'],
-                'correct': weak_group['correct'],
-                'wrong': weak_group['wrong'],
-                'available_count': len(available_ids),
-                'available_tasks': available_tasks[:5],
-                'group_total': len(group_task_ids),
-            })
-            total_available += len(available_ids)
-
-        weak_topics = task_logs.exclude(
-            topic__isnull=True,
-        ).values(
-            'topic',
-            'topic__name',
-        ).annotate(
-            total=Count('id'),
-            correct=Count('id', filter=Q(is_correct=True)),
-            avg_pct=Avg('percentage'),
-        ).filter(
-            avg_pct__lt=70,
-        ).order_by('avg_pct')[:10]
-
-        return StudentRemedialWorkData(
-            remedial_groups=remedial_groups,
-            weak_topics=weak_topics,
-            total_available=total_available,
-            done_count=len(done_task_ids),
+    ) -> StudentRemedialSource:
+        task_logs = list(
+            StudentTaskLog.objects.filter(
+                student_id=student_id,
+            ).select_related('analog_group', 'topic')
         )
-
-    def get_student_short_name(self, student_id: str) -> str:
-        return Student.objects.get(pk=student_id).get_short_name()
+        group_ids = {
+            task_log.analog_group_id
+            for task_log in task_logs
+            if task_log.analog_group_id
+        }
+        memberships = list(
+            TaskGroup.objects.filter(group_id__in=group_ids)
+        )
+        group_ids_by_task = defaultdict(list)
+        for membership in memberships:
+            group_ids_by_task[str(membership.task_id)].append(
+                str(membership.group_id),
+            )
+        tasks = Task.objects.filter(
+            id__in=group_ids_by_task,
+        )
+        return StudentRemedialSource(
+            task_logs=tuple(
+                StudentRemedialTaskLog(
+                    task_id=str(task_log.task_id),
+                    analog_group=(
+                        ObjectRef(
+                            pk=str(task_log.analog_group_id),
+                            name=task_log.analog_group.name,
+                        )
+                        if task_log.analog_group_id
+                        else None
+                    ),
+                    topic=(
+                        ObjectRef(
+                            pk=str(task_log.topic_id),
+                            name=task_log.topic.name,
+                        )
+                        if task_log.topic_id
+                        else None
+                    ),
+                    percentage=task_log.percentage,
+                    is_correct=task_log.is_correct,
+                )
+                for task_log in task_logs
+            ),
+            tasks=tuple(
+                StudentRemedialCandidateTask(
+                    task_id=str(task.pk),
+                    text=task.text,
+                    analog_group_ids=group_ids_by_task[str(task.pk)],
+                )
+                for task in tasks
+            ),
+        )
 
     def get_group_name(self, group_id: str):
         group = StudentGroup.objects.filter(pk=group_id).first()
         return group.name if group else None
-
-    def select_student_remedial_task_ids(
-        self,
-        student_id: str,
-        max_tasks: int,
-        selected_group_ids: List[str],
-    ) -> List[str]:
-        task_logs = StudentTaskLog.objects.filter(student_id=student_id)
-        done_task_ids = set(task_logs.values_list('task_id', flat=True))
-        tasks_to_add = []
-
-        if selected_group_ids:
-            group_ids = selected_group_ids
-        else:
-            group_ids = task_logs.exclude(
-                analog_group__isnull=True,
-            ).values(
-                'analog_group',
-            ).annotate(
-                avg_pct=Avg('percentage'),
-            ).filter(
-                avg_pct__lt=70,
-            ).values_list('analog_group', flat=True)
-
-        for group_id in group_ids:
-            if len(tasks_to_add) >= max_tasks:
-                break
-
-            group_task_ids = set(
-                TaskGroup.objects.filter(group_id=group_id).values_list(
-                    'task_id',
-                    flat=True,
-                )
-            )
-            available_ids = list(group_task_ids - done_task_ids)
-
-            if available_ids:
-                random.shuffle(available_ids)
-                take = min(2, max_tasks - len(tasks_to_add), len(available_ids))
-                tasks_to_add.extend(str(task_id) for task_id in available_ids[:take])
-
-        return tasks_to_add
 
     def get_remedial_wizard_preview_source(
         self,

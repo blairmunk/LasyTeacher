@@ -581,7 +581,8 @@ class RemedialFromEventViewTests(TestCase):
         self.assertEqual(response.context['total_available'], 2)
         remedial_groups = response.context['remedial_groups']
         self.assertEqual(len(remedial_groups), 1)
-        self.assertEqual(remedial_groups[0]['group'], self.weak_group)
+        self.assertEqual(remedial_groups[0]['group'].pk, str(self.weak_group.pk))
+        self.assertEqual(remedial_groups[0]['group'].name, self.weak_group.name)
         self.assertEqual(remedial_groups[0]['available_count'], 2)
         self.assertEqual(remedial_groups[0]['avg_pct'], 0.0)
 

@@ -6,6 +6,7 @@ from typing import List
 from core_logic.interfaces.student_repo import IStudentRepository
 from core_logic.interfaces.task_repo import ITaskRepository
 from core_logic.interfaces.work_repo import CreateVariantParams, IWorkRepository
+from core_logic.services.student_remedial_service import StudentRemedialService
 from core_logic.services.remedial_variant_content_service import (
     build_remedial_variant_creation_plan,
 )
@@ -36,17 +37,19 @@ class CreateStudentRemedialVariantUseCase:
         student_repo: IStudentRepository,
         task_repo: ITaskRepository,
         work_repo: IWorkRepository,
+        remedial_service: StudentRemedialService | None = None,
     ):
         self.student_repo = student_repo
         self.task_repo = task_repo
         self.work_repo = work_repo
+        self.remedial_service = remedial_service or StudentRemedialService()
 
     def execute(
         self,
         request: CreateStudentRemedialVariantRequest,
     ) -> CreateStudentRemedialVariantResult:
-        task_ids = self.student_repo.select_student_remedial_task_ids(
-            student_id=request.student_id,
+        task_ids = self.remedial_service.select_task_ids(
+            self.student_repo.get_student_remedial_source(request.student_id),
             max_tasks=request.max_tasks,
             selected_group_ids=request.group_ids(),
         )
@@ -57,7 +60,13 @@ class CreateStudentRemedialVariantUseCase:
         )
 
         tasks = self.task_repo.get_by_ids(set(task_ids))
-        student_name = self.student_repo.get_student_short_name(request.student_id)
+        student = self.student_repo.get_student(request.student_id)
+        if student is None:
+            return CreateStudentRemedialVariantResult(
+                success=False,
+                message='Ученик не найден.',
+            )
+        student_name = student.short_name
         work_name = f'Работа над ошибками — {student_name}'
         plan = build_remedial_variant_creation_plan(
             task_ids=task_ids,

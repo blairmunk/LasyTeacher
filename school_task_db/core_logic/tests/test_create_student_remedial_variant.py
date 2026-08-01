@@ -1,7 +1,13 @@
 from unittest import TestCase
 
+from core_logic.entities.student import (
+    StudentDetail,
+    StudentRemedialCandidateTask,
+    StudentRemedialSource,
+)
 from core_logic.entities.task import TaskEntity
 from core_logic.interfaces.work_repo import CreateVariantParams
+from core_logic.services.student_remedial_service import StudentRemedialService
 from core_logic.use_cases.create_student_remedial_variant import (
     CreateStudentRemedialVariantRequest,
     CreateStudentRemedialVariantUseCase,
@@ -10,21 +16,33 @@ from core_logic.use_cases.create_student_remedial_variant import (
 
 class FakeStudentRepository:
     def __init__(self):
-        self.selected_request = None
-        self.short_name = 'Иванов И.'
-        self.task_ids = ['task-1', 'task-2']
+        self.requested_student_id = None
+        self.source = StudentRemedialSource(
+            tasks=(
+                StudentRemedialCandidateTask(
+                    task_id='task-1',
+                    text='Задание 1',
+                    analog_group_ids=('group-1',),
+                ),
+                StudentRemedialCandidateTask(
+                    task_id='task-2',
+                    text='Задание 2',
+                    analog_group_ids=('group-1',),
+                ),
+            ),
+        )
 
-    def select_student_remedial_task_ids(
-        self,
-        student_id,
-        max_tasks,
-        selected_group_ids,
-    ):
-        self.selected_request = (student_id, max_tasks, selected_group_ids)
-        return self.task_ids
+    def get_student_remedial_source(self, student_id):
+        self.requested_student_id = student_id
+        return self.source
 
-    def get_student_short_name(self, student_id):
-        return self.short_name
+    def get_student(self, student_id):
+        return StudentDetail(
+            pk=student_id,
+            first_name='Иван',
+            last_name='Иванов',
+            short_name='Иванов И.',
+        )
 
 
 class FakeTaskRepository:
@@ -53,6 +71,9 @@ class CreateStudentRemedialVariantUseCaseTests(TestCase):
             student_repo=student_repo,
             task_repo=FakeTaskRepository(),
             work_repo=work_repo,
+            remedial_service=StudentRemedialService(
+                shuffle=lambda items: None,
+            ),
         )
 
         result = use_case.execute(
@@ -67,10 +88,7 @@ class CreateStudentRemedialVariantUseCaseTests(TestCase):
         self.assertEqual(result.variant_id, 'variant-1')
         self.assertEqual(result.task_count, 2)
         self.assertEqual(result.total_score, 5)
-        self.assertEqual(
-            student_repo.selected_request,
-            ('student-1', 5, ['group-1']),
-        )
+        self.assertEqual(student_repo.requested_student_id, 'student-1')
         self.assertEqual(work_repo.created_variant_params.work_id, None)
         self.assertEqual(work_repo.created_variant_params.student_id, 'student-1')
         self.assertEqual(
@@ -100,11 +118,14 @@ class CreateStudentRemedialVariantUseCaseTests(TestCase):
 
     def test_execute_handles_empty_selection(self):
         student_repo = FakeStudentRepository()
-        student_repo.task_ids = []
+        student_repo.source = StudentRemedialSource()
         use_case = CreateStudentRemedialVariantUseCase(
             student_repo=student_repo,
             task_repo=FakeTaskRepository(),
             work_repo=FakeWorkRepository(),
+            remedial_service=StudentRemedialService(
+                shuffle=lambda items: None,
+            ),
         )
 
         result = use_case.execute(

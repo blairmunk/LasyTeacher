@@ -1787,6 +1787,78 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(coverage['covered'], 1)
         self.assertEqual(leaf.parent, root)
 
+    def test_codifier_repository_builds_deep_naturally_sorted_tree(self):
+        codifier = CodifierSpec.objects.create(
+            name='Авторский кодификатор',
+            short_name='Авторский',
+            subject='Физика',
+            exam_type='custom',
+            year=2026,
+        )
+        root = ContentEntry.objects.create(
+            codifier=codifier,
+            code='1',
+            name='Механика',
+        )
+        later = ContentEntry.objects.create(
+            codifier=codifier,
+            parent=root,
+            code='1.10',
+            name='Поздний раздел',
+        )
+        middle = ContentEntry.objects.create(
+            codifier=codifier,
+            parent=root,
+            code='1.2',
+            name='Средний раздел',
+        )
+        first = ContentEntry.objects.create(
+            codifier=codifier,
+            parent=root,
+            code='1.1',
+            name='Первый раздел',
+            topic=self.topic,
+        )
+        deep = ContentEntry.objects.create(
+            codifier=codifier,
+            parent=middle,
+            code='1.2.1',
+            name='Глубокий элемент',
+            topic=self.topic,
+            subtopic=self.subtopic,
+        )
+        self.replacement.subtopic = self.subtopic
+        self.replacement.save(update_fields=['subtopic'])
+        other_codifier = CodifierSpec.objects.create(
+            name='Другой авторский кодификатор',
+            short_name='Другой',
+            subject='Физика',
+            exam_type='custom',
+            year=2027,
+        )
+        sibling = ContentEntry.objects.create(
+            codifier=other_codifier,
+            code='5.4',
+            name='Та же подтема',
+            topic=self.topic,
+            subtopic=self.subtopic,
+        )
+
+        repo = DjangoCodifierRepository()
+        tree = repo.get_content_tree(str(codifier.pk))
+        coverage = repo.get_coverage(str(codifier.pk))
+
+        self.assertEqual(
+            [entry.code for entry in tree[0].children],
+            [first.code, middle.code, later.code],
+        )
+        deep_data = tree[0].children[1].children[0]
+        self.assertEqual(deep_data.code, deep.code)
+        self.assertEqual(deep_data.task_count, 1)
+        self.assertEqual(deep_data.sibling_codes[0].code, sibling.code)
+        self.assertEqual(coverage['total'], 3)
+        self.assertEqual(coverage['covered'], 2)
+
     def test_core_repository_returns_dashboard_counts(self):
         orphan = Variant.objects.create(
             work=None,

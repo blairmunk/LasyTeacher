@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.db.models import Count
+
 from .models import CodifierSpec, ContentEntry, Requirement
 
 
@@ -35,6 +37,15 @@ class ContentEntryAdmin(admin.ModelAdmin):
     list_editable = ['topic', 'subtopic']
     list_per_page = 50
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            'topic',
+            'subtopic',
+        ).annotate(
+            topic_task_count=Count('topic__task', distinct=True),
+            subtopic_task_count=Count('subtopic__task', distinct=True),
+        )
+
     def short_name(self, obj):
         return obj.name[:80]
     short_name.short_description = 'Формулировка'
@@ -44,7 +55,11 @@ class ContentEntryAdmin(admin.ModelAdmin):
     parent_code.short_description = 'Родитель'
 
     def task_count(self, obj):
-        count = obj.get_task_count()
+        count = (
+            obj.subtopic_task_count
+            if obj.subtopic_id
+            else obj.topic_task_count
+        )
         return count if count else '—'
     task_count.short_description = 'Заданий'
 

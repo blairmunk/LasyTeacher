@@ -33,34 +33,6 @@ class CodifierSpec(BaseModel):
     def get_absolute_url(self):
         return reverse('codifier:spec-detail', kwargs={'pk': self.pk})
 
-    def get_content_tree(self):
-        """Корневые элементы содержания с натуральной сортировкой"""
-        roots = list(self.content_entries.filter(parent__isnull=True))
-        roots.sort(key=lambda x: [int(p) for p in x.code.split('.')])
-        return roots
-
-    def get_coverage(self, tasks_qs=None):
-        """
-        Покрытие заданиями.
-        tasks_qs — опционально фильтр заданий (например, задания одной работы)
-        """
-        leaves = self.content_entries.filter(children__isnull=True)
-        total = leaves.count()
-        if not total:
-            return {'total': 0, 'covered': 0, 'pct': 0}
-
-        if tasks_qs is not None:
-            covered = leaves.filter(topic__task__in=tasks_qs).distinct().count()
-        else:
-            covered = leaves.filter(topic__task__isnull=False).distinct().count()
-
-        return {
-            'total': total,
-            'covered': covered,
-            'uncovered': total - covered,
-            'pct': round(covered / total * 100) if total else 0,
-        }
-
 
 class ContentEntry(BaseModel):
     """
@@ -119,73 +91,6 @@ class ContentEntry(BaseModel):
     def __str__(self):
         return f'{self.codifier.short_name} {self.code} {self.name[:60]}'
 
-    @property
-    def level(self):
-        """Уровень вложенности по коду: '1'→0, '1.4'→1, '1.1.6'→2"""
-        return self.code.count('.')
-
-    @property
-    def is_leaf(self):
-        """Конечный элемент (нет дочерних)"""
-        return not self.children.exists()
-
-    def get_task_count(self):
-        """Количество заданий через subtopic или topic"""
-        if self.subtopic:
-            return self.subtopic.task_set.count()
-        if self.topic:
-            return self.topic.task_set.count()
-        return 0
-
-    def get_tasks(self):
-        """Задания этого элемента (точная привязка)"""
-        from tasks.models import Task
-        if self.subtopic:
-            return Task.objects.filter(subtopic=self.subtopic)
-        if self.topic:
-            return Task.objects.filter(topic=self.topic)
-        return Task.objects.none()
-    
-    def get_sorted_children(self):
-        """Дочерние элементы с натуральной сортировкой (1.2 < 1.10)"""
-        children = list(self.children.all())
-        children.sort(key=lambda x: [int(p) for p in x.code.split('.')])
-        return children
-
-    def get_all_tasks(self):
-        """Задания включая дочерние элементы"""
-        from tasks.models import Task
-        q = models.Q()
-
-        # Собираем все topic_id и subtopic_id из дерева
-        entries = [self]
-        for child in self.children.select_related('topic', 'subtopic'):
-            entries.append(child)
-            for grandchild in child.children.select_related('topic', 'subtopic'):
-                entries.append(grandchild)
-
-        for entry in entries:
-            if entry.subtopic_id:
-                q |= models.Q(subtopic_id=entry.subtopic_id)
-            elif entry.topic_id:
-                q |= models.Q(topic_id=entry.topic_id)
-
-        if not q:
-            return Task.objects.none()
-        return Task.objects.filter(q).distinct()
-
-    def get_sibling_codes(self):
-        """Эта же тема в других кодификаторах"""
-        q = models.Q()
-        if self.subtopic:
-            q = models.Q(subtopic=self.subtopic)
-        elif self.topic:
-            q = models.Q(topic=self.topic)
-        else:
-            return ContentEntry.objects.none()
-        return ContentEntry.objects.filter(q).exclude(
-            pk=self.pk
-        ).select_related('codifier')
 
 
 class Requirement(BaseModel):
@@ -230,6 +135,3 @@ class Requirement(BaseModel):
 
     def __str__(self):
         return f'{self.codifier.short_name} Тр.{self.code} {self.name[:60]}'
-
-    def get_task_count(self):
-        return self.tasks.count()

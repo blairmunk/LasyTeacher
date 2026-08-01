@@ -1,5 +1,9 @@
 """Django implementation of the codifier repository."""
 
+from collections import defaultdict
+
+from django.db.models import Count, Q
+
 from core_logic.entities.codifier import (
     CodifierContentEntry,
     CodifierDetailSpec,
@@ -9,7 +13,8 @@ from core_logic.entities.codifier import (
     CodifierSiblingCode,
 )
 from core_logic.interfaces.codifier_repo import ICodifierRepository
-from codifier.models import CodifierSpec
+from core_logic.services.codifier_service import CodifierService
+from codifier.models import CodifierSpec, ContentEntry, Requirement
 
 
 class DjangoCodifierRepository(ICodifierRepository):
@@ -46,14 +51,35 @@ class DjangoCodifierRepository(ICodifierRepository):
         )
 
     def get_content_tree(self, codifier_id: str):
-        codifier = CodifierSpec.objects.get(pk=codifier_id)
+        entries = list(
+            ContentEntry.objects.filter(codifier_id=codifier_id)
+            .select_related('topic', 'subtopic')
+            .annotate(
+                topic_task_count=Count('topic__task', distinct=True),
+                subtopic_task_count=Count('subtopic__task', distinct=True),
+            )
+        )
+        children_by_parent = defaultdict(list)
+        for entry in entries:
+            children_by_parent[entry.parent_id].append(entry)
+        for children in children_by_parent.values():
+            children.sort(
+                key=lambda item: CodifierService.content_code_sort_key(
+                    item.code,
+                )
+            )
+
+        sibling_codes = self._get_sibling_codes(entries)
         return [
-            self._build_content_entry(entry)
-            for entry in codifier.get_content_tree()
+            self._build_content_entry(
+                entry,
+                children_by_parent=children_by_parent,
+                sibling_codes=sibling_codes,
+            )
+            for entry in children_by_parent[None]
         ]
 
     def get_requirements(self, codifier_id: str):
-        codifier = CodifierSpec.objects.get(pk=codifier_id)
         return [
             CodifierRequirement(
                 code=requirement.code,
@@ -64,16 +90,38 @@ class DjangoCodifierRepository(ICodifierRepository):
                     if requirement.cognitive_level
                     else ''
                 ),
-                task_count=requirement.get_task_count(),
+                task_count=requirement.task_count,
             )
-            for requirement in codifier.requirements.all()
+            for requirement in Requirement.objects.filter(
+                codifier_id=codifier_id,
+            ).annotate(task_count=Count('tasks'))
         ]
 
     def get_coverage(self, codifier_id: str) -> dict:
-        codifier = CodifierSpec.objects.get(pk=codifier_id)
-        return codifier.get_coverage()
+        leaves = ContentEntry.objects.filter(
+            codifier_id=codifier_id,
+            children__isnull=True,
+        )
+        total = leaves.count()
+        covered = leaves.filter(
+            Q(
+                subtopic__isnull=False,
+                subtopic__task__isnull=False,
+            )
+            | Q(
+                subtopic__isnull=True,
+                topic__task__isnull=False,
+            )
+        ).distinct().count()
+        return CodifierService.coverage(total=total, covered=covered)
 
-    def _build_content_entry(self, entry):
+    def _build_content_entry(
+        self,
+        entry,
+        *,
+        children_by_parent,
+        sibling_codes,
+    ):
         return CodifierContentEntry(
             code=entry.code,
             name=entry.name,
@@ -88,7 +136,11 @@ class DjangoCodifierRepository(ICodifierRepository):
                 else None
             ),
             grade_studied=entry.grade_studied,
-            task_count=entry.get_task_count(),
+            task_count=(
+                entry.subtopic_task_count
+                if entry.subtopic_id
+                else entry.topic_task_count
+            ),
             sibling_codes=[
                 CodifierSiblingCode(
                     codifier=CodifierObjectRef(
@@ -96,10 +148,48 @@ class DjangoCodifierRepository(ICodifierRepository):
                     ),
                     code=sibling.code,
                 )
-                for sibling in entry.get_sibling_codes()
+                for sibling in sibling_codes.get(entry.pk, [])
             ],
             children=[
-                self._build_content_entry(child)
-                for child in entry.get_sorted_children()
+                self._build_content_entry(
+                    child,
+                    children_by_parent=children_by_parent,
+                    sibling_codes=sibling_codes,
+                )
+                for child in children_by_parent[entry.pk]
             ],
         )
+
+    def _get_sibling_codes(self, entries):
+        topic_ids = {entry.topic_id for entry in entries if entry.topic_id}
+        subtopic_ids = {
+            entry.subtopic_id for entry in entries if entry.subtopic_id
+        }
+        if not topic_ids and not subtopic_ids:
+            return {}
+
+        candidates = ContentEntry.objects.filter(
+            Q(topic_id__in=topic_ids) | Q(subtopic_id__in=subtopic_ids)
+        ).select_related('codifier')
+        by_topic = defaultdict(list)
+        by_subtopic = defaultdict(list)
+        for candidate in candidates:
+            if candidate.topic_id:
+                by_topic[candidate.topic_id].append(candidate)
+            if candidate.subtopic_id:
+                by_subtopic[candidate.subtopic_id].append(candidate)
+
+        result = {}
+        for entry in entries:
+            if entry.subtopic_id:
+                matches = by_subtopic[entry.subtopic_id]
+            elif entry.topic_id:
+                matches = by_topic[entry.topic_id]
+            else:
+                matches = []
+            result[entry.pk] = [
+                candidate
+                for candidate in matches
+                if candidate.pk != entry.pk
+            ]
+        return result

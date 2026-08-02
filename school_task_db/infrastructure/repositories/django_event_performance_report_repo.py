@@ -13,8 +13,10 @@ from core_logic.entities.event_performance_report import (
 from core_logic.interfaces.event_performance_report_repo import (
     IEventPerformanceReportRepository,
 )
-from core_logic.value_objects.task_scores import resolve_task_score_record
-from events.models import Event, EventParticipation, Mark
+from events.models import Event, EventParticipation
+from infrastructure.services.attempt_snapshot_queries import (
+    latest_attempts_by_participation,
+)
 from infrastructure.services.task_content_snapshots import (
     task_content_snapshot_from_mapping,
 )
@@ -37,58 +39,58 @@ class DjangoEventPerformanceReportRepository(
             .select_related('student', 'variant')
             .order_by('student__last_name', 'student__first_name')
         )
-        marks = {
-            mark.participation_id: mark
-            for mark in Mark.objects.filter(
-                participation_id__in=[item.pk for item in participations],
-            )
-        }
+        attempts = latest_attempts_by_participation(
+            participation.pk for participation in participations
+        )
         variant_tasks = self._variant_tasks_by_variant(participations)
         task_scores = []
         participant_facts = []
         for participation in participations:
-            mark = marks.get(participation.pk)
+            attempt = attempts.get(participation.pk)
             student_name = participation.student.get_full_name()
             participant_facts.append(
                 EventReportParticipantFact(
                     student_id=str(participation.student_id),
                     student_name=student_name,
                     status=participation.status,
-                    score=mark.score if mark else None,
-                    points=self._number(mark.points) if mark else None,
-                    max_points=self._number(mark.max_points) if mark else None,
-                    mistakes_analysis=mark.mistakes_analysis if mark else '',
-                    recommendations=mark.recommendations if mark else '',
-                    teacher_comment=mark.teacher_comment if mark else '',
-                    needs_attention=mark.needs_attention if mark else False,
+                    score=attempt.score if attempt else None,
+                    points=self._number(attempt.points) if attempt else None,
+                    max_points=(
+                        self._number(attempt.max_points) if attempt else None
+                    ),
+                    mistakes_analysis=(
+                        attempt.mistakes_analysis if attempt else ''
+                    ),
+                    recommendations=attempt.recommendations if attempt else '',
+                    teacher_comment=attempt.teacher_comment if attempt else '',
+                    needs_attention=(
+                        attempt.needs_attention if attempt else False
+                    ),
                 )
             )
-            if mark is None or participation.variant_id is None:
+            if attempt is None:
                 continue
-            for variant_task in variant_tasks.get(participation.variant_id, []):
-                if not variant_task.is_assessable:
+            for task_result in attempt.captured_task_results:
+                if not task_result.is_assessable_snapshot:
                     continue
                 task_snapshot = task_content_snapshot_from_mapping(
-                    variant_task.task_snapshot,
+                    task_result.variant_task.task_snapshot,
                 )
-                record = resolve_task_score_record(
-                    mark.task_scores,
-                    variant_task_id=str(variant_task.pk),
-                    task_id=str(variant_task.task_id),
-                )
-                if record is None:
-                    continue
                 task_scores.append(
                     EventReportTaskScoreFact(
-                        group_key=f'position:{variant_task.order}',
-                        order=variant_task.order,
+                        group_key=f'position:{task_result.order_snapshot}',
+                        order=task_result.order_snapshot,
                         topic_name=task_snapshot.topic_name,
                         subtopic_name=task_snapshot.subtopic_name,
                         student_id=str(participation.student_id),
                         student_name=student_name,
-                        points=self._number(record.points),
-                        max_points=self._number(record.max_points),
-                        comment=record.comment,
+                        points=self._number(task_result.points),
+                        max_points=self._number(
+                            task_result.checked_max_points
+                            if task_result.checked_max_points is not None
+                            else task_result.expected_max_points_snapshot
+                        ),
+                        comment=task_result.comment,
                     )
                 )
 

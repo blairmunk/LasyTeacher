@@ -22,7 +22,10 @@ from infrastructure.repositories.django_event_performance_report_repo import (
 from infrastructure.repositories.django_student_digest_repo import (
     DjangoStudentDigestRepository,
 )
-from infrastructure.tests.variant_task_factory import create_variant_task
+from infrastructure.tests.variant_task_factory import (
+    capture_attempt_snapshot,
+    create_variant_task,
+)
 from students.models import Student, StudentGroup
 from tasks.models import Task
 from works.models import Variant, Work
@@ -154,6 +157,7 @@ class WrittenReportRepositoryTests(TestCase):
                 },
             },
         )
+        self.attempt = capture_attempt_snapshot(self.mark)
 
     def test_event_report_repository_returns_normalized_attempt_facts(self):
         repo = DjangoEventPerformanceReportRepository()
@@ -178,6 +182,57 @@ class WrittenReportRepositoryTests(TestCase):
         self.assertEqual(
             source.specification[0].content_element_descriptions,
             ('ОГЭ 2026: Применение второго закона Ньютона',),
+        )
+
+    def test_written_reports_ignore_uncaptured_mark_changes(self):
+        self.mark.score = 5
+        self.mark.recommendations = 'Несохранённая рекомендация'
+        self.mark.task_scores[str(self.variant_task.pk)]['points'] = 2
+        self.mark.save()
+
+        event_source = (
+            DjangoEventPerformanceReportRepository()
+            .get_event_report_source(str(self.event.pk))
+        )
+        digest_source = DjangoStudentDigestRepository().get_student_digest_source(
+            str(self.group.pk),
+            start_date=dt.date(2026, 10, 13),
+            end_date=dt.date(2026, 10, 19),
+        )
+
+        self.assertEqual(event_source.participants[0].score, 2)
+        self.assertEqual(event_source.task_scores[0].points, 0)
+        digest_entry = digest_source.students[0].entries[0]
+        self.assertEqual(digest_entry.score, 2)
+        self.assertEqual(
+            digest_entry.recommendations,
+            'Повторить второй закон Ньютона',
+        )
+
+    def test_written_reports_use_latest_captured_attempt_revision(self):
+        self.mark.score = 4
+        self.mark.recommendations = 'Проверить единицы измерения'
+        self.mark.task_scores[str(self.variant_task.pk)]['points'] = 1
+        self.mark.save()
+        capture_attempt_snapshot(self.mark)
+
+        event_source = (
+            DjangoEventPerformanceReportRepository()
+            .get_event_report_source(str(self.event.pk))
+        )
+        digest_source = DjangoStudentDigestRepository().get_student_digest_source(
+            str(self.group.pk),
+            start_date=dt.date(2026, 10, 13),
+            end_date=dt.date(2026, 10, 19),
+        )
+
+        self.assertEqual(event_source.participants[0].score, 4)
+        self.assertEqual(event_source.task_scores[0].points, 1)
+        digest_entry = digest_source.students[0].entries[0]
+        self.assertEqual(digest_entry.score, 4)
+        self.assertEqual(
+            digest_entry.recommendations,
+            'Проверить единицы измерения',
         )
 
     def test_event_report_repository_saves_narrative(self):

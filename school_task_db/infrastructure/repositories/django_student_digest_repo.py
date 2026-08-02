@@ -1,7 +1,5 @@
 """Django read model for printable student grade digests."""
 
-from django.db.models import Q
-
 from core_logic.entities.student_digest import (
     StudentDigestEntryFact,
     StudentDigestGroupRef,
@@ -10,13 +8,14 @@ from core_logic.entities.student_digest import (
     StudentDigestStudentSource,
 )
 from core_logic.interfaces.student_digest_repo import IStudentDigestRepository
-from core_logic.value_objects.task_scores import resolve_task_score_record
 from events.models import EventParticipation
+from infrastructure.services.attempt_snapshot_queries import (
+    latest_attempts_by_participation,
+)
 from infrastructure.services.task_content_snapshots import (
     task_content_snapshot_from_mapping,
 )
 from students.models import StudentGroup
-from works.models import VariantTask
 
 
 class DjangoStudentDigestRepository(IStudentDigestRepository):
@@ -37,28 +36,37 @@ class DjangoStudentDigestRepository(IStudentDigestRepository):
             group.students.all().order_by('last_name', 'first_name')
         )
         student_ids = [student.pk for student in students]
-        participations = list(
+        all_participations = list(
             EventParticipation.objects.filter(
                 student_id__in=student_ids,
                 event__planned_date__date__gte=start_date,
                 event__planned_date__date__lte=end_date,
-            ).filter(
-                # Keep assessed work and explicit absences only.
-                Q(status='absent') | Q(mark__score__isnull=False)
             ).select_related(
                 'student',
                 'event',
                 'event__work',
                 'event__course',
-                'variant',
-                'mark',
             ).order_by('event__planned_date')
         )
-        variant_tasks = self._variant_tasks_by_variant(participations)
+        attempts = latest_attempts_by_participation(
+            participation.pk for participation in all_participations
+        )
+        participations = [
+            participation
+            for participation in all_participations
+            if participation.status == 'absent'
+            or (
+                participation.pk in attempts
+                and attempts[participation.pk].score is not None
+            )
+        ]
         entries_by_student = {student.pk: [] for student in students}
         for participation in participations:
             entries_by_student[participation.student_id].append(
-                self._entry(participation, variant_tasks)
+                self._entry(
+                    participation,
+                    attempts.get(participation.pk),
+                )
             )
         return StudentDigestSource(
             group=StudentDigestGroupRef(pk=str(group.pk), name=group.name),
@@ -74,71 +82,65 @@ class DjangoStudentDigestRepository(IStudentDigestRepository):
             ),
         )
 
-    def _entry(self, participation, variant_tasks):
-        mark = getattr(participation, 'mark', None)
-        tasks = variant_tasks.get(participation.variant_id, [])
+    def _entry(self, participation, attempt):
+        task_results = (
+            attempt.captured_task_results if attempt is not None else ()
+        )
         failed_topics = []
         task_comments = []
-        if mark:
-            for variant_task in tasks:
-                if not variant_task.is_assessable:
+        if attempt:
+            for task_result in task_results:
+                if not task_result.is_assessable_snapshot:
                     continue
                 task_snapshot = task_content_snapshot_from_mapping(
-                    variant_task.task_snapshot,
+                    task_result.variant_task.task_snapshot,
                 )
-                record = resolve_task_score_record(
-                    mark.task_scores,
-                    variant_task_id=str(variant_task.pk),
-                    task_id=task_snapshot.task_id,
+                points = self._number(task_result.points)
+                max_points = self._number(
+                    task_result.checked_max_points
+                    if task_result.checked_max_points is not None
+                    else task_result.expected_max_points_snapshot
                 )
-                if record is None:
-                    continue
-                points = self._number(record.points)
-                max_points = self._number(record.max_points)
                 if points is None or not max_points or points >= max_points:
                     continue
                 topic_label = task_snapshot.topic_name
                 if task_snapshot.subtopic_name:
                     topic_label += f': {task_snapshot.subtopic_name}'
                 failed_topics.append(topic_label)
-                if record.comment:
-                    task_comments.append(record.comment.strip())
+                if task_result.comment:
+                    task_comments.append(task_result.comment.strip())
 
         event = participation.event
         subject = event.course.subject if event.course_id else ''
-        if not subject and tasks:
+        if not subject and task_results:
             subject = task_content_snapshot_from_mapping(
-                tasks[0].task_snapshot,
+                task_results[0].variant_task.task_snapshot,
             ).subject
         return StudentDigestEntryFact(
             event_id=str(event.pk),
-            event_name=event.name,
-            work_name=event.work.name,
+            event_name=(
+                attempt.event_name_snapshot if attempt else event.name
+            ),
+            work_name=(
+                attempt.work_name_snapshot if attempt else event.work.name
+            ),
             subject=subject,
-            planned_date=event.planned_date.date(),
+            planned_date=(
+                attempt.event_date_snapshot.date()
+                if attempt
+                else event.planned_date.date()
+            ),
             status=participation.status,
-            score=mark.score if mark else None,
-            points=self._number(mark.points) if mark else None,
-            max_points=self._number(mark.max_points) if mark else None,
-            teacher_comment=mark.teacher_comment if mark else '',
-            mistakes_analysis=mark.mistakes_analysis if mark else '',
-            recommendations=mark.recommendations if mark else '',
-            needs_attention=mark.needs_attention if mark else False,
+            score=attempt.score if attempt else None,
+            points=self._number(attempt.points) if attempt else None,
+            max_points=self._number(attempt.max_points) if attempt else None,
+            teacher_comment=attempt.teacher_comment if attempt else '',
+            mistakes_analysis=attempt.mistakes_analysis if attempt else '',
+            recommendations=attempt.recommendations if attempt else '',
+            needs_attention=attempt.needs_attention if attempt else False,
             failed_topics=tuple(dict.fromkeys(failed_topics)),
             task_comments=tuple(dict.fromkeys(task_comments)),
         )
-
-    @staticmethod
-    def _variant_tasks_by_variant(participations):
-        variant_ids = {
-            item.variant_id for item in participations if item.variant_id
-        }
-        result = {variant_id: [] for variant_id in variant_ids}
-        for variant_task in VariantTask.objects.filter(
-            variant_id__in=variant_ids,
-        ):
-            result[variant_task.variant_id].append(variant_task)
-        return result
 
     @staticmethod
     def _number(value):

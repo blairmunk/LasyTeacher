@@ -13,10 +13,11 @@ from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_student_repo import (
     DjangoStudentRepository,
 )
+from infrastructure.tests.variant_task_factory import create_variant_task
 from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
-from works.models import Variant, VariantTask, Work, WorkAnalogGroup
+from works.models import Variant, Work, WorkAnalogGroup
 
 
 class ReportsViewsTests(TestCase):
@@ -163,7 +164,7 @@ class ReportsViewsTests(TestCase):
             difficulty=2,
         )
         variant = Variant.objects.create(work=work, number=1)
-        VariantTask.objects.create(
+        create_variant_task(
             variant=variant,
             task=task,
             order=1,

@@ -6,11 +6,12 @@ from django.utils import timezone
 
 from curriculum.models import Topic
 from events.models import Event, EventParticipation, Mark
+from infrastructure.tests.variant_task_factory import create_variant_task
 from review.models import ReviewComment, ReviewSession
 from students.models import Student, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
-from works.models import Variant, VariantTask, Work
+from works.models import Variant, Work
 
 
 class ParticipationReviewViewTests(TestCase):
@@ -48,7 +49,7 @@ class ParticipationReviewViewTests(TestCase):
         )
         self.group = AnalogGroup.objects.create(name='Скорость')
         TaskGroup.objects.create(task=self.task, group=self.group)
-        self.variant_task = VariantTask.objects.create(
+        self.variant_task = create_variant_task(
             variant=self.variant,
             task=self.task,
             order=1,

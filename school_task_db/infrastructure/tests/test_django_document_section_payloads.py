@@ -1,5 +1,7 @@
 from django.test import TestCase
 
+from infrastructure.tests.variant_task_factory import create_variant_task
+
 from core_logic.entities.document import (
     DocumentRecipe,
     DocumentSectionSpec,
@@ -60,7 +62,6 @@ from task_groups.models import AnalogGroup
 from works.models import (
     Variant,
     VariantContentBlockSnapshot,
-    VariantTask,
     Work,
     WorkAnalogGroup,
 )
@@ -151,7 +152,7 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             task_type='computational',
             difficulty=2,
         )
-        variant_task = VariantTask.objects.create(
+        variant_task = create_variant_task(
             variant=variant,
             task=task,
             source_selection_id='selection-1',
@@ -221,6 +222,17 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
         self.assertIn('Сила изменяет скорость.', formatted_texts)
         self.assertIn('Проверьте единицы измерения.', formatted_texts)
 
+        task.text = 'Изменённое условие в банке'
+        task.answer = 'Изменённый ответ'
+        task.save(update_fields=['text', 'answer'])
+        frozen_payload = builder.build_payload(
+            build_request(work, TASK_LIST_SECTION),
+        )
+        frozen_task = frozen_payload['variants'][0]['tasks'][0]
+
+        self.assertEqual(frozen_task['text'], 'Решите задачу')
+        self.assertEqual(frozen_task['answer'], 'Ответ')
+
     def test_builds_task_list_payload(self):
         work = Work.objects.create(name='Контрольная', duration=45)
         variant = Variant.objects.create(
@@ -252,7 +264,7 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             source=source,
             source_detail='стр. 10',
         )
-        variant_task = VariantTask.objects.create(
+        variant_task = create_variant_task(
             variant=variant,
             task=task,
             order=1,
@@ -265,7 +277,7 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             task_type='computational',
             difficulty=2,
         )
-        demo_variant_task = VariantTask.objects.create(
+        demo_variant_task = create_variant_task(
             variant=variant,
             task=demo_task,
             source_selection_id='selection-demo',
@@ -353,7 +365,7 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
         work = Work.objects.create(name='Контрольная', duration=45)
         variant = Variant.objects.create(work=work, number=1)
         task = self.create_task(text='Найдите силу')
-        VariantTask.objects.create(
+        create_variant_task(
             variant=variant,
             task=task,
             order=1,
@@ -419,7 +431,7 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             text='Разберите пример',
             full_solution='Полное решение',
         )
-        variant_task = VariantTask.objects.create(
+        variant_task = create_variant_task(
             variant=variant,
             task=task,
             order=1,
@@ -474,7 +486,7 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
         work = Work.objects.create(name='Рабочий лист', duration=45)
         variant = Variant.objects.create(work=work, number=1)
         task = self.create_task(text='Самостоятельная задача')
-        variant_task = VariantTask.objects.create(
+        variant_task = create_variant_task(
             variant=variant,
             task=task,
             order=1,
@@ -739,7 +751,7 @@ class DjangoRemedialSectionPayloadBuilderTests(TestCase):
             answer='Новый ответ',
             short_solution='Краткое решение',
         )
-        variant_task = VariantTask.objects.create(
+        variant_task = create_variant_task(
             variant=variant,
             task=task,
             order=2,
@@ -784,14 +796,14 @@ class DjangoRemedialSectionPayloadBuilderTests(TestCase):
             text='Второе задание',
             answer='Ответ',
         )
-        first_variant_task = VariantTask.objects.create(
+        first_variant_task = create_variant_task(
             variant=variant,
             task=first_task,
             order=1,
             content_order=20,
             max_points=2,
         )
-        second_variant_task = VariantTask.objects.create(
+        second_variant_task = create_variant_task(
             variant=variant,
             task=second_task,
             order=2,
@@ -856,7 +868,7 @@ class DjangoRemedialSectionPayloadBuilderTests(TestCase):
             variant_type='remedial',
         )
         task = self.create_task(text='Задание с клетками')
-        variant_task = VariantTask.objects.create(
+        variant_task = create_variant_task(
             variant=variant,
             task=task,
             order=1,
@@ -900,7 +912,7 @@ class DjangoRemedialSectionPayloadBuilderTests(TestCase):
             variant_type='remedial',
         )
         task = self.create_task(text='Тренировочное задание')
-        variant_task = VariantTask.objects.create(
+        variant_task = create_variant_task(
             variant=variant,
             task=task,
             order=1,
@@ -988,7 +1000,7 @@ class DjangoRemedialSectionPayloadBuilderTests(TestCase):
             variant_type='remedial',
         )
         task = self.create_task(text='Новое задание')
-        variant_task = VariantTask.objects.create(
+        variant_task = create_variant_task(
             variant=variant,
             task=task,
             order=1,

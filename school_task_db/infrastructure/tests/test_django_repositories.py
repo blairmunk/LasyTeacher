@@ -96,6 +96,7 @@ from infrastructure.repositories.django_review_repo import DjangoReviewRepositor
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
+from infrastructure.tests.variant_task_factory import create_variant_task
 from infrastructure.services.django_transaction_manager import (
     DjangoTransactionManager,
 )
@@ -174,14 +175,14 @@ class DjangoRemedialRepositoryTests(TestCase):
         TaskGroup.objects.create(task=self.too_hard, group=self.weak_group)
         TaskGroup.objects.create(task=self.original_ok, group=self.ok_group)
 
-        VariantTask.objects.create(
+        create_variant_task(
             variant=self.source_variant,
             task=self.original_weak,
             order=1,
             max_points=2,
             weight=2,
         )
-        VariantTask.objects.create(
+        create_variant_task(
             variant=self.source_variant,
             task=self.original_ok,
             order=2,
@@ -1487,7 +1488,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             number=2,
             work_name_snapshot=self.source_work.name,
         )
-        VariantTask.objects.create(
+        create_variant_task(
             variant=second_source_variant,
             task=self.replacement,
             order=1,
@@ -2277,6 +2278,11 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertTrue(rows[0].blank_cells_after)
         self.assertEqual(rows[0].blank_cells_rows, 9)
         self.assertEqual(rows[0].max_points, 0)
+        self.assertEqual(rows[0].task_snapshot['text'], demo_task.text)
+        self.assertEqual(
+            rows[0].task_snapshot['topic_name'],
+            demo_task.topic.name,
+        )
         self.assertEqual(rows[1].bank_role, TASK_BANK_ROLE_PRACTICE)
         self.assertEqual(
             rows[1].source_selection_id,
@@ -2341,14 +2347,14 @@ class DjangoRemedialRepositoryTests(TestCase):
             work_name_snapshot='Вторая сирота',
             variant_type='remedial',
         )
-        VariantTask.objects.create(
+        create_variant_task(
             variant=first_orphan,
             task=self.original_weak,
             order=1,
             max_points=4,
             weight=4,
         )
-        VariantTask.objects.create(
+        create_variant_task(
             variant=second_orphan,
             task=self.original_ok,
             order=1,
@@ -2724,7 +2730,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             usage_count=3,
         )
         demo_task = self._task('Демо с решением', difficulty=4)
-        demo_variant_task = VariantTask.objects.create(
+        demo_variant_task = create_variant_task(
             variant=self.source_variant,
             task=demo_task,
             order=3,

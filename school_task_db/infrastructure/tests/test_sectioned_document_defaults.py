@@ -3,6 +3,8 @@ from tempfile import TemporaryDirectory
 
 from django.test import TestCase
 
+from infrastructure.tests.variant_task_factory import create_variant_task
+
 from core_logic.entities.document import (
     DocumentPresentation,
     DocumentRecipe,
@@ -57,7 +59,6 @@ from tasks.models import Task
 from works.models import (
     Variant,
     VariantContentBlockSnapshot,
-    VariantTask,
     Work,
 )
 
@@ -87,7 +88,7 @@ class SectionedDocumentDefaultsTests(TestCase):
             task_type='computational',
             difficulty=3,
         )
-        VariantTask.objects.create(
+        create_variant_task(
             variant=variant,
             task=task,
             order=1,
@@ -155,13 +156,13 @@ class SectionedDocumentDefaultsTests(TestCase):
         )
         first_task = self.create_task(text='Первое задание', answer='1')
         second_task = self.create_task(text='Второе задание', answer='2')
-        VariantTask.objects.create(
+        create_variant_task(
             variant=first_variant,
             task=first_task,
             order=1,
             max_points=4,
         )
-        VariantTask.objects.create(
+        create_variant_task(
             variant=second_variant,
             task=second_task,
             order=1,
@@ -210,7 +211,7 @@ class SectionedDocumentDefaultsTests(TestCase):
             duration_snapshot=45,
         )
         task = self.create_task(text='Найдите силу', answer='10 Н')
-        VariantTask.objects.create(
+        create_variant_task(
             variant=variant,
             task=task,
             order=1,
@@ -257,7 +258,7 @@ class SectionedDocumentDefaultsTests(TestCase):
             duration_snapshot=45,
         )
         task = self.create_task(text='Найдите силу', answer='10 Н')
-        VariantTask.objects.create(
+        create_variant_task(
             variant=variant,
             task=task,
             order=1,
@@ -361,7 +362,7 @@ class SectionedDocumentDefaultsTests(TestCase):
             short_solution='Используем $F=ma$',
             hint='масса & ускорение',
         )
-        VariantTask.objects.create(
+        create_variant_task(
             variant=variant,
             task=task,
             order=1,
@@ -425,7 +426,7 @@ class SectionedDocumentDefaultsTests(TestCase):
             answer='Тренировочный ответ',
             short_solution='Краткое решение тренировки',
         )
-        training_variant_task = VariantTask.objects.create(
+        training_variant_task = create_variant_task(
             variant=remedial_variant,
             task=training_task,
             order=1,
@@ -520,7 +521,7 @@ class SectionedDocumentDefaultsTests(TestCase):
             answer='Ответ тренировки',
             short_solution='Кратко $a=F/m$',
         )
-        training_variant_task = VariantTask.objects.create(
+        training_variant_task = create_variant_task(
             variant=remedial_variant,
             task=training_task,
             order=1,

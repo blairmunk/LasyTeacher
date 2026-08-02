@@ -12,12 +12,6 @@ class DjangoVariantDocumentPayloadBuilder:
     def build(self, variant, request=None):
         variant_tasks = list(
             variant.varianttask_set
-            .select_related(
-                'task',
-                'task__topic',
-                'task__subtopic',
-                'task__source',
-            )
             .order_by('order', 'pk')
         )
         content_payload = build_variant_document_content_payload(

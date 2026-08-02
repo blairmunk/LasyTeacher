@@ -8,9 +8,10 @@ from django.utils import timezone
 
 from curriculum.models import Topic
 from events.models import Event, EventParticipation, Mark
+from infrastructure.tests.variant_task_factory import create_variant_task
 from students.models import Student, StudentGroup
 from tasks.models import Task
-from works.models import Variant, VariantTask, Work
+from works.models import Variant, Work
 
 
 class MarkModelValidationTests(TestCase):
@@ -57,7 +58,7 @@ class GradeParticipationViewTests(TestCase):
             task_type='computational',
             difficulty=2,
         )
-        VariantTask.objects.create(
+        create_variant_task(
             variant=self.variant,
             task=self.task,
             order=1,

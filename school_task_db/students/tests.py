@@ -14,6 +14,7 @@ from core_logic.use_cases.sync_student_task_logs import (
 )
 from curriculum.models import Topic
 from events.models import Event, EventParticipation, Mark
+from infrastructure.tests.variant_task_factory import create_variant_task
 from infrastructure.repositories.django_student_repo import (
     DjangoStudentRepository,
 )
@@ -151,7 +152,7 @@ class BackfillTaskLogCommandTests(TestCase):
             task_type='computational',
             difficulty=2,
         )
-        variant_task = VariantTask.objects.create(
+        variant_task = create_variant_task(
             variant=variant,
             task=task,
             order=1,
@@ -257,14 +258,14 @@ class RemedialFromEventViewTests(TestCase):
         TaskGroup.objects.create(task=self.replacement_hard, group=self.weak_group)
         TaskGroup.objects.create(task=self.ok_original, group=self.other_group)
 
-        VariantTask.objects.create(
+        create_variant_task(
             variant=self.source_variant,
             task=self.weak_original,
             order=1,
             max_points=2,
             weight=2,
         )
-        VariantTask.objects.create(
+        create_variant_task(
             variant=self.source_variant,
             task=self.ok_original,
             order=2,
@@ -713,7 +714,7 @@ class RemedialFromEventViewTests(TestCase):
             assigned_student=self.student,
             source_work=self.source_work,
         )
-        VariantTask.objects.create(
+        create_variant_task(
             variant=remedial_variant,
             task=self.replacement_easy,
             order=1,

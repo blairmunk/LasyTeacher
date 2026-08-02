@@ -24,12 +24,12 @@ from curriculum.models import Topic
 from document_engine.models import PrintSettings
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
+from infrastructure.tests.variant_task_factory import create_variant_task
 from students.models import Student
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
 from works.models import (
     Variant,
-    VariantTask,
     Work,
     WorkAnalogGroup,
     WorkContentBlock,
@@ -620,7 +620,7 @@ class WorkDetailViewTests(TestCase):
             weight=2,
             order=1,
         )
-        VariantTask.objects.create(
+        create_variant_task(
             variant=self.variant,
             task=task,
             order=1,
@@ -652,7 +652,7 @@ class WorkDetailViewTests(TestCase):
             difficulty=2,
         )
         TaskGroup.objects.create(task=task, group=group)
-        VariantTask.objects.create(
+        create_variant_task(
             variant=self.variant,
             task=task,
             order=1,
@@ -752,14 +752,14 @@ class WorkDetailViewTests(TestCase):
             task_type='computational',
             difficulty=4,
         )
-        VariantTask.objects.create(
+        create_variant_task(
             variant=first_orphan,
             task=task,
             order=1,
             max_points=4,
             weight=4,
         )
-        VariantTask.objects.create(
+        create_variant_task(
             variant=second_orphan,
             task=task,
             order=1,
@@ -799,7 +799,7 @@ class WorkDetailViewTests(TestCase):
             task_type='computational',
             difficulty=2,
         )
-        VariantTask.objects.create(
+        create_variant_task(
             variant=self.variant,
             task=task,
             order=1,
@@ -883,7 +883,7 @@ class WorkDetailViewTests(TestCase):
             variant=self.variant,
             status='graded',
         )
-        VariantTask.objects.create(
+        create_variant_task(
             variant=self.variant,
             task=Task.objects.create(
                 text='Задание',
@@ -1447,14 +1447,14 @@ class WorkDetailViewTests(TestCase):
             difficulty=2,
         )
         TaskGroup.objects.create(task=task, group=group)
-        original_variant_task = VariantTask.objects.create(
+        original_variant_task = create_variant_task(
             variant=original_variant,
             task=task,
             order=1,
             max_points=5,
             weight=5,
         )
-        VariantTask.objects.create(
+        create_variant_task(
             variant=remedial_variant,
             task=new_task,
             order=1,

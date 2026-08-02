@@ -201,7 +201,17 @@ class Variant(BaseModel):
 class VariantTask(BaseModel):
     """Задание в варианте — иммутабельная запись с баллами"""
     variant = models.ForeignKey(Variant, on_delete=models.CASCADE, verbose_name='Вариант')
-    task = models.ForeignKey('tasks.Task', on_delete=models.CASCADE, verbose_name='Задание')
+    task = models.ForeignKey(
+        'tasks.Task',
+        on_delete=models.PROTECT,
+        verbose_name='Исходное задание',
+        help_text='Связь с источником; печать использует сохранённый снимок.',
+    )
+    task_snapshot = models.JSONField(
+        'Содержимое задания (снимок)',
+        default=dict,
+        help_text='Неизменяемое содержимое задания на момент генерации варианта.',
+    )
     source_selection_id = models.CharField(
         'Исходный блок выбора заданий (снимок)',
         max_length=36,

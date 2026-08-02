@@ -10,6 +10,9 @@ from core_logic.value_objects.task_print_settings import (
 from infrastructure.services.blank_cells_payload import (
     build_blank_cells_payload,
 )
+from infrastructure.services.task_content_snapshots import (
+    task_content_snapshot_payload,
+)
 
 
 def build_variant_task_payload(
@@ -17,9 +20,8 @@ def build_variant_task_payload(
     task_payload_formatter=None,
     request=None,
 ):
-    task = variant_task.task
     payload = {
-        **build_task_payload(task),
+        **_variant_task_content_payload(variant_task),
         **variant_task_snapshot_data(variant_task),
         'variant_task_id': str(variant_task.pk),
         'order': variant_task.order,
@@ -46,6 +48,13 @@ def build_variant_task_payload(
         task_payload_formatter,
         request=request,
     )
+
+
+def _variant_task_content_payload(variant_task):
+    task_snapshot = getattr(variant_task, 'task_snapshot', None)
+    if task_snapshot is not None:
+        return task_content_snapshot_payload(task_snapshot)
+    return build_task_payload(variant_task.task)
 
 
 def build_original_task_payload(

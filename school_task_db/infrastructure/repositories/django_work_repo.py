@@ -2,6 +2,7 @@
 
 from typing import List, Optional, Set
 
+from django.core.files.storage import default_storage
 from django.db import transaction
 from django.db.models import Count, Q, Sum
 
@@ -86,6 +87,10 @@ from core_logic.value_objects.variant_display import (
 from events.models import EventParticipation, Mark
 from infrastructure.services.task_image_presentation import (
     TaskImagePresentationService,
+)
+from infrastructure.services.task_content_snapshots import (
+    build_task_content_snapshots,
+    task_content_snapshot_from_mapping,
 )
 from task_groups.models import TaskGroup
 from tasks.models import Task
@@ -399,37 +404,35 @@ class DjangoWorkRepository(
     def get_variant_detail_tasks(self, variant_id: str):
         variant_tasks = VariantTask.objects.filter(
             variant_id=variant_id,
-        ).select_related(
-            'task',
-            'task__topic',
-            'task__subtopic',
-        ).prefetch_related(
-            'task__images',
         ).order_by('order')
 
-        return [
-            VariantDetailTaskRow(
+        result = []
+        for variant_task in variant_tasks:
+            task = task_content_snapshot_from_mapping(
+                variant_task.task_snapshot,
+            )
+            result.append(VariantDetailTaskRow(
                 task=VariantDetailTask(
-                    pk=str(variant_task.task.pk),
-                    id=str(variant_task.task.pk),
-                    topic=str(variant_task.task.topic),
-                    text=variant_task.task.text,
-                    answer=variant_task.task.answer,
-                    task_type_display=variant_task.task.get_task_type_display(),
-                    difficulty=variant_task.task.difficulty,
-                    short_uuid=variant_task.task.get_short_uuid(),
+                    pk=task.task_id,
+                    id=task.task_id,
+                    topic=task.topic_name,
+                    text=task.text,
+                    answer=task.answer,
+                    task_type_display=task.task_type_display,
+                    difficulty=task.difficulty,
+                    short_uuid=task.task_id[-4:].upper(),
                     images=[
                         VariantDetailImage(
                             caption=image.caption,
                             position=image.position,
-                            safe_url=TaskImagePresentationService.safe_url(
-                                image.image,
+                            safe_url=self._snapshot_image_url(
+                                image.file_name,
                             ),
                             css_class=TaskImagePresentationService.css_class(
                                 image.position,
                             ),
                         )
-                        for image in variant_task.task.images.all()
+                        for image in task.images
                     ],
                 ),
                 order=variant_task.order,
@@ -439,9 +442,8 @@ class DjangoWorkRepository(
                 is_assessable=variant_task.is_assessable,
                 blank_cells_after=variant_task.blank_cells_after,
                 blank_cells_rows=variant_task.blank_cells_rows,
-            )
-            for variant_task in variant_tasks
-        ]
+            ))
+        return result
 
     def get_variant_total_max_points(self, variant_id: str) -> int:
         aggregate = VariantTask.objects.filter(
@@ -496,16 +498,15 @@ class DjangoWorkRepository(
                 if original_ep.variant:
                     original_variant_tasks = VariantTask.objects.filter(
                         variant=original_ep.variant,
-                    ).select_related(
-                        'task',
-                        'task__topic',
-                        'task__subtopic',
-                        'task__source',
                     ).order_by('order')
 
                     for variant_task in original_variant_tasks:
-                        task = variant_task.task
-                        task_group = TaskGroup.objects.filter(task=task).first()
+                        task = task_content_snapshot_from_mapping(
+                            variant_task.task_snapshot,
+                        )
+                        task_group = TaskGroup.objects.filter(
+                            task_id=task.task_id,
+                        ).first()
 
                         original_tasks.append(
                             RemedialOriginalTaskSource(
@@ -522,11 +523,6 @@ class DjangoWorkRepository(
 
         new_tasks = VariantTask.objects.filter(
             variant=variant,
-        ).select_related(
-            'task',
-            'task__topic',
-            'task__subtopic',
-            'task__source',
         ).order_by('order')
 
         return RemedialSheetSource(
@@ -573,7 +569,11 @@ class DjangoWorkRepository(
                 RemedialTrainingTaskRow(
                     pk=str(variant_task.pk),
                     task_id=str(variant_task.task_id),
-                    task=self._remedial_task_ref(variant_task.task),
+                    task=self._remedial_task_ref(
+                        task_content_snapshot_from_mapping(
+                            variant_task.task_snapshot,
+                        ),
+                    ),
                     order=variant_task.order,
                     max_points=variant_task.max_points,
                     source_selection_id=(
@@ -609,7 +609,7 @@ class DjangoWorkRepository(
     @staticmethod
     def _remedial_task_ref(task):
         return RemedialTaskRef(
-            pk=str(task.pk),
+            pk=task.task_id,
             text=task.text,
             answer=task.answer,
             short_solution=task.short_solution,
@@ -618,11 +618,20 @@ class DjangoWorkRepository(
             instruction=task.instruction,
             task_type=task.task_type,
             difficulty=task.difficulty,
-            topic=task.topic.name if task.topic else '',
-            subtopic=task.subtopic.name if task.subtopic else '',
-            source=str(task.source) if task.source else '',
+            topic=task.topic_name,
+            subtopic=task.subtopic_name,
+            source=task.source_name,
             source_detail=task.source_detail,
         )
+
+    @staticmethod
+    def _snapshot_image_url(file_name):
+        if not file_name:
+            return None
+        try:
+            return default_storage.url(file_name)
+        except ValueError:
+            return None
 
     def get_work_personal_remedial_variant_ids(
         self,
@@ -1182,11 +1191,17 @@ class DjangoWorkRepository(
 
     @staticmethod
     def _persist_variant_content(variant, plan):
+        task_snapshots = DjangoWorkRepository._task_snapshots(
+            task_plan.task_id for task_plan in plan.tasks
+        )
         VariantTask.objects.bulk_create(
             [
                 VariantTask(
                     variant=variant,
                     task_id=task_plan.task_id,
+                    task_snapshot=task_snapshots[
+                        str(task_plan.task_id)
+                    ].to_mapping(),
                     source_selection_id=task_plan.source_selection_id,
                     content_order=task_plan.content_order,
                     order=task_plan.order,
@@ -1249,6 +1264,9 @@ class DjangoWorkRepository(
                 VariantTask.objects.create(
                     variant=variant,
                     task=task,
+                    task_snapshot=build_task_content_snapshots(
+                        [task],
+                    )[str(task.pk)].to_mapping(),
                     order=order,
                 )
 
@@ -1257,6 +1275,18 @@ class DjangoWorkRepository(
             variant_id=str(variant.pk),
             tasks_count=len(ordered_tasks),
         )
+
+    @staticmethod
+    def _task_snapshots(task_ids):
+        tasks = Task.objects.filter(pk__in=set(task_ids)).select_related(
+            'topic',
+            'subtopic',
+            'source',
+        ).prefetch_related(
+            'codifier_requirements__codifier',
+            'images',
+        )
+        return build_task_content_snapshots(tasks)
 
     @staticmethod
     def _task_bank_roles(analog_group_id):

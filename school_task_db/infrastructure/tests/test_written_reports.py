@@ -22,9 +22,10 @@ from infrastructure.repositories.django_event_performance_report_repo import (
 from infrastructure.repositories.django_student_digest_repo import (
     DjangoStudentDigestRepository,
 )
+from infrastructure.tests.variant_task_factory import create_variant_task
 from students.models import Student, StudentGroup
 from tasks.models import Task
-from works.models import Variant, VariantTask, Work
+from works.models import Variant, Work
 
 
 class WrittenReportRepositoryTests(TestCase):
@@ -97,7 +98,7 @@ class WrittenReportRepositoryTests(TestCase):
             number=1,
             work_name_snapshot=self.work.name,
         )
-        self.variant_task = VariantTask.objects.create(
+        self.variant_task = create_variant_task(
             variant=self.variant,
             task=self.task,
             source_selection_id='spec-row-1',
@@ -197,6 +198,33 @@ class WrittenReportRepositoryTests(TestCase):
 
         self.assertEqual(result.status, 'saved')
         self.assertEqual(source.narrative.planned_actions, 'Консультация')
+
+    def test_event_report_uses_variant_task_metadata_snapshot(self):
+        self.task.content_element = '9.9'
+        self.task.requirement_element = '9.8'
+        self.task.save(update_fields=[
+            'content_element',
+            'requirement_element',
+        ])
+        self.requirement.code = '9.7'
+        self.requirement.save(update_fields=['code'])
+        self.content_entry.name = 'Изменённый элемент содержания'
+        self.content_entry.save(update_fields=['name'])
+
+        source = DjangoEventPerformanceReportRepository().get_event_report_source(
+            str(self.event.pk),
+        )
+
+        self.assertEqual(source.specification[0].content_element, '1.2')
+        self.assertEqual(source.specification[0].requirement_element, '2.1')
+        self.assertEqual(
+            source.specification[0].codifier_requirements,
+            ('ОГЭ 2026: 2.3',),
+        )
+        self.assertEqual(
+            source.specification[0].content_element_descriptions,
+            ('ОГЭ 2026: Применение второго закона Ньютона',),
+        )
 
     def test_student_digest_repository_returns_marks_and_absences(self):
         repo = DjangoStudentDigestRepository()

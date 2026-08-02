@@ -9,6 +9,7 @@ from infrastructure.repositories.django_report_repo import DjangoReportRepositor
 from infrastructure.repositories.django_student_repo import (
     DjangoStudentRepository,
 )
+from infrastructure.tests.variant_task_factory import create_variant_task
 from core_logic.use_cases.get_heatmap_course_topic_matrix import (
     GetHeatmapCourseTopicMatrixUseCase,
     HeatmapCourseTopicMatrixRequest,
@@ -51,7 +52,7 @@ from core_logic.use_cases.sync_student_task_logs import (
 from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
-from works.models import Variant, VariantTask, Work, WorkAnalogGroup
+from works.models import Variant, Work, WorkAnalogGroup
 
 
 class DjangoReportRepositoryTests(TestCase):
@@ -654,7 +655,7 @@ class DjangoReportRepositoryTests(TestCase):
             difficulty=2,
         )
         variant = Variant.objects.create(work=course_work, number=1)
-        VariantTask.objects.create(
+        create_variant_task(
             variant=variant,
             task=task,
             order=1,

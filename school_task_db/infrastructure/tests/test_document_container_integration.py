@@ -21,12 +21,13 @@ from curriculum.models import Topic
 from document_engine.models import PrintSettings
 from events.models import Event, EventParticipation, Mark
 from infrastructure.container import Container
+from infrastructure.tests.variant_task_factory import create_variant_task
 from infrastructure.services.rendered_document_file_store import (
     RenderedDocumentFileStore,
 )
 from students.models import Student
 from tasks.models import Task
-from works.models import Variant, VariantTask, Work
+from works.models import Variant, Work
 
 
 class DocumentContainerIntegrationTests(TestCase):
@@ -52,7 +53,7 @@ class DocumentContainerIntegrationTests(TestCase):
             task_type='computational',
             difficulty=3,
         )
-        VariantTask.objects.create(
+        create_variant_task(
             variant=variant,
             task=task,
             order=1,
@@ -145,7 +146,7 @@ class DocumentContainerIntegrationTests(TestCase):
             task_type='computational',
             difficulty=3,
         )
-        VariantTask.objects.create(
+        create_variant_task(
             variant=source_variant,
             task=original_task,
             order=1,
@@ -185,7 +186,7 @@ class DocumentContainerIntegrationTests(TestCase):
             assigned_student=student,
             source_work=source_work,
         )
-        VariantTask.objects.create(
+        create_variant_task(
             variant=remedial_variant,
             task=training_task,
             order=1,
@@ -287,13 +288,13 @@ class DocumentContainerIntegrationTests(TestCase):
             variant_type='remedial',
             assigned_student=second_student,
         )
-        VariantTask.objects.create(
+        create_variant_task(
             variant=first_variant,
             task=first_task,
             order=1,
             max_points=4,
         )
-        VariantTask.objects.create(
+        create_variant_task(
             variant=second_variant,
             task=second_task,
             order=1,

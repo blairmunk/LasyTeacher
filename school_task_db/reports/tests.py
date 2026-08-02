@@ -534,6 +534,10 @@ class ReportsViewsTests(TestCase):
         self.assertEqual(work_stat['average_percentage'], 100)
         self.assertEqual(work_stat['difficulty_assessment'], 'Легкая')
         self.assertEqual(response.context['summary_stats']['total_works'], 1)
+        self.assertContains(
+            response,
+            reverse('reports:event-performance', args=[event.pk]),
+        )
 
     def test_student_performance_view_uses_clean_report_data(self):
         now = timezone.now()

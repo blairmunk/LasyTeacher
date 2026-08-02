@@ -12,7 +12,13 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <div>
             <h2 class="mb-1"><i class="fas fa-envelope-open-text"></i> Дайджесты оценок</h2>
-            <div class="text-muted">Индивидуальные листы по классу и периоду</div>
+            <div class="text-muted">
+                {% if page.selected_student %}
+                    Индивидуальный лист: {{ page.selected_student.full_name }}
+                {% else %}
+                    Индивидуальные листы по классу и периоду
+                {% endif %}
+            </div>
         </div>
         {% if page.digests %}
         <div class="d-flex flex-wrap gap-2">
@@ -20,6 +26,7 @@
                 {% csrf_token %}
                 <input type="hidden" name="apply" value="1">
                 <input type="hidden" name="group" value="{{ page.selected_group.pk }}">
+                {% if page.selected_student %}<input type="hidden" name="student" value="{{ page.selected_student.pk }}">{% endif %}
                 <input type="hidden" name="start_date" value="{{ page.start_date|date:'Y-m-d' }}">
                 <input type="hidden" name="end_date" value="{{ page.end_date|date:'Y-m-d' }}">
                 <input type="hidden" name="retake_score_threshold" value="{{ page.options.retake_score_threshold }}">
@@ -51,7 +58,7 @@
     <form method="get" class="border rounded p-3 mb-4 bg-light">
         <input type="hidden" name="apply" value="1">
         <div class="row g-3 align-items-end">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label class="form-label fw-bold" for="digest-group">Класс</label>
                 <select class="form-select" id="digest-group" name="group" required>
                     <option value="">Выберите класс</option>
@@ -61,10 +68,19 @@
                 </select>
             </div>
             <div class="col-md-3">
+                <label class="form-label fw-bold" for="digest-student">Ученик</label>
+                <select class="form-select" id="digest-student" name="student"{% if not page.selected_group %} disabled{% endif %}>
+                    <option value="">Весь класс</option>
+                    {% for student in page.students %}
+                    <option value="{{ student.pk }}"{% if page.selected_student.pk == student.pk %} selected{% endif %}>{{ student.full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
                 <label class="form-label fw-bold" for="digest-start">С</label>
                 <input class="form-control" id="digest-start" type="date" name="start_date" value="{{ page.start_date|date:'Y-m-d' }}" required>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label fw-bold" for="digest-end">По</label>
                 <input class="form-control" id="digest-end" type="date" name="end_date" value="{{ page.end_date|date:'Y-m-d' }}" required>
             </div>
@@ -129,7 +145,13 @@
 {% if page.selected_group and not page.digests %}
 <div class="no-print text-center py-5 text-muted">
     <i class="fas fa-inbox fa-3x mb-3"></i>
-    <p>За выбранный период нет проверенных работ или отмеченных пропусков.</p>
+    <p>
+        {% if page.selected_student %}
+            У выбранного ученика за этот период нет проверенных работ или отмеченных пропусков.
+        {% else %}
+            За выбранный период нет проверенных работ или отмеченных пропусков.
+        {% endif %}
+    </p>
 </div>
 {% elif not page.selected_group %}
 <div class="no-print text-center py-5 text-muted">

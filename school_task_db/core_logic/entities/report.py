@@ -1,6 +1,6 @@
 """Report DTOs."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, List
 
 
@@ -186,6 +186,7 @@ class WorkAnalysisItemSource:
     work: ReportWorkRef
     events_count: int
     marks: List[ReportMarkFact]
+    events: List['ReportEventRef'] = field(default_factory=list)
 
 
 @dataclass(frozen=True)

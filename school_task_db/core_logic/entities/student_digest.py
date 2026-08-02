@@ -107,6 +107,8 @@ class StudentDigestPageData:
     start_date: date
     end_date: date
     options: StudentDigestOptions
+    students: Tuple[StudentDigestStudentRef, ...] = field(default_factory=tuple)
+    selected_student: StudentDigestStudentRef | None = None
     digests: Tuple[StudentDigestData, ...] = field(default_factory=tuple)
     active_report: str = 'student-digests'
 
@@ -114,6 +116,7 @@ class StudentDigestPageData:
 @dataclass(frozen=True)
 class StudentDigestRequest:
     group_id: str = ''
+    student_id: str = ''
     start_date: date | None = None
     end_date: date | None = None
     year: AcademicYearRef | None = None

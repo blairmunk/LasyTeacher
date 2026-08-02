@@ -5,7 +5,11 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Класс {{ studentgroup.name }} <span class="uuid-badge">{{ studentgroup.short_uuid }}</span></h2>
-    <div>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'reports:student-digests' %}?group={{ studentgroup.pk }}"
+           class="btn btn-outline-primary">
+            <i class="fas fa-envelope-open-text"></i> Дайджесты оценок
+        </a>
         <a href="{% url 'students:remedial-wizard' %}?group_id={{ studentgroup.pk }}"
            class="btn btn-info">
             <i class="fas fa-first-aid"></i> Работа над ошибками
@@ -43,6 +47,7 @@
                         <th>Отчество</th>
                         <th>Email</th>
                         <th>UUID</th>
+                        <th class="text-end">Действия</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -54,6 +59,12 @@
                         <td>{{ student.middle_name|default:"—" }}</td>
                         <td>{{ student.email|default:"—" }}</td>
                         <td><span class="uuid-badge">{{ student.short_uuid }}</span></td>
+                        <td class="text-end">
+                            <a href="{% url 'reports:student-digests' %}?group={{ studentgroup.pk }}&amp;student={{ student.pk }}"
+                               class="btn btn-sm btn-outline-primary" title="Дайджест оценок">
+                                <i class="fas fa-envelope-open-text"></i>
+                            </a>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

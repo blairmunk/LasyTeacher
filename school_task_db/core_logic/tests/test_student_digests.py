@@ -129,7 +129,37 @@ class StudentDigestTests(TestCase):
         )
 
         self.assertEqual(result.selected_group.name, '9А')
+        self.assertEqual(result.students[0].pk, 'student-1')
         self.assertEqual(len(result.digests), 1)
+
+    def test_use_case_filters_digests_to_selected_student(self):
+        second_student = StudentDigestStudentSource(
+            student=StudentDigestStudentRef(
+                pk='student-2',
+                full_name='Петров Пётр',
+            ),
+            entries=self.source.students[0].entries,
+        )
+        source = StudentDigestSource(
+            group=self.source.group,
+            students=(*self.source.students, second_student),
+        )
+
+        result = GetStudentDigestsUseCase(
+            FakeStudentDigestRepository(source),
+        ).execute(
+            StudentDigestRequest(
+                group_id='group-1',
+                student_id='student-2',
+                start_date=dt.date(2026, 7, 14),
+                end_date=dt.date(2026, 7, 20),
+            )
+        )
+
+        self.assertEqual(len(result.students), 2)
+        self.assertEqual(result.selected_student.pk, 'student-2')
+        self.assertEqual(len(result.digests), 1)
+        self.assertEqual(result.digests[0].student.pk, 'student-2')
 
     def test_rejects_reversed_period(self):
         use_case = GetStudentDigestsUseCase(

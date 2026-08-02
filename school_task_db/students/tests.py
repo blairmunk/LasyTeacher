@@ -873,6 +873,9 @@ class RemedialFromEventViewTests(TestCase):
             response.context['studentgroup'].students[0].pk,
             str(self.student.pk),
         )
+        self.assertContains(response, reverse('reports:student-digests'))
+        self.assertContains(response, f'group={group.pk}')
+        self.assertContains(response, f'student={self.student.pk}')
 
     def test_student_group_detail_returns_404_for_missing_group(self):
         response = self.client.get(

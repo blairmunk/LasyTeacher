@@ -831,19 +831,23 @@ class DjangoReportRepository(IReportRepository):
 
         work_sources = []
         for work in Work.objects.all():
-            work_events = events.filter(work=work)
+            work_events = list(
+                self._event_summary_queryset(
+                    events.filter(work=work),
+                ).order_by('-planned_date')
+            )
             work_marks = marks.filter(
                 participation__event__work=work,
                 score__isnull=False,
             )
 
-            if work_events.count() == 0:
+            if not work_events:
                 continue
 
             work_sources.append(
                 WorkAnalysisItemSource(
                     work=self._report_work_ref(work),
-                    events_count=work_events.count(),
+                    events_count=len(work_events),
                     marks=[
                         ReportMarkFact(
                             score=mark.score,
@@ -851,6 +855,10 @@ class DjangoReportRepository(IReportRepository):
                             max_points=mark.max_points,
                         )
                         for mark in work_marks
+                    ],
+                    events=[
+                        self._report_event_ref(event)
+                        for event in work_events
                     ],
                 ),
             )

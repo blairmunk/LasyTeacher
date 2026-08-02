@@ -378,6 +378,41 @@ class WrittenReportRepositoryTests(TestCase):
         self.assertContains(comments_response, 'Нужна консультация')
         self.assertContains(comments_response, 'Комментарии учителя')
 
+    def test_student_digest_view_and_document_can_select_one_student(self):
+        query = {
+            'apply': '1',
+            'group': str(self.group.pk),
+            'student': str(self.student.pk),
+            'start_date': '2026-10-13',
+            'end_date': '2026-10-19',
+            'include_details': 'on',
+        }
+
+        response = self.client.get(
+            reverse('reports:student-digests'),
+            query,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['page'].selected_student.pk, str(self.student.pk))
+        self.assertEqual(len(response.context['page'].digests), 1)
+        self.assertContains(response, 'Индивидуальный лист: Иванов Иван')
+
+        document_response = self.client.post(
+            reverse('reports:student-digests-document'),
+            {
+                **query,
+                'renderer_type': 'html',
+                'format': 'A4',
+            },
+        )
+        html = document_response.content.decode('utf-8')
+
+        self.assertEqual(document_response.status_code, 200)
+        self.assertIn('Иванов Иван', html)
+        self.assertNotIn('Петров Пётр', html)
+        self.assertEqual(html.count('report-kicker">Дайджест оценок'), 1)
+
     def test_event_report_document_endpoint_renders_sectioned_html(self):
         response = self.client.post(
             reverse(

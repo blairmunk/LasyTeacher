@@ -5,6 +5,7 @@ from datetime import date, timedelta
 from core_logic.entities.student_digest import (
     StudentDigestPageData,
     StudentDigestRequest,
+    StudentDigestSource,
 )
 from core_logic.interfaces.student_digest_repo import IStudentDigestRepository
 from core_logic.services.student_digest_service import StudentDigestService
@@ -26,6 +27,8 @@ class GetStudentDigestsUseCase:
             (group for group in groups if group.pk == request.group_id),
             None,
         )
+        students = ()
+        selected_student = None
         digests = ()
         if selected_group:
             source = self.digest_repo.get_student_digest_source(
@@ -34,7 +37,29 @@ class GetStudentDigestsUseCase:
                 end_date=end_date,
             )
             if source:
-                digests = self.digest_service.build(source, request.options)
+                students = tuple(item.student for item in source.students)
+                selected_student = next(
+                    (
+                        student
+                        for student in students
+                        if student.pk == request.student_id
+                    ),
+                    None,
+                )
+                digest_source = source
+                if request.student_id:
+                    digest_source = StudentDigestSource(
+                        group=source.group,
+                        students=tuple(
+                            item
+                            for item in source.students
+                            if item.student.pk == request.student_id
+                        ),
+                    )
+                digests = self.digest_service.build(
+                    digest_source,
+                    request.options,
+                )
 
         return StudentDigestPageData(
             groups=groups,
@@ -42,5 +67,7 @@ class GetStudentDigestsUseCase:
             start_date=start_date,
             end_date=end_date,
             options=request.options,
+            students=students,
+            selected_student=selected_student,
             digests=digests,
         )

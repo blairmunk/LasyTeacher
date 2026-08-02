@@ -463,7 +463,8 @@ class ReportFormAdapterTests(SimpleTestCase):
 
     def test_builds_submitted_student_digest_request(self):
         query = QueryDict(
-            'apply=1&group=g1&start_date=2026-10-13&end_date=2026-10-19'
+            'apply=1&group=g1&student=s1'
+            '&start_date=2026-10-13&end_date=2026-10-19'
             '&include_summary=on&include_focus=on'
             '&include_teacher_comments=on&retake_score_threshold=9'
         )
@@ -475,6 +476,7 @@ class ReportFormAdapterTests(SimpleTestCase):
         )
 
         self.assertEqual(request.group_id, 'g1')
+        self.assertEqual(request.student_id, 's1')
         self.assertEqual(request.start_date, dt.date(2026, 10, 13))
         self.assertEqual(request.end_date, dt.date(2026, 10, 19))
         self.assertEqual(request.year, 'year-1')

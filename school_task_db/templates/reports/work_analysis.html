@@ -134,10 +134,29 @@
                 </div>
 
                 <div class="col-md-2 text-end">
-                    <a href="{% url 'works:detail' work.work.pk %}"
-                       class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-eye"></i> Подробнее
-                    </a>
+                    <div class="d-flex flex-column align-items-end gap-2 no-print">
+                        {% if work.events %}
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-success dropdown-toggle"
+                                    type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-file-alt"></i> Отчёт по событию
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                {% for event in work.events %}
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'reports:event-performance' event.pk %}">
+                                        {{ event.planned_date|date:'d.m.Y' }} · {{ event.name }}
+                                    </a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                        <a href="{% url 'works:detail' work.work.pk %}"
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye"></i> Подробнее
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

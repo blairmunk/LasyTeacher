@@ -922,6 +922,7 @@ class DjangoReportRepositoryTests(TestCase):
         )
         self.assertEqual(work_stat['work'].variant_count, 0)
         self.assertEqual(work_stat['events_count'], 1)
+        self.assertEqual(work_stat['events'][0].pk, str(event.pk))
         self.assertEqual(work_stat['total_marks'], 1)
         self.assertEqual(work_stat['average_score'], 4)
         self.assertEqual(work_stat['average_percentage'], 80)

@@ -15,6 +15,12 @@
             <a href="{% url 'students:remedial' object.pk %}" class="btn btn-outline-warning">
                 <i class="fas fa-first-aid"></i> Работа над ошибками
             </a>
+            {% if student_groups %}
+            <a href="{% url 'reports:student-digests' %}?group={{ student_groups.0.pk }}&amp;student={{ student.pk }}"
+               class="btn btn-outline-primary">
+                <i class="fas fa-envelope-open-text"></i> Дайджест оценок
+            </a>
+            {% endif %}
             <div class="d-flex gap-2 align-items-center">
                 {% for g in student_groups %}
                 <a href="{% url 'students:group-detail' g.pk %}" class="badge bg-primary fs-6 text-decoration-none">

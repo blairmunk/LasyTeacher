@@ -141,6 +141,13 @@ class ReportSummaryServiceTests(TestCase):
                 WorkAnalysisItemSource(
                     work=self._work('work-1', 'Контрольная'),
                     events_count=2,
+                    events=[
+                        self._event(
+                            'event-1',
+                            'graded',
+                            datetime(2026, 9, 1),
+                        ),
+                    ],
                     marks=[
                         ReportMarkFact(score=4, points=3, max_points=5),
                         ReportMarkFact(score=5, points=5, max_points=5),
@@ -161,6 +168,7 @@ class ReportSummaryServiceTests(TestCase):
 
         first = report.works_analysis[0]
         self.assertEqual(first['events_count'], 2)
+        self.assertEqual(first['events'][0].pk, 'event-1')
         self.assertEqual(first['total_marks'], 2)
         self.assertEqual(first['average_score'], 4.5)
         self.assertEqual(first['average_percentage'], 80)

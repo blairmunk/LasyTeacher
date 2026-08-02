@@ -610,6 +610,7 @@ class ReportSummaryService:
 
             works_analysis.append({
                 'work': item.work,
+                'events': item.events,
                 'events_count': item.events_count,
                 'total_marks': len(item.marks),
                 'average_score': average_score,

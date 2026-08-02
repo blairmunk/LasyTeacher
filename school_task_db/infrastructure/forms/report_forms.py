@@ -90,6 +90,7 @@ class ReportFormAdapter:
 
         return StudentDigestRequest(
             group_id=query.get('group', ''),
+            student_id=query.get('student', ''),
             start_date=start_date,
             end_date=end_date,
             year=year,

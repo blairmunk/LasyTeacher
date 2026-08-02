@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from curriculum.models import Topic
-from events.models import Event, EventParticipation, Mark
+from events.models import AttemptSnapshot, Event, EventParticipation, Mark
 from infrastructure.tests.variant_task_factory import create_variant_task
 from review.models import ReviewComment, ReviewSession
 from students.models import Student, StudentTaskLog
@@ -230,6 +230,10 @@ class ParticipationReviewViewTests(TestCase):
         self.assertEqual(self.participation.status, 'graded')
         self.assertEqual(self.event.status, 'reviewing')
         self.assertEqual(task_log.percentage, 100)
+        attempt = AttemptSnapshot.objects.get(mark=mark)
+        self.assertEqual(attempt.revision, 1)
+        self.assertEqual(attempt.recommendations, 'Повторить перевод единиц')
+        self.assertEqual(attempt.task_results.count(), 1)
 
     def test_post_rejects_invalid_score_without_saving_mark(self):
         response = self.client.post(

@@ -8,6 +8,9 @@ from core_logic.interfaces.event_repo import (
     GradeParticipationResult,
     IEventRepository,
 )
+from core_logic.interfaces.attempt_snapshot_repo import (
+    IAttemptSnapshotRepository,
+)
 from core_logic.interfaces.review_repo import IReviewRepository
 from core_logic.interfaces.student_repo import IStudentRepository
 from core_logic.interfaces.transaction_manager import ITransactionManager
@@ -42,6 +45,7 @@ class GradeStudentWorkResult:
     status: str
     grade: Optional[GradeParticipationResult] = None
     errors: tuple[str, ...] = ()
+    attempt_snapshot_id: str = ''
 
 
 class GradeStudentWorkUseCase:
@@ -53,6 +57,7 @@ class GradeStudentWorkUseCase:
         grading_service: GradingService,
         transaction_manager: ITransactionManager,
         task_log_sync_use_case: SyncStudentTaskLogsUseCase | None = None,
+        attempt_snapshot_repo: IAttemptSnapshotRepository | None = None,
     ):
         self.event_repo = event_repo
         self.review_repo = review_repo
@@ -62,6 +67,7 @@ class GradeStudentWorkUseCase:
             task_log_sync_use_case
             or SyncStudentTaskLogsUseCase(student_repo)
         )
+        self.attempt_snapshot_repo = attempt_snapshot_repo
 
     def execute(self, request: GradeStudentWorkRequest) -> GradeStudentWorkResult:
         checked_by = self.grading_service.checked_by_name(
@@ -127,7 +133,14 @@ class GradeStudentWorkUseCase:
                 )
             )
             self.task_log_sync_use_case.execute(grade.mark_id)
+            attempt_snapshot_id = ''
+            if self.attempt_snapshot_repo is not None:
+                attempt_snapshot = self.attempt_snapshot_repo.capture_mark(
+                    grade.mark_id,
+                )
+                attempt_snapshot_id = attempt_snapshot.pk
             return GradeStudentWorkResult(
                 status='saved',
                 grade=grade,
+                attempt_snapshot_id=attempt_snapshot_id,
             )

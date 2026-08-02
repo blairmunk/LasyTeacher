@@ -2,7 +2,59 @@ from django.contrib import admin
 from django.db.models import Count, Q
 
 from core_logic.services.event_service import EventService
-from .models import Event, EventParticipation, Mark
+from .models import (
+    AttemptSnapshot,
+    AttemptTaskSnapshot,
+    Event,
+    EventParticipation,
+    Mark,
+)
+
+
+class AttemptTaskSnapshotInline(admin.TabularInline):
+    model = AttemptTaskSnapshot
+    extra = 0
+    can_delete = False
+    fields = [
+        'order_snapshot',
+        'variant_task',
+        'is_assessable_snapshot',
+        'points',
+        'checked_max_points',
+        'comment',
+    ]
+    readonly_fields = fields
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(AttemptSnapshot)
+class AttemptSnapshotAdmin(admin.ModelAdmin):
+    list_display = [
+        'student_name_snapshot',
+        'event_name_snapshot',
+        'revision',
+        'score',
+        'points',
+        'checked_at_snapshot',
+    ]
+    list_filter = ['score', 'needs_attention', 'event_date_snapshot']
+    search_fields = [
+        'student_name_snapshot',
+        'event_name_snapshot',
+        'work_name_snapshot',
+    ]
+    readonly_fields = [
+        field.name for field in AttemptSnapshot._meta.fields
+    ]
+    inlines = [AttemptTaskSnapshotInline]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 class EventParticipationInline(admin.TabularInline):
     """Inline для участников события"""

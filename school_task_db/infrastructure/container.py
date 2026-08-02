@@ -299,6 +299,9 @@ from core_logic.use_cases.validate_review_work_scan import (
 from infrastructure.repositories.django_academic_year_repo import (
     DjangoAcademicYearRepository,
 )
+from infrastructure.repositories.django_attempt_snapshot_repo import (
+    DjangoAttemptSnapshotRepository,
+)
 from infrastructure.repositories.django_codifier_repo import DjangoCodifierRepository
 from infrastructure.repositories.django_core_repo import DjangoCoreRepository
 from infrastructure.repositories.django_curriculum_repo import (
@@ -348,6 +351,7 @@ class Container:
 
     def __init__(self):
         self._academic_year_repo = None
+        self._attempt_snapshot_repo = None
         self._student_repo = None
         self._task_repo = None
         self._work_repo = None
@@ -382,6 +386,12 @@ class Container:
         if self._academic_year_repo is None:
             self._academic_year_repo = DjangoAcademicYearRepository()
         return self._academic_year_repo
+
+    @property
+    def attempt_snapshot_repo(self):
+        if self._attempt_snapshot_repo is None:
+            self._attempt_snapshot_repo = DjangoAttemptSnapshotRepository()
+        return self._attempt_snapshot_repo
 
     @property
     def student_repo(self):
@@ -926,6 +936,7 @@ class Container:
             student_repo=self.student_repo,
             grading_service=self.grading_service(),
             transaction_manager=self.transaction_manager,
+            attempt_snapshot_repo=self.attempt_snapshot_repo,
         )
 
     def get_participation_review_use_case(self):

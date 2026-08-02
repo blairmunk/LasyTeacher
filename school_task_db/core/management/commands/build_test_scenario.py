@@ -22,7 +22,7 @@ from core_logic.use_cases.grade_student_work import GradeStudentWorkRequest
 from core_logic.use_cases.save_work import SaveWorkSpecificationRequest
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from document_engine.models import PrintSettings
-from events.models import Event, EventParticipation
+from events.models import AttemptSnapshot, Event, EventParticipation
 from infrastructure.container import container
 from site_settings.models import SiteSettings
 from students.models import StudentGroup, StudentTaskLog
@@ -137,6 +137,9 @@ class Command(BaseCommand):
             for item in manifest.get('works', [])
         ]
         StudentTaskLog.objects.filter(event_id__in=event_ids).delete()
+        AttemptSnapshot.objects.filter(
+            event_id_snapshot__in=[str(event_id) for event_id in event_ids],
+        ).delete()
         Event.objects.filter(pk__in=event_ids).delete()
         Variant.objects.filter(work_id__in=work_ids).delete()
 

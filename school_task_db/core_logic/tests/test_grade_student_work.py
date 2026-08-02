@@ -2,6 +2,7 @@ from contextlib import contextmanager
 from unittest import TestCase
 
 from core_logic.entities.event import ParticipationGradingContext
+from core_logic.entities.attempt_snapshot import AttemptSnapshotRef
 from core_logic.entities.review import ReviewTaskRef, ReviewVariantTaskRef
 from core_logic.interfaces.event_repo import GradeParticipationResult
 from core_logic.services.grading_service import GradingService
@@ -69,17 +70,33 @@ class FakeStudentRepository:
         raise AssertionError('No plan is expected without a sync source')
 
 
+class FakeAttemptSnapshotRepository:
+    def __init__(self):
+        self.mark_ids = []
+
+    def capture_mark(self, mark_id):
+        self.mark_ids.append(mark_id)
+        return AttemptSnapshotRef(
+            pk='attempt-1',
+            participation_id='participation-1',
+            mark_id=mark_id,
+            revision=1,
+        )
+
+
 class GradeStudentWorkUseCaseTests(TestCase):
     def test_execute_saves_grade_with_normalized_checked_by(self):
         repo = FakeEventRepository()
         student_repo = FakeStudentRepository()
         transaction_manager = FakeTransactionManager()
+        attempt_snapshot_repo = FakeAttemptSnapshotRepository()
         use_case = GradeStudentWorkUseCase(
             event_repo=repo,
             review_repo=FakeReviewRepository(),
             student_repo=student_repo,
             grading_service=GradingService(),
             transaction_manager=transaction_manager,
+            attempt_snapshot_repo=attempt_snapshot_repo,
         )
 
         result = use_case.execute(
@@ -108,6 +125,8 @@ class GradeStudentWorkUseCaseTests(TestCase):
         )
         self.assertEqual(repo.graded_params.event_status, 'reviewing')
         self.assertEqual(student_repo.synced_mark_ids, ['mark-1'])
+        self.assertEqual(attempt_snapshot_repo.mark_ids, ['mark-1'])
+        self.assertEqual(result.attempt_snapshot_id, 'attempt-1')
         self.assertEqual(transaction_manager.entered, 1)
 
     def test_execute_marks_event_graded_when_all_active_work_is_graded(self):

@@ -17,6 +17,7 @@ from core_logic.value_objects.document_recipes import (
     EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
     EVENT_REPORT_CONCLUSIONS_SECTION,
     EVENT_REPORT_SUMMARY_SECTION,
+    EVENT_REPORT_SPECIFICATION_SECTION,
     EVENT_REPORT_TASK_ANALYSIS_SECTION,
     HEADER_SECTION,
     PAGE_BREAK_SECTION,
@@ -39,6 +40,7 @@ class ReportDocumentRecipeTests(TestCase):
             recipe.section_types,
             (
                 HEADER_SECTION,
+                EVENT_REPORT_SPECIFICATION_SECTION,
                 EVENT_REPORT_SUMMARY_SECTION,
                 EVENT_REPORT_TASK_ANALYSIS_SECTION,
                 EVENT_REPORT_CONCLUSIONS_SECTION,

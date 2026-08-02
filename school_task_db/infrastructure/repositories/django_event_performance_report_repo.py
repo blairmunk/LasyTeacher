@@ -5,6 +5,7 @@ from core_logic.entities.event_performance_report import (
     EventReportEventRef,
     EventReportNarrative,
     EventReportParticipantFact,
+    EventReportSpecificationFact,
     EventReportTaskScoreFact,
     SaveEventReportNarrativeParams,
     SaveEventReportNarrativeResult,
@@ -71,13 +72,8 @@ class DjangoEventPerformanceReportRepository(
                     continue
                 task_scores.append(
                     EventReportTaskScoreFact(
-                        group_key=(
-                            variant_task.source_selection_id
-                            or f'order:{variant_task.content_order or variant_task.order}'
-                        ),
-                        order=variant_task.content_order or variant_task.order,
-                        task_id=str(variant_task.task_id),
-                        task_text=variant_task.task.text,
+                        group_key=f'position:{variant_task.order}',
+                        order=variant_task.order,
                         topic_name=variant_task.task.topic.name,
                         subtopic_name=(
                             variant_task.task.subtopic.name
@@ -107,6 +103,7 @@ class DjangoEventPerformanceReportRepository(
             ),
             participants=tuple(participant_facts),
             task_scores=tuple(task_scores),
+            specification=self._specification_facts(variant_tasks),
             narrative=self._narrative(narrative_model),
         )
 
@@ -136,9 +133,51 @@ class DjangoEventPerformanceReportRepository(
         result = {variant_id: [] for variant_id in variant_ids}
         for variant_task in VariantTask.objects.filter(
             variant_id__in=variant_ids,
-        ).select_related('task', 'task__topic', 'task__subtopic'):
+        ).select_related(
+            'task',
+            'task__topic',
+            'task__subtopic',
+        ).prefetch_related(
+            'task__codifier_requirements__codifier',
+        ):
             result[variant_task.variant_id].append(variant_task)
         return result
+
+    @staticmethod
+    def _specification_facts(variant_tasks):
+        facts = []
+        seen = set()
+        for tasks in variant_tasks.values():
+            for variant_task in tasks:
+                if not variant_task.is_assessable:
+                    continue
+                task = variant_task.task
+                codifier_requirements = tuple(
+                    f'{item.codifier.short_name}: {item.code}'
+                    for item in task.codifier_requirements.all()
+                )
+                key = (
+                    variant_task.order,
+                    task.topic.name,
+                    task.subtopic.name if task.subtopic_id else '',
+                    task.content_element.strip(),
+                    task.requirement_element.strip(),
+                    codifier_requirements,
+                )
+                if key in seen:
+                    continue
+                seen.add(key)
+                facts.append(
+                    EventReportSpecificationFact(
+                        order=key[0],
+                        topic_name=key[1],
+                        subtopic_name=key[2],
+                        content_element=key[3],
+                        requirement_element=key[4],
+                        codifier_requirements=key[5],
+                    )
+                )
+        return tuple(sorted(facts, key=lambda item: item.order))
 
     @staticmethod
     def _narrative(model):

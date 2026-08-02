@@ -6,6 +6,7 @@ from core_logic.entities.event_performance_report import (
     EventReportEventRef,
     EventReportNarrative,
     EventReportParticipantFact,
+    EventReportSpecificationFact,
     EventReportTaskScoreFact,
     SaveEventReportNarrativeParams,
     SaveEventReportNarrativeResult,
@@ -77,6 +78,15 @@ class EventPerformanceReportTests(TestCase):
                 self._task_score('s1', 'Иванов Иван', points=0),
                 self._task_score('s2', 'Петрова Мария', points=2),
             ),
+            specification=(
+                EventReportSpecificationFact(
+                    order=1,
+                    topic_name='Динамика',
+                    subtopic_name='Второй закон Ньютона',
+                    content_element='1.2',
+                    codifier_requirements=('ОГЭ 2026: 2.1',),
+                ),
+            ),
             narrative=EventReportNarrative(planned_actions='Консультация'),
         )
 
@@ -85,8 +95,6 @@ class EventPerformanceReportTests(TestCase):
         return EventReportTaskScoreFact(
             group_key='spec-1',
             order=1,
-            task_id=f'task-{student_id}',
-            task_text='Рассчитать силу',
             topic_name='Динамика',
             subtopic_name='Второй закон Ньютона',
             student_id=student_id,
@@ -106,6 +114,11 @@ class EventPerformanceReportTests(TestCase):
         self.assertEqual(report.pass_percentage, 50)
         self.assertEqual(report.quality_percentage, 50)
         self.assertEqual(report.task_summaries[0].error_percentage, 50)
+        self.assertEqual(report.specification_items[0].order, 1)
+        self.assertEqual(
+            report.specification_items[0].requirement_elements,
+            ('ОГЭ 2026: 2.1',),
+        )
         self.assertEqual(
             report.task_summaries[0].failed_students,
             ('Иванов Иван',),

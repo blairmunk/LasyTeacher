@@ -1,6 +1,6 @@
 {% with report=payload.report %}
 <section class="document-section document-section-{{ section.section_type }}">
-    <h2 class="report-section-title">3. Выводы и дальнейшая работа</h2>
+    <h2 class="report-section-title">4. Выводы и дальнейшая работа</h2>
     <h3>Возможные причины ошибок</h3>
     {% if report.narrative.possible_causes %}<div>{{ report.narrative.possible_causes|linebreaksbr }}</div>
     {% elif report.suggested_causes %}<ul>{% for item in report.suggested_causes %}<li>{{ item }}</li>{% endfor %}</ul>

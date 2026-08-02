@@ -14,6 +14,7 @@ from core_logic.value_objects.document_recipes import (
     EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
     EVENT_REPORT_CONCLUSIONS_SECTION,
     EVENT_REPORT_SUMMARY_SECTION,
+    EVENT_REPORT_SPECIFICATION_SECTION,
     EVENT_REPORT_TASK_ANALYSIS_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
@@ -124,6 +125,13 @@ DOCUMENT_SECTION_CATALOG = (
         ),
         description='Название документа и основные метаданные.',
         is_repeatable=True,
+    ),
+    DocumentSectionCatalogItem(
+        section_type=EVENT_REPORT_SPECIFICATION_SECTION,
+        title='Краткая спецификация',
+        supported_document_types=(EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,),
+        renderable_document_types=(EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,),
+        description='Номера заданий, темы, подтемы и кодификаторные элементы.',
     ),
     DocumentSectionCatalogItem(
         section_type=EVENT_REPORT_SUMMARY_SECTION,

@@ -7,6 +7,7 @@ from core_logic.value_objects.document_recipes import (
     COMMON_HEADER_SECTION,
     EVENT_REPORT_CONCLUSIONS_SECTION,
     EVENT_REPORT_SUMMARY_SECTION,
+    EVENT_REPORT_SPECIFICATION_SECTION,
     EVENT_REPORT_TASK_ANALYSIS_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
@@ -93,6 +94,9 @@ REMEDIAL_LATEX_WRAPPER_TEMPLATE = 'documents/latex/base/document.tex'
 
 EVENT_REPORT_HTML_SECTION_TEMPLATES = {
     HEADER_SECTION: 'documents/html/reports/event_header.html',
+    EVENT_REPORT_SPECIFICATION_SECTION: (
+        'documents/html/reports/event_specification.html'
+    ),
     EVENT_REPORT_SUMMARY_SECTION: 'documents/html/reports/event_summary.html',
     EVENT_REPORT_TASK_ANALYSIS_SECTION: (
         'documents/html/reports/event_task_analysis.html'

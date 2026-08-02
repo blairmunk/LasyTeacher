@@ -6,6 +6,7 @@ from core_logic.entities.event_performance_report import (
     EventPerformanceReportData,
     EventPerformanceReportSource,
     EventReportTaskSummary,
+    EventReportSpecificationItem,
     EventReportTopicSummary,
 )
 
@@ -59,6 +60,7 @@ class EventPerformanceReportService:
                 (score, grade_counts.get(score, 0))
                 for score in (5, 4, 3, 2, 1)
             ),
+            specification_items=self._specification_items(source),
             task_summaries=task_summaries,
             weak_topics=weak_topics,
             common_errors=common_errors,
@@ -117,6 +119,45 @@ class EventPerformanceReportService:
                 )
             )
         return tuple(sorted(result, key=lambda item: item.order))
+
+    def _specification_items(self, source):
+        grouped = defaultdict(list)
+        for fact in source.specification:
+            grouped[fact.order].append(fact)
+
+        items = []
+        for facts in grouped.values():
+            first = min(facts, key=lambda item: item.order)
+            items.append(
+                EventReportSpecificationItem(
+                    order=first.order,
+                    topics=tuple(dict.fromkeys(
+                        fact.topic_name
+                        for fact in facts
+                        if fact.topic_name
+                    )),
+                    subtopics=tuple(dict.fromkeys(
+                        fact.subtopic_name
+                        for fact in facts
+                        if fact.subtopic_name
+                    )),
+                    content_elements=tuple(dict.fromkeys(
+                        fact.content_element
+                        for fact in facts
+                        if fact.content_element
+                    )),
+                    requirement_elements=tuple(dict.fromkeys(
+                        value
+                        for fact in facts
+                        for value in (
+                            fact.requirement_element,
+                            *fact.codifier_requirements,
+                        )
+                        if value
+                    )),
+                )
+            )
+        return tuple(sorted(items, key=lambda item: item.order))
 
     def _weak_topics(self, source):
         grouped = defaultdict(list)

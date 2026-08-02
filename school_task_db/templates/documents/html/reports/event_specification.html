@@ -1,0 +1,11 @@
+{% with report=payload.report %}
+<section class="document-section document-section-{{ section.section_type }}">
+    <h2 class="report-section-title">1. Краткая спецификация работы</h2>
+    {% if report.specification_items %}
+    <table>
+        <thead><tr><th>Задание</th><th>Тема и подтема</th><th>Кодификатор</th></tr></thead>
+        <tbody>{% for item in report.specification_items %}<tr><td><strong>№ {{ item.order }}</strong></td><td>{{ item.topics|join:", " }}{% if item.subtopics %}<div class="muted">{{ item.subtopics|join:", " }}</div>{% endif %}</td><td>{% if item.content_elements %}<div><strong>ЭС:</strong> {{ item.content_elements|join:", " }}</div>{% endif %}{% if item.requirement_elements %}<div><strong>Требования:</strong> {{ item.requirement_elements|join:", " }}</div>{% endif %}{% if not item.content_elements and not item.requirement_elements %}<span class="muted">—</span>{% endif %}</td></tr>{% endfor %}</tbody>
+    </table>
+    {% else %}<p class="muted">Спецификация пока недоступна.</p>{% endif %}
+</section>
+{% endwith %}

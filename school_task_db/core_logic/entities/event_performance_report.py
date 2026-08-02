@@ -39,8 +39,6 @@ class EventReportParticipantFact:
 class EventReportTaskScoreFact:
     group_key: str
     order: int
-    task_id: str
-    task_text: str
     topic_name: str
     subtopic_name: str
     student_id: str
@@ -51,12 +49,25 @@ class EventReportTaskScoreFact:
 
 
 @dataclass(frozen=True)
+class EventReportSpecificationFact:
+    order: int
+    topic_name: str
+    subtopic_name: str = ''
+    content_element: str = ''
+    requirement_element: str = ''
+    codifier_requirements: Tuple[str, ...] = field(default_factory=tuple)
+
+
+@dataclass(frozen=True)
 class EventPerformanceReportSource:
     event: EventReportEventRef
     participants: Tuple[EventReportParticipantFact, ...] = field(
         default_factory=tuple,
     )
     task_scores: Tuple[EventReportTaskScoreFact, ...] = field(
+        default_factory=tuple,
+    )
+    specification: Tuple[EventReportSpecificationFact, ...] = field(
         default_factory=tuple,
     )
     narrative: EventReportNarrative = field(
@@ -81,6 +92,15 @@ class EventReportTaskSummary:
 
 
 @dataclass(frozen=True)
+class EventReportSpecificationItem:
+    order: int
+    topics: Tuple[str, ...]
+    subtopics: Tuple[str, ...]
+    content_elements: Tuple[str, ...]
+    requirement_elements: Tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class EventReportTopicSummary:
     label: str
     attempts: int
@@ -102,6 +122,7 @@ class EventPerformanceReportData:
     pass_percentage: float
     quality_percentage: float
     grade_distribution: Tuple[tuple[int, int], ...]
+    specification_items: Tuple[EventReportSpecificationItem, ...]
     task_summaries: Tuple[EventReportTaskSummary, ...]
     weak_topics: Tuple[EventReportTopicSummary, ...]
     common_errors: Tuple[str, ...]

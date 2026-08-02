@@ -2,6 +2,17 @@
 
 from django import forms
 
+from core_logic.value_objects.document_recipes import (
+    EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
+    STUDENT_DIGEST_DOCUMENT_TYPE,
+)
+
+
+HTML_ONLY_DOCUMENT_TYPES = {
+    EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
+    STUDENT_DIGEST_DOCUMENT_TYPE,
+}
+
 
 class PresentationProfileForm(forms.Form):
     name = forms.CharField(
@@ -109,7 +120,16 @@ class PresentationProfileForm(forms.Form):
         return self._clean_wrapper('html_template_override', 'HTML')
 
     def clean_latex_template_override(self):
+        if self.cleaned_data.get('document_type') in HTML_ONLY_DOCUMENT_TYPES:
+            return ''
         return self._clean_wrapper('latex_template_override', 'LaTeX')
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get('document_type') in HTML_ONLY_DOCUMENT_TYPES:
+            cleaned_data['custom_latex_preamble'] = ''
+            cleaned_data['latex_template_override'] = ''
+        return cleaned_data
 
     def _clean_wrapper(self, field_name, label):
         value = self.cleaned_data.get(field_name, '')

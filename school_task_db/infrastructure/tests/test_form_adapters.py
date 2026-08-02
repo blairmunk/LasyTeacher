@@ -30,7 +30,10 @@ from core_logic.use_cases.get_presentation_profile_editor_data import (
     PresentationProfileEditorData,
 )
 from core_logic.value_objects.document_render_options import WorkDocumentRenderOptions
-from core_logic.value_objects.document_recipes import WORK_DOCUMENT_TYPE
+from core_logic.value_objects.document_recipes import (
+    EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
+    WORK_DOCUMENT_TYPE,
+)
 from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_ANY,
     TASK_BANK_ROLE_CONTROL,
@@ -324,6 +327,40 @@ class PresentationProfileFormAdapterTests(SimpleTestCase):
 
         self.assertFalse(form.is_valid())
         self.assertIn('body_content', form.errors['html_template_override'][0])
+
+    def test_clears_latex_settings_for_html_only_report(self):
+        form = self._form(
+            data={
+                'name': 'Отчёт',
+                'document_type': EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
+                'custom_latex_preamble': '\\small',
+                'latex_template_override': 'unused invalid wrapper',
+            },
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['custom_latex_preamble'], '')
+        self.assertEqual(form.cleaned_data['latex_template_override'], '')
+
+    def test_exposes_actual_style_hooks_for_each_document_type(self):
+        document_types = get_document_type_catalog(renderable_only=True)
+        context = PresentationProfileFormAdapter.create_context(
+            form=object(),
+            document_types=document_types,
+        )
+        report_guide = context['presentation_guides'][
+            EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE
+        ]
+
+        self.assertFalse(report_guide['supports_latex'])
+        self.assertIn(
+            '.document-section-event_report_specification',
+            [item['selector'] for item in report_guide['html_hooks']],
+        )
+        self.assertIn(
+            '.document-section-event_report_specification',
+            report_guide['css_example'],
+        )
 
 
 class EventFormAdapterTests(SimpleTestCase):

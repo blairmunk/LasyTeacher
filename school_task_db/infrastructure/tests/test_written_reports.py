@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from core.models import AcademicYear
+from codifier.models import CodifierSpec, Requirement
 from core_logic.entities.event_performance_report import (
     EventReportNarrative,
     SaveEventReportNarrativeParams,
@@ -62,9 +63,24 @@ class WrittenReportRepositoryTests(TestCase):
             answer='10 Н',
             topic=self.topic,
             subtopic=self.subtopic,
+            content_element='1.2',
+            requirement_element='2.1',
             task_type='computational',
             difficulty=2,
         )
+        self.codifier = CodifierSpec.objects.create(
+            name='ОГЭ по физике 2026',
+            short_name='ОГЭ 2026',
+            subject='Физика',
+            exam_type='oge',
+            year=2026,
+        )
+        self.requirement = Requirement.objects.create(
+            codifier=self.codifier,
+            code='2.3',
+            name='Применять физические законы',
+        )
+        self.requirement.tasks.add(self.task)
         self.work = Work.objects.create(
             name='Контрольная по динамике',
             work_type='test',
@@ -78,7 +94,7 @@ class WrittenReportRepositoryTests(TestCase):
             variant=self.variant,
             task=self.task,
             source_selection_id='spec-row-1',
-            content_order=1,
+            content_order=30,
             order=1,
             max_points=2,
             is_assessable=True,
@@ -140,9 +156,17 @@ class WrittenReportRepositoryTests(TestCase):
         self.assertEqual(len(source.participants), 2)
         self.assertEqual(source.participants[0].score, 2)
         self.assertEqual(len(source.task_scores), 1)
-        self.assertEqual(source.task_scores[0].group_key, 'spec-row-1')
+        self.assertEqual(source.task_scores[0].group_key, 'position:1')
+        self.assertEqual(source.task_scores[0].order, 1)
         self.assertEqual(source.task_scores[0].points, 0)
         self.assertEqual(source.task_scores[0].comment, 'Ошибка в формуле')
+        self.assertEqual(source.specification[0].order, 1)
+        self.assertEqual(source.specification[0].content_element, '1.2')
+        self.assertEqual(source.specification[0].requirement_element, '2.1')
+        self.assertEqual(
+            source.specification[0].codifier_requirements,
+            ('ОГЭ 2026: 2.3',),
+        )
 
     def test_event_report_repository_saves_narrative(self):
         repo = DjangoEventPerformanceReportRepository()
@@ -195,6 +219,8 @@ class WrittenReportRepositoryTests(TestCase):
         self.assertEqual(response.context['report'].average_score, 2)
         self.assertContains(response, 'Контрольная 9А')
         self.assertContains(response, 'Динамика: Второй закон Ньютона')
+        self.assertContains(response, 'Краткая спецификация работы')
+        self.assertNotContains(response, 'Найти силу')
 
         post_response = self.client.post(
             reverse('reports:event-performance', args=[self.event.pk]),
@@ -254,7 +280,15 @@ class WrittenReportRepositoryTests(TestCase):
         html = response.content.decode('utf-8')
         self.assertIn('Контрольная 9А', html)
         self.assertIn('document-section-event_report_summary', html)
+        self.assertIn(
+            'document-section-event_report_specification',
+            html,
+        )
+        self.assertIn('№ 1', html)
+        self.assertIn('1.2', html)
+        self.assertIn('ОГЭ 2026: 2.3', html)
         self.assertIn('Динамика: Второй закон Ньютона', html)
+        self.assertNotIn('Найти силу', html)
 
     def test_event_report_document_applies_explicit_presentation_profile(self):
         profile = PrintSettings.objects.create(

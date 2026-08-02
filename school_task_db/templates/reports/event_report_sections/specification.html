@@ -1,0 +1,23 @@
+<section class="report-section">
+    <h2 class="report-section-title">1. Краткая спецификация работы</h2>
+    {% if report.specification_items %}
+    <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+            <thead><tr><th style="width:90px">Задание</th><th>Тема и подтема</th><th>Кодификатор</th></tr></thead>
+            <tbody>
+            {% for item in report.specification_items %}
+            <tr>
+                <td><strong>№ {{ item.order }}</strong></td>
+                <td>{{ item.topics|join:", " }}{% if item.subtopics %}<div class="small text-muted">{{ item.subtopics|join:", " }}</div>{% endif %}</td>
+                <td class="small">
+                    {% if item.content_elements %}<div><strong>ЭС:</strong> {{ item.content_elements|join:", " }}</div>{% endif %}
+                    {% if item.requirement_elements %}<div><strong>Требования:</strong> {{ item.requirement_elements|join:", " }}</div>{% endif %}
+                    {% if not item.content_elements and not item.requirement_elements %}<span class="text-muted">—</span>{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}<p class="text-muted">Спецификация пока недоступна.</p>{% endif %}
+</section>

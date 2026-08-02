@@ -11,6 +11,12 @@ from core_logic.use_cases.get_presentation_profile_editor_data import (
     GetPresentationProfileEditorDataRequest,
 )
 from core_logic.value_objects.document_render_options import FILE_TYPE_LABELS
+from core_logic.value_objects.document_type_catalog import (
+    get_document_type_catalog_item,
+)
+from infrastructure.forms.presentation_profile_guides import (
+    get_presentation_profile_guides,
+)
 
 
 class PresentationProfileFormAdapter:
@@ -80,6 +86,9 @@ class PresentationProfileFormAdapter:
         return {
             'form': form,
             'document_types': document_types,
+            'presentation_guides': get_presentation_profile_guides(
+                document_types,
+            ),
         }
 
     def _document_type_context(self, document_type, request):
@@ -102,23 +111,36 @@ class PresentationProfileFormAdapter:
     @staticmethod
     def _presentation_profile_context(presentation_profile):
         presentation = presentation_profile.presentation
+        document_type = get_document_type_catalog_item(
+            presentation_profile.document_type,
+        )
+        supports_latex = bool(
+            document_type and 'latex' in document_type.renderer_types
+        )
+        has_css = bool(presentation.custom_css)
+        has_html_wrapper = bool(presentation.html_template_override)
+        has_latex_preamble = bool(
+            supports_latex and presentation.custom_latex_preamble
+        )
+        has_latex_wrapper = bool(
+            supports_latex and presentation.latex_template_override
+        )
         return {
             'presentation_profile_id': presentation_profile.presentation_profile_id,
             'name': presentation_profile.name,
             'description': presentation_profile.description,
             'document_type': presentation_profile.document_type,
             'is_default': presentation_profile.is_default,
-            'has_customization': presentation.has_customization,
-            'has_css': bool(presentation.custom_css),
-            'has_latex_preamble': bool(
-                presentation.custom_latex_preamble,
-            ),
-            'has_html_wrapper': bool(
-                presentation.html_template_override,
-            ),
-            'has_latex_wrapper': bool(
-                presentation.latex_template_override,
-            ),
+            'has_customization': any((
+                has_css,
+                has_html_wrapper,
+                has_latex_preamble,
+                has_latex_wrapper,
+            )),
+            'has_css': has_css,
+            'has_latex_preamble': has_latex_preamble,
+            'has_html_wrapper': has_html_wrapper,
+            'has_latex_wrapper': has_latex_wrapper,
         }
 
     @staticmethod

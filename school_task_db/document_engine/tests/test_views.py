@@ -2,6 +2,9 @@ from django.test import TestCase
 from django.urls import reverse
 
 from document_engine.models import PrintSettings
+from core_logic.value_objects.document_recipes import (
+    EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
+)
 
 
 class PresentationProfileViewTests(TestCase):
@@ -115,6 +118,26 @@ class PresentationProfileViewTests(TestCase):
         self.assertFalse(
             PrintSettings.objects.filter(name='Сломанная обёртка').exists(),
         )
+
+    def test_create_view_discards_latex_for_html_only_report(self):
+        response = self.client.post(
+            reverse('document_engine:print-profile-create'),
+            {
+                'name': 'Оформление отчёта',
+                'document_type': EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
+                'custom_css': '.report-metric { padding: 2mm; }',
+                'custom_latex_preamble': '\\small',
+                'latex_template_override': 'not a valid wrapper',
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('document_engine:print-profile-editor'),
+        )
+        profile = PrintSettings.objects.get(name='Оформление отчёта')
+        self.assertEqual(profile.custom_latex_preamble, '')
+        self.assertEqual(profile.latex_template_override, '')
 
     def test_update_view_shows_existing_presentation(self):
         profile = PrintSettings.objects.create(

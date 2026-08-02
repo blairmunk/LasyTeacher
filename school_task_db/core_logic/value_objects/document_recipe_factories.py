@@ -6,6 +6,7 @@ from core_logic.value_objects.document_recipes import (
     EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
     EVENT_REPORT_CONCLUSIONS_SECTION,
     EVENT_REPORT_SUMMARY_SECTION,
+    EVENT_REPORT_SPECIFICATION_SECTION,
     EVENT_REPORT_TASK_ANALYSIS_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
@@ -84,6 +85,9 @@ def build_event_performance_report_document_recipe() -> DocumentRecipe:
         document_type=EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
         sections=(
             DocumentSectionSpec(section_type=HEADER_SECTION),
+            DocumentSectionSpec(
+                section_type=EVENT_REPORT_SPECIFICATION_SECTION,
+            ),
             DocumentSectionSpec(section_type=EVENT_REPORT_SUMMARY_SECTION),
             DocumentSectionSpec(
                 section_type=EVENT_REPORT_TASK_ANALYSIS_SECTION,

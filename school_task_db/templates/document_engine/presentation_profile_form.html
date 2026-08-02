@@ -19,7 +19,7 @@
     <div class="border-start border-4 border-info bg-light px-3 py-2 mb-4">
         <strong>Содержание остаётся в работе.</strong>
         Профиль управляет только шрифтами, отступами, цветами и внешней обёрткой
-        HTML/PDF или LaTeX.
+        поддерживаемых форматов документа.
     </div>
 
     <form method="post" class="card border-0 shadow-sm" data-print-settings-form>
@@ -51,7 +51,7 @@
             <hr class="my-4">
 
             <div class="row g-4">
-                <div class="col-lg-6">
+                <div class="col-lg-6" data-html-settings>
                     <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
                         <div>
                             <h2 class="h5 mb-0">HTML и PDF</h2>
@@ -65,18 +65,13 @@
                     {{ form.custom_css }}
                     {{ form.custom_css.errors }}
                     <div class="form-text">{{ form.custom_css.help_text }}</div>
-                    <div class="small mt-2">
-                        Hooks:
-                        <code>.document-section</code>,
-                        <code>.document-header</code>,
-                        <code>.document-task-variants</code>,
-                        <code>.document-theory-block</code>,
-                        <code>.task-item</code>,
-                        <code>.task-blank-cells</code>.
+                    <div class="small mt-3">
+                        <div class="fw-semibold mb-1">Доступные CSS-селекторы</div>
+                        <div class="d-grid gap-1" data-html-hooks></div>
                     </div>
                 </div>
 
-                <div class="col-lg-6">
+                <div class="col-lg-6" data-latex-settings>
                     <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
                         <div>
                             <h2 class="h5 mb-0">LaTeX</h2>
@@ -90,14 +85,9 @@
                     {{ form.custom_latex_preamble }}
                     {{ form.custom_latex_preamble.errors }}
                     <div class="form-text">{{ form.custom_latex_preamble.help_text }}</div>
-                    <div class="small mt-2">
-                        Hooks:
-                        <code>schoolheader</code>,
-                        <code>schooltasklist</code>,
-                        <code>schooltheory</code>,
-                        <code>schoolanswers</code>,
-                        <code>schoolblankcells</code>,
-                        <code>schoolscoretable</code>.
+                    <div class="small mt-3">
+                        <div class="fw-semibold mb-1">Доступные окружения</div>
+                        <div class="d-grid gap-1" data-latex-hooks></div>
                     </div>
                 </div>
             </div>
@@ -105,11 +95,11 @@
             <details class="border rounded mt-4 p-3">
                 <summary class="fw-semibold">Полная обёртка документа</summary>
                 <div class="small text-muted mt-2 mb-3">
-                    Экспертный режим: заменяет весь базовый HTML или LaTeX-документ.
+                    Экспертный режим: заменяет базовую обёртку выбранного формата.
                     Для обычной настройки используйте поля выше.
                 </div>
                 <div class="row g-4">
-                    <div class="col-lg-6">
+                    <div class="col-lg-6" data-html-wrapper>
                         <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
                             <label class="form-label mb-0" for="{{ form.html_template_override.id_for_label }}">{{ form.html_template_override.label }}</label>
                             <button class="btn btn-sm btn-outline-secondary" type="button" data-style-example="html-wrapper">
@@ -120,7 +110,7 @@
                         {{ form.html_template_override.errors }}
                         <div class="form-text">{{ form.html_template_override.help_text }}</div>
                     </div>
-                    <div class="col-lg-6">
+                    <div class="col-lg-6" data-latex-wrapper>
                         <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
                             <label class="form-label mb-0" for="{{ form.latex_template_override.id_for_label }}">{{ form.latex_template_override.label }}</label>
                             <button class="btn btn-sm btn-outline-secondary" type="button" data-style-example="latex-wrapper">
@@ -140,7 +130,7 @@
                     {{ form.is_default.label }}
                 </label>
                 <div class="form-text">
-                    На странице работы профиль будет выбран явно и виден до запуска печати.
+                    На экране печати профиль будет выбран явно и виден до запуска.
                 </div>
             </div>
         </div>
@@ -154,38 +144,17 @@
         </div>
     </form>
 </div>
+{{ presentation_guides|json_script:"presentation-profile-guides" }}
 {% endblock %}
 
 {% block extra_js %}
 <script>
 (function() {
+    var guidesNode = document.getElementById('presentation-profile-guides');
+    var guides = guidesNode ? JSON.parse(guidesNode.textContent) : {};
     var examples = {
-        css: [
-            'body {',
-            '    font-family: Georgia, serif;',
-            '    font-size: 14px;',
-            '}',
-            '',
-            '.document-section {',
-            '    margin-bottom: 1.5rem;',
-            '}',
-            '',
-            '.document-theory-block {',
-            '    border-left: 3px solid #555;',
-            '    padding-left: 1rem;',
-            '}'
-        ].join('\n'),
-        latex: [
-            '\\usepackage{xcolor}',
-            '',
-            '\\renewenvironment{schooltheory}',
-            '  {\\begin{quote}\\small\\color{gray}}',
-            '  {\\end{quote}}',
-            '',
-            '\\renewenvironment{schoolanswers}',
-            '  {\\small}',
-            '  {}'
-        ].join('\n'),
+        css: '',
+        latex: '',
         'html-wrapper': [
             '<!doctype html>',
             '<html lang="ru">',
@@ -216,16 +185,69 @@
         'html-wrapper': '{{ form.html_template_override.auto_id|escapejs }}',
         'latex-wrapper': '{{ form.latex_template_override.auto_id|escapejs }}'
     };
+    var documentTypeSelect = document.getElementById(
+        '{{ form.document_type.auto_id|escapejs }}'
+    );
+
+    function renderHooks(target, hooks) {
+        target.replaceChildren();
+        hooks.forEach(function(hook) {
+            var row = document.createElement('div');
+            row.className = 'text-break';
+            var code = document.createElement('code');
+            code.textContent = hook.selector;
+            row.appendChild(code);
+            row.appendChild(document.createTextNode(' — ' + hook.description));
+            target.appendChild(row);
+        });
+    }
+
+    function setPanelState(selector, visible) {
+        document.querySelectorAll(selector).forEach(function(panel) {
+            panel.hidden = !visible;
+            panel.querySelectorAll('textarea, input, select').forEach(function(field) {
+                field.disabled = !visible;
+            });
+        });
+    }
+
+    function setFullWidth(selector, fullWidth) {
+        var panel = document.querySelector(selector);
+        panel.classList.toggle('col-lg-6', !fullWidth);
+        panel.classList.toggle('col-lg-12', fullWidth);
+    }
+
+    function applyDocumentGuide() {
+        var guide = guides[documentTypeSelect.value] || {
+            supports_latex: false,
+            html_hooks: [],
+            latex_hooks: [],
+            css_example: '',
+            latex_example: ''
+        };
+        examples.css = guide.css_example;
+        examples.latex = guide.latex_example;
+        document.getElementById(targets.css).placeholder = guide.css_example;
+        document.getElementById(targets.latex).placeholder = guide.latex_example;
+        renderHooks(document.querySelector('[data-html-hooks]'), guide.html_hooks);
+        renderHooks(document.querySelector('[data-latex-hooks]'), guide.latex_hooks);
+        setPanelState('[data-latex-settings]', guide.supports_latex);
+        setPanelState('[data-latex-wrapper]', guide.supports_latex);
+        setFullWidth('[data-html-settings]', !guide.supports_latex);
+        setFullWidth('[data-html-wrapper]', !guide.supports_latex);
+    }
 
     document.querySelectorAll('[data-style-example]').forEach(function(button) {
         button.addEventListener('click', function() {
             var key = button.dataset.styleExample;
             var target = document.getElementById(targets[key]);
-            if (!target) return;
+            if (!target || !examples[key]) return;
             target.value = examples[key];
             target.focus();
         });
     });
+    documentTypeSelect.addEventListener('change', applyDocumentGuide);
+    applyDocumentGuide();
 })();
 </script>
 {% endblock %}

@@ -1,6 +1,6 @@
 {% with report=payload.report %}
 <section class="document-section document-section-{{ section.section_type }}">
-    <h2 class="report-section-title">1. Общие результаты</h2>
+    <h2 class="report-section-title">2. Общие результаты</h2>
     <div class="report-metrics">
         <div class="report-metric"><strong>{{ report.present_count }}/{{ report.participants_total }}</strong><span class="muted">выполняли работу</span></div>
         <div class="report-metric"><strong>{{ report.average_score|default:"—" }}</strong><span class="muted">средняя оценка</span></div>

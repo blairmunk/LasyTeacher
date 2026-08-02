@@ -6,7 +6,9 @@ from core_logic.use_cases.get_presentation_profile_editor_data import (
     GetPresentationProfileEditorDataUseCase,
 )
 from core_logic.value_objects.document_recipes import (
+    EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
+    STUDENT_DIGEST_DOCUMENT_TYPE,
     WORK_DOCUMENT_TYPE,
     WORKSHEET_DOCUMENT_TYPE,
 )
@@ -54,6 +56,11 @@ class GetPresentationProfileEditorDataUseCaseTests(TestCase):
         ]
         self.assertEqual(
             document_types,
-            [WORK_DOCUMENT_TYPE, REMEDIAL_SHEET_DOCUMENT_TYPE],
+            [
+                WORK_DOCUMENT_TYPE,
+                REMEDIAL_SHEET_DOCUMENT_TYPE,
+                EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
+                STUDENT_DIGEST_DOCUMENT_TYPE,
+            ],
         )
         self.assertEqual(data.presentation_profiles, [])

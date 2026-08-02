@@ -4,15 +4,19 @@ from dataclasses import dataclass
 from typing import Tuple
 
 from core_logic.entities.document import (
+    EVENT_REPORT_SOURCE_TYPE,
     REMEDIAL_VARIANT_SOURCE_TYPE,
+    STUDENT_DIGEST_SOURCE_TYPE,
     WORK_SOURCE_TYPE,
 )
 from core_logic.value_objects.document_recipes import (
     ANSWER_KEY_DOCUMENT_TYPE,
     CUSTOM_DOCUMENT_TYPE,
     DIAGNOSTIC_DOCUMENT_TYPE,
+    EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
     HOMEWORK_DOCUMENT_TYPE,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
+    STUDENT_DIGEST_DOCUMENT_TYPE,
     WORK_DOCUMENT_TYPE,
     WORKSHEET_DOCUMENT_TYPE,
 )
@@ -29,6 +33,7 @@ class DocumentTypeCatalogItem:
 
 
 SECTIONED_RENDERER_TYPES = ('html', 'pdf', 'latex')
+REPORT_RENDERER_TYPES = ('html', 'pdf')
 
 
 DOCUMENT_TYPE_CATALOG = (
@@ -47,6 +52,22 @@ DOCUMENT_TYPE_CATALOG = (
         source_type=REMEDIAL_VARIANT_SOURCE_TYPE,
         is_renderable=True,
         renderer_types=SECTIONED_RENDERER_TYPES,
+    ),
+    DocumentTypeCatalogItem(
+        document_type=EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
+        title='Отчёт по результатам работы',
+        description='Аналитический отчёт по одному проведённому событию.',
+        source_type=EVENT_REPORT_SOURCE_TYPE,
+        is_renderable=True,
+        renderer_types=REPORT_RENDERER_TYPES,
+    ),
+    DocumentTypeCatalogItem(
+        document_type=STUDENT_DIGEST_DOCUMENT_TYPE,
+        title='Дайджест оценок',
+        description='Индивидуальные листы оценок для обучающихся.',
+        source_type=STUDENT_DIGEST_SOURCE_TYPE,
+        is_renderable=True,
+        renderer_types=REPORT_RENDERER_TYPES,
     ),
     DocumentTypeCatalogItem(
         document_type=WORKSHEET_DOCUMENT_TYPE,

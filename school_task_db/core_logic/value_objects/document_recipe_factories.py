@@ -3,12 +3,21 @@
 from core_logic.entities.document import DocumentRecipe, DocumentSectionSpec
 from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
+    EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
+    EVENT_REPORT_CONCLUSIONS_SECTION,
+    EVENT_REPORT_SUMMARY_SECTION,
+    EVENT_REPORT_TASK_ANALYSIS_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
     ORIGINAL_MISTAKES_SECTION,
     PAGE_BREAK_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     SHORT_SOLUTIONS_SECTION,
+    STUDENT_DIGEST_DETAILS_SECTION,
+    STUDENT_DIGEST_DOCUMENT_TYPE,
+    STUDENT_DIGEST_FOCUS_SECTION,
+    STUDENT_DIGEST_RETAKES_SECTION,
+    STUDENT_DIGEST_SUMMARY_SECTION,
     TASK_LIST_SECTION,
     TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
@@ -66,5 +75,45 @@ def build_remedial_sheet_document_recipe(
 
     return DocumentRecipe(
         document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
+        sections=sections,
+    )
+
+
+def build_event_performance_report_document_recipe() -> DocumentRecipe:
+    return DocumentRecipe(
+        document_type=EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
+        sections=(
+            DocumentSectionSpec(section_type=HEADER_SECTION),
+            DocumentSectionSpec(section_type=EVENT_REPORT_SUMMARY_SECTION),
+            DocumentSectionSpec(
+                section_type=EVENT_REPORT_TASK_ANALYSIS_SECTION,
+            ),
+            DocumentSectionSpec(
+                section_type=EVENT_REPORT_CONCLUSIONS_SECTION,
+            ),
+        ),
+    )
+
+
+def build_student_digest_document_recipe(options) -> DocumentRecipe:
+    sections = [DocumentSectionSpec(section_type=HEADER_SECTION)]
+    if options.include_summary:
+        sections.append(
+            DocumentSectionSpec(section_type=STUDENT_DIGEST_SUMMARY_SECTION),
+        )
+    if options.include_retakes:
+        sections.append(
+            DocumentSectionSpec(section_type=STUDENT_DIGEST_RETAKES_SECTION),
+        )
+    if options.include_details:
+        sections.append(
+            DocumentSectionSpec(section_type=STUDENT_DIGEST_DETAILS_SECTION),
+        )
+    if options.include_focus:
+        sections.append(
+            DocumentSectionSpec(section_type=STUDENT_DIGEST_FOCUS_SECTION),
+        )
+    return DocumentRecipe(
+        document_type=STUDENT_DIGEST_DOCUMENT_TYPE,
         sections=sections,
     )

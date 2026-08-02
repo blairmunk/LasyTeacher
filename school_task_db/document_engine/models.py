@@ -11,8 +11,10 @@ from core_logic.value_objects.document_recipes import (
     ANSWER_KEY_DOCUMENT_TYPE,
     CUSTOM_DOCUMENT_TYPE,
     DIAGNOSTIC_DOCUMENT_TYPE,
+    EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
     HOMEWORK_DOCUMENT_TYPE,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
+    STUDENT_DIGEST_DOCUMENT_TYPE,
     WORK_DOCUMENT_TYPE,
     WORKSHEET_DOCUMENT_TYPE,
 )
@@ -28,6 +30,11 @@ class PrintSettings(BaseModel):
     class DocumentType(models.TextChoices):
         WORK = WORK_DOCUMENT_TYPE, 'Контрольная / самостоятельная'
         REMEDIAL = REMEDIAL_SHEET_DOCUMENT_TYPE, 'Работа над ошибками'
+        EVENT_REPORT = (
+            EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
+            'Отчёт по результатам работы',
+        )
+        STUDENT_DIGEST = STUDENT_DIGEST_DOCUMENT_TYPE, 'Дайджест оценок'
         WORKSHEET = WORKSHEET_DOCUMENT_TYPE, 'Рабочий лист'
         ANSWER_KEY = ANSWER_KEY_DOCUMENT_TYPE, 'Ключ для проверки'
         HOMEWORK = HOMEWORK_DOCUMENT_TYPE, 'Домашнее задание'

@@ -7,6 +7,8 @@ from typing import Any, Mapping, Tuple
 WORK_SOURCE_TYPE = 'work'
 REMEDIAL_VARIANT_SOURCE_TYPE = 'remedial_variant'
 REMEDIAL_WORK_SOURCE_TYPE = 'remedial_work'
+EVENT_REPORT_SOURCE_TYPE = 'event_report'
+STUDENT_DIGEST_SOURCE_TYPE = 'student_digest'
 
 
 @dataclass(frozen=True)

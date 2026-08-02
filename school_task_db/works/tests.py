@@ -24,7 +24,10 @@ from curriculum.models import Topic
 from document_engine.models import PrintSettings
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
-from infrastructure.tests.variant_task_factory import create_variant_task
+from infrastructure.tests.variant_task_factory import (
+    capture_attempt_snapshot,
+    create_variant_task,
+)
 from students.models import Student
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
@@ -1485,6 +1488,15 @@ class WorkDetailViewTests(TestCase):
                     'max_points': 5,
                 },
             },
+        )
+        source_attempt = capture_attempt_snapshot(mark)
+        remedial_variant.source_participation = participation
+        remedial_variant.source_attempt_snapshot = source_attempt
+        remedial_variant.save(
+            update_fields=[
+                'source_participation',
+                'source_attempt_snapshot',
+            ],
         )
 
         sheet_data = GetRemedialSheetDataUseCase(

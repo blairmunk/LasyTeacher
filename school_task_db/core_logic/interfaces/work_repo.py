@@ -28,6 +28,7 @@ class CreateVariantParams:
     plan: VariantCreationPlan
     source_work_id: Optional[str] = None
     source_participation_id: Optional[str] = None
+    source_attempt_snapshot_id: Optional[str] = None
     variant_type: str = 'remedial'
 
 
@@ -69,6 +70,7 @@ class NewWorkVariantParams:
     plan: VariantCreationPlan
     source_work_id: Optional[str] = None
     source_participation_id: Optional[str] = None
+    source_attempt_snapshot_id: Optional[str] = None
     variant_type: str = 'remedial'
 
 

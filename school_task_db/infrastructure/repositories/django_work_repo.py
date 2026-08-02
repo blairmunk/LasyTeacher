@@ -84,7 +84,7 @@ from core_logic.interfaces.work_variant_generation_repo import (
 from core_logic.value_objects.variant_display import (
     resolve_variant_display_name,
 )
-from events.models import EventParticipation, Mark
+from events.models import EventParticipation
 from infrastructure.services.task_image_presentation import (
     TaskImagePresentationService,
 )
@@ -465,6 +465,7 @@ class DjangoWorkRepository(
         variant = Variant.objects.select_related(
             'assigned_student',
             'source_work',
+            'source_attempt_snapshot',
             'source_participation__event__work',
             'source_participation__student',
             'source_participation__variant',
@@ -473,6 +474,7 @@ class DjangoWorkRepository(
         if variant is None:
             return None
         original_ep = variant.source_participation
+        attempt = variant.source_attempt_snapshot
         student = (
             original_ep.student
             if original_ep is not None
@@ -483,43 +485,69 @@ class DjangoWorkRepository(
             if original_ep is not None
             else variant.source_work
         )
-        mark = None
+        student_ref = (
+            VariantDetailStudentRef(
+                pk=str(student.pk),
+                full_name=student.get_full_name(),
+                short_name=student.get_short_name(),
+            )
+            if student
+            else (
+                VariantDetailStudentRef(
+                    pk=attempt.student_id_snapshot,
+                    full_name=attempt.student_name_snapshot,
+                    short_name=attempt.student_name_snapshot,
+                )
+                if attempt
+                else None
+            )
+        )
+        source_work_ref = (
+            VariantDetailRef(
+                pk=str(source_work.pk),
+                name=source_work.name,
+            )
+            if source_work
+            else (
+                VariantDetailRef(
+                    pk=attempt.work_id_snapshot,
+                    name=attempt.work_name_snapshot,
+                )
+                if attempt
+                else None
+            )
+        )
+        mark_ref = None
+        task_scores = {}
         original_tasks = []
 
-        if source_work and student:
-            if original_ep is None:
-                original_ep = EventParticipation.objects.filter(
-                    event__work=source_work,
-                    student=student,
-                ).select_related('variant').first()
-
-            if original_ep:
-                mark = Mark.objects.filter(participation=original_ep).first()
-                if original_ep.variant:
-                    original_variant_tasks = VariantTask.objects.filter(
-                        variant=original_ep.variant,
-                    ).order_by('order')
-
-                    for variant_task in original_variant_tasks:
-                        task = task_content_snapshot_from_mapping(
-                            variant_task.task_snapshot,
-                        )
-                        task_group = TaskGroup.objects.filter(
-                            task_id=task.task_id,
-                        ).first()
-
-                        original_tasks.append(
-                            RemedialOriginalTaskSource(
-                                task=self._remedial_task_ref(task),
-                                variant_task_id=str(variant_task.pk),
-                                order=variant_task.order,
-                                group_name=(
-                                    task_group.group.name
-                                    if task_group
-                                    else ''
-                                ),
-                            )
-                        )
+        if attempt:
+            mark_ref = RemedialMarkRef(
+                score=attempt.score,
+                points=attempt.points,
+                max_points=attempt.max_points,
+            )
+            task_scores = dict(attempt.task_scores_snapshot or {})
+            for task_result in attempt.task_results.select_related(
+                'variant_task',
+            ).order_by('order_snapshot', 'pk'):
+                variant_task = task_result.variant_task
+                task = task_content_snapshot_from_mapping(
+                    variant_task.task_snapshot,
+                )
+                task_group = TaskGroup.objects.filter(
+                    task_id=task.task_id,
+                ).first()
+                original_tasks.append(
+                    RemedialOriginalTaskSource(
+                        task=self._remedial_task_ref(task),
+                        variant_task_id=str(variant_task.pk),
+                        order=task_result.order_snapshot,
+                        group_name=(
+                            task_group.group.name if task_group else ''
+                        ),
+                    )
+                )
 
         new_tasks = VariantTask.objects.filter(
             variant=variant,
@@ -537,33 +565,10 @@ class DjangoWorkRepository(
                     else None
                 ),
             ),
-            student=(
-                VariantDetailStudentRef(
-                    pk=str(student.pk),
-                    full_name=student.get_full_name(),
-                    short_name=student.get_short_name(),
-                )
-                if student
-                else None
-            ),
-            source_work=(
-                VariantDetailRef(
-                    pk=str(source_work.pk),
-                    name=source_work.name,
-                )
-                if source_work
-                else None
-            ),
-            mark=(
-                RemedialMarkRef(
-                    score=mark.score,
-                    points=mark.points,
-                    max_points=mark.max_points,
-                )
-                if mark
-                else None
-            ),
-            task_scores=mark.task_scores if mark else {},
+            student=student_ref,
+            source_work=source_work_ref,
+            mark=mark_ref,
+            task_scores=task_scores,
             original_tasks=original_tasks,
             new_tasks=[
                 RemedialTrainingTaskRow(
@@ -1085,6 +1090,9 @@ class DjangoWorkRepository(
                         source_participation_id=(
                             variant.source_participation_id
                         ),
+                        source_attempt_snapshot_id=(
+                            variant.source_attempt_snapshot_id
+                        ),
                         variant_type=variant.variant_type,
                     )
                 )
@@ -1185,6 +1193,7 @@ class DjangoWorkRepository(
             assigned_student_id=params.student_id,
             source_work_id=params.source_work_id,
             source_participation_id=params.source_participation_id,
+            source_attempt_snapshot_id=params.source_attempt_snapshot_id,
         )
         self._persist_variant_content(variant, plan)
         return str(variant.pk)

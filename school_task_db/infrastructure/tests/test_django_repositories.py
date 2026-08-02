@@ -96,7 +96,10 @@ from infrastructure.repositories.django_review_repo import DjangoReviewRepositor
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
-from infrastructure.tests.variant_task_factory import create_variant_task
+from infrastructure.tests.variant_task_factory import (
+    capture_attempt_snapshot,
+    create_variant_task,
+)
 from infrastructure.services.django_transaction_manager import (
     DjangoTransactionManager,
 )
@@ -1254,6 +1257,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(import_logs[0].file_size_human, '1.5 КБ')
 
     def test_create_remedial_use_case_creates_django_objects(self):
+        source_attempt = capture_attempt_snapshot(self.mark)
         student_repo = DjangoStudentRepository()
         task_repo = DjangoTaskRepository()
         work_repo = DjangoWorkRepository()
@@ -1303,6 +1307,10 @@ class DjangoRemedialRepositoryTests(TestCase):
             remedial_variant.source_participation,
             self.participation,
         )
+        self.assertEqual(
+            remedial_variant.source_attempt_snapshot,
+            source_attempt,
+        )
         self.assertEqual(remedial_variant.max_score_snapshot, self.replacement.difficulty)
         self.assertEqual(remedial_event.status, 'planned')
         self.assertEqual(remedial_event.description, f'Работа над ошибками по: {self.source_work.name}')
@@ -1319,6 +1327,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertTrue(variant_task.is_assessable)
 
     def test_remedial_transaction_rolls_back_work_when_participation_fails(self):
+        capture_attempt_snapshot(self.mark)
         student_repo = DjangoStudentRepository()
         task_repo = DjangoTaskRepository()
         work_repo = DjangoWorkRepository()
@@ -1506,7 +1515,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             variant=second_source_variant,
             status='graded',
         )
-        Mark.objects.create(
+        second_mark = Mark.objects.create(
             participation=second_participation,
             score=4,
             points=3,
@@ -1518,6 +1527,10 @@ class DjangoRemedialRepositoryTests(TestCase):
                 },
             },
         )
+        source_attempt = capture_attempt_snapshot(second_mark)
+        second_mark.score = 2
+        second_mark.points = 0
+        second_mark.save(update_fields=['score', 'points'])
         remedial_work = Work.objects.create(
             name='РнО по повторной попытке',
             work_type='remedial',
@@ -1529,6 +1542,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             assigned_student=self.student,
             source_work=self.source_work,
             source_participation=second_participation,
+            source_attempt_snapshot=source_attempt,
         )
 
         sheet_data = GetRemedialSheetDataUseCase(
@@ -1536,6 +1550,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         ).execute(str(remedial_variant.pk))
 
         self.assertEqual(sheet_data.mark.score, 4)
+        self.assertEqual(sheet_data.mark.points, 3)
         self.assertEqual(
             sheet_data.original_tasks[0].task.pk,
             str(self.replacement.pk),

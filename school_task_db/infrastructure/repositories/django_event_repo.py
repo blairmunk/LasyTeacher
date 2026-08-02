@@ -238,6 +238,12 @@ class DjangoEventRepository(IEventRepository):
             event_id=str(event_id),
             score=mark.score,
             participation_id=str(mark.participation_id),
+            attempt_snapshot_id=str(
+                mark.attempt_snapshots.order_by('-revision')
+                .values_list('pk', flat=True)
+                .first()
+                or ''
+            ),
         )
 
     def get_participation_marks(self, event_id: str):

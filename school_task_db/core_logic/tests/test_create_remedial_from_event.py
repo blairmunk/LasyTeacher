@@ -83,6 +83,7 @@ class FakeEventRepository:
             event_id=event_id,
             score=2,
             participation_id=f'participation-{student_id}',
+            attempt_snapshot_id=f'attempt-{student_id}',
         )
 
     def create_event(self, params):
@@ -177,6 +178,10 @@ class CreateRemedialFromEventUseCaseTests(TestCase):
         self.assertEqual(
             work_repo.created_variants[0].source_participation_id,
             'participation-student-1',
+        )
+        self.assertEqual(
+            work_repo.created_variants[0].source_attempt_snapshot_id,
+            'attempt-student-1',
         )
         self.assertEqual(event_repo.created_event.work_id, 'new-work')
         self.assertEqual(

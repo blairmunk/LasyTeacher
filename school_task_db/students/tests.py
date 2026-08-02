@@ -14,7 +14,10 @@ from core_logic.use_cases.sync_student_task_logs import (
 )
 from curriculum.models import Topic
 from events.models import Event, EventParticipation, Mark
-from infrastructure.tests.variant_task_factory import create_variant_task
+from infrastructure.tests.variant_task_factory import (
+    capture_attempt_snapshot,
+    create_variant_task,
+)
 from infrastructure.repositories.django_student_repo import (
     DjangoStudentRepository,
 )
@@ -286,6 +289,7 @@ class RemedialFromEventViewTests(TestCase):
         SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(
             str(source_mark.pk),
         )
+        self.source_attempt = capture_attempt_snapshot(source_mark)
 
     def _task(self, text, difficulty):
         return Task.objects.create(
@@ -524,6 +528,7 @@ class RemedialFromEventViewTests(TestCase):
         SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(
             str(first_remedial_mark.pk),
         )
+        first_source_attempt = capture_attempt_snapshot(first_remedial_mark)
         first_participation.status = 'graded'
         first_participation.save()
         first_remedial_event.status = 'graded'
@@ -556,6 +561,10 @@ class RemedialFromEventViewTests(TestCase):
             fetch_redirect_response=False,
         )
         self.assertEqual(second_variant.source_work, first_remedial_work)
+        self.assertEqual(
+            second_variant.source_attempt_snapshot,
+            first_source_attempt,
+        )
         self.assertEqual(second_task_ids, {self.replacement_hard.pk})
         self.assertNotIn(self.weak_original.pk, second_task_ids)
         self.assertNotIn(self.replacement_easy.pk, second_task_ids)
@@ -713,6 +722,8 @@ class RemedialFromEventViewTests(TestCase):
             variant_type='remedial',
             assigned_student=self.student,
             source_work=self.source_work,
+            source_participation=self.participation,
+            source_attempt_snapshot=self.source_attempt,
         )
         create_variant_task(
             variant=remedial_variant,

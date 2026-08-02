@@ -153,6 +153,7 @@ class MarkEntity:
     event_id: str
     score: Optional[int] = None
     participation_id: str = ''
+    attempt_snapshot_id: str = ''
 
 
 @dataclass(frozen=True)

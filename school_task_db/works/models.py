@@ -185,6 +185,14 @@ class Variant(BaseModel):
         related_name='derived_remedial_variants',
         verbose_name='Исходная попытка ученика',
     )
+    source_attempt_snapshot = models.ForeignKey(
+        'events.AttemptSnapshot',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='derived_remedial_variants',
+        verbose_name='Снимок исходной проверенной попытки',
+    )
 
     class Meta:
         verbose_name = 'Вариант'

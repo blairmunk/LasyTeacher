@@ -21,7 +21,10 @@ from curriculum.models import Topic
 from document_engine.models import PrintSettings
 from events.models import Event, EventParticipation, Mark
 from infrastructure.container import Container
-from infrastructure.tests.variant_task_factory import create_variant_task
+from infrastructure.tests.variant_task_factory import (
+    capture_attempt_snapshot,
+    create_variant_task,
+)
 from infrastructure.services.rendered_document_file_store import (
     RenderedDocumentFileStore,
 )
@@ -164,7 +167,7 @@ class DocumentContainerIntegrationTests(TestCase):
             variant=source_variant,
             status='graded',
         )
-        Mark.objects.create(
+        mark = Mark.objects.create(
             participation=participation,
             score=3,
             points=1,
@@ -176,6 +179,7 @@ class DocumentContainerIntegrationTests(TestCase):
                 },
             },
         )
+        source_attempt = capture_attempt_snapshot(mark)
         remedial_variant = Variant.objects.create(
             work=None,
             number=1,
@@ -185,6 +189,8 @@ class DocumentContainerIntegrationTests(TestCase):
             variant_type='remedial',
             assigned_student=student,
             source_work=source_work,
+            source_participation=participation,
+            source_attempt_snapshot=source_attempt,
         )
         create_variant_task(
             variant=remedial_variant,

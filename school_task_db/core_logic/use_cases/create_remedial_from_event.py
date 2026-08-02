@@ -103,7 +103,7 @@ class CreateRemedialFromEventUseCase:
             )
         for student_id in request.selected_student_ids:
             mark = self.event_repo.get_student_mark(request.event_id, student_id)
-            if mark is None:
+            if mark is None or not mark.attempt_snapshot_id:
                 students_without_review += 1
                 continue
             marks_by_student_id[student_id] = mark
@@ -179,6 +179,12 @@ class CreateRemedialFromEventUseCase:
                                 ].participation_id
                                 or None
                             ),
+                            source_attempt_snapshot_id=(
+                                marks_by_student_id[
+                                    selection.student_id
+                                ].attempt_snapshot_id
+                                or None
+                            ),
                         )
                         for selection, plan in zip(
                             selections,
@@ -224,8 +230,8 @@ class CreateRemedialFromEventUseCase:
             )
         if students_without_review:
             message += (
-                f' Для {students_without_review} учеников проверка '
-                'ещё не завершена.'
+                f' Для {students_without_review} учеников проверка ещё не '
+                'завершена или не зафиксирована.'
             )
         if students_with_shortage and not students_without_tasks:
             message += (

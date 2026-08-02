@@ -7,6 +7,7 @@ from core_logic.entities.event_performance_report import (
     EventPerformanceReportSource,
     EventReportTaskSummary,
     EventReportSpecificationItem,
+    EventReportTeacherNote,
     EventReportTopicSummary,
 )
 
@@ -61,6 +62,7 @@ class EventPerformanceReportService:
                 for score in (5, 4, 3, 2, 1)
             ),
             specification_items=self._specification_items(source),
+            teacher_notes=self._teacher_notes(source),
             task_summaries=task_summaries,
             weak_topics=weak_topics,
             common_errors=common_errors,
@@ -146,6 +148,12 @@ class EventPerformanceReportService:
                         for fact in facts
                         if fact.content_element
                     )),
+                    content_element_descriptions=tuple(dict.fromkeys(
+                        description
+                        for fact in facts
+                        for description in fact.content_element_descriptions
+                        if description
+                    )),
                     requirement_elements=tuple(dict.fromkeys(
                         value
                         for fact in facts
@@ -158,6 +166,28 @@ class EventPerformanceReportService:
                 )
             )
         return tuple(sorted(items, key=lambda item: item.order))
+
+    @staticmethod
+    def _teacher_notes(source):
+        notes = (
+            EventReportTeacherNote(
+                student_name=participant.student_name,
+                score=participant.score,
+                comment=participant.teacher_comment.strip(),
+                needs_attention=participant.needs_attention,
+            )
+            for participant in source.participants
+            if participant.teacher_comment.strip()
+        )
+        return tuple(sorted(
+            notes,
+            key=lambda note: (
+                not note.needs_attention,
+                note.score is None,
+                note.score if note.score is not None else 6,
+                note.student_name,
+            ),
+        ))
 
     def _weak_topics(self, source):
         grouped = defaultdict(list)

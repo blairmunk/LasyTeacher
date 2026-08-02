@@ -19,6 +19,7 @@ from core_logic.value_objects.document_recipes import (
     EVENT_REPORT_SUMMARY_SECTION,
     EVENT_REPORT_SPECIFICATION_SECTION,
     EVENT_REPORT_TASK_ANALYSIS_SECTION,
+    EVENT_REPORT_TEACHER_NOTES_SECTION,
     HEADER_SECTION,
     PAGE_BREAK_SECTION,
     STUDENT_DIGEST_DETAILS_SECTION,
@@ -45,6 +46,20 @@ class ReportDocumentRecipeTests(TestCase):
                 EVENT_REPORT_TASK_ANALYSIS_SECTION,
                 EVENT_REPORT_CONCLUSIONS_SECTION,
             ),
+        )
+
+    def test_builds_event_report_with_explicit_optional_materials(self):
+        recipe = build_event_performance_report_document_recipe(
+            include_content_element_text=False,
+            include_teacher_notes=True,
+        )
+
+        self.assertFalse(
+            recipe.sections[1].options['include_content_element_text'],
+        )
+        self.assertEqual(
+            recipe.section_types[-1],
+            EVENT_REPORT_TEACHER_NOTES_SECTION,
         )
 
     def test_builds_digest_recipe_from_content_options(self):

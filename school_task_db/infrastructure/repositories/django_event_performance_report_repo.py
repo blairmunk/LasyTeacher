@@ -14,6 +14,7 @@ from core_logic.interfaces.event_performance_report_repo import (
     IEventPerformanceReportRepository,
 )
 from core_logic.value_objects.task_scores import resolve_task_score_record
+from codifier.models import ContentEntry
 from events.models import Event, EventParticipation, Mark
 from reports.models import EventReportNarrativeModel
 from works.models import VariantTask
@@ -56,6 +57,8 @@ class DjangoEventPerformanceReportRepository(
                     max_points=self._number(mark.max_points) if mark else None,
                     mistakes_analysis=mark.mistakes_analysis if mark else '',
                     recommendations=mark.recommendations if mark else '',
+                    teacher_comment=mark.teacher_comment if mark else '',
+                    needs_attention=mark.needs_attention if mark else False,
                 )
             )
             if mark is None or participation.variant_id is None:
@@ -145,6 +148,10 @@ class DjangoEventPerformanceReportRepository(
 
     @staticmethod
     def _specification_facts(variant_tasks):
+        content_entries = (
+            DjangoEventPerformanceReportRepository
+            ._content_entries_by_code(variant_tasks)
+        )
         facts = []
         seen = set()
         for tasks in variant_tasks.values():
@@ -156,6 +163,13 @@ class DjangoEventPerformanceReportRepository(
                     f'{item.codifier.short_name}: {item.code}'
                     for item in task.codifier_requirements.all()
                 )
+                content_element_descriptions = (
+                    DjangoEventPerformanceReportRepository
+                    ._content_element_descriptions(
+                        task,
+                        content_entries.get(task.content_element.strip(), ()),
+                    )
+                )
                 key = (
                     variant_task.order,
                     task.topic.name,
@@ -163,6 +177,7 @@ class DjangoEventPerformanceReportRepository(
                     task.content_element.strip(),
                     task.requirement_element.strip(),
                     codifier_requirements,
+                    content_element_descriptions,
                 )
                 if key in seen:
                     continue
@@ -175,9 +190,63 @@ class DjangoEventPerformanceReportRepository(
                         content_element=key[3],
                         requirement_element=key[4],
                         codifier_requirements=key[5],
+                        content_element_descriptions=key[6],
                     )
                 )
         return tuple(sorted(facts, key=lambda item: item.order))
+
+    @staticmethod
+    def _content_entries_by_code(variant_tasks):
+        codes = {
+            variant_task.task.content_element.strip()
+            for tasks in variant_tasks.values()
+            for variant_task in tasks
+            if variant_task.is_assessable
+            and variant_task.task.content_element.strip()
+        }
+        result = {code: [] for code in codes}
+        if not codes:
+            return result
+        entries = ContentEntry.objects.filter(code__in=codes).select_related(
+            'codifier',
+            'topic',
+            'subtopic',
+        )
+        for entry in entries:
+            result[entry.code].append(entry)
+        return result
+
+    @staticmethod
+    def _content_element_descriptions(task, candidates):
+        if not candidates:
+            return ()
+        requirement_codifier_ids = {
+            requirement.codifier_id
+            for requirement in task.codifier_requirements.all()
+        }
+        selected = [
+            entry
+            for entry in candidates
+            if entry.codifier_id in requirement_codifier_ids
+        ]
+        if not selected and task.subtopic_id:
+            selected = [
+                entry
+                for entry in candidates
+                if entry.subtopic_id == task.subtopic_id
+            ]
+        if not selected:
+            selected = [
+                entry
+                for entry in candidates
+                if entry.topic_id == task.topic_id
+            ]
+        if not selected and len(candidates) == 1:
+            selected = list(candidates)
+        return tuple(dict.fromkeys(
+            f'{entry.codifier.short_name}: {entry.name}'
+            for entry in selected
+        ))
 
     @staticmethod
     def _narrative(model):

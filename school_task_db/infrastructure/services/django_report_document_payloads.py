@@ -21,7 +21,10 @@ class EventReportSectionPayloadBuilder:
         self.data_provider = data_provider
 
     def build_payload(self, request):
-        return {'report': self.data_provider.get_report(request)}
+        return {
+            'report': self.data_provider.get_report(request),
+            'options': dict(request.section.options),
+        }
 
 
 class StudentDigestDocumentDataProvider:

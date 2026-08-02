@@ -9,6 +9,7 @@ from core_logic.value_objects.document_recipes import (
     EVENT_REPORT_SUMMARY_SECTION,
     EVENT_REPORT_SPECIFICATION_SECTION,
     EVENT_REPORT_TASK_ANALYSIS_SECTION,
+    EVENT_REPORT_TEACHER_NOTES_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
     ORIGINAL_MISTAKES_SECTION,
@@ -103,6 +104,9 @@ EVENT_REPORT_HTML_SECTION_TEMPLATES = {
     ),
     EVENT_REPORT_CONCLUSIONS_SECTION: (
         'documents/html/reports/event_conclusions.html'
+    ),
+    EVENT_REPORT_TEACHER_NOTES_SECTION: (
+        'documents/html/reports/event_teacher_notes.html'
     ),
 }
 

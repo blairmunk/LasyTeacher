@@ -11,6 +11,7 @@
                 <td>{{ item.topics|join:", " }}{% if item.subtopics %}<div class="small text-muted">{{ item.subtopics|join:", " }}</div>{% endif %}</td>
                 <td class="small">
                     {% if item.content_elements %}<div><strong>ЭС:</strong> {{ item.content_elements|join:", " }}</div>{% endif %}
+                    {% for description in item.content_element_descriptions %}<div class="text-muted mt-1">{{ description }}</div>{% endfor %}
                     {% if item.requirement_elements %}<div><strong>Требования:</strong> {{ item.requirement_elements|join:", " }}</div>{% endif %}
                     {% if not item.content_elements and not item.requirement_elements %}<span class="text-muted">—</span>{% endif %}
                 </td>

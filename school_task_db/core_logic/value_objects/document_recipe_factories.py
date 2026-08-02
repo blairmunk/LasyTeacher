@@ -8,6 +8,7 @@ from core_logic.value_objects.document_recipes import (
     EVENT_REPORT_SUMMARY_SECTION,
     EVENT_REPORT_SPECIFICATION_SECTION,
     EVENT_REPORT_TASK_ANALYSIS_SECTION,
+    EVENT_REPORT_TEACHER_NOTES_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
     ORIGINAL_MISTAKES_SECTION,
@@ -80,22 +81,37 @@ def build_remedial_sheet_document_recipe(
     )
 
 
-def build_event_performance_report_document_recipe() -> DocumentRecipe:
+def build_event_performance_report_document_recipe(
+    include_content_element_text: bool = True,
+    include_teacher_notes: bool = False,
+) -> DocumentRecipe:
+    sections = [
+        DocumentSectionSpec(section_type=HEADER_SECTION),
+        DocumentSectionSpec(
+            section_type=EVENT_REPORT_SPECIFICATION_SECTION,
+            options={
+                'include_content_element_text': (
+                    include_content_element_text
+                ),
+            },
+        ),
+        DocumentSectionSpec(section_type=EVENT_REPORT_SUMMARY_SECTION),
+        DocumentSectionSpec(
+            section_type=EVENT_REPORT_TASK_ANALYSIS_SECTION,
+        ),
+        DocumentSectionSpec(
+            section_type=EVENT_REPORT_CONCLUSIONS_SECTION,
+        ),
+    ]
+    if include_teacher_notes:
+        sections.append(
+            DocumentSectionSpec(
+                section_type=EVENT_REPORT_TEACHER_NOTES_SECTION,
+            )
+        )
     return DocumentRecipe(
         document_type=EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
-        sections=(
-            DocumentSectionSpec(section_type=HEADER_SECTION),
-            DocumentSectionSpec(
-                section_type=EVENT_REPORT_SPECIFICATION_SECTION,
-            ),
-            DocumentSectionSpec(section_type=EVENT_REPORT_SUMMARY_SECTION),
-            DocumentSectionSpec(
-                section_type=EVENT_REPORT_TASK_ANALYSIS_SECTION,
-            ),
-            DocumentSectionSpec(
-                section_type=EVENT_REPORT_CONCLUSIONS_SECTION,
-            ),
-        ),
+        sections=sections,
     )
 
 

@@ -59,6 +59,8 @@ class EventPerformanceReportTests(TestCase):
                     points=2,
                     max_points=5,
                     mistakes_analysis='Не записана формула',
+                    teacher_comment='Нужна индивидуальная консультация',
+                    needs_attention=True,
                 ),
                 EventReportParticipantFact(
                     student_id='s2',
@@ -84,6 +86,9 @@ class EventPerformanceReportTests(TestCase):
                     topic_name='Динамика',
                     subtopic_name='Второй закон Ньютона',
                     content_element='1.2',
+                    content_element_descriptions=(
+                        'ОГЭ 2026: Второй закон Ньютона',
+                    ),
                     codifier_requirements=('ОГЭ 2026: 2.1',),
                 ),
             ),
@@ -119,6 +124,12 @@ class EventPerformanceReportTests(TestCase):
             report.specification_items[0].requirement_elements,
             ('ОГЭ 2026: 2.1',),
         )
+        self.assertEqual(
+            report.specification_items[0].content_element_descriptions,
+            ('ОГЭ 2026: Второй закон Ньютона',),
+        )
+        self.assertEqual(report.teacher_notes[0].student_name, 'Иванов Иван')
+        self.assertTrue(report.teacher_notes[0].needs_attention)
         self.assertEqual(
             report.task_summaries[0].failed_students,
             ('Иванов Иван',),

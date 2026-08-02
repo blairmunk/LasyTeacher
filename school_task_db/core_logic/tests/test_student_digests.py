@@ -49,6 +49,7 @@ class StudentDigestTests(TestCase):
                             points=3,
                             max_points=8,
                             recommendations='Повторить формулы',
+                            teacher_comment='Проверить оформление решения',
                             failed_topics=('Динамика',),
                         ),
                         StudentDigestEntryFact(
@@ -77,6 +78,22 @@ class StudentDigestTests(TestCase):
         self.assertEqual(len(digest.retake_entries), 2)
         self.assertIn('Повторить формулы', digest.focus_items[0])
         self.assertEqual(digest.subjects[0].title, 'Физика')
+        self.assertEqual(digest.subjects[0].entries[0].teacher_comment, '')
+
+    def test_includes_teacher_comments_only_when_requested(self):
+        digest = StudentDigestService().build(
+            self.source,
+            StudentDigestOptions(include_teacher_comments=True),
+        )[0]
+
+        self.assertEqual(
+            digest.subjects[0].entries[0].teacher_comment,
+            'Проверить оформление решения',
+        )
+        self.assertNotIn(
+            'Проверить оформление решения',
+            digest.focus_items,
+        )
 
     def test_can_hide_absences_and_raise_retake_threshold(self):
         digest = StudentDigestService().build(

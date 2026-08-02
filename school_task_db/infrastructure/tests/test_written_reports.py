@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from core.models import AcademicYear
-from codifier.models import CodifierSpec, Requirement
+from codifier.models import CodifierSpec, ContentEntry, Requirement
 from core_logic.entities.event_performance_report import (
     EventReportNarrative,
     SaveEventReportNarrativeParams,
@@ -81,6 +81,13 @@ class WrittenReportRepositoryTests(TestCase):
             name='Применять физические законы',
         )
         self.requirement.tasks.add(self.task)
+        self.content_entry = ContentEntry.objects.create(
+            codifier=self.codifier,
+            code='1.2',
+            name='Применение второго закона Ньютона',
+            topic=self.topic,
+            subtopic=self.subtopic,
+        )
         self.work = Work.objects.create(
             name='Контрольная по динамике',
             work_type='test',
@@ -167,6 +174,10 @@ class WrittenReportRepositoryTests(TestCase):
             source.specification[0].codifier_requirements,
             ('ОГЭ 2026: 2.3',),
         )
+        self.assertEqual(
+            source.specification[0].content_element_descriptions,
+            ('ОГЭ 2026: Применение второго закона Ньютона',),
+        )
 
     def test_event_report_repository_saves_narrative(self):
         repo = DjangoEventPerformanceReportRepository()
@@ -220,6 +231,8 @@ class WrittenReportRepositoryTests(TestCase):
         self.assertContains(response, 'Контрольная 9А')
         self.assertContains(response, 'Динамика: Второй закон Ньютона')
         self.assertContains(response, 'Краткая спецификация работы')
+        self.assertContains(response, 'Применение второго закона Ньютона')
+        self.assertContains(response, 'Нужна консультация')
         self.assertNotContains(response, 'Найти силу')
 
         post_response = self.client.post(
@@ -264,6 +277,21 @@ class WrittenReportRepositoryTests(TestCase):
         self.assertContains(response, 'Иванов Иван')
         self.assertContains(response, 'Работы к сдаче или пересдаче')
         self.assertContains(response, 'Повторить второй закон Ньютона')
+        self.assertNotContains(response, 'Нужна консультация')
+
+        comments_response = self.client.get(
+            reverse('reports:student-digests'),
+            {
+                'apply': '1',
+                'group': str(self.group.pk),
+                'start_date': '2026-10-13',
+                'end_date': '2026-10-19',
+                'include_details': 'on',
+                'include_teacher_comments': 'on',
+            },
+        )
+        self.assertContains(comments_response, 'Нужна консультация')
+        self.assertContains(comments_response, 'Комментарий учителя')
 
     def test_event_report_document_endpoint_renders_sectioned_html(self):
         response = self.client.post(
@@ -287,8 +315,45 @@ class WrittenReportRepositoryTests(TestCase):
         self.assertIn('№ 1', html)
         self.assertIn('1.2', html)
         self.assertIn('ОГЭ 2026: 2.3', html)
+        self.assertIn('Применение второго закона Ньютона', html)
         self.assertIn('Динамика: Второй закон Ньютона', html)
         self.assertNotIn('Найти силу', html)
+        self.assertNotIn('Нужна консультация', html)
+
+    def test_event_report_document_controls_optional_details(self):
+        without_details = self.client.post(
+            reverse(
+                'reports:event-performance-document',
+                args=[self.event.pk],
+            ),
+            {
+                'renderer_type': 'html',
+                'report_options_submitted': '1',
+            },
+        )
+        with_details = self.client.post(
+            reverse(
+                'reports:event-performance-document',
+                args=[self.event.pk],
+            ),
+            {
+                'renderer_type': 'html',
+                'report_options_submitted': '1',
+                'include_content_element_text': 'on',
+                'include_teacher_notes': 'on',
+            },
+        )
+
+        compact_html = without_details.content.decode('utf-8')
+        detailed_html = with_details.content.decode('utf-8')
+        self.assertNotIn('Применение второго закона Ньютона', compact_html)
+        self.assertNotIn('Нужна консультация', compact_html)
+        self.assertIn('Применение второго закона Ньютона', detailed_html)
+        self.assertIn('Нужна консультация', detailed_html)
+        self.assertIn(
+            'document-section-event_report_teacher_notes',
+            detailed_html,
+        )
 
     def test_event_report_document_applies_explicit_presentation_profile(self):
         profile = PrintSettings.objects.create(

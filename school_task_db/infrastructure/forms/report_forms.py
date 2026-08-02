@@ -108,6 +108,7 @@ class ReportFormAdapter:
         )
 
     def event_report_document_request(self, event_id, data):
+        options_submitted = data.get('report_options_submitted') == '1'
         return RenderEventPerformanceReportDocumentRequest(
             event_id=str(event_id),
             render_target=build_render_target_from_data(data),
@@ -115,6 +116,16 @@ class ReportFormAdapter:
                 'presentation_profile_id',
                 '',
             ).strip(),
+            include_content_element_text=(
+                'include_content_element_text' in data
+                if options_submitted
+                else True
+            ),
+            include_teacher_notes=(
+                'include_teacher_notes' in data
+                if options_submitted
+                else False
+            ),
         )
 
     def student_digest_document_request(self, data, year, today):

@@ -16,6 +16,7 @@ from core_logic.value_objects.document_recipes import (
     EVENT_REPORT_SUMMARY_SECTION,
     EVENT_REPORT_SPECIFICATION_SECTION,
     EVENT_REPORT_TASK_ANALYSIS_SECTION,
+    EVENT_REPORT_TEACHER_NOTES_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
     HOMEWORK_DOCUMENT_TYPE,
@@ -153,6 +154,16 @@ DOCUMENT_SECTION_CATALOG = (
         supported_document_types=(EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,),
         renderable_document_types=(EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,),
         description='Причины ошибок, рекомендации и мероприятия.',
+    ),
+    DocumentSectionCatalogItem(
+        section_type=EVENT_REPORT_TEACHER_NOTES_SECTION,
+        title='Комментарии проверки',
+        supported_document_types=(EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,),
+        renderable_document_types=(EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,),
+        description=(
+            'Необязательное приложение с общими комментариями учителя '
+            'к отдельным работам.'
+        ),
     ),
     DocumentSectionCatalogItem(
         section_type=STUDENT_DIGEST_SUMMARY_SECTION,

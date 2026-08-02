@@ -1,0 +1,30 @@
+{% if report.teacher_notes %}
+<details class="no-print border rounded p-3 mt-4">
+    <summary class="fw-semibold">
+        <i class="fas fa-comment-alt"></i>
+        Комментарии, оставленные при проверке
+        <span class="badge bg-secondary ms-1">{{ report.teacher_notes|length }}</span>
+    </summary>
+    <p class="small text-muted mt-2 mb-3">
+        Это рабочий материал для выводов и рекомендаций. В печатный отчёт
+        комментарии попадут только при явном включении соответствующего приложения.
+    </p>
+    <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+            <thead><tr><th>Обучающийся</th><th style="width:80px">Оценка</th><th>Комментарий</th></tr></thead>
+            <tbody>
+            {% for note in report.teacher_notes %}
+            <tr>
+                <td>
+                    {{ note.student_name }}
+                    {% if note.needs_attention %}<span class="badge bg-warning text-dark ms-1">требует внимания</span>{% endif %}
+                </td>
+                <td>{{ note.score|default:"—" }}</td>
+                <td>{{ note.comment|linebreaksbr }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</details>
+{% endif %}

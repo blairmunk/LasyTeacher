@@ -33,6 +33,8 @@ class EventReportParticipantFact:
     max_points: float | None = None
     mistakes_analysis: str = ''
     recommendations: str = ''
+    teacher_comment: str = ''
+    needs_attention: bool = False
 
 
 @dataclass(frozen=True)
@@ -56,6 +58,9 @@ class EventReportSpecificationFact:
     content_element: str = ''
     requirement_element: str = ''
     codifier_requirements: Tuple[str, ...] = field(default_factory=tuple)
+    content_element_descriptions: Tuple[str, ...] = field(
+        default_factory=tuple,
+    )
 
 
 @dataclass(frozen=True)
@@ -97,7 +102,16 @@ class EventReportSpecificationItem:
     topics: Tuple[str, ...]
     subtopics: Tuple[str, ...]
     content_elements: Tuple[str, ...]
+    content_element_descriptions: Tuple[str, ...]
     requirement_elements: Tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class EventReportTeacherNote:
+    student_name: str
+    comment: str
+    score: int | None = None
+    needs_attention: bool = False
 
 
 @dataclass(frozen=True)
@@ -123,6 +137,7 @@ class EventPerformanceReportData:
     quality_percentage: float
     grade_distribution: Tuple[tuple[int, int], ...]
     specification_items: Tuple[EventReportSpecificationItem, ...]
+    teacher_notes: Tuple[EventReportTeacherNote, ...]
     task_summaries: Tuple[EventReportTaskSummary, ...]
     weak_topics: Tuple[EventReportTopicSummary, ...]
     common_errors: Tuple[str, ...]

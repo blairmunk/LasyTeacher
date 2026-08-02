@@ -13,6 +13,7 @@ from core_logic.value_objects.document_recipes import (
     EVENT_REPORT_SUMMARY_SECTION,
     EVENT_REPORT_SPECIFICATION_SECTION,
     EVENT_REPORT_TASK_ANALYSIS_SECTION,
+    EVENT_REPORT_TEACHER_NOTES_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
     ORIGINAL_MISTAKES_SECTION,
@@ -185,6 +186,7 @@ def build_report_section_payload_builder_registry(
         EVENT_REPORT_SUMMARY_SECTION,
         EVENT_REPORT_TASK_ANALYSIS_SECTION,
         EVENT_REPORT_CONCLUSIONS_SECTION,
+        EVENT_REPORT_TEACHER_NOTES_SECTION,
     ):
         registry.register(
             section_type,

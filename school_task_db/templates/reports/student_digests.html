@@ -95,7 +95,7 @@
                 </div>
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="include_teacher_comments" id="include-comments"{% if page.options.include_teacher_comments %} checked{% endif %}>
-                    <label class="form-check-label" for="include-comments">Комментарии учителя</label>
+                    <label class="form-check-label" for="include-comments">Комментарии учителя в списке оценок</label>
                 </div>
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="include_absences" id="include-absences"{% if page.options.include_absences %} checked{% endif %}>
@@ -109,6 +109,10 @@
                         {% endfor %}
                     </select>
                 </div>
+            </div>
+            <div class="small text-muted mt-2">
+                Комментарии выключены по умолчанию: включайте их только для той
+                распечатки, где персональные пояснения действительно нужны.
             </div>
         </div>
     </form>

@@ -1,0 +1,10 @@
+{% with report=payload.report %}{% if report.teacher_notes %}
+<section class="document-section document-section-{{ section.section_type }}">
+    <h2 class="report-section-title">Комментарии учителя к отдельным работам</h2>
+    <p class="muted">Приложение сформировано из общих комментариев, сохранённых при проверке.</p>
+    <table>
+        <thead><tr><th>Обучающийся</th><th class="text-center">Оценка</th><th>Комментарий</th></tr></thead>
+        <tbody>{% for note in report.teacher_notes %}<tr><td>{{ note.student_name }}{% if note.needs_attention %}<div class="danger">Требует внимания</div>{% endif %}</td><td class="text-center">{{ note.score|default:"—" }}</td><td>{{ note.comment|linebreaksbr }}</td></tr>{% endfor %}</tbody>
+    </table>
+</section>
+{% endif %}{% endwith %}

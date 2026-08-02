@@ -16,10 +16,24 @@
     <div class="d-flex flex-wrap gap-2">
         <form method="post" action="{% url 'reports:event-performance-document' report.event.pk %}" class="d-flex flex-wrap gap-2 align-items-center">
             {% csrf_token %}
+            <input type="hidden" name="report_options_submitted" value="1">
             <select class="form-select form-select-sm" name="presentation_profile_id" aria-label="Профиль оформления">
                 <option value="">Встроенное оформление</option>
                 {% for profile in presentation_profiles %}<option value="{{ profile.presentation_profile_id }}">{{ profile.name }}</option>{% endfor %}
             </select>
+            <details class="border rounded px-2 py-1 small">
+                <summary class="fw-semibold">Состав PDF / HTML</summary>
+                <div class="pt-2 pb-1 d-grid gap-1">
+                    <label class="form-check mb-0">
+                        <input class="form-check-input" type="checkbox" name="include_content_element_text" checked>
+                        <span class="form-check-label">Текст элементов содержания</span>
+                    </label>
+                    <label class="form-check mb-0">
+                        <input class="form-check-input" type="checkbox" name="include_teacher_notes">
+                        <span class="form-check-label">Приложить комментарии проверки</span>
+                    </label>
+                </div>
+            </details>
             <button type="submit" name="renderer_type" value="pdf" class="btn btn-danger" title="Сформировать PDF"><i class="fas fa-file-pdf"></i> PDF</button>
             <button type="submit" name="renderer_type" value="html" class="btn btn-info" title="Сформировать HTML"><i class="fas fa-globe"></i> HTML</button>
         </form>
@@ -48,6 +62,8 @@
     {% include 'reports/event_report_sections/task_analysis.html' %}
     {% include 'reports/event_report_sections/conclusions.html' %}
 </article>
+
+{% include 'reports/event_report_sections/teacher_notes_source.html' %}
 
 <section class="no-print mt-5 border-top pt-4">
     <h3 class="h5 mb-3"><i class="fas fa-pen"></i> Редактируемая часть отчёта</h3>

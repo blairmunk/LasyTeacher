@@ -56,6 +56,10 @@ EVENT_REPORT_HTML_HOOKS = REPORT_COMMON_HTML_HOOKS + (
         '.document-section-event_report_conclusions',
         'Выводы и дальнейшая работа.',
     ),
+    (
+        '.document-section-event_report_teacher_notes',
+        'Необязательное приложение с комментариями проверки.',
+    ),
 )
 
 STUDENT_DIGEST_HTML_HOOKS = REPORT_COMMON_HTML_HOOKS + (
@@ -63,6 +67,7 @@ STUDENT_DIGEST_HTML_HOOKS = REPORT_COMMON_HTML_HOOKS + (
     ('.digest-header-row', 'Строка имени и периода.'),
     ('.digest-grade', 'Оценка в таблице.'),
     ('.digest-note', 'Акцентный блок рекомендаций.'),
+    ('.digest-teacher-comment', 'Необязательный комментарий учителя.'),
     ('.document-section-student_digest_summary', 'Сводка за период.'),
     ('.document-section-student_digest_retakes', 'Работы к пересдаче.'),
     ('.document-section-student_digest_details', 'Таблица оценок.'),

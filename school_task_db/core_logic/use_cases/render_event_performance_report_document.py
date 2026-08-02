@@ -33,6 +33,8 @@ class RenderEventPerformanceReportDocumentRequest:
     render_target: RenderTarget
     presentation_profile: DocumentPresentationProfile | None = None
     presentation_profile_id: str = ''
+    include_content_element_text: bool = True
+    include_teacher_notes: bool = False
 
 
 class RenderEventPerformanceReportDocumentUseCase:
@@ -63,6 +65,10 @@ class RenderEventPerformanceReportDocumentUseCase:
                     event_name=report.event.name,
                 ),
                 recipe=build_event_report_document_recipe_for_render(
+                    include_content_element_text=(
+                        request.include_content_element_text
+                    ),
+                    include_teacher_notes=request.include_teacher_notes,
                     presentation_profile=resolve_document_presentation_profile(
                         document_type=(
                             EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE

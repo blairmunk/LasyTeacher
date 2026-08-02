@@ -228,6 +228,8 @@ class WrittenReportRepositoryTests(TestCase):
 
     def test_student_digest_repository_returns_marks_and_absences(self):
         repo = DjangoStudentDigestRepository()
+        self.topic.name = 'Изменённая тема банка'
+        self.topic.save(update_fields=['name'])
 
         groups = repo.get_digest_groups(self.year)
         source = repo.get_student_digest_source(

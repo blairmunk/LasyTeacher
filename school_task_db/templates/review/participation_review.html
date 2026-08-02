@@ -177,6 +177,18 @@
                                       placeholder="Комментарий к работе...">{{ mark.teacher_comment|default:'' }}</textarea>
                         </div>
 
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold" for="mistakes_analysis">Анализ ошибок</label>
+                            <textarea name="mistakes_analysis" id="mistakes_analysis"
+                                      class="form-control form-control-sm" rows="3">{{ mark.mistakes_analysis|default:'' }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold" for="recommendations">Рекомендации по подготовке</label>
+                            <textarea name="recommendations" id="recommendations"
+                                      class="form-control form-control-sm" rows="3">{{ mark.recommendations|default:'' }}</textarea>
+                        </div>
+
                         <!-- Типовые комментарии -->
                         {% if typical_comments %}
                         <div class="mb-3">

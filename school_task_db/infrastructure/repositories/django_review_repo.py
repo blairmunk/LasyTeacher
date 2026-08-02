@@ -390,6 +390,8 @@ class DjangoReviewRepository(IReviewRepository):
             points=mark.points,
             max_points=mark.max_points,
             teacher_comment=mark.teacher_comment,
+            mistakes_analysis=mark.mistakes_analysis,
+            recommendations=mark.recommendations,
             work_scan=work_scan,
             task_scores=mark.task_scores or {},
         )

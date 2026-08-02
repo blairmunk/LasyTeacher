@@ -41,6 +41,7 @@ class TaskContentSnapshot:
     difficulty: int = 0
     topic_id: str = ''
     topic_name: str = ''
+    subject: str = ''
     subtopic_id: str = ''
     subtopic_name: str = ''
     source_id: str = ''

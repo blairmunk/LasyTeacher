@@ -117,6 +117,8 @@ class ReviewMarkRef:
     points: Optional[int] = None
     max_points: Optional[int] = None
     teacher_comment: str = ''
+    mistakes_analysis: str = ''
+    recommendations: str = ''
     work_scan: Optional[ReviewWorkScanRef] = None
     task_scores: Dict[str, dict] = field(default_factory=dict)
 

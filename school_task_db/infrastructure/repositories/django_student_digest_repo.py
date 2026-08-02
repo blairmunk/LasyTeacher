@@ -12,6 +12,9 @@ from core_logic.entities.student_digest import (
 from core_logic.interfaces.student_digest_repo import IStudentDigestRepository
 from core_logic.value_objects.task_scores import resolve_task_score_record
 from events.models import EventParticipation
+from infrastructure.services.task_content_snapshots import (
+    task_content_snapshot_from_mapping,
+)
 from students.models import StudentGroup
 from works.models import VariantTask
 
@@ -80,10 +83,13 @@ class DjangoStudentDigestRepository(IStudentDigestRepository):
             for variant_task in tasks:
                 if not variant_task.is_assessable:
                     continue
+                task_snapshot = task_content_snapshot_from_mapping(
+                    variant_task.task_snapshot,
+                )
                 record = resolve_task_score_record(
                     mark.task_scores,
                     variant_task_id=str(variant_task.pk),
-                    task_id=str(variant_task.task_id),
+                    task_id=task_snapshot.task_id,
                 )
                 if record is None:
                     continue
@@ -91,9 +97,9 @@ class DjangoStudentDigestRepository(IStudentDigestRepository):
                 max_points = self._number(record.max_points)
                 if points is None or not max_points or points >= max_points:
                     continue
-                topic_label = variant_task.task.topic.name
-                if variant_task.task.subtopic_id:
-                    topic_label += f': {variant_task.task.subtopic.name}'
+                topic_label = task_snapshot.topic_name
+                if task_snapshot.subtopic_name:
+                    topic_label += f': {task_snapshot.subtopic_name}'
                 failed_topics.append(topic_label)
                 if record.comment:
                     task_comments.append(record.comment.strip())
@@ -101,7 +107,9 @@ class DjangoStudentDigestRepository(IStudentDigestRepository):
         event = participation.event
         subject = event.course.subject if event.course_id else ''
         if not subject and tasks:
-            subject = tasks[0].task.topic.subject
+            subject = task_content_snapshot_from_mapping(
+                tasks[0].task_snapshot,
+            ).subject
         return StudentDigestEntryFact(
             event_id=str(event.pk),
             event_name=event.name,
@@ -128,7 +136,7 @@ class DjangoStudentDigestRepository(IStudentDigestRepository):
         result = {variant_id: [] for variant_id in variant_ids}
         for variant_task in VariantTask.objects.filter(
             variant_id__in=variant_ids,
-        ).select_related('task', 'task__topic', 'task__subtopic'):
+        ):
             result[variant_task.variant_id].append(variant_task)
         return result
 

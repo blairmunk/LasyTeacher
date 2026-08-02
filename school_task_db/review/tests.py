@@ -80,6 +80,12 @@ class ParticipationReviewViewTests(TestCase):
         )
 
     def test_get_uses_participation_review_context_from_clean_use_case(self):
+        Mark.objects.create(
+            participation=self.participation,
+            max_points=2,
+            mistakes_analysis='Ошибки в переводе единиц',
+            recommendations='Повторить перевод единиц',
+        )
         ReviewComment.objects.create(
             text='Проверь оформление',
             category='suggestion',
@@ -94,6 +100,16 @@ class ParticipationReviewViewTests(TestCase):
         self.assertEqual(response.context['participation'].pk, str(self.participation.pk))
         self.assertEqual(response.context['participation'].student.last_name, 'Иванов')
         self.assertEqual(response.context['mark'].max_points, 2)
+        self.assertEqual(
+            response.context['mark'].mistakes_analysis,
+            'Ошибки в переводе единиц',
+        )
+        self.assertEqual(
+            response.context['mark'].recommendations,
+            'Повторить перевод единиц',
+        )
+        self.assertContains(response, 'Ошибки в переводе единиц')
+        self.assertContains(response, 'Повторить перевод единиц')
         self.assertEqual(len(response.context['tasks_with_scores']), 1)
         self.assertEqual(response.context['tasks_with_scores'][0].task.text, 'Найти скорость')
         self.assertEqual(response.context['tasks_with_scores'][0].max_points, 2)
@@ -162,6 +178,8 @@ class ParticipationReviewViewTests(TestCase):
                 'points': '2',
                 'max_points': '2',
                 'teacher_comment': 'Хорошо',
+                'mistakes_analysis': 'Потеряны единицы измерения',
+                'recommendations': 'Повторить перевод единиц',
                 f'task_{self.variant_task.pk}': '2',
                 f'task_{self.variant_task.pk}_max': '2',
                 f'task_{self.variant_task.pk}_task_id': str(self.task.pk),
@@ -191,6 +209,11 @@ class ParticipationReviewViewTests(TestCase):
         self.assertEqual(mark.points, 2)
         self.assertEqual(mark.max_points, 2)
         self.assertEqual(mark.teacher_comment, 'Хорошо')
+        self.assertEqual(
+            mark.mistakes_analysis,
+            'Потеряны единицы измерения',
+        )
+        self.assertEqual(mark.recommendations, 'Повторить перевод единиц')
         self.assertEqual(mark.checked_by, 'Мария Иванова')
         self.assertEqual(
             mark.task_scores,

@@ -95,6 +95,7 @@ def _build_task_content_snapshot(task, content_entries):
         difficulty=task.difficulty,
         topic_id=str(task.topic_id),
         topic_name=task.topic.name,
+        subject=task.topic.subject,
         subtopic_id=str(task.subtopic_id or ''),
         subtopic_name=task.subtopic.name if task.subtopic_id else '',
         source_id=str(task.source_id or ''),

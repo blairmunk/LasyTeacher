@@ -59,6 +59,7 @@ class StudentDigestOptions:
     include_focus: bool = True
     include_retakes: bool = True
     include_teacher_comments: bool = False
+    include_task_comments: bool = False
     include_absences: bool = True
     retake_score_threshold: int = 2
 
@@ -96,6 +97,7 @@ class StudentDigestData:
     absent_count: int
     retake_entries: Tuple[StudentDigestEntry, ...]
     focus_items: Tuple[str, ...]
+    teacher_comment_entries: Tuple[StudentDigestEntry, ...]
 
 
 @dataclass(frozen=True)

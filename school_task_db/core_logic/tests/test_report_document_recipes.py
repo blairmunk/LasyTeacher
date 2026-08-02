@@ -26,6 +26,7 @@ from core_logic.value_objects.document_recipes import (
     STUDENT_DIGEST_DOCUMENT_TYPE,
     STUDENT_DIGEST_FOCUS_SECTION,
     STUDENT_DIGEST_SUMMARY_SECTION,
+    STUDENT_DIGEST_TEACHER_COMMENTS_SECTION,
 )
 
 
@@ -121,6 +122,22 @@ class ReportDocumentRecipeTests(TestCase):
         self.assertEqual(
             recipe.sections[-1].options['student_id'],
             'student-2',
+        )
+
+    def test_builds_teacher_comments_independently_from_digest_details(self):
+        recipe = build_student_digest_document_recipe(
+            StudentDigestOptions(
+                include_summary=False,
+                include_details=False,
+                include_focus=False,
+                include_retakes=False,
+                include_teacher_comments=True,
+            ),
+        )
+
+        self.assertEqual(
+            recipe.section_types,
+            (HEADER_SECTION, STUDENT_DIGEST_TEACHER_COMMENTS_SECTION),
         )
 
     def test_preserves_presentation_when_expanding_digest(self):

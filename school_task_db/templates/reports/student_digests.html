@@ -28,6 +28,7 @@
                 {% if page.options.include_focus %}<input type="hidden" name="include_focus" value="on">{% endif %}
                 {% if page.options.include_retakes %}<input type="hidden" name="include_retakes" value="on">{% endif %}
                 {% if page.options.include_teacher_comments %}<input type="hidden" name="include_teacher_comments" value="on">{% endif %}
+                {% if page.options.include_task_comments %}<input type="hidden" name="include_task_comments" value="on">{% endif %}
                 {% if page.options.include_absences %}<input type="hidden" name="include_absences" value="on">{% endif %}
                 <select class="form-select form-select-sm" name="presentation_profile_id" aria-label="Профиль оформления">
                     <option value="">Встроенное оформление</option>
@@ -95,7 +96,11 @@
                 </div>
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="include_teacher_comments" id="include-comments"{% if page.options.include_teacher_comments %} checked{% endif %}>
-                    <label class="form-check-label" for="include-comments">Комментарии учителя в списке оценок</label>
+                    <label class="form-check-label" for="include-comments">Общие комментарии учителя</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="include_task_comments" id="include-task-comments"{% if page.options.include_task_comments %} checked{% endif %}>
+                    <label class="form-check-label" for="include-task-comments">Комментарии к заданиям</label>
                 </div>
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="include_absences" id="include-absences"{% if page.options.include_absences %} checked{% endif %}>
@@ -111,8 +116,9 @@
                 </div>
             </div>
             <div class="small text-muted mt-2">
-                Комментарии выключены по умолчанию: включайте их только для той
-                распечатки, где персональные пояснения действительно нужны.
+                Оба вида комментариев выключены по умолчанию. Общие комментарии
+                печатаются отдельным блоком, комментарии к заданиям добавляются
+                в рекомендации по подготовке.
             </div>
         </div>
     </form>

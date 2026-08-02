@@ -1,0 +1,16 @@
+{% if digest.teacher_comment_entries %}
+<section class="report-section digest-teacher-comments">
+    <h2 class="report-section-title">Комментарии учителя</h2>
+    <div class="d-grid gap-2">
+        {% for entry in digest.teacher_comment_entries %}
+        <div class="digest-teacher-comment border-start border-3 ps-2">
+            <div class="small text-muted">
+                {{ entry.planned_date|date:"d.m.Y" }} ·
+                <a href="{% url 'events:detail' entry.event_id %}">{{ entry.event_name }}</a>
+            </div>
+            <div>{{ entry.teacher_comment|linebreaksbr }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}

@@ -72,6 +72,10 @@ STUDENT_DIGEST_HTML_HOOKS = REPORT_COMMON_HTML_HOOKS + (
     ('.document-section-student_digest_retakes', 'Работы к пересдаче.'),
     ('.document-section-student_digest_details', 'Таблица оценок.'),
     ('.document-section-student_digest_focus', 'Рекомендации.'),
+    (
+        '.document-section-student_digest_teacher_comments',
+        'Общие комментарии учителя к работам.',
+    ),
 )
 
 WORK_LATEX_HOOKS = (

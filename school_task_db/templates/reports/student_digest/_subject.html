@@ -30,7 +30,6 @@
                     </td>
                     <td class="small">
                         {% if entry.focus %}{{ entry.focus }}{% else %}<span class="text-muted">—</span>{% endif %}
-                        {% if entry.teacher_comment %}<div class="digest-teacher-comment mt-2 border-start border-3 ps-2"><strong>Комментарий учителя:</strong><br>{{ entry.teacher_comment|linebreaksbr }}</div>{% endif %}
                     </td>
                 </tr>
                 {% endfor %}

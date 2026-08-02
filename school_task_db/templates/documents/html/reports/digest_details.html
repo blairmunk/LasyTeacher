@@ -4,7 +4,7 @@
     <h2 class="report-section-title">{{ subject.title }}{% if subject.average_score != None %}<span style="float:right;font-size:9pt">Средняя: {{ subject.average_score }}</span>{% endif %}</h2>
     <table>
         <thead><tr><th>Дата</th><th class="text-center">Оценка</th><th>Работа</th><th>Подготовка</th></tr></thead>
-        <tbody>{% for entry in subject.entries %}<tr><td>{{ entry.planned_date|date:"d.m" }}</td><td class="text-center">{% if entry.status == 'absent' %}<strong class="danger">Н</strong>{% else %}<span class="digest-grade">{{ entry.score }}</span>{% endif %}</td><td>{{ entry.event_name }}{% if entry.work_name != entry.event_name %}<div class="muted">{{ entry.work_name }}</div>{% endif %}</td><td>{% if entry.focus %}{{ entry.focus }}{% else %}<span class="muted">—</span>{% endif %}{% if entry.teacher_comment %}<div class="digest-teacher-comment"><strong>Комментарий учителя:</strong><br>{{ entry.teacher_comment|linebreaksbr }}</div>{% endif %}</td></tr>{% endfor %}</tbody>
+        <tbody>{% for entry in subject.entries %}<tr><td>{{ entry.planned_date|date:"d.m" }}</td><td class="text-center">{% if entry.status == 'absent' %}<strong class="danger">Н</strong>{% else %}<span class="digest-grade">{{ entry.score }}</span>{% endif %}</td><td>{{ entry.event_name }}{% if entry.work_name != entry.event_name %}<div class="muted">{{ entry.work_name }}</div>{% endif %}</td><td>{% if entry.focus %}{{ entry.focus }}{% else %}<span class="muted">—</span>{% endif %}</td></tr>{% endfor %}</tbody>
     </table>
     {% endfor %}
 </section>

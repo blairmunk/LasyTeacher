@@ -20,6 +20,7 @@ from core_logic.value_objects.document_recipes import (
     STUDENT_DIGEST_FOCUS_SECTION,
     STUDENT_DIGEST_RETAKES_SECTION,
     STUDENT_DIGEST_SUMMARY_SECTION,
+    STUDENT_DIGEST_TEACHER_COMMENTS_SECTION,
     TASK_LIST_SECTION,
     TRAINING_TASKS_SECTION,
 )
@@ -123,6 +124,9 @@ STUDENT_DIGEST_HTML_SECTION_TEMPLATES = {
     ),
     STUDENT_DIGEST_FOCUS_SECTION: (
         'documents/html/reports/digest_focus.html'
+    ),
+    STUDENT_DIGEST_TEACHER_COMMENTS_SECTION: (
+        'documents/html/reports/digest_teacher_comments.html'
     ),
     PAGE_BREAK_SECTION: 'documents/html/sections/page_break.html',
 }

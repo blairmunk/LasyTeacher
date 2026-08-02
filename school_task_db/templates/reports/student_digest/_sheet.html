@@ -24,6 +24,9 @@
             {% include 'reports/student_digest/_subject.html' %}
         {% endfor %}
     {% endif %}
+    {% if page.options.include_teacher_comments %}
+        {% include 'reports/student_digest/_teacher_comments.html' %}
+    {% endif %}
     {% if page.options.include_focus and digest.focus_items %}
         {% include 'reports/student_digest/_focus.html' %}
     {% endif %}

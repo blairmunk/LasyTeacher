@@ -291,7 +291,7 @@ class WrittenReportRepositoryTests(TestCase):
             },
         )
         self.assertContains(comments_response, 'Нужна консультация')
-        self.assertContains(comments_response, 'Комментарий учителя')
+        self.assertContains(comments_response, 'Комментарии учителя')
 
     def test_event_report_document_endpoint_renders_sectioned_html(self):
         response = self.client.post(
@@ -413,3 +413,25 @@ class WrittenReportRepositoryTests(TestCase):
             1,
         )
         self.assertIn('Работы к сдаче или пересдаче', html)
+
+    def test_digest_document_prints_teacher_comments_without_details(self):
+        response = self.client.post(
+            reverse('reports:student-digests-document'),
+            {
+                'apply': '1',
+                'group': str(self.group.pk),
+                'start_date': '2026-10-13',
+                'end_date': '2026-10-19',
+                'include_teacher_comments': 'on',
+                'renderer_type': 'html',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode('utf-8')
+        self.assertIn(
+            'document-section-student_digest_teacher_comments',
+            html,
+        )
+        self.assertIn('Нужна консультация', html)
+        self.assertNotIn('document-section-student_digest_details', html)

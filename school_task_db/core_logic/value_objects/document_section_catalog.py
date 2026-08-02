@@ -30,6 +30,7 @@ from core_logic.value_objects.document_recipes import (
     STUDENT_DIGEST_FOCUS_SECTION,
     STUDENT_DIGEST_RETAKES_SECTION,
     STUDENT_DIGEST_SUMMARY_SECTION,
+    STUDENT_DIGEST_TEACHER_COMMENTS_SECTION,
     TASK_LIST_SECTION,
     TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
@@ -195,6 +196,16 @@ DOCUMENT_SECTION_CATALOG = (
         supported_document_types=(STUDENT_DIGEST_DOCUMENT_TYPE,),
         renderable_document_types=(STUDENT_DIGEST_DOCUMENT_TYPE,),
         description='Сводные рекомендации по подготовке.',
+        is_repeatable=True,
+    ),
+    DocumentSectionCatalogItem(
+        section_type=STUDENT_DIGEST_TEACHER_COMMENTS_SECTION,
+        title='Комментарии учителя',
+        supported_document_types=(STUDENT_DIGEST_DOCUMENT_TYPE,),
+        renderable_document_types=(STUDENT_DIGEST_DOCUMENT_TYPE,),
+        description=(
+            'Необязательные общие комментарии к проверенным работам.'
+        ),
         is_repeatable=True,
     ),
     DocumentSectionCatalogItem(

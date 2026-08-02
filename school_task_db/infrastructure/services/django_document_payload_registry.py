@@ -24,6 +24,7 @@ from core_logic.value_objects.document_recipes import (
     STUDENT_DIGEST_FOCUS_SECTION,
     STUDENT_DIGEST_RETAKES_SECTION,
     STUDENT_DIGEST_SUMMARY_SECTION,
+    STUDENT_DIGEST_TEACHER_COMMENTS_SECTION,
     TASK_LIST_SECTION,
     TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
@@ -204,6 +205,7 @@ def build_report_section_payload_builder_registry(
         STUDENT_DIGEST_RETAKES_SECTION,
         STUDENT_DIGEST_DETAILS_SECTION,
         STUDENT_DIGEST_FOCUS_SECTION,
+        STUDENT_DIGEST_TEACHER_COMMENTS_SECTION,
     ):
         registry.register(
             section_type,

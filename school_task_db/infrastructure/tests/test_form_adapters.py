@@ -481,6 +481,7 @@ class ReportFormAdapterTests(SimpleTestCase):
         self.assertTrue(request.options.include_summary)
         self.assertTrue(request.options.include_focus)
         self.assertTrue(request.options.include_teacher_comments)
+        self.assertFalse(request.options.include_task_comments)
         self.assertFalse(request.options.include_details)
         self.assertFalse(request.options.include_retakes)
         self.assertFalse(request.options.include_absences)
@@ -499,6 +500,7 @@ class ReportFormAdapterTests(SimpleTestCase):
         self.assertTrue(request.options.include_retakes)
         self.assertTrue(request.options.include_absences)
         self.assertFalse(request.options.include_teacher_comments)
+        self.assertFalse(request.options.include_task_comments)
 
     def test_builds_written_report_document_requests(self):
         adapter = ReportFormAdapter()

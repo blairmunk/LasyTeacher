@@ -102,6 +102,10 @@ class ReportFormAdapter:
                     'include_teacher_comments',
                     default=False,
                 ),
+                include_task_comments=enabled(
+                    'include_task_comments',
+                    default=False,
+                ),
                 include_absences=enabled('include_absences'),
                 retake_score_threshold=threshold,
             ),

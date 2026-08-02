@@ -62,6 +62,9 @@ class StudentDigestService:
             absent_count=sum(1 for entry in entries if entry.status == 'absent'),
             retake_entries=retake_entries,
             focus_items=focus_items,
+            teacher_comment_entries=tuple(
+                entry for entry in entries if entry.teacher_comment
+            ),
         )
 
     def _entry(self, fact, options):
@@ -72,7 +75,10 @@ class StudentDigestService:
             focus_parts.append(fact.mistakes_analysis.strip())
         if fact.failed_topics:
             focus_parts.append('Повторить: ' + ', '.join(fact.failed_topics))
-        focus_parts.extend(comment for comment in fact.task_comments if comment)
+        if options.include_task_comments:
+            focus_parts.extend(
+                comment for comment in fact.task_comments if comment
+            )
         focus = '; '.join(dict.fromkeys(part for part in focus_parts if part))
 
         is_absent = fact.status == 'absent'

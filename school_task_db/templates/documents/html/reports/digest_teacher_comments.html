@@ -1,0 +1,11 @@
+{% with digest=payload.digest %}{% if digest.teacher_comment_entries %}
+<section class="document-section document-section-{{ section.section_type }} digest-teacher-comments">
+    <h2 class="report-section-title">Комментарии учителя</h2>
+    {% for entry in digest.teacher_comment_entries %}
+    <div class="digest-teacher-comment">
+        <div class="muted">{{ entry.planned_date|date:"d.m.Y" }} · {{ entry.event_name }}</div>
+        <div>{{ entry.teacher_comment|linebreaksbr }}</div>
+    </div>
+    {% endfor %}
+</section>
+{% endif %}{% endwith %}

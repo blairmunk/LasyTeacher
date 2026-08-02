@@ -20,6 +20,7 @@ from core_logic.value_objects.document_recipes import (
     STUDENT_DIGEST_FOCUS_SECTION,
     STUDENT_DIGEST_RETAKES_SECTION,
     STUDENT_DIGEST_SUMMARY_SECTION,
+    STUDENT_DIGEST_TEACHER_COMMENTS_SECTION,
     TASK_LIST_SECTION,
     TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
@@ -128,6 +129,12 @@ def build_student_digest_document_recipe(options) -> DocumentRecipe:
     if options.include_details:
         sections.append(
             DocumentSectionSpec(section_type=STUDENT_DIGEST_DETAILS_SECTION),
+        )
+    if options.include_teacher_comments:
+        sections.append(
+            DocumentSectionSpec(
+                section_type=STUDENT_DIGEST_TEACHER_COMMENTS_SECTION,
+            ),
         )
     if options.include_focus:
         sections.append(

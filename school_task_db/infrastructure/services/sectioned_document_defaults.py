@@ -9,6 +9,7 @@ from core_logic.use_cases.get_remedial_sheet_data import (
 )
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from infrastructure.services.django_document_payload_registry import (
+    build_report_section_payload_builder_registry,
     build_remedial_sheet_section_payload_builder_registry,
     build_work_section_payload_builder_registry,
 )
@@ -36,12 +37,16 @@ def build_sectioned_html_document_components(
     file_store,
     get_work_source=None,
     get_remedial_sheet_data=None,
+    get_event_report=None,
+    get_student_digests=None,
     template_renderer=None,
     task_payload_formatter=None,
 ) -> SectionedDocumentComponents:
     payload_registry = build_sectioned_document_payload_builder_registry(
         get_work_source=get_work_source,
         get_remedial_sheet_data=get_remedial_sheet_data,
+        get_event_report=get_event_report,
+        get_student_digests=get_student_digests,
         task_payload_formatter=task_payload_formatter,
     )
     return SectionedDocumentComponents(
@@ -63,6 +68,8 @@ def build_sectioned_html_pdf_document_components(
     file_store,
     get_work_source=None,
     get_remedial_sheet_data=None,
+    get_event_report=None,
+    get_student_digests=None,
     template_renderer=None,
     html_to_pdf_renderer_factory=None,
     task_payload_formatter=None,
@@ -71,6 +78,8 @@ def build_sectioned_html_pdf_document_components(
         file_store=file_store,
         get_work_source=get_work_source,
         get_remedial_sheet_data=get_remedial_sheet_data,
+        get_event_report=get_event_report,
+        get_student_digests=get_student_digests,
         template_renderer=template_renderer,
         task_payload_formatter=task_payload_formatter,
     )
@@ -91,6 +100,8 @@ def build_sectioned_document_components(
     file_store,
     get_work_source=None,
     get_remedial_sheet_data=None,
+    get_event_report=None,
+    get_student_digests=None,
     template_renderer=None,
     html_to_pdf_renderer_factory=None,
     task_payload_formatter=None,
@@ -99,6 +110,8 @@ def build_sectioned_document_components(
         file_store=file_store,
         get_work_source=get_work_source,
         get_remedial_sheet_data=get_remedial_sheet_data,
+        get_event_report=get_event_report,
+        get_student_digests=get_student_digests,
         template_renderer=template_renderer,
         html_to_pdf_renderer_factory=html_to_pdf_renderer_factory,
         task_payload_formatter=(
@@ -121,6 +134,8 @@ def build_sectioned_document_components(
 def build_sectioned_document_payload_builder_registry(
     get_work_source=None,
     get_remedial_sheet_data=None,
+    get_event_report=None,
+    get_student_digests=None,
     task_payload_formatter=None,
 ):
     get_remedial_sheet_data = (
@@ -137,6 +152,13 @@ def build_sectioned_document_payload_builder_registry(
             task_payload_formatter=task_payload_formatter,
         )
     )
+    if get_event_report and get_student_digests:
+        payload_registry.extend(
+            build_report_section_payload_builder_registry(
+                get_event_report=get_event_report,
+                get_student_digests=get_student_digests,
+            )
+        )
     return payload_registry
 
 

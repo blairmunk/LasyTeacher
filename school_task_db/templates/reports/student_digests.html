@@ -15,9 +15,31 @@
             <div class="text-muted">Индивидуальные листы по классу и периоду</div>
         </div>
         {% if page.digests %}
-        <button type="button" class="btn btn-dark" onclick="window.print()">
-            <i class="fas fa-print"></i> Напечатать {{ page.digests|length }} листов
-        </button>
+        <div class="d-flex flex-wrap gap-2">
+            <form method="post" action="{% url 'reports:student-digests-document' %}" class="d-flex gap-2 align-items-center">
+                {% csrf_token %}
+                <input type="hidden" name="apply" value="1">
+                <input type="hidden" name="group" value="{{ page.selected_group.pk }}">
+                <input type="hidden" name="start_date" value="{{ page.start_date|date:'Y-m-d' }}">
+                <input type="hidden" name="end_date" value="{{ page.end_date|date:'Y-m-d' }}">
+                <input type="hidden" name="retake_score_threshold" value="{{ page.options.retake_score_threshold }}">
+                {% if page.options.include_summary %}<input type="hidden" name="include_summary" value="on">{% endif %}
+                {% if page.options.include_details %}<input type="hidden" name="include_details" value="on">{% endif %}
+                {% if page.options.include_focus %}<input type="hidden" name="include_focus" value="on">{% endif %}
+                {% if page.options.include_retakes %}<input type="hidden" name="include_retakes" value="on">{% endif %}
+                {% if page.options.include_teacher_comments %}<input type="hidden" name="include_teacher_comments" value="on">{% endif %}
+                {% if page.options.include_absences %}<input type="hidden" name="include_absences" value="on">{% endif %}
+                <select class="form-select form-select-sm" name="presentation_profile_id" aria-label="Профиль оформления">
+                    <option value="">Встроенное оформление</option>
+                    {% for profile in presentation_profiles %}<option value="{{ profile.presentation_profile_id }}">{{ profile.name }}</option>{% endfor %}
+                </select>
+                <button type="submit" name="renderer_type" value="pdf" class="btn btn-danger"><i class="fas fa-file-pdf"></i> PDF</button>
+                <button type="submit" name="renderer_type" value="html" class="btn btn-info"><i class="fas fa-globe"></i> HTML</button>
+            </form>
+            <button type="button" class="btn btn-dark" onclick="window.print()">
+                <i class="fas fa-print"></i> Печать из браузера
+            </button>
+        </div>
         {% endif %}
     </div>
 

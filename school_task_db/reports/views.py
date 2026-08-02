@@ -2,7 +2,7 @@
 
 import json
 from django.contrib import messages
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.urls import reverse
 from django.shortcuts import redirect, render
 from django.views import View
@@ -22,6 +22,17 @@ from core_logic.use_cases.get_heatmap_topic_matrix import (
     HeatmapTopicMatrixRequest,
 )
 from core_logic.use_cases.get_journal_select import JournalSelectRequest
+from core_logic.entities.document_rendering import (
+    DOCUMENT_RENDER_STATUS_EMPTY,
+    DOCUMENT_RENDER_STATUS_NOT_FOUND,
+)
+from core_logic.use_cases.get_presentation_profile_list import (
+    GetPresentationProfileListRequest,
+)
+from core_logic.value_objects.document_recipes import (
+    EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
+    STUDENT_DIGEST_DOCUMENT_TYPE,
+)
 from infrastructure.container import container
 
 
@@ -126,8 +137,14 @@ class EventPerformanceReportView(View):
         )
         if report is None:
             raise Http404('Событие не найдено.')
+        profiles = container.get_presentation_profile_list_use_case().execute(
+            GetPresentationProfileListRequest(
+                document_type=EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
+            ),
+        )
         return render(request, self.template_name, {
             'report': report,
+            'presentation_profiles': profiles.presentation_profiles,
             'active_report': 'event-performance',
         })
 
@@ -141,6 +158,27 @@ class EventPerformanceReportView(View):
         if result.status == 'not_found':
             raise Http404('Событие не найдено.')
         messages.success(request, 'Текстовые разделы отчёта сохранены.')
+        return redirect('reports:event-performance', event_pk=event_pk)
+
+
+class EventPerformanceReportDocumentView(View):
+    def post(self, request, event_pk):
+        result = (
+            container
+            .render_event_performance_report_document_use_case()
+            .execute(
+                container.report_form_adapter.event_report_document_request(
+                    event_pk,
+                    request.POST,
+                ),
+            )
+        )
+        if result.status == DOCUMENT_RENDER_STATUS_NOT_FOUND:
+            raise Http404('Событие не найдено.')
+        response = _rendered_document_response(result)
+        if response:
+            return response
+        messages.error(request, 'Не удалось сформировать документ отчёта.')
         return redirect('reports:event-performance', event_pk=event_pk)
 
 
@@ -172,11 +210,67 @@ class StudentDigestView(View):
             page = container.get_student_digests_use_case().execute(
                 fallback_request,
             )
+        profiles = container.get_presentation_profile_list_use_case().execute(
+            GetPresentationProfileListRequest(
+                document_type=STUDENT_DIGEST_DOCUMENT_TYPE,
+            ),
+        )
         return render(request, self.template_name, {
             'page': page,
+            'presentation_profiles': profiles.presentation_profiles,
             'form_error': form_error,
             'active_report': page.active_report,
         })
+
+
+class StudentDigestDocumentView(View):
+    def post(self, request):
+        document_request = (
+            container.report_form_adapter.student_digest_document_request(
+                request.POST,
+                year=getattr(request, 'current_year', None),
+                today=timezone.localdate(),
+            )
+        )
+        try:
+            result = container.render_student_digest_document_use_case().execute(
+                document_request,
+            )
+        except ValueError as error:
+            messages.error(request, str(error))
+            return redirect('reports:student-digests')
+        if result.status == DOCUMENT_RENDER_STATUS_NOT_FOUND:
+            raise Http404('Класс не найден.')
+        if result.status == DOCUMENT_RENDER_STATUS_EMPTY:
+            messages.error(request, 'За выбранный период нет данных для печати.')
+            return redirect('reports:student-digests')
+        response = _rendered_document_response(result)
+        if response:
+            return response
+        messages.error(request, 'Не удалось сформировать дайджесты.')
+        return redirect('reports:student-digests')
+
+
+def _rendered_document_response(result):
+    if not result.success or not result.files:
+        return None
+    file_info = result.files[0]
+    generated = container.get_rendered_document_file_use_case().execute(
+        container.report_form_adapter.rendered_document_file_request(
+            result.file_type,
+            file_info.filename,
+        ),
+    )
+    if not generated.success or generated.file is None:
+        return None
+    response = HttpResponse(
+        generated.file.content,
+        content_type=generated.file.content_type,
+    )
+    response['Content-Disposition'] = (
+        f'inline; filename="{generated.file.filename}"'
+    )
+    return response
 
 
 

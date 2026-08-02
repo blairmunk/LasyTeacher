@@ -18,7 +18,17 @@ urlpatterns = [
         views.EventPerformanceReportView.as_view(),
         name='event-performance',
     ),
+    path(
+        'events/<uuid:event_pk>/performance/document/',
+        views.EventPerformanceReportDocumentView.as_view(),
+        name='event-performance-document',
+    ),
     path('student-digests/', views.StudentDigestView.as_view(), name='student-digests'),
+    path(
+        'student-digests/document/',
+        views.StudentDigestDocumentView.as_view(),
+        name='student-digests-document',
+    ),
     path('journal/', views.JournalSelectView.as_view(), name='journal-select'),
     path('journal/<uuid:course_pk>/<uuid:group_pk>/', views.JournalView.as_view(), name='journal'),
     path('db-health/', views.TaskDBHealthView.as_view(), name='db-health'),

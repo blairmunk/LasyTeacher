@@ -1,0 +1,8 @@
+{% with digest=payload.digest page=payload.page %}
+<header class="document-section report-header digest-header document-section-{{ section.section_type }}">
+    <div class="digest-header-row">
+        <div><div class="report-kicker">Дайджест оценок</div><h1>{{ digest.student.full_name }}</h1><div>{{ digest.group_name }}</div></div>
+        <div class="text-center"><div>{{ page.start_date|date:"d.m.Y" }}–{{ page.end_date|date:"d.m.Y" }}</div>{% if digest.average_score != None %}<div>Средняя оценка: <strong>{{ digest.average_score }}</strong></div>{% endif %}</div>
+    </div>
+</header>
+{% endwith %}

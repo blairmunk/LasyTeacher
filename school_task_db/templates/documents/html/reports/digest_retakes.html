@@ -1,0 +1,6 @@
+{% with digest=payload.digest %}{% if digest.retake_entries %}
+<section class="document-section document-section-{{ section.section_type }}">
+    <h2 class="report-section-title danger">Работы к сдаче или пересдаче</h2>
+    <ul>{% for entry in digest.retake_entries %}<li><strong>{{ entry.planned_date|date:"d.m" }} · {{ entry.event_name }}</strong>{% if entry.score != None %} — оценка {{ entry.score }}{% else %} — пропуск{% endif %}. {{ entry.retake_reason }}</li>{% endfor %}</ul>
+</section>
+{% endif %}{% endwith %}

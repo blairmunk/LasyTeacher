@@ -1,0 +1,30 @@
+{% with report=payload.report %}
+<section class="document-section document-section-{{ section.section_type }}">
+    <h2 class="report-section-title">2. Анализ выполнения заданий</h2>
+    {% if report.task_summaries %}
+    <table>
+        <thead><tr><th>Задание и тема</th><th class="text-center">Выполнение</th><th class="text-center">Ошибки</th><th>Обучающиеся</th></tr></thead>
+        <tbody>
+        {% for item in report.task_summaries %}
+        <tr>
+            <td>{{ item.label }}</td>
+            <td class="text-center">{{ item.average_percentage }}%</td>
+            <td class="text-center{% if item.error_percentage >= 50 %} danger{% endif %}">{{ item.failed_count }}/{{ item.attempts }} ({{ item.error_percentage }}%)</td>
+            <td>{{ item.failed_students|join:", "|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}<p class="muted">Для события пока нет детализированных баллов по заданиям.</p>{% endif %}
+
+    <h3>Темы, требующие внимания</h3>
+    {% if report.weak_topics %}
+    <ul>{% for topic in report.weak_topics %}<li><strong>{{ topic.label }}</strong> — ошибки у {{ topic.failed_count }} из {{ topic.attempts }} ({{ topic.error_percentage }}%), среднее выполнение {{ topic.average_percentage }}%.</li>{% endfor %}</ul>
+    {% else %}<p>Тем с долей ошибок 50% и выше не выявлено.</p>{% endif %}
+
+    {% if report.common_errors %}
+    <h3>Зафиксированные типичные ошибки</h3>
+    <ul>{% for error in report.common_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+</section>
+{% endwith %}

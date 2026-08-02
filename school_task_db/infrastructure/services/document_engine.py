@@ -24,6 +24,8 @@ class DjangoDocumentEngine(IDocumentEngine):
     def with_sectioned_renderers(
         cls,
         get_remedial_sheet_data_use_case=None,
+        get_event_report_use_case=None,
+        get_student_digests_use_case=None,
         get_work_source=None,
         file_store=None,
         template_renderer=None,
@@ -35,10 +37,22 @@ class DjangoDocumentEngine(IDocumentEngine):
             if get_remedial_sheet_data_use_case
             else None
         )
+        get_event_report = (
+            get_event_report_use_case.execute
+            if get_event_report_use_case
+            else None
+        )
+        get_student_digests = (
+            get_student_digests_use_case.execute
+            if get_student_digests_use_case
+            else None
+        )
         components = build_sectioned_document_components(
             file_store=file_store,
             get_work_source=get_work_source,
             get_remedial_sheet_data=get_remedial_sheet_data,
+            get_event_report=get_event_report,
+            get_student_digests=get_student_digests,
             template_renderer=template_renderer,
             html_to_pdf_renderer_factory=html_to_pdf_renderer_factory,
         )

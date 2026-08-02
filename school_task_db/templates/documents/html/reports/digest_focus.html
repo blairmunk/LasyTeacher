@@ -1,0 +1,6 @@
+{% with digest=payload.digest %}{% if digest.focus_items %}
+<section class="document-section document-section-{{ section.section_type }}">
+    <h2 class="report-section-title">На что обратить внимание при подготовке</h2>
+    <div class="digest-note"><ul>{% for item in digest.focus_items %}<li>{{ item }}</li>{% endfor %}</ul></div>
+</section>
+{% endif %}{% endwith %}

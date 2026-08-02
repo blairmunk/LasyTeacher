@@ -463,6 +463,38 @@ class ReportFormAdapterTests(SimpleTestCase):
         self.assertTrue(request.options.include_absences)
         self.assertFalse(request.options.include_teacher_comments)
 
+    def test_builds_written_report_document_requests(self):
+        adapter = ReportFormAdapter()
+        data = QueryDict(
+            'apply=1&group=g1&start_date=2026-10-13&end_date=2026-10-19'
+            '&include_details=on&renderer_type=html&format=A5'
+            '&presentation_profile_id=profile-1'
+        )
+
+        event_request = adapter.event_report_document_request(
+            'event-1',
+            data,
+        )
+        digest_request = adapter.student_digest_document_request(
+            data,
+            year='year-1',
+            today=dt.date(2026, 10, 20),
+        )
+
+        self.assertEqual(event_request.event_id, 'event-1')
+        self.assertEqual(event_request.render_target.renderer_type, 'html')
+        self.assertEqual(event_request.render_target.page_format, 'A5')
+        self.assertEqual(event_request.presentation_profile_id, 'profile-1')
+        self.assertEqual(digest_request.digest_request.group_id, 'g1')
+        self.assertTrue(
+            digest_request.digest_request.options.include_details,
+        )
+        self.assertEqual(digest_request.render_target.renderer_type, 'html')
+        self.assertEqual(
+            digest_request.presentation_profile_id,
+            'profile-1',
+        )
+
     def test_builds_top_level_report_requests(self):
         adapter = ReportFormAdapter()
         now = object()

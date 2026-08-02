@@ -1,7 +1,9 @@
 from django.test import SimpleTestCase
 
 from core_logic.value_objects.document_recipes import (
+    EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
+    STUDENT_DIGEST_DOCUMENT_TYPE,
     WORK_DOCUMENT_TYPE,
 )
 from core_logic.value_objects.document_section_catalog import (
@@ -28,6 +30,22 @@ class SectionedDocumentRendererSpecsTests(SimpleTestCase):
                 REMEDIAL_SHEET_DOCUMENT_TYPE,
             ),
             _renderable_section_types(REMEDIAL_SHEET_DOCUMENT_TYPE),
+        )
+        self.assertEqual(
+            _renderer_section_types(
+                sectioned_html_renderer_specs(),
+                EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
+            ),
+            _renderable_section_types(
+                EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
+            ),
+        )
+        self.assertEqual(
+            _renderer_section_types(
+                sectioned_html_renderer_specs(),
+                STUDENT_DIGEST_DOCUMENT_TYPE,
+            ),
+            _renderable_section_types(STUDENT_DIGEST_DOCUMENT_TYPE),
         )
 
     def test_latex_specs_cover_renderable_section_catalog(self):

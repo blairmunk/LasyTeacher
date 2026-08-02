@@ -13,7 +13,16 @@
         <h2 class="mb-1"><i class="fas fa-file-alt"></i> Отчёт по результатам работы</h2>
         <div class="text-muted">Данные пересчитываются из результатов события</div>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex flex-wrap gap-2">
+        <form method="post" action="{% url 'reports:event-performance-document' report.event.pk %}" class="d-flex flex-wrap gap-2 align-items-center">
+            {% csrf_token %}
+            <select class="form-select form-select-sm" name="presentation_profile_id" aria-label="Профиль оформления">
+                <option value="">Встроенное оформление</option>
+                {% for profile in presentation_profiles %}<option value="{{ profile.presentation_profile_id }}">{{ profile.name }}</option>{% endfor %}
+            </select>
+            <button type="submit" name="renderer_type" value="pdf" class="btn btn-danger" title="Сформировать PDF"><i class="fas fa-file-pdf"></i> PDF</button>
+            <button type="submit" name="renderer_type" value="html" class="btn btn-info" title="Сформировать HTML"><i class="fas fa-globe"></i> HTML</button>
+        </form>
         <button type="button" class="btn btn-dark" onclick="window.print()" title="Печать отчёта">
             <i class="fas fa-print"></i> Печать
         </button>

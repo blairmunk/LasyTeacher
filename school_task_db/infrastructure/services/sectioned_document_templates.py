@@ -5,12 +5,19 @@ from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
     BLANK_CELLS_SECTION,
     COMMON_HEADER_SECTION,
+    EVENT_REPORT_CONCLUSIONS_SECTION,
+    EVENT_REPORT_SUMMARY_SECTION,
+    EVENT_REPORT_TASK_ANALYSIS_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
     ORIGINAL_MISTAKES_SECTION,
     PAGE_BREAK_SECTION,
     SCORE_TABLE_SECTION,
     SHORT_SOLUTIONS_SECTION,
+    STUDENT_DIGEST_DETAILS_SECTION,
+    STUDENT_DIGEST_FOCUS_SECTION,
+    STUDENT_DIGEST_RETAKES_SECTION,
+    STUDENT_DIGEST_SUMMARY_SECTION,
     TASK_LIST_SECTION,
     TRAINING_TASKS_SECTION,
 )
@@ -83,3 +90,33 @@ REMEDIAL_LATEX_SECTION_TEMPLATES = {
     BLANK_CELLS_SECTION: 'documents/latex/sections/blank_cells.tex',
 }
 REMEDIAL_LATEX_WRAPPER_TEMPLATE = 'documents/latex/base/document.tex'
+
+EVENT_REPORT_HTML_SECTION_TEMPLATES = {
+    HEADER_SECTION: 'documents/html/reports/event_header.html',
+    EVENT_REPORT_SUMMARY_SECTION: 'documents/html/reports/event_summary.html',
+    EVENT_REPORT_TASK_ANALYSIS_SECTION: (
+        'documents/html/reports/event_task_analysis.html'
+    ),
+    EVENT_REPORT_CONCLUSIONS_SECTION: (
+        'documents/html/reports/event_conclusions.html'
+    ),
+}
+
+STUDENT_DIGEST_HTML_SECTION_TEMPLATES = {
+    HEADER_SECTION: 'documents/html/reports/digest_header.html',
+    STUDENT_DIGEST_SUMMARY_SECTION: (
+        'documents/html/reports/digest_summary.html'
+    ),
+    STUDENT_DIGEST_RETAKES_SECTION: (
+        'documents/html/reports/digest_retakes.html'
+    ),
+    STUDENT_DIGEST_DETAILS_SECTION: (
+        'documents/html/reports/digest_details.html'
+    ),
+    STUDENT_DIGEST_FOCUS_SECTION: (
+        'documents/html/reports/digest_focus.html'
+    ),
+    PAGE_BREAK_SECTION: 'documents/html/sections/page_break.html',
+}
+
+REPORT_HTML_WRAPPER_TEMPLATE = 'documents/html/base/report_document.html'

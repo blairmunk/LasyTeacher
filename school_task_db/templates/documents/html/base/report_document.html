@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <title>{{ document.title }}</title>
+    <style>
+        @page { margin: 14mm; size: A4 portrait; }
+        * { box-sizing: border-box; }
+        body {
+            color: #20242a;
+            font-family: Arial, sans-serif;
+            font-size: 10.5pt;
+            line-height: 1.35;
+            margin: 0 auto;
+            max-width: 190mm;
+        }
+        h1, h2, h3 { letter-spacing: 0; }
+        h1 { font-size: 18pt; margin: 0 0 3mm; }
+        h2 { font-size: 12pt; margin: 0; }
+        h3 { font-size: 10.5pt; margin: 4mm 0 2mm; }
+        p { margin: 2mm 0; }
+        ul { margin: 2mm 0; padding-left: 6mm; }
+        .document-section { margin-top: 7mm; }
+        .report-header { margin-top: 0; text-align: center; }
+        .report-kicker {
+            color: #68707b;
+            font-size: 8.5pt;
+            text-transform: uppercase;
+        }
+        .report-section-title {
+            border-bottom: 0.6mm solid #343a40;
+            margin-bottom: 3mm;
+            padding-bottom: 1.5mm;
+        }
+        .report-metrics {
+            display: grid;
+            gap: 3mm;
+            grid-template-columns: repeat(4, 1fr);
+        }
+        .report-metric {
+            border-left: 0.8mm solid #495057;
+            min-height: 16mm;
+            padding: 2mm 3mm;
+        }
+        .report-metric strong { display: block; font-size: 15pt; }
+        .muted { color: #68707b; }
+        .danger { color: #b42318; }
+        .report-inline-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3mm 7mm;
+            margin-top: 4mm;
+        }
+        table { border-collapse: collapse; width: 100%; }
+        th, td {
+            border-bottom: 0.25mm solid #cfd5dc;
+            padding: 2mm 1.5mm;
+            text-align: left;
+            vertical-align: top;
+        }
+        th { border-bottom-color: #343a40; }
+        .text-center { text-align: center; }
+        .digest-header { text-align: left; }
+        .digest-header-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 0.25mm solid #cfd5dc;
+            padding-bottom: 4mm;
+        }
+        .digest-grade {
+            border: 0.5mm solid currentColor;
+            border-radius: 50%;
+            display: inline-block;
+            font-weight: bold;
+            height: 8mm;
+            line-height: 7mm;
+            text-align: center;
+            width: 8mm;
+        }
+        .digest-note { border-left: 0.8mm solid #d9480f; padding-left: 3mm; }
+        .document-page-break { margin: 0; }
+        tr, .report-section { break-inside: avoid; }
+        {{ custom_css|safe }}
+    </style>
+</head>
+<body>
+{{ body_content|safe }}
+</body>
+</html>

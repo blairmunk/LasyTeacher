@@ -1,0 +1,16 @@
+{% with report=payload.report %}
+<section class="document-section document-section-{{ section.section_type }}">
+    <h2 class="report-section-title">1. Общие результаты</h2>
+    <div class="report-metrics">
+        <div class="report-metric"><strong>{{ report.present_count }}/{{ report.participants_total }}</strong><span class="muted">выполняли работу</span></div>
+        <div class="report-metric"><strong>{{ report.average_score|default:"—" }}</strong><span class="muted">средняя оценка</span></div>
+        <div class="report-metric"><strong>{{ report.pass_percentage }}%</strong><span class="muted">успеваемость</span></div>
+        <div class="report-metric"><strong>{{ report.quality_percentage }}%</strong><span class="muted">качество знаний</span></div>
+    </div>
+    <div class="report-inline-stats">
+        {% for score, count in report.grade_distribution %}<span><strong>«{{ score }}»:</strong> {{ count }}</span>{% endfor %}
+        <span><strong>Отсутствовали:</strong> {{ report.absent_count }}</span>
+        {% if report.average_percentage != None %}<span><strong>Среднее выполнение:</strong> {{ report.average_percentage }}%</span>{% endif %}
+    </div>
+</section>
+{% endwith %}

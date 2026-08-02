@@ -1,0 +1,9 @@
+{% with digest=payload.digest %}
+<section class="document-section document-section-{{ section.section_type }}">
+    <div class="report-metrics">
+        <div class="report-metric"><strong>{{ digest.grades_count }}</strong><span class="muted">оценок за период</span></div>
+        <div class="report-metric"><strong>{{ digest.absent_count }}</strong><span class="muted">пропущено работ</span></div>
+        <div class="report-metric"><strong>{{ digest.retake_entries|length }}</strong><span class="muted">требуют внимания</span></div>
+    </div>
+</section>
+{% endwith %}

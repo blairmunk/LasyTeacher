@@ -65,6 +65,12 @@ from core_logic.use_cases.render_document_from_recipe import (
     RenderDocumentFromRecipeUseCase,
 )
 from core_logic.use_cases.render_work_document import RenderWorkDocumentUseCase
+from core_logic.use_cases.render_event_performance_report_document import (
+    RenderEventPerformanceReportDocumentUseCase,
+)
+from core_logic.use_cases.render_student_digest_document import (
+    RenderStudentDigestDocumentUseCase,
+)
 from core_logic.use_cases.create_presentation_profile import (
     CreatePresentationProfileUseCase,
 )
@@ -541,6 +547,12 @@ class Container:
             self._document_engine = DjangoDocumentEngine.with_sectioned_renderers(
                 get_remedial_sheet_data_use_case=(
                     self.get_remedial_sheet_data_use_case()
+                ),
+                get_event_report_use_case=(
+                    self.get_event_performance_report_use_case()
+                ),
+                get_student_digests_use_case=(
+                    self.get_student_digests_use_case()
                 ),
             )
         return self._document_engine
@@ -1222,6 +1234,26 @@ class Container:
     def render_remedial_sheet_document_use_case(self):
         return RenderRemedialSheetDocumentUseCase(
             work_repo=self.work_repo,
+            presentation_profile_repo=self.presentation_profile_repo,
+            render_document_from_recipe_use_case=(
+                self.render_document_from_recipe_use_case()
+            ),
+        )
+
+    def render_event_performance_report_document_use_case(self):
+        return RenderEventPerformanceReportDocumentUseCase(
+            get_event_report_use_case=(
+                self.get_event_performance_report_use_case()
+            ),
+            presentation_profile_repo=self.presentation_profile_repo,
+            render_document_from_recipe_use_case=(
+                self.render_document_from_recipe_use_case()
+            ),
+        )
+
+    def render_student_digest_document_use_case(self):
+        return RenderStudentDigestDocumentUseCase(
+            get_student_digests_use_case=self.get_student_digests_use_case(),
             presentation_profile_repo=self.presentation_profile_repo,
             render_document_from_recipe_use_case=(
                 self.render_document_from_recipe_use_case()

@@ -34,6 +34,18 @@ from core_logic.use_cases.get_student_performance_report import (
     StudentPerformanceReportRequest,
 )
 from core_logic.use_cases.get_work_analysis_report import WorkAnalysisReportRequest
+from core_logic.use_cases.get_rendered_document_file import (
+    GetRenderedDocumentFileRequest,
+)
+from core_logic.use_cases.render_event_performance_report_document import (
+    RenderEventPerformanceReportDocumentRequest,
+)
+from core_logic.use_cases.render_student_digest_document import (
+    RenderStudentDigestDocumentRequest,
+)
+from core_logic.value_objects.document_render_options import (
+    build_render_target_from_data,
+)
 from reports import plotly_utils
 
 
@@ -93,6 +105,36 @@ class ReportFormAdapter:
                 include_absences=enabled('include_absences'),
                 retake_score_threshold=threshold,
             ),
+        )
+
+    def event_report_document_request(self, event_id, data):
+        return RenderEventPerformanceReportDocumentRequest(
+            event_id=str(event_id),
+            render_target=build_render_target_from_data(data),
+            presentation_profile_id=data.get(
+                'presentation_profile_id',
+                '',
+            ).strip(),
+        )
+
+    def student_digest_document_request(self, data, year, today):
+        return RenderStudentDigestDocumentRequest(
+            digest_request=self.student_digest_request_from_query(
+                data,
+                year=year,
+                today=today,
+            ),
+            render_target=build_render_target_from_data(data),
+            presentation_profile_id=data.get(
+                'presentation_profile_id',
+                '',
+            ).strip(),
+        )
+
+    def rendered_document_file_request(self, file_type, filename):
+        return GetRenderedDocumentFileRequest(
+            file_type=file_type,
+            filename=filename,
         )
 
     def reports_dashboard_request(self, year=None, current_date=None):

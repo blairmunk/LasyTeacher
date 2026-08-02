@@ -9,7 +9,11 @@ from core_logic.entities.event_performance_report import (
     EventReportNarrative,
     SaveEventReportNarrativeParams,
 )
+from core_logic.value_objects.document_recipes import (
+    EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
+)
 from curriculum.models import Course, SubTopic, Topic
+from document_engine.models import PrintSettings
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_event_performance_report_repo import (
     DjangoEventPerformanceReportRepository,
@@ -234,3 +238,79 @@ class WrittenReportRepositoryTests(TestCase):
         self.assertContains(response, 'Иванов Иван')
         self.assertContains(response, 'Работы к сдаче или пересдаче')
         self.assertContains(response, 'Повторить второй закон Ньютона')
+
+    def test_event_report_document_endpoint_renders_sectioned_html(self):
+        response = self.client.post(
+            reverse(
+                'reports:event-performance-document',
+                args=[self.event.pk],
+            ),
+            {'renderer_type': 'html', 'format': 'A4'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/html')
+        self.assertIn('inline; filename="event_report_', response['Content-Disposition'])
+        html = response.content.decode('utf-8')
+        self.assertIn('Контрольная 9А', html)
+        self.assertIn('document-section-event_report_summary', html)
+        self.assertIn('Динамика: Второй закон Ньютона', html)
+
+    def test_event_report_document_applies_explicit_presentation_profile(self):
+        profile = PrintSettings.objects.create(
+            name='Компактный отчёт',
+            document_type=EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
+            custom_css='.report-metric { min-height: 10mm; }',
+        )
+
+        response = self.client.post(
+            reverse(
+                'reports:event-performance-document',
+                args=[self.event.pk],
+            ),
+            {
+                'renderer_type': 'html',
+                'format': 'A4',
+                'presentation_profile_id': str(profile.pk),
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            '.report-metric { min-height: 10mm; }',
+        )
+
+    def test_student_digest_document_endpoint_renders_one_page_per_student(self):
+        response = self.client.post(
+            reverse('reports:student-digests-document'),
+            {
+                'apply': '1',
+                'group': str(self.group.pk),
+                'start_date': '2026-10-13',
+                'end_date': '2026-10-19',
+                'include_summary': 'on',
+                'include_details': 'on',
+                'include_focus': 'on',
+                'include_retakes': 'on',
+                'include_absences': 'on',
+                'retake_score_threshold': '2',
+                'renderer_type': 'html',
+                'format': 'A4',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/html')
+        html = response.content.decode('utf-8')
+        self.assertIn('Иванов Иван', html)
+        self.assertIn('Петров Пётр', html)
+        self.assertEqual(html.count('report-kicker">Дайджест оценок'), 2)
+        self.assertEqual(
+            html.count(
+                'class="document-section document-section-page_break '
+                'document-page-break"'
+            ),
+            1,
+        )
+        self.assertIn('Работы к сдаче или пересдаче', html)

@@ -1,0 +1,11 @@
+{% with report=payload.report %}
+<header class="document-section report-header document-section-{{ section.section_type }}">
+    <div class="report-kicker">Аналитический отчёт</div>
+    <h1>{{ report.event.name }}</h1>
+    <div>
+        {{ report.event.work_name }}
+        {% if report.event.course_name %} · {{ report.event.course_name }}{% endif %}
+        · {{ report.event.planned_date|date:"d.m.Y" }}
+    </div>
+</header>
+{% endwith %}

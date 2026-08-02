@@ -152,6 +152,12 @@ from core_logic.use_cases.render_document_from_recipe import (
     RenderDocumentFromRecipeUseCase,
 )
 from core_logic.use_cases.render_work_document import RenderWorkDocumentUseCase
+from core_logic.use_cases.render_event_performance_report_document import (
+    RenderEventPerformanceReportDocumentUseCase,
+)
+from core_logic.use_cases.render_student_digest_document import (
+    RenderStudentDigestDocumentUseCase,
+)
 from core_logic.use_cases.get_recent_review_sessions import (
     GetRecentReviewSessionsUseCase,
 )
@@ -288,10 +294,24 @@ class ContainerTests(SimpleTestCase):
         event_report = container.get_event_performance_report_use_case()
         save_narrative = container.save_event_report_narrative_use_case()
         student_digests = container.get_student_digests_use_case()
+        event_report_document = (
+            container.render_event_performance_report_document_use_case()
+        )
+        student_digest_document = (
+            container.render_student_digest_document_use_case()
+        )
 
         self.assertIsInstance(event_report, GetEventPerformanceReportUseCase)
         self.assertIsInstance(save_narrative, SaveEventReportNarrativeUseCase)
         self.assertIsInstance(student_digests, GetStudentDigestsUseCase)
+        self.assertIsInstance(
+            event_report_document,
+            RenderEventPerformanceReportDocumentUseCase,
+        )
+        self.assertIsInstance(
+            student_digest_document,
+            RenderStudentDigestDocumentUseCase,
+        )
         self.assertIsInstance(
             event_report.report_repo,
             DjangoEventPerformanceReportRepository,
@@ -314,12 +334,22 @@ class ContainerTests(SimpleTestCase):
     def test_document_engine_uses_sectioned_renderer_factory(self):
         container = Container()
         remedial_sheet_data_use_case = object()
+        event_report_use_case = object()
+        student_digests_use_case = object()
         engine = object()
 
         with patch.object(
             container,
             'get_remedial_sheet_data_use_case',
             return_value=remedial_sheet_data_use_case,
+        ), patch.object(
+            container,
+            'get_event_performance_report_use_case',
+            return_value=event_report_use_case,
+        ), patch.object(
+            container,
+            'get_student_digests_use_case',
+            return_value=student_digests_use_case,
         ), patch.object(
             DjangoDocumentEngine,
             'with_sectioned_renderers',
@@ -330,6 +360,8 @@ class ContainerTests(SimpleTestCase):
         self.assertIs(result, engine)
         factory.assert_called_once_with(
             get_remedial_sheet_data_use_case=remedial_sheet_data_use_case,
+            get_event_report_use_case=event_report_use_case,
+            get_student_digests_use_case=student_digests_use_case,
         )
 
     def test_wires_remedial_from_event_use_case(self):

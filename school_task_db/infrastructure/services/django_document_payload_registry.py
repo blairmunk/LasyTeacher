@@ -8,18 +8,29 @@ from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
     BLANK_CELLS_SECTION,
     COMMON_HEADER_SECTION,
+    EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
+    EVENT_REPORT_CONCLUSIONS_SECTION,
+    EVENT_REPORT_SUMMARY_SECTION,
+    EVENT_REPORT_TASK_ANALYSIS_SECTION,
     FULL_SOLUTIONS_SECTION,
     HEADER_SECTION,
     ORIGINAL_MISTAKES_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
     SHORT_SOLUTIONS_SECTION,
+    STUDENT_DIGEST_DETAILS_SECTION,
+    STUDENT_DIGEST_DOCUMENT_TYPE,
+    STUDENT_DIGEST_FOCUS_SECTION,
+    STUDENT_DIGEST_RETAKES_SECTION,
+    STUDENT_DIGEST_SUMMARY_SECTION,
     TASK_LIST_SECTION,
     TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
 )
 from core_logic.entities.document import (
+    EVENT_REPORT_SOURCE_TYPE,
     REMEDIAL_WORK_SOURCE_TYPE,
     REMEDIAL_VARIANT_SOURCE_TYPE,
+    STUDENT_DIGEST_SOURCE_TYPE,
     WORK_SOURCE_TYPE,
 )
 from infrastructure.services.blank_cells_payload import (
@@ -35,6 +46,12 @@ from infrastructure.services.django_work_document_payloads import (
     DjangoWorkHeaderPayloadBuilder,
     DjangoWorkTaskListPayloadBuilder,
     WorkDocumentSourceProvider,
+)
+from infrastructure.services.django_report_document_payloads import (
+    EventReportDocumentDataProvider,
+    EventReportSectionPayloadBuilder,
+    StudentDigestDocumentDataProvider,
+    StudentDigestSectionPayloadBuilder,
 )
 
 
@@ -150,4 +167,44 @@ def build_remedial_sheet_section_payload_builder_registry(
                 document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
                 source_type=source_type,
             )
+    return registry
+
+
+def build_report_section_payload_builder_registry(
+    get_event_report,
+    get_student_digests,
+) -> DocumentSectionPayloadBuilderRegistry:
+    registry = DocumentSectionPayloadBuilderRegistry()
+    event_builder = EventReportSectionPayloadBuilder(
+        EventReportDocumentDataProvider(get_event_report),
+    )
+    for section_type in (
+        HEADER_SECTION,
+        EVENT_REPORT_SUMMARY_SECTION,
+        EVENT_REPORT_TASK_ANALYSIS_SECTION,
+        EVENT_REPORT_CONCLUSIONS_SECTION,
+    ):
+        registry.register(
+            section_type,
+            event_builder,
+            document_type=EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
+            source_type=EVENT_REPORT_SOURCE_TYPE,
+        )
+
+    digest_builder = StudentDigestSectionPayloadBuilder(
+        StudentDigestDocumentDataProvider(get_student_digests),
+    )
+    for section_type in (
+        HEADER_SECTION,
+        STUDENT_DIGEST_SUMMARY_SECTION,
+        STUDENT_DIGEST_RETAKES_SECTION,
+        STUDENT_DIGEST_DETAILS_SECTION,
+        STUDENT_DIGEST_FOCUS_SECTION,
+    ):
+        registry.register(
+            section_type,
+            digest_builder,
+            document_type=STUDENT_DIGEST_DOCUMENT_TYPE,
+            source_type=STUDENT_DIGEST_SOURCE_TYPE,
+        )
     return registry

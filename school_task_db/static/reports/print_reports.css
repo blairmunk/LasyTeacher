@@ -1,0 +1,118 @@
+.report-document {
+    color: #20242a;
+    font-size: 0.95rem;
+}
+
+.report-document h1,
+.report-document h2,
+.report-document h3 {
+    letter-spacing: 0;
+}
+
+.report-section {
+    margin-top: 1.5rem;
+}
+
+.report-section-title {
+    border-bottom: 2px solid #343a40;
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.35rem;
+}
+
+.report-metric {
+    border-left: 3px solid #495057;
+    min-height: 64px;
+    padding: 0.5rem 0.75rem;
+}
+
+.report-metric-value {
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.digest-sheet {
+    background: #fff;
+    border: 1px solid #d9dee5;
+    margin: 1.25rem 0;
+    padding: 1.5rem;
+}
+
+.digest-grade {
+    align-items: center;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    display: inline-flex;
+    font-size: 0.9rem;
+    font-weight: 700;
+    height: 30px;
+    justify-content: center;
+    width: 30px;
+}
+
+.digest-grade-5 { color: #087f5b; }
+.digest-grade-4 { color: #1864ab; }
+.digest-grade-3 { color: #b35c00; }
+.digest-grade-2,
+.digest-grade-1 { color: #c92a2a; }
+
+.digest-note {
+    border-left: 3px solid #d9480f;
+    padding-left: 0.75rem;
+}
+
+@media print {
+    @page {
+        margin: 14mm;
+        size: A4 portrait;
+    }
+
+    .navbar,
+    .no-print,
+    .alert {
+        display: none !important;
+    }
+
+    body {
+        background: #fff !important;
+        font-size: 10.5pt;
+    }
+
+    body > .container {
+        margin: 0 !important;
+        max-width: none !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+
+    .report-document,
+    .digest-sheet {
+        border: 0;
+        box-shadow: none !important;
+        margin: 0;
+        padding: 0;
+    }
+
+    .digest-sheet {
+        break-after: page;
+        min-height: 260mm;
+    }
+
+    .digest-sheet:last-child {
+        break-after: auto;
+    }
+
+    .report-section,
+    .digest-subject,
+    table,
+    tr {
+        break-inside: avoid;
+    }
+
+    a {
+        color: inherit !important;
+        text-decoration: none !important;
+    }
+}

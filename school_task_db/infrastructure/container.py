@@ -149,6 +149,9 @@ from core_logic.use_cases.get_event_variant_assignment import (
 from core_logic.use_cases.get_events_status_report import (
     GetEventsStatusReportUseCase,
 )
+from core_logic.use_cases.get_event_performance_report import (
+    GetEventPerformanceReportUseCase,
+)
 from core_logic.use_cases.get_rendered_document_file import (
     GetRenderedDocumentFileUseCase,
 )
@@ -208,6 +211,7 @@ from core_logic.use_cases.get_reports_dashboard import GetReportsDashboardUseCas
 from core_logic.use_cases.get_student_performance_report import (
     GetStudentPerformanceReportUseCase,
 )
+from core_logic.use_cases.get_student_digests import GetStudentDigestsUseCase
 from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUseCase
 from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionUseCase,
@@ -252,6 +256,9 @@ from core_logic.use_cases.save_analog_group import (
     UpdateAnalogGroupUseCase,
 )
 from core_logic.use_cases.save_event import CreateEventUseCase, UpdateEventUseCase
+from core_logic.use_cases.save_event_report_narrative import (
+    SaveEventReportNarrativeUseCase,
+)
 from core_logic.use_cases.save_student import (
     CreateStudentGroupUseCase,
     CreateStudentUseCase,
@@ -295,10 +302,16 @@ from infrastructure.repositories.django_presentation_profile_repo import (
     DjangoPresentationProfileRepository,
 )
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
+from infrastructure.repositories.django_event_performance_report_repo import (
+    DjangoEventPerformanceReportRepository,
+)
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
 from infrastructure.repositories.django_report_repo import DjangoReportRepository
 from infrastructure.repositories.django_settings_repo import DjangoSettingsRepository
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
+from infrastructure.repositories.django_student_digest_repo import (
+    DjangoStudentDigestRepository,
+)
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from infrastructure.services.document_engine import (
@@ -335,6 +348,8 @@ class Container:
         self._event_repo = None
         self._review_repo = None
         self._report_repo = None
+        self._event_performance_report_repo = None
+        self._student_digest_repo = None
         self._curriculum_repo = None
         self._codifier_repo = None
         self._core_repo = None
@@ -403,6 +418,20 @@ class Container:
         if self._report_repo is None:
             self._report_repo = DjangoReportRepository()
         return self._report_repo
+
+    @property
+    def event_performance_report_repo(self):
+        if self._event_performance_report_repo is None:
+            self._event_performance_report_repo = (
+                DjangoEventPerformanceReportRepository()
+            )
+        return self._event_performance_report_repo
+
+    @property
+    def student_digest_repo(self):
+        if self._student_digest_repo is None:
+            self._student_digest_repo = DjangoStudentDigestRepository()
+        return self._student_digest_repo
 
     @property
     def curriculum_repo(self):
@@ -936,6 +965,21 @@ class Container:
     def get_events_status_report_use_case(self):
         return GetEventsStatusReportUseCase(
             report_repo=self.report_repo,
+        )
+
+    def get_event_performance_report_use_case(self):
+        return GetEventPerformanceReportUseCase(
+            report_repo=self.event_performance_report_repo,
+        )
+
+    def save_event_report_narrative_use_case(self):
+        return SaveEventReportNarrativeUseCase(
+            report_repo=self.event_performance_report_repo,
+        )
+
+    def get_student_digests_use_case(self):
+        return GetStudentDigestsUseCase(
+            digest_repo=self.student_digest_repo,
         )
 
     def get_reports_dashboard_use_case(self):

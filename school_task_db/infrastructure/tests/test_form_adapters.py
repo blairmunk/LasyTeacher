@@ -1,3 +1,4 @@
+import datetime as dt
 from types import SimpleNamespace
 
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -408,6 +409,60 @@ class EventFormAdapterTests(SimpleTestCase):
 
 
 class ReportFormAdapterTests(SimpleTestCase):
+    def test_builds_event_report_narrative_params(self):
+        params = ReportFormAdapter().event_report_narrative_params(
+            'event-1',
+            QueryDict(
+                'possible_causes= gaps &recommendations= repeat '
+                '&planned_actions= consultation &additional_notes= note '
+            ),
+        )
+
+        self.assertEqual(params.event_id, 'event-1')
+        self.assertEqual(params.narrative.possible_causes, 'gaps')
+        self.assertEqual(params.narrative.recommendations, 'repeat')
+        self.assertEqual(params.narrative.planned_actions, 'consultation')
+        self.assertEqual(params.narrative.additional_notes, 'note')
+
+    def test_builds_submitted_student_digest_request(self):
+        query = QueryDict(
+            'apply=1&group=g1&start_date=2026-10-13&end_date=2026-10-19'
+            '&include_summary=on&include_focus=on'
+            '&include_teacher_comments=on&retake_score_threshold=9'
+        )
+
+        request = ReportFormAdapter().student_digest_request_from_query(
+            query,
+            year='year-1',
+            today=dt.date(2026, 10, 20),
+        )
+
+        self.assertEqual(request.group_id, 'g1')
+        self.assertEqual(request.start_date, dt.date(2026, 10, 13))
+        self.assertEqual(request.end_date, dt.date(2026, 10, 19))
+        self.assertEqual(request.year, 'year-1')
+        self.assertTrue(request.options.include_summary)
+        self.assertTrue(request.options.include_focus)
+        self.assertTrue(request.options.include_teacher_comments)
+        self.assertFalse(request.options.include_details)
+        self.assertFalse(request.options.include_retakes)
+        self.assertFalse(request.options.include_absences)
+        self.assertEqual(request.options.retake_score_threshold, 4)
+
+    def test_builds_default_student_digest_period_and_options(self):
+        request = ReportFormAdapter().student_digest_request_from_query(
+            QueryDict(''),
+            year=None,
+            today=dt.date(2026, 10, 20),
+        )
+
+        self.assertEqual(request.start_date, dt.date(2026, 10, 13))
+        self.assertEqual(request.end_date, dt.date(2026, 10, 20))
+        self.assertTrue(request.options.include_details)
+        self.assertTrue(request.options.include_retakes)
+        self.assertTrue(request.options.include_absences)
+        self.assertFalse(request.options.include_teacher_comments)
+
     def test_builds_top_level_report_requests(self):
         adapter = ReportFormAdapter()
         now = object()

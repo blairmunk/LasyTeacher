@@ -129,6 +129,9 @@ from core_logic.use_cases.get_event_variant_assignment import (
 from core_logic.use_cases.get_events_status_report import (
     GetEventsStatusReportUseCase,
 )
+from core_logic.use_cases.get_event_performance_report import (
+    GetEventPerformanceReportUseCase,
+)
 from core_logic.use_cases.get_rendered_document_file import (
     GetRenderedDocumentFileUseCase,
 )
@@ -193,6 +196,7 @@ from core_logic.use_cases.get_reports_dashboard import GetReportsDashboardUseCas
 from core_logic.use_cases.get_student_performance_report import (
     GetStudentPerformanceReportUseCase,
 )
+from core_logic.use_cases.get_student_digests import GetStudentDigestsUseCase
 from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionUseCase,
 )
@@ -213,6 +217,9 @@ from core_logic.use_cases.save_student import (
     UpdateStudentUseCase,
 )
 from core_logic.use_cases.save_site_settings import SaveSiteSettingsUseCase
+from core_logic.use_cases.save_event_report_narrative import (
+    SaveEventReportNarrativeUseCase,
+)
 from core_logic.use_cases.save_task import (
     CreateTaskUseCase,
     SaveTaskImagesUseCase,
@@ -245,9 +252,15 @@ from infrastructure.repositories.django_presentation_profile_repo import (
 )
 from infrastructure.container import Container
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
+from infrastructure.repositories.django_event_performance_report_repo import (
+    DjangoEventPerformanceReportRepository,
+)
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
 from infrastructure.repositories.django_report_repo import DjangoReportRepository
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
+from infrastructure.repositories.django_student_digest_repo import (
+    DjangoStudentDigestRepository,
+)
 from infrastructure.repositories.django_settings_repo import DjangoSettingsRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
@@ -269,6 +282,26 @@ from infrastructure.services.task_import_service import DjangoTaskImportService
 
 
 class ContainerTests(SimpleTestCase):
+    def test_wires_written_report_use_cases(self):
+        container = Container()
+
+        event_report = container.get_event_performance_report_use_case()
+        save_narrative = container.save_event_report_narrative_use_case()
+        student_digests = container.get_student_digests_use_case()
+
+        self.assertIsInstance(event_report, GetEventPerformanceReportUseCase)
+        self.assertIsInstance(save_narrative, SaveEventReportNarrativeUseCase)
+        self.assertIsInstance(student_digests, GetStudentDigestsUseCase)
+        self.assertIsInstance(
+            event_report.report_repo,
+            DjangoEventPerformanceReportRepository,
+        )
+        self.assertIs(save_narrative.report_repo, event_report.report_repo)
+        self.assertIsInstance(
+            student_digests.digest_repo,
+            DjangoStudentDigestRepository,
+        )
+
     def test_wires_academic_year_activation_use_case(self):
         use_case = Container().activate_academic_year_use_case()
 

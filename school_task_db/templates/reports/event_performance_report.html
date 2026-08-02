@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Отчёт: {{ report.event.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'reports/print_reports.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="no-print d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <h2 class="mb-1"><i class="fas fa-file-alt"></i> Отчёт по результатам работы</h2>
+        <div class="text-muted">Данные пересчитываются из результатов события</div>
+    </div>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-dark" onclick="window.print()" title="Печать отчёта">
+            <i class="fas fa-print"></i> Печать
+        </button>
+        <a href="{% url 'events:detail' report.event.pk %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> К событию
+        </a>
+    </div>
+</div>
+
+<article class="report-document">
+    <header class="text-center mb-4">
+        <div class="text-uppercase small text-muted">Аналитический отчёт</div>
+        <h1 class="h3 mt-2 mb-1">{{ report.event.name }}</h1>
+        <div>
+            {{ report.event.work_name }}
+            {% if report.event.course_name %} · {{ report.event.course_name }}{% endif %}
+            · {{ report.event.planned_date|date:"d.m.Y" }}
+        </div>
+    </header>
+
+    {% include 'reports/event_report_sections/summary.html' %}
+    {% include 'reports/event_report_sections/task_analysis.html' %}
+    {% include 'reports/event_report_sections/conclusions.html' %}
+</article>
+
+<section class="no-print mt-5 border-top pt-4">
+    <h3 class="h5 mb-3"><i class="fas fa-pen"></i> Редактируемая часть отчёта</h3>
+    <p class="text-muted small">
+        Автоматические выводы остаются подсказками. Здесь можно записать формулировки,
+        которые войдут в печатный отчёт без изменений.
+    </p>
+    <form method="post">
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-bold" for="possible_causes">Возможные причины ошибок</label>
+                <textarea class="form-control" rows="5" id="possible_causes" name="possible_causes">{{ report.narrative.possible_causes }}</textarea>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold" for="recommendations">Рекомендации</label>
+                <textarea class="form-control" rows="5" id="recommendations" name="recommendations">{{ report.narrative.recommendations }}</textarea>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold" for="planned_actions">Мероприятия</label>
+                <textarea class="form-control" rows="5" id="planned_actions" name="planned_actions">{{ report.narrative.planned_actions }}</textarea>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold" for="additional_notes">Дополнительные примечания</label>
+                <textarea class="form-control" rows="5" id="additional_notes" name="additional_notes">{{ report.narrative.additional_notes }}</textarea>
+            </div>
+        </div>
+        <button class="btn btn-primary mt-3" type="submit">
+            <i class="fas fa-save"></i> Сохранить текст
+        </button>
+    </form>
+</section>
+{% endblock %}

@@ -1,0 +1,34 @@
+<article class="digest-sheet">
+    <header class="d-flex justify-content-between align-items-start border-bottom pb-3 mb-3">
+        <div>
+            <div class="text-uppercase small text-muted">Дайджест оценок</div>
+            <h1 class="h4 mb-1">{{ digest.student.full_name }}</h1>
+            <div>{{ digest.group_name }}</div>
+        </div>
+        <div class="text-end small">
+            <div>{{ page.start_date|date:"d.m.Y" }}–{{ page.end_date|date:"d.m.Y" }}</div>
+            {% if digest.average_score != None %}
+            <div class="mt-1">Средняя оценка: <strong>{{ digest.average_score }}</strong></div>
+            {% endif %}
+        </div>
+    </header>
+
+    {% if page.options.include_summary %}
+        {% include 'reports/student_digest/_summary.html' %}
+    {% endif %}
+    {% if page.options.include_retakes and digest.retake_entries %}
+        {% include 'reports/student_digest/_retakes.html' %}
+    {% endif %}
+    {% if page.options.include_details %}
+        {% for subject in digest.subjects %}
+            {% include 'reports/student_digest/_subject.html' %}
+        {% endfor %}
+    {% endif %}
+    {% if page.options.include_focus and digest.focus_items %}
+        {% include 'reports/student_digest/_focus.html' %}
+    {% endif %}
+
+    <footer class="mt-4 pt-3 border-top small text-muted">
+        Лист сформирован по данным проверенных работ. Вопросы по пересдаче и срокам выполнения уточняются у учителя.
+    </footer>
+</article>

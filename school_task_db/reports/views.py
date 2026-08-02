@@ -1,8 +1,10 @@
 # reports/views.py
 
 import json
+from django.contrib import messages
+from django.http import Http404
 from django.urls import reverse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.views import View
 from django.views.generic import TemplateView
 from django.utils import timezone
@@ -113,6 +115,68 @@ class EventsStatusView(TemplateView):
         })
 
         return context
+
+
+class EventPerformanceReportView(View):
+    template_name = 'reports/event_performance_report.html'
+
+    def get(self, request, event_pk):
+        report = container.get_event_performance_report_use_case().execute(
+            str(event_pk),
+        )
+        if report is None:
+            raise Http404('Событие не найдено.')
+        return render(request, self.template_name, {
+            'report': report,
+            'active_report': 'event-performance',
+        })
+
+    def post(self, request, event_pk):
+        result = container.save_event_report_narrative_use_case().execute(
+            container.report_form_adapter.event_report_narrative_params(
+                event_pk,
+                request.POST,
+            ),
+        )
+        if result.status == 'not_found':
+            raise Http404('Событие не найдено.')
+        messages.success(request, 'Текстовые разделы отчёта сохранены.')
+        return redirect('reports:event-performance', event_pk=event_pk)
+
+
+class StudentDigestView(View):
+    template_name = 'reports/student_digests.html'
+
+    def get(self, request):
+        digest_request = (
+            container.report_form_adapter.student_digest_request_from_query(
+                request.GET,
+                year=getattr(request, 'current_year', None),
+                today=timezone.localdate(),
+            )
+        )
+        form_error = ''
+        try:
+            page = container.get_student_digests_use_case().execute(
+                digest_request,
+            )
+        except ValueError as error:
+            form_error = str(error)
+            fallback_request = (
+                container.report_form_adapter.student_digest_request_from_query(
+                    {},
+                    year=getattr(request, 'current_year', None),
+                    today=timezone.localdate(),
+                )
+            )
+            page = container.get_student_digests_use_case().execute(
+                fallback_request,
+            )
+        return render(request, self.template_name, {
+            'page': page,
+            'form_error': form_error,
+            'active_report': page.active_report,
+        })
 
 
 

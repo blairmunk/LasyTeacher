@@ -1,0 +1,33 @@
+<section class="report-section">
+    <h2 class="report-section-title">3. Выводы и дальнейшая работа</h2>
+
+    <h3 class="h6">Возможные причины ошибок</h3>
+    {% if report.narrative.possible_causes %}
+    <div>{{ report.narrative.possible_causes|linebreaksbr }}</div>
+    {% elif report.suggested_causes %}
+    <ul>{% for item in report.suggested_causes %}<li>{{ item }}</li>{% endfor %}</ul>
+    {% else %}
+    <p class="text-muted">Причины требуют уточнения педагогом.</p>
+    {% endif %}
+
+    <h3 class="h6 mt-3">Рекомендации</h3>
+    {% if report.narrative.recommendations %}
+    <div>{{ report.narrative.recommendations|linebreaksbr }}</div>
+    {% else %}
+    <ul>{% for item in report.suggested_recommendations %}<li>{{ item }}</li>{% endfor %}</ul>
+    {% endif %}
+
+    <h3 class="h6 mt-3">Запланированные мероприятия</h3>
+    {% if report.narrative.planned_actions %}
+    <div>{{ report.narrative.planned_actions|linebreaksbr }}</div>
+    {% elif report.suggested_actions %}
+    <ul>{% for item in report.suggested_actions %}<li>{{ item }}</li>{% endfor %}</ul>
+    {% else %}
+    <p>Дополнительные мероприятия не требуются.</p>
+    {% endif %}
+
+    {% if report.narrative.additional_notes %}
+    <h3 class="h6 mt-3">Примечания</h3>
+    <div>{{ report.narrative.additional_notes|linebreaksbr }}</div>
+    {% endif %}
+</section>

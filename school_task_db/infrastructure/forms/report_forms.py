@@ -1,5 +1,17 @@
 """Infrastructure helpers for Django report query params."""
 
+from datetime import timedelta
+
+from django.utils.dateparse import parse_date
+
+from core_logic.entities.event_performance_report import (
+    EventReportNarrative,
+    SaveEventReportNarrativeParams,
+)
+from core_logic.entities.student_digest import (
+    StudentDigestOptions,
+    StudentDigestRequest,
+)
 from core_logic.use_cases.get_events_status_report import (
     EventsStatusReportRequest,
 )
@@ -36,6 +48,53 @@ REPORT_STATUS_CHART_ITEMS = {
 
 
 class ReportFormAdapter:
+    def event_report_narrative_params(self, event_id, data):
+        return SaveEventReportNarrativeParams(
+            event_id=str(event_id),
+            narrative=EventReportNarrative(
+                possible_causes=data.get('possible_causes', '').strip(),
+                recommendations=data.get('recommendations', '').strip(),
+                planned_actions=data.get('planned_actions', '').strip(),
+                additional_notes=data.get('additional_notes', '').strip(),
+            ),
+        )
+
+    def student_digest_request_from_query(self, query, year, today):
+        submitted = query.get('apply') == '1'
+        start_date = parse_date(query.get('start_date', ''))
+        end_date = parse_date(query.get('end_date', ''))
+        if not submitted:
+            end_date = today
+            start_date = today - timedelta(days=7)
+
+        try:
+            threshold = int(query.get('retake_score_threshold', 2))
+        except (TypeError, ValueError):
+            threshold = 2
+        threshold = min(4, max(1, threshold))
+
+        def enabled(name, default=True):
+            return name in query if submitted else default
+
+        return StudentDigestRequest(
+            group_id=query.get('group', ''),
+            start_date=start_date,
+            end_date=end_date,
+            year=year,
+            options=StudentDigestOptions(
+                include_summary=enabled('include_summary'),
+                include_details=enabled('include_details'),
+                include_focus=enabled('include_focus'),
+                include_retakes=enabled('include_retakes'),
+                include_teacher_comments=enabled(
+                    'include_teacher_comments',
+                    default=False,
+                ),
+                include_absences=enabled('include_absences'),
+                retake_score_threshold=threshold,
+            ),
+        )
+
     def reports_dashboard_request(self, year=None, current_date=None):
         return ReportsDashboardRequest(
             year=year,

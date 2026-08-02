@@ -15,6 +15,11 @@
             </small>
         </div>
         <div class="d-flex gap-2">
+            {% if event.status == 'completed' or event.status == 'reviewing' or event.status == 'graded' or event.status == 'closed' %}
+            <a href="{% url 'reports:event-performance' event.pk %}" class="btn btn-outline-dark btn-sm">
+                <i class="fas fa-file-alt"></i> Отчёт
+            </a>
+            {% endif %}
             {% if can_review %}
             <a href="{% url 'review:event-review' event.pk %}" class="btn btn-warning btn-sm">
                 <i class="fas fa-clipboard-check"></i> К проверке

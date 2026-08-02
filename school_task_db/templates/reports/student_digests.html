@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Дайджесты оценок{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'reports/print_reports.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="no-print">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-envelope-open-text"></i> Дайджесты оценок</h2>
+            <div class="text-muted">Индивидуальные листы по классу и периоду</div>
+        </div>
+        {% if page.digests %}
+        <button type="button" class="btn btn-dark" onclick="window.print()">
+            <i class="fas fa-print"></i> Напечатать {{ page.digests|length }} листов
+        </button>
+        {% endif %}
+    </div>
+
+    {% if form_error %}
+    <div class="alert alert-danger">{{ form_error }}</div>
+    {% endif %}
+
+    <form method="get" class="border rounded p-3 mb-4 bg-light">
+        <input type="hidden" name="apply" value="1">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label fw-bold" for="digest-group">Класс</label>
+                <select class="form-select" id="digest-group" name="group" required>
+                    <option value="">Выберите класс</option>
+                    {% for group in page.groups %}
+                    <option value="{{ group.pk }}"{% if page.selected_group.pk == group.pk %} selected{% endif %}>{{ group.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold" for="digest-start">С</label>
+                <input class="form-control" id="digest-start" type="date" name="start_date" value="{{ page.start_date|date:'Y-m-d' }}" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold" for="digest-end">По</label>
+                <input class="form-control" id="digest-end" type="date" name="end_date" value="{{ page.end_date|date:'Y-m-d' }}" required>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary w-100" type="submit">
+                    <i class="fas fa-sync"></i> Собрать
+                </button>
+            </div>
+        </div>
+
+        <div class="border-top mt-3 pt-3">
+            <div class="fw-bold mb-2">Состав листа</div>
+            <div class="d-flex flex-wrap gap-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="include_summary" id="include-summary"{% if page.options.include_summary %} checked{% endif %}>
+                    <label class="form-check-label" for="include-summary">Сводка</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="include_details" id="include-details"{% if page.options.include_details %} checked{% endif %}>
+                    <label class="form-check-label" for="include-details">Список оценок</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="include_focus" id="include-focus"{% if page.options.include_focus %} checked{% endif %}>
+                    <label class="form-check-label" for="include-focus">На что обратить внимание</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="include_retakes" id="include-retakes"{% if page.options.include_retakes %} checked{% endif %}>
+                    <label class="form-check-label" for="include-retakes">Работы к сдаче/пересдаче</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="include_teacher_comments" id="include-comments"{% if page.options.include_teacher_comments %} checked{% endif %}>
+                    <label class="form-check-label" for="include-comments">Комментарии учителя</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="include_absences" id="include-absences"{% if page.options.include_absences %} checked{% endif %}>
+                    <label class="form-check-label" for="include-absences">Показывать пропуски</label>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <label for="retake-threshold">Пересдача при оценке ≤</label>
+                    <select class="form-select form-select-sm" id="retake-threshold" name="retake_score_threshold" style="width:70px">
+                        {% for score in '1234' %}
+                        <option value="{{ score }}"{% if page.options.retake_score_threshold|stringformat:'s' == score %} selected{% endif %}>{{ score }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    {% include 'reports/_reports_nav.html' %}
+</div>
+
+{% if page.selected_group and not page.digests %}
+<div class="no-print text-center py-5 text-muted">
+    <i class="fas fa-inbox fa-3x mb-3"></i>
+    <p>За выбранный период нет проверенных работ или отмеченных пропусков.</p>
+</div>
+{% elif not page.selected_group %}
+<div class="no-print text-center py-5 text-muted">
+    <i class="fas fa-users fa-3x mb-3"></i>
+    <p>Выберите класс и период, чтобы собрать индивидуальные листы.</p>
+</div>
+{% endif %}
+
+<div class="digest-document">
+    {% for digest in page.digests %}
+        {% include 'reports/student_digest/_sheet.html' %}
+    {% endfor %}
+</div>
+{% endblock %}

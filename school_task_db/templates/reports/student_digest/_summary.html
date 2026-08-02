@@ -1,0 +1,22 @@
+<section class="report-section mt-0">
+    <div class="row g-2">
+        <div class="col-4">
+            <div class="report-metric">
+                <div class="report-metric-value">{{ digest.grades_count }}</div>
+                <div class="small text-muted">оценок за период</div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="report-metric">
+                <div class="report-metric-value">{{ digest.absent_count }}</div>
+                <div class="small text-muted">пропущено работ</div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="report-metric">
+                <div class="report-metric-value">{{ digest.retake_entries|length }}</div>
+                <div class="small text-muted">требуют внимания</div>
+            </div>
+        </div>
+    </div>
+</section>

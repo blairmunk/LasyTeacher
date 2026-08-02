@@ -1,0 +1,12 @@
+<section class="report-section">
+    <h2 class="report-section-title text-danger">Работы к сдаче или пересдаче</h2>
+    <ul class="mb-0">
+        {% for entry in digest.retake_entries %}
+        <li class="mb-2">
+            <strong>{{ entry.planned_date|date:"d.m" }} · {{ entry.event_name }}</strong>
+            {% if entry.score != None %} — оценка {{ entry.score }}{% else %} — пропуск{% endif %}.<br>
+            <span class="small">{{ entry.retake_reason }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+</section>

@@ -1,0 +1,38 @@
+<section class="report-section">
+    <h2 class="report-section-title">1. Общие результаты</h2>
+    <div class="row g-2">
+        <div class="col-6 col-md-3">
+            <div class="report-metric">
+                <div class="report-metric-value">{{ report.present_count }}/{{ report.participants_total }}</div>
+                <div class="small text-muted">выполняли работу</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="report-metric">
+                <div class="report-metric-value">{{ report.average_score|default:"—" }}</div>
+                <div class="small text-muted">средняя оценка</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="report-metric">
+                <div class="report-metric-value">{{ report.pass_percentage }}%</div>
+                <div class="small text-muted">успеваемость</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="report-metric">
+                <div class="report-metric-value">{{ report.quality_percentage }}%</div>
+                <div class="small text-muted">качество знаний</div>
+            </div>
+        </div>
+    </div>
+    <div class="mt-3 d-flex flex-wrap gap-4">
+        {% for score, count in report.grade_distribution %}
+        <span><strong>«{{ score }}»:</strong> {{ count }}</span>
+        {% endfor %}
+        <span><strong>Отсутствовали:</strong> {{ report.absent_count }}</span>
+        {% if report.average_percentage != None %}
+        <span><strong>Среднее выполнение:</strong> {{ report.average_percentage }}%</span>
+        {% endif %}
+    </div>
+</section>

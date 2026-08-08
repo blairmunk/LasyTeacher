@@ -9,7 +9,10 @@ from infrastructure.repositories.django_report_repo import DjangoReportRepositor
 from infrastructure.repositories.django_student_repo import (
     DjangoStudentRepository,
 )
-from infrastructure.tests.variant_task_factory import create_variant_task
+from infrastructure.tests.variant_task_factory import (
+    capture_attempt_snapshot,
+    create_variant_task,
+)
 from core_logic.use_cases.get_heatmap_course_topic_matrix import (
     GetHeatmapCourseTopicMatrixUseCase,
     HeatmapCourseTopicMatrixRequest,
@@ -893,7 +896,7 @@ class DjangoReportRepositoryTests(TestCase):
             student=student,
             status='graded',
         )
-        Mark.objects.create(
+        mark = Mark.objects.create(
             participation=participation,
             score=4,
             points=8,
@@ -905,6 +908,10 @@ class DjangoReportRepositoryTests(TestCase):
                 },
             },
         )
+        capture_attempt_snapshot(mark)
+        mark.score = 2
+        mark.points = 1
+        mark.save(update_fields=['score', 'points'])
 
         data = GetWorkAnalysisReportUseCase(
             DjangoReportRepository(),
@@ -966,7 +973,7 @@ class DjangoReportRepositoryTests(TestCase):
             student=other_student,
             status='assigned',
         )
-        Mark.objects.create(
+        mark = Mark.objects.create(
             participation=selected_participation,
             score=5,
             points=9,
@@ -978,6 +985,10 @@ class DjangoReportRepositoryTests(TestCase):
                 },
             },
         )
+        capture_attempt_snapshot(mark)
+        mark.score = 2
+        mark.points = 1
+        mark.save(update_fields=['score', 'points'])
 
         data = GetStudentPerformanceReportUseCase(
             DjangoReportRepository(),

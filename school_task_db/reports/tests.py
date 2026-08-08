@@ -13,7 +13,10 @@ from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_student_repo import (
     DjangoStudentRepository,
 )
-from infrastructure.tests.variant_task_factory import create_variant_task
+from infrastructure.tests.variant_task_factory import (
+    capture_attempt_snapshot,
+    create_variant_task,
+)
 from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
@@ -511,7 +514,7 @@ class ReportsViewsTests(TestCase):
             student=student,
             status='graded',
         )
-        Mark.objects.create(
+        mark = Mark.objects.create(
             participation=participation,
             score=5,
             points=10,
@@ -523,6 +526,7 @@ class ReportsViewsTests(TestCase):
                 },
             },
         )
+        capture_attempt_snapshot(mark)
 
         response = self.client.get(reverse('reports:work-analysis'))
         work_stat = response.context['works_analysis'][0]
@@ -556,7 +560,7 @@ class ReportsViewsTests(TestCase):
             student=student,
             status='graded',
         )
-        Mark.objects.create(
+        mark = Mark.objects.create(
             participation=participation,
             score=4,
             points=7,
@@ -568,6 +572,7 @@ class ReportsViewsTests(TestCase):
                 },
             },
         )
+        capture_attempt_snapshot(mark)
 
         response = self.client.get(
             reverse('reports:student-performance'),

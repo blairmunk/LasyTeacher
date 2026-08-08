@@ -53,6 +53,9 @@ from core_logic.interfaces.report_repo import IReportRepository
 from core_logic.services.event_service import EventService
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
+from infrastructure.services.attempt_snapshot_queries import (
+    latest_attempts_by_participation,
+)
 from students.models import Student, StudentGroup, StudentTaskLog
 from tasks.models import Task
 from task_groups.models import AnalogGroup, TaskGroup
@@ -826,8 +829,24 @@ class DjangoReportRepository(IReportRepository):
         )
 
     def get_work_analysis_source(self, year):
-        events, _, courses = self._get_event_scope(year)
-        marks = self._get_marks_scope(year)
+        events, participations, courses = self._get_event_scope(year)
+        scoped_participations = list(
+            participations.select_related('event').only(
+                'pk',
+                'event_id',
+                'event__work_id',
+            )
+        )
+        attempts = latest_attempts_by_participation(
+            participation.pk for participation in scoped_participations
+        )
+        attempts_by_work = defaultdict(list)
+        for participation in scoped_participations:
+            attempt = attempts.get(participation.pk)
+            if attempt is not None and attempt.score is not None:
+                attempts_by_work[participation.event.work_id].append(
+                    attempt,
+                )
 
         work_sources = []
         for work in Work.objects.all():
@@ -836,11 +855,6 @@ class DjangoReportRepository(IReportRepository):
                     events.filter(work=work),
                 ).order_by('-planned_date')
             )
-            work_marks = marks.filter(
-                participation__event__work=work,
-                score__isnull=False,
-            )
-
             if not work_events:
                 continue
 
@@ -850,11 +864,11 @@ class DjangoReportRepository(IReportRepository):
                     events_count=len(work_events),
                     marks=[
                         ReportMarkFact(
-                            score=mark.score,
-                            points=mark.points,
-                            max_points=mark.max_points,
+                            score=attempt.score,
+                            points=attempt.points,
+                            max_points=attempt.max_points,
                         )
-                        for mark in work_marks
+                        for attempt in attempts_by_work[work.pk]
                     ],
                     events=[
                         self._report_event_ref(event)
@@ -873,7 +887,6 @@ class DjangoReportRepository(IReportRepository):
 
     def get_student_performance_source(self, year, group_id):
         _, participations, courses = self._get_event_scope(year)
-        marks = self._get_marks_scope(year)
         groups, students = self._get_student_scope(year)
         groups = groups.order_by('name')
 
@@ -885,25 +898,29 @@ class DjangoReportRepository(IReportRepository):
 
         students = list(students.order_by('last_name', 'first_name'))
         student_ids = [student.pk for student in students]
-        participations_by_student = defaultdict(list)
-        for participation in participations.filter(
+        scoped_participations = list(participations.filter(
             student_id__in=student_ids,
-        ).only('student_id', 'status', 'created_at'):
+        ).only('pk', 'student_id', 'status', 'created_at'))
+        attempts = latest_attempts_by_participation(
+            participation.pk for participation in scoped_participations
+        )
+        participations_by_student = defaultdict(list)
+        marks_by_student = defaultdict(list)
+        for participation in scoped_participations:
             participations_by_student[participation.student_id].append(
                 StudentPerformanceParticipationFact(
                     status=participation.status,
                     created_at=participation.created_at,
                 )
             )
-        marks_by_student = defaultdict(list)
-        for mark in marks.filter(
-            participation__student_id__in=student_ids,
-        ).select_related('participation'):
-            marks_by_student[mark.participation.student_id].append(
+            attempt = attempts.get(participation.pk)
+            if attempt is None or attempt.score is None:
+                continue
+            marks_by_student[participation.student_id].append(
                 ReportMarkFact(
-                    score=mark.score,
-                    points=mark.points,
-                    max_points=mark.max_points,
+                    score=attempt.score,
+                    points=attempt.points,
+                    max_points=attempt.max_points,
                 )
             )
 

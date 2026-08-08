@@ -64,6 +64,8 @@ class PresentationProfileViewTests(TestCase):
         self.assertContains(response, 'name="html_template_override"')
         self.assertContains(response, 'name="latex_template_override"')
         self.assertContains(response, 'data-style-example="css"')
+        self.assertContains(response, 'data-presentation-presets')
+        self.assertContains(response, 'compact_worksheet')
         self.assertContains(response, 'schooltasklist')
         self.assertNotContains(response, 'name="sections"')
         self.assertNotContains(response, 'name="section_order"')

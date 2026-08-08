@@ -50,6 +50,11 @@
 
             <hr class="my-4">
 
+            <section class="mb-4" data-presentation-presets hidden>
+                <h2 class="h5 mb-2">Готовые варианты оформления</h2>
+                <div class="row g-3" data-presentation-preset-list></div>
+            </section>
+
             <div class="row g-4">
                 <div class="col-lg-6" data-html-settings>
                     <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
@@ -202,6 +207,47 @@
         });
     }
 
+    function renderPresets(presets) {
+        var panel = document.querySelector('[data-presentation-presets]');
+        var target = document.querySelector('[data-presentation-preset-list]');
+        target.replaceChildren();
+        panel.hidden = presets.length === 0;
+        presets.forEach(function(preset) {
+            var column = document.createElement('div');
+            column.className = 'col-md-6';
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'btn btn-outline-secondary text-start w-100 h-100 p-3';
+            var title = document.createElement('strong');
+            title.className = 'd-block mb-1';
+            title.textContent = preset.title;
+            var description = document.createElement('span');
+            description.className = 'small text-muted';
+            description.textContent = preset.description;
+            button.append(title, description);
+            button.addEventListener('click', function() {
+                applyPreset(preset);
+            });
+            column.appendChild(button);
+            target.appendChild(column);
+        });
+    }
+
+    function applyPreset(preset) {
+        var cssField = document.getElementById(targets.css);
+        var latexField = document.getElementById(targets.latex);
+        var hasExistingStyles = cssField.value.trim() || latexField.value.trim();
+        if (
+            hasExistingStyles &&
+            !window.confirm('Заменить текущие CSS и LaTeX-настройки?')
+        ) {
+            return;
+        }
+        cssField.value = preset.custom_css || '';
+        latexField.value = preset.custom_latex_preamble || '';
+        cssField.focus();
+    }
+
     function setPanelState(selector, visible) {
         document.querySelectorAll(selector).forEach(function(panel) {
             panel.hidden = !visible;
@@ -223,7 +269,8 @@
             html_hooks: [],
             latex_hooks: [],
             css_example: '',
-            latex_example: ''
+            latex_example: '',
+            presets: []
         };
         examples.css = guide.css_example;
         examples.latex = guide.latex_example;
@@ -231,6 +278,7 @@
         document.getElementById(targets.latex).placeholder = guide.latex_example;
         renderHooks(document.querySelector('[data-html-hooks]'), guide.html_hooks);
         renderHooks(document.querySelector('[data-latex-hooks]'), guide.latex_hooks);
+        renderPresets(guide.presets || []);
         setPanelState('[data-latex-settings]', guide.supports_latex);
         setPanelState('[data-latex-wrapper]', guide.supports_latex);
         setFullWidth('[data-html-settings]', !guide.supports_latex);

@@ -351,6 +351,7 @@ class PresentationProfileFormAdapterTests(SimpleTestCase):
         report_guide = context['presentation_guides'][
             EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE
         ]
+        work_guide = context['presentation_guides'][WORK_DOCUMENT_TYPE]
 
         self.assertFalse(report_guide['supports_latex'])
         self.assertIn(
@@ -360,6 +361,19 @@ class PresentationProfileFormAdapterTests(SimpleTestCase):
         self.assertIn(
             '.document-section-event_report_specification',
             report_guide['css_example'],
+        )
+        self.assertEqual(report_guide['presets'], [])
+        self.assertEqual(
+            work_guide['presets'][0]['preset_id'],
+            'compact_worksheet',
+        )
+        self.assertIn(
+            'columns: 2 72mm',
+            work_guide['presets'][0]['custom_css'],
+        )
+        self.assertIn(
+            r'\renewenvironment{schooltasklist}',
+            work_guide['presets'][0]['custom_latex_preamble'],
         )
 
 

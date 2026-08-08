@@ -115,6 +115,7 @@ def get_presentation_profile_guides(document_types):
             'latex_hooks': _hook_context(_latex_hooks(item.document_type)),
             'css_example': _css_example(item.document_type),
             'latex_example': _latex_example(item.document_type),
+            'presets': _presentation_presets(item.document_type),
         }
         for item in document_types
     }
@@ -192,3 +193,56 @@ def _latex_example(document_type):
             '  {\\end{quote}}'
         )
     return ''
+
+
+def _presentation_presets(document_type):
+    if document_type != WORK_DOCUMENT_TYPE:
+        return []
+    return [
+        {
+            'preset_id': 'compact_worksheet',
+            'title': 'Компактный рабочий лист',
+            'description': (
+                'Две колонки на широкой странице, одна колонка на A5. '
+                'Порядок и состав блоков не меняются.'
+            ),
+            'custom_css': _compact_worksheet_css(),
+            'custom_latex_preamble': _compact_worksheet_latex(),
+        },
+    ]
+
+
+def _compact_worksheet_css():
+    return (
+        '.document-variant .task-list {\n'
+        '    columns: 2 72mm;\n'
+        '    column-gap: 8mm;\n'
+        '    column-rule: 1px solid var(--document-line);\n'
+        '}\n\n'
+        '.document-theory-block,\n'
+        '.document-text-block,\n'
+        '.task-item,\n'
+        '.task-blank-cells {\n'
+        '    break-inside: avoid;\n'
+        '}\n\n'
+        '.task-item {\n'
+        '    break-after: avoid;\n'
+        '}'
+    )
+
+
+def _compact_worksheet_latex():
+    return (
+        '\\usepackage{multicol}\n'
+        '\\setlength{\\columnsep}{7mm}\n'
+        '\\setlength{\\columnseprule}{0.2pt}\n'
+        '\\newif\\ifschoolwidepage\n'
+        '\\ifdim\\paperwidth>170mm\n'
+        '  \\schoolwidepagetrue\n'
+        '\\else\n'
+        '  \\schoolwidepagefalse\n'
+        '\\fi\n'
+        '\\renewenvironment{schooltasklist}\n'
+        '  {\\ifschoolwidepage\\begin{multicols}{2}\\raggedcolumns\\fi}\n'
+        '  {\\ifschoolwidepage\\end{multicols}\\fi}'
+    )

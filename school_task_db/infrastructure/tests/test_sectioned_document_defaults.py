@@ -20,6 +20,7 @@ from core_logic.entities.work import (
     RemedialSheetData,
     VariantDetailStudentRef,
 )
+from core_logic.entities.work_document import WorkDocumentSource
 from core_logic.value_objects.document_render_options import (
     RemedialSheetDocumentRenderOptions,
     RenderTarget,
@@ -602,12 +603,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 file_store=RenderedDocumentFileStore(
                     output_dirs={'html': output_dir},
                 ),
-                get_work_source=lambda work_id: Work(
-                    id=work_id,
-                    name='Контрольная',
-                    duration=45,
-                    max_score=4,
-                ),
+                get_work_source=_work_document_source,
                 get_remedial_sheet_data=lambda variant_id: RemedialSheetData(
                     variant='variant',
                     student=None,
@@ -632,12 +628,7 @@ class SectionedDocumentDefaultsTests(TestCase):
 
     def test_builds_combined_section_payload_registry(self):
         registry = build_sectioned_document_payload_builder_registry(
-            get_work_source=lambda work_id: Work(
-                id=work_id,
-                name='Контрольная',
-                duration=45,
-                max_score=4,
-            ),
+            get_work_source=_work_document_source,
             get_remedial_sheet_data=lambda variant_id: RemedialSheetData(
                 variant='variant',
                 student=None,
@@ -679,12 +670,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 file_store=RenderedDocumentFileStore(
                     output_dirs={'html': output_dir, 'pdf': output_dir},
                 ),
-                get_work_source=lambda work_id: Work(
-                    id=work_id,
-                    name='Контрольная',
-                    duration=45,
-                    max_score=4,
-                ),
+                get_work_source=_work_document_source,
                 get_remedial_sheet_data=lambda variant_id: RemedialSheetData(
                     variant='variant',
                     student=None,
@@ -724,12 +710,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                         'latex': output_dir,
                     },
                 ),
-                get_work_source=lambda work_id: Work(
-                    id=work_id,
-                    name='Контрольная',
-                    duration=45,
-                    max_score=4,
-                ),
+                get_work_source=_work_document_source,
                 get_remedial_sheet_data=lambda variant_id: RemedialSheetData(
                     variant='variant',
                     student=None,
@@ -820,6 +801,16 @@ class FakeDocument:
 class FakeSource:
     def __init__(self, source_id):
         self.source_id = source_id
+
+
+def _work_document_source(work_id):
+    return WorkDocumentSource(
+        pk=str(work_id),
+        name='Контрольная',
+        work_type='test',
+        duration=45,
+        max_score=4,
+    )
 
 
 def work_html_filename_from_id(work_id):

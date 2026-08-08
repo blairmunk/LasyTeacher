@@ -14,12 +14,19 @@ from infrastructure.services.document_build_cache import (
     document_payload_cache,
     document_section_input_key,
 )
-from works.models import Work
+from infrastructure.repositories.django_work_document_repo import (
+    DjangoWorkDocumentRepository,
+)
 
 
 class WorkDocumentSourceProvider:
-    def __init__(self, get_work_source=None):
-        self.get_work_source = get_work_source or _get_work_source
+    def __init__(self, work_document_repo=None, get_work_source=None):
+        self.get_work_source = (
+            get_work_source
+            or (
+                work_document_repo or DjangoWorkDocumentRepository()
+            ).get_work_document_source
+        )
 
     def get(self, work_id, build_context=None):
         if build_context is None:
@@ -54,17 +61,15 @@ class DjangoWorkHeaderPayloadBuilder:
         title = work.name
         duration = work.duration
         if variant is None:
-            score_spec_rows = ()
-            if work.max_score <= 0:
-                score_spec_rows = (
-                    WorkScoreSpecRow(
-                        spec_row_id=str(row.pk),
-                        count=row.count,
-                        weight=row.weight,
-                        is_assessable=row.is_assessable,
-                    )
-                    for row in work.workanaloggroup_set.all()
+            score_spec_rows = (
+                WorkScoreSpecRow(
+                    spec_row_id=row.pk,
+                    count=row.count,
+                    weight=row.weight,
+                    is_assessable=row.is_assessable,
                 )
+                for row in work.score_spec_rows
+            )
             max_score = self.score_allocation_service.effective_max_score(
                 max_score=work.max_score,
                 spec_rows=score_spec_rows,
@@ -129,15 +134,14 @@ class DjangoWorkTaskListPayloadBuilder:
         return payload
 
 
-def _get_work_source(work_id):
-    return Work.objects.get(pk=work_id)
-
-
 def _work_variants_from_request(work, request):
-    variants = work.variant_set.order_by('number', 'pk')
+    variants = work.variants
     variant_id = request.section.options.get('variant_id')
     if variant_id:
-        variants = variants.filter(pk=variant_id)
+        variants = tuple(
+            variant for variant in variants
+            if variant.pk == str(variant_id)
+        )
     return variants
 
 
@@ -145,4 +149,10 @@ def _work_variant_from_request(work, request):
     variant_id = request.section.options.get('variant_id')
     if not variant_id:
         return None
-    return work.variant_set.filter(pk=variant_id).first()
+    return next(
+        (
+            variant for variant in work.variants
+            if variant.pk == str(variant_id)
+        ),
+        None,
+    )

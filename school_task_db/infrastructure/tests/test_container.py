@@ -401,6 +401,7 @@ class ContainerTests(SimpleTestCase):
 
         self.assertIs(result, engine)
         factory.assert_called_once_with(
+            work_document_repo=container.work_document_repo,
             get_remedial_sheet_data_use_case=remedial_sheet_data_use_case,
             get_event_report_use_case=event_report_use_case,
             get_student_digests_use_case=student_digests_use_case,

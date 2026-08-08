@@ -705,6 +705,7 @@ class Container:
     def document_engine(self):
         if self._document_engine is None:
             self._document_engine = DjangoDocumentEngine.with_sectioned_renderers(
+                work_document_repo=self.work_document_repo,
                 get_remedial_sheet_data_use_case=(
                     self.get_remedial_sheet_data_use_case()
                 ),

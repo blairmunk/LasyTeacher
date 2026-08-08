@@ -15,6 +15,7 @@ from core_logic.entities.work import (
     RemedialSheetData,
     VariantDetailStudentRef,
 )
+from core_logic.entities.work_document import WorkDocumentSource
 from core_logic.services.document_builder import RecipeDocumentBuilder
 from core_logic.value_objects.document_build_plan import (
     DocumentSectionPayloadBuildRequest,
@@ -543,8 +544,15 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
     def test_registry_loads_work_once_per_document_build(self):
         work = Work.objects.create(name='Контрольная')
         calls = []
+        work_source = WorkDocumentSource(
+            pk=str(work.pk),
+            name=work.name,
+            work_type=work.work_type,
+            duration=work.duration,
+            max_score=work.max_score,
+        )
         registry = build_work_section_payload_builder_registry(
-            get_work_source=lambda work_id: calls.append(work_id) or work,
+            get_work_source=lambda work_id: calls.append(work_id) or work_source,
         )
         builder = RecipeDocumentBuilder(
             section_payload_builder_registry=registry,

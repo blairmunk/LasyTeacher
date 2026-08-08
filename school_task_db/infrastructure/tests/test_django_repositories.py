@@ -1360,6 +1360,48 @@ class DjangoRemedialRepositoryTests(TestCase):
             [str(first_variant.pk), str(second_variant.pk)],
         )
 
+    def test_work_document_source_contains_ordered_immutable_variant_data(self):
+        content_block = VariantContentBlockSnapshot.objects.create(
+            variant=self.source_variant,
+            source_content_id='theory-1',
+            content_type='text',
+            order=3,
+            title='Памятка',
+            content={'body': 'Проверьте единицы.'},
+        )
+
+        source = DjangoWorkDocumentRepository().get_work_document_source(
+            str(self.source_work.pk),
+        )
+
+        self.assertEqual(source.pk, str(self.source_work.pk))
+        self.assertEqual(source.name, self.source_work.name)
+        self.assertEqual(len(source.score_spec_rows), 1)
+        self.assertEqual(source.score_spec_rows[0].weight, 2)
+        self.assertEqual(len(source.variants), 1)
+        variant = source.variants[0]
+        self.assertEqual(variant.pk, str(self.source_variant.pk))
+        self.assertEqual(
+            [task.task_id for task in variant.tasks],
+            [str(self.original_weak.pk), str(self.original_ok.pk)],
+        )
+        self.assertEqual(
+            variant.tasks[0].task_snapshot['text'],
+            self.original_weak.text,
+        )
+        self.assertEqual(variant.content_blocks[0].pk, str(content_block.pk))
+        self.assertEqual(
+            variant.content_blocks[0].content,
+            {'body': 'Проверьте единицы.'},
+        )
+
+    def test_work_document_source_returns_none_for_missing_work(self):
+        source = DjangoWorkDocumentRepository().get_work_document_source(
+            '00000000-0000-0000-0000-000000000000',
+        )
+
+        self.assertIsNone(source)
+
     def test_work_repository_returns_none_for_missing_remedial_sheet(self):
         sheet_data = DjangoWorkDocumentRepository().get_remedial_sheet_source(
             '00000000-0000-0000-0000-000000000000',

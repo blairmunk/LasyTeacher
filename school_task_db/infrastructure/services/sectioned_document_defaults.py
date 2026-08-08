@@ -35,6 +35,7 @@ class SectionedDocumentComponents:
 
 def build_sectioned_html_document_components(
     file_store,
+    work_document_repo=None,
     get_work_source=None,
     get_remedial_sheet_data=None,
     get_event_report=None,
@@ -43,6 +44,7 @@ def build_sectioned_html_document_components(
     task_payload_formatter=None,
 ) -> SectionedDocumentComponents:
     payload_registry = build_sectioned_document_payload_builder_registry(
+        work_document_repo=work_document_repo,
         get_work_source=get_work_source,
         get_remedial_sheet_data=get_remedial_sheet_data,
         get_event_report=get_event_report,
@@ -66,6 +68,7 @@ def build_sectioned_html_document_components(
 
 def build_sectioned_html_pdf_document_components(
     file_store,
+    work_document_repo=None,
     get_work_source=None,
     get_remedial_sheet_data=None,
     get_event_report=None,
@@ -76,6 +79,7 @@ def build_sectioned_html_pdf_document_components(
 ) -> SectionedDocumentComponents:
     components = build_sectioned_html_document_components(
         file_store=file_store,
+        work_document_repo=work_document_repo,
         get_work_source=get_work_source,
         get_remedial_sheet_data=get_remedial_sheet_data,
         get_event_report=get_event_report,
@@ -98,6 +102,7 @@ def build_sectioned_html_pdf_document_components(
 
 def build_sectioned_document_components(
     file_store,
+    work_document_repo=None,
     get_work_source=None,
     get_remedial_sheet_data=None,
     get_event_report=None,
@@ -108,6 +113,7 @@ def build_sectioned_document_components(
 ) -> SectionedDocumentComponents:
     components = build_sectioned_html_pdf_document_components(
         file_store=file_store,
+        work_document_repo=work_document_repo,
         get_work_source=get_work_source,
         get_remedial_sheet_data=get_remedial_sheet_data,
         get_event_report=get_event_report,
@@ -132,6 +138,7 @@ def build_sectioned_document_components(
 
 
 def build_sectioned_document_payload_builder_registry(
+    work_document_repo=None,
     get_work_source=None,
     get_remedial_sheet_data=None,
     get_event_report=None,
@@ -143,6 +150,7 @@ def build_sectioned_document_payload_builder_registry(
         or _default_get_remedial_sheet_data()
     )
     payload_registry = build_work_section_payload_builder_registry(
+        work_document_repo=work_document_repo,
         get_work_source=get_work_source,
         task_payload_formatter=task_payload_formatter,
     )

@@ -111,11 +111,13 @@ class DjangoStudentDigestRepository(IStudentDigestRepository):
                     task_comments.append(task_result.comment.strip())
 
         event = participation.event
-        subject = event.course.subject if event.course_id else ''
-        if not subject and task_results:
+        subject = ''
+        if task_results:
             subject = task_content_snapshot_from_mapping(
                 task_results[0].task_content_snapshot,
             ).subject
+        if not subject and event.course_id:
+            subject = event.course.subject
         return StudentDigestEntryFact(
             event_id=str(event.pk),
             event_name=(

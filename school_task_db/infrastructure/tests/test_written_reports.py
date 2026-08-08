@@ -369,6 +369,8 @@ class WrittenReportRepositoryTests(TestCase):
         repo = DjangoStudentDigestRepository()
         self.topic.name = 'Изменённая тема банка'
         self.topic.save(update_fields=['name'])
+        self.course.subject = 'Изменённый предмет курса'
+        self.course.save(update_fields=['subject'])
 
         groups = repo.get_digest_groups(self.year)
         source = repo.get_student_digest_source(

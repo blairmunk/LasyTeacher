@@ -16,22 +16,22 @@ class DjangoEventAttemptQueryTests(TestCase):
             last_name='Петров',
             first_name='Пётр',
         )
-        work = Work.objects.create(name='Контрольная')
-        variant = Variant.objects.create(
-            work=work,
+        self.work = Work.objects.create(name='Контрольная')
+        self.variant = Variant.objects.create(
+            work=self.work,
             number=1,
-            work_name_snapshot=work.name,
+            work_name_snapshot=self.work.name,
         )
         self.event = Event.objects.create(
             name='КР 9Б',
-            work=work,
+            work=self.work,
             planned_date=timezone.now(),
             status='graded',
         )
         self.participation = EventParticipation.objects.create(
             event=self.event,
             student=self.student,
-            variant=variant,
+            variant=self.variant,
             status='graded',
         )
         self.mark = Mark.objects.create(
@@ -65,6 +65,20 @@ class DjangoEventAttemptQueryTests(TestCase):
         self.assertEqual(participation_result.score, 2)
         self.assertEqual(participation_result.points, 5)
         self.assertEqual(participation_result.task_scores, original_task_scores)
+
+    def test_remedial_preview_uses_captured_variant(self):
+        replacement_variant = Variant.objects.create(
+            work=self.work,
+            number=2,
+            work_name_snapshot=self.work.name,
+        )
+        self.participation.variant = replacement_variant
+        self.participation.save(update_fields=['variant'])
+
+        _attempt_ref, participation_result = self._read_attempt()
+
+        self.assertEqual(participation_result.variant.pk, str(self.variant.pk))
+        self.assertEqual(participation_result.variant.number, 1)
 
     def test_remedial_queries_select_latest_captured_revision(self):
         self.mark.score = 5

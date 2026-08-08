@@ -269,8 +269,19 @@ class DjangoEventRepository(IEventRepository):
         result = []
         for participation in participations:
             student = participation.student
-            variant = participation.variant
             attempt = attempts.get(participation.pk)
+            if attempt and attempt.variant_id_snapshot:
+                variant = VariantSummary(
+                    id=attempt.variant_id_snapshot,
+                    number=attempt.variant_number_snapshot,
+                )
+            elif participation.variant:
+                variant = VariantSummary(
+                    id=str(participation.variant.pk),
+                    number=participation.variant.number,
+                )
+            else:
+                variant = None
             result.append(
                 ParticipationAttemptData(
                     student=StudentSummary(
@@ -278,14 +289,7 @@ class DjangoEventRepository(IEventRepository):
                         full_name=student.get_full_name(),
                         short_name=student.get_short_name(),
                     ),
-                    variant=(
-                        VariantSummary(
-                            id=str(variant.pk),
-                            number=variant.number,
-                        )
-                        if variant
-                        else None
-                    ),
+                    variant=variant,
                     score=attempt.score if attempt else None,
                     points=attempt.points if attempt else None,
                     max_points=attempt.max_points if attempt else None,

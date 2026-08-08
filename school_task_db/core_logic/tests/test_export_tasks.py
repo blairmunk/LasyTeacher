@@ -15,7 +15,13 @@ class FakeTaskRepository:
         self.filters = None
         topic = TaskExportTopicRef('Динамика', 'Физика', 9)
         source = TaskExportSourceRef(pk='source-1', name='Сборник')
-        groups = (TaskExportGroupRef(pk='group-1', name='Группа'),)
+        groups = (
+            TaskExportGroupRef(
+                pk='group-1',
+                name='Группа',
+                bank_role='demo',
+            ),
+        )
         self.sources = [
             TaskExportTaskSource(
                 pk='task-1',
@@ -49,10 +55,13 @@ class ExportTasksUseCaseTests(TestCase):
         )
 
         self.assertEqual(repo.filters, filters)
-        self.assertEqual(data.payload['version'], '1.1')
+        self.assertEqual(data.payload['version'], '1.2')
         self.assertEqual(data.payload['export_date'], '2026-07-17')
         self.assertEqual(data.payload['tasks'][0]['id'], 'task-1')
-        self.assertEqual(data.payload['tasks'][0]['groups'], ['group-1'])
+        self.assertEqual(
+            data.payload['tasks'][0]['groups'],
+            [{'id': 'group-1', 'bank_role': 'demo'}],
+        )
         self.assertEqual(len(data.payload['tasks']), 2)
         self.assertEqual(len(data.payload['topics']), 1)
         self.assertEqual(len(data.payload['sources']), 1)

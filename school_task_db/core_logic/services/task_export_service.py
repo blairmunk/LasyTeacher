@@ -40,11 +40,12 @@ class TaskExportService:
                     'id': group.pk,
                     'name': group.name,
                     'description': group.description,
+                    'difficulty': group.difficulty,
                 })
             images.extend(self._image_row(image) for image in task.images)
 
         return {
-            'version': '1.1',
+            'version': '1.2',
             'export_date': export_date,
             'analog_groups': list(groups.values()),
             'topics': list(topics.values()),
@@ -75,7 +76,13 @@ class TaskExportService:
             'teacher_notes': task.teacher_notes,
             'source_detail': task.source_detail,
             'source': None,
-            'groups': [group.pk for group in task.groups],
+            'groups': [
+                {
+                    'id': group.pk,
+                    'bank_role': group.bank_role,
+                }
+                for group in task.groups
+            ],
         }
         if task.topic:
             row['topic'] = {

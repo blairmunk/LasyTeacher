@@ -711,7 +711,21 @@ class TaskImporter(BaseImporter):
             task_text = task_data.get('text', 'Unknown')[:30]
             
             # Проверяем UUID группы
-            for group_uuid in task_data.get('groups', []):
+            for group_ref in task_data.get('groups', []):
+                try:
+                    group_uuid, _bank_role = self._parse_group_reference(
+                        group_ref,
+                    )
+                except ValueError as error:
+                    broken_references.append(
+                        f"Задание '{task_text}' → {error}"
+                    )
+                    continue
+                if not group_uuid:
+                    broken_references.append(
+                        f"Задание '{task_text}' → группа без id"
+                    )
+                    continue
                 if group_uuid not in declared_group_uuids:
                     # Проверяем в базе данных
                     existing_group = self.safe_get_by_uuid(AnalogGroup, group_uuid)

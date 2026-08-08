@@ -1211,17 +1211,24 @@ class DjangoRemedialRepositoryTests(TestCase):
         tasks_by_id = {task['id']: task for task in payload['tasks']}
         weak_task = tasks_by_id[str(self.original_weak.pk)]
 
-        self.assertEqual(payload['version'], '1.1')
+        self.assertEqual(payload['version'], '1.2')
         self.assertEqual(payload['export_date'], '2026-07-17')
         self.assertEqual(weak_task['text'], self.original_weak.text)
         self.assertEqual(weak_task['source']['short_name'], 'Сборник')
         self.assertEqual(weak_task['source_detail'], 'стр. 1')
-        self.assertIn(str(self.weak_group.pk), weak_task['groups'])
+        self.assertIn(
+            {
+                'id': str(self.weak_group.pk),
+                'bank_role': 'control',
+            },
+            weak_task['groups'],
+        )
         self.assertIn(
             {
                 'id': str(self.weak_group.pk),
                 'name': self.weak_group.name,
                 'description': '',
+                'difficulty': self.weak_group.difficulty,
             },
             payload['analog_groups'],
         )

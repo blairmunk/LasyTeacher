@@ -320,6 +320,38 @@ class CoreViewsTests(TestCase):
         self.assertEqual(relation.bank_role, 'practice')
         self.assertEqual(relation.group.difficulty, 4)
 
+    def test_task_importer_dry_run_accepts_group_role_objects(self):
+        output = []
+        payload = {
+            'analog_groups': [
+                {
+                    'id': '770e8400-e29b-41d4-a716-446655440001',
+                    'name': 'Группа',
+                },
+            ],
+            'tasks': [
+                {
+                    'id': '550e8400-e29b-41d4-a716-446655440001',
+                    'text': 'Задача',
+                    'groups': [
+                        {
+                            'id': '770e8400-e29b-41d4-a716-446655440001',
+                            'bank_role': 'demo',
+                        },
+                    ],
+                },
+            ],
+        }
+
+        TaskImporter(
+            mode='update',
+            dry_run=True,
+            create_missing=True,
+            output=output.append,
+        ).import_tasks_from_json(payload)
+
+        self.assertIn('🔍 ПРЕДВАРИТЕЛЬНЫЙ ПРОСМОТР (--dry-run)', output)
+
     def test_build_test_scenario_is_idempotent_and_builds_learning_logs(self):
         year = AcademicYear.objects.create(
             name='2026-2027',
@@ -429,7 +461,7 @@ class CoreViewsTests(TestCase):
             response['Content-Disposition'],
             'attachment; filename="sample_import.json"',
         )
-        self.assertEqual(payload['version'], '1.1')
+        self.assertEqual(payload['version'], '1.2')
         self.assertEqual(len(payload['tasks']), 2)
         self.assertEqual(payload['task_images'], [])
 
@@ -463,10 +495,13 @@ class CoreViewsTests(TestCase):
         self.assertTrue(
             response['Content-Disposition'].startswith('attachment; filename="export_'),
         )
-        self.assertEqual(payload['version'], '1.1')
+        self.assertEqual(payload['version'], '1.2')
         self.assertEqual(len(payload['tasks']), 1)
         self.assertEqual(payload['tasks'][0]['id'], str(task.pk))
-        self.assertEqual(payload['tasks'][0]['groups'], [str(group.pk)])
+        self.assertEqual(
+            payload['tasks'][0]['groups'],
+            [{'id': str(group.pk), 'bank_role': 'control'}],
+        )
         self.assertEqual(payload['topics'][0]['name'], topic.name)
         self.assertEqual(payload['sources'][0]['id'], str(source.pk))
 

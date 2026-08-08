@@ -119,6 +119,8 @@ class TaskExportGroupRef:
     pk: str
     name: str
     description: str = ''
+    difficulty: int = 0
+    bank_role: str = TASK_BANK_ROLE_CONTROL
 
 
 @dataclass(frozen=True)

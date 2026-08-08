@@ -8,10 +8,10 @@ class GetTaskImportSampleUseCase:
         return TaskImportSampleData(
             filename='sample_import.json',
             payload={
-                'version': '1.1',
+                'version': '1.2',
                 'description': (
                     'Пример файла для импорта заданий '
-                    '(v1.1 — с источниками и метаданными)'
+                    '(v1.2 — с ролями заданий в группах)'
                 ),
                 'sources': [
                     {
@@ -61,7 +61,7 @@ class GetTaskImportSampleUseCase:
                         ),
                         'hint': 'Перенесите число в правую часть',
                         'difficulty': 1,
-                        'task_type': 'task',
+                        'task_type': 'computational',
                         'cognitive_level': 'apply',
                         'grade': 7,
                         'year': 2024,
@@ -79,9 +79,10 @@ class GetTaskImportSampleUseCase:
                             'subject': 'Математика',
                             'grade_level': 7,
                         },
-                        'groups': [
-                            '770e8400-e29b-41d4-a716-446655440001',
-                        ],
+                        'groups': [{
+                            'id': '770e8400-e29b-41d4-a716-446655440001',
+                            'bank_role': 'demo',
+                        }],
                     },
                     {
                         'id': '550e8400-e29b-41d4-a716-446655440002',
@@ -95,7 +96,7 @@ class GetTaskImportSampleUseCase:
                             '\\frac{11}{12}$'
                         ),
                         'difficulty': 1,
-                        'task_type': 'task',
+                        'task_type': 'computational',
                         'cognitive_level': 'apply',
                         'grade': 6,
                         'is_verified': False,
@@ -104,9 +105,10 @@ class GetTaskImportSampleUseCase:
                             'subject': 'Математика',
                             'grade_level': 6,
                         },
-                        'groups': [
-                            '770e8400-e29b-41d4-a716-446655440002',
-                        ],
+                        'groups': [{
+                            'id': '770e8400-e29b-41d4-a716-446655440002',
+                            'bank_role': 'control',
+                        }],
                     },
                 ],
                 'task_images': [],

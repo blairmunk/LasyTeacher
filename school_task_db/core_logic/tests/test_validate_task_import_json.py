@@ -97,3 +97,55 @@ class ValidateTaskImportJsonUseCaseTests(TestCase):
                 'не найдена в analog_groups (будет искать в БД)',
             ],
         )
+
+    def test_accepts_group_reference_with_bank_role(self):
+        group_id = '770e8400-e29b-41d4-a716-446655440001'
+
+        data = self.use_case.execute(
+            ValidateTaskImportJsonRequest(
+                data={
+                    'tasks': [
+                        {
+                            'id': '550e8400-e29b-41d4-a716-446655440001',
+                            'text': 'Демонстрационная задача',
+                            'groups': [
+                                {
+                                    'id': group_id,
+                                    'bank_role': 'demo',
+                                },
+                            ],
+                        },
+                    ],
+                    'analog_groups': [
+                        {'id': group_id, 'name': 'Динамика'},
+                    ],
+                },
+            ),
+        )
+
+        self.assertTrue(data.is_valid)
+        self.assertEqual(data.errors, [])
+
+    def test_rejects_unsupported_group_bank_role(self):
+        data = self.use_case.execute(
+            ValidateTaskImportJsonRequest(
+                data={
+                    'tasks': [
+                        {
+                            'id': '550e8400-e29b-41d4-a716-446655440001',
+                            'text': 'Задача',
+                            'groups': [
+                                {
+                                    'id': '770e8400-e29b-41d4-a716-446655440001',
+                                    'bank_role': 'unknown',
+                                },
+                            ],
+                        },
+                    ],
+                    'analog_groups': [],
+                },
+            ),
+        )
+
+        self.assertFalse(data.is_valid)
+        self.assertIn('Unsupported specific task bank role', data.errors[0])

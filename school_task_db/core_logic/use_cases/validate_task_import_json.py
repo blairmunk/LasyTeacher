@@ -4,6 +4,9 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from core_logic.entities.core import ImportJsonValidationData
+from core_logic.value_objects.task_print_settings import (
+    validate_task_specific_bank_role,
+)
 
 
 @dataclass(frozen=True)
@@ -66,7 +69,12 @@ class ValidateTaskImportJsonUseCase:
                 tasks_ok += 1
 
         group_uuids = self._validate_groups(groups_data, errors)
-        self._validate_task_group_links(tasks, group_uuids, warnings)
+        self._validate_task_group_links(
+            tasks,
+            group_uuids,
+            errors,
+            warnings,
+        )
 
         summary = {
             'tasks_total': len(tasks),
@@ -78,7 +86,7 @@ class ValidateTaskImportJsonUseCase:
         }
 
         return ImportJsonValidationData(
-            is_valid=tasks_errors == 0,
+            is_valid=not errors,
             errors=errors,
             warnings=warnings,
             summary=summary,
@@ -134,13 +142,51 @@ class ValidateTaskImportJsonUseCase:
 
         return group_uuids
 
-    def _validate_task_group_links(self, tasks, group_uuids, warnings):
+    def _validate_task_group_links(
+        self,
+        tasks,
+        group_uuids,
+        errors,
+        warnings,
+    ):
         for index, task in enumerate(tasks):
             if not isinstance(task, dict):
                 continue
-            for group_uuid in task.get('groups', []):
+            for group_ref in task.get('groups', []):
+                group_uuid = self._group_reference_id(
+                    group_ref,
+                    task_number=index + 1,
+                    errors=errors,
+                )
+                if not group_uuid:
+                    continue
                 if group_uuid not in group_uuids:
                     warnings.append(
                         f'Задание #{index + 1}: ссылка на группу {group_uuid[-8:]}... '
                         f'не найдена в analog_groups (будет искать в БД)',
                     )
+
+    @staticmethod
+    def _group_reference_id(group_ref, task_number, errors):
+        if isinstance(group_ref, str):
+            return group_ref
+        if not isinstance(group_ref, dict):
+            errors.append(
+                f'Задание #{task_number}: связь с группой '
+                'должна быть UUID-строкой или объектом',
+            )
+            return ''
+
+        group_uuid = group_ref.get('id') or group_ref.get('group_id') or ''
+        if not group_uuid:
+            errors.append(
+                f'Задание #{task_number}: у связи с группой '
+                'отсутствует id',
+            )
+        try:
+            validate_task_specific_bank_role(
+                group_ref.get('bank_role', 'control'),
+            )
+        except ValueError as error:
+            errors.append(f'Задание #{task_number}: {error}')
+        return group_uuid

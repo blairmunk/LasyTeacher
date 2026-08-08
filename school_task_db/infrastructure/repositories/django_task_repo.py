@@ -841,6 +841,8 @@ class DjangoTaskRepository(ITaskRepository):
                     pk=str(membership.group.pk),
                     name=membership.group.name,
                     description=getattr(membership.group, 'description', ''),
+                    difficulty=membership.group.difficulty,
+                    bank_role=membership.bank_role,
                 )
                 for membership in task.taskgroup_set.all()
             ),

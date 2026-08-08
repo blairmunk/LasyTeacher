@@ -777,7 +777,7 @@ class DjangoReportRepositoryTests(TestCase):
             student=student,
             status='assigned',
         )
-        Mark.objects.create(
+        mark = Mark.objects.create(
             participation=participation,
             score=4,
             points=8,
@@ -789,6 +789,10 @@ class DjangoReportRepositoryTests(TestCase):
                 },
             },
         )
+        capture_attempt_snapshot(mark)
+        mark.points = 1
+        mark.max_points = 100
+        mark.save(update_fields=['points', 'max_points'])
 
         data = DjangoReportRepository().get_heatmap_course_timeline_source(
             student_ids=[student.pk],

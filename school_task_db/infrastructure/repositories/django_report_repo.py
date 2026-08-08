@@ -52,7 +52,7 @@ from core_logic.entities.report import (
 from core_logic.interfaces.report_repo import IReportRepository
 from core_logic.services.event_service import EventService
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
-from events.models import Event, EventParticipation, Mark
+from events.models import Event, EventParticipation
 from infrastructure.services.attempt_snapshot_queries import (
     latest_attempts_by_participation,
 )
@@ -476,10 +476,16 @@ class DjangoReportRepository(IReportRepository):
             work_id__in=work_ids,
             status='graded',
         ).order_by('planned_date'))
-        marks = Mark.objects.filter(
-            participation__event__in=events,
-            participation__student_id__in=student_ids,
-        ).select_related('participation')
+        participations = list(
+            EventParticipation.objects.filter(
+                event__in=events,
+                student_id__in=student_ids,
+            ).only('pk', 'event_id')
+        )
+        attempts = latest_attempts_by_participation(
+            (participation.pk for participation in participations),
+            include_task_results=False,
+        )
 
         return HeatmapCourseTimelineSource(
             events=[
@@ -492,11 +498,12 @@ class DjangoReportRepository(IReportRepository):
             ],
             marks=[
                 HeatmapTimelineMarkFact(
-                    event_id=str(mark.participation.event_id),
-                    points=mark.points or 0,
-                    max_points=mark.max_points or 0,
+                    event_id=str(participation.event_id),
+                    points=attempt.points or 0,
+                    max_points=attempt.max_points or 0,
                 )
-                for mark in marks
+                for participation in participations
+                if (attempt := attempts.get(participation.pk)) is not None
             ],
         )
 

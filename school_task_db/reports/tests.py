@@ -193,6 +193,7 @@ class ReportsViewsTests(TestCase):
                 str(task.pk): {'points': 8, 'max_points': 10},
             },
         )
+        capture_attempt_snapshot(mark)
         StudentTaskLog.objects.create(
             student=student,
             task=task,

@@ -88,6 +88,7 @@ class ReportsViewsTests(TestCase):
                 str(task.pk): {'points': 8, 'max_points': 10},
             },
         )
+        capture_attempt_snapshot(mark)
         StudentTaskLog.objects.create(
             student=student,
             task=task,
@@ -266,7 +267,7 @@ class ReportsViewsTests(TestCase):
                 str(task.pk): {'points': 8, 'max_points': 10},
             },
         )
-        SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(str(mark.pk))
+        capture_attempt_snapshot(mark)
 
         response = self.client.get(
             reverse('reports:heatmap-drilldown', args=[topic.pk]),

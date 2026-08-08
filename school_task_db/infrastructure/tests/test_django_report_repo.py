@@ -159,7 +159,7 @@ class DjangoReportRepositoryTests(TestCase):
                 },
             },
         )
-        SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(str(mark.pk))
+        capture_attempt_snapshot(mark)
 
         data = GetHeatmapSubtopicMatrixUseCase(
             DjangoReportRepository(),
@@ -523,6 +523,7 @@ class DjangoReportRepositoryTests(TestCase):
                 str(other_task.pk): {'points': 2, 'max_points': 10},
             },
         )
+        capture_attempt_snapshot(mark)
         StudentTaskLog.objects.create(
             student=student,
             task=task,
@@ -567,7 +568,7 @@ class DjangoReportRepositoryTests(TestCase):
         self.assertEqual(data.rows[0]['cells'][0]['css'], 'good')
         self.assertEqual(data.col_averages, [{'pct': 80, 'css': 'good'}])
 
-    def test_heatmap_reads_normalized_task_logs_instead_of_mark_json(self):
+    def test_heatmap_reads_captured_attempt_instead_of_live_projections(self):
         student = Student.objects.create(last_name='Иванов', first_name='Иван')
         work = Work.objects.create(name='Контрольная')
         topic = Topic.objects.create(
@@ -600,17 +601,22 @@ class DjangoReportRepositoryTests(TestCase):
             points=3,
             max_points=4,
             task_scores={
-                str(task.pk): {'points': 0, 'max_points': 100},
+                str(task.pk): {'points': 3, 'max_points': 4},
             },
         )
+        capture_attempt_snapshot(mark)
+        mark.task_scores = {
+            str(task.pk): {'points': 0, 'max_points': 100},
+        }
+        mark.save(update_fields=['task_scores'])
         StudentTaskLog.objects.create(
             student=student,
             task=task,
             event=event,
             mark=mark,
             topic=topic,
-            points=3,
-            max_points=4,
+            points=0,
+            max_points=100,
             completed_at=timezone.now(),
         )
 
@@ -697,7 +703,6 @@ class DjangoReportRepositoryTests(TestCase):
                     'points': 8,
                     'max_points': 10,
                 },
-                str(other_task.pk): {'points': 1, 'max_points': 10},
             },
         )
         other_mark = Mark.objects.create(
@@ -709,6 +714,8 @@ class DjangoReportRepositoryTests(TestCase):
                 str(other_task.pk): {'points': 10, 'max_points': 10},
             },
         )
+        capture_attempt_snapshot(mark)
+        capture_attempt_snapshot(other_mark)
         StudentTaskLog.objects.create(
             student=student,
             task=task,

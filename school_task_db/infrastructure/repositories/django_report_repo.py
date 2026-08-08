@@ -1,6 +1,8 @@
 """Django implementation of report repository."""
 
 from collections import defaultdict
+from dataclasses import dataclass
+from typing import Any
 
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
@@ -56,10 +58,26 @@ from events.models import Event, EventParticipation
 from infrastructure.services.attempt_snapshot_queries import (
     latest_attempts_by_participation,
 )
+from infrastructure.services.task_content_snapshots import (
+    task_content_snapshot_from_mapping,
+)
 from students.models import Student, StudentGroup, StudentTaskLog
 from tasks.models import Task
 from task_groups.models import AnalogGroup, TaskGroup
 from works.models import Variant, Work, WorkAnalogGroup
+
+
+@dataclass(frozen=True)
+class _CapturedTaskResult:
+    student_id: str
+    event_id: str
+    event_name: str
+    event_date: Any
+    work_id: str
+    task: Any
+    points: Any
+    max_points: Any
+    comment: str
 
 
 class DjangoReportRepository(IReportRepository):
@@ -387,43 +405,48 @@ class DjangoReportRepository(IReportRepository):
                 'first_name',
             ),
         )
-        task_logs = StudentTaskLog.objects.filter(
-            student__in=students,
-            topic__isnull=False,
-        ).select_related('topic')
-        if section_filter:
-            task_logs = task_logs.filter(topic__section=section_filter)
-
-        topic_ids = set(task_logs.values_list('topic_id', flat=True))
-        topics = list(
-            Topic.objects.filter(pk__in=topic_ids).order_by(
-                'section',
-                'order',
-                'name',
-            ),
-        )
+        task_results = self._latest_attempt_task_results(student_ids)
+        topic_sections = self._topic_sections(task_results)
+        topic_orders = self._topic_orders(task_results)
+        columns = {}
+        scores = []
+        for result in task_results:
+            topic_id = result.task.topic_id
+            section = (
+                result.task.topic_section
+                or topic_sections.get(topic_id, '')
+            )
+            if not topic_id or (section_filter and section != section_filter):
+                continue
+            columns.setdefault(
+                topic_id,
+                ReportHeatmapColumnRef(
+                    pk=topic_id,
+                    name=result.task.topic_name,
+                    section=section,
+                ),
+            )
+            scores.append(HeatmapScoreFact(
+                student_id=result.student_id,
+                column_id=topic_id,
+                points=result.points,
+                max_points=result.max_points,
+            ))
         return HeatmapMatrixSource(
             students=[
                 self._report_student_ref(student)
                 for student in students
             ],
-            columns=[
-                ReportHeatmapColumnRef(
-                    pk=str(topic.pk),
-                    name=topic.name,
-                    section=topic.section,
-                )
-                for topic in topics
-            ],
-            scores=[
-                HeatmapScoreFact(
-                    student_id=str(task_log.student_id),
-                    column_id=str(task_log.topic_id),
-                    points=task_log.points or 0,
-                    max_points=task_log.max_points or 0,
-                )
-                for task_log in task_logs
-            ],
+            columns=sorted(
+                columns.values(),
+                key=lambda item: (
+                    item.section,
+                    topic_orders.get(item.pk, 0),
+                    item.name,
+                    item.pk,
+                ),
+            ),
+            scores=scores,
         )
 
     def get_heatmap_course_topic_matrix_source(self, student_ids, work_ids):
@@ -433,42 +456,51 @@ class DjangoReportRepository(IReportRepository):
                 'first_name',
             ),
         )
-        task_logs = StudentTaskLog.objects.filter(
-            student__in=students,
-            event__work_id__in=work_ids,
-            topic__isnull=False,
-        ).select_related('topic')
-
-        topic_ids = set(task_logs.values_list('topic_id', flat=True))
-        topics = list(
-            Topic.objects.filter(pk__in=topic_ids).order_by(
-                'section',
-                'order',
-                'name',
-            ),
+        task_results = self._latest_attempt_task_results(
+            student_ids,
+            work_ids=work_ids,
         )
+        topic_sections = self._topic_sections(task_results)
+        topic_orders = self._topic_orders(task_results)
+        columns = {}
+        scores = []
+        for result in task_results:
+            topic_id = result.task.topic_id
+            if not topic_id:
+                continue
+            section = (
+                result.task.topic_section
+                or topic_sections.get(topic_id, '')
+            )
+            columns.setdefault(
+                topic_id,
+                ReportHeatmapColumnRef(
+                    pk=topic_id,
+                    name=result.task.topic_name,
+                    section=section,
+                ),
+            )
+            scores.append(HeatmapScoreFact(
+                student_id=result.student_id,
+                column_id=topic_id,
+                points=result.points,
+                max_points=result.max_points,
+            ))
         return HeatmapMatrixSource(
             students=[
                 self._report_student_ref(student)
                 for student in students
             ],
-            columns=[
-                ReportHeatmapColumnRef(
-                    pk=str(topic.pk),
-                    name=topic.name,
-                    section=topic.section,
-                )
-                for topic in topics
-            ],
-            scores=[
-                HeatmapScoreFact(
-                    student_id=str(task_log.student_id),
-                    column_id=str(task_log.topic_id),
-                    points=task_log.points or 0,
-                    max_points=task_log.max_points or 0,
-                )
-                for task_log in task_logs
-            ],
+            columns=sorted(
+                columns.values(),
+                key=lambda item: (
+                    item.section,
+                    topic_orders.get(item.pk, 0),
+                    item.name,
+                    item.pk,
+                ),
+            ),
+            scores=scores,
         )
 
     def get_heatmap_course_timeline_source(self, student_ids, work_ids):
@@ -515,41 +547,121 @@ class DjangoReportRepository(IReportRepository):
                 'first_name',
             ),
         )
-        task_logs = StudentTaskLog.objects.filter(
-            student__in=students,
-            topic=topic,
-            subtopic__isnull=False,
-        ).select_related('subtopic')
-
-        subtopic_ids = set(task_logs.values_list('subtopic_id', flat=True))
-        subtopics = list(
-            SubTopic.objects.filter(pk__in=subtopic_ids).order_by(
-                'order',
-                'name',
-            ),
-        )
+        task_results = self._latest_attempt_task_results(student_ids)
+        subtopic_orders = self._subtopic_orders(task_results)
+        columns = {}
+        scores = []
+        for result in task_results:
+            if result.task.topic_id != str(topic.pk):
+                continue
+            subtopic_id = result.task.subtopic_id
+            if not subtopic_id:
+                continue
+            columns.setdefault(
+                subtopic_id,
+                ReportHeatmapColumnRef(
+                    pk=subtopic_id,
+                    name=result.task.subtopic_name,
+                ),
+            )
+            scores.append(HeatmapScoreFact(
+                student_id=result.student_id,
+                column_id=subtopic_id,
+                points=result.points,
+                max_points=result.max_points,
+            ))
         return HeatmapMatrixSource(
             students=[
                 self._report_student_ref(student)
                 for student in students
             ],
-            columns=[
-                ReportHeatmapColumnRef(
-                    pk=str(subtopic.pk),
-                    name=subtopic.name,
-                )
-                for subtopic in subtopics
-            ],
-            scores=[
-                HeatmapScoreFact(
-                    student_id=str(task_log.student_id),
-                    column_id=str(task_log.subtopic_id),
-                    points=task_log.points or 0,
-                    max_points=task_log.max_points or 0,
-                )
-                for task_log in task_logs
-            ],
+            columns=sorted(
+                columns.values(),
+                key=lambda item: (
+                    subtopic_orders.get(item.pk, 0),
+                    item.name,
+                    item.pk,
+                ),
+            ),
+            scores=scores,
         )
+
+    def _latest_attempt_task_results(self, student_ids, work_ids=None):
+        participations = EventParticipation.objects.filter(
+            student_id__in=student_ids,
+        ).only('pk')
+        if work_ids is not None:
+            participations = participations.filter(
+                event__work_id__in=work_ids,
+            )
+        participation_ids = list(
+            participations.values_list('pk', flat=True)
+        )
+        attempts = latest_attempts_by_participation(participation_ids)
+        results = []
+        for attempt in attempts.values():
+            for task_result in attempt.captured_task_results:
+                if not task_result.is_assessable_snapshot:
+                    continue
+                try:
+                    task = task_content_snapshot_from_mapping(
+                        task_result.task_content_snapshot,
+                    )
+                except (TypeError, ValueError):
+                    continue
+                max_points = (
+                    task_result.checked_max_points
+                    if task_result.checked_max_points is not None
+                    else task_result.expected_max_points_snapshot
+                )
+                results.append(_CapturedTaskResult(
+                    student_id=attempt.student_id_snapshot,
+                    event_id=attempt.event_id_snapshot,
+                    event_name=attempt.event_name_snapshot,
+                    event_date=attempt.event_date_snapshot,
+                    work_id=attempt.work_id_snapshot,
+                    task=task,
+                    points=task_result.points or 0,
+                    max_points=max_points or 0,
+                    comment=task_result.comment,
+                ))
+        return results
+
+    @staticmethod
+    def _topic_sections(task_results):
+        topic_ids = {
+            result.task.topic_id
+            for result in task_results
+            if result.task.topic_id and not result.task.topic_section
+        }
+        return {
+            str(topic.pk): topic.section
+            for topic in Topic.objects.filter(pk__in=topic_ids)
+        }
+
+    @staticmethod
+    def _topic_orders(task_results):
+        topic_ids = {
+            result.task.topic_id
+            for result in task_results
+            if result.task.topic_id
+        }
+        return {
+            str(topic.pk): topic.order
+            for topic in Topic.objects.filter(pk__in=topic_ids)
+        }
+
+    @staticmethod
+    def _subtopic_orders(task_results):
+        subtopic_ids = {
+            result.task.subtopic_id
+            for result in task_results
+            if result.task.subtopic_id
+        }
+        return {
+            str(subtopic.pk): subtopic.order
+            for subtopic in SubTopic.objects.filter(pk__in=subtopic_ids)
+        }
 
     def get_heatmap_subtopic_detail_source(self, subtopic_id, group_id):
         subtopic = get_object_or_404(SubTopic, pk=subtopic_id)

@@ -24,26 +24,30 @@
             <details class="border rounded px-2 py-1 small">
                 <summary class="fw-semibold">Состав PDF / HTML</summary>
                 <div class="pt-2 pb-1 d-grid gap-1">
+                    {% if report.event.has_task_level_results %}
                     <label class="form-check mb-0">
                         <input class="form-check-input" type="checkbox" name="include_specification" checked>
                         <span class="form-check-label">Краткая спецификация</span>
                     </label>
+                    {% endif %}
                     <label class="form-check mb-0">
                         <input class="form-check-input" type="checkbox" name="include_summary" checked>
                         <span class="form-check-label">Сводные результаты</span>
                     </label>
+                    {% if report.event.has_task_level_results %}
                     <label class="form-check mb-0">
                         <input class="form-check-input" type="checkbox" name="include_task_analysis" checked>
                         <span class="form-check-label">Анализ заданий и тем</span>
                     </label>
+                    {% endif %}
                     <label class="form-check mb-0">
                         <input class="form-check-input" type="checkbox" name="include_conclusions" checked>
                         <span class="form-check-label">Выводы и мероприятия</span>
                     </label>
-                    <label class="form-check mb-0">
+                    {% if report.event.has_task_level_results %}<label class="form-check mb-0">
                         <input class="form-check-input" type="checkbox" name="include_content_element_text" checked>
                         <span class="form-check-label">Текст элементов содержания</span>
-                    </label>
+                    </label>{% endif %}
                     <label class="form-check mb-0">
                         <input class="form-check-input" type="checkbox" name="include_teacher_notes">
                         <span class="form-check-label">Приложить комментарии проверки</span>
@@ -73,10 +77,15 @@
         </div>
     </header>
 
-    {% include 'reports/event_report_sections/specification.html' %}
-    {% include 'reports/event_report_sections/summary.html' %}
-    {% include 'reports/event_report_sections/task_analysis.html' %}
-    {% include 'reports/event_report_sections/conclusions.html' %}
+    {% if report.event.has_task_level_results %}
+    {% include 'reports/event_report_sections/specification.html' with section_number=1 %}
+    {% include 'reports/event_report_sections/summary.html' with section_number=2 %}
+    {% include 'reports/event_report_sections/task_analysis.html' with section_number=3 %}
+    {% include 'reports/event_report_sections/conclusions.html' with section_number=4 %}
+    {% else %}
+    {% include 'reports/event_report_sections/summary.html' with section_number=1 %}
+    {% include 'reports/event_report_sections/conclusions.html' with section_number=2 %}
+    {% endif %}
 </article>
 
 {% include 'reports/event_report_sections/teacher_notes_source.html' %}

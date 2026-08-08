@@ -26,6 +26,7 @@ def review_event_ref(event) -> ReviewEventRef:
                 work_type=event.work.work_type,
                 work_type_display=event.work.get_work_type_display(),
                 assessment_mode=event.work.assessment_mode,
+                max_score=event.work.max_score,
             )
             if event.work_id
             else None

@@ -27,9 +27,9 @@ class GetParticipationReviewUseCase:
         )
         mark = self.review_repo.get_or_create_mark(
             participation_id=participation_id,
-            default_max_points=sum(
-                task.weight
-                for task in assessable_variant_tasks
+            default_max_points=self.review_service.default_max_points(
+                work=participation.event.work,
+                assessable_variant_tasks=assessable_variant_tasks,
             ),
         )
         review_participations = self.review_repo.get_review_participations(

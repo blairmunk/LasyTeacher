@@ -1,7 +1,7 @@
 """Review repository interface."""
 
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Optional
 
 from core_logic.entities.review import (
     EventReviewParticipationRow,
@@ -40,7 +40,7 @@ class IReviewRepository(ABC):
     def get_or_create_mark(
         self,
         participation_id: str,
-        default_max_points: int,
+        default_max_points: Optional[int],
     ) -> ReviewMarkRef:
         """Return the existing mark or create one with default max points."""
 

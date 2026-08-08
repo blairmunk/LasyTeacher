@@ -1,5 +1,5 @@
 <section class="report-section">
-    <h2 class="report-section-title">1. Краткая спецификация работы</h2>
+    <h2 class="report-section-title">{{ section_number|default:"1" }}. Краткая спецификация работы</h2>
     {% if report.specification_items %}
     <div class="table-responsive">
         <table class="table table-sm align-middle mb-0">

@@ -24,6 +24,9 @@ from infrastructure.services.task_content_snapshots import (
     task_content_snapshot_from_mapping,
 )
 from reports.models import EventReportNarrativeModel
+from core_logic.value_objects.work_assessment import (
+    WORK_ASSESSMENT_MODE_VARIANT,
+)
 
 
 class DjangoEventPerformanceReportRepository(
@@ -122,6 +125,10 @@ class DjangoEventPerformanceReportRepository(
                 planned_date=event.planned_date,
                 work_name=event.work.name,
                 course_name=event.course.name if event.course_id else '',
+                work_assessment_mode=self._work_assessment_mode(
+                    event,
+                    attempts.values(),
+                ),
             ),
             participants=tuple(participant_facts),
             task_scores=tuple(task_scores),
@@ -220,3 +227,18 @@ class DjangoEventPerformanceReportRepository(
             return float(value) if value is not None else None
         except (TypeError, ValueError):
             return None
+
+    @staticmethod
+    def _work_assessment_mode(event, attempts):
+        captured_modes = {
+            attempt.work_assessment_mode_snapshot
+            for attempt in attempts
+            if attempt.work_assessment_mode_snapshot
+        }
+        if len(captured_modes) == 1:
+            return captured_modes.pop()
+        return (
+            event.work.assessment_mode
+            if event.work_id
+            else WORK_ASSESSMENT_MODE_VARIANT
+        )

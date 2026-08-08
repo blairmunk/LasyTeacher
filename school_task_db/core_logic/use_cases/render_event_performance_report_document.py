@@ -1,6 +1,6 @@
 """Render a sectioned document for one event performance report."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from core_logic.entities.document import DocumentPresentationProfile
 from core_logic.entities.document_rendering import (
@@ -61,6 +61,14 @@ class RenderEventPerformanceReportDocumentUseCase:
                 status=DOCUMENT_RENDER_STATUS_NOT_FOUND,
                 renderer_type=request.render_target.renderer_type,
             )
+        options = request.options
+        if not report.event.has_task_level_results:
+            options = replace(
+                options,
+                include_specification=False,
+                include_task_analysis=False,
+                include_content_element_text=False,
+            )
 
         return self.render_document_from_recipe_use_case.execute(
             RenderDocumentFromRecipeRequest(
@@ -69,7 +77,7 @@ class RenderEventPerformanceReportDocumentUseCase:
                     event_name=report.event.name,
                 ),
                 recipe=build_event_report_document_recipe_for_render(
-                    options=request.options,
+                    options=options,
                     presentation_profile=resolve_document_presentation_profile(
                         document_type=(
                             EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE

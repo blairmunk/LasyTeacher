@@ -46,6 +46,7 @@ class ReviewWorkRef:
     work_type: str = ''
     work_type_display: str = ''
     assessment_mode: str = WORK_ASSESSMENT_MODE_VARIANT
+    max_score: int = 0
 
     def get_work_type_display(self) -> str:
         return self.work_type_display or self.work_type

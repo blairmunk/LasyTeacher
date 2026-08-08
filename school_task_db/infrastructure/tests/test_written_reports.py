@@ -16,6 +16,9 @@ from core_logic.services.event_performance_report_service import (
 from core_logic.value_objects.document_recipes import (
     EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
 )
+from core_logic.value_objects.work_assessment import (
+    WORK_ASSESSMENT_MODE_AGGREGATE,
+)
 from curriculum.models import Course, SubTopic, Topic
 from document_engine.models import PrintSettings
 from events.models import Event, EventParticipation, Mark
@@ -425,6 +428,79 @@ class WrittenReportRepositoryTests(TestCase):
             str(self.event.pk),
         )
         self.assertEqual(source.narrative.recommendations, 'Повторить формулы')
+
+    def test_aggregate_event_report_uses_summary_without_task_sections(self):
+        work = Work.objects.create(
+            name='Внешний диагностический лист',
+            assessment_mode=WORK_ASSESSMENT_MODE_AGGREGATE,
+            max_score=10,
+        )
+        event = Event.objects.create(
+            name='Диагностика 9А',
+            work=work,
+            course=self.course,
+            planned_date=timezone.now(),
+            status='graded',
+        )
+        participation = EventParticipation.objects.create(
+            event=event,
+            student=self.student,
+            status='graded',
+        )
+        mark = Mark.objects.create(
+            participation=participation,
+            score=4,
+            points=8,
+            max_points=10,
+            teacher_comment='Уверенная работа',
+            mistakes_analysis='Нет пояснений',
+        )
+        capture_attempt_snapshot(mark)
+        work.assessment_mode = 'variant'
+        work.save(update_fields=['assessment_mode'])
+
+        source = DjangoEventPerformanceReportRepository().get_event_report_source(
+            str(event.pk),
+        )
+        response = self.client.get(
+            reverse('reports:event-performance', args=[event.pk]),
+        )
+
+        self.assertEqual(
+            source.event.work_assessment_mode,
+            WORK_ASSESSMENT_MODE_AGGREGATE,
+        )
+        self.assertFalse(source.event.has_task_level_results)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '1. Общие результаты')
+        self.assertContains(response, '2. Выводы и дальнейшая работа')
+        self.assertNotContains(response, 'Краткая спецификация работы')
+        self.assertNotContains(response, 'Анализ выполнения заданий')
+        self.assertNotContains(response, 'name="include_specification"')
+        self.assertNotContains(response, 'name="include_task_analysis"')
+
+        document_response = self.client.post(
+            reverse(
+                'reports:event-performance-document',
+                args=[event.pk],
+            ),
+            {
+                'renderer_type': 'html',
+                'report_options_submitted': '1',
+                'include_specification': 'on',
+                'include_summary': 'on',
+                'include_task_analysis': 'on',
+                'include_conclusions': 'on',
+                'include_content_element_text': 'on',
+            },
+        )
+        html = document_response.content.decode('utf-8')
+
+        self.assertEqual(document_response.status_code, 200)
+        self.assertIn('document-section-event_report_summary', html)
+        self.assertIn('document-section-event_report_conclusions', html)
+        self.assertNotIn('document-section-event_report_specification', html)
+        self.assertNotIn('document-section-event_report_task_analysis', html)
 
     def test_student_digest_view_renders_individual_sheet(self):
         response = self.client.get(

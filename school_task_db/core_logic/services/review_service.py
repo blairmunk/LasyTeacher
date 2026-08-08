@@ -40,6 +40,12 @@ class ReviewService:
     }
 
     @staticmethod
+    def default_max_points(work, assessable_variant_tasks) -> Optional[int]:
+        if work is not None and not work.requires_variants:
+            return work.max_score or None
+        return sum(task.weight for task in assessable_variant_tasks)
+
+    @staticmethod
     def score_percentage(
         points: Optional[int],
         max_points: Optional[int],

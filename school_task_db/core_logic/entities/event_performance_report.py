@@ -3,6 +3,11 @@
 from dataclasses import dataclass, field
 from typing import Any, Tuple
 
+from core_logic.value_objects.work_assessment import (
+    WORK_ASSESSMENT_MODE_VARIANT,
+    work_requires_variants,
+)
+
 
 @dataclass(frozen=True)
 class EventReportEventRef:
@@ -13,6 +18,11 @@ class EventReportEventRef:
     planned_date: Any
     work_name: str
     course_name: str = ''
+    work_assessment_mode: str = WORK_ASSESSMENT_MODE_VARIANT
+
+    @property
+    def has_task_level_results(self) -> bool:
+        return work_requires_variants(self.work_assessment_mode)
 
 
 @dataclass(frozen=True)

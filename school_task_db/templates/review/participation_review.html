@@ -147,12 +147,12 @@
                             <div class="col-6">
                                 <label class="form-label small fw-bold">Баллы</label>
                                 <input type="number" name="points" id="points"
-                                       class="form-control" value="{{ mark.points|default:0 }}" min="0">
+                                       class="form-control" value="{{ mark.points|default_if_none:'' }}" min="0">
                             </div>
                             <div class="col-6">
                                 <label class="form-label small fw-bold">Из</label>
                                 <input type="number" name="max_points" id="max_points"
-                                       class="form-control" value="{{ mark.max_points|default:20 }}" min="1">
+                                       class="form-control" value="{{ mark.max_points|default_if_none:'' }}" min="1">
                             </div>
                         </div>
 
@@ -264,7 +264,8 @@
 {% block extra_js %}
 <script>
 // Пересчёт баллов при изменении заданий
-document.querySelectorAll('.task-points').forEach(input => {
+const taskPointInputs = document.querySelectorAll('.task-points');
+taskPointInputs.forEach(input => {
     input.addEventListener('input', calculateTotal);
 });
 
@@ -272,7 +273,7 @@ document.querySelectorAll('.task-points').forEach(input => {
 function calculateTotal() {
     let pts = 0, maxPts = 0;
     
-    document.querySelectorAll('.task-points').forEach(input => {
+    taskPointInputs.forEach(input => {
         pts += parseInt(input.value) || 0;
         
         // Получаем max_points из соответствующего hidden-поля
@@ -289,7 +290,10 @@ function calculateTotal() {
 }
 
 function updateScoreRecommendation(pts, maxPts) {
-    if (maxPts === 0) return;
+    if (maxPts === 0) {
+        document.getElementById('score-info').innerHTML = '';
+        return;
+    }
     const pct = (pts / maxPts * 100).toFixed(1);
     let score, cls;
     if (pct >= 85) { score = 5; cls = 'primary'; }
@@ -333,10 +337,25 @@ document.addEventListener('keydown', e => {
 
 // Рендер формул MathJax
 document.addEventListener('DOMContentLoaded', () => {
-    calculateTotal();
+    if (taskPointInputs.length > 0) {
+        calculateTotal();
+    } else {
+        const pts = parseInt(document.getElementById('points').value) || 0;
+        const maxPts = parseInt(document.getElementById('max_points').value) || 0;
+        updateScoreRecommendation(pts, maxPts);
+    }
     if (window.MathJax) {
         MathJax.typesetPromise();
     }
+});
+
+['points', 'max_points'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+        if (taskPointInputs.length > 0) return;
+        const pts = parseInt(document.getElementById('points').value) || 0;
+        const maxPts = parseInt(document.getElementById('max_points').value) || 0;
+        updateScoreRecommendation(pts, maxPts);
+    });
 });
 
 // Radio-кнопки оценки — переключение active

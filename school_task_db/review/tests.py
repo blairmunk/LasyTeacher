@@ -177,6 +177,7 @@ class ParticipationReviewViewTests(TestCase):
         work = Work.objects.create(
             name='Внешний рабочий лист',
             assessment_mode=WORK_ASSESSMENT_MODE_AGGREGATE,
+            max_score=10,
         )
         event = Event.objects.create(
             name='Рабочий лист 9А',
@@ -197,11 +198,22 @@ class ParticipationReviewViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.context['blocked'])
         self.assertFalse(response.context['variants_required'])
+        self.assertEqual(response.context['participations_data'][0].variant, None)
         self.assertContains(response, 'Не требуется')
         self.assertContains(
             response,
             reverse('review:participation-review', args=[participation.pk]),
         )
+
+        participation_response = self.client.get(
+            reverse('review:participation-review', args=[participation.pk]),
+        )
+        self.assertEqual(participation_response.context['mark'].max_points, 10)
+        self.assertContains(
+            participation_response,
+            'name="max_points" id="max_points"',
+        )
+        self.assertNotContains(participation_response, 'value="20"')
 
         response = self.client.post(
             reverse('review:participation-review', args=[participation.pk]),

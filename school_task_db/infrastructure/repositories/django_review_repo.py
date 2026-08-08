@@ -1,6 +1,6 @@
 """Django implementation of the review repository."""
 
-from typing import List
+from typing import List, Optional
 
 from django.db.models import Count, Q
 
@@ -140,7 +140,7 @@ class DjangoReviewRepository(IReviewRepository):
     def get_or_create_mark(
         self,
         participation_id: str,
-        default_max_points: int,
+        default_max_points: Optional[int],
     ) -> ReviewMarkRef:
         mark, _ = Mark.objects.get_or_create(
             participation_id=participation_id,

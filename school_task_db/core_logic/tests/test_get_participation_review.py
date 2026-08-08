@@ -8,10 +8,14 @@ from core_logic.entities.review import (
     ReviewStudentRef,
     ReviewTaskRef,
     ReviewVariantTaskRef,
+    ReviewWorkRef,
 )
 from core_logic.services.review_service import ReviewService
 from core_logic.use_cases.get_participation_review import (
     GetParticipationReviewUseCase,
+)
+from core_logic.value_objects.work_assessment import (
+    WORK_ASSESSMENT_MODE_AGGREGATE,
 )
 
 
@@ -65,6 +69,11 @@ class FakeReviewTaskRepository:
         ]
 
 
+class EmptyReviewTaskRepository:
+    def get_variant_tasks(self, participation_id):
+        return []
+
+
 class GetParticipationReviewUseCaseTests(TestCase):
     def test_execute_builds_review_screen_data(self):
         repo = FakeReviewRepository()
@@ -92,3 +101,65 @@ class GetParticipationReviewUseCaseTests(TestCase):
         self.assertEqual(result.typical_comments[0].text, 'Хорошо')
         self.assertEqual(result.current_position, 1)
         self.assertEqual(result.total_positions, 1)
+
+    def test_aggregate_review_uses_work_scoring_scale(self):
+        repo = FakeReviewRepository()
+        repo.event = ReviewEventRef(
+            pk='event-1',
+            name='Рабочий лист',
+            work=ReviewWorkRef(
+                pk='work-1',
+                name='Материал вне базы',
+                assessment_mode=WORK_ASSESSMENT_MODE_AGGREGATE,
+                max_score=12,
+            ),
+        )
+        repo.participation = ReviewParticipationRef(
+            pk='p1',
+            student=ReviewStudentRef(
+                pk='s1',
+                last_name='Иванов',
+                first_name='Иван',
+            ),
+            event=repo.event,
+        )
+        use_case = GetParticipationReviewUseCase(
+            review_repo=repo,
+            review_task_repo=EmptyReviewTaskRepository(),
+            review_service=ReviewService(),
+        )
+
+        result = use_case.execute('p1')
+
+        self.assertEqual(repo.default_max_points, 12)
+        self.assertEqual(result.mark.max_points, 12)
+        self.assertEqual(result.tasks_with_scores, [])
+
+    def test_aggregate_review_without_scale_keeps_maximum_empty(self):
+        repo = FakeReviewRepository()
+        repo.event = ReviewEventRef(
+            pk='event-1',
+            name='Рабочий лист',
+            work=ReviewWorkRef(
+                pk='work-1',
+                name='Материал вне базы',
+                assessment_mode=WORK_ASSESSMENT_MODE_AGGREGATE,
+            ),
+        )
+        repo.participation = ReviewParticipationRef(
+            pk='p1',
+            student=ReviewStudentRef(
+                pk='s1',
+                last_name='Иванов',
+                first_name='Иван',
+            ),
+            event=repo.event,
+        )
+
+        GetParticipationReviewUseCase(
+            review_repo=repo,
+            review_task_repo=EmptyReviewTaskRepository(),
+            review_service=ReviewService(),
+        ).execute('p1')
+
+        self.assertIsNone(repo.default_max_points)

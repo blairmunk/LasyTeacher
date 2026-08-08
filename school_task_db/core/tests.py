@@ -17,8 +17,8 @@ from core.models import AcademicYear, ImportLog
 from core.test_slices import TEST_SLICES
 from core.importers.tasks import TaskImporter
 from curriculum.models import Course, Topic
-from events.models import Event, EventParticipation, Mark
-from students.models import Student, StudentGroup, StudentTaskLog
+from events.models import AttemptTaskSnapshot, Event, EventParticipation, Mark
+from students.models import Student, StudentGroup
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Source, Task
 from works.models import Variant, Work
@@ -414,10 +414,10 @@ class CoreViewsTests(TestCase):
         self.assertEqual(Event.objects.count(), 1)
         self.assertEqual(EventParticipation.objects.count(), 1)
         self.assertEqual(Mark.objects.count(), 1)
-        task_log = StudentTaskLog.objects.get()
-        self.assertEqual(task_log.student, student)
-        self.assertEqual(task_log.task, task)
-        self.assertIsNotNone(task_log.variant_task)
+        task_result = AttemptTaskSnapshot.objects.get()
+        self.assertEqual(task_result.attempt.student_id_snapshot, str(student.pk))
+        self.assertEqual(task_result.task_id_snapshot, str(task.pk))
+        self.assertIsNotNone(task_result.variant_task)
 
     def test_download_sample_json_uses_clean_sample_data(self):
         response = self.client.get(reverse('core:import-sample'))

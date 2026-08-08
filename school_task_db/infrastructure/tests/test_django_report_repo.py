@@ -46,7 +46,7 @@ from core_logic.use_cases.get_reports_dashboard import (
     GetReportsDashboardUseCase,
     ReportsDashboardRequest,
 )
-from students.models import Student, StudentGroup, StudentTaskLog
+from students.models import Student, StudentGroup
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
 from works.models import Variant, Work, WorkAnalogGroup
@@ -523,26 +523,6 @@ class DjangoReportRepositoryTests(TestCase):
             },
         )
         capture_attempt_snapshot(mark)
-        StudentTaskLog.objects.create(
-            student=student,
-            task=task,
-            event=event,
-            mark=mark,
-            topic=topic,
-            points=8,
-            max_points=10,
-            completed_at=timezone.now(),
-        )
-        StudentTaskLog.objects.create(
-            student=student,
-            task=other_task,
-            event=event,
-            mark=mark,
-            topic=other_topic,
-            points=2,
-            max_points=10,
-            completed_at=timezone.now(),
-        )
 
         data = GetHeatmapTopicMatrixUseCase(
             DjangoReportRepository(),
@@ -567,7 +547,7 @@ class DjangoReportRepositoryTests(TestCase):
         self.assertEqual(data.rows[0]['cells'][0]['css'], 'good')
         self.assertEqual(data.col_averages, [{'pct': 80, 'css': 'good'}])
 
-    def test_heatmap_reads_captured_attempt_instead_of_live_projections(self):
+    def test_heatmap_reads_captured_attempt_instead_of_live_mark(self):
         student = Student.objects.create(last_name='Иванов', first_name='Иван')
         work = Work.objects.create(name='Контрольная')
         topic = Topic.objects.create(
@@ -608,16 +588,6 @@ class DjangoReportRepositoryTests(TestCase):
             str(task.pk): {'points': 0, 'max_points': 100},
         }
         mark.save(update_fields=['task_scores'])
-        StudentTaskLog.objects.create(
-            student=student,
-            task=task,
-            event=event,
-            mark=mark,
-            topic=topic,
-            points=0,
-            max_points=100,
-            completed_at=timezone.now(),
-        )
 
         data = GetHeatmapTopicMatrixUseCase(
             DjangoReportRepository(),
@@ -715,26 +685,6 @@ class DjangoReportRepositoryTests(TestCase):
         )
         capture_attempt_snapshot(mark)
         capture_attempt_snapshot(other_mark)
-        StudentTaskLog.objects.create(
-            student=student,
-            task=task,
-            event=course_event,
-            mark=mark,
-            topic=topic,
-            points=8,
-            max_points=10,
-            completed_at=timezone.now(),
-        )
-        StudentTaskLog.objects.create(
-            student=student,
-            task=other_task,
-            event=other_event,
-            mark=other_mark,
-            topic=other_topic,
-            points=10,
-            max_points=10,
-            completed_at=timezone.now(),
-        )
 
         data = GetHeatmapCourseTopicMatrixUseCase(
             DjangoReportRepository(),

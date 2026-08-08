@@ -7,7 +7,7 @@ from core_logic.entities.student import (
     ObjectRef,
     StudentGroupRef,
     StudentParticipationProfile,
-    StudentTaskLogProfile,
+    StudentTaskResultProfile,
     WorkGroupRef,
     WorkRef,
 )
@@ -50,7 +50,7 @@ class StudentAnalyticsServiceTests(TestCase):
                 ),
             ],
             task_logs=[
-                StudentTaskLogProfile(
+                StudentTaskResultProfile(
                     task=ObjectRef(pk='t1', name='Задание 1'),
                     event=ObjectRef(pk='e1', name='КР'),
                     topic_name='Кинематика',
@@ -62,7 +62,7 @@ class StudentAnalyticsServiceTests(TestCase):
                     percentage=0,
                     completed_at=datetime(2026, 3, 10),
                 ),
-                StudentTaskLogProfile(
+                StudentTaskResultProfile(
                     task=ObjectRef(pk='t2', name='Задание 2'),
                     event=ObjectRef(pk='e1', name='КР'),
                     topic_name='Кинематика',

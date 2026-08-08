@@ -17,9 +17,7 @@ from core_logic.entities.student import (
     StudentRemedialSource,
     StudentGroupRef,
     StudentParticipationProfile,
-    StudentTaskLogProfile,
-    TaskLogSyncPlan,
-    TaskLogSyncSource,
+    StudentTaskResultProfile,
     TaskResultsSource,
     WorkGroupRef,
 )
@@ -94,7 +92,7 @@ class IStudentRepository(ABC):
         """Return participation rows for a student profile."""
 
     @abstractmethod
-    def get_task_logs(self, student_id: str) -> List[StudentTaskLogProfile]:
+    def get_task_logs(self, student_id: str) -> List[StudentTaskResultProfile]:
         """Return task-level learning history for a student."""
 
     @abstractmethod
@@ -118,14 +116,3 @@ class IStudentRepository(ABC):
     @abstractmethod
     def get_work_group_refs(self, work_ids: List[str]) -> List[WorkGroupRef]:
         """Return analog groups used by works."""
-
-    @abstractmethod
-    def get_task_log_sync_source(
-        self,
-        mark_id: str,
-    ) -> Optional[TaskLogSyncSource]:
-        """Return facts needed to synchronize logs from a mark."""
-
-    @abstractmethod
-    def apply_task_log_sync(self, plan: TaskLogSyncPlan) -> int:
-        """Apply a prepared task-log projection plan."""

@@ -25,7 +25,7 @@ from document_engine.models import PrintSettings
 from events.models import AttemptSnapshot, Event, EventParticipation
 from infrastructure.container import container
 from site_settings.models import SiteSettings
-from students.models import StudentGroup, StudentTaskLog
+from students.models import StudentGroup
 from task_groups.models import AnalogGroup
 from works.models import Variant, Work
 
@@ -136,7 +136,6 @@ class Command(BaseCommand):
             self._scenario_id('work', item.get('key'))
             for item in manifest.get('works', [])
         ]
-        StudentTaskLog.objects.filter(event_id__in=event_ids).delete()
         AttemptSnapshot.objects.filter(
             event_id_snapshot__in=[str(event_id) for event_id in event_ids],
         ).delete()

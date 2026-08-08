@@ -7,7 +7,7 @@ from core_logic.entities.student import (
     StudentGroupRef,
     StudentLevel,
     StudentParticipationProfile,
-    StudentTaskLogProfile,
+    StudentTaskResultProfile,
     WorkGroupRef,
 )
 
@@ -30,7 +30,7 @@ class StudentProfileData:
     heatmap_groups: List[dict] = field(default_factory=list)
     heatmap_topics: List[dict] = field(default_factory=list)
     heatmap_difficulty: List[dict] = field(default_factory=list)
-    recent_task_log: List[StudentTaskLogProfile] = field(default_factory=list)
+    recent_task_log: List[StudentTaskResultProfile] = field(default_factory=list)
 
 
 class StudentAnalyticsService:
@@ -40,7 +40,7 @@ class StudentAnalyticsService:
         self,
         student_groups: Iterable[StudentGroupRef],
         participations: Iterable[StudentParticipationProfile],
-        task_logs: Iterable[StudentTaskLogProfile],
+        task_logs: Iterable[StudentTaskResultProfile],
         work_group_refs: Iterable[WorkGroupRef],
     ) -> StudentProfileData:
         participation_rows = list(participations)
@@ -72,7 +72,7 @@ class StudentAnalyticsService:
     def _build_stats(
         self,
         participations: List[StudentParticipationProfile],
-        task_logs: List[StudentTaskLogProfile],
+        task_logs: List[StudentTaskResultProfile],
     ) -> tuple[dict, List[ScoreTimelinePoint]]:
         total_marks = 0
         total_score_sum = 0
@@ -173,7 +173,7 @@ class StudentAnalyticsService:
 
     def _build_task_log_stats(
         self,
-        task_logs: List[StudentTaskLogProfile],
+        task_logs: List[StudentTaskResultProfile],
     ) -> Optional[dict]:
         if not task_logs:
             return None
@@ -204,7 +204,7 @@ class StudentAnalyticsService:
 
     def _build_difficulty_cells(
         self,
-        task_logs: List[StudentTaskLogProfile],
+        task_logs: List[StudentTaskResultProfile],
     ) -> List[dict]:
         buckets = {}
         for log in task_logs:
@@ -217,7 +217,11 @@ class StudentAnalyticsService:
             for difficulty in sorted(buckets)
         ]
 
-    def _build_heatmap_cell(self, name: str, logs: List[StudentTaskLogProfile]) -> dict:
+    def _build_heatmap_cell(
+        self,
+        name: str,
+        logs: List[StudentTaskResultProfile],
+    ) -> dict:
         percentages = [log.percentage for log in logs if log.percentage is not None]
         avg_pct = round(self._average(percentages), 1)
         return {

@@ -58,18 +58,6 @@ class FakeReviewRepository:
         return self.variant_tasks
 
 
-class FakeStudentRepository:
-    def __init__(self):
-        self.synced_mark_ids = []
-
-    def get_task_log_sync_source(self, mark_id):
-        self.synced_mark_ids.append(mark_id)
-        return None
-
-    def apply_task_log_sync(self, plan):
-        raise AssertionError('No plan is expected without a sync source')
-
-
 class FakeAttemptSnapshotRepository:
     def __init__(self):
         self.mark_ids = []
@@ -87,13 +75,11 @@ class FakeAttemptSnapshotRepository:
 class GradeStudentWorkUseCaseTests(TestCase):
     def test_execute_saves_grade_with_normalized_checked_by(self):
         repo = FakeEventRepository()
-        student_repo = FakeStudentRepository()
         transaction_manager = FakeTransactionManager()
         attempt_snapshot_repo = FakeAttemptSnapshotRepository()
         use_case = GradeStudentWorkUseCase(
             event_repo=repo,
             review_repo=FakeReviewRepository(),
-            student_repo=student_repo,
             grading_service=GradingService(),
             transaction_manager=transaction_manager,
             attempt_snapshot_repo=attempt_snapshot_repo,
@@ -124,7 +110,6 @@ class GradeStudentWorkUseCaseTests(TestCase):
             {'task-1': {'points': 8, 'max_points': 10}},
         )
         self.assertEqual(repo.graded_params.event_status, 'reviewing')
-        self.assertEqual(student_repo.synced_mark_ids, ['mark-1'])
         self.assertEqual(attempt_snapshot_repo.mark_ids, ['mark-1'])
         self.assertEqual(result.attempt_snapshot_id, 'attempt-1')
         self.assertEqual(transaction_manager.entered, 1)
@@ -139,7 +124,6 @@ class GradeStudentWorkUseCaseTests(TestCase):
         use_case = GradeStudentWorkUseCase(
             event_repo=repo,
             review_repo=FakeReviewRepository(),
-            student_repo=FakeStudentRepository(),
             grading_service=GradingService(),
             transaction_manager=FakeTransactionManager(),
         )
@@ -159,7 +143,6 @@ class GradeStudentWorkUseCaseTests(TestCase):
         use_case = GradeStudentWorkUseCase(
             event_repo=repo,
             review_repo=FakeReviewRepository(),
-            student_repo=FakeStudentRepository(),
             grading_service=GradingService(),
             transaction_manager=FakeTransactionManager(),
         )
@@ -177,11 +160,9 @@ class GradeStudentWorkUseCaseTests(TestCase):
 
     def test_execute_rejects_invalid_mark_before_persistence(self):
         event_repo = FakeEventRepository()
-        student_repo = FakeStudentRepository()
         use_case = GradeStudentWorkUseCase(
             event_repo=event_repo,
             review_repo=FakeReviewRepository(),
-            student_repo=student_repo,
             grading_service=GradingService(),
             transaction_manager=FakeTransactionManager(),
         )
@@ -202,7 +183,6 @@ class GradeStudentWorkUseCaseTests(TestCase):
         )
         self.assertIsNone(event_repo.context_request)
         self.assertIsNone(event_repo.graded_params)
-        self.assertEqual(student_repo.synced_mark_ids, [])
 
     def test_execute_derives_totals_from_assessable_variant_snapshots(self):
         event_repo = FakeEventRepository()
@@ -225,7 +205,6 @@ class GradeStudentWorkUseCaseTests(TestCase):
         use_case = GradeStudentWorkUseCase(
             event_repo=event_repo,
             review_repo=review_repo,
-            student_repo=FakeStudentRepository(),
             grading_service=GradingService(),
             transaction_manager=FakeTransactionManager(),
         )

@@ -3,7 +3,7 @@
 from collections import defaultdict
 from typing import List
 
-from django.db.models import Count, Q
+from django.db.models import Count
 
 from core_logic.entities.student import (
     EventRef,
@@ -27,14 +27,10 @@ from core_logic.entities.student import (
     StudentGroupRef,
     StudentListItem,
     StudentParticipationProfile,
-    StudentTaskLogProfile,
+    StudentTaskResultProfile,
     TaskResultGroupRef,
     TaskResultsSource,
     TaskResultVariantRow,
-    TaskLogSyncPlan,
-    TaskLogSyncSource,
-    TaskLogSyncTask,
-    TaskLogSyncVariantTask,
     WorkGroupRef,
     WorkRef,
 )
@@ -47,10 +43,10 @@ from infrastructure.services.captured_task_result_queries import (
     latest_assessable_task_results,
 )
 from task_groups.models import AnalogGroup, TaskGroup
-from students.models import StudentGroup, StudentTaskLog
+from students.models import StudentGroup
 from students.models import Student
 from tasks.models import Task
-from works.models import VariantTask, WorkAnalogGroup
+from works.models import WorkAnalogGroup
 
 
 class DjangoStudentRepository(IStudentRepository):
@@ -329,14 +325,14 @@ class DjangoStudentRepository(IStudentRepository):
 
         return rows
 
-    def get_task_logs(self, student_id: str) -> List[StudentTaskLogProfile]:
+    def get_task_logs(self, student_id: str) -> List[StudentTaskResultProfile]:
         results = self._latest_task_history([student_id])
         analog_groups = self._first_analog_groups(
             result.task.task_id for result in results
         )
 
         return [
-            StudentTaskLogProfile(
+            StudentTaskResultProfile(
                 task=ObjectRef(
                     pk=result.task.task_id,
                     name=result.task.text,
@@ -538,139 +534,3 @@ class DjangoStudentRepository(IStudentRepository):
                 work_id__in=work_ids,
             ).select_related('analog_group')
         ]
-
-    def get_task_log_sync_source(self, mark_id: str):
-        mark = Mark.objects.select_related(
-            'participation__student',
-            'participation__event',
-            'participation__variant',
-        ).filter(pk=mark_id).first()
-        if mark is None:
-            return None
-
-        participation = mark.participation
-        variant_tasks = []
-        if participation.variant_id:
-            variant_tasks = list(
-                VariantTask.objects.filter(
-                    variant_id=participation.variant_id,
-                    is_assessable=True,
-                ).order_by('order', 'pk')
-            )
-            task_ids = {row.task_id for row in variant_tasks}
-        else:
-            task_ids = self._task_score_ids(mark.task_scores)
-        tasks = list(
-            Task.objects.select_related('topic', 'subtopic').filter(
-                pk__in=task_ids,
-            )
-        )
-        first_group_ids = {}
-        for membership in TaskGroup.objects.filter(
-            task_id__in=task_ids,
-        ).order_by('pk'):
-            first_group_ids.setdefault(
-                str(membership.task_id),
-                str(membership.group_id),
-            )
-        return TaskLogSyncSource(
-            mark_id=str(mark.pk),
-            student_id=str(participation.student_id),
-            event_id=str(participation.event_id),
-            variant_id=(
-                str(participation.variant_id)
-                if participation.variant_id
-                else None
-            ),
-            completed_at=mark.checked_at or mark.created_at,
-            task_scores=mark.task_scores,
-            variant_tasks=tuple(
-                TaskLogSyncVariantTask(
-                    variant_task_id=str(row.pk),
-                    task_id=str(row.task_id),
-                )
-                for row in variant_tasks
-            ),
-            tasks=tuple(
-                TaskLogSyncTask(
-                    task_id=str(task.pk),
-                    topic_id=str(task.topic_id) if task.topic_id else None,
-                    subtopic_id=(
-                        str(task.subtopic_id)
-                        if task.subtopic_id
-                        else None
-                    ),
-                    analog_group_id=first_group_ids.get(str(task.pk)),
-                    difficulty=task.difficulty,
-                )
-                for task in tasks
-            ),
-        )
-
-    def apply_task_log_sync(self, plan: TaskLogSyncPlan) -> int:
-        created_count = 0
-        resolved_variant_task_ids = set()
-        resolved_legacy_task_ids = set()
-        for entry in plan.entries:
-            if entry.variant_task_id:
-                resolved_variant_task_ids.add(entry.variant_task_id)
-            else:
-                resolved_legacy_task_ids.add(entry.task_id)
-
-            lookup = {'mark_id': plan.mark_id, 'task_id': entry.task_id}
-            if entry.variant_task_id:
-                lookup = {
-                    'mark_id': plan.mark_id,
-                    'variant_task_id': entry.variant_task_id,
-                }
-            _, created = StudentTaskLog.objects.update_or_create(
-                **lookup,
-                defaults={
-                    'student_id': entry.student_id,
-                    'task_id': entry.task_id,
-                    'event_id': entry.event_id,
-                    'variant_id': entry.variant_id,
-                    'variant_task_id': entry.variant_task_id,
-                    'topic_id': entry.topic_id,
-                    'subtopic_id': entry.subtopic_id,
-                    'analog_group_id': entry.analog_group_id,
-                    'difficulty': entry.difficulty,
-                    'points': entry.points,
-                    'max_points': entry.max_points,
-                    'comment': entry.comment,
-                    'completed_at': entry.completed_at,
-                    'percentage': entry.percentage,
-                    'is_correct': entry.is_correct,
-                },
-            )
-            if created:
-                created_count += 1
-
-        current_logs = StudentTaskLog.objects.filter(mark_id=plan.mark_id)
-        keep_filter = Q()
-        if resolved_variant_task_ids:
-            keep_filter |= Q(
-                variant_task_id__in=resolved_variant_task_ids,
-            )
-        if resolved_legacy_task_ids:
-            keep_filter |= Q(
-                variant_task__isnull=True,
-                task_id__in=resolved_legacy_task_ids,
-            )
-        if keep_filter:
-            current_logs.exclude(keep_filter).delete()
-        else:
-            current_logs.delete()
-
-        return created_count
-
-    @staticmethod
-    def _task_score_ids(task_scores):
-        if not isinstance(task_scores, dict):
-            return set()
-        task_ids = set()
-        for score_key, score_data in task_scores.items():
-            if not isinstance(score_data, dict):
-                continue
-            task_ids.add(str(score_data.get('task_id') or score_key))
-        return task_ids

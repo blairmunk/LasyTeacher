@@ -11,7 +11,7 @@ from infrastructure.tests.variant_task_factory import (
     capture_attempt_snapshot,
     create_variant_task,
 )
-from students.models import Student, StudentGroup, StudentTaskLog
+from students.models import Student, StudentGroup
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
 from works.models import Variant, Work, WorkAnalogGroup
@@ -83,16 +83,6 @@ class ReportsViewsTests(TestCase):
             },
         )
         capture_attempt_snapshot(mark)
-        StudentTaskLog.objects.create(
-            student=student,
-            task=task,
-            event=event,
-            mark=mark,
-            topic=topic,
-            points=8,
-            max_points=10,
-            completed_at=timezone.now(),
-        )
 
         response = self.client.get(
             reverse('reports:heatmap'),
@@ -189,16 +179,6 @@ class ReportsViewsTests(TestCase):
             },
         )
         capture_attempt_snapshot(mark)
-        StudentTaskLog.objects.create(
-            student=student,
-            task=task,
-            event=event,
-            mark=mark,
-            topic=topic,
-            points=8,
-            max_points=10,
-            completed_at=timezone.now(),
-        )
 
         response = self.client.get(
             reverse('reports:heatmap-course', args=[course.pk]),

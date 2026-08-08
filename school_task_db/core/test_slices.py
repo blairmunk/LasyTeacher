@@ -82,7 +82,6 @@ TEST_SLICES = {
         'core_logic.tests.test_get_student_profile',
         'core_logic.tests.test_save_student',
         'core_logic.tests.test_student_task_result_service',
-        'core_logic.tests.test_sync_student_task_logs',
     ),
     'tasks': (
         'tasks.tests',

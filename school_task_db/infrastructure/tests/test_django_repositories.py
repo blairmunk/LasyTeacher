@@ -73,9 +73,6 @@ from core_logic.use_cases.sync_work_analog_groups import (
     SyncWorkAnalogGroupsRequest,
     SyncWorkAnalogGroupsUseCase,
 )
-from core_logic.use_cases.sync_student_task_logs import (
-    SyncStudentTaskLogsUseCase,
-)
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_DEMO,
@@ -85,7 +82,10 @@ from core_logic.value_objects.task_print_settings import (
 )
 from codifier.models import CodifierSpec, ContentEntry, Requirement
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
-from events.models import Event, EventParticipation, Mark
+from events.models import AttemptSnapshot, Event, EventParticipation, Mark
+from infrastructure.repositories.django_attempt_snapshot_repo import (
+    DjangoAttemptSnapshotRepository,
+)
 from infrastructure.repositories.django_codifier_repo import DjangoCodifierRepository
 from infrastructure.repositories.django_core_repo import DjangoCoreRepository
 from infrastructure.repositories.django_curriculum_repo import (
@@ -103,7 +103,7 @@ from infrastructure.tests.variant_task_factory import (
 from infrastructure.services.django_transaction_manager import (
     DjangoTransactionManager,
 )
-from students.models import Student, StudentGroup, StudentTaskLog
+from students.models import Student, StudentGroup
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Source, Task, TaskImage
 from works.models import (
@@ -202,9 +202,6 @@ class DjangoRemedialRepositoryTests(TestCase):
                 str(self.original_ok.pk): {'points': 5, 'max_points': 5},
             },
         )
-        SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(
-            str(self.mark.pk),
-        )
         capture_attempt_snapshot(self.mark)
 
     def _task(self, text, difficulty):
@@ -299,81 +296,6 @@ class DjangoRemedialRepositoryTests(TestCase):
             [result.task_id for result in results],
             [str(self.original_weak.pk)],
         )
-
-    def test_student_repository_syncs_task_logs_from_mark(self):
-        self.original_weak.subtopic = self.subtopic
-        self.original_weak.save(update_fields=['subtopic'])
-        StudentTaskLog.objects.filter(mark=self.mark).delete()
-
-        created_count = SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(
-            str(self.mark.pk),
-        )
-
-        logs = StudentTaskLog.objects.filter(mark=self.mark).order_by('task_id')
-        self.assertEqual(created_count, 2)
-        self.assertEqual(logs.count(), 2)
-        weak_log = logs.get(task=self.original_weak)
-        weak_variant_task = VariantTask.objects.get(
-            variant=self.source_variant,
-            task=self.original_weak,
-        )
-        self.assertEqual(weak_log.analog_group, self.weak_group)
-        self.assertEqual(weak_log.variant_task, weak_variant_task)
-        self.assertEqual(weak_log.subtopic, self.subtopic)
-        self.assertEqual(weak_log.points, 0)
-        self.assertEqual(weak_log.max_points, 2)
-
-    def test_task_log_sync_does_not_claim_unlinked_historical_log(self):
-        StudentTaskLog.objects.filter(mark=self.mark).delete()
-        historical_log = StudentTaskLog.objects.create(
-            student=self.student,
-            task=self.original_weak,
-            event=self.event,
-            variant=self.source_variant,
-            points=2,
-            max_points=2,
-            completed_at=timezone.now() - dt.timedelta(days=1),
-        )
-
-        created_count = SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(
-            str(self.mark.pk),
-        )
-
-        current_log = StudentTaskLog.objects.get(
-            mark=self.mark,
-            task=self.original_weak,
-        )
-        self.assertEqual(created_count, 2)
-        self.assertEqual(current_log.points, 0)
-        historical_log.refresh_from_db()
-        self.assertIsNone(historical_log.mark)
-        self.assertEqual(historical_log.points, 2)
-
-    def test_task_log_sync_recalculates_correctness_after_score_edit(self):
-        weak_log = StudentTaskLog.objects.get(
-            mark=self.mark,
-            task=self.original_weak,
-        )
-        self.assertFalse(weak_log.is_correct)
-        self.assertEqual(weak_log.percentage, 0)
-        self.mark.task_scores = {
-            str(self.original_weak.pk): {'points': 2, 'max_points': 2},
-            str(self.original_ok.pk): {'points': 5, 'max_points': 5},
-        }
-        self.mark.save(update_fields=['task_scores'])
-
-        SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(str(self.mark.pk))
-
-        weak_log.refresh_from_db()
-        self.assertTrue(weak_log.is_correct)
-        self.assertEqual(weak_log.percentage, 100)
-
-    def test_student_repository_ignores_missing_mark_during_log_sync(self):
-        created_count = SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(
-            '00000000-0000-0000-0000-000000000000',
-        )
-
-        self.assertEqual(created_count, 0)
 
     def test_student_repository_returns_profile_data(self):
         repo = DjangoStudentRepository()
@@ -2548,29 +2470,12 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
         demo_variant_task.is_assessable = False
         demo_variant_task.save(update_fields=['is_assessable'])
-        StudentTaskLog.objects.filter(
-            student=self.student,
-            task=self.original_ok,
-            event=self.event,
-        ).delete()
-        StudentTaskLog.objects.create(
-            student=self.student,
-            task=self.original_ok,
-            event=self.event,
-            variant=self.source_variant,
-            variant_task=demo_variant_task,
-            mark=self.mark,
-            points=5,
-            max_points=5,
-            completed_at=timezone.now(),
-        )
-
         result = GradeStudentWorkUseCase(
             event_repo=DjangoEventRepository(),
             review_repo=DjangoReviewRepository(),
-            student_repo=DjangoStudentRepository(),
             grading_service=GradingService(),
             transaction_manager=DjangoTransactionManager(),
+            attempt_snapshot_repo=DjangoAttemptSnapshotRepository(),
         ).execute(
             GradeStudentWorkRequest(
                 participation_id=str(self.participation.pk),
@@ -2599,11 +2504,8 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.mark.refresh_from_db()
         self.participation.refresh_from_db()
         self.event.refresh_from_db()
-        weak_log = StudentTaskLog.objects.get(
-            student=self.student,
-            task=self.original_weak,
-            event=self.event,
-        )
+        attempt = AttemptSnapshot.objects.get(pk=result.attempt_snapshot_id)
+        task_result = attempt.task_results.get(is_assessable_snapshot=True)
 
         self.assertEqual(result.status, 'saved')
         self.assertEqual(result.grade.score, 4)
@@ -2622,17 +2524,10 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(self.participation.status, 'graded')
         self.assertIsNotNone(self.participation.graded_at)
         self.assertEqual(self.event.status, 'graded')
-        self.assertEqual(weak_log.points, 1)
-        self.assertEqual(weak_log.max_points, 2)
-        self.assertEqual(weak_log.comment, 'Повторить')
-        self.assertEqual(weak_log.variant_task, variant_task)
-        self.assertFalse(
-            StudentTaskLog.objects.filter(
-                student=self.student,
-                task=self.original_ok,
-                event=self.event,
-            ).exists()
-        )
+        self.assertEqual(task_result.points, 1)
+        self.assertEqual(task_result.checked_max_points, 2)
+        self.assertEqual(task_result.comment, 'Повторить')
+        self.assertEqual(task_result.variant_task, variant_task)
 
     def test_grading_use_case_waits_for_all_active_participants(self):
         self.event.status = 'completed'
@@ -2652,7 +2547,6 @@ class DjangoRemedialRepositoryTests(TestCase):
         use_case = GradeStudentWorkUseCase(
             event_repo=DjangoEventRepository(),
             review_repo=DjangoReviewRepository(),
-            student_repo=DjangoStudentRepository(),
             grading_service=GradingService(),
             transaction_manager=DjangoTransactionManager(),
         )

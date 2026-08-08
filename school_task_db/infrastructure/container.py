@@ -283,9 +283,6 @@ from core_logic.use_cases.save_work import (
     UpdateWorkUseCase,
 )
 from core_logic.use_cases.sync_review_session import SyncReviewSessionUseCase
-from core_logic.use_cases.sync_student_task_logs import (
-    SyncStudentTaskLogsUseCase,
-)
 from core_logic.use_cases.sync_work_analog_groups import SyncWorkAnalogGroupsUseCase
 from core_logic.use_cases.toggle_participation_absent import (
     ToggleParticipationAbsentUseCase,
@@ -686,11 +683,6 @@ class Container:
             student_repo=self.student_repo,
         )
 
-    def sync_student_task_logs_use_case(self):
-        return SyncStudentTaskLogsUseCase(
-            student_repo=self.student_repo,
-        )
-
     def get_student_remedial_work_use_case(self):
         return GetStudentRemedialWorkUseCase(
             student_repo=self.student_repo,
@@ -933,7 +925,6 @@ class Container:
         return GradeStudentWorkUseCase(
             event_repo=self.event_repo,
             review_repo=self.review_repo,
-            student_repo=self.student_repo,
             grading_service=self.grading_service(),
             transaction_manager=self.transaction_manager,
             attempt_snapshot_repo=self.attempt_snapshot_repo,

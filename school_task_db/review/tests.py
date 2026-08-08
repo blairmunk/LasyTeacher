@@ -8,7 +8,7 @@ from curriculum.models import Topic
 from events.models import AttemptSnapshot, Event, EventParticipation, Mark
 from infrastructure.tests.variant_task_factory import create_variant_task
 from review.models import ReviewComment, ReviewSession
-from students.models import Student, StudentTaskLog
+from students.models import Student
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
 from works.models import Variant, Work
@@ -199,11 +199,6 @@ class ParticipationReviewViewTests(TestCase):
         mark = Mark.objects.get(participation=self.participation)
         self.participation.refresh_from_db()
         self.event.refresh_from_db()
-        task_log = StudentTaskLog.objects.get(
-            student=self.student,
-            task=self.task,
-            event=self.event,
-        )
 
         self.assertEqual(mark.score, 4)
         self.assertEqual(mark.points, 2)
@@ -229,10 +224,12 @@ class ParticipationReviewViewTests(TestCase):
         )
         self.assertEqual(self.participation.status, 'graded')
         self.assertEqual(self.event.status, 'reviewing')
-        self.assertEqual(task_log.percentage, 100)
         attempt = AttemptSnapshot.objects.get(mark=mark)
+        task_result = attempt.task_results.get()
         self.assertEqual(attempt.revision, 1)
         self.assertEqual(attempt.recommendations, 'Повторить перевод единиц')
+        self.assertEqual(task_result.points, 2)
+        self.assertEqual(task_result.checked_max_points, 2)
         self.assertEqual(attempt.task_results.count(), 1)
 
     def test_post_rejects_invalid_score_without_saving_mark(self):

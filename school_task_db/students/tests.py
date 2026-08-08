@@ -9,9 +9,6 @@ from django.urls import reverse
 from django.utils import timezone
 
 from core.models import AcademicYear
-from core_logic.use_cases.sync_student_task_logs import (
-    SyncStudentTaskLogsUseCase,
-)
 from curriculum.models import Topic
 from events.models import Event, EventParticipation, Mark
 from infrastructure.tests.variant_task_factory import (
@@ -21,7 +18,7 @@ from infrastructure.tests.variant_task_factory import (
 from infrastructure.repositories.django_student_repo import (
     DjangoStudentRepository,
 )
-from students.models import Student, StudentGroup, StudentTaskLog
+from students.models import Student, StudentGroup
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
 from works.models import Variant, VariantTask, Work, WorkAnalogGroup
@@ -137,74 +134,6 @@ class ImportStudentsCsvCommandTests(TestCase):
                 )
 
 
-class BackfillTaskLogCommandTests(TestCase):
-    def test_dry_run_counts_normalized_variant_task_scores(self):
-        topic = Topic.objects.create(
-            name='Кинематика',
-            subject='Физика',
-            section='Механика',
-            grade_level=9,
-        )
-        student = Student.objects.create(last_name='Иванов', first_name='Иван')
-        work = Work.objects.create(name='Контрольная')
-        variant = Variant.objects.create(work=work, number=1)
-        task = Task.objects.create(
-            text='Найти скорость',
-            answer='10 м/с',
-            topic=topic,
-            task_type='computational',
-            difficulty=2,
-        )
-        variant_task = create_variant_task(
-            variant=variant,
-            task=task,
-            order=1,
-            max_points=2,
-            weight=2,
-        )
-        event = Event.objects.create(
-            name='КР 9А',
-            work=work,
-            planned_date=timezone.now(),
-            status='graded',
-        )
-        participation = EventParticipation.objects.create(
-            event=event,
-            student=student,
-            variant=variant,
-            status='graded',
-        )
-        Mark.objects.create(
-            participation=participation,
-            score=5,
-            points=2,
-            max_points=2,
-            task_scores={
-                str(variant_task.pk): {
-                    'task_id': str(task.pk),
-                    'variant_task_id': str(variant_task.pk),
-                    'points': 2,
-                    'max_points': 2,
-                },
-            },
-        )
-        out = StringIO()
-        initial_log_count = StudentTaskLog.objects.count()
-
-        call_command('backfill_task_log', dry_run=True, stdout=out)
-
-        self.assertIn('Найдено 1 отметок', out.getvalue())
-        self.assertIn('1 заданий', out.getvalue())
-        self.assertEqual(StudentTaskLog.objects.count(), initial_log_count)
-
-        StudentTaskLog.objects.all().delete()
-        write_out = StringIO()
-        call_command('backfill_task_log', stdout=write_out)
-
-        self.assertEqual(StudentTaskLog.objects.count(), 1)
-        self.assertIn('Создано 1 записей', write_out.getvalue())
-
-
 class RemedialFromEventViewTests(TestCase):
     """Characterization tests for the current remedial-from-event flow."""
 
@@ -285,9 +214,6 @@ class RemedialFromEventViewTests(TestCase):
                 str(self.weak_original.pk): {'points': 0, 'max_points': 2},
                 str(self.ok_original.pk): {'points': 5, 'max_points': 5},
             },
-        )
-        SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(
-            str(source_mark.pk),
         )
         self.source_attempt = capture_attempt_snapshot(source_mark)
 
@@ -524,9 +450,6 @@ class RemedialFromEventViewTests(TestCase):
                     'max_points': first_variant_task.max_points,
                 },
             },
-        )
-        SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(
-            str(first_remedial_mark.pk),
         )
         first_source_attempt = capture_attempt_snapshot(first_remedial_mark)
         first_participation.status = 'graded'

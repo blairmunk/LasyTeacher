@@ -1086,7 +1086,7 @@ class DjangoReportRepositoryTests(TestCase):
             student=graded_student,
             status='graded',
         )
-        Mark.objects.create(
+        mark = Mark.objects.create(
             participation=participation,
             score=4,
             points=8,
@@ -1098,6 +1098,10 @@ class DjangoReportRepositoryTests(TestCase):
                 },
             },
         )
+        capture_attempt_snapshot(mark)
+        mark.score = 2
+        mark.points = 1
+        mark.save(update_fields=['score', 'points'])
 
         data = DjangoReportRepository().get_journal_source(
             course_id=course.pk,
@@ -1217,7 +1221,7 @@ class DjangoReportRepositoryTests(TestCase):
             student=student,
             status='graded',
         )
-        Mark.objects.create(
+        mark = Mark.objects.create(
             participation=participation,
             score=5,
             points=10,
@@ -1230,6 +1234,10 @@ class DjangoReportRepositoryTests(TestCase):
                 },
             },
         )
+        capture_attempt_snapshot(mark)
+        mark.score = 2
+        mark.checked_at = now - timedelta(days=60)
+        mark.save(update_fields=['score', 'checked_at'])
 
         data = GetReportsDashboardUseCase(
             DjangoReportRepository(),

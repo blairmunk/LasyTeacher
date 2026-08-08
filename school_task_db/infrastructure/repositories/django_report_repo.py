@@ -126,21 +126,19 @@ class DjangoReportRepository(IReportRepository):
             event.id: self._report_event_ref(event)
             for event in events
         }
-        participations = EventParticipation.objects.filter(
-            event__in=events,
-            student_id__in=student_ids,
-        ).select_related('student', 'event', 'variant')
-        marks = Mark.objects.filter(
-            participation__in=participations,
-        ).select_related('participation')
-
-        mark_lookup = {
-            mark.participation_id: mark
-            for mark in marks
-        }
+        participations = list(
+            EventParticipation.objects.filter(
+                event__in=events,
+                student_id__in=student_ids,
+            ).select_related('student', 'event', 'variant')
+        )
+        attempts = latest_attempts_by_participation(
+            (participation.pk for participation in participations),
+            include_task_results=False,
+        )
         entries = []
         for participation in participations:
-            mark = mark_lookup.get(participation.id)
+            attempt = attempts.get(participation.id)
             entries.append(JournalEntryFact(
                 student_id=str(participation.student_id),
                 event_id=str(participation.event_id),
@@ -150,11 +148,11 @@ class DjangoReportRepository(IReportRepository):
                 ),
                 mark=(
                     ReportMarkFact(
-                        score=mark.score,
-                        points=mark.points,
-                        max_points=mark.max_points,
+                        score=attempt.score,
+                        points=attempt.points,
+                        max_points=attempt.max_points,
                     )
-                    if mark
+                    if attempt
                     else None
                 ),
                 variant=(
@@ -741,10 +739,21 @@ class DjangoReportRepository(IReportRepository):
 
     def get_reports_dashboard_source(self, year):
         events, participations, courses = self._get_event_scope(year)
-        marks = self._get_marks_scope(year)
         groups, students = self._get_student_scope(year)
         event_rows = list(
             self._event_summary_queryset(events).order_by('-planned_date')
+        )
+        participation_rows = list(
+            participations.only(
+                'pk',
+                'student_id',
+                'event_id',
+                'status',
+            )
+        )
+        attempts = latest_attempts_by_participation(
+            (participation.pk for participation in participation_rows),
+            include_task_results=False,
         )
         course_rows = list(courses.order_by('grade_level', 'name'))
         return ReportsDashboardSource(
@@ -760,20 +769,17 @@ class DjangoReportRepository(IReportRepository):
                     event_id=str(participation.event_id),
                     status=participation.status,
                 )
-                for participation in participations.only(
-                    'student_id',
-                    'event_id',
-                    'status',
-                )
+                for participation in participation_rows
             ],
             marks=[
                 DashboardMarkFact(
-                    student_id=str(mark.participation.student_id),
-                    event_id=str(mark.participation.event_id),
-                    score=mark.score,
-                    checked_at=mark.checked_at,
+                    student_id=str(participation.student_id),
+                    event_id=str(participation.event_id),
+                    score=attempt.score,
+                    checked_at=attempt.checked_at_snapshot,
                 )
-                for mark in marks.select_related('participation')
+                for participation in participation_rows
+                if (attempt := attempts.get(participation.pk)) is not None
             ],
             groups=[
                 self._dashboard_group_source(group, year)
@@ -838,7 +844,8 @@ class DjangoReportRepository(IReportRepository):
             )
         )
         attempts = latest_attempts_by_participation(
-            participation.pk for participation in scoped_participations
+            (participation.pk for participation in scoped_participations),
+            include_task_results=False,
         )
         attempts_by_work = defaultdict(list)
         for participation in scoped_participations:
@@ -898,11 +905,14 @@ class DjangoReportRepository(IReportRepository):
 
         students = list(students.order_by('last_name', 'first_name'))
         student_ids = [student.pk for student in students]
-        scoped_participations = list(participations.filter(
-            student_id__in=student_ids,
-        ).only('pk', 'student_id', 'status', 'created_at'))
+        scoped_participations = list(
+            participations.filter(
+                student_id__in=student_ids,
+            ).only('pk', 'student_id', 'status', 'created_at')
+        )
         attempts = latest_attempts_by_participation(
-            participation.pk for participation in scoped_participations
+            (participation.pk for participation in scoped_participations),
+            include_task_results=False,
         )
         participations_by_student = defaultdict(list)
         marks_by_student = defaultdict(list)
@@ -981,14 +991,6 @@ class DjangoReportRepository(IReportRepository):
                 ).distinct(),
             )
         return StudentGroup.objects.all(), Student.objects.all()
-
-    def _get_marks_scope(self, year):
-        if year:
-            date_range = (year.start_date, year.end_date)
-            return Mark.objects.filter(
-                participation__event__planned_date__range=date_range,
-            )
-        return Mark.objects.all()
 
     def _report_student_ref(self, student):
         return ReportStudentRef(

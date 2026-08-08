@@ -441,7 +441,7 @@ class ReportsViewsTests(TestCase):
             student=student,
             status='graded',
         )
-        Mark.objects.create(
+        mark = Mark.objects.create(
             participation=participation,
             score=5,
             points=10,
@@ -454,6 +454,7 @@ class ReportsViewsTests(TestCase):
                 },
             },
         )
+        capture_attempt_snapshot(mark)
 
         response = self.client.get(reverse('reports:dashboard'))
 
@@ -660,7 +661,7 @@ class ReportsViewsTests(TestCase):
             student=graded_student,
             status='graded',
         )
-        Mark.objects.create(
+        mark = Mark.objects.create(
             participation=participation,
             score=4,
             points=8,
@@ -672,6 +673,7 @@ class ReportsViewsTests(TestCase):
                 },
             },
         )
+        capture_attempt_snapshot(mark)
 
         response = self.client.get(
             reverse('reports:journal', args=[course.pk, group.pk]),

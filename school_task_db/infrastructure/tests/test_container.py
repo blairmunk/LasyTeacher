@@ -268,6 +268,9 @@ from infrastructure.repositories.django_events_status_repo import (
     DjangoEventsStatusRepository,
 )
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
+from infrastructure.repositories.django_review_session_repo import (
+    DjangoReviewSessionRepository,
+)
 from infrastructure.repositories.django_review_task_repo import (
     DjangoReviewTaskRepository,
 )
@@ -812,6 +815,14 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(save_navigation_use_case, GetReviewSaveNavigationUseCase)
         self.assertIsInstance(recent_sessions_use_case, GetRecentReviewSessionsUseCase)
         self.assertIsInstance(sync_session_use_case, SyncReviewSessionUseCase)
+        self.assertIsInstance(
+            recent_sessions_use_case.session_repo,
+            DjangoReviewSessionRepository,
+        )
+        self.assertIs(
+            sync_session_use_case.session_repo,
+            recent_sessions_use_case.session_repo,
+        )
         self.assertIsInstance(work_detail_use_case, GetWorkDetailUseCase)
         self.assertIsInstance(work_form_data_use_case, GetWorkFormDataUseCase)
         self.assertIsInstance(work_list_use_case, GetWorkListUseCase)
@@ -898,6 +909,10 @@ class ContainerTests(SimpleTestCase):
             DjangoParticipationGradingRepository,
         )
         self.assertIsInstance(container.review_repo, DjangoReviewRepository)
+        self.assertIsInstance(
+            container.review_session_repo,
+            DjangoReviewSessionRepository,
+        )
         self.assertIsInstance(
             container.review_task_repo,
             DjangoReviewTaskRepository,

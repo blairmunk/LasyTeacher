@@ -100,6 +100,9 @@ from infrastructure.repositories.django_participation_grading_repo import (
     DjangoParticipationGradingRepository,
 )
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
+from infrastructure.repositories.django_review_session_repo import (
+    DjangoReviewSessionRepository,
+)
 from infrastructure.repositories.django_review_task_repo import (
     DjangoReviewTaskRepository,
 )
@@ -2800,7 +2803,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertTrue(all_checked_navigation.all_checked)
 
     def test_review_repository_syncs_and_returns_review_sessions(self):
-        repo = DjangoReviewRepository()
+        repo = DjangoReviewSessionRepository()
         reviewer = User.objects.create_user(username='teacher')
 
         session_ref = repo.sync_review_session(

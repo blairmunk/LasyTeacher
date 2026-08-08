@@ -216,7 +216,7 @@ class ReviewActionUseCaseTests(TestCase):
 
     def test_get_recent_review_sessions_delegates_to_repository(self):
         repo = FakeReviewActionRepository()
-        use_case = GetRecentReviewSessionsUseCase(review_repo=repo)
+        use_case = GetRecentReviewSessionsUseCase(session_repo=repo)
 
         result = use_case.execute(
             GetRecentReviewSessionsRequest(reviewer_id='user-1')
@@ -227,7 +227,7 @@ class ReviewActionUseCaseTests(TestCase):
 
     def test_sync_review_session_delegates_to_repository(self):
         repo = FakeReviewActionRepository()
-        use_case = SyncReviewSessionUseCase(review_repo=repo)
+        use_case = SyncReviewSessionUseCase(session_repo=repo)
 
         result = use_case.execute(
             SyncReviewSessionRequest(

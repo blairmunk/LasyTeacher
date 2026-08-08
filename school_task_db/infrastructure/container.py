@@ -321,6 +321,9 @@ from infrastructure.repositories.django_journal_repo import (
     DjangoJournalRepository,
 )
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
+from infrastructure.repositories.django_review_session_repo import (
+    DjangoReviewSessionRepository,
+)
 from infrastructure.repositories.django_review_task_repo import (
     DjangoReviewTaskRepository,
 )
@@ -385,6 +388,7 @@ class Container:
         self._event_repo = None
         self._participation_grading_repo = None
         self._review_repo = None
+        self._review_session_repo = None
         self._review_task_repo = None
         self._events_status_repo = None
         self._reports_dashboard_repo = None
@@ -473,6 +477,12 @@ class Container:
         if self._review_repo is None:
             self._review_repo = DjangoReviewRepository()
         return self._review_repo
+
+    @property
+    def review_session_repo(self):
+        if self._review_session_repo is None:
+            self._review_session_repo = DjangoReviewSessionRepository()
+        return self._review_session_repo
 
     @property
     def review_task_repo(self):
@@ -1262,12 +1272,12 @@ class Container:
 
     def get_recent_review_sessions_use_case(self):
         return GetRecentReviewSessionsUseCase(
-            review_repo=self.review_repo,
+            session_repo=self.review_session_repo,
         )
 
     def sync_review_session_use_case(self):
         return SyncReviewSessionUseCase(
-            review_repo=self.review_repo,
+            session_repo=self.review_session_repo,
         )
 
     def get_work_detail_use_case(self):

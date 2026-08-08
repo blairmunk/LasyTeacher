@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import List
 
 from core_logic.entities.review import ReviewSessionRef
-from core_logic.interfaces.review_repo import IReviewRepository
+from core_logic.interfaces.review_session_repo import IReviewSessionRepository
 
 
 @dataclass(frozen=True)
@@ -14,14 +14,14 @@ class GetRecentReviewSessionsRequest:
 
 
 class GetRecentReviewSessionsUseCase:
-    def __init__(self, review_repo: IReviewRepository):
-        self.review_repo = review_repo
+    def __init__(self, session_repo: IReviewSessionRepository):
+        self.session_repo = session_repo
 
     def execute(
         self,
         request: GetRecentReviewSessionsRequest,
     ) -> List[ReviewSessionRef]:
-        return self.review_repo.get_recent_sessions(
+        return self.session_repo.get_recent_sessions(
             reviewer_id=request.reviewer_id,
             limit=request.limit,
         )

@@ -7,22 +7,24 @@ from django.db.models import Count, Q
 from core_logic.entities.review import (
     EventReviewParticipationRow,
     ReviewCommentRef,
-    ReviewCourseRef,
     ReviewEventRef,
     ReviewEventProgress,
     ReviewMarkRef,
     ReviewParticipationAbsenceContext,
     ReviewParticipationRef,
     ReviewSaveNavigation,
-    ReviewSessionRef,
-    ReviewStudentRef,
     ReviewVariantRef,
-    ReviewWorkRef,
-    ReviewWorkScanRef,
 )
 from core_logic.interfaces.review_repo import IReviewRepository
 from events.models import Event, EventParticipation, Mark
-from review.models import ReviewComment, ReviewSession
+from infrastructure.repositories.django_review_refs import (
+    review_event_ref,
+    review_mark_ref,
+    review_participation_ref,
+    review_student_ref,
+    review_variant_ref,
+)
+from review.models import ReviewComment
 from works.models import Variant, VariantTask
 
 
@@ -55,7 +57,7 @@ class DjangoReviewRepository(IReviewRepository):
             )
             result.append(
                 ReviewEventProgress(
-                    event=self._event_ref(event),
+                    event=review_event_ref(event),
                     total_participants=event.total_participants,
                     graded_participants=event.graded_participants,
                     absent_participants=event.absent_participants,
@@ -91,19 +93,19 @@ class DjangoReviewRepository(IReviewRepository):
         result = []
         for participation in participations:
             mark = marks.get(participation.pk)
-            mark_ref = self._mark_ref(mark) if mark else None
+            mark_ref = review_mark_ref(mark) if mark else None
             result.append(
                 EventReviewParticipationRow(
-                    participation=self._participation_ref(
+                    participation=review_participation_ref(
                         participation,
                         task_counts=task_counts,
                     ),
                     mark=mark_ref,
                     has_mark=mark is not None and mark.score is not None,
                     is_absent=participation.status == 'absent',
-                    student=self._student_ref(participation.student),
+                    student=review_student_ref(participation.student),
                     variant=(
-                        self._variant_ref(
+                        review_variant_ref(
                             participation.variant,
                             task_counts=task_counts,
                         )
@@ -122,7 +124,7 @@ class DjangoReviewRepository(IReviewRepository):
         variants = Variant.objects.filter(work=event.work).order_by('number')
         task_counts = self._variant_task_counts([variant.pk for variant in variants])
         return [
-            self._variant_ref(variant, task_counts=task_counts)
+            review_variant_ref(variant, task_counts=task_counts)
             for variant in variants
         ]
 
@@ -133,7 +135,7 @@ class DjangoReviewRepository(IReviewRepository):
             'event',
             'event__work',
         ).get(pk=participation_id)
-        return self._participation_ref(participation)
+        return review_participation_ref(participation)
 
     def get_or_create_mark(
         self,
@@ -144,7 +146,7 @@ class DjangoReviewRepository(IReviewRepository):
             participation_id=participation_id,
             defaults={'max_points': default_max_points},
         )
-        return self._mark_ref(mark)
+        return review_mark_ref(mark)
 
     def get_review_participations(self, event_id: str) -> List[ReviewParticipationRef]:
         participations = EventParticipation.objects.filter(
@@ -163,7 +165,7 @@ class DjangoReviewRepository(IReviewRepository):
             [p.variant_id for p in participations if p.variant_id]
         )
         return [
-            self._participation_ref(participation, task_counts=task_counts)
+            review_participation_ref(participation, task_counts=task_counts)
             for participation in participations
         ]
 
@@ -179,7 +181,7 @@ class DjangoReviewRepository(IReviewRepository):
         event = Event.objects.select_related('work', 'course').get(pk=event_id)
         event.status = 'graded'
         event.save()
-        return self._event_ref(event)
+        return review_event_ref(event)
 
     def get_participation_absence_context(
         self,
@@ -239,136 +241,11 @@ class DjangoReviewRepository(IReviewRepository):
         return ReviewSaveNavigation(
             event_id=str(participation.event.pk),
             next_participation=(
-                self._participation_ref(next_participation)
+                review_participation_ref(next_participation)
                 if next_participation
                 else None
             ),
             all_checked=next_participation is None,
-        )
-
-    def get_recent_sessions(
-        self,
-        reviewer_id: str,
-        limit: int = 5,
-    ) -> List[ReviewSessionRef]:
-        sessions = ReviewSession.objects.filter(
-            reviewer_id=reviewer_id,
-        ).select_related(
-            'event',
-            'event__work',
-            'event__course',
-        ).order_by('-started_at')[:limit]
-        return [self._session_ref(session) for session in sessions]
-
-    def sync_review_session(
-        self,
-        reviewer_id: str,
-        event_id: str,
-        total_participations: int,
-        checked_participations: int,
-    ) -> ReviewSessionRef:
-        session, _ = ReviewSession.objects.select_related(
-            'event',
-            'event__work',
-            'event__course',
-        ).get_or_create(
-            reviewer_id=reviewer_id,
-            event_id=event_id,
-            defaults={
-                'total_participations': total_participations,
-                'checked_participations': checked_participations,
-            },
-        )
-        session.total_participations = total_participations
-        session.checked_participations = checked_participations
-        session.save()
-        return self._session_ref(session)
-
-    def _participation_ref(self, participation, task_counts=None) -> ReviewParticipationRef:
-        student = participation.student
-        event = participation.event
-        variant = participation.variant
-        return ReviewParticipationRef(
-            pk=str(participation.pk),
-            student=self._student_ref(student),
-            event=self._event_ref(event),
-            variant=(
-                self._variant_ref(variant, task_counts=task_counts)
-                if variant
-                else None
-            ),
-        )
-
-    def _event_ref(self, event) -> ReviewEventRef:
-        return ReviewEventRef(
-            pk=str(event.pk),
-            name=event.name,
-            planned_date=event.planned_date,
-            status=event.status,
-            work=(
-                ReviewWorkRef(
-                    pk=str(event.work.pk),
-                    name=event.work.name,
-                    work_type=event.work.work_type,
-                    work_type_display=event.work.get_work_type_display(),
-                )
-                if event.work_id
-                else None
-            ),
-            course=(
-                ReviewCourseRef(
-                    pk=str(event.course.pk),
-                    name=event.course.name,
-                )
-                if event.course_id
-                else None
-            ),
-        )
-
-    def _student_ref(self, student) -> ReviewStudentRef:
-        return ReviewStudentRef(
-            pk=str(student.pk),
-            last_name=student.last_name,
-            first_name=student.first_name,
-            middle_name=student.middle_name,
-        )
-
-    def _variant_ref(self, variant, task_counts=None) -> ReviewVariantRef:
-        task_counts = task_counts or {}
-        return ReviewVariantRef(
-            pk=str(variant.pk),
-            number=variant.number,
-            tasks_count=task_counts.get(variant.pk, 0),
-        )
-
-    def _mark_ref(self, mark: Mark) -> ReviewMarkRef:
-        work_scan = None
-        if mark.work_scan:
-            work_scan = ReviewWorkScanRef(
-                name=mark.work_scan.name,
-                url=mark.work_scan.url,
-            )
-
-        return ReviewMarkRef(
-            pk=str(mark.pk),
-            score=mark.score,
-            points=mark.points,
-            max_points=mark.max_points,
-            teacher_comment=mark.teacher_comment,
-            mistakes_analysis=mark.mistakes_analysis,
-            recommendations=mark.recommendations,
-            work_scan=work_scan,
-            task_scores=mark.task_scores or {},
-        )
-
-    def _session_ref(self, session: ReviewSession) -> ReviewSessionRef:
-        return ReviewSessionRef(
-            pk=str(session.pk),
-            event=self._event_ref(session.event),
-            total_participations=session.total_participations,
-            checked_participations=session.checked_participations,
-            started_at=session.started_at,
-            finished_at=session.finished_at,
         )
 
     def _variant_task_counts(self, variant_ids) -> dict:

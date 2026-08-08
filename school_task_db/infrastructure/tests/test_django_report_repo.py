@@ -9,6 +9,9 @@ from infrastructure.repositories.django_heatmap_repo import DjangoHeatmapReposit
 from infrastructure.repositories.django_heatmap_overview_repo import (
     DjangoHeatmapOverviewRepository,
 )
+from infrastructure.repositories.django_heatmap_matrix_repo import (
+    DjangoHeatmapMatrixRepository,
+)
 from infrastructure.repositories.django_events_status_repo import (
     DjangoEventsStatusRepository,
 )
@@ -170,7 +173,7 @@ class DjangoReportRepositoriesTests(TestCase):
         capture_attempt_snapshot(mark)
 
         data = GetHeatmapSubtopicMatrixUseCase(
-            DjangoHeatmapRepository(),
+            DjangoHeatmapMatrixRepository(),
         ).execute(
             HeatmapSubtopicMatrixRequest(
                 student_ids=[student.pk],
@@ -539,7 +542,7 @@ class DjangoReportRepositoriesTests(TestCase):
         capture_attempt_snapshot(mark)
 
         data = GetHeatmapTopicMatrixUseCase(
-            DjangoHeatmapRepository(),
+            DjangoHeatmapMatrixRepository(),
         ).execute(
             HeatmapTopicMatrixRequest(
                 student_ids=[student.pk],
@@ -604,7 +607,7 @@ class DjangoReportRepositoriesTests(TestCase):
         mark.save(update_fields=['task_scores'])
 
         data = GetHeatmapTopicMatrixUseCase(
-            DjangoHeatmapRepository(),
+            DjangoHeatmapMatrixRepository(),
         ).execute(
             HeatmapTopicMatrixRequest(
                 student_ids=[student.pk],
@@ -701,7 +704,7 @@ class DjangoReportRepositoriesTests(TestCase):
         capture_attempt_snapshot(other_mark)
 
         data = GetHeatmapCourseTopicMatrixUseCase(
-            DjangoHeatmapRepository(),
+            DjangoHeatmapMatrixRepository(),
         ).execute(
             HeatmapCourseTopicMatrixRequest(
                 student_ids=[student.pk],
@@ -764,7 +767,7 @@ class DjangoReportRepositoriesTests(TestCase):
         mark.max_points = 100
         mark.save(update_fields=['points', 'max_points'])
 
-        data = DjangoHeatmapRepository().get_heatmap_course_timeline_source(
+        data = DjangoHeatmapMatrixRepository().get_heatmap_course_timeline_source(
             student_ids=[student.pk],
             work_ids=[work.pk],
         )

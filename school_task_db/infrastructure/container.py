@@ -322,6 +322,9 @@ from infrastructure.repositories.django_heatmap_repo import DjangoHeatmapReposit
 from infrastructure.repositories.django_heatmap_overview_repo import (
     DjangoHeatmapOverviewRepository,
 )
+from infrastructure.repositories.django_heatmap_matrix_repo import (
+    DjangoHeatmapMatrixRepository,
+)
 from infrastructure.repositories.django_reports_dashboard_repo import (
     DjangoReportsDashboardRepository,
 )
@@ -380,6 +383,7 @@ class Container:
         self._student_performance_repo = None
         self._work_analysis_repo = None
         self._heatmap_repo = None
+        self._heatmap_matrix_repo = None
         self._heatmap_overview_repo = None
         self._journal_repo = None
         self._task_db_health_repo = None
@@ -485,6 +489,12 @@ class Container:
         if self._heatmap_repo is None:
             self._heatmap_repo = DjangoHeatmapRepository()
         return self._heatmap_repo
+
+    @property
+    def heatmap_matrix_repo(self):
+        if self._heatmap_matrix_repo is None:
+            self._heatmap_matrix_repo = DjangoHeatmapMatrixRepository()
+        return self._heatmap_matrix_repo
 
     @property
     def heatmap_overview_repo(self):
@@ -1085,12 +1095,12 @@ class Container:
 
     def get_heatmap_course_topic_matrix_use_case(self):
         return GetHeatmapCourseTopicMatrixUseCase(
-            report_repo=self.heatmap_repo,
+            report_repo=self.heatmap_matrix_repo,
         )
 
     def get_heatmap_course_timeline_use_case(self):
         return GetHeatmapCourseTimelineUseCase(
-            report_repo=self.heatmap_repo,
+            report_repo=self.heatmap_matrix_repo,
         )
 
     def get_heatmap_drilldown_overview_use_case(self):
@@ -1110,12 +1120,12 @@ class Container:
 
     def get_heatmap_subtopic_matrix_use_case(self):
         return GetHeatmapSubtopicMatrixUseCase(
-            report_repo=self.heatmap_repo,
+            report_repo=self.heatmap_matrix_repo,
         )
 
     def get_heatmap_topic_matrix_use_case(self):
         return GetHeatmapTopicMatrixUseCase(
-            report_repo=self.heatmap_repo,
+            report_repo=self.heatmap_matrix_repo,
         )
 
     def get_work_analysis_report_use_case(self):

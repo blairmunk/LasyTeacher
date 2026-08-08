@@ -269,6 +269,9 @@ from infrastructure.repositories.django_heatmap_repo import DjangoHeatmapReposit
 from infrastructure.repositories.django_heatmap_overview_repo import (
     DjangoHeatmapOverviewRepository,
 )
+from infrastructure.repositories.django_heatmap_matrix_repo import (
+    DjangoHeatmapMatrixRepository,
+)
 from infrastructure.repositories.django_reports_dashboard_repo import (
     DjangoReportsDashboardRepository,
 )
@@ -890,6 +893,10 @@ class ContainerTests(SimpleTestCase):
             DjangoWorkAnalysisRepository,
         )
         self.assertIsInstance(container.heatmap_repo, DjangoHeatmapRepository)
+        self.assertIsInstance(
+            container.heatmap_matrix_repo,
+            DjangoHeatmapMatrixRepository,
+        )
         self.assertIsInstance(
             container.heatmap_overview_repo,
             DjangoHeatmapOverviewRepository,

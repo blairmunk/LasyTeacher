@@ -5,9 +5,28 @@ from core_logic.entities.report_refs import (
     ReportCourseRef,
     ReportGroupRef,
     ReportStudentRef,
+    ReportTaskRef,
     ReportWorkRef,
 )
 from curriculum.models import Course
+from events.models import EventParticipation
+from infrastructure.services.captured_task_result_queries import (
+    latest_assessable_task_results,
+)
+
+
+def latest_attempt_task_results(student_ids, work_ids=None):
+    participations = EventParticipation.objects.filter(
+        student_id__in=student_ids,
+    ).only('pk')
+    if work_ids is not None:
+        participations = participations.filter(
+            event__work_id__in=work_ids,
+        )
+    participation_ids = list(
+        participations.values_list('pk', flat=True)
+    )
+    return latest_assessable_task_results(participation_ids)
 
 
 def report_student_ref(student):
@@ -17,6 +36,17 @@ def report_student_ref(student):
         short_name=student.get_short_name(),
         last_name=student.last_name,
         first_name=student.first_name,
+    )
+
+
+def report_snapshot_task_ref(task):
+    return ReportTaskRef(
+        pk=task.task_id,
+        text=task.text,
+        difficulty=task.difficulty,
+        difficulty_display=(
+            task.difficulty_display or str(task.difficulty)
+        ),
     )
 
 

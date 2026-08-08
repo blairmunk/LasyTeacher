@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from core_logic.entities.heatmap import HeatmapStudentDetailData
-from core_logic.interfaces.heatmap_repo import IHeatmapRepository
+from core_logic.interfaces.heatmap_detail_repo import IHeatmapDetailRepository
 from core_logic.services.heatmap_detail_service import HeatmapDetailService
 
 
@@ -18,7 +18,7 @@ class HeatmapStudentDetailRequest:
 class GetHeatmapStudentDetailUseCase:
     def __init__(
         self,
-        report_repo: IHeatmapRepository,
+        report_repo: IHeatmapDetailRepository,
         detail_service: HeatmapDetailService | None = None,
     ):
         self.report_repo = report_repo

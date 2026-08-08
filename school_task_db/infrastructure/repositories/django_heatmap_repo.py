@@ -24,7 +24,11 @@ from core_logic.entities.report_refs import (
     ReportTaskRef,
     ReportWorkRef,
 )
-from core_logic.interfaces.heatmap_repo import IHeatmapRepository
+from core_logic.interfaces.heatmap_detail_repo import IHeatmapDetailRepository
+from core_logic.interfaces.heatmap_matrix_repo import IHeatmapMatrixRepository
+from core_logic.interfaces.heatmap_overview_repo import (
+    IHeatmapOverviewRepository,
+)
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation
 from infrastructure.services.attempt_snapshot_queries import (
@@ -36,7 +40,11 @@ from infrastructure.services.captured_task_result_queries import (
 from students.models import Student, StudentGroup
 
 
-class DjangoHeatmapRepository(IHeatmapRepository):
+class DjangoHeatmapRepository(
+    IHeatmapDetailRepository,
+    IHeatmapMatrixRepository,
+    IHeatmapOverviewRepository,
+):
     def get_heatmap_drilldown_overview(self, topic_id, group_id):
         topic = get_object_or_404(Topic, pk=topic_id)
         groups = list(StudentGroup.objects.all().order_by('name'))

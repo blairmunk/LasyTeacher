@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any, List
 
 from core_logic.entities.heatmap import HeatmapTopicMatrixData
-from core_logic.interfaces.heatmap_repo import IHeatmapRepository
+from core_logic.interfaces.heatmap_matrix_repo import IHeatmapMatrixRepository
 from core_logic.services.heatmap_matrix_service import HeatmapMatrixService
 
 
@@ -17,7 +17,7 @@ class HeatmapCourseTopicMatrixRequest:
 class GetHeatmapCourseTopicMatrixUseCase:
     def __init__(
         self,
-        report_repo: IHeatmapRepository,
+        report_repo: IHeatmapMatrixRepository,
         matrix_service: HeatmapMatrixService | None = None,
     ):
         self.report_repo = report_repo

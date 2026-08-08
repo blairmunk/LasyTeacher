@@ -19,4 +19,32 @@ class ToggleParticipationAbsentUseCase:
         self,
         request: ToggleParticipationAbsentRequest,
     ) -> ReviewParticipationStatusChange:
-        return self.review_repo.toggle_absent(request.participation_id)
+        context = self.review_repo.get_participation_absence_context(
+            request.participation_id,
+        )
+        if context.status != 'absent' and context.has_checked_result:
+            return ReviewParticipationStatusChange(
+                participation_id=context.participation_id,
+                event_id=context.event_id,
+                student_last_name=context.student_last_name,
+                status=context.status,
+                is_absent=False,
+                changed=False,
+                message='Проверенную работу нельзя отметить как пропущенную.',
+            )
+
+        if context.status == 'absent':
+            new_status = 'graded' if context.has_checked_result else 'assigned'
+        else:
+            new_status = 'absent'
+        self.review_repo.set_participation_status(
+            context.participation_id,
+            new_status,
+        )
+        return ReviewParticipationStatusChange(
+            participation_id=context.participation_id,
+            event_id=context.event_id,
+            student_last_name=context.student_last_name,
+            status=new_status,
+            is_absent=new_status == 'absent',
+        )

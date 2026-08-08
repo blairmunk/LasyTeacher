@@ -11,8 +11,8 @@ from core_logic.entities.review import (
     ReviewEventRef,
     ReviewEventProgress,
     ReviewMarkRef,
+    ReviewParticipationAbsenceContext,
     ReviewParticipationRef,
-    ReviewParticipationStatusChange,
     ReviewSaveNavigation,
     ReviewSessionRef,
     ReviewStudentRef,
@@ -222,26 +222,32 @@ class DjangoReviewRepository(IReviewRepository):
         event.save()
         return self._event_ref(event)
 
-    def toggle_absent(self, participation_id: str) -> ReviewParticipationStatusChange:
+    def get_participation_absence_context(
+        self,
+        participation_id: str,
+    ) -> ReviewParticipationAbsenceContext:
         participation = EventParticipation.objects.select_related(
             'student',
             'event',
         ).get(pk=participation_id)
-
-        if participation.status == 'absent':
-            participation.status = 'assigned'
-            is_absent = False
-        else:
-            participation.status = 'absent'
-            is_absent = True
-        participation.save()
-
-        return ReviewParticipationStatusChange(
+        return ReviewParticipationAbsenceContext(
             participation_id=str(participation.pk),
             event_id=str(participation.event.pk),
             student_last_name=participation.student.last_name,
             status=participation.status,
-            is_absent=is_absent,
+            has_checked_result=Mark.objects.filter(
+                participation=participation,
+                score__isnull=False,
+            ).exists(),
+        )
+
+    def set_participation_status(
+        self,
+        participation_id: str,
+        status: str,
+    ) -> None:
+        EventParticipation.objects.filter(pk=participation_id).update(
+            status=status,
         )
 
     def get_save_navigation(self, participation_id: str) -> ReviewSaveNavigation:

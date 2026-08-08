@@ -73,6 +73,10 @@ from core_logic.use_cases.sync_work_analog_groups import (
     SyncWorkAnalogGroupsRequest,
     SyncWorkAnalogGroupsUseCase,
 )
+from core_logic.use_cases.toggle_participation_absent import (
+    ToggleParticipationAbsentRequest,
+    ToggleParticipationAbsentUseCase,
+)
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_DEMO,
@@ -2715,23 +2719,39 @@ class DjangoRemedialRepositoryTests(TestCase):
         repo = DjangoReviewRepository()
         self.event.status = 'reviewing'
         self.event.save()
-        self.participation.status = 'completed'
-        self.participation.save()
+        second_student = Student.objects.create(
+            last_name='Сидоров',
+            first_name='Сидор',
+        )
+        second_participation = EventParticipation.objects.create(
+            event=self.event,
+            student=second_student,
+            status='completed',
+        )
+        toggle_absent = ToggleParticipationAbsentUseCase(repo)
 
         event_ref = repo.finalize_event(str(self.event.pk))
-        absent_result = repo.toggle_absent(str(self.participation.pk))
-        present_result = repo.toggle_absent(str(self.participation.pk))
+        absent_result = toggle_absent.execute(ToggleParticipationAbsentRequest(
+            participation_id=str(second_participation.pk),
+        ))
+        present_result = toggle_absent.execute(ToggleParticipationAbsentRequest(
+            participation_id=str(second_participation.pk),
+        ))
+        checked_result = toggle_absent.execute(ToggleParticipationAbsentRequest(
+            participation_id=str(self.participation.pk),
+        ))
 
         self.event.refresh_from_db()
-        self.participation.refresh_from_db()
+        second_participation.refresh_from_db()
 
         self.assertEqual(event_ref.pk, str(self.event.pk))
         self.assertEqual(event_ref.name, self.event.name)
         self.assertEqual(self.event.status, 'graded')
         self.assertTrue(absent_result.is_absent)
-        self.assertEqual(absent_result.student_last_name, self.student.last_name)
+        self.assertEqual(absent_result.student_last_name, second_student.last_name)
         self.assertFalse(present_result.is_absent)
-        self.assertEqual(self.participation.status, 'assigned')
+        self.assertEqual(second_participation.status, 'assigned')
+        self.assertFalse(checked_result.changed)
 
     def test_review_repository_returns_save_navigation(self):
         repo = DjangoReviewRepository()

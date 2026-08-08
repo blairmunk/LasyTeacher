@@ -178,7 +178,12 @@
                             <form method="post" action="{% url 'review:toggle-absent' data.participation.pk %}" class="d-inline">
                                 {% csrf_token %}
                                 <input type="hidden" name="next" value="{{ request.path }}">
-                                {% if data.is_absent %}
+                                {% if data.has_mark %}
+                                <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" disabled
+                                        title="Работа уже проверена">
+                                    <i class="fas fa-user-check"></i>
+                                </button>
+                                {% elif data.is_absent %}
                                 <button type="submit" class="btn btn-secondary btn-sm py-0 px-2"
                                         title="Нажмите чтобы снять отсутствие">
                                     <i class="fas fa-user-slash"></i> Н

@@ -221,7 +221,9 @@ def toggle_absent(request, pk):
         ToggleParticipationAbsentRequest(participation_id=str(pk))
     )
 
-    if result.is_absent:
+    if not result.changed:
+        messages.warning(request, result.message)
+    elif result.is_absent:
         messages.warning(request, f'{result.student_last_name} — отсутствовал')
     else:
         messages.info(request, f'{result.student_last_name} — статус снят')

@@ -143,6 +143,17 @@ class ReviewParticipationStatusChange:
     student_last_name: str
     status: str
     is_absent: bool
+    changed: bool = True
+    message: str = ''
+
+
+@dataclass(frozen=True)
+class ReviewParticipationAbsenceContext:
+    participation_id: str
+    event_id: str
+    student_last_name: str
+    status: str
+    has_checked_result: bool = False
 
 
 @dataclass(frozen=True)

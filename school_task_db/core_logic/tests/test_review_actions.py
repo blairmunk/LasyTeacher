@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from core_logic.entities.review import (
     ReviewEventRef,
-    ReviewParticipationStatusChange,
+    ReviewParticipationAbsenceContext,
     ReviewSaveNavigation,
     ReviewSessionRef,
 )
@@ -45,6 +45,8 @@ class FakeReviewActionRepository:
     def __init__(self):
         self.finalized_event_id = None
         self.toggled_participation_id = None
+        self.participation_status = 'assigned'
+        self.has_checked_result = False
         self.navigation_participation_id = None
         self.recent_sessions_reviewer_id = None
         self.synced_session = None
@@ -53,15 +55,19 @@ class FakeReviewActionRepository:
         self.finalized_event_id = event_id
         return ReviewEventRef(pk=event_id, name='КР 9А', status='graded')
 
-    def toggle_absent(self, participation_id):
+    def get_participation_absence_context(self, participation_id):
         self.toggled_participation_id = participation_id
-        return ReviewParticipationStatusChange(
+        return ReviewParticipationAbsenceContext(
             participation_id=participation_id,
             event_id='event-1',
             student_last_name='Иванов',
-            status='absent',
-            is_absent=True,
+            status=self.participation_status,
+            has_checked_result=self.has_checked_result,
         )
+
+    def set_participation_status(self, participation_id, status):
+        self.toggled_participation_id = participation_id
+        self.participation_status = status
 
     def get_save_navigation(self, participation_id):
         self.navigation_participation_id = participation_id
@@ -140,8 +146,36 @@ class ReviewActionUseCaseTests(TestCase):
         )
 
         self.assertTrue(result.is_absent)
+        self.assertTrue(result.changed)
         self.assertEqual(result.student_last_name, 'Иванов')
         self.assertEqual(repo.toggled_participation_id, 'participation-1')
+
+    def test_toggle_participation_absent_rejects_checked_result(self):
+        repo = FakeReviewActionRepository()
+        repo.participation_status = 'graded'
+        repo.has_checked_result = True
+
+        result = ToggleParticipationAbsentUseCase(repo).execute(
+            ToggleParticipationAbsentRequest(participation_id='participation-1')
+        )
+
+        self.assertFalse(result.changed)
+        self.assertFalse(result.is_absent)
+        self.assertEqual(repo.participation_status, 'graded')
+        self.assertIn('нельзя', result.message)
+
+    def test_toggle_participation_repairs_absent_checked_result(self):
+        repo = FakeReviewActionRepository()
+        repo.participation_status = 'absent'
+        repo.has_checked_result = True
+
+        result = ToggleParticipationAbsentUseCase(repo).execute(
+            ToggleParticipationAbsentRequest(participation_id='participation-1')
+        )
+
+        self.assertTrue(result.changed)
+        self.assertFalse(result.is_absent)
+        self.assertEqual(repo.participation_status, 'graded')
 
     def test_prepare_submission_use_case_uses_review_service(self):
         use_case = PrepareParticipationReviewSubmissionUseCase(

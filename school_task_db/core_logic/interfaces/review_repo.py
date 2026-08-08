@@ -9,7 +9,7 @@ from core_logic.entities.review import (
     ReviewEventProgress,
     ReviewEventRef,
     ReviewMarkRef,
-    ReviewParticipationStatusChange,
+    ReviewParticipationAbsenceContext,
     ReviewParticipationRef,
     ReviewSaveNavigation,
     ReviewSessionRef,
@@ -63,8 +63,19 @@ class IReviewRepository(ABC):
         """Mark an event as fully graded and return event details."""
 
     @abstractmethod
-    def toggle_absent(self, participation_id: str) -> ReviewParticipationStatusChange:
-        """Toggle absent status for a participation."""
+    def get_participation_absence_context(
+        self,
+        participation_id: str,
+    ) -> ReviewParticipationAbsenceContext:
+        """Return facts needed to decide an absence status change."""
+
+    @abstractmethod
+    def set_participation_status(
+        self,
+        participation_id: str,
+        status: str,
+    ) -> None:
+        """Persist a participation status selected by the use case."""
 
     @abstractmethod
     def get_save_navigation(self, participation_id: str) -> ReviewSaveNavigation:

@@ -14,7 +14,6 @@ from core_logic.entities.review import (
     ReviewSaveNavigation,
     ReviewSessionRef,
     ReviewVariantRef,
-    ReviewVariantTaskRef,
 )
 
 
@@ -37,10 +36,6 @@ class IReviewRepository(ABC):
     @abstractmethod
     def get_participation(self, participation_id: str) -> ReviewParticipationRef:
         """Return participation details for the review screen."""
-
-    @abstractmethod
-    def get_variant_tasks(self, participation_id: str) -> List[ReviewVariantTaskRef]:
-        """Return ordered variant tasks with scoring weights."""
 
     @abstractmethod
     def get_or_create_mark(

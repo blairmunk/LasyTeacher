@@ -96,7 +96,13 @@ from infrastructure.repositories.django_curriculum_repo import (
     DjangoCurriculumRepository,
 )
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
+from infrastructure.repositories.django_participation_grading_repo import (
+    DjangoParticipationGradingRepository,
+)
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
+from infrastructure.repositories.django_review_task_repo import (
+    DjangoReviewTaskRepository,
+)
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
@@ -2484,8 +2490,8 @@ class DjangoRemedialRepositoryTests(TestCase):
         demo_variant_task.is_assessable = False
         demo_variant_task.save(update_fields=['is_assessable'])
         result = GradeStudentWorkUseCase(
-            event_repo=DjangoEventRepository(),
-            review_repo=DjangoReviewRepository(),
+            grading_repo=DjangoParticipationGradingRepository(),
+            review_task_repo=DjangoReviewTaskRepository(),
             grading_service=GradingService(),
             transaction_manager=DjangoTransactionManager(),
             attempt_snapshot_repo=DjangoAttemptSnapshotRepository(),
@@ -2558,8 +2564,8 @@ class DjangoRemedialRepositoryTests(TestCase):
             status='completed',
         )
         use_case = GradeStudentWorkUseCase(
-            event_repo=DjangoEventRepository(),
-            review_repo=DjangoReviewRepository(),
+            grading_repo=DjangoParticipationGradingRepository(),
+            review_task_repo=DjangoReviewTaskRepository(),
             grading_service=GradingService(),
             transaction_manager=DjangoTransactionManager(),
         )
@@ -2672,9 +2678,12 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.topic.name = 'Изменённая тема банка'
         self.topic.save(update_fields=['name'])
         repo = DjangoReviewRepository()
+        review_task_repo = DjangoReviewTaskRepository()
 
         participation = repo.get_participation(str(self.participation.pk))
-        variant_tasks = repo.get_variant_tasks(str(self.participation.pk))
+        variant_tasks = review_task_repo.get_variant_tasks(
+            str(self.participation.pk),
+        )
         mark = repo.get_or_create_mark(str(self.participation.pk), default_max_points=7)
         navigation = repo.get_review_participations(str(self.event.pk))
         comments = repo.get_typical_comments()

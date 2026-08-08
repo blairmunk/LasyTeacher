@@ -8,7 +8,6 @@ from core_logic.entities.event import (
     EventParticipationRow,
     EventEntity,
     EventParticipationRef,
-    ParticipationGradingContext,
     EventVariantAssignmentResult,
     EventVariantRef,
     CheckedAttemptRef,
@@ -26,34 +25,6 @@ class CreateEventParams:
     location: str = ''
     description: str = ''
     event_id: str = ''
-
-
-@dataclass(frozen=True)
-class GradeParticipationParams:
-    participation_id: str
-    score: Optional[int] = None
-    points: Optional[int] = None
-    max_points: Optional[int] = None
-    teacher_comment: str = ''
-    mistakes_analysis: str = ''
-    recommendations: str = ''
-    checked_by: str = ''
-    work_scan: Optional[Any] = None
-    task_scores: Optional[Dict[str, dict]] = None
-    is_retake: bool = False
-    is_excellent: bool = False
-    needs_attention: bool = False
-    event_status: Optional[str] = None
-
-
-@dataclass(frozen=True)
-class GradeParticipationResult:
-    mark_id: str
-    participation_id: str
-    event_id: str
-    student_name: str
-    score: Optional[int]
-    event_status: str
 
 
 class IEventRepository(ABC):
@@ -140,17 +111,3 @@ class IEventRepository(ABC):
         variant_id: str,
     ) -> str:
         """Create an assigned event participation and return its ID."""
-
-    @abstractmethod
-    def get_participation_grading_context(
-        self,
-        participation_id: str,
-    ) -> ParticipationGradingContext:
-        """Lock and return the state needed for grading decisions."""
-
-    @abstractmethod
-    def save_participation_grade(
-        self,
-        params: GradeParticipationParams,
-    ) -> GradeParticipationResult:
-        """Persist a mark, participation state and optional event status."""

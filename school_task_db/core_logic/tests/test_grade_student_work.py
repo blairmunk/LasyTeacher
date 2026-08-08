@@ -4,7 +4,9 @@ from unittest import TestCase
 from core_logic.entities.event import ParticipationGradingContext
 from core_logic.entities.attempt_snapshot import AttemptSnapshotRef
 from core_logic.entities.review import ReviewTaskRef, ReviewVariantTaskRef
-from core_logic.interfaces.event_repo import GradeParticipationResult
+from core_logic.interfaces.participation_grading_repo import (
+    GradeParticipationResult,
+)
 from core_logic.services.grading_service import GradingService
 from core_logic.use_cases.grade_student_work import (
     GradeStudentWorkRequest,
@@ -12,7 +14,7 @@ from core_logic.use_cases.grade_student_work import (
 )
 
 
-class FakeEventRepository:
+class FakeParticipationGradingRepository:
     def __init__(self):
         self.graded_params = None
         self.context_request = None
@@ -48,7 +50,7 @@ class FakeTransactionManager:
         yield
 
 
-class FakeReviewRepository:
+class FakeReviewTaskRepository:
     def __init__(self, variant_tasks=None):
         self.variant_tasks = variant_tasks or []
         self.request = None
@@ -74,12 +76,12 @@ class FakeAttemptSnapshotRepository:
 
 class GradeStudentWorkUseCaseTests(TestCase):
     def test_execute_saves_grade_with_normalized_checked_by(self):
-        repo = FakeEventRepository()
+        repo = FakeParticipationGradingRepository()
         transaction_manager = FakeTransactionManager()
         attempt_snapshot_repo = FakeAttemptSnapshotRepository()
         use_case = GradeStudentWorkUseCase(
-            event_repo=repo,
-            review_repo=FakeReviewRepository(),
+            grading_repo=repo,
+            review_task_repo=FakeReviewTaskRepository(),
             grading_service=GradingService(),
             transaction_manager=transaction_manager,
             attempt_snapshot_repo=attempt_snapshot_repo,
@@ -115,15 +117,15 @@ class GradeStudentWorkUseCaseTests(TestCase):
         self.assertEqual(transaction_manager.entered, 1)
 
     def test_execute_marks_event_graded_when_all_active_work_is_graded(self):
-        repo = FakeEventRepository()
+        repo = FakeParticipationGradingRepository()
         repo.grading_context = ParticipationGradingContext(
             event_status='reviewing',
             other_active_participants=2,
             other_graded_participants=2,
         )
         use_case = GradeStudentWorkUseCase(
-            event_repo=repo,
-            review_repo=FakeReviewRepository(),
+            grading_repo=repo,
+            review_task_repo=FakeReviewTaskRepository(),
             grading_service=GradingService(),
             transaction_manager=FakeTransactionManager(),
         )
@@ -139,10 +141,10 @@ class GradeStudentWorkUseCaseTests(TestCase):
         self.assertEqual(repo.graded_params.event_status, 'graded')
 
     def test_execute_can_save_grade_without_syncing_event_status(self):
-        repo = FakeEventRepository()
+        repo = FakeParticipationGradingRepository()
         use_case = GradeStudentWorkUseCase(
-            event_repo=repo,
-            review_repo=FakeReviewRepository(),
+            grading_repo=repo,
+            review_task_repo=FakeReviewTaskRepository(),
             grading_service=GradingService(),
             transaction_manager=FakeTransactionManager(),
         )
@@ -159,10 +161,10 @@ class GradeStudentWorkUseCaseTests(TestCase):
         self.assertIsNone(repo.graded_params.event_status)
 
     def test_execute_rejects_invalid_mark_before_persistence(self):
-        event_repo = FakeEventRepository()
+        event_repo = FakeParticipationGradingRepository()
         use_case = GradeStudentWorkUseCase(
-            event_repo=event_repo,
-            review_repo=FakeReviewRepository(),
+            grading_repo=event_repo,
+            review_task_repo=FakeReviewTaskRepository(),
             grading_service=GradingService(),
             transaction_manager=FakeTransactionManager(),
         )
@@ -185,8 +187,8 @@ class GradeStudentWorkUseCaseTests(TestCase):
         self.assertIsNone(event_repo.graded_params)
 
     def test_execute_derives_totals_from_assessable_variant_snapshots(self):
-        event_repo = FakeEventRepository()
-        review_repo = FakeReviewRepository(
+        event_repo = FakeParticipationGradingRepository()
+        review_repo = FakeReviewTaskRepository(
             variant_tasks=[
                 ReviewVariantTaskRef(
                     task=ReviewTaskRef(id='task-1', text='Контрольное'),
@@ -203,8 +205,8 @@ class GradeStudentWorkUseCaseTests(TestCase):
             ],
         )
         use_case = GradeStudentWorkUseCase(
-            event_repo=event_repo,
-            review_repo=review_repo,
+            grading_repo=event_repo,
+            review_task_repo=review_repo,
             grading_service=GradingService(),
             transaction_manager=FakeTransactionManager(),
         )

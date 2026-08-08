@@ -2,6 +2,7 @@
 
 from core_logic.entities.review import ParticipationReviewData
 from core_logic.interfaces.review_repo import IReviewRepository
+from core_logic.interfaces.review_task_repo import IReviewTaskRepository
 from core_logic.services.review_service import ReviewService
 
 
@@ -9,14 +10,18 @@ class GetParticipationReviewUseCase:
     def __init__(
         self,
         review_repo: IReviewRepository,
+        review_task_repo: IReviewTaskRepository,
         review_service: ReviewService,
     ):
         self.review_repo = review_repo
+        self.review_task_repo = review_task_repo
         self.review_service = review_service
 
     def execute(self, participation_id: str) -> ParticipationReviewData:
         participation = self.review_repo.get_participation(participation_id)
-        variant_tasks = self.review_repo.get_variant_tasks(participation_id)
+        variant_tasks = self.review_task_repo.get_variant_tasks(
+            participation_id,
+        )
         assessable_variant_tasks = self.review_service.assessable_variant_tasks(
             variant_tasks,
         )

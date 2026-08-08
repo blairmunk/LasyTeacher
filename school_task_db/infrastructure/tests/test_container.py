@@ -258,6 +258,9 @@ from infrastructure.repositories.django_presentation_profile_repo import (
 )
 from infrastructure.container import Container
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
+from infrastructure.repositories.django_participation_grading_repo import (
+    DjangoParticipationGradingRepository,
+)
 from infrastructure.repositories.django_event_performance_report_repo import (
     DjangoEventPerformanceReportRepository,
 )
@@ -265,6 +268,9 @@ from infrastructure.repositories.django_events_status_repo import (
     DjangoEventsStatusRepository,
 )
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
+from infrastructure.repositories.django_review_task_repo import (
+    DjangoReviewTaskRepository,
+)
 from infrastructure.repositories.django_heatmap_detail_repo import DjangoHeatmapDetailRepository
 from infrastructure.repositories.django_heatmap_overview_repo import (
     DjangoHeatmapOverviewRepository,
@@ -664,6 +670,18 @@ class ContainerTests(SimpleTestCase):
         )
         self.assertIsInstance(grade_use_case, GradeStudentWorkUseCase)
         self.assertIsInstance(review_use_case, GetParticipationReviewUseCase)
+        self.assertIsInstance(
+            grade_use_case.grading_repo,
+            DjangoParticipationGradingRepository,
+        )
+        self.assertIsInstance(
+            grade_use_case.review_task_repo,
+            DjangoReviewTaskRepository,
+        )
+        self.assertIs(
+            review_use_case.review_task_repo,
+            grade_use_case.review_task_repo,
+        )
         self.assertIsInstance(dashboard_use_case, GetReviewDashboardUseCase)
         self.assertIsInstance(event_review_use_case, GetEventReviewUseCase)
         self.assertIsInstance(event_list_use_case, GetEventListUseCase)
@@ -875,7 +893,15 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(container.task_repo, DjangoTaskRepository)
         self.assertIsInstance(container.work_repo, DjangoWorkRepository)
         self.assertIsInstance(container.event_repo, DjangoEventRepository)
+        self.assertIsInstance(
+            container.participation_grading_repo,
+            DjangoParticipationGradingRepository,
+        )
         self.assertIsInstance(container.review_repo, DjangoReviewRepository)
+        self.assertIsInstance(
+            container.review_task_repo,
+            DjangoReviewTaskRepository,
+        )
         self.assertIsInstance(
             container.events_status_repo,
             DjangoEventsStatusRepository,

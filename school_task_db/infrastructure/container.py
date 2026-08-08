@@ -308,6 +308,9 @@ from infrastructure.repositories.django_presentation_profile_repo import (
     DjangoPresentationProfileRepository,
 )
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
+from infrastructure.repositories.django_participation_grading_repo import (
+    DjangoParticipationGradingRepository,
+)
 from infrastructure.repositories.django_event_performance_report_repo import (
     DjangoEventPerformanceReportRepository,
 )
@@ -318,6 +321,9 @@ from infrastructure.repositories.django_journal_repo import (
     DjangoJournalRepository,
 )
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
+from infrastructure.repositories.django_review_task_repo import (
+    DjangoReviewTaskRepository,
+)
 from infrastructure.repositories.django_heatmap_detail_repo import DjangoHeatmapDetailRepository
 from infrastructure.repositories.django_heatmap_overview_repo import (
     DjangoHeatmapOverviewRepository,
@@ -377,7 +383,9 @@ class Container:
         self._task_repo = None
         self._work_repo = None
         self._event_repo = None
+        self._participation_grading_repo = None
         self._review_repo = None
+        self._review_task_repo = None
         self._events_status_repo = None
         self._reports_dashboard_repo = None
         self._student_performance_repo = None
@@ -447,6 +455,14 @@ class Container:
         return self._event_repo
 
     @property
+    def participation_grading_repo(self):
+        if self._participation_grading_repo is None:
+            self._participation_grading_repo = (
+                DjangoParticipationGradingRepository()
+            )
+        return self._participation_grading_repo
+
+    @property
     def transaction_manager(self):
         if self._transaction_manager is None:
             self._transaction_manager = DjangoTransactionManager()
@@ -457,6 +473,12 @@ class Container:
         if self._review_repo is None:
             self._review_repo = DjangoReviewRepository()
         return self._review_repo
+
+    @property
+    def review_task_repo(self):
+        if self._review_task_repo is None:
+            self._review_task_repo = DjangoReviewTaskRepository()
+        return self._review_task_repo
 
     @property
     def events_status_repo(self):
@@ -1005,8 +1027,8 @@ class Container:
 
     def grade_student_work_use_case(self):
         return GradeStudentWorkUseCase(
-            event_repo=self.event_repo,
-            review_repo=self.review_repo,
+            grading_repo=self.participation_grading_repo,
+            review_task_repo=self.review_task_repo,
             grading_service=self.grading_service(),
             transaction_manager=self.transaction_manager,
             attempt_snapshot_repo=self.attempt_snapshot_repo,
@@ -1015,6 +1037,7 @@ class Container:
     def get_participation_review_use_case(self):
         return GetParticipationReviewUseCase(
             review_repo=self.review_repo,
+            review_task_repo=self.review_task_repo,
             review_service=self.review_service(),
         )
 

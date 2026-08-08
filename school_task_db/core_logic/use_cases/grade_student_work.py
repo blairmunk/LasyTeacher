@@ -3,15 +3,15 @@
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
-from core_logic.interfaces.event_repo import (
+from core_logic.interfaces.participation_grading_repo import (
     GradeParticipationParams,
     GradeParticipationResult,
-    IEventRepository,
+    IParticipationGradingRepository,
 )
 from core_logic.interfaces.attempt_snapshot_repo import (
     IAttemptSnapshotRepository,
 )
-from core_logic.interfaces.review_repo import IReviewRepository
+from core_logic.interfaces.review_task_repo import IReviewTaskRepository
 from core_logic.interfaces.transaction_manager import ITransactionManager
 from core_logic.services.grading_service import GradingService
 from core_logic.value_objects.mark_validation import validate_mark_values
@@ -47,14 +47,14 @@ class GradeStudentWorkResult:
 class GradeStudentWorkUseCase:
     def __init__(
         self,
-        event_repo: IEventRepository,
-        review_repo: IReviewRepository,
+        grading_repo: IParticipationGradingRepository,
+        review_task_repo: IReviewTaskRepository,
         grading_service: GradingService,
         transaction_manager: ITransactionManager,
         attempt_snapshot_repo: IAttemptSnapshotRepository | None = None,
     ):
-        self.event_repo = event_repo
-        self.review_repo = review_repo
+        self.grading_repo = grading_repo
+        self.review_task_repo = review_task_repo
         self.grading_service = grading_service
         self.transaction_manager = transaction_manager
         self.attempt_snapshot_repo = attempt_snapshot_repo
@@ -65,7 +65,7 @@ class GradeStudentWorkUseCase:
             username=request.checked_by_username,
         )
         with self.transaction_manager.atomic():
-            variant_tasks = self.review_repo.get_variant_tasks(
+            variant_tasks = self.review_task_repo.get_variant_tasks(
                 request.participation_id,
             )
             task_scores = request.task_scores
@@ -90,7 +90,7 @@ class GradeStudentWorkUseCase:
                     status='invalid',
                     errors=(str(error),),
                 )
-            context = self.event_repo.get_participation_grading_context(
+            context = self.grading_repo.get_participation_grading_context(
                 request.participation_id,
             )
             event_status = None
@@ -104,7 +104,7 @@ class GradeStudentWorkUseCase:
                         context.other_graded_participants + 1
                     ),
                 )
-            grade = self.event_repo.save_participation_grade(
+            grade = self.grading_repo.save_participation_grade(
                 GradeParticipationParams(
                     participation_id=request.participation_id,
                     score=request.score,

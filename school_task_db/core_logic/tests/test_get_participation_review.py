@@ -28,6 +28,22 @@ class FakeReviewRepository:
     def get_participation(self, participation_id):
         return self.participation
 
+    def get_or_create_mark(self, participation_id, default_max_points):
+        self.default_max_points = default_max_points
+        return ReviewMarkRef(
+            pk='mark-1',
+            max_points=default_max_points,
+            task_scores={'task-1': {'points': 1, 'max_points': 2}},
+        )
+
+    def get_review_participations(self, event_id):
+        return [self.participation]
+
+    def get_typical_comments(self, limit=10):
+        return [ReviewCommentRef(text='Хорошо')]
+
+
+class FakeReviewTaskRepository:
     def get_variant_tasks(self, participation_id):
         return [
             ReviewVariantTaskRef(
@@ -48,26 +64,13 @@ class FakeReviewRepository:
             ),
         ]
 
-    def get_or_create_mark(self, participation_id, default_max_points):
-        self.default_max_points = default_max_points
-        return ReviewMarkRef(
-            pk='mark-1',
-            max_points=default_max_points,
-            task_scores={'task-1': {'points': 1, 'max_points': 2}},
-        )
-
-    def get_review_participations(self, event_id):
-        return [self.participation]
-
-    def get_typical_comments(self, limit=10):
-        return [ReviewCommentRef(text='Хорошо')]
-
 
 class GetParticipationReviewUseCaseTests(TestCase):
     def test_execute_builds_review_screen_data(self):
         repo = FakeReviewRepository()
         use_case = GetParticipationReviewUseCase(
             review_repo=repo,
+            review_task_repo=FakeReviewTaskRepository(),
             review_service=ReviewService(),
         )
 

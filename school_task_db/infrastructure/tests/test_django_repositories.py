@@ -298,6 +298,15 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
 
     def test_student_repository_returns_profile_data(self):
+        original_event_name = self.event.name
+        original_work_name = self.source_work.name
+        self.mark.score = 5
+        self.mark.points = 7
+        self.mark.save(update_fields=['score', 'points'])
+        self.event.name = 'Изменённое событие'
+        self.event.save(update_fields=['name'])
+        self.source_work.name = 'Изменённая работа'
+        self.source_work.save(update_fields=['name'])
         repo = DjangoStudentRepository()
 
         groups = repo.get_student_groups(str(self.student.pk))
@@ -306,8 +315,8 @@ class DjangoRemedialRepositoryTests(TestCase):
         work_groups = repo.get_work_group_refs([str(self.source_work.pk)])
 
         self.assertEqual(groups[0].name, '9Б')
-        self.assertEqual(participations[0].event.name, self.event.name)
-        self.assertEqual(participations[0].work.name, self.source_work.name)
+        self.assertEqual(participations[0].event.name, original_event_name)
+        self.assertEqual(participations[0].work.name, original_work_name)
         self.assertEqual(participations[0].work.get_work_type_display(), 'Контрольная работа')
         self.assertEqual(participations[0].mark.points, 5)
         self.assertEqual(participations[0].score, 2)

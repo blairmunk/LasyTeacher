@@ -35,7 +35,7 @@ from core_logic.entities.student import (
     WorkRef,
 )
 from core_logic.interfaces.student_repo import IStudentRepository
-from events.models import EventParticipation, Mark
+from events.models import EventParticipation
 from infrastructure.services.attempt_snapshot_queries import (
     latest_attempts_by_participation,
 )
@@ -265,26 +265,29 @@ class DjangoStudentRepository(IStudentRepository):
         self,
         student_id: str,
     ) -> List[StudentParticipationProfile]:
-        participations = EventParticipation.objects.filter(
-            student_id=student_id,
-        ).select_related(
-            'event',
-            'event__work',
-            'variant',
-        ).order_by('-event__planned_date')
-
-        marks = {
-            mark.participation_id: mark
-            for mark in Mark.objects.filter(
-                participation__student_id=student_id,
-            )
-        }
+        participations = list(
+            EventParticipation.objects.filter(
+                student_id=student_id,
+            ).select_related(
+                'event',
+                'event__work',
+                'variant',
+            ).order_by('-event__planned_date')
+        )
+        attempts = latest_attempts_by_participation(
+            (participation.pk for participation in participations),
+            include_task_results=False,
+        )
 
         rows = []
         for participation in participations:
             event = participation.event
             work = event.work if event else None
-            mark = marks.get(participation.pk)
+            attempt = attempts.get(participation.pk)
+            event_name = attempt.event_name_snapshot if attempt else event.name
+            event_date = (
+                attempt.event_date_snapshot if attempt else event.planned_date
+            )
             rows.append(
                 StudentParticipationProfile(
                     participation=ObjectRef(
@@ -293,13 +296,17 @@ class DjangoStudentRepository(IStudentRepository):
                     ),
                     event=EventRef(
                         pk=str(event.pk),
-                        name=event.name,
-                        planned_date=event.planned_date,
+                        name=event_name,
+                        planned_date=event_date,
                     ),
                     work=(
                         WorkRef(
                             pk=str(work.pk),
-                            name=work.name,
+                            name=(
+                                attempt.work_name_snapshot
+                                if attempt
+                                else work.name
+                            ),
                             work_type=work.work_type,
                             work_type_display=work.get_work_type_display(),
                         )
@@ -308,18 +315,26 @@ class DjangoStudentRepository(IStudentRepository):
                     ),
                     mark=(
                         MarkRef(
-                            pk=str(mark.pk),
-                            score=mark.score,
-                            points=mark.points,
-                            max_points=mark.max_points,
-                            teacher_comment=mark.teacher_comment,
+                            pk=str(attempt.mark_id),
+                            score=attempt.score,
+                            points=attempt.points,
+                            max_points=attempt.max_points,
+                            teacher_comment=attempt.teacher_comment,
                         )
-                        if mark
+                        if attempt
                         else None
                     ),
-                    score=mark.score if mark else None,
+                    score=attempt.score if attempt else None,
                     is_absent=participation.status == 'absent',
-                    variant_number=participation.variant.number if participation.variant else None,
+                    variant_number=(
+                        attempt.variant_number_snapshot
+                        if attempt
+                        else (
+                            participation.variant.number
+                            if participation.variant
+                            else None
+                        )
+                    ),
                 )
             )
 

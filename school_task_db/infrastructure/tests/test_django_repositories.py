@@ -2665,6 +2665,12 @@ class DjangoRemedialRepositoryTests(TestCase):
             weight=4,
             is_assessable=False,
         )
+        self.original_weak.text = 'Изменённое задание банка'
+        self.original_weak.answer = 'Изменённый ответ'
+        self.original_weak.difficulty = 6
+        self.original_weak.save(update_fields=['text', 'answer', 'difficulty'])
+        self.topic.name = 'Изменённая тема банка'
+        self.topic.save(update_fields=['name'])
         repo = DjangoReviewRepository()
 
         participation = repo.get_participation(str(self.participation.pk))
@@ -2677,8 +2683,10 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(participation.event.name, self.event.name)
         self.assertEqual(participation.variant.number, 1)
         self.assertEqual(len(variant_tasks), 3)
-        self.assertEqual(variant_tasks[0].task.text, self.original_weak.text)
-        self.assertEqual(variant_tasks[0].task.topic.name, self.topic.name)
+        self.assertEqual(variant_tasks[0].task.text, 'Исходное слабое')
+        self.assertEqual(variant_tasks[0].task.answer, 'Ответ')
+        self.assertEqual(variant_tasks[0].task.difficulty, 2)
+        self.assertEqual(variant_tasks[0].task.topic.name, 'Динамика')
         self.assertEqual(variant_tasks[0].weight, 2)
         self.assertTrue(variant_tasks[0].is_assessable)
         self.assertEqual(variant_tasks[2].task.text, 'Демо с решением')

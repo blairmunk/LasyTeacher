@@ -25,6 +25,9 @@ from core_logic.entities.review import (
 )
 from core_logic.interfaces.review_repo import IReviewRepository
 from events.models import Event, EventParticipation, Mark
+from infrastructure.services.task_content_snapshots import (
+    task_content_snapshot_from_mapping,
+)
 from review.models import ReviewComment, ReviewSession
 from works.models import Variant, VariantTask
 
@@ -147,34 +150,34 @@ class DjangoReviewRepository(IReviewRepository):
 
         variant_tasks = VariantTask.objects.filter(
             variant=participation.variant,
-        ).select_related(
-            'task',
-            'task__topic',
         ).order_by('order')
 
-        return [
-            ReviewVariantTaskRef(
+        result = []
+        for variant_task in variant_tasks:
+            task = task_content_snapshot_from_mapping(
+                variant_task.task_snapshot,
+            )
+            result.append(ReviewVariantTaskRef(
                 task=ReviewTaskRef(
-                    id=str(variant_task.task.pk),
-                    text=variant_task.task.text,
-                    answer=variant_task.task.answer,
-                    short_solution=variant_task.task.short_solution,
-                    difficulty=variant_task.task.difficulty,
+                    id=task.task_id,
+                    text=task.text,
+                    answer=task.answer,
+                    short_solution=task.short_solution,
+                    difficulty=task.difficulty,
                     topic=(
                         ReviewTopicRef(
-                            pk=str(variant_task.task.topic.pk),
-                            name=variant_task.task.topic.name,
+                            pk=task.topic_id,
+                            name=task.topic_name,
                         )
-                        if variant_task.task.topic
+                        if task.topic_id
                         else None
                     ),
                 ),
                 variant_task_id=str(variant_task.pk),
                 weight=variant_task.max_points or variant_task.weight,
                 is_assessable=variant_task.is_assessable,
-            )
-            for variant_task in variant_tasks
-        ]
+            ))
+        return result
 
     def get_or_create_mark(
         self,

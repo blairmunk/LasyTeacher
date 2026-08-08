@@ -6,8 +6,17 @@ from django.utils import timezone
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_heatmap_repo import DjangoHeatmapRepository
-from infrastructure.repositories.django_report_summary_repo import (
-    DjangoReportSummaryRepository,
+from infrastructure.repositories.django_events_status_repo import (
+    DjangoEventsStatusRepository,
+)
+from infrastructure.repositories.django_reports_dashboard_repo import (
+    DjangoReportsDashboardRepository,
+)
+from infrastructure.repositories.django_student_performance_repo import (
+    DjangoStudentPerformanceRepository,
+)
+from infrastructure.repositories.django_work_analysis_repo import (
+    DjangoWorkAnalysisRepository,
 )
 from infrastructure.tests.variant_task_factory import (
     capture_attempt_snapshot,
@@ -800,7 +809,7 @@ class DjangoReportRepositoriesTests(TestCase):
         )
 
         data = GetEventsStatusReportUseCase(
-            DjangoReportSummaryRepository(),
+            DjangoEventsStatusRepository(),
         ).execute(
             EventsStatusReportRequest(
                 year=None,
@@ -876,7 +885,7 @@ class DjangoReportRepositoriesTests(TestCase):
         mark.save(update_fields=['score', 'points'])
 
         data = GetWorkAnalysisReportUseCase(
-            DjangoReportSummaryRepository(),
+            DjangoWorkAnalysisRepository(),
         ).execute(
             WorkAnalysisReportRequest(year=None),
         )
@@ -953,7 +962,7 @@ class DjangoReportRepositoriesTests(TestCase):
         mark.save(update_fields=['score', 'points'])
 
         data = GetStudentPerformanceReportUseCase(
-            DjangoReportSummaryRepository(),
+            DjangoStudentPerformanceRepository(),
         ).execute(
             StudentPerformanceReportRequest(
                 year=None,
@@ -1024,7 +1033,7 @@ class DjangoReportRepositoriesTests(TestCase):
         mark.save(update_fields=['score', 'checked_at'])
 
         data = GetReportsDashboardUseCase(
-            DjangoReportSummaryRepository(),
+            DjangoReportsDashboardRepository(),
         ).execute(
             ReportsDashboardRequest(
                 year=None,

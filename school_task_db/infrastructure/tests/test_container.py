@@ -261,10 +261,13 @@ from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_event_performance_report_repo import (
     DjangoEventPerformanceReportRepository,
 )
+from infrastructure.repositories.django_events_status_repo import (
+    DjangoEventsStatusRepository,
+)
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
 from infrastructure.repositories.django_heatmap_repo import DjangoHeatmapRepository
-from infrastructure.repositories.django_report_summary_repo import (
-    DjangoReportSummaryRepository,
+from infrastructure.repositories.django_reports_dashboard_repo import (
+    DjangoReportsDashboardRepository,
 )
 from infrastructure.repositories.django_journal_repo import DjangoJournalRepository
 from infrastructure.repositories.django_task_db_health_repo import (
@@ -274,9 +277,15 @@ from infrastructure.repositories.django_student_repo import DjangoStudentReposit
 from infrastructure.repositories.django_student_digest_repo import (
     DjangoStudentDigestRepository,
 )
+from infrastructure.repositories.django_student_performance_repo import (
+    DjangoStudentPerformanceRepository,
+)
 from infrastructure.repositories.django_settings_repo import DjangoSettingsRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
+from infrastructure.repositories.django_work_analysis_repo import (
+    DjangoWorkAnalysisRepository,
+)
 from infrastructure.forms.codifier_forms import CodifierFormAdapter
 from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
@@ -862,8 +871,20 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(container.event_repo, DjangoEventRepository)
         self.assertIsInstance(container.review_repo, DjangoReviewRepository)
         self.assertIsInstance(
-            container.report_summary_repo,
-            DjangoReportSummaryRepository,
+            container.events_status_repo,
+            DjangoEventsStatusRepository,
+        )
+        self.assertIsInstance(
+            container.reports_dashboard_repo,
+            DjangoReportsDashboardRepository,
+        )
+        self.assertIsInstance(
+            container.student_performance_repo,
+            DjangoStudentPerformanceRepository,
+        )
+        self.assertIsInstance(
+            container.work_analysis_repo,
+            DjangoWorkAnalysisRepository,
         )
         self.assertIsInstance(container.heatmap_repo, DjangoHeatmapRepository)
         self.assertIsInstance(container.journal_repo, DjangoJournalRepository)

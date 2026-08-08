@@ -311,24 +311,33 @@ from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_event_performance_report_repo import (
     DjangoEventPerformanceReportRepository,
 )
+from infrastructure.repositories.django_events_status_repo import (
+    DjangoEventsStatusRepository,
+)
 from infrastructure.repositories.django_journal_repo import (
     DjangoJournalRepository,
 )
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
 from infrastructure.repositories.django_heatmap_repo import DjangoHeatmapRepository
-from infrastructure.repositories.django_report_summary_repo import (
-    DjangoReportSummaryRepository,
+from infrastructure.repositories.django_reports_dashboard_repo import (
+    DjangoReportsDashboardRepository,
 )
 from infrastructure.repositories.django_settings_repo import DjangoSettingsRepository
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
 from infrastructure.repositories.django_student_digest_repo import (
     DjangoStudentDigestRepository,
 )
+from infrastructure.repositories.django_student_performance_repo import (
+    DjangoStudentPerformanceRepository,
+)
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_task_db_health_repo import (
     DjangoTaskDBHealthRepository,
 )
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
+from infrastructure.repositories.django_work_analysis_repo import (
+    DjangoWorkAnalysisRepository,
+)
 from infrastructure.services.document_engine import (
     DjangoDocumentEngine,
 )
@@ -363,7 +372,10 @@ class Container:
         self._work_repo = None
         self._event_repo = None
         self._review_repo = None
-        self._report_summary_repo = None
+        self._events_status_repo = None
+        self._reports_dashboard_repo = None
+        self._student_performance_repo = None
+        self._work_analysis_repo = None
         self._heatmap_repo = None
         self._journal_repo = None
         self._task_db_health_repo = None
@@ -439,10 +451,30 @@ class Container:
         return self._review_repo
 
     @property
-    def report_summary_repo(self):
-        if self._report_summary_repo is None:
-            self._report_summary_repo = DjangoReportSummaryRepository()
-        return self._report_summary_repo
+    def events_status_repo(self):
+        if self._events_status_repo is None:
+            self._events_status_repo = DjangoEventsStatusRepository()
+        return self._events_status_repo
+
+    @property
+    def reports_dashboard_repo(self):
+        if self._reports_dashboard_repo is None:
+            self._reports_dashboard_repo = DjangoReportsDashboardRepository()
+        return self._reports_dashboard_repo
+
+    @property
+    def student_performance_repo(self):
+        if self._student_performance_repo is None:
+            self._student_performance_repo = (
+                DjangoStudentPerformanceRepository()
+            )
+        return self._student_performance_repo
+
+    @property
+    def work_analysis_repo(self):
+        if self._work_analysis_repo is None:
+            self._work_analysis_repo = DjangoWorkAnalysisRepository()
+        return self._work_analysis_repo
 
     @property
     def heatmap_repo(self):
@@ -1008,7 +1040,7 @@ class Container:
 
     def get_events_status_report_use_case(self):
         return GetEventsStatusReportUseCase(
-            report_repo=self.report_summary_repo,
+            report_repo=self.events_status_repo,
         )
 
     def get_event_performance_report_use_case(self):
@@ -1028,7 +1060,7 @@ class Container:
 
     def get_reports_dashboard_use_case(self):
         return GetReportsDashboardUseCase(
-            report_repo=self.report_summary_repo,
+            report_repo=self.reports_dashboard_repo,
         )
 
     def get_heatmap_overview_use_case(self):
@@ -1078,12 +1110,12 @@ class Container:
 
     def get_work_analysis_report_use_case(self):
         return GetWorkAnalysisReportUseCase(
-            report_repo=self.report_summary_repo,
+            report_repo=self.work_analysis_repo,
         )
 
     def get_student_performance_report_use_case(self):
         return GetStudentPerformanceReportUseCase(
-            report_repo=self.report_summary_repo,
+            report_repo=self.student_performance_repo,
         )
 
     def get_journal_select_use_case(self):

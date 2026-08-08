@@ -349,6 +349,9 @@ from infrastructure.repositories.django_task_db_health_repo import (
     DjangoTaskDBHealthRepository,
 )
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
+from infrastructure.repositories.django_work_read_repo import (
+    DjangoWorkReadRepository,
+)
 from infrastructure.repositories.django_work_analysis_repo import (
     DjangoWorkAnalysisRepository,
 )
@@ -384,6 +387,7 @@ class Container:
         self._student_repo = None
         self._task_repo = None
         self._work_repo = None
+        self._work_read_repo = None
         self._event_repo = None
         self._participation_grading_repo = None
         self._review_repo = None
@@ -450,6 +454,12 @@ class Container:
         if self._work_repo is None:
             self._work_repo = DjangoWorkRepository()
         return self._work_repo
+
+    @property
+    def work_read_repo(self):
+        if self._work_read_repo is None:
+            self._work_read_repo = DjangoWorkReadRepository()
+        return self._work_read_repo
 
     @property
     def event_repo(self):
@@ -1281,19 +1291,19 @@ class Container:
 
     def get_work_detail_use_case(self):
         return GetWorkDetailUseCase(
-            work_read_repo=self.work_repo,
+            work_read_repo=self.work_read_repo,
             work_service=self.work_service(),
             presentation_profile_repo=self.presentation_profile_repo,
         )
 
     def get_work_list_use_case(self):
         return GetWorkListUseCase(
-            work_read_repo=self.work_repo,
+            work_read_repo=self.work_read_repo,
         )
 
     def get_work_form_data_use_case(self):
         return GetWorkFormDataUseCase(
-            work_read_repo=self.work_repo,
+            work_read_repo=self.work_read_repo,
         )
 
     def get_variant_detail_use_case(self):

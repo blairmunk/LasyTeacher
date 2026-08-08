@@ -109,6 +109,9 @@ from infrastructure.repositories.django_review_task_repo import (
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
+from infrastructure.repositories.django_work_read_repo import (
+    DjangoWorkReadRepository,
+)
 from infrastructure.tests.variant_task_factory import (
     capture_attempt_snapshot,
     create_variant_task,
@@ -1453,7 +1456,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
 
     def test_work_repository_returns_detail_page_data(self):
-        repo = DjangoWorkRepository()
+        repo = DjangoWorkReadRepository()
         content_block = WorkContentBlock.objects.create(
             work=self.source_work,
             content_type='theory',
@@ -1495,9 +1498,10 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertGreaterEqual(len(analog_groups[0].task_bank_roles), 1)
 
     def test_work_repository_returns_list_page_data(self):
+        read_repo = DjangoWorkReadRepository()
         repo = DjangoWorkRepository()
 
-        works = repo.get_list_works()
+        works = read_repo.get_list_works()
         work = repo.get_work_generation_target(str(self.source_work.pk))
         generation_groups = repo.get_variant_generation_group_sources(
             str(self.source_work.pk),
@@ -1531,7 +1535,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             work_type='quiz',
         )
 
-        repo = DjangoWorkRepository()
+        repo = DjangoWorkReadRepository()
 
         remedial_works = repo.get_list_works(
             WorkListFilters(work_type='remedial'),
@@ -1821,7 +1825,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(variants[0].task_count, 2)
 
     def test_work_repository_returns_form_analog_group_options(self):
-        repo = DjangoWorkRepository()
+        repo = DjangoWorkReadRepository()
 
         analog_group_options = repo.get_work_form_analog_group_options()
 

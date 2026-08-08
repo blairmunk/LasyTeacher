@@ -5,7 +5,9 @@ from datetime import datetime
 
 from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.report_summary import ReportsDashboardData
-from core_logic.interfaces.report_summary_repo import IReportSummaryRepository
+from core_logic.interfaces.reports_dashboard_repo import (
+    IReportsDashboardRepository,
+)
 from core_logic.services.reports_dashboard_service import ReportsDashboardService
 
 
@@ -18,7 +20,7 @@ class ReportsDashboardRequest:
 class GetReportsDashboardUseCase:
     def __init__(
         self,
-        report_repo: IReportSummaryRepository,
+        report_repo: IReportsDashboardRepository,
         dashboard_service: ReportsDashboardService | None = None,
     ):
         self.report_repo = report_repo

@@ -25,7 +25,14 @@ from core_logic.entities.report_refs import (
     ReportStudentRef,
     ReportWorkRef,
 )
-from core_logic.interfaces.report_summary_repo import IReportSummaryRepository
+from core_logic.interfaces.events_status_repo import IEventsStatusRepository
+from core_logic.interfaces.reports_dashboard_repo import (
+    IReportsDashboardRepository,
+)
+from core_logic.interfaces.student_performance_repo import (
+    IStudentPerformanceRepository,
+)
+from core_logic.interfaces.work_analysis_repo import IWorkAnalysisRepository
 from core_logic.services.event_service import EventService
 from curriculum.models import Course
 from events.models import Event, EventParticipation
@@ -36,7 +43,12 @@ from students.models import Student, StudentGroup
 from works.models import Work
 
 
-class DjangoReportSummaryRepository(IReportSummaryRepository):
+class DjangoReportSummaryRepository(
+    IEventsStatusRepository,
+    IReportsDashboardRepository,
+    IStudentPerformanceRepository,
+    IWorkAnalysisRepository,
+):
     def get_reports_dashboard_source(self, year):
         events, participations, courses = self._get_event_scope(year)
         groups, students = self._get_student_scope(year)

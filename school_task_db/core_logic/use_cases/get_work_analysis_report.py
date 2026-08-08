@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.report_summary import WorkAnalysisReportData
-from core_logic.interfaces.report_summary_repo import IReportSummaryRepository
+from core_logic.interfaces.work_analysis_repo import IWorkAnalysisRepository
 from core_logic.services.work_analysis_service import WorkAnalysisService
 
 
@@ -16,7 +16,7 @@ class WorkAnalysisReportRequest:
 class GetWorkAnalysisReportUseCase:
     def __init__(
         self,
-        report_repo: IReportSummaryRepository,
+        report_repo: IWorkAnalysisRepository,
         analysis_service: WorkAnalysisService | None = None,
     ):
         self.report_repo = report_repo

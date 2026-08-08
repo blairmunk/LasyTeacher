@@ -6,9 +6,6 @@ from django.utils import timezone
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_report_repo import DjangoReportRepository
-from infrastructure.repositories.django_student_repo import (
-    DjangoStudentRepository,
-)
 from infrastructure.tests.variant_task_factory import (
     capture_attempt_snapshot,
     create_variant_task,
@@ -48,9 +45,6 @@ from core_logic.use_cases.get_events_status_report import (
 from core_logic.use_cases.get_reports_dashboard import (
     GetReportsDashboardUseCase,
     ReportsDashboardRequest,
-)
-from core_logic.use_cases.sync_student_task_logs import (
-    SyncStudentTaskLogsUseCase,
 )
 from students.models import Student, StudentGroup, StudentTaskLog
 from task_groups.models import AnalogGroup, TaskGroup
@@ -261,7 +255,11 @@ class DjangoReportRepositoryTests(TestCase):
                 str(other_task.pk): {'points': 2, 'max_points': 10},
             },
         )
-        SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(str(mark.pk))
+        capture_attempt_snapshot(mark)
+        task.text = 'Изменённое задание банка'
+        task.save(update_fields=['text'])
+        event.name = 'Изменённое событие'
+        event.save(update_fields=['name'])
 
         data = GetHeatmapSubtopicDetailUseCase(
             DjangoReportRepository(),
@@ -295,6 +293,7 @@ class DjangoReportRepositoryTests(TestCase):
         self.assertEqual(data.student_rows[1]['student'].pk, str(empty_student.pk))
         self.assertIsNone(data.student_rows[1]['pct'])
         self.assertEqual(data.task_rows[0]['task'].pk, str(task.pk))
+        self.assertEqual(data.task_rows[0]['task'].text, 'Задача 1')
         self.assertEqual(
             data.task_rows[0]['task'].difficulty_display,
             task.get_difficulty_display(),
@@ -354,7 +353,7 @@ class DjangoReportRepositoryTests(TestCase):
                 },
             },
         )
-        SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(str(mark.pk))
+        capture_attempt_snapshot(mark)
 
         data = GetHeatmapStudentDetailUseCase(
             DjangoReportRepository(),

@@ -61,7 +61,7 @@ from infrastructure.services.attempt_snapshot_queries import (
 from infrastructure.services.task_content_snapshots import (
     task_content_snapshot_from_mapping,
 )
-from students.models import Student, StudentGroup, StudentTaskLog
+from students.models import Student, StudentGroup
 from tasks.models import Task
 from task_groups.models import AnalogGroup, TaskGroup
 from works.models import Variant, Work, WorkAnalogGroup
@@ -679,17 +679,19 @@ class DjangoReportRepository(IReportRepository):
             selected_group_model = None
             students = list(Student.objects.all().order_by('last_name', 'first_name'))
 
-        task_logs = StudentTaskLog.objects.filter(
-            student__in=students,
-            subtopic=subtopic,
-        ).select_related('task', 'event')
-        task_ids = set(task_logs.values_list('task_id', flat=True))
-        task_models = list(
-            Task.objects.filter(pk__in=task_ids).order_by(
-                'difficulty',
-                'text',
-            ),
-        )
+        task_results = [
+            result
+            for result in self._latest_attempt_task_results(
+                [student.pk for student in students],
+            )
+            if result.task.subtopic_id == str(subtopic.pk)
+        ]
+        task_refs = {}
+        for result in task_results:
+            task_refs.setdefault(
+                result.task.task_id,
+                self._report_snapshot_task_ref(result.task),
+            )
 
         return HeatmapSubtopicDetailSource(
             subtopic=ReportHeatmapColumnRef(
@@ -722,33 +724,24 @@ class DjangoReportRepository(IReportRepository):
                 self._report_student_ref(student)
                 for student in students
             ],
-            tasks=[
-                ReportTaskRef(
-                    pk=str(task.pk),
-                    text=task.text,
-                    difficulty=task.difficulty,
-                    difficulty_display=task.get_difficulty_display(),
-                )
-                for task in task_models
-            ],
+            tasks=sorted(
+                task_refs.values(),
+                key=lambda task: (task.difficulty, task.text, task.pk),
+            ),
             scores=[
                 HeatmapDetailScoreFact(
-                    student_id=str(task_log.student_id),
-                    task_id=str(task_log.task_id),
-                    subtopic_id=str(task_log.subtopic_id),
-                    points=task_log.points or 0,
-                    max_points=task_log.max_points or 0,
-                    event=(
-                        ReportActivityRef(
-                            pk=str(task_log.event.pk),
-                            name=task_log.event.name,
-                            planned_date=task_log.event.planned_date,
-                        )
-                        if task_log.event
-                        else None
+                    student_id=result.student_id,
+                    task_id=result.task.task_id,
+                    subtopic_id=result.task.subtopic_id,
+                    points=result.points,
+                    max_points=result.max_points,
+                    event=ReportActivityRef(
+                        pk=result.event_id,
+                        name=result.event_name,
+                        planned_date=result.event_date,
                     ),
                 )
-                for task_log in task_logs
+                for result in task_results
             ],
             courses=[
                 ReportCourseRef(
@@ -777,19 +770,17 @@ class DjangoReportRepository(IReportRepository):
                 topic=topic,
             ).first()
 
-        task_logs = list(
-            StudentTaskLog.objects.filter(
-                student=student,
-                topic=topic,
-            ).select_related('task', 'event', 'subtopic'),
-        )
-        task_ids = {task_log.task_id for task_log in task_logs}
-        task_models = list(
-            Task.objects.filter(pk__in=task_ids).order_by(
-                'difficulty',
-                'text',
-            ),
-        )
+        task_results = [
+            result
+            for result in self._latest_attempt_task_results([student.pk])
+            if result.task.topic_id == str(topic.pk)
+        ]
+        task_refs = {}
+        for result in task_results:
+            task_refs.setdefault(
+                result.task.task_id,
+                self._report_snapshot_task_ref(result.task),
+            )
         subtopic_models = list(
             SubTopic.objects.filter(topic=topic).order_by('order', 'name'),
         )
@@ -816,33 +807,24 @@ class DjangoReportRepository(IReportRepository):
                 )
                 for subtopic in subtopic_models
             ],
-            tasks=[
-                ReportTaskRef(
-                    pk=str(task.pk),
-                    text=task.text,
-                    difficulty=task.difficulty,
-                    difficulty_display=task.get_difficulty_display(),
-                )
-                for task in task_models
-            ],
+            tasks=sorted(
+                task_refs.values(),
+                key=lambda task: (task.difficulty, task.text, task.pk),
+            ),
             scores=[
                 HeatmapDetailScoreFact(
-                    student_id=str(task_log.student_id),
-                    task_id=str(task_log.task_id),
-                    subtopic_id=str(task_log.subtopic_id or ''),
-                    points=task_log.points or 0,
-                    max_points=task_log.max_points or 0,
-                    event=(
-                        ReportActivityRef(
-                            pk=str(task_log.event.pk),
-                            name=task_log.event.name,
-                            planned_date=task_log.event.planned_date,
-                        )
-                        if task_log.event
-                        else None
+                    student_id=result.student_id,
+                    task_id=result.task.task_id,
+                    subtopic_id=result.task.subtopic_id,
+                    points=result.points,
+                    max_points=result.max_points,
+                    event=ReportActivityRef(
+                        pk=result.event_id,
+                        name=result.event_name,
+                        planned_date=result.event_date,
                     ),
                 )
-                for task_log in task_logs
+                for result in task_results
             ],
             courses=[
                 ReportCourseRef(
@@ -854,6 +836,17 @@ class DjangoReportRepository(IReportRepository):
                     'name',
                 )
             ],
+        )
+
+    @staticmethod
+    def _report_snapshot_task_ref(task):
+        return ReportTaskRef(
+            pk=task.task_id,
+            text=task.text,
+            difficulty=task.difficulty,
+            difficulty_display=(
+                task.difficulty_display or str(task.difficulty)
+            ),
         )
 
     def get_reports_dashboard_source(self, year):

@@ -39,6 +39,7 @@ class TaskContentSnapshot:
     task_type: str = ''
     task_type_display: str = ''
     difficulty: int = 0
+    difficulty_display: str = ''
     topic_id: str = ''
     topic_name: str = ''
     topic_section: str = ''

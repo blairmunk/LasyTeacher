@@ -125,7 +125,7 @@ class EventPerformanceReportService:
     def _specification_items(self, source):
         grouped = defaultdict(list)
         for fact in source.specification:
-            grouped[fact.order].append(fact)
+            grouped[fact.group_key].append(fact)
 
         items = []
         for facts in grouped.values():

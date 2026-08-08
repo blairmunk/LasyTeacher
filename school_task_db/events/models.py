@@ -251,6 +251,16 @@ class AttemptTaskSnapshot(BaseModel):
         verbose_name='Задание варианта',
     )
     task_id_snapshot = models.CharField('ID задания (снимок)', max_length=36)
+    source_selection_id_snapshot = models.CharField(
+        'Блок спецификации (снимок)',
+        max_length=36,
+        blank=True,
+        default='',
+    )
+    content_order_snapshot = models.PositiveIntegerField(
+        'Порядок блока спецификации (снимок)',
+        default=0,
+    )
     order_snapshot = models.PositiveIntegerField('Номер задания (снимок)')
     is_assessable_snapshot = models.BooleanField('Оценивалось (снимок)')
     expected_max_points_snapshot = models.DecimalField(

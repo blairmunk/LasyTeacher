@@ -10,6 +10,9 @@ from core_logic.entities.event_performance_report import (
     EventReportNarrative,
     SaveEventReportNarrativeParams,
 )
+from core_logic.services.event_performance_report_service import (
+    EventPerformanceReportService,
+)
 from core_logic.value_objects.document_recipes import (
     EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
 )
@@ -168,7 +171,10 @@ class WrittenReportRepositoryTests(TestCase):
         self.assertEqual(len(source.participants), 2)
         self.assertEqual(source.participants[0].score, 2)
         self.assertEqual(len(source.task_scores), 1)
-        self.assertEqual(source.task_scores[0].group_key, 'position:1')
+        self.assertEqual(
+            source.task_scores[0].group_key,
+            f'selection:{self.variant_task.source_selection_id}:slot:1',
+        )
         self.assertEqual(source.task_scores[0].order, 1)
         self.assertEqual(source.task_scores[0].points, 0)
         self.assertEqual(source.task_scores[0].comment, 'Ошибка в формуле')
@@ -183,6 +189,55 @@ class WrittenReportRepositoryTests(TestCase):
             source.specification[0].content_element_descriptions,
             ('ОГЭ 2026: Применение второго закона Ньютона',),
         )
+
+    def test_event_report_groups_reordered_variants_by_specification_slot(self):
+        second_variant = Variant.objects.create(
+            work=self.work,
+            number=2,
+            work_name_snapshot=self.work.name,
+        )
+        second_variant_task = create_variant_task(
+            variant=second_variant,
+            task=self.task,
+            source_selection_id='spec-row-1',
+            content_order=30,
+            order=2,
+            max_points=2,
+            is_assessable=True,
+        )
+        self.absent_participation.variant = second_variant
+        self.absent_participation.status = 'graded'
+        self.absent_participation.save(
+            update_fields=['variant', 'status'],
+        )
+        second_mark = Mark.objects.create(
+            participation=self.absent_participation,
+            score=4,
+            points=1,
+            max_points=2,
+            task_scores={
+                str(second_variant_task.pk): {
+                    'task_id': str(self.task.pk),
+                    'variant_task_id': str(second_variant_task.pk),
+                    'points': 1,
+                    'max_points': 2,
+                },
+            },
+        )
+        capture_attempt_snapshot(second_mark)
+
+        source = DjangoEventPerformanceReportRepository().get_event_report_source(
+            str(self.event.pk),
+        )
+        report = EventPerformanceReportService().build(source)
+
+        self.assertEqual(
+            {fact.group_key for fact in source.task_scores},
+            {'selection:spec-row-1:slot:1'},
+        )
+        self.assertEqual(len(report.task_summaries), 1)
+        self.assertEqual(report.task_summaries[0].attempts, 2)
+        self.assertEqual(len(report.specification_items), 1)
 
     def test_written_reports_ignore_uncaptured_mark_changes(self):
         self.mark.score = 5

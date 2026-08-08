@@ -86,6 +86,10 @@ class DjangoAttemptSnapshotRepository(IAttemptSnapshotRepository):
                 attempt=snapshot,
                 variant_task=variant_task,
                 task_id_snapshot=task.task_id,
+                source_selection_id_snapshot=(
+                    variant_task.source_selection_id
+                ),
+                content_order_snapshot=variant_task.content_order,
                 order_snapshot=variant_task.order,
                 is_assessable_snapshot=variant_task.is_assessable,
                 expected_max_points_snapshot=variant_task.max_points,
@@ -105,4 +109,3 @@ class DjangoAttemptSnapshotRepository(IAttemptSnapshotRepository):
             return Decimal(str(value))
         except (InvalidOperation, TypeError, ValueError):
             return None
-

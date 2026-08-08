@@ -1,5 +1,7 @@
 """Django persistence for event performance reports."""
 
+from collections import defaultdict
+
 from core_logic.entities.event_performance_report import (
     EventPerformanceReportSource,
     EventReportEventRef,
@@ -13,6 +15,7 @@ from core_logic.entities.event_performance_report import (
 from core_logic.interfaces.event_performance_report_repo import (
     IEventPerformanceReportRepository,
 )
+from core_logic.value_objects.report_task_slot import report_task_slot_key
 from events.models import Event, EventParticipation
 from infrastructure.services.attempt_snapshot_queries import (
     latest_attempts_by_participation,
@@ -70,15 +73,30 @@ class DjangoEventPerformanceReportRepository(
             )
             if attempt is None:
                 continue
+            slot_occurrences = defaultdict(int)
             for task_result in attempt.captured_task_results:
                 if not task_result.is_assessable_snapshot:
                     continue
+                occurrence_key = (
+                    task_result.source_selection_id_snapshot,
+                    task_result.content_order_snapshot,
+                )
+                slot_occurrences[occurrence_key] += 1
                 task_snapshot = task_content_snapshot_from_mapping(
                     task_result.variant_task.task_snapshot,
                 )
                 task_scores.append(
                     EventReportTaskScoreFact(
-                        group_key=f'position:{task_result.order_snapshot}',
+                        group_key=report_task_slot_key(
+                            source_selection_id=(
+                                task_result.source_selection_id_snapshot
+                            ),
+                            content_order=(
+                                task_result.content_order_snapshot
+                            ),
+                            position=task_result.order_snapshot,
+                            occurrence=slot_occurrences[occurrence_key],
+                        ),
                         order=task_result.order_snapshot,
                         topic_name=task_snapshot.topic_name,
                         subtopic_name=task_snapshot.subtopic_name,
@@ -148,9 +166,24 @@ class DjangoEventPerformanceReportRepository(
         facts = []
         seen = set()
         for tasks in variant_tasks.values():
-            for variant_task in tasks:
+            slot_occurrences = defaultdict(int)
+            for variant_task in sorted(
+                tasks,
+                key=lambda item: (item.order, str(item.pk)),
+            ):
                 if not variant_task.is_assessable:
                     continue
+                occurrence_key = (
+                    variant_task.source_selection_id,
+                    variant_task.content_order,
+                )
+                slot_occurrences[occurrence_key] += 1
+                group_key = report_task_slot_key(
+                    source_selection_id=variant_task.source_selection_id,
+                    content_order=variant_task.content_order,
+                    position=variant_task.order,
+                    occurrence=slot_occurrences[occurrence_key],
+                )
                 task = task_content_snapshot_from_mapping(
                     variant_task.task_snapshot,
                 )
@@ -159,6 +192,7 @@ class DjangoEventPerformanceReportRepository(
                     for item in task.codifier_requirements
                 )
                 key = (
+                    group_key,
                     variant_task.order,
                     task.topic_name,
                     task.subtopic_name,
@@ -172,13 +206,14 @@ class DjangoEventPerformanceReportRepository(
                 seen.add(key)
                 facts.append(
                     EventReportSpecificationFact(
-                        order=key[0],
-                        topic_name=key[1],
-                        subtopic_name=key[2],
-                        content_element=key[3],
-                        requirement_element=key[4],
-                        codifier_requirements=key[5],
-                        content_element_descriptions=key[6],
+                        group_key=key[0],
+                        order=key[1],
+                        topic_name=key[2],
+                        subtopic_name=key[3],
+                        content_element=key[4],
+                        requirement_element=key[5],
+                        codifier_requirements=key[6],
+                        content_element_descriptions=key[7],
                     )
                 )
         return tuple(sorted(facts, key=lambda item: item.order))

@@ -52,6 +52,7 @@ class EventReportTaskScoreFact:
 
 @dataclass(frozen=True)
 class EventReportSpecificationFact:
+    group_key: str
     order: int
     topic_name: str
     subtopic_name: str = ''

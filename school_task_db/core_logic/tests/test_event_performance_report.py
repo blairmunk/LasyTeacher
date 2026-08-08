@@ -14,6 +14,7 @@ from core_logic.entities.event_performance_report import (
 from core_logic.services.event_performance_report_service import (
     EventPerformanceReportService,
 )
+from core_logic.value_objects.report_task_slot import report_task_slot_key
 from core_logic.use_cases.get_event_performance_report import (
     GetEventPerformanceReportUseCase,
 )
@@ -82,6 +83,7 @@ class EventPerformanceReportTests(TestCase):
             ),
             specification=(
                 EventReportSpecificationFact(
+                    group_key='spec-1',
                     order=1,
                     topic_name='Динамика',
                     subtopic_name='Второй закон Ньютона',
@@ -159,4 +161,27 @@ class EventPerformanceReportTests(TestCase):
 
         self.assertIsNone(
             GetEventPerformanceReportUseCase(repo).execute('missing'),
+        )
+
+    def test_task_slot_key_prefers_specification_identity(self):
+        self.assertEqual(
+            report_task_slot_key(
+                source_selection_id='selection-1',
+                content_order=30,
+                position=7,
+                occurrence=2,
+            ),
+            'selection:selection-1:slot:2',
+        )
+        self.assertEqual(
+            report_task_slot_key(
+                content_order=30,
+                position=7,
+                occurrence=2,
+            ),
+            'content:30:slot:2',
+        )
+        self.assertEqual(
+            report_task_slot_key(position=7),
+            'position:7',
         )

@@ -603,7 +603,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 file_store=RenderedDocumentFileStore(
                     output_dirs={'html': output_dir},
                 ),
-                get_work_source=_work_document_source,
+                get_work_document_source=_work_document_source,
                 get_remedial_sheet_data=lambda variant_id: RemedialSheetData(
                     variant='variant',
                     student=None,
@@ -628,7 +628,7 @@ class SectionedDocumentDefaultsTests(TestCase):
 
     def test_builds_combined_section_payload_registry(self):
         registry = build_sectioned_document_payload_builder_registry(
-            get_work_source=_work_document_source,
+            get_work_document_source=_work_document_source,
             get_remedial_sheet_data=lambda variant_id: RemedialSheetData(
                 variant='variant',
                 student=None,
@@ -670,7 +670,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 file_store=RenderedDocumentFileStore(
                     output_dirs={'html': output_dir, 'pdf': output_dir},
                 ),
-                get_work_source=_work_document_source,
+                get_work_document_source=_work_document_source,
                 get_remedial_sheet_data=lambda variant_id: RemedialSheetData(
                     variant='variant',
                     student=None,
@@ -710,7 +710,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                         'latex': output_dir,
                     },
                 ),
-                get_work_source=_work_document_source,
+                get_work_document_source=_work_document_source,
                 get_remedial_sheet_data=lambda variant_id: RemedialSheetData(
                     variant='variant',
                     student=None,

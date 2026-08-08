@@ -27,7 +27,7 @@ class DjangoDocumentEngine(IDocumentEngine):
         get_event_report_use_case=None,
         get_student_digests_use_case=None,
         work_document_repo=None,
-        get_work_source=None,
+        get_work_document_source=None,
         file_store=None,
         template_renderer=None,
         html_to_pdf_renderer_factory=None,
@@ -51,7 +51,7 @@ class DjangoDocumentEngine(IDocumentEngine):
         components = build_sectioned_document_components(
             file_store=file_store,
             work_document_repo=work_document_repo,
-            get_work_source=get_work_source,
+            get_work_document_source=get_work_document_source,
             get_remedial_sheet_data=get_remedial_sheet_data,
             get_event_report=get_event_report,
             get_student_digests=get_student_digests,

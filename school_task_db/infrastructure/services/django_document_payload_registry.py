@@ -65,13 +65,13 @@ class BlankCellsPayloadBuilder:
 
 def build_work_section_payload_builder_registry(
     work_document_repo=None,
-    get_work_source=None,
+    get_work_document_source=None,
     task_payload_formatter=None,
 ) -> DocumentSectionPayloadBuilderRegistry:
     registry = DocumentSectionPayloadBuilderRegistry()
     work_source_provider = WorkDocumentSourceProvider(
         work_document_repo=work_document_repo,
-        get_work_source=get_work_source,
+        get_work_document_source=get_work_document_source,
     )
     task_list_builder = DjangoWorkTaskListPayloadBuilder(
         task_payload_formatter=task_payload_formatter,

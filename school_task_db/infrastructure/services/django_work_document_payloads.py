@@ -7,9 +7,6 @@ from core_logic.services.work_score_allocation_service import (
     WorkScoreAllocationService,
     WorkScoreSpecRow,
 )
-from infrastructure.services.django_variant_document_payloads import (
-    DjangoVariantDocumentPayloadBuilder,
-)
 from infrastructure.services.document_build_cache import (
     document_payload_cache,
     document_section_input_key,
@@ -17,12 +14,19 @@ from infrastructure.services.document_build_cache import (
 from infrastructure.repositories.django_work_document_repo import (
     DjangoWorkDocumentRepository,
 )
+from infrastructure.services.work_variant_document_payloads import (
+    WorkVariantDocumentPayloadBuilder,
+)
 
 
 class WorkDocumentSourceProvider:
-    def __init__(self, work_document_repo=None, get_work_source=None):
-        self.get_work_source = (
-            get_work_source
+    def __init__(
+        self,
+        work_document_repo=None,
+        get_work_document_source=None,
+    ):
+        self.get_work_document_source = (
+            get_work_document_source
             or (
                 work_document_repo or DjangoWorkDocumentRepository()
             ).get_work_document_source
@@ -30,23 +34,25 @@ class WorkDocumentSourceProvider:
 
     def get(self, work_id, build_context=None):
         if build_context is None:
-            return self.get_work_source(work_id)
+            return self.get_work_document_source(work_id)
         cache = build_context.setdefault('work_document_source_by_id', {})
         if work_id not in cache:
-            cache[work_id] = self.get_work_source(work_id)
+            cache[work_id] = self.get_work_document_source(work_id)
         return cache[work_id]
 
 
 class DjangoWorkHeaderPayloadBuilder:
     def __init__(
         self,
-        get_work_source=None,
+        get_work_document_source=None,
         work_source_provider=None,
         score_allocation_service=None,
     ):
         self.work_source_provider = (
             work_source_provider
-            or WorkDocumentSourceProvider(get_work_source=get_work_source)
+            or WorkDocumentSourceProvider(
+                get_work_document_source=get_work_document_source,
+            )
         )
         self.score_allocation_service = (
             score_allocation_service or WorkScoreAllocationService()
@@ -90,18 +96,20 @@ class DjangoWorkHeaderPayloadBuilder:
 class DjangoWorkTaskListPayloadBuilder:
     def __init__(
         self,
-        get_work_source=None,
+        get_work_document_source=None,
         task_payload_formatter=None,
         variant_payload_builder=None,
         work_source_provider=None,
     ):
         self.work_source_provider = (
             work_source_provider
-            or WorkDocumentSourceProvider(get_work_source=get_work_source)
+            or WorkDocumentSourceProvider(
+                get_work_document_source=get_work_document_source,
+            )
         )
         self.variant_payload_builder = (
             variant_payload_builder
-            or DjangoVariantDocumentPayloadBuilder(
+            or WorkVariantDocumentPayloadBuilder(
                 task_payload_formatter=task_payload_formatter,
             )
         )

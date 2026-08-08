@@ -73,7 +73,9 @@ class DjangoWorkHeaderPayloadBuilderTests(TestCase):
         calls = []
         work = object()
         provider = WorkDocumentSourceProvider(
-            get_work_source=lambda work_id: calls.append(work_id) or work,
+            get_work_document_source=(
+                lambda work_id: calls.append(work_id) or work
+            ),
         )
         first_build_context = {}
 
@@ -552,7 +554,9 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             max_score=work.max_score,
         )
         registry = build_work_section_payload_builder_registry(
-            get_work_source=lambda work_id: calls.append(work_id) or work_source,
+            get_work_document_source=(
+                lambda work_id: calls.append(work_id) or work_source
+            ),
         )
         builder = RecipeDocumentBuilder(
             section_payload_builder_registry=registry,

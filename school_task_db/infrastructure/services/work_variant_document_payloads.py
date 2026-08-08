@@ -5,7 +5,7 @@ from infrastructure.services.variant_document_content_payloads import (
 )
 
 
-class DjangoVariantDocumentPayloadBuilder:
+class WorkVariantDocumentPayloadBuilder:
     def __init__(self, task_payload_formatter=None):
         self.task_payload_formatter = task_payload_formatter
 

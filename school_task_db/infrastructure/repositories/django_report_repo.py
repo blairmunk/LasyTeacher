@@ -159,9 +159,13 @@ class DjangoReportRepository(IReportRepository):
                     else None
                 ),
                 variant=(
-                    self._report_variant_ref(participation.variant)
-                    if participation.variant
-                    else None
+                    self._attempt_variant_ref(attempt)
+                    if attempt and attempt.variant_id_snapshot
+                    else (
+                        self._report_variant_ref(participation.variant)
+                        if participation.variant
+                        else None
+                    )
                 ),
             ))
 
@@ -1155,6 +1159,16 @@ class DjangoReportRepository(IReportRepository):
             short_uuid=variant.get_short_uuid(),
             number=variant.number,
             work_name_snapshot=variant.work_name_snapshot,
+        )
+
+    @staticmethod
+    def _attempt_variant_ref(attempt):
+        variant_id = attempt.variant_id_snapshot
+        return ReportVariantRef(
+            pk=variant_id,
+            short_uuid=variant_id[-4:].upper(),
+            number=attempt.variant_number_snapshot,
+            work_name_snapshot=attempt.work_name_snapshot,
         )
 
     def _report_analog_group_ref(self, group):

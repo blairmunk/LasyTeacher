@@ -1041,9 +1041,15 @@ class DjangoReportRepositoryTests(TestCase):
             status='graded',
             planned_date=now,
         )
+        captured_variant = Variant.objects.create(
+            work=work,
+            number=1,
+            work_name_snapshot=work.name,
+        )
         participation = EventParticipation.objects.create(
             event=event,
             student=graded_student,
+            variant=captured_variant,
             status='graded',
         )
         mark = Mark.objects.create(
@@ -1062,6 +1068,13 @@ class DjangoReportRepositoryTests(TestCase):
         mark.score = 2
         mark.points = 1
         mark.save(update_fields=['score', 'points'])
+        replacement_variant = Variant.objects.create(
+            work=work,
+            number=2,
+            work_name_snapshot='Изменённая работа',
+        )
+        participation.variant = replacement_variant
+        participation.save(update_fields=['variant'])
 
         data = DjangoReportRepository().get_journal_source(
             course_id=course.pk,
@@ -1087,6 +1100,9 @@ class DjangoReportRepositoryTests(TestCase):
         self.assertEqual(data.entries[0].participation.status, 'graded')
         self.assertEqual(data.entries[0].mark.score, 4)
         self.assertEqual(data.entries[0].mark.points, 8)
+        self.assertEqual(data.entries[0].variant.pk, str(captured_variant.pk))
+        self.assertEqual(data.entries[0].variant.number, 1)
+        self.assertEqual(data.entries[0].variant.work_name_snapshot, work.name)
 
     def test_get_task_db_health_returns_database_health_data(self):
         topic = Topic.objects.create(

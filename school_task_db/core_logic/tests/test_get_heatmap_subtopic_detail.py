@@ -1,11 +1,13 @@
 from unittest import TestCase
 
-from core_logic.entities.report import (
+from core_logic.entities.heatmap import (
     HeatmapDetailScoreFact,
     HeatmapSubtopicDetailSource,
+    ReportHeatmapColumnRef,
+)
+from core_logic.entities.report_refs import (
     ReportCourseRef,
     ReportGroupRef,
-    ReportHeatmapColumnRef,
     ReportStudentRef,
     ReportTaskRef,
 )

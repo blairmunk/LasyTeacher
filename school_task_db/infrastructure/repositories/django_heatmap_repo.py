@@ -2,7 +2,7 @@
 
 from django.shortcuts import get_object_or_404
 
-from core_logic.entities.report import (
+from core_logic.entities.heatmap import (
     HeatmapCourseOverviewData,
     HeatmapCourseTimelineSource,
     HeatmapDrilldownOverviewData,

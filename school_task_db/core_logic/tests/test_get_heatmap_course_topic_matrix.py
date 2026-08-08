@@ -1,9 +1,11 @@
 from unittest import TestCase
 
-from core_logic.entities.report import (
+from core_logic.entities.heatmap import (
     HeatmapMatrixSource,
     HeatmapScoreFact,
     ReportHeatmapColumnRef,
+)
+from core_logic.entities.report_refs import (
     ReportStudentRef,
 )
 from core_logic.use_cases.get_heatmap_course_topic_matrix import (

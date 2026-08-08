@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from core_logic.entities.report import HeatmapCourseOverviewData
+from core_logic.entities.heatmap import HeatmapCourseOverviewData
 from core_logic.use_cases.get_heatmap_course_overview import (
     GetHeatmapCourseOverviewUseCase,
     HeatmapCourseOverviewRequest,

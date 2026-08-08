@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from core_logic.entities.report import (
+from core_logic.entities.heatmap import (
     HeatmapCourseOverviewData,
     HeatmapCourseTimelineSource,
     HeatmapDrilldownOverviewData,

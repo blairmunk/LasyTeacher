@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 
-from core_logic.entities.report import (
+from core_logic.entities.heatmap import (
     HeatmapStudentDetailData,
     HeatmapStudentDetailSource,
     HeatmapSubtopicDetailData,

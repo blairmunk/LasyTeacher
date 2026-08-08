@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from datetime import datetime
 
-from core_logic.entities.report import (
+from core_logic.entities.heatmap import (
     HeatmapCourseTimelineSource,
     HeatmapTimelineEventRef,
     HeatmapTimelineMarkFact,

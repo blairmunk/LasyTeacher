@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from core_logic.entities.report import HeatmapDrilldownOverviewData
+from core_logic.entities.heatmap import HeatmapDrilldownOverviewData
 from core_logic.interfaces.heatmap_repo import IHeatmapRepository
 
 

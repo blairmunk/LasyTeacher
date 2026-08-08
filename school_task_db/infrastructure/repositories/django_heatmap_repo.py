@@ -34,7 +34,7 @@ from infrastructure.services.captured_task_result_queries import (
 from students.models import Student, StudentGroup
 
 
-class DjangoReportRepository(IHeatmapRepository):
+class DjangoHeatmapRepository(IHeatmapRepository):
     def get_heatmap_drilldown_overview(self, topic_id, group_id):
         topic = get_object_or_404(Topic, pk=topic_id)
         groups = list(StudentGroup.objects.all().order_by('name'))

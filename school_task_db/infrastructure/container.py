@@ -315,7 +315,7 @@ from infrastructure.repositories.django_journal_repo import (
     DjangoJournalRepository,
 )
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
-from infrastructure.repositories.django_report_repo import DjangoReportRepository
+from infrastructure.repositories.django_heatmap_repo import DjangoHeatmapRepository
 from infrastructure.repositories.django_report_summary_repo import (
     DjangoReportSummaryRepository,
 )
@@ -447,7 +447,7 @@ class Container:
     @property
     def heatmap_repo(self):
         if self._heatmap_repo is None:
-            self._heatmap_repo = DjangoReportRepository()
+            self._heatmap_repo = DjangoHeatmapRepository()
         return self._heatmap_repo
 
     @property

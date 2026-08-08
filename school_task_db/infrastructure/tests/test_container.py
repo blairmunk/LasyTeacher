@@ -262,7 +262,7 @@ from infrastructure.repositories.django_event_performance_report_repo import (
     DjangoEventPerformanceReportRepository,
 )
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
-from infrastructure.repositories.django_report_repo import DjangoReportRepository
+from infrastructure.repositories.django_heatmap_repo import DjangoHeatmapRepository
 from infrastructure.repositories.django_report_summary_repo import (
     DjangoReportSummaryRepository,
 )
@@ -865,7 +865,7 @@ class ContainerTests(SimpleTestCase):
             container.report_summary_repo,
             DjangoReportSummaryRepository,
         )
-        self.assertIsInstance(container.heatmap_repo, DjangoReportRepository)
+        self.assertIsInstance(container.heatmap_repo, DjangoHeatmapRepository)
         self.assertIsInstance(container.journal_repo, DjangoJournalRepository)
         self.assertIsInstance(
             container.task_db_health_repo,

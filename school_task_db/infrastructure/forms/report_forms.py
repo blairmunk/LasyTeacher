@@ -46,6 +46,9 @@ from core_logic.use_cases.render_student_digest_document import (
 from core_logic.value_objects.document_render_options import (
     build_render_target_from_data,
 )
+from core_logic.value_objects.report_document_options import (
+    EventReportDocumentOptions,
+)
 from reports import plotly_utils
 
 
@@ -114,6 +117,9 @@ class ReportFormAdapter:
 
     def event_report_document_request(self, event_id, data):
         options_submitted = data.get('report_options_submitted') == '1'
+        def enabled(name, default=True):
+            return name in data if options_submitted else default
+
         return RenderEventPerformanceReportDocumentRequest(
             event_id=str(event_id),
             render_target=build_render_target_from_data(data),
@@ -121,15 +127,18 @@ class ReportFormAdapter:
                 'presentation_profile_id',
                 '',
             ).strip(),
-            include_content_element_text=(
-                'include_content_element_text' in data
-                if options_submitted
-                else True
-            ),
-            include_teacher_notes=(
-                'include_teacher_notes' in data
-                if options_submitted
-                else False
+            options=EventReportDocumentOptions(
+                include_specification=enabled('include_specification'),
+                include_summary=enabled('include_summary'),
+                include_task_analysis=enabled('include_task_analysis'),
+                include_conclusions=enabled('include_conclusions'),
+                include_content_element_text=enabled(
+                    'include_content_element_text',
+                ),
+                include_teacher_notes=enabled(
+                    'include_teacher_notes',
+                    default=False,
+                ),
             ),
         )
 

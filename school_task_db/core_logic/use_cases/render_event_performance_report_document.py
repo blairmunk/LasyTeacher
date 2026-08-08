@@ -1,6 +1,6 @@
 """Render a sectioned document for one event performance report."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from core_logic.entities.document import DocumentPresentationProfile
 from core_logic.entities.document_rendering import (
@@ -25,6 +25,9 @@ from core_logic.value_objects.document_render_plan_factories import (
 from core_logic.value_objects.document_recipes import (
     EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
 )
+from core_logic.value_objects.report_document_options import (
+    EventReportDocumentOptions,
+)
 
 
 @dataclass(frozen=True)
@@ -33,8 +36,9 @@ class RenderEventPerformanceReportDocumentRequest:
     render_target: RenderTarget
     presentation_profile: DocumentPresentationProfile | None = None
     presentation_profile_id: str = ''
-    include_content_element_text: bool = True
-    include_teacher_notes: bool = False
+    options: EventReportDocumentOptions = field(
+        default_factory=EventReportDocumentOptions,
+    )
 
 
 class RenderEventPerformanceReportDocumentUseCase:
@@ -65,10 +69,7 @@ class RenderEventPerformanceReportDocumentUseCase:
                     event_name=report.event.name,
                 ),
                 recipe=build_event_report_document_recipe_for_render(
-                    include_content_element_text=(
-                        request.include_content_element_text
-                    ),
-                    include_teacher_notes=request.include_teacher_notes,
+                    options=request.options,
                     presentation_profile=resolve_document_presentation_profile(
                         document_type=(
                             EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE

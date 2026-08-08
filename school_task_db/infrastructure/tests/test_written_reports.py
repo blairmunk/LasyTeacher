@@ -504,6 +504,7 @@ class WrittenReportRepositoryTests(TestCase):
             {
                 'renderer_type': 'html',
                 'report_options_submitted': '1',
+                'include_summary': 'on',
             },
         )
         with_details = self.client.post(
@@ -514,6 +515,7 @@ class WrittenReportRepositoryTests(TestCase):
             {
                 'renderer_type': 'html',
                 'report_options_submitted': '1',
+                'include_specification': 'on',
                 'include_content_element_text': 'on',
                 'include_teacher_notes': 'on',
             },

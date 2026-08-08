@@ -28,6 +28,9 @@ from core_logic.value_objects.document_recipes import (
     STUDENT_DIGEST_SUMMARY_SECTION,
     STUDENT_DIGEST_TEACHER_COMMENTS_SECTION,
 )
+from core_logic.value_objects.report_document_options import (
+    EventReportDocumentOptions,
+)
 
 
 class ReportDocumentRecipeTests(TestCase):
@@ -51,8 +54,10 @@ class ReportDocumentRecipeTests(TestCase):
 
     def test_builds_event_report_with_explicit_optional_materials(self):
         recipe = build_event_performance_report_document_recipe(
-            include_content_element_text=False,
-            include_teacher_notes=True,
+            options=EventReportDocumentOptions(
+                include_content_element_text=False,
+                include_teacher_notes=True,
+            ),
         )
 
         self.assertFalse(
@@ -61,6 +66,25 @@ class ReportDocumentRecipeTests(TestCase):
         self.assertEqual(
             recipe.section_types[-1],
             EVENT_REPORT_TEACHER_NOTES_SECTION,
+        )
+
+    def test_can_disable_independent_event_report_sections(self):
+        recipe = build_event_performance_report_document_recipe(
+            options=EventReportDocumentOptions(
+                include_specification=False,
+                include_summary=True,
+                include_task_analysis=False,
+                include_conclusions=True,
+            ),
+        )
+
+        self.assertEqual(
+            recipe.section_types,
+            (
+                HEADER_SECTION,
+                EVENT_REPORT_SUMMARY_SECTION,
+                EVENT_REPORT_CONCLUSIONS_SECTION,
+            ),
         )
 
     def test_builds_digest_recipe_from_content_options(self):

@@ -526,8 +526,12 @@ class ReportFormAdapterTests(SimpleTestCase):
         self.assertEqual(event_request.render_target.renderer_type, 'html')
         self.assertEqual(event_request.render_target.page_format, 'A5')
         self.assertEqual(event_request.presentation_profile_id, 'profile-1')
-        self.assertTrue(event_request.include_content_element_text)
-        self.assertFalse(event_request.include_teacher_notes)
+        self.assertTrue(event_request.options.include_specification)
+        self.assertTrue(event_request.options.include_summary)
+        self.assertTrue(event_request.options.include_task_analysis)
+        self.assertTrue(event_request.options.include_conclusions)
+        self.assertTrue(event_request.options.include_content_element_text)
+        self.assertFalse(event_request.options.include_teacher_notes)
         self.assertEqual(digest_request.digest_request.group_id, 'g1')
         self.assertTrue(
             digest_request.digest_request.options.include_details,
@@ -548,15 +552,25 @@ class ReportFormAdapterTests(SimpleTestCase):
             'event-1',
             QueryDict(
                 'report_options_submitted=1'
+                '&include_specification=on'
+                '&include_task_analysis=on'
                 '&include_content_element_text=on'
                 '&include_teacher_notes=on'
             ),
         )
 
-        self.assertFalse(compact.include_content_element_text)
-        self.assertFalse(compact.include_teacher_notes)
-        self.assertTrue(detailed.include_content_element_text)
-        self.assertTrue(detailed.include_teacher_notes)
+        self.assertFalse(compact.options.include_specification)
+        self.assertFalse(compact.options.include_summary)
+        self.assertFalse(compact.options.include_task_analysis)
+        self.assertFalse(compact.options.include_conclusions)
+        self.assertFalse(compact.options.include_content_element_text)
+        self.assertFalse(compact.options.include_teacher_notes)
+        self.assertTrue(detailed.options.include_specification)
+        self.assertFalse(detailed.options.include_summary)
+        self.assertTrue(detailed.options.include_task_analysis)
+        self.assertFalse(detailed.options.include_conclusions)
+        self.assertTrue(detailed.options.include_content_element_text)
+        self.assertTrue(detailed.options.include_teacher_notes)
 
     def test_builds_top_level_report_requests(self):
         adapter = ReportFormAdapter()

@@ -28,6 +28,9 @@ from core_logic.value_objects.document_recipes import (
 from core_logic.value_objects.document_render_options import (
     RemedialSheetBuildOptions,
 )
+from core_logic.value_objects.report_document_options import (
+    EventReportDocumentOptions,
+)
 
 
 def build_work_document_recipe() -> DocumentRecipe:
@@ -83,28 +86,32 @@ def build_remedial_sheet_document_recipe(
 
 
 def build_event_performance_report_document_recipe(
-    include_content_element_text: bool = True,
-    include_teacher_notes: bool = False,
+    options: EventReportDocumentOptions | None = None,
 ) -> DocumentRecipe:
-    sections = [
-        DocumentSectionSpec(section_type=HEADER_SECTION),
-        DocumentSectionSpec(
+    options = options or EventReportDocumentOptions()
+    sections = [DocumentSectionSpec(section_type=HEADER_SECTION)]
+    if options.include_specification:
+        sections.append(DocumentSectionSpec(
             section_type=EVENT_REPORT_SPECIFICATION_SECTION,
             options={
                 'include_content_element_text': (
-                    include_content_element_text
+                    options.include_content_element_text
                 ),
             },
-        ),
-        DocumentSectionSpec(section_type=EVENT_REPORT_SUMMARY_SECTION),
-        DocumentSectionSpec(
+        ))
+    if options.include_summary:
+        sections.append(
+            DocumentSectionSpec(section_type=EVENT_REPORT_SUMMARY_SECTION),
+        )
+    if options.include_task_analysis:
+        sections.append(DocumentSectionSpec(
             section_type=EVENT_REPORT_TASK_ANALYSIS_SECTION,
-        ),
-        DocumentSectionSpec(
+        ))
+    if options.include_conclusions:
+        sections.append(DocumentSectionSpec(
             section_type=EVENT_REPORT_CONCLUSIONS_SECTION,
-        ),
-    ]
-    if include_teacher_notes:
+        ))
+    if options.include_teacher_notes:
         sections.append(
             DocumentSectionSpec(
                 section_type=EVENT_REPORT_TEACHER_NOTES_SECTION,

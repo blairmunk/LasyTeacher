@@ -312,15 +312,13 @@ def build_remedial_sheet_batch_document_recipe_for_render(
 
 def build_event_report_document_recipe_for_render(
     presentation_profile: DocumentPresentationProfile | None = None,
-    include_content_element_text: bool = True,
-    include_teacher_notes: bool = False,
+    options=None,
 ) -> DocumentRecipe:
     return _recipe_with_profile_presentation(
         presentation_profile=presentation_profile,
         default_recipe_builder=lambda: (
             build_event_performance_report_document_recipe(
-                include_content_element_text=include_content_element_text,
-                include_teacher_notes=include_teacher_notes,
+                options=options,
             )
         ),
     )

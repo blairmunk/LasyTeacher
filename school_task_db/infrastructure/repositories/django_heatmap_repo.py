@@ -14,10 +14,12 @@ from core_logic.entities.report import (
     HeatmapSubtopicDetailSource,
     HeatmapTimelineEventRef,
     HeatmapTimelineMarkFact,
+    ReportHeatmapColumnRef,
+)
+from core_logic.entities.report_refs import (
     ReportActivityRef,
     ReportCourseRef,
     ReportGroupRef,
-    ReportHeatmapColumnRef,
     ReportStudentRef,
     ReportTaskRef,
     ReportWorkRef,

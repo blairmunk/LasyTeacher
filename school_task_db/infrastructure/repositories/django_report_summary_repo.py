@@ -10,18 +10,20 @@ from core_logic.entities.report import (
     DashboardMarkFact,
     DashboardParticipationFact,
     EventsStatusSource,
-    ReportCourseRef,
-    ReportEventRef,
-    ReportGroupRef,
-    ReportMarkFact,
     ReportsDashboardSource,
-    ReportStudentRef,
-    ReportWorkRef,
     StudentPerformanceItemSource,
     StudentPerformanceParticipationFact,
     StudentPerformanceSource,
     WorkAnalysisItemSource,
     WorkAnalysisSource,
+)
+from core_logic.entities.report_refs import (
+    ReportCourseRef,
+    ReportEventRef,
+    ReportGroupRef,
+    ReportMarkFact,
+    ReportStudentRef,
+    ReportWorkRef,
 )
 from core_logic.interfaces.report_summary_repo import IReportSummaryRepository
 from core_logic.services.event_service import EventService

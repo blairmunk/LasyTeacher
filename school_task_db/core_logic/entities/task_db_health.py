@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Any, List
 
-from core_logic.entities.report import (
+from core_logic.entities.report_refs import (
     ReportAnalogGroupRef,
     ReportCourseRef,
     ReportTaskUsageRef,

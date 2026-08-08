@@ -9,7 +9,7 @@ from core_logic.entities.journal import (
     JournalSelectData,
     JournalSource,
 )
-from core_logic.entities.report import (
+from core_logic.entities.report_refs import (
     ReportCourseRef,
     ReportEventRef,
     ReportGroupRef,

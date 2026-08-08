@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from core_logic.entities.report import (
+from core_logic.entities.report_refs import (
     ReportAnalogGroupRef,
     ReportCourseRef,
     ReportVariantRef,

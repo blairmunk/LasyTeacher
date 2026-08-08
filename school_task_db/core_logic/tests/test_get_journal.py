@@ -5,7 +5,7 @@ from core_logic.entities.journal import (
     JournalParticipationRef,
     JournalSource,
 )
-from core_logic.entities.report import (
+from core_logic.entities.report_refs import (
     ReportCourseRef,
     ReportEventRef,
     ReportGroupRef,

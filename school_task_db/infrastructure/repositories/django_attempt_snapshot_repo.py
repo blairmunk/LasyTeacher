@@ -8,11 +8,16 @@ from core_logic.entities.attempt_snapshot import AttemptSnapshotRef
 from core_logic.interfaces.attempt_snapshot_repo import (
     IAttemptSnapshotRepository,
 )
-from core_logic.value_objects.task_scores import resolve_task_score_record
+from core_logic.value_objects.task_scores import (
+    resolve_task_score_record,
+    task_score_records_for_attempt,
+)
 from events.models import AttemptSnapshot, AttemptTaskSnapshot, Mark
 from infrastructure.services.task_content_snapshots import (
+    build_task_content_snapshots,
     task_content_snapshot_from_mapping,
 )
+from tasks.models import Task
 from works.models import VariantTask
 
 
@@ -69,6 +74,7 @@ class DjangoAttemptSnapshotRepository(IAttemptSnapshotRepository):
 
     def _capture_task_results(self, snapshot, variant, task_scores):
         if variant is None:
+            self._capture_unassigned_task_results(snapshot, task_scores)
             return
         rows = []
         for variant_task in VariantTask.objects.filter(
@@ -86,6 +92,7 @@ class DjangoAttemptSnapshotRepository(IAttemptSnapshotRepository):
                 attempt=snapshot,
                 variant_task=variant_task,
                 task_id_snapshot=task.task_id,
+                task_content_snapshot=dict(variant_task.task_snapshot),
                 source_selection_id_snapshot=(
                     variant_task.source_selection_id
                 ),
@@ -98,6 +105,33 @@ class DjangoAttemptSnapshotRepository(IAttemptSnapshotRepository):
                     self._decimal(record.max_points) if record else None
                 ),
                 comment=record.comment if record else '',
+            ))
+        AttemptTaskSnapshot.objects.bulk_create(rows)
+
+    def _capture_unassigned_task_results(self, snapshot, task_scores):
+        records = task_score_records_for_attempt(task_scores)
+        snapshots = build_task_content_snapshots(
+            Task.objects.filter(
+                pk__in=[record.task_id for record in records],
+            )
+        )
+        rows = []
+        for order, record in enumerate(records, start=1):
+            task_snapshot = snapshots.get(record.task_id)
+            if task_snapshot is None:
+                continue
+            checked_max_points = self._decimal(record.max_points)
+            rows.append(AttemptTaskSnapshot(
+                attempt=snapshot,
+                variant_task=None,
+                task_id_snapshot=record.task_id,
+                task_content_snapshot=task_snapshot.to_mapping(),
+                order_snapshot=order,
+                is_assessable_snapshot=True,
+                expected_max_points_snapshot=checked_max_points or Decimal('0'),
+                points=self._decimal(record.points),
+                checked_max_points=checked_max_points,
+                comment=record.comment,
             ))
         AttemptTaskSnapshot.objects.bulk_create(rows)
 

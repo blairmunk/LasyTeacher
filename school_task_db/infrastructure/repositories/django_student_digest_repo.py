@@ -93,7 +93,7 @@ class DjangoStudentDigestRepository(IStudentDigestRepository):
                 if not task_result.is_assessable_snapshot:
                     continue
                 task_snapshot = task_content_snapshot_from_mapping(
-                    task_result.variant_task.task_snapshot,
+                    task_result.task_content_snapshot,
                 )
                 points = self._number(task_result.points)
                 max_points = self._number(
@@ -114,7 +114,7 @@ class DjangoStudentDigestRepository(IStudentDigestRepository):
         subject = event.course.subject if event.course_id else ''
         if not subject and task_results:
             subject = task_content_snapshot_from_mapping(
-                task_results[0].variant_task.task_snapshot,
+                task_results[0].task_content_snapshot,
             ).subject
         return StudentDigestEntryFact(
             event_id=str(event.pk),

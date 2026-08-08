@@ -26,9 +26,10 @@ def latest_attempts_by_participation(
         attempts = attempts.prefetch_related(
             Prefetch(
                 'task_results',
-                queryset=AttemptTaskSnapshot.objects.select_related(
-                    'variant_task',
-                ).order_by('order_snapshot', 'pk'),
+                queryset=AttemptTaskSnapshot.objects.order_by(
+                    'order_snapshot',
+                    'pk',
+                ),
                 to_attr='captured_task_results',
             ),
         )

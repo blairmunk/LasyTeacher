@@ -83,7 +83,7 @@ class DjangoEventPerformanceReportRepository(
                 )
                 slot_occurrences[occurrence_key] += 1
                 task_snapshot = task_content_snapshot_from_mapping(
-                    task_result.variant_task.task_snapshot,
+                    task_result.task_content_snapshot,
                 )
                 task_scores.append(
                     EventReportTaskScoreFact(

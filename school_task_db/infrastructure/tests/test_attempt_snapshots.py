@@ -104,10 +104,54 @@ class DjangoAttemptSnapshotRepositoryTests(TestCase):
         self.assertEqual(first.recommendations, 'Повторить второй закон Ньютона')
         self.assertEqual(first_task.points, 1)
         self.assertEqual(first_task.comment, 'Ошибка в формуле')
+        self.assertEqual(
+            first_task.task_content_snapshot['text'],
+            'Найдите силу',
+        )
         self.assertEqual(second.score, 4)
         self.assertEqual(second.recommendations, 'Проверить единицы измерения')
         self.assertEqual(second_task.points, 2)
         self.assertEqual(
-            second_task.variant_task.task_snapshot['text'],
+            second_task.task_content_snapshot['text'],
             'Найдите силу',
         )
+
+    def test_captures_task_results_without_assigned_variant(self):
+        student = Student.objects.create(
+            last_name='Петров',
+            first_name='Пётр',
+        )
+        participation = EventParticipation.objects.create(
+            event=self.mark.participation.event,
+            student=student,
+            status='graded',
+        )
+        mark = Mark.objects.create(
+            participation=participation,
+            score=4,
+            points=2,
+            max_points=2,
+            task_scores={
+                str(self.task.pk): {
+                    'points': 2,
+                    'max_points': 2,
+                    'comment': 'Верно',
+                },
+            },
+        )
+
+        attempt_ref = DjangoAttemptSnapshotRepository().capture_mark(
+            str(mark.pk),
+        )
+
+        task_result = AttemptSnapshot.objects.get(
+            pk=attempt_ref.pk,
+        ).task_results.get()
+        self.assertIsNone(task_result.variant_task)
+        self.assertEqual(task_result.task_id_snapshot, str(self.task.pk))
+        self.assertEqual(
+            task_result.task_content_snapshot['text'],
+            'Найдите силу',
+        )
+        self.assertEqual(task_result.points, 2)
+        self.assertEqual(task_result.comment, 'Верно')

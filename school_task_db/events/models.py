@@ -247,10 +247,16 @@ class AttemptTaskSnapshot(BaseModel):
     variant_task = models.ForeignKey(
         'works.VariantTask',
         on_delete=models.PROTECT,
+        null=True,
+        blank=True,
         related_name='attempt_task_snapshots',
         verbose_name='Задание варианта',
     )
     task_id_snapshot = models.CharField('ID задания (снимок)', max_length=36)
+    task_content_snapshot = models.JSONField(
+        'Содержимое задания (снимок)',
+        default=dict,
+    )
     source_selection_id_snapshot = models.CharField(
         'Блок спецификации (снимок)',
         max_length=36,
@@ -292,6 +298,11 @@ class AttemptTaskSnapshot(BaseModel):
             models.UniqueConstraint(
                 fields=['attempt', 'variant_task'],
                 name='unique_attempt_snapshot_variant_task',
+            ),
+            models.UniqueConstraint(
+                fields=['attempt', 'task_id_snapshot'],
+                condition=models.Q(variant_task__isnull=True),
+                name='unique_attempt_snapshot_legacy_task',
             ),
         ]
 

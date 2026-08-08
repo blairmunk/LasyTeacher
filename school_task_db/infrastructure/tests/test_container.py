@@ -263,6 +263,9 @@ from infrastructure.repositories.django_event_performance_report_repo import (
 )
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
 from infrastructure.repositories.django_report_repo import DjangoReportRepository
+from infrastructure.repositories.django_report_summary_repo import (
+    DjangoReportSummaryRepository,
+)
 from infrastructure.repositories.django_journal_repo import DjangoJournalRepository
 from infrastructure.repositories.django_task_db_health_repo import (
     DjangoTaskDBHealthRepository,
@@ -858,7 +861,11 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(container.work_repo, DjangoWorkRepository)
         self.assertIsInstance(container.event_repo, DjangoEventRepository)
         self.assertIsInstance(container.review_repo, DjangoReviewRepository)
-        self.assertIsInstance(container.report_repo, DjangoReportRepository)
+        self.assertIsInstance(
+            container.report_summary_repo,
+            DjangoReportSummaryRepository,
+        )
+        self.assertIsInstance(container.heatmap_repo, DjangoReportRepository)
         self.assertIsInstance(container.journal_repo, DjangoJournalRepository)
         self.assertIsInstance(
             container.task_db_health_repo,

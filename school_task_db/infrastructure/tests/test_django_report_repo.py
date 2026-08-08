@@ -6,6 +6,9 @@ from django.utils import timezone
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_report_repo import DjangoReportRepository
+from infrastructure.repositories.django_report_summary_repo import (
+    DjangoReportSummaryRepository,
+)
 from infrastructure.tests.variant_task_factory import (
     capture_attempt_snapshot,
     create_variant_task,
@@ -797,7 +800,7 @@ class DjangoReportRepositoryTests(TestCase):
         )
 
         data = GetEventsStatusReportUseCase(
-            DjangoReportRepository(),
+            DjangoReportSummaryRepository(),
         ).execute(
             EventsStatusReportRequest(
                 year=None,
@@ -873,7 +876,7 @@ class DjangoReportRepositoryTests(TestCase):
         mark.save(update_fields=['score', 'points'])
 
         data = GetWorkAnalysisReportUseCase(
-            DjangoReportRepository(),
+            DjangoReportSummaryRepository(),
         ).execute(
             WorkAnalysisReportRequest(year=None),
         )
@@ -950,7 +953,7 @@ class DjangoReportRepositoryTests(TestCase):
         mark.save(update_fields=['score', 'points'])
 
         data = GetStudentPerformanceReportUseCase(
-            DjangoReportRepository(),
+            DjangoReportSummaryRepository(),
         ).execute(
             StudentPerformanceReportRequest(
                 year=None,
@@ -1021,7 +1024,7 @@ class DjangoReportRepositoryTests(TestCase):
         mark.save(update_fields=['score', 'checked_at'])
 
         data = GetReportsDashboardUseCase(
-            DjangoReportRepository(),
+            DjangoReportSummaryRepository(),
         ).execute(
             ReportsDashboardRequest(
                 year=None,

@@ -1,7 +1,10 @@
 import json
 from datetime import date
+from importlib import import_module
+from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from django.core.management import call_command
 from django.core.management.base import CommandError
@@ -11,6 +14,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from core.models import AcademicYear, ImportLog
+from core.test_slices import TEST_SLICES
 from core.importers.tasks import TaskImporter
 from curriculum.models import Course, Topic
 from events.models import Event, EventParticipation, Mark
@@ -465,3 +469,41 @@ class CoreViewsTests(TestCase):
         self.assertEqual(payload['tasks'][0]['groups'], [str(group.pk)])
         self.assertEqual(payload['topics'][0]['name'], topic.name)
         self.assertEqual(payload['sources'][0]['id'], str(source.pk))
+
+
+class TestSliceCommandTests(TestCase):
+    def test_every_configured_label_is_importable(self):
+        for slice_name, labels in TEST_SLICES.items():
+            for label in labels:
+                with self.subTest(slice=slice_name, label=label):
+                    import_module(label)
+
+    def test_list_prints_available_slices(self):
+        output = StringIO()
+
+        call_command('test_slice', '--list', stdout=output)
+
+        self.assertIn('reports', output.getvalue())
+        self.assertIn('documents', output.getvalue())
+        self.assertIn('all', output.getvalue())
+
+    def test_named_slice_delegates_to_django_test_command(self):
+        output = StringIO()
+
+        with patch(
+            'core.management.commands.test_slice.call_command',
+        ) as test_command:
+            call_command(
+                'test_slice',
+                'reports',
+                keepdb=True,
+                failfast=True,
+                stdout=output,
+            )
+
+        args, kwargs = test_command.call_args
+        self.assertEqual(args[0], 'test')
+        self.assertEqual(args[1:], TEST_SLICES['reports'])
+        self.assertTrue(kwargs['keepdb'])
+        self.assertTrue(kwargs['failfast'])
+        self.assertFalse(kwargs['interactive'])

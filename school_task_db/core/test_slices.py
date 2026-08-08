@@ -22,7 +22,7 @@ TEST_SLICES = {
         'core_logic.tests.test_get_student_performance_report',
         'core_logic.tests.test_get_work_analysis_report',
         'core_logic.tests.test_report_document_recipes',
-        'core_logic.tests.test_report_summary_service',
+        'core_logic.tests.test_report_services',
         'core_logic.tests.test_student_digests',
         'infrastructure.tests.test_attempt_snapshots',
         'infrastructure.tests.test_django_report_repo',

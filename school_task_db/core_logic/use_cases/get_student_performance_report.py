@@ -6,7 +6,9 @@ from typing import Any
 from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.report_summary import StudentPerformanceReportData
 from core_logic.interfaces.report_summary_repo import IReportSummaryRepository
-from core_logic.services.report_summary_service import ReportSummaryService
+from core_logic.services.student_performance_service import (
+    StudentPerformanceService,
+)
 
 
 @dataclass(frozen=True)
@@ -19,10 +21,12 @@ class GetStudentPerformanceReportUseCase:
     def __init__(
         self,
         report_repo: IReportSummaryRepository,
-        summary_service: ReportSummaryService | None = None,
+        performance_service: StudentPerformanceService | None = None,
     ):
         self.report_repo = report_repo
-        self.summary_service = summary_service or ReportSummaryService()
+        self.performance_service = (
+            performance_service or StudentPerformanceService()
+        )
 
     def execute(
         self,
@@ -32,4 +36,4 @@ class GetStudentPerformanceReportUseCase:
             year=request.year,
             group_id=request.group_id,
         )
-        return self.summary_service.build_student_performance(source)
+        return self.performance_service.build(source)

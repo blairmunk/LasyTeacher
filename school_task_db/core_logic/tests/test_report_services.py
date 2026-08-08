@@ -17,10 +17,14 @@ from core_logic.entities.report_refs import (
     ReportStudentRef,
     ReportWorkRef,
 )
-from core_logic.services.report_summary_service import ReportSummaryService
+from core_logic.services.events_status_service import EventsStatusService
+from core_logic.services.student_performance_service import (
+    StudentPerformanceService,
+)
+from core_logic.services.work_analysis_service import WorkAnalysisService
 
 
-class ReportSummaryServiceTests(TestCase):
+class ReportServicesTests(TestCase):
     def test_builds_events_status_and_time_based_attention_lists(self):
         now = datetime(2026, 7, 20, 12, 0)
         source = EventsStatusSource(
@@ -47,7 +51,7 @@ class ReportSummaryServiceTests(TestCase):
             courses=[],
         )
 
-        report = ReportSummaryService().build_events_status(source, now)
+        report = EventsStatusService().build(source, now)
 
         self.assertEqual(report.events_by_status, [
             {'status': 'completed', 'count': 1},
@@ -93,7 +97,7 @@ class ReportSummaryServiceTests(TestCase):
             courses=[],
         )
 
-        report = ReportSummaryService().build_student_performance(source)
+        report = StudentPerformanceService().build(source)
 
         stat = report.students_stats[0]
         self.assertEqual(stat['total_participations'], 2)
@@ -132,7 +136,7 @@ class ReportSummaryServiceTests(TestCase):
             courses=[],
         )
 
-        report = ReportSummaryService().build_student_performance(source)
+        report = StudentPerformanceService().build(source)
 
         self.assertIsNone(report.students_stats[0]['average_pct'])
         self.assertEqual(report.summary_stats['avg_pct'], 0)
@@ -166,7 +170,7 @@ class ReportSummaryServiceTests(TestCase):
             courses=[ReportCourseRef(pk='course-1', name='Физика 7')],
         )
 
-        report = ReportSummaryService().build_work_analysis(source)
+        report = WorkAnalysisService().build(source)
 
         first = report.works_analysis[0]
         self.assertEqual(first['events_count'], 2)
@@ -197,7 +201,7 @@ class ReportSummaryServiceTests(TestCase):
             courses=[],
         )
 
-        report = ReportSummaryService().build_work_analysis(source)
+        report = WorkAnalysisService().build(source)
 
         work = report.works_analysis[0]
         self.assertEqual(work['average_score'], 0)

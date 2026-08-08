@@ -6,7 +6,7 @@ from datetime import datetime
 from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.report_summary import EventsStatusReportData
 from core_logic.interfaces.report_summary_repo import IReportSummaryRepository
-from core_logic.services.report_summary_service import ReportSummaryService
+from core_logic.services.events_status_service import EventsStatusService
 
 
 @dataclass(frozen=True)
@@ -19,10 +19,10 @@ class GetEventsStatusReportUseCase:
     def __init__(
         self,
         report_repo: IReportSummaryRepository,
-        summary_service: ReportSummaryService | None = None,
+        status_service: EventsStatusService | None = None,
     ):
         self.report_repo = report_repo
-        self.summary_service = summary_service or ReportSummaryService()
+        self.status_service = status_service or EventsStatusService()
 
     def execute(
         self,
@@ -31,7 +31,7 @@ class GetEventsStatusReportUseCase:
         source = self.report_repo.get_events_status_source(
             year=request.year,
         )
-        return self.summary_service.build_events_status(
+        return self.status_service.build(
             source,
             current_date=request.current_date,
         )

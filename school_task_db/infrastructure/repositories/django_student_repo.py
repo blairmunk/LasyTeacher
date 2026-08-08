@@ -43,6 +43,9 @@ from events.models import EventParticipation, Mark
 from infrastructure.services.attempt_snapshot_queries import (
     latest_attempts_by_participation,
 )
+from infrastructure.services.captured_task_result_queries import (
+    latest_assessable_task_results,
+)
 from task_groups.models import AnalogGroup, TaskGroup
 from students.models import StudentGroup, StudentTaskLog
 from students.models import Student
@@ -327,55 +330,55 @@ class DjangoStudentRepository(IStudentRepository):
         return rows
 
     def get_task_logs(self, student_id: str) -> List[StudentTaskLogProfile]:
-        logs = StudentTaskLog.objects.filter(
-            student_id=student_id,
-        ).select_related(
-            'task',
-            'event',
-            'topic',
-            'analog_group',
-        ).order_by('-completed_at')
+        results = self._latest_task_history([student_id])
+        analog_groups = self._first_analog_groups(
+            result.task.task_id for result in results
+        )
 
         return [
             StudentTaskLogProfile(
-                task=ObjectRef(pk=str(log.task.pk), name=log.task.text),
-                event=(
-                    ObjectRef(pk=str(log.event.pk), name=log.event.name)
-                    if log.event
-                    else None
+                task=ObjectRef(
+                    pk=result.task.task_id,
+                    name=result.task.text,
                 ),
-                topic_name=log.topic.name if log.topic else '',
+                event=ObjectRef(
+                    pk=result.event_id,
+                    name=result.event_name,
+                ),
+                topic_name=result.task.topic_name,
                 analog_group=(
                     ObjectRef(
-                        pk=str(log.analog_group.pk),
-                        name=log.analog_group.name,
+                        pk=str(analog_groups[result.task.task_id].pk),
+                        name=analog_groups[result.task.task_id].name,
                     )
-                    if log.analog_group
+                    if result.task.task_id in analog_groups
                     else None
                 ),
-                difficulty=log.difficulty,
-                points=log.points,
-                max_points=log.max_points,
-                is_correct=log.is_correct,
-                percentage=log.percentage,
-                completed_at=log.completed_at,
+                difficulty=result.task.difficulty,
+                points=result.points,
+                max_points=result.max_points,
+                is_correct=self._result_is_correct(result),
+                percentage=self._result_percentage(result),
+                completed_at=result.captured_at,
             )
-            for log in logs
+            for result in sorted(
+                results,
+                key=lambda item: item.captured_at,
+                reverse=True,
+            )
         ]
 
     def get_student_remedial_source(
         self,
         student_id: str,
     ) -> StudentRemedialSource:
-        task_logs = list(
-            StudentTaskLog.objects.filter(
-                student_id=student_id,
-            ).select_related('analog_group', 'topic')
+        task_results = self._latest_task_history([student_id])
+        analog_groups = self._first_analog_groups(
+            result.task.task_id for result in task_results
         )
         group_ids = {
-            task_log.analog_group_id
-            for task_log in task_logs
-            if task_log.analog_group_id
+            group.pk
+            for group in analog_groups.values()
         }
         memberships = list(
             TaskGroup.objects.filter(group_id__in=group_ids)
@@ -391,27 +394,27 @@ class DjangoStudentRepository(IStudentRepository):
         return StudentRemedialSource(
             task_logs=tuple(
                 StudentRemedialTaskLog(
-                    task_id=str(task_log.task_id),
+                    task_id=result.task.task_id,
                     analog_group=(
                         ObjectRef(
-                            pk=str(task_log.analog_group_id),
-                            name=task_log.analog_group.name,
+                            pk=str(analog_groups[result.task.task_id].pk),
+                            name=analog_groups[result.task.task_id].name,
                         )
-                        if task_log.analog_group_id
+                        if result.task.task_id in analog_groups
                         else None
                     ),
                     topic=(
                         ObjectRef(
-                            pk=str(task_log.topic_id),
-                            name=task_log.topic.name,
+                            pk=result.task.topic_id,
+                            name=result.task.topic_name,
                         )
-                        if task_log.topic_id
+                        if result.task.topic_id
                         else None
                     ),
-                    percentage=task_log.percentage,
-                    is_correct=task_log.is_correct,
+                    percentage=self._result_percentage(result),
+                    is_correct=self._result_is_correct(result),
                 )
-                for task_log in task_logs
+                for result in task_results
             ),
             tasks=tuple(
                 StudentRemedialCandidateTask(
@@ -438,20 +441,15 @@ class DjangoStudentRepository(IStudentRepository):
         students = list(
             group.students.all().order_by('last_name', 'first_name')
         )
-        task_logs = list(
-            StudentTaskLog.objects.filter(
-                student__in=students,
-            ).values(
-                'student_id',
-                'task_id',
-                'analog_group_id',
-                'percentage',
-            )
+        task_results = self._latest_task_history(
+            [student.pk for student in students],
+        )
+        analog_groups_by_task = self._first_analog_groups(
+            result.task.task_id for result in task_results
         )
         group_ids = {
-            row['analog_group_id']
-            for row in task_logs
-            if row['analog_group_id']
+            group.pk
+            for group in analog_groups_by_task.values()
         }
         memberships = list(
             TaskGroup.objects.filter(
@@ -470,16 +468,16 @@ class DjangoStudentRepository(IStudentRepository):
             students=tuple(self._student_detail(student) for student in students),
             task_logs=tuple(
                 RemedialWizardTaskLog(
-                    student_id=str(row['student_id']),
-                    task_id=str(row['task_id']),
+                    student_id=result.student_id,
+                    task_id=result.task.task_id,
                     analog_group_id=(
-                        str(row['analog_group_id'])
-                        if row['analog_group_id']
+                        str(analog_groups_by_task[result.task.task_id].pk)
+                        if result.task.task_id in analog_groups_by_task
                         else None
                     ),
-                    percentage=row['percentage'],
+                    percentage=self._result_percentage(result),
                 )
-                for row in task_logs
+                for result in task_results
             ),
             tasks=tuple(
                 RemedialWizardTask(
@@ -498,6 +496,33 @@ class DjangoStudentRepository(IStudentRepository):
                 for analog_group in AnalogGroup.objects.filter(pk__in=group_ids)
             ),
         )
+
+    @staticmethod
+    def _latest_task_history(student_ids):
+        participation_ids = EventParticipation.objects.filter(
+            student_id__in=student_ids,
+        ).values_list('pk', flat=True)
+        return latest_assessable_task_results(participation_ids)
+
+    @staticmethod
+    def _first_analog_groups(task_ids):
+        groups = {}
+        for membership in TaskGroup.objects.filter(
+            task_id__in=set(task_ids),
+        ).select_related('group').order_by('pk'):
+            groups.setdefault(str(membership.task_id), membership.group)
+        return groups
+
+    @staticmethod
+    def _result_percentage(result):
+        if not result.max_points or result.max_points <= 0:
+            return None
+        return round(result.points / result.max_points * 100, 1)
+
+    @classmethod
+    def _result_is_correct(cls, result):
+        percentage = cls._result_percentage(result)
+        return percentage >= 70 if percentage is not None else None
 
     def get_work_group_refs(self, work_ids: List[str]) -> List[WorkGroupRef]:
         if not work_ids:

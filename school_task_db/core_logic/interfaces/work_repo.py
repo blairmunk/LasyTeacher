@@ -122,14 +122,6 @@ class CreatedWorkVariantRef:
 
 class IWorkRepository(ABC):
     @abstractmethod
-    def create_work(self, params: CreateWorkParams) -> str:
-        """Create a work and return its ID."""
-
-    @abstractmethod
-    def update_work(self, params: CreateWorkParams) -> bool:
-        """Update a work and return whether it was found."""
-
-    @abstractmethod
     def get_work_update_context(
         self,
         work_id: str,
@@ -156,23 +148,6 @@ class IWorkRepository(ABC):
         params: CreateWorkWithVariantsParams,
     ) -> CreatedWorkWithVariantsRef:
         """Create a work and all supplied variants atomically."""
-
-    @abstractmethod
-    def replace_work_analog_groups(
-        self,
-        work_id: str,
-        specs: List[WorkTaskSelectionParams],
-    ) -> bool:
-        """Replace a work specification and return whether the work was found."""
-
-    @abstractmethod
-    def replace_work_content_plan(
-        self,
-        work_id: str,
-        specs: List[WorkTaskSelectionParams],
-        content_blocks: List[WorkContentBlockParams],
-    ) -> bool:
-        """Replace all persistent work content atomically."""
 
     @abstractmethod
     def create_variant_from_plan(self, params: CreateVariantParams) -> str:

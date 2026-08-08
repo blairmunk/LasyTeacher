@@ -471,41 +471,6 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(event.description, 'Новое описание')
         self.assertEqual(event.location, '202')
 
-    def test_work_repository_creates_and_updates_work(self):
-        repo = DjangoWorkRepository()
-
-        work_id = repo.create_work(
-            CreateWorkParams(
-                name='Новая работа',
-                work_type='test',
-                duration=50,
-                max_score=10,
-            )
-        )
-        updated = repo.update_work(
-            CreateWorkParams(
-                work_id=work_id,
-                name='Обновлённая работа',
-                work_type='quiz',
-                duration=30,
-                max_score=12,
-            )
-        )
-        missing_updated = repo.update_work(
-            CreateWorkParams(
-                work_id='00000000-0000-0000-0000-000000000000',
-                name='Нет',
-            )
-        )
-
-        work = Work.objects.get(pk=work_id)
-        self.assertTrue(updated)
-        self.assertFalse(missing_updated)
-        self.assertEqual(work.name, 'Обновлённая работа')
-        self.assertEqual(work.work_type, 'quiz')
-        self.assertEqual(work.duration, 30)
-        self.assertEqual(work.max_score, 12)
-
     def test_work_repository_returns_update_lock_context(self):
         repo = DjangoWorkRepository()
 
@@ -703,43 +668,6 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(Work.objects.count(), work_count)
         self.assertEqual(Variant.objects.count(), variant_count)
 
-    def test_work_repository_replaces_work_analog_groups(self):
-        repo = DjangoWorkRepository()
-        old_group = AnalogGroup.objects.create(name='Старая группа')
-        new_group = AnalogGroup.objects.create(name='Новая группа')
-        WorkAnalogGroup.objects.create(
-            work=self.source_work,
-            analog_group=old_group,
-            order=1,
-            count=1,
-            weight=1,
-        )
-
-        updated = repo.replace_work_analog_groups(
-            work_id=str(self.source_work.pk),
-            specs=[
-                WorkTaskSelectionParams(
-                    analog_group_id=str(new_group.pk),
-                    order=2,
-                    count=3,
-                    weight=4,
-                )
-            ],
-        )
-        missing_updated = repo.replace_work_analog_groups(
-            work_id='00000000-0000-0000-0000-000000000000',
-            specs=[],
-        )
-
-        specs = list(WorkAnalogGroup.objects.filter(work=self.source_work))
-        self.assertTrue(updated)
-        self.assertFalse(missing_updated)
-        self.assertEqual(len(specs), 1)
-        self.assertEqual(specs[0].analog_group, new_group)
-        self.assertEqual(specs[0].order, 2)
-        self.assertEqual(specs[0].count, 3)
-        self.assertEqual(specs[0].weight, 4)
-
     def test_work_repository_creates_work_with_specification(self):
         group = AnalogGroup.objects.create(name='Спецификация новой работы')
         topic = Topic.objects.create(
@@ -801,58 +729,6 @@ class DjangoRemedialRepositoryTests(TestCase):
             [topic.pk],
         )
         self.assertEqual(content_blocks[1].body, 'Покажите вычисления.')
-
-    def test_work_repository_replaces_complete_content_plan(self):
-        old_group = AnalogGroup.objects.create(name='Старая механика')
-        new_group = AnalogGroup.objects.create(name='Новая механика')
-        topic = Topic.objects.create(
-            name='Работа',
-            subject='Физика',
-            section='Механика',
-            grade_level=8,
-        )
-        WorkAnalogGroup.objects.create(
-            work=self.source_work,
-            analog_group=old_group,
-            order=10,
-        )
-        WorkContentBlock.objects.create(
-            work=self.source_work,
-            content_type='text',
-            order=20,
-            body='Старый текст',
-        )
-
-        updated = DjangoWorkRepository().replace_work_content_plan(
-            work_id=str(self.source_work.pk),
-            specs=[
-                WorkTaskSelectionParams(
-                    analog_group_id=str(new_group.pk),
-                    order=20,
-                    count=2,
-                    weight=3,
-                ),
-            ],
-            content_blocks=[
-                WorkContentBlockParams(
-                    content_type='theory',
-                    order=10,
-                    title='Новая теория',
-                    topic_ids=[str(topic.pk)],
-                    include_subtopics=True,
-                ),
-            ],
-        )
-
-        self.assertTrue(updated)
-        spec = WorkAnalogGroup.objects.get(work=self.source_work)
-        block = WorkContentBlock.objects.get(work=self.source_work)
-        self.assertEqual(spec.analog_group, new_group)
-        self.assertEqual(spec.order, 20)
-        self.assertEqual(block.content_type, 'theory')
-        self.assertEqual(block.title, 'Новая теория')
-        self.assertEqual(list(block.topics.all()), [topic])
-        self.assertTrue(block.include_subtopics)
 
     def test_student_repository_creates_and_updates_student(self):
         repo = DjangoStudentRepository()

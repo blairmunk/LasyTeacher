@@ -933,7 +933,7 @@ class DjangoWorkRepository(
             if len(variants) != len(params.variant_ids):
                 return None
 
-            work_id = self.create_work(
+            work_id = self._create_work(
                 CreateWorkParams(
                     name=params.name,
                     work_type=params.work_type,
@@ -1027,7 +1027,7 @@ class DjangoWorkRepository(
             ).values_list('task_id', flat=True)
         }
 
-    def create_work(self, params: CreateWorkParams) -> str:
+    def _create_work(self, params: CreateWorkParams) -> str:
         work = Work.objects.create(
             name=params.name,
             work_type=params.work_type,
@@ -1037,19 +1037,6 @@ class DjangoWorkRepository(
             assessment_mode=params.assessment_mode,
         )
         return str(work.pk)
-
-    def update_work(self, params: CreateWorkParams) -> bool:
-        work = Work.objects.filter(pk=params.work_id).first()
-        if work is None:
-            return False
-
-        work.name = params.name
-        work.work_type = params.work_type
-        work.duration = params.duration
-        work.max_score = params.max_score
-        work.assessment_mode = params.assessment_mode
-        work.save()
-        return True
 
     def get_work_update_context(self, work_id: str):
         work = Work.objects.filter(pk=work_id).first()
@@ -1121,7 +1108,7 @@ class DjangoWorkRepository(
         params: CreateWorkWithVariantsParams,
     ) -> CreatedWorkWithVariantsRef:
         with transaction.atomic():
-            work_id = self.create_work(params.work)
+            work_id = self._create_work(params.work)
             variant_ids = [
                 self._create_variant_from_plan(
                     CreateVariantParams(
@@ -1144,50 +1131,6 @@ class DjangoWorkRepository(
             work_id=work_id,
             variant_ids=variant_ids,
         )
-
-    def replace_work_analog_groups(
-        self,
-        work_id: str,
-        specs: List[WorkTaskSelectionParams],
-    ) -> bool:
-        if not Work.objects.filter(pk=work_id).exists():
-            return False
-
-        with transaction.atomic():
-            WorkAnalogGroup.objects.filter(work_id=work_id).delete()
-            WorkAnalogGroup.objects.bulk_create([
-                WorkAnalogGroup(
-                    work_id=work_id,
-                    analog_group_id=spec.analog_group_id,
-                    order=spec.order,
-                    count=spec.count,
-                    weight=spec.weight,
-                    bank_role_filter=spec.bank_role_filter,
-                    render_mode=spec.render_mode,
-                    is_assessable=spec.is_assessable,
-                    blank_cells_after=spec.blank_cells_after,
-                    blank_cells_rows=spec.blank_cells_rows,
-                )
-                for spec in specs
-            ])
-        return True
-
-    def replace_work_content_plan(
-        self,
-        work_id: str,
-        specs: List[WorkTaskSelectionParams],
-        content_blocks: List[WorkContentBlockParams],
-    ) -> bool:
-        if not Work.objects.filter(pk=work_id).exists():
-            return False
-
-        with transaction.atomic():
-            self._replace_work_content_plan(
-                work_id=work_id,
-                specs=specs,
-                content_blocks=content_blocks,
-            )
-        return True
 
     def _replace_work_content_plan(
         self,

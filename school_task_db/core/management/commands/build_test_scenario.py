@@ -12,6 +12,7 @@ from django.utils.dateparse import parse_date, parse_datetime
 
 from core.models import AcademicYear
 from core_logic.interfaces.work_repo import (
+    CreateWorkParams,
     WorkContentBlockParams,
     WorkTaskSelectionParams,
 )
@@ -19,7 +20,9 @@ from core_logic.use_cases.activate_academic_year import (
     ActivateAcademicYearRequest,
 )
 from core_logic.use_cases.grade_student_work import GradeStudentWorkRequest
-from core_logic.use_cases.save_work import SaveWorkSpecificationRequest
+from core_logic.use_cases.save_work import (
+    UpdateWorkWithSpecificationRequest,
+)
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from document_engine.models import PrintSettings
 from events.models import AttemptSnapshot, Event, EventParticipation
@@ -263,11 +266,25 @@ class Command(BaseCommand):
                     'variant_counter': 0,
                     'work_type': data.get('work_type', 'test'),
                     'max_score': data.get('max_score', 0),
+                    'assessment_mode': data.get(
+                        'assessment_mode',
+                        'variant',
+                    ),
                 },
             )
-            result = container.save_work_specification_use_case().execute(
-                SaveWorkSpecificationRequest(
-                    work_id=str(work.pk),
+            result = container.update_work_with_specification_use_case().execute(
+                UpdateWorkWithSpecificationRequest(
+                    work=CreateWorkParams(
+                        work_id=str(work.pk),
+                        name=data['name'],
+                        duration=data.get('duration', 45),
+                        work_type=data.get('work_type', 'test'),
+                        max_score=data.get('max_score', 0),
+                        assessment_mode=data.get(
+                            'assessment_mode',
+                            'variant',
+                        ),
+                    ),
                     specs=[
                         self._work_spec(spec)
                         for spec in data.get('specification', [])
@@ -278,7 +295,7 @@ class Command(BaseCommand):
                     ],
                 )
             )
-            if result.status != 'saved':
+            if result.status != 'updated':
                 raise CommandError(
                     f'Не удалось сохранить работу {work.name}: '
                     + '; '.join(result.errors)

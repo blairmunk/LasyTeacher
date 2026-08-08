@@ -233,8 +233,6 @@ from core_logic.use_cases.save_task import (
 )
 from core_logic.use_cases.save_work import (
     CreateWorkWithSpecificationUseCase,
-    SaveWorkSpecificationUseCase,
-    UpdateWorkUseCase,
     UpdateWorkWithSpecificationUseCase,
 )
 from core_logic.use_cases.sync_review_session import SyncReviewSessionUseCase
@@ -546,12 +544,8 @@ class ContainerTests(SimpleTestCase):
         create_work_with_specification_use_case = (
             container.create_work_with_specification_use_case()
         )
-        update_work_use_case = container.update_work_use_case()
         update_work_with_specification_use_case = (
             container.update_work_with_specification_use_case()
-        )
-        save_work_specification_use_case = (
-            container.save_work_specification_use_case()
         )
         variant_delete_info_use_case = container.get_variant_delete_info_use_case()
         delete_variant_use_case = container.delete_variant_use_case()
@@ -852,14 +846,9 @@ class ContainerTests(SimpleTestCase):
             create_work_with_specification_use_case,
             CreateWorkWithSpecificationUseCase,
         )
-        self.assertIsInstance(update_work_use_case, UpdateWorkUseCase)
         self.assertIsInstance(
             update_work_with_specification_use_case,
             UpdateWorkWithSpecificationUseCase,
-        )
-        self.assertIsInstance(
-            save_work_specification_use_case,
-            SaveWorkSpecificationUseCase,
         )
         self.assertIsInstance(variant_delete_info_use_case, GetVariantDeleteInfoUseCase)
         self.assertIsInstance(delete_variant_use_case, DeleteVariantUseCase)

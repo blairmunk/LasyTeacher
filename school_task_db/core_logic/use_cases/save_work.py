@@ -25,22 +25,6 @@ class SaveWorkResult:
 
 
 @dataclass(frozen=True)
-class SaveWorkSpecificationRequest:
-    work_id: str
-    specs: List[WorkTaskSelectionParams]
-    content_blocks: List[WorkContentBlockParams] = field(
-        default_factory=list,
-    )
-
-
-@dataclass(frozen=True)
-class SaveWorkSpecificationResult:
-    status: str
-    saved_count: int = 0
-    errors: tuple[str, ...] = ()
-
-
-@dataclass(frozen=True)
 class UpdateWorkWithSpecificationRequest:
     work: CreateWorkParams
     specs: List[WorkTaskSelectionParams]
@@ -66,32 +50,6 @@ class CreateWorkWithSpecificationUseCase:
 
         work_id = self.work_repo.create_work_with_specification(params)
         return SaveWorkResult(status='created', work_id=work_id)
-
-
-class UpdateWorkUseCase:
-    def __init__(self, work_repo: IWorkRepository):
-        self.work_repo = work_repo
-
-    def execute(self, params: CreateWorkParams) -> SaveWorkResult:
-        context = self.work_repo.get_work_update_context(params.work_id)
-        if context is None:
-            return SaveWorkResult(status='not_found')
-        mode_error = _assessment_mode_update_error(
-            current_mode=context.assessment_mode,
-            requested_mode=params.assessment_mode,
-            mode_locked=context.assessment_mode_locked,
-        )
-        if mode_error:
-            return SaveWorkResult(
-                status='invalid',
-                errors=(mode_error,),
-            )
-
-        updated = self.work_repo.update_work(params)
-        if not updated:
-            return SaveWorkResult(status='not_found')
-
-        return SaveWorkResult(status='updated', work_id=params.work_id)
 
 
 class UpdateWorkWithSpecificationUseCase:
@@ -174,7 +132,6 @@ def validate_work_specification_specs(
             errors.append(f'Строка {index}: {error}')
     return tuple(errors)
 
-
 def validate_work_content_blocks(
     content_blocks: List[WorkContentBlockParams],
 ) -> tuple[str, ...]:
@@ -233,38 +190,3 @@ def validate_work_content_plan(
             + ', '.join(str(order) for order in duplicate_orders),
         )
     return tuple(errors)
-
-
-class SaveWorkSpecificationUseCase:
-    def __init__(self, work_repo: IWorkRepository):
-        self.work_repo = work_repo
-
-    def execute(
-        self,
-        request: SaveWorkSpecificationRequest,
-    ) -> SaveWorkSpecificationResult:
-        errors = validate_work_content_plan(
-            request.specs,
-            request.content_blocks,
-        )
-        if errors:
-            return SaveWorkSpecificationResult(
-                status='invalid',
-                errors=errors,
-            )
-
-        updated = self.work_repo.replace_work_content_plan(
-            work_id=request.work_id,
-            specs=request.specs,
-            content_blocks=request.content_blocks,
-        )
-        if not updated:
-            return SaveWorkSpecificationResult(status='not_found')
-
-        return SaveWorkSpecificationResult(
-            status='saved',
-            saved_count=(
-                len(request.specs)
-                + len(request.content_blocks)
-            ),
-        )

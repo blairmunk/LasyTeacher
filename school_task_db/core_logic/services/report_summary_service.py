@@ -4,7 +4,7 @@ from collections import Counter
 from datetime import timedelta
 
 from core_logic.entities.journal import JournalData, JournalSource
-from core_logic.entities.report import (
+from core_logic.entities.report_summary import (
     EventsStatusReportData,
     EventsStatusSource,
     ReportsDashboardData,

@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from django.db.models import Count, Q
 
-from core_logic.entities.report import (
+from core_logic.entities.report_summary import (
     DashboardCourseGroupRef,
     DashboardGroupSource,
     DashboardMarkFact,

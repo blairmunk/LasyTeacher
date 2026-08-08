@@ -20,7 +20,7 @@ from core_logic.entities.work import (
     WorkListFilters,
     WorkListItem,
 )
-from core_logic.entities.report import ReportsDashboardData
+from core_logic.entities.report_summary import ReportsDashboardData
 from core_logic.entities.student import StudentRemedialWorkData
 from core_logic.services.analytics_service import (
     ScoreTimelinePoint,

@@ -1,16 +1,18 @@
 from datetime import datetime
 from unittest import TestCase
 
-from core_logic.entities.report import (
+from core_logic.entities.report_summary import (
     DashboardCourseGroupRef,
     DashboardGroupSource,
     DashboardMarkFact,
     DashboardParticipationFact,
+    ReportsDashboardSource,
+)
+from core_logic.entities.report_refs import (
     ReportCourseRef,
     ReportEventRef,
     ReportGroupRef,
     ReportWorkRef,
-    ReportsDashboardSource,
 )
 from core_logic.use_cases.get_reports_dashboard import (
     GetReportsDashboardUseCase,

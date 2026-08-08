@@ -1,19 +1,21 @@
 from datetime import datetime
 from unittest import TestCase
 
-from core_logic.entities.report import (
+from core_logic.entities.report_summary import (
     EventsStatusSource,
+    StudentPerformanceItemSource,
+    StudentPerformanceParticipationFact,
+    StudentPerformanceSource,
+    WorkAnalysisItemSource,
+    WorkAnalysisSource,
+)
+from core_logic.entities.report_refs import (
     ReportCourseRef,
     ReportGroupRef,
     ReportEventRef,
     ReportMarkFact,
     ReportStudentRef,
     ReportWorkRef,
-    StudentPerformanceItemSource,
-    StudentPerformanceParticipationFact,
-    StudentPerformanceSource,
-    WorkAnalysisItemSource,
-    WorkAnalysisSource,
 )
 from core_logic.services.report_summary_service import ReportSummaryService
 

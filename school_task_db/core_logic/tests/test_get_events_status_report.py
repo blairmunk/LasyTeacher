@@ -1,8 +1,10 @@
 from datetime import datetime
 from unittest import TestCase
 
-from core_logic.entities.report import (
+from core_logic.entities.report_summary import (
     EventsStatusSource,
+)
+from core_logic.entities.report_refs import (
     ReportEventRef,
 )
 from core_logic.use_cases.get_events_status_report import (

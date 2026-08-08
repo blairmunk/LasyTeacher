@@ -1,4 +1,4 @@
-"""Report DTOs."""
+"""DTOs for dashboard and summary reports."""
 
 from dataclasses import dataclass, field
 from typing import Any, List

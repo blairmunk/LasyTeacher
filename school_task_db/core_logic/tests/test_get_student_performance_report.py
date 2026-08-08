@@ -2,14 +2,16 @@ from unittest import TestCase
 
 from datetime import datetime
 
-from core_logic.entities.report import (
+from core_logic.entities.report_summary import (
+    StudentPerformanceItemSource,
+    StudentPerformanceParticipationFact,
+    StudentPerformanceSource,
+)
+from core_logic.entities.report_refs import (
     ReportCourseRef,
     ReportGroupRef,
     ReportMarkFact,
     ReportStudentRef,
-    StudentPerformanceItemSource,
-    StudentPerformanceParticipationFact,
-    StudentPerformanceSource,
 )
 from core_logic.use_cases.get_student_performance_report import (
     GetStudentPerformanceReportUseCase,

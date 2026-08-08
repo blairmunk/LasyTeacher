@@ -1,11 +1,13 @@
 from unittest import TestCase
 
-from core_logic.entities.report import (
+from core_logic.entities.report_summary import (
+    WorkAnalysisItemSource,
+    WorkAnalysisSource,
+)
+from core_logic.entities.report_refs import (
     ReportCourseRef,
     ReportMarkFact,
     ReportWorkRef,
-    WorkAnalysisItemSource,
-    WorkAnalysisSource,
 )
 from core_logic.use_cases.get_work_analysis_report import (
     GetWorkAnalysisReportUseCase,

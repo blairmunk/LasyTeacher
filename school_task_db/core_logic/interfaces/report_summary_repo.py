@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from core_logic.entities.academic_year import AcademicYearRef
-from core_logic.entities.report import (
+from core_logic.entities.report_summary import (
     EventsStatusSource,
     ReportsDashboardSource,
     StudentPerformanceSource,

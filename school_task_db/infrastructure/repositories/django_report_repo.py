@@ -22,10 +22,6 @@ from core_logic.entities.report import (
     HeatmapSubtopicDetailSource,
     HeatmapTimelineEventRef,
     HeatmapTimelineMarkFact,
-    JournalEntryFact,
-    JournalParticipationRef,
-    JournalSelectData,
-    JournalSource,
     ReportsDashboardSource,
     ReportAnalogGroupRef,
     ReportActivityRef,
@@ -49,7 +45,11 @@ from core_logic.entities.report import (
     WorkAnalysisItemSource,
     WorkAnalysisSource,
 )
-from core_logic.interfaces.report_repo import IReportRepository
+from core_logic.interfaces.report_repo import (
+    IHeatmapRepository,
+    IReportSummaryRepository,
+    ITaskDBHealthRepository,
+)
 from core_logic.services.event_service import EventService
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation
@@ -65,129 +65,11 @@ from task_groups.models import AnalogGroup, TaskGroup
 from works.models import Variant, Work, WorkAnalogGroup
 
 
-class DjangoReportRepository(IReportRepository):
-    def get_journal_select(self, year):
-        _, _, courses = self._get_event_scope(year)
-        groups, _ = self._get_student_scope(year)
-        courses = courses.order_by('grade_level', 'name')
-        groups = groups.order_by('name')
-        available_groups = list(groups)
-
-        journal_links = []
-        for course in courses:
-            for group in course.student_groups.all():
-                if group in available_groups:
-                    event_count = Event.objects.filter(
-                        course=course,
-                        eventparticipation__student__in=group.students.all(),
-                    ).distinct().count()
-                    journal_links.append({
-                        'course': ReportCourseRef(
-                            pk=str(course.pk),
-                            name=course.name,
-                        ),
-                        'group': ReportGroupRef(
-                            pk=str(group.pk),
-                            name=group.name,
-                            students_count=group.students.count(),
-                        ),
-                        'event_count': event_count,
-                    })
-
-        return JournalSelectData(
-            journal_links=journal_links,
-            groups=[
-                ReportGroupRef(
-                    pk=str(group.pk),
-                    name=group.name,
-                    students_count=group.students.count(),
-                )
-                for group in groups
-            ],
-            courses=[
-                ReportCourseRef(pk=str(course.pk), name=course.name)
-                for course in courses
-            ],
-        )
-
-    def get_journal_source(self, course_id, group_id, year):
-        course = get_object_or_404(Course, pk=course_id)
-        group = get_object_or_404(StudentGroup, pk=group_id)
-        students = list(
-            group.students.all().order_by('last_name', 'first_name')
-        )
-        student_ids = [student.id for student in students]
-
-        event_ids = Event.objects.filter(
-            course=course,
-            eventparticipation__student__in=student_ids,
-        ).values_list('pk', flat=True).distinct()
-        events = self._event_summary_queryset(
-            Event.objects.filter(pk__in=event_ids),
-        ).order_by('planned_date')
-        event_refs = {
-            event.id: self._report_event_ref(event)
-            for event in events
-        }
-        participations = list(
-            EventParticipation.objects.filter(
-                event__in=events,
-                student_id__in=student_ids,
-            ).select_related('student', 'event', 'variant')
-        )
-        attempts = latest_attempts_by_participation(
-            (participation.pk for participation in participations),
-            include_task_results=False,
-        )
-        entries = []
-        for participation in participations:
-            attempt = attempts.get(participation.id)
-            entries.append(JournalEntryFact(
-                student_id=str(participation.student_id),
-                event_id=str(participation.event_id),
-                participation=JournalParticipationRef(
-                    pk=str(participation.pk),
-                    status=participation.status,
-                ),
-                mark=(
-                    ReportMarkFact(
-                        score=attempt.score,
-                        points=attempt.points,
-                        max_points=attempt.max_points,
-                    )
-                    if attempt
-                    else None
-                ),
-                variant=(
-                    self._attempt_variant_ref(attempt)
-                    if attempt and attempt.variant_id_snapshot
-                    else (
-                        self._report_variant_ref(participation.variant)
-                        if participation.variant
-                        else None
-                    )
-                ),
-            ))
-
-        return JournalSource(
-            course=ReportCourseRef(pk=str(course.pk), name=course.name),
-            group=ReportGroupRef(
-                pk=str(group.pk),
-                name=group.name,
-                students_count=len(students),
-            ),
-            students=[self._report_student_ref(student) for student in students],
-            events=[event_refs[event.id] for event in events],
-            entries=entries,
-            courses=[
-                ReportCourseRef(pk=str(item.pk), name=item.name)
-                for item in self._get_event_scope(year)[2].order_by(
-                    'grade_level',
-                    'name',
-                )
-            ],
-        )
-
+class DjangoReportRepository(
+    IReportSummaryRepository,
+    ITaskDBHealthRepository,
+    IHeatmapRepository,
+):
     def get_task_db_health_source(self):
         total_tasks = Task.objects.count()
         group_records = list(
@@ -1159,16 +1041,6 @@ class DjangoReportRepository(IReportRepository):
             short_uuid=variant.get_short_uuid(),
             number=variant.number,
             work_name_snapshot=variant.work_name_snapshot,
-        )
-
-    @staticmethod
-    def _attempt_variant_ref(attempt):
-        variant_id = attempt.variant_id_snapshot
-        return ReportVariantRef(
-            pk=variant_id,
-            short_uuid=variant_id[-4:].upper(),
-            number=attempt.variant_number_snapshot,
-            work_name_snapshot=attempt.work_name_snapshot,
         )
 
     def _report_analog_group_ref(self, group):

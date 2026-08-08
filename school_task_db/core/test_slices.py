@@ -26,6 +26,7 @@ TEST_SLICES = {
         'core_logic.tests.test_student_digests',
         'infrastructure.tests.test_attempt_snapshots',
         'infrastructure.tests.test_django_report_repo',
+        'infrastructure.tests.test_django_journal_repo',
         'infrastructure.tests.test_written_reports',
         'reports.tests',
     ),

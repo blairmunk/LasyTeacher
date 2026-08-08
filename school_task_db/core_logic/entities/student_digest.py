@@ -75,6 +75,7 @@ class StudentDigestEntry:
     points: float | None
     max_points: float | None
     focus: str
+    focus_items: Tuple[str, ...]
     teacher_comment: str
     needs_retake: bool
     retake_reason: str

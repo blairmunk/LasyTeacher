@@ -77,10 +77,13 @@ class StudentDigestTests(TestCase):
         self.assertEqual(digest.grades_count, 1)
         self.assertEqual(digest.absent_count, 1)
         self.assertEqual(len(digest.retake_entries), 2)
-        self.assertIn('Повторить формулы', digest.focus_items[0])
+        self.assertEqual(
+            digest.focus_items,
+            ('Повторить формулы', 'Повторить: Динамика'),
+        )
         self.assertEqual(digest.subjects[0].title, 'Физика')
         self.assertEqual(digest.subjects[0].entries[0].teacher_comment, '')
-        self.assertNotIn('Ошибка в формуле', digest.focus_items[0])
+        self.assertNotIn('Ошибка в формуле', digest.focus_items)
 
     def test_includes_teacher_comments_only_when_requested(self):
         digest = StudentDigestService().build(
@@ -103,7 +106,29 @@ class StudentDigestTests(TestCase):
             StudentDigestOptions(include_task_comments=True),
         )[0]
 
-        self.assertIn('Ошибка в формуле', digest.focus_items[0])
+        self.assertIn('Ошибка в формуле', digest.focus_items)
+
+    def test_deduplicates_atomic_focus_items_across_works(self):
+        repeated = self.source.students[0].entries[0]
+        source = StudentDigestSource(
+            group=self.source.group,
+            students=(
+                StudentDigestStudentSource(
+                    student=self.source.students[0].student,
+                    entries=(repeated, repeated),
+                ),
+            ),
+        )
+
+        digest = StudentDigestService().build(
+            source,
+            StudentDigestOptions(),
+        )[0]
+
+        self.assertEqual(
+            digest.focus_items,
+            ('Повторить формулы', 'Повторить: Динамика'),
+        )
 
     def test_can_hide_absences_and_raise_retake_threshold(self):
         digest = StudentDigestService().build(

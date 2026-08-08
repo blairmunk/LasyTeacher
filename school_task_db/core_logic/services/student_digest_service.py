@@ -50,7 +50,9 @@ class StudentDigestService:
         )
         grades = [entry.score for entry in entries if entry.score is not None]
         focus_items = tuple(dict.fromkeys(
-            entry.focus for entry in entries if entry.focus
+            focus_item
+            for entry in entries
+            for focus_item in entry.focus_items
         ))
         retake_entries = tuple(entry for entry in entries if entry.needs_retake)
         return StudentDigestData(
@@ -79,7 +81,10 @@ class StudentDigestService:
             focus_parts.extend(
                 comment for comment in fact.task_comments if comment
             )
-        focus = '; '.join(dict.fromkeys(part for part in focus_parts if part))
+        focus_items = tuple(dict.fromkeys(
+            part for part in focus_parts if part
+        ))
+        focus = '; '.join(focus_items)
 
         is_absent = fact.status == 'absent'
         low_score = (
@@ -106,6 +111,7 @@ class StudentDigestService:
             points=fact.points,
             max_points=fact.max_points,
             focus=focus,
+            focus_items=focus_items,
             teacher_comment=(
                 fact.teacher_comment.strip()
                 if options.include_teacher_comments

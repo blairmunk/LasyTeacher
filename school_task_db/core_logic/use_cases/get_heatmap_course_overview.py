@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from core_logic.entities.report import HeatmapCourseOverviewData
-from core_logic.interfaces.report_repo import IReportRepository
+from core_logic.interfaces.report_repo import IHeatmapRepository
 
 
 @dataclass(frozen=True)
@@ -14,7 +14,7 @@ class HeatmapCourseOverviewRequest:
 
 
 class GetHeatmapCourseOverviewUseCase:
-    def __init__(self, report_repo: IReportRepository):
+    def __init__(self, report_repo: IHeatmapRepository):
         self.report_repo = report_repo
 
     def execute(

@@ -23,7 +23,7 @@ from core_logic.entities.report import (
 )
 
 
-class IReportRepository(ABC):
+class IReportSummaryRepository(ABC):
     @abstractmethod
     def get_events_status_source(
         self,
@@ -47,6 +47,15 @@ class IReportRepository(ABC):
         """Return normalized facts for the student performance report."""
 
     @abstractmethod
+    def get_reports_dashboard_source(
+        self,
+        year: AcademicYearRef | None,
+    ) -> ReportsDashboardSource:
+        """Return normalized facts for the reports dashboard."""
+
+
+class IJournalRepository(ABC):
+    @abstractmethod
     def get_journal_select(
         self,
         year: AcademicYearRef | None,
@@ -62,16 +71,14 @@ class IReportRepository(ABC):
     ) -> JournalSource:
         """Return normalized facts for the class journal."""
 
+
+class ITaskDBHealthRepository(ABC):
     @abstractmethod
     def get_task_db_health_source(self) -> TaskDBHealthSource:
         """Return normalized facts for task database diagnostics."""
 
-    @abstractmethod
-    def get_reports_dashboard_source(
-        self,
-        year: AcademicYearRef | None,
-    ) -> ReportsDashboardSource:
-        """Return normalized facts for the reports dashboard."""
+
+class IHeatmapRepository(ABC):
 
     @abstractmethod
     def get_heatmap_overview(self, group_id: Any) -> HeatmapOverviewData:
@@ -141,3 +148,12 @@ class IReportRepository(ABC):
         subtopic_id: Any,
     ) -> HeatmapStudentDetailSource:
         """Return normalized facts for one student's topic history."""
+
+
+class IReportRepository(
+    IReportSummaryRepository,
+    IJournalRepository,
+    ITaskDBHealthRepository,
+    IHeatmapRepository,
+):
+    """Compatibility aggregate for adapters implementing every report port."""

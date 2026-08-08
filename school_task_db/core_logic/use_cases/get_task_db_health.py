@@ -1,14 +1,14 @@
 """Build task database health report data."""
 
 from core_logic.entities.report import TaskDBHealthData
-from core_logic.interfaces.report_repo import IReportRepository
+from core_logic.interfaces.report_repo import ITaskDBHealthRepository
 from core_logic.services.report_summary_service import ReportSummaryService
 
 
 class GetTaskDBHealthUseCase:
     def __init__(
         self,
-        report_repo: IReportRepository,
+        report_repo: ITaskDBHealthRepository,
         summary_service: ReportSummaryService | None = None,
     ):
         self.report_repo = report_repo

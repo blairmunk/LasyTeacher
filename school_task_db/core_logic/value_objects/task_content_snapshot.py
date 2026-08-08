@@ -99,3 +99,59 @@ class TaskContentSnapshot:
             data.get('content_element_descriptions', ()),
         )
         return cls(**data)
+
+
+def task_content_snapshot_from_mapping(value) -> TaskContentSnapshot:
+    return TaskContentSnapshot.from_mapping(value)
+
+
+def task_content_snapshot_payload(value) -> Mapping[str, Any]:
+    """Project a stored task snapshot to renderer-neutral document data."""
+    snapshot = (
+        value
+        if isinstance(value, TaskContentSnapshot)
+        else task_content_snapshot_from_mapping(value)
+    )
+    return {
+        'id': snapshot.task_id,
+        'text': snapshot.text,
+        'answer': snapshot.answer,
+        'short_solution': snapshot.short_solution,
+        'full_solution': snapshot.full_solution,
+        'hint': snapshot.hint,
+        'instruction': snapshot.instruction,
+        'task_type': snapshot.task_type,
+        'task_type_display': snapshot.task_type_display,
+        'difficulty': snapshot.difficulty,
+        'difficulty_display': snapshot.difficulty_display,
+        'topic': snapshot.topic_name,
+        'topic_section': snapshot.topic_section,
+        'subtopic': snapshot.subtopic_name,
+        'source': snapshot.source_name,
+        'source_detail': snapshot.source_detail,
+        'content_element': snapshot.content_element,
+        'requirement_element': snapshot.requirement_element,
+        'codifier_requirements': tuple(
+            {
+                'codifier_id': item.codifier_id,
+                'codifier_name': item.codifier_name,
+                'codifier_short_name': item.codifier_short_name,
+                'code': item.code,
+                'name': item.name,
+            }
+            for item in snapshot.codifier_requirements
+        ),
+        'content_element_descriptions': (
+            snapshot.content_element_descriptions
+        ),
+        'images': tuple(
+            {
+                'image_id': item.image_id,
+                'file_name': item.file_name,
+                'position': item.position,
+                'caption': item.caption,
+                'order': item.order,
+            }
+            for item in snapshot.images
+        ),
+    }

@@ -8,12 +8,12 @@ from core_logic.entities.student_digest import (
     StudentDigestStudentSource,
 )
 from core_logic.interfaces.student_digest_repo import IStudentDigestRepository
+from core_logic.value_objects.task_content_snapshot import (
+    task_content_snapshot_from_mapping,
+)
 from events.models import EventParticipation
 from infrastructure.services.attempt_snapshot_queries import (
     latest_attempts_by_participation,
-)
-from infrastructure.services.task_content_snapshots import (
-    task_content_snapshot_from_mapping,
 )
 from students.models import StudentGroup
 

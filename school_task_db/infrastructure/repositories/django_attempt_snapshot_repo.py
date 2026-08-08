@@ -12,10 +12,12 @@ from core_logic.value_objects.task_scores import (
     resolve_task_score_record,
     task_score_records_for_attempt,
 )
+from core_logic.value_objects.task_content_snapshot import (
+    task_content_snapshot_from_mapping,
+)
 from events.models import AttemptSnapshot, AttemptTaskSnapshot, Mark
 from infrastructure.services.task_content_snapshots import (
     build_task_content_snapshots,
-    task_content_snapshot_from_mapping,
 )
 from tasks.models import Task
 from works.models import VariantTask

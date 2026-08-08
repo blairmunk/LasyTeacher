@@ -4,14 +4,14 @@ from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_COLUMNS,
     DEFAULT_BLANK_CELLS_ROW_HEIGHT,
 )
+from core_logic.value_objects.task_content_snapshot import (
+    task_content_snapshot_payload,
+)
 from core_logic.value_objects.variant_content_snapshot import (
     variant_task_content_decisions,
 )
 from infrastructure.services.blank_cells_payload import (
     build_blank_cells_payload,
-)
-from infrastructure.services.task_content_snapshots import (
-    task_content_snapshot_payload,
 )
 
 

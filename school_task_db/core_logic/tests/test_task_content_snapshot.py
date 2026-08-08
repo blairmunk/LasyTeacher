@@ -3,6 +3,8 @@ from unittest import TestCase
 from core_logic.value_objects.task_content_snapshot import (
     TaskCodifierSnapshot,
     TaskContentSnapshot,
+    TaskImageSnapshot,
+    task_content_snapshot_payload,
 )
 
 
@@ -32,3 +34,41 @@ class TaskContentSnapshotTests(TestCase):
     def test_rejects_missing_snapshot(self):
         with self.assertRaisesRegex(ValueError, 'no task content snapshot'):
             TaskContentSnapshot.from_mapping({})
+
+    def test_projects_snapshot_to_document_payload(self):
+        snapshot = TaskContentSnapshot(
+            task_id='task-1',
+            text='Условие',
+            answer='Ответ',
+            topic_name='Динамика',
+            source_name='Сборник',
+            codifier_requirements=(
+                TaskCodifierSnapshot(
+                    codifier_id='codifier-1',
+                    codifier_name='ОГЭ по физике',
+                    codifier_short_name='ОГЭ',
+                    code='2.3',
+                    name='Применять законы',
+                ),
+            ),
+            images=(
+                TaskImageSnapshot(
+                    image_id='image-1',
+                    file_name='tasks/image.png',
+                    position='bottom',
+                    caption='Рисунок',
+                ),
+            ),
+        )
+
+        payload = task_content_snapshot_payload(snapshot.to_mapping())
+
+        self.assertEqual(payload['id'], 'task-1')
+        self.assertEqual(payload['text'], 'Условие')
+        self.assertEqual(payload['topic'], 'Динамика')
+        self.assertEqual(payload['source'], 'Сборник')
+        self.assertEqual(
+            payload['codifier_requirements'][0]['code'],
+            '2.3',
+        )
+        self.assertEqual(payload['images'][0]['image_id'], 'image-1')

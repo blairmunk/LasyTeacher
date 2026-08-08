@@ -17,15 +17,15 @@ from core_logic.entities.work import (
     WorkDocumentRef,
 )
 from core_logic.interfaces.work_document_repo import IWorkDocumentRepository
+from core_logic.value_objects.task_content_snapshot import (
+    task_content_snapshot_from_mapping,
+)
 from core_logic.entities.work_document import (
     WorkDocumentContentBlockSource,
     WorkDocumentScoreSpecRow,
     WorkDocumentSource,
     WorkDocumentTaskSource,
     WorkDocumentVariantSource,
-)
-from infrastructure.services.task_content_snapshots import (
-    task_content_snapshot_from_mapping,
 )
 from task_groups.models import TaskGroup
 from works.models import (

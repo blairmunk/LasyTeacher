@@ -8,10 +8,10 @@ from core_logic.entities.review import (
     ReviewVariantTaskRef,
 )
 from core_logic.interfaces.review_task_repo import IReviewTaskRepository
-from events.models import EventParticipation
-from infrastructure.services.task_content_snapshots import (
+from core_logic.value_objects.task_content_snapshot import (
     task_content_snapshot_from_mapping,
 )
+from events.models import EventParticipation
 from works.models import VariantTask
 
 
@@ -56,4 +56,3 @@ class DjangoReviewTaskRepository(IReviewTaskRepository):
                 is_assessable=variant_task.is_assessable,
             ))
         return result
-

@@ -18,7 +18,7 @@ from core_logic.interfaces.variant_read_repo import IVariantReadRepository
 from core_logic.value_objects.variant_display import (
     resolve_variant_display_name,
 )
-from infrastructure.services.task_content_snapshots import (
+from core_logic.value_objects.task_content_snapshot import (
     task_content_snapshot_from_mapping,
 )
 from infrastructure.services.task_image_presentation import (

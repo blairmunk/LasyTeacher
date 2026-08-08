@@ -16,12 +16,12 @@ from core_logic.interfaces.event_performance_report_repo import (
     IEventPerformanceReportRepository,
 )
 from core_logic.value_objects.report_task_slot import report_task_slot_key
+from core_logic.value_objects.task_content_snapshot import (
+    task_content_snapshot_from_mapping,
+)
 from events.models import Event, EventParticipation
 from infrastructure.services.attempt_snapshot_queries import (
     latest_attempts_by_participation,
-)
-from infrastructure.services.task_content_snapshots import (
-    task_content_snapshot_from_mapping,
 )
 from reports.models import EventReportNarrativeModel
 from core_logic.value_objects.work_assessment import (

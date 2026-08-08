@@ -41,7 +41,7 @@ class GetRemedialEventPreviewUseCase:
 
         analysis = [
             self._analyze_participation(item)
-            for item in self.event_repo.get_participation_marks(event_id)
+            for item in self.event_repo.get_participation_attempts(event_id)
         ]
         weak_students = sum(
             1

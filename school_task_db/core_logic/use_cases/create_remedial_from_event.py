@@ -87,7 +87,7 @@ class CreateRemedialFromEventUseCase:
             )
 
         selections = []
-        marks_by_student_id = {}
+        attempts_by_student_id = {}
         students_without_tasks = 0
         students_without_review = 0
         students_with_shortage = 0
@@ -102,15 +102,18 @@ class CreateRemedialFromEventUseCase:
                 message='Количество заданий должно быть больше нуля.',
             )
         for student_id in request.selected_student_ids:
-            mark = self.event_repo.get_student_mark(request.event_id, student_id)
-            if mark is None or not mark.attempt_snapshot_id:
+            attempt = self.event_repo.get_latest_student_attempt(
+                request.event_id,
+                student_id,
+            )
+            if attempt is None or not attempt.attempt_snapshot_id:
                 students_without_review += 1
                 continue
-            marks_by_student_id[student_id] = mark
+            attempts_by_student_id[student_id] = attempt
             selection = self.remedial_service.select_tasks_for_student(
                 student_id=student_id,
                 event_id=request.event_id,
-                mark_score=mark.score,
+                mark_score=attempt.score,
                 limits=limits,
             )
             if selection.shortage_count:
@@ -174,13 +177,13 @@ class CreateRemedialFromEventUseCase:
                             plan=plan,
                             source_work_id=event.work_id,
                             source_participation_id=(
-                                marks_by_student_id[
+                                attempts_by_student_id[
                                     selection.student_id
                                 ].participation_id
                                 or None
                             ),
                             source_attempt_snapshot_id=(
-                                marks_by_student_id[
+                                attempts_by_student_id[
                                     selection.student_id
                                 ].attempt_snapshot_id
                                 or None

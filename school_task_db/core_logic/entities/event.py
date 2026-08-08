@@ -148,7 +148,7 @@ class ParticipationGradingContext:
 
 
 @dataclass(frozen=True)
-class MarkEntity:
+class CheckedAttemptRef:
     student_id: str
     event_id: str
     score: Optional[int] = None
@@ -157,7 +157,7 @@ class MarkEntity:
 
 
 @dataclass(frozen=True)
-class ParticipationMarkData:
+class ParticipationAttemptData:
     student: StudentSummary
     variant: Optional[VariantSummary]
     score: Optional[int] = None

@@ -18,9 +18,9 @@ from core_logic.entities.event import (
     EventVariantAssignmentResult,
     EventVariantRef,
     EventWorkScanRef,
-    MarkEntity,
+    CheckedAttemptRef,
     ParticipationGradingContext,
-    ParticipationMarkData,
+    ParticipationAttemptData,
     StudentSummary,
     VariantSummary,
     WorkSummary,
@@ -32,6 +32,9 @@ from core_logic.interfaces.event_repo import (
     IEventRepository,
 )
 from events.models import Event, EventParticipation, Mark
+from infrastructure.services.attempt_snapshot_queries import (
+    latest_attempts_by_participation,
+)
 from students.models import StudentGroup
 from works.models import Variant
 
@@ -221,32 +224,36 @@ class DjangoEventRepository(IEventRepository):
             event_id=str(participation.event_id),
         )
 
-    def get_student_mark(
+    def get_latest_student_attempt(
         self,
         event_id: str,
         student_id: str,
-    ) -> Optional[MarkEntity]:
-        mark = Mark.objects.filter(
-            participation__event_id=event_id,
-            participation__student_id=student_id,
+    ) -> Optional[CheckedAttemptRef]:
+        participation_id = EventParticipation.objects.filter(
+            event_id=event_id,
+            student_id=student_id,
+        ).values_list(
+            'pk',
+            flat=True,
         ).first()
-        if not mark:
+        if not participation_id:
+            return None
+        attempt = latest_attempts_by_participation(
+            [participation_id],
+            include_task_results=False,
+        ).get(participation_id)
+        if attempt is None:
             return None
 
-        return MarkEntity(
-            student_id=str(student_id),
-            event_id=str(event_id),
-            score=mark.score,
-            participation_id=str(mark.participation_id),
-            attempt_snapshot_id=str(
-                mark.attempt_snapshots.order_by('-revision')
-                .values_list('pk', flat=True)
-                .first()
-                or ''
-            ),
+        return CheckedAttemptRef(
+            student_id=attempt.student_id_snapshot,
+            event_id=attempt.event_id_snapshot,
+            score=attempt.score,
+            participation_id=str(attempt.participation_id),
+            attempt_snapshot_id=str(attempt.pk),
         )
 
-    def get_participation_marks(self, event_id: str):
+    def get_participation_attempts(self, event_id: str):
         participations = EventParticipation.objects.filter(
             event_id=event_id
         ).select_related('student', 'variant').order_by(
@@ -254,20 +261,18 @@ class DjangoEventRepository(IEventRepository):
             'student__first_name',
         )
 
-        marks = {
-            mark.participation_id: mark
-            for mark in Mark.objects.filter(
-                participation_id__in=[p.pk for p in participations]
-            )
-        }
+        attempts = latest_attempts_by_participation(
+            [participation.pk for participation in participations],
+            include_task_results=False,
+        )
 
         result = []
         for participation in participations:
             student = participation.student
             variant = participation.variant
-            mark = marks.get(participation.pk)
+            attempt = attempts.get(participation.pk)
             result.append(
-                ParticipationMarkData(
+                ParticipationAttemptData(
                     student=StudentSummary(
                         id=str(student.pk),
                         full_name=student.get_full_name(),
@@ -281,10 +286,12 @@ class DjangoEventRepository(IEventRepository):
                         if variant
                         else None
                     ),
-                    score=mark.score if mark else None,
-                    points=mark.points if mark else None,
-                    max_points=mark.max_points if mark else None,
-                    task_scores=mark.task_scores if mark else {},
+                    score=attempt.score if attempt else None,
+                    points=attempt.points if attempt else None,
+                    max_points=attempt.max_points if attempt else None,
+                    task_scores=(
+                        attempt.task_scores_snapshot if attempt else {}
+                    ),
                 )
             )
         return result

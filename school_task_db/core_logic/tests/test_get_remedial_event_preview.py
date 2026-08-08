@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from core_logic.entities.event import (
     EventEntity,
-    ParticipationMarkData,
+    ParticipationAttemptData,
     StudentSummary,
     VariantSummary,
 )
@@ -23,9 +23,9 @@ class FakeEventRepository:
             status='graded',
         )
 
-    def get_participation_marks(self, event_id):
+    def get_participation_attempts(self, event_id):
         return [
-            ParticipationMarkData(
+            ParticipationAttemptData(
                 student=StudentSummary(id='s1', full_name='Иванов Иван'),
                 variant=VariantSummary(id='v1', number=1),
                 score=2,
@@ -40,7 +40,7 @@ class FakeEventRepository:
                     },
                 },
             ),
-            ParticipationMarkData(
+            ParticipationAttemptData(
                 student=StudentSummary(id='s2', full_name='Петров Пётр'),
                 variant=None,
             ),

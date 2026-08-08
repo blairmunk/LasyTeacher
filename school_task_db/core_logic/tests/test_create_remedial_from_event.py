@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from unittest import TestCase
 
-from core_logic.entities.event import EventEntity, MarkEntity
+from core_logic.entities.event import CheckedAttemptRef, EventEntity
 from core_logic.entities.task import TaskEntity
 from core_logic.interfaces.work_repo import (
     CreatedWorkWithVariantsRef,
@@ -77,8 +77,8 @@ class FakeEventRepository:
             course_id='course-1',
         )
 
-    def get_student_mark(self, event_id, student_id):
-        return MarkEntity(
+    def get_latest_student_attempt(self, event_id, student_id):
+        return CheckedAttemptRef(
             student_id=student_id,
             event_id=event_id,
             score=2,
@@ -213,7 +213,7 @@ class CreateRemedialFromEventUseCaseTests(TestCase):
 
     def test_execute_skips_student_without_checked_result(self):
         event_repo = FakeEventRepository()
-        event_repo.get_student_mark = lambda event_id, student_id: None
+        event_repo.get_latest_student_attempt = lambda event_id, student_id: None
         use_case = CreateRemedialFromEventUseCase(
             remedial_service=FakeRemedialService(),
             task_repo=FakeTaskRepository(),

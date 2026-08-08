@@ -11,8 +11,8 @@ from core_logic.entities.event import (
     ParticipationGradingContext,
     EventVariantAssignmentResult,
     EventVariantRef,
-    MarkEntity,
-    ParticipationMarkData,
+    CheckedAttemptRef,
+    ParticipationAttemptData,
 )
 
 
@@ -110,16 +110,19 @@ class IEventRepository(ABC):
         """Return a lightweight participation reference by ID."""
 
     @abstractmethod
-    def get_student_mark(
+    def get_latest_student_attempt(
         self,
         event_id: str,
         student_id: str,
-    ) -> Optional[MarkEntity]:
-        """Return a student's mark for an event."""
+    ) -> Optional[CheckedAttemptRef]:
+        """Return the latest captured attempt for a student and event."""
 
     @abstractmethod
-    def get_participation_marks(self, event_id: str) -> List[ParticipationMarkData]:
-        """Return participation data with optional marks for preview."""
+    def get_participation_attempts(
+        self,
+        event_id: str,
+    ) -> List[ParticipationAttemptData]:
+        """Return participations with their latest captured attempts."""
 
     @abstractmethod
     def create_event(self, params: CreateEventParams) -> str:

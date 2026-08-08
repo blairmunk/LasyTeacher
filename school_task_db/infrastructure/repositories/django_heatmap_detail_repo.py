@@ -1,4 +1,4 @@
-"""Django implementation of heatmap report repository."""
+"""Django read adapter for detailed heatmap reports."""
 
 from django.shortcuts import get_object_or_404
 
@@ -23,7 +23,7 @@ from infrastructure.repositories.django_heatmap_support import (
 from students.models import Student, StudentGroup
 
 
-class DjangoHeatmapRepository(IHeatmapDetailRepository):
+class DjangoHeatmapDetailRepository(IHeatmapDetailRepository):
     def get_heatmap_subtopic_detail_source(self, subtopic_id, group_id):
         subtopic = get_object_or_404(SubTopic, pk=subtopic_id)
         topic = subtopic.topic

@@ -5,7 +5,7 @@ from django.utils import timezone
 
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
-from infrastructure.repositories.django_heatmap_repo import DjangoHeatmapRepository
+from infrastructure.repositories.django_heatmap_detail_repo import DjangoHeatmapDetailRepository
 from infrastructure.repositories.django_heatmap_overview_repo import (
     DjangoHeatmapOverviewRepository,
 )
@@ -279,7 +279,7 @@ class DjangoReportRepositoriesTests(TestCase):
         event.save(update_fields=['name'])
 
         data = GetHeatmapSubtopicDetailUseCase(
-            DjangoHeatmapRepository(),
+            DjangoHeatmapDetailRepository(),
         ).execute(
             HeatmapSubtopicDetailRequest(
                 subtopic_id=subtopic.pk,
@@ -373,7 +373,7 @@ class DjangoReportRepositoriesTests(TestCase):
         capture_attempt_snapshot(mark)
 
         data = GetHeatmapStudentDetailUseCase(
-            DjangoHeatmapRepository(),
+            DjangoHeatmapDetailRepository(),
         ).execute(
             HeatmapStudentDetailRequest(
                 topic_id=topic.pk,

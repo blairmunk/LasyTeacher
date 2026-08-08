@@ -318,7 +318,7 @@ from infrastructure.repositories.django_journal_repo import (
     DjangoJournalRepository,
 )
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
-from infrastructure.repositories.django_heatmap_repo import DjangoHeatmapRepository
+from infrastructure.repositories.django_heatmap_detail_repo import DjangoHeatmapDetailRepository
 from infrastructure.repositories.django_heatmap_overview_repo import (
     DjangoHeatmapOverviewRepository,
 )
@@ -382,7 +382,7 @@ class Container:
         self._reports_dashboard_repo = None
         self._student_performance_repo = None
         self._work_analysis_repo = None
-        self._heatmap_repo = None
+        self._heatmap_detail_repo = None
         self._heatmap_matrix_repo = None
         self._heatmap_overview_repo = None
         self._journal_repo = None
@@ -485,10 +485,10 @@ class Container:
         return self._work_analysis_repo
 
     @property
-    def heatmap_repo(self):
-        if self._heatmap_repo is None:
-            self._heatmap_repo = DjangoHeatmapRepository()
-        return self._heatmap_repo
+    def heatmap_detail_repo(self):
+        if self._heatmap_detail_repo is None:
+            self._heatmap_detail_repo = DjangoHeatmapDetailRepository()
+        return self._heatmap_detail_repo
 
     @property
     def heatmap_matrix_repo(self):
@@ -1110,12 +1110,12 @@ class Container:
 
     def get_heatmap_student_detail_use_case(self):
         return GetHeatmapStudentDetailUseCase(
-            report_repo=self.heatmap_repo,
+            report_repo=self.heatmap_detail_repo,
         )
 
     def get_heatmap_subtopic_detail_use_case(self):
         return GetHeatmapSubtopicDetailUseCase(
-            report_repo=self.heatmap_repo,
+            report_repo=self.heatmap_detail_repo,
         )
 
     def get_heatmap_subtopic_matrix_use_case(self):

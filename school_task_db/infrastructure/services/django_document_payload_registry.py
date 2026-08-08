@@ -39,15 +39,18 @@ from core_logic.entities.document import (
 from infrastructure.services.blank_cells_payload import (
     build_blank_cells_payload,
 )
+from infrastructure.repositories.django_work_document_repo import (
+    DjangoWorkDocumentRepository,
+)
 from infrastructure.services.remedial_document_payloads import (
     RemedialHeaderPayloadBuilder,
     RemedialOriginalMistakesPayloadBuilder,
     RemedialTrainingTasksPayloadBuilder,
     RemedialSheetDataProvider,
 )
-from infrastructure.services.django_work_document_payloads import (
-    DjangoWorkHeaderPayloadBuilder,
-    DjangoWorkTaskListPayloadBuilder,
+from infrastructure.services.work_document_payloads import (
+    WorkHeaderPayloadBuilder,
+    WorkTaskListPayloadBuilder,
     WorkDocumentSourceProvider,
 )
 from infrastructure.services.django_report_document_payloads import (
@@ -69,15 +72,16 @@ def build_work_section_payload_builder_registry(
     task_payload_formatter=None,
 ) -> DocumentSectionPayloadBuilderRegistry:
     registry = DocumentSectionPayloadBuilderRegistry()
+    work_document_repo = work_document_repo or DjangoWorkDocumentRepository()
     work_source_provider = WorkDocumentSourceProvider(
         work_document_repo=work_document_repo,
         get_work_document_source=get_work_document_source,
     )
-    task_list_builder = DjangoWorkTaskListPayloadBuilder(
+    task_list_builder = WorkTaskListPayloadBuilder(
         task_payload_formatter=task_payload_formatter,
         work_source_provider=work_source_provider,
     )
-    header_builder = DjangoWorkHeaderPayloadBuilder(
+    header_builder = WorkHeaderPayloadBuilder(
         work_source_provider=work_source_provider,
     )
     registry.register(

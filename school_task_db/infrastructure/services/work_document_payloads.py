@@ -1,8 +1,5 @@
-"""Django-backed document payload builders for regular works."""
+"""Document payload builders for detached work document sources."""
 
-from core_logic.value_objects.document_recipes import (
-    TASK_LIST_SECTION,
-)
 from core_logic.services.work_score_allocation_service import (
     WorkScoreAllocationService,
     WorkScoreSpecRow,
@@ -10,9 +7,6 @@ from core_logic.services.work_score_allocation_service import (
 from infrastructure.services.document_build_cache import (
     document_payload_cache,
     document_section_input_key,
-)
-from infrastructure.repositories.django_work_document_repo import (
-    DjangoWorkDocumentRepository,
 )
 from infrastructure.services.work_variant_document_payloads import (
     WorkVariantDocumentPayloadBuilder,
@@ -25,11 +19,11 @@ class WorkDocumentSourceProvider:
         work_document_repo=None,
         get_work_document_source=None,
     ):
+        if get_work_document_source is None and work_document_repo is None:
+            raise ValueError('work document source is required')
         self.get_work_document_source = (
             get_work_document_source
-            or (
-                work_document_repo or DjangoWorkDocumentRepository()
-            ).get_work_document_source
+            or work_document_repo.get_work_document_source
         )
 
     def get(self, work_id, build_context=None):
@@ -41,9 +35,10 @@ class WorkDocumentSourceProvider:
         return cache[work_id]
 
 
-class DjangoWorkHeaderPayloadBuilder:
+class WorkHeaderPayloadBuilder:
     def __init__(
         self,
+        work_document_repo=None,
         get_work_document_source=None,
         work_source_provider=None,
         score_allocation_service=None,
@@ -51,6 +46,7 @@ class DjangoWorkHeaderPayloadBuilder:
         self.work_source_provider = (
             work_source_provider
             or WorkDocumentSourceProvider(
+                work_document_repo=work_document_repo,
                 get_work_document_source=get_work_document_source,
             )
         )
@@ -93,9 +89,10 @@ class DjangoWorkHeaderPayloadBuilder:
         }
 
 
-class DjangoWorkTaskListPayloadBuilder:
+class WorkTaskListPayloadBuilder:
     def __init__(
         self,
+        work_document_repo=None,
         get_work_document_source=None,
         task_payload_formatter=None,
         variant_payload_builder=None,
@@ -104,6 +101,7 @@ class DjangoWorkTaskListPayloadBuilder:
         self.work_source_provider = (
             work_source_provider
             or WorkDocumentSourceProvider(
+                work_document_repo=work_document_repo,
                 get_work_document_source=get_work_document_source,
             )
         )

@@ -53,10 +53,13 @@ from infrastructure.services.django_document_payload_registry import (
 from infrastructure.services.remedial_document_payloads import (
     RemedialSheetDataProvider,
 )
-from infrastructure.services.django_work_document_payloads import (
-    DjangoWorkHeaderPayloadBuilder,
-    DjangoWorkTaskListPayloadBuilder,
+from infrastructure.services.work_document_payloads import (
+    WorkHeaderPayloadBuilder,
+    WorkTaskListPayloadBuilder,
     WorkDocumentSourceProvider,
+)
+from infrastructure.repositories.django_work_document_repo import (
+    DjangoWorkDocumentRepository,
 )
 from tasks.models import Source, Task
 from task_groups.models import AnalogGroup
@@ -92,7 +95,9 @@ class DjangoWorkHeaderPayloadBuilderTests(TestCase):
             duration=60,
             max_score=12,
         )
-        builder = DjangoWorkHeaderPayloadBuilder()
+        builder = WorkHeaderPayloadBuilder(
+            work_document_repo=DjangoWorkDocumentRepository(),
+        )
 
         payload = builder.build_payload(
             build_request(work, HEADER_SECTION, options={'show_date': True}),
@@ -131,7 +136,9 @@ class DjangoWorkHeaderPayloadBuilderTests(TestCase):
             is_assessable=True,
         )
 
-        payload = DjangoWorkHeaderPayloadBuilder().build_payload(
+        payload = WorkHeaderPayloadBuilder(
+            work_document_repo=DjangoWorkDocumentRepository(),
+        ).build_payload(
             build_request(work, HEADER_SECTION),
         )
 
@@ -187,7 +194,8 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             content={'body': 'Проверьте единицы измерения.'},
         )
         formatter = FakeTaskPayloadFormatter()
-        builder = DjangoWorkTaskListPayloadBuilder(
+        builder = WorkTaskListPayloadBuilder(
+            work_document_repo=DjangoWorkDocumentRepository(),
             task_payload_formatter=formatter,
         )
 
@@ -292,7 +300,9 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             blank_cells_after=True,
             blank_cells_rows=7,
         )
-        builder = DjangoWorkTaskListPayloadBuilder()
+        builder = WorkTaskListPayloadBuilder(
+            work_document_repo=DjangoWorkDocumentRepository(),
+        )
 
         payload = builder.build_payload(
             build_request(
@@ -375,7 +385,8 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             max_points=4,
         )
         formatter = FakeTaskPayloadFormatter()
-        builder = DjangoWorkTaskListPayloadBuilder(
+        builder = WorkTaskListPayloadBuilder(
+            work_document_repo=DjangoWorkDocumentRepository(),
             task_payload_formatter=formatter,
         )
 
@@ -389,7 +400,8 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
         work = Work.objects.create(name='Контрольная')
         Variant.objects.create(work=work, number=1)
         variant_payload_builder = FakeVariantPayloadBuilder()
-        builder = DjangoWorkTaskListPayloadBuilder(
+        builder = WorkTaskListPayloadBuilder(
+            work_document_repo=DjangoWorkDocumentRepository(),
             variant_payload_builder=variant_payload_builder,
         )
         build_context = {}
@@ -443,7 +455,9 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             render_mode=TASK_RENDER_MODE_TASK_ONLY,
             is_assessable=False,
         )
-        builder = DjangoWorkTaskListPayloadBuilder()
+        builder = WorkTaskListPayloadBuilder(
+            work_document_repo=DjangoWorkDocumentRepository(),
+        )
 
         payload = builder.build_payload(
             build_request(
@@ -497,7 +511,9 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             bank_role=TASK_BANK_ROLE_PRACTICE,
             is_assessable=True,
         )
-        builder = DjangoWorkTaskListPayloadBuilder()
+        builder = WorkTaskListPayloadBuilder(
+            work_document_repo=DjangoWorkDocumentRepository(),
+        )
 
         payload = builder.build_payload(
             build_request(

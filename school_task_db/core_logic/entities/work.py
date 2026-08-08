@@ -62,6 +62,7 @@ class WorkDetailWork:
     created_at: datetime
     updated_at: datetime
     assessment_mode: str = WORK_ASSESSMENT_MODE_VARIANT
+    event_count: int = 0
 
     @property
     def id(self) -> str:
@@ -77,6 +78,10 @@ class WorkDetailWork:
     @property
     def requires_variants(self) -> bool:
         return work_requires_variants(self.assessment_mode)
+
+    @property
+    def assessment_mode_locked(self) -> bool:
+        return self.variant_count > 0 or self.event_count > 0
 
 
 @dataclass(frozen=True)

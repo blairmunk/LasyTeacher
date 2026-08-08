@@ -281,6 +281,7 @@ from core_logic.use_cases.save_work import (
     CreateWorkWithSpecificationUseCase,
     SaveWorkSpecificationUseCase,
     UpdateWorkUseCase,
+    UpdateWorkWithSpecificationUseCase,
 )
 from core_logic.use_cases.sync_review_session import SyncReviewSessionUseCase
 from core_logic.use_cases.sync_work_analog_groups import SyncWorkAnalogGroupsUseCase
@@ -1423,6 +1424,11 @@ class Container:
 
     def update_work_use_case(self):
         return UpdateWorkUseCase(
+            work_repo=self.work_repo,
+        )
+
+    def update_work_with_specification_use_case(self):
+        return UpdateWorkWithSpecificationUseCase(
             work_repo=self.work_repo,
         )
 

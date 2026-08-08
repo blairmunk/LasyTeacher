@@ -235,6 +235,7 @@ from core_logic.use_cases.save_work import (
     CreateWorkWithSpecificationUseCase,
     SaveWorkSpecificationUseCase,
     UpdateWorkUseCase,
+    UpdateWorkWithSpecificationUseCase,
 )
 from core_logic.use_cases.sync_review_session import SyncReviewSessionUseCase
 from core_logic.use_cases.sync_work_analog_groups import SyncWorkAnalogGroupsUseCase
@@ -546,6 +547,9 @@ class ContainerTests(SimpleTestCase):
             container.create_work_with_specification_use_case()
         )
         update_work_use_case = container.update_work_use_case()
+        update_work_with_specification_use_case = (
+            container.update_work_with_specification_use_case()
+        )
         save_work_specification_use_case = (
             container.save_work_specification_use_case()
         )
@@ -849,6 +853,10 @@ class ContainerTests(SimpleTestCase):
             CreateWorkWithSpecificationUseCase,
         )
         self.assertIsInstance(update_work_use_case, UpdateWorkUseCase)
+        self.assertIsInstance(
+            update_work_with_specification_use_case,
+            UpdateWorkWithSpecificationUseCase,
+        )
         self.assertIsInstance(
             save_work_specification_use_case,
             SaveWorkSpecificationUseCase,

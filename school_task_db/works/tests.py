@@ -512,6 +512,72 @@ class WorkDetailViewTests(TestCase):
             block,
         )
 
+    def test_update_form_locks_assessment_mode_for_used_work(self):
+        response = self.client.get(
+            reverse('works:update', args=[self.work.pk]),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            'name="assessment_mode" value="variant"',
+        )
+        self.assertContains(
+            response,
+            'Режим зафиксирован: у работы уже есть '
+            'варианты или события.',
+        )
+
+    def test_update_rejects_mode_change_without_partial_spec_save(self):
+        old_group = AnalogGroup.objects.create(name='Исходная группа')
+        new_group = AnalogGroup.objects.create(name='Новая группа')
+        old_spec = WorkAnalogGroup.objects.create(
+            work=self.work,
+            analog_group=old_group,
+            count=1,
+            order=10,
+            weight=1,
+        )
+
+        response = self.client.post(
+            reverse('works:update', args=[self.work.pk]),
+            {
+                'name': 'Не сохранять',
+                'work_type': 'quiz',
+                'assessment_mode': WORK_ASSESSMENT_MODE_AGGREGATE,
+                'duration': '30',
+                'max_score': '12',
+                'workanaloggroup_set-TOTAL_FORMS': '1',
+                'workanaloggroup_set-INITIAL_FORMS': '1',
+                'workanaloggroup_set-MIN_NUM_FORMS': '0',
+                'workanaloggroup_set-MAX_NUM_FORMS': '1000',
+                'workanaloggroup_set-0-id': str(old_spec.pk),
+                'workanaloggroup_set-0-analog_group': str(new_group.pk),
+                'workanaloggroup_set-0-count': '2',
+                'workanaloggroup_set-0-order': '10',
+                'workanaloggroup_set-0-weight': '3',
+                'content_blocks-TOTAL_FORMS': '0',
+                'content_blocks-INITIAL_FORMS': '0',
+                'content_blocks-MIN_NUM_FORMS': '0',
+                'content_blocks-MAX_NUM_FORMS': '1000',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Режим проверки уже зафиксирован')
+        self.work.refresh_from_db()
+        old_spec.refresh_from_db()
+        self.assertEqual(self.work.name, 'Контрольная')
+        self.assertEqual(self.work.assessment_mode, 'variant')
+        self.assertEqual(old_spec.analog_group, old_group)
+        self.assertEqual(old_spec.count, 1)
+        self.assertFalse(
+            WorkAnalogGroup.objects.filter(
+                work=self.work,
+                analog_group=new_group,
+            ).exists(),
+        )
+
     def test_detail_shows_persistent_content_plan_blocks(self):
         WorkContentBlock.objects.create(
             work=self.work,

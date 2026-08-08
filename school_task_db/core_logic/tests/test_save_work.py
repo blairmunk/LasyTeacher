@@ -5,14 +5,21 @@ from core_logic.interfaces.work_repo import (
     CreateWorkWithSpecificationParams,
     WorkContentBlockParams,
     WorkTaskSelectionParams,
+    WorkUpdateContext,
 )
 from core_logic.use_cases.save_work import (
     CreateWorkWithSpecificationUseCase,
     SaveWorkSpecificationRequest,
     SaveWorkSpecificationUseCase,
     UpdateWorkUseCase,
+    UpdateWorkWithSpecificationRequest,
+    UpdateWorkWithSpecificationUseCase,
 )
 from core_logic.value_objects.task_print_settings import TASK_BANK_ROLE_DEMO
+from core_logic.value_objects.work_assessment import (
+    WORK_ASSESSMENT_MODE_AGGREGATE,
+    WORK_ASSESSMENT_MODE_VARIANT,
+)
 
 
 class FakeWorkRepository:
@@ -21,7 +28,12 @@ class FakeWorkRepository:
         self.replaced_specs = None
         self.replaced_content_plan = None
         self.created_with_specification = None
+        self.updated_with_specification = None
         self.update_result = update_result
+        self.update_context = WorkUpdateContext(
+            work_id='work-1',
+            assessment_mode=WORK_ASSESSMENT_MODE_VARIANT,
+        )
 
     def create_work_with_specification(self, params):
         self.created_with_specification = params
@@ -29,6 +41,15 @@ class FakeWorkRepository:
 
     def update_work(self, params):
         self.updated_params = params
+        return self.update_result
+
+    def get_work_update_context(self, work_id):
+        if not self.update_result or work_id != self.update_context.work_id:
+            return None
+        return self.update_context
+
+    def update_work_with_specification(self, params):
+        self.updated_with_specification = params
         return self.update_result
 
     def replace_work_analog_groups(self, work_id, specs):
@@ -135,6 +156,88 @@ class SaveWorkUseCaseTests(TestCase):
         result = UpdateWorkUseCase(FakeWorkRepository(False)).execute(params)
 
         self.assertEqual(result.status, 'not_found')
+
+    def test_update_work_rejects_locked_assessment_mode_change(self):
+        repo = FakeWorkRepository()
+        repo.update_context = WorkUpdateContext(
+            work_id='work-1',
+            assessment_mode=WORK_ASSESSMENT_MODE_VARIANT,
+            has_variants=True,
+        )
+        params = CreateWorkParams(
+            work_id='work-1',
+            name='Внешняя работа',
+            assessment_mode=WORK_ASSESSMENT_MODE_AGGREGATE,
+        )
+
+        result = UpdateWorkUseCase(repo).execute(params)
+
+        self.assertEqual(result.status, 'invalid')
+        self.assertIn('Режим проверки уже зафиксирован', result.errors[0])
+        self.assertIsNone(repo.updated_params)
+
+    def test_update_work_with_specification_delegates_complete_change(self):
+        repo = FakeWorkRepository()
+        work = CreateWorkParams(
+            work_id='work-1',
+            name='Обновлённая работа',
+        )
+        specs = [
+            WorkTaskSelectionParams(
+                analog_group_id='group-1',
+                order=10,
+                count=2,
+                weight=3,
+            ),
+        ]
+
+        result = UpdateWorkWithSpecificationUseCase(repo).execute(
+            UpdateWorkWithSpecificationRequest(work=work, specs=specs),
+        )
+
+        self.assertEqual(result.status, 'updated')
+        self.assertEqual(
+            repo.updated_with_specification,
+            CreateWorkWithSpecificationParams(work=work, specs=specs),
+        )
+
+    def test_combined_update_allows_mode_change_before_work_is_used(self):
+        repo = FakeWorkRepository()
+        work = CreateWorkParams(
+            work_id='work-1',
+            name='Внешний материал',
+            assessment_mode=WORK_ASSESSMENT_MODE_AGGREGATE,
+        )
+
+        result = UpdateWorkWithSpecificationUseCase(repo).execute(
+            UpdateWorkWithSpecificationRequest(work=work, specs=[]),
+        )
+
+        self.assertEqual(result.status, 'updated')
+        self.assertEqual(
+            repo.updated_with_specification.work.assessment_mode,
+            WORK_ASSESSMENT_MODE_AGGREGATE,
+        )
+
+    def test_combined_update_rejects_mode_change_after_event(self):
+        repo = FakeWorkRepository()
+        repo.update_context = WorkUpdateContext(
+            work_id='work-1',
+            assessment_mode=WORK_ASSESSMENT_MODE_VARIANT,
+            has_events=True,
+        )
+        work = CreateWorkParams(
+            work_id='work-1',
+            name='Не сохранять',
+            assessment_mode=WORK_ASSESSMENT_MODE_AGGREGATE,
+        )
+
+        result = UpdateWorkWithSpecificationUseCase(repo).execute(
+            UpdateWorkWithSpecificationRequest(work=work, specs=[]),
+        )
+
+        self.assertEqual(result.status, 'invalid')
+        self.assertIsNone(repo.updated_with_specification)
 
     def test_save_work_specification_replaces_specs(self):
         repo = FakeWorkRepository()

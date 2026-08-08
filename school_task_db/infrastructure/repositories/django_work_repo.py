@@ -75,6 +75,7 @@ from core_logic.interfaces.work_repo import (
     IWorkRepository,
     WorkContentBlockParams,
     WorkTaskSelectionParams,
+    WorkUpdateContext,
 )
 from core_logic.interfaces.work_read_repo import IWorkReadRepository
 from core_logic.interfaces.work_document_repo import IWorkDocumentRepository
@@ -269,6 +270,7 @@ class DjangoWorkRepository(
             created_at=work.created_at,
             updated_at=work.updated_at,
             assessment_mode=work.assessment_mode,
+            event_count=work.event_set.count(),
         )
 
     def get_detail_variants(self, work_id: str):
@@ -1049,6 +1051,37 @@ class DjangoWorkRepository(
         work.save()
         return True
 
+    def get_work_update_context(self, work_id: str):
+        work = Work.objects.filter(pk=work_id).first()
+        if work is None:
+            return None
+        return WorkUpdateContext(
+            work_id=str(work.pk),
+            assessment_mode=work.assessment_mode,
+            has_variants=work.variant_set.exists(),
+            has_events=work.event_set.exists(),
+        )
+
+    def update_work_with_specification(self, params):
+        with transaction.atomic():
+            work = Work.objects.select_for_update().filter(
+                pk=params.work.work_id,
+            ).first()
+            if work is None:
+                return False
+            work.name = params.work.name
+            work.work_type = params.work.work_type
+            work.duration = params.work.duration
+            work.max_score = params.work.max_score
+            work.assessment_mode = params.work.assessment_mode
+            work.save()
+            self._replace_work_content_plan(
+                work_id=str(work.pk),
+                specs=params.specs,
+                content_blocks=params.content_blocks,
+            )
+        return True
+
     def create_work_with_specification(
         self,
         params: CreateWorkWithSpecificationParams,
@@ -1149,25 +1182,37 @@ class DjangoWorkRepository(
             return False
 
         with transaction.atomic():
-            WorkAnalogGroup.objects.filter(work_id=work_id).delete()
-            WorkContentBlock.objects.filter(work_id=work_id).delete()
-            WorkAnalogGroup.objects.bulk_create([
-                WorkAnalogGroup(
-                    work_id=work_id,
-                    analog_group_id=spec.analog_group_id,
-                    order=spec.order,
-                    count=spec.count,
-                    weight=spec.weight,
-                    bank_role_filter=spec.bank_role_filter,
-                    render_mode=spec.render_mode,
-                    is_assessable=spec.is_assessable,
-                    blank_cells_after=spec.blank_cells_after,
-                    blank_cells_rows=spec.blank_cells_rows,
-                )
-                for spec in specs
-            ])
-            self._create_work_content_blocks(work_id, content_blocks)
+            self._replace_work_content_plan(
+                work_id=work_id,
+                specs=specs,
+                content_blocks=content_blocks,
+            )
         return True
+
+    def _replace_work_content_plan(
+        self,
+        work_id: str,
+        specs: List[WorkTaskSelectionParams],
+        content_blocks: List[WorkContentBlockParams],
+    ):
+        WorkAnalogGroup.objects.filter(work_id=work_id).delete()
+        WorkContentBlock.objects.filter(work_id=work_id).delete()
+        WorkAnalogGroup.objects.bulk_create([
+            WorkAnalogGroup(
+                work_id=work_id,
+                analog_group_id=spec.analog_group_id,
+                order=spec.order,
+                count=spec.count,
+                weight=spec.weight,
+                bank_role_filter=spec.bank_role_filter,
+                render_mode=spec.render_mode,
+                is_assessable=spec.is_assessable,
+                blank_cells_after=spec.blank_cells_after,
+                blank_cells_rows=spec.blank_cells_rows,
+            )
+            for spec in specs
+        ])
+        self._create_work_content_blocks(work_id, content_blocks)
 
     @staticmethod
     def _create_work_content_blocks(

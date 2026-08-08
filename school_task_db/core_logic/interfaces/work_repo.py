@@ -73,6 +73,18 @@ class CreateWorkWithSpecificationParams:
 
 
 @dataclass(frozen=True)
+class WorkUpdateContext:
+    work_id: str
+    assessment_mode: str
+    has_variants: bool = False
+    has_events: bool = False
+
+    @property
+    def assessment_mode_locked(self) -> bool:
+        return self.has_variants or self.has_events
+
+
+@dataclass(frozen=True)
 class NewWorkVariantParams:
     student_id: str
     plan: VariantCreationPlan
@@ -116,6 +128,20 @@ class IWorkRepository(ABC):
     @abstractmethod
     def update_work(self, params: CreateWorkParams) -> bool:
         """Update a work and return whether it was found."""
+
+    @abstractmethod
+    def get_work_update_context(
+        self,
+        work_id: str,
+    ) -> Optional[WorkUpdateContext]:
+        """Return facts needed to validate a work update."""
+
+    @abstractmethod
+    def update_work_with_specification(
+        self,
+        params: CreateWorkWithSpecificationParams,
+    ) -> bool:
+        """Atomically update a work and its complete content plan."""
 
     @abstractmethod
     def create_work_with_specification(

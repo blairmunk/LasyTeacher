@@ -9,7 +9,7 @@ from core_logic.use_cases.prepare_work_variant_submission import (
     PrepareVariantActionSubmissionRequest,
 )
 from core_logic.use_cases.save_work import (
-    SaveWorkSpecificationRequest,
+    UpdateWorkWithSpecificationRequest,
 )
 from core_logic.use_cases.sync_work_analog_groups import (
     SyncWorkAnalogGroupsRequest,
@@ -193,9 +193,12 @@ class WorkUpdateView(TemplateView):
         specs = container.work_form_adapter.work_specs_from_formset(
             formset,
         )
-        specification_result = container.save_work_specification_use_case().execute(
-            SaveWorkSpecificationRequest(
-                work_id=str(work.pk),
+        result = container.update_work_with_specification_use_case().execute(
+            UpdateWorkWithSpecificationRequest(
+                work=container.work_form_adapter.work_params_from_form(
+                    form,
+                    work_id=str(work.pk),
+                ),
                 specs=specs,
                 content_blocks=(
                     container.work_form_adapter
@@ -203,8 +206,8 @@ class WorkUpdateView(TemplateView):
                 ),
             )
         )
-        if specification_result.status == 'invalid':
-            messages.error(request, '; '.join(specification_result.errors))
+        if result.status == 'invalid':
+            messages.error(request, '; '.join(result.errors))
             return self.render_to_response(
                 self.get_context_data(
                     form=form,
@@ -213,15 +216,6 @@ class WorkUpdateView(TemplateView):
                     object=work,
                 ),
             )
-        if specification_result.status == 'not_found':
-            raise Http404('Работа не найдена')
-
-        result = container.update_work_use_case().execute(
-            container.work_form_adapter.work_params_from_form(
-                form,
-                work_id=str(work.pk),
-            ),
-        )
         if result.status == 'not_found':
             raise Http404('Работа не найдена')
         messages.success(request, 'Работа успешно обновлена!')

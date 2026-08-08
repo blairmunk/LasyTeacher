@@ -31,9 +31,15 @@
                             {{ form.work_type }}
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="{{ form.assessment_mode.id_for_label }}" class="form-label">{{ form.assessment_mode.label }}</label>
-                            {{ form.assessment_mode }}
-                            {% if form.assessment_mode.help_text %}<div class="form-text">{{ form.assessment_mode.help_text }}</div>{% endif %}
+                            <label{% if not object.assessment_mode_locked %} for="{{ form.assessment_mode.id_for_label }}"{% endif %} class="form-label">{{ form.assessment_mode.label }}</label>
+                            {% if object.assessment_mode_locked %}
+                                <input type="hidden" name="assessment_mode" value="{{ object.assessment_mode }}">
+                                <div class="form-control bg-light">{{ object.assessment_mode_display }}</div>
+                                <div class="form-text">Режим зафиксирован: у работы уже есть варианты или события.</div>
+                            {% else %}
+                                {{ form.assessment_mode }}
+                                {% if form.assessment_mode.help_text %}<div class="form-text">{{ form.assessment_mode.help_text }}</div>{% endif %}
+                            {% endif %}
                             {% if form.assessment_mode.errors %}<div class="text-danger small">{{ form.assessment_mode.errors }}</div>{% endif %}
                         </div>
                         <div class="col-md-3 mb-3">

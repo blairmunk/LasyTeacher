@@ -506,6 +506,70 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(work.duration, 30)
         self.assertEqual(work.max_score, 12)
 
+    def test_work_repository_returns_update_lock_context(self):
+        repo = DjangoWorkRepository()
+
+        context = repo.get_work_update_context(str(self.source_work.pk))
+        missing = repo.get_work_update_context(
+            '00000000-0000-0000-0000-000000000000',
+        )
+
+        self.assertEqual(context.work_id, str(self.source_work.pk))
+        self.assertTrue(context.has_variants)
+        self.assertTrue(context.has_events)
+        self.assertTrue(context.assessment_mode_locked)
+        self.assertIsNone(missing)
+
+    def test_work_repository_updates_work_and_content_plan_together(self):
+        work = Work.objects.create(name='Черновик')
+        old_group = AnalogGroup.objects.create(name='Старая тема')
+        new_group = AnalogGroup.objects.create(name='Новая тема')
+        WorkAnalogGroup.objects.create(
+            work=work,
+            analog_group=old_group,
+            order=10,
+        )
+
+        updated = DjangoWorkRepository().update_work_with_specification(
+            CreateWorkWithSpecificationParams(
+                work=CreateWorkParams(
+                    work_id=str(work.pk),
+                    name='Готовая работа',
+                    work_type='quiz',
+                    duration=35,
+                    max_score=8,
+                ),
+                specs=[
+                    WorkTaskSelectionParams(
+                        analog_group_id=str(new_group.pk),
+                        order=20,
+                        count=2,
+                        weight=4,
+                    ),
+                ],
+                content_blocks=[
+                    WorkContentBlockParams(
+                        content_type='text',
+                        order=10,
+                        title='Инструкция',
+                        body='Покажите ход решения.',
+                    ),
+                ],
+            ),
+        )
+
+        self.assertTrue(updated)
+        work.refresh_from_db()
+        spec = WorkAnalogGroup.objects.get(work=work)
+        block = WorkContentBlock.objects.get(work=work)
+        self.assertEqual(work.name, 'Готовая работа')
+        self.assertEqual(work.work_type, 'quiz')
+        self.assertEqual(work.duration, 35)
+        self.assertEqual(work.max_score, 8)
+        self.assertEqual(spec.analog_group, new_group)
+        self.assertEqual(spec.count, 2)
+        self.assertEqual(block.body, 'Покажите ход решения.')
+
     def test_work_repository_creates_work_with_variants(self):
         repo = DjangoWorkRepository()
 

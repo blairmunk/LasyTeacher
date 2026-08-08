@@ -40,6 +40,15 @@ class SaveWorkSpecificationResult:
     errors: tuple[str, ...] = ()
 
 
+@dataclass(frozen=True)
+class UpdateWorkWithSpecificationRequest:
+    work: CreateWorkParams
+    specs: List[WorkTaskSelectionParams]
+    content_blocks: List[WorkContentBlockParams] = field(
+        default_factory=list,
+    )
+
+
 class CreateWorkWithSpecificationUseCase:
     def __init__(self, work_repo: IWorkRepository):
         self.work_repo = work_repo
@@ -64,11 +73,84 @@ class UpdateWorkUseCase:
         self.work_repo = work_repo
 
     def execute(self, params: CreateWorkParams) -> SaveWorkResult:
+        context = self.work_repo.get_work_update_context(params.work_id)
+        if context is None:
+            return SaveWorkResult(status='not_found')
+        mode_error = _assessment_mode_update_error(
+            current_mode=context.assessment_mode,
+            requested_mode=params.assessment_mode,
+            mode_locked=context.assessment_mode_locked,
+        )
+        if mode_error:
+            return SaveWorkResult(
+                status='invalid',
+                errors=(mode_error,),
+            )
+
         updated = self.work_repo.update_work(params)
         if not updated:
             return SaveWorkResult(status='not_found')
 
         return SaveWorkResult(status='updated', work_id=params.work_id)
+
+
+class UpdateWorkWithSpecificationUseCase:
+    def __init__(self, work_repo: IWorkRepository):
+        self.work_repo = work_repo
+
+    def execute(
+        self,
+        request: UpdateWorkWithSpecificationRequest,
+    ) -> SaveWorkResult:
+        errors = validate_work_content_plan(
+            request.specs,
+            request.content_blocks,
+        )
+        if errors:
+            return SaveWorkResult(status='invalid', errors=errors)
+
+        context = self.work_repo.get_work_update_context(
+            request.work.work_id,
+        )
+        if context is None:
+            return SaveWorkResult(status='not_found')
+        mode_error = _assessment_mode_update_error(
+            current_mode=context.assessment_mode,
+            requested_mode=request.work.assessment_mode,
+            mode_locked=context.assessment_mode_locked,
+        )
+        if mode_error:
+            return SaveWorkResult(
+                status='invalid',
+                errors=(mode_error,),
+            )
+
+        updated = self.work_repo.update_work_with_specification(
+            CreateWorkWithSpecificationParams(
+                work=request.work,
+                specs=request.specs,
+                content_blocks=request.content_blocks,
+            ),
+        )
+        if not updated:
+            return SaveWorkResult(status='not_found')
+        return SaveWorkResult(
+            status='updated',
+            work_id=request.work.work_id,
+        )
+
+
+def _assessment_mode_update_error(
+    current_mode: str,
+    requested_mode: str,
+    mode_locked: bool,
+) -> str:
+    if current_mode == requested_mode or not mode_locked:
+        return ''
+    return (
+        'Режим проверки уже зафиксирован вариантами или '
+        'событиями. Для другого режима создайте новую работу.'
+    )
 
 
 def validate_work_specification_specs(

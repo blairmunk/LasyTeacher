@@ -12,6 +12,9 @@ from infrastructure.tests.variant_task_factory import create_variant_task
 from students.models import Student, StudentGroup
 from tasks.models import Task
 from works.models import Variant, Work
+from core_logic.value_objects.work_assessment import (
+    WORK_ASSESSMENT_MODE_AGGREGATE,
+)
 
 
 class MarkModelValidationTests(TestCase):
@@ -197,6 +200,33 @@ class GradeParticipationViewTests(TestCase):
             reverse('works:detail', args=[self.work.pk]) + '#generation',
         )
         self.assertContains(response, 'Печать работы')
+
+    def test_aggregate_event_detail_allows_review_without_variants(self):
+        work = Work.objects.create(
+            name='Внешний рабочий лист',
+            assessment_mode=WORK_ASSESSMENT_MODE_AGGREGATE,
+        )
+        event = Event.objects.create(
+            name='Рабочий лист 9Б',
+            work=work,
+            planned_date=timezone.now(),
+            status='completed',
+        )
+        EventParticipation.objects.create(
+            event=event,
+            student=self.student,
+            status='completed',
+        )
+
+        response = self.client.get(reverse('events:detail', args=[event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['variants_required'])
+        self.assertTrue(response.context['all_variants_assigned'])
+        self.assertTrue(response.context['can_review'])
+        self.assertContains(response, 'Варианты не требуются')
+        self.assertNotContains(response, 'Назначить варианты')
+        self.assertNotContains(response, 'Печать работы')
 
     def test_remedial_event_detail_links_to_batch_remedial_printing(self):
         remedial_work = Work.objects.create(

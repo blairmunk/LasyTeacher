@@ -174,10 +174,22 @@ class ReviewService:
     ) -> EventReviewData:
         total_participants = len(participations)
         has_participants = total_participants > 0
+        variants_required = (
+            event.work.requires_variants
+            if event is not None and event.work is not None
+            else True
+        )
         variants_assigned = any(row.variant is not None for row in participations)
         all_variants_assigned = (
             has_participants
-            and all(row.variant is not None for row in participations if not row.is_absent)
+            and (
+                not variants_required
+                or all(
+                    row.variant is not None
+                    for row in participations
+                    if not row.is_absent
+                )
+            )
         )
 
         if not has_participants:
@@ -188,10 +200,11 @@ class ReviewService:
                 has_participants=False,
                 variants_assigned=False,
                 all_variants_assigned=False,
+                variants_required=variants_required,
                 event=event,
             )
 
-        if not variants_assigned:
+        if variants_required and not variants_assigned:
             return self._blocked_event_review(
                 block_reason='no_variants',
                 participations=participations,
@@ -199,6 +212,7 @@ class ReviewService:
                 has_participants=True,
                 variants_assigned=False,
                 all_variants_assigned=False,
+                variants_required=True,
                 event=event,
             )
 
@@ -225,6 +239,7 @@ class ReviewService:
             has_participants=has_participants,
             variants_assigned=variants_assigned,
             all_variants_assigned=all_variants_assigned,
+            variants_required=variants_required,
             blocked=False,
             block_reason='',
             available_variants=available_variants,
@@ -356,6 +371,7 @@ class ReviewService:
         has_participants: bool,
         variants_assigned: bool,
         all_variants_assigned: bool,
+        variants_required: bool,
         event=None,
     ) -> EventReviewData:
         return EventReviewData(
@@ -363,6 +379,7 @@ class ReviewService:
             has_participants=has_participants,
             variants_assigned=variants_assigned,
             all_variants_assigned=all_variants_assigned,
+            variants_required=variants_required,
             blocked=True,
             block_reason=block_reason,
             available_variants=available_variants,

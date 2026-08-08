@@ -3,6 +3,10 @@ from django.urls import reverse
 from django.core.exceptions import ValidationError
 from core.models import BaseModel
 from core_logic.value_objects.mark_validation import validate_mark_values
+from core_logic.value_objects.work_assessment import (
+    WORK_ASSESSMENT_MODE_CHOICES,
+    WORK_ASSESSMENT_MODE_VARIANT,
+)
 
 def work_scan_upload_path(instance, filename):
     """Путь для загрузки сканов работ"""
@@ -172,6 +176,12 @@ class AttemptSnapshot(BaseModel):
     event_date_snapshot = models.DateTimeField('Дата события (снимок)')
     work_id_snapshot = models.CharField('ID работы (снимок)', max_length=36)
     work_name_snapshot = models.CharField('Работа (снимок)', max_length=200)
+    work_assessment_mode_snapshot = models.CharField(
+        'Режим оценивания работы (снимок)',
+        max_length=20,
+        choices=WORK_ASSESSMENT_MODE_CHOICES,
+        default=WORK_ASSESSMENT_MODE_VARIANT,
+    )
     variant_id_snapshot = models.CharField(
         'ID варианта (снимок)',
         max_length=36,

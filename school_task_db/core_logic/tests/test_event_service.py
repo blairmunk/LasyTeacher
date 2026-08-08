@@ -1,11 +1,15 @@
 from unittest import TestCase
 
 from core_logic.entities.event import (
+    EventEntity,
     EventParticipationRow,
     EventStudentRef,
     EventVariantRef,
 )
 from core_logic.services.event_service import EventService
+from core_logic.value_objects.work_assessment import (
+    WORK_ASSESSMENT_MODE_AGGREGATE,
+)
 
 
 class EventServiceTests(TestCase):
@@ -60,6 +64,38 @@ class EventServiceTests(TestCase):
         self.assertEqual(detail.status_steps[2].code, 'completed')
         self.assertTrue(detail.status_steps[2].current)
         self.assertEqual(detail.status_transitions[0].new_status, 'reviewing')
+
+    def test_aggregate_work_can_be_reviewed_without_variants(self):
+        event = EventEntity(
+            id='event-1',
+            name='Рабочий лист',
+            work_id='work-1',
+            work_name='Материал вне базы',
+            status='completed',
+            work_assessment_mode=WORK_ASSESSMENT_MODE_AGGREGATE,
+        )
+        detail = EventService().build_detail_data(
+            event=event,
+            status=event.status,
+            has_work=True,
+            participations=[
+                EventParticipationRow(
+                    pk='p1',
+                    status='completed',
+                    student=EventStudentRef(
+                        pk='s1',
+                        last_name='Иванов',
+                        first_name='Иван',
+                    ),
+                ),
+            ],
+            available_variants=[],
+        )
+
+        self.assertFalse(detail.variants_required)
+        self.assertFalse(detail.some_variants_assigned)
+        self.assertTrue(detail.all_variants_assigned)
+        self.assertTrue(detail.can_review)
 
     def test_status_transition_rules_and_labels_are_pure(self):
         service = EventService()

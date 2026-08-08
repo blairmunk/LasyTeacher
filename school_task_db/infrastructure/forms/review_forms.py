@@ -19,6 +19,7 @@ class ReviewFormAdapter:
             'has_participants': review_data.has_participants,
             'variants_assigned': review_data.variants_assigned,
             'all_variants_assigned': review_data.all_variants_assigned,
+            'variants_required': review_data.variants_required,
             'blocked': review_data.blocked,
             'block_reason': review_data.block_reason,
             'available_variants': review_data.available_variants,

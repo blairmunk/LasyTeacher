@@ -49,6 +49,7 @@ class DjangoAttemptSnapshotRepository(IAttemptSnapshotRepository):
                 if variant and variant.work_name_snapshot
                 else event.work.name
             ),
+            work_assessment_mode_snapshot=event.work.assessment_mode,
             variant_id_snapshot=str(participation.variant_id or ''),
             variant_number_snapshot=variant.number if variant else None,
             score=mark.score,

@@ -15,6 +15,7 @@ class AssignEventVariantsRequest:
 @dataclass(frozen=True)
 class AssignEventVariantsResult:
     assigned_count: int
+    status: str = 'assigned'
 
 
 class AssignEventVariantsUseCase:
@@ -25,6 +26,17 @@ class AssignEventVariantsUseCase:
         self,
         request: AssignEventVariantsRequest,
     ) -> AssignEventVariantsResult:
+        event = self.event_repo.get_by_id(request.event_id)
+        if event is None:
+            return AssignEventVariantsResult(
+                assigned_count=0,
+                status='not_found',
+            )
+        if not event.requires_variants:
+            return AssignEventVariantsResult(
+                assigned_count=0,
+                status='variants_not_required',
+            )
         assignments = {
             str(participation_id): str(variant_id)
             for participation_id, variant_id in request.assignments.items()

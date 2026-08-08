@@ -15,6 +15,10 @@ from core_logic.value_objects.work_content_plan import (
     WORK_CONTENT_TEXT,
     WORK_CONTENT_THEORY,
 )
+from core_logic.value_objects.work_assessment import (
+    WORK_ASSESSMENT_MODE_CHOICES,
+    WORK_ASSESSMENT_MODE_VARIANT,
+)
 
 
 class Work(BaseModel):
@@ -36,6 +40,12 @@ class Work(BaseModel):
     variant_counter = models.PositiveIntegerField('Счётчик вариантов', default=0)
     work_type = models.CharField('Тип работы', max_length=50,
                                  choices=WORK_TYPE_CHOICES, default='test')
+    assessment_mode = models.CharField(
+        'Режим оценивания',
+        max_length=20,
+        choices=WORK_ASSESSMENT_MODE_CHOICES,
+        default=WORK_ASSESSMENT_MODE_VARIANT,
+    )
     max_score = models.PositiveIntegerField(
         'Максимальный балл', default=0,
         help_text='Шкала нормировки. 0 = сумма весов (без нормировки)'

@@ -13,7 +13,7 @@
             </h3>
             <small class="text-muted">
                 {{ participation.event.name }} •
-                {% if participation.variant %}Вариант {{ participation.variant.number }}{% endif %}
+                {% if participation.variant %}Вариант {{ participation.variant.number }}{% else %}Итоговая проверка{% endif %}
             </small>
         </div>
         <a href="{% url 'review:event-review' participation.event.pk %}" class="btn btn-secondary btn-sm">
@@ -123,8 +123,13 @@
                 </div>
                 {% endfor %}
                 {% else %}
-                <div class="alert alert-warning">
-                    <i class="fas fa-info-circle"></i> Вариант не назначен или не содержит заданий.
+                <div class="alert alert-light border">
+                    <i class="fas fa-info-circle"></i>
+                    {% if participation.event.work.requires_variants %}
+                    Вариант не назначен или не содержит оцениваемых заданий.
+                    {% else %}
+                    Работа оценивается целиком. Укажите итоговые баллы, оценку и комментарии.
+                    {% endif %}
                 </div>
                 {% endif %}
             </div>

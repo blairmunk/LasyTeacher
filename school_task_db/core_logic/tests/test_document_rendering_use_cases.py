@@ -11,6 +11,7 @@ from core_logic.entities.document_rendering import (
     DocumentRenderResult,
     DOCUMENT_RENDER_STATUS_NOT_PERSONALIZED,
     DOCUMENT_RENDER_STATUS_PERSONAL_REMEDIAL_REQUIRED,
+    DOCUMENT_RENDER_STATUS_VARIANTS_NOT_REQUIRED,
     DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
     GeneratedDocument,
     GeneratedDocumentFile,
@@ -47,6 +48,10 @@ from core_logic.value_objects.document_recipes import (
     PAGE_BREAK_SECTION,
     SHORT_SOLUTIONS_SECTION,
     TASK_LIST_SECTION,
+)
+from core_logic.value_objects.work_assessment import (
+    WORK_ASSESSMENT_MODE_AGGREGATE,
+    WORK_ASSESSMENT_MODE_VARIANT,
 )
 
 
@@ -97,12 +102,14 @@ class FakeWorkRepository:
         remedial_variant_ids=None,
         remedial_sheet_data=None,
         work_type='test',
+        assessment_mode=WORK_ASSESSMENT_MODE_VARIANT,
     ):
         self.variant_type = variant_type
         self.variant_type_request = None
         self.work_name = work_name
         self.work_name_request = None
         self.work_type = work_type
+        self.assessment_mode = assessment_mode
         self.remedial_variant_ids = remedial_variant_ids or []
         self.remedial_variant_ids_request = None
         self.remedial_sheet_source = (
@@ -126,6 +133,7 @@ class FakeWorkRepository:
             pk=work_id,
             name=self.work_name,
             work_type=self.work_type,
+            assessment_mode=self.assessment_mode,
         )
 
     def get_variant_type(self, variant_id):
@@ -266,6 +274,28 @@ class DocumentRenderingUseCaseTests(TestCase):
         self.assertEqual(
             result.status,
             DOCUMENT_RENDER_STATUS_PERSONAL_REMEDIAL_REQUIRED,
+        )
+        self.assertIsNone(service.render_request)
+
+    def test_render_work_document_rejects_aggregate_work(self):
+        service = FakeDocumentEngine()
+        use_case = RenderWorkDocumentUseCase(
+            render_document_from_recipe_use_case=recipe_renderer(service),
+            work_repo=FakeWorkRepository(
+                assessment_mode=WORK_ASSESSMENT_MODE_AGGREGATE,
+            ),
+        )
+
+        result = use_case.execute(
+            RenderWorkDocumentRequest(
+                work_id='work-1',
+                options=WorkDocumentRenderOptions(renderer_type='pdf'),
+            )
+        )
+
+        self.assertEqual(
+            result.status,
+            DOCUMENT_RENDER_STATUS_VARIANTS_NOT_REQUIRED,
         )
         self.assertIsNone(service.render_request)
 

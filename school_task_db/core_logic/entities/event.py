@@ -3,6 +3,11 @@
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, NamedTuple, Optional
 
+from core_logic.value_objects.work_assessment import (
+    WORK_ASSESSMENT_MODE_VARIANT,
+    work_requires_variants,
+)
+
 
 def _same_pk(left_id: str, other: Any) -> bool:
     other_id = getattr(other, 'pk', getattr(other, 'id', None))
@@ -16,6 +21,7 @@ class WorkSummary:
     work_type: str = ''
     work_type_display: str = ''
     variant_count: int = 0
+    assessment_mode: str = WORK_ASSESSMENT_MODE_VARIANT
 
     @property
     def pk(self) -> str:
@@ -27,6 +33,10 @@ class WorkSummary:
 
     def count(self) -> int:
         return self.variant_count
+
+    @property
+    def requires_variants(self) -> bool:
+        return work_requires_variants(self.assessment_mode)
 
     def __eq__(self, other):
         return _same_pk(self.id, other)
@@ -98,6 +108,7 @@ class EventEntity:
     work_type_display: str = ''
     work_variant_count: int = 0
     participant_group_names: str = ''
+    work_assessment_mode: str = WORK_ASSESSMENT_MODE_VARIANT
 
     @property
     def pk(self) -> str:
@@ -111,7 +122,12 @@ class EventEntity:
             work_type=self.work_type,
             work_type_display=self.work_type_display,
             variant_count=self.work_variant_count,
+            assessment_mode=self.work_assessment_mode,
         )
+
+    @property
+    def requires_variants(self) -> bool:
+        return work_requires_variants(self.work_assessment_mode)
 
     @property
     def course(self):
@@ -241,6 +257,7 @@ class EventDetailData:
     participations: List[EventParticipationRow] = field(default_factory=list)
     some_variants_assigned: bool = False
     all_variants_assigned: bool = False
+    variants_required: bool = True
     can_review: bool = False
     status_color: str = 'secondary'
     status_steps: List[EventStatusStep] = field(default_factory=list)

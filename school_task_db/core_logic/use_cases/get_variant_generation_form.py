@@ -24,6 +24,11 @@ class GetVariantGenerationFormUseCase:
         work = self.work_repo.get_work_generation_target(str(work_id))
         if not work:
             return VariantGenerationFormData(work=None, status='not_found')
+        if not work.requires_variants:
+            return VariantGenerationFormData(
+                work=work,
+                status='variants_not_required',
+            )
         return VariantGenerationFormData(
             work=work,
             work_groups=self.composition_service.build_generation_groups(

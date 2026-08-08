@@ -48,6 +48,7 @@ class DjangoEventRepository(IEventRepository):
                     name=event.work.name,
                     work_type=event.work.work_type,
                     work_type_display=event.work.get_work_type_display(),
+                    assessment_mode=event.work.assessment_mode,
                 ) if event.work else None,
                 course=CourseSummary(
                     pk=str(event.course.pk),
@@ -205,6 +206,7 @@ class DjangoEventRepository(IEventRepository):
             work_type_display=event.work.get_work_type_display(),
             work_variant_count=event.work.variant_set.count(),
             participant_group_names=participant_group_names,
+            work_assessment_mode=event.work.assessment_mode,
         )
 
     def get_participation_ref(self, participation_id: str):

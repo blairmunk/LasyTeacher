@@ -10,8 +10,12 @@ from core_logic.entities.review import (
     ReviewTaskRef,
     ReviewVariantRef,
     ReviewVariantTaskRef,
+    ReviewWorkRef,
 )
 from core_logic.services.review_service import ReviewService
+from core_logic.value_objects.work_assessment import (
+    WORK_ASSESSMENT_MODE_AGGREGATE,
+)
 
 
 class ReviewServiceTests(TestCase):
@@ -201,6 +205,47 @@ class ReviewServiceTests(TestCase):
         self.assertEqual(review.progress_percentage, 50)
         self.assertEqual(review.avg_score, 4)
         self.assertEqual(review.score_distribution[4], 1)
+
+    def test_aggregate_work_review_does_not_require_variants(self):
+        event = ReviewEventRef(
+            pk='event-1',
+            name='Рабочий лист',
+            work=ReviewWorkRef(
+                pk='work-1',
+                name='Материал вне базы',
+                assessment_mode=WORK_ASSESSMENT_MODE_AGGREGATE,
+            ),
+        )
+        student = ReviewStudentRef(
+            pk='s1',
+            last_name='Иванов',
+            first_name='Иван',
+        )
+        participation = ReviewParticipationRef(
+            pk='p1',
+            student=student,
+            event=event,
+        )
+
+        review = ReviewService().build_event_review(
+            event=event,
+            participations=[
+                EventReviewParticipationRow(
+                    participation=participation,
+                    mark=None,
+                    has_mark=False,
+                    is_absent=False,
+                    student=student,
+                    variant=None,
+                ),
+            ],
+            available_variants=[],
+        )
+
+        self.assertFalse(review.blocked)
+        self.assertFalse(review.variants_required)
+        self.assertFalse(review.variants_assigned)
+        self.assertTrue(review.all_variants_assigned)
 
     def test_build_task_score_rows_uses_existing_scores_and_variant_weights(self):
         service = ReviewService()

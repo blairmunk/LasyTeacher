@@ -11,6 +11,7 @@ from core_logic.entities.document_rendering import (
     DOCUMENT_RENDER_STATUS_NOT_PERSONALIZED,
     DOCUMENT_RENDER_STATUS_NOT_REMEDIAL,
     DOCUMENT_RENDER_STATUS_PERSONAL_REMEDIAL_REQUIRED,
+    DOCUMENT_RENDER_STATUS_VARIANTS_NOT_REQUIRED,
     DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
     GENERATED_FILE_STATUS_NOT_FOUND,
     GENERATED_FILE_STATUS_UNSUPPORTED_TYPE,
@@ -50,6 +51,14 @@ def render_work_ajax(request, work_id):
                 container.work_form_adapter.render_work_error_payload(
                     'Для работы над ошибками используйте печать '
                     'персональных листов.',
+                ),
+                status=400,
+            )
+        if result.status == DOCUMENT_RENDER_STATUS_VARIANTS_NOT_REQUIRED:
+            return JsonResponse(
+                container.work_form_adapter.render_work_error_payload(
+                    'Для этой работы документ не формируется: '
+                    'используется внешний материал.',
                 ),
                 status=400,
             )

@@ -7,6 +7,7 @@ from core_logic.entities.document_rendering import (
     DOCUMENT_RENDER_STATUS_NOT_PERSONALIZED,
     DOCUMENT_RENDER_STATUS_NOT_REMEDIAL,
     DOCUMENT_RENDER_STATUS_PERSONAL_REMEDIAL_REQUIRED,
+    DOCUMENT_RENDER_STATUS_VARIANTS_NOT_REQUIRED,
     DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
 )
 from core_logic.use_cases.render_remedial_sheet_document import (
@@ -68,6 +69,8 @@ def raise_for_work_document_render_error(
         raise CommandError(
             'Remedial works require personal remedial sheet rendering'
         )
+    if result.status == DOCUMENT_RENDER_STATUS_VARIANTS_NOT_REQUIRED:
+        raise CommandError('Aggregate works use external material')
     if result.status == DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER:
         raise CommandError(f'Unsupported renderer: {renderer_type}')
     if result.status != DOCUMENT_RENDER_STATUS_GENERATED:

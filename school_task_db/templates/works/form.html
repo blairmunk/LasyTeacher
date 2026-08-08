@@ -21,21 +21,27 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-5 mb-3">
+                        <div class="col-md-6 mb-3">
                             <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
                             {{ form.name }}
                             {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors }}</div>{% endif %}
                         </div>
-                        <div class="col-md-3 mb-3">
+                        <div class="col-md-6 mb-3">
                             <label for="{{ form.work_type.id_for_label }}" class="form-label">{{ form.work_type.label }}</label>
                             {{ form.work_type }}
                         </div>
-                        <div class="col-md-2 mb-3">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.assessment_mode.id_for_label }}" class="form-label">{{ form.assessment_mode.label }}</label>
+                            {{ form.assessment_mode }}
+                            {% if form.assessment_mode.help_text %}<div class="form-text">{{ form.assessment_mode.help_text }}</div>{% endif %}
+                            {% if form.assessment_mode.errors %}<div class="text-danger small">{{ form.assessment_mode.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-3 mb-3">
                             <label for="{{ form.duration.id_for_label }}" class="form-label">{{ form.duration.label }}</label>
                             {{ form.duration }}
                             <div class="form-text">минут</div>
                         </div>
-                        <div class="col-md-2 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label for="{{ form.max_score.id_for_label }}" class="form-label">{{ form.max_score.label }}</label>
                             {{ form.max_score }}
                             <div class="form-text">баллов</div>

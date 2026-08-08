@@ -96,16 +96,24 @@ class EventService:
             participation.variant is not None
             for participation in active_participations
         )
+        variants_required = (
+            event.requires_variants
+            if event is not None
+            else True
+        )
         all_variants_assigned = (
             has_participants
-            and all(
-                participation.variant is not None
-                for participation in active_participations
+            and (
+                not variants_required
+                or all(
+                    participation.variant is not None
+                    for participation in active_participations
+                )
             )
         )
         can_review = (
             has_participants
-            and some_variants_assigned
+            and (some_variants_assigned or not variants_required)
             and status in ('completed', 'reviewing', 'graded')
         )
 
@@ -114,6 +122,7 @@ class EventService:
             participations=participations,
             some_variants_assigned=some_variants_assigned,
             all_variants_assigned=all_variants_assigned,
+            variants_required=variants_required,
             can_review=can_review,
             status_color=self.status_color(status),
             status_steps=self.status_steps(status),

@@ -9,6 +9,10 @@ from core_logic.value_objects.review_session import (
     review_session_is_completed,
     review_session_progress_percentage,
 )
+from core_logic.value_objects.work_assessment import (
+    WORK_ASSESSMENT_MODE_VARIANT,
+    work_requires_variants,
+)
 
 
 @dataclass(frozen=True)
@@ -41,9 +45,14 @@ class ReviewWorkRef:
     name: str
     work_type: str = ''
     work_type_display: str = ''
+    assessment_mode: str = WORK_ASSESSMENT_MODE_VARIANT
 
     def get_work_type_display(self) -> str:
         return self.work_type_display or self.work_type
+
+    @property
+    def requires_variants(self) -> bool:
+        return work_requires_variants(self.assessment_mode)
 
 
 @dataclass(frozen=True)
@@ -255,6 +264,7 @@ class EventReviewData:
     has_participants: bool = False
     variants_assigned: bool = False
     all_variants_assigned: bool = False
+    variants_required: bool = True
     blocked: bool = False
     block_reason: str = ''
     available_variants: List[ReviewVariantRef] = field(default_factory=list)

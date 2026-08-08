@@ -7,12 +7,35 @@ from core_logic.value_objects.task_print_settings import (
     TASK_RENDER_MODE_TASK_ONLY,
 )
 from works.models import Work, WorkAnalogGroup, WorkContentBlock
+from core_logic.value_objects.work_assessment import WORK_ASSESSMENT_MODE_VARIANT
 
 
 class WorkForm(forms.ModelForm):
+    assessment_mode = forms.ChoiceField(
+        label='Проверка работы',
+        choices=Work._meta.get_field('assessment_mode').choices,
+        help_text=(
+            'Для распечатанного материала вне базы выберите итоговую оценку: '
+            'варианты и задания назначать не потребуется.'
+        ),
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        required=False,
+    )
+
+    def clean_assessment_mode(self):
+        return self.cleaned_data.get(
+            'assessment_mode',
+        ) or WORK_ASSESSMENT_MODE_VARIANT
+
     class Meta:
         model = Work
-        fields = ['name', 'work_type', 'duration', 'max_score']
+        fields = [
+            'name',
+            'work_type',
+            'assessment_mode',
+            'duration',
+            'max_score',
+        ]
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'work_type': forms.Select(attrs={'class': 'form-select'}),

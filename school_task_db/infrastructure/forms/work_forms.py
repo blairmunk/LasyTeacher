@@ -71,6 +71,7 @@ class WorkFormAdapter:
             work_id=work_id,
             name=form.cleaned_data['name'],
             work_type=form.cleaned_data.get('work_type', 'test'),
+            assessment_mode=form.cleaned_data['assessment_mode'],
             duration=form.cleaned_data.get('duration') or 45,
             max_score=form.cleaned_data.get('max_score') or 0,
         )
@@ -79,6 +80,7 @@ class WorkFormAdapter:
         return {
             'name': work.name,
             'work_type': work.work_type,
+            'assessment_mode': work.assessment_mode,
             'duration': work.duration,
             'max_score': work.max_score,
         }

@@ -63,6 +63,10 @@ from core_logic.use_cases.sync_work_analog_groups import (
     SyncWorkAnalogGroupsRequest,
     SyncWorkAnalogGroupsUseCase,
 )
+from core_logic.value_objects.work_assessment import (
+    WORK_ASSESSMENT_MODE_AGGREGATE,
+    WORK_ASSESSMENT_MODE_VARIANT,
+)
 
 
 class FakeQuerySet(list):
@@ -128,6 +132,7 @@ class FakeWorkRepository:
         self.variant_composition_save_statuses = []
         self.orphan_variant_refs = []
         self.created_from_orphans_params = None
+        self.assessment_mode = WORK_ASSESSMENT_MODE_VARIANT
         self.create_from_orphans_result = CreatedWorkFromOrphanVariantsRef(
             work_id='created-work',
             variant_count=0,
@@ -275,6 +280,7 @@ class FakeWorkRepository:
             duration=45,
             max_score=0,
             variant_counter=len(self.variant_composition_input_requests) - 1,
+            assessment_mode=self.assessment_mode,
         )
 
     def save_variant_composition_plan(
@@ -742,6 +748,22 @@ class WorkDetailTests(TestCase):
         self.assertEqual(result.status, 'not_found')
         self.assertEqual(result.created_count, 0)
         self.assertEqual(repo.variant_composition_input_requests, ['missing'])
+        self.assertIsNone(repo.generated_variants_request)
+
+    def test_compose_work_variants_rejects_aggregate_work(self):
+        repo = FakeWorkRepository()
+        repo.assessment_mode = WORK_ASSESSMENT_MODE_AGGREGATE
+        use_case = ComposeWorkVariantsUseCase(
+            work_repo=repo,
+            transaction_manager=FakeTransactionManager(),
+        )
+
+        result = use_case.execute(
+            ComposeWorkVariantsRequest(work_id='work-1', count=3)
+        )
+
+        self.assertEqual(result.status, 'variants_not_required')
+        self.assertEqual(result.created_count, 0)
         self.assertIsNone(repo.generated_variants_request)
 
     def test_compose_work_variants_use_case_retries_counter_conflict(self):

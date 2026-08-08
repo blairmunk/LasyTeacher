@@ -160,6 +160,7 @@ class DjangoWorkRepository(
                 variant_count=work.variant_count,
                 work_type=work.work_type,
                 work_type_display=work.get_work_type_display(),
+                assessment_mode=work.assessment_mode,
             )
             for work in queryset.order_by('-created_at')
         ]
@@ -211,6 +212,7 @@ class DjangoWorkRepository(
             'pk',
             'name',
             'work_type',
+            'assessment_mode',
         ).first()
         if work is None:
             return None
@@ -218,6 +220,7 @@ class DjangoWorkRepository(
             pk=str(work.pk),
             name=work.name,
             work_type=work.work_type,
+            assessment_mode=work.assessment_mode,
         )
 
     def get_work_generation_target(self, work_id: str):
@@ -230,6 +233,7 @@ class DjangoWorkRepository(
             name=work.name,
             duration=work.duration,
             variant_counter=work.variant_counter,
+            assessment_mode=work.assessment_mode,
         )
 
     def get_variant_generation_group_sources(self, work_id: str):
@@ -264,6 +268,7 @@ class DjangoWorkRepository(
             variant_count=Variant.objects.filter(work_id=work_id).count(),
             created_at=work.created_at,
             updated_at=work.updated_at,
+            assessment_mode=work.assessment_mode,
         )
 
     def get_detail_variants(self, work_id: str):
@@ -800,6 +805,7 @@ class DjangoWorkRepository(
             duration=work.duration,
             max_score=work.max_score,
             variant_counter=work.variant_counter,
+            assessment_mode=work.assessment_mode,
             spec_rows=tuple(
                 self._variant_composition_spec_source_row(work_group)
                 for work_group in work_groups
@@ -1026,6 +1032,7 @@ class DjangoWorkRepository(
             duration=params.duration,
             max_score=params.max_score,
             variant_counter=params.variant_counter,
+            assessment_mode=params.assessment_mode,
         )
         return str(work.pk)
 
@@ -1038,6 +1045,7 @@ class DjangoWorkRepository(
         work.work_type = params.work_type
         work.duration = params.duration
         work.max_score = params.max_score
+        work.assessment_mode = params.assessment_mode
         work.save()
         return True
 
@@ -1052,6 +1060,7 @@ class DjangoWorkRepository(
                 duration=params.work.duration,
                 max_score=params.work.max_score,
                 variant_counter=params.work.variant_counter,
+                assessment_mode=params.work.assessment_mode,
             )
             WorkAnalogGroup.objects.bulk_create([
                 WorkAnalogGroup(

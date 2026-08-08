@@ -21,6 +21,7 @@ class EventFormAdapter:
             'participations': detail.participations,
             'some_variants_assigned': detail.some_variants_assigned,
             'all_variants_assigned': detail.all_variants_assigned,
+            'variants_required': detail.variants_required,
             'can_review': detail.can_review,
             'status_color': detail.status_color,
             'status_steps': detail.status_steps,

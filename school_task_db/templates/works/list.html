@@ -86,6 +86,8 @@
                     <h5 class="card-title mb-2">{{ work.name }}</h5>
                     {% if work.is_remedial %}
                     <span class="badge bg-info align-self-start">РнО</span>
+                    {% elif not work.requires_variants %}
+                    <span class="badge bg-dark align-self-start">Без вариантов</span>
                     {% endif %}
                 </div>
                 <p class="mb-2">

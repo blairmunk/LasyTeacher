@@ -20,6 +20,9 @@ from core_logic.entities.document_rendering import (
 from core_logic.use_cases.get_remedial_sheet_data import (
     GetRemedialSheetDataUseCase,
 )
+from core_logic.value_objects.work_assessment import (
+    WORK_ASSESSMENT_MODE_AGGREGATE,
+)
 from curriculum.models import Topic
 from document_engine.models import PrintSettings
 from events.models import Event, EventParticipation, Mark
@@ -440,6 +443,51 @@ class WorkDetailViewTests(TestCase):
         self.assertEqual(content_block.title, 'Опорная теория')
         self.assertEqual(list(content_block.topics.all()), [self.topic])
         self.assertTrue(content_block.include_subtopics)
+
+    def test_create_view_saves_aggregate_work_without_specification(self):
+        response = self.client.post(
+            reverse('works:create'),
+            {
+                'name': 'Внешний рабочий лист',
+                'work_type': 'practice',
+                'assessment_mode': WORK_ASSESSMENT_MODE_AGGREGATE,
+                'duration': '40',
+                'max_score': '10',
+                'workanaloggroup_set-TOTAL_FORMS': '0',
+                'workanaloggroup_set-INITIAL_FORMS': '0',
+                'workanaloggroup_set-MIN_NUM_FORMS': '0',
+                'workanaloggroup_set-MAX_NUM_FORMS': '1000',
+                'content_blocks-TOTAL_FORMS': '0',
+                'content_blocks-INITIAL_FORMS': '0',
+                'content_blocks-MIN_NUM_FORMS': '0',
+                'content_blocks-MAX_NUM_FORMS': '1000',
+            },
+        )
+
+        work = Work.objects.get(name='Внешний рабочий лист')
+        self.assertRedirects(
+            response,
+            reverse('works:detail', args=[work.pk]),
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(
+            work.assessment_mode,
+            WORK_ASSESSMENT_MODE_AGGREGATE,
+        )
+
+    def test_aggregate_work_detail_hides_variant_actions(self):
+        self.work.assessment_mode = WORK_ASSESSMENT_MODE_AGGREGATE
+        self.work.save(update_fields=['assessment_mode'])
+
+        response = self.client.get(
+            reverse('works:detail', args=[self.work.pk]),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Материал хранится вне базы')
+        self.assertNotContains(response, 'Собрать варианты')
+        self.assertNotContains(response, 'id="generation"')
+        self.assertContains(response, 'Работа проверяется без вариантов')
 
     def test_update_form_exposes_existing_content_blocks(self):
         block = WorkContentBlock.objects.create(

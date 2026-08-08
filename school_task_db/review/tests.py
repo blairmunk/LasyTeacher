@@ -12,6 +12,9 @@ from students.models import Student
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
 from works.models import Variant, Work
+from core_logic.value_objects.work_assessment import (
+    WORK_ASSESSMENT_MODE_AGGREGATE,
+)
 
 
 class ParticipationReviewViewTests(TestCase):
@@ -169,6 +172,64 @@ class ParticipationReviewViewTests(TestCase):
                 checked_participations=0,
             ).exists()
         )
+
+    def test_aggregate_work_can_be_reviewed_and_snapshotted_without_variant(self):
+        work = Work.objects.create(
+            name='Внешний рабочий лист',
+            assessment_mode=WORK_ASSESSMENT_MODE_AGGREGATE,
+        )
+        event = Event.objects.create(
+            name='Рабочий лист 9А',
+            work=work,
+            planned_date=timezone.now(),
+            status='completed',
+        )
+        participation = EventParticipation.objects.create(
+            event=event,
+            student=self.student,
+            status='completed',
+        )
+
+        response = self.client.get(
+            reverse('review:event-review', args=[event.pk]),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['blocked'])
+        self.assertFalse(response.context['variants_required'])
+        self.assertContains(response, 'Не требуется')
+        self.assertContains(
+            response,
+            reverse('review:participation-review', args=[participation.pk]),
+        )
+
+        response = self.client.post(
+            reverse('review:participation-review', args=[participation.pk]),
+            {
+                'score': '4',
+                'points': '8',
+                'max_points': '10',
+                'teacher_comment': 'Материал усвоен',
+                'mistakes_analysis': 'Ошибки в оформлении',
+                'recommendations': 'Повторить правила записи',
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('review:event-review', args=[event.pk]),
+            fetch_redirect_response=False,
+        )
+        mark = Mark.objects.get(participation=participation)
+        attempt = AttemptSnapshot.objects.get(mark=mark)
+        self.assertEqual(mark.score, 4)
+        self.assertEqual(mark.teacher_comment, 'Материал усвоен')
+        self.assertEqual(
+            attempt.work_assessment_mode_snapshot,
+            WORK_ASSESSMENT_MODE_AGGREGATE,
+        )
+        self.assertFalse(attempt.variant_id_snapshot)
+        self.assertEqual(attempt.task_results.count(), 0)
 
     def test_post_grades_participation_through_use_case(self):
         response = self.client.post(

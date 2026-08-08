@@ -26,13 +26,13 @@
             </a>
             {% endif %}
             
-            {% if event.work and event.status == 'graded' or event.status == 'closed' or event.status == 'reviewing' %}
+            {% if event.work.requires_variants and event.status == 'graded' or event.work.requires_variants and event.status == 'closed' or event.work.requires_variants and event.status == 'reviewing' %}
             <a href="{% url 'students:remedial-from-event' event.pk %}" class="btn btn-info btn-sm">
                 <i class="fas fa-first-aid"></i> Работа над ошибками
             </a>
             {% endif %}
 
-            {% if event.work %}
+            {% if event.work and event.work.requires_variants %}
                 {% if event.work.work_type == 'remedial' %}
                 <a href="{% url 'works:detail' event.work.pk %}#remedial-batch" class="btn btn-outline-info btn-sm">
                     <i class="fas fa-print"></i> Печать листов ошибок
@@ -141,7 +141,12 @@
                         {% endif %}
 
                         <!-- 2. Варианты -->
-                        {% if all_variants_assigned %}
+                        {% if not variants_required %}
+                        <div class="list-group-item py-2 text-success">
+                            <i class="fas fa-check-circle"></i>
+                            <strong>2.</strong> Варианты не требуются
+                        </div>
+                        {% elif all_variants_assigned %}
                         <div class="list-group-item py-2 text-success">
                             <i class="fas fa-check-circle"></i>
                             <strong>2.</strong> Варианты назначены
@@ -205,7 +210,7 @@
                 <a href="{% url 'events:add-participants' event.pk %}" class="btn btn-success btn-sm">
                     <i class="fas fa-user-plus"></i> Добавить
                 </a>
-                {% if participations|length > 0 %}
+                {% if participations|length > 0 and variants_required %}
                 <a href="{% url 'events:assign-variants' event.pk %}" class="btn btn-primary btn-sm">
                     <i class="fas fa-random"></i> Варианты
                 </a>
@@ -227,7 +232,7 @@
                 </thead>
                 <tbody>
                     {% for p in participations %}
-                    <tr class="{% if p.status == 'absent' %}table-secondary{% elif p.mark_obj and p.mark_obj.score %}{% elif not p.variant %}table-light{% endif %}">
+                    <tr class="{% if p.status == 'absent' %}table-secondary{% elif p.mark_obj and p.mark_obj.score %}{% elif variants_required and not p.variant %}table-light{% endif %}">
                         <td class="text-muted">{{ forloop.counter }}</td>
                         <td>
                             <a href="{% url 'students:detail' p.student.pk %}" class="text-decoration-none">
@@ -238,7 +243,9 @@
                             {% endif %}
                         </td>
                         <td class="text-center">
-                            {% if p.variant %}
+                            {% if not variants_required %}
+                            <span class="text-muted">Не требуется</span>
+                            {% elif p.variant %}
                             <span class="badge bg-secondary">В-{{ p.variant.number }}</span>
                             {% elif available_variants %}
                             <form method="post" action="{% url 'events:assign-single-variant' event.pk %}"
@@ -265,7 +272,7 @@
                                 <span class="badge bg-secondary">Отсутствует</span>
                             {% elif p.mark_obj and p.mark_obj.score %}
                                 <span class="badge bg-success">Проверено</span>
-                            {% elif not p.variant %}
+                            {% elif variants_required and not p.variant %}
                                 <span class="badge bg-light text-dark">Нет варианта</span>
                             {% else %}
                                 <span class="badge bg-warning text-dark">Ожидает</span>

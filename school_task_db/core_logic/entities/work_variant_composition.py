@@ -13,6 +13,9 @@ from core_logic.value_objects.work_content_plan import (
     WORK_CONTENT_TEXT,
     WORK_CONTENT_THEORY,
 )
+from core_logic.value_objects.work_assessment import (
+    WORK_ASSESSMENT_MODE_VARIANT,
+)
 
 
 @dataclass(frozen=True)
@@ -129,6 +132,7 @@ class WorkVariantCompositionSource:
     duration: int
     max_score: int
     variant_counter: int
+    assessment_mode: str = WORK_ASSESSMENT_MODE_VARIANT
     spec_rows: Tuple[WorkVariantSpecSourceRow, ...] = field(
         default_factory=tuple,
     )

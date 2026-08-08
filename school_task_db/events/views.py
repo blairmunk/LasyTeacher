@@ -199,6 +199,9 @@ def assign_variants(request, event_id):
     )
     if assignment_data.status == 'not_found':
         raise Http404("Событие не найдено")
+    if assignment_data.status == 'variants_not_required':
+        messages.info(request, 'Для этой работы варианты не используются.')
+        return redirect('events:detail', pk=event_id)
     event = assignment_data.event
 
     if request.method == 'POST':
@@ -293,6 +296,8 @@ def assign_single_variant(request, event_id):
         )
     elif result.error == 'not_found':
         raise Http404("Событие не найдено")
+    elif result.error == 'variants_not_required':
+        messages.info(request, 'Для этой работы варианты не используются.')
     else:
         messages.error(request, 'Не указан вариант или участник')
 

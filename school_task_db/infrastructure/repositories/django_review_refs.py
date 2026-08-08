@@ -25,6 +25,7 @@ def review_event_ref(event) -> ReviewEventRef:
                 name=event.work.name,
                 work_type=event.work.work_type,
                 work_type_display=event.work.get_work_type_display(),
+                assessment_mode=event.work.assessment_mode,
             )
             if event.work_id
             else None
@@ -104,4 +105,3 @@ def review_session_ref(session) -> ReviewSessionRef:
         started_at=session.started_at,
         finished_at=session.finished_at,
     )
-

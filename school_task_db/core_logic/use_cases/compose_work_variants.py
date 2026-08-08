@@ -10,6 +10,7 @@ from core_logic.interfaces.transaction_manager import ITransactionManager
 from core_logic.services.work_variant_composition_service import (
     WorkVariantCompositionService,
 )
+from core_logic.value_objects.work_assessment import work_requires_variants
 
 
 MAX_COMPOSITION_ATTEMPTS = 3
@@ -49,6 +50,13 @@ class ComposeWorkVariantsUseCase:
                     return ComposeWorkVariantsResult(
                         created_count=0,
                         status='not_found',
+                    )
+                if not work_requires_variants(
+                    composition_source.assessment_mode,
+                ):
+                    return ComposeWorkVariantsResult(
+                        created_count=0,
+                        status='variants_not_required',
                     )
                 composition_input = self.composition_service.build_input(
                     composition_source,

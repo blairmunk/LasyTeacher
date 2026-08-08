@@ -7,6 +7,7 @@ from core_logic.entities.document_rendering import (
     DOCUMENT_RENDER_STATUS_GENERATED,
     DOCUMENT_RENDER_STATUS_NOT_FOUND,
     DOCUMENT_RENDER_STATUS_PERSONAL_REMEDIAL_REQUIRED,
+    DOCUMENT_RENDER_STATUS_VARIANTS_NOT_REQUIRED,
     DocumentRenderResult,
 )
 from core_logic.interfaces.presentation_profile_repo import (
@@ -66,6 +67,12 @@ class RenderWorkDocumentUseCase:
         if work.work_type == 'remedial':
             return DocumentRenderResult(
                 status=DOCUMENT_RENDER_STATUS_PERSONAL_REMEDIAL_REQUIRED,
+                renderer_type=renderer_type,
+                source_name=work.name,
+            )
+        if not work.requires_variants:
+            return DocumentRenderResult(
+                status=DOCUMENT_RENDER_STATUS_VARIANTS_NOT_REQUIRED,
                 renderer_type=renderer_type,
                 source_name=work.name,
             )

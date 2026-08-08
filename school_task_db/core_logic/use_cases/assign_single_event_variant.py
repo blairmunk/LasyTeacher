@@ -29,10 +29,16 @@ class AssignSingleEventVariantUseCase:
         self,
         request: AssignSingleEventVariantRequest,
     ) -> AssignSingleEventVariantResult:
-        if self.event_repo.get_event_status(request.event_id) is None:
+        event = self.event_repo.get_by_id(request.event_id)
+        if event is None:
             return AssignSingleEventVariantResult(
                 success=False,
                 error='not_found',
+            )
+        if not event.requires_variants:
+            return AssignSingleEventVariantResult(
+                success=False,
+                error='variants_not_required',
             )
 
         if not request.participation_id or not request.variant_id:

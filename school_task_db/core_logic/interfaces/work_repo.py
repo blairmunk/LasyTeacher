@@ -9,6 +9,10 @@ from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_ANY,
     TASK_RENDER_MODE_TASK_ONLY,
 )
+from core_logic.value_objects.work_assessment import (
+    WORK_ASSESSMENT_MODE_VARIANT,
+    validate_work_assessment_mode,
+)
 
 
 @dataclass(frozen=True)
@@ -19,6 +23,10 @@ class CreateWorkParams:
     max_score: int = 0
     variant_counter: int = 0
     work_id: str = ''
+    assessment_mode: str = WORK_ASSESSMENT_MODE_VARIANT
+
+    def __post_init__(self):
+        validate_work_assessment_mode(self.assessment_mode)
 
 
 @dataclass(frozen=True)

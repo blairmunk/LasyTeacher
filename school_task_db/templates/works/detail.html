@@ -8,14 +8,19 @@
         <div>
             <h2 class="mb-1">{{ work.name }}</h2>
             <span class="badge bg-secondary">{{ work.work_type_display }}</span>
+            <span class="badge {% if work.requires_variants %}bg-light text-dark border{% else %}bg-dark{% endif %}">
+                {{ work.assessment_mode_display }}
+            </span>
         </div>
         <div class="btn-group">
             <a href="{% url 'works:update' work.pk %}" class="btn btn-outline-primary">
                 <i class="fas fa-edit"></i> Редактировать
             </a>
+            {% if work.requires_variants %}
             <a href="{% url 'works:compose-variants' work.pk %}" class="btn btn-success">
                 <i class="fas fa-random"></i> Собрать варианты
             </a>
+            {% endif %}
             <a href="{% url 'works:list' %}" class="btn btn-secondary">
                 <i class="fas fa-list"></i> К списку
             </a>
@@ -129,7 +134,11 @@
                             <p class="mt-2">Спецификация не задана</p>
                         </div>
 
-                        {% if show_sync_button %}
+                        {% if not work.requires_variants %}
+                        <div class="alert alert-light border mb-0">
+                            Материал хранится вне базы. Для проверки достаточно добавить участников события.
+                        </div>
+                        {% elif show_sync_button %}
                         <form method="post" action="{% url 'works:sync-groups' work.pk %}" class="d-inline">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-warning">
@@ -272,7 +281,7 @@
             </div>
             {% endif %}
 
-            {% if work.work_type != 'remedial' %}
+            {% if work.work_type != 'remedial' and work.requires_variants %}
             <!-- Печать документов -->
             <div
                 id="generation"
@@ -388,6 +397,7 @@
                     <h5 class="mb-0"><i class="fas fa-copy"></i> Варианты ({{ variants|length }})</h5>
                 </div>
                 <div class="card-body p-0">
+                    {% if work.requires_variants %}
                     {% for variant in variants %}
                     <div class="d-flex justify-content-between align-items-center border-bottom p-3">
                         <div>
@@ -428,12 +438,22 @@
                     {% empty %}
                     <div class="p-4 text-center text-muted">
                         <i class="fas fa-inbox fa-2x mb-2"></i>
+                        {% if work.requires_variants %}
                         <p>Вариантов пока нет</p>
                         <a href="{% url 'works:compose-variants' work.pk %}" class="btn btn-sm btn-success">
                             Создать варианты
                         </a>
+                        {% else %}
+                        <p class="mb-0">Варианты для этой работы не используются</p>
+                        {% endif %}
                     </div>
                     {% endfor %}
+                    {% else %}
+                    <div class="p-4 text-center text-muted">
+                        <i class="fas fa-file-signature fa-2x mb-2"></i>
+                        <p class="mb-0">Работа проверяется без вариантов</p>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 

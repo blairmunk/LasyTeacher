@@ -376,6 +376,7 @@ class EventFormAdapterTests(SimpleTestCase):
             participations=['participation-1'],
             some_variants_assigned=True,
             all_variants_assigned=False,
+            variants_required=True,
             can_review=True,
             status_color='warning',
             status_steps=['step-1'],
@@ -395,6 +396,7 @@ class EventFormAdapterTests(SimpleTestCase):
         self.assertEqual(detail_context['participations'], ['participation-1'])
         self.assertTrue(detail_context['some_variants_assigned'])
         self.assertFalse(detail_context['all_variants_assigned'])
+        self.assertTrue(detail_context['variants_required'])
         self.assertTrue(detail_context['can_review'])
         self.assertEqual(detail_context['status_color'], 'warning')
         self.assertEqual(detail_context['status_steps'], ['step-1'])
@@ -722,6 +724,7 @@ class ReviewFormAdapterTests(SimpleTestCase):
             has_participants=True,
             variants_assigned=True,
             all_variants_assigned=False,
+            variants_required=True,
             blocked=False,
             block_reason='',
             available_variants=['variant-1'],
@@ -744,6 +747,7 @@ class ReviewFormAdapterTests(SimpleTestCase):
         self.assertTrue(context['has_participants'])
         self.assertTrue(context['variants_assigned'])
         self.assertFalse(context['all_variants_assigned'])
+        self.assertTrue(context['variants_required'])
         self.assertFalse(context['blocked'])
         self.assertEqual(context['available_variants'], ['variant-1'])
         self.assertEqual(context['participations_data'], ['participation-1'])

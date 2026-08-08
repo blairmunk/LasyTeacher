@@ -1,4 +1,5 @@
 from unittest import TestCase
+from types import SimpleNamespace
 
 from core_logic.entities.event import EventVariantAssignmentResult
 from core_logic.services.event_service import EventService
@@ -27,6 +28,7 @@ class FakeMutationEventRepository:
         self.single_assignment = None
         self.status = 'completed'
         self.saved_status = None
+        self.requires_variants = True
 
     def add_participants(self, event_id, student_ids):
         self.student_ids = student_ids
@@ -46,6 +48,11 @@ class FakeMutationEventRepository:
 
     def get_event_status(self, event_id):
         return self.status
+
+    def get_by_id(self, event_id):
+        if self.status is None:
+            return None
+        return SimpleNamespace(requires_variants=self.requires_variants)
 
     def set_event_status(self, event_id, status):
         self.saved_status = status
@@ -79,6 +86,22 @@ class EventMutationUseCaseTests(TestCase):
 
         self.assertEqual(result.assigned_count, 1)
         self.assertEqual(repo.assignments, {'p1': 'v1'})
+
+    def test_assign_event_variants_rejects_aggregate_work(self):
+        repo = FakeMutationEventRepository()
+        repo.requires_variants = False
+        use_case = AssignEventVariantsUseCase(event_repo=repo)
+
+        result = use_case.execute(
+            AssignEventVariantsRequest(
+                event_id='event-1',
+                assignments={'p1': 'v1'},
+            )
+        )
+
+        self.assertEqual(result.status, 'variants_not_required')
+        self.assertEqual(result.assigned_count, 0)
+        self.assertEqual(repo.assignments, {})
 
     def test_assign_single_variant_requires_selection(self):
         repo = FakeMutationEventRepository()

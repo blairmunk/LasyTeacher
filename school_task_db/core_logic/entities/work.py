@@ -6,6 +6,11 @@ from typing import Any, List, Mapping, Optional
 
 from core_logic.entities.document import DocumentPresentationProfile
 from core_logic.value_objects.work_content_plan import WorkContentPlan
+from core_logic.value_objects.work_assessment import (
+    WORK_ASSESSMENT_MODE_LABELS,
+    WORK_ASSESSMENT_MODE_VARIANT,
+    work_requires_variants,
+)
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_LABELS,
@@ -38,6 +43,11 @@ class WorkDocumentRef:
     pk: str
     name: str
     work_type: str
+    assessment_mode: str = WORK_ASSESSMENT_MODE_VARIANT
+
+    @property
+    def requires_variants(self) -> bool:
+        return work_requires_variants(self.assessment_mode)
 
 
 @dataclass(frozen=True)
@@ -51,10 +61,22 @@ class WorkDetailWork:
     variant_count: int
     created_at: datetime
     updated_at: datetime
+    assessment_mode: str = WORK_ASSESSMENT_MODE_VARIANT
 
     @property
     def id(self) -> str:
         return self.pk
+
+    @property
+    def assessment_mode_display(self) -> str:
+        return WORK_ASSESSMENT_MODE_LABELS.get(
+            self.assessment_mode,
+            self.assessment_mode,
+        )
+
+    @property
+    def requires_variants(self) -> bool:
+        return work_requires_variants(self.assessment_mode)
 
 
 @dataclass(frozen=True)
@@ -165,10 +187,15 @@ class WorkListItem:
     variant_count: int = 0
     work_type: str = ''
     work_type_display: str = ''
+    assessment_mode: str = WORK_ASSESSMENT_MODE_VARIANT
 
     @property
     def is_remedial(self) -> bool:
         return self.work_type == 'remedial'
+
+    @property
+    def requires_variants(self) -> bool:
+        return work_requires_variants(self.assessment_mode)
 
 
 @dataclass(frozen=True)
@@ -221,6 +248,11 @@ class VariantGenerationWork:
     name: str
     duration: int
     variant_counter: int
+    assessment_mode: str = WORK_ASSESSMENT_MODE_VARIANT
+
+    @property
+    def requires_variants(self) -> bool:
+        return work_requires_variants(self.assessment_mode)
 
 
 @dataclass(frozen=True)

@@ -28,6 +28,13 @@ class GetEventVariantAssignmentUseCase:
                 variants=[],
                 status='not_found',
             )
+        if not event.requires_variants:
+            return EventVariantAssignmentData(
+                event=event,
+                participations=[],
+                variants=[],
+                status='variants_not_required',
+            )
         return EventVariantAssignmentData(
             event=event,
             participations=self.event_repo.get_detail_participations(event_id),

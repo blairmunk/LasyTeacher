@@ -241,6 +241,12 @@ def compose_variants(request, work_id):
                 )
                 if result.status == 'not_found':
                     raise Http404("Работа не найдена")
+                if result.status == 'variants_not_required':
+                    messages.info(
+                        request,
+                        'Для этой работы варианты не используются.',
+                    )
+                    return redirect('works:detail', pk=work_id)
                 if result.status == 'conflict':
                     messages.error(
                         request,
@@ -266,6 +272,9 @@ def compose_variants(request, work_id):
     )
     if form_data.status == 'not_found':
         raise Http404("Работа не найдена")
+    if form_data.status == 'variants_not_required':
+        messages.info(request, 'Для этой работы варианты не используются.')
+        return redirect('works:detail', pk=work_id)
     return render(
         request,
         'works/compose_variants.html',

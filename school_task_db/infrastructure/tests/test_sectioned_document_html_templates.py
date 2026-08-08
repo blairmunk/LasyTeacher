@@ -65,6 +65,7 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
                             'title': 'Черновик',
                             'columns': 3,
                             'row_height': 18,
+                            'css_max_width': 54,
                             'cells_range': range(6),
                         },
                     ),
@@ -126,6 +127,7 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
                                             'blank_cells': {
                                                 'columns': 3,
                                                 'row_height': 18,
+                                                'css_max_width': 54,
                                                 'cells_range': range(6),
                                             },
                                         },
@@ -153,6 +155,7 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
                                             'blank_cells': {
                                                 'columns': 3,
                                                 'row_height': 18,
+                                                'css_max_width': 54,
                                                 'cells_range': range(6),
                                             },
                                         },
@@ -188,6 +191,8 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
             self.assertIn('Черновик', html)
             self.assertIn('--grid-columns: 3', html)
             self.assertIn('--grid-row-height: 18px', html)
+            self.assertIn('--grid-max-width: 54px', html)
+            self.assertIn('aspect-ratio: 1', html)
             self.assertIn('Шкала перевода баллов', html)
             self.assertIn('document-section-score_table', html)
             self.assertIn('<td>85%</td>', html)

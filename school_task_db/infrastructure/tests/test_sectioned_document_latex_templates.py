@@ -268,6 +268,7 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
             self.assertIn(r'\begin{schoolblankcells}', latex)
             self.assertIn(r'\usepackage{tikz}', latex)
             self.assertIn(r'\newcommand{\schoolgrid}[3]', latex)
+            self.assertIn(r'\ifdim\dimexpr#2\schoolgridcell', latex)
             self.assertIn(r'\begin{schoolscoretable}', latex)
             self.assertIn(r'\begin{schoolanswers}', latex)
             self.assertIn(r'\begin{schoolshortsolutions}', latex)

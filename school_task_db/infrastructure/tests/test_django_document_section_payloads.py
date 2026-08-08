@@ -633,6 +633,7 @@ class DjangoWorkTechnicalPayloadBuilderTests(TestCase):
         self.assertEqual(payload['rows'], 2)
         self.assertEqual(payload['columns'], 3)
         self.assertEqual(payload['row_height'], 18)
+        self.assertEqual(payload['css_max_width'], 54)
         self.assertEqual(list(payload['rows_range']), [0, 1])
         self.assertEqual(list(payload['cells_range']), [0, 1, 2, 3, 4, 5])
 

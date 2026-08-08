@@ -29,6 +29,7 @@ def build_blank_cells_payload(options):
         'rows': rows,
         'columns': columns,
         'row_height': row_height,
+        'css_max_width': columns * row_height,
         'rows_range': range(rows),
         'cells_range': range(rows * columns),
         'latex_cell_size_mm': _latex_cell_size_mm(row_height),

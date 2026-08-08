@@ -56,9 +56,16 @@
   \fi
   \par\nobreak\smallskip}
 \newcommand{\schoolgrid}[3]{%
-\begin{tikzpicture}[x=#3mm,y=#3mm,baseline]
+\begingroup
+\newdimen\schoolgridcell
+\schoolgridcell=#3mm
+\ifdim\dimexpr#2\schoolgridcell\relax>\linewidth
+  \schoolgridcell=\dimexpr\linewidth/#2\relax
+\fi
+\begin{tikzpicture}[x=\schoolgridcell,y=\schoolgridcell,baseline]
 \draw[step=1,draw=schoolgrid,line width=0.2pt] (0,0) grid (#2,-#1);
 \end{tikzpicture}%
+\endgroup
 }
 {{ custom_latex_preamble|safe }}
 

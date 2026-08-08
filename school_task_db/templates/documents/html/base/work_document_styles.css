@@ -255,6 +255,7 @@ h4 {
     --grid-cell-size: var(--grid-row-height, 24px);
     display: grid;
     grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+    width: min(100%, var(--grid-max-width, 100%));
     overflow: hidden;
     margin: 2.5mm 0 5mm;
     border-top: 0.35mm solid var(--document-grid);
@@ -264,7 +265,8 @@ h4 {
 }
 
 .blank-cells-grid > span {
-    height: var(--grid-cell-size);
+    aspect-ratio: 1;
+    min-width: 0;
     border-right: 0.35mm solid var(--document-grid);
     border-bottom: 0.35mm solid var(--document-grid);
 }

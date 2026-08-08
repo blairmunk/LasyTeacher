@@ -1,6 +1,6 @@
 <div
     class="blank-cells-grid{% if extra_class %} {{ extra_class }}{% endif %}"
-    style="--grid-columns: {{ grid.columns }}; --grid-row-height: {{ grid.row_height }}px;"
+    style="--grid-columns: {{ grid.columns }}; --grid-row-height: {{ grid.row_height }}px;{% if grid.css_max_width %} --grid-max-width: {{ grid.css_max_width }}px;{% endif %}"
     role="presentation"
 >
     {% for cell in grid.cells_range %}<span></span>{% endfor %}

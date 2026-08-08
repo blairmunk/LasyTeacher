@@ -40,6 +40,9 @@ from core_logic.entities.student import (
 )
 from core_logic.interfaces.student_repo import IStudentRepository
 from events.models import EventParticipation, Mark
+from infrastructure.services.attempt_snapshot_queries import (
+    latest_attempts_by_participation,
+)
 from task_groups.models import AnalogGroup, TaskGroup
 from students.models import StudentGroup, StudentTaskLog
 from students.models import Student
@@ -191,33 +194,48 @@ class DjangoStudentRepository(IStudentRepository):
         if not participation:
             return None
 
-        mark = Mark.objects.filter(participation=participation).first()
-        if not mark or not mark.task_scores:
+        attempt = latest_attempts_by_participation(
+            [participation.pk],
+        ).get(participation.pk)
+        if attempt is None:
             return None
 
+        task_results = [
+            result
+            for result in attempt.captured_task_results
+            if result.is_assessable_snapshot
+        ]
+        task_scores = {}
         variant_tasks = []
-        if participation.variant_id:
-            variant_tasks = list(VariantTask.objects.filter(
-                variant_id=participation.variant_id,
-                is_assessable=True,
-            ).order_by('order', 'pk'))
-        candidate_task_ids = (
-            [row.task_id for row in variant_tasks]
-            if variant_tasks
-            else list(mark.task_scores)
-        )
+        for result in task_results:
+            variant_task_id = str(result.variant_task_id or '')
+            score_key = variant_task_id or result.task_id_snapshot
+            task_scores[score_key] = {
+                'task_id': result.task_id_snapshot,
+                'variant_task_id': variant_task_id,
+                'points': result.points,
+                'max_points': (
+                    result.checked_max_points
+                    if result.checked_max_points is not None
+                    else result.expected_max_points_snapshot
+                ),
+                'comment': result.comment,
+            }
+            if variant_task_id:
+                variant_tasks.append(TaskResultVariantRow(
+                    variant_task_id=variant_task_id,
+                    task_id=result.task_id_snapshot,
+                ))
+        candidate_task_ids = [
+            result.task_id_snapshot
+            for result in task_results
+        ]
         task_groups = TaskGroup.objects.filter(
             task_id__in=candidate_task_ids,
         ).select_related('group')
         return TaskResultsSource(
-            task_scores=mark.task_scores,
-            variant_tasks=tuple(
-                TaskResultVariantRow(
-                    variant_task_id=str(row.pk),
-                    task_id=str(row.task_id),
-                )
-                for row in variant_tasks
-            ),
+            task_scores=task_scores,
+            variant_tasks=tuple(variant_tasks),
             groups=tuple(
                 TaskResultGroupRef(
                     task_id=str(membership.task_id),

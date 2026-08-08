@@ -205,6 +205,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         SyncStudentTaskLogsUseCase(DjangoStudentRepository()).execute(
             str(self.mark.pk),
         )
+        capture_attempt_snapshot(self.mark)
 
     def _task(self, text, difficulty):
         return Task.objects.create(
@@ -251,6 +252,9 @@ class DjangoRemedialRepositoryTests(TestCase):
             },
         }
         self.mark.save()
+        capture_attempt_snapshot(self.mark)
+        self.mark.task_scores = {}
+        self.mark.save(update_fields=['task_scores'])
 
         results = StudentTaskResultService().build(
             DjangoStudentRepository().get_task_results_source_for_event(
@@ -282,6 +286,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
         demo_variant_task.is_assessable = False
         demo_variant_task.save(update_fields=['is_assessable'])
+        capture_attempt_snapshot(self.mark)
 
         results = StudentTaskResultService().build(
             DjangoStudentRepository().get_task_results_source_for_event(

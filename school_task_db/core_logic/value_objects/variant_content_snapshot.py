@@ -120,3 +120,73 @@ def build_variant_content_snapshot(
         items=tuple(items),
         content_blocks=tuple(content_blocks),
     )
+
+
+def build_variant_content_snapshot_from_sources(
+    variant_id: str,
+    variant_tasks,
+    content_blocks=(),
+) -> VariantContentSnapshot:
+    """Build a clean content snapshot from detached document sources."""
+    return build_variant_content_snapshot(
+        variant_id=str(variant_id),
+        items=tuple(
+            variant_content_item_from_source(task)
+            for task in variant_tasks
+        ),
+        content_blocks=tuple(
+            variant_content_block_item_from_source(block)
+            for block in content_blocks
+        ),
+    )
+
+
+def variant_content_item_from_source(source) -> VariantContentItem:
+    decisions = variant_task_content_decisions(source)
+    return VariantContentItem(
+        variant_task_id=str(source.pk),
+        task_id=str(source.task_id),
+        order=source.order,
+        max_points=source.max_points,
+        source_selection_id=decisions['source_selection_id'],
+        content_order=decisions['content_order'],
+        bank_role=decisions['bank_role'],
+        render_mode=decisions['render_mode'],
+        is_assessable=decisions['is_assessable'],
+        blank_cells_after=decisions['blank_cells_after'],
+        blank_cells_rows=decisions['blank_cells_rows'],
+    )
+
+
+def variant_content_block_item_from_source(
+    source,
+) -> VariantContentBlockItem:
+    return VariantContentBlockItem(
+        snapshot_id=str(source.pk),
+        source_content_id=source.source_content_id,
+        content_type=source.content_type,
+        order=source.order,
+        title=source.title,
+        content=source.content,
+    )
+
+
+def variant_task_content_decisions(source) -> Mapping[str, Any]:
+    """Return content decisions frozen on a variant task source."""
+    return {
+        'source_selection_id': getattr(source, 'source_selection_id', ''),
+        'content_order': getattr(source, 'content_order', 0),
+        'bank_role': getattr(source, 'bank_role', TASK_BANK_ROLE_CONTROL),
+        'render_mode': getattr(
+            source,
+            'render_mode',
+            TASK_RENDER_MODE_TASK_ONLY,
+        ),
+        'is_assessable': getattr(source, 'is_assessable', True),
+        'blank_cells_after': getattr(source, 'blank_cells_after', False),
+        'blank_cells_rows': getattr(
+            source,
+            'blank_cells_rows',
+            DEFAULT_BLANK_CELLS_ROWS,
+        ),
+    }

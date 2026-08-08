@@ -1,9 +1,7 @@
 """Renderer payloads built from an immutable variant content snapshot."""
 
 from core_logic.value_objects.variant_content_snapshot import (
-    VariantContentBlockItem,
-    VariantContentItem,
-    build_variant_content_snapshot,
+    build_variant_content_snapshot_from_sources,
 )
 from core_logic.value_objects.variant_print_plan import (
     VARIANT_PRINT_BLOCK_BLANK_CELLS,
@@ -17,7 +15,6 @@ from infrastructure.services.blank_cells_payload import (
 from infrastructure.services.task_document_payloads import (
     build_variant_task_payload,
     format_text_payload,
-    variant_task_snapshot_data,
 )
 
 
@@ -32,16 +29,10 @@ def build_variant_document_content_payload(
 ):
     """Build task and ordered print-block payloads for one variant."""
     variant_tasks = list(variant_tasks)
-    content_snapshot = build_variant_content_snapshot(
+    content_snapshot = build_variant_content_snapshot_from_sources(
         variant_id=str(variant_id),
-        items=[
-            _variant_content_item(variant_task)
-            for variant_task in variant_tasks
-        ],
-        content_blocks=[
-            _variant_content_block_item(block)
-            for block in content_blocks
-        ],
+        variant_tasks=variant_tasks,
+        content_blocks=content_blocks,
     )
     print_plan = build_variant_print_plan_from_snapshot(
         content_snapshot,
@@ -68,23 +59,6 @@ def build_variant_document_content_payload(
         ),
         'tasks': task_payloads,
     }
-
-
-def _variant_content_item(variant_task):
-    snapshot_data = variant_task_snapshot_data(variant_task)
-    return VariantContentItem(
-        variant_task_id=str(variant_task.pk),
-        task_id=str(variant_task.task_id),
-        order=variant_task.order,
-        max_points=variant_task.max_points,
-        source_selection_id=snapshot_data['source_selection_id'],
-        content_order=snapshot_data['content_order'],
-        bank_role=snapshot_data['bank_role'],
-        render_mode=snapshot_data['render_mode'],
-        is_assessable=snapshot_data['is_assessable'],
-        blank_cells_after=snapshot_data['blank_cells_after'],
-        blank_cells_rows=snapshot_data['blank_cells_rows'],
-    )
 
 
 def _variant_print_blocks_payload(
@@ -132,17 +106,6 @@ def _variant_print_blocks_payload(
             )
         print_blocks.append(block_payload)
     return print_blocks
-
-
-def _variant_content_block_item(block):
-    return VariantContentBlockItem(
-        snapshot_id=str(block.pk),
-        source_content_id=block.source_content_id,
-        content_type=block.content_type,
-        order=block.order,
-        title=block.title,
-        content=block.content,
-    )
 
 
 def _format_static_content(

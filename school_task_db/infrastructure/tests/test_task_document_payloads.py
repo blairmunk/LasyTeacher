@@ -8,8 +8,8 @@ from core_logic.value_objects.task_print_settings import (
     TASK_RENDER_MODE_TASK_ONLY,
     TASK_RENDER_MODE_WITH_FULL_SOLUTION,
 )
-from infrastructure.services.task_document_payloads import (
-    variant_task_snapshot_data,
+from core_logic.value_objects.variant_content_snapshot import (
+    variant_task_content_decisions,
 )
 
 
@@ -25,7 +25,7 @@ class VariantTaskSnapshotDataTests(TestCase):
             blank_cells_rows=9,
         )
 
-        data = variant_task_snapshot_data(variant_task)
+        data = variant_task_content_decisions(variant_task)
 
         self.assertEqual(
             data,
@@ -41,7 +41,7 @@ class VariantTaskSnapshotDataTests(TestCase):
         )
 
     def test_supplies_legacy_defaults_without_inventing_print_rules(self):
-        data = variant_task_snapshot_data(SimpleNamespace())
+        data = variant_task_content_decisions(SimpleNamespace())
 
         self.assertEqual(
             data,

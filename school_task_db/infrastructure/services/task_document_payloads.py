@@ -3,9 +3,9 @@
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_COLUMNS,
     DEFAULT_BLANK_CELLS_ROW_HEIGHT,
-    DEFAULT_BLANK_CELLS_ROWS,
-    TASK_BANK_ROLE_CONTROL,
-    TASK_RENDER_MODE_TASK_ONLY,
+)
+from core_logic.value_objects.variant_content_snapshot import (
+    variant_task_content_decisions,
 )
 from infrastructure.services.blank_cells_payload import (
     build_blank_cells_payload,
@@ -22,7 +22,7 @@ def build_variant_task_payload(
 ):
     payload = {
         **_variant_task_content_payload(variant_task),
-        **variant_task_snapshot_data(variant_task),
+        **variant_task_content_decisions(variant_task),
         'variant_task_id': str(variant_task.pk),
         'order': variant_task.order,
         'max_points': variant_task.max_points,
@@ -112,35 +112,6 @@ def format_text_payload(text, task_payload_formatter=None, request=None):
         {'text': text},
         request=request,
     )['text']
-
-
-def variant_task_snapshot_data(variant_task):
-    """Return immutable content decisions stored on a variant task."""
-    return {
-        'source_selection_id': getattr(
-            variant_task,
-            'source_selection_id',
-            '',
-        ),
-        'content_order': getattr(variant_task, 'content_order', 0),
-        'bank_role': getattr(
-            variant_task,
-            'bank_role',
-            TASK_BANK_ROLE_CONTROL,
-        ),
-        'render_mode': getattr(
-            variant_task,
-            'render_mode',
-            TASK_RENDER_MODE_TASK_ONLY,
-        ),
-        'is_assessable': getattr(variant_task, 'is_assessable', True),
-        'blank_cells_after': getattr(variant_task, 'blank_cells_after', False),
-        'blank_cells_rows': getattr(
-            variant_task,
-            'blank_cells_rows',
-            DEFAULT_BLANK_CELLS_ROWS,
-        ),
-    }
 
 
 def _related_name(value):

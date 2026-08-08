@@ -1,12 +1,12 @@
 \begin{schooltrainingtasks}
-\section*{ {{ section.title|default:"Часть 2. Тренировочные задания" }} }
+\schoolsectionheading{ {{ section.title|default:"Часть 2. Тренировочные задания" }} }
 {% if payload.print_blocks %}
 {% for block in payload.print_blocks %}
 {% if block.block_type == 'theory' %}
 \begin{schooltheory}
-{% if block.title %}\subsection*{ {{ block.title }} }{% endif %}
+{% if block.title %}\schoolsubheading{ {{ block.title }} }{% endif %}
 {% for topic in block.content.topics %}
-\subsubsection*{ {{ topic.name }} }
+\schoolsubheading{ {{ topic.name }} }
 {{ topic.content|safe }}
 
 {% if topic.subtopics %}
@@ -20,11 +20,11 @@
 \end{schooltheory}
 
 {% elif block.block_type == 'text' %}
-{% if block.title %}\subsection*{ {{ block.title }} }{% endif %}
+{% if block.title %}\schoolsubheading{ {{ block.title }} }{% endif %}
 {{ block.content.body|safe }}
 
 {% elif block.block_type == 'task' and block.task %}
-\subsection*{Задание {{ block.task.order }}{% if block.task.max_points %} \hfill {\normalfont\normalsize ({{ block.task.max_points }} балл.)}{% endif %}}
+\schooltaskheading{ {{ block.task.order }} }{% if block.task.max_points %}{ {{ block.task.max_points }} балл. }{% else %}{}{% endif %}
 {{ block.task.latex_content|default:block.task.text|safe }}
 
 {% if block.task.render_mode == 'with_answer' and block.task.answer %}
@@ -50,7 +50,7 @@
 {% endfor %}
 {% else %}
 {% for task in payload.tasks %}
-\subsection*{Задание {{ task.order }}{% if task.max_points %} \hfill {\normalfont\normalsize ({{ task.max_points }} балл.)}{% endif %}}
+\schooltaskheading{ {{ task.order }} }{% if task.max_points %}{ {{ task.max_points }} балл. }{% else %}{}{% endif %}
 {{ task.latex_content|default:task.text|safe }}
 
 {% empty %}

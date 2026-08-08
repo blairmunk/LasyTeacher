@@ -250,7 +250,8 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
             self.assertEqual(result.file_type, 'latex')
             self.assertEqual(result.files[0].filename, 'work.tex')
             self.assertIn(r'\documentclass', latex)
-            self.assertIn(r'\newenvironment{schooltheory}{}{}', latex)
+            self.assertIn(r'\newenvironment{schooltheory}', latex)
+            self.assertIn(r'\begin{tcolorbox}', latex)
             self.assertIn(
                 (
                     r'\renewenvironment{schooltheory}'
@@ -273,38 +274,38 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
             self.assertIn(r'\begin{schoolfullsolutions}', latex)
             self.assertNotIn(r'\newpage', latex)
             self.assertLess(
-                latex.index(r'\newenvironment{schooltheory}{}{}'),
+                latex.index(r'\newenvironment{schooltheory}'),
                 latex.index(r'\renewenvironment{schooltheory}'),
             )
             self.assertLess(
                 latex.index(r'\renewenvironment{schooltheory}'),
                 latex.index(r'\begin{schooltheory}'),
             )
-            self.assertIn(r'{\LARGE\bfseries Контрольная}', latex)
-            self.assertIn(r'\section*{ Вариант 1 }', latex)
-            self.assertIn(r'\subsection*{ Теория варианта }', latex)
+            self.assertIn(r'\Large\sffamily\bfseries Контрольная', latex)
+            self.assertIn(r'\schoolvariantheading{ Вариант 1 }', latex)
+            self.assertIn(r'\schoolsubheading{ Теория варианта }', latex)
             self.assertIn('Импульс сохраняется', latex)
-            self.assertIn(r'\subsection*{ Самопроверка }', latex)
+            self.assertIn(r'\schoolsubheading{ Самопроверка }', latex)
             self.assertIn('Проверьте единицы измерения', latex)
             self.assertIn('Найдите силу', latex)
             self.assertIn('Подсказка: F = ma', latex)
             self.assertIn(r'\textbf{Решение.}', latex)
             self.assertIn('Подставим в формулу', latex)
             self.assertIn(r'\clearpage', latex)
-            self.assertIn(r'\section*{\centering Черновик}', latex)
+            self.assertIn(r'\schoolsectionheading{ Черновик }', latex)
             self.assertEqual(
                 latex.count(r'\schoolgrid{ 2 }{ 3 }{ 4.0 }'),
                 2,
             )
             self.assertNotIn(r'\begin{tabular}{|*{ 3 }', latex)
-            self.assertIn(r'\section*{\centering Критерии оценивания}', latex)
+            self.assertIn(r'\schoolsectionheading{ Критерии оценивания }', latex)
             self.assertIn(r'5 & 85\% & 8,5', latex)
             self.assertIn(
-                r'\section*{\centering Ключ для самопроверки}',
+                r'\schoolsectionheading{ Ключ для самопроверки }',
                 latex,
             )
             self.assertIn('10 Н', latex)
-            self.assertIn(r'\section*{\centering Краткие решения}', latex)
+            self.assertIn(r'\schoolsectionheading{ Краткие решения }', latex)
 
     def test_remedial_page_breaks_and_titles_are_recipe_driven(self):
         with TemporaryDirectory() as output_dir:
@@ -357,7 +358,7 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                 encoding='utf-8',
             )
 
-        self.assertIn(r'\section*{ Мои ошибки }', latex)
-        self.assertIn(r'\section*{ Повторная попытка }', latex)
+        self.assertIn(r'\schoolsectionheading{ Мои ошибки }', latex)
+        self.assertIn(r'\schoolsectionheading{ Повторная попытка }', latex)
         self.assertEqual(latex.count(r'\clearpage'), 1)
         self.assertNotIn(r'\newpage', latex)

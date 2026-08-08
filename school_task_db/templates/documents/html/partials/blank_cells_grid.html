@@ -1,0 +1,7 @@
+<div
+    class="blank-cells-grid{% if extra_class %} {{ extra_class }}{% endif %}"
+    style="--grid-columns: {{ grid.columns }}; --grid-row-height: {{ grid.row_height }}px;"
+    role="presentation"
+>
+    {% for cell in grid.cells_range %}<span></span>{% endfor %}
+</div>

@@ -1,11 +1,12 @@
 \begin{schoolscoretable}
-\section*{\centering {% if section.title %}{{ section.title }}{% elif payload.section_title %}{{ payload.section_title }}{% else %}Критерии оценивания{% endif %}}
+\schoolsectionheading{ {% if section.title %}{{ section.title }}{% elif payload.section_title %}{{ payload.section_title }}{% else %}Критерии оценивания{% endif %} }
 {% if payload.max_score %}
 Максимальный балл: {{ payload.max_score }}
 
 {% endif %}
 {% if payload.criteria %}
 \begin{center}
+\renewcommand{\arraystretch}{1.25}
 \begin{tabular}{|c|c|c|}
 \hline
 Оценка & Минимальный процент & Минимальный балл \\

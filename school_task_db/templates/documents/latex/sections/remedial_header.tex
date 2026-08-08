@@ -1,19 +1,13 @@
 \begin{schoolheader}
-\begin{center}
-{\LARGE\bfseries {{ section.title|default:payload.title|default:document.title }}}
+\noindent{\Large\sffamily\bfseries {{ section.title|default:payload.title|default:document.title }}\par}
 {% if payload.student %}
-
-{\large Ученик: {{ payload.student.full_name }}}
+\smallskip{\normalsize\sffamily Ученик: \textbf{ {{ payload.student.full_name }} }\par}
 {% endif %}
 {% if payload.source_work %}
-
-{\normalsize Исходная работа: {{ payload.source_work.name }}}
+{\small\sffamily\color{schoolmuted} Исходная работа: {{ payload.source_work.name }}\par}
 {% endif %}
 {% if payload.mark %}
-
-{\normalsize Оценка: {{ payload.mark.score }} \hspace{0.5cm} Баллы: {{ payload.mark.points }}/{{ payload.mark.max_points }}}
+{\small\sffamily\color{schoolmuted} Оценка: {{ payload.mark.score }} \hspace{7mm} Баллы: {{ payload.mark.points }}/{{ payload.mark.max_points }}\par}
 {% endif %}
-\end{center}
-
-\vspace{0.5cm}
+\vspace{1mm}\color{schoolaccent}\hrule\color{black}\vspace{3mm}
 \end{schoolheader}

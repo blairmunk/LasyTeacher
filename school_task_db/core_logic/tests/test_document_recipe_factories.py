@@ -28,6 +28,7 @@ class DocumentRecipeFactoriesTests(TestCase):
             recipe.section_types,
             (HEADER_SECTION, TASK_LIST_SECTION),
         )
+        self.assertTrue(recipe.sections[0].options['show_student_fields'])
         self.assertEqual(recipe.sections[1].options, {})
 
     def test_default_remedial_sheet_recipe_contains_review_and_training(self):

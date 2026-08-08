@@ -35,7 +35,10 @@ from core_logic.value_objects.report_document_options import (
 
 def build_work_document_recipe() -> DocumentRecipe:
     sections = [
-        DocumentSectionSpec(section_type=HEADER_SECTION),
+        DocumentSectionSpec(
+            section_type=HEADER_SECTION,
+            options={'show_student_fields': True},
+        ),
         DocumentSectionSpec(section_type=TASK_LIST_SECTION),
     ]
 

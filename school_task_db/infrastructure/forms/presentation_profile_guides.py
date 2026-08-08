@@ -15,10 +15,13 @@ COMMON_HTML_HOOKS = (
 
 WORK_HTML_HOOKS = COMMON_HTML_HOOKS + (
     ('.document-header', 'Заголовок варианта.'),
+    ('.document-header-meta', 'Время и максимальный балл.'),
+    ('.document-student-fields', 'Строки фамилии, имени и даты.'),
     ('.document-task-variants', 'Секция с содержанием вариантов.'),
     ('.document-variant', 'Один вариант внутри документа.'),
     ('.document-theory-block', 'Блок теории.'),
     ('.task-item', 'Одно задание.'),
+    ('.task-heading', 'Строка номера задания и количества баллов.'),
     ('.task-blank-cells', 'Клетки после конкретного задания.'),
 )
 
@@ -85,6 +88,10 @@ WORK_LATEX_HOOKS = (
     ('schoolanswers', 'Блок ответов.'),
     ('schoolblankcells', 'Поле в клетку.'),
     ('schoolscoretable', 'Таблица баллов.'),
+    ('schoolvariantheading', 'Команда заголовка варианта.'),
+    ('schooltaskheading', 'Команда заголовка задания и количества баллов.'),
+    ('schoolsectionheading', 'Команда заголовка секции.'),
+    ('schoolsubheading', 'Команда подзаголовка внутри секции.'),
 )
 
 REMEDIAL_LATEX_HOOKS = (
@@ -93,6 +100,9 @@ REMEDIAL_LATEX_HOOKS = (
     ('schooltrainingtasks', 'Тренировочные задания.'),
     ('schoolanswers', 'Блок ответов.'),
     ('schoolblankcells', 'Поле в клетку.'),
+    ('schooltaskheading', 'Команда заголовка задания.'),
+    ('schoolsectionheading', 'Команда заголовка секции.'),
+    ('schoolsubheading', 'Команда подзаголовка внутри секции.'),
 )
 
 

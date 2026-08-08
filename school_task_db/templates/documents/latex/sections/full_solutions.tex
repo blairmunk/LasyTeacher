@@ -1,9 +1,9 @@
 \begin{schoolfullsolutions}
-\section*{\centering {{ section.title|default:"Полные решения" }}}
+\schoolsectionheading{ {{ section.title|default:"Полные решения" }} }
 {% for variant in payload.variants %}
-\subsection*{ {{ variant.title }} }
+\schoolsubheading{ {{ variant.title }} }
 {% for task in variant.tasks %}
-\textbf{Задание {{ task.order }}.}
+\schooltaskheading{ {{ task.order }} }{}
 
 {{ task.full_solution|safe }}
 

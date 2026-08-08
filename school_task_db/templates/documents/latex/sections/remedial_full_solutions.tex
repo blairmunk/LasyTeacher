@@ -1,7 +1,7 @@
 \begin{schoolfullsolutions}
-\section*{\centering {{ section.title|default:"Полные решения тренировочных заданий" }}}
+\schoolsectionheading{ {{ section.title|default:"Полные решения тренировочных заданий" }} }
 {% for task in payload.tasks %}
-\textbf{Задание {{ task.order }}.}
+\schooltaskheading{ {{ task.order }} }{}
 
 {{ task.full_solution|safe }}
 

@@ -35,7 +35,12 @@
                         </article>
                         {% elif block.block_type == 'task' and block.task %}
                         <div class="task-item">
-                            <h3>Задание {{ block.task.order }}</h3>
+                            <div class="task-heading">
+                                <h3>Задание {{ block.task.order }}</h3>
+                                {% if block.task.max_points %}
+                                    <span class="task-points">{{ block.task.max_points }} балл.</span>
+                                {% endif %}
+                            </div>
                             <div class="task-text">{{ block.task.text|linebreaksbr }}</div>
                             {% if payload.include_hints and block.task.hint %}
                                 <div class="task-hint">Подсказка: {{ block.task.hint }}</div>
@@ -60,21 +65,9 @@
                                     {{ block.task.full_solution|linebreaksbr }}
                                 </div>
                             {% endif %}
-                            {% if block.task.max_points %}
-                                <div class="task-points">{{ block.task.max_points }} балл.</div>
-                            {% endif %}
                         </div>
                         {% elif block.block_type == 'blank_cells' %}
-                            <div
-                                class="blank-cells-grid task-blank-cells"
-                                style="display: grid; grid-template-columns: repeat({{ block.blank_cells.columns }}, minmax(0, 1fr)); border-left: 1px solid #999; border-top: 1px solid #999; margin-top: 0.75rem; margin-bottom: 1rem;"
-                            >
-                                {% for cell in block.blank_cells.cells_range %}
-                                <span
-                                    style="height: {{ block.blank_cells.row_height }}px; border-right: 1px solid #999; border-bottom: 1px solid #999;"
-                                ></span>
-                                {% endfor %}
-                            </div>
+                            {% include "documents/html/partials/blank_cells_grid.html" with grid=block.blank_cells extra_class="task-blank-cells" %}
                         {% endif %}
                     {% endfor %}
                 </div>
@@ -110,16 +103,7 @@
                             <div class="task-points">{{ task.max_points }} балл.</div>
                         {% endif %}
                         {% if task.blank_cells_after %}
-                            <div
-                                class="blank-cells-grid task-blank-cells"
-                                style="display: grid; grid-template-columns: repeat({{ task.blank_cells.columns }}, minmax(0, 1fr)); border-left: 1px solid #999; border-top: 1px solid #999; margin-top: 0.75rem;"
-                            >
-                                {% for cell in task.blank_cells.cells_range %}
-                                <span
-                                    style="height: {{ task.blank_cells.row_height }}px; border-right: 1px solid #999; border-bottom: 1px solid #999;"
-                                ></span>
-                                {% endfor %}
-                            </div>
+                            {% include "documents/html/partials/blank_cells_grid.html" with grid=task.blank_cells extra_class="task-blank-cells" %}
                         {% endif %}
                         </li>
                     {% endfor %}

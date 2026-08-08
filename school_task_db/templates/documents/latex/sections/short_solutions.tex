@@ -1,9 +1,10 @@
 \begin{schoolshortsolutions}
-\section*{\centering {{ section.title|default:"Краткие решения" }}}
+\schoolsectionheading{ {{ section.title|default:"Краткие решения" }} }
 {% for variant in payload.variants %}
-\subsection*{ {{ variant.title }} }
+\schoolsubheading{ {{ variant.title }} }
 {% for task in variant.tasks %}
-\textbf{Задание {{ task.order }}.} {{ task.short_solution|safe }}
+\schooltaskheading{ {{ task.order }} }{}
+{{ task.short_solution|safe }}
 
 {% endfor %}
 {% empty %}

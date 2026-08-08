@@ -1,7 +1,7 @@
 \begin{schooloriginalmistakes}
-\section*{ {{ section.title|default:"Часть 1. Разбор ошибок" }} }
+\schoolsectionheading{ {{ section.title|default:"Часть 1. Разбор ошибок" }} }
 {% for task in payload.tasks %}
-\subsection*{Задание {{ task.order }}{% if task.group_name %} \hfill {\normalfont\normalsize {{ task.group_name }}}{% endif %}}
+\schooltaskheading{ {{ task.order }} }{% if task.group_name %}{ {{ task.group_name }} }{% else %}{}{% endif %}
 {% if task.max_points is not None %}
 {\small Баллы: {{ task.points }}/{{ task.max_points }}}
 

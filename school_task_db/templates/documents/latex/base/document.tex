@@ -1,4 +1,4 @@
-\documentclass[12pt,{{ render_target.page_format|lower }}]{article}
+\documentclass[11pt,{{ render_target.page_format|lower }}paper]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T2A]{fontenc}
 \usepackage[russian]{babel}
@@ -6,10 +6,24 @@
 \usepackage{graphicx}
 \usepackage{enumitem}
 \usepackage{geometry}
+\usepackage[protrusion=true,expansion=false]{microtype}
 \usepackage{tikz}
-\geometry{margin=2cm}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+{% if render_target.page_format|upper == 'A5' %}
+\geometry{left=9mm,right=9mm,top=9mm,bottom=9mm}
+{% else %}
+\geometry{left=12mm,right=12mm,top=12mm,bottom=12mm}
+{% endif %}
 \setlength{\parindent}{0pt}
-\setlength{\parskip}{6pt}
+\setlength{\parskip}{3pt}
+\setlist{nosep,leftmargin=*}
+\pagestyle{empty}
+\raggedbottom
+\definecolor{schoolaccent}{HTML}{274C5E}
+\definecolor{schoolmuted}{HTML}{5E6870}
+\definecolor{schoolsoft}{HTML}{F3F5F6}
+\definecolor{schoolgrid}{HTML}{C4CBD0}
 % Stable styling hooks for section templates.
 \newenvironment{schoolcommonheader}{}{}
 \newenvironment{schoolheader}{}{}
@@ -18,15 +32,32 @@
 \newenvironment{schoolanswerkey}{}{}
 \newenvironment{schoolshortsolutions}{}{}
 \newenvironment{schoolfullsolutions}{}{}
-\newenvironment{schooltheory}{}{}
+\newenvironment{schooltheory}
+  {\begin{tcolorbox}[colback=schoolsoft,colframe=schoolaccent,
+    boxrule=0pt,leftrule=1.2pt,arc=0pt,left=3mm,right=3mm,
+    top=2mm,bottom=2mm,before skip=2mm,after skip=3mm]}
+  {\end{tcolorbox}}
 \newenvironment{schoolpagebreak}{}{}
 \newenvironment{schoolblankcells}{}{}
 \newenvironment{schoolscoretable}{}{}
 \newenvironment{schooloriginalmistakes}{}{}
 \newenvironment{schooltrainingtasks}{}{}
+\newcommand{\schoolsectionheading}[1]{%
+  \par\medskip\noindent{\large\sffamily\bfseries #1}\par\nobreak\smallskip}
+\newcommand{\schoolsubheading}[1]{%
+  \par\smallskip\noindent{\normalsize\sffamily\bfseries #1}\par\nobreak\smallskip}
+\newcommand{\schoolvariantheading}[1]{%
+  \par\noindent{\large\sffamily\bfseries\MakeUppercase{#1}}\par
+  \vspace{1mm}\color{schoolaccent}\hrule\color{black}\vspace{3mm}}
+\newcommand{\schooltaskheading}[2]{%
+  \par\medskip\noindent{\sffamily\bfseries Задание #1}%
+  \if\relax\detokenize{#2}\relax\else
+    \hfill{\small\sffamily\itshape\color{schoolmuted}#2}%
+  \fi
+  \par\nobreak\smallskip}
 \newcommand{\schoolgrid}[3]{%
-\begin{tikzpicture}[x=#3mm,y=#3mm]
-\draw[step=1,draw=gray!65,line width=0.25pt] (0,0) grid (#2,-#1);
+\begin{tikzpicture}[x=#3mm,y=#3mm,baseline]
+\draw[step=1,draw=schoolgrid,line width=0.2pt] (0,0) grid (#2,-#1);
 \end{tikzpicture}%
 }
 {{ custom_latex_preamble|safe }}

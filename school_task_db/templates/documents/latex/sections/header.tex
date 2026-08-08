@@ -1,19 +1,19 @@
 {% if section.section_type == 'common_header' %}\begin{schoolcommonheader}
 {% else %}\begin{schoolheader}
 {% endif %}
-\begin{center}
-{\LARGE\bfseries {{ section.title|default:payload.title }}}
-{% if payload.duration %}
-
-{\large Время выполнения: {{ payload.duration }} минут}
+\noindent{\Large\sffamily\bfseries {{ section.title|default:payload.title }}\par}
+{% if payload.duration or payload.max_score %}
+\smallskip
+{\small\sffamily\color{schoolmuted}%
+{% if payload.duration %}Время выполнения: {{ payload.duration }} минут{% endif %}%
+{% if payload.duration and payload.max_score %}\hspace{7mm}{\color{schoolgrid}|}\hspace{7mm}{% endif %}%
+{% if payload.max_score %}Максимальный балл: {{ payload.max_score }}{% endif %}\par}
 {% endif %}
-{% if payload.max_score %}
-
-{\large Максимальный балл: {{ payload.max_score }}}
+{% if payload.show_student_fields %}
+\smallskip
+{\small Фамилия, имя: \rule{0.42\linewidth}{0.4pt}\hfill Дата: \rule{22mm}{0.4pt}\par}
 {% endif %}
-\end{center}
-
-\vspace{0.5cm}
+\vspace{1mm}\color{schoolaccent}\hrule\color{black}\vspace{3mm}
 {% if section.section_type == 'common_header' %}\end{schoolcommonheader}
 {% else %}\end{schoolheader}
 {% endif %}

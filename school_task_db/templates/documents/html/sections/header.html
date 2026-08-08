@@ -1,9 +1,23 @@
 <header class="document-section document-section-{{ section.section_type }} document-header">
     <h1>{{ section.title|default:payload.title|default:document.title }}</h1>
-    {% if payload.duration %}
-        <p>Время выполнения: {{ payload.duration }} мин.</p>
+    {% if payload.duration or payload.max_score %}
+        <p class="document-header-meta">
+            {% if payload.duration %}
+                <span>Время выполнения: {{ payload.duration }} мин.</span>
+            {% endif %}
+            {% if payload.max_score %}
+                <span>Максимальный балл: {{ payload.max_score }}</span>
+            {% endif %}
+        </p>
     {% endif %}
-    {% if payload.max_score %}
-        <p>Максимальный балл: {{ payload.max_score }}</p>
+    {% if payload.show_student_fields %}
+        <div class="document-student-fields">
+            <span class="document-student-field document-student-name">
+                Фамилия, имя <span class="document-field-line"></span>
+            </span>
+            <span class="document-student-field document-student-date">
+                Дата <span class="document-field-line"></span>
+            </span>
+        </div>
     {% endif %}
 </header>

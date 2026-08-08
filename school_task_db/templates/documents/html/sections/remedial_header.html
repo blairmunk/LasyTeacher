@@ -1,15 +1,17 @@
 <header class="document-section document-section-{{ section.section_type }} document-header remedial-header">
     <h1>{{ section.title|default:payload.title|default:document.title }}</h1>
-    {% if payload.student %}
-        <p><strong>{{ payload.student.full_name }}</strong></p>
-    {% endif %}
-    {% if payload.source_work %}
-        <p>Исходная работа: {{ payload.source_work.name }}</p>
-    {% endif %}
-    {% if payload.mark %}
-        <p>
-            Оценка: <strong>{{ payload.mark.score }}</strong>
-            · {{ payload.mark.points }}/{{ payload.mark.max_points }} баллов
-        </p>
-    {% endif %}
+    <p class="document-header-meta">
+        {% if payload.student %}
+            <span><strong>{{ payload.student.full_name }}</strong></span>
+        {% endif %}
+        {% if payload.source_work %}
+            <span>Исходная работа: {{ payload.source_work.name }}</span>
+        {% endif %}
+        {% if payload.mark %}
+            <span>
+                Оценка: <strong>{{ payload.mark.score }}</strong>,
+                {{ payload.mark.points }}/{{ payload.mark.max_points }} баллов
+            </span>
+        {% endif %}
+    </p>
 </header>

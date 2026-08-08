@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" data-page-format="{{ render_target.page_format|lower }}">
 <head>
     <meta charset="utf-8">
     <title>{{ document.title }}</title>
@@ -20,13 +20,16 @@
         defer
         src="{{ mathjax_script_url }}"
     ></script>
+    <style>
+{% include "documents/html/base/work_document_styles.css" %}
+    </style>
     {% if custom_css %}
     <style>
 {{ custom_css|safe }}
     </style>
     {% endif %}
 </head>
-<body>
+<body class="school-document school-document-{{ document.document_type }}">
 {{ body_content|safe }}
 </body>
 </html>

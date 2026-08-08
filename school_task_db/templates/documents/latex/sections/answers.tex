@@ -1,9 +1,9 @@
 {% if section.section_type == 'answer_key' %}\begin{schoolanswerkey}
 {% else %}\begin{schoolanswers}
 {% endif %}
-\section*{\centering {{ section.title|default:"Ответы" }}}
+\schoolsectionheading{ {{ section.title|default:"Ответы" }} }
 {% for variant in payload.variants %}
-\subsection*{ {{ variant.title }} }
+\schoolsubheading{ {{ variant.title }} }
 \begin{enumerate}
 {% for task in variant.tasks %}
 \item {{ task.answer|safe }}

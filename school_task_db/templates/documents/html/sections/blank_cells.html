@@ -2,14 +2,5 @@
     {% if section.title or payload.title %}
     <h2>{{ section.title|default:payload.title }}</h2>
     {% endif %}
-    <div
-        class="blank-cells-grid"
-        style="display: grid; grid-template-columns: repeat({{ payload.columns }}, minmax(0, 1fr)); border-left: 1px solid #999; border-top: 1px solid #999;"
-    >
-        {% for cell in payload.cells_range %}
-        <span
-            style="height: {{ payload.row_height }}px; border-right: 1px solid #999; border-bottom: 1px solid #999;"
-        ></span>
-        {% endfor %}
-    </div>
+    {% include "documents/html/partials/blank_cells_grid.html" with grid=payload %}
 </section>

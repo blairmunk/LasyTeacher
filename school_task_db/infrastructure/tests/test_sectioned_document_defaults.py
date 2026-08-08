@@ -402,7 +402,7 @@ class SectionedDocumentDefaultsTests(TestCase):
             self.assertEqual(result.file_type, 'latex')
             self.assertEqual(result.files[0].filename, filename)
             self.assertIn(r'\documentclass', latex)
-            self.assertIn(r'\section*{ Вариант 1 }', latex)
+            self.assertIn(r'\schoolvariantheading{ Вариант 1 }', latex)
             self.assertIn(r'Найдите силу \& ускорение \(F=ma\)', latex)
             self.assertIn(
                 r'\renewcommand{\familydefault}{\sfdefault}',

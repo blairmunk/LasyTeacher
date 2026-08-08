@@ -1,6 +1,5 @@
 \begin{schoolblankcells}
-{% if section.title or payload.title %}\section*{\centering {{ section.title|default:payload.title }}}{% endif %}
-\begin{center}
+{% if section.title or payload.title %}\schoolsectionheading{ {{ section.title|default:payload.title }} }{% endif %}
+\noindent
 \schoolgrid{ {{ payload.rows }} }{ {{ payload.columns }} }{ {{ payload.latex_cell_size_mm }} }
-\end{center}
 \end{schoolblankcells}

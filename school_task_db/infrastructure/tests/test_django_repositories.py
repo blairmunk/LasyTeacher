@@ -112,6 +112,9 @@ from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from infrastructure.repositories.django_work_read_repo import (
     DjangoWorkReadRepository,
 )
+from infrastructure.repositories.django_variant_read_repo import (
+    DjangoVariantReadRepository,
+)
 from infrastructure.tests.variant_task_factory import (
     capture_attempt_snapshot,
     create_variant_task,
@@ -1814,7 +1817,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(uuid_results['works'][0].name, self.source_work.name)
 
     def test_work_repository_returns_variant_list_page_data(self):
-        repo = DjangoWorkRepository()
+        repo = DjangoVariantReadRepository()
 
         variants = repo.get_list_variants()
 
@@ -1835,7 +1838,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
 
     def test_work_repository_returns_variant_detail_page_data(self):
-        repo = DjangoWorkRepository()
+        repo = DjangoVariantReadRepository()
 
         variant = repo.get_variant_detail(str(self.source_variant.pk))
         missing_variant = repo.get_variant_detail(
@@ -1862,7 +1865,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             source_participation=self.participation,
         )
 
-        variant = DjangoWorkRepository().get_variant_detail(
+        variant = DjangoVariantReadRepository().get_variant_detail(
             str(remedial_variant.pk),
         )
 

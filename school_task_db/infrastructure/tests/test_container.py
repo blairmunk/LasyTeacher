@@ -300,6 +300,9 @@ from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from infrastructure.repositories.django_work_read_repo import (
     DjangoWorkReadRepository,
 )
+from infrastructure.repositories.django_variant_read_repo import (
+    DjangoVariantReadRepository,
+)
 from infrastructure.repositories.django_work_analysis_repo import (
     DjangoWorkAnalysisRepository,
 )
@@ -906,6 +909,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             container.work_read_repo,
             DjangoWorkReadRepository,
+        )
+        self.assertIsInstance(
+            container.variant_read_repo,
+            DjangoVariantReadRepository,
         )
         self.assertIsInstance(container.event_repo, DjangoEventRepository)
         self.assertIsInstance(

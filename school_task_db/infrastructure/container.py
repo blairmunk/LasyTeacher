@@ -352,6 +352,9 @@ from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from infrastructure.repositories.django_work_read_repo import (
     DjangoWorkReadRepository,
 )
+from infrastructure.repositories.django_variant_read_repo import (
+    DjangoVariantReadRepository,
+)
 from infrastructure.repositories.django_work_analysis_repo import (
     DjangoWorkAnalysisRepository,
 )
@@ -388,6 +391,7 @@ class Container:
         self._task_repo = None
         self._work_repo = None
         self._work_read_repo = None
+        self._variant_read_repo = None
         self._event_repo = None
         self._participation_grading_repo = None
         self._review_repo = None
@@ -460,6 +464,12 @@ class Container:
         if self._work_read_repo is None:
             self._work_read_repo = DjangoWorkReadRepository()
         return self._work_read_repo
+
+    @property
+    def variant_read_repo(self):
+        if self._variant_read_repo is None:
+            self._variant_read_repo = DjangoVariantReadRepository()
+        return self._variant_read_repo
 
     @property
     def event_repo(self):
@@ -1308,7 +1318,7 @@ class Container:
 
     def get_variant_detail_use_case(self):
         return GetVariantDetailUseCase(
-            variant_repo=self.work_repo,
+            variant_repo=self.variant_read_repo,
         )
 
     def get_variant_generation_form_use_case(self):
@@ -1318,7 +1328,7 @@ class Container:
 
     def get_variant_list_use_case(self):
         return GetVariantListUseCase(
-            variant_repo=self.work_repo,
+            variant_repo=self.variant_read_repo,
         )
 
     def get_orphan_variant_list_use_case(self):

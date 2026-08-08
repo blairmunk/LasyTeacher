@@ -22,7 +22,7 @@ from core_logic.entities.report import (
     ReportTaskRef,
     ReportWorkRef,
 )
-from core_logic.interfaces.report_repo import IHeatmapRepository
+from core_logic.interfaces.heatmap_repo import IHeatmapRepository
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation
 from infrastructure.services.attempt_snapshot_queries import (

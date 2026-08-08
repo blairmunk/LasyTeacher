@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any, List
 
 from core_logic.entities.report import HeatmapSubtopicMatrixData
-from core_logic.interfaces.report_repo import IHeatmapRepository
+from core_logic.interfaces.heatmap_repo import IHeatmapRepository
 from core_logic.services.heatmap_matrix_service import HeatmapMatrixService
 
 

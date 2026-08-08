@@ -16,7 +16,7 @@ from core_logic.entities.report import (
     ReportVariantRef,
     ReportWorkRef,
 )
-from core_logic.interfaces.report_repo import IJournalRepository
+from core_logic.interfaces.journal_repo import IJournalRepository
 from core_logic.services.event_service import EventService
 from curriculum.models import Course
 from events.models import Event, EventParticipation

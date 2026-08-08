@@ -23,7 +23,7 @@ from core_logic.entities.report import (
     WorkAnalysisItemSource,
     WorkAnalysisSource,
 )
-from core_logic.interfaces.report_repo import IReportSummaryRepository
+from core_logic.interfaces.report_summary_repo import IReportSummaryRepository
 from core_logic.services.event_service import EventService
 from curriculum.models import Course
 from events.models import Event, EventParticipation

@@ -13,7 +13,7 @@ from core_logic.entities.report import (
     TaskDistributionFact,
     TaskGroupSizeFact,
 )
-from core_logic.interfaces.report_repo import ITaskDBHealthRepository
+from core_logic.interfaces.task_db_health_repo import ITaskDBHealthRepository
 from curriculum.models import Course
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task

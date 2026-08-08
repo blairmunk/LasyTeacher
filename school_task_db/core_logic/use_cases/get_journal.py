@@ -5,7 +5,7 @@ from typing import Any
 
 from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.report import JournalData
-from core_logic.interfaces.report_repo import IJournalRepository
+from core_logic.interfaces.journal_repo import IJournalRepository
 from core_logic.services.report_summary_service import ReportSummaryService
 
 

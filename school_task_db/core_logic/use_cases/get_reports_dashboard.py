@@ -5,7 +5,7 @@ from datetime import datetime
 
 from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.report import ReportsDashboardData
-from core_logic.interfaces.report_repo import IReportSummaryRepository
+from core_logic.interfaces.report_summary_repo import IReportSummaryRepository
 from core_logic.services.report_summary_service import ReportSummaryService
 
 

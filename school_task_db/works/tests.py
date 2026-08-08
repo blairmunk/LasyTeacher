@@ -26,7 +26,9 @@ from core_logic.value_objects.work_assessment import (
 from curriculum.models import Topic
 from document_engine.models import PrintSettings
 from events.models import Event, EventParticipation, Mark
-from infrastructure.repositories.django_work_repo import DjangoWorkRepository
+from infrastructure.repositories.django_work_document_repo import (
+    DjangoWorkDocumentRepository,
+)
 from infrastructure.tests.variant_task_factory import (
     capture_attempt_snapshot,
     create_variant_task,
@@ -1614,7 +1616,7 @@ class WorkDetailViewTests(TestCase):
         )
 
         sheet_data = GetRemedialSheetDataUseCase(
-            DjangoWorkRepository(),
+            DjangoWorkDocumentRepository(),
         ).execute(str(remedial_variant.pk))
 
         self.assertEqual(sheet_data.variant.pk, str(remedial_variant.pk))

@@ -355,6 +355,12 @@ from infrastructure.repositories.django_work_read_repo import (
 from infrastructure.repositories.django_variant_read_repo import (
     DjangoVariantReadRepository,
 )
+from infrastructure.repositories.django_work_document_repo import (
+    DjangoWorkDocumentRepository,
+)
+from infrastructure.repositories.django_remedial_source_repo import (
+    DjangoRemedialSourceRepository,
+)
 from infrastructure.repositories.django_work_analysis_repo import (
     DjangoWorkAnalysisRepository,
 )
@@ -392,6 +398,8 @@ class Container:
         self._work_repo = None
         self._work_read_repo = None
         self._variant_read_repo = None
+        self._work_document_repo = None
+        self._remedial_source_repo = None
         self._event_repo = None
         self._participation_grading_repo = None
         self._review_repo = None
@@ -470,6 +478,18 @@ class Container:
         if self._variant_read_repo is None:
             self._variant_read_repo = DjangoVariantReadRepository()
         return self._variant_read_repo
+
+    @property
+    def work_document_repo(self):
+        if self._work_document_repo is None:
+            self._work_document_repo = DjangoWorkDocumentRepository()
+        return self._work_document_repo
+
+    @property
+    def remedial_source_repo(self):
+        if self._remedial_source_repo is None:
+            self._remedial_source_repo = DjangoRemedialSourceRepository()
+        return self._remedial_source_repo
 
     @property
     def event_repo(self):
@@ -707,7 +727,7 @@ class Container:
         return RemedialService(
             student_repo=self.student_repo,
             task_repo=self.task_repo,
-            remedial_source_repo=self.work_repo,
+            remedial_source_repo=self.remedial_source_repo,
         )
 
     def analytics_service(self):
@@ -1338,7 +1358,7 @@ class Container:
 
     def get_remedial_sheet_data_use_case(self):
         return GetRemedialSheetDataUseCase(
-            work_repo=self.work_repo,
+            work_repo=self.work_document_repo,
         )
 
     def sync_work_analog_groups_use_case(self):
@@ -1355,7 +1375,7 @@ class Container:
 
     def render_work_document_use_case(self):
         return RenderWorkDocumentUseCase(
-            work_repo=self.work_repo,
+            work_repo=self.work_document_repo,
             presentation_profile_repo=self.presentation_profile_repo,
             render_document_from_recipe_use_case=(
                 self.render_document_from_recipe_use_case()
@@ -1369,7 +1389,7 @@ class Container:
 
     def render_remedial_sheet_document_use_case(self):
         return RenderRemedialSheetDocumentUseCase(
-            work_repo=self.work_repo,
+            work_repo=self.work_document_repo,
             presentation_profile_repo=self.presentation_profile_repo,
             render_document_from_recipe_use_case=(
                 self.render_document_from_recipe_use_case()
@@ -1398,7 +1418,7 @@ class Container:
 
     def render_remedial_sheet_batch_document_use_case(self):
         return RenderRemedialSheetBatchDocumentUseCase(
-            work_repo=self.work_repo,
+            work_repo=self.work_document_repo,
             presentation_profile_repo=self.presentation_profile_repo,
             render_document_from_recipe_use_case=(
                 self.render_document_from_recipe_use_case()

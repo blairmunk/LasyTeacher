@@ -115,6 +115,12 @@ from infrastructure.repositories.django_work_read_repo import (
 from infrastructure.repositories.django_variant_read_repo import (
     DjangoVariantReadRepository,
 )
+from infrastructure.repositories.django_work_document_repo import (
+    DjangoWorkDocumentRepository,
+)
+from infrastructure.repositories.django_remedial_source_repo import (
+    DjangoRemedialSourceRepository,
+)
 from infrastructure.tests.variant_task_factory import (
     capture_attempt_snapshot,
     create_variant_task,
@@ -236,7 +242,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         service = RemedialService(
             student_repo=DjangoStudentRepository(),
             task_repo=DjangoTaskRepository(),
-            remedial_source_repo=DjangoWorkRepository(),
+            remedial_source_repo=DjangoRemedialSourceRepository(),
         )
 
         selection = service.select_tasks_for_student(
@@ -1167,7 +1173,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         service = RemedialService(
             student_repo=student_repo,
             task_repo=task_repo,
-            remedial_source_repo=work_repo,
+            remedial_source_repo=DjangoRemedialSourceRepository(),
         )
         use_case = CreateRemedialFromEventUseCase(
             remedial_service=service,
@@ -1237,7 +1243,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         service = RemedialService(
             student_repo=student_repo,
             task_repo=task_repo,
-            remedial_source_repo=work_repo,
+            remedial_source_repo=DjangoRemedialSourceRepository(),
         )
 
         def fail_participation(**kwargs):
@@ -1317,7 +1323,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
 
         variant_ids = (
-            DjangoWorkRepository()
+            DjangoWorkDocumentRepository()
             .get_work_personal_remedial_variant_ids(
                 str(remedial_work.pk),
             )
@@ -1345,7 +1351,9 @@ class DjangoRemedialRepositoryTests(TestCase):
             work_name_snapshot=work.name,
         )
 
-        variant_ids = DjangoWorkRepository().get_work_variant_ids(str(work.pk))
+        variant_ids = DjangoWorkDocumentRepository().get_work_variant_ids(
+            str(work.pk),
+        )
 
         self.assertEqual(
             variant_ids,
@@ -1353,11 +1361,41 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
 
     def test_work_repository_returns_none_for_missing_remedial_sheet(self):
-        sheet_data = DjangoWorkRepository().get_remedial_sheet_source(
+        sheet_data = DjangoWorkDocumentRepository().get_remedial_sheet_source(
             '00000000-0000-0000-0000-000000000000',
         )
 
         self.assertIsNone(sheet_data)
+
+    def test_remedial_sheet_reads_original_tasks_from_attempt_snapshot(self):
+        attempt = self.participation.attempt_snapshots.get(revision=1)
+        variant_task = VariantTask.objects.get(
+            variant=self.source_variant,
+            task=self.original_weak,
+        )
+        changed_snapshot = dict(variant_task.task_snapshot)
+        changed_snapshot['text'] = 'Изменёно после проверки'
+        variant_task.task_snapshot = changed_snapshot
+        variant_task.save(update_fields=['task_snapshot'])
+        remedial_variant = Variant.objects.create(
+            number=1,
+            variant_type='remedial',
+            assigned_student=self.student,
+            source_work=self.source_work,
+            source_participation=self.participation,
+            source_attempt_snapshot=attempt,
+        )
+
+        source = DjangoWorkDocumentRepository().get_remedial_sheet_source(
+            str(remedial_variant.pk),
+        )
+
+        original = next(
+            row
+            for row in source.original_tasks
+            if row.task.pk == str(self.original_weak.pk)
+        )
+        self.assertEqual(original.task.text, self.original_weak.text)
 
     def test_remedial_sheet_returns_frozen_content_blocks(self):
         remedial_work = Work.objects.create(
@@ -1380,7 +1418,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
 
         sheet_data = GetRemedialSheetDataUseCase(
-            DjangoWorkRepository(),
+            DjangoWorkDocumentRepository(),
         ).execute(str(remedial_variant.pk))
 
         self.assertEqual(len(sheet_data.content_blocks), 1)
@@ -1448,7 +1486,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
 
         sheet_data = GetRemedialSheetDataUseCase(
-            DjangoWorkRepository(),
+            DjangoWorkDocumentRepository(),
         ).execute(str(remedial_variant.pk))
 
         self.assertEqual(sheet_data.mark.score, 4)

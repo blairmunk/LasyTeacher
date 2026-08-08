@@ -1,6 +1,6 @@
 """Build task database health report data."""
 
-from core_logic.entities.report import TaskDBHealthData
+from core_logic.entities.task_db_health import TaskDBHealthData
 from core_logic.interfaces.task_db_health_repo import ITaskDBHealthRepository
 from core_logic.services.report_summary_service import ReportSummaryService
 

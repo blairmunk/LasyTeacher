@@ -8,6 +8,8 @@ from core_logic.entities.report import (
     ReportTaskUsageRef,
     ReportVariantRef,
     ReportWorkRef,
+)
+from core_logic.entities.task_db_health import (
     TaskCoverageFact,
     TaskDBHealthSource,
     TaskDistributionFact,

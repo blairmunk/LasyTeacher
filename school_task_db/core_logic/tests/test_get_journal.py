@@ -1,9 +1,11 @@
 from unittest import TestCase
 
-from core_logic.entities.report import (
+from core_logic.entities.journal import (
     JournalEntryFact,
     JournalParticipationRef,
     JournalSource,
+)
+from core_logic.entities.report import (
     ReportCourseRef,
     ReportEventRef,
     ReportGroupRef,

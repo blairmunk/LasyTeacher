@@ -5,6 +5,8 @@ from core_logic.entities.report import (
     ReportCourseRef,
     ReportVariantRef,
     ReportWorkRef,
+)
+from core_logic.entities.task_db_health import (
     TaskCoverageFact,
     TaskDBHealthSource,
     TaskDistributionFact,

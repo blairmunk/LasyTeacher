@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from core_logic.entities.academic_year import AcademicYearRef
-from core_logic.entities.report import JournalSelectData, JournalSource
+from core_logic.entities.journal import JournalSelectData, JournalSource
 
 
 class IJournalRepository(ABC):

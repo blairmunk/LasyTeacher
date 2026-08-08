@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from core_logic.entities.report import JournalSelectData
+from core_logic.entities.journal import JournalSelectData
 from core_logic.use_cases.get_journal_select import (
     GetJournalSelectUseCase,
     JournalSelectRequest,

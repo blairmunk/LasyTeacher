@@ -3,11 +3,13 @@
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 
-from core_logic.entities.report import (
+from core_logic.entities.journal import (
     JournalEntryFact,
     JournalParticipationRef,
     JournalSelectData,
     JournalSource,
+)
+from core_logic.entities.report import (
     ReportCourseRef,
     ReportEventRef,
     ReportGroupRef,

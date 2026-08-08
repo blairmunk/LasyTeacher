@@ -3,19 +3,20 @@
 from collections import Counter
 from datetime import timedelta
 
+from core_logic.entities.journal import JournalData, JournalSource
 from core_logic.entities.report import (
     EventsStatusReportData,
     EventsStatusSource,
-    JournalData,
-    JournalSource,
     ReportsDashboardData,
     ReportsDashboardSource,
     StudentPerformanceReportData,
     StudentPerformanceSource,
-    TaskDBHealthData,
-    TaskDBHealthSource,
     WorkAnalysisReportData,
     WorkAnalysisSource,
+)
+from core_logic.entities.task_db_health import (
+    TaskDBHealthData,
+    TaskDBHealthSource,
 )
 
 

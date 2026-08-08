@@ -3,12 +3,9 @@
 from django.shortcuts import get_object_or_404
 
 from core_logic.entities.heatmap import (
-    HeatmapCourseOverviewData,
     HeatmapCourseTimelineSource,
-    HeatmapDrilldownOverviewData,
     HeatmapDetailScoreFact,
     HeatmapMatrixSource,
-    HeatmapOverviewData,
     HeatmapScoreFact,
     HeatmapStudentDetailSource,
     HeatmapSubtopicDetailSource,
@@ -22,14 +19,10 @@ from core_logic.entities.report_refs import (
     ReportGroupRef,
     ReportStudentRef,
     ReportTaskRef,
-    ReportWorkRef,
 )
 from core_logic.interfaces.heatmap_detail_repo import IHeatmapDetailRepository
 from core_logic.interfaces.heatmap_matrix_repo import IHeatmapMatrixRepository
-from core_logic.interfaces.heatmap_overview_repo import (
-    IHeatmapOverviewRepository,
-)
-from curriculum.models import Course, CourseAssignment, SubTopic, Topic
+from curriculum.models import Course, SubTopic, Topic
 from events.models import Event, EventParticipation
 from infrastructure.services.attempt_snapshot_queries import (
     latest_attempts_by_participation,
@@ -43,103 +36,7 @@ from students.models import Student, StudentGroup
 class DjangoHeatmapRepository(
     IHeatmapDetailRepository,
     IHeatmapMatrixRepository,
-    IHeatmapOverviewRepository,
 ):
-    def get_heatmap_drilldown_overview(self, topic_id, group_id):
-        topic = get_object_or_404(Topic, pk=topic_id)
-        groups = list(StudentGroup.objects.all().order_by('name'))
-        if group_id:
-            selected_group = get_object_or_404(StudentGroup, pk=group_id)
-            students = list(
-                selected_group.students.all().order_by('last_name', 'first_name'),
-            )
-        else:
-            selected_group = None
-            students = list(Student.objects.all().order_by('last_name', 'first_name'))
-
-        return HeatmapDrilldownOverviewData(
-            topic=self._report_heatmap_column_ref(topic),
-            groups=[self._report_group_ref(group) for group in groups],
-            selected_group=(
-                self._report_group_ref(selected_group)
-                if selected_group
-                else None
-            ),
-            students=[self._report_student_ref(student) for student in students],
-            courses=self._active_course_refs(),
-        )
-
-    def get_heatmap_course_overview(self, course_id, group_id):
-        course = get_object_or_404(Course, pk=course_id)
-        course_groups = list(course.student_groups.all().order_by('name'))
-
-        if group_id:
-            selected_group = get_object_or_404(StudentGroup, pk=group_id)
-            students = list(
-                selected_group.students.all().order_by('last_name', 'first_name'),
-            )
-        elif course_groups:
-            students = list(
-                Student.objects.filter(
-                    studentgroup__in=course_groups,
-                ).distinct().order_by('last_name', 'first_name'),
-            )
-            selected_group = None
-        else:
-            students = list(Student.objects.all().order_by('last_name', 'first_name'))
-            selected_group = None
-
-        course_works = [
-            assignment.work
-            for assignment in CourseAssignment.objects.filter(
-                course=course,
-            ).select_related('work')
-        ]
-
-        return HeatmapCourseOverviewData(
-            course=self._report_course_ref(course),
-            groups=[self._report_group_ref(group) for group in course_groups],
-            selected_group=(
-                self._report_group_ref(selected_group)
-                if selected_group
-                else None
-            ),
-            students=[self._report_student_ref(student) for student in students],
-            course_works=[self._report_work_ref(work) for work in course_works],
-            courses=self._active_course_refs(),
-            active_course_pk=str(course.pk),
-        )
-
-    def get_heatmap_overview(self, group_id):
-        groups = list(StudentGroup.objects.all().order_by('name'))
-        if group_id:
-            selected_group = get_object_or_404(StudentGroup, pk=group_id)
-            students = list(
-                selected_group.students.all().order_by('last_name', 'first_name'),
-            )
-        else:
-            selected_group = None
-            students = list(Student.objects.all().order_by('last_name', 'first_name'))
-
-        sections = list(
-            Topic.objects.filter(subject='Физика')
-            .values_list('section', flat=True)
-            .distinct()
-            .order_by('section'),
-        )
-
-        return HeatmapOverviewData(
-            groups=[self._report_group_ref(group) for group in groups],
-            selected_group=(
-                self._report_group_ref(selected_group)
-                if selected_group
-                else None
-            ),
-            students=[self._report_student_ref(student) for student in students],
-            sections=sections,
-            courses=self._active_course_refs(),
-        )
-
     def get_heatmap_topic_matrix_source(self, student_ids, section_filter=''):
         students = list(
             Student.objects.filter(pk__in=student_ids).order_by(
@@ -570,44 +467,4 @@ class DjangoHeatmapRepository(
             short_name=student.get_short_name(),
             last_name=student.last_name,
             first_name=student.first_name,
-        )
-
-    def _report_group_ref(self, group):
-        return ReportGroupRef(
-            pk=str(group.pk),
-            name=group.name,
-            students_count=group.students.count(),
-        )
-
-    def _report_course_ref(self, course):
-        return ReportCourseRef(pk=str(course.pk), name=course.name)
-
-    def _active_course_refs(self):
-        return [
-            self._report_course_ref(course)
-            for course in Course.objects.filter(is_active=True).order_by(
-                'grade_level',
-                'name',
-            )
-        ]
-
-    def _report_heatmap_column_ref(self, item):
-        return ReportHeatmapColumnRef(
-            pk=str(item.pk),
-            name=item.name,
-            section=getattr(item, 'section', ''),
-        )
-
-    @staticmethod
-    def _report_work_ref(work):
-        variant_count = getattr(work, 'variant_count', None)
-        if variant_count is None:
-            variant_count = work.variant_set.count()
-        return ReportWorkRef(
-            pk=str(work.pk),
-            name=work.name,
-            work_type=work.work_type,
-            work_type_display=work.get_work_type_display(),
-            duration=work.duration,
-            variant_count=variant_count,
         )

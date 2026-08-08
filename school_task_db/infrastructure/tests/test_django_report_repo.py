@@ -6,6 +6,9 @@ from django.utils import timezone
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_heatmap_repo import DjangoHeatmapRepository
+from infrastructure.repositories.django_heatmap_overview_repo import (
+    DjangoHeatmapOverviewRepository,
+)
 from infrastructure.repositories.django_events_status_repo import (
     DjangoEventsStatusRepository,
 )
@@ -90,7 +93,7 @@ class DjangoReportRepositoriesTests(TestCase):
             is_active=True,
         )
 
-        data = DjangoHeatmapRepository().get_heatmap_drilldown_overview(
+        data = DjangoHeatmapOverviewRepository().get_heatmap_drilldown_overview(
             topic_id=topic.pk,
             group_id=selected_group.pk,
         )
@@ -419,7 +422,7 @@ class DjangoReportRepositoriesTests(TestCase):
         work = Work.objects.create(name='Контрольная')
         CourseAssignment.objects.create(course=course, work=work)
 
-        data = DjangoHeatmapRepository().get_heatmap_course_overview(
+        data = DjangoHeatmapOverviewRepository().get_heatmap_course_overview(
             course_id=course.pk,
             group_id=selected_group.pk,
         )
@@ -465,7 +468,7 @@ class DjangoReportRepositoriesTests(TestCase):
             is_active=True,
         )
 
-        data = DjangoHeatmapRepository().get_heatmap_overview(
+        data = DjangoHeatmapOverviewRepository().get_heatmap_overview(
             group_id=selected_group.pk,
         )
 

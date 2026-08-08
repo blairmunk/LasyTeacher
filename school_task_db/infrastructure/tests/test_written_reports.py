@@ -336,6 +336,35 @@ class WrittenReportRepositoryTests(TestCase):
             ('ОГЭ 2026: Применение второго закона Ньютона',),
         )
 
+    def test_event_report_specification_survives_variant_reassignment(self):
+        replacement_variant = Variant.objects.create(
+            work=self.work,
+            number=2,
+            work_name_snapshot=self.work.name,
+        )
+        self.participation.variant = replacement_variant
+        self.participation.save(update_fields=['variant'])
+        self.variant_task.order = 9
+        self.variant_task.source_selection_id = 'changed-selection'
+        self.variant_task.is_assessable = False
+        self.variant_task.save(update_fields=[
+            'order',
+            'source_selection_id',
+            'is_assessable',
+        ])
+
+        source = DjangoEventPerformanceReportRepository().get_event_report_source(
+            str(self.event.pk),
+        )
+
+        self.assertEqual(len(source.specification), 1)
+        self.assertEqual(source.specification[0].order, 1)
+        self.assertEqual(
+            source.specification[0].group_key,
+            'selection:spec-row-1:slot:1',
+        )
+        self.assertEqual(source.specification[0].content_element, '1.2')
+
     def test_student_digest_repository_returns_marks_and_absences(self):
         repo = DjangoStudentDigestRepository()
         self.topic.name = 'Изменённая тема банка'

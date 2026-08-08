@@ -24,7 +24,6 @@ from infrastructure.services.task_content_snapshots import (
     task_content_snapshot_from_mapping,
 )
 from reports.models import EventReportNarrativeModel
-from works.models import VariantTask
 
 
 class DjangoEventPerformanceReportRepository(
@@ -45,7 +44,6 @@ class DjangoEventPerformanceReportRepository(
         attempts = latest_attempts_by_participation(
             participation.pk for participation in participations
         )
-        variant_tasks = self._variant_tasks_by_variant(participations)
         task_scores = []
         participant_facts = []
         for participation in participations:
@@ -127,7 +125,7 @@ class DjangoEventPerformanceReportRepository(
             ),
             participants=tuple(participant_facts),
             task_scores=tuple(task_scores),
-            specification=self._specification_facts(variant_tasks),
+            specification=self._specification_facts(attempts.values()),
             narrative=self._narrative(narrative_model),
         )
 
@@ -150,42 +148,29 @@ class DjangoEventPerformanceReportRepository(
         )
 
     @staticmethod
-    def _variant_tasks_by_variant(participations):
-        variant_ids = {
-            item.variant_id for item in participations if item.variant_id
-        }
-        result = {variant_id: [] for variant_id in variant_ids}
-        for variant_task in VariantTask.objects.filter(
-            variant_id__in=variant_ids,
-        ):
-            result[variant_task.variant_id].append(variant_task)
-        return result
-
-    @staticmethod
-    def _specification_facts(variant_tasks):
+    def _specification_facts(attempts):
         facts = []
         seen = set()
-        for tasks in variant_tasks.values():
+        for attempt in attempts:
             slot_occurrences = defaultdict(int)
-            for variant_task in sorted(
-                tasks,
-                key=lambda item: (item.order, str(item.pk)),
-            ):
-                if not variant_task.is_assessable:
+            for task_result in attempt.captured_task_results:
+                if not task_result.is_assessable_snapshot:
                     continue
                 occurrence_key = (
-                    variant_task.source_selection_id,
-                    variant_task.content_order,
+                    task_result.source_selection_id_snapshot,
+                    task_result.content_order_snapshot,
                 )
                 slot_occurrences[occurrence_key] += 1
                 group_key = report_task_slot_key(
-                    source_selection_id=variant_task.source_selection_id,
-                    content_order=variant_task.content_order,
-                    position=variant_task.order,
+                    source_selection_id=(
+                        task_result.source_selection_id_snapshot
+                    ),
+                    content_order=task_result.content_order_snapshot,
+                    position=task_result.order_snapshot,
                     occurrence=slot_occurrences[occurrence_key],
                 )
                 task = task_content_snapshot_from_mapping(
-                    variant_task.task_snapshot,
+                    task_result.task_content_snapshot,
                 )
                 codifier_requirements = tuple(
                     f'{item.codifier_short_name}: {item.code}'
@@ -193,7 +178,7 @@ class DjangoEventPerformanceReportRepository(
                 )
                 key = (
                     group_key,
-                    variant_task.order,
+                    task_result.order_snapshot,
                     task.topic_name,
                     task.subtopic_name,
                     task.content_element,

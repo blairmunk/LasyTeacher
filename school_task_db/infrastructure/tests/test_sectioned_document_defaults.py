@@ -664,6 +664,25 @@ class SectionedDocumentDefaultsTests(TestCase):
         self.assertEqual(work_payload['title'], 'Контрольная')
         self.assertEqual(remedial_payload['title'], 'Работа над ошибками')
 
+    def test_default_remedial_source_uses_document_repository(self):
+        registry = build_sectioned_document_payload_builder_registry()
+
+        payload = registry.build_payload(
+            DocumentSectionPayloadBuildRequest(
+                source=DocumentSourceRef(
+                    source_type=REMEDIAL_VARIANT_SOURCE_TYPE,
+                    source_id='00000000-0000-0000-0000-000000000000',
+                ),
+                recipe=DocumentRecipe(document_type='remedial_sheet'),
+                section=DocumentSectionSpec(section_type=HEADER_SECTION),
+            )
+        )
+
+        self.assertEqual(payload['title'], 'Работа над ошибками')
+        self.assertIsNone(payload['student'])
+        self.assertIsNone(payload['source_work'])
+        self.assertIsNone(payload['mark'])
+
     def test_builds_combined_sectioned_html_pdf_components(self):
         with TemporaryDirectory() as output_dir:
             components = build_sectioned_html_pdf_document_components(

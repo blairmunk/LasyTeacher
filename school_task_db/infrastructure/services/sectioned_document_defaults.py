@@ -7,7 +7,9 @@ from core_logic.services.document_renderer_registry import DocumentRendererRegis
 from core_logic.use_cases.get_remedial_sheet_data import (
     GetRemedialSheetDataUseCase,
 )
-from infrastructure.repositories.django_work_repo import DjangoWorkRepository
+from infrastructure.repositories.django_work_document_repo import (
+    DjangoWorkDocumentRepository,
+)
 from infrastructure.services.django_document_payload_registry import (
     build_report_section_payload_builder_registry,
     build_remedial_sheet_section_payload_builder_registry,
@@ -180,5 +182,5 @@ def _sectioned_task_payload_formatter():
 
 def _default_get_remedial_sheet_data():
     return GetRemedialSheetDataUseCase(
-        work_repo=DjangoWorkRepository(),
+        work_repo=DjangoWorkDocumentRepository(),
     ).execute

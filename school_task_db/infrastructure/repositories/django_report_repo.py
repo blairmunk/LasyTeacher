@@ -23,7 +23,6 @@ from core_logic.entities.report import (
     HeatmapTimelineEventRef,
     HeatmapTimelineMarkFact,
     ReportsDashboardSource,
-    ReportAnalogGroupRef,
     ReportActivityRef,
     ReportCourseRef,
     ReportEventRef,
@@ -32,23 +31,16 @@ from core_logic.entities.report import (
     ReportMarkFact,
     ReportStudentRef,
     ReportTaskRef,
-    ReportTaskUsageRef,
-    ReportVariantRef,
     ReportWorkRef,
     StudentPerformanceItemSource,
     StudentPerformanceParticipationFact,
     StudentPerformanceSource,
-    TaskCoverageFact,
-    TaskDBHealthSource,
-    TaskDistributionFact,
-    TaskGroupSizeFact,
     WorkAnalysisItemSource,
     WorkAnalysisSource,
 )
 from core_logic.interfaces.report_repo import (
     IHeatmapRepository,
     IReportSummaryRepository,
-    ITaskDBHealthRepository,
 )
 from core_logic.services.event_service import EventService
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
@@ -61,119 +53,13 @@ from infrastructure.services.captured_task_result_queries import (
 )
 from students.models import Student, StudentGroup
 from tasks.models import Task
-from task_groups.models import AnalogGroup, TaskGroup
-from works.models import Variant, Work, WorkAnalogGroup
+from works.models import Work
 
 
 class DjangoReportRepository(
     IReportSummaryRepository,
-    ITaskDBHealthRepository,
     IHeatmapRepository,
 ):
-    def get_task_db_health_source(self):
-        total_tasks = Task.objects.count()
-        group_records = list(
-            AnalogGroup.objects.annotate(
-                task_count=Count('taskgroup'),
-            ).order_by('name'),
-        )
-        total_works = Work.objects.count()
-        total_variants = Variant.objects.count()
-        orphan_variants = Variant.objects.filter(work__isnull=True)
-        tasks_in_groups = set(TaskGroup.objects.values_list('task_id', flat=True))
-        ungrouped_count = Task.objects.exclude(id__in=tasks_in_groups).count()
-        works_no_variants = Work.objects.annotate(
-            variant_count=Count('variant'),
-        ).filter(variant_count=0)
-        works_no_spec = Work.objects.annotate(
-            spec_count=Count('workanaloggroup'),
-        ).filter(spec_count=0)
-        unverified_count = Task.objects.filter(is_verified=False).count()
-        no_source_count = Task.objects.filter(source__isnull=True).count()
-        no_grade_count = Task.objects.filter(grade__isnull=True).count()
-
-        type_labels = dict(getattr(Task, 'TASK_TYPE_CHOICES', ()))
-        return TaskDBHealthSource(
-            total_tasks=total_tasks,
-            total_works=total_works,
-            total_variants=total_variants,
-            orphan_variants_count=orphan_variants.count(),
-            orphan_variant_samples=[
-                self._report_variant_ref(variant)
-                for variant in orphan_variants.order_by('-created_at')[:10]
-            ],
-            group_sizes=[
-                TaskGroupSizeFact(
-                    group=self._report_analog_group_ref(group),
-                    task_count=group.task_count,
-                )
-                for group in group_records
-            ],
-            coverage=[
-                TaskCoverageFact(
-                    work=self._report_work_ref(work_group.work),
-                    group=self._report_analog_group_ref(
-                        work_group.analog_group,
-                    ),
-                    needed=work_group.count,
-                    available=work_group.available,
-                )
-                for work_group in WorkAnalogGroup.objects.select_related(
-                    'work',
-                    'analog_group',
-                ).annotate(available=Count('analog_group__taskgroup'))
-            ],
-            ungrouped_tasks_count=ungrouped_count,
-            works_no_variants_count=works_no_variants.count(),
-            works_no_variant_samples=[
-                self._report_work_ref(work)
-                for work in works_no_variants[:10]
-            ],
-            works_no_spec_count=works_no_spec.count(),
-            works_no_spec_samples=[
-                self._report_work_ref(work)
-                for work in works_no_spec[:10]
-            ],
-            difficulty_counts=[
-                TaskDistributionFact(
-                    key=item['difficulty'],
-                    count=item['count'],
-                )
-                for item in Task.objects.values('difficulty').annotate(
-                    count=Count('id'),
-                ).order_by('difficulty')
-            ],
-            type_counts=[
-                TaskDistributionFact(
-                    key=item['task_type'],
-                    count=item['count'],
-                    label=type_labels.get(
-                        item['task_type'],
-                        item['task_type'] or '—',
-                    ),
-                )
-                for item in Task.objects.values('task_type').annotate(
-                    count=Count('id'),
-                ).order_by('-count')
-            ],
-            most_used_tasks=[
-                self._report_task_usage_ref(task)
-                for task in Task.objects.annotate(
-                    variant_count=Count('varianttask'),
-                ).filter(variant_count__gt=0).order_by('-variant_count')[:10]
-            ],
-            unverified_tasks_count=unverified_count,
-            no_source_tasks_count=no_source_count,
-            no_grade_tasks_count=no_grade_count,
-            courses=[
-                ReportCourseRef(pk=str(course.pk), name=course.name)
-                for course in Course.objects.filter(is_active=True).order_by(
-                    'grade_level',
-                    'name',
-                )
-            ],
-        )
-
     def get_heatmap_drilldown_overview(self, topic_id, group_id):
         topic = get_object_or_404(Topic, pk=topic_id)
         groups = list(StudentGroup.objects.all().order_by('name'))
@@ -1033,26 +919,4 @@ class DjangoReportRepository(
             work_type_display=work.get_work_type_display(),
             duration=work.duration,
             variant_count=variant_count,
-        )
-
-    def _report_variant_ref(self, variant):
-        return ReportVariantRef(
-            pk=str(variant.pk),
-            short_uuid=variant.get_short_uuid(),
-            number=variant.number,
-            work_name_snapshot=variant.work_name_snapshot,
-        )
-
-    def _report_analog_group_ref(self, group):
-        return ReportAnalogGroupRef(
-            pk=str(group.pk),
-            name=group.name,
-        )
-
-    def _report_task_usage_ref(self, task):
-        return ReportTaskUsageRef(
-            pk=str(task.pk),
-            short_uuid=task.get_short_uuid(),
-            text=task.text,
-            variant_count=task.variant_count,
         )

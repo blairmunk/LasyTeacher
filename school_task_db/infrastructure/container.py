@@ -322,6 +322,9 @@ from infrastructure.repositories.django_student_digest_repo import (
     DjangoStudentDigestRepository,
 )
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
+from infrastructure.repositories.django_task_db_health_repo import (
+    DjangoTaskDBHealthRepository,
+)
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from infrastructure.services.document_engine import (
     DjangoDocumentEngine,
@@ -359,6 +362,7 @@ class Container:
         self._review_repo = None
         self._report_repo = None
         self._journal_repo = None
+        self._task_db_health_repo = None
         self._event_performance_report_repo = None
         self._student_digest_repo = None
         self._curriculum_repo = None
@@ -441,6 +445,12 @@ class Container:
         if self._journal_repo is None:
             self._journal_repo = DjangoJournalRepository()
         return self._journal_repo
+
+    @property
+    def task_db_health_repo(self):
+        if self._task_db_health_repo is None:
+            self._task_db_health_repo = DjangoTaskDBHealthRepository()
+        return self._task_db_health_repo
 
     @property
     def event_performance_report_repo(self):
@@ -1078,7 +1088,7 @@ class Container:
 
     def get_task_db_health_use_case(self):
         return GetTaskDBHealthUseCase(
-            report_repo=self.report_repo,
+            report_repo=self.task_db_health_repo,
         )
 
     def add_event_participants_use_case(self):

@@ -27,6 +27,7 @@ TEST_SLICES = {
         'infrastructure.tests.test_attempt_snapshots',
         'infrastructure.tests.test_django_report_repo',
         'infrastructure.tests.test_django_journal_repo',
+        'infrastructure.tests.test_django_task_db_health_repo',
         'infrastructure.tests.test_written_reports',
         'reports.tests',
     ),

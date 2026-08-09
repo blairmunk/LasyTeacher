@@ -6,7 +6,7 @@ from core_logic.use_cases.refresh_task_math_cache import (
 )
 
 
-class FakeTaskRepository:
+class FakeSourceRepository:
     def __init__(self):
         self.sources_requested = False
 
@@ -30,8 +30,8 @@ class FakeTaskMathStatusCache:
 
 class SourceListAndMathCacheUseCaseTests(TestCase):
     def test_get_source_list_returns_sources(self):
-        repo = FakeTaskRepository()
-        use_case = GetSourceListUseCase(task_repo=repo)
+        repo = FakeSourceRepository()
+        use_case = GetSourceListUseCase(source_repo=repo)
 
         result = use_case.execute()
 

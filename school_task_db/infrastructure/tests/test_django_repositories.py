@@ -107,6 +107,7 @@ from infrastructure.repositories.django_review_session_repo import (
 from infrastructure.repositories.django_review_task_repo import (
     DjangoReviewTaskRepository,
 )
+from infrastructure.repositories.django_source_repo import DjangoSourceRepository
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
@@ -963,11 +964,11 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(subtopics[0].name, self.subtopic.name)
         self.assertEqual(missing_subtopics, [])
 
-    def test_task_repository_returns_source_list_with_task_count(self):
+    def test_source_repository_returns_list_with_task_count(self):
         source = Source.objects.create(name='Сборник задач')
         self.original_weak.source = source
         self.original_weak.save()
-        repo = DjangoTaskRepository()
+        repo = DjangoSourceRepository()
 
         sources = repo.get_source_list_sources()
 
@@ -976,8 +977,8 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(sources[0].source_type_display, source.get_source_type_display())
         self.assertEqual(sources[0].task_count, 1)
 
-    def test_task_repository_creates_source(self):
-        repo = DjangoTaskRepository()
+    def test_source_repository_creates_source(self):
+        repo = DjangoSourceRepository()
 
         result = repo.create_source(
             SourceCreateParams(

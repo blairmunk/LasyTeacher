@@ -7,9 +7,6 @@ from core_logic.entities.task import (
     AddTasksToGroupTask,
     ReferenceElementOption,
     SelectOption,
-    SourceCreateParams,
-    SourceCreateResult,
-    SourceListItem,
     TaskEntity,
     TaskExportFilters,
     TaskGroupDetailGroup,
@@ -114,14 +111,6 @@ class ITaskRepository(ABC):
         filters: TaskExportFilters,
     ) -> list:
         """Return normalized task records for portable export."""
-
-    @abstractmethod
-    def get_source_list_sources(self) -> List[SourceListItem]:
-        """Return sources for the source list page."""
-
-    @abstractmethod
-    def create_source(self, params: SourceCreateParams) -> SourceCreateResult:
-        """Create a task source and return its read model."""
 
     @abstractmethod
     def get_subtopics_for_topic(self, topic_id: str) -> List[SelectOption]:

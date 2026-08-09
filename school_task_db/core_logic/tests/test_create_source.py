@@ -4,7 +4,7 @@ from core_logic.entities.task import SourceCreateParams, SourceCreateResult
 from core_logic.use_cases.create_source import CreateSourceUseCase
 
 
-class FakeTaskRepository:
+class FakeSourceRepository:
     def __init__(self):
         self.created_params = None
 
@@ -15,8 +15,8 @@ class FakeTaskRepository:
 
 class CreateSourceUseCaseTests(TestCase):
     def test_execute_delegates_to_repository(self):
-        repo = FakeTaskRepository()
-        use_case = CreateSourceUseCase(task_repo=repo)
+        repo = FakeSourceRepository()
+        use_case = CreateSourceUseCase(source_repo=repo)
         params = SourceCreateParams(
             name='Сборник задач',
             short_name='Сборник',

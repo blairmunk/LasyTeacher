@@ -2,7 +2,9 @@
 
 from django.core.management.base import BaseCommand
 from django.core.cache import cache
-from tasks.utils import math_status_cache
+from infrastructure.services.task_math_status_cache import (
+    task_math_status_cache,
+)
 from tasks.models import Task
 
 class Command(BaseCommand):
@@ -49,7 +51,7 @@ class Command(BaseCommand):
         """Показывает статистику кэша"""
         self.stdout.write(self.style.SUCCESS('📊 Статистика кэша математических формул:'))
         
-        stats = math_status_cache.get_cache_stats()
+        stats = task_math_status_cache.get_cache_stats()
         
         self.stdout.write(f"  Основной кэш: {'✅' if stats['all_status_cached'] else '❌'}")
         self.stdout.write(f"  Задания с формулами: {'✅' if stats['with_math_cached'] else '❌'}")
@@ -65,7 +67,7 @@ class Command(BaseCommand):
             # Проверяем сколько заданий закэшировано индивидуально
             cached_tasks = 0
             for task_id in Task.objects.values_list('id', flat=True)[:100]:  # Проверяем первые 100
-                cache_key = math_status_cache.get_task_cache_key(task_id)
+                cache_key = task_math_status_cache.get_task_cache_key(task_id)
                 if cache.get(cache_key) is not None:
                     cached_tasks += 1
             
@@ -83,7 +85,7 @@ class Command(BaseCommand):
         self.stdout.write("🔄 Обновление кэша...")
         
         try:
-            stats = math_status_cache.refresh_cache()
+            stats = task_math_status_cache.refresh_cache()
             
             self.stdout.write(self.style.SUCCESS("✅ Кэш успешно обновлен!"))
             self.stdout.write(f"  📐 Заданий с формулами: {len(stats['with_math'])}")
@@ -100,7 +102,7 @@ class Command(BaseCommand):
             self.stdout.write("Операция отменена")
             return
         
-        math_status_cache.invalidate_all_cache()
+        task_math_status_cache.invalidate_all_cache()
         self.stdout.write(self.style.SUCCESS("✅ Кэш очищен"))
     
     def warmup_cache(self, batch_size):
@@ -114,7 +116,7 @@ class Command(BaseCommand):
             tasks_batch = Task.objects.all()[offset:offset + batch_size]
             
             for task in tasks_batch:
-                math_status_cache.get_task_math_status(task)
+                task_math_status_cache.get_task_math_status(task)
                 processed += 1
             
             # Показываем прогресс

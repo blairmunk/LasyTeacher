@@ -43,10 +43,12 @@ from curriculum.models import SubTopic, Topic
 from infrastructure.services.task_image_presentation import (
     TaskImagePresentationService,
 )
+from infrastructure.services.task_math_status_cache import (
+    task_math_status_cache,
+)
 from task_groups.models import AnalogGroup, TaskGroup
 from references.models import SubjectReference
 from tasks.models import Source, Task, TaskImage
-from tasks.utils import math_status_cache
 
 
 class DjangoTaskRepository(ITaskRepository):
@@ -97,11 +99,11 @@ class DjangoTaskRepository(ITaskRepository):
 
         if filters.math_filter == 'with_math':
             queryset = queryset.filter(
-                id__in=math_status_cache.get_tasks_with_math_ids(),
+                id__in=task_math_status_cache.get_tasks_with_math_ids(),
             )
         elif filters.math_filter == 'with_errors':
             queryset = queryset.filter(
-                id__in=math_status_cache.get_tasks_with_errors_ids(),
+                id__in=task_math_status_cache.get_tasks_with_errors_ids(),
             )
 
         if filters.source_id == 'none':
@@ -606,10 +608,10 @@ class DjangoTaskRepository(ITaskRepository):
         ).count()
 
     def get_math_cache_stats(self):
-        return math_status_cache.get_cache_stats()
+        return task_math_status_cache.get_cache_stats()
 
     def refresh_math_cache(self) -> dict:
-        return math_status_cache.refresh_cache()
+        return task_math_status_cache.refresh_cache()
 
     def get_by_ids(self, task_ids: Set[str]) -> List[TaskEntity]:
         if not task_ids:

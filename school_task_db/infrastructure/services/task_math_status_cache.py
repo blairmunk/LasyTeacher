@@ -1,15 +1,17 @@
-"""Утилиты для кэширования статуса математических формул в заданиях"""
+"""Django cache adapter for task formula diagnostics."""
 
 import logging
-from typing import Dict, Set, List, Optional
+from typing import Any, Dict, Set
+
 from django.core.cache import cache
-from django.db.models.signals import post_save, post_delete
-from django.dispatch import receiver
+
 from core_logic.services.formula_processor import formula_processor
+from tasks.models import Task
 
 logger = logging.getLogger(__name__)
 
-class MathStatusCache:
+
+class DjangoTaskMathStatusCache:
     """Кэш для статуса математических формул в заданиях"""
     
     # Ключи кэша
@@ -30,7 +32,7 @@ class MathStatusCache:
         return f"{cls.CACHE_KEY_TASK_PREFIX}{task_id}"
     
     @classmethod
-    def get_task_math_status(cls, task) -> Dict[str, any]:
+    def get_task_math_status(cls, task) -> Dict[str, Any]:
         """Получает статус формул для отдельного задания с кэшированием"""
         cache_key = cls.get_task_cache_key(task.id)
         cached_status = cache.get(cache_key)
@@ -61,7 +63,11 @@ class MathStatusCache:
                 'error_count': error_count,
                 'warning_count': warning_count,
                 'task_id': task.id,
-                'last_updated': task.updated_at.isoformat() if hasattr(task, 'updated_at') else None
+                'last_updated': (
+                    task.updated_at.isoformat()
+                    if getattr(task, 'updated_at', None)
+                    else None
+                ),
             }
             
             # Кэшируем результат
@@ -92,8 +98,6 @@ class MathStatusCache:
                 return cached_data
         
         logger.info("Вычисляем статус формул для всех заданий...")
-        
-        from tasks.models import Task
         
         result = {
             'with_math': set(),
@@ -128,9 +132,11 @@ class MathStatusCache:
                 logger.info(f"Обработано заданий: {processed_count}/{total_tasks}")
         
         logger.info(f"Завершена обработка {processed_count} заданий")
-        logger.info(f"С формулами: {len(result['with_math'])}, "
-                   f"с ошибками: {len(result['with_errors'])}, "
-                   f"с предупреждениями: {len(result['with_warnings'])}")
+        logger.info(
+            f"С формулами: {len(result['with_math'])}, "
+            f"с ошибками: {len(result['with_errors'])}, "
+            f"с предупреждениями: {len(result['with_warnings'])}"
+        )
         
         # Кэшируем результат
         cache.set(cls.CACHE_KEY_ALL_MATH, result, cls.CACHE_TIMEOUT)
@@ -189,7 +195,7 @@ class MathStatusCache:
         return cls.get_all_tasks_math_status(force_refresh=True)
     
     @classmethod
-    def get_cache_stats(cls) -> Dict[str, any]:
+    def get_cache_stats(cls) -> Dict[str, Any]:
         """Получает статистику кэша"""
         all_status = cache.get(cls.CACHE_KEY_ALL_MATH)
         with_math = cache.get(cls.CACHE_KEY_WITH_MATH)
@@ -203,25 +209,6 @@ class MathStatusCache:
             'total_with_errors': len(with_errors) if with_errors else 0,
         }
 
-# Создаем глобальный экземпляр
-math_status_cache = MathStatusCache()
 
-# Сигналы для автоматической инвалидации кэша
-@receiver(post_save, sender='tasks.Task')
-def invalidate_task_math_cache_on_save(sender, instance, **kwargs):
-    """Инвалидирует кэш при сохранении задания"""
-    math_status_cache.invalidate_task_cache(instance.id)
-
-    update_fields = kwargs.get('update_fields')
-    text_may_have_changed = (
-        update_fields is None
-        or 'text' in update_fields
-    )
-    if kwargs.get('created') or text_may_have_changed:
-        math_status_cache.invalidate_all_cache()
-
-@receiver(post_delete, sender='tasks.Task')
-def invalidate_task_math_cache_on_delete(sender, instance, **kwargs):
-    """Инвалидирует кэш при удалении задания"""
-    math_status_cache.invalidate_task_cache(instance.id)
-    math_status_cache.invalidate_all_cache()
+# Shared adapter instance used by repositories, commands, and signals.
+task_math_status_cache = DjangoTaskMathStatusCache()

@@ -11,12 +11,14 @@ from core_logic.value_objects.document_render_options import (
     RemedialSheetDocumentRenderOptions,
     WorkDocumentRenderOptions,
 )
-from core_logic.value_objects.document_render_plan_factories import (
+from core_logic.value_objects.document_render_recipe_factories import (
     build_remedial_sheet_batch_document_recipe_for_render,
-    build_remedial_sheet_batch_document_source,
     build_remedial_sheet_document_recipe_for_render,
-    build_remedial_sheet_document_source,
     build_work_document_recipe_for_render,
+)
+from core_logic.value_objects.document_source_factories import (
+    build_remedial_sheet_batch_document_source,
+    build_remedial_sheet_document_source,
     build_work_document_source,
 )
 from core_logic.value_objects.document_recipes import (
@@ -29,7 +31,7 @@ from core_logic.value_objects.document_recipes import (
 )
 
 
-class DocumentRenderPlanFactoriesTests(TestCase):
+class DocumentRenderRecipeFactoriesTests(TestCase):
     def test_build_work_document_source(self):
         source = build_work_document_source(
             work_id='work-1',

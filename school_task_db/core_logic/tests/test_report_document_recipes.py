@@ -10,7 +10,7 @@ from core_logic.value_objects.document_recipe_factories import (
     build_event_performance_report_document_recipe,
     build_student_digest_document_recipe,
 )
-from core_logic.value_objects.document_render_plan_factories import (
+from core_logic.value_objects.document_render_recipe_factories import (
     build_student_digest_document_recipe_for_render,
 )
 from core_logic.value_objects.document_recipes import (

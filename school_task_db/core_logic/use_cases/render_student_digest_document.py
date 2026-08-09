@@ -20,8 +20,10 @@ from core_logic.use_cases.render_document_from_recipe import (
     RenderDocumentFromRecipeUseCase,
 )
 from core_logic.value_objects.document_render_options import RenderTarget
-from core_logic.value_objects.document_render_plan_factories import (
+from core_logic.value_objects.document_render_recipe_factories import (
     build_student_digest_document_recipe_for_render,
+)
+from core_logic.value_objects.document_source_factories import (
     build_student_digest_document_source,
 )
 from core_logic.value_objects.document_recipes import (

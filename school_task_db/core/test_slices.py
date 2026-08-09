@@ -40,7 +40,7 @@ TEST_SLICES = {
         'core_logic.tests.test_document_recipe_factories',
         'core_logic.tests.test_document_render_options',
         'core_logic.tests.test_document_render_plan',
-        'core_logic.tests.test_document_render_plan_factories',
+        'core_logic.tests.test_document_render_recipe_factories',
         'core_logic.tests.test_document_render_requests',
         'core_logic.tests.test_document_renderer_registry',
         'core_logic.tests.test_document_rendering_interfaces',

@@ -27,8 +27,10 @@ from core_logic.use_cases.render_document_from_recipe import (
 from core_logic.value_objects.document_render_options import (
     RemedialSheetDocumentRenderOptions,
 )
-from core_logic.value_objects.document_render_plan_factories import (
+from core_logic.value_objects.document_render_recipe_factories import (
     build_remedial_sheet_document_recipe_for_render,
+)
+from core_logic.value_objects.document_source_factories import (
     build_remedial_sheet_document_source,
 )
 from core_logic.value_objects.document_recipes import REMEDIAL_SHEET_DOCUMENT_TYPE

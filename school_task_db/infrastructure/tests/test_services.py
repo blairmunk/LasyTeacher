@@ -23,8 +23,10 @@ from core_logic.value_objects.document_render_options import (
 from core_logic.value_objects.document_render_plan import (
     DocumentRenderPlan,
 )
-from core_logic.value_objects.document_render_plan_factories import (
+from core_logic.value_objects.document_render_recipe_factories import (
     build_work_document_recipe_for_render,
+)
+from core_logic.value_objects.document_source_factories import (
     build_work_document_source,
 )
 from curriculum.models import Topic

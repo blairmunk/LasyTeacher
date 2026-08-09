@@ -30,10 +30,12 @@ from core_logic.value_objects.document_build_plan import (
     DocumentSectionPayloadBuildRequest,
 )
 from core_logic.value_objects.document_render_plan import DocumentRenderPlan
-from core_logic.value_objects.document_render_plan_factories import (
+from core_logic.value_objects.document_render_recipe_factories import (
     build_remedial_sheet_document_recipe_for_render,
-    build_remedial_sheet_document_source,
     build_work_document_recipe_for_render,
+)
+from core_logic.value_objects.document_source_factories import (
+    build_remedial_sheet_document_source,
     build_work_document_source,
 )
 from core_logic.value_objects.document_recipes import (

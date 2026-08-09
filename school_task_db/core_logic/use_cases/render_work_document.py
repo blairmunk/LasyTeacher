@@ -24,8 +24,10 @@ from core_logic.use_cases.render_document_from_recipe import (
 from core_logic.value_objects.document_render_options import (
     WorkDocumentRenderOptions,
 )
-from core_logic.value_objects.document_render_plan_factories import (
+from core_logic.value_objects.document_render_recipe_factories import (
     build_work_document_recipe_for_render,
+)
+from core_logic.value_objects.document_source_factories import (
     build_work_document_source,
 )
 from core_logic.value_objects.document_recipes import WORK_DOCUMENT_TYPE

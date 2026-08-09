@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 
 from core_logic.value_objects.document_render_options import (
-    RemedialSheetBuildOptions,
+    RemedialSheetPrintOptions,
     RenderTarget,
     WorkDocumentPrintOverrides,
 )
@@ -31,10 +31,10 @@ def work_print_overrides_from_data(
     )
 
 
-def remedial_sheet_build_options_from_data(
+def remedial_sheet_print_options_from_data(
     data: Mapping[str, str],
-) -> RemedialSheetBuildOptions:
-    return RemedialSheetBuildOptions(
+) -> RemedialSheetPrintOptions:
+    return RemedialSheetPrintOptions(
         answer_type=data.get('answer_type', 'with_short_solutions'),
     )
 

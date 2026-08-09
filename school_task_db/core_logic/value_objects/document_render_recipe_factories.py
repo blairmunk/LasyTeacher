@@ -8,7 +8,7 @@ from core_logic.entities.document import (
     DocumentPresentationProfile,
 )
 from core_logic.value_objects.document_render_options import (
-    RemedialSheetBuildOptions,
+    RemedialSheetPrintOptions,
     WorkDocumentPrintOverrides,
 )
 from core_logic.value_objects.document_recipe_factories import (
@@ -171,14 +171,14 @@ def apply_work_document_print_overrides(
 
 
 def build_remedial_sheet_document_recipe_for_render(
-    build_options: RemedialSheetBuildOptions,
+    print_options: RemedialSheetPrintOptions,
     presentation_profile: DocumentPresentationProfile | None = None,
 ) -> DocumentRecipe:
     return _recipe_with_profile_presentation(
         presentation_profile=presentation_profile,
         default_recipe_builder=(
             lambda: build_remedial_sheet_document_recipe(
-                build_options,
+                print_options,
             )
         ),
     )
@@ -186,11 +186,11 @@ def build_remedial_sheet_document_recipe_for_render(
 
 def build_remedial_sheet_batch_document_recipe_for_render(
     variant_ids: list[str],
-    build_options: RemedialSheetBuildOptions,
+    print_options: RemedialSheetPrintOptions,
     presentation_profile: DocumentPresentationProfile | None = None,
 ) -> DocumentRecipe:
     base_recipe = build_remedial_sheet_document_recipe_for_render(
-        build_options=build_options,
+        print_options=print_options,
         presentation_profile=presentation_profile,
     )
     return DocumentRecipe(

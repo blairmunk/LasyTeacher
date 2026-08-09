@@ -15,7 +15,7 @@ from core_logic.use_cases.render_remedial_sheet_document import (
 )
 from core_logic.use_cases.render_work_document import RenderWorkDocumentRequest
 from core_logic.value_objects.document_render_options import (
-    RemedialSheetBuildOptions,
+    RemedialSheetPrintOptions,
     RenderTarget,
     WorkDocumentPrintOverrides,
 )
@@ -56,7 +56,7 @@ def render_remedial_sheet_document_with_container(
                 renderer_type=renderer_type,
                 page_format=page_format,
             ),
-            build_options=RemedialSheetBuildOptions(
+            print_options=RemedialSheetPrintOptions(
                 answer_type=answer_type,
             ),
         )

@@ -167,7 +167,7 @@ class RenderRemedialSheetDocumentCommandTests(TestCase):
         self.assertEqual(request.variant_id, 'variant-1')
         self.assertEqual(request.render_target.renderer_type, 'pdf')
         self.assertEqual(request.render_target.page_format, 'A5')
-        self.assertEqual(request.build_options.answer_type, 'with_full_solutions')
+        self.assertEqual(request.print_options.answer_type, 'with_full_solutions')
         self.assertIn('Created pdf document', stdout.getvalue())
         self.assertIn('remedial_1.pdf', stdout.getvalue())
 

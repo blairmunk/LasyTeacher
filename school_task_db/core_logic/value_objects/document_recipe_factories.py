@@ -26,7 +26,7 @@ from core_logic.value_objects.document_recipes import (
     WORK_DOCUMENT_TYPE,
 )
 from core_logic.value_objects.document_render_options import (
-    RemedialSheetBuildOptions,
+    RemedialSheetPrintOptions,
 )
 from core_logic.value_objects.report_document_options import (
     EventReportDocumentOptions,
@@ -49,10 +49,9 @@ def build_work_document_recipe() -> DocumentRecipe:
 
 
 def build_remedial_sheet_document_recipe(
-    options: RemedialSheetBuildOptions | None = None,
+    options: RemedialSheetPrintOptions | None = None,
 ) -> DocumentRecipe:
-    options = options or RemedialSheetBuildOptions()
-    content_config = options.content_config
+    options = options or RemedialSheetPrintOptions()
     sections = [
         DocumentSectionSpec(section_type=HEADER_SECTION),
         DocumentSectionSpec(
@@ -66,17 +65,17 @@ def build_remedial_sheet_document_recipe(
         ),
     ]
 
-    if content_config['include_answers']:
+    if options.include_answers:
         sections.extend((
             DocumentSectionSpec(section_type=PAGE_BREAK_SECTION),
             DocumentSectionSpec(section_type=ANSWERS_SECTION),
         ))
-    if content_config['include_short_solutions']:
+    if options.include_short_solutions:
         sections.extend((
             DocumentSectionSpec(section_type=PAGE_BREAK_SECTION),
             DocumentSectionSpec(section_type=SHORT_SOLUTIONS_SECTION),
         ))
-    if content_config['include_full_solutions']:
+    if options.include_full_solutions:
         sections.extend((
             DocumentSectionSpec(section_type=PAGE_BREAK_SECTION),
             DocumentSectionSpec(section_type=FULL_SOLUTIONS_SECTION),

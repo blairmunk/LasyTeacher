@@ -50,16 +50,22 @@ class WorkDocumentPrintOverrides:
 
 
 @dataclass(frozen=True)
-class RemedialSheetBuildOptions:
+class RemedialSheetPrintOptions:
+    """Temporary presentation choices for a personalized remedial sheet."""
+
     answer_type: str = 'with_short_solutions'
 
     @property
-    def content_config(self) -> dict:
-        return {
-            'include_answers': self.answer_type in ANSWER_TYPES_WITH_ANSWERS,
-            'include_short_solutions': self.answer_type in {
-                'with_short_solutions',
-                'with_full_solutions',
-            },
-            'include_full_solutions': self.answer_type == 'with_full_solutions',
+    def include_answers(self) -> bool:
+        return self.answer_type in ANSWER_TYPES_WITH_ANSWERS
+
+    @property
+    def include_short_solutions(self) -> bool:
+        return self.answer_type in {
+            'with_short_solutions',
+            'with_full_solutions',
         }
+
+    @property
+    def include_full_solutions(self) -> bool:
+        return self.answer_type == 'with_full_solutions'

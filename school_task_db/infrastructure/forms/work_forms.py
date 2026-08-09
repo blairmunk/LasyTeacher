@@ -17,7 +17,7 @@ from core_logic.use_cases.render_remedial_sheet_batch_document import (
 from core_logic.use_cases.render_work_document import RenderWorkDocumentRequest
 from core_logic.use_cases.compose_work_variants import ComposeWorkVariantsRequest
 from infrastructure.forms.document_rendering import (
-    remedial_sheet_build_options_from_data,
+    remedial_sheet_print_options_from_data,
     render_target_from_data,
     renderer_type_from_data,
     work_print_overrides_from_data,
@@ -290,7 +290,7 @@ class WorkFormAdapter:
         return RenderRemedialSheetDocumentRequest(
             variant_id=variant_id,
             render_target=render_target_from_data(post_data),
-            build_options=remedial_sheet_build_options_from_data(
+            print_options=remedial_sheet_print_options_from_data(
                 post_data,
             ),
             presentation_profile_id=self._presentation_profile_id_from_post(post_data),
@@ -300,7 +300,7 @@ class WorkFormAdapter:
         return RenderRemedialSheetBatchDocumentRequest(
             work_id=work_id,
             render_target=render_target_from_data(post_data),
-            build_options=remedial_sheet_build_options_from_data(
+            print_options=remedial_sheet_print_options_from_data(
                 post_data,
             ),
             presentation_profile_id=self._presentation_profile_id_from_post(post_data),

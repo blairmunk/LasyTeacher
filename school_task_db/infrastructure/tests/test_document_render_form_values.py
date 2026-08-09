@@ -4,7 +4,7 @@ from core_logic.value_objects.document_render_options import (
     WorkDocumentPrintOverrides,
 )
 from infrastructure.forms.document_rendering import (
-    remedial_sheet_build_options_from_data,
+    remedial_sheet_print_options_from_data,
     render_target_from_data,
     renderer_type_from_data,
     work_print_overrides_from_data,
@@ -59,7 +59,7 @@ class DocumentRenderFormValueTests(TestCase):
         )
 
     def test_builds_remedial_sheet_options_without_target_fields(self):
-        options = remedial_sheet_build_options_from_data({
+        options = remedial_sheet_print_options_from_data({
             'renderer_type': 'html',
             'format': 'A5',
             'answer_type': 'with_answers',

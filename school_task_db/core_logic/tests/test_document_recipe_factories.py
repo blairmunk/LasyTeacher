@@ -16,7 +16,7 @@ from core_logic.value_objects.document_recipes import (
     TRAINING_TASKS_SECTION,
     WORK_DOCUMENT_TYPE,
 )
-from core_logic.value_objects.document_render_options import RemedialSheetBuildOptions
+from core_logic.value_objects.document_render_options import RemedialSheetPrintOptions
 
 
 class DocumentRecipeFactoriesTests(TestCase):
@@ -59,7 +59,7 @@ class DocumentRecipeFactoriesTests(TestCase):
 
     def test_remedial_sheet_recipe_maps_full_solutions(self):
         recipe = build_remedial_sheet_document_recipe(
-            RemedialSheetBuildOptions(answer_type='with_full_solutions')
+            RemedialSheetPrintOptions(answer_type='with_full_solutions')
         )
 
         self.assertEqual(

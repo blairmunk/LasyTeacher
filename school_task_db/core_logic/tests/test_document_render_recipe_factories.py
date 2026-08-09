@@ -8,7 +8,7 @@ from core_logic.entities.document import (
     WORK_SOURCE_TYPE,
 )
 from core_logic.value_objects.document_render_options import (
-    RemedialSheetBuildOptions,
+    RemedialSheetPrintOptions,
     WorkDocumentPrintOverrides,
 )
 from core_logic.value_objects.document_render_recipe_factories import (
@@ -97,7 +97,7 @@ class DocumentRenderRecipeFactoriesTests(TestCase):
 
     def test_build_remedial_sheet_document_recipe_for_render(self):
         recipe = build_remedial_sheet_document_recipe_for_render(
-            RemedialSheetBuildOptions(
+            RemedialSheetPrintOptions(
                 answer_type='with_answers',
             ),
         )
@@ -180,7 +180,7 @@ class DocumentRenderRecipeFactoriesTests(TestCase):
 
     def test_build_remedial_sheet_recipe_with_full_solutions(self):
         recipe = build_remedial_sheet_document_recipe_for_render(
-            build_options=RemedialSheetBuildOptions(
+            print_options=RemedialSheetPrintOptions(
                 answer_type='with_full_solutions',
             ),
         )
@@ -209,7 +209,7 @@ class DocumentRenderRecipeFactoriesTests(TestCase):
         )
 
         recipe = build_remedial_sheet_document_recipe_for_render(
-            build_options=RemedialSheetBuildOptions(),
+            print_options=RemedialSheetPrintOptions(),
             presentation_profile=presentation_profile,
         )
 
@@ -236,7 +236,7 @@ class DocumentRenderRecipeFactoriesTests(TestCase):
         )
         recipe = build_remedial_sheet_batch_document_recipe_for_render(
             variant_ids=['variant-1', 'variant-2'],
-            build_options=RemedialSheetBuildOptions(
+            print_options=RemedialSheetPrintOptions(
                 answer_type='with_answers',
             ),
         )
@@ -278,7 +278,7 @@ class DocumentRenderRecipeFactoriesTests(TestCase):
 
         recipe = build_remedial_sheet_batch_document_recipe_for_render(
             variant_ids=['variant-1'],
-            build_options=RemedialSheetBuildOptions(),
+            print_options=RemedialSheetPrintOptions(),
             presentation_profile=presentation_profile,
         )
 

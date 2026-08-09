@@ -1827,7 +1827,7 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertEqual(request.presentation_profile_id, 'template-rno')
         self.assertEqual(request.render_target.renderer_type, 'pdf')
         self.assertEqual(request.render_target.page_format, 'A4')
-        self.assertEqual(request.build_options.answer_type, 'with_full_solutions')
+        self.assertEqual(request.print_options.answer_type, 'with_full_solutions')
 
     def test_builds_render_remedial_sheet_batch_request_from_post(self):
         request = WorkFormAdapter().render_remedial_sheet_batch_request_from_post(

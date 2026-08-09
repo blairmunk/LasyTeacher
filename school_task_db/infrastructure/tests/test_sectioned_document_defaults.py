@@ -28,7 +28,7 @@ from core_logic.services.document_builder import (
     UnsupportedDocumentSectionPayloadBuilder,
 )
 from core_logic.value_objects.document_render_options import (
-    RemedialSheetBuildOptions,
+    RemedialSheetPrintOptions,
     RenderTarget,
     WorkDocumentPrintOverrides,
 )
@@ -498,7 +498,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 document_builder=components.document_builder,
                 document_renderer_registry=components.document_renderer_registry,
             )
-            build_options = RemedialSheetBuildOptions(
+            print_options = RemedialSheetPrintOptions(
                 answer_type='with_short_solutions',
             )
 
@@ -506,7 +506,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 _remedial_sheet_document_render_plan(
                     variant_id=str(remedial_variant.pk),
                     renderer_type='html',
-                    build_options=build_options,
+                    print_options=print_options,
                 ),
             )
 
@@ -592,7 +592,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 document_builder=components.document_builder,
                 document_renderer_registry=components.document_renderer_registry,
             )
-            build_options = RemedialSheetBuildOptions(
+            print_options = RemedialSheetPrintOptions(
                 answer_type='with_short_solutions',
             )
 
@@ -600,7 +600,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 _remedial_sheet_document_render_plan(
                     variant_id=str(remedial_variant.pk),
                     renderer_type='latex',
-                    build_options=build_options,
+                    print_options=print_options,
                 ),
             )
 
@@ -947,14 +947,14 @@ def _work_document_render_plan(
 def _remedial_sheet_document_render_plan(
     variant_id,
     renderer_type,
-    build_options=None,
+    print_options=None,
     presentation_profile=None,
 ):
-    build_options = build_options or RemedialSheetBuildOptions()
+    print_options = print_options or RemedialSheetPrintOptions()
     return DocumentRenderPlan(
         source=build_remedial_sheet_document_source(variant_id),
         recipe=build_remedial_sheet_document_recipe_for_render(
-            build_options=build_options,
+            print_options=print_options,
             presentation_profile=presentation_profile,
         ),
         render_target=RenderTarget(renderer_type=renderer_type),

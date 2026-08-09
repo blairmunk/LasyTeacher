@@ -14,7 +14,7 @@ from core_logic.use_cases.render_work_document import (
     RenderWorkDocumentRequest,
 )
 from core_logic.value_objects.document_render_options import (
-    RemedialSheetBuildOptions,
+    RemedialSheetPrintOptions,
     RenderTarget,
     WorkDocumentPrintOverrides,
 )
@@ -222,7 +222,7 @@ class DocumentContainerIntegrationTests(TestCase):
                     render_target=RenderTarget(
                         renderer_type='html',
                     ),
-                    build_options=RemedialSheetBuildOptions(
+                    print_options=RemedialSheetPrintOptions(
                         answer_type='with_short_solutions',
                     ),
                 )
@@ -335,7 +335,7 @@ class DocumentContainerIntegrationTests(TestCase):
                         render_target=RenderTarget(
                             renderer_type='html',
                         ),
-                        build_options=RemedialSheetBuildOptions(
+                        print_options=RemedialSheetPrintOptions(
                             answer_type='with_short_solutions',
                         ),
                     )

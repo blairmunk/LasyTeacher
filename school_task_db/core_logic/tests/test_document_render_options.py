@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from core_logic.value_objects.document_render_options import (
     FILE_TYPE_LABELS,
-    RemedialSheetBuildOptions,
+    RemedialSheetPrintOptions,
     RenderTarget,
     SUPPORTED_DOCUMENT_RENDERER_TYPES,
     WorkDocumentPrintOverrides,
@@ -40,16 +40,18 @@ class DocumentRenderOptionsTests(TestCase):
             ('theory', 'text'),
         )
 
-    def test_remedial_sheet_build_options_expose_content_config(self):
-        options = RemedialSheetBuildOptions(
+    def test_remedial_sheet_print_options_expose_section_flags(self):
+        options = RemedialSheetPrintOptions(
             answer_type='with_full_solutions',
         )
 
-        self.assertEqual(
-            options.content_config,
-            {
-                'include_answers': True,
-                'include_short_solutions': True,
-                'include_full_solutions': True,
-            },
-        )
+        self.assertTrue(options.include_answers)
+        self.assertTrue(options.include_short_solutions)
+        self.assertTrue(options.include_full_solutions)
+
+    def test_answer_only_print_options_do_not_add_solutions(self):
+        options = RemedialSheetPrintOptions(answer_type='with_answers')
+
+        self.assertTrue(options.include_answers)
+        self.assertFalse(options.include_short_solutions)
+        self.assertFalse(options.include_full_solutions)

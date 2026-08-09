@@ -20,7 +20,7 @@ from core_logic.use_cases.render_document_from_recipe import (
     RenderDocumentFromRecipeUseCase,
 )
 from core_logic.value_objects.document_render_options import (
-    RemedialSheetBuildOptions,
+    RemedialSheetPrintOptions,
     RenderTarget,
 )
 from core_logic.value_objects.document_render_recipe_factories import (
@@ -36,8 +36,8 @@ from core_logic.value_objects.document_recipes import REMEDIAL_SHEET_DOCUMENT_TY
 class RenderRemedialSheetBatchDocumentRequest:
     work_id: str
     render_target: RenderTarget = field(default_factory=RenderTarget)
-    build_options: RemedialSheetBuildOptions = field(
-        default_factory=RemedialSheetBuildOptions,
+    print_options: RemedialSheetPrintOptions = field(
+        default_factory=RemedialSheetPrintOptions,
     )
     presentation_profile: DocumentPresentationProfile | None = None
     presentation_profile_id: str = ''
@@ -85,7 +85,7 @@ class RenderRemedialSheetBatchDocumentUseCase:
                 ),
                 recipe=build_remedial_sheet_batch_document_recipe_for_render(
                     variant_ids=variant_ids,
-                    build_options=request.build_options,
+                    print_options=request.print_options,
                     presentation_profile=resolve_document_presentation_profile(
                         document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
                         request_presentation_profile=request.presentation_profile,

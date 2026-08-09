@@ -12,6 +12,9 @@ from core_logic.value_objects.variant_print_plan import (
 from infrastructure.services.blank_cells_payload import (
     build_blank_cells_payload,
 )
+from infrastructure.services.document_build_cache import (
+    document_payload_cache,
+)
 from infrastructure.services.task_document_payloads import (
     build_variant_task_payload,
     format_text_payload,
@@ -78,14 +81,35 @@ def _variant_task_payloads(
     task_payload_formatter=None,
     request=None,
 ):
-    return [
-        build_variant_task_payload(
-            variant_task,
-            task_payload_formatter=task_payload_formatter,
-            request=request,
-        )
-        for variant_task in variant_tasks
-    ]
+    cache = (
+        document_payload_cache(request, namespace='variant_task_payloads')
+        if request is not None
+        else None
+    )
+    payloads = []
+    for variant_task in variant_tasks:
+        cache_key = _variant_task_payload_cache_key(variant_task, request)
+        if cache is not None and cache_key in cache:
+            payload = cache[cache_key]
+        else:
+            payload = build_variant_task_payload(
+                variant_task,
+                task_payload_formatter=task_payload_formatter,
+                request=request,
+            )
+            if cache is not None:
+                cache[cache_key] = payload
+        payloads.append(payload)
+    return payloads
+
+
+def _variant_task_payload_cache_key(variant_task, request):
+    render_target = request.render_target if request is not None else None
+    return (
+        str(variant_task.pk),
+        render_target.renderer_type if render_target else '',
+        render_target.page_format if render_target else '',
+    )
 
 
 def _variant_print_blocks_payload(

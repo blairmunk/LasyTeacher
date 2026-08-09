@@ -1083,7 +1083,7 @@ class DjangoRemedialSectionPayloadBuilderTests(TestCase):
         )
 
         self.assertIsNot(first_payload, second_payload)
-        self.assertEqual(len(formatter.requests), 4)
+        self.assertEqual(len(formatter.requests), 2)
 
     def test_builds_remedial_payload_with_task_formatter(self):
         task = self.create_task(text='Исходное задание', answer='Ответ')

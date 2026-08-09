@@ -7,11 +7,7 @@ from django.db import transaction
 
 from .base import BaseImporter, ImportContext
 from tasks.models import Task
-from task_groups.models import AnalogGroup, TaskGroup
-from core_logic.value_objects.task_print_settings import (
-    TASK_BANK_ROLE_CONTROL,
-    validate_task_specific_bank_role,
-)
+from .task_groups import TaskGroupImporter
 from .task_images import TaskImageImporter
 from .task_sources import TaskSourceImporter
 from .task_topics import TaskTopicImporter
@@ -24,6 +20,7 @@ class TaskImporter(BaseImporter):
         super().__init__(*args, **kwargs)
         self.context = ImportContext()
         self.image_importer = TaskImageImporter(self, self.context)
+        self.group_importer = TaskGroupImporter(self, self.context)
         self.source_importer = TaskSourceImporter(self)
         self.topic_importer = TaskTopicImporter(self, self.context)
     
@@ -43,7 +40,7 @@ class TaskImporter(BaseImporter):
             
             # ЭТАП 1: Импорт групп аналогов
             if 'analog_groups' in json_data:
-                self._import_analog_groups(json_data['analog_groups'])
+                self.group_importer.import_groups(json_data['analog_groups'])
             
             # ЭТАП 2: Импорт тем (если есть и разрешено создавать)
             if 'topics' in json_data and self.create_missing:
@@ -54,7 +51,9 @@ class TaskImporter(BaseImporter):
                 self._import_tasks(json_data['tasks'])
             
             # ЭТАП 4: Создание связей задание-группа
-            self._create_task_group_relations(json_data)
+            self.group_importer.create_task_relations(
+                json_data.get('tasks', []),
+            )
             
             # ЭТАП 5: Импорт изображений (если есть)
             if 'task_images' in json_data:
@@ -91,42 +90,6 @@ class TaskImporter(BaseImporter):
         }
         
         return self.context
-    
-    def _import_analog_groups(self, groups_data: List[Dict[str, Any]]):
-        """Импорт групп аналогов"""
-        self._write("📋 Импорт групп аналогов...")
-        
-        for group_data in groups_data:
-            try:
-                group_uuid = self.generate_uuid_if_missing(group_data, 'id')
-                
-                # Поиск существующей группы
-                existing_group = self.safe_get_by_uuid(AnalogGroup, group_uuid)
-                
-                if existing_group and not self.should_create_object(existing_group, group_data):
-                    if self.mode == 'update':
-                        self._update_analog_group(existing_group, group_data)
-                        self.context.add_group(group_uuid, existing_group)
-                        self.stats.updated += 1
-                    else:  # skip
-                        self.context.add_group(group_uuid, existing_group)
-                    continue
-                
-                # Создание новой группы
-                if not existing_group:
-                    group = AnalogGroup.objects.create(
-                        id=group_uuid,
-                        name=group_data['name'],
-                        description=group_data.get('description', ''),
-                        difficulty=group_data.get('difficulty', 0),
-                    )
-                    
-                    self.context.add_group(group_uuid, group)
-                    self.stats.created += 1
-                    self.log_success(f"Создана группа: {group.name} [{group.get_short_uuid()}]")
-                
-            except Exception as e:
-                self.log_error(f"Ошибка импорта группы {group_data.get('name', 'Unknown')}: {e}", e)
     
     def _import_tasks(self, tasks_data: List[Dict[str, Any]]):
         """Импорт заданий"""
@@ -208,118 +171,6 @@ class TaskImporter(BaseImporter):
         
         return task
     
-    def _create_task_group_relations(self, json_data: Dict[str, Any]):
-        """Создание связей задание-группа"""
-        self._write("🔗 Создание связей заданий с группами...")
-        
-        relations_created = 0
-        
-        for task_data in json_data.get('tasks', []):
-            task_uuid = task_data.get('id')
-            
-            if task_uuid not in self.context.imported_tasks:
-                continue
-            
-            task = self.context.imported_tasks[task_uuid]
-            
-            # Связи через UUID групп
-            for group_ref in task_data.get('groups', []):
-                group_uuid, bank_role = self._parse_group_reference(group_ref)
-                if not group_uuid:
-                    self.log_warning(
-                        f"Пропущена связь задания {task_uuid[-8:]} "
-                        "с группой без id"
-                    )
-                    continue
-                if group_uuid in self.context.imported_groups:
-                    group = self.context.imported_groups[group_uuid]
-                    if self._create_task_group_relation(
-                        task,
-                        group,
-                        bank_role=bank_role,
-                    ):
-                        relations_created += 1
-                else:
-                    # Поиск группы в базе
-                    existing_group = self.safe_get_by_uuid(AnalogGroup, group_uuid)
-                    if existing_group and self._create_task_group_relation(
-                        task,
-                        existing_group,
-                        bank_role=bank_role,
-                    ):
-                        relations_created += 1
-            
-            # Связи через имя группы (fallback)
-            group_name = task_data.get('group_name')
-            if group_name and not task_data.get('groups'):
-                group = self._get_or_create_group_by_name(group_name)
-                if group and self._create_task_group_relation(task, group):
-                    relations_created += 1
-        
-        self._write(f"  ✅ Создано связей: {relations_created}")
-    
-    @staticmethod
-    def _parse_group_reference(group_ref):
-        if isinstance(group_ref, str):
-            return group_ref, TASK_BANK_ROLE_CONTROL
-        if isinstance(group_ref, dict):
-            bank_role = group_ref.get(
-                'bank_role',
-                TASK_BANK_ROLE_CONTROL,
-            )
-            validate_task_specific_bank_role(bank_role)
-            return (
-                group_ref.get('id') or group_ref.get('group_id') or '',
-                bank_role,
-            )
-        return '', TASK_BANK_ROLE_CONTROL
-
-    def _create_task_group_relation(
-        self,
-        task,
-        group,
-        bank_role=TASK_BANK_ROLE_CONTROL,
-    ) -> bool:
-        """Создание связи задание-группа"""
-        try:
-            relation, created = TaskGroup.objects.get_or_create(
-                task=task,
-                group=group,
-                defaults={'bank_role': bank_role},
-            )
-            if not created and relation.bank_role != bank_role:
-                relation.bank_role = bank_role
-                relation.save(update_fields=['bank_role', 'updated_at'])
-            
-            if created:
-                self.log_info(f"Связь: {task.get_short_uuid()} ↔ {group.get_short_uuid()}")
-            
-            return created
-            
-        except Exception as e:
-            self.log_error(f"Ошибка создания связи: {e}", e)
-            return False
-    
-    def _get_or_create_group_by_name(self, group_name: str):
-        """Получение или создание группы по имени"""
-        existing_group = AnalogGroup.objects.filter(name=group_name).first()
-        if existing_group:
-            return existing_group
-        
-        if self.create_missing:
-            try:
-                group = AnalogGroup.objects.create(
-                    name=group_name,
-                    description="Автоматически создана при импорте заданий"
-                )
-                self.log_success(f"Создана группа: {group_name}")
-                return group
-            except Exception as e:
-                self.log_error(f"Ошибка создания группы {group_name}: {e}", e)
-        
-        return None
-
-
     def _analyze_uuid_conflicts(self, json_data: Dict[str, Any]):
         """Анализ конфликтов UUID"""
         self._write("\n📊 UUID АНАЛИЗ:")
@@ -363,7 +214,7 @@ class TaskImporter(BaseImporter):
                 import uuid
                 uuid.UUID(group_uuid)
                 
-                existing_group = self.safe_get_by_uuid(AnalogGroup, group_uuid)
+                existing_group = self.group_importer.find_by_uuid(group_uuid)
                 if existing_group:
                     group_conflicts['existing'].append(group_uuid)
                 else:
@@ -436,7 +287,7 @@ class TaskImporter(BaseImporter):
             # Проверяем UUID группы
             for group_ref in task_data.get('groups', []):
                 try:
-                    group_uuid, _bank_role = self._parse_group_reference(
+                    group_uuid, _bank_role = self.group_importer.parse_reference(
                         group_ref,
                     )
                 except ValueError as error:
@@ -451,7 +302,7 @@ class TaskImporter(BaseImporter):
                     continue
                 if group_uuid not in declared_group_uuids:
                     # Проверяем в базе данных
-                    existing_group = self.safe_get_by_uuid(AnalogGroup, group_uuid)
+                    existing_group = self.group_importer.find_by_uuid(group_uuid)
                     if not existing_group:
                         missing_groups.add(group_uuid)
                         broken_references.append(f"Задание '{task_text}' → группа {group_uuid[-8:]}")
@@ -459,7 +310,7 @@ class TaskImporter(BaseImporter):
             # Проверяем имя группы (fallback)
             group_name = task_data.get('group_name')
             if group_name and not task_data.get('groups'):
-                if not AnalogGroup.objects.filter(name=group_name).exists():
+                if not self.group_importer.exists_by_name(group_name):
                     missing_groups.add(f"По имени: {group_name}")
         
         # Вывод анализа зависимостей
@@ -507,22 +358,6 @@ class TaskImporter(BaseImporter):
             self._write(f"  💡 РЕКОМЕНДАЦИИ:")
             for rec in recommendations:
                 self._write(f"    • {rec}")
-
-    def _update_analog_group(self, group: AnalogGroup, group_data: Dict[str, Any]):
-        """Обновление существующей группы аналогов"""
-        try:
-            group.name = group_data.get('name', group.name)
-            group.description = group_data.get('description', group.description)
-            group.difficulty = group_data.get(
-                'difficulty',
-                group.difficulty,
-            )
-            group.save()
-            
-            self.log_success(f"Обновлена группа: {group.name} [{group.get_short_uuid()}]")
-            
-        except Exception as e:
-            self.log_error(f"Ошибка обновления группы: {e}", e)
 
     def _update_task(self, task: Task, task_data: Dict[str, Any]):
         """Обновление существующего задания"""

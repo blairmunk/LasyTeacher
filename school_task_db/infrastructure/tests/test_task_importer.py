@@ -32,6 +32,24 @@ class TaskImporterTests(TestCase):
         self.assertEqual(relation.bank_role, 'practice')
         self.assertEqual(relation.group.difficulty, 4)
 
+    def test_group_name_fallback_creates_group_and_membership(self):
+        task_id = '550e8400-e29b-41d4-a716-446655440001'
+        payload = self._task_payload(
+            task_id=task_id,
+            group_id='770e8400-e29b-41d4-a716-446655440001',
+        )
+        payload.pop('analog_groups')
+        payload['tasks'][0].pop('groups')
+        payload['tasks'][0]['group_name'] = 'Группа по имени'
+
+        self._import(payload)
+
+        relation = TaskGroup.objects.select_related('group').get(
+            task_id=task_id,
+        )
+        self.assertEqual(relation.group.name, 'Группа по имени')
+        self.assertEqual(relation.bank_role, 'control')
+
     def test_dry_run_accepts_group_role_objects(self):
         output = []
         payload = self._task_payload(

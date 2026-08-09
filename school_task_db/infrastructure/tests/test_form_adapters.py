@@ -698,6 +698,21 @@ class ReportFormAdapterTests(SimpleTestCase):
         self.assertEqual(subtopic.subtopic_id, 's1')
         self.assertEqual(subtopic.group_id, 'g1')
 
+    def test_builds_course_timeline_chart_json(self):
+        timeline_json = ReportFormAdapter().heatmap_course_timeline_json(
+            SimpleNamespace(
+                dates=['2026-08-01'],
+                averages=[72.5],
+                labels=['Контрольная'],
+            ),
+        )
+
+        self.assertIn('2026-08-01', timeline_json)
+        self.assertIn('72.5', timeline_json)
+        self.assertIn('Контрольная', timeline_json)
+        self.assertIn('Динамика результатов', timeline_json)
+        self.assertIn('displayModeBar', timeline_json)
+
     def test_builds_journal_request_from_query(self):
         request = ReportFormAdapter().journal_request_from_query(
             QueryDict('debts=1'),

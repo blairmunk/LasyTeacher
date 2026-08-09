@@ -1,6 +1,5 @@
 # reports/views.py
 
-import json
 from django.contrib import messages
 from django.http import Http404, HttpResponse
 from django.urls import reverse
@@ -468,7 +467,11 @@ class HeatmapCourseView(View):
                 work_ids=work_ids,
             ),
         )
-        timeline_json = _build_course_timeline_json(timeline)
+        timeline_json = (
+            container.report_form_adapter.heatmap_course_timeline_json(
+                timeline,
+            )
+        )
 
         return render(request, 'reports/heatmap_course.html', {
             'course': course,
@@ -688,59 +691,6 @@ class HeatmapSubtopicView(View):
             'courses': detail.courses,
         })
 
-
-# ============================================================
-# Общие функции
-# ============================================================
-
-def _build_course_timeline_json(timeline):
-    """Plotly JSON for course result timeline."""
-    chart = {
-        'data': [{
-            'x': timeline.dates,
-            'y': timeline.averages,
-            'text': timeline.labels,
-            'mode': 'lines+markers',
-            'type': 'scatter',
-            'name': 'Средний %',
-            'line': {'color': '#0d6efd', 'width': 3},
-            'marker': {'size': 10},
-            'hovertemplate': '%{text}<br>%{y}%<extra></extra>',
-        }],
-        'layout': {
-            'title': {'text': 'Динамика результатов', 'font': {'size': 16}},
-            'xaxis': {'title': 'Дата'},
-            'yaxis': {'title': '%', 'range': [0, 105]},
-            'margin': {'t': 40, 'b': 40, 'l': 50, 'r': 20},
-            'height': 300,
-            'shapes': [
-                {'type': 'line', 'y0': 70, 'y1': 70, 'x0': 0, 'x1': 1,
-                 'xref': 'paper', 'line': {'color': '#28a745', 'dash': 'dash', 'width': 1}},
-                {'type': 'line', 'y0': 45, 'y1': 45, 'x0': 0, 'x1': 1,
-                 'xref': 'paper', 'line': {'color': '#dc3545', 'dash': 'dash', 'width': 1}},
-            ],
-        },
-        'config': {'displayModeBar': False, 'responsive': True},
-    }
-
-    return json.dumps(chart, ensure_ascii=False)
-
-
-
-def _color_class(pct):
-    if pct is None:
-        return 'no-data'
-    if pct >= 95:
-        return 'perfect'
-    if pct >= 85:
-        return 'excellent'
-    if pct >= 70:
-        return 'good'
-    if pct >= 60:
-        return 'moderate'
-    if pct >= 45:
-        return 'warning'
-    return 'danger'
 
 class JournalSelectView(TemplateView):
     """Выбор курса и класса для журнала"""

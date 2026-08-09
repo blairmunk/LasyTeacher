@@ -268,6 +268,60 @@ class ReportFormAdapter:
             'group_suffix': f'&group={group_id}' if group_id else '',
         }
 
+    def heatmap_course_timeline_json(self, timeline):
+        return plotly_utils.to_json({
+            'data': [{
+                'x': timeline.dates,
+                'y': timeline.averages,
+                'text': timeline.labels,
+                'mode': 'lines+markers',
+                'type': 'scatter',
+                'name': 'Средний %',
+                'line': {'color': '#0d6efd', 'width': 3},
+                'marker': {'size': 10},
+                'hovertemplate': '%{text}<br>%{y}%<extra></extra>',
+            }],
+            'layout': {
+                'title': {
+                    'text': 'Динамика результатов',
+                    'font': {'size': 16},
+                },
+                'xaxis': {'title': 'Дата'},
+                'yaxis': {'title': '%', 'range': [0, 105]},
+                'margin': {'t': 40, 'b': 40, 'l': 50, 'r': 20},
+                'height': 300,
+                'shapes': [
+                    {
+                        'type': 'line',
+                        'y0': 70,
+                        'y1': 70,
+                        'x0': 0,
+                        'x1': 1,
+                        'xref': 'paper',
+                        'line': {
+                            'color': '#28a745',
+                            'dash': 'dash',
+                            'width': 1,
+                        },
+                    },
+                    {
+                        'type': 'line',
+                        'y0': 45,
+                        'y1': 45,
+                        'x0': 0,
+                        'x1': 1,
+                        'xref': 'paper',
+                        'line': {
+                            'color': '#dc3545',
+                            'dash': 'dash',
+                            'width': 1,
+                        },
+                    },
+                ],
+            },
+            'config': {'displayModeBar': False, 'responsive': True},
+        })
+
     def heatmap_overview_request_from_query(self, query):
         params = self.heatmap_params_from_query(query)
         return HeatmapOverviewRequest(group_id=params['group_id'])

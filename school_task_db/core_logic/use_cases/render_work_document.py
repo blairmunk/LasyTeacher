@@ -94,7 +94,7 @@ class RenderWorkDocumentUseCase:
                     work_name=work.name,
                 ),
                 recipe=build_work_document_recipe_for_render(
-                    options=request.options,
+                    print_overrides=request.options.print_overrides,
                     presentation_profile=resolve_document_presentation_profile(
                         document_type=WORK_DOCUMENT_TYPE,
                         request_presentation_profile=request.presentation_profile,

@@ -110,7 +110,9 @@ def empty_work_render_plan(work_id, work_name, renderer_type):
 def work_render_plan(work_id, work_name, options):
     return DocumentRenderPlan(
         source=build_work_document_source(work_id, work_name),
-        recipe=build_work_document_recipe_for_render(options),
+        recipe=build_work_document_recipe_for_render(
+            options.print_overrides,
+        ),
         render_target=options.render_target,
     )
 

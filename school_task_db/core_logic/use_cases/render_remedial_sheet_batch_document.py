@@ -81,7 +81,7 @@ class RenderRemedialSheetBatchDocumentUseCase:
                 ),
                 recipe=build_remedial_sheet_batch_document_recipe_for_render(
                     variant_ids=variant_ids,
-                    options=request.options,
+                    build_options=request.options.build_options,
                     presentation_profile=resolve_document_presentation_profile(
                         document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
                         request_presentation_profile=request.presentation_profile,

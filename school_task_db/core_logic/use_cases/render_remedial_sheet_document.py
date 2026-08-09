@@ -90,7 +90,7 @@ class RenderRemedialSheetDocumentUseCase:
                     request.variant_id,
                 ),
                 recipe=build_remedial_sheet_document_recipe_for_render(
-                    options=request.options,
+                    build_options=request.options.build_options,
                     presentation_profile=resolve_document_presentation_profile(
                         document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
                         request_presentation_profile=request.presentation_profile,

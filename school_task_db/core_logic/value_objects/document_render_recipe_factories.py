@@ -8,8 +8,8 @@ from core_logic.entities.document import (
     DocumentPresentationProfile,
 )
 from core_logic.value_objects.document_render_options import (
-    RemedialSheetDocumentRenderOptions,
-    WorkDocumentRenderOptions,
+    RemedialSheetBuildOptions,
+    WorkDocumentPrintOverrides,
 )
 from core_logic.value_objects.document_recipe_factories import (
     build_event_performance_report_document_recipe,
@@ -31,7 +31,7 @@ from core_logic.value_objects.document_recipes import (
 
 
 def build_work_document_recipe_for_render(
-    options: WorkDocumentRenderOptions,
+    print_overrides: WorkDocumentPrintOverrides,
     presentation_profile: DocumentPresentationProfile | None = None,
     variant_ids: list[str] | None = None,
 ) -> DocumentRecipe:
@@ -39,11 +39,11 @@ def build_work_document_recipe_for_render(
         presentation_profile=presentation_profile,
         default_recipe_builder=build_work_document_recipe,
     )
-    recipe = apply_work_document_print_overrides(recipe, options)
+    recipe = apply_work_document_print_overrides(recipe, print_overrides)
     return expand_work_document_recipe_per_variant(
         recipe,
         variant_ids,
-        break_between_variants=options.break_between_variants,
+        break_between_variants=print_overrides.break_between_variants,
     )
 
 
@@ -126,9 +126,8 @@ def repeat_document_sections(
 
 def apply_work_document_print_overrides(
     recipe: DocumentRecipe,
-    options: WorkDocumentRenderOptions,
+    overrides: WorkDocumentPrintOverrides,
 ) -> DocumentRecipe:
-    overrides = options.print_overrides
     sections = []
     for section in recipe.sections:
         if (
@@ -172,14 +171,14 @@ def apply_work_document_print_overrides(
 
 
 def build_remedial_sheet_document_recipe_for_render(
-    options: RemedialSheetDocumentRenderOptions,
+    build_options: RemedialSheetBuildOptions,
     presentation_profile: DocumentPresentationProfile | None = None,
 ) -> DocumentRecipe:
     return _recipe_with_profile_presentation(
         presentation_profile=presentation_profile,
         default_recipe_builder=(
             lambda: build_remedial_sheet_document_recipe(
-                options.build_options,
+                build_options,
             )
         ),
     )
@@ -187,11 +186,11 @@ def build_remedial_sheet_document_recipe_for_render(
 
 def build_remedial_sheet_batch_document_recipe_for_render(
     variant_ids: list[str],
-    options: RemedialSheetDocumentRenderOptions,
+    build_options: RemedialSheetBuildOptions,
     presentation_profile: DocumentPresentationProfile | None = None,
 ) -> DocumentRecipe:
     base_recipe = build_remedial_sheet_document_recipe_for_render(
-        options=options,
+        build_options=build_options,
         presentation_profile=presentation_profile,
     )
     return DocumentRecipe(

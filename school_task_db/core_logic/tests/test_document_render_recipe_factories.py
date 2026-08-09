@@ -8,8 +8,8 @@ from core_logic.entities.document import (
     WORK_SOURCE_TYPE,
 )
 from core_logic.value_objects.document_render_options import (
-    RemedialSheetDocumentRenderOptions,
-    WorkDocumentRenderOptions,
+    RemedialSheetBuildOptions,
+    WorkDocumentPrintOverrides,
 )
 from core_logic.value_objects.document_render_recipe_factories import (
     build_remedial_sheet_batch_document_recipe_for_render,
@@ -51,8 +51,7 @@ class DocumentRenderRecipeFactoriesTests(TestCase):
 
     def test_build_work_document_recipe_for_render(self):
         recipe = build_work_document_recipe_for_render(
-            WorkDocumentRenderOptions(
-                renderer_type='html',
+            WorkDocumentPrintOverrides(
                 append_answers=True,
             ),
         )
@@ -72,7 +71,7 @@ class DocumentRenderRecipeFactoriesTests(TestCase):
         )
 
         recipe = build_work_document_recipe_for_render(
-            WorkDocumentRenderOptions(renderer_type='html'),
+            WorkDocumentPrintOverrides(),
             presentation_profile=presentation_profile,
         )
 
@@ -90,7 +89,7 @@ class DocumentRenderRecipeFactoriesTests(TestCase):
         )
 
         recipe = build_work_document_recipe_for_render(
-            WorkDocumentRenderOptions(renderer_type='html'),
+            WorkDocumentPrintOverrides(),
             presentation_profile=presentation_profile,
         )
 
@@ -98,8 +97,7 @@ class DocumentRenderRecipeFactoriesTests(TestCase):
 
     def test_build_remedial_sheet_document_recipe_for_render(self):
         recipe = build_remedial_sheet_document_recipe_for_render(
-            RemedialSheetDocumentRenderOptions(
-                renderer_type='pdf',
+            RemedialSheetBuildOptions(
                 answer_type='with_answers',
             ),
         )
@@ -109,7 +107,7 @@ class DocumentRenderRecipeFactoriesTests(TestCase):
 
     def test_build_work_document_recipe_repeats_sections_per_variant(self):
         recipe = build_work_document_recipe_for_render(
-            options=WorkDocumentRenderOptions(renderer_type='html'),
+            print_overrides=WorkDocumentPrintOverrides(),
             variant_ids=['variant-1', 'variant-2'],
         )
 
@@ -144,8 +142,7 @@ class DocumentRenderRecipeFactoriesTests(TestCase):
         )
 
         recipe = build_work_document_recipe_for_render(
-            WorkDocumentRenderOptions(
-                renderer_type='html',
+            WorkDocumentPrintOverrides(
                 hide_theory=True,
                 hide_blank_cells=True,
                 append_answers=True,
@@ -165,8 +162,7 @@ class DocumentRenderRecipeFactoriesTests(TestCase):
 
     def test_build_work_document_recipe_can_disable_variant_breaks(self):
         recipe = build_work_document_recipe_for_render(
-            options=WorkDocumentRenderOptions(
-                renderer_type='html',
+            print_overrides=WorkDocumentPrintOverrides(
                 break_between_variants=False,
             ),
             variant_ids=['variant-1', 'variant-2'],
@@ -184,8 +180,7 @@ class DocumentRenderRecipeFactoriesTests(TestCase):
 
     def test_build_remedial_sheet_recipe_with_full_solutions(self):
         recipe = build_remedial_sheet_document_recipe_for_render(
-            options=RemedialSheetDocumentRenderOptions(
-                renderer_type='pdf',
+            build_options=RemedialSheetBuildOptions(
                 answer_type='with_full_solutions',
             ),
         )
@@ -214,7 +209,7 @@ class DocumentRenderRecipeFactoriesTests(TestCase):
         )
 
         recipe = build_remedial_sheet_document_recipe_for_render(
-            options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+            build_options=RemedialSheetBuildOptions(),
             presentation_profile=presentation_profile,
         )
 
@@ -241,8 +236,7 @@ class DocumentRenderRecipeFactoriesTests(TestCase):
         )
         recipe = build_remedial_sheet_batch_document_recipe_for_render(
             variant_ids=['variant-1', 'variant-2'],
-            options=RemedialSheetDocumentRenderOptions(
-                renderer_type='html',
+            build_options=RemedialSheetBuildOptions(
                 answer_type='with_answers',
             ),
         )
@@ -284,7 +278,7 @@ class DocumentRenderRecipeFactoriesTests(TestCase):
 
         recipe = build_remedial_sheet_batch_document_recipe_for_render(
             variant_ids=['variant-1'],
-            options=RemedialSheetDocumentRenderOptions(renderer_type='html'),
+            build_options=RemedialSheetBuildOptions(),
             presentation_profile=presentation_profile,
         )
 

@@ -932,7 +932,7 @@ def _work_document_render_plan(
     return DocumentRenderPlan(
         source=build_work_document_source(work_id, work_name),
         recipe=build_work_document_recipe_for_render(
-            options=options,
+            print_overrides=options.print_overrides,
             presentation_profile=presentation_profile,
             variant_ids=variant_ids,
         ),
@@ -948,7 +948,7 @@ def _remedial_sheet_document_render_plan(
     return DocumentRenderPlan(
         source=build_remedial_sheet_document_source(variant_id),
         recipe=build_remedial_sheet_document_recipe_for_render(
-            options=options,
+            build_options=options.build_options,
             presentation_profile=presentation_profile,
         ),
         render_target=options.render_target,

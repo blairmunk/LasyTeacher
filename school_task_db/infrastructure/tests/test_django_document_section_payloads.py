@@ -239,10 +239,11 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
         frozen_payload = builder.build_payload(
             build_request(work, TASK_LIST_SECTION),
         )
-        frozen_task = frozen_payload['variants'][0]['tasks'][0]
+        frozen_task = frozen_payload['variants'][0]['print_blocks'][1]['task']
 
         self.assertEqual(frozen_task['text'], 'Решите задачу')
         self.assertEqual(frozen_task['answer'], 'Ответ')
+        self.assertNotIn('tasks', frozen_payload['variants'][0])
 
     def test_builds_task_list_payload(self):
         work = Work.objects.create(name='Контрольная', duration=45)
@@ -319,16 +320,6 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
         self.assertEqual(variant_payload['max_score'], 8)
         self.assertEqual(variant_payload['duration'], 40)
         self.assertEqual(
-            [
-                task_payload['variant_task_id']
-                for task_payload in variant_payload['tasks']
-            ],
-            [str(variant_task.pk), str(demo_variant_task.pk)],
-        )
-        self.assertFalse(
-            variant_payload['tasks'][1]['is_assessable'],
-        )
-        self.assertEqual(
             [block['block_type'] for block in variant_payload['print_blocks']],
             [
                 VARIANT_PRINT_BLOCK_TASK,
@@ -354,8 +345,8 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             variant_payload['print_blocks'][2]['blank_cells']['rows'],
             7,
         )
-        self.assertEqual(len(variant_payload['tasks']), 2)
-        task_payload = variant_payload['tasks'][0]
+        self.assertNotIn('tasks', variant_payload)
+        task_payload = variant_payload['print_blocks'][0]['task']
         self.assertEqual(task_payload['variant_task_id'], str(variant_task.pk))
         self.assertEqual(task_payload['order'], 1)
         self.assertEqual(task_payload['max_points'], 4)
@@ -392,7 +383,7 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
 
         payload = builder.build_payload(build_request(work, TASK_LIST_SECTION))
 
-        task_payload = payload['variants'][0]['tasks'][0]
+        task_payload = payload['variants'][0]['print_blocks'][0]['task']
         self.assertTrue(task_payload['formatted'])
         self.assertEqual(formatter.requests[0]['text'], 'Найдите силу')
 
@@ -436,8 +427,8 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             )
         )
 
-        self.assertIs(first_payload, second_payload)
-        self.assertEqual(len(variant_payload_builder.requests), 3)
+        self.assertIsNot(first_payload, second_payload)
+        self.assertEqual(len(variant_payload_builder.requests), 4)
 
     def test_task_list_section_options_cannot_override_snapshot_tasks(self):
         work = Work.objects.create(name='Рабочий лист', duration=45)
@@ -477,10 +468,6 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
         )
 
         variant_payload = payload['variants'][0]
-        self.assertEqual(
-            variant_payload['tasks'][0]['render_mode'],
-            TASK_RENDER_MODE_TASK_ONLY,
-        )
         self.assertEqual(
             variant_payload['print_blocks'][0]['task']['render_mode'],
             TASK_RENDER_MODE_TASK_ONLY,
@@ -524,10 +511,7 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
         )
 
         variant_payload = payload['variants'][0]
-        self.assertEqual(
-            [task['variant_task_id'] for task in variant_payload['tasks']],
-            [str(variant_task.pk)],
-        )
+        self.assertNotIn('tasks', variant_payload)
         self.assertEqual(
             [
                 block['variant_task_id']
@@ -619,13 +603,26 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
 
     def test_registry_supports_answer_key_section(self):
         work = Work.objects.create(name='Контрольная')
+        variant = Variant.objects.create(work=work, number=1)
+        task = self.create_task(text='Задание с ответом')
+        variant_task = create_variant_task(
+            variant=variant,
+            task=task,
+            order=1,
+            max_points=2,
+        )
         registry = build_work_section_payload_builder_registry()
 
         answer_key_payload = registry.build_payload(
             build_request(work, ANSWER_KEY_SECTION)
         )
 
-        self.assertEqual(answer_key_payload['variants'], [])
+        variant_payload = answer_key_payload['variants'][0]
+        self.assertEqual(
+            variant_payload['tasks'][0]['variant_task_id'],
+            str(variant_task.pk),
+        )
+        self.assertNotIn('print_blocks', variant_payload)
 
     def create_task(self, **overrides):
         topic = Topic.objects.create(
@@ -812,6 +809,7 @@ class DjangoRemedialSectionPayloadBuilderTests(TestCase):
         self.assertEqual(task_payload['text'], 'Новое задание')
         self.assertEqual(task_payload['answer'], 'Новый ответ')
         self.assertEqual(task_payload['short_solution'], 'Краткое решение')
+        self.assertNotIn('print_blocks', payload)
 
     def test_builds_remedial_training_print_plan_from_task_snapshots(self):
         remedial_work = Work.objects.create(name='Работа над ошибками')
@@ -931,7 +929,7 @@ class DjangoRemedialSectionPayloadBuilderTests(TestCase):
             [block['block_type'] for block in payload['print_blocks']],
             [VARIANT_PRINT_BLOCK_TASK],
         )
-        self.assertTrue(payload['tasks'][0]['blank_cells_after'])
+        self.assertNotIn('tasks', payload)
 
     def test_remedial_print_plan_includes_frozen_static_content(self):
         remedial_work = Work.objects.create(name='Работа над ошибками')
@@ -1084,8 +1082,8 @@ class DjangoRemedialSectionPayloadBuilderTests(TestCase):
             )
         )
 
-        self.assertIs(first_payload, second_payload)
-        self.assertEqual(len(formatter.requests), 3)
+        self.assertIsNot(first_payload, second_payload)
+        self.assertEqual(len(formatter.requests), 4)
 
     def test_builds_remedial_payload_with_task_formatter(self):
         task = self.create_task(text='Исходное задание', answer='Ответ')

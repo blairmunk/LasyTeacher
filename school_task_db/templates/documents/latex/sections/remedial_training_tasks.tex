@@ -1,6 +1,5 @@
 \begin{schooltrainingtasks}
 \schoolsectionheading{ {{ section.title|default:"Часть 2. Тренировочные задания" }} }
-{% if payload.print_blocks %}
 {% for block in payload.print_blocks %}
 {% if block.block_type == 'theory' %}
 \begin{schooltheory}
@@ -47,14 +46,7 @@
 \end{center}
 
 {% endif %}
-{% endfor %}
-{% else %}
-{% for task in payload.tasks %}
-\schooltaskheading{ {{ task.order }} }{% if task.max_points %}{ {{ task.max_points }} балл. }{% else %}{}{% endif %}
-{{ task.latex_content|default:task.text|safe }}
-
 {% empty %}
 \textit{Тренировочные задания не созданы.}
 {% endfor %}
-{% endif %}
 \end{schooltrainingtasks}

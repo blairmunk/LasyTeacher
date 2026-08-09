@@ -13,6 +13,7 @@ def document_section_input_key(request):
     return (
         request.source.source_type,
         request.source.source_id,
+        request.section.section_type,
         render_target.renderer_type if render_target else '',
         render_target.page_format if render_target else '',
         json.dumps(

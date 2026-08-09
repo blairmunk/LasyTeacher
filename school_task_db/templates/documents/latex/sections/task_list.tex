@@ -10,7 +10,6 @@
 {% endif %}
 {% endif %}
 
-{% if variant.print_blocks %}
 {% for block in variant.print_blocks %}
 {% if block.block_type == 'theory' %}
 \begin{schooltheory}
@@ -65,42 +64,9 @@
 \end{center}
 
 {% endif %}
+{% empty %}
+\textit{В варианте нет содержательных блоков.}
 {% endfor %}
-{% else %}
-{% for task in variant.tasks %}
-\schooltaskheading{ {{ task.order }} }{% if task.max_points %}{ {{ task.max_points }} балл. }{% else %}{}{% endif %}
-{{ task.latex_content|default:task.text|safe }}
-
-{% if payload.include_hints and task.hint %}
-\textit{Подсказка: {{ task.hint|safe }}}
-
-{% endif %}
-{% if payload.include_instructions and task.instruction %}
-\textit{Инструкция: {{ task.instruction|safe }}}
-
-{% endif %}
-{% if task.render_mode == 'with_answer' and task.answer %}
-\textbf{Ответ:} {{ task.answer|safe }}
-
-{% endif %}
-{% if task.render_mode == 'with_short_solution' and task.short_solution %}
-\textbf{Краткое решение:} {{ task.short_solution|safe }}
-
-{% endif %}
-{% if task.render_mode == 'with_full_solution' and task.full_solution %}
-\textbf{Решение.}
-
-{{ task.full_solution|safe }}
-
-{% endif %}
-{% if task.blank_cells_after %}
-\begin{center}
-\schoolgrid{ {{ task.blank_cells.rows }} }{ {{ task.blank_cells.columns }} }{ {{ task.blank_cells.latex_cell_size_mm }} }
-\end{center}
-
-{% endif %}
-{% endfor %}
-{% endif %}
 {% empty %}
 \textit{Нет вариантов для печати.}
 {% endfor %}

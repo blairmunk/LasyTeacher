@@ -18,7 +18,7 @@ from infrastructure.services.task_document_payloads import (
 )
 
 
-def build_variant_document_content_payload(
+def build_variant_ordered_content_payload(
     *,
     variant_id,
     variant_tasks,
@@ -27,7 +27,7 @@ def build_variant_document_content_payload(
     task_payload_formatter=None,
     request=None,
 ):
-    """Build task and ordered print-block payloads for one variant."""
+    """Build ordered print blocks for a task/content section."""
     variant_tasks = list(variant_tasks)
     content_snapshot = build_variant_content_snapshot_from_sources(
         variant_id=str(variant_id),
@@ -38,14 +38,11 @@ def build_variant_document_content_payload(
         content_snapshot,
         overrides=build_variant_print_overrides_from_options(options),
     )
-    task_payloads = [
-        build_variant_task_payload(
-            variant_task,
-            task_payload_formatter=task_payload_formatter,
-            request=request,
-        )
-        for variant_task in variant_tasks
-    ]
+    task_payloads = _variant_task_payloads(
+        variant_tasks,
+        task_payload_formatter=task_payload_formatter,
+        request=request,
+    )
     task_payloads_by_variant_task_id = {
         task_payload['variant_task_id']: task_payload
         for task_payload in task_payloads
@@ -57,8 +54,38 @@ def build_variant_document_content_payload(
             task_payload_formatter=task_payload_formatter,
             request=request,
         ),
-        'tasks': task_payloads,
     }
+
+
+def build_variant_task_collection_payload(
+    *,
+    variant_tasks,
+    task_payload_formatter=None,
+    request=None,
+):
+    """Build the flat task collection used by answer/solution sections."""
+    return {
+        'tasks': _variant_task_payloads(
+            variant_tasks,
+            task_payload_formatter=task_payload_formatter,
+            request=request,
+        ),
+    }
+
+
+def _variant_task_payloads(
+    variant_tasks,
+    task_payload_formatter=None,
+    request=None,
+):
+    return [
+        build_variant_task_payload(
+            variant_task,
+            task_payload_formatter=task_payload_formatter,
+            request=request,
+        )
+        for variant_task in variant_tasks
+    ]
 
 
 def _variant_print_blocks_payload(

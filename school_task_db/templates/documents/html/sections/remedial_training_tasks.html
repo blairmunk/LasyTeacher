@@ -1,7 +1,6 @@
 <section class="document-section document-section-{{ section.section_type }} remedial-training-tasks">
     <h2>{{ section.title|default:"Часть 2. Тренировочные задания" }}</h2>
-    {% if payload.print_blocks %}
-        {% for block in payload.print_blocks %}
+    {% for block in payload.print_blocks %}
             {% if block.block_type == 'theory' %}
                 <article class="document-theory-block">
                     {% if block.title %}<h3>{{ block.title }}</h3>{% endif %}
@@ -57,20 +56,7 @@
             {% elif block.block_type == 'blank_cells' %}
                 {% include "documents/html/partials/blank_cells_grid.html" with grid=block.blank_cells extra_class="task-blank-cells" %}
             {% endif %}
-        {% endfor %}
-    {% else %}
-        {% for task in payload.tasks %}
-            <article class="remedial-training-task">
-                <h3>
-                    Задание {{ task.order }}
-                    {% if task.max_points %}
-                        <small>{{ task.max_points }} балл.</small>
-                    {% endif %}
-                </h3>
-                <div class="task-text">{{ task.text|linebreaksbr }}</div>
-            </article>
-        {% empty %}
-            <p>Тренировочные задания не созданы.</p>
-        {% endfor %}
-    {% endif %}
+    {% empty %}
+        <p>Тренировочные задания не созданы.</p>
+    {% endfor %}
 </section>

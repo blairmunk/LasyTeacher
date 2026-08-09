@@ -370,6 +370,9 @@ from infrastructure.services.document_engine import (
 from infrastructure.services.rendered_document_file_store import (
     RenderedDocumentFileStore,
 )
+from infrastructure.services.sectioned_document_defaults import (
+    build_sectioned_document_components,
+)
 from infrastructure.services.django_transaction_manager import (
     DjangoTransactionManager,
 )
@@ -716,18 +719,24 @@ class Container:
     @property
     def document_engine(self):
         if self._document_engine is None:
-            self._document_engine = DjangoDocumentEngine.with_sectioned_renderers(
+            components = build_sectioned_document_components(
                 work_document_repo=self.work_document_repo,
-                get_remedial_sheet_data_use_case=(
-                    self.get_remedial_sheet_data_use_case()
+                get_remedial_sheet_data=(
+                    self.get_remedial_sheet_data_use_case().execute
                 ),
-                get_event_report_use_case=(
-                    self.get_event_performance_report_use_case()
+                get_event_report=(
+                    self.get_event_performance_report_use_case().execute
                 ),
-                get_student_digests_use_case=(
-                    self.get_student_digests_use_case()
+                get_student_digests=(
+                    self.get_student_digests_use_case().execute
                 ),
                 file_store=self.rendered_document_file_store,
+            )
+            self._document_engine = DjangoDocumentEngine(
+                document_builder=components.document_builder,
+                document_renderer_registry=(
+                    components.document_renderer_registry
+                ),
             )
         return self._document_engine
 

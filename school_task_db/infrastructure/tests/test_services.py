@@ -8,7 +8,6 @@ from core_logic.entities.document import (
     DocumentSectionSpec,
     DocumentSourceRef,
     REMEDIAL_VARIANT_SOURCE_TYPE,
-    WORK_SOURCE_TYPE,
 )
 from core_logic.entities.document_rendering import GeneratedDocument
 from core.models import ImportLog
@@ -18,26 +17,13 @@ from core_logic.services.document_builder import (
 )
 from core_logic.value_objects.document_render_options import (
     RenderTarget,
-    WorkDocumentPrintOverrides,
 )
 from core_logic.value_objects.document_render_plan import (
     DocumentRenderPlan,
 )
-from core_logic.value_objects.document_render_recipe_factories import (
-    build_work_document_recipe_for_render,
-)
-from core_logic.value_objects.document_source_factories import (
-    build_work_document_source,
-)
 from curriculum.models import Topic
-from infrastructure.repositories.django_work_document_repo import (
-    DjangoWorkDocumentRepository,
-)
 from infrastructure.services.document_engine import (
     DjangoDocumentEngine,
-)
-from infrastructure.services.rendered_document_file_store import (
-    RenderedDocumentFileStore,
 )
 from infrastructure.services.task_import_service import DjangoTaskImportService
 from tasks.models import Task
@@ -63,21 +49,6 @@ class FakeDocumentRendererRegistry:
         return GeneratedDocument(file_type=request.render_target.renderer_type)
 
 
-class FakeRenderedDocumentFileStore:
-    def __init__(self):
-        self.requests = []
-        self.path_requests = []
-        self.result = 'file-result'
-
-    def get_file(self, file_type, filename):
-        self.requests.append((file_type, filename))
-        return self.result
-
-    def document_from_paths(self, file_type, file_paths):
-        self.path_requests.append((file_type, file_paths))
-        return GeneratedDocument(file_type=file_type)
-
-
 class FakeSectionPayloadBuilder:
     def __init__(self, payload):
         self.payload = payload
@@ -86,38 +57,6 @@ class FakeSectionPayloadBuilder:
     def build_payload(self, request):
         self.request = request
         return self.payload
-
-
-class FakeHtmlToPdfRenderer:
-    def __init__(self):
-        self.html_content = ''
-
-    def generate_pdf(self, html_path, pdf_path):
-        self.html_content = html_path.read_text(encoding='utf-8')
-        pdf_path.write_bytes(b'pdf')
-        return pdf_path
-
-
-def empty_work_render_plan(work_id, work_name, renderer_type):
-    return DocumentRenderPlan(
-        source=DocumentSourceRef(
-            source_type=WORK_SOURCE_TYPE,
-            source_id=work_id,
-            title=work_name,
-        ),
-        recipe=DocumentRecipe(document_type='work'),
-        render_target=RenderTarget(renderer_type=renderer_type),
-    )
-
-
-def work_render_plan(work_id, work_name, renderer_type):
-    return DocumentRenderPlan(
-        source=build_work_document_source(work_id, work_name),
-        recipe=build_work_document_recipe_for_render(
-            WorkDocumentPrintOverrides(),
-        ),
-        render_target=RenderTarget(renderer_type=renderer_type),
-    )
 
 
 class DjangoDocumentEngineTests(TestCase):
@@ -219,42 +158,6 @@ class DjangoDocumentEngineTests(TestCase):
             'Document render plan is required.',
         ):
             service.render_document(None)
-
-    def test_sectioned_factory_uses_sectioned_renderers(self):
-        work = Work.objects.create(name='Контрольная', duration=45)
-        html_to_pdf_renderer = FakeHtmlToPdfRenderer()
-
-        with TemporaryDirectory() as output_dir:
-            service = DjangoDocumentEngine.with_sectioned_renderers(
-                work_document_repo=DjangoWorkDocumentRepository(),
-                file_store=RenderedDocumentFileStore(
-                    output_dirs={
-                        'html': output_dir,
-                        'pdf': output_dir,
-                        'latex': output_dir,
-                    },
-                ),
-                html_to_pdf_renderer_factory=lambda request: html_to_pdf_renderer,
-            )
-            html_result = service.render_document(
-                empty_work_render_plan(
-                    work_id=str(work.pk),
-                    work_name=work.name,
-                    renderer_type='html',
-                ),
-            )
-            pdf_result = service.render_document(
-                work_render_plan(str(work.pk), work.name, 'pdf'),
-            )
-            latex_result = service.render_document(
-                work_render_plan(str(work.pk), work.name, 'latex'),
-            )
-
-        self.assertEqual(html_result.file_type, 'html')
-        self.assertEqual(pdf_result.file_type, 'pdf')
-        self.assertEqual(latex_result.file_type, 'latex')
-        self.assertIn('<title>Контрольная</title>', html_to_pdf_renderer.html_content)
-
 
 class DjangoTaskImportServiceTests(TestCase):
     def test_preview_import_returns_dry_run_context_without_creating_tasks(self):

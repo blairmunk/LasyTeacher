@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.test import SimpleTestCase
@@ -382,10 +383,22 @@ class ContainerTests(SimpleTestCase):
 
     def test_document_engine_uses_sectioned_renderer_factory(self):
         container = Container()
-        remedial_sheet_data_use_case = object()
-        event_report_use_case = object()
-        student_digests_use_case = object()
-        engine = object()
+        get_remedial_sheet_data = object()
+        get_event_report = object()
+        get_student_digests = object()
+        remedial_sheet_data_use_case = SimpleNamespace(
+            execute=get_remedial_sheet_data,
+        )
+        event_report_use_case = SimpleNamespace(execute=get_event_report)
+        student_digests_use_case = SimpleNamespace(
+            execute=get_student_digests,
+        )
+        document_builder = object()
+        document_renderer_registry = object()
+        components = SimpleNamespace(
+            document_builder=document_builder,
+            document_renderer_registry=document_renderer_registry,
+        )
 
         with patch.object(
             container,
@@ -399,19 +412,23 @@ class ContainerTests(SimpleTestCase):
             container,
             'get_student_digests_use_case',
             return_value=student_digests_use_case,
-        ), patch.object(
-            DjangoDocumentEngine,
-            'with_sectioned_renderers',
-            return_value=engine,
+        ), patch(
+            'infrastructure.container.build_sectioned_document_components',
+            return_value=components,
         ) as factory:
             result = container.document_engine
 
-        self.assertIs(result, engine)
+        self.assertIsInstance(result, DjangoDocumentEngine)
+        self.assertIs(result.document_builder, document_builder)
+        self.assertIs(
+            result.document_renderer_registry,
+            document_renderer_registry,
+        )
         factory.assert_called_once_with(
             work_document_repo=container.work_document_repo,
-            get_remedial_sheet_data_use_case=remedial_sheet_data_use_case,
-            get_event_report_use_case=event_report_use_case,
-            get_student_digests_use_case=student_digests_use_case,
+            get_remedial_sheet_data=get_remedial_sheet_data,
+            get_event_report=get_event_report,
+            get_student_digests=get_student_digests,
             file_store=container.rendered_document_file_store,
         )
 

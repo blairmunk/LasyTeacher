@@ -2,7 +2,7 @@
 
 import time
 
-from core.importers.tasks import TaskImporter
+from infrastructure.importers.tasks import TaskImporter
 from core.models import ImportLog
 from core_logic.services.import_log_service import ImportLogService
 from core_logic.entities.task_import import (

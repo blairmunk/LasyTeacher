@@ -15,7 +15,7 @@ from django.utils import timezone
 
 from core.models import AcademicYear, ImportLog
 from core.test_slices import TEST_SLICES
-from core.importers.tasks import TaskImporter
+from infrastructure.importers.tasks import TaskImporter
 from curriculum.models import Course, Topic
 from events.models import AttemptTaskSnapshot, Event, EventParticipation, Mark
 from students.models import Student, StudentGroup

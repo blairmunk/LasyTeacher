@@ -2,10 +2,8 @@
 Базовые классы для системы импорта JSON данных
 """
 import uuid
-import json
-from typing import Dict, List, Any, Optional, Union
-from pathlib import Path
-from django.db import transaction, IntegrityError
+from typing import Any, Dict, List, Optional
+
 from django.core.management.base import CommandError
 
 class ImportStats:

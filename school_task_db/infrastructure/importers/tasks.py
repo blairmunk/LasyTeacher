@@ -1,8 +1,8 @@
 """
 Импортер заданий с поддержкой UUID и зависимостей
 """
-import uuid
 from typing import Dict, List, Any, Optional
+
 from django.db import transaction
 
 from .base import BaseImporter, ImportContext
@@ -13,6 +13,7 @@ from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_CONTROL,
     validate_task_specific_bank_role,
 )
+
 
 class TaskImporter(BaseImporter):
     """Импортер заданий с полной поддержкой зависимостей"""

@@ -1,5 +1,9 @@
 from django.db import models
 from core.models import BaseModel
+from core_logic.services.reference_catalog import (
+    parse_simple_reference_items,
+    parse_subject_reference_items,
+)
 
 class SimpleReference(BaseModel):
     """
@@ -43,18 +47,7 @@ class SimpleReference(BaseModel):
     
     def get_items_list(self):
         """Получить список элементов из текста"""
-        if not self.items_text:
-            return []
-        
-        lines = self.items_text.strip().split('\n')
-        items = []
-        
-        for line in lines:
-            line = line.strip()
-            if line:  # Игнорируем пустые строки
-                items.append(line)
-        
-        return items
+        return parse_simple_reference_items(self.items_text)
     
     def get_choices(self):
         """Получить choices для Django форм: [(value, label), ...]"""
@@ -120,30 +113,7 @@ class SubjectReference(BaseModel):
     # Остальные методы остаются без изменений
     def get_items_dict(self):
         """Получить словарь {код: название}"""
-        if not self.items_text:
-            return {}
-        
-        items = {}
-        lines = self.items_text.strip().split('\n')
-        
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-            
-            if '|' in line:
-                # Формат: код|название
-                parts = line.split('|', 1)
-                if len(parts) == 2:
-                    code = parts[0].strip()
-                    name = parts[1].strip()
-                    if code and name:
-                        items[code] = name
-            else:
-                # Простой формат: только название (код = название)
-                items[line] = line
-        
-        return items
+        return dict(parse_subject_reference_items(self.items_text))
     
     def get_choices(self):
         """Получить choices для Django форм"""
@@ -155,4 +125,3 @@ class SubjectReference(BaseModel):
         choices = [('', '--- Выберите ---')]
         choices.extend(self.get_choices())
         return choices
-

@@ -37,12 +37,14 @@ from core_logic.entities.task import (
     TaskSaveResult,
 )
 from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.services.reference_catalog import merge_reference_choices
 from core_logic.value_objects.task_print_settings import TASK_BANK_ROLE_CONTROL
 from curriculum.models import SubTopic, Topic
 from infrastructure.services.task_image_presentation import (
     TaskImagePresentationService,
 )
 from task_groups.models import AnalogGroup, TaskGroup
+from references.models import SubjectReference
 from tasks.models import Source, Task, TaskImage
 from tasks.utils import math_status_cache
 
@@ -579,28 +581,21 @@ class DjangoTaskRepository(ITaskRepository):
         subject: str,
         category: str,
     ) -> List[ReferenceElementOption]:
-        try:
-            from references.helpers import get_subject_reference_choices
-        except ImportError:
-            return []
-
+        catalogs = (
+            reference.get_choices()
+            for reference in SubjectReference.objects.filter(
+                subject=subject,
+                category=category,
+                is_active=True,
+            ).order_by('grade_level', 'created_at')
+        )
         return [
             ReferenceElementOption(code=code, name=name)
-            for code, name in get_subject_reference_choices(subject, category)
+            for code, name in merge_reference_choices(catalogs)
         ]
 
     def get_task_type_choices(self):
-        try:
-            from references.helpers import get_task_type_choices
-
-            return get_task_type_choices()
-        except ImportError:
-            return [
-                ('computational', 'Расчётная задача'),
-                ('qualitative', 'Качественная задача'),
-                ('theoretical', 'Теоретический вопрос'),
-                ('test', 'Тест'),
-            ]
+        return list(Task.TASK_TYPES)
 
     def count_tasks(self) -> int:
         return Task.objects.count()

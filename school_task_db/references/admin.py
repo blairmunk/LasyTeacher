@@ -50,19 +50,16 @@ class SubjectReferenceAdminForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         
         # Динамически загружаем предметы из справочника subjects
-        try:
-            from .helpers import get_reference_choices
-            subject_choices = get_reference_choices('subjects', include_empty=True)
-            
-            if subject_choices and len(subject_choices) > 1:  # Есть выбор
-                self.fields['subject'] = forms.ChoiceField(
-                    label='Предмет',
-                    choices=subject_choices,
-                    widget=forms.Select(attrs={'class': 'form-select'})
-                )
-        except:
-            # Если справочник недоступен - оставляем обычное текстовое поле
-            pass
+        subject_reference = SimpleReference.objects.filter(
+            category='subjects',
+            is_active=True,
+        ).first()
+        if subject_reference and subject_reference.get_items_list():
+            self.fields['subject'] = forms.ChoiceField(
+                label='Предмет',
+                choices=subject_reference.get_choices_with_empty(),
+                widget=forms.Select(attrs={'class': 'form-select'}),
+            )
         
         # Настраиваем поле класса
         self.fields['grade_level'].widget.attrs.update({

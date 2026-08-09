@@ -11,8 +11,9 @@ from infrastructure.repositories.django_work_document_repo import (
     DjangoWorkDocumentRepository,
 )
 from infrastructure.services.django_document_payload_registry import (
-    build_report_section_payload_builder_registry,
+    build_event_report_section_payload_builder_registry,
     build_remedial_sheet_section_payload_builder_registry,
+    build_student_digest_section_payload_builder_registry,
     build_work_section_payload_builder_registry,
 )
 from infrastructure.services.latex_document_payloads import (
@@ -162,10 +163,15 @@ def build_sectioned_document_payload_builder_registry(
             task_payload_formatter=task_payload_formatter,
         )
     )
-    if get_event_report and get_student_digests:
+    if get_event_report:
         payload_registry.extend(
-            build_report_section_payload_builder_registry(
+            build_event_report_section_payload_builder_registry(
                 get_event_report=get_event_report,
+            )
+        )
+    if get_student_digests:
+        payload_registry.extend(
+            build_student_digest_section_payload_builder_registry(
                 get_student_digests=get_student_digests,
             )
         )

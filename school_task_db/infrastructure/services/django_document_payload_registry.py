@@ -179,9 +179,8 @@ def build_remedial_sheet_section_payload_builder_registry(
     return registry
 
 
-def build_report_section_payload_builder_registry(
+def build_event_report_section_payload_builder_registry(
     get_event_report,
-    get_student_digests,
 ) -> DocumentSectionPayloadBuilderRegistry:
     registry = DocumentSectionPayloadBuilderRegistry()
     event_builder = EventReportSectionPayloadBuilder(
@@ -201,7 +200,13 @@ def build_report_section_payload_builder_registry(
             document_type=EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
             source_type=EVENT_REPORT_SOURCE_TYPE,
         )
+    return registry
 
+
+def build_student_digest_section_payload_builder_registry(
+    get_student_digests,
+) -> DocumentSectionPayloadBuilderRegistry:
+    registry = DocumentSectionPayloadBuilderRegistry()
     digest_builder = StudentDigestSectionPayloadBuilder(
         StudentDigestDocumentDataProvider(get_student_digests),
     )

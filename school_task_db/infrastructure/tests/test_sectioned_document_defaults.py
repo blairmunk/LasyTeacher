@@ -1,5 +1,6 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 
 from django.test import TestCase
 
@@ -11,7 +12,9 @@ from core_logic.entities.document import (
     DocumentSectionSpec,
     DocumentSourceRef,
     DocumentPresentationProfile,
+    EVENT_REPORT_SOURCE_TYPE,
     REMEDIAL_VARIANT_SOURCE_TYPE,
+    STUDENT_DIGEST_SOURCE_TYPE,
     WORK_SOURCE_TYPE,
 )
 from core_logic.entities.work import (
@@ -39,8 +42,10 @@ from core_logic.value_objects.document_source_factories import (
     build_work_document_source,
 )
 from core_logic.value_objects.document_recipes import (
+    EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
     HEADER_SECTION,
     REMEDIAL_SHEET_DOCUMENT_TYPE,
+    STUDENT_DIGEST_DOCUMENT_TYPE,
     WORK_DOCUMENT_TYPE,
 )
 from curriculum.models import Topic
@@ -667,6 +672,59 @@ class SectionedDocumentDefaultsTests(TestCase):
 
         self.assertEqual(work_payload['title'], 'Контрольная')
         self.assertEqual(remedial_payload['title'], 'Работа над ошибками')
+
+    def test_registers_event_report_payloads_without_digest_dependency(self):
+        report = object()
+        registry = build_sectioned_document_payload_builder_registry(
+            get_event_report=lambda event_id: report,
+        )
+
+        payload = registry.build_payload(
+            DocumentSectionPayloadBuildRequest(
+                source=DocumentSourceRef(
+                    source_type=EVENT_REPORT_SOURCE_TYPE,
+                    source_id='event-1',
+                ),
+                recipe=DocumentRecipe(
+                    document_type=EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
+                ),
+                section=DocumentSectionSpec(section_type=HEADER_SECTION),
+            )
+        )
+
+        self.assertIs(payload['report'], report)
+
+    def test_registers_digest_payloads_without_event_report_dependency(self):
+        digest_request = object()
+        digest = SimpleNamespace(
+            student=SimpleNamespace(pk='student-1'),
+        )
+        page = SimpleNamespace(digests=(digest,))
+        registry = build_sectioned_document_payload_builder_registry(
+            get_student_digests=lambda request: page,
+        )
+
+        payload = registry.build_payload(
+            DocumentSectionPayloadBuildRequest(
+                source=DocumentSourceRef(
+                    source_type=STUDENT_DIGEST_SOURCE_TYPE,
+                    source_id='group-1',
+                ),
+                recipe=DocumentRecipe(
+                    document_type=STUDENT_DIGEST_DOCUMENT_TYPE,
+                ),
+                section=DocumentSectionSpec(
+                    section_type=HEADER_SECTION,
+                    options={
+                        'digest_request': digest_request,
+                        'student_id': 'student-1',
+                    },
+                ),
+            )
+        )
+
+        self.assertIs(payload['page'], page)
+        self.assertIs(payload['digest'], digest)
 
     def test_default_remedial_source_uses_document_repository(self):
         registry = build_sectioned_document_payload_builder_registry()

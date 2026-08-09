@@ -31,8 +31,10 @@ from core_logic.value_objects.document_build_plan import (
 )
 from core_logic.value_objects.document_render_plan import DocumentRenderPlan
 from core_logic.value_objects.document_render_plan_factories import (
-    build_remedial_sheet_document_render_plan,
-    build_work_document_render_plan,
+    build_remedial_sheet_document_recipe_for_render,
+    build_remedial_sheet_document_source,
+    build_work_document_recipe_for_render,
+    build_work_document_source,
 )
 from core_logic.value_objects.document_recipes import (
     HEADER_SECTION,
@@ -120,7 +122,7 @@ class SectionedDocumentDefaultsTests(TestCase):
             )
 
             result = engine.render_document(
-                build_work_document_render_plan(
+                _work_document_render_plan(
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=options,
@@ -182,7 +184,7 @@ class SectionedDocumentDefaultsTests(TestCase):
             )
 
             result = engine.render_document(
-                build_work_document_render_plan(
+                _work_document_render_plan(
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=WorkDocumentRenderOptions(renderer_type='html'),
@@ -235,7 +237,7 @@ class SectionedDocumentDefaultsTests(TestCase):
             )
 
             result = engine.render_document(
-                build_work_document_render_plan(
+                _work_document_render_plan(
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=options,
@@ -282,7 +284,7 @@ class SectionedDocumentDefaultsTests(TestCase):
             )
 
             result = engine.render_document(
-                build_work_document_render_plan(
+                _work_document_render_plan(
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=options,
@@ -334,7 +336,7 @@ class SectionedDocumentDefaultsTests(TestCase):
             )
 
             result = engine.render_document(
-                build_work_document_render_plan(
+                _work_document_render_plan(
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=WorkDocumentRenderOptions(renderer_type='html'),
@@ -390,7 +392,7 @@ class SectionedDocumentDefaultsTests(TestCase):
             )
 
             result = engine.render_document(
-                build_work_document_render_plan(
+                _work_document_render_plan(
                     work_id=str(work.pk),
                     work_name=work.name,
                     options=options,
@@ -484,7 +486,7 @@ class SectionedDocumentDefaultsTests(TestCase):
             )
 
             result = engine.render_document(
-                build_remedial_sheet_document_render_plan(
+                _remedial_sheet_document_render_plan(
                     variant_id=str(remedial_variant.pk),
                     options=options,
                 ),
@@ -578,7 +580,7 @@ class SectionedDocumentDefaultsTests(TestCase):
             )
 
             result = engine.render_document(
-                build_remedial_sheet_document_render_plan(
+                _remedial_sheet_document_render_plan(
                     variant_id=str(remedial_variant.pk),
                     options=options,
                 ),
@@ -857,6 +859,39 @@ def empty_work_render_plan(renderer_type):
         ),
         recipe=DocumentRecipe(document_type='work'),
         render_target=RenderTarget(renderer_type=renderer_type),
+    )
+
+
+def _work_document_render_plan(
+    work_id,
+    work_name,
+    options,
+    presentation_profile=None,
+    variant_ids=None,
+):
+    return DocumentRenderPlan(
+        source=build_work_document_source(work_id, work_name),
+        recipe=build_work_document_recipe_for_render(
+            options=options,
+            presentation_profile=presentation_profile,
+            variant_ids=variant_ids,
+        ),
+        render_target=options.render_target,
+    )
+
+
+def _remedial_sheet_document_render_plan(
+    variant_id,
+    options,
+    presentation_profile=None,
+):
+    return DocumentRenderPlan(
+        source=build_remedial_sheet_document_source(variant_id),
+        recipe=build_remedial_sheet_document_recipe_for_render(
+            options=options,
+            presentation_profile=presentation_profile,
+        ),
+        render_target=options.render_target,
     )
 
 

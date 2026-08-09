@@ -24,7 +24,8 @@ from core_logic.value_objects.document_render_plan import (
     DocumentRenderPlan,
 )
 from core_logic.value_objects.document_render_plan_factories import (
-    build_work_document_render_plan,
+    build_work_document_recipe_for_render,
+    build_work_document_source,
 )
 from curriculum.models import Topic
 from infrastructure.services.document_engine import (
@@ -101,6 +102,14 @@ def empty_work_render_plan(work_id, work_name, renderer_type):
         ),
         recipe=DocumentRecipe(document_type='work'),
         render_target=RenderTarget(renderer_type=renderer_type),
+    )
+
+
+def work_render_plan(work_id, work_name, options):
+    return DocumentRenderPlan(
+        source=build_work_document_source(work_id, work_name),
+        recipe=build_work_document_recipe_for_render(options),
+        render_target=options.render_target,
     )
 
 
@@ -242,18 +251,10 @@ class DjangoDocumentEngineTests(TestCase):
                 ),
             )
             pdf_result = service.render_document(
-                build_work_document_render_plan(
-                    work_id=str(work.pk),
-                    work_name=work.name,
-                    options=pdf_options,
-                ),
+                work_render_plan(str(work.pk), work.name, pdf_options),
             )
             latex_result = service.render_document(
-                build_work_document_render_plan(
-                    work_id=str(work.pk),
-                    work_name=work.name,
-                    options=latex_options,
-                ),
+                work_render_plan(str(work.pk), work.name, latex_options),
             )
 
         self.assertEqual(html_result.file_type, 'html')

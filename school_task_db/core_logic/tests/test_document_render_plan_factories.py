@@ -12,12 +12,11 @@ from core_logic.value_objects.document_render_options import (
     WorkDocumentRenderOptions,
 )
 from core_logic.value_objects.document_render_plan_factories import (
+    build_remedial_sheet_batch_document_recipe_for_render,
+    build_remedial_sheet_batch_document_source,
     build_remedial_sheet_document_recipe_for_render,
-    build_remedial_sheet_batch_document_render_plan,
-    build_remedial_sheet_document_render_plan,
     build_remedial_sheet_document_source,
     build_work_document_recipe_for_render,
-    build_work_document_render_plan,
     build_work_document_source,
 )
 from core_logic.value_objects.document_recipes import (
@@ -92,57 +91,14 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         self.assertEqual(recipe.document_type, REMEDIAL_SHEET_DOCUMENT_TYPE)
         self.assertIn(ANSWERS_SECTION, recipe.section_types)
 
-    def test_build_work_document_render_plan(self):
-        plan = build_work_document_render_plan(
-            work_id='work-1',
-            work_name='Контрольная',
-            options=WorkDocumentRenderOptions(
-                renderer_type='html',
-                append_answers=True,
-            ),
-        )
-
-        self.assertEqual(plan.source.source_type, WORK_SOURCE_TYPE)
-        self.assertEqual(plan.source.source_id, 'work-1')
-        self.assertEqual(plan.source.title, 'Контрольная')
-        self.assertEqual(plan.render_target.renderer_type, 'html')
-        self.assertEqual(
-            plan.recipe.section_types,
-            ('header', 'task_list', 'answers'),
-        )
-
-    def test_build_work_document_render_plan_uses_profile_presentation(self):
-        presentation = DocumentPresentation(custom_css='.task {}')
-        presentation_profile = DocumentPresentationProfile(
-            name='Рабочий лист',
-            document_type='work',
-            presentation=presentation,
-        )
-
-        plan = build_work_document_render_plan(
-            work_id='work-1',
-            work_name='Контрольная',
-            options=WorkDocumentRenderOptions(renderer_type='html'),
-            presentation_profile=presentation_profile,
-        )
-
-        self.assertEqual(plan.recipe.document_type, 'work')
-        self.assertEqual(
-            plan.recipe.section_types,
-            (HEADER_SECTION, TASK_LIST_SECTION),
-        )
-        self.assertEqual(plan.recipe.presentation, presentation)
-
-    def test_build_work_document_render_plan_repeats_sections_per_variant(self):
-        plan = build_work_document_render_plan(
-            work_id='work-1',
-            work_name='Контрольная',
+    def test_build_work_document_recipe_repeats_sections_per_variant(self):
+        recipe = build_work_document_recipe_for_render(
             options=WorkDocumentRenderOptions(renderer_type='html'),
             variant_ids=['variant-1', 'variant-2'],
         )
 
         self.assertEqual(
-            plan.recipe.section_types,
+            recipe.section_types,
             (
                 HEADER_SECTION,
                 TASK_LIST_SECTION,
@@ -154,15 +110,15 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         self.assertEqual(
             [
                 section.options.get('variant_id')
-                for section in plan.recipe.sections
+                for section in recipe.sections
             ],
             ['variant-1', 'variant-1', None, 'variant-2', 'variant-2'],
         )
         self.assertFalse(
-            plan.recipe.sections[1].options['show_variant_heading'],
+            recipe.sections[1].options['show_variant_heading'],
         )
         self.assertFalse(
-            plan.recipe.sections[4].options['show_variant_heading'],
+            recipe.sections[4].options['show_variant_heading'],
         )
 
     def test_work_print_overrides_apply_on_top_of_default_recipe(self):
@@ -191,11 +147,8 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         )
         self.assertTrue(recipe.sections[1].options['hide_blank_cells'])
 
-
-    def test_build_work_document_render_plan_can_disable_variant_breaks(self):
-        plan = build_work_document_render_plan(
-            work_id='work-1',
-            work_name='Контрольная',
+    def test_build_work_document_recipe_can_disable_variant_breaks(self):
+        recipe = build_work_document_recipe_for_render(
             options=WorkDocumentRenderOptions(
                 renderer_type='html',
                 break_between_variants=False,
@@ -204,7 +157,7 @@ class DocumentRenderPlanFactoriesTests(TestCase):
         )
 
         self.assertEqual(
-            plan.recipe.section_types,
+            recipe.section_types,
             (
                 HEADER_SECTION,
                 TASK_LIST_SECTION,
@@ -213,23 +166,15 @@ class DocumentRenderPlanFactoriesTests(TestCase):
             ),
         )
 
-    def test_build_remedial_sheet_document_render_plan(self):
-        plan = build_remedial_sheet_document_render_plan(
-            variant_id='variant-1',
+    def test_build_remedial_sheet_recipe_with_full_solutions(self):
+        recipe = build_remedial_sheet_document_recipe_for_render(
             options=RemedialSheetDocumentRenderOptions(
                 renderer_type='pdf',
                 answer_type='with_full_solutions',
             ),
         )
-
         self.assertEqual(
-            plan.source.source_type,
-            REMEDIAL_VARIANT_SOURCE_TYPE,
-        )
-        self.assertEqual(plan.source.source_id, 'variant-1')
-        self.assertEqual(plan.render_target.renderer_type, 'pdf')
-        self.assertEqual(
-            plan.recipe.section_types,
+            recipe.section_types,
             (
                 'header',
                 'original_mistakes',
@@ -252,15 +197,14 @@ class DocumentRenderPlanFactoriesTests(TestCase):
             presentation=presentation,
         )
 
-        plan = build_remedial_sheet_document_render_plan(
-            variant_id='variant-1',
+        recipe = build_remedial_sheet_document_recipe_for_render(
             options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
             presentation_profile=presentation_profile,
         )
 
-        self.assertEqual(plan.recipe.document_type, 'remedial_sheet')
+        self.assertEqual(recipe.document_type, 'remedial_sheet')
         self.assertEqual(
-            plan.recipe.section_types,
+            recipe.section_types,
             (
                 'header',
                 'original_mistakes',
@@ -272,12 +216,14 @@ class DocumentRenderPlanFactoriesTests(TestCase):
                 'short_solutions',
             ),
         )
-        self.assertEqual(plan.recipe.presentation, presentation)
+        self.assertEqual(recipe.presentation, presentation)
 
-    def test_build_remedial_sheet_batch_document_render_plan_repeats_sections(self):
-        plan = build_remedial_sheet_batch_document_render_plan(
+    def test_build_remedial_sheet_batch_recipe_repeats_sections(self):
+        source = build_remedial_sheet_batch_document_source(
             work_id='work-1',
             work_name='Работа над ошибками',
+        )
+        recipe = build_remedial_sheet_batch_document_recipe_for_render(
             variant_ids=['variant-1', 'variant-2'],
             options=RemedialSheetDocumentRenderOptions(
                 renderer_type='html',
@@ -285,11 +231,11 @@ class DocumentRenderPlanFactoriesTests(TestCase):
             ),
         )
 
-        self.assertEqual(plan.source.source_type, REMEDIAL_WORK_SOURCE_TYPE)
-        self.assertEqual(plan.source.source_id, 'work-1')
-        self.assertEqual(plan.source.title, 'Работа над ошибками')
+        self.assertEqual(source.source_type, REMEDIAL_WORK_SOURCE_TYPE)
+        self.assertEqual(source.source_id, 'work-1')
+        self.assertEqual(source.title, 'Работа над ошибками')
         self.assertEqual(
-            plan.recipe.section_types,
+            recipe.section_types,
             (
                 'header',
                 'original_mistakes',
@@ -306,10 +252,10 @@ class DocumentRenderPlanFactoriesTests(TestCase):
                 'answers',
             ),
         )
-        self.assertEqual(plan.recipe.sections[0].options['variant_id'], 'variant-1')
-        self.assertEqual(plan.recipe.sections[7].options['variant_id'], 'variant-2')
+        self.assertEqual(recipe.sections[0].options['variant_id'], 'variant-1')
+        self.assertEqual(recipe.sections[7].options['variant_id'], 'variant-2')
 
-    def test_build_remedial_sheet_batch_document_render_plan_uses_presentation_profile(self):
+    def test_build_remedial_sheet_batch_recipe_uses_presentation_profile(self):
         presentation = DocumentPresentation(
             custom_css='.remedial-sheet { font-size: 12pt; }',
             custom_latex_preamble='\\usepackage{multicol}',
@@ -320,16 +266,14 @@ class DocumentRenderPlanFactoriesTests(TestCase):
             presentation=presentation,
         )
 
-        plan = build_remedial_sheet_batch_document_render_plan(
-            work_id='work-1',
-            work_name='Работа над ошибками',
+        recipe = build_remedial_sheet_batch_document_recipe_for_render(
             variant_ids=['variant-1'],
             options=RemedialSheetDocumentRenderOptions(renderer_type='html'),
             presentation_profile=presentation_profile,
         )
 
         self.assertEqual(
-            plan.recipe.section_types,
+            recipe.section_types,
             (
                 'header',
                 'original_mistakes',
@@ -341,5 +285,5 @@ class DocumentRenderPlanFactoriesTests(TestCase):
                 'short_solutions',
             ),
         )
-        self.assertEqual(plan.recipe.sections[0].options['variant_id'], 'variant-1')
-        self.assertEqual(plan.recipe.presentation, presentation)
+        self.assertEqual(recipe.sections[0].options['variant_id'], 'variant-1')
+        self.assertEqual(recipe.presentation, presentation)

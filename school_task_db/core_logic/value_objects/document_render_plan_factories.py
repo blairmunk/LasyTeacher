@@ -17,10 +17,6 @@ from core_logic.value_objects.document_render_options import (
     RemedialSheetDocumentRenderOptions,
     WorkDocumentRenderOptions,
 )
-from core_logic.value_objects.document_render_plan import (
-    DocumentRenderPlan,
-    build_document_render_plan,
-)
 from core_logic.value_objects.document_recipe_factories import (
     build_event_performance_report_document_recipe,
     build_remedial_sheet_document_recipe,
@@ -38,64 +34,6 @@ from core_logic.value_objects.document_recipes import (
     STUDENT_DIGEST_DOCUMENT_TYPE,
     TASK_LIST_SECTION,
 )
-
-
-def build_work_document_render_plan(
-    work_id: str,
-    work_name: str,
-    options: WorkDocumentRenderOptions,
-    presentation_profile: DocumentPresentationProfile | None = None,
-    variant_ids: list[str] | None = None,
-) -> DocumentRenderPlan:
-    return build_document_render_plan(
-        source=build_work_document_source(
-            work_id=work_id,
-            work_name=work_name,
-        ),
-        recipe=build_work_document_recipe_for_render(
-            options=options,
-            presentation_profile=presentation_profile,
-            variant_ids=variant_ids,
-        ),
-        render_target=options.render_target,
-    )
-
-
-def build_remedial_sheet_document_render_plan(
-    variant_id: str,
-    options: RemedialSheetDocumentRenderOptions,
-    presentation_profile: DocumentPresentationProfile | None = None,
-) -> DocumentRenderPlan:
-    return build_document_render_plan(
-        source=build_remedial_sheet_document_source(variant_id),
-        recipe=build_remedial_sheet_document_recipe_for_render(
-            options=options,
-            presentation_profile=presentation_profile,
-        ),
-        render_target=options.render_target,
-    )
-
-
-def build_remedial_sheet_batch_document_render_plan(
-    work_id: str,
-    work_name: str,
-    variant_ids: list[str],
-    options: RemedialSheetDocumentRenderOptions,
-    presentation_profile: DocumentPresentationProfile | None = None,
-) -> DocumentRenderPlan:
-    return build_document_render_plan(
-        source=build_remedial_sheet_batch_document_source(
-            work_id=work_id,
-            work_name=work_name,
-        ),
-        recipe=build_remedial_sheet_batch_document_recipe_for_render(
-            variant_ids=variant_ids,
-            options=options,
-            presentation_profile=presentation_profile,
-        ),
-        render_target=options.render_target,
-    )
-
 
 def build_work_document_source(
     work_id: str,

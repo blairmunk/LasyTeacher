@@ -96,16 +96,11 @@ class DjangoTaskImportService(ITaskImportService):
 
     @staticmethod
     def _summarize_import(importer, context):
-        raw_errors = getattr(importer.stats, 'errors', [])
-        if isinstance(raw_errors, list):
-            errors_count = len(raw_errors)
-            error_messages = [str(error) for error in raw_errors[:50]]
-        elif isinstance(raw_errors, int):
-            errors_count = raw_errors
-            error_messages = []
-        else:
-            errors_count = 0
-            error_messages = []
+        errors_count = getattr(importer.stats, 'errors', 0)
+        error_messages = [
+            str(error.get('message', error))
+            for error in getattr(importer.stats, 'error_details', [])[:50]
+        ]
 
         return {
             'created': getattr(importer.stats, 'created', 0),

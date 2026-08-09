@@ -2,9 +2,9 @@
 Базовые классы для системы импорта JSON данных
 """
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from django.core.management.base import CommandError
+from core_logic.value_objects.task_import import validate_task_import_mode
 
 class ImportStats:
     """Статистика импорта"""
@@ -33,23 +33,6 @@ class ImportStats:
             'timestamp': str(uuid.uuid4())
         })
     
-    def get_summary(self) -> Dict[str, Any]:
-        return {
-            'created': self.created,
-            'updated': self.updated,
-            'skipped': self.skipped,
-            'errors': self.errors,
-            'warnings_count': len(self.warnings),
-            'success_rate': self.get_success_rate()
-        }
-    
-    def get_success_rate(self) -> float:
-        total = self.created + self.updated + self.skipped + self.errors
-        if total == 0:
-            return 100.0
-        successful = self.created + self.updated + self.skipped
-        return (successful / total) * 100.0
-
 class BaseImporter:
     """Базовый класс для всех импортеров"""
     
@@ -84,9 +67,7 @@ class BaseImporter:
     
     def validate_mode(self):
         """Валидация режима импорта"""
-        valid_modes = ['strict', 'update', 'skip']
-        if self.mode not in valid_modes:
-            raise CommandError(f"Неверный режим импорта: {self.mode}. Доступны: {', '.join(valid_modes)}")
+        validate_task_import_mode(self.mode)
     
     def log_info(self, message: str, indent: int = 0):
         """Логирование информационных сообщений"""
@@ -133,17 +114,17 @@ class BaseImporter:
             self.log_error(f"Ошибка поиска {model_class.__name__} с UUID {uuid_str[-8:]}: {e}")
             return None
     
-    def clear_cache(self):
-        """Очистка кэша"""
-        self._cache.clear()
-    
     def should_create_object(self, existing_obj, data: Dict[str, Any]) -> bool:
         """Определяет нужно ли создавать объект в зависимости от режима"""
         if not existing_obj:
             return True
         
         if self.mode == 'strict':
-            raise CommandError(f"Объект с UUID {data.get('id', 'unknown')[-8:]} уже существует в strict режиме")
+            raise ValueError(
+                'Объект с UUID '
+                f"{data.get('id', 'unknown')[-8:]} уже существует "
+                'в strict режиме',
+            )
         elif self.mode == 'skip':
             self.stats.skipped += 1
             return False
@@ -152,32 +133,6 @@ class BaseImporter:
         
         return True
     
-    def print_import_summary(self):
-        """Печать итогового резюме импорта"""
-        summary = self.stats.get_summary()
-        
-        self._write("\n📊 ИТОГИ ИМПОРТА:")
-        self._write(f"  ✅ Создано: {summary['created']}")
-        self._write(f"  ✏️ Обновлено: {summary['updated']}")
-        self._write(f"  ⏭️ Пропущено: {summary['skipped']}")
-        self._write(f"  ❌ Ошибок: {summary['errors']}")
-        self._write(f"  ⚠️ Предупреждений: {summary['warnings_count']}")
-        self._write(f"  🎯 Успешность: {summary['success_rate']:.1f}%")
-        
-        # Детали ошибок
-        if self.stats.errors > 0 and self.verbose:
-            self._write("\n❌ ДЕТАЛИ ОШИБОК:")
-            for error in self.stats.error_details[:5]:  # Показываем первые 5
-                self._write(f"  • {error['message']}")
-                if error['exception']:
-                    self._write(f"    Исключение: {error['exception']}")
-        
-        # Предупреждения
-        if len(self.stats.warnings) > 0 and self.verbose:
-            self._write("\n⚠️ ПРЕДУПРЕЖДЕНИЯ:")
-            for warning in self.stats.warnings[:5]:  # Показываем первые 5
-                self._write(f"  • {warning['message']}")
-
 class ImportContext:
     """Контекст импорта для передачи данных между импортерами"""
     
@@ -202,16 +157,3 @@ class ImportContext:
             'groups': len(self.imported_groups),
             'tasks': len(self.imported_tasks)
         }
-
-def validate_json_structure(data: Dict[str, Any], required_fields: List[str], context: str = "") -> bool:
-    """Валидация базовой структуры JSON"""
-    missing_fields = []
-    
-    for field in required_fields:
-        if field not in data:
-            missing_fields.append(field)
-    
-    if missing_fields:
-        raise CommandError(f"Отсутствуют обязательные поля в {context}: {', '.join(missing_fields)}")
-    
-    return True

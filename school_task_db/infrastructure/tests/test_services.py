@@ -243,3 +243,27 @@ class DjangoTaskImportServiceTests(TestCase):
         self.assertIn('Неверный режим импорта', result.error)
         self.assertEqual(log.status, ImportLog.Status.FAILED)
         self.assertEqual(log.error_messages, [result.error])
+
+    def test_execute_import_preserves_partial_import_error_messages(self):
+        request = TaskImportRequest(
+            data={
+                'tasks': [
+                    {
+                        'id': '550e8400-e29b-41d4-a716-446655440001',
+                        'answer': 'Ответ без условия',
+                    },
+                ],
+            },
+            filename='broken-tasks.json',
+            file_size=128,
+        )
+
+        result = DjangoTaskImportService().execute_import(request)
+        log = ImportLog.objects.get(pk=result.log_id)
+
+        self.assertTrue(result.success)
+        self.assertEqual(result.stats['errors'], 1)
+        self.assertEqual(log.status, ImportLog.Status.PARTIAL)
+        self.assertEqual(log.errors_count, 1)
+        self.assertTrue(log.error_messages)
+        self.assertIn('задания', log.error_messages[0])

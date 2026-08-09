@@ -1,6 +1,7 @@
 """Django persistence for event performance reports."""
 
 from core_logic.entities.event_performance_report import (
+    EventReportCapturedEventFact,
     EventReportCapturedTaskFact,
     EventPerformanceReportSource,
     EventReportEventRef,
@@ -14,7 +15,9 @@ from core_logic.interfaces.event_performance_report_repo import (
 )
 from core_logic.services.event_report_task_fact_service import (
     EventReportTaskFactService,
-    resolve_event_report_assessment_mode,
+)
+from core_logic.services.event_report_source_service import (
+    resolve_event_report_event_ref,
 )
 from core_logic.value_objects.task_content_snapshot import (
     task_content_snapshot_from_mapping,
@@ -120,22 +123,31 @@ class DjangoEventPerformanceReportRepository(
         narrative_model = EventReportNarrativeModel.objects.filter(
             event=event,
         ).first()
-        return EventPerformanceReportSource(
-            event=EventReportEventRef(
-                pk=str(event.pk),
-                name=event.name,
-                status=event.status,
-                status_display=event.get_status_display(),
-                planned_date=event.planned_date,
-                work_name=event.work.name,
-                course_name=event.course.name if event.course_id else '',
-                work_assessment_mode=resolve_event_report_assessment_mode(
-                    captured_modes=(
-                        attempt.work_assessment_mode_snapshot
-                        for attempt in attempts.values()
-                    ),
-                    fallback_mode=event.work.assessment_mode,
+        current_event_ref = EventReportEventRef(
+            pk=str(event.pk),
+            name=event.name,
+            status=event.status,
+            status_display=event.get_status_display(),
+            planned_date=event.planned_date,
+            work_name=event.work.name,
+            course_name=event.course.name if event.course_id else '',
+            work_assessment_mode=event.work.assessment_mode,
+        )
+        captured_event_facts = tuple(
+            EventReportCapturedEventFact(
+                name=attempt.event_name_snapshot,
+                planned_date=attempt.event_date_snapshot,
+                work_name=attempt.work_name_snapshot,
+                work_assessment_mode=(
+                    attempt.work_assessment_mode_snapshot
                 ),
+            )
+            for attempt in attempts.values()
+        )
+        return EventPerformanceReportSource(
+            event=resolve_event_report_event_ref(
+                current_event_ref,
+                captured_event_facts,
             ),
             participants=tuple(participant_facts),
             task_scores=task_facts.task_scores,

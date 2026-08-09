@@ -178,6 +178,24 @@ class WrittenReportRepositoryTests(TestCase):
             source.task_scores[0].group_key,
             f'selection:{self.variant_task.source_selection_id}:slot:1',
         )
+
+    def test_event_report_keeps_captured_event_and_work_metadata(self):
+        captured_event_name = self.attempt.event_name_snapshot
+        captured_work_name = self.attempt.work_name_snapshot
+        captured_date = self.attempt.event_date_snapshot
+        self.event.name = 'Переименованное событие'
+        self.event.planned_date += dt.timedelta(days=7)
+        self.event.save(update_fields=['name', 'planned_date'])
+        self.work.name = 'Переименованная работа'
+        self.work.save(update_fields=['name'])
+
+        source = DjangoEventPerformanceReportRepository().get_event_report_source(
+            str(self.event.pk),
+        )
+
+        self.assertEqual(source.event.name, captured_event_name)
+        self.assertEqual(source.event.work_name, captured_work_name)
+        self.assertEqual(source.event.planned_date, captured_date)
         self.assertEqual(source.task_scores[0].order, 1)
         self.assertEqual(source.task_scores[0].points, 0)
         self.assertEqual(source.task_scores[0].comment, 'Ошибка в формуле')

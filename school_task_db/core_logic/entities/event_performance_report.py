@@ -26,6 +26,14 @@ class EventReportEventRef:
 
 
 @dataclass(frozen=True)
+class EventReportCapturedEventFact:
+    name: str
+    planned_date: Any
+    work_name: str
+    work_assessment_mode: str = WORK_ASSESSMENT_MODE_VARIANT
+
+
+@dataclass(frozen=True)
 class EventReportNarrative:
     possible_causes: str = ''
     recommendations: str = ''

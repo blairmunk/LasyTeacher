@@ -2,6 +2,7 @@ import datetime as dt
 from unittest import TestCase
 
 from core_logic.entities.event_performance_report import (
+    EventReportCapturedEventFact,
     EventReportCapturedTaskFact,
     EventPerformanceReportSource,
     EventReportEventRef,
@@ -17,7 +18,10 @@ from core_logic.services.event_performance_report_service import (
 )
 from core_logic.services.event_report_task_fact_service import (
     EventReportTaskFactService,
+)
+from core_logic.services.event_report_source_service import (
     resolve_event_report_assessment_mode,
+    resolve_event_report_event_ref,
 )
 from core_logic.value_objects.work_assessment import (
     WORK_ASSESSMENT_MODE_AGGREGATE,
@@ -248,6 +252,44 @@ class EventPerformanceReportTests(TestCase):
             ),
             WORK_ASSESSMENT_MODE_VARIANT,
         )
+
+    def test_report_event_ref_prefers_consistent_historical_metadata(self):
+        captured_date = dt.datetime(2026, 7, 1)
+        captured = (
+            EventReportCapturedEventFact(
+                name='Исходное событие',
+                planned_date=captured_date,
+                work_name='Исходная работа',
+                work_assessment_mode=WORK_ASSESSMENT_MODE_AGGREGATE,
+            ),
+        )
+
+        result = resolve_event_report_event_ref(self.source.event, captured)
+
+        self.assertEqual(result.name, 'Исходное событие')
+        self.assertEqual(result.planned_date, captured_date)
+        self.assertEqual(result.work_name, 'Исходная работа')
+        self.assertEqual(
+            result.work_assessment_mode,
+            WORK_ASSESSMENT_MODE_AGGREGATE,
+        )
+        self.assertEqual(result.status, self.source.event.status)
+        self.assertEqual(result.course_name, self.source.event.course_name)
+
+    def test_report_event_ref_uses_current_value_for_conflicting_snapshots(self):
+        captured = tuple(
+            EventReportCapturedEventFact(
+                name=name,
+                planned_date=self.source.event.planned_date,
+                work_name='Исходная работа',
+            )
+            for name in ('Первое название', 'Второе название')
+        )
+
+        result = resolve_event_report_event_ref(self.source.event, captured)
+
+        self.assertEqual(result.name, self.source.event.name)
+        self.assertEqual(result.work_name, 'Исходная работа')
 
     @staticmethod
     def _captured_task(

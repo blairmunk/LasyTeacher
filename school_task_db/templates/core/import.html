@@ -430,6 +430,7 @@ function buildPreviewTable(preview) {
     const fileCounts = preview.file_counts || {};
     const taskCounts = preview.task_uuid_counts || {};
     const groupCounts = preview.group_uuid_counts || {};
+    const dependencyCounts = preview.dependency_counts || {};
     let html = '<table class="table table-sm"><thead><tr><th>Показатель</th><th>Значение</th></tr></thead><tbody>';
     html += '<tr class="table-light"><th colspan="2">В файле</th></tr>';
     html += `<tr><td>Заданий</td><td>${fileCounts.tasks || 0}</td></tr>`;
@@ -445,6 +446,10 @@ function buildPreviewTable(preview) {
     html += `<tr><td>Новых</td><td>${groupCounts.new || 0}</td></tr>`;
     html += `<tr><td>Уже существуют</td><td>${groupCounts.existing || 0}</td></tr>`;
     html += `<tr><td>Некорректных</td><td>${groupCounts.invalid || 0}</td></tr>`;
+    html += '<tr class="table-light"><th colspan="2">Зависимости</th></tr>';
+    html += `<tr><td>Отсутствующих тем</td><td>${dependencyCounts.missing_topics || 0}</td></tr>`;
+    html += `<tr><td>Отсутствующих групп</td><td>${dependencyCounts.missing_groups || 0}</td></tr>`;
+    html += `<tr><td>Проблемных ссылок</td><td>${dependencyCounts.broken_references || 0}</td></tr>`;
     html += '</tbody></table>';
     return html;
 }

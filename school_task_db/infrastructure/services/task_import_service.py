@@ -167,6 +167,7 @@ class DjangoTaskImportService(ITaskImportService):
             preview = (log.details or {}).get('preview', {})
             file_counts = preview.get('file_counts', {})
             task_counts = preview.get('task_uuid_counts', {})
+            dependency_counts = preview.get('dependency_counts', {})
             lines.extend([
                 '',
                 '📦 В файле:',
@@ -180,6 +181,14 @@ class DjangoTaskImportService(ITaskImportService):
                 f"  Новых: {task_counts.get('new', 0)}",
                 f"  Уже существуют: {task_counts.get('existing', 0)}",
                 f"  Некорректных: {task_counts.get('invalid', 0)}",
+                '',
+                '🔗 Зависимости:',
+                '  Отсутствующих тем: '
+                f"{dependency_counts.get('missing_topics', 0)}",
+                '  Отсутствующих групп: '
+                f"{dependency_counts.get('missing_groups', 0)}",
+                '  Проблемных ссылок: '
+                f"{dependency_counts.get('broken_references', 0)}",
             ])
         else:
             lines.extend([

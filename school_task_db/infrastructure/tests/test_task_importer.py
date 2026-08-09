@@ -68,6 +68,14 @@ class TaskImporterTests(TestCase):
         self.assertEqual(context.preview_summary['file_counts']['tasks'], 1)
         self.assertEqual(context.preview_summary['file_counts']['groups'], 1)
         self.assertEqual(context.preview_summary['task_uuid_counts']['new'], 1)
+        self.assertEqual(
+            context.preview_summary['dependency_counts'],
+            {
+                'missing_topics': 1,
+                'missing_groups': 0,
+                'broken_references': 0,
+            },
+        )
 
     def test_imports_base64_task_image_through_image_component(self):
         task_id = '550e8400-e29b-41d4-a716-446655440001'

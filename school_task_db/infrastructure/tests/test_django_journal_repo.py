@@ -101,7 +101,8 @@ class DjangoJournalRepositoryTests(TestCase):
             work_name_snapshot='Изменённая работа',
         )
         participation.variant = replacement_variant
-        participation.save(update_fields=['variant'])
+        participation.status = 'absent'
+        participation.save(update_fields=['variant', 'status'])
 
         data = DjangoJournalRepository().get_journal_source(
             course_id=course.pk,

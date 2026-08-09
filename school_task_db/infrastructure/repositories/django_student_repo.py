@@ -35,6 +35,9 @@ from core_logic.entities.student import (
     WorkRef,
 )
 from core_logic.interfaces.student_repo import IStudentRepository
+from core_logic.value_objects.attempt_status import (
+    resolve_historical_participation_status,
+)
 from events.models import EventParticipation
 from infrastructure.services.django_attempt_snapshot_queries import (
     latest_attempts_by_participation,
@@ -325,7 +328,12 @@ class DjangoStudentRepository(IStudentRepository):
                         else None
                     ),
                     score=attempt.score if attempt else None,
-                    is_absent=participation.status == 'absent',
+                    is_absent=(
+                        resolve_historical_participation_status(
+                            participation.status,
+                            has_attempt=attempt is not None,
+                        ) == 'absent'
+                    ),
                     variant_number=(
                         attempt.variant_number_snapshot
                         if attempt

@@ -28,6 +28,9 @@ from infrastructure.repositories.django_event_performance_report_repo import (
 from infrastructure.repositories.django_student_digest_repo import (
     DjangoStudentDigestRepository,
 )
+from infrastructure.repositories.django_student_repo import (
+    DjangoStudentRepository,
+)
 from infrastructure.tests.variant_task_factory import (
     capture_attempt_snapshot,
     create_variant_task,
@@ -246,6 +249,9 @@ class WrittenReportRepositoryTests(TestCase):
             start_date=dt.date(2026, 10, 13),
             end_date=dt.date(2026, 10, 19),
         )
+        profile_rows = DjangoStudentRepository().get_profile_participations(
+            str(self.student.pk),
+        )
 
         graded_participant = next(
             item
@@ -255,6 +261,7 @@ class WrittenReportRepositoryTests(TestCase):
         graded_digest = digest_source.students[0].entries[0]
         self.assertEqual(graded_participant.status, 'graded')
         self.assertEqual(graded_digest.status, 'graded')
+        self.assertFalse(profile_rows[0].is_absent)
 
     def test_event_report_groups_reordered_variants_by_specification_slot(self):
         second_variant = Variant.objects.create(

@@ -20,6 +20,9 @@ from core_logic.entities.report_refs import (
 )
 from core_logic.interfaces.journal_repo import IJournalRepository
 from core_logic.services.event_service import EventService
+from core_logic.value_objects.attempt_status import (
+    resolve_historical_participation_status,
+)
 from curriculum.models import Course
 from events.models import Event, EventParticipation
 from infrastructure.services.django_attempt_snapshot_queries import (
@@ -92,7 +95,10 @@ class DjangoJournalRepository(IJournalRepository):
                 event_id=str(participation.event_id),
                 participation=JournalParticipationRef(
                     pk=str(participation.pk),
-                    status=participation.status,
+                    status=resolve_historical_participation_status(
+                        participation.status,
+                        has_attempt=attempt is not None,
+                    ),
                 ),
                 mark=(
                     ReportMarkFact(

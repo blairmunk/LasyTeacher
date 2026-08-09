@@ -20,6 +20,34 @@ class StudentDigestStudentRef:
 
 
 @dataclass(frozen=True)
+class StudentDigestTaskResultFact:
+    topic_name: str
+    subtopic_name: str = ''
+    subject: str = ''
+    points: float | None = None
+    max_points: float | None = None
+    comment: str = ''
+    is_assessable: bool = True
+
+    @property
+    def is_failed(self) -> bool:
+        return bool(
+            self.is_assessable
+            and self.points is not None
+            and self.max_points
+            and self.points < self.max_points
+        )
+
+    @property
+    def topic_label(self) -> str:
+        if not self.topic_name:
+            return self.subtopic_name
+        if not self.subtopic_name:
+            return self.topic_name
+        return f'{self.topic_name}: {self.subtopic_name}'
+
+
+@dataclass(frozen=True)
 class StudentDigestEntryFact:
     event_id: str
     event_name: str
@@ -34,8 +62,28 @@ class StudentDigestEntryFact:
     mistakes_analysis: str = ''
     recommendations: str = ''
     needs_attention: bool = False
-    failed_topics: Tuple[str, ...] = field(default_factory=tuple)
-    task_comments: Tuple[str, ...] = field(default_factory=tuple)
+    task_results: Tuple[StudentDigestTaskResultFact, ...] = field(
+        default_factory=tuple,
+    )
+
+    def __post_init__(self):
+        object.__setattr__(self, 'task_results', tuple(self.task_results))
+
+    @property
+    def failed_topics(self) -> Tuple[str, ...]:
+        return tuple(dict.fromkeys(
+            result.topic_label
+            for result in self.task_results
+            if result.is_failed and result.topic_label
+        ))
+
+    @property
+    def task_comments(self) -> Tuple[str, ...]:
+        return tuple(dict.fromkeys(
+            result.comment.strip()
+            for result in self.task_results
+            if result.is_failed and result.comment.strip()
+        ))
 
 
 @dataclass(frozen=True)

@@ -6,6 +6,7 @@ from core_logic.entities.student_digest import (
     StudentDigestSource,
     StudentDigestStudentRef,
     StudentDigestStudentSource,
+    StudentDigestTaskResultFact,
 )
 from core_logic.interfaces.student_digest_repo import IStudentDigestRepository
 from core_logic.value_objects.task_content_snapshot import (
@@ -86,36 +87,42 @@ class DjangoStudentDigestRepository(IStudentDigestRepository):
         task_results = (
             attempt.captured_task_results if attempt is not None else ()
         )
-        failed_topics = []
-        task_comments = []
+        task_result_facts = []
         if attempt:
             for task_result in task_results:
-                if not task_result.is_assessable_snapshot:
+                try:
+                    task_snapshot = task_content_snapshot_from_mapping(
+                        task_result.task_content_snapshot,
+                    )
+                except (TypeError, ValueError):
                     continue
-                task_snapshot = task_content_snapshot_from_mapping(
-                    task_result.task_content_snapshot,
+                task_result_facts.append(
+                    StudentDigestTaskResultFact(
+                        topic_name=task_snapshot.topic_name,
+                        subtopic_name=task_snapshot.subtopic_name,
+                        subject=task_snapshot.subject,
+                        points=self._number(task_result.points),
+                        max_points=self._number(
+                            task_result.checked_max_points
+                            if task_result.checked_max_points is not None
+                            else task_result.expected_max_points_snapshot
+                        ),
+                        comment=task_result.comment,
+                        is_assessable=(
+                            task_result.is_assessable_snapshot
+                        ),
+                    )
                 )
-                points = self._number(task_result.points)
-                max_points = self._number(
-                    task_result.checked_max_points
-                    if task_result.checked_max_points is not None
-                    else task_result.expected_max_points_snapshot
-                )
-                if points is None or not max_points or points >= max_points:
-                    continue
-                topic_label = task_snapshot.topic_name
-                if task_snapshot.subtopic_name:
-                    topic_label += f': {task_snapshot.subtopic_name}'
-                failed_topics.append(topic_label)
-                if task_result.comment:
-                    task_comments.append(task_result.comment.strip())
 
         event = participation.event
-        subject = ''
-        if task_results:
-            subject = task_content_snapshot_from_mapping(
-                task_results[0].task_content_snapshot,
-            ).subject
+        subject = next(
+            (
+                result.subject
+                for result in task_result_facts
+                if result.subject
+            ),
+            '',
+        )
         if not subject and event.course_id:
             subject = event.course.subject
         return StudentDigestEntryFact(
@@ -140,8 +147,7 @@ class DjangoStudentDigestRepository(IStudentDigestRepository):
             mistakes_analysis=attempt.mistakes_analysis if attempt else '',
             recommendations=attempt.recommendations if attempt else '',
             needs_attention=attempt.needs_attention if attempt else False,
-            failed_topics=tuple(dict.fromkeys(failed_topics)),
-            task_comments=tuple(dict.fromkeys(task_comments)),
+            task_results=tuple(task_result_facts),
         )
 
     @staticmethod

@@ -9,6 +9,7 @@ from core_logic.entities.student_digest import (
     StudentDigestSource,
     StudentDigestStudentRef,
     StudentDigestStudentSource,
+    StudentDigestTaskResultFact,
 )
 from core_logic.services.student_digest_service import StudentDigestService
 from core_logic.use_cases.get_student_digests import GetStudentDigestsUseCase
@@ -50,8 +51,30 @@ class StudentDigestTests(TestCase):
                             max_points=8,
                             recommendations='Повторить формулы',
                             teacher_comment='Проверить оформление решения',
-                            failed_topics=('Динамика',),
-                            task_comments=('Ошибка в формуле',),
+                            task_results=(
+                                StudentDigestTaskResultFact(
+                                    topic_name='Динамика',
+                                    subject='Физика',
+                                    points=0,
+                                    max_points=2,
+                                    comment='Ошибка в формуле',
+                                ),
+                                StudentDigestTaskResultFact(
+                                    topic_name='Импульс',
+                                    subject='Физика',
+                                    points=2,
+                                    max_points=2,
+                                    comment='Верное решение',
+                                ),
+                                StudentDigestTaskResultFact(
+                                    topic_name='Разобранный пример',
+                                    subject='Физика',
+                                    points=0,
+                                    max_points=2,
+                                    comment='Не оценивать',
+                                    is_assessable=False,
+                                ),
+                            ),
                         ),
                         StudentDigestEntryFact(
                             event_id='event-2',
@@ -107,6 +130,8 @@ class StudentDigestTests(TestCase):
         )[0]
 
         self.assertIn('Ошибка в формуле', digest.focus_items)
+        self.assertNotIn('Верное решение', digest.focus_items)
+        self.assertNotIn('Не оценивать', digest.focus_items)
 
     def test_deduplicates_atomic_focus_items_across_works(self):
         repeated = self.source.students[0].entries[0]

@@ -1,23 +1,24 @@
 """Views for document rendering through the web interface."""
 
 import logging
+
 from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.http import require_http_methods
 
 from infrastructure.container import container
 from core_logic.entities.document_rendering import (
-    DOCUMENT_RENDER_STATUS_EMPTY,
-    DOCUMENT_RENDER_STATUS_NOT_FOUND,
-    DOCUMENT_RENDER_STATUS_NOT_PERSONALIZED,
-    DOCUMENT_RENDER_STATUS_NOT_REMEDIAL,
-    DOCUMENT_RENDER_STATUS_PERSONAL_REMEDIAL_REQUIRED,
-    DOCUMENT_RENDER_STATUS_VARIANTS_NOT_REQUIRED,
-    DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER,
     GENERATED_FILE_STATUS_NOT_FOUND,
     GENERATED_FILE_STATUS_UNSUPPORTED_TYPE,
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _json_response(spec):
+    if spec.is_not_found:
+        raise Http404(spec.not_found_message)
+    return JsonResponse(spec.payload, status=spec.status_code)
+
 
 @require_http_methods(["POST"])
 def render_work_ajax(request, work_id):
@@ -43,43 +44,30 @@ def render_work_ajax(request, work_id):
         result = container.render_work_document_use_case().execute(
             document_request,
         )
-        if result.status == DOCUMENT_RENDER_STATUS_NOT_FOUND:
-            raise Http404("Работа не найдена")
-        if result.status == DOCUMENT_RENDER_STATUS_PERSONAL_REMEDIAL_REQUIRED:
-            return JsonResponse(
-                container.work_form_adapter.render_work_error_payload(
-                    'Для работы над ошибками используйте печать '
-                    'персональных листов.',
-                ),
-                status=400,
-            )
-        if result.status == DOCUMENT_RENDER_STATUS_VARIANTS_NOT_REQUIRED:
-            return JsonResponse(
-                container.work_form_adapter.render_work_error_payload(
-                    'Для этой работы документ не формируется: '
-                    'используется внешний материал.',
-                ),
-                status=400,
-            )
-        if result.status == DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER:
-            return JsonResponse(
-                container.work_form_adapter
-                .render_work_unsupported_renderer_payload(renderer_type)
-            )
-        
-        return JsonResponse(
-            container.work_form_adapter.rendered_work_document_response_payload(
+        return _json_response(
+            container.work_document_web_presenter.work_document_response(
                 result,
                 document_request.render_target,
                 document_request.print_overrides,
             )
         )
-        
+
     except Http404:
         raise
-    except Exception as e:
-        logger.error(f"Ошибка веб-рендера {renderer_type} для работы {work_id}: {e}")
-        return JsonResponse(container.work_form_adapter.render_work_error_payload(e))
+    except Exception as error:
+        logger.error(
+            "Ошибка веб-рендера %s для работы %s: %s",
+            renderer_type,
+            work_id,
+            error,
+            exc_info=True,
+        )
+        return _json_response(
+            container
+            .work_document_web_presenter
+            .work_exception_response(error)
+        )
+
 
 @require_http_methods(["GET"])
 def download_rendered_file(request, file_type, filename):
@@ -110,7 +98,10 @@ def download_rendered_file(request, file_type, filename):
 @require_http_methods(["GET"])
 def render_status_ajax(request):
     """Ajax status check for document rendering."""
-    return JsonResponse(container.work_form_adapter.render_status_payload())
+    return JsonResponse(
+        container.work_document_web_presenter.render_status_payload()
+    )
+
 
 @require_http_methods(["POST"])
 def render_remedial_sheet_ajax(request, variant_id):
@@ -122,67 +113,32 @@ def render_remedial_sheet_ajax(request, variant_id):
                 variant_id=str(variant_id),
             )
         )
-        renderer_type = document_request.render_target.renderer_type
 
         logger.info(f"Рендер remedial sheet для варианта {variant_id}")
 
         result = container.render_remedial_sheet_document_use_case().execute(
             document_request,
         )
-
-        if result.status == DOCUMENT_RENDER_STATUS_NOT_FOUND:
-            raise Http404("Вариант не найден")
-        if result.status == DOCUMENT_RENDER_STATUS_NOT_REMEDIAL:
-            return JsonResponse(
-                container.work_form_adapter.remedial_sheet_error_payload(
-                    'Этот вариант не является работой над ошибками',
-                ),
-                status=400,
+        return _json_response(
+            container.work_document_web_presenter.remedial_sheet_response(
+                result,
             )
-        if result.status == DOCUMENT_RENDER_STATUS_NOT_PERSONALIZED:
-            return JsonResponse(
-                container.work_form_adapter.remedial_sheet_error_payload(
-                    'Лист работы над ошибками не привязан к ученику',
-                ),
-                status=400,
-            )
-        if result.status == DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER:
-            return JsonResponse(
-                container.work_form_adapter.remedial_sheet_error_payload(
-                    f'Неподдерживаемый тип рендера: {renderer_type}',
-                ),
-                status=400,
-            )
-        if result.status == DOCUMENT_RENDER_STATUS_EMPTY:
-            return JsonResponse(
-                container.work_form_adapter.remedial_sheet_error_payload(
-                    'Файлы не были созданы',
-                ),
-                status=500,
-            )
-
-        return JsonResponse(
-            container.work_form_adapter.remedial_sheet_response_payload(result)
         )
 
     except Http404:
         raise
-    except Exception as e:
-        logger.error(f'Ошибка рендера remedial sheet: {e}', exc_info=True)
-        return JsonResponse(
-            container.work_form_adapter.remedial_sheet_error_payload(
-                f'Ошибка: {str(e)}',
-            ),
-            status=500,
+    except Exception as error:
+        logger.error('Ошибка рендера remedial sheet: %s', error, exc_info=True)
+        return _json_response(
+            container
+            .work_document_web_presenter
+            .remedial_exception_response(error)
         )
 
 
 @require_http_methods(["POST"])
 def render_remedial_sheet_batch_ajax(request, work_id):
     """Ajax rendering for all remedial sheet documents in a work."""
-    renderer_type = container.work_form_adapter.document_renderer_type_from_post(
-        request.POST,
-    )
     try:
         document_request = (
             container.work_form_adapter
@@ -191,8 +147,6 @@ def render_remedial_sheet_batch_ajax(request, work_id):
                 work_id=str(work_id),
             )
         )
-        renderer_type = document_request.render_target.renderer_type
-
         logger.info(
             "Пакетный рендер remedial sheets для работы %s",
             work_id,
@@ -203,48 +157,25 @@ def render_remedial_sheet_batch_ajax(request, work_id):
             .render_remedial_sheet_batch_document_use_case()
             .execute(document_request)
         )
-
-        if result.status == DOCUMENT_RENDER_STATUS_NOT_FOUND:
-            raise Http404("Работа не найдена")
-        if result.status == DOCUMENT_RENDER_STATUS_UNSUPPORTED_RENDERER:
-            return JsonResponse(
-                container.work_form_adapter.remedial_sheet_batch_error_payload(
-                    f'Неподдерживаемый тип рендера: {renderer_type}',
-                ),
-                status=400,
-            )
-        if result.status == DOCUMENT_RENDER_STATUS_EMPTY:
-            return JsonResponse(
-                container.work_form_adapter.remedial_sheet_batch_error_payload(
-                    'В этой работе нет персональных листов '
-                    'работы над ошибками для печати.',
-                ),
-                status=400,
-            )
-        if not result.success:
-            return JsonResponse(
-                container.work_form_adapter.remedial_sheet_batch_error_payload(
-                    'Не удалось создать листы работы над ошибками.',
-                ),
-                status=500,
-            )
-
-        return JsonResponse(
-            container.work_form_adapter.remedial_sheet_batch_response_payload(
+        return _json_response(
+            container
+            .work_document_web_presenter
+            .remedial_sheet_batch_response(
                 result,
             )
         )
 
     except Http404:
         raise
-    except Exception as e:
+    except Exception as error:
         logger.error(
             "Ошибка пакетного рендера remedial sheets для работы %s: %s",
             work_id,
-            e,
+            error,
             exc_info=True,
         )
-        return JsonResponse(
-            container.work_form_adapter.remedial_sheet_batch_error_payload(str(e)),
-            status=500,
+        return _json_response(
+            container
+            .work_document_web_presenter
+            .remedial_batch_exception_response(error)
         )

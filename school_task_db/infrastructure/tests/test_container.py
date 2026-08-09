@@ -322,6 +322,7 @@ from infrastructure.forms.review_forms import ReviewFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
 from infrastructure.forms.work_forms import WorkFormAdapter
 from infrastructure.presenters.heatmap import HeatmapPresenter
+from infrastructure.presenters.work_document import WorkDocumentWebPresenter
 from infrastructure.services.document_engine import (
     DjangoDocumentEngine,
 )
@@ -1034,6 +1035,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(container.review_form_adapter, ReviewFormAdapter)
         self.assertIsInstance(container.task_form_adapter, TaskFormAdapter)
         self.assertIsInstance(container.work_form_adapter, WorkFormAdapter)
+        self.assertIsInstance(
+            container.work_document_web_presenter,
+            WorkDocumentWebPresenter,
+        )
         self.assertIsInstance(
             container.document_engine,
             DjangoDocumentEngine,

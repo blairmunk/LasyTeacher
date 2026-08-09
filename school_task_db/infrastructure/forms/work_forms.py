@@ -1,6 +1,5 @@
 """Infrastructure helpers for Django work forms."""
 
-from django.urls import reverse
 from django.core.paginator import Paginator
 
 from core_logic.interfaces.work_repo import (
@@ -207,36 +206,6 @@ class WorkFormAdapter:
             'remaining': result.remaining_count,
         }
 
-    def render_work_unsupported_renderer_payload(self, renderer_type):
-        return {
-            'success': False,
-            'error': f'Неподдерживаемый тип рендера: {renderer_type}',
-        }
-
-    def render_work_error_payload(self, error):
-        return {
-            'success': False,
-            'error': str(error),
-        }
-
-    def render_status_payload(self):
-        return {
-            'status': 'ready',
-            'message': 'Система готова к рендерингу',
-        }
-
-    def remedial_sheet_error_payload(self, message):
-        return {
-            'status': 'error',
-            'message': message,
-        }
-
-    def remedial_sheet_batch_error_payload(self, message):
-        return {
-            'success': False,
-            'error': message,
-        }
-
     def work_specs_from_formset(self, formset):
         specs = []
         for row in formset.cleaned_data:
@@ -352,88 +321,3 @@ class WorkFormAdapter:
             file_type=file_type,
             filename=filename,
         )
-
-    def rendered_work_document_response_payload(
-        self,
-        result,
-        render_target,
-        print_overrides,
-    ):
-        files_info = [
-            {
-                'name': file_info.filename,
-                'size': f'{file_info.size_kb:.1f} KB',
-                'download_url': reverse(
-                    'works:download_rendered_file',
-                    kwargs={
-                        'file_type': result.file_type,
-                        'filename': file_info.filename,
-                    },
-                ),
-            }
-            for file_info in result.files
-        ]
-
-        return {
-            'success': True,
-            'message': (
-                f'{render_target.file_type_label} документ создан '
-                f'({self._work_content_description(print_overrides)})'
-            ),
-            'files': files_info,
-            'total_files': len(files_info),
-        }
-
-    @staticmethod
-    def _work_content_description(print_overrides):
-        if print_overrides.append_answers:
-            return 'по спецификации + ответы в конце'
-        return 'по спецификации'
-
-    def remedial_sheet_response_payload(self, result):
-        return {
-            'status': 'success',
-            'files': [
-                {
-                    'filename': file_info.filename,
-                    'url': reverse(
-                        'works:download_rendered_file',
-                        kwargs={
-                            'file_type': result.file_type,
-                            'filename': file_info.filename,
-                        },
-                    ),
-                }
-                for file_info in result.files
-            ],
-            'message': (
-                f'Рабочий лист создан '
-                f'({result.renderer_type.upper()})'
-            ),
-        }
-
-    def remedial_sheet_batch_response_payload(self, result):
-        files_info = [
-            {
-                'name': file_info.filename,
-                'size': f'{file_info.size_kb:.1f} KB',
-                'download_url': reverse(
-                    'works:download_rendered_file',
-                    kwargs={
-                        'file_type': result.file_type,
-                        'filename': file_info.filename,
-                    },
-                ),
-            }
-            for file_info in result.files
-        ]
-
-        return {
-            'success': True,
-            'message': (
-                f'Пакет листов работы над ошибками создан '
-                f'({result.renderer_type.upper()})'
-            ),
-            'files': files_info,
-            'total_files': len(files_info),
-        }

@@ -11,10 +11,6 @@ from core_logic.entities.core import (
     DashboardSummaryData,
     GlobalSearchData,
 )
-from core_logic.entities.document_rendering import (
-    DocumentRenderResult,
-    GeneratedDocumentFile,
-)
 from core_logic.entities.work import (
     WorkListData,
     WorkListFilters,
@@ -28,10 +24,6 @@ from core_logic.services.analytics_service import (
 )
 from core_logic.use_cases.get_presentation_profile_editor_data import (
     PresentationProfileEditorData,
-)
-from core_logic.value_objects.document_render_options import (
-    RenderTarget,
-    WorkDocumentPrintOverrides,
 )
 from core_logic.value_objects.document_recipes import (
     EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
@@ -1707,39 +1699,6 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertEqual(context['work_groups'], ['group-1'])
         self.assertEqual(context['form'], form)
 
-    def test_builds_document_rendering_status_and_error_payloads(self):
-        adapter = WorkFormAdapter()
-
-        self.assertEqual(
-            adapter.render_work_unsupported_renderer_payload('docx'),
-            {
-                'success': False,
-                'error': 'Неподдерживаемый тип рендера: docx',
-            },
-        )
-        self.assertEqual(
-            adapter.render_work_error_payload(ValueError('bad')),
-            {'success': False, 'error': 'bad'},
-        )
-        self.assertEqual(
-            adapter.render_status_payload(),
-            {
-                'status': 'ready',
-                'message': 'Система готова к рендерингу',
-            },
-        )
-    def test_builds_remedial_rendering_error_payloads(self):
-        adapter = WorkFormAdapter()
-
-        self.assertEqual(
-            adapter.remedial_sheet_error_payload('Ошибка'),
-            {'status': 'error', 'message': 'Ошибка'},
-        )
-        self.assertEqual(
-            adapter.remedial_sheet_batch_error_payload('Ошибка'),
-            {'success': False, 'error': 'Ошибка'},
-        )
-
     def test_builds_work_specs_from_expanded_formset(self):
         analog_group = SimpleNamespace(pk='group-1')
         formset = SimpleNamespace(
@@ -1889,59 +1848,3 @@ class WorkFormAdapterTests(SimpleTestCase):
 
         self.assertEqual(request.file_type, 'html')
         self.assertEqual(request.filename, 'work.html')
-
-    def test_builds_rendered_work_document_response_payload(self):
-        payload = WorkFormAdapter().rendered_work_document_response_payload(
-            DocumentRenderResult(
-                status='generated',
-                renderer_type='html',
-                file_type='html',
-                files=[GeneratedDocumentFile(filename='work.html', size_kb=1.25)],
-            ),
-            RenderTarget(renderer_type='html'),
-            WorkDocumentPrintOverrides(
-                append_answers=True,
-            ),
-        )
-
-        self.assertEqual(payload, {
-            'success': True,
-            'message': (
-                'HTML документ создан '
-                '(по спецификации + ответы в конце)'
-            ),
-            'files': [
-                {
-                    'name': 'work.html',
-                    'size': '1.2 KB',
-                    'download_url': '/works/download/html/work.html/',
-                },
-            ],
-            'total_files': 1,
-        })
-
-    def test_builds_remedial_sheet_response_payload(self):
-        payload = WorkFormAdapter().remedial_sheet_response_payload(
-            DocumentRenderResult(
-                status='generated',
-                renderer_type='pdf',
-                file_type='pdf',
-                files=[
-                    GeneratedDocumentFile(
-                        filename='remedial.pdf',
-                        size_kb=2.0,
-                    ),
-                ],
-            ),
-        )
-
-        self.assertEqual(payload, {
-            'status': 'success',
-            'files': [
-                {
-                    'filename': 'remedial.pdf',
-                    'url': '/works/download/pdf/remedial.pdf/',
-                },
-            ],
-            'message': 'Рабочий лист создан (PDF)',
-        })

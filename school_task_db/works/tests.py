@@ -1244,6 +1244,18 @@ class WorkDetailViewTests(TestCase):
         )
         render_document.assert_called_once()
 
+    def test_render_work_ajax_rejects_unsupported_renderer(self):
+        response = self.client.post(
+            reverse('works:render_work_ajax', args=[self.work.pk]),
+            {'renderer_type': 'docx'},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {
+            'success': False,
+            'error': 'Неподдерживаемый тип рендера: docx',
+        })
+
     def test_render_work_ajax_rejects_generic_print_for_remedial_work(self):
         remedial_work = Work.objects.create(
             name='Работа над ошибками',

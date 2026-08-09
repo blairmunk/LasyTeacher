@@ -392,6 +392,7 @@ from infrastructure.forms.task_group_forms import TaskGroupFormAdapter
 from infrastructure.forms.work_forms import WorkFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
 from infrastructure.presenters.heatmap import HeatmapPresenter
+from infrastructure.presenters.work_document import WorkDocumentWebPresenter
 
 
 class Container:
@@ -440,6 +441,7 @@ class Container:
         self._student_form_adapter = None
         self._task_group_form_adapter = None
         self._work_form_adapter = None
+        self._work_document_web_presenter = None
         self._task_form_adapter = None
         self._document_engine = None
         self._rendered_document_file_store = None
@@ -709,6 +711,12 @@ class Container:
         if self._work_form_adapter is None:
             self._work_form_adapter = WorkFormAdapter()
         return self._work_form_adapter
+
+    @property
+    def work_document_web_presenter(self):
+        if self._work_document_web_presenter is None:
+            self._work_document_web_presenter = WorkDocumentWebPresenter()
+        return self._work_document_web_presenter
 
     @property
     def task_form_adapter(self):

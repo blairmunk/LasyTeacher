@@ -350,6 +350,9 @@ from infrastructure.repositories.django_student_performance_repo import (
     DjangoStudentPerformanceRepository,
 )
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
+from infrastructure.repositories.django_task_group_repo import (
+    DjangoTaskGroupRepository,
+)
 from infrastructure.repositories.django_task_image_audit_repo import (
     DjangoTaskImageAuditRepository,
 )
@@ -506,7 +509,7 @@ class Container:
     @property
     def task_group_repo(self):
         if self._task_group_repo is None:
-            self._task_group_repo = self.task_repo
+            self._task_group_repo = DjangoTaskGroupRepository()
         return self._task_group_repo
 
     @property

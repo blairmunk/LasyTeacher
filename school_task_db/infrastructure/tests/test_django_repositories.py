@@ -110,6 +110,9 @@ from infrastructure.repositories.django_review_task_repo import (
 from infrastructure.repositories.django_source_repo import DjangoSourceRepository
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
+from infrastructure.repositories.django_task_group_repo import (
+    DjangoTaskGroupRepository,
+)
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
 from infrastructure.repositories.django_work_read_repo import (
     DjangoWorkReadRepository,
@@ -846,7 +849,10 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
         self.assertIn(
             str(self.weak_group.pk),
-            [option.pk for option in repo.get_list_analog_groups()],
+            [
+                option.pk
+                for option in DjangoTaskGroupRepository().get_list_analog_groups()
+            ],
         )
 
     def test_task_repository_uses_injected_math_status_filter(self):
@@ -875,8 +881,8 @@ class DjangoRemedialRepositoryTests(TestCase):
         math_status_cache.get_tasks_with_math_ids.assert_called_once_with()
         math_status_cache.get_tasks_with_errors_ids.assert_called_once_with()
 
-    def test_task_repository_returns_filtered_analog_group_list_data(self):
-        repo = DjangoTaskRepository()
+    def test_task_group_repository_returns_filtered_list_data(self):
+        repo = DjangoTaskGroupRepository()
 
         groups = repo.get_list_task_groups(
             TaskGroupListFilters(
@@ -902,8 +908,8 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(repo.count_empty_analog_groups(), 0)
         self.assertEqual(repo.count_task_group_memberships(), 4)
 
-    def test_task_repository_returns_analog_group_detail_data(self):
-        repo = DjangoTaskRepository()
+    def test_task_group_repository_returns_detail_data(self):
+        repo = DjangoTaskGroupRepository()
 
         group = repo.get_analog_group_detail(str(self.weak_group.pk))
         missing_group = repo.get_analog_group_detail(
@@ -918,8 +924,8 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(tasks[0].topic, str(self.topic))
         self.assertEqual(tasks[0].task_type_display, 'Расчётная задача')
 
-    def test_task_repository_returns_add_tasks_form_data(self):
-        repo = DjangoTaskRepository()
+    def test_task_group_repository_returns_add_tasks_form_data(self):
+        repo = DjangoTaskGroupRepository()
 
         group = repo.get_analog_group_detail(str(self.weak_group.pk))
         available_tasks = repo.get_available_tasks_for_analog_group(
@@ -2089,8 +2095,8 @@ class DjangoRemedialRepositoryTests(TestCase):
             WorkAnalogGroup.objects.filter(work=self.source_work).exists()
         )
 
-    def test_task_repository_mutates_bulk_group_memberships(self):
-        repo = DjangoTaskRepository()
+    def test_task_group_repository_mutates_bulk_memberships(self):
+        repo = DjangoTaskGroupRepository()
         new_group_id = repo.create_analog_group(
             name='Новая группа',
             description='Описание',
@@ -2108,7 +2114,12 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertTrue(updated)
         self.assertFalse(missing_updated)
         self.assertTrue(repo.analog_group_name_exists('Обновлённая группа'))
-        self.assertEqual(repo.count_existing_task_ids({str(self.original_weak.pk)}), 1)
+        self.assertEqual(
+            DjangoTaskRepository().count_existing_task_ids(
+                {str(self.original_weak.pk)},
+            ),
+            1,
+        )
 
         created_count = repo.add_tasks_to_group(
             new_group_id,
@@ -2141,8 +2152,8 @@ class DjangoRemedialRepositoryTests(TestCase):
             ).exists()
         )
 
-    def test_task_repository_updates_task_group_roles(self):
-        repo = DjangoTaskRepository()
+    def test_task_group_repository_updates_roles(self):
+        repo = DjangoTaskGroupRepository()
         group = AnalogGroup.objects.create(name='Роли')
         other_group = AnalogGroup.objects.create(name='Другая группа')
         first_membership = TaskGroup.objects.create(

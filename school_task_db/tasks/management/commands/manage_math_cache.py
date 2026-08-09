@@ -1,11 +1,11 @@
 """Команда управления кэшем математических формул"""
 
 from django.core.management.base import BaseCommand
-from django.core.cache import cache
+
 from infrastructure.services.task_math_status_cache import (
     task_math_status_cache,
 )
-from tasks.models import Task
+
 
 class Command(BaseCommand):
     help = 'Управление кэшем статуса математических формул'
@@ -61,18 +61,15 @@ class Command(BaseCommand):
             self.stdout.write(f"  📐 Всего заданий с формулами: {stats['total_with_math']}")
             self.stdout.write(f"  ❌ Заданий с ошибками в формулах: {stats['total_with_errors']}")
         
-        # Статистика по отдельным заданиям
-        total_tasks = Task.objects.count()
-        if total_tasks > 0:
-            # Проверяем сколько заданий закэшировано индивидуально
-            cached_tasks = 0
-            for task_id in Task.objects.values_list('id', flat=True)[:100]:  # Проверяем первые 100
-                cache_key = task_math_status_cache.get_task_cache_key(task_id)
-                if cache.get(cache_key) is not None:
-                    cached_tasks += 1
-            
-            self.stdout.write(f"  📝 Всего заданий в базе: {total_tasks}")
-            self.stdout.write(f"  🗄️ Индивидуально закэшировано (выборка): {cached_tasks}/100")
+        inventory = task_math_status_cache.get_cache_inventory()
+        if inventory['total_tasks'] > 0:
+            self.stdout.write(
+                f"  📝 Всего заданий в базе: {inventory['total_tasks']}"
+            )
+            self.stdout.write(
+                "  🗄️ Индивидуально закэшировано (выборка): "
+                f"{inventory['cached_in_sample']}/{inventory['sample_size']}"
+            )
     
     def refresh_cache(self, force=False):
         """Обновляет кэш"""
@@ -102,25 +99,13 @@ class Command(BaseCommand):
             self.stdout.write("Операция отменена")
             return
         
-        task_math_status_cache.invalidate_all_cache()
+        task_math_status_cache.clear_cache()
         self.stdout.write(self.style.SUCCESS("✅ Кэш очищен"))
     
     def warmup_cache(self, batch_size):
         """Прогревает кэш для всех заданий"""
         self.stdout.write(f"🔥 Прогрев кэша (батч: {batch_size})...")
         
-        total_tasks = Task.objects.count()
-        processed = 0
-        
-        for offset in range(0, total_tasks, batch_size):
-            tasks_batch = Task.objects.all()[offset:offset + batch_size]
-            
-            for task in tasks_batch:
-                task_math_status_cache.get_task_math_status(task)
-                processed += 1
-            
-            # Показываем прогресс
-            if processed % (batch_size * 5) == 0:
-                self.stdout.write(f"  Обработано: {processed}/{total_tasks}")
+        processed = task_math_status_cache.warmup_cache(batch_size=batch_size)
         
         self.stdout.write(self.style.SUCCESS(f"✅ Прогрев завершен! Обработано {processed} заданий"))

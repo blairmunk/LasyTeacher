@@ -87,6 +87,31 @@ class DjangoTaskMathStatusCacheTests(TestCase):
             cache.get(DjangoTaskMathStatusCache.CACHE_KEY_ALL_MATH)
         )
 
+    @patch(
+        'infrastructure.services.task_math_status_cache.formula_processor'
+    )
+    def test_warmup_and_inventory_are_owned_by_adapter(
+        self,
+        formula_processor,
+    ):
+        topic = Topic.objects.create(
+            name='Оптика',
+            subject='Физика',
+            section='Световые явления',
+            grade_level=8,
+        )
+        self._create_task(topic, 'Первое задание')
+        self._create_task(topic, 'Второе задание')
+        formula_processor.has_math.return_value = False
+
+        processed = DjangoTaskMathStatusCache.warmup_cache(batch_size=1)
+        inventory = DjangoTaskMathStatusCache.get_cache_inventory()
+
+        self.assertEqual(processed, 2)
+        self.assertEqual(inventory['total_tasks'], 2)
+        self.assertEqual(inventory['sample_size'], 2)
+        self.assertEqual(inventory['cached_in_sample'], 2)
+
     @staticmethod
     def _create_task(topic, text):
         return Task.objects.create(

@@ -188,6 +188,26 @@ class DjangoTaskMathStatusCache(ITaskMathStatusCache):
         
         cache.delete_many(keys_to_delete)
         logger.info("Инвалидирован весь кэш статуса формул")
+
+    @classmethod
+    def clear_cache(cls) -> None:
+        """Clear all aggregate formula diagnostics."""
+        cls.invalidate_all_cache()
+
+    @classmethod
+    def warmup_cache(cls, batch_size: int = 100) -> int:
+        """Populate individual formula diagnostics for all tasks."""
+        normalized_batch_size = max(int(batch_size), 1)
+        task_ids = Task.objects.order_by('pk').values_list('pk', flat=True)
+        processed_count = 0
+
+        for offset in range(0, task_ids.count(), normalized_batch_size):
+            batch_ids = task_ids[offset:offset + normalized_batch_size]
+            for task in Task.objects.filter(pk__in=batch_ids):
+                cls.get_task_math_status(task)
+                processed_count += 1
+
+        return processed_count
     
     @classmethod
     def refresh_cache(cls):
@@ -208,6 +228,25 @@ class DjangoTaskMathStatusCache(ITaskMathStatusCache):
             'with_errors_cached': with_errors is not None,
             'total_with_math': len(with_math) if with_math else 0,
             'total_with_errors': len(with_errors) if with_errors else 0,
+        }
+
+    @classmethod
+    def get_cache_inventory(cls, sample_size: int = 100) -> Dict[str, int]:
+        """Return database and individual-key counts for CLI diagnostics."""
+        normalized_sample_size = max(int(sample_size), 0)
+        task_ids = list(
+            Task.objects.order_by('pk').values_list('pk', flat=True)[
+                :normalized_sample_size
+            ]
+        )
+        cached_count = sum(
+            cache.get(cls.get_task_cache_key(task_id)) is not None
+            for task_id in task_ids
+        )
+        return {
+            'total_tasks': Task.objects.count(),
+            'sample_size': len(task_ids),
+            'cached_in_sample': cached_count,
         }
 
 

@@ -190,32 +190,59 @@ def expand_work_document_recipe_per_variant(
         section.section_type == HEADER_SECTION
         for section in repeated_sections
     )
-    sections = list(common_sections)
-    last_index = len(variant_ids) - 1
-    for index, variant_id in enumerate(variant_ids):
-        for section in repeated_sections:
-            section_options = {
-                **dict(section.options),
-                'variant_id': variant_id,
-            }
-            if (
-                section.section_type == TASK_LIST_SECTION
-                and has_variant_header
-            ):
-                section_options['show_variant_heading'] = False
-            sections.append(
-                _section_with_options(
-                    section,
-                    section_options,
-                )
+    if has_variant_header:
+        repeated_sections = [
+            _section_with_options(
+                section,
+                {
+                    **dict(section.options),
+                    'show_variant_heading': False,
+                },
             )
-        if break_between_variants and index < last_index:
-            sections.append(DocumentSectionSpec(section_type=PAGE_BREAK_SECTION))
+            if section.section_type == TASK_LIST_SECTION
+            else section
+            for section in repeated_sections
+        ]
+    sections = [
+        *common_sections,
+        *repeat_document_sections(
+            repeated_sections,
+            ({'variant_id': variant_id} for variant_id in variant_ids),
+            break_between_instances=break_between_variants,
+        ),
+    ]
     return DocumentRecipe(
         document_type=recipe.document_type,
         sections=sections,
         presentation=recipe.presentation,
     )
+
+
+def repeat_document_sections(
+    sections,
+    instance_options,
+    break_between_instances: bool = True,
+) -> tuple[DocumentSectionSpec, ...]:
+    """Repeat one section sequence for each distributable document item."""
+    instances = tuple(instance_options)
+    repeated_sections = []
+    for index, options in enumerate(instances):
+        if break_between_instances and index > 0:
+            repeated_sections.append(
+                DocumentSectionSpec(section_type=PAGE_BREAK_SECTION),
+            )
+        for section in sections:
+            section_options = {
+                **dict(section.options),
+                **dict(options),
+            }
+            repeated_sections.append(
+                _section_with_options(
+                    section,
+                    section_options,
+                )
+            )
+    return tuple(repeated_sections)
 
 
 def apply_work_document_print_overrides(
@@ -288,24 +315,12 @@ def build_remedial_sheet_batch_document_recipe_for_render(
         options=options,
         presentation_profile=presentation_profile,
     )
-    sections = []
-    for index, variant_id in enumerate(variant_ids):
-        if index > 0:
-            sections.append(DocumentSectionSpec(section_type=PAGE_BREAK_SECTION))
-        sections.extend(
-            DocumentSectionSpec(
-                section_type=section.section_type,
-                title=section.title,
-                options={
-                    **dict(section.options),
-                    'variant_id': variant_id,
-                },
-            )
-            for section in base_recipe.sections
-        )
     return DocumentRecipe(
         document_type=base_recipe.document_type,
-        sections=sections,
+        sections=repeat_document_sections(
+            base_recipe.sections,
+            ({'variant_id': variant_id} for variant_id in variant_ids),
+        ),
         presentation=base_recipe.presentation,
     )
 
@@ -337,25 +352,18 @@ def build_student_digest_document_recipe_for_render(
             )
         ),
     )
-    sections = []
-    for index, student_id in enumerate(student_ids):
-        if index > 0:
-            sections.append(DocumentSectionSpec(section_type=PAGE_BREAK_SECTION))
-        sections.extend(
-            DocumentSectionSpec(
-                section_type=section.section_type,
-                title=section.title,
-                options={
-                    **dict(section.options),
-                    'digest_request': digest_request,
-                    'student_id': student_id,
-                },
-            )
-            for section in base_recipe.sections
-        )
     return DocumentRecipe(
         document_type=STUDENT_DIGEST_DOCUMENT_TYPE,
-        sections=sections,
+        sections=repeat_document_sections(
+            base_recipe.sections,
+            (
+                {
+                    'digest_request': digest_request,
+                    'student_id': student_id,
+                }
+                for student_id in student_ids
+            ),
+        ),
         presentation=base_recipe.presentation,
     )
 

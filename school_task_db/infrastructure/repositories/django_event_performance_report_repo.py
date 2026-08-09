@@ -1,21 +1,23 @@
 """Django persistence for event performance reports."""
 
-from collections import defaultdict
-
 from core_logic.entities.event_performance_report import (
+    EventReportCapturedTaskFact,
     EventPerformanceReportSource,
     EventReportEventRef,
     EventReportNarrative,
     EventReportParticipantFact,
-    EventReportSpecificationFact,
-    EventReportTaskScoreFact,
     SaveEventReportNarrativeParams,
     SaveEventReportNarrativeResult,
 )
 from core_logic.interfaces.event_performance_report_repo import (
     IEventPerformanceReportRepository,
 )
-from core_logic.value_objects.report_task_slot import report_task_slot_key
+from core_logic.services.event_report_task_fact_service import (
+    EventReportTaskFactService,
+)
+from core_logic.value_objects.work_assessment import (
+    WORK_ASSESSMENT_MODE_VARIANT,
+)
 from core_logic.value_objects.task_content_snapshot import (
     task_content_snapshot_from_mapping,
 )
@@ -24,14 +26,16 @@ from infrastructure.services.django_attempt_snapshot_queries import (
     latest_attempts_by_participation,
 )
 from reports.models import EventReportNarrativeModel
-from core_logic.value_objects.work_assessment import (
-    WORK_ASSESSMENT_MODE_VARIANT,
-)
 
 
 class DjangoEventPerformanceReportRepository(
     IEventPerformanceReportRepository,
 ):
+    def __init__(self, task_fact_service=None):
+        self.task_fact_service = (
+            task_fact_service or EventReportTaskFactService()
+        )
+
     def get_event_report_source(self, event_id: str):
         event = Event.objects.select_related('work', 'course').filter(
             pk=event_id,
@@ -47,7 +51,7 @@ class DjangoEventPerformanceReportRepository(
         attempts = latest_attempts_by_participation(
             participation.pk for participation in participations
         )
-        task_scores = []
+        captured_tasks = []
         participant_facts = []
         for participation in participations:
             attempt = attempts.get(participation.pk)
@@ -74,30 +78,15 @@ class DjangoEventPerformanceReportRepository(
             )
             if attempt is None:
                 continue
-            slot_occurrences = defaultdict(int)
             for task_result in attempt.captured_task_results:
-                if not task_result.is_assessable_snapshot:
+                try:
+                    task_snapshot = task_content_snapshot_from_mapping(
+                        task_result.task_content_snapshot,
+                    )
+                except (TypeError, ValueError):
                     continue
-                occurrence_key = (
-                    task_result.source_selection_id_snapshot,
-                    task_result.content_order_snapshot,
-                )
-                slot_occurrences[occurrence_key] += 1
-                task_snapshot = task_content_snapshot_from_mapping(
-                    task_result.task_content_snapshot,
-                )
-                task_scores.append(
-                    EventReportTaskScoreFact(
-                        group_key=report_task_slot_key(
-                            source_selection_id=(
-                                task_result.source_selection_id_snapshot
-                            ),
-                            content_order=(
-                                task_result.content_order_snapshot
-                            ),
-                            position=task_result.order_snapshot,
-                            occurrence=slot_occurrences[occurrence_key],
-                        ),
+                captured_tasks.append(
+                    EventReportCapturedTaskFact(
                         order=task_result.order_snapshot,
                         topic_name=task_snapshot.topic_name,
                         subtopic_name=task_snapshot.subtopic_name,
@@ -110,9 +99,26 @@ class DjangoEventPerformanceReportRepository(
                             else task_result.expected_max_points_snapshot
                         ),
                         comment=task_result.comment,
+                        source_selection_id=(
+                            task_result.source_selection_id_snapshot
+                        ),
+                        content_order=task_result.content_order_snapshot,
+                        is_assessable=(
+                            task_result.is_assessable_snapshot
+                        ),
+                        content_element=task_snapshot.content_element,
+                        requirement_element=task_snapshot.requirement_element,
+                        codifier_requirements=tuple(
+                            f'{item.codifier_short_name}: {item.code}'
+                            for item in task_snapshot.codifier_requirements
+                        ),
+                        content_element_descriptions=(
+                            task_snapshot.content_element_descriptions
+                        ),
                     )
                 )
 
+        task_facts = self.task_fact_service.build(captured_tasks)
         narrative_model = EventReportNarrativeModel.objects.filter(
             event=event,
         ).first()
@@ -131,8 +137,8 @@ class DjangoEventPerformanceReportRepository(
                 ),
             ),
             participants=tuple(participant_facts),
-            task_scores=tuple(task_scores),
-            specification=self._specification_facts(attempts.values()),
+            task_scores=task_facts.task_scores,
+            specification=task_facts.specification,
             narrative=self._narrative(narrative_model),
         )
 
@@ -153,62 +159,6 @@ class DjangoEventPerformanceReportRepository(
             status='saved',
             event_id=params.event_id,
         )
-
-    @staticmethod
-    def _specification_facts(attempts):
-        facts = []
-        seen = set()
-        for attempt in attempts:
-            slot_occurrences = defaultdict(int)
-            for task_result in attempt.captured_task_results:
-                if not task_result.is_assessable_snapshot:
-                    continue
-                occurrence_key = (
-                    task_result.source_selection_id_snapshot,
-                    task_result.content_order_snapshot,
-                )
-                slot_occurrences[occurrence_key] += 1
-                group_key = report_task_slot_key(
-                    source_selection_id=(
-                        task_result.source_selection_id_snapshot
-                    ),
-                    content_order=task_result.content_order_snapshot,
-                    position=task_result.order_snapshot,
-                    occurrence=slot_occurrences[occurrence_key],
-                )
-                task = task_content_snapshot_from_mapping(
-                    task_result.task_content_snapshot,
-                )
-                codifier_requirements = tuple(
-                    f'{item.codifier_short_name}: {item.code}'
-                    for item in task.codifier_requirements
-                )
-                key = (
-                    group_key,
-                    task_result.order_snapshot,
-                    task.topic_name,
-                    task.subtopic_name,
-                    task.content_element,
-                    task.requirement_element,
-                    codifier_requirements,
-                    task.content_element_descriptions,
-                )
-                if key in seen:
-                    continue
-                seen.add(key)
-                facts.append(
-                    EventReportSpecificationFact(
-                        group_key=key[0],
-                        order=key[1],
-                        topic_name=key[2],
-                        subtopic_name=key[3],
-                        content_element=key[4],
-                        requirement_element=key[5],
-                        codifier_requirements=key[6],
-                        content_element_descriptions=key[7],
-                    )
-                )
-        return tuple(sorted(facts, key=lambda item: item.order))
 
     @staticmethod
     def _narrative(model):

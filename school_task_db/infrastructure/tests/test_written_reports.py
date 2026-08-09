@@ -21,7 +21,7 @@ from core_logic.value_objects.work_assessment import (
 )
 from curriculum.models import Course, SubTopic, Topic
 from document_engine.models import PrintSettings
-from events.models import Event, EventParticipation, Mark
+from events.models import AttemptTaskSnapshot, Event, EventParticipation, Mark
 from infrastructure.repositories.django_event_performance_report_repo import (
     DjangoEventPerformanceReportRepository,
 )
@@ -338,6 +338,19 @@ class WrittenReportRepositoryTests(TestCase):
             source.specification[0].content_element_descriptions,
             ('ОГЭ 2026: Применение второго закона Ньютона',),
         )
+
+    def test_event_report_skips_broken_task_snapshot(self):
+        AttemptTaskSnapshot.objects.filter(
+            attempt__participation=self.participation,
+        ).update(task_content_snapshot={})
+
+        source = DjangoEventPerformanceReportRepository().get_event_report_source(
+            str(self.event.pk),
+        )
+
+        self.assertEqual(len(source.participants), 2)
+        self.assertEqual(source.task_scores, ())
+        self.assertEqual(source.specification, ())
 
     def test_event_report_specification_survives_variant_reassignment(self):
         replacement_variant = Variant.objects.create(

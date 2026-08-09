@@ -48,6 +48,39 @@ class EventReportParticipantFact:
 
 
 @dataclass(frozen=True)
+class EventReportCapturedTaskFact:
+    student_id: str
+    student_name: str
+    order: int
+    topic_name: str
+    subtopic_name: str = ''
+    source_selection_id: str = ''
+    content_order: int = 0
+    is_assessable: bool = True
+    points: float | None = None
+    max_points: float | None = None
+    comment: str = ''
+    content_element: str = ''
+    requirement_element: str = ''
+    codifier_requirements: Tuple[str, ...] = field(default_factory=tuple)
+    content_element_descriptions: Tuple[str, ...] = field(
+        default_factory=tuple,
+    )
+
+    def __post_init__(self):
+        object.__setattr__(
+            self,
+            'codifier_requirements',
+            tuple(self.codifier_requirements),
+        )
+        object.__setattr__(
+            self,
+            'content_element_descriptions',
+            tuple(self.content_element_descriptions),
+        )
+
+
+@dataclass(frozen=True)
 class EventReportTaskScoreFact:
     group_key: str
     order: int
@@ -72,6 +105,20 @@ class EventReportSpecificationFact:
     content_element_descriptions: Tuple[str, ...] = field(
         default_factory=tuple,
     )
+
+
+@dataclass(frozen=True)
+class EventReportTaskFacts:
+    task_scores: Tuple[EventReportTaskScoreFact, ...] = field(
+        default_factory=tuple,
+    )
+    specification: Tuple[EventReportSpecificationFact, ...] = field(
+        default_factory=tuple,
+    )
+
+    def __post_init__(self):
+        object.__setattr__(self, 'task_scores', tuple(self.task_scores))
+        object.__setattr__(self, 'specification', tuple(self.specification))
 
 
 @dataclass(frozen=True)

@@ -2,6 +2,7 @@ import datetime as dt
 from unittest import TestCase
 
 from core_logic.entities.event_performance_report import (
+    EventReportCapturedTaskFact,
     EventPerformanceReportSource,
     EventReportEventRef,
     EventReportNarrative,
@@ -13,6 +14,9 @@ from core_logic.entities.event_performance_report import (
 )
 from core_logic.services.event_performance_report_service import (
     EventPerformanceReportService,
+)
+from core_logic.services.event_report_task_fact_service import (
+    EventReportTaskFactService,
 )
 from core_logic.value_objects.report_task_slot import report_task_slot_key
 from core_logic.use_cases.get_event_performance_report import (
@@ -184,4 +188,62 @@ class EventPerformanceReportTests(TestCase):
         self.assertEqual(
             report_task_slot_key(position=7),
             'position:7',
+        )
+
+    def test_builds_stable_task_slots_from_captured_facts(self):
+        captured = (
+            self._captured_task('s1', order=1, points=0),
+            self._captured_task('s1', order=2, points=1),
+            self._captured_task('s2', order=1, points=2),
+            self._captured_task('s2', order=2, points=2),
+            self._captured_task(
+                's1',
+                order=3,
+                points=0,
+                is_assessable=False,
+            ),
+        )
+
+        facts = EventReportTaskFactService().build(captured)
+
+        self.assertEqual(
+            [fact.group_key for fact in facts.task_scores],
+            [
+                'selection:selection-1:slot:1',
+                'selection:selection-1:slot:2',
+                'selection:selection-1:slot:1',
+                'selection:selection-1:slot:2',
+            ],
+        )
+        self.assertEqual(len(facts.specification), 2)
+        self.assertEqual(
+            [fact.order for fact in facts.specification],
+            [1, 2],
+        )
+        self.assertEqual(
+            facts.specification[0].codifier_requirements,
+            ('ОГЭ: 2.1',),
+        )
+
+    @staticmethod
+    def _captured_task(
+        student_id,
+        order,
+        points,
+        is_assessable=True,
+    ):
+        return EventReportCapturedTaskFact(
+            student_id=student_id,
+            student_name=student_id,
+            order=order,
+            topic_name='Динамика',
+            subtopic_name=f'Задание {order}',
+            source_selection_id='selection-1',
+            content_order=10,
+            is_assessable=is_assessable,
+            points=points,
+            max_points=2,
+            content_element='1.2',
+            requirement_element='2.1',
+            codifier_requirements=('ОГЭ: 2.1',),
         )

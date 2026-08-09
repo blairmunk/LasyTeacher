@@ -6,8 +6,6 @@ from typing import List, Set
 from django.db.models import Count, Exists, OuterRef, Q
 
 from core_logic.entities.task import (
-    ReferenceElementOption,
-    SelectOption,
     TaskEntity,
     TaskExportFilters,
     TaskExportGroupRef,
@@ -30,8 +28,7 @@ from core_logic.entities.task import (
 )
 from core_logic.interfaces.task_repo import ITaskRepository
 from core_logic.interfaces.task_math_status_cache import ITaskMathStatusCache
-from core_logic.services.reference_catalog import merge_reference_choices
-from curriculum.models import SubTopic, Topic
+from curriculum.models import Topic
 from infrastructure.services.task_image_presentation import (
     TaskImagePresentationService,
 )
@@ -39,8 +36,7 @@ from infrastructure.services.task_math_status_cache import (
     task_math_status_cache,
 )
 from task_groups.models import TaskGroup
-from references.models import SubjectReference
-from tasks.models import Source, Task, TaskImage
+from tasks.models import Task, TaskImage
 
 
 class DjangoTaskRepository(ITaskRepository):
@@ -219,13 +215,6 @@ class DjangoTaskRepository(ITaskRepository):
         task.save()
         return TaskSaveResult(status='updated', task_id=str(task.pk))
 
-    def get_subtopic_topic_id(self, subtopic_id: str):
-        topic_id = SubTopic.objects.filter(pk=subtopic_id).values_list(
-            'topic_id',
-            flat=True,
-        ).first()
-        return str(topic_id) if topic_id else None
-
     def save_task_images(
         self,
         task_id: str,
@@ -310,18 +299,6 @@ class DjangoTaskRepository(ITaskRepository):
             for task_group in task_groups
         ]
 
-    def get_list_topics(self):
-        return [
-            SelectOption(id=str(topic.pk), name=topic.name)
-            for topic in Topic.objects.all().order_by('section', 'name')
-        ]
-
-    def get_list_sources(self):
-        return [
-            SelectOption(id=str(source.pk), name=str(source))
-            for source in Source.objects.all().order_by('name')
-        ]
-
     def get_task_export_sources(
         self,
         filters: TaskExportFilters,
@@ -330,52 +307,6 @@ class DjangoTaskRepository(ITaskRepository):
             self._task_export_source(task)
             for task in self._get_export_tasks(filters)
         ]
-
-    def get_subtopics_for_topic(self, topic_id: str):
-        if not topic_id:
-            return []
-
-        return [
-            SelectOption(id=str(subtopic.pk), name=subtopic.name)
-            for subtopic in SubTopic.objects.filter(
-                topic_id=topic_id,
-            ).order_by('order', 'name')
-        ]
-
-    def get_subtopic_options(self, topic_id: str) -> List[SelectOption]:
-        if not topic_id:
-            return []
-
-        try:
-            topic = Topic.objects.get(pk=topic_id)
-        except (Topic.DoesNotExist, ValueError):
-            return []
-
-        return [
-            SelectOption(id=str(subtopic.id), name=subtopic.name)
-            for subtopic in topic.subtopics.all().order_by('order', 'name')
-        ]
-
-    def get_reference_element_options(
-        self,
-        subject: str,
-        category: str,
-    ) -> List[ReferenceElementOption]:
-        catalogs = (
-            reference.get_choices()
-            for reference in SubjectReference.objects.filter(
-                subject=subject,
-                category=category,
-                is_active=True,
-            ).order_by('grade_level', 'created_at')
-        )
-        return [
-            ReferenceElementOption(code=code, name=name)
-            for code, name in merge_reference_choices(catalogs)
-        ]
-
-    def get_task_type_choices(self):
-        return list(Task.TASK_TYPES)
 
     def count_tasks(self) -> int:
         return Task.objects.count()

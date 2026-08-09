@@ -1,6 +1,8 @@
 from django.test import TestCase
 
-from infrastructure.repositories.django_task_repo import DjangoTaskRepository
+from infrastructure.repositories.django_task_catalog_repo import (
+    DjangoTaskCatalogRepository,
+)
 from references.models import SubjectReference
 from tasks.models import Task
 
@@ -27,7 +29,7 @@ class DjangoReferenceCatalogTests(TestCase):
             is_active=False,
         )
 
-        options = DjangoTaskRepository().get_reference_element_options(
+        options = DjangoTaskCatalogRepository().get_reference_element_options(
             subject='Физика',
             category='content_elements',
         )
@@ -42,7 +44,7 @@ class DjangoReferenceCatalogTests(TestCase):
         )
 
     def test_task_type_options_use_codes_accepted_by_task_model(self):
-        options = DjangoTaskRepository().get_task_type_choices()
+        options = DjangoTaskCatalogRepository().get_task_type_choices()
 
         self.assertEqual(options, list(Task.TASK_TYPES))
         self.assertIn(('computational', 'Расчётная задача'), options)

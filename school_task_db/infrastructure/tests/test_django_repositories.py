@@ -110,6 +110,9 @@ from infrastructure.repositories.django_review_task_repo import (
 from infrastructure.repositories.django_source_repo import DjangoSourceRepository
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
+from infrastructure.repositories.django_task_catalog_repo import (
+    DjangoTaskCatalogRepository,
+)
 from infrastructure.repositories.django_task_group_repo import (
     DjangoTaskGroupRepository,
 )
@@ -843,10 +846,11 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(list(ungrouped_tasks), [])
         self.assertEqual(repo.count_tasks(), 4)
         self.assertEqual(repo.count_ungrouped_tasks(), 0)
-        self.assertEqual(list(repo.get_subtopics_for_topic('')), [])
+        task_catalog = DjangoTaskCatalogRepository()
+        self.assertEqual(list(task_catalog.get_subtopics_for_topic('')), [])
         self.assertIn(
             str(self.topic.pk),
-            [option.pk for option in repo.get_list_topics()],
+            [option.pk for option in task_catalog.get_list_topics()],
         )
         self.assertIn(
             str(self.weak_group.pk),
@@ -954,8 +958,9 @@ class DjangoRemedialRepositoryTests(TestCase):
         detail_task = repo.get_task(str(self.original_weak.pk))
         missing_task = repo.get_task('00000000-0000-0000-0000-000000000000')
         task_groups = repo.get_task_detail_groups(str(self.original_weak.pk))
-        subtopics = repo.get_subtopic_options(str(self.topic.pk))
-        missing_subtopics = repo.get_subtopic_options(
+        task_catalog = DjangoTaskCatalogRepository()
+        subtopics = task_catalog.get_subtopic_options(str(self.topic.pk))
+        missing_subtopics = task_catalog.get_subtopic_options(
             '00000000-0000-0000-0000-000000000000',
         )
 

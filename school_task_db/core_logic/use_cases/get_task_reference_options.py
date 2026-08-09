@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import List
 
 from core_logic.entities.task import ReferenceElementOption, SelectOption
-from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.interfaces.task_catalog_repo import ITaskCatalogRepository
 
 
 @dataclass(frozen=True)
@@ -13,14 +13,14 @@ class SubtopicOptionsResult:
 
 
 class GetSubtopicOptionsUseCase:
-    def __init__(self, task_repo: ITaskRepository):
-        self.task_repo = task_repo
+    def __init__(self, task_catalog_repo: ITaskCatalogRepository):
+        self.task_catalog_repo = task_catalog_repo
 
     def execute(self, topic_id: str) -> SubtopicOptionsResult:
         if not topic_id:
             return SubtopicOptionsResult(subtopics=[])
         return SubtopicOptionsResult(
-            subtopics=self.task_repo.get_subtopic_options(topic_id),
+            subtopics=self.task_catalog_repo.get_subtopic_options(topic_id),
         )
 
 
@@ -30,12 +30,12 @@ class CodifierElementsResult:
 
 
 class GetCodifierElementsUseCase:
-    def __init__(self, task_repo: ITaskRepository):
-        self.task_repo = task_repo
+    def __init__(self, task_catalog_repo: ITaskCatalogRepository):
+        self.task_catalog_repo = task_catalog_repo
 
     def execute(self, subject: str, category: str) -> CodifierElementsResult:
         return CodifierElementsResult(
-            elements=self.task_repo.get_reference_element_options(
+            elements=self.task_catalog_repo.get_reference_element_options(
                 subject=subject,
                 category=category,
             ),

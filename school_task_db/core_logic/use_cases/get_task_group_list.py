@@ -1,24 +1,26 @@
 """Build analog group list screen data."""
 
 from core_logic.entities.task import TaskGroupListData, TaskGroupListFilters
+from core_logic.interfaces.task_catalog_repo import ITaskCatalogRepository
 from core_logic.interfaces.task_group_repo import ITaskGroupRepository
-from core_logic.interfaces.task_repo import ITaskRepository
 
 
 class GetTaskGroupListUseCase:
     def __init__(
         self,
-        task_repo: ITaskRepository,
+        task_catalog_repo: ITaskCatalogRepository,
         task_group_repo: ITaskGroupRepository,
     ):
-        self.task_repo = task_repo
+        self.task_catalog_repo = task_catalog_repo
         self.task_group_repo = task_group_repo
 
     def execute(self, filters: TaskGroupListFilters) -> TaskGroupListData:
         return TaskGroupListData(
             analog_groups=self.task_group_repo.get_list_task_groups(filters),
-            topics=self.task_repo.get_list_topics(),
-            subtopics=self.task_repo.get_subtopics_for_topic(filters.topic_id),
+            topics=self.task_catalog_repo.get_list_topics(),
+            subtopics=self.task_catalog_repo.get_subtopics_for_topic(
+                filters.topic_id,
+            ),
             difficulties=[
                 (1, 'Базовый'),
                 (2, 'Повышенный'),

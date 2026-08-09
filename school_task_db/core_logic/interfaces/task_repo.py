@@ -1,11 +1,9 @@
 """Task repository interface."""
 
 from abc import ABC, abstractmethod
-from typing import List, Optional, Set, Tuple
+from typing import List, Optional, Set
 
 from core_logic.entities.task import (
-    ReferenceElementOption,
-    SelectOption,
     TaskEntity,
     TaskExportFilters,
     TaskDetailGroup,
@@ -37,10 +35,6 @@ class ITaskRepository(ABC):
         """Update a task, or return not_found status."""
 
     @abstractmethod
-    def get_subtopic_topic_id(self, subtopic_id: str) -> Optional[str]:
-        """Return the parent topic ID for a subtopic, or None."""
-
-    @abstractmethod
     def save_task_images(
         self,
         task_id: str,
@@ -53,39 +47,11 @@ class ITaskRepository(ABC):
         """Return analog-group read models for one task detail page."""
 
     @abstractmethod
-    def get_list_topics(self) -> List[SelectOption]:
-        """Return topic options for the task list page."""
-
-    @abstractmethod
-    def get_list_sources(self) -> List[SelectOption]:
-        """Return source options for the task list page."""
-
-    @abstractmethod
     def get_task_export_sources(
         self,
         filters: TaskExportFilters,
     ) -> list:
         """Return normalized task records for portable export."""
-
-    @abstractmethod
-    def get_subtopics_for_topic(self, topic_id: str) -> List[SelectOption]:
-        """Return subtopic options for a topic."""
-
-    @abstractmethod
-    def get_subtopic_options(self, topic_id: str) -> List[SelectOption]:
-        """Return subtopic select options for a topic."""
-
-    @abstractmethod
-    def get_reference_element_options(
-        self,
-        subject: str,
-        category: str,
-    ) -> List[ReferenceElementOption]:
-        """Return codifier reference element options."""
-
-    @abstractmethod
-    def get_task_type_choices(self) -> List[Tuple[str, str]]:
-        """Return task type choices."""
 
     @abstractmethod
     def count_tasks(self) -> int:

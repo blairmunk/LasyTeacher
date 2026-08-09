@@ -47,7 +47,7 @@ class SaveTaskUseCaseTests(TestCase):
             difficulty=2,
         )
 
-        result = CreateTaskUseCase(repo).execute(params)
+        result = CreateTaskUseCase(repo, repo).execute(params)
 
         self.assertEqual(result.task_id, 'task-1')
         self.assertEqual(repo.created_params, params)
@@ -63,7 +63,7 @@ class SaveTaskUseCaseTests(TestCase):
             difficulty=2,
         )
 
-        result = UpdateTaskUseCase(repo).execute(params)
+        result = UpdateTaskUseCase(repo, repo).execute(params)
 
         self.assertEqual(result.status, 'updated')
         self.assertEqual(repo.updated_params, params)
@@ -80,7 +80,7 @@ class SaveTaskUseCaseTests(TestCase):
             difficulty=2,
         )
 
-        result = CreateTaskUseCase(repo).execute(params)
+        result = CreateTaskUseCase(repo, repo).execute(params)
 
         self.assertEqual(result.status, 'invalid')
         self.assertEqual(

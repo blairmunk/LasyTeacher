@@ -49,6 +49,7 @@ class GetTaskListUseCaseTests(TestCase):
         cache = FakeTaskMathStatusCache()
         use_case = GetTaskListUseCase(
             task_repo=repo,
+            task_catalog_repo=repo,
             task_group_repo=repo,
             math_status_cache=cache,
         )
@@ -74,6 +75,7 @@ class GetTaskListUseCaseTests(TestCase):
         cache = FakeTaskMathStatusCache()
         use_case = GetTaskListUseCase(
             task_repo=repo,
+            task_catalog_repo=repo,
             task_group_repo=repo,
             math_status_cache=cache,
         )

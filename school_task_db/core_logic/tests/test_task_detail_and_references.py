@@ -70,7 +70,7 @@ class TaskDetailAndReferenceUseCaseTests(TestCase):
 
     def test_subtopic_options_rejects_empty_topic(self):
         repo = FakeTaskRepository()
-        use_case = GetSubtopicOptionsUseCase(task_repo=repo)
+        use_case = GetSubtopicOptionsUseCase(task_catalog_repo=repo)
 
         result = use_case.execute('')
 
@@ -79,7 +79,7 @@ class TaskDetailAndReferenceUseCaseTests(TestCase):
 
     def test_subtopic_options_returns_repository_options(self):
         repo = FakeTaskRepository()
-        use_case = GetSubtopicOptionsUseCase(task_repo=repo)
+        use_case = GetSubtopicOptionsUseCase(task_catalog_repo=repo)
 
         result = use_case.execute('topic-1')
 
@@ -88,7 +88,7 @@ class TaskDetailAndReferenceUseCaseTests(TestCase):
 
     def test_codifier_options_returns_repository_options(self):
         repo = FakeTaskRepository()
-        use_case = GetCodifierElementsUseCase(task_repo=repo)
+        use_case = GetCodifierElementsUseCase(task_catalog_repo=repo)
 
         result = use_case.execute(subject='physics', category='content')
 

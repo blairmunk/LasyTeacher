@@ -350,6 +350,9 @@ from infrastructure.repositories.django_student_performance_repo import (
     DjangoStudentPerformanceRepository,
 )
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
+from infrastructure.repositories.django_task_catalog_repo import (
+    DjangoTaskCatalogRepository,
+)
 from infrastructure.repositories.django_task_group_repo import (
     DjangoTaskGroupRepository,
 )
@@ -424,6 +427,7 @@ class Container:
         self._student_repo = None
         self._source_repo = None
         self._task_repo = None
+        self._task_catalog_repo = None
         self._task_group_repo = None
         self._task_math_status_cache = None
         self._task_image_audit_repo = None
@@ -505,6 +509,12 @@ class Container:
                 math_status_cache=self.task_math_status_cache,
             )
         return self._task_repo
+
+    @property
+    def task_catalog_repo(self):
+        if self._task_catalog_repo is None:
+            self._task_catalog_repo = DjangoTaskCatalogRepository()
+        return self._task_catalog_repo
 
     @property
     def task_group_repo(self):
@@ -968,13 +978,14 @@ class Container:
     def get_task_list_use_case(self):
         return GetTaskListUseCase(
             task_repo=self.task_repo,
+            task_catalog_repo=self.task_catalog_repo,
             task_group_repo=self.task_group_repo,
             math_status_cache=self.task_math_status_cache,
         )
 
     def get_task_group_list_use_case(self):
         return GetTaskGroupListUseCase(
-            task_repo=self.task_repo,
+            task_catalog_repo=self.task_catalog_repo,
             task_group_repo=self.task_group_repo,
         )
 
@@ -1143,12 +1154,12 @@ class Container:
 
     def get_subtopic_options_use_case(self):
         return GetSubtopicOptionsUseCase(
-            task_repo=self.task_repo,
+            task_catalog_repo=self.task_catalog_repo,
         )
 
     def get_codifier_elements_use_case(self):
         return GetCodifierElementsUseCase(
-            task_repo=self.task_repo,
+            task_catalog_repo=self.task_catalog_repo,
         )
 
     def get_source_list_use_case(self):
@@ -1169,11 +1180,13 @@ class Container:
     def create_task_use_case(self):
         return CreateTaskUseCase(
             task_repo=self.task_repo,
+            task_catalog_repo=self.task_catalog_repo,
         )
 
     def update_task_use_case(self):
         return UpdateTaskUseCase(
             task_repo=self.task_repo,
+            task_catalog_repo=self.task_catalog_repo,
         )
 
     def save_task_images_use_case(self):

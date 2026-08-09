@@ -8,13 +8,13 @@ from django.db import transaction
 from .base import BaseImporter, ImportContext
 from tasks.models import Task
 from task_groups.models import AnalogGroup, TaskGroup
-from curriculum.models import Topic, SubTopic
 from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_CONTROL,
     validate_task_specific_bank_role,
 )
 from .task_images import TaskImageImporter
 from .task_sources import TaskSourceImporter
+from .task_topics import TaskTopicImporter
 
 
 class TaskImporter(BaseImporter):
@@ -25,6 +25,7 @@ class TaskImporter(BaseImporter):
         self.context = ImportContext()
         self.image_importer = TaskImageImporter(self, self.context)
         self.source_importer = TaskSourceImporter(self)
+        self.topic_importer = TaskTopicImporter(self, self.context)
     
     def import_tasks_from_json(self, json_data: Dict[str, Any]) -> ImportContext:
         """Основной метод импорта заданий из JSON"""
@@ -46,7 +47,7 @@ class TaskImporter(BaseImporter):
             
             # ЭТАП 2: Импорт тем (если есть и разрешено создавать)
             if 'topics' in json_data and self.create_missing:
-                self._import_topics(json_data['topics'])
+                self.topic_importer.import_topics(json_data['topics'])
             
             # ЭТАП 3: Импорт заданий
             if 'tasks' in json_data:
@@ -127,21 +128,6 @@ class TaskImporter(BaseImporter):
             except Exception as e:
                 self.log_error(f"Ошибка импорта группы {group_data.get('name', 'Unknown')}: {e}", e)
     
-    def _import_topics(self, topics_data: List[Dict[str, Any]]):
-        """Импорт тем (если создание зависимостей разрешено)"""
-        self._write("📚 Импорт тем...")
-        
-        for topic_data in topics_data:
-            try:
-                topic = self._find_or_create_topic(topic_data)
-                if topic:
-                    # UUID может не быть в данных темы, генерируем на основе содержимого
-                    topic_key = f"{topic.subject}_{topic.grade_level}_{topic.name}"
-                    self.context.add_topic(topic_key, topic)
-                    
-            except Exception as e:
-                self.log_error(f"Ошибка импорта темы {topic_data.get('name', 'Unknown')}: {e}", e)
-    
     def _import_tasks(self, tasks_data: List[Dict[str, Any]]):
         """Импорт заданий"""
         self._write("📝 Импорт заданий...")
@@ -178,7 +164,7 @@ class TaskImporter(BaseImporter):
         """Создание нового задания"""
         
         # Поиск темы
-        topic = self._find_or_create_topic(task_data.get('topic'))
+        topic = self.topic_importer.resolve(task_data.get('topic'))
         if not topic:
             self.log_error(f"Не удалось найти/создать тему для задания {task_uuid[-8:]}")
             return None
@@ -186,7 +172,10 @@ class TaskImporter(BaseImporter):
         # Поиск подтемы (опционально)
         subtopic = None
         if 'subtopic' in task_data:
-            subtopic = self._find_or_create_subtopic(task_data['subtopic'], topic)
+            subtopic = self.topic_importer.resolve_subtopic(
+                task_data['subtopic'],
+                topic,
+            )
         
         # Поиск источника
         source = self.source_importer.resolve(task_data.get('source'))
@@ -218,73 +207,6 @@ class TaskImporter(BaseImporter):
         )
         
         return task
-    
-    def _find_or_create_topic(self, topic_data):
-        """Поиск или создание темы"""
-        topic = self._find_topic(topic_data)
-        if topic:
-            return topic
-
-        # Создание новой темы если разрешено
-        if self.create_missing and isinstance(topic_data, dict):
-            try:
-                topic = Topic.objects.create(
-                    name=topic_data['name'],
-                    subject=topic_data.get('subject', 'Не указан'),
-                    grade_level=topic_data.get('grade_level'),
-                    section=topic_data.get('section', ''),
-                    description=topic_data.get('description', ''),
-                    order=topic_data.get('order', 1)
-                )
-                self.log_success(f"Создана тема: {topic.name}")
-                return topic
-            except Exception as e:
-                self.log_error(f"Ошибка создания темы: {e}", e)
-
-        return None
-
-
-            
-        # Создание новой темы если разрешено
-        if self.create_missing and isinstance(topic_data, dict):
-            try:
-                topic = Topic.objects.create(
-                    name=topic_data['name'],
-                    subject=topic_data.get('subject', 'Не указан'),
-                    grade_level=topic_data.get('grade_level'),
-                    section=topic_data.get('section', ''),
-                    description=topic_data.get('description', ''),
-                    order=topic_data.get('order', 1)
-                )
-                self.log_success(f"Создана тема: {topic.name}")
-                return topic
-            except Exception as e:
-                self.log_error(f"Ошибка создания темы: {e}", e)
-        
-        return None
-        
-    def _find_topic(self, topic_data: Any) -> Optional[Topic]:
-        """Поиск темы по данным (только поиск, без создания)"""
-        if not topic_data:
-            return None
-        
-        if isinstance(topic_data, str):
-            return Topic.objects.filter(name=topic_data).first()
-        
-        elif isinstance(topic_data, dict):
-            filters = {}
-            if 'name' in topic_data:
-                filters['name'] = topic_data['name']
-            if 'subject' in topic_data:
-                filters['subject'] = topic_data['subject']
-            if 'grade_level' in topic_data:
-                filters['grade_level'] = topic_data['grade_level']
-            
-            if filters:
-                return Topic.objects.filter(**filters).first()
-        
-        return None
-
     
     def _create_task_group_relations(self, json_data: Dict[str, Any]):
         """Создание связей задание-группа"""
@@ -495,7 +417,7 @@ class TaskImporter(BaseImporter):
         for i, task_data in enumerate(tasks_data):
             topic_data = task_data.get('topic')
             if topic_data:
-                topic = self._find_topic(topic_data)
+                topic = self.topic_importer.find(topic_data)
                 if not topic:
                     if isinstance(topic_data, dict):
                         topic_key = f"{topic_data.get('subject', 'Unknown')} - {topic_data.get('name', 'Unknown')}"
@@ -624,11 +546,11 @@ class TaskImporter(BaseImporter):
             # Обновляем тему если указана
             topic_data = task_data.get('topic')
             if topic_data:
-                topic = self._find_or_create_topic(topic_data)
+                topic = self.topic_importer.resolve(topic_data)
                 if topic:
                     task.topic = topic
                     if 'subtopic' in task_data:
-                        task.subtopic = self._find_or_create_subtopic(
+                        task.subtopic = self.topic_importer.resolve_subtopic(
                             task_data['subtopic'],
                             topic,
                         )
@@ -654,33 +576,3 @@ class TaskImporter(BaseImporter):
             
         except Exception as e:
             self.log_error(f"Ошибка обновления задания: {e}", e)
-
-    def _find_or_create_subtopic(self, subtopic_data: Any, topic: Topic) -> Optional[SubTopic]:
-        """Поиск или создание подтемы"""
-        if not subtopic_data or not topic:
-            return None
-        
-        subtopic_name = subtopic_data if isinstance(subtopic_data, str) else subtopic_data.get('name')
-        if not subtopic_name:
-            return None
-        
-        # Поиск существующей подтемы
-        existing_subtopic = SubTopic.objects.filter(topic=topic, name=subtopic_name).first()
-        if existing_subtopic:
-            return existing_subtopic
-        
-        # Создание новой подтемы если разрешено
-        if self.create_missing:
-            try:
-                subtopic = SubTopic.objects.create(
-                    topic=topic,
-                    name=subtopic_name,
-                    description=subtopic_data.get('description', '') if isinstance(subtopic_data, dict) else '',
-                    order=subtopic_data.get('order', 1) if isinstance(subtopic_data, dict) else 1
-                )
-                self.log_success(f"Создана подтема: {subtopic_name}")
-                return subtopic
-            except Exception as e:
-                self.log_error(f"Ошибка создания подтемы: {e}", e)
-        
-        return None

@@ -129,6 +129,26 @@ class TaskImporterTests(TestCase):
         task.source.refresh_from_db()
         self.assertEqual(task.source.author, 'Новый автор')
 
+    def test_subtopic_is_created_once_and_bound_to_task_topic(self):
+        task_id = '550e8400-e29b-41d4-a716-446655440001'
+        payload = self._task_payload(
+            task_id=task_id,
+            group_id='770e8400-e29b-41d4-a716-446655440001',
+        )
+        payload['tasks'][0]['subtopic'] = {
+            'name': 'Второй закон Ньютона',
+            'description': 'Связь силы и ускорения',
+            'order': 2,
+        }
+
+        self._import(payload)
+        self._import(payload)
+
+        task = Task.objects.select_related('topic', 'subtopic').get(pk=task_id)
+        self.assertEqual(task.subtopic.name, 'Второй закон Ньютона')
+        self.assertEqual(task.subtopic.topic_id, task.topic_id)
+        self.assertEqual(task.topic.subtopics.count(), 1)
+
     @staticmethod
     def _import(payload):
         return TaskImporter(

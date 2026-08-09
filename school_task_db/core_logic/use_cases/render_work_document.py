@@ -1,6 +1,6 @@
 """Render document files for a work."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from core_logic.entities.document import DocumentPresentationProfile
 from core_logic.entities.document_rendering import (
@@ -22,7 +22,8 @@ from core_logic.use_cases.render_document_from_recipe import (
     RenderDocumentFromRecipeUseCase,
 )
 from core_logic.value_objects.document_render_options import (
-    WorkDocumentRenderOptions,
+    RenderTarget,
+    WorkDocumentPrintOverrides,
 )
 from core_logic.value_objects.document_render_recipe_factories import (
     build_work_document_recipe_for_render,
@@ -36,7 +37,10 @@ from core_logic.value_objects.document_recipes import WORK_DOCUMENT_TYPE
 @dataclass(frozen=True)
 class RenderWorkDocumentRequest:
     work_id: str
-    options: WorkDocumentRenderOptions
+    render_target: RenderTarget = field(default_factory=RenderTarget)
+    print_overrides: WorkDocumentPrintOverrides = field(
+        default_factory=WorkDocumentPrintOverrides,
+    )
     presentation_profile: DocumentPresentationProfile | None = None
     presentation_profile_id: str = ''
     variant_id: str = ''
@@ -59,7 +63,7 @@ class RenderWorkDocumentUseCase:
         self,
         request: RenderWorkDocumentRequest,
     ) -> DocumentRenderResult:
-        renderer_type = request.options.renderer_type
+        renderer_type = request.render_target.renderer_type
         work = self.work_repo.get_work_document_ref(request.work_id)
         if work is None:
             return DocumentRenderResult(
@@ -94,7 +98,7 @@ class RenderWorkDocumentUseCase:
                     work_name=work.name,
                 ),
                 recipe=build_work_document_recipe_for_render(
-                    print_overrides=request.options.print_overrides,
+                    print_overrides=request.print_overrides,
                     presentation_profile=resolve_document_presentation_profile(
                         document_type=WORK_DOCUMENT_TYPE,
                         request_presentation_profile=request.presentation_profile,
@@ -103,7 +107,7 @@ class RenderWorkDocumentUseCase:
                     ),
                     variant_ids=variant_ids,
                 ),
-                render_target=request.options.render_target,
+                render_target=request.render_target,
                 source_name=work.name,
                 empty_status=DOCUMENT_RENDER_STATUS_GENERATED,
             )

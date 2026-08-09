@@ -32,13 +32,12 @@ def render_work_ajax(request, work_id):
                 work_id=str(work_id),
             )
         )
-        options = document_request.options
-        renderer_type = options.renderer_type
+        renderer_type = document_request.render_target.renderer_type
 
         logger.info("Web render %s for work %s", renderer_type, work_id)
         logger.info(
             "Print overrides: %s",
-            options.print_overrides,
+            document_request.print_overrides,
         )
 
         result = container.render_work_document_use_case().execute(
@@ -71,7 +70,8 @@ def render_work_ajax(request, work_id):
         return JsonResponse(
             container.work_form_adapter.rendered_work_document_response_payload(
                 result,
-                options,
+                document_request.render_target,
+                document_request.print_overrides,
             )
         )
         
@@ -122,8 +122,7 @@ def render_remedial_sheet_ajax(request, variant_id):
                 variant_id=str(variant_id),
             )
         )
-        options = document_request.options
-        renderer_type = options.renderer_type
+        renderer_type = document_request.render_target.renderer_type
 
         logger.info(f"Рендер remedial sheet для варианта {variant_id}")
 
@@ -192,7 +191,7 @@ def render_remedial_sheet_batch_ajax(request, work_id):
                 work_id=str(work_id),
             )
         )
-        renderer_type = document_request.options.renderer_type
+        renderer_type = document_request.render_target.renderer_type
 
         logger.info(
             "Пакетный рендер remedial sheets для работы %s",

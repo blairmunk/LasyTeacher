@@ -39,8 +39,7 @@ from core_logic.use_cases.render_work_document import (
     RenderWorkDocumentUseCase,
 )
 from core_logic.value_objects.document_render_options import (
-    RemedialSheetDocumentRenderOptions,
-    WorkDocumentRenderOptions,
+    RenderTarget,
 )
 from core_logic.value_objects.document_recipes import (
     ANSWERS_SECTION,
@@ -171,8 +170,8 @@ class FakeRenderRemedialSheetDocumentUseCase:
             request.variant_id,
             DocumentRenderResult(
                 status='generated',
-                renderer_type=request.options.renderer_type,
-                file_type=request.options.renderer_type,
+                renderer_type=request.render_target.renderer_type,
+                file_type=request.render_target.renderer_type,
                 files=[
                     GeneratedDocumentFile(
                         filename=f'remedial_{request.variant_id}.pdf',
@@ -217,7 +216,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         result = use_case.execute(
             RenderWorkDocumentRequest(
                 work_id='work-1',
-                options=WorkDocumentRenderOptions(renderer_type='docx'),
+                render_target=RenderTarget(renderer_type='docx'),
             )
         )
 
@@ -235,10 +234,13 @@ class DocumentRenderingUseCaseTests(TestCase):
             render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=work_repo,
         )
-        options = WorkDocumentRenderOptions(renderer_type='html')
+        render_target = RenderTarget(renderer_type='html')
 
         result = use_case.execute(
-            RenderWorkDocumentRequest(work_id='work-1', options=options)
+            RenderWorkDocumentRequest(
+                work_id='work-1',
+                render_target=render_target,
+            )
         )
 
         self.assertTrue(result.success)
@@ -267,7 +269,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         result = use_case.execute(
             RenderWorkDocumentRequest(
                 work_id='work-1',
-                options=WorkDocumentRenderOptions(renderer_type='pdf'),
+                render_target=RenderTarget(renderer_type='pdf'),
             )
         )
 
@@ -289,7 +291,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         result = use_case.execute(
             RenderWorkDocumentRequest(
                 work_id='work-1',
-                options=WorkDocumentRenderOptions(renderer_type='pdf'),
+                render_target=RenderTarget(renderer_type='pdf'),
             )
         )
 
@@ -309,7 +311,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         result = use_case.execute(
             RenderWorkDocumentRequest(
                 work_id='work-1',
-                options=WorkDocumentRenderOptions(renderer_type='html'),
+                render_target=RenderTarget(renderer_type='html'),
             )
         )
 
@@ -336,7 +338,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         result = use_case.execute(
             RenderWorkDocumentRequest(
                 work_id='work-1',
-                options=WorkDocumentRenderOptions(renderer_type='html'),
+                render_target=RenderTarget(renderer_type='html'),
                 presentation_profile=presentation_profile,
             )
         )
@@ -364,7 +366,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         result = use_case.execute(
             RenderWorkDocumentRequest(
                 work_id='work-1',
-                options=WorkDocumentRenderOptions(renderer_type='html'),
+                render_target=RenderTarget(renderer_type='html'),
             )
         )
 
@@ -398,7 +400,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         result = use_case.execute(
             RenderWorkDocumentRequest(
                 work_id='work-1',
-                options=WorkDocumentRenderOptions(renderer_type='html'),
+                render_target=RenderTarget(renderer_type='html'),
                 presentation_profile_id='template-work',
             )
         )
@@ -427,7 +429,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         result = use_case.execute(
             RenderWorkDocumentRequest(
                 work_id='missing-work',
-                options=WorkDocumentRenderOptions(renderer_type='html'),
+                render_target=RenderTarget(renderer_type='html'),
             )
         )
 
@@ -448,7 +450,7 @@ class DocumentRenderingUseCaseTests(TestCase):
             RenderWorkDocumentRequest(
                 work_id='work-1',
                 variant_id='variant-2',
-                options=WorkDocumentRenderOptions(renderer_type='html'),
+                render_target=RenderTarget(renderer_type='html'),
             )
         )
 
@@ -472,7 +474,7 @@ class DocumentRenderingUseCaseTests(TestCase):
             RenderWorkDocumentRequest(
                 work_id='work-1',
                 variant_id='foreign-variant',
-                options=WorkDocumentRenderOptions(renderer_type='html'),
+                render_target=RenderTarget(renderer_type='html'),
             )
         )
 
@@ -487,12 +489,12 @@ class DocumentRenderingUseCaseTests(TestCase):
             render_document_from_recipe_use_case=recipe_renderer(service),
             work_repo=work_repo,
         )
-        options = RemedialSheetDocumentRenderOptions(renderer_type='pdf')
+        render_target = RenderTarget(renderer_type='pdf')
 
         result = use_case.execute(
             RenderRemedialSheetDocumentRequest(
                 variant_id='variant-1',
-                options=options,
+                render_target=render_target,
             )
         )
 
@@ -529,7 +531,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         result = use_case.execute(
             RenderRemedialSheetDocumentRequest(
                 variant_id='variant-1',
-                options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+                render_target=RenderTarget(renderer_type='pdf'),
             )
         )
 
@@ -555,7 +557,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         result = use_case.execute(
             RenderRemedialSheetDocumentRequest(
                 variant_id='variant-1',
-                options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+                render_target=RenderTarget(renderer_type='pdf'),
                 presentation_profile=presentation_profile,
             )
         )
@@ -592,7 +594,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         result = use_case.execute(
             RenderRemedialSheetDocumentRequest(
                 variant_id='variant-1',
-                options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+                render_target=RenderTarget(renderer_type='pdf'),
             )
         )
 
@@ -637,7 +639,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         result = use_case.execute(
             RenderRemedialSheetDocumentRequest(
                 variant_id='variant-1',
-                options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+                render_target=RenderTarget(renderer_type='pdf'),
                 presentation_profile_id='template-rno',
             )
         )
@@ -676,7 +678,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         result = use_case.execute(
             RenderRemedialSheetDocumentRequest(
                 variant_id='variant-1',
-                options=RemedialSheetDocumentRenderOptions(),
+                render_target=RenderTarget(),
             )
         )
 
@@ -693,7 +695,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         result = use_case.execute(
             RenderRemedialSheetDocumentRequest(
                 variant_id='variant-1',
-                options=RemedialSheetDocumentRenderOptions(renderer_type='docx'),
+                render_target=RenderTarget(renderer_type='docx'),
             )
         )
 
@@ -712,7 +714,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         result = use_case.execute(
             RenderRemedialSheetDocumentRequest(
                 variant_id='variant-1',
-                options=RemedialSheetDocumentRenderOptions(),
+                render_target=RenderTarget(),
             )
         )
 
@@ -732,7 +734,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         result = use_case.execute(
             RenderRemedialSheetDocumentRequest(
                 variant_id='variant-1',
-                options=RemedialSheetDocumentRenderOptions(),
+                render_target=RenderTarget(),
             )
         )
 
@@ -752,7 +754,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         result = use_case.execute(
             RenderRemedialSheetDocumentRequest(
                 variant_id='variant-1',
-                options=RemedialSheetDocumentRenderOptions(),
+                render_target=RenderTarget(),
             )
         )
 
@@ -774,7 +776,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         result = use_case.execute(
             RenderRemedialSheetBatchDocumentRequest(
                 work_id='work-1',
-                options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+                render_target=RenderTarget(renderer_type='pdf'),
             )
         )
 
@@ -850,7 +852,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         result = use_case.execute(
             RenderRemedialSheetBatchDocumentRequest(
                 work_id='work-1',
-                options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+                render_target=RenderTarget(renderer_type='pdf'),
                 presentation_profile=presentation_profile,
             )
         )
@@ -884,7 +886,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         result = use_case.execute(
             RenderRemedialSheetBatchDocumentRequest(
                 work_id='missing-work',
-                options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+                render_target=RenderTarget(renderer_type='pdf'),
             )
         )
 
@@ -906,7 +908,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         result = use_case.execute(
             RenderRemedialSheetBatchDocumentRequest(
                 work_id='work-1',
-                options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+                render_target=RenderTarget(renderer_type='pdf'),
             )
         )
 
@@ -930,7 +932,7 @@ class DocumentRenderingUseCaseTests(TestCase):
         result = use_case.execute(
             RenderRemedialSheetBatchDocumentRequest(
                 work_id='work-1',
-                options=RemedialSheetDocumentRenderOptions(renderer_type='pdf'),
+                render_target=RenderTarget(renderer_type='pdf'),
             )
         )
 

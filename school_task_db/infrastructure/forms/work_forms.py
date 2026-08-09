@@ -308,9 +308,11 @@ class WorkFormAdapter:
         )
 
     def render_work_document_request_from_post(self, post_data, work_id):
+        options = build_work_render_options(post_data)
         return RenderWorkDocumentRequest(
             work_id=work_id,
-            options=build_work_render_options(post_data),
+            render_target=options.render_target,
+            print_overrides=options.print_overrides,
             presentation_profile_id=self._presentation_profile_id_from_post(post_data),
             variant_id=self._variant_id_from_post(post_data),
         )
@@ -319,16 +321,20 @@ class WorkFormAdapter:
         return renderer_type_from_data(post_data, default=default)
 
     def render_remedial_sheet_request_from_post(self, post_data, variant_id):
+        options = build_remedial_sheet_render_options(post_data)
         return RenderRemedialSheetDocumentRequest(
             variant_id=variant_id,
-            options=build_remedial_sheet_render_options(post_data),
+            render_target=options.render_target,
+            build_options=options.build_options,
             presentation_profile_id=self._presentation_profile_id_from_post(post_data),
         )
 
     def render_remedial_sheet_batch_request_from_post(self, post_data, work_id):
+        options = build_remedial_sheet_render_options(post_data)
         return RenderRemedialSheetBatchDocumentRequest(
             work_id=work_id,
-            options=build_remedial_sheet_render_options(post_data),
+            render_target=options.render_target,
+            build_options=options.build_options,
             presentation_profile_id=self._presentation_profile_id_from_post(post_data),
         )
 
@@ -345,7 +351,12 @@ class WorkFormAdapter:
             filename=filename,
         )
 
-    def rendered_work_document_response_payload(self, result, options):
+    def rendered_work_document_response_payload(
+        self,
+        result,
+        render_target,
+        print_overrides,
+    ):
         files_info = [
             {
                 'name': file_info.filename,
@@ -364,12 +375,18 @@ class WorkFormAdapter:
         return {
             'success': True,
             'message': (
-                f'{options.file_type_label} документ создан '
-                f'({options.content_description})'
+                f'{render_target.file_type_label} документ создан '
+                f'({self._work_content_description(print_overrides)})'
             ),
             'files': files_info,
             'total_files': len(files_info),
         }
+
+    @staticmethod
+    def _work_content_description(print_overrides):
+        if print_overrides.append_answers:
+            return 'по спецификации + ответы в конце'
+        return 'по спецификации'
 
     def remedial_sheet_response_payload(self, result):
         return {

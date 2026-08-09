@@ -105,9 +105,9 @@ class RenderWorkDocumentCommandTests(TestCase):
 
         request = use_case.request
         self.assertEqual(request.work_id, 'work-1')
-        self.assertEqual(request.options.renderer_type, 'html')
-        self.assertEqual(request.options.pdf_format, 'A5')
-        self.assertTrue(request.options.print_overrides.append_answers)
+        self.assertEqual(request.render_target.renderer_type, 'html')
+        self.assertEqual(request.render_target.page_format, 'A5')
+        self.assertTrue(request.print_overrides.append_answers)
         self.assertIn('Created html document for Контрольная', stdout.getvalue())
         self.assertIn('work_1.html', stdout.getvalue())
 
@@ -165,9 +165,9 @@ class RenderRemedialSheetDocumentCommandTests(TestCase):
 
         request = use_case.request
         self.assertEqual(request.variant_id, 'variant-1')
-        self.assertEqual(request.options.renderer_type, 'pdf')
-        self.assertEqual(request.options.pdf_format, 'A5')
-        self.assertEqual(request.options.answer_type, 'with_full_solutions')
+        self.assertEqual(request.render_target.renderer_type, 'pdf')
+        self.assertEqual(request.render_target.page_format, 'A5')
+        self.assertEqual(request.build_options.answer_type, 'with_full_solutions')
         self.assertIn('Created pdf document', stdout.getvalue())
         self.assertIn('remedial_1.pdf', stdout.getvalue())
 

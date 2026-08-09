@@ -1,6 +1,6 @@
 """Render one batch remedial sheet document for all remedial variants in a work."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from core_logic.entities.document import DocumentPresentationProfile
 from core_logic.entities.document_rendering import (
@@ -20,7 +20,8 @@ from core_logic.use_cases.render_document_from_recipe import (
     RenderDocumentFromRecipeUseCase,
 )
 from core_logic.value_objects.document_render_options import (
-    RemedialSheetDocumentRenderOptions,
+    RemedialSheetBuildOptions,
+    RenderTarget,
 )
 from core_logic.value_objects.document_render_recipe_factories import (
     build_remedial_sheet_batch_document_recipe_for_render,
@@ -34,7 +35,10 @@ from core_logic.value_objects.document_recipes import REMEDIAL_SHEET_DOCUMENT_TY
 @dataclass(frozen=True)
 class RenderRemedialSheetBatchDocumentRequest:
     work_id: str
-    options: RemedialSheetDocumentRenderOptions
+    render_target: RenderTarget = field(default_factory=RenderTarget)
+    build_options: RemedialSheetBuildOptions = field(
+        default_factory=RemedialSheetBuildOptions,
+    )
     presentation_profile: DocumentPresentationProfile | None = None
     presentation_profile_id: str = ''
 
@@ -60,7 +64,7 @@ class RenderRemedialSheetBatchDocumentUseCase:
         if work is None:
             return DocumentRenderResult(
                 status=DOCUMENT_RENDER_STATUS_NOT_FOUND,
-                renderer_type=request.options.renderer_type,
+                renderer_type=request.render_target.renderer_type,
             )
 
         variant_ids = self.work_repo.get_work_personal_remedial_variant_ids(
@@ -69,7 +73,7 @@ class RenderRemedialSheetBatchDocumentUseCase:
         if not variant_ids:
             return DocumentRenderResult(
                 status=DOCUMENT_RENDER_STATUS_EMPTY,
-                renderer_type=request.options.renderer_type,
+                renderer_type=request.render_target.renderer_type,
                 source_name=work.name,
             )
 
@@ -81,7 +85,7 @@ class RenderRemedialSheetBatchDocumentUseCase:
                 ),
                 recipe=build_remedial_sheet_batch_document_recipe_for_render(
                     variant_ids=variant_ids,
-                    build_options=request.options.build_options,
+                    build_options=request.build_options,
                     presentation_profile=resolve_document_presentation_profile(
                         document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
                         request_presentation_profile=request.presentation_profile,
@@ -89,7 +93,7 @@ class RenderRemedialSheetBatchDocumentUseCase:
                         presentation_profile_repo=self.presentation_profile_repo,
                     ),
                 ),
-                render_target=request.options.render_target,
+                render_target=request.render_target,
                 source_name=work.name,
                 empty_status=DOCUMENT_RENDER_STATUS_EMPTY,
             )

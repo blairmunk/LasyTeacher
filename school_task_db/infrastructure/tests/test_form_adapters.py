@@ -29,7 +29,10 @@ from core_logic.services.analytics_service import (
 from core_logic.use_cases.get_presentation_profile_editor_data import (
     PresentationProfileEditorData,
 )
-from core_logic.value_objects.document_render_options import WorkDocumentRenderOptions
+from core_logic.value_objects.document_render_options import (
+    RenderTarget,
+    WorkDocumentPrintOverrides,
+)
 from core_logic.value_objects.document_recipes import (
     EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
     WORK_DOCUMENT_TYPE,
@@ -1843,12 +1846,12 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertEqual(request.work_id, 'w1')
         self.assertEqual(request.presentation_profile_id, 'template-work')
         self.assertEqual(request.presentation_profile_id, 'template-work')
-        self.assertEqual(request.options.renderer_type, 'html')
-        self.assertEqual(request.options.pdf_format, 'A5')
+        self.assertEqual(request.render_target.renderer_type, 'html')
+        self.assertEqual(request.render_target.page_format, 'A5')
         self.assertEqual(request.variant_id, 'variant-1')
-        self.assertTrue(request.options.print_overrides.hide_theory)
-        self.assertTrue(request.options.print_overrides.hide_blank_cells)
-        self.assertTrue(request.options.print_overrides.append_answers)
+        self.assertTrue(request.print_overrides.hide_theory)
+        self.assertTrue(request.print_overrides.hide_blank_cells)
+        self.assertTrue(request.print_overrides.append_answers)
 
     def test_builds_render_remedial_sheet_request_from_post(self):
         request = WorkFormAdapter().render_remedial_sheet_request_from_post(
@@ -1863,9 +1866,9 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertEqual(request.variant_id, 'v1')
         self.assertEqual(request.presentation_profile_id, 'template-rno')
         self.assertEqual(request.presentation_profile_id, 'template-rno')
-        self.assertEqual(request.options.renderer_type, 'pdf')
-        self.assertEqual(request.options.pdf_format, 'A4')
-        self.assertEqual(request.options.answer_type, 'with_full_solutions')
+        self.assertEqual(request.render_target.renderer_type, 'pdf')
+        self.assertEqual(request.render_target.page_format, 'A4')
+        self.assertEqual(request.build_options.answer_type, 'with_full_solutions')
 
     def test_builds_render_remedial_sheet_batch_request_from_post(self):
         request = WorkFormAdapter().render_remedial_sheet_batch_request_from_post(
@@ -1876,7 +1879,7 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertEqual(request.work_id, 'w1')
         self.assertEqual(request.presentation_profile_id, 'template-rno')
         self.assertEqual(request.presentation_profile_id, 'template-rno')
-        self.assertEqual(request.options.renderer_type, 'html')
+        self.assertEqual(request.render_target.renderer_type, 'html')
 
     def test_builds_rendered_document_file_request(self):
         request = WorkFormAdapter().rendered_document_file_request(
@@ -1895,8 +1898,8 @@ class WorkFormAdapterTests(SimpleTestCase):
                 file_type='html',
                 files=[GeneratedDocumentFile(filename='work.html', size_kb=1.25)],
             ),
-            WorkDocumentRenderOptions(
-                renderer_type='html',
+            RenderTarget(renderer_type='html'),
+            WorkDocumentPrintOverrides(
                 append_answers=True,
             ),
         )

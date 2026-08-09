@@ -14,8 +14,9 @@ from core_logic.use_cases.render_work_document import (
     RenderWorkDocumentRequest,
 )
 from core_logic.value_objects.document_render_options import (
-    RemedialSheetDocumentRenderOptions,
-    WorkDocumentRenderOptions,
+    RemedialSheetBuildOptions,
+    RenderTarget,
+    WorkDocumentPrintOverrides,
 )
 from curriculum.models import Topic
 from document_engine.models import PrintSettings
@@ -89,8 +90,10 @@ class DocumentContainerIntegrationTests(TestCase):
             result = Container().render_work_document_use_case().execute(
                 RenderWorkDocumentRequest(
                     work_id=str(work.pk),
-                    options=WorkDocumentRenderOptions(
+                    render_target=RenderTarget(
                         renderer_type='html',
+                    ),
+                    print_overrides=WorkDocumentPrintOverrides(
                         append_answers=True,
                     ),
                     presentation_profile_id=str(print_settings.pk),
@@ -216,8 +219,10 @@ class DocumentContainerIntegrationTests(TestCase):
             result = Container().render_remedial_sheet_document_use_case().execute(
                 RenderRemedialSheetDocumentRequest(
                     variant_id=str(remedial_variant.pk),
-                    options=RemedialSheetDocumentRenderOptions(
+                    render_target=RenderTarget(
                         renderer_type='html',
+                    ),
+                    build_options=RemedialSheetBuildOptions(
                         answer_type='with_short_solutions',
                     ),
                 )
@@ -327,8 +332,10 @@ class DocumentContainerIntegrationTests(TestCase):
                 .execute(
                     RenderRemedialSheetBatchDocumentRequest(
                         work_id=str(remedial_work.pk),
-                        options=RemedialSheetDocumentRenderOptions(
+                        render_target=RenderTarget(
                             renderer_type='html',
+                        ),
+                        build_options=RemedialSheetBuildOptions(
                             answer_type='with_short_solutions',
                         ),
                     )

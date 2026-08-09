@@ -15,8 +15,9 @@ from core_logic.use_cases.render_remedial_sheet_document import (
 )
 from core_logic.use_cases.render_work_document import RenderWorkDocumentRequest
 from core_logic.value_objects.document_render_options import (
-    RemedialSheetDocumentRenderOptions,
-    WorkDocumentRenderOptions,
+    RemedialSheetBuildOptions,
+    RenderTarget,
+    WorkDocumentPrintOverrides,
 )
 
 
@@ -30,9 +31,11 @@ def render_work_document_with_container(
     return render_container.render_work_document_use_case().execute(
         RenderWorkDocumentRequest(
             work_id=str(work_id),
-            options=WorkDocumentRenderOptions(
+            render_target=RenderTarget(
                 renderer_type=renderer_type,
-                pdf_format=page_format,
+                page_format=page_format,
+            ),
+            print_overrides=WorkDocumentPrintOverrides(
                 append_answers=append_answers,
             ),
         )
@@ -49,9 +52,11 @@ def render_remedial_sheet_document_with_container(
     return render_container.render_remedial_sheet_document_use_case().execute(
         RenderRemedialSheetDocumentRequest(
             variant_id=str(variant_id),
-            options=RemedialSheetDocumentRenderOptions(
+            render_target=RenderTarget(
                 renderer_type=renderer_type,
-                pdf_format=page_format,
+                page_format=page_format,
+            ),
+            build_options=RemedialSheetBuildOptions(
                 answer_type=answer_type,
             ),
         )

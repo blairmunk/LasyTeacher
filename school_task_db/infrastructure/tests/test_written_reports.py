@@ -196,6 +196,28 @@ class WrittenReportRepositoryTests(TestCase):
         self.assertEqual(source.event.name, captured_event_name)
         self.assertEqual(source.event.work_name, captured_work_name)
         self.assertEqual(source.event.planned_date, captured_date)
+
+    def test_event_report_keeps_captured_student_identity(self):
+        captured_student_id = self.attempt.student_id_snapshot
+        captured_student_name = self.attempt.student_name_snapshot
+        self.student.last_name = 'Переименованный'
+        self.student.save(update_fields=['last_name'])
+
+        source = DjangoEventPerformanceReportRepository().get_event_report_source(
+            str(self.event.pk),
+        )
+
+        graded = next(
+            participant
+            for participant in source.participants
+            if participant.score is not None
+        )
+        self.assertEqual(graded.student_id, captured_student_id)
+        self.assertEqual(graded.student_name, captured_student_name)
+        self.assertEqual(
+            source.task_scores[0].student_name,
+            captured_student_name,
+        )
         self.assertEqual(source.task_scores[0].order, 1)
         self.assertEqual(source.task_scores[0].points, 0)
         self.assertEqual(source.task_scores[0].comment, 'Ошибка в формуле')

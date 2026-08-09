@@ -56,10 +56,19 @@ class DjangoEventPerformanceReportRepository(
         participant_facts = []
         for participation in participations:
             attempt = attempts.get(participation.pk)
-            student_name = participation.student.get_full_name()
+            student_id = (
+                attempt.student_id_snapshot
+                if attempt
+                else str(participation.student_id)
+            )
+            student_name = (
+                attempt.student_name_snapshot
+                if attempt
+                else participation.student.get_full_name()
+            )
             participant_facts.append(
                 EventReportParticipantFact(
-                    student_id=str(participation.student_id),
+                    student_id=student_id,
                     student_name=student_name,
                     status=participation.status,
                     score=attempt.score if attempt else None,
@@ -91,7 +100,7 @@ class DjangoEventPerformanceReportRepository(
                         order=task_result.order_snapshot,
                         topic_name=task_snapshot.topic_name,
                         subtopic_name=task_snapshot.subtopic_name,
-                        student_id=str(participation.student_id),
+                        student_id=student_id,
                         student_name=student_name,
                         points=self._number(task_result.points),
                         max_points=self._number(

@@ -26,7 +26,7 @@ from core_logic.entities.event import (
 )
 from core_logic.interfaces.event_repo import CreateEventParams, IEventRepository
 from events.models import Event, EventParticipation, Mark
-from infrastructure.services.attempt_snapshot_queries import (
+from infrastructure.services.django_attempt_snapshot_queries import (
     latest_attempts_by_participation,
 )
 from students.models import StudentGroup

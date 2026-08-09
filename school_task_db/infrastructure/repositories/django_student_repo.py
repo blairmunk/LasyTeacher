@@ -36,7 +36,7 @@ from core_logic.entities.student import (
 )
 from core_logic.interfaces.student_repo import IStudentRepository
 from events.models import EventParticipation
-from infrastructure.services.attempt_snapshot_queries import (
+from infrastructure.services.django_attempt_snapshot_queries import (
     latest_attempts_by_participation,
 )
 from infrastructure.services.captured_task_result_queries import (

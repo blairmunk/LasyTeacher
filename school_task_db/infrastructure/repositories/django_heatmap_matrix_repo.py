@@ -17,7 +17,7 @@ from infrastructure.repositories.django_heatmap_support import (
     latest_attempt_task_results,
     report_student_ref,
 )
-from infrastructure.services.attempt_snapshot_queries import (
+from infrastructure.services.django_attempt_snapshot_queries import (
     latest_attempts_by_participation,
 )
 from students.models import Student

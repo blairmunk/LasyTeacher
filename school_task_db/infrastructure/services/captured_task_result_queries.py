@@ -6,7 +6,7 @@ from typing import Any
 from core_logic.value_objects.task_content_snapshot import (
     task_content_snapshot_from_mapping,
 )
-from infrastructure.services.attempt_snapshot_queries import (
+from infrastructure.services.django_attempt_snapshot_queries import (
     latest_attempts_by_participation,
 )
 

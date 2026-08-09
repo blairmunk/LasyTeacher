@@ -22,7 +22,7 @@ from core_logic.interfaces.journal_repo import IJournalRepository
 from core_logic.services.event_service import EventService
 from curriculum.models import Course
 from events.models import Event, EventParticipation
-from infrastructure.services.attempt_snapshot_queries import (
+from infrastructure.services.django_attempt_snapshot_queries import (
     latest_attempts_by_participation,
 )
 from students.models import StudentGroup

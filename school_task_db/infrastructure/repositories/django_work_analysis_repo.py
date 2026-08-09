@@ -15,7 +15,7 @@ from infrastructure.repositories.django_report_summary_support import (
     report_event_ref,
     report_work_ref,
 )
-from infrastructure.services.attempt_snapshot_queries import (
+from infrastructure.services.django_attempt_snapshot_queries import (
     latest_attempts_by_participation,
 )
 from works.models import Work

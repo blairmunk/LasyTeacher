@@ -1,24 +1,18 @@
 """Pure assembly of a personalized remedial sheet."""
 
+from decimal import Decimal, InvalidOperation
+
 from core_logic.entities.work import (
     RemedialOriginalTaskRow,
     RemedialSheetData,
     RemedialSheetSource,
 )
-from core_logic.value_objects.task_scores import resolve_task_score_record
-
-
 class RemedialSheetService:
     def build(self, source: RemedialSheetSource) -> RemedialSheetData:
         original_tasks = []
         for item in source.original_tasks:
-            score = resolve_task_score_record(
-                source.task_scores,
-                variant_task_id=item.variant_task_id,
-                task_id=item.task.pk,
-            )
-            points = score.points if score else None
-            max_points = score.max_points if score else None
+            points = item.points
+            max_points = item.max_points
             pct, status = self._score_status(points, max_points)
             original_tasks.append(RemedialOriginalTaskRow(
                 task=item.task,
@@ -42,17 +36,19 @@ class RemedialSheetService:
 
     @staticmethod
     def _score_status(points, max_points):
-        if (
-            isinstance(points, (int, float))
-            and isinstance(max_points, (int, float))
-            and max_points > 0
-        ):
-            pct = points / max_points * 100
-            if pct >= 70:
-                status = 'ok'
-            elif pct > 0:
-                status = 'partial'
-            else:
-                status = 'fail'
-            return round(pct, 1), status
-        return 0, 'unknown'
+        try:
+            points = Decimal(str(points))
+            max_points = Decimal(str(max_points))
+        except (InvalidOperation, TypeError, ValueError):
+            return 0, 'unknown'
+        if max_points <= 0:
+            return 0, 'unknown'
+
+        pct = float(points / max_points * 100)
+        if pct >= 70:
+            status = 'ok'
+        elif pct > 0:
+            status = 'partial'
+        else:
+            status = 'fail'
+        return round(pct, 1), status

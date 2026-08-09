@@ -212,7 +212,6 @@ class DjangoWorkDocumentRepository(IWorkDocumentRepository):
             )
         )
         mark_ref = None
-        task_scores = {}
         original_tasks = []
 
         if attempt:
@@ -221,24 +220,22 @@ class DjangoWorkDocumentRepository(IWorkDocumentRepository):
                 points=attempt.points,
                 max_points=attempt.max_points,
             )
-            task_scores = dict(attempt.task_scores_snapshot or {})
-            for task_result in attempt.task_results.select_related(
-                'variant_task',
-            ).order_by('order_snapshot', 'pk'):
-                variant_task = task_result.variant_task
+            for task_result in attempt.task_results.order_by(
+                'order_snapshot',
+                'pk',
+            ):
                 task = task_content_snapshot_from_mapping(
                     task_result.task_content_snapshot,
                 )
                 original_tasks.append(
                     RemedialOriginalTaskSource(
                         task=self._remedial_task_ref(task),
-                        variant_task_id=(
-                            str(variant_task.pk) if variant_task else ''
-                        ),
                         order=task_result.order_snapshot,
                         group_name=(
                             task_result.source_selection_name_snapshot
                         ),
+                        points=task_result.points,
+                        max_points=task_result.checked_max_points,
                     )
                 )
 
@@ -261,7 +258,6 @@ class DjangoWorkDocumentRepository(IWorkDocumentRepository):
             student=student_ref,
             source_work=source_work_ref,
             mark=mark_ref,
-            task_scores=task_scores,
             original_tasks=original_tasks,
             new_tasks=[
                 RemedialTrainingTaskRow(

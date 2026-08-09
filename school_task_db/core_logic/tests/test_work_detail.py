@@ -147,13 +147,11 @@ class FakeWorkRepository:
             student='student',
             source_work='source-work',
             mark=RemedialMarkRef(score=3, points=2, max_points=5),
-            task_scores={
-                'variant-task-1': {'points': 2, 'max_points': 5},
-            },
             original_tasks=[RemedialOriginalTaskSource(
                 task=RemedialTaskRef(pk='task-1', text='Задание'),
-                variant_task_id='variant-task-1',
                 order=1,
+                points=2,
+                max_points=5,
             )],
             new_tasks=[RemedialTrainingTaskRow(
                 pk='new-row-1',

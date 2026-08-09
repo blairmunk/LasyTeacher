@@ -454,9 +454,10 @@ class RemedialSheetData:
 @dataclass(frozen=True)
 class RemedialOriginalTaskSource:
     task: RemedialTaskRef
-    variant_task_id: str
     order: int
     group_name: str = ''
+    points: Any = None
+    max_points: Any = None
 
 
 @dataclass(frozen=True)
@@ -465,7 +466,6 @@ class RemedialSheetSource:
     student: Optional[VariantDetailStudentRef]
     source_work: Optional[VariantDetailRef]
     mark: Optional[RemedialMarkRef]
-    task_scores: Mapping[str, Any] = field(default_factory=dict)
     original_tasks: List[RemedialOriginalTaskSource] = field(
         default_factory=list,
     )
@@ -473,10 +473,6 @@ class RemedialSheetSource:
     content_blocks: List[RemedialContentBlockRow] = field(
         default_factory=list,
     )
-
-    def __post_init__(self):
-        object.__setattr__(self, 'task_scores', dict(self.task_scores))
-
 
 @dataclass(frozen=True)
 class OrphanVariantListData:

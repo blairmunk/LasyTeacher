@@ -1,4 +1,5 @@
 from unittest import TestCase
+from decimal import Decimal
 
 from core_logic.entities.work import (
     RemedialOriginalTaskSource,
@@ -13,21 +14,22 @@ class RemedialSheetServiceTests(TestCase):
         tasks = [
             RemedialOriginalTaskSource(
                 task=RemedialTaskRef(pk=f'task-{index}', text='Задание'),
-                variant_task_id=f'row-{index}',
                 order=index,
+                points=points,
+                max_points=max_points,
             )
-            for index in range(1, 5)
+            for index, points, max_points in (
+                (1, 7, 10),
+                (2, 2, 10),
+                (3, 0, 10),
+                (4, None, None),
+            )
         ]
         source = RemedialSheetSource(
             variant=None,
             student=None,
             source_work=None,
             mark=None,
-            task_scores={
-                'row-1': {'points': 7, 'max_points': 10},
-                'row-2': {'points': 2, 'max_points': 10},
-                'row-3': {'points': 0, 'max_points': 10},
-            },
             original_tasks=tasks,
         )
 
@@ -42,19 +44,17 @@ class RemedialSheetServiceTests(TestCase):
             [70.0, 20.0, 0.0, 0],
         )
 
-    def test_build_supports_legacy_scores_keyed_by_task(self):
+    def test_build_supports_decimal_snapshot_scores(self):
         source = RemedialSheetSource(
             variant=None,
             student=None,
             source_work=None,
             mark=None,
-            task_scores={
-                'task-1': {'points': 4, 'max_points': 5},
-            },
             original_tasks=[RemedialOriginalTaskSource(
                 task=RemedialTaskRef(pk='task-1', text='Задание'),
-                variant_task_id='row-1',
                 order=1,
+                points=Decimal('4.00'),
+                max_points=Decimal('5.00'),
             )],
         )
 

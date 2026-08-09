@@ -20,28 +20,23 @@ class DjangoTaskImportService(ITaskImportService):
         request: TaskImportPreviewRequest,
     ) -> TaskImportPreviewResult:
         try:
-            importer = TaskImporter(
+            importer, context = self._run_import(
+                data=request.data,
                 mode='update',
                 dry_run=True,
                 verbose=False,
                 create_missing=True,
-                output=lambda _message: None,
             )
-            importer.validate_mode()
-            context = importer.import_tasks_from_json(request.data)
-
-            context_stats = {}
-            if hasattr(context, 'get_stats_summary'):
-                context_stats = context.get_stats_summary()
+            summary = self._summarize_import(importer, context)
 
             return TaskImportPreviewResult(
                 preview={
-                    'total_created': getattr(importer.stats, 'created', 0),
-                    'total_updated': getattr(importer.stats, 'updated', 0),
-                    'context': context_stats,
-                    'tasks_in_context': len(getattr(context, 'imported_tasks', {})),
-                    'groups_in_context': len(getattr(context, 'imported_groups', {})),
-                    'topics_in_context': len(getattr(context, 'imported_topics', {})),
+                    'total_created': summary['created'],
+                    'total_updated': summary['updated'],
+                    'context': summary['context'],
+                    'tasks_in_context': summary['context_counts']['tasks'],
+                    'groups_in_context': summary['context_counts']['groups'],
+                    'topics_in_context': summary['context_counts']['topics'],
                 },
             )
         except Exception as exc:
@@ -58,15 +53,13 @@ class DjangoTaskImportService(ITaskImportService):
 
         start_time = time.time()
         try:
-            importer = TaskImporter(
+            importer, context = self._run_import(
+                data=request.data,
                 mode=request.mode,
                 dry_run=request.dry_run,
                 verbose=True,
                 create_missing=request.create_missing,
-                output=lambda _message: None,
             )
-            importer.validate_mode()
-            context = importer.import_tasks_from_json(request.data)
 
             duration_ms = int((time.time() - start_time) * 1000)
             return self._complete_log(
@@ -88,53 +81,68 @@ class DjangoTaskImportService(ITaskImportService):
                 error=str(exc),
             )
 
-    def _complete_log(self, log, importer, context, duration_ms):
-        stats_created = getattr(importer.stats, 'created', 0)
-        stats_updated = getattr(importer.stats, 'updated', 0)
-        stats_skipped = getattr(importer.stats, 'skipped', 0)
-        stats_errors_list = getattr(importer.stats, 'errors', [])
+    @staticmethod
+    def _run_import(*, data, mode, dry_run, verbose, create_missing):
+        importer = TaskImporter(
+            mode=mode,
+            dry_run=dry_run,
+            verbose=verbose,
+            create_missing=create_missing,
+            output=lambda _message: None,
+        )
+        importer.validate_mode()
+        context = importer.import_tasks_from_json(data)
+        return importer, context
 
-        if isinstance(stats_errors_list, list):
-            errors_count = len(stats_errors_list)
-            error_messages = [str(error) for error in stats_errors_list[:50]]
-        elif isinstance(stats_errors_list, int):
-            errors_count = stats_errors_list
+    @staticmethod
+    def _summarize_import(importer, context):
+        raw_errors = getattr(importer.stats, 'errors', [])
+        if isinstance(raw_errors, list):
+            errors_count = len(raw_errors)
+            error_messages = [str(error) for error in raw_errors[:50]]
+        elif isinstance(raw_errors, int):
+            errors_count = raw_errors
             error_messages = []
         else:
             errors_count = 0
             error_messages = []
 
-        tasks_in_context = len(getattr(context, 'imported_tasks', {}))
-        groups_in_context = len(getattr(context, 'imported_groups', {}))
-        topics_in_context = len(getattr(context, 'imported_topics', {}))
-
-        context_stats = {}
-        if hasattr(context, 'get_stats_summary'):
-            context_stats = context.get_stats_summary()
-
-        log.tasks_created = stats_created
-        log.tasks_updated = stats_updated
-        log.tasks_skipped = stats_skipped
-        log.groups_created = groups_in_context
-        log.topics_created = topics_in_context
-        log.errors_count = errors_count
-        log.details = {
-            'importer_stats': {
-                'created': stats_created,
-                'updated': stats_updated,
-                'skipped': stats_skipped,
-            },
-            'context_stats': context_stats,
+        return {
+            'created': getattr(importer.stats, 'created', 0),
+            'updated': getattr(importer.stats, 'updated', 0),
+            'skipped': getattr(importer.stats, 'skipped', 0),
+            'errors': errors_count,
+            'error_messages': error_messages,
+            'context': context.get_stats_summary(),
             'context_counts': {
-                'tasks': tasks_in_context,
-                'groups': groups_in_context,
-                'topics': topics_in_context,
+                'tasks': len(context.imported_tasks),
+                'groups': len(context.imported_groups),
+                'topics': len(context.imported_topics),
             },
         }
-        log.error_messages = error_messages
+
+    def _complete_log(self, log, importer, context, duration_ms):
+        summary = self._summarize_import(importer, context)
+
+        log.tasks_created = summary['created']
+        log.tasks_updated = summary['updated']
+        log.tasks_skipped = summary['skipped']
+        log.groups_created = summary['context_counts']['groups']
+        log.topics_created = summary['context_counts']['topics']
+        log.errors_count = summary['errors']
+        log.details = {
+            'importer_stats': {
+                'created': summary['created'],
+                'updated': summary['updated'],
+                'skipped': summary['skipped'],
+            },
+            'context_stats': summary['context'],
+            'context_counts': summary['context_counts'],
+        }
+        log.error_messages = summary['error_messages']
         log.duration_ms = duration_ms
         log.status = (
-            ImportLog.Status.SUCCESS if errors_count == 0
+            ImportLog.Status.SUCCESS if summary['errors'] == 0
             else ImportLog.Status.PARTIAL
         )
         log.save()
@@ -145,16 +153,12 @@ class DjangoTaskImportService(ITaskImportService):
             log_id=str(log.id),
             duration_ms=duration_ms,
             stats={
-                'created': stats_created,
-                'updated': stats_updated,
-                'skipped': stats_skipped,
-                'errors': errors_count,
-                'context': context_stats,
-                'context_counts': {
-                    'tasks': tasks_in_context,
-                    'groups': groups_in_context,
-                    'topics': topics_in_context,
-                },
+                'created': summary['created'],
+                'updated': summary['updated'],
+                'skipped': summary['skipped'],
+                'errors': summary['errors'],
+                'context': summary['context'],
+                'context_counts': summary['context_counts'],
             },
             message=self._build_summary_message(log),
         )

@@ -7,6 +7,10 @@ from core_logic.services.remedial_service import RemedialService
 from core_logic.services.review_service import ReviewService
 from core_logic.services.work_service import WorkService
 from core_logic.use_cases.add_event_participants import AddEventParticipantsUseCase
+from core_logic.use_cases.analyze_task_images import (
+    AnalyzeTaskImagesUseCase,
+    ApplyTaskImagePositionSuggestionsUseCase,
+)
 from core_logic.use_cases.activate_academic_year import (
     ActivateAcademicYearUseCase,
 )
@@ -345,6 +349,9 @@ from infrastructure.repositories.django_student_performance_repo import (
     DjangoStudentPerformanceRepository,
 )
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
+from infrastructure.repositories.django_task_image_audit_repo import (
+    DjangoTaskImageAuditRepository,
+)
 from infrastructure.repositories.django_task_db_health_repo import (
     DjangoTaskDBHealthRepository,
 )
@@ -409,6 +416,7 @@ class Container:
         self._attempt_snapshot_repo = None
         self._student_repo = None
         self._task_repo = None
+        self._task_image_audit_repo = None
         self._work_repo = None
         self._work_read_repo = None
         self._variant_read_repo = None
@@ -479,6 +487,12 @@ class Container:
         if self._task_repo is None:
             self._task_repo = DjangoTaskRepository()
         return self._task_repo
+
+    @property
+    def task_image_audit_repo(self):
+        if self._task_image_audit_repo is None:
+            self._task_image_audit_repo = DjangoTaskImageAuditRepository()
+        return self._task_image_audit_repo
 
     @property
     def work_repo(self):
@@ -1282,6 +1296,16 @@ class Container:
     def get_task_db_health_use_case(self):
         return GetTaskDBHealthUseCase(
             report_repo=self.task_db_health_repo,
+        )
+
+    def analyze_task_images_use_case(self):
+        return AnalyzeTaskImagesUseCase(
+            image_repo=self.task_image_audit_repo,
+        )
+
+    def apply_task_image_position_suggestions_use_case(self):
+        return ApplyTaskImagePositionSuggestionsUseCase(
+            image_repo=self.task_image_audit_repo,
         )
 
     def add_event_participants_use_case(self):

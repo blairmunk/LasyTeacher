@@ -5,6 +5,9 @@ from core.models import BaseModel
 from core_logic.value_objects.task_validation import (
     validate_task_topic_selection,
 )
+from core_logic.value_objects.task_image_position import (
+    TASK_IMAGE_POSITION_CHOICES,
+)
 
 
 def task_image_upload_path(instance, filename):
@@ -161,12 +164,7 @@ class Task(BaseModel):
 
 class TaskImage(BaseModel):
     """Изображение для задания"""
-    POSITION_CHOICES = [
-        ('right_40', 'Справа 40% (обтекание текстом 60%)'),
-        ('right_20', 'Справа 20% (обтекание текстом 80%)'),
-        ('bottom_100', 'Снизу по центру 100% ширины'),
-        ('bottom_70', 'Снизу по центру 70% ширины'),
-    ]
+    POSITION_CHOICES = TASK_IMAGE_POSITION_CHOICES
     
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='images', verbose_name='Задание')
     image = models.ImageField('Изображение', upload_to=task_image_upload_path)

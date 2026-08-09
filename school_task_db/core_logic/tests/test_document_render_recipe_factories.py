@@ -82,6 +82,20 @@ class DocumentRenderRecipeFactoriesTests(TestCase):
         )
         self.assertEqual(recipe.presentation, presentation)
 
+    def test_work_recipe_ignores_profile_for_another_document_type(self):
+        presentation_profile = DocumentPresentationProfile(
+            name='Профиль РнО',
+            document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
+            presentation=DocumentPresentation(custom_css='.foreign {}'),
+        )
+
+        recipe = build_work_document_recipe_for_render(
+            WorkDocumentRenderOptions(renderer_type='html'),
+            presentation_profile=presentation_profile,
+        )
+
+        self.assertFalse(recipe.presentation.has_customization)
+
     def test_build_remedial_sheet_document_recipe_for_render(self):
         recipe = build_remedial_sheet_document_recipe_for_render(
             RemedialSheetDocumentRenderOptions(

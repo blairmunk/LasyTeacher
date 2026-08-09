@@ -252,7 +252,10 @@ def _recipe_with_profile_presentation(
     default_recipe_builder: Callable[[], DocumentRecipe],
 ) -> DocumentRecipe:
     recipe = default_recipe_builder()
-    if presentation_profile is None:
+    if (
+        presentation_profile is None
+        or presentation_profile.document_type != recipe.document_type
+    ):
         return recipe
     return DocumentRecipe(
         document_type=recipe.document_type,

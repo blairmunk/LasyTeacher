@@ -68,10 +68,22 @@ class TaskImporter(BaseImporter):
         self._write(f"  📚 Тем: {len(topics_data)}")
         
         # Анализ UUID конфликтов
-        self._analyze_uuid_conflicts(json_data)
+        uuid_counts = self._analyze_uuid_conflicts(json_data)
         
         # Анализ зависимостей
         self._analyze_dependencies(json_data)
+
+        self.context.preview_summary = {
+            'file_counts': {
+                'tasks': len(tasks_data),
+                'groups': len(groups_data),
+                'topics': len(topics_data),
+                'sources': len(json_data.get('sources', [])),
+                'images': len(json_data.get('task_images', [])),
+            },
+            'task_uuid_counts': uuid_counts['tasks'],
+            'group_uuid_counts': uuid_counts['groups'],
+        }
         
         return self.context
     
@@ -681,6 +693,17 @@ class TaskImporter(BaseImporter):
         
         if task_conflicts['invalid'] or group_conflicts['invalid']:
             self._write(f"  🚨 Некорректные UUID будут пропущены")
+
+        return {
+            'tasks': {
+                key: len(values)
+                for key, values in task_conflicts.items()
+            },
+            'groups': {
+                key: len(values)
+                for key, values in group_conflicts.items()
+            },
+        }
 
     def _analyze_dependencies(self, json_data: Dict[str, Any]):
         """Анализ зависимостей"""

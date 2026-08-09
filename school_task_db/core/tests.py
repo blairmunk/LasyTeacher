@@ -213,8 +213,9 @@ class CoreViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(payload['validation']['is_valid'])
-        self.assertEqual(payload['preview']['total_created'], 0)
-        self.assertEqual(payload['preview']['tasks_in_context'], 0)
+        self.assertEqual(payload['preview']['file_counts']['tasks'], 1)
+        self.assertEqual(payload['preview']['task_uuid_counts']['new'], 1)
+        self.assertEqual(payload['preview']['task_uuid_counts']['existing'], 0)
         self.assertFalse(Task.objects.filter(text='Задача на силу').exists())
 
     def test_execute_import_json_ajax_uses_clean_import_use_case(self):
@@ -343,7 +344,7 @@ class CoreViewsTests(TestCase):
             ],
         }
 
-        TaskImporter(
+        context = TaskImporter(
             mode='update',
             dry_run=True,
             create_missing=True,
@@ -351,6 +352,9 @@ class CoreViewsTests(TestCase):
         ).import_tasks_from_json(payload)
 
         self.assertIn('🔍 ПРЕДВАРИТЕЛЬНЫЙ ПРОСМОТР (--dry-run)', output)
+        self.assertEqual(context.preview_summary['file_counts']['tasks'], 1)
+        self.assertEqual(context.preview_summary['file_counts']['groups'], 1)
+        self.assertEqual(context.preview_summary['task_uuid_counts']['new'], 1)
 
     def test_import_tasks_command_uses_clean_import_service(self):
         payload = {

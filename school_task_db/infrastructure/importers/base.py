@@ -141,6 +141,7 @@ class ImportContext:
         self.imported_groups = {}      # uuid -> AnalogGroup  
         self.imported_tasks = {}       # uuid -> Task
         self.created_dependencies = {} # тип -> список созданных объектов
+        self.preview_summary = {}
     
     def add_topic(self, uuid_str: str, topic):
         self.imported_topics[uuid_str] = topic

@@ -30,14 +30,7 @@ class DjangoTaskImportService(ITaskImportService):
             summary = self._summarize_import(importer, context)
 
             return TaskImportPreviewResult(
-                preview={
-                    'total_created': summary['created'],
-                    'total_updated': summary['updated'],
-                    'context': summary['context'],
-                    'tasks_in_context': summary['context_counts']['tasks'],
-                    'groups_in_context': summary['context_counts']['groups'],
-                    'topics_in_context': summary['context_counts']['topics'],
-                },
+                preview=summary['preview'],
             )
         except Exception as exc:
             return TaskImportPreviewResult(warning=f'Ошибка dry-run: {str(exc)}')
@@ -114,6 +107,7 @@ class DjangoTaskImportService(ITaskImportService):
                 'groups': len(context.imported_groups),
                 'topics': len(context.imported_topics),
             },
+            'preview': context.preview_summary,
         }
 
     def _complete_log(self, log, importer, context, duration_ms):
@@ -133,6 +127,7 @@ class DjangoTaskImportService(ITaskImportService):
             },
             'context_stats': summary['context'],
             'context_counts': summary['context_counts'],
+            'preview': summary['preview'],
         }
         log.error_messages = summary['error_messages']
         log.duration_ms = duration_ms
@@ -154,6 +149,7 @@ class DjangoTaskImportService(ITaskImportService):
                 'errors': summary['errors'],
                 'context': summary['context'],
                 'context_counts': summary['context_counts'],
+                'preview': summary['preview'],
             },
             message=self._build_summary_message(log),
         )
@@ -166,16 +162,37 @@ class DjangoTaskImportService(ITaskImportService):
             f"{ImportLogService.file_size_human(log.file_size)})",
             f"Режим: {log.get_mode_display()}",
             f"Время: {ImportLogService.duration_human(log.duration_ms)}",
-            "",
-            "📊 Результаты:",
-            f"  Создано: {log.tasks_created}",
-            f"  Обновлено: {log.tasks_updated}",
-            f"  Пропущено: {log.tasks_skipped}",
-            "",
-            "📦 В контексте:",
-            f"  Групп аналогов: {log.groups_created}",
-            f"  Тем: {log.topics_created}",
         ]
+        if log.dry_run:
+            preview = (log.details or {}).get('preview', {})
+            file_counts = preview.get('file_counts', {})
+            task_counts = preview.get('task_uuid_counts', {})
+            lines.extend([
+                '',
+                '📦 В файле:',
+                f"  Заданий: {file_counts.get('tasks', 0)}",
+                f"  Групп аналогов: {file_counts.get('groups', 0)}",
+                f"  Тем: {file_counts.get('topics', 0)}",
+                f"  Источников: {file_counts.get('sources', 0)}",
+                f"  Изображений: {file_counts.get('images', 0)}",
+                '',
+                '🔎 UUID заданий:',
+                f"  Новых: {task_counts.get('new', 0)}",
+                f"  Уже существуют: {task_counts.get('existing', 0)}",
+                f"  Некорректных: {task_counts.get('invalid', 0)}",
+            ])
+        else:
+            lines.extend([
+                '',
+                '📊 Результаты:',
+                f"  Создано: {log.tasks_created}",
+                f"  Обновлено: {log.tasks_updated}",
+                f"  Пропущено: {log.tasks_skipped}",
+                '',
+                '📦 В контексте:',
+                f"  Групп аналогов: {log.groups_created}",
+                f"  Тем: {log.topics_created}",
+            ])
         if log.errors_count > 0:
             lines.append(f"\n❌ Ошибок: {log.errors_count}")
             for error in (log.error_messages or [])[:5]:

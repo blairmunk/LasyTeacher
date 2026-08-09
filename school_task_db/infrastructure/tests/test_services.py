@@ -183,8 +183,9 @@ class DjangoTaskImportServiceTests(TestCase):
         result = DjangoTaskImportService().preview_import(request)
 
         self.assertTrue(result.success)
-        self.assertEqual(result.preview['total_created'], 0)
-        self.assertEqual(result.preview['tasks_in_context'], 0)
+        self.assertEqual(result.preview['file_counts']['tasks'], 1)
+        self.assertEqual(result.preview['task_uuid_counts']['new'], 1)
+        self.assertEqual(result.preview['task_uuid_counts']['existing'], 0)
         self.assertFalse(Task.objects.filter(text='Задача на силу').exists())
 
     def test_execute_import_creates_log_and_tasks(self):

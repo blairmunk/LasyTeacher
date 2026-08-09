@@ -427,21 +427,24 @@ function showImportResult(data, ok) {
 }
 
 function buildPreviewTable(preview) {
+    const fileCounts = preview.file_counts || {};
+    const taskCounts = preview.task_uuid_counts || {};
+    const groupCounts = preview.group_uuid_counts || {};
     let html = '<table class="table table-sm"><thead><tr><th>Показатель</th><th>Значение</th></tr></thead><tbody>';
-    html += `<tr><td>Всего создано (dry-run)</td><td class="text-success fw-bold">${preview.total_created || 0}</td></tr>`;
-    html += `<tr><td>Всего обновлено (dry-run)</td><td class="text-primary fw-bold">${preview.total_updated || 0}</td></tr>`;
-    html += `<tr><td>Заданий в контексте</td><td>${preview.tasks_in_context || 0}</td></tr>`;
-    html += `<tr><td>Групп в контексте</td><td>${preview.groups_in_context || 0}</td></tr>`;
-    html += `<tr><td>Тем в контексте</td><td>${preview.topics_in_context || 0}</td></tr>`;
-    
-    if (preview.context) {
-        for (const [key, value] of Object.entries(preview.context)) {
-            if (value > 0) {
-                html += `<tr><td>${key}</td><td>${value}</td></tr>`;
-            }
-        }
-    }
-    
+    html += '<tr class="table-light"><th colspan="2">В файле</th></tr>';
+    html += `<tr><td>Заданий</td><td>${fileCounts.tasks || 0}</td></tr>`;
+    html += `<tr><td>Групп аналогов</td><td>${fileCounts.groups || 0}</td></tr>`;
+    html += `<tr><td>Тем</td><td>${fileCounts.topics || 0}</td></tr>`;
+    html += `<tr><td>Источников</td><td>${fileCounts.sources || 0}</td></tr>`;
+    html += `<tr><td>Изображений</td><td>${fileCounts.images || 0}</td></tr>`;
+    html += '<tr class="table-light"><th colspan="2">UUID заданий</th></tr>';
+    html += `<tr><td>Новых</td><td class="text-success fw-bold">${taskCounts.new || 0}</td></tr>`;
+    html += `<tr><td>Уже существуют</td><td class="text-primary fw-bold">${taskCounts.existing || 0}</td></tr>`;
+    html += `<tr><td>Некорректных</td><td class="text-danger fw-bold">${taskCounts.invalid || 0}</td></tr>`;
+    html += '<tr class="table-light"><th colspan="2">UUID групп</th></tr>';
+    html += `<tr><td>Новых</td><td>${groupCounts.new || 0}</td></tr>`;
+    html += `<tr><td>Уже существуют</td><td>${groupCounts.existing || 0}</td></tr>`;
+    html += `<tr><td>Некорректных</td><td>${groupCounts.invalid || 0}</td></tr>`;
     html += '</tbody></table>';
     return html;
 }

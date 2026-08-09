@@ -2,7 +2,6 @@
 
 from django.contrib import messages
 from django.http import Http404, HttpResponse
-from django.urls import reverse
 from django.shortcuts import redirect, render
 from django.views import View
 from django.views.generic import TemplateView
@@ -314,7 +313,7 @@ class HeatmapView(View):
             ),
         )
         matrix_context = (
-            container.report_form_adapter.heatmap_topic_matrix_context(
+            container.heatmap_presenter.heatmap_topic_matrix_context(
                 matrix,
                 transpose=transpose,
                 group_id=str(group.pk) if group else '',
@@ -328,7 +327,7 @@ class HeatmapView(View):
             'selected_section': section,
             'is_transposed': transpose,
             'toggle_url': (
-                container.report_form_adapter.heatmap_toggle_url(request.GET)
+                container.heatmap_presenter.heatmap_toggle_url(request.GET)
             ),
             **matrix_context,
             'total_students': len(students),
@@ -378,7 +377,7 @@ class HeatmapCourseView(View):
             ),
         )
         matrix_context = (
-            container.report_form_adapter.heatmap_topic_matrix_context(
+            container.heatmap_presenter.heatmap_topic_matrix_context(
                 matrix,
                 transpose=transpose,
                 group_id=str(group.pk) if group else '',
@@ -392,7 +391,7 @@ class HeatmapCourseView(View):
             ),
         )
         timeline_json = (
-            container.report_form_adapter.heatmap_course_timeline_json(
+            container.heatmap_presenter.heatmap_course_timeline_json(
                 timeline,
             )
         )
@@ -402,7 +401,7 @@ class HeatmapCourseView(View):
             'groups': course_groups,
             'selected_group': group,
             'is_transposed': transpose,
-            'toggle_url': container.report_form_adapter.heatmap_toggle_url(
+            'toggle_url': container.heatmap_presenter.heatmap_toggle_url(
                 request.GET,
                 path=request.path,
             ),
@@ -441,91 +440,25 @@ class HeatmapDrilldownView(View):
                 topic_id=topic_pk,
             ),
         )
-        columns = matrix.columns
-        rows = matrix.rows
-        col_averages = matrix.col_averages
-        group_param = f'?group={group.pk}' if group else ''
-        group_suffix = f'&group={group.pk}' if group else ''
-
-        if not transpose:
-            grid_row_header = 'Ученик'
-            grid_rows = []
-            for row in rows:
-                cells_with_urls = []
-                for i, cell in enumerate(row['cells']):
-                    url = None
-                    if cell['pct'] is not None:
-                        url = (reverse('reports:heatmap-student',
-                                       args=[topic.pk, row['student'].pk])
-                               + f'?subtopic={columns[i].pk}{group_suffix}')
-                    cells_with_urls.append({**cell, 'url': url})
-
-                student_url = (reverse('reports:heatmap-student',
-                                       args=[topic.pk, row['student'].pk])
-                               + group_param)
-                grid_rows.append({
-                    'label': row['student'].short_name,
-                    'url': student_url,
-                    'cells': cells_with_urls,
-                    'avg': row['avg'],
-                    'avg_css': row['avg_css'],
-                })
-
-            grid_col_headers = [{
-                'label': sub.name,
-                'title': sub.name,
-                'url': reverse('reports:heatmap-subtopic', args=[sub.pk]) + group_param,
-            } for sub in columns]
-            grid_col_averages = col_averages
-        else:
-            grid_row_header = 'Подтема'
-            grid_rows = []
-            for i, sub in enumerate(columns):
-                cells_with_urls = []
-                for j in range(len(rows)):
-                    cell = rows[j]['cells'][i]
-                    url = None
-                    if cell['pct'] is not None:
-                        url = (reverse('reports:heatmap-student',
-                                       args=[topic.pk, rows[j]['student'].pk])
-                               + f'?subtopic={sub.pk}{group_suffix}')
-                    cells_with_urls.append({**cell, 'url': url})
-
-                grid_rows.append({
-                    'label': sub.name,
-                    'url': reverse('reports:heatmap-subtopic', args=[sub.pk]) + group_param,
-                    'cells': cells_with_urls,
-                    'avg': col_averages[i]['pct'],
-                    'avg_css': col_averages[i]['css'],
-                })
-
-            grid_col_headers = [{
-                'label': row['student'].short_name,
-                'title': row['student'].full_name,
-                'url': (reverse('reports:heatmap-student',
-                                args=[topic.pk, row['student'].pk]) + group_param),
-            } for row in rows]
-            grid_col_averages = [{'pct': row['avg'], 'css': row['avg_css']} for row in rows]
-
-        toggle_params = request.GET.copy()
-        if transpose:
-            toggle_params.pop('transpose', None)
-        else:
-            toggle_params['transpose'] = '1'
-        toggle_url = f'{request.path}?{toggle_params.urlencode()}'
+        matrix_context = (
+            container.heatmap_presenter.heatmap_subtopic_matrix_context(
+                matrix,
+                topic_id=topic.pk,
+                transpose=transpose,
+                group_id=str(group.pk) if group else '',
+            )
+        )
 
         return render(request, 'reports/heatmap_drilldown.html', {
             'topic': topic,
             'groups': groups,
             'selected_group': group,
-            'group_param': group_param,
             'is_transposed': transpose,
-            'toggle_url': toggle_url,
-            'grid_row_header': grid_row_header,
-            'grid_rows': grid_rows,
-            'grid_col_headers': grid_col_headers,
-            'grid_col_averages': grid_col_averages,
-            'has_data': bool(rows and columns),
+            'toggle_url': container.heatmap_presenter.heatmap_toggle_url(
+                request.GET,
+                path=request.path,
+            ),
+            **matrix_context,
             'active_report': overview.active_report,
             'active_course_pk': overview.active_course_pk,
             'courses': overview.courses,
@@ -537,7 +470,7 @@ class HeatmapStudentView(View):
 
     def get(self, request, topic_pk, student_pk):
         group_params = (
-            container.report_form_adapter.heatmap_group_url_params_from_query(
+            container.heatmap_presenter.heatmap_group_url_params_from_query(
                 request.GET,
             )
         )
@@ -573,36 +506,18 @@ class HeatmapSubtopicView(View):
                 subtopic_id=subtopic_pk,
             ),
         )
-        group_param = (
-            f'?group={detail.selected_group.pk}'
-            if detail.selected_group
-            else ''
+        student_rows_context = (
+            container.heatmap_presenter.heatmap_subtopic_student_rows(
+                detail,
+            )
         )
-        group_suffix = (
-            f'&group={detail.selected_group.pk}'
-            if detail.selected_group
-            else ''
-        )
-        student_rows = []
-        for row in detail.student_rows:
-            url = None
-            if row['pct'] is not None:
-                url = (
-                    reverse(
-                        'reports:heatmap-student',
-                        args=[detail.topic.pk, row['student'].pk],
-                    )
-                    + f'?subtopic={detail.subtopic.pk}{group_suffix}'
-                )
-            student_rows.append({**row, 'url': url})
 
         return render(request, 'reports/heatmap_subtopic.html', {
             'subtopic': detail.subtopic,
             'topic': detail.topic,
             'groups': detail.groups,
             'selected_group': detail.selected_group,
-            'group_param': group_param,
-            'student_rows': student_rows,
+            **student_rows_context,
             'task_rows': detail.task_rows,
             'overall_pct': detail.overall_pct,
             'overall_css': detail.overall_css,

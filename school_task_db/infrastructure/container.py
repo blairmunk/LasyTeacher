@@ -385,6 +385,7 @@ from infrastructure.forms.student_forms import StudentFormAdapter
 from infrastructure.forms.task_group_forms import TaskGroupFormAdapter
 from infrastructure.forms.work_forms import WorkFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
+from infrastructure.presenters.heatmap import HeatmapPresenter
 
 
 class Container:
@@ -427,6 +428,7 @@ class Container:
         self._presentation_profile_form_adapter = None
         self._event_form_adapter = None
         self._report_form_adapter = None
+        self._heatmap_presenter = None
         self._review_form_adapter = None
         self._settings_form_adapter = None
         self._student_form_adapter = None
@@ -664,6 +666,12 @@ class Container:
         if self._report_form_adapter is None:
             self._report_form_adapter = ReportFormAdapter()
         return self._report_form_adapter
+
+    @property
+    def heatmap_presenter(self):
+        if self._heatmap_presenter is None:
+            self._heatmap_presenter = HeatmapPresenter()
+        return self._heatmap_presenter
 
     @property
     def review_form_adapter(self):

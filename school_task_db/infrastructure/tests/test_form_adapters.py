@@ -49,6 +49,7 @@ from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
 from infrastructure.forms.presentation_profile_forms import PresentationProfileFormAdapter
 from infrastructure.forms.event_forms import EventFormAdapter
 from infrastructure.forms.report_forms import ReportFormAdapter
+from infrastructure.presenters.heatmap import HeatmapPresenter
 from infrastructure.forms.review_forms import ReviewFormAdapter
 from infrastructure.forms.settings_forms import SettingsFormAdapter
 from infrastructure.forms.student_forms import StudentFormAdapter
@@ -658,7 +659,9 @@ class ReportFormAdapterTests(SimpleTestCase):
         adapter = ReportFormAdapter()
 
         params = adapter.heatmap_params_from_query(query)
-        group_url_params = adapter.heatmap_group_url_params_from_query(query)
+        group_url_params = (
+            HeatmapPresenter().heatmap_group_url_params_from_query(query)
+        )
         overview = adapter.heatmap_overview_request_from_query(query)
         course = adapter.heatmap_course_overview_request_from_query(
             query,
@@ -699,7 +702,7 @@ class ReportFormAdapterTests(SimpleTestCase):
         self.assertEqual(subtopic.group_id, 'g1')
 
     def test_builds_course_timeline_chart_json(self):
-        timeline_json = ReportFormAdapter().heatmap_course_timeline_json(
+        timeline_json = HeatmapPresenter().heatmap_course_timeline_json(
             SimpleNamespace(
                 dates=['2026-08-01'],
                 averages=[72.5],
@@ -734,7 +737,7 @@ class ReportFormAdapterTests(SimpleTestCase):
             }],
             col_averages=[{'pct': 80, 'css': 'good'}],
         )
-        adapter = ReportFormAdapter()
+        adapter = HeatmapPresenter()
 
         normal = adapter.heatmap_topic_matrix_context(matrix)
         transposed = adapter.heatmap_topic_matrix_context(
@@ -759,7 +762,7 @@ class ReportFormAdapterTests(SimpleTestCase):
         self.assertEqual(transposed['grid_col_averages'][0]['pct'], 80)
 
     def test_builds_heatmap_transpose_toggle_url(self):
-        adapter = ReportFormAdapter()
+        adapter = HeatmapPresenter()
 
         enabled = adapter.heatmap_toggle_url(
             QueryDict('group=g1'),
@@ -774,6 +777,101 @@ class ReportFormAdapterTests(SimpleTestCase):
             '/reports/heatmap/?group=g1&transpose=1',
         )
         self.assertEqual(disabled, '?group=g1')
+
+    def test_builds_subtopic_heatmap_context_and_cell_links(self):
+        student = SimpleNamespace(
+            pk='00000000-0000-0000-0000-000000000001',
+            short_name='И. Иванов',
+            full_name='Иванов Иван',
+        )
+        subtopic = SimpleNamespace(
+            pk='00000000-0000-0000-0000-000000000002',
+            name='Равномерное движение',
+        )
+        topic_id = '00000000-0000-0000-0000-000000000003'
+        matrix = SimpleNamespace(
+            columns=[subtopic],
+            rows=[{
+                'student': student,
+                'cells': [{'pct': 80, 'css': 'good'}],
+                'avg': 80,
+                'avg_css': 'good',
+            }],
+            col_averages=[{'pct': 80, 'css': 'good'}],
+        )
+        adapter = HeatmapPresenter()
+
+        normal = adapter.heatmap_subtopic_matrix_context(
+            matrix,
+            topic_id=topic_id,
+            group_id='00000000-0000-0000-0000-000000000004',
+        )
+        transposed = adapter.heatmap_subtopic_matrix_context(
+            matrix,
+            topic_id=topic_id,
+            transpose=True,
+        )
+
+        self.assertEqual(normal['grid_row_header'], 'Ученик')
+        self.assertIn('subtopic=', normal['grid_rows'][0]['cells'][0]['url'])
+        self.assertIn('group=', normal['grid_rows'][0]['cells'][0]['url'])
+        self.assertEqual(transposed['grid_row_header'], 'Подтема')
+        self.assertEqual(
+            transposed['grid_col_headers'][0]['title'],
+            'Иванов Иван',
+        )
+
+    def test_does_not_link_empty_heatmap_cells(self):
+        student = SimpleNamespace(
+            pk='00000000-0000-0000-0000-000000000001',
+            short_name='И. Иванов',
+            full_name='Иванов Иван',
+        )
+        subtopic = SimpleNamespace(
+            pk='00000000-0000-0000-0000-000000000002',
+            name='Равномерное движение',
+        )
+        matrix = SimpleNamespace(
+            columns=[subtopic],
+            rows=[{
+                'student': student,
+                'cells': [{'pct': None, 'css': 'no-data'}],
+                'avg': None,
+                'avg_css': 'no-data',
+            }],
+            col_averages=[{'pct': None, 'css': 'no-data'}],
+        )
+
+        context = HeatmapPresenter().heatmap_subtopic_matrix_context(
+            matrix,
+            topic_id='00000000-0000-0000-0000-000000000003',
+        )
+
+        self.assertIsNone(context['grid_rows'][0]['cells'][0]['url'])
+
+    def test_builds_subtopic_detail_student_links(self):
+        detail = SimpleNamespace(
+            topic=SimpleNamespace(
+                pk='00000000-0000-0000-0000-000000000001',
+            ),
+            subtopic=SimpleNamespace(
+                pk='00000000-0000-0000-0000-000000000002',
+            ),
+            selected_group=SimpleNamespace(
+                pk='00000000-0000-0000-0000-000000000003',
+            ),
+            student_rows=[{
+                'student': SimpleNamespace(
+                    pk='00000000-0000-0000-0000-000000000004',
+                ),
+                'pct': 60,
+            }],
+        )
+
+        context = HeatmapPresenter().heatmap_subtopic_student_rows(detail)
+
+        self.assertIn('subtopic=', context['student_rows'][0]['url'])
+        self.assertIn('group=', context['student_rows'][0]['url'])
 
     def test_builds_journal_request_from_query(self):
         request = ReportFormAdapter().journal_request_from_query(

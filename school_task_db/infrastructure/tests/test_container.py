@@ -320,6 +320,7 @@ from infrastructure.forms.report_forms import ReportFormAdapter
 from infrastructure.forms.review_forms import ReviewFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
 from infrastructure.forms.work_forms import WorkFormAdapter
+from infrastructure.presenters.heatmap import HeatmapPresenter
 from infrastructure.services.document_engine import (
     DjangoDocumentEngine,
 )
@@ -330,6 +331,12 @@ from infrastructure.services.task_import_service import DjangoTaskImportService
 
 
 class ContainerTests(SimpleTestCase):
+    def test_wires_heatmap_presenter(self):
+        container = Container()
+
+        self.assertIsInstance(container.heatmap_presenter, HeatmapPresenter)
+        self.assertIs(container.heatmap_presenter, container.heatmap_presenter)
+
     def test_wires_written_report_use_cases(self):
         container = Container()
 

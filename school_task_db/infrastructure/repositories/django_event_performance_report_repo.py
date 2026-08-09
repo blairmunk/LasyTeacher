@@ -22,12 +22,12 @@ from core_logic.services.event_report_source_service import (
 from core_logic.value_objects.attempt_status import (
     resolve_historical_participation_status,
 )
-from core_logic.value_objects.task_content_snapshot import (
-    task_content_snapshot_from_mapping,
-)
 from events.models import Event, EventParticipation
 from infrastructure.services.django_attempt_snapshot_queries import (
     latest_attempts_by_participation,
+)
+from infrastructure.services.django_captured_task_result_queries import (
+    captured_task_result_snapshot,
 )
 from reports.models import EventReportNarrativeModel
 
@@ -95,41 +95,30 @@ class DjangoEventPerformanceReportRepository(
             if attempt is None:
                 continue
             for task_result in attempt.captured_task_results:
-                try:
-                    task_snapshot = task_content_snapshot_from_mapping(
-                        task_result.task_content_snapshot,
-                    )
-                except (TypeError, ValueError):
+                captured = captured_task_result_snapshot(task_result)
+                if captured is None:
                     continue
                 captured_tasks.append(
                     EventReportCapturedTaskFact(
-                        order=task_result.order_snapshot,
-                        topic_name=task_snapshot.topic_name,
-                        subtopic_name=task_snapshot.subtopic_name,
+                        order=captured.order,
+                        topic_name=captured.task.topic_name,
+                        subtopic_name=captured.task.subtopic_name,
                         student_id=student_id,
                         student_name=student_name,
-                        points=self._number(task_result.points),
-                        max_points=self._number(
-                            task_result.checked_max_points
-                            if task_result.checked_max_points is not None
-                            else task_result.expected_max_points_snapshot
-                        ),
-                        comment=task_result.comment,
-                        source_selection_id=(
-                            task_result.source_selection_id_snapshot
-                        ),
-                        content_order=task_result.content_order_snapshot,
-                        is_assessable=(
-                            task_result.is_assessable_snapshot
-                        ),
-                        content_element=task_snapshot.content_element,
-                        requirement_element=task_snapshot.requirement_element,
+                        points=self._number(captured.points),
+                        max_points=self._number(captured.max_points),
+                        comment=captured.comment,
+                        source_selection_id=captured.source_selection_id,
+                        content_order=captured.content_order,
+                        is_assessable=captured.is_assessable,
+                        content_element=captured.task.content_element,
+                        requirement_element=captured.task.requirement_element,
                         codifier_requirements=tuple(
                             f'{item.codifier_short_name}: {item.code}'
-                            for item in task_snapshot.codifier_requirements
+                            for item in captured.task.codifier_requirements
                         ),
                         content_element_descriptions=(
-                            task_snapshot.content_element_descriptions
+                            captured.task.content_element_descriptions
                         ),
                     )
                 )

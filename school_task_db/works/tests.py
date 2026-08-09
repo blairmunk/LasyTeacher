@@ -1574,6 +1574,13 @@ class WorkDetailViewTests(TestCase):
             weight=5,
         )
         create_variant_task(
+            variant=original_variant,
+            task=new_task,
+            order=2,
+            max_points=0,
+            is_assessable=False,
+        )
+        create_variant_task(
             variant=remedial_variant,
             task=new_task,
             order=1,

@@ -12,12 +12,12 @@ from core_logic.interfaces.student_digest_repo import IStudentDigestRepository
 from core_logic.value_objects.attempt_status import (
     resolve_historical_participation_status,
 )
-from core_logic.value_objects.task_content_snapshot import (
-    task_content_snapshot_from_mapping,
-)
 from events.models import EventParticipation
 from infrastructure.services.django_attempt_snapshot_queries import (
     latest_attempts_by_participation,
+)
+from infrastructure.services.django_captured_task_result_queries import (
+    captured_task_result_snapshot,
 )
 from students.models import StudentGroup
 
@@ -93,27 +93,18 @@ class DjangoStudentDigestRepository(IStudentDigestRepository):
         task_result_facts = []
         if attempt:
             for task_result in task_results:
-                try:
-                    task_snapshot = task_content_snapshot_from_mapping(
-                        task_result.task_content_snapshot,
-                    )
-                except (TypeError, ValueError):
+                captured = captured_task_result_snapshot(task_result)
+                if captured is None:
                     continue
                 task_result_facts.append(
                     StudentDigestTaskResultFact(
-                        topic_name=task_snapshot.topic_name,
-                        subtopic_name=task_snapshot.subtopic_name,
-                        subject=task_snapshot.subject,
-                        points=self._number(task_result.points),
-                        max_points=self._number(
-                            task_result.checked_max_points
-                            if task_result.checked_max_points is not None
-                            else task_result.expected_max_points_snapshot
-                        ),
-                        comment=task_result.comment,
-                        is_assessable=(
-                            task_result.is_assessable_snapshot
-                        ),
+                        topic_name=captured.task.topic_name,
+                        subtopic_name=captured.task.subtopic_name,
+                        subject=captured.task.subject,
+                        points=self._number(captured.points),
+                        max_points=self._number(captured.max_points),
+                        comment=captured.comment,
+                        is_assessable=captured.is_assessable,
                     )
                 )
 

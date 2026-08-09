@@ -27,6 +27,9 @@ from core_logic.entities.work_document import (
     WorkDocumentTaskSource,
     WorkDocumentVariantSource,
 )
+from infrastructure.services.django_captured_task_result_queries import (
+    captured_task_result_snapshot,
+)
 from works.models import (
     Variant,
     VariantContentBlockSnapshot,
@@ -224,18 +227,16 @@ class DjangoWorkDocumentRepository(IWorkDocumentRepository):
                 'order_snapshot',
                 'pk',
             ):
-                task = task_content_snapshot_from_mapping(
-                    task_result.task_content_snapshot,
-                )
+                captured = captured_task_result_snapshot(task_result)
+                if captured is None or not captured.is_assessable:
+                    continue
                 original_tasks.append(
                     RemedialOriginalTaskSource(
-                        task=self._remedial_task_ref(task),
-                        order=task_result.order_snapshot,
-                        group_name=(
-                            task_result.source_selection_name_snapshot
-                        ),
-                        points=task_result.points,
-                        max_points=task_result.checked_max_points,
+                        task=self._remedial_task_ref(captured.task),
+                        order=captured.order,
+                        group_name=captured.source_selection_name,
+                        points=captured.points,
+                        max_points=captured.max_points,
                     )
                 )
 

@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 from django.test import TestCase
 
 from infrastructure.tests.variant_task_factory import create_variant_task
@@ -57,6 +59,10 @@ from infrastructure.services.work_document_payloads import (
     WorkHeaderPayloadBuilder,
     WorkVariantSectionPayloadBuilder,
     WorkDocumentSourceProvider,
+)
+from infrastructure.services.variant_document_content_payloads import (
+    UnsupportedVariantContentSection,
+    build_variant_section_content_payload,
 )
 from infrastructure.repositories.django_work_document_repo import (
     DjangoWorkDocumentRepository,
@@ -143,6 +149,26 @@ class DjangoWorkHeaderPayloadBuilderTests(TestCase):
         )
 
         self.assertEqual(payload['max_score'], 12)
+
+
+class VariantSectionContentPayloadTests(TestCase):
+    def test_rejects_unsupported_variant_section(self):
+        request = SimpleNamespace(
+            section=SimpleNamespace(
+                section_type=HEADER_SECTION,
+                options={},
+            ),
+        )
+
+        with self.assertRaisesRegex(
+            UnsupportedVariantContentSection,
+            HEADER_SECTION,
+        ):
+            build_variant_section_content_payload(
+                variant_id='variant-1',
+                variant_tasks=(),
+                request=request,
+            )
 
 
 class DjangoWorkVariantSectionPayloadBuilderTests(TestCase):

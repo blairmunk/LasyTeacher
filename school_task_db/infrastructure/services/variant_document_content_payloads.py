@@ -1,5 +1,13 @@
 """Renderer payloads built from an immutable variant content snapshot."""
 
+from core_logic.value_objects.document_recipes import (
+    ANSWER_KEY_SECTION,
+    ANSWERS_SECTION,
+    FULL_SOLUTIONS_SECTION,
+    SHORT_SOLUTIONS_SECTION,
+    TASK_LIST_SECTION,
+    TRAINING_TASKS_SECTION,
+)
 from core_logic.value_objects.variant_content_snapshot import (
     build_variant_content_snapshot_from_sources,
 )
@@ -19,6 +27,50 @@ from infrastructure.services.task_document_payloads import (
     build_variant_task_payload,
     format_text_payload,
 )
+
+
+ORDERED_VARIANT_CONTENT_SECTIONS = frozenset((
+    TASK_LIST_SECTION,
+    TRAINING_TASKS_SECTION,
+))
+VARIANT_TASK_COLLECTION_SECTIONS = frozenset((
+    ANSWER_KEY_SECTION,
+    ANSWERS_SECTION,
+    SHORT_SOLUTIONS_SECTION,
+    FULL_SOLUTIONS_SECTION,
+))
+
+
+class UnsupportedVariantContentSection(ValueError):
+    pass
+
+
+def build_variant_section_content_payload(
+    *,
+    variant_id,
+    variant_tasks,
+    content_blocks=(),
+    task_payload_formatter=None,
+    request,
+):
+    """Build the payload shape declared by a variant-backed section."""
+    section_type = request.section.section_type
+    if section_type in ORDERED_VARIANT_CONTENT_SECTIONS:
+        return build_variant_ordered_content_payload(
+            variant_id=variant_id,
+            variant_tasks=variant_tasks,
+            content_blocks=content_blocks,
+            options=request.section.options,
+            task_payload_formatter=task_payload_formatter,
+            request=request,
+        )
+    if section_type in VARIANT_TASK_COLLECTION_SECTIONS:
+        return build_variant_task_collection_payload(
+            variant_tasks=variant_tasks,
+            task_payload_formatter=task_payload_formatter,
+            request=request,
+        )
+    raise UnsupportedVariantContentSection(section_type)
 
 
 def build_variant_ordered_content_payload(

@@ -1,6 +1,5 @@
 """Document payload builders for remedial sheets."""
 
-from core_logic.value_objects.document_recipes import TRAINING_TASKS_SECTION
 from infrastructure.services.document_build_cache import (
     document_payload_cache,
     document_section_input_key,
@@ -9,8 +8,7 @@ from infrastructure.services.task_document_payloads import (
     build_original_task_payload,
 )
 from infrastructure.services.variant_document_content_payloads import (
-    build_variant_ordered_content_payload,
-    build_variant_task_collection_payload,
+    build_variant_section_content_payload,
 )
 
 
@@ -88,21 +86,13 @@ class RemedialVariantSectionPayloadBuilder:
             _remedial_variant_id(request),
             request.build_context,
         )
-        if request.section.section_type == TRAINING_TASKS_SECTION:
-            content_payload = build_variant_ordered_content_payload(
-                variant_id=_remedial_variant_id(request),
-                variant_tasks=sheet_data.new_tasks or (),
-                content_blocks=sheet_data.content_blocks or (),
-                options=request.section.options,
-                task_payload_formatter=self.task_payload_formatter,
-                request=request,
-            )
-        else:
-            content_payload = build_variant_task_collection_payload(
-                variant_tasks=sheet_data.new_tasks or (),
-                task_payload_formatter=self.task_payload_formatter,
-                request=request,
-            )
+        content_payload = build_variant_section_content_payload(
+            variant_id=_remedial_variant_id(request),
+            variant_tasks=sheet_data.new_tasks or (),
+            content_blocks=sheet_data.content_blocks or (),
+            task_payload_formatter=self.task_payload_formatter,
+            request=request,
+        )
         payload = {
             **dict(request.section.options),
             **content_payload,

@@ -6,7 +6,7 @@ from typing import Dict, List, Any, Optional
 from django.db import transaction
 
 from .base import BaseImporter, ImportContext
-from tasks.models import Task, Source
+from tasks.models import Task
 from task_groups.models import AnalogGroup, TaskGroup
 from curriculum.models import Topic, SubTopic
 from core_logic.value_objects.task_print_settings import (
@@ -14,6 +14,7 @@ from core_logic.value_objects.task_print_settings import (
     validate_task_specific_bank_role,
 )
 from .task_images import TaskImageImporter
+from .task_sources import TaskSourceImporter
 
 
 class TaskImporter(BaseImporter):
@@ -23,6 +24,7 @@ class TaskImporter(BaseImporter):
         super().__init__(*args, **kwargs)
         self.context = ImportContext()
         self.image_importer = TaskImageImporter(self, self.context)
+        self.source_importer = TaskSourceImporter(self)
     
     def import_tasks_from_json(self, json_data: Dict[str, Any]) -> ImportContext:
         """Основной метод импорта заданий из JSON"""
@@ -36,7 +38,7 @@ class TaskImporter(BaseImporter):
 
             # ЭТАП 0: Импорт источников
             if 'sources' in json_data:
-                self._import_sources(json_data['sources'])
+                self.source_importer.import_sources(json_data['sources'])
             
             # ЭТАП 1: Импорт групп аналогов
             if 'analog_groups' in json_data:
@@ -89,18 +91,6 @@ class TaskImporter(BaseImporter):
         
         return self.context
     
-    def _import_sources(self, sources_data: List[Dict[str, Any]]):
-        """Импорт источников"""
-        self._write("📚 Импорт источников...")
-
-        for source_data in sources_data:
-            try:
-                source = self._find_or_create_source(source_data)
-                if source:
-                    self.log_info(f"Источник: {source}")
-            except Exception as e:
-                self.log_error(f"Ошибка импорта источника: {e}", e)
-
     def _import_analog_groups(self, groups_data: List[Dict[str, Any]]):
         """Импорт групп аналогов"""
         self._write("📋 Импорт групп аналогов...")
@@ -184,71 +174,6 @@ class TaskImporter(BaseImporter):
                 task_preview = task_data.get('text', 'Unknown')[:30]
                 self.log_error(f"Ошибка импорта задания '{task_preview}': {e}", e)
     
-    def _find_or_create_source(self, source_data) -> Optional['Source']:
-        """Поиск или создание источника"""
-        if not source_data:
-            return None
-
-        # Строка — ищем по имени
-        if isinstance(source_data, str):
-            return Source.objects.filter(name=source_data).first() or \
-                   Source.objects.filter(short_name=source_data).first()
-
-        if not isinstance(source_data, dict):
-            return None
-
-        # Поиск по short_name (приоритетно)
-        if source_data.get('short_name'):
-            existing = Source.objects.filter(short_name=source_data['short_name']).first()
-            if existing:
-                self._update_source(existing, source_data)
-                return existing
-
-        # Поиск по name
-        if source_data.get('name'):
-            existing = Source.objects.filter(name=source_data['name']).first()
-            if existing:
-                self._update_source(existing, source_data)
-                return existing
-
-        # Создание нового источника
-        if self.create_missing and source_data.get('name'):
-            try:
-                source = Source.objects.create(
-                    name=source_data['name'],
-                    short_name=source_data.get('short_name', ''),
-                    source_type=source_data.get('source_type', 'other'),
-                    author=source_data.get('author', ''),
-                    year=source_data.get('year'),
-                    url=source_data.get('url', ''),
-                    isbn=source_data.get('isbn', ''),
-                    notes=source_data.get('notes', ''),
-                )
-                self.log_success(f"Создан источник: {source}")
-                return source
-            except Exception as e:
-                self.log_error(f"Ошибка создания источника: {e}", e)
-
-        return None
-
-    def _update_source(self, source, source_data):
-        if self.mode != 'update':
-            return
-        for field in (
-            'name',
-            'short_name',
-            'source_type',
-            'author',
-            'year',
-            'url',
-            'isbn',
-            'notes',
-        ):
-            if field in source_data:
-                setattr(source, field, source_data[field])
-        source.save()
-
-
     def _create_task(self, task_uuid: str, task_data: Dict[str, Any]) -> Optional[Task]:
         """Создание нового задания"""
         
@@ -264,7 +189,7 @@ class TaskImporter(BaseImporter):
             subtopic = self._find_or_create_subtopic(task_data['subtopic'], topic)
         
         # Поиск источника
-        source = self._find_or_create_source(task_data.get('source'))
+        source = self.source_importer.resolve(task_data.get('source'))
 
         # Создание задания
         task = Task.objects.create(
@@ -710,7 +635,7 @@ class TaskImporter(BaseImporter):
 
             # Обновляем новые поля
             if 'source' in task_data:
-                source = self._find_or_create_source(task_data['source'])
+                source = self.source_importer.resolve(task_data['source'])
                 if source:
                     task.source = source
             if 'source_detail' in task_data:

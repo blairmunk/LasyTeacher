@@ -5,7 +5,7 @@ from django.test import TestCase
 
 from infrastructure.importers.tasks import TaskImporter
 from task_groups.models import TaskGroup
-from tasks.models import TaskImage
+from tasks.models import Task, TaskImage
 
 
 class TaskImporterTests(TestCase):
@@ -100,6 +100,34 @@ class TaskImporterTests(TestCase):
             self.assertEqual(image.caption, 'Исходная подпись')
             with image.image.open('rb') as imported_file:
                 self.assertEqual(imported_file.read(), b'original')
+
+    def test_catalog_source_is_resolved_and_updated_for_task(self):
+        task_id = '550e8400-e29b-41d4-a716-446655440001'
+        payload = self._task_payload(
+            task_id=task_id,
+            group_id='770e8400-e29b-41d4-a716-446655440001',
+        )
+        payload['sources'] = [{
+            'name': 'Сборник задач по физике',
+            'short_name': 'Сборник-9',
+            'source_type': 'problem_book',
+            'author': 'Первый автор',
+        }]
+        payload['tasks'][0]['source'] = {
+            'name': 'Сборник задач по физике',
+            'short_name': 'Сборник-9',
+        }
+
+        self._import(payload)
+
+        task = Task.objects.select_related('source').get(pk=task_id)
+        self.assertEqual(task.source.short_name, 'Сборник-9')
+        self.assertEqual(task.source.author, 'Первый автор')
+
+        payload['sources'][0]['author'] = 'Новый автор'
+        self._import(payload)
+        task.source.refresh_from_db()
+        self.assertEqual(task.source.author, 'Новый автор')
 
     @staticmethod
     def _import(payload):

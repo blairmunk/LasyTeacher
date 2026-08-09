@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('document_generator', '0003_rename_document_template_to_print_settings'),
+        ('document_engine', '0003_rename_document_template_to_print_settings'),
     ]
 
     operations = [

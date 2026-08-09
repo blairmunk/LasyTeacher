@@ -5,7 +5,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         (
-            'document_generator',
+            'document_engine',
             '0005_remove_legacy_theory_sections',
         ),
     ]

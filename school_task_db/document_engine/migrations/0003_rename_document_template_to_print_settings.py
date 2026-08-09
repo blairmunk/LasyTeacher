@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('document_generator', '0002_alter_documenttemplate_options_and_more'),
+        ('document_engine', '0002_alter_documenttemplate_options_and_more'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 

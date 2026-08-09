@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('document_generator', '0001_initial'),
+        ('document_engine', '0001_initial'),
     ]
 
     operations = [

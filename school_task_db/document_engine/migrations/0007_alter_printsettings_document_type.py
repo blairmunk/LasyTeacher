@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('document_generator', '0006_remove_printsettings_sections_config'),
+        ('document_engine', '0006_remove_printsettings_sections_config'),
     ]
 
     operations = [

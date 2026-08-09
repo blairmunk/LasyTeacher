@@ -3,7 +3,7 @@ from django.db import migrations
 
 def remove_legacy_theory_sections(apps, schema_editor):
     print_settings_model = apps.get_model(
-        'document_generator',
+        'document_engine',
         'PrintSettings',
     )
     for print_settings in print_settings_model.objects.all().iterator():
@@ -44,7 +44,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         (
-            'document_generator',
+            'document_engine',
             '0004_alter_printsettings_options_and_more',
         ),
     ]

@@ -563,6 +563,44 @@ class CoreViewsTests(TestCase):
         self.assertEqual(payload['topics'][0]['name'], topic.name)
         self.assertEqual(payload['sources'][0]['id'], str(source.pk))
 
+    def test_export_tasks_command_uses_clean_export_contract(self):
+        topic = Topic.objects.create(
+            name='Кинематика',
+            subject='Физика',
+            section='Механика',
+            grade_level=9,
+        )
+        group = AnalogGroup.objects.create(name='Равномерное движение')
+        for number in range(2):
+            task = Task.objects.create(
+                text=f'Задание {number + 1}',
+                answer=str(number + 1),
+                topic=topic,
+                difficulty=1,
+                task_type='computational',
+            )
+            TaskGroup.objects.create(task=task, group=group)
+
+        with TemporaryDirectory() as temp_dir:
+            output_path = Path(temp_dir) / 'tasks.json'
+            call_command(
+                'export_tasks',
+                str(output_path),
+                '--include-groups',
+                '--include-topics',
+                '--filter-subject',
+                'Физика',
+                '--limit',
+                '1',
+                stdout=StringIO(),
+            )
+            payload = json.loads(output_path.read_text(encoding='utf-8'))
+
+        self.assertEqual(payload['version'], '1.2')
+        self.assertEqual(len(payload['tasks']), 1)
+        self.assertEqual(len(payload['analog_groups']), 1)
+        self.assertEqual(len(payload['topics']), 1)
+
 
 class TestSliceCommandTests(TestCase):
     def test_every_configured_label_is_importable(self):

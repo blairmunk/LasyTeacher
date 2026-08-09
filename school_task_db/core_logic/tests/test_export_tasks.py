@@ -66,3 +66,17 @@ class ExportTasksUseCaseTests(TestCase):
         self.assertEqual(len(data.payload['topics']), 1)
         self.assertEqual(len(data.payload['sources']), 1)
         self.assertEqual(len(data.payload['analog_groups']), 1)
+
+    def test_execute_can_omit_group_and_topic_catalogs(self):
+        payload = ExportTasksUseCase(task_repo=FakeTaskRepository()).execute(
+            ExportTasksRequest(
+                filters=TaskExportFilters(),
+                export_date='2026-07-17',
+                include_groups=False,
+                include_topics=False,
+            ),
+        ).payload
+
+        self.assertNotIn('analog_groups', payload)
+        self.assertNotIn('topics', payload)
+        self.assertEqual(len(payload['tasks']), 2)

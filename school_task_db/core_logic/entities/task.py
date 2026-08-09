@@ -86,6 +86,7 @@ class TaskExportFilters:
     topic_id: str = ''
     subject: str = ''
     grade: str = ''
+    limit: int | None = None
 
 
 @dataclass(frozen=True)

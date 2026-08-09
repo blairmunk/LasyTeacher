@@ -788,6 +788,8 @@ class DjangoTaskRepository(ITaskRepository):
             tasks = tasks.filter(topic__subject=filters.subject)
         if filters.grade:
             tasks = tasks.filter(topic__grade_level=filters.grade)
+        if filters.limit:
+            tasks = tasks[:filters.limit]
 
         return tasks
 

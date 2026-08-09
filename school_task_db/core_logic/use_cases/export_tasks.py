@@ -11,6 +11,8 @@ from core_logic.services.task_export_service import TaskExportService
 class ExportTasksRequest:
     filters: TaskExportFilters
     export_date: str
+    include_groups: bool = True
+    include_topics: bool = True
 
 
 class ExportTasksUseCase:
@@ -27,5 +29,7 @@ class ExportTasksUseCase:
             payload=self.export_service.build(
                 self.task_repo.get_task_export_sources(request.filters),
                 export_date=request.export_date,
+                include_groups=request.include_groups,
+                include_topics=request.include_topics,
             ),
         )

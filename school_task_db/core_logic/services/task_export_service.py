@@ -2,7 +2,14 @@
 
 
 class TaskExportService:
-    def build(self, tasks, export_date):
+    def build(
+        self,
+        tasks,
+        export_date,
+        *,
+        include_groups=True,
+        include_topics=True,
+    ):
         groups = {}
         topics = {}
         sources = {}
@@ -11,7 +18,7 @@ class TaskExportService:
 
         for task in tasks:
             task_rows.append(self._task_row(task))
-            if task.topic:
+            if include_topics and task.topic:
                 key = (
                     task.topic.subject,
                     task.topic.grade_level,
@@ -35,24 +42,28 @@ class TaskExportService:
                     'url': task.source.url,
                     'isbn': task.source.isbn,
                 })
-            for group in task.groups:
-                groups.setdefault(group.pk, {
-                    'id': group.pk,
-                    'name': group.name,
-                    'description': group.description,
-                    'difficulty': group.difficulty,
-                })
+            if include_groups:
+                for group in task.groups:
+                    groups.setdefault(group.pk, {
+                        'id': group.pk,
+                        'name': group.name,
+                        'description': group.description,
+                        'difficulty': group.difficulty,
+                    })
             images.extend(self._image_row(image) for image in task.images)
 
-        return {
+        payload = {
             'version': '1.2',
             'export_date': export_date,
-            'analog_groups': list(groups.values()),
-            'topics': list(topics.values()),
             'sources': list(sources.values()),
             'tasks': task_rows,
             'task_images': images,
         }
+        if include_groups:
+            payload['analog_groups'] = list(groups.values())
+        if include_topics:
+            payload['topics'] = list(topics.values())
+        return payload
 
     @staticmethod
     def _task_row(task):

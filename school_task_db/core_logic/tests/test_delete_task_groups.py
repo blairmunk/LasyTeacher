@@ -18,7 +18,7 @@ class FakeTaskRepository:
 class DeleteTaskGroupsUseCaseTests(TestCase):
     def test_execute_deletes_selected_groups(self):
         repo = FakeTaskRepository()
-        use_case = DeleteTaskGroupsUseCase(task_repo=repo)
+        use_case = DeleteTaskGroupsUseCase(task_group_repo=repo)
 
         result = use_case.execute(
             DeleteTaskGroupsRequest(group_ids=['group-1', '', 'group-2'])
@@ -31,7 +31,7 @@ class DeleteTaskGroupsUseCaseTests(TestCase):
 
     def test_execute_rejects_empty_selection(self):
         repo = FakeTaskRepository()
-        use_case = DeleteTaskGroupsUseCase(task_repo=repo)
+        use_case = DeleteTaskGroupsUseCase(task_group_repo=repo)
 
         result = use_case.execute(DeleteTaskGroupsRequest(group_ids=[]))
 

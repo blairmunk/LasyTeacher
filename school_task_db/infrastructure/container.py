@@ -421,6 +421,7 @@ class Container:
         self._student_repo = None
         self._source_repo = None
         self._task_repo = None
+        self._task_group_repo = None
         self._task_math_status_cache = None
         self._task_image_audit_repo = None
         self._work_repo = None
@@ -501,6 +502,12 @@ class Container:
                 math_status_cache=self.task_math_status_cache,
             )
         return self._task_repo
+
+    @property
+    def task_group_repo(self):
+        if self._task_group_repo is None:
+            self._task_group_repo = self.task_repo
+        return self._task_group_repo
 
     @property
     def task_math_status_cache(self):
@@ -957,32 +964,34 @@ class Container:
     def get_task_list_use_case(self):
         return GetTaskListUseCase(
             task_repo=self.task_repo,
+            task_group_repo=self.task_group_repo,
             math_status_cache=self.task_math_status_cache,
         )
 
     def get_task_group_list_use_case(self):
         return GetTaskGroupListUseCase(
             task_repo=self.task_repo,
+            task_group_repo=self.task_group_repo,
         )
 
     def get_task_group_detail_use_case(self):
         return GetTaskGroupDetailUseCase(
-            task_repo=self.task_repo,
+            task_group_repo=self.task_group_repo,
         )
 
     def create_analog_group_use_case(self):
         return CreateAnalogGroupUseCase(
-            task_repo=self.task_repo,
+            task_group_repo=self.task_group_repo,
         )
 
     def update_analog_group_use_case(self):
         return UpdateAnalogGroupUseCase(
-            task_repo=self.task_repo,
+            task_group_repo=self.task_group_repo,
         )
 
     def get_add_tasks_to_group_use_case(self):
         return GetAddTasksToGroupUseCase(
-            task_repo=self.task_repo,
+            task_group_repo=self.task_group_repo,
         )
 
     def get_course_detail_use_case(self):
@@ -1581,7 +1590,7 @@ class Container:
 
     def delete_task_groups_use_case(self):
         return DeleteTaskGroupsUseCase(
-            task_repo=self.task_repo,
+            task_group_repo=self.task_group_repo,
         )
 
     def delete_task_use_case(self):
@@ -1591,32 +1600,34 @@ class Container:
 
     def add_tasks_to_group_use_case(self):
         return AddTasksToGroupUseCase(
-            task_repo=self.task_repo,
+            task_group_repo=self.task_group_repo,
         )
 
     def remove_task_from_group_use_case(self):
         return RemoveTaskFromGroupUseCase(
-            task_repo=self.task_repo,
+            task_group_repo=self.task_group_repo,
         )
 
     def update_task_group_roles_use_case(self):
         return UpdateTaskGroupRolesUseCase(
-            task_repo=self.task_repo,
+            task_group_repo=self.task_group_repo,
         )
 
     def bulk_create_group_from_tasks_use_case(self):
         return BulkCreateGroupFromTasksUseCase(
             task_repo=self.task_repo,
+            task_group_repo=self.task_group_repo,
         )
 
     def bulk_add_tasks_to_group_use_case(self):
         return BulkAddTasksToGroupUseCase(
             task_repo=self.task_repo,
+            task_group_repo=self.task_group_repo,
         )
 
     def bulk_remove_tasks_from_groups_use_case(self):
         return BulkRemoveTasksFromGroupsUseCase(
-            task_repo=self.task_repo,
+            task_group_repo=self.task_group_repo,
         )
 
     def bulk_delete_variants_use_case(self):

@@ -49,6 +49,7 @@ class GetTaskListUseCaseTests(TestCase):
         cache = FakeTaskMathStatusCache()
         use_case = GetTaskListUseCase(
             task_repo=repo,
+            task_group_repo=repo,
             math_status_cache=cache,
         )
         filters = TaskListFilters(topic_id='topic-1', search='сила')
@@ -73,6 +74,7 @@ class GetTaskListUseCaseTests(TestCase):
         cache = FakeTaskMathStatusCache()
         use_case = GetTaskListUseCase(
             task_repo=repo,
+            task_group_repo=repo,
             math_status_cache=cache,
         )
 

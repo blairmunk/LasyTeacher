@@ -1,18 +1,13 @@
 """Task repository interface."""
 
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional, Set, Tuple
+from typing import List, Optional, Set, Tuple
 
 from core_logic.entities.task import (
-    AddTasksToGroupTask,
     ReferenceElementOption,
     SelectOption,
     TaskEntity,
     TaskExportFilters,
-    TaskGroupDetailGroup,
-    TaskGroupDetailTask,
-    TaskGroupListItem,
-    TaskGroupListFilters,
     TaskDetailGroup,
     TaskDetailTask,
     TaskListItem,
@@ -22,36 +17,12 @@ from core_logic.entities.task import (
     TaskSaveParams,
     TaskSaveResult,
 )
-from core_logic.value_objects.task_print_settings import TASK_BANK_ROLE_CONTROL
 
 
 class ITaskRepository(ABC):
     @abstractmethod
     def get_list_tasks(self, filters: TaskListFilters) -> List[TaskListItem]:
         """Return tasks for the task list page."""
-
-    @abstractmethod
-    def get_list_task_groups(self, filters: TaskGroupListFilters) -> List[TaskGroupListItem]:
-        """Return analog groups for the analog group list page."""
-
-    @abstractmethod
-    def get_analog_group_detail(self, group_id: str) -> Optional[TaskGroupDetailGroup]:
-        """Return one analog group detail read model, or None."""
-
-    @abstractmethod
-    def get_task_group_detail_tasks(
-        self,
-        group_id: str,
-    ) -> List[TaskGroupDetailTask]:
-        """Return task read models for one analog group detail page."""
-
-    @abstractmethod
-    def get_available_tasks_for_analog_group(
-        self,
-        group_id: str,
-        search: str,
-    ) -> List[AddTasksToGroupTask]:
-        """Return tasks not yet assigned to one analog group."""
 
     @abstractmethod
     def get_task(self, task_id: str) -> Optional[TaskDetailTask]:
@@ -84,22 +55,6 @@ class ITaskRepository(ABC):
     @abstractmethod
     def get_list_topics(self) -> List[SelectOption]:
         """Return topic options for the task list page."""
-
-    @abstractmethod
-    def get_list_analog_groups(self) -> List[SelectOption]:
-        """Return analog-group options for the task list page."""
-
-    @abstractmethod
-    def count_analog_groups(self) -> int:
-        """Return total analog group count."""
-
-    @abstractmethod
-    def count_empty_analog_groups(self) -> int:
-        """Return analog groups without tasks."""
-
-    @abstractmethod
-    def count_task_group_memberships(self) -> int:
-        """Return total task-to-group memberships."""
 
     @abstractmethod
     def get_list_sources(self) -> List[SelectOption]:
@@ -157,62 +112,12 @@ class ITaskRepository(ABC):
         """Return how many analog groups from the given IDs exist."""
 
     @abstractmethod
-    def analog_group_name_exists(self, name: str) -> bool:
-        """Return whether an analog group with the given name exists."""
-
-    @abstractmethod
-    def create_analog_group(self, name: str, description: str = '') -> str:
-        """Create an analog group and return its ID."""
-
-    @abstractmethod
-    def update_analog_group(
-        self,
-        group_id: str,
-        name: str,
-        description: str = '',
-    ) -> bool:
-        """Update an analog group and return whether it existed."""
-
-    @abstractmethod
     def get_first_task_difficulty_for_group(self, group_id: str) -> int:
         """Return the first task difficulty for an analog group, or 1."""
 
     @abstractmethod
-    def get_analog_group_name(self, group_id: str) -> Optional[str]:
-        """Return an analog-group name, or None when it does not exist."""
-
-    @abstractmethod
-    def add_tasks_to_group(
-        self,
-        group_id: str,
-        task_ids: List[str],
-        bank_role: str = TASK_BANK_ROLE_CONTROL,
-    ) -> int:
-        """Add tasks to an analog group and return created membership count."""
-
-    @abstractmethod
-    def update_task_group_roles(
-        self,
-        group_id: str,
-        task_roles: Dict[str, str],
-    ) -> int:
-        """Update bank roles for existing task memberships in one analog group."""
-
-    @abstractmethod
-    def remove_task_from_group(self, group_id: str, task_id: str) -> int:
-        """Remove one task from an analog group and return deleted row count."""
-
-    @abstractmethod
-    def remove_tasks_from_all_groups(self, task_ids: List[str]) -> int:
-        """Remove selected tasks from all analog groups and return deleted count."""
-
-    @abstractmethod
     def delete_task(self, task_id: str) -> int:
         """Delete one task and return deleted object count."""
-
-    @abstractmethod
-    def delete_groups(self, group_ids: List[str]) -> int:
-        """Delete analog groups by IDs and return deleted object count."""
 
     @abstractmethod
     def get_tasks_in_group(self, group_id: str) -> Set[str]:

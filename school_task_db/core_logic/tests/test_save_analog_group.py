@@ -25,7 +25,7 @@ class FakeTaskRepository:
 class SaveAnalogGroupUseCaseTests(TestCase):
     def test_create_analog_group_delegates_to_repository(self):
         repo = FakeTaskRepository()
-        use_case = CreateAnalogGroupUseCase(task_repo=repo)
+        use_case = CreateAnalogGroupUseCase(task_group_repo=repo)
 
         result = use_case.execute(
             SaveAnalogGroupRequest(
@@ -40,7 +40,7 @@ class SaveAnalogGroupUseCaseTests(TestCase):
 
     def test_update_analog_group_delegates_to_repository(self):
         repo = FakeTaskRepository()
-        use_case = UpdateAnalogGroupUseCase(task_repo=repo)
+        use_case = UpdateAnalogGroupUseCase(task_group_repo=repo)
 
         result = use_case.execute(
             SaveAnalogGroupRequest(
@@ -57,7 +57,7 @@ class SaveAnalogGroupUseCaseTests(TestCase):
     def test_update_analog_group_returns_not_found(self):
         repo = FakeTaskRepository()
         repo.update_exists = False
-        use_case = UpdateAnalogGroupUseCase(task_repo=repo)
+        use_case = UpdateAnalogGroupUseCase(task_group_repo=repo)
 
         result = use_case.execute(
             SaveAnalogGroupRequest(

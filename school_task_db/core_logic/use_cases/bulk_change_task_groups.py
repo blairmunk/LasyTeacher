@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import List
 
+from core_logic.interfaces.task_group_repo import ITaskGroupRepository
 from core_logic.interfaces.task_repo import ITaskRepository
 
 
@@ -26,8 +27,13 @@ class BulkCreateGroupFromTasksResult:
 
 
 class BulkCreateGroupFromTasksUseCase:
-    def __init__(self, task_repo: ITaskRepository):
+    def __init__(
+        self,
+        task_repo: ITaskRepository,
+        task_group_repo: ITaskGroupRepository,
+    ):
         self.task_repo = task_repo
+        self.task_group_repo = task_group_repo
 
     def execute(
         self,
@@ -46,7 +52,7 @@ class BulkCreateGroupFromTasksUseCase:
                 status='empty_name',
                 message='Название группы не указано',
             )
-        if self.task_repo.analog_group_name_exists(group_name):
+        if self.task_group_repo.analog_group_name_exists(group_name):
             return BulkCreateGroupFromTasksResult(
                 status='duplicate_name',
                 message='Группа с таким названием уже существует',
@@ -57,11 +63,14 @@ class BulkCreateGroupFromTasksUseCase:
                 message='Задания не найдены',
             )
 
-        group_id = self.task_repo.create_analog_group(
+        group_id = self.task_group_repo.create_analog_group(
             name=group_name,
             description='Создана из выбранных заданий',
         )
-        added_count = self.task_repo.add_tasks_to_group(group_id, task_ids)
+        added_count = self.task_group_repo.add_tasks_to_group(
+            group_id,
+            task_ids,
+        )
         return BulkCreateGroupFromTasksResult(
             status='created',
             group_id=group_id,
@@ -91,8 +100,13 @@ class BulkAddTasksToGroupResult:
 
 
 class BulkAddTasksToGroupUseCase:
-    def __init__(self, task_repo: ITaskRepository):
+    def __init__(
+        self,
+        task_repo: ITaskRepository,
+        task_group_repo: ITaskGroupRepository,
+    ):
         self.task_repo = task_repo
+        self.task_group_repo = task_group_repo
 
     def execute(self, request: BulkAddTasksToGroupRequest) -> BulkAddTasksToGroupResult:
         task_ids = [str(task_id) for task_id in request.task_ids if task_id]
@@ -107,7 +121,9 @@ class BulkAddTasksToGroupUseCase:
                 message='Группа не указана',
             )
 
-        group_name = self.task_repo.get_analog_group_name(request.group_id)
+        group_name = self.task_group_repo.get_analog_group_name(
+            request.group_id,
+        )
         if group_name is None:
             return BulkAddTasksToGroupResult(
                 status='missing_group',
@@ -115,7 +131,10 @@ class BulkAddTasksToGroupUseCase:
             )
 
         existing_count = self.task_repo.count_existing_task_ids(set(task_ids))
-        added_count = self.task_repo.add_tasks_to_group(request.group_id, task_ids)
+        added_count = self.task_group_repo.add_tasks_to_group(
+            request.group_id,
+            task_ids,
+        )
         skipped_count = max(0, existing_count - added_count)
         message = f'Добавлено {added_count} заданий в «{group_name}»'
         if skipped_count:
@@ -147,8 +166,8 @@ class BulkRemoveTasksFromGroupsResult:
 
 
 class BulkRemoveTasksFromGroupsUseCase:
-    def __init__(self, task_repo: ITaskRepository):
-        self.task_repo = task_repo
+    def __init__(self, task_group_repo: ITaskGroupRepository):
+        self.task_group_repo = task_group_repo
 
     def execute(
         self,
@@ -161,7 +180,9 @@ class BulkRemoveTasksFromGroupsUseCase:
                 message='Не выбрано ни одного задания',
             )
 
-        removed_count = self.task_repo.remove_tasks_from_all_groups(task_ids)
+        removed_count = self.task_group_repo.remove_tasks_from_all_groups(
+            task_ids,
+        )
         return BulkRemoveTasksFromGroupsResult(
             status='removed',
             removed_count=removed_count,

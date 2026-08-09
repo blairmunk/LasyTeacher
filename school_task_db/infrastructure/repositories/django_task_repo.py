@@ -34,6 +34,7 @@ from core_logic.entities.task import (
     TaskSaveResult,
 )
 from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.interfaces.task_group_repo import ITaskGroupRepository
 from core_logic.interfaces.task_math_status_cache import ITaskMathStatusCache
 from core_logic.services.reference_catalog import merge_reference_choices
 from core_logic.value_objects.task_print_settings import TASK_BANK_ROLE_CONTROL
@@ -49,7 +50,7 @@ from references.models import SubjectReference
 from tasks.models import Source, Task, TaskImage
 
 
-class DjangoTaskRepository(ITaskRepository):
+class DjangoTaskRepository(ITaskRepository, ITaskGroupRepository):
     def __init__(
         self,
         math_status_cache: ITaskMathStatusCache = task_math_status_cache,

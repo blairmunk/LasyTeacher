@@ -29,7 +29,7 @@ class FakeTaskRepository:
 class GetTaskGroupDetailUseCaseTests(TestCase):
     def test_execute_returns_detail_tasks(self):
         repo = FakeTaskRepository()
-        use_case = GetTaskGroupDetailUseCase(task_repo=repo)
+        use_case = GetTaskGroupDetailUseCase(task_group_repo=repo)
 
         data = use_case.execute('group-1')
 
@@ -39,7 +39,7 @@ class GetTaskGroupDetailUseCaseTests(TestCase):
 
     def test_execute_returns_empty_data_for_missing_group(self):
         repo = FakeTaskRepository()
-        use_case = GetTaskGroupDetailUseCase(task_repo=repo)
+        use_case = GetTaskGroupDetailUseCase(task_group_repo=repo)
 
         data = use_case.execute('missing-group')
 

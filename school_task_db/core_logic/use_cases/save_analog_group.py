@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.interfaces.task_group_repo import ITaskGroupRepository
 
 
 @dataclass(frozen=True)
@@ -19,11 +19,11 @@ class SaveAnalogGroupResult:
 
 
 class CreateAnalogGroupUseCase:
-    def __init__(self, task_repo: ITaskRepository):
-        self.task_repo = task_repo
+    def __init__(self, task_group_repo: ITaskGroupRepository):
+        self.task_group_repo = task_group_repo
 
     def execute(self, request: SaveAnalogGroupRequest) -> SaveAnalogGroupResult:
-        group_id = self.task_repo.create_analog_group(
+        group_id = self.task_group_repo.create_analog_group(
             name=request.name,
             description=request.description,
         )
@@ -31,11 +31,11 @@ class CreateAnalogGroupUseCase:
 
 
 class UpdateAnalogGroupUseCase:
-    def __init__(self, task_repo: ITaskRepository):
-        self.task_repo = task_repo
+    def __init__(self, task_group_repo: ITaskGroupRepository):
+        self.task_group_repo = task_group_repo
 
     def execute(self, request: SaveAnalogGroupRequest) -> SaveAnalogGroupResult:
-        updated = self.task_repo.update_analog_group(
+        updated = self.task_group_repo.update_analog_group(
             group_id=request.group_id,
             name=request.name,
             description=request.description,

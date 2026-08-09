@@ -31,7 +31,10 @@ class FakeTaskRepository:
 class GetTaskGroupListUseCaseTests(TestCase):
     def test_execute_builds_task_group_list_data(self):
         repo = FakeTaskRepository()
-        use_case = GetTaskGroupListUseCase(task_repo=repo)
+        use_case = GetTaskGroupListUseCase(
+            task_repo=repo,
+            task_group_repo=repo,
+        )
         filters = TaskGroupListFilters(topic_id='topic-1', search='скорость')
 
         data = use_case.execute(filters)

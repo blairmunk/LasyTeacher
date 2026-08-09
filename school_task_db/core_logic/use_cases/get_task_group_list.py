@@ -1,16 +1,22 @@
 """Build analog group list screen data."""
 
 from core_logic.entities.task import TaskGroupListData, TaskGroupListFilters
+from core_logic.interfaces.task_group_repo import ITaskGroupRepository
 from core_logic.interfaces.task_repo import ITaskRepository
 
 
 class GetTaskGroupListUseCase:
-    def __init__(self, task_repo: ITaskRepository):
+    def __init__(
+        self,
+        task_repo: ITaskRepository,
+        task_group_repo: ITaskGroupRepository,
+    ):
         self.task_repo = task_repo
+        self.task_group_repo = task_group_repo
 
     def execute(self, filters: TaskGroupListFilters) -> TaskGroupListData:
         return TaskGroupListData(
-            analog_groups=self.task_repo.get_list_task_groups(filters),
+            analog_groups=self.task_group_repo.get_list_task_groups(filters),
             topics=self.task_repo.get_list_topics(),
             subtopics=self.task_repo.get_subtopics_for_topic(filters.topic_id),
             difficulties=[
@@ -18,7 +24,9 @@ class GetTaskGroupListUseCase:
                 (2, 'Повышенный'),
                 (3, 'Высокий'),
             ],
-            total_groups=self.task_repo.count_analog_groups(),
-            empty_groups=self.task_repo.count_empty_analog_groups(),
-            total_tasks_in_groups=self.task_repo.count_task_group_memberships(),
+            total_groups=self.task_group_repo.count_analog_groups(),
+            empty_groups=self.task_group_repo.count_empty_analog_groups(),
+            total_tasks_in_groups=(
+                self.task_group_repo.count_task_group_memberships()
+            ),
         )

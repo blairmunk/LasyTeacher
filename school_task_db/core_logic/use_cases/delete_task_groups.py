@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.interfaces.task_group_repo import ITaskGroupRepository
 
 
 @dataclass(frozen=True)
@@ -23,8 +23,8 @@ class DeleteTaskGroupsResult:
 
 
 class DeleteTaskGroupsUseCase:
-    def __init__(self, task_repo: ITaskRepository):
-        self.task_repo = task_repo
+    def __init__(self, task_group_repo: ITaskGroupRepository):
+        self.task_group_repo = task_group_repo
 
     def execute(self, request: DeleteTaskGroupsRequest) -> DeleteTaskGroupsResult:
         group_ids = [str(group_id) for group_id in request.group_ids if group_id]
@@ -34,7 +34,7 @@ class DeleteTaskGroupsUseCase:
                 message='Не выбрано ни одной группы',
             )
 
-        deleted_count = self.task_repo.delete_groups(group_ids)
+        deleted_count = self.task_group_repo.delete_groups(group_ids)
         return DeleteTaskGroupsResult(
             status='deleted',
             deleted_count=deleted_count,

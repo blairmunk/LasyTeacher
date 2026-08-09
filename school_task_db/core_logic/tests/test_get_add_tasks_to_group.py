@@ -23,7 +23,7 @@ class FakeTaskRepository:
 class GetAddTasksToGroupUseCaseTests(TestCase):
     def test_execute_returns_group_and_available_tasks(self):
         repo = FakeTaskRepository()
-        use_case = GetAddTasksToGroupUseCase(task_repo=repo)
+        use_case = GetAddTasksToGroupUseCase(task_group_repo=repo)
 
         data = use_case.execute(
             AddTasksToGroupFormRequest(group_id='group-1', search='скорость'),
@@ -37,7 +37,7 @@ class GetAddTasksToGroupUseCaseTests(TestCase):
 
     def test_execute_returns_not_found_without_loading_available_tasks(self):
         repo = FakeTaskRepository(group=None)
-        use_case = GetAddTasksToGroupUseCase(task_repo=repo)
+        use_case = GetAddTasksToGroupUseCase(task_group_repo=repo)
 
         data = use_case.execute(
             AddTasksToGroupFormRequest(group_id='missing', search='x'),

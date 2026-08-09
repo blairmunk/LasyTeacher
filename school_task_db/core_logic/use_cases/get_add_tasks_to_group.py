@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 from core_logic.entities.task import AddTasksToGroupData
-from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.interfaces.task_group_repo import ITaskGroupRepository
 
 
 @dataclass(frozen=True)
@@ -13,19 +13,21 @@ class AddTasksToGroupFormRequest:
 
 
 class GetAddTasksToGroupUseCase:
-    def __init__(self, task_repo: ITaskRepository):
-        self.task_repo = task_repo
+    def __init__(self, task_group_repo: ITaskGroupRepository):
+        self.task_group_repo = task_group_repo
 
     def execute(self, request: AddTasksToGroupFormRequest) -> AddTasksToGroupData:
-        group = self.task_repo.get_analog_group_detail(request.group_id)
+        group = self.task_group_repo.get_analog_group_detail(request.group_id)
         if group is None:
             return AddTasksToGroupData(status='not_found', search=request.search)
 
         return AddTasksToGroupData(
             group=group,
-            available_tasks=self.task_repo.get_available_tasks_for_analog_group(
+            available_tasks=(
+                self.task_group_repo.get_available_tasks_for_analog_group(
                 group_id=request.group_id,
                 search=request.search,
+                )
             ),
             search=request.search,
         )

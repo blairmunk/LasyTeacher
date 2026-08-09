@@ -46,7 +46,10 @@ class FakeTaskRepository:
 class BulkChangeTaskGroupsUseCaseTests(TestCase):
     def test_create_group_from_tasks_creates_group_and_memberships(self):
         repo = FakeTaskRepository()
-        use_case = BulkCreateGroupFromTasksUseCase(task_repo=repo)
+        use_case = BulkCreateGroupFromTasksUseCase(
+            task_repo=repo,
+            task_group_repo=repo,
+        )
 
         result = use_case.execute(
             BulkCreateGroupFromTasksRequest(
@@ -68,7 +71,10 @@ class BulkChangeTaskGroupsUseCaseTests(TestCase):
     def test_create_group_rejects_duplicate_name(self):
         repo = FakeTaskRepository()
         repo.duplicate_group_names.add('Кинематика')
-        use_case = BulkCreateGroupFromTasksUseCase(task_repo=repo)
+        use_case = BulkCreateGroupFromTasksUseCase(
+            task_repo=repo,
+            task_group_repo=repo,
+        )
 
         result = use_case.execute(
             BulkCreateGroupFromTasksRequest(
@@ -83,7 +89,10 @@ class BulkChangeTaskGroupsUseCaseTests(TestCase):
 
     def test_add_tasks_to_group_counts_existing_memberships_as_skipped(self):
         repo = FakeTaskRepository()
-        use_case = BulkAddTasksToGroupUseCase(task_repo=repo)
+        use_case = BulkAddTasksToGroupUseCase(
+            task_repo=repo,
+            task_group_repo=repo,
+        )
 
         result = use_case.execute(
             BulkAddTasksToGroupRequest(
@@ -102,7 +111,10 @@ class BulkChangeTaskGroupsUseCaseTests(TestCase):
 
     def test_add_tasks_to_group_rejects_missing_group(self):
         repo = FakeTaskRepository()
-        use_case = BulkAddTasksToGroupUseCase(task_repo=repo)
+        use_case = BulkAddTasksToGroupUseCase(
+            task_repo=repo,
+            task_group_repo=repo,
+        )
 
         result = use_case.execute(
             BulkAddTasksToGroupRequest(task_ids=['task-1'], group_id='missing')
@@ -114,7 +126,7 @@ class BulkChangeTaskGroupsUseCaseTests(TestCase):
 
     def test_remove_tasks_from_groups_delegates_filtered_ids(self):
         repo = FakeTaskRepository()
-        use_case = BulkRemoveTasksFromGroupsUseCase(task_repo=repo)
+        use_case = BulkRemoveTasksFromGroupsUseCase(task_group_repo=repo)
 
         result = use_case.execute(
             BulkRemoveTasksFromGroupsRequest(task_ids=['task-1', '', 'task-2'])

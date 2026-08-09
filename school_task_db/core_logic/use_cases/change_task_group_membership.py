@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Dict, List
 
-from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.interfaces.task_group_repo import ITaskGroupRepository
 from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_CONTROL,
     validate_task_specific_bank_role,
@@ -30,11 +30,13 @@ class AddTasksToGroupResult:
 
 
 class AddTasksToGroupUseCase:
-    def __init__(self, task_repo: ITaskRepository):
-        self.task_repo = task_repo
+    def __init__(self, task_group_repo: ITaskGroupRepository):
+        self.task_group_repo = task_group_repo
 
     def execute(self, request: AddTasksToGroupRequest) -> AddTasksToGroupResult:
-        group_name = self.task_repo.get_analog_group_name(request.group_id)
+        group_name = self.task_group_repo.get_analog_group_name(
+            request.group_id,
+        )
         if group_name is None:
             return AddTasksToGroupResult(status='not_found')
 
@@ -47,7 +49,7 @@ class AddTasksToGroupUseCase:
                 group_name=group_name,
                 errors=(str(error),),
             )
-        created_count = self.task_repo.add_tasks_to_group(
+        created_count = self.task_group_repo.add_tasks_to_group(
             group_id=request.group_id,
             task_ids=task_ids,
             bank_role=request.bank_role,
@@ -77,18 +79,20 @@ class RemoveTaskFromGroupResult:
 
 
 class RemoveTaskFromGroupUseCase:
-    def __init__(self, task_repo: ITaskRepository):
-        self.task_repo = task_repo
+    def __init__(self, task_group_repo: ITaskGroupRepository):
+        self.task_group_repo = task_group_repo
 
     def execute(
         self,
         request: RemoveTaskFromGroupRequest,
     ) -> RemoveTaskFromGroupResult:
-        group_name = self.task_repo.get_analog_group_name(request.group_id)
+        group_name = self.task_group_repo.get_analog_group_name(
+            request.group_id,
+        )
         if group_name is None:
             return RemoveTaskFromGroupResult(status='not_found')
 
-        deleted_count = self.task_repo.remove_task_from_group(
+        deleted_count = self.task_group_repo.remove_task_from_group(
             group_id=request.group_id,
             task_id=request.task_id,
         )
@@ -118,14 +122,16 @@ class UpdateTaskGroupRolesResult:
 
 
 class UpdateTaskGroupRolesUseCase:
-    def __init__(self, task_repo: ITaskRepository):
-        self.task_repo = task_repo
+    def __init__(self, task_group_repo: ITaskGroupRepository):
+        self.task_group_repo = task_group_repo
 
     def execute(
         self,
         request: UpdateTaskGroupRolesRequest,
     ) -> UpdateTaskGroupRolesResult:
-        group_name = self.task_repo.get_analog_group_name(request.group_id)
+        group_name = self.task_group_repo.get_analog_group_name(
+            request.group_id,
+        )
         if group_name is None:
             return UpdateTaskGroupRolesResult(status='not_found')
 
@@ -148,7 +154,7 @@ class UpdateTaskGroupRolesUseCase:
                 errors=tuple(errors),
             )
 
-        updated_count = self.task_repo.update_task_group_roles(
+        updated_count = self.task_group_repo.update_task_group_roles(
             group_id=request.group_id,
             task_roles=task_roles,
         )

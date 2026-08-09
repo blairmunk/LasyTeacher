@@ -36,7 +36,7 @@ class FakeTaskRepository:
 class TaskGroupMembershipUseCaseTests(TestCase):
     def test_add_tasks_to_group_filters_empty_ids(self):
         repo = FakeTaskRepository()
-        use_case = AddTasksToGroupUseCase(task_repo=repo)
+        use_case = AddTasksToGroupUseCase(task_group_repo=repo)
 
         result = use_case.execute(
             AddTasksToGroupRequest(
@@ -56,7 +56,7 @@ class TaskGroupMembershipUseCaseTests(TestCase):
 
     def test_add_tasks_to_group_rejects_unknown_bank_role(self):
         repo = FakeTaskRepository()
-        use_case = AddTasksToGroupUseCase(task_repo=repo)
+        use_case = AddTasksToGroupUseCase(task_group_repo=repo)
 
         result = use_case.execute(
             AddTasksToGroupRequest(
@@ -74,7 +74,7 @@ class TaskGroupMembershipUseCaseTests(TestCase):
     def test_add_tasks_to_group_handles_missing_group(self):
         repo = FakeTaskRepository()
         repo.group_name = None
-        use_case = AddTasksToGroupUseCase(task_repo=repo)
+        use_case = AddTasksToGroupUseCase(task_group_repo=repo)
 
         result = use_case.execute(
             AddTasksToGroupRequest(group_id='missing', task_ids=['task-1'])
@@ -86,7 +86,7 @@ class TaskGroupMembershipUseCaseTests(TestCase):
 
     def test_remove_task_from_group_delegates_to_repository(self):
         repo = FakeTaskRepository()
-        use_case = RemoveTaskFromGroupUseCase(task_repo=repo)
+        use_case = RemoveTaskFromGroupUseCase(task_group_repo=repo)
 
         result = use_case.execute(
             RemoveTaskFromGroupRequest(group_id='group-1', task_id='task-1')
@@ -98,7 +98,7 @@ class TaskGroupMembershipUseCaseTests(TestCase):
 
     def test_update_task_group_roles_delegates_valid_roles(self):
         repo = FakeTaskRepository()
-        use_case = UpdateTaskGroupRolesUseCase(task_repo=repo)
+        use_case = UpdateTaskGroupRolesUseCase(task_group_repo=repo)
 
         result = use_case.execute(
             UpdateTaskGroupRolesRequest(
@@ -119,7 +119,7 @@ class TaskGroupMembershipUseCaseTests(TestCase):
 
     def test_update_task_group_roles_rejects_unknown_role(self):
         repo = FakeTaskRepository()
-        use_case = UpdateTaskGroupRolesUseCase(task_repo=repo)
+        use_case = UpdateTaskGroupRolesUseCase(task_group_repo=repo)
 
         result = use_case.execute(
             UpdateTaskGroupRolesRequest(

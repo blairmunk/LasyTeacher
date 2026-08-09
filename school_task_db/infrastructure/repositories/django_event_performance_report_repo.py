@@ -19,6 +19,9 @@ from core_logic.services.event_report_task_fact_service import (
 from core_logic.services.event_report_source_service import (
     resolve_event_report_event_ref,
 )
+from core_logic.value_objects.attempt_status import (
+    resolve_historical_participation_status,
+)
 from core_logic.value_objects.task_content_snapshot import (
     task_content_snapshot_from_mapping,
 )
@@ -70,7 +73,10 @@ class DjangoEventPerformanceReportRepository(
                 EventReportParticipantFact(
                     student_id=student_id,
                     student_name=student_name,
-                    status=participation.status,
+                    status=resolve_historical_participation_status(
+                        participation.status,
+                        has_attempt=attempt is not None,
+                    ),
                     score=attempt.score if attempt else None,
                     points=self._number(attempt.points) if attempt else None,
                     max_points=(

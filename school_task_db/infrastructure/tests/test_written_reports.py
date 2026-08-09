@@ -233,6 +233,29 @@ class WrittenReportRepositoryTests(TestCase):
             ('ОГЭ 2026: Применение второго закона Ньютона',),
         )
 
+    def test_written_reports_keep_checked_status_from_captured_attempt(self):
+        self.participation.status = 'absent'
+        self.participation.save(update_fields=['status'])
+
+        event_source = (
+            DjangoEventPerformanceReportRepository()
+            .get_event_report_source(str(self.event.pk))
+        )
+        digest_source = DjangoStudentDigestRepository().get_student_digest_source(
+            str(self.group.pk),
+            start_date=dt.date(2026, 10, 13),
+            end_date=dt.date(2026, 10, 19),
+        )
+
+        graded_participant = next(
+            item
+            for item in event_source.participants
+            if item.student_id == self.attempt.student_id_snapshot
+        )
+        graded_digest = digest_source.students[0].entries[0]
+        self.assertEqual(graded_participant.status, 'graded')
+        self.assertEqual(graded_digest.status, 'graded')
+
     def test_event_report_groups_reordered_variants_by_specification_slot(self):
         second_variant = Variant.objects.create(
             work=self.work,

@@ -27,6 +27,9 @@ from core_logic.value_objects.work_assessment import (
     WORK_ASSESSMENT_MODE_AGGREGATE,
     WORK_ASSESSMENT_MODE_VARIANT,
 )
+from core_logic.value_objects.attempt_status import (
+    resolve_historical_participation_status,
+)
 from core_logic.value_objects.report_task_slot import report_task_slot_key
 from core_logic.use_cases.get_event_performance_report import (
     GetEventPerformanceReportUseCase,
@@ -290,6 +293,22 @@ class EventPerformanceReportTests(TestCase):
 
         self.assertEqual(result.name, self.source.event.name)
         self.assertEqual(result.work_name, 'Исходная работа')
+
+    def test_captured_attempt_has_stable_graded_status(self):
+        self.assertEqual(
+            resolve_historical_participation_status(
+                'absent',
+                has_attempt=True,
+            ),
+            'graded',
+        )
+        self.assertEqual(
+            resolve_historical_participation_status(
+                'absent',
+                has_attempt=False,
+            ),
+            'absent',
+        )
 
     @staticmethod
     def _captured_task(

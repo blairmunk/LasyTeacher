@@ -9,6 +9,9 @@ from core_logic.entities.student_digest import (
     StudentDigestTaskResultFact,
 )
 from core_logic.interfaces.student_digest_repo import IStudentDigestRepository
+from core_logic.value_objects.attempt_status import (
+    resolve_historical_participation_status,
+)
 from core_logic.value_objects.task_content_snapshot import (
     task_content_snapshot_from_mapping,
 )
@@ -139,7 +142,10 @@ class DjangoStudentDigestRepository(IStudentDigestRepository):
                 if attempt
                 else event.planned_date.date()
             ),
-            status=participation.status,
+            status=resolve_historical_participation_status(
+                participation.status,
+                has_attempt=attempt is not None,
+            ),
             score=attempt.score if attempt else None,
             points=self._number(attempt.points) if attempt else None,
             max_points=self._number(attempt.max_points) if attempt else None,

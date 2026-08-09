@@ -549,7 +549,9 @@ class DjangoWorkVariantSectionPayloadBuilderTests(TestCase):
 
     def test_builds_registry_for_work_sections(self):
         work = Work.objects.create(name='Контрольная')
-        registry = build_work_section_payload_builder_registry()
+        registry = build_work_section_payload_builder_registry(
+            work_document_repo=DjangoWorkDocumentRepository(),
+        )
         recipe = DocumentRecipe(
             document_type=WORK_DOCUMENT_TYPE,
             sections=[DocumentSectionSpec(section_type=HEADER_SECTION)],
@@ -607,7 +609,9 @@ class DjangoWorkVariantSectionPayloadBuilderTests(TestCase):
 
     def test_registry_uses_variant_payload_for_answer_sections(self):
         work = Work.objects.create(name='Контрольная')
-        registry = build_work_section_payload_builder_registry()
+        registry = build_work_section_payload_builder_registry(
+            work_document_repo=DjangoWorkDocumentRepository(),
+        )
         recipe = DocumentRecipe(
             document_type=WORK_DOCUMENT_TYPE,
             sections=[DocumentSectionSpec(section_type=ANSWERS_SECTION)],
@@ -637,7 +641,9 @@ class DjangoWorkVariantSectionPayloadBuilderTests(TestCase):
             order=1,
             max_points=2,
         )
-        registry = build_work_section_payload_builder_registry()
+        registry = build_work_section_payload_builder_registry(
+            work_document_repo=DjangoWorkDocumentRepository(),
+        )
 
         answer_key_payload = registry.build_payload(
             build_request(work, ANSWER_KEY_SECTION)
@@ -671,7 +677,9 @@ class DjangoWorkVariantSectionPayloadBuilderTests(TestCase):
 class DjangoWorkTechnicalPayloadBuilderTests(TestCase):
     def test_registry_supports_work_blank_cells_section(self):
         work = Work.objects.create(name='Контрольная')
-        registry = build_work_section_payload_builder_registry()
+        registry = build_work_section_payload_builder_registry(
+            work_document_repo=DjangoWorkDocumentRepository(),
+        )
 
         payload = registry.build_payload(
             build_request(

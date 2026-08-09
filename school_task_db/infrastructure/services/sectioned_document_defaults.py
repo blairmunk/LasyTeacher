@@ -2,14 +2,11 @@
 
 from dataclasses import dataclass
 
-from core_logic.services.document_builder import RecipeDocumentBuilder
+from core_logic.services.document_builder import (
+    DocumentSectionPayloadBuilderRegistry,
+    RecipeDocumentBuilder,
+)
 from core_logic.services.document_renderer_registry import DocumentRendererRegistry
-from core_logic.use_cases.get_remedial_sheet_data import (
-    GetRemedialSheetDataUseCase,
-)
-from infrastructure.repositories.django_work_document_repo import (
-    DjangoWorkDocumentRepository,
-)
 from infrastructure.services.django_document_payload_registry import (
     build_event_report_section_payload_builder_registry,
     build_remedial_sheet_section_payload_builder_registry,
@@ -148,21 +145,22 @@ def build_sectioned_document_payload_builder_registry(
     get_student_digests=None,
     task_payload_formatter=None,
 ):
-    get_remedial_sheet_data = (
-        get_remedial_sheet_data
-        or _default_get_remedial_sheet_data()
-    )
-    payload_registry = build_work_section_payload_builder_registry(
-        work_document_repo=work_document_repo,
-        get_work_document_source=get_work_document_source,
-        task_payload_formatter=task_payload_formatter,
-    )
-    payload_registry.extend(
-        build_remedial_sheet_section_payload_builder_registry(
-            get_remedial_sheet_data=get_remedial_sheet_data,
-            task_payload_formatter=task_payload_formatter,
+    payload_registry = DocumentSectionPayloadBuilderRegistry()
+    if work_document_repo or get_work_document_source:
+        payload_registry.extend(
+            build_work_section_payload_builder_registry(
+                work_document_repo=work_document_repo,
+                get_work_document_source=get_work_document_source,
+                task_payload_formatter=task_payload_formatter,
+            )
         )
-    )
+    if get_remedial_sheet_data:
+        payload_registry.extend(
+            build_remedial_sheet_section_payload_builder_registry(
+                get_remedial_sheet_data=get_remedial_sheet_data,
+                task_payload_formatter=task_payload_formatter,
+            )
+        )
     if get_event_report:
         payload_registry.extend(
             build_event_report_section_payload_builder_registry(
@@ -184,9 +182,3 @@ def _sectioned_task_payload_formatter():
             'latex': LatexTaskPayloadFormatter(),
         },
     )
-
-
-def _default_get_remedial_sheet_data():
-    return GetRemedialSheetDataUseCase(
-        work_repo=DjangoWorkDocumentRepository(),
-    ).execute

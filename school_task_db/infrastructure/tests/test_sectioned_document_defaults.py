@@ -24,6 +24,9 @@ from core_logic.entities.work import (
     VariantDetailStudentRef,
 )
 from core_logic.entities.work_document import WorkDocumentSource
+from core_logic.services.document_builder import (
+    UnsupportedDocumentSectionPayloadBuilder,
+)
 from core_logic.value_objects.document_render_options import (
     RemedialSheetBuildOptions,
     RenderTarget,
@@ -49,6 +52,9 @@ from core_logic.value_objects.document_recipes import (
     WORK_DOCUMENT_TYPE,
 )
 from curriculum.models import Topic
+from infrastructure.repositories.django_work_document_repo import (
+    DjangoWorkDocumentRepository,
+)
 from infrastructure.services.document_engine import DjangoDocumentEngine
 from infrastructure.services.rendered_document_file_store import (
     RenderedDocumentFileStore,
@@ -111,6 +117,7 @@ class SectionedDocumentDefaultsTests(TestCase):
             )
             components = build_sectioned_document_components(
                 file_store=file_store,
+                work_document_repo=DjangoWorkDocumentRepository(),
             )
             engine = DjangoDocumentEngine(
                 document_builder=components.document_builder,
@@ -184,6 +191,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 file_store=RenderedDocumentFileStore(
                     output_dirs={'html': output_dir},
                 ),
+                work_document_repo=DjangoWorkDocumentRepository(),
             )
             engine = DjangoDocumentEngine(
                 document_builder=components.document_builder,
@@ -233,6 +241,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 file_store=RenderedDocumentFileStore(
                     output_dirs={'html': output_dir},
                 ),
+                work_document_repo=DjangoWorkDocumentRepository(),
             )
             engine = DjangoDocumentEngine(
                 document_builder=components.document_builder,
@@ -280,6 +289,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 file_store=RenderedDocumentFileStore(
                     output_dirs={'html': output_dir},
                 ),
+                work_document_repo=DjangoWorkDocumentRepository(),
             )
             engine = DjangoDocumentEngine(
                 document_builder=components.document_builder,
@@ -336,6 +346,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 file_store=RenderedDocumentFileStore(
                     output_dirs={'html': output_dir},
                 ),
+                work_document_repo=DjangoWorkDocumentRepository(),
             )
             engine = DjangoDocumentEngine(
                 document_builder=components.document_builder,
@@ -384,6 +395,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 file_store=RenderedDocumentFileStore(
                     output_dirs={'latex': output_dir},
                 ),
+                work_document_repo=DjangoWorkDocumentRepository(),
             )
             engine = DjangoDocumentEngine(
                 document_builder=components.document_builder,
@@ -725,24 +737,15 @@ class SectionedDocumentDefaultsTests(TestCase):
         self.assertIs(payload['page'], page)
         self.assertIs(payload['digest'], digest)
 
-    def test_default_remedial_source_uses_document_repository(self):
+    def test_payload_registry_has_no_hidden_default_sources(self):
         registry = build_sectioned_document_payload_builder_registry()
 
-        payload = registry.build_payload(
-            DocumentSectionPayloadBuildRequest(
-                source=DocumentSourceRef(
-                    source_type=REMEDIAL_VARIANT_SOURCE_TYPE,
-                    source_id='00000000-0000-0000-0000-000000000000',
-                ),
-                recipe=DocumentRecipe(document_type='remedial_sheet'),
-                section=DocumentSectionSpec(section_type=HEADER_SECTION),
+        with self.assertRaises(UnsupportedDocumentSectionPayloadBuilder):
+            registry.get(
+                HEADER_SECTION,
+                document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
+                source_type=REMEDIAL_VARIANT_SOURCE_TYPE,
             )
-        )
-
-        self.assertEqual(payload['title'], 'Работа над ошибками')
-        self.assertIsNone(payload['student'])
-        self.assertIsNone(payload['source_work'])
-        self.assertIsNone(payload['mark'])
 
     def test_builds_combined_sectioned_html_pdf_components(self):
         with TemporaryDirectory() as output_dir:

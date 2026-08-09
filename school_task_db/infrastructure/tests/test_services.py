@@ -30,6 +30,9 @@ from core_logic.value_objects.document_source_factories import (
     build_work_document_source,
 )
 from curriculum.models import Topic
+from infrastructure.repositories.django_work_document_repo import (
+    DjangoWorkDocumentRepository,
+)
 from infrastructure.services.document_engine import (
     DjangoDocumentEngine,
 )
@@ -223,6 +226,7 @@ class DjangoDocumentEngineTests(TestCase):
 
         with TemporaryDirectory() as output_dir:
             service = DjangoDocumentEngine.with_sectioned_renderers(
+                work_document_repo=DjangoWorkDocumentRepository(),
                 file_store=RenderedDocumentFileStore(
                     output_dirs={
                         'html': output_dir,

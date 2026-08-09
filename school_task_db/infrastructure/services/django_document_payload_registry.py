@@ -33,9 +33,6 @@ from core_logic.entities.document import (
 from infrastructure.services.blank_cells_payload import (
     build_blank_cells_payload,
 )
-from infrastructure.repositories.django_work_document_repo import (
-    DjangoWorkDocumentRepository,
-)
 from infrastructure.services.remedial_document_payloads import (
     RemedialHeaderPayloadBuilder,
     RemedialOriginalMistakesPayloadBuilder,
@@ -70,7 +67,6 @@ def build_work_section_payload_builder_registry(
     task_payload_formatter=None,
 ) -> DocumentSectionPayloadBuilderRegistry:
     registry = DocumentSectionPayloadBuilderRegistry()
-    work_document_repo = work_document_repo or DjangoWorkDocumentRepository()
     work_source_provider = WorkDocumentSourceProvider(
         work_document_repo=work_document_repo,
         get_work_document_source=get_work_document_source,

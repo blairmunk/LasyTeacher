@@ -53,7 +53,7 @@ from infrastructure.services.work_document_payloads import (
     WorkTaskListPayloadBuilder,
     WorkDocumentSourceProvider,
 )
-from infrastructure.services.django_report_document_payloads import (
+from infrastructure.services.report_document_payloads import (
     EventReportDocumentDataProvider,
     EventReportSectionPayloadBuilder,
     StudentDigestDocumentDataProvider,

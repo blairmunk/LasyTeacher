@@ -352,6 +352,64 @@ class CoreViewsTests(TestCase):
 
         self.assertIn('🔍 ПРЕДВАРИТЕЛЬНЫЙ ПРОСМОТР (--dry-run)', output)
 
+    def test_import_tasks_command_uses_clean_import_service(self):
+        payload = {
+            'topics': [
+                {
+                    'name': 'Динамика',
+                    'subject': 'Физика',
+                    'grade_level': 9,
+                    'section': 'Механика',
+                },
+            ],
+            'tasks': [
+                {
+                    'id': '550e8400-e29b-41d4-a716-446655440011',
+                    'text': 'Задача из management-команды',
+                    'answer': 'Ответ',
+                    'task_type': 'computational',
+                    'difficulty': 2,
+                    'topic': {
+                        'name': 'Динамика',
+                        'subject': 'Физика',
+                        'grade_level': 9,
+                    },
+                },
+            ],
+        }
+
+        with TemporaryDirectory() as temp_dir:
+            json_file = Path(temp_dir) / 'tasks.json'
+            json_file.write_text(
+                json.dumps(payload, ensure_ascii=False),
+                encoding='utf-8',
+            )
+            output = StringIO()
+
+            call_command(
+                'import_tasks',
+                str(json_file),
+                create_topics=True,
+                stdout=output,
+            )
+
+        self.assertTrue(
+            Task.objects.filter(
+                text='Задача из management-команды',
+            ).exists(),
+        )
+        log = ImportLog.objects.get(filename='tasks.json')
+        self.assertEqual(log.status, ImportLog.Status.SUCCESS)
+        self.assertIn('ИМПОРТ ЗАВЕРШЁН', output.getvalue())
+
+    def test_import_tasks_command_uses_clean_json_validation(self):
+        with TemporaryDirectory() as temp_dir:
+            json_file = Path(temp_dir) / 'broken.json'
+            json_file.write_text('{broken', encoding='utf-8')
+
+            with self.assertRaisesRegex(CommandError, 'Невалидный JSON'):
+                call_command('import_tasks', str(json_file))
+
     def test_build_test_scenario_is_idempotent_and_builds_learning_logs(self):
         year = AcademicYear.objects.create(
             name='2026-2027',

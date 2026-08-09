@@ -50,6 +50,30 @@ class TaskImporterTests(TestCase):
         self.assertEqual(relation.group.name, 'Группа по имени')
         self.assertEqual(relation.bank_role, 'control')
 
+    def test_existing_task_record_is_updated(self):
+        task_id = '550e8400-e29b-41d4-a716-446655440001'
+        payload = self._task_payload(
+            task_id=task_id,
+            group_id='770e8400-e29b-41d4-a716-446655440001',
+        )
+        self._import(payload)
+
+        payload['tasks'][0].update({
+            'text': 'Обновлённое условие',
+            'answer': 'Новый ответ',
+            'difficulty': 5,
+            'teacher_notes': 'Проверено учителем',
+            'is_verified': True,
+        })
+        self._import(payload)
+
+        task = Task.objects.get(pk=task_id)
+        self.assertEqual(task.text, 'Обновлённое условие')
+        self.assertEqual(task.answer, 'Новый ответ')
+        self.assertEqual(task.difficulty, 5)
+        self.assertEqual(task.teacher_notes, 'Проверено учителем')
+        self.assertTrue(task.is_verified)
+
     def test_dry_run_accepts_group_role_objects(self):
         output = []
         payload = self._task_payload(

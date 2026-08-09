@@ -1,6 +1,7 @@
 """Django persistence for immutable checked-attempt revisions."""
 
 from decimal import Decimal, InvalidOperation
+from uuid import UUID
 
 from django.db.models import Max
 
@@ -19,6 +20,7 @@ from events.models import AttemptSnapshot, AttemptTaskSnapshot, Mark
 from infrastructure.services.task_content_snapshots import (
     build_task_content_snapshots,
 )
+from task_groups.models import TaskGroup
 from tasks.models import Task
 from works.models import VariantTask, WorkAnalogGroup
 
@@ -84,7 +86,7 @@ class DjangoAttemptSnapshotRepository(IAttemptSnapshotRepository):
                 variant=variant,
             ).order_by('order', 'pk')
         )
-        selection_names = self._selection_names_by_id(variant_tasks)
+        selection_names = self._selection_names_by_variant_task(variant_tasks)
         rows = []
         for variant_task in variant_tasks:
             task = task_content_snapshot_from_mapping(
@@ -104,7 +106,7 @@ class DjangoAttemptSnapshotRepository(IAttemptSnapshotRepository):
                     variant_task.source_selection_id
                 ),
                 source_selection_name_snapshot=selection_names.get(
-                    str(variant_task.source_selection_id),
+                    str(variant_task.pk),
                     '',
                 ),
                 content_order_snapshot=variant_task.content_order,
@@ -119,21 +121,67 @@ class DjangoAttemptSnapshotRepository(IAttemptSnapshotRepository):
             ))
         AttemptTaskSnapshot.objects.bulk_create(rows)
 
-    @staticmethod
-    def _selection_names_by_id(variant_tasks):
-        selection_ids = {
-            str(variant_task.source_selection_id)
+    @classmethod
+    def _selection_names_by_variant_task(cls, variant_tasks):
+        selection_id_by_variant_task = {
+            str(variant_task.pk): cls._valid_uuid(
+                variant_task.source_selection_id,
+            )
             for variant_task in variant_tasks
-            if variant_task.source_selection_id
         }
-        if not selection_ids:
-            return {}
-        return {
-            str(selection_id): group_name
-            for selection_id, group_name in WorkAnalogGroup.objects.filter(
-                pk__in=selection_ids,
-            ).values_list('pk', 'analog_group__name')
+        selection_ids = {
+            selection_id
+            for selection_id in selection_id_by_variant_task.values()
+            if selection_id
         }
+        names_by_selection_id = {}
+        if selection_ids:
+            names_by_selection_id = {
+                str(selection_id): group_name
+                for selection_id, group_name in WorkAnalogGroup.objects.filter(
+                    pk__in=selection_ids,
+                ).values_list('pk', 'analog_group__name')
+            }
+
+        result = {}
+        unresolved = []
+        for variant_task in variant_tasks:
+            variant_task_id = str(variant_task.pk)
+            group_name = names_by_selection_id.get(
+                selection_id_by_variant_task[variant_task_id],
+                '',
+            )
+            if group_name:
+                result[variant_task_id] = group_name
+            else:
+                unresolved.append(variant_task)
+
+        if not unresolved:
+            return result
+
+        fallback_names_by_task_id = {}
+        fallback_rows = TaskGroup.objects.filter(
+            task_id__in={variant_task.task_id for variant_task in unresolved},
+        ).order_by('task_id', 'pk').values_list('task_id', 'group__name')
+        for task_id, group_name in fallback_rows:
+            fallback_names_by_task_id.setdefault(str(task_id), group_name)
+        for variant_task in unresolved:
+            group_name = fallback_names_by_task_id.get(
+                str(variant_task.task_id),
+                '',
+            )
+            if group_name:
+                result[str(variant_task.pk)] = group_name
+        return result
+
+    @staticmethod
+    def _valid_uuid(value):
+        if not value:
+            return ''
+        try:
+            return str(UUID(str(value)))
+        except (AttributeError, TypeError, ValueError):
+            return ''
 
     def _capture_unassigned_task_results(self, snapshot, task_scores):
         records = task_score_records_for_attempt(task_scores)

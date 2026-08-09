@@ -15,6 +15,7 @@ from infrastructure.repositories.django_attempt_snapshot_repo import (
 )
 from infrastructure.tests.variant_task_factory import create_variant_task
 from students.models import Student
+from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
 from works.models import Variant, Work
 
@@ -114,6 +115,30 @@ class DjangoAttemptSnapshotRepositoryTests(TestCase):
         self.assertEqual(
             second_task.task_content_snapshot['text'],
             'Найдите силу',
+        )
+
+    def test_freezes_bank_group_for_legacy_selection_identifier(self):
+        group = AnalogGroup.objects.create(name='Динамика')
+        TaskGroup.objects.create(task=self.task, group=group)
+        self.variant_task.source_selection_id = 'spec-row-1'
+        self.variant_task.save(update_fields=['source_selection_id'])
+
+        attempt_ref = DjangoAttemptSnapshotRepository().capture_mark(
+            str(self.mark.pk),
+        )
+        group.name = 'Переименованная группа'
+        group.save(update_fields=['name'])
+
+        task_result = AttemptSnapshot.objects.get(
+            pk=attempt_ref.pk,
+        ).task_results.get()
+        self.assertEqual(
+            task_result.source_selection_id_snapshot,
+            'spec-row-1',
+        )
+        self.assertEqual(
+            task_result.source_selection_name_snapshot,
+            'Динамика',
         )
 
     def test_captures_task_results_without_assigned_variant(self):

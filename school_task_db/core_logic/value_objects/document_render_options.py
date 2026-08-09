@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Mapping, Optional
+from typing import Mapping
 
 
 ANSWER_TYPES_WITH_ANSWERS = {
@@ -30,24 +30,13 @@ class RenderTarget:
         return FILE_TYPE_LABELS[self.renderer_type]
 
 
-def build_render_target(
-    renderer_type: Optional[str] = None,
-    pdf_format: str = 'A4',
-    render_target: Optional[RenderTarget] = None,
-) -> RenderTarget:
-    return render_target or RenderTarget(
-        renderer_type=renderer_type or 'pdf',
-        page_format=pdf_format,
-    )
-
-
 def build_render_target_from_data(
     data: Mapping[str, str],
     default_renderer_type: str = 'pdf',
 ) -> RenderTarget:
-    return build_render_target(
+    return RenderTarget(
         renderer_type=renderer_type_from_data(data, default_renderer_type),
-        pdf_format=data.get('format', 'A4'),
+        page_format=data.get('format', 'A4'),
     )
 
 

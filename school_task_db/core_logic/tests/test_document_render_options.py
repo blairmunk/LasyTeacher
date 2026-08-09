@@ -6,7 +6,6 @@ from core_logic.value_objects.document_render_options import (
     RenderTarget,
     SUPPORTED_DOCUMENT_RENDERER_TYPES,
     WorkDocumentPrintOverrides,
-    build_render_target,
     build_render_target_from_data,
     build_remedial_sheet_build_options_from_data,
     build_work_print_overrides_from_data,
@@ -33,23 +32,6 @@ class DocumentRenderOptionsTests(TestCase):
         self.assertEqual(target.renderer_type, 'html')
         self.assertEqual(target.page_format, 'A5')
         self.assertEqual(target.file_type_label, 'HTML')
-
-    def test_build_render_target_from_legacy_arguments(self):
-        target = build_render_target(renderer_type='html', pdf_format='A5')
-
-        self.assertEqual(target.renderer_type, 'html')
-        self.assertEqual(target.page_format, 'A5')
-
-    def test_build_render_target_preserves_existing_target(self):
-        existing_target = RenderTarget(renderer_type='latex', page_format='A4')
-
-        target = build_render_target(
-            renderer_type='html',
-            pdf_format='A5',
-            render_target=existing_target,
-        )
-
-        self.assertEqual(target, existing_target)
 
     def test_build_render_target_from_data(self):
         target = build_render_target_from_data({

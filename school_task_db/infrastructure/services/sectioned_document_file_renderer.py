@@ -6,7 +6,7 @@ from typing import Callable
 
 from core_logic.entities.document_rendering import GeneratedDocument
 from core_logic.interfaces.document_rendering import IDocumentRenderer
-from core_logic.value_objects.document_render_options import build_render_target
+from core_logic.value_objects.document_render_options import RenderTarget
 from core_logic.value_objects.document_render_requests import DocumentRenderRequest
 
 
@@ -86,9 +86,9 @@ class SectionedHtmlToPdfDocumentRenderer(IDocumentRenderer):
     def _html_request(self, request: DocumentRenderRequest) -> DocumentRenderRequest:
         return DocumentRenderRequest(
             document=request.document,
-            render_target=build_render_target(
+            render_target=RenderTarget(
                 renderer_type='html',
-                pdf_format=request.render_target.page_format,
+                page_format=request.render_target.page_format,
             ),
         )
 

@@ -1,12 +1,18 @@
 """Build task list screen data."""
 
 from core_logic.entities.task import TaskListData, TaskListFilters
+from core_logic.interfaces.task_math_status_cache import ITaskMathStatusCache
 from core_logic.interfaces.task_repo import ITaskRepository
 
 
 class GetTaskListUseCase:
-    def __init__(self, task_repo: ITaskRepository):
+    def __init__(
+        self,
+        task_repo: ITaskRepository,
+        math_status_cache: ITaskMathStatusCache,
+    ):
         self.task_repo = task_repo
+        self.math_status_cache = math_status_cache
 
     def execute(
         self,
@@ -29,7 +35,7 @@ class GetTaskListUseCase:
             total_tasks=self.task_repo.count_tasks(),
             ungrouped_count=self.task_repo.count_ungrouped_tasks(),
             cache_stats=(
-                self.task_repo.get_math_cache_stats()
+                self.math_status_cache.get_cache_stats()
                 if include_cache_stats
                 else None
             ),

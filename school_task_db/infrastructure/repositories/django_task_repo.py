@@ -37,6 +37,7 @@ from core_logic.entities.task import (
     TaskSaveResult,
 )
 from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.interfaces.task_math_status_cache import ITaskMathStatusCache
 from core_logic.services.reference_catalog import merge_reference_choices
 from core_logic.value_objects.task_print_settings import TASK_BANK_ROLE_CONTROL
 from curriculum.models import SubTopic, Topic
@@ -52,6 +53,12 @@ from tasks.models import Source, Task, TaskImage
 
 
 class DjangoTaskRepository(ITaskRepository):
+    def __init__(
+        self,
+        math_status_cache: ITaskMathStatusCache = task_math_status_cache,
+    ):
+        self.math_status_cache = math_status_cache
+
     def _parse_int(self, value):
         try:
             return int(value)
@@ -99,11 +106,11 @@ class DjangoTaskRepository(ITaskRepository):
 
         if filters.math_filter == 'with_math':
             queryset = queryset.filter(
-                id__in=task_math_status_cache.get_tasks_with_math_ids(),
+                id__in=self.math_status_cache.get_tasks_with_math_ids(),
             )
         elif filters.math_filter == 'with_errors':
             queryset = queryset.filter(
-                id__in=task_math_status_cache.get_tasks_with_errors_ids(),
+                id__in=self.math_status_cache.get_tasks_with_errors_ids(),
             )
 
         if filters.source_id == 'none':
@@ -606,12 +613,6 @@ class DjangoTaskRepository(ITaskRepository):
         return Task.objects.filter(
             ~Exists(TaskGroup.objects.filter(task=OuterRef('pk')))
         ).count()
-
-    def get_math_cache_stats(self):
-        return task_math_status_cache.get_cache_stats()
-
-    def refresh_math_cache(self) -> dict:
-        return task_math_status_cache.refresh_cache()
 
     def get_by_ids(self, task_ids: Set[str]) -> List[TaskEntity]:
         if not task_ids:

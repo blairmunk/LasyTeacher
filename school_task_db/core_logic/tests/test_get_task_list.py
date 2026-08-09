@@ -7,7 +7,6 @@ from core_logic.use_cases.get_task_list import GetTaskListUseCase
 class FakeTaskRepository:
     def __init__(self):
         self.filters = None
-        self.cache_stats_requested = False
 
     def get_list_tasks(self, filters):
         self.filters = filters
@@ -34,15 +33,24 @@ class FakeTaskRepository:
     def count_ungrouped_tasks(self):
         return 2
 
-    def get_math_cache_stats(self):
-        self.cache_stats_requested = True
+
+class FakeTaskMathStatusCache:
+    def __init__(self):
+        self.stats_requested = False
+
+    def get_cache_stats(self):
+        self.stats_requested = True
         return {'total': 7}
 
 
 class GetTaskListUseCaseTests(TestCase):
     def test_execute_builds_task_list_data(self):
         repo = FakeTaskRepository()
-        use_case = GetTaskListUseCase(task_repo=repo)
+        cache = FakeTaskMathStatusCache()
+        use_case = GetTaskListUseCase(
+            task_repo=repo,
+            math_status_cache=cache,
+        )
         filters = TaskListFilters(topic_id='topic-1', search='сила')
 
         data = use_case.execute(filters, include_cache_stats=True)
@@ -58,13 +66,17 @@ class GetTaskListUseCaseTests(TestCase):
         self.assertEqual(data.total_tasks, 7)
         self.assertEqual(data.ungrouped_count, 2)
         self.assertEqual(data.cache_stats, {'total': 7})
-        self.assertTrue(repo.cache_stats_requested)
+        self.assertTrue(cache.stats_requested)
 
     def test_execute_skips_cache_stats_for_non_staff_context(self):
         repo = FakeTaskRepository()
-        use_case = GetTaskListUseCase(task_repo=repo)
+        cache = FakeTaskMathStatusCache()
+        use_case = GetTaskListUseCase(
+            task_repo=repo,
+            math_status_cache=cache,
+        )
 
         data = use_case.execute(TaskListFilters())
 
         self.assertIsNone(data.cache_stats)
-        self.assertFalse(repo.cache_stats_requested)
+        self.assertFalse(cache.stats_requested)

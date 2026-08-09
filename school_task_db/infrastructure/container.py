@@ -384,6 +384,9 @@ from infrastructure.services.django_transaction_manager import (
     DjangoTransactionManager,
 )
 from infrastructure.services.task_import_service import DjangoTaskImportService
+from infrastructure.services.task_math_status_cache import (
+    task_math_status_cache,
+)
 from infrastructure.forms.codifier_forms import CodifierFormAdapter
 from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
@@ -416,6 +419,7 @@ class Container:
         self._attempt_snapshot_repo = None
         self._student_repo = None
         self._task_repo = None
+        self._task_math_status_cache = None
         self._task_image_audit_repo = None
         self._work_repo = None
         self._work_read_repo = None
@@ -485,8 +489,16 @@ class Container:
     @property
     def task_repo(self):
         if self._task_repo is None:
-            self._task_repo = DjangoTaskRepository()
+            self._task_repo = DjangoTaskRepository(
+                math_status_cache=self.task_math_status_cache,
+            )
         return self._task_repo
+
+    @property
+    def task_math_status_cache(self):
+        if self._task_math_status_cache is None:
+            self._task_math_status_cache = task_math_status_cache
+        return self._task_math_status_cache
 
     @property
     def task_image_audit_repo(self):
@@ -937,6 +949,7 @@ class Container:
     def get_task_list_use_case(self):
         return GetTaskListUseCase(
             task_repo=self.task_repo,
+            math_status_cache=self.task_math_status_cache,
         )
 
     def get_task_group_list_use_case(self):
@@ -1129,7 +1142,7 @@ class Container:
 
     def refresh_task_math_cache_use_case(self):
         return RefreshTaskMathCacheUseCase(
-            task_repo=self.task_repo,
+            math_status_cache=self.task_math_status_cache,
         )
 
     def create_task_use_case(self):

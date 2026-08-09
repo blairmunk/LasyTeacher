@@ -1,15 +1,15 @@
 """Refresh cached math status for tasks."""
 
 from core_logic.entities.task import MathCacheRefreshResult
-from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.interfaces.task_math_status_cache import ITaskMathStatusCache
 
 
 class RefreshTaskMathCacheUseCase:
-    def __init__(self, task_repo: ITaskRepository):
-        self.task_repo = task_repo
+    def __init__(self, math_status_cache: ITaskMathStatusCache):
+        self.math_status_cache = math_status_cache
 
     def execute(self) -> MathCacheRefreshResult:
-        stats = self.task_repo.refresh_math_cache()
+        stats = self.math_status_cache.refresh_cache()
         return MathCacheRefreshResult(
             status='refreshed',
             with_math_count=len(stats.get('with_math', [])),

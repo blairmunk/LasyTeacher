@@ -5,13 +5,14 @@ from typing import Any, Dict, Set
 
 from django.core.cache import cache
 
+from core_logic.interfaces.task_math_status_cache import ITaskMathStatusCache
 from core_logic.services.formula_processor import formula_processor
 from tasks.models import Task
 
 logger = logging.getLogger(__name__)
 
 
-class DjangoTaskMathStatusCache:
+class DjangoTaskMathStatusCache(ITaskMathStatusCache):
     """Кэш для статуса математических формул в заданиях"""
     
     # Ключи кэша

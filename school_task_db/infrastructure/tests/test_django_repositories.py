@@ -1,4 +1,5 @@
 import datetime as dt
+from unittest.mock import Mock
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -846,6 +847,32 @@ class DjangoRemedialRepositoryTests(TestCase):
             str(self.weak_group.pk),
             [option.pk for option in repo.get_list_analog_groups()],
         )
+
+    def test_task_repository_uses_injected_math_status_filter(self):
+        math_status_cache = Mock()
+        math_status_cache.get_tasks_with_math_ids.return_value = {
+            self.original_weak.pk,
+        }
+        math_status_cache.get_tasks_with_errors_ids.return_value = {
+            self.original_ok.pk,
+        }
+        repo = DjangoTaskRepository(math_status_cache=math_status_cache)
+
+        with_math = repo.get_list_tasks(
+            TaskListFilters(math_filter='with_math')
+        )
+        with_errors = repo.get_list_tasks(
+            TaskListFilters(math_filter='with_errors')
+        )
+
+        self.assertEqual([task.pk for task in with_math], [
+            str(self.original_weak.pk),
+        ])
+        self.assertEqual([task.pk for task in with_errors], [
+            str(self.original_ok.pk),
+        ])
+        math_status_cache.get_tasks_with_math_ids.assert_called_once_with()
+        math_status_cache.get_tasks_with_errors_ids.assert_called_once_with()
 
     def test_task_repository_returns_filtered_analog_group_list_data(self):
         repo = DjangoTaskRepository()

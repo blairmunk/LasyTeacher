@@ -1,7 +1,7 @@
 """Task repository interface."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 from core_logic.entities.task import (
     AddTasksToGroupTask,
@@ -150,14 +150,6 @@ class ITaskRepository(ABC):
     @abstractmethod
     def count_ungrouped_tasks(self) -> int:
         """Return task count without analog groups."""
-
-    @abstractmethod
-    def get_math_cache_stats(self) -> Any:
-        """Return math cache stats for task administration UI."""
-
-    @abstractmethod
-    def refresh_math_cache(self) -> dict:
-        """Refresh task math cache and return grouped task IDs."""
 
     @abstractmethod
     def get_by_ids(self, task_ids: Set[str]) -> List[TaskEntity]:

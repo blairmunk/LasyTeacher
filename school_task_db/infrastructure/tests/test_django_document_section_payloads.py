@@ -55,7 +55,7 @@ from infrastructure.services.remedial_document_payloads import (
 )
 from infrastructure.services.work_document_payloads import (
     WorkHeaderPayloadBuilder,
-    WorkTaskListPayloadBuilder,
+    WorkVariantSectionPayloadBuilder,
     WorkDocumentSourceProvider,
 )
 from infrastructure.repositories.django_work_document_repo import (
@@ -145,7 +145,7 @@ class DjangoWorkHeaderPayloadBuilderTests(TestCase):
         self.assertEqual(payload['max_score'], 12)
 
 
-class DjangoWorkTaskListPayloadBuilderTests(TestCase):
+class DjangoWorkVariantSectionPayloadBuilderTests(TestCase):
     def test_builds_mixed_variant_content_from_immutable_snapshots(self):
         work = Work.objects.create(name='Рабочий лист')
         variant = Variant.objects.create(work=work, number=1)
@@ -194,7 +194,7 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             content={'body': 'Проверьте единицы измерения.'},
         )
         formatter = FakeTaskPayloadFormatter()
-        builder = WorkTaskListPayloadBuilder(
+        builder = WorkVariantSectionPayloadBuilder(
             work_document_repo=DjangoWorkDocumentRepository(),
             task_payload_formatter=formatter,
         )
@@ -301,7 +301,7 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             blank_cells_after=True,
             blank_cells_rows=7,
         )
-        builder = WorkTaskListPayloadBuilder(
+        builder = WorkVariantSectionPayloadBuilder(
             work_document_repo=DjangoWorkDocumentRepository(),
         )
 
@@ -376,7 +376,7 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             max_points=4,
         )
         formatter = FakeTaskPayloadFormatter()
-        builder = WorkTaskListPayloadBuilder(
+        builder = WorkVariantSectionPayloadBuilder(
             work_document_repo=DjangoWorkDocumentRepository(),
             task_payload_formatter=formatter,
         )
@@ -391,7 +391,7 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
         work = Work.objects.create(name='Контрольная')
         Variant.objects.create(work=work, number=1)
         variant_payload_builder = FakeVariantPayloadBuilder()
-        builder = WorkTaskListPayloadBuilder(
+        builder = WorkVariantSectionPayloadBuilder(
             work_document_repo=DjangoWorkDocumentRepository(),
             variant_payload_builder=variant_payload_builder,
         )
@@ -446,7 +446,7 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             render_mode=TASK_RENDER_MODE_TASK_ONLY,
             is_assessable=False,
         )
-        builder = WorkTaskListPayloadBuilder(
+        builder = WorkVariantSectionPayloadBuilder(
             work_document_repo=DjangoWorkDocumentRepository(),
         )
 
@@ -498,7 +498,7 @@ class DjangoWorkTaskListPayloadBuilderTests(TestCase):
             bank_role=TASK_BANK_ROLE_PRACTICE,
             is_assessable=True,
         )
-        builder = WorkTaskListPayloadBuilder(
+        builder = WorkVariantSectionPayloadBuilder(
             work_document_repo=DjangoWorkDocumentRepository(),
         )
 

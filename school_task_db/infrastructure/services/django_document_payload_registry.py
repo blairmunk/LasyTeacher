@@ -45,12 +45,12 @@ from infrastructure.repositories.django_work_document_repo import (
 from infrastructure.services.remedial_document_payloads import (
     RemedialHeaderPayloadBuilder,
     RemedialOriginalMistakesPayloadBuilder,
-    RemedialTrainingTasksPayloadBuilder,
+    RemedialVariantSectionPayloadBuilder,
     RemedialSheetDataProvider,
 )
 from infrastructure.services.work_document_payloads import (
     WorkHeaderPayloadBuilder,
-    WorkTaskListPayloadBuilder,
+    WorkVariantSectionPayloadBuilder,
     WorkDocumentSourceProvider,
 )
 from infrastructure.services.report_document_payloads import (
@@ -77,7 +77,7 @@ def build_work_section_payload_builder_registry(
         work_document_repo=work_document_repo,
         get_work_document_source=get_work_document_source,
     )
-    task_list_builder = WorkTaskListPayloadBuilder(
+    variant_section_builder = WorkVariantSectionPayloadBuilder(
         task_payload_formatter=task_payload_formatter,
         work_source_provider=work_source_provider,
     )
@@ -98,7 +98,7 @@ def build_work_section_payload_builder_registry(
     )
     registry.register(
         TASK_LIST_SECTION,
-        task_list_builder,
+        variant_section_builder,
         document_type=WORK_DOCUMENT_TYPE,
         source_type=WORK_SOURCE_TYPE,
     )
@@ -116,7 +116,7 @@ def build_work_section_payload_builder_registry(
     ):
         registry.register(
             section_type,
-            task_list_builder,
+            variant_section_builder,
             document_type=WORK_DOCUMENT_TYPE,
             source_type=WORK_SOURCE_TYPE,
         )
@@ -136,7 +136,7 @@ def build_remedial_sheet_section_payload_builder_registry(
         sheet_data_provider,
         task_payload_formatter=task_payload_formatter,
     )
-    training_tasks_builder = RemedialTrainingTasksPayloadBuilder(
+    variant_section_builder = RemedialVariantSectionPayloadBuilder(
         sheet_data_provider,
         task_payload_formatter=task_payload_formatter,
     )
@@ -172,7 +172,7 @@ def build_remedial_sheet_section_payload_builder_registry(
         ):
             registry.register(
                 section_type,
-                training_tasks_builder,
+                variant_section_builder,
                 document_type=REMEDIAL_SHEET_DOCUMENT_TYPE,
                 source_type=source_type,
             )

@@ -89,7 +89,7 @@ class WorkHeaderPayloadBuilder:
         }
 
 
-class WorkTaskListPayloadBuilder:
+class WorkVariantSectionPayloadBuilder:
     def __init__(
         self,
         work_document_repo=None,

@@ -70,7 +70,7 @@ class RemedialOriginalMistakesPayloadBuilder:
         }
 
 
-class RemedialTrainingTasksPayloadBuilder:
+class RemedialVariantSectionPayloadBuilder:
     def __init__(self, sheet_data_provider, task_payload_formatter=None):
         self.sheet_data_provider = sheet_data_provider
         self.task_payload_formatter = task_payload_formatter

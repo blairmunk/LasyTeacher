@@ -966,6 +966,8 @@ class DjangoReportRepositoriesTests(TestCase):
         mark.score = 2
         mark.points = 1
         mark.save(update_fields=['score', 'points'])
+        selected_participation.status = 'absent'
+        selected_participation.save(update_fields=['status'])
 
         data = GetStudentPerformanceReportUseCase(
             DjangoStudentPerformanceRepository(),
@@ -1037,6 +1039,8 @@ class DjangoReportRepositoriesTests(TestCase):
         mark.score = 2
         mark.checked_at = now - timedelta(days=60)
         mark.save(update_fields=['score', 'checked_at'])
+        participation.status = 'absent'
+        participation.save(update_fields=['status'])
 
         data = GetReportsDashboardUseCase(
             DjangoReportsDashboardRepository(),

@@ -11,6 +11,9 @@ from core_logic.entities.report_refs import ReportMarkFact
 from core_logic.interfaces.student_performance_repo import (
     IStudentPerformanceRepository,
 )
+from core_logic.value_objects.attempt_status import (
+    resolve_historical_participation_status,
+)
 from infrastructure.repositories.django_report_summary_support import (
     event_scope,
     report_course_ref,
@@ -49,13 +52,16 @@ class DjangoStudentPerformanceRepository(IStudentPerformanceRepository):
         participations_by_student = defaultdict(list)
         marks_by_student = defaultdict(list)
         for participation in scoped_participations:
+            attempt = attempts.get(participation.pk)
             participations_by_student[participation.student_id].append(
                 StudentPerformanceParticipationFact(
-                    status=participation.status,
+                    status=resolve_historical_participation_status(
+                        participation.status,
+                        has_attempt=attempt is not None,
+                    ),
                     created_at=participation.created_at,
                 )
             )
-            attempt = attempts.get(participation.pk)
             if attempt is None or attempt.score is None:
                 continue
             marks_by_student[participation.student_id].append(

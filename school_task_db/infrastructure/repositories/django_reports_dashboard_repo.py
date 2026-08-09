@@ -10,6 +10,9 @@ from core_logic.entities.report_summary import (
 from core_logic.interfaces.reports_dashboard_repo import (
     IReportsDashboardRepository,
 )
+from core_logic.value_objects.attempt_status import (
+    resolve_historical_participation_status,
+)
 from infrastructure.repositories.django_report_summary_support import (
     event_scope,
     event_summary_queryset,
@@ -51,7 +54,10 @@ class DjangoReportsDashboardRepository(IReportsDashboardRepository):
                 DashboardParticipationFact(
                     student_id=str(participation.student_id),
                     event_id=str(participation.event_id),
-                    status=participation.status,
+                    status=resolve_historical_participation_status(
+                        participation.status,
+                        has_attempt=participation.pk in attempts,
+                    ),
                 )
                 for participation in participation_rows
             ],

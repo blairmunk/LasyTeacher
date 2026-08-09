@@ -14,15 +14,3 @@ class DocumentRenderPlan:
     source: DocumentSourceRef
     recipe: DocumentRecipe
     render_target: RenderTarget
-
-
-def build_document_render_plan(
-    source: DocumentSourceRef,
-    recipe: DocumentRecipe,
-    render_target: RenderTarget,
-) -> DocumentRenderPlan:
-    return DocumentRenderPlan(
-        source=source,
-        recipe=recipe,
-        render_target=render_target,
-    )

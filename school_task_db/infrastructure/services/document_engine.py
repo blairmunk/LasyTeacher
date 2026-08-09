@@ -10,6 +10,8 @@ from core_logic.services.document_renderer_registry import (
 )
 from core_logic.value_objects.document_render_plan import DocumentRenderPlan
 from core_logic.value_objects.document_render_requests import DocumentRenderRequest
+
+
 class DjangoDocumentEngine(IDocumentEngine):
     def __init__(
         self,

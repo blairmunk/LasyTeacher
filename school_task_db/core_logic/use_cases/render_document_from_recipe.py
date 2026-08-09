@@ -16,9 +16,7 @@ from core_logic.value_objects.document_render_options import (
     RenderTarget,
     is_supported_document_renderer_type,
 )
-from core_logic.value_objects.document_render_plan import (
-    build_document_render_plan,
-)
+from core_logic.value_objects.document_render_plan import DocumentRenderPlan
 
 
 @dataclass(frozen=True)
@@ -52,7 +50,7 @@ class RenderDocumentFromRecipeUseCase:
                 source_name=source_name,
             )
 
-        render_plan = build_document_render_plan(
+        render_plan = DocumentRenderPlan(
             source=request.source,
             recipe=request.recipe,
             render_target=request.render_target,

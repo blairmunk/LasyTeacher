@@ -25,9 +25,9 @@ from core_logic.entities.work import (
 )
 from core_logic.entities.work_document import WorkDocumentSource
 from core_logic.value_objects.document_render_options import (
-    RemedialSheetDocumentRenderOptions,
+    RemedialSheetBuildOptions,
     RenderTarget,
-    WorkDocumentRenderOptions,
+    WorkDocumentPrintOverrides,
 )
 from core_logic.value_objects.document_build_plan import (
     DocumentSectionPayloadBuildRequest,
@@ -116,8 +116,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 document_builder=components.document_builder,
                 document_renderer_registry=components.document_renderer_registry,
             )
-            options = WorkDocumentRenderOptions(
-                renderer_type='html',
+            print_overrides = WorkDocumentPrintOverrides(
                 append_answers=True,
             )
             presentation_profile = DocumentPresentationProfile(
@@ -132,7 +131,8 @@ class SectionedDocumentDefaultsTests(TestCase):
                 _work_document_render_plan(
                     work_id=str(work.pk),
                     work_name=work.name,
-                    options=options,
+                    renderer_type='html',
+                    print_overrides=print_overrides,
                     presentation_profile=presentation_profile,
                 ),
             )
@@ -194,7 +194,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 _work_document_render_plan(
                     work_id=str(work.pk),
                     work_name=work.name,
-                    options=WorkDocumentRenderOptions(renderer_type='html'),
+                    renderer_type='html',
                     variant_ids=[
                         str(first_variant.pk),
                         str(second_variant.pk),
@@ -238,8 +238,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 document_builder=components.document_builder,
                 document_renderer_registry=components.document_renderer_registry,
             )
-            options = WorkDocumentRenderOptions(
-                renderer_type='html',
+            print_overrides = WorkDocumentPrintOverrides(
                 append_answers=True,
             )
 
@@ -247,7 +246,8 @@ class SectionedDocumentDefaultsTests(TestCase):
                 _work_document_render_plan(
                     work_id=str(work.pk),
                     work_name=work.name,
-                    options=options,
+                    renderer_type='html',
+                    print_overrides=print_overrides,
                 ),
             )
 
@@ -285,8 +285,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 document_builder=components.document_builder,
                 document_renderer_registry=components.document_renderer_registry,
             )
-            options = WorkDocumentRenderOptions(
-                renderer_type='html',
+            print_overrides = WorkDocumentPrintOverrides(
                 append_answers=True,
             )
 
@@ -294,7 +293,8 @@ class SectionedDocumentDefaultsTests(TestCase):
                 _work_document_render_plan(
                     work_id=str(work.pk),
                     work_name=work.name,
-                    options=options,
+                    renderer_type='html',
+                    print_overrides=print_overrides,
                 ),
             )
 
@@ -346,7 +346,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 _work_document_render_plan(
                     work_id=str(work.pk),
                     work_name=work.name,
-                    options=WorkDocumentRenderOptions(renderer_type='html'),
+                    renderer_type='html',
                 ),
             )
 
@@ -389,7 +389,6 @@ class SectionedDocumentDefaultsTests(TestCase):
                 document_builder=components.document_builder,
                 document_renderer_registry=components.document_renderer_registry,
             )
-            options = WorkDocumentRenderOptions(renderer_type='latex')
             presentation_profile = DocumentPresentationProfile(
                 name='Профиль оформления',
                 document_type=WORK_DOCUMENT_TYPE,
@@ -402,7 +401,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 _work_document_render_plan(
                     work_id=str(work.pk),
                     work_name=work.name,
-                    options=options,
+                    renderer_type='latex',
                     presentation_profile=presentation_profile,
                 ),
             )
@@ -487,15 +486,15 @@ class SectionedDocumentDefaultsTests(TestCase):
                 document_builder=components.document_builder,
                 document_renderer_registry=components.document_renderer_registry,
             )
-            options = RemedialSheetDocumentRenderOptions(
-                renderer_type='html',
+            build_options = RemedialSheetBuildOptions(
                 answer_type='with_short_solutions',
             )
 
             result = engine.render_document(
                 _remedial_sheet_document_render_plan(
                     variant_id=str(remedial_variant.pk),
-                    options=options,
+                    renderer_type='html',
+                    build_options=build_options,
                 ),
             )
 
@@ -581,15 +580,15 @@ class SectionedDocumentDefaultsTests(TestCase):
                 document_builder=components.document_builder,
                 document_renderer_registry=components.document_renderer_registry,
             )
-            options = RemedialSheetDocumentRenderOptions(
-                renderer_type='latex',
+            build_options = RemedialSheetBuildOptions(
                 answer_type='with_short_solutions',
             )
 
             result = engine.render_document(
                 _remedial_sheet_document_render_plan(
                     variant_id=str(remedial_variant.pk),
-                    options=options,
+                    renderer_type='latex',
+                    build_options=build_options,
                 ),
             )
 
@@ -925,33 +924,37 @@ def empty_work_render_plan(renderer_type):
 def _work_document_render_plan(
     work_id,
     work_name,
-    options,
+    renderer_type,
+    print_overrides=None,
     presentation_profile=None,
     variant_ids=None,
 ):
+    print_overrides = print_overrides or WorkDocumentPrintOverrides()
     return DocumentRenderPlan(
         source=build_work_document_source(work_id, work_name),
         recipe=build_work_document_recipe_for_render(
-            print_overrides=options.print_overrides,
+            print_overrides=print_overrides,
             presentation_profile=presentation_profile,
             variant_ids=variant_ids,
         ),
-        render_target=options.render_target,
+        render_target=RenderTarget(renderer_type=renderer_type),
     )
 
 
 def _remedial_sheet_document_render_plan(
     variant_id,
-    options,
+    renderer_type,
+    build_options=None,
     presentation_profile=None,
 ):
+    build_options = build_options or RemedialSheetBuildOptions()
     return DocumentRenderPlan(
         source=build_remedial_sheet_document_source(variant_id),
         recipe=build_remedial_sheet_document_recipe_for_render(
-            build_options=options.build_options,
+            build_options=build_options,
             presentation_profile=presentation_profile,
         ),
-        render_target=options.render_target,
+        render_target=RenderTarget(renderer_type=renderer_type),
     )
 
 

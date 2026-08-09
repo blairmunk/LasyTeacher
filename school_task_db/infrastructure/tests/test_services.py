@@ -18,7 +18,7 @@ from core_logic.services.document_builder import (
 )
 from core_logic.value_objects.document_render_options import (
     RenderTarget,
-    WorkDocumentRenderOptions,
+    WorkDocumentPrintOverrides,
 )
 from core_logic.value_objects.document_render_plan import (
     DocumentRenderPlan,
@@ -107,13 +107,13 @@ def empty_work_render_plan(work_id, work_name, renderer_type):
     )
 
 
-def work_render_plan(work_id, work_name, options):
+def work_render_plan(work_id, work_name, renderer_type):
     return DocumentRenderPlan(
         source=build_work_document_source(work_id, work_name),
         recipe=build_work_document_recipe_for_render(
-            options.print_overrides,
+            WorkDocumentPrintOverrides(),
         ),
-        render_target=options.render_target,
+        render_target=RenderTarget(renderer_type=renderer_type),
     )
 
 
@@ -244,9 +244,6 @@ class DjangoDocumentEngineTests(TestCase):
                 ),
                 html_to_pdf_renderer_factory=lambda request: html_to_pdf_renderer,
             )
-            pdf_options = WorkDocumentRenderOptions(renderer_type='pdf')
-            latex_options = WorkDocumentRenderOptions(renderer_type='latex')
-
             html_result = service.render_document(
                 empty_work_render_plan(
                     work_id=str(work.pk),
@@ -255,10 +252,10 @@ class DjangoDocumentEngineTests(TestCase):
                 ),
             )
             pdf_result = service.render_document(
-                work_render_plan(str(work.pk), work.name, pdf_options),
+                work_render_plan(str(work.pk), work.name, 'pdf'),
             )
             latex_result = service.render_document(
-                work_render_plan(str(work.pk), work.name, latex_options),
+                work_render_plan(str(work.pk), work.name, 'latex'),
             )
 
         self.assertEqual(html_result.file_type, 'html')

@@ -87,120 +87,10 @@ class RemedialSheetBuildOptions:
         }
 
 
-@dataclass(frozen=True, init=False)
-class WorkDocumentRenderOptions:
-    render_target: RenderTarget
-    print_overrides: WorkDocumentPrintOverrides
-
-    def __init__(
-        self,
-        renderer_type: Optional[str] = None,
-        pdf_format: str = 'A4',
-        break_between_variants: bool = True,
-        hide_theory: bool = False,
-        hide_text: bool = False,
-        hide_blank_cells: bool = False,
-        append_answers: bool = False,
-        render_target: Optional[RenderTarget] = None,
-        print_overrides: Optional[WorkDocumentPrintOverrides] = None,
-    ):
-        object.__setattr__(
-            self,
-            'render_target',
-            build_render_target(
-                renderer_type=renderer_type,
-                pdf_format=pdf_format,
-                render_target=render_target,
-            ),
-        )
-        object.__setattr__(
-            self,
-            'print_overrides',
-            print_overrides or WorkDocumentPrintOverrides(
-                hide_theory=hide_theory,
-                hide_text=hide_text,
-                hide_blank_cells=hide_blank_cells,
-                append_answers=append_answers,
-                break_between_variants=break_between_variants,
-            ),
-        )
-
-    @property
-    def renderer_type(self) -> str:
-        return self.render_target.renderer_type
-
-    @property
-    def pdf_format(self) -> str:
-        return self.render_target.page_format
-
-    @property
-    def break_between_variants(self) -> bool:
-        return self.print_overrides.break_between_variants
-
-    @property
-    def file_type_label(self) -> str:
-        return self.render_target.file_type_label
-
-    @property
-    def content_description(self) -> str:
-        if self.print_overrides.append_answers:
-            return 'по спецификации + ответы в конце'
-        return 'по спецификации'
-
-
-@dataclass(frozen=True, init=False)
-class RemedialSheetDocumentRenderOptions:
-    render_target: RenderTarget
-    build_options: RemedialSheetBuildOptions
-
-    def __init__(
-        self,
-        renderer_type: Optional[str] = None,
-        pdf_format: str = 'A4',
-        answer_type: str = 'with_short_solutions',
-        render_target: Optional[RenderTarget] = None,
-        build_options: Optional[RemedialSheetBuildOptions] = None,
-    ):
-        object.__setattr__(
-            self,
-            'render_target',
-            build_render_target(
-                renderer_type=renderer_type,
-                pdf_format=pdf_format,
-                render_target=render_target,
-            ),
-        )
-        object.__setattr__(
-            self,
-            'build_options',
-            build_options or RemedialSheetBuildOptions(answer_type=answer_type),
-        )
-
-    @property
-    def renderer_type(self) -> str:
-        return self.render_target.renderer_type
-
-    @property
-    def pdf_format(self) -> str:
-        return self.render_target.page_format
-
-    @property
-    def answer_type(self) -> str:
-        return self.build_options.answer_type
-
-    @property
-    def content_config(self) -> dict:
-        return {
-            **self.build_options.content_config,
-            'page_format': self.pdf_format,
-        }
-
-
-def build_work_render_options(
+def build_work_print_overrides_from_data(
     data: Mapping[str, str],
-) -> WorkDocumentRenderOptions:
-    return WorkDocumentRenderOptions(
-        render_target=build_render_target_from_data(data),
+) -> WorkDocumentPrintOverrides:
+    return WorkDocumentPrintOverrides(
         break_between_variants=data.get('break_between_variants', '1') == '1',
         hide_theory=data.get('hide_theory', '0') == '1',
         hide_text=data.get('hide_text', '0') == '1',
@@ -209,11 +99,10 @@ def build_work_render_options(
     )
 
 
-def build_remedial_sheet_render_options(
+def build_remedial_sheet_build_options_from_data(
     data: Mapping[str, str],
-) -> RemedialSheetDocumentRenderOptions:
-    return RemedialSheetDocumentRenderOptions(
-        render_target=build_render_target_from_data(data),
+) -> RemedialSheetBuildOptions:
+    return RemedialSheetBuildOptions(
         answer_type=data.get('answer_type', 'with_short_solutions'),
     )
 

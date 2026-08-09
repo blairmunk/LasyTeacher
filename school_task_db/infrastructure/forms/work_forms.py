@@ -21,8 +21,9 @@ from core_logic.use_cases.get_rendered_document_file import (
     GetRenderedDocumentFileRequest,
 )
 from core_logic.value_objects.document_render_options import (
-    build_remedial_sheet_render_options,
-    build_work_render_options,
+    build_remedial_sheet_build_options_from_data,
+    build_render_target_from_data,
+    build_work_print_overrides_from_data,
     renderer_type_from_data,
 )
 from core_logic.value_objects.task_print_settings import (
@@ -308,11 +309,10 @@ class WorkFormAdapter:
         )
 
     def render_work_document_request_from_post(self, post_data, work_id):
-        options = build_work_render_options(post_data)
         return RenderWorkDocumentRequest(
             work_id=work_id,
-            render_target=options.render_target,
-            print_overrides=options.print_overrides,
+            render_target=build_render_target_from_data(post_data),
+            print_overrides=build_work_print_overrides_from_data(post_data),
             presentation_profile_id=self._presentation_profile_id_from_post(post_data),
             variant_id=self._variant_id_from_post(post_data),
         )
@@ -321,20 +321,22 @@ class WorkFormAdapter:
         return renderer_type_from_data(post_data, default=default)
 
     def render_remedial_sheet_request_from_post(self, post_data, variant_id):
-        options = build_remedial_sheet_render_options(post_data)
         return RenderRemedialSheetDocumentRequest(
             variant_id=variant_id,
-            render_target=options.render_target,
-            build_options=options.build_options,
+            render_target=build_render_target_from_data(post_data),
+            build_options=build_remedial_sheet_build_options_from_data(
+                post_data,
+            ),
             presentation_profile_id=self._presentation_profile_id_from_post(post_data),
         )
 
     def render_remedial_sheet_batch_request_from_post(self, post_data, work_id):
-        options = build_remedial_sheet_render_options(post_data)
         return RenderRemedialSheetBatchDocumentRequest(
             work_id=work_id,
-            render_target=options.render_target,
-            build_options=options.build_options,
+            render_target=build_render_target_from_data(post_data),
+            build_options=build_remedial_sheet_build_options_from_data(
+                post_data,
+            ),
             presentation_profile_id=self._presentation_profile_id_from_post(post_data),
         )
 

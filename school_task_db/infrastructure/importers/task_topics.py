@@ -40,6 +40,7 @@ class TaskTopicImporter:
                 description=topic_data.get('description', ''),
                 order=topic_data.get('order', 1),
             )
+            self.runtime.stats.record_created('topics', topic.pk)
             self.runtime.log_success(f'Создана тема: {topic.name}')
             return topic
         except Exception as error:

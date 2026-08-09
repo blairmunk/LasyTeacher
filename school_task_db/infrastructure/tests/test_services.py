@@ -191,6 +191,13 @@ class DjangoTaskImportServiceTests(TestCase):
     def test_execute_import_creates_log_and_tasks(self):
         request = TaskImportRequest(
             data={
+                'analog_groups': [
+                    {
+                        'id': '770e8400-e29b-41d4-a716-446655440001',
+                        'name': 'Силы',
+                        'difficulty': 2,
+                    },
+                ],
                 'tasks': [
                     {
                         'id': '550e8400-e29b-41d4-a716-446655440001',
@@ -204,6 +211,9 @@ class DjangoTaskImportServiceTests(TestCase):
                             'grade_level': 9,
                             'section': 'Механика',
                         },
+                        'groups': [
+                            '770e8400-e29b-41d4-a716-446655440001',
+                        ],
                     },
                 ],
             },
@@ -223,6 +233,12 @@ class DjangoTaskImportServiceTests(TestCase):
         self.assertEqual(log.status, ImportLog.Status.SUCCESS)
         self.assertEqual(log.filename, 'tasks.json')
         self.assertEqual(log.tasks_created, 1)
+        self.assertEqual(log.groups_created, 1)
+        self.assertEqual(log.topics_created, 1)
+        self.assertEqual(log.images_created, 0)
+        self.assertEqual(result.stats['by_type']['created']['tasks'], 1)
+        self.assertEqual(result.stats['by_type']['created']['groups'], 1)
+        self.assertEqual(result.stats['by_type']['created']['topics'], 1)
         self.assertIn('Файл: tasks.json (256 Б)', result.message)
         self.assertIn('Время:', result.message)
         self.assertTrue(Topic.objects.filter(name='Динамика').exists())

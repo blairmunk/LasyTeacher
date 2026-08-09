@@ -95,10 +95,15 @@ class DjangoTaskImportService(ITaskImportService):
             for error in getattr(importer.stats, 'error_details', [])[:50]
         ]
 
+        by_type = {
+            action: dict(getattr(importer.stats, f'{action}_by_type', {}))
+            for action in ('created', 'updated', 'skipped')
+        }
         return {
-            'created': getattr(importer.stats, 'created', 0),
-            'updated': getattr(importer.stats, 'updated', 0),
-            'skipped': getattr(importer.stats, 'skipped', 0),
+            'created': by_type['created'].get('tasks', 0),
+            'updated': by_type['updated'].get('tasks', 0),
+            'skipped': by_type['skipped'].get('tasks', 0),
+            'by_type': by_type,
             'errors': errors_count,
             'error_messages': error_messages,
             'context': context.get_stats_summary(),
@@ -116,8 +121,9 @@ class DjangoTaskImportService(ITaskImportService):
         log.tasks_created = summary['created']
         log.tasks_updated = summary['updated']
         log.tasks_skipped = summary['skipped']
-        log.groups_created = summary['context_counts']['groups']
-        log.topics_created = summary['context_counts']['topics']
+        log.groups_created = summary['by_type']['created'].get('groups', 0)
+        log.topics_created = summary['by_type']['created'].get('topics', 0)
+        log.images_created = summary['by_type']['created'].get('images', 0)
         log.errors_count = summary['errors']
         log.details = {
             'importer_stats': {
@@ -125,6 +131,7 @@ class DjangoTaskImportService(ITaskImportService):
                 'updated': summary['updated'],
                 'skipped': summary['skipped'],
             },
+            'operations_by_type': summary['by_type'],
             'context_stats': summary['context'],
             'context_counts': summary['context_counts'],
             'preview': summary['preview'],
@@ -147,6 +154,7 @@ class DjangoTaskImportService(ITaskImportService):
                 'updated': summary['updated'],
                 'skipped': summary['skipped'],
                 'errors': summary['errors'],
+                'by_type': summary['by_type'],
                 'context': summary['context'],
                 'context_counts': summary['context_counts'],
                 'preview': summary['preview'],

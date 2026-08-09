@@ -13,6 +13,10 @@ class ImportStats:
         self.created = 0
         self.updated = 0
         self.skipped = 0
+        self.created_by_type = {}
+        self.updated_by_type = {}
+        self.skipped_by_type = {}
+        self._recorded_operations = set()
         self.errors = 0
         self.warnings = []
         self.error_details = []
@@ -32,6 +36,28 @@ class ImportStats:
             'context': context or {},
             'timestamp': str(uuid.uuid4())
         })
+
+    def record_created(self, object_type: str, object_id=''):
+        self._record('created', object_type, object_id)
+
+    def record_updated(self, object_type: str, object_id=''):
+        self._record('updated', object_type, object_id)
+
+    def record_skipped(self, object_type: str, object_id=''):
+        self._record('skipped', object_type, object_id)
+
+    def count(self, action: str, object_type: str) -> int:
+        return getattr(self, f'{action}_by_type').get(object_type, 0)
+
+    def _record(self, action: str, object_type: str, object_id):
+        operation_key = (action, object_type, str(object_id))
+        if object_id and operation_key in self._recorded_operations:
+            return
+        if object_id:
+            self._recorded_operations.add(operation_key)
+        setattr(self, action, getattr(self, action) + 1)
+        counts = getattr(self, f'{action}_by_type')
+        counts[object_type] = counts.get(object_type, 0) + 1
     
 class BaseImporter:
     """Базовый класс для всех импортеров"""
@@ -114,7 +140,12 @@ class BaseImporter:
             self.log_error(f"Ошибка поиска {model_class.__name__} с UUID {uuid_str[-8:]}: {e}")
             return None
     
-    def should_create_object(self, existing_obj, data: Dict[str, Any]) -> bool:
+    def should_create_object(
+        self,
+        existing_obj,
+        data: Dict[str, Any],
+        object_type: str,
+    ) -> bool:
         """Определяет нужно ли создавать объект в зависимости от режима"""
         if not existing_obj:
             return True
@@ -126,7 +157,7 @@ class BaseImporter:
                 'в strict режиме',
             )
         elif self.mode == 'skip':
-            self.stats.skipped += 1
+            self.stats.record_skipped(object_type, existing_obj.pk)
             return False
         elif self.mode == 'update':
             return False  # Будем обновлять существующий

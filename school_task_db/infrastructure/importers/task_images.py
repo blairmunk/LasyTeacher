@@ -40,16 +40,20 @@ class TaskImageImporter:
         if existing_image and not self.runtime.should_create_object(
             existing_image,
             image_data,
+            'images',
         ):
             if self.runtime.mode == 'update':
-                self._update_image(existing_image, image_data)
-                self.runtime.stats.updated += 1
+                if self._update_image(existing_image, image_data):
+                    self.runtime.stats.record_updated(
+                        'images',
+                        existing_image.pk,
+                    )
             return
 
         if not existing_image:
             image = self._create_image(task, image_uuid, image_data)
             if image:
-                self.runtime.stats.created += 1
+                self.runtime.stats.record_created('images', image.pk)
                 self.runtime.log_success(
                     'Создано изображение для задания '
                     f'{task.get_short_uuid()}',
@@ -113,17 +117,19 @@ class TaskImageImporter:
                     default_filename=f'updated_{image.image.name}',
                 )
                 if image_content is None:
-                    return
+                    return False
                 image.image = image_content
             image.save()
             self.runtime.log_success(
                 f'Обновлено изображение {image.get_short_uuid()}',
             )
+            return True
         except Exception as error:
             self.runtime.log_error(
                 f'Ошибка обновления изображения: {error}',
                 error,
             )
+            return False
 
     def _decode_content(
         self,

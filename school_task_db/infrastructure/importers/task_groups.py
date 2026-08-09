@@ -29,10 +29,14 @@ class TaskGroupImporter:
     def _import_group(self, group_data):
         group_uuid = self.runtime.generate_uuid_if_missing(group_data, 'id')
         group = self.find_by_uuid(group_uuid)
-        if group and not self.runtime.should_create_object(group, group_data):
+        if group and not self.runtime.should_create_object(
+            group,
+            group_data,
+            'groups',
+        ):
             if self.runtime.mode == 'update':
                 self._update_group(group, group_data)
-                self.runtime.stats.updated += 1
+                self.runtime.stats.record_updated('groups', group.pk)
             self.context.add_group(group_uuid, group)
             return
         if group:
@@ -45,7 +49,7 @@ class TaskGroupImporter:
             difficulty=group_data.get('difficulty', 0),
         )
         self.context.add_group(group_uuid, group)
-        self.runtime.stats.created += 1
+        self.runtime.stats.record_created('groups', group.pk)
         self.runtime.log_success(
             f'Создана группа: {group.name} [{group.get_short_uuid()}]',
         )
@@ -148,23 +152,17 @@ class TaskGroupImporter:
             return False
 
     def _update_group(self, group, group_data):
-        try:
-            group.name = group_data.get('name', group.name)
-            group.description = group_data.get(
-                'description',
-                group.description,
-            )
-            group.difficulty = group_data.get(
-                'difficulty',
-                group.difficulty,
-            )
-            group.save()
-            self.runtime.log_success(
-                f'Обновлена группа: {group.name} '
-                f'[{group.get_short_uuid()}]',
-            )
-        except Exception as error:
-            self.runtime.log_error(
-                f'Ошибка обновления группы: {error}',
-                error,
-            )
+        group.name = group_data.get('name', group.name)
+        group.description = group_data.get(
+            'description',
+            group.description,
+        )
+        group.difficulty = group_data.get(
+            'difficulty',
+            group.difficulty,
+        )
+        group.save()
+        self.runtime.log_success(
+            f'Обновлена группа: {group.name} '
+            f'[{group.get_short_uuid()}]',
+        )

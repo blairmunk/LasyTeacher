@@ -1,9 +1,9 @@
 from django.contrib import admin
 
-from .models import PrintSettings
+from .models import PresentationProfile
 
 
-@admin.register(PrintSettings)
+@admin.register(PresentationProfile)
 class PresentationProfileAdmin(admin.ModelAdmin):
     list_display = [
         'name',

@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
 
-from document_engine.models import PrintSettings
+from document_engine.models import PresentationProfile
 from core_logic.value_objects.document_recipes import (
     EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
 )
@@ -9,9 +9,9 @@ from core_logic.value_objects.document_recipes import (
 
 class PresentationProfileViewTests(TestCase):
     def test_editor_shows_presentation_profiles_without_section_controls(self):
-        profile = PrintSettings.objects.create(
+        profile = PresentationProfile.objects.create(
             name='Оформление работы',
-            document_type=PrintSettings.DocumentType.WORK,
+            document_type=PresentationProfile.DocumentType.WORK,
             custom_css='body { font-size: 14px; }',
             custom_latex_preamble='\\small',
         )
@@ -93,7 +93,7 @@ class PresentationProfileViewTests(TestCase):
             response,
             reverse('document_engine:print-profile-editor'),
         )
-        profile = PrintSettings.objects.get(name='Оформление работы')
+        profile = PresentationProfile.objects.get(name='Оформление работы')
         self.assertEqual(profile.description, 'Для печати')
         self.assertTrue(profile.is_default)
         self.assertEqual(profile.custom_css, 'body { font-size: 12pt; }')
@@ -118,7 +118,7 @@ class PresentationProfileViewTests(TestCase):
             'HTML-обёртка должна содержать',
         )
         self.assertFalse(
-            PrintSettings.objects.filter(name='Сломанная обёртка').exists(),
+            PresentationProfile.objects.filter(name='Сломанная обёртка').exists(),
         )
 
     def test_create_view_discards_latex_for_html_only_report(self):
@@ -137,15 +137,15 @@ class PresentationProfileViewTests(TestCase):
             response,
             reverse('document_engine:print-profile-editor'),
         )
-        profile = PrintSettings.objects.get(name='Оформление отчёта')
+        profile = PresentationProfile.objects.get(name='Оформление отчёта')
         self.assertEqual(profile.custom_latex_preamble, '')
         self.assertEqual(profile.latex_template_override, '')
 
     def test_update_view_shows_existing_presentation(self):
-        profile = PrintSettings.objects.create(
+        profile = PresentationProfile.objects.create(
             name='Оформление работы',
             description='Описание',
-            document_type=PrintSettings.DocumentType.WORK,
+            document_type=PresentationProfile.DocumentType.WORK,
             custom_css='body { color: black; }',
             is_default=True,
         )
@@ -164,9 +164,9 @@ class PresentationProfileViewTests(TestCase):
         self.assertContains(response, 'name="is_default"')
 
     def test_update_view_updates_presentation(self):
-        profile = PrintSettings.objects.create(
+        profile = PresentationProfile.objects.create(
             name='Старый профиль',
-            document_type=PrintSettings.DocumentType.WORK,
+            document_type=PresentationProfile.DocumentType.WORK,
         )
 
         response = self.client.post(

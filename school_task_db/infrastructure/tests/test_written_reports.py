@@ -20,7 +20,7 @@ from core_logic.value_objects.work_assessment import (
     WORK_ASSESSMENT_MODE_AGGREGATE,
 )
 from curriculum.models import Course, SubTopic, Topic
-from document_engine.models import PrintSettings
+from document_engine.models import PresentationProfile
 from events.models import AttemptTaskSnapshot, Event, EventParticipation, Mark
 from infrastructure.repositories.django_event_performance_report_repo import (
     DjangoEventPerformanceReportRepository,
@@ -723,7 +723,7 @@ class WrittenReportRepositoryTests(TestCase):
         )
 
     def test_event_report_document_applies_explicit_presentation_profile(self):
-        profile = PrintSettings.objects.create(
+        profile = PresentationProfile.objects.create(
             name='Компактный отчёт',
             document_type=EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
             custom_css='.report-metric { min-height: 10mm; }',

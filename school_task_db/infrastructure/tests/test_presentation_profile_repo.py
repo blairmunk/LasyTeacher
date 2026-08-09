@@ -7,7 +7,7 @@ from core_logic.entities.document import (
     UpdatePresentationProfileParams,
 )
 from core_logic.interfaces.presentation_profile_repo import IPresentationProfileRepository
-from document_engine.models import PrintSettings
+from document_engine.models import PresentationProfile
 from infrastructure.repositories.django_presentation_profile_repo import (
     DjangoPresentationProfileRepository,
 )
@@ -21,17 +21,17 @@ class DjangoPresentationProfileRepositoryTests(TestCase):
         )
 
     def test_lists_profiles_filtered_by_document_type(self):
-        PrintSettings.objects.create(
+        PresentationProfile.objects.create(
             name='Рабочий лист',
-            document_type=PrintSettings.DocumentType.WORKSHEET,
+            document_type=PresentationProfile.DocumentType.WORKSHEET,
         )
-        PrintSettings.objects.create(
+        PresentationProfile.objects.create(
             name='Ключ',
-            document_type=PrintSettings.DocumentType.ANSWER_KEY,
+            document_type=PresentationProfile.DocumentType.ANSWER_KEY,
         )
 
         profiles = DjangoPresentationProfileRepository().list_presentation_profiles(
-            document_type=PrintSettings.DocumentType.WORKSHEET,
+            document_type=PresentationProfile.DocumentType.WORKSHEET,
         )
 
         self.assertEqual(len(profiles), 1)
@@ -40,28 +40,28 @@ class DjangoPresentationProfileRepositoryTests(TestCase):
         self.assertEqual(profiles[0].document_type, 'worksheet')
 
     def test_returns_profile_by_id_and_type(self):
-        model = PrintSettings.objects.create(
+        model = PresentationProfile.objects.create(
             name='Рабочий лист',
-            document_type=PrintSettings.DocumentType.WORKSHEET,
+            document_type=PresentationProfile.DocumentType.WORKSHEET,
         )
 
         profile = DjangoPresentationProfileRepository().get_presentation_profile(
             presentation_profile_id=str(model.pk),
-            document_type=PrintSettings.DocumentType.WORKSHEET,
+            document_type=PresentationProfile.DocumentType.WORKSHEET,
         )
 
         self.assertEqual(profile.presentation_profile_id, str(model.pk))
         self.assertEqual(profile.name, 'Рабочий лист')
 
     def test_returns_none_when_profile_has_wrong_type(self):
-        model = PrintSettings.objects.create(
+        model = PresentationProfile.objects.create(
             name='Рабочий лист',
-            document_type=PrintSettings.DocumentType.WORKSHEET,
+            document_type=PresentationProfile.DocumentType.WORKSHEET,
         )
 
         profile = DjangoPresentationProfileRepository().get_presentation_profile(
             presentation_profile_id=str(model.pk),
-            document_type=PrintSettings.DocumentType.ANSWER_KEY,
+            document_type=PresentationProfile.DocumentType.ANSWER_KEY,
         )
 
         self.assertIsNone(profile)
@@ -70,7 +70,7 @@ class DjangoPresentationProfileRepositoryTests(TestCase):
         profile_id = DjangoPresentationProfileRepository().create_presentation_profile(
             CreatePresentationProfileParams(
                 name='Рабочий лист',
-                document_type=PrintSettings.DocumentType.WORK,
+                document_type=PresentationProfile.DocumentType.WORK,
                 is_default=True,
                 presentation=DocumentPresentation(
                     custom_css='body { font-size: 12pt; }',
@@ -81,7 +81,7 @@ class DjangoPresentationProfileRepositoryTests(TestCase):
             )
         )
 
-        model = PrintSettings.objects.get(pk=profile_id)
+        model = PresentationProfile.objects.get(pk=profile_id)
         self.assertTrue(model.is_default)
         self.assertEqual(model.custom_css, 'body { font-size: 12pt; }')
         self.assertEqual(
@@ -98,16 +98,16 @@ class DjangoPresentationProfileRepositoryTests(TestCase):
         )
 
     def test_creating_default_profile_clears_previous_default(self):
-        old_default = PrintSettings.objects.create(
+        old_default = PresentationProfile.objects.create(
             name='Старый профиль',
-            document_type=PrintSettings.DocumentType.WORK,
+            document_type=PresentationProfile.DocumentType.WORK,
             is_default=True,
         )
 
         DjangoPresentationProfileRepository().create_presentation_profile(
             CreatePresentationProfileParams(
                 name='Новый профиль',
-                document_type=PrintSettings.DocumentType.WORK,
+                document_type=PresentationProfile.DocumentType.WORK,
                 is_default=True,
             )
         )
@@ -116,9 +116,9 @@ class DjangoPresentationProfileRepositoryTests(TestCase):
         self.assertFalse(old_default.is_default)
 
     def test_updates_profile_preserving_presentation(self):
-        model = PrintSettings.objects.create(
+        model = PresentationProfile.objects.create(
             name='Старый профиль',
-            document_type=PrintSettings.DocumentType.WORK,
+            document_type=PresentationProfile.DocumentType.WORK,
         )
 
         updated = DjangoPresentationProfileRepository().update_presentation_profile(
@@ -126,7 +126,7 @@ class DjangoPresentationProfileRepositoryTests(TestCase):
                 presentation_profile_id=str(model.pk),
                 name='Новый профиль',
                 description='Новое описание',
-                document_type=PrintSettings.DocumentType.WORK,
+                document_type=PresentationProfile.DocumentType.WORK,
                 is_default=True,
                 presentation=DocumentPresentation(
                     custom_css='.task { margin: 1rem; }',
@@ -153,7 +153,7 @@ class DjangoPresentationProfileRepositoryTests(TestCase):
             UpdatePresentationProfileParams(
                 presentation_profile_id='550e8400-e29b-41d4-a716-446655440000',
                 name='Профиль',
-                document_type=PrintSettings.DocumentType.WORK,
+                document_type=PresentationProfile.DocumentType.WORK,
             )
         )
 

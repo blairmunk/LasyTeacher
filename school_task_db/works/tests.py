@@ -24,7 +24,7 @@ from core_logic.value_objects.work_assessment import (
     WORK_ASSESSMENT_MODE_AGGREGATE,
 )
 from curriculum.models import Topic
-from document_engine.models import PrintSettings
+from document_engine.models import PresentationProfile
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_work_document_repo import (
     DjangoWorkDocumentRepository,
@@ -245,9 +245,9 @@ class WorkDetailViewTests(TestCase):
         self.assertContains(response, 'break_between_variants')
 
     def test_detail_exposes_work_template_selector(self):
-        template = PrintSettings.objects.create(
+        template = PresentationProfile.objects.create(
             name='Кастомный шаблон работы',
-            document_type=PrintSettings.DocumentType.WORK,
+            document_type=PresentationProfile.DocumentType.WORK,
             custom_latex_preamble='\\usepackage{multicol}',
             is_default=True,
         )
@@ -282,9 +282,9 @@ class WorkDetailViewTests(TestCase):
             variant_type='remedial',
             assigned_student=student,
         )
-        template = PrintSettings.objects.create(
+        template = PresentationProfile.objects.create(
             name='Шаблон листа РнО',
-            document_type=PrintSettings.DocumentType.REMEDIAL,
+            document_type=PresentationProfile.DocumentType.REMEDIAL,
             is_default=True,
         )
 

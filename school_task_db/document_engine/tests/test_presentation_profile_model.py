@@ -3,15 +3,15 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from core_logic.entities.document import DocumentPresentationProfile
-from document_engine.models import PrintSettings
+from document_engine.models import PresentationProfile
 
 
-class PrintSettingsModelTests(TestCase):
+class PresentationProfileModelTests(TestCase):
     def test_converts_model_to_presentation_spec(self):
         user = User.objects.create_user(username='teacher')
-        profile = PrintSettings.objects.create(
+        profile = PresentationProfile.objects.create(
             name='Рабочий лист',
-            document_type=PrintSettings.DocumentType.WORKSHEET,
+            document_type=PresentationProfile.DocumentType.WORKSHEET,
             created_by=user,
             html_template_override='<html>{{ body_content }}</html>',
             latex_template_override='\\begin{document}{{ body_content }}',
@@ -19,7 +19,7 @@ class PrintSettingsModelTests(TestCase):
             custom_latex_preamble='\\usepackage{multicol}',
         )
 
-        spec = profile.to_presentation_profile()
+        spec = profile.to_domain_profile()
 
         self.assertIsInstance(spec, DocumentPresentationProfile)
         self.assertEqual(spec.name, 'Рабочий лист')
@@ -41,23 +41,23 @@ class PrintSettingsModelTests(TestCase):
         )
 
     def test_string_representation_contains_name_and_type(self):
-        profile = PrintSettings(
+        profile = PresentationProfile(
             name='Ключ',
-            document_type=PrintSettings.DocumentType.ANSWER_KEY,
+            document_type=PresentationProfile.DocumentType.ANSWER_KEY,
         )
 
         self.assertEqual(str(profile), 'Ключ (Ключ для проверки)')
 
     def test_full_clean_accepts_supported_document_type(self):
-        profile = PrintSettings(
+        profile = PresentationProfile(
             name='Рабочий лист',
-            document_type=PrintSettings.DocumentType.WORKSHEET,
+            document_type=PresentationProfile.DocumentType.WORKSHEET,
         )
 
         profile.full_clean()
 
     def test_full_clean_rejects_unknown_document_type(self):
-        profile = PrintSettings(
+        profile = PresentationProfile(
             name='Сломанный профиль',
             document_type='unknown_document_type',
         )

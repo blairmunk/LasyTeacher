@@ -19,7 +19,7 @@ from core_logic.value_objects.document_render_options import (
     WorkDocumentPrintOverrides,
 )
 from curriculum.models import Topic
-from document_engine.models import PrintSettings
+from document_engine.models import PresentationProfile
 from events.models import Event, EventParticipation, Mark
 from infrastructure.container import Container
 from infrastructure.tests.variant_task_factory import (
@@ -63,9 +63,9 @@ class DocumentContainerIntegrationTests(TestCase):
             order=1,
             max_points=4,
         )
-        print_settings = PrintSettings.objects.create(
+        presentation_profile = PresentationProfile.objects.create(
             name='Пользовательское оформление',
-            document_type=PrintSettings.DocumentType.WORK,
+            document_type=PresentationProfile.DocumentType.WORK,
             custom_css='.document-task { margin: 12px; }',
             html_template_override=(
                 '<html><head><style>{{ custom_css }}</style></head>'
@@ -96,7 +96,7 @@ class DocumentContainerIntegrationTests(TestCase):
                     print_overrides=WorkDocumentPrintOverrides(
                         append_answers=True,
                     ),
-                    presentation_profile_id=str(print_settings.pk),
+                    presentation_profile_id=str(presentation_profile.pk),
                 )
             )
 

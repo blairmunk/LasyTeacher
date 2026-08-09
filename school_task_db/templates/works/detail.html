@@ -600,7 +600,7 @@
         });
     }
 
-    function syncPrintSettingsNotice(form) {
+    function syncPresentationProfileNotice(form) {
         var isRemedial = form.hasAttribute(
             'data-remedial-batch-rendering-form'
         );
@@ -651,9 +651,9 @@
         );
         if (!printSettingsSelect) return;
         printSettingsSelect.addEventListener('change', function() {
-            syncPrintSettingsNotice(form);
+            syncPresentationProfileNotice(form);
         });
-        syncPrintSettingsNotice(form);
+        syncPresentationProfileNotice(form);
     });
 
     // === Пакетная печать листов работы над ошибками ===

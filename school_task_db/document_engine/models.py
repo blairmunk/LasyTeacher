@@ -21,11 +21,8 @@ from core_logic.value_objects.document_recipes import (
 from core_logic.value_objects.document_type_catalog import validate_document_type
 
 
-class PrintSettings(BaseModel):
-    """Persistence model for presentation profiles.
-
-    The legacy class name is kept to avoid a database-table rename.
-    """
+class PresentationProfile(BaseModel):
+    """Persistence model for saved document presentation profiles."""
 
     class DocumentType(models.TextChoices):
         WORK = WORK_DOCUMENT_TYPE, 'Контрольная / самостоятельная'
@@ -71,7 +68,7 @@ class PrintSettings(BaseModel):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='print_settings_profiles',
+        related_name='presentation_profiles',
     )
 
     class Meta:
@@ -89,7 +86,7 @@ class PrintSettings(BaseModel):
         except ValueError as error:
             raise ValidationError({'document_type': str(error)}) from error
 
-    def to_presentation_profile(self):
+    def to_domain_profile(self):
         return DocumentPresentationProfile(
             name=self.name,
             document_type=self.document_type,

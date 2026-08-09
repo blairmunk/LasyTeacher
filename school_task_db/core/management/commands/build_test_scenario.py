@@ -24,7 +24,7 @@ from core_logic.use_cases.save_work import (
     UpdateWorkWithSpecificationRequest,
 )
 from curriculum.models import Course, CourseAssignment, SubTopic, Topic
-from document_engine.models import PrintSettings
+from document_engine.models import PresentationProfile
 from events.models import AttemptSnapshot, Event, EventParticipation
 from infrastructure.container import container
 from site_settings.models import SiteSettings
@@ -197,7 +197,7 @@ class Command(BaseCommand):
         profiles = {}
         for data in manifest.get('print_profiles', []):
             profile_id = self._scenario_id('print-profile', data.get('key'))
-            profile, _ = PrintSettings.objects.update_or_create(
+            profile, _ = PresentationProfile.objects.update_or_create(
                 id=profile_id,
                 defaults={
                     'name': data['name'],

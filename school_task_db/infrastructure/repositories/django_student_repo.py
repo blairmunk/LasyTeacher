@@ -39,7 +39,7 @@ from events.models import EventParticipation
 from infrastructure.services.django_attempt_snapshot_queries import (
     latest_attempts_by_participation,
 )
-from infrastructure.services.captured_task_result_queries import (
+from infrastructure.services.django_captured_task_result_queries import (
     latest_assessable_task_results,
 )
 from task_groups.models import AnalogGroup, TaskGroup

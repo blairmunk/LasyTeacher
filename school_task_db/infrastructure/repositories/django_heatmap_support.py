@@ -10,7 +10,7 @@ from core_logic.entities.report_refs import (
 )
 from curriculum.models import Course
 from events.models import EventParticipation
-from infrastructure.services.captured_task_result_queries import (
+from infrastructure.services.django_captured_task_result_queries import (
     latest_assessable_task_results,
 )
 

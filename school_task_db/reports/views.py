@@ -20,10 +20,6 @@ from core_logic.use_cases.get_heatmap_topic_matrix import (
     HeatmapTopicMatrixRequest,
 )
 from core_logic.use_cases.get_journal_select import JournalSelectRequest
-from core_logic.entities.document_rendering import (
-    DOCUMENT_RENDER_STATUS_EMPTY,
-    DOCUMENT_RENDER_STATUS_NOT_FOUND,
-)
 from core_logic.use_cases.get_presentation_profile_list import (
     GetPresentationProfileListRequest,
 )
@@ -174,12 +170,15 @@ class EventPerformanceReportDocumentView(View):
                 ),
             )
         )
-        if result.status == DOCUMENT_RENDER_STATUS_NOT_FOUND:
-            raise Http404('Событие не найдено.')
-        response = _rendered_document_response(result)
-        if response:
+        presentation = (
+            container.report_document_web_presenter.event_report(result)
+        )
+        if presentation.is_not_found:
+            raise Http404(presentation.not_found_message)
+        response = _rendered_document_response(presentation)
+        if response is not None:
             return response
-        messages.error(request, 'Не удалось сформировать документ отчёта.')
+        messages.error(request, presentation.error_message)
         return redirect('reports:event-performance', event_pk=event_pk)
 
 
@@ -240,26 +239,25 @@ class StudentDigestDocumentView(View):
         except ValueError as error:
             messages.error(request, str(error))
             return redirect('reports:student-digests')
-        if result.status == DOCUMENT_RENDER_STATUS_NOT_FOUND:
-            raise Http404('Класс не найден.')
-        if result.status == DOCUMENT_RENDER_STATUS_EMPTY:
-            messages.error(request, 'За выбранный период нет данных для печати.')
-            return redirect('reports:student-digests')
-        response = _rendered_document_response(result)
-        if response:
+        presentation = (
+            container.report_document_web_presenter.student_digest(result)
+        )
+        if presentation.is_not_found:
+            raise Http404(presentation.not_found_message)
+        response = _rendered_document_response(presentation)
+        if response is not None:
             return response
-        messages.error(request, 'Не удалось сформировать дайджесты.')
+        messages.error(request, presentation.error_message)
         return redirect('reports:student-digests')
 
 
-def _rendered_document_response(result):
-    if not result.success or not result.files:
+def _rendered_document_response(presentation):
+    if not presentation.has_file:
         return None
-    file_info = result.files[0]
     generated = container.get_rendered_document_file_use_case().execute(
         GetRenderedDocumentFileRequest(
-            file_type=result.file_type,
-            filename=file_info.filename,
+            file_type=presentation.file_type,
+            filename=presentation.filename,
         ),
     )
     return container.rendered_document_file_presenter.response(

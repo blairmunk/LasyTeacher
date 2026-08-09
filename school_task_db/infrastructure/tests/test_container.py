@@ -325,6 +325,9 @@ from infrastructure.presenters.heatmap import HeatmapPresenter
 from infrastructure.presenters.rendered_document_file import (
     RenderedDocumentFilePresenter,
 )
+from infrastructure.presenters.report_document import (
+    ReportDocumentWebPresenter,
+)
 from infrastructure.presenters.work_document import WorkDocumentWebPresenter
 from infrastructure.services.document_engine import (
     DjangoDocumentEngine,
@@ -1045,6 +1048,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             container.rendered_document_file_presenter,
             RenderedDocumentFilePresenter,
+        )
+        self.assertIsInstance(
+            container.report_document_web_presenter,
+            ReportDocumentWebPresenter,
         )
         self.assertIsInstance(
             container.document_engine,

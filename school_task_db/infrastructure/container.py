@@ -395,6 +395,9 @@ from infrastructure.presenters.heatmap import HeatmapPresenter
 from infrastructure.presenters.rendered_document_file import (
     RenderedDocumentFilePresenter,
 )
+from infrastructure.presenters.report_document import (
+    ReportDocumentWebPresenter,
+)
 from infrastructure.presenters.work_document import WorkDocumentWebPresenter
 
 
@@ -446,6 +449,7 @@ class Container:
         self._work_form_adapter = None
         self._work_document_web_presenter = None
         self._rendered_document_file_presenter = None
+        self._report_document_web_presenter = None
         self._task_form_adapter = None
         self._document_engine = None
         self._rendered_document_file_store = None
@@ -729,6 +733,12 @@ class Container:
                 RenderedDocumentFilePresenter()
             )
         return self._rendered_document_file_presenter
+
+    @property
+    def report_document_web_presenter(self):
+        if self._report_document_web_presenter is None:
+            self._report_document_web_presenter = ReportDocumentWebPresenter()
+        return self._report_document_web_presenter
 
     @property
     def task_form_adapter(self):

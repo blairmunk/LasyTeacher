@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 
+from django.urls import reverse
 from django.utils.dateparse import parse_date
 
 from core_logic.entities.event_performance_report import (
@@ -266,6 +267,93 @@ class ReportFormAdapter:
         return {
             'group_param': f'?group={group_id}' if group_id else '',
             'group_suffix': f'&group={group_id}' if group_id else '',
+        }
+
+    def heatmap_toggle_url(self, query, path=''):
+        toggle_params = query.copy()
+        if query.get('transpose') == '1':
+            toggle_params.pop('transpose', None)
+        else:
+            toggle_params['transpose'] = '1'
+        encoded_params = toggle_params.urlencode()
+        if path:
+            return f'{path}?{encoded_params}'
+        return f'?{encoded_params}' if encoded_params else '?'
+
+    def heatmap_topic_matrix_context(
+        self,
+        matrix,
+        *,
+        transpose=False,
+        group_id='',
+    ):
+        columns = matrix.columns
+        rows = matrix.rows
+        col_averages = matrix.col_averages
+        group_param = f'?group={group_id}' if group_id else ''
+
+        if not transpose:
+            return {
+                'group_param': group_param,
+                'grid_row_header': 'Ученик',
+                'grid_rows': [
+                    {
+                        'label': row['student'].short_name,
+                        'url': reverse(
+                            'students:detail',
+                            args=[row['student'].pk],
+                        ),
+                        'cells': row['cells'],
+                        'avg': row['avg'],
+                        'avg_css': row['avg_css'],
+                    }
+                    for row in rows
+                ],
+                'grid_col_headers': [
+                    {
+                        'label': topic.name,
+                        'title': f'{topic.section} → {topic.name}',
+                    }
+                    for topic in columns
+                ],
+                'grid_col_averages': col_averages,
+                'has_data': bool(rows and columns),
+            }
+
+        return {
+            'group_param': group_param,
+            'grid_row_header': 'Тема',
+            'grid_rows': [
+                {
+                    'label': topic.name,
+                    'url': (
+                        reverse(
+                            'reports:heatmap-drilldown',
+                            args=[topic.pk],
+                        )
+                        + group_param
+                    ),
+                    'cells': [
+                        row['cells'][column_index]
+                        for row in rows
+                    ],
+                    'avg': col_averages[column_index]['pct'],
+                    'avg_css': col_averages[column_index]['css'],
+                }
+                for column_index, topic in enumerate(columns)
+            ],
+            'grid_col_headers': [
+                {
+                    'label': row['student'].short_name,
+                    'title': row['student'].full_name,
+                }
+                for row in rows
+            ],
+            'grid_col_averages': [
+                {'pct': row['avg'], 'css': row['avg_css']}
+                for row in rows
+            ],
+            'has_data': bool(rows and columns),
         }
 
     def heatmap_course_timeline_json(self, timeline):

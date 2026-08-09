@@ -713,6 +713,68 @@ class ReportFormAdapterTests(SimpleTestCase):
         self.assertIn('Динамика результатов', timeline_json)
         self.assertIn('displayModeBar', timeline_json)
 
+    def test_builds_topic_heatmap_context_in_both_orientations(self):
+        student = SimpleNamespace(
+            pk='00000000-0000-0000-0000-000000000001',
+            short_name='И. Иванов',
+            full_name='Иванов Иван',
+        )
+        topic = SimpleNamespace(
+            pk='00000000-0000-0000-0000-000000000002',
+            name='Динамика',
+            section='Механика',
+        )
+        matrix = SimpleNamespace(
+            columns=[topic],
+            rows=[{
+                'student': student,
+                'cells': [{'pct': 80, 'css': 'good'}],
+                'avg': 80,
+                'avg_css': 'good',
+            }],
+            col_averages=[{'pct': 80, 'css': 'good'}],
+        )
+        adapter = ReportFormAdapter()
+
+        normal = adapter.heatmap_topic_matrix_context(matrix)
+        transposed = adapter.heatmap_topic_matrix_context(
+            matrix,
+            transpose=True,
+            group_id='00000000-0000-0000-0000-000000000003',
+        )
+
+        self.assertEqual(normal['grid_row_header'], 'Ученик')
+        self.assertEqual(normal['grid_rows'][0]['label'], 'И. Иванов')
+        self.assertEqual(
+            normal['grid_col_headers'][0]['title'],
+            'Механика → Динамика',
+        )
+        self.assertEqual(transposed['grid_row_header'], 'Тема')
+        self.assertEqual(transposed['grid_rows'][0]['label'], 'Динамика')
+        self.assertEqual(transposed['grid_rows'][0]['cells'][0]['pct'], 80)
+        self.assertIn(
+            'group=00000000-0000-0000-0000-000000000003',
+            transposed['grid_rows'][0]['url'],
+        )
+        self.assertEqual(transposed['grid_col_averages'][0]['pct'], 80)
+
+    def test_builds_heatmap_transpose_toggle_url(self):
+        adapter = ReportFormAdapter()
+
+        enabled = adapter.heatmap_toggle_url(
+            QueryDict('group=g1'),
+            path='/reports/heatmap/',
+        )
+        disabled = adapter.heatmap_toggle_url(
+            QueryDict('group=g1&transpose=1'),
+        )
+
+        self.assertEqual(
+            enabled,
+            '/reports/heatmap/?group=g1&transpose=1',
+        )
+        self.assertEqual(disabled, '?group=g1')
+
     def test_builds_journal_request_from_query(self):
         request = ReportFormAdapter().journal_request_from_query(
             QueryDict('debts=1'),

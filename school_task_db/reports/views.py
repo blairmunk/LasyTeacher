@@ -313,50 +313,13 @@ class HeatmapView(View):
                 section_filter=section,
             ),
         )
-        columns = matrix.columns
-        rows = matrix.rows
-        col_averages = matrix.col_averages
-        group_param = f'?group={group.pk}' if group else ''
-
-        if not transpose:
-            grid_row_header = 'Ученик'
-            grid_rows = [{
-                'label': row['student'].short_name,
-                'url': reverse('students:detail', args=[row['student'].pk]),
-                'cells': row['cells'],
-                'avg': row['avg'],
-                'avg_css': row['avg_css'],
-            } for row in rows]
-            grid_col_headers = [{
-                'label': t.name,
-                'title': f'{t.section} → {t.name}',
-            } for t in columns]
-            grid_col_averages = col_averages
-        else:
-            grid_row_header = 'Тема'
-            grid_rows = []
-            for i, topic in enumerate(columns):
-                cells = [rows[j]['cells'][i] for j in range(len(rows))]
-                url = reverse('reports:heatmap-drilldown', args=[topic.pk]) + group_param
-                grid_rows.append({
-                    'label': topic.name,
-                    'url': url,
-                    'cells': cells,
-                    'avg': col_averages[i]['pct'],
-                    'avg_css': col_averages[i]['css'],
-                })
-            grid_col_headers = [{
-                'label': row['student'].short_name,
-                'title': row['student'].full_name,
-            } for row in rows]
-            grid_col_averages = [{'pct': row['avg'], 'css': row['avg_css']} for row in rows]
-
-        toggle_params = request.GET.copy()
-        if transpose:
-            toggle_params.pop('transpose', None)
-        else:
-            toggle_params['transpose'] = '1'
-        toggle_url = f'?{toggle_params.urlencode()}' if toggle_params else '?'
+        matrix_context = (
+            container.report_form_adapter.heatmap_topic_matrix_context(
+                matrix,
+                transpose=transpose,
+                group_id=str(group.pk) if group else '',
+            )
+        )
 
         return render(request, 'reports/heatmap.html', {
             'groups': groups,
@@ -364,14 +327,12 @@ class HeatmapView(View):
             'sections': overview.sections,
             'selected_section': section,
             'is_transposed': transpose,
-            'toggle_url': toggle_url,
-            'grid_row_header': grid_row_header,
-            'grid_rows': grid_rows,
-            'grid_col_headers': grid_col_headers,
-            'grid_col_averages': grid_col_averages,
+            'toggle_url': (
+                container.report_form_adapter.heatmap_toggle_url(request.GET)
+            ),
+            **matrix_context,
             'total_students': len(students),
-            'total_topics': len(columns),
-            'has_data': bool(rows and columns),
+            'total_topics': len(matrix.columns),
             'active_report': overview.active_report,
             'active_course_pk': overview.active_course_pk,
             'courses': overview.courses,
@@ -416,50 +377,13 @@ class HeatmapCourseView(View):
                 work_ids=work_ids,
             ),
         )
-        columns = matrix.columns
-        rows = matrix.rows
-        col_averages = matrix.col_averages
-        group_param = f'?group={group.pk}' if group else ''
-
-        if not transpose:
-            grid_row_header = 'Ученик'
-            grid_rows = [{
-                'label': row['student'].short_name,
-                'url': reverse('students:detail', args=[row['student'].pk]),
-                'cells': row['cells'],
-                'avg': row['avg'],
-                'avg_css': row['avg_css'],
-            } for row in rows]
-            grid_col_headers = [{
-                'label': t.name,
-                'title': f'{t.section} → {t.name}',
-            } for t in columns]
-            grid_col_averages = col_averages
-        else:
-            grid_row_header = 'Тема'
-            grid_rows = []
-            for i, topic in enumerate(columns):
-                cells = [rows[j]['cells'][i] for j in range(len(rows))]
-                url = reverse('reports:heatmap-drilldown', args=[topic.pk]) + group_param
-                grid_rows.append({
-                    'label': topic.name,
-                    'url': url,
-                    'cells': cells,
-                    'avg': col_averages[i]['pct'],
-                    'avg_css': col_averages[i]['css'],
-                })
-            grid_col_headers = [{
-                'label': row['student'].short_name,
-                'title': row['student'].full_name,
-            } for row in rows]
-            grid_col_averages = [{'pct': row['avg'], 'css': row['avg_css']} for row in rows]
-
-        toggle_params = request.GET.copy()
-        if transpose:
-            toggle_params.pop('transpose', None)
-        else:
-            toggle_params['transpose'] = '1'
-        toggle_url = f'{request.path}?{toggle_params.urlencode()}'
+        matrix_context = (
+            container.report_form_adapter.heatmap_topic_matrix_context(
+                matrix,
+                transpose=transpose,
+                group_id=str(group.pk) if group else '',
+            )
+        )
 
         timeline = container.get_heatmap_course_timeline_use_case().execute(
             HeatmapCourseTimelineRequest(
@@ -477,16 +401,14 @@ class HeatmapCourseView(View):
             'course': course,
             'groups': course_groups,
             'selected_group': group,
-            'group_param': group_param,
             'is_transposed': transpose,
-            'toggle_url': toggle_url,
-            'grid_row_header': grid_row_header,
-            'grid_rows': grid_rows,
-            'grid_col_headers': grid_col_headers,
-            'grid_col_averages': grid_col_averages,
+            'toggle_url': container.report_form_adapter.heatmap_toggle_url(
+                request.GET,
+                path=request.path,
+            ),
+            **matrix_context,
             'total_students': len(students),
-            'total_topics': len(columns),
-            'has_data': bool(rows and columns),
+            'total_topics': len(matrix.columns),
             'timeline_json': timeline_json,
             'active_report': overview.active_report,
             'active_course_pk': overview.active_course_pk,

@@ -120,6 +120,19 @@ class PresentationProfileSelectionTests(TestCase):
 
         self.assertEqual(selected_profile, request_spec)
 
+    def test_rejects_request_profile_for_another_document_type(self):
+        request_spec = DocumentPresentationProfile(
+            name='Чужой профиль',
+            document_type='event_performance_report',
+        )
+
+        selected_profile = resolve_document_presentation_profile(
+            document_type=WORKSHEET_DOCUMENT_TYPE,
+            request_presentation_profile=request_spec,
+        )
+
+        self.assertIsNone(selected_profile)
+
     def test_returns_profile_by_id(self):
         repo = FakePresentationProfileRepository()
 

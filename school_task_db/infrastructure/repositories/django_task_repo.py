@@ -38,7 +38,7 @@ from infrastructure.services.task_image_presentation import (
 from infrastructure.services.task_math_status_cache import (
     task_math_status_cache,
 )
-from task_groups.models import AnalogGroup, TaskGroup
+from task_groups.models import TaskGroup
 from references.models import SubjectReference
 from tasks.models import Source, Task, TaskImage
 
@@ -401,50 +401,17 @@ class DjangoTaskRepository(ITaskRepository):
         }
         return [task_map[task_id] for task_id in task_ids if task_id in task_map]
 
-    def get_group_ids_for_tasks(self, task_ids: Set[str]) -> Set[str]:
-        if not task_ids:
-            return set()
-
-        return {
-            str(group_id)
-            for group_id in TaskGroup.objects.filter(
-                task_id__in=task_ids
-            ).values_list('group_id', flat=True)
-        }
-
     def count_existing_task_ids(self, task_ids: Set[str]) -> int:
         if not task_ids:
             return 0
 
         return Task.objects.filter(pk__in=task_ids).count()
 
-    def count_existing_group_ids(self, group_ids: Set[str]) -> int:
-        if not group_ids:
-            return 0
-
-        return AnalogGroup.objects.filter(pk__in=group_ids).count()
-
-    def get_first_task_difficulty_for_group(self, group_id: str) -> int:
-        task_group = TaskGroup.objects.filter(
-            group_id=group_id,
-        ).select_related('task').first()
-        if task_group and task_group.task.difficulty:
-            return task_group.task.difficulty
-        return 1
-
     def delete_task(self, task_id: str) -> int:
         tasks = Task.objects.filter(pk=task_id)
         deleted_count = tasks.count()
         tasks.delete()
         return deleted_count
-
-    def get_tasks_in_group(self, group_id: str) -> Set[str]:
-        return {
-            str(task_id)
-            for task_id in TaskGroup.objects.filter(
-                group_id=group_id
-            ).values_list('task_id', flat=True)
-        }
 
     def get_tasks_by_difficulty(
         self,

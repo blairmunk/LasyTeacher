@@ -249,6 +249,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         service = RemedialService(
             student_repo=DjangoStudentRepository(),
             task_repo=DjangoTaskRepository(),
+            task_group_repo=DjangoTaskGroupRepository(),
             remedial_source_repo=DjangoRemedialSourceRepository(),
         )
 
@@ -1209,6 +1210,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         service = RemedialService(
             student_repo=student_repo,
             task_repo=task_repo,
+            task_group_repo=DjangoTaskGroupRepository(),
             remedial_source_repo=DjangoRemedialSourceRepository(),
         )
         use_case = CreateRemedialFromEventUseCase(
@@ -1279,6 +1281,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         service = RemedialService(
             student_repo=student_repo,
             task_repo=task_repo,
+            task_group_repo=DjangoTaskGroupRepository(),
             remedial_source_repo=DjangoRemedialSourceRepository(),
         )
 

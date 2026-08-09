@@ -20,7 +20,7 @@ from core_logic.value_objects.task_print_settings import (
 )
 
 
-class FakeTaskRepository:
+class FakeTaskGroupRepository:
     def __init__(self):
         self.existing_count = 2
         self.first_difficulties = {'group-1': 3}
@@ -149,11 +149,11 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         self.assertFalse(bool_result.auto_generate)
 
     def test_execute_creates_work_spec_and_generates_variants(self):
-        task_repo = FakeTaskRepository()
+        task_repo = FakeTaskGroupRepository()
         work_repo = FakeWorkRepository()
         compose_use_case = FakeComposeWorkVariantsUseCase()
         use_case = CreateWorkFromGroupsUseCase(
-            task_repo=task_repo,
+            task_group_repo=task_repo,
             create_work_with_specification_use_case=(
                 CreateWorkWithSpecificationUseCase(work_repo)
             ),
@@ -206,11 +206,11 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         self.assertIn('3 вариантами', result.message)
 
     def test_execute_preserves_group_role_filter(self):
-        task_repo = FakeTaskRepository()
+        task_repo = FakeTaskGroupRepository()
         task_repo.existing_count = 1
         work_repo = FakeWorkRepository()
         use_case = CreateWorkFromGroupsUseCase(
-            task_repo=task_repo,
+            task_group_repo=task_repo,
             create_work_with_specification_use_case=(
                 CreateWorkWithSpecificationUseCase(work_repo)
             ),
@@ -236,11 +236,11 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         )
 
     def test_execute_keeps_created_work_when_variant_generation_fails(self):
-        task_repo = FakeTaskRepository()
+        task_repo = FakeTaskGroupRepository()
         task_repo.existing_count = 1
         work_repo = FakeWorkRepository()
         use_case = CreateWorkFromGroupsUseCase(
-            task_repo=task_repo,
+            task_group_repo=task_repo,
             create_work_with_specification_use_case=(
                 CreateWorkWithSpecificationUseCase(work_repo)
             ),
@@ -263,11 +263,11 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         self.assertIsNotNone(work_repo.created_work)
 
     def test_execute_preserves_group_print_settings(self):
-        task_repo = FakeTaskRepository()
+        task_repo = FakeTaskGroupRepository()
         task_repo.existing_count = 1
         work_repo = FakeWorkRepository()
         use_case = CreateWorkFromGroupsUseCase(
-            task_repo=task_repo,
+            task_group_repo=task_repo,
             create_work_with_specification_use_case=(
                 CreateWorkWithSpecificationUseCase(work_repo)
             ),
@@ -300,11 +300,11 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         self.assertEqual(created_group.blank_cells_rows, 8)
 
     def test_execute_rejects_invalid_group_role_filter(self):
-        task_repo = FakeTaskRepository()
+        task_repo = FakeTaskGroupRepository()
         task_repo.existing_count = 1
         work_repo = FakeWorkRepository()
         use_case = CreateWorkFromGroupsUseCase(
-            task_repo=task_repo,
+            task_group_repo=task_repo,
             create_work_with_specification_use_case=(
                 CreateWorkWithSpecificationUseCase(work_repo)
             ),
@@ -328,11 +328,11 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         self.assertIsNone(work_repo.created_work)
 
     def test_execute_rejects_invalid_group_render_mode(self):
-        task_repo = FakeTaskRepository()
+        task_repo = FakeTaskGroupRepository()
         task_repo.existing_count = 1
         work_repo = FakeWorkRepository()
         use_case = CreateWorkFromGroupsUseCase(
-            task_repo=task_repo,
+            task_group_repo=task_repo,
             create_work_with_specification_use_case=(
                 CreateWorkWithSpecificationUseCase(work_repo)
             ),
@@ -358,7 +358,7 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
     def test_execute_rejects_empty_groups(self):
         work_repo = FakeWorkRepository()
         use_case = CreateWorkFromGroupsUseCase(
-            task_repo=FakeTaskRepository(),
+            task_group_repo=FakeTaskGroupRepository(),
             create_work_with_specification_use_case=(
                 CreateWorkWithSpecificationUseCase(work_repo)
             ),
@@ -373,11 +373,11 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         self.assertEqual(result.status, 'empty_groups')
 
     def test_execute_rejects_missing_groups(self):
-        task_repo = FakeTaskRepository()
+        task_repo = FakeTaskGroupRepository()
         task_repo.existing_count = 1
         work_repo = FakeWorkRepository()
         use_case = CreateWorkFromGroupsUseCase(
-            task_repo=task_repo,
+            task_group_repo=task_repo,
             create_work_with_specification_use_case=(
                 CreateWorkWithSpecificationUseCase(work_repo)
             ),

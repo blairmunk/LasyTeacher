@@ -12,6 +12,7 @@ from core_logic.interfaces.remedial_source_repo import (
     IRemedialSourceRepository,
 )
 from core_logic.interfaces.student_repo import IStudentRepository
+from core_logic.interfaces.task_group_repo import ITaskGroupRepository
 from core_logic.interfaces.task_repo import ITaskRepository
 from core_logic.services.student_task_result_service import (
     StudentTaskResultService,
@@ -60,12 +61,14 @@ class RemedialService:
         self,
         student_repo: IStudentRepository,
         task_repo: ITaskRepository,
+        task_group_repo: ITaskGroupRepository,
         remedial_source_repo: IRemedialSourceRepository,
         config: Optional[RemedialConfig] = None,
         task_result_service=None,
     ):
         self.student_repo = student_repo
         self.task_repo = task_repo
+        self.task_group_repo = task_group_repo
         self.remedial_source_repo = remedial_source_repo
         self.config = config or RemedialConfig()
         self.task_result_service = (
@@ -103,11 +106,11 @@ class RemedialService:
         weak_task_ids = self.find_weak_tasks(task_results)
 
         if weak_task_ids:
-            weak_group_ids = self.task_repo.get_group_ids_for_tasks(
+            weak_group_ids = self.task_group_repo.get_group_ids_for_tasks(
                 weak_task_ids,
             )
         else:
-            weak_group_ids = self.task_repo.get_group_ids_for_tasks(
+            weak_group_ids = self.task_group_repo.get_group_ids_for_tasks(
                 event_variant_task_ids,
             )
 
@@ -120,7 +123,7 @@ class RemedialService:
         )
 
         for group_id in sorted(weak_group_ids):
-            group_task_ids = self.task_repo.get_tasks_in_group(group_id)
+            group_task_ids = self.task_group_repo.get_tasks_in_group(group_id)
             available_ids = (
                 group_task_ids
                 - attempted_task_ids

@@ -1,6 +1,6 @@
 """Django implementation of the analog task group repository."""
 
-from typing import List
+from typing import List, Set
 
 from django.db.models import Avg, Count, OuterRef, Q, Subquery
 
@@ -268,3 +268,34 @@ class DjangoTaskGroupRepository(ITaskGroupRepository):
         deleted_count = groups.count()
         groups.delete()
         return deleted_count
+
+    def get_group_ids_for_tasks(self, task_ids: Set[str]) -> Set[str]:
+        if not task_ids:
+            return set()
+        return {
+            str(group_id)
+            for group_id in TaskGroup.objects.filter(
+                task_id__in=task_ids,
+            ).values_list('group_id', flat=True)
+        }
+
+    def count_existing_group_ids(self, group_ids: Set[str]) -> int:
+        if not group_ids:
+            return 0
+        return AnalogGroup.objects.filter(pk__in=group_ids).count()
+
+    def get_first_task_difficulty_for_group(self, group_id: str) -> int:
+        membership = TaskGroup.objects.filter(
+            group_id=group_id,
+        ).select_related('task').first()
+        if membership and membership.task.difficulty:
+            return membership.task.difficulty
+        return 1
+
+    def get_tasks_in_group(self, group_id: str) -> Set[str]:
+        return {
+            str(task_id)
+            for task_id in TaskGroup.objects.filter(
+                group_id=group_id,
+            ).values_list('task_id', flat=True)
+        }

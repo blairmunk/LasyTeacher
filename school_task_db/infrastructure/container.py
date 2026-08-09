@@ -830,6 +830,7 @@ class Container:
         return RemedialService(
             student_repo=self.student_repo,
             task_repo=self.task_repo,
+            task_group_repo=self.task_group_repo,
             remedial_source_repo=self.remedial_source_repo,
         )
 
@@ -1553,7 +1554,7 @@ class Container:
 
     def create_work_from_groups_use_case(self):
         return CreateWorkFromGroupsUseCase(
-            task_repo=self.task_repo,
+            task_group_repo=self.task_group_repo,
             create_work_with_specification_use_case=(
                 self.create_work_with_specification_use_case()
             ),

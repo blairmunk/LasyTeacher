@@ -92,12 +92,14 @@ class FakeWorkRepository:
 
 class RemedialServiceTests(TestCase):
     def service(self, results=None, attempted_task_ids=None):
+        task_repo = FakeTaskRepository()
         return RemedialService(
             student_repo=FakeStudentRepository(
                 results,
                 attempted_task_ids=attempted_task_ids,
             ),
-            task_repo=FakeTaskRepository(),
+            task_repo=task_repo,
+            task_group_repo=task_repo,
             remedial_source_repo=FakeWorkRepository(),
             config=RemedialConfig(max_tasks_per_group=1, max_total_tasks=5),
         )

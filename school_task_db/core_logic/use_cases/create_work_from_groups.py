@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Any, Mapping, List
 
-from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.interfaces.task_group_repo import ITaskGroupRepository
 from core_logic.interfaces.work_repo import (
     CreateWorkParams,
     CreateWorkWithSpecificationParams,
@@ -116,11 +116,11 @@ class PrepareCreateWorkFromGroupsSubmissionUseCase:
 class CreateWorkFromGroupsUseCase:
     def __init__(
         self,
-        task_repo: ITaskRepository,
+        task_group_repo: ITaskGroupRepository,
         create_work_with_specification_use_case: CreateWorkWithSpecificationUseCase,
         compose_work_variants_use_case: ComposeWorkVariantsUseCase,
     ):
-        self.task_repo = task_repo
+        self.task_group_repo = task_group_repo
         self.create_work_with_specification_use_case = (
             create_work_with_specification_use_case
         )
@@ -144,7 +144,10 @@ class CreateWorkFromGroupsUseCase:
             )
 
         group_ids = {group.id for group in request.groups}
-        if self.task_repo.count_existing_group_ids(group_ids) != len(group_ids):
+        if (
+            self.task_group_repo.count_existing_group_ids(group_ids)
+            != len(group_ids)
+        ):
             return CreateWorkFromGroupsResult(
                 status='missing_groups',
                 message='Некоторые группы не найдены',
@@ -154,7 +157,11 @@ class CreateWorkFromGroupsUseCase:
         for position, group in enumerate(request.groups, 1):
             weight = group.weight
             if weight <= 0:
-                weight = self.task_repo.get_first_task_difficulty_for_group(group.id)
+                weight = (
+                    self.task_group_repo.get_first_task_difficulty_for_group(
+                        group.id,
+                    )
+                )
             specs.append(
                 WorkTaskSelectionParams(
                     analog_group_id=group.id,

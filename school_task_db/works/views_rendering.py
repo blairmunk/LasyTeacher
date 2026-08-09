@@ -2,13 +2,12 @@
 
 import logging
 
-from django.http import JsonResponse, HttpResponse, Http404
+from django.http import JsonResponse, Http404
 from django.views.decorators.http import require_http_methods
 
 from infrastructure.container import container
-from core_logic.entities.document_rendering import (
-    GENERATED_FILE_STATUS_NOT_FOUND,
-    GENERATED_FILE_STATUS_UNSUPPORTED_TYPE,
+from core_logic.use_cases.get_rendered_document_file import (
+    GetRenderedDocumentFileRequest,
 )
 
 logger = logging.getLogger(__name__)
@@ -73,27 +72,22 @@ def render_work_ajax(request, work_id):
 def download_rendered_file(request, file_type, filename):
     """Download a rendered document file."""
     result = container.get_rendered_document_file_use_case().execute(
-        container.work_form_adapter.rendered_document_file_request(
-            file_type,
-            filename,
+        GetRenderedDocumentFileRequest(
+            file_type=file_type,
+            filename=filename,
         ),
     )
-
-    if result.status == GENERATED_FILE_STATUS_UNSUPPORTED_TYPE:
-        raise Http404("Неподдерживаемый тип файла")
-    if result.status == GENERATED_FILE_STATUS_NOT_FOUND:
-        raise Http404("Файл не найден")
-    if not result.file:
-        raise Http404("Ошибка чтения файла")
-
-    response = HttpResponse(
-        result.file.content,
-        content_type=result.file.content_type,
+    response = container.rendered_document_file_presenter.response(
+        result,
+        disposition='attachment',
     )
-    response['Content-Disposition'] = (
-        f'attachment; filename="{result.file.filename}"'
+    if response is not None:
+        return response
+    raise Http404(
+        container
+        .rendered_document_file_presenter
+        .download_error_message(result)
     )
-    return response
 
 @require_http_methods(["GET"])
 def render_status_ajax(request):

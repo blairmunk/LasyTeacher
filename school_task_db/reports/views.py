@@ -1,7 +1,7 @@
 # reports/views.py
 
 from django.contrib import messages
-from django.http import Http404, HttpResponse
+from django.http import Http404
 from django.shortcuts import redirect, render
 from django.views import View
 from django.views.generic import TemplateView
@@ -26,6 +26,9 @@ from core_logic.entities.document_rendering import (
 )
 from core_logic.use_cases.get_presentation_profile_list import (
     GetPresentationProfileListRequest,
+)
+from core_logic.use_cases.get_rendered_document_file import (
+    GetRenderedDocumentFileRequest,
 )
 from core_logic.value_objects.document_recipes import (
     EVENT_PERFORMANCE_REPORT_DOCUMENT_TYPE,
@@ -254,21 +257,15 @@ def _rendered_document_response(result):
         return None
     file_info = result.files[0]
     generated = container.get_rendered_document_file_use_case().execute(
-        container.report_form_adapter.rendered_document_file_request(
-            result.file_type,
-            file_info.filename,
+        GetRenderedDocumentFileRequest(
+            file_type=result.file_type,
+            filename=file_info.filename,
         ),
     )
-    if not generated.success or generated.file is None:
-        return None
-    response = HttpResponse(
-        generated.file.content,
-        content_type=generated.file.content_type,
+    return container.rendered_document_file_presenter.response(
+        generated,
+        disposition='inline',
     )
-    response['Content-Disposition'] = (
-        f'inline; filename="{generated.file.filename}"'
-    )
-    return response
 
 
 

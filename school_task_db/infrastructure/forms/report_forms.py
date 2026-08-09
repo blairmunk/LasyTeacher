@@ -34,9 +34,6 @@ from core_logic.use_cases.get_student_performance_report import (
     StudentPerformanceReportRequest,
 )
 from core_logic.use_cases.get_work_analysis_report import WorkAnalysisReportRequest
-from core_logic.use_cases.get_rendered_document_file import (
-    GetRenderedDocumentFileRequest,
-)
 from core_logic.use_cases.render_event_performance_report_document import (
     RenderEventPerformanceReportDocumentRequest,
 )
@@ -154,12 +151,6 @@ class ReportFormAdapter:
                 'presentation_profile_id',
                 '',
             ).strip(),
-        )
-
-    def rendered_document_file_request(self, file_type, filename):
-        return GetRenderedDocumentFileRequest(
-            file_type=file_type,
-            filename=filename,
         )
 
     def reports_dashboard_request(self, year=None, current_date=None):

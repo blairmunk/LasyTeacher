@@ -16,9 +16,6 @@ from core_logic.use_cases.render_remedial_sheet_batch_document import (
 )
 from core_logic.use_cases.render_work_document import RenderWorkDocumentRequest
 from core_logic.use_cases.compose_work_variants import ComposeWorkVariantsRequest
-from core_logic.use_cases.get_rendered_document_file import (
-    GetRenderedDocumentFileRequest,
-)
 from infrastructure.forms.document_rendering import (
     remedial_sheet_build_options_from_data,
     render_target_from_data,
@@ -315,9 +312,3 @@ class WorkFormAdapter:
     def _variant_id_from_post(self, post_data):
         variant_id = post_data.get('variant_selection', '').strip()
         return '' if variant_id == 'all' else variant_id
-
-    def rendered_document_file_request(self, file_type, filename):
-        return GetRenderedDocumentFileRequest(
-            file_type=file_type,
-            filename=filename,
-        )

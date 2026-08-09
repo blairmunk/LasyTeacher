@@ -1839,12 +1839,3 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertEqual(request.presentation_profile_id, 'template-rno')
         self.assertEqual(request.presentation_profile_id, 'template-rno')
         self.assertEqual(request.render_target.renderer_type, 'html')
-
-    def test_builds_rendered_document_file_request(self):
-        request = WorkFormAdapter().rendered_document_file_request(
-            'html',
-            'work.html',
-        )
-
-        self.assertEqual(request.file_type, 'html')
-        self.assertEqual(request.filename, 'work.html')

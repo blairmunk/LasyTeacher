@@ -322,6 +322,9 @@ from infrastructure.forms.review_forms import ReviewFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
 from infrastructure.forms.work_forms import WorkFormAdapter
 from infrastructure.presenters.heatmap import HeatmapPresenter
+from infrastructure.presenters.rendered_document_file import (
+    RenderedDocumentFilePresenter,
+)
 from infrastructure.presenters.work_document import WorkDocumentWebPresenter
 from infrastructure.services.document_engine import (
     DjangoDocumentEngine,
@@ -1038,6 +1041,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             container.work_document_web_presenter,
             WorkDocumentWebPresenter,
+        )
+        self.assertIsInstance(
+            container.rendered_document_file_presenter,
+            RenderedDocumentFilePresenter,
         )
         self.assertIsInstance(
             container.document_engine,

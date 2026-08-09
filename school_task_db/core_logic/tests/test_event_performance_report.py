@@ -17,6 +17,11 @@ from core_logic.services.event_performance_report_service import (
 )
 from core_logic.services.event_report_task_fact_service import (
     EventReportTaskFactService,
+    resolve_event_report_assessment_mode,
+)
+from core_logic.value_objects.work_assessment import (
+    WORK_ASSESSMENT_MODE_AGGREGATE,
+    WORK_ASSESSMENT_MODE_VARIANT,
 )
 from core_logic.value_objects.report_task_slot import report_task_slot_key
 from core_logic.use_cases.get_event_performance_report import (
@@ -223,6 +228,25 @@ class EventPerformanceReportTests(TestCase):
         self.assertEqual(
             facts.specification[0].codifier_requirements,
             ('ОГЭ: 2.1',),
+        )
+
+    def test_report_assessment_mode_prefers_consistent_snapshot(self):
+        self.assertEqual(
+            resolve_event_report_assessment_mode(
+                (WORK_ASSESSMENT_MODE_AGGREGATE,) * 2,
+                fallback_mode=WORK_ASSESSMENT_MODE_VARIANT,
+            ),
+            WORK_ASSESSMENT_MODE_AGGREGATE,
+        )
+        self.assertEqual(
+            resolve_event_report_assessment_mode(
+                (
+                    WORK_ASSESSMENT_MODE_AGGREGATE,
+                    WORK_ASSESSMENT_MODE_VARIANT,
+                ),
+                fallback_mode=WORK_ASSESSMENT_MODE_VARIANT,
+            ),
+            WORK_ASSESSMENT_MODE_VARIANT,
         )
 
     @staticmethod

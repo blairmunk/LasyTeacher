@@ -8,6 +8,9 @@ from core_logic.entities.event_performance_report import (
     EventReportTaskScoreFact,
 )
 from core_logic.value_objects.report_task_slot import report_task_slot_key
+from core_logic.value_objects.work_assessment import (
+    WORK_ASSESSMENT_MODE_VARIANT,
+)
 
 
 class EventReportTaskFactService:
@@ -83,3 +86,18 @@ class EventReportTaskFactService:
                 ),
             )),
         )
+
+
+def resolve_event_report_assessment_mode(
+    captured_modes,
+    fallback_mode: str = WORK_ASSESSMENT_MODE_VARIANT,
+) -> str:
+    """Prefer one consistent historical mode, otherwise use the work mode."""
+    modes = {
+        mode
+        for mode in captured_modes
+        if mode
+    }
+    if len(modes) == 1:
+        return modes.pop()
+    return fallback_mode or WORK_ASSESSMENT_MODE_VARIANT

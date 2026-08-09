@@ -13,9 +13,12 @@ from core_logic.entities.document_rendering import (
     GeneratedFile,
     GeneratedFileResult,
 )
+from core_logic.interfaces.rendered_document_file_store import (
+    IRenderedDocumentFileStore,
+)
 
 
-class RenderedDocumentFileStore:
+class RenderedDocumentFileStore(IRenderedDocumentFileStore):
     default_output_dirs = {
         'latex': 'web_latex_output',
         'html': 'web_html_output',

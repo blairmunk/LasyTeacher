@@ -412,7 +412,19 @@ class ContainerTests(SimpleTestCase):
             get_remedial_sheet_data_use_case=remedial_sheet_data_use_case,
             get_event_report_use_case=event_report_use_case,
             get_student_digests_use_case=student_digests_use_case,
+            file_store=container.rendered_document_file_store,
         )
+
+    def test_download_use_case_does_not_initialize_document_engine(self):
+        container = Container()
+
+        use_case = container.get_rendered_document_file_use_case()
+
+        self.assertIs(
+            use_case.file_store,
+            container.rendered_document_file_store,
+        )
+        self.assertIsNone(container._document_engine)
 
     def test_wires_remedial_from_event_use_case(self):
         container = Container()

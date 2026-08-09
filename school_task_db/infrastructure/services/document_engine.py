@@ -2,7 +2,6 @@
 
 from core_logic.entities.document_rendering import (
     GeneratedDocument,
-    GeneratedFileResult,
 )
 from core_logic.interfaces.document_engine import IDocumentEngine
 from core_logic.services.document_builder import RecipeDocumentBuilder
@@ -61,17 +60,14 @@ class DjangoDocumentEngine(IDocumentEngine):
         return cls(
             document_builder=components.document_builder,
             document_renderer_registry=components.document_renderer_registry,
-            file_store=file_store,
         )
 
     def __init__(
         self,
         document_builder=None,
         document_renderer_registry=None,
-        file_store=None,
         section_payload_builder_registry=None,
     ):
-        self.file_store = file_store or RenderedDocumentFileStore()
         self.document_builder = document_builder or RecipeDocumentBuilder(
             section_payload_builder_registry=section_payload_builder_registry,
         )
@@ -94,13 +90,6 @@ class DjangoDocumentEngine(IDocumentEngine):
                 render_target=render_target,
             )
         )
-
-    def get_rendered_file(
-        self,
-        file_type: str,
-        filename: str,
-    ) -> GeneratedFileResult:
-        return self.file_store.get_file(file_type, filename)
 
     def _build_document(self, render_plan: DocumentRenderPlan):
         return self.document_builder.build(

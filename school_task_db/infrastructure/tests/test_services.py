@@ -217,18 +217,6 @@ class DjangoDocumentEngineTests(TestCase):
         ):
             service.render_document(None)
 
-    def test_get_rendered_file_uses_configured_file_store(self):
-        file_store = FakeRenderedDocumentFileStore()
-        service = DjangoDocumentEngine(file_store=file_store)
-
-        result = service.get_rendered_file(
-            file_type='html',
-            filename='work.html',
-        )
-
-        self.assertEqual(result, 'file-result')
-        self.assertEqual(file_store.requests, [('html', 'work.html')])
-
     def test_sectioned_factory_uses_sectioned_renderers(self):
         work = Work.objects.create(name='Контрольная', duration=45)
         html_to_pdf_renderer = FakeHtmlToPdfRenderer()

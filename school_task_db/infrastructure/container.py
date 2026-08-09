@@ -367,6 +367,9 @@ from infrastructure.repositories.django_work_analysis_repo import (
 from infrastructure.services.document_engine import (
     DjangoDocumentEngine,
 )
+from infrastructure.services.rendered_document_file_store import (
+    RenderedDocumentFileStore,
+)
 from infrastructure.services.django_transaction_manager import (
     DjangoTransactionManager,
 )
@@ -436,6 +439,7 @@ class Container:
         self._work_form_adapter = None
         self._task_form_adapter = None
         self._document_engine = None
+        self._rendered_document_file_store = None
         self._task_import_service = None
         self._transaction_manager = None
 
@@ -723,8 +727,15 @@ class Container:
                 get_student_digests_use_case=(
                     self.get_student_digests_use_case()
                 ),
+                file_store=self.rendered_document_file_store,
             )
         return self._document_engine
+
+    @property
+    def rendered_document_file_store(self):
+        if self._rendered_document_file_store is None:
+            self._rendered_document_file_store = RenderedDocumentFileStore()
+        return self._rendered_document_file_store
 
     @property
     def task_import_service(self):
@@ -1436,7 +1447,7 @@ class Container:
 
     def get_rendered_document_file_use_case(self):
         return GetRenderedDocumentFileUseCase(
-            document_engine=self.document_engine,
+            file_store=self.rendered_document_file_store,
         )
 
     def create_work_from_orphans_use_case(self):

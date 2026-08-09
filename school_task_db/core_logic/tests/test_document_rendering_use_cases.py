@@ -65,6 +65,16 @@ class FakeDocumentEngine:
             file_type='pdf',
             files=[GeneratedDocumentFile(filename='remedial.pdf', size_kb=2.0)],
         )
+
+    def render_document(self, render_plan):
+        self.render_request = render_plan
+        if render_plan.recipe.document_type == 'remedial_sheet':
+            return self.remedial_document
+        return self.work_document
+
+
+class FakeRenderedDocumentFileStore:
+    def __init__(self):
         self.file_request = None
         self.file_result = GeneratedFileResult(
             status='ready',
@@ -75,13 +85,7 @@ class FakeDocumentEngine:
             ),
         )
 
-    def render_document(self, render_plan):
-        self.render_request = render_plan
-        if render_plan.recipe.document_type == 'remedial_sheet':
-            return self.remedial_document
-        return self.work_document
-
-    def get_rendered_file(self, file_type, filename):
+    def get_file(self, file_type, filename):
         self.file_request = (file_type, filename)
         return self.file_result
 
@@ -941,9 +945,9 @@ class DocumentRenderingUseCaseTests(TestCase):
         self.assertEqual(result.files, [])
 
     def test_get_rendered_document_file_delegates_to_service(self):
-        service = FakeDocumentEngine()
+        service = FakeRenderedDocumentFileStore()
         use_case = GetRenderedDocumentFileUseCase(
-            document_engine=service,
+            file_store=service,
         )
 
         result = use_case.execute(
@@ -957,16 +961,16 @@ class DocumentRenderingUseCaseTests(TestCase):
         self.assertEqual(result.file.content, b'html')
         self.assertEqual(service.file_request, ('html', 'work.html'))
 
-    def test_get_rendered_document_file_requires_document_engine(self):
+    def test_get_rendered_document_file_requires_file_store(self):
         with self.assertRaisesRegex(
             ValueError,
-            'Document engine dependency is required.',
+            'Rendered document file store is required.',
         ):
             GetRenderedDocumentFileUseCase()
 
-    def test_get_rendered_document_file_accepts_document_engine_keyword(self):
-        service = FakeDocumentEngine()
-        use_case = GetRenderedDocumentFileUseCase(document_engine=service)
+    def test_get_rendered_document_file_accepts_file_store_keyword(self):
+        service = FakeRenderedDocumentFileStore()
+        use_case = GetRenderedDocumentFileUseCase(file_store=service)
 
         result = use_case.execute(
             GetRenderedDocumentFileRequest(

@@ -1274,8 +1274,8 @@ class WorkDetailViewTests(TestCase):
 
     def test_download_rendered_file_uses_document_service(self):
         with patch(
-            'infrastructure.services.document_engine.'
-            'DjangoDocumentEngine.get_rendered_file',
+            'infrastructure.services.rendered_document_file_store.'
+            'RenderedDocumentFileStore.get_file',
             return_value=GeneratedFileResult(
                 status='ready',
                 file=GeneratedFile(
@@ -1284,7 +1284,7 @@ class WorkDetailViewTests(TestCase):
                     content_type='text/html',
                 ),
             ),
-        ) as get_rendered_file:
+        ) as get_file:
             response = self.client.get(
                 reverse('works:download_rendered_file', args=['html', 'work.html'])
             )
@@ -1296,7 +1296,7 @@ class WorkDetailViewTests(TestCase):
             response['Content-Disposition'],
             'attachment; filename="work.html"',
         )
-        get_rendered_file.assert_called_once_with(
+        get_file.assert_called_once_with(
             file_type='html',
             filename='work.html',
         )

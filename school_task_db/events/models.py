@@ -273,6 +273,12 @@ class AttemptTaskSnapshot(BaseModel):
         blank=True,
         default='',
     )
+    source_selection_name_snapshot = models.CharField(
+        'Название блока спецификации (снимок)',
+        max_length=200,
+        blank=True,
+        default='',
+    )
     content_order_snapshot = models.PositiveIntegerField(
         'Порядок блока спецификации (снимок)',
         default=0,

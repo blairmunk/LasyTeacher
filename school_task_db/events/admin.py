@@ -18,6 +18,7 @@ class AttemptTaskSnapshotInline(admin.TabularInline):
     fields = [
         'order_snapshot',
         'source_selection_id_snapshot',
+        'source_selection_name_snapshot',
         'content_order_snapshot',
         'variant_task',
         'is_assessable_snapshot',

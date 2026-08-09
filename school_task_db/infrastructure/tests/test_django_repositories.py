@@ -192,7 +192,7 @@ class DjangoRemedialRepositoryTests(TestCase):
 
         self.weak_group = AnalogGroup.objects.create(name='Законы Ньютона')
         self.ok_group = AnalogGroup.objects.create(name='Импульс')
-        WorkAnalogGroup.objects.create(
+        self.weak_selection = WorkAnalogGroup.objects.create(
             work=self.source_work,
             analog_group=self.weak_group,
             order=1,
@@ -209,6 +209,8 @@ class DjangoRemedialRepositoryTests(TestCase):
             order=1,
             max_points=2,
             weight=2,
+            source_selection_id=str(self.weak_selection.pk),
+            content_order=self.weak_selection.order,
         )
         create_variant_task(
             variant=self.source_variant,
@@ -1438,6 +1440,38 @@ class DjangoRemedialRepositoryTests(TestCase):
             if row.task.pk == str(self.original_weak.pk)
         )
         self.assertEqual(original.task.text, self.original_weak.text)
+
+    def test_remedial_sheet_uses_frozen_specification_block_name(self):
+        attempt = self.participation.attempt_snapshots.get(revision=1)
+        task_result = attempt.task_results.get(
+            task_id_snapshot=str(self.original_weak.pk),
+        )
+        original_group_name = self.weak_group.name
+        self.weak_group.name = 'Переименованная группа'
+        self.weak_group.save(update_fields=['name'])
+        remedial_variant = Variant.objects.create(
+            number=1,
+            variant_type='remedial',
+            assigned_student=self.student,
+            source_work=self.source_work,
+            source_participation=self.participation,
+            source_attempt_snapshot=attempt,
+        )
+
+        source = DjangoWorkDocumentRepository().get_remedial_sheet_source(
+            str(remedial_variant.pk),
+        )
+        original = next(
+            row
+            for row in source.original_tasks
+            if row.task.pk == str(self.original_weak.pk)
+        )
+
+        self.assertEqual(
+            task_result.source_selection_name_snapshot,
+            original_group_name,
+        )
+        self.assertEqual(original.group_name, original_group_name)
 
     def test_remedial_sheet_returns_frozen_content_blocks(self):
         remedial_work = Work.objects.create(

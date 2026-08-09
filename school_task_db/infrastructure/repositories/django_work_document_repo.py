@@ -27,7 +27,6 @@ from core_logic.entities.work_document import (
     WorkDocumentTaskSource,
     WorkDocumentVariantSource,
 )
-from task_groups.models import TaskGroup
 from works.models import (
     Variant,
     VariantContentBlockSnapshot,
@@ -230,9 +229,6 @@ class DjangoWorkDocumentRepository(IWorkDocumentRepository):
                 task = task_content_snapshot_from_mapping(
                     task_result.task_content_snapshot,
                 )
-                task_group = TaskGroup.objects.filter(
-                    task_id=task.task_id,
-                ).select_related('group').first()
                 original_tasks.append(
                     RemedialOriginalTaskSource(
                         task=self._remedial_task_ref(task),
@@ -241,7 +237,7 @@ class DjangoWorkDocumentRepository(IWorkDocumentRepository):
                         ),
                         order=task_result.order_snapshot,
                         group_name=(
-                            task_group.group.name if task_group else ''
+                            task_result.source_selection_name_snapshot
                         ),
                     )
                 )

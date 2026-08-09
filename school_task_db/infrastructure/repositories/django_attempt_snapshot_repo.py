@@ -20,7 +20,7 @@ from infrastructure.services.task_content_snapshots import (
     build_task_content_snapshots,
 )
 from tasks.models import Task
-from works.models import VariantTask
+from works.models import VariantTask, WorkAnalogGroup
 
 
 class DjangoAttemptSnapshotRepository(IAttemptSnapshotRepository):
@@ -79,10 +79,14 @@ class DjangoAttemptSnapshotRepository(IAttemptSnapshotRepository):
         if variant is None:
             self._capture_unassigned_task_results(snapshot, task_scores)
             return
+        variant_tasks = list(
+            VariantTask.objects.filter(
+                variant=variant,
+            ).order_by('order', 'pk')
+        )
+        selection_names = self._selection_names_by_id(variant_tasks)
         rows = []
-        for variant_task in VariantTask.objects.filter(
-            variant=variant,
-        ).order_by('order', 'pk'):
+        for variant_task in variant_tasks:
             task = task_content_snapshot_from_mapping(
                 variant_task.task_snapshot,
             )
@@ -99,6 +103,10 @@ class DjangoAttemptSnapshotRepository(IAttemptSnapshotRepository):
                 source_selection_id_snapshot=(
                     variant_task.source_selection_id
                 ),
+                source_selection_name_snapshot=selection_names.get(
+                    str(variant_task.source_selection_id),
+                    '',
+                ),
                 content_order_snapshot=variant_task.content_order,
                 order_snapshot=variant_task.order,
                 is_assessable_snapshot=variant_task.is_assessable,
@@ -110,6 +118,22 @@ class DjangoAttemptSnapshotRepository(IAttemptSnapshotRepository):
                 comment=record.comment if record else '',
             ))
         AttemptTaskSnapshot.objects.bulk_create(rows)
+
+    @staticmethod
+    def _selection_names_by_id(variant_tasks):
+        selection_ids = {
+            str(variant_task.source_selection_id)
+            for variant_task in variant_tasks
+            if variant_task.source_selection_id
+        }
+        if not selection_ids:
+            return {}
+        return {
+            str(selection_id): group_name
+            for selection_id, group_name in WorkAnalogGroup.objects.filter(
+                pk__in=selection_ids,
+            ).values_list('pk', 'analog_group__name')
+        }
 
     def _capture_unassigned_task_results(self, snapshot, task_scores):
         records = task_score_records_for_attempt(task_scores)

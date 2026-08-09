@@ -43,8 +43,8 @@ from core_logic.use_cases.render_event_performance_report_document import (
 from core_logic.use_cases.render_student_digest_document import (
     RenderStudentDigestDocumentRequest,
 )
-from core_logic.value_objects.document_render_options import (
-    build_render_target_from_data,
+from infrastructure.forms.document_rendering import (
+    render_target_from_data,
 )
 from core_logic.value_objects.report_document_options import (
     EventReportDocumentOptions,
@@ -122,7 +122,7 @@ class ReportFormAdapter:
 
         return RenderEventPerformanceReportDocumentRequest(
             event_id=str(event_id),
-            render_target=build_render_target_from_data(data),
+            render_target=render_target_from_data(data),
             presentation_profile_id=data.get(
                 'presentation_profile_id',
                 '',
@@ -149,7 +149,7 @@ class ReportFormAdapter:
                 year=year,
                 today=today,
             ),
-            render_target=build_render_target_from_data(data),
+            render_target=render_target_from_data(data),
             presentation_profile_id=data.get(
                 'presentation_profile_id',
                 '',

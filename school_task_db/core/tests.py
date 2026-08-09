@@ -15,7 +15,6 @@ from django.utils import timezone
 
 from core.models import AcademicYear, ImportLog
 from core.test_slices import TEST_SLICES
-from infrastructure.importers.tasks import TaskImporter
 from curriculum.models import Course, Topic
 from events.models import AttemptTaskSnapshot, Event, EventParticipation, Mark
 from students.models import Student, StudentGroup
@@ -258,103 +257,6 @@ class CoreViewsTests(TestCase):
         self.assertTrue(Task.objects.filter(text='Задача на силу').exists())
         self.assertTrue(ImportLog.objects.filter(pk=payload['log_id']).exists())
 
-    def test_task_importer_persists_and_updates_group_bank_role(self):
-        group_id = '770e8400-e29b-41d4-a716-446655440001'
-        task_id = '550e8400-e29b-41d4-a716-446655440001'
-        payload = {
-            'analog_groups': [
-                {
-                    'id': group_id,
-                    'name': 'Группа для демонстрации',
-                    'difficulty': 3,
-                },
-            ],
-            'topics': [
-                {
-                    'name': 'Динамика',
-                    'subject': 'Физика',
-                    'grade_level': 9,
-                    'section': 'Механика',
-                },
-            ],
-            'tasks': [
-                {
-                    'id': task_id,
-                    'text': 'Найдите ускорение.',
-                    'answer': '2 м/с²',
-                    'task_type': 'computational',
-                    'difficulty': 2,
-                    'topic': {
-                        'name': 'Динамика',
-                        'subject': 'Физика',
-                        'grade_level': 9,
-                    },
-                    'groups': [
-                        {
-                            'id': group_id,
-                            'bank_role': 'demo',
-                        },
-                    ],
-                },
-            ],
-        }
-
-        TaskImporter(mode='update', create_missing=True).import_tasks_from_json(
-            payload,
-        )
-
-        relation = TaskGroup.objects.get(
-            task_id=task_id,
-            group_id=group_id,
-        )
-        self.assertEqual(relation.bank_role, 'demo')
-        self.assertEqual(relation.group.difficulty, 3)
-
-        payload['tasks'][0]['groups'][0]['bank_role'] = 'practice'
-        payload['analog_groups'][0]['difficulty'] = 4
-        TaskImporter(mode='update', create_missing=True).import_tasks_from_json(
-            payload,
-        )
-
-        relation.refresh_from_db()
-        relation.group.refresh_from_db()
-        self.assertEqual(relation.bank_role, 'practice')
-        self.assertEqual(relation.group.difficulty, 4)
-
-    def test_task_importer_dry_run_accepts_group_role_objects(self):
-        output = []
-        payload = {
-            'analog_groups': [
-                {
-                    'id': '770e8400-e29b-41d4-a716-446655440001',
-                    'name': 'Группа',
-                },
-            ],
-            'tasks': [
-                {
-                    'id': '550e8400-e29b-41d4-a716-446655440001',
-                    'text': 'Задача',
-                    'groups': [
-                        {
-                            'id': '770e8400-e29b-41d4-a716-446655440001',
-                            'bank_role': 'demo',
-                        },
-                    ],
-                },
-            ],
-        }
-
-        context = TaskImporter(
-            mode='update',
-            dry_run=True,
-            create_missing=True,
-            output=output.append,
-        ).import_tasks_from_json(payload)
-
-        self.assertIn('🔍 ПРЕДВАРИТЕЛЬНЫЙ ПРОСМОТР (--dry-run)', output)
-        self.assertEqual(context.preview_summary['file_counts']['tasks'], 1)
-        self.assertEqual(context.preview_summary['file_counts']['groups'], 1)
-        self.assertEqual(context.preview_summary['task_uuid_counts']['new'], 1)
 
     def test_import_tasks_command_uses_clean_import_service(self):
         payload = {

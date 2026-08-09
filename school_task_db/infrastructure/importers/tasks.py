@@ -6,13 +6,14 @@ from typing import Dict, List, Any, Optional
 from django.db import transaction
 
 from .base import BaseImporter, ImportContext
-from tasks.models import Task, TaskImage, Source
+from tasks.models import Task, Source
 from task_groups.models import AnalogGroup, TaskGroup
 from curriculum.models import Topic, SubTopic
 from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_CONTROL,
     validate_task_specific_bank_role,
 )
+from .task_images import TaskImageImporter
 
 
 class TaskImporter(BaseImporter):
@@ -21,6 +22,7 @@ class TaskImporter(BaseImporter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.context = ImportContext()
+        self.image_importer = TaskImageImporter(self, self.context)
     
     def import_tasks_from_json(self, json_data: Dict[str, Any]) -> ImportContext:
         """Основной метод импорта заданий из JSON"""
@@ -53,7 +55,7 @@ class TaskImporter(BaseImporter):
             
             # ЭТАП 5: Импорт изображений (если есть)
             if 'task_images' in json_data:
-                self._import_task_images(json_data['task_images'])
+                self.image_importer.import_images(json_data['task_images'])
         
         return self.context
     
@@ -470,156 +472,6 @@ class TaskImporter(BaseImporter):
         
         return None
 
-    def _import_task_images(self, images_data: List[Dict[str, Any]]):
-        """Импорт изображений заданий из base64 или файлов"""
-        self._write("🖼️ Импорт изображений заданий...")
-        
-        for image_data in images_data:
-            try:
-                task_uuid = image_data.get('task_uuid') or image_data.get('task_id')
-                
-                if task_uuid not in self.context.imported_tasks:
-                    self.log_warning(f"Задание не найдено для изображения: {task_uuid[-8:] if task_uuid else 'Unknown'}")
-                    continue
-                
-                task = self.context.imported_tasks[task_uuid]
-                
-                # Генерируем UUID для изображения
-                image_uuid = self.generate_uuid_if_missing(image_data, 'id')
-                
-                # Проверяем существующее изображение
-                existing_image = self.safe_get_by_uuid(TaskImage, image_uuid)
-                if existing_image and not self.should_create_object(existing_image, image_data):
-                    if self.mode == 'update':
-                        self._update_task_image(existing_image, image_data)
-                        self.stats.updated += 1
-                    else:  # skip
-                        pass
-                    continue
-                
-                # Создание нового изображения
-                if not existing_image:
-                    image = self._create_task_image(task, image_uuid, image_data)
-                    if image:
-                        self.stats.created += 1
-                        self.log_success(f"Создано изображение для задания {task.get_short_uuid()}")
-                
-            except Exception as e:
-                self.log_error(f"Ошибка импорта изображения: {e}", e)
-
-    def _create_task_image(self, task: Task, image_uuid: str, image_data: Dict[str, Any]) -> Optional[TaskImage]:
-        """Создание изображения задания"""
-        try:
-            # ИСПРАВЛЕНО: Валидация UUID формата
-            import uuid as uuid_module
-            
-            try:
-                # Проверяем что UUID валидный
-                uuid_obj = uuid_module.UUID(image_uuid)
-                self.log_info(f"UUID валиден: {str(uuid_obj)[-8:]}")
-            except ValueError as e:
-                self.log_error(f"Некорректный UUID изображения: {image_uuid} - {e}")
-                return None
-            
-            # Обработка содержимого изображения
-            image_content = None
-            filename = image_data.get('filename', 'imported_image.jpg')
-            
-            if 'base64_data' in image_data:
-                # Импорт из base64
-                import base64
-                from django.core.files.base import ContentFile
-                
-                try:
-                    # Убираем префикс data:image/...;base64, если есть
-                    base64_string = image_data['base64_data']
-                    if ',' in base64_string:
-                        base64_string = base64_string.split(',')[1]
-                    
-                    image_content = ContentFile(
-                        base64.b64decode(base64_string),
-                        name=filename
-                    )
-                    self.log_info(f"Base64 декодирован: {len(base64_string)} символов")
-                except Exception as e:
-                    self.log_error(f"Ошибка декодирования base64: {e}", e)
-                    return None
-                    
-            elif hasattr(self, 'images_dir') and self.images_dir and 'filename' in image_data:
-                # Импорт из файла
-                from pathlib import Path
-                from django.core.files.base import ContentFile
-                
-                image_path = Path(self.images_dir) / image_data['filename']
-                if image_path.exists():
-                    with open(image_path, 'rb') as f:
-                        image_content = ContentFile(f.read(), name=filename)
-                else:
-                    self.log_warning(f"Файл изображения не найден: {image_path}")
-                    return None
-            else:
-                self.log_warning(f"Нет данных изображения (base64_data или filename)")
-                return None
-            
-            if image_content:
-                # ИЗМЕНЕНО: НЕ устанавливаем position по умолчанию
-                position = image_data.get('position', '')  # Пустая строка вместо 'bottom_70'
-                
-                task_image = TaskImage.objects.create(
-                    id=image_uuid,
-                    task=task,
-                    image=image_content,
-                    position=position,  # Может быть пустой строкой
-                    caption=image_data.get('caption', ''),
-                    order=image_data.get('order', 1)
-                )
-                
-                # ДОБАВЛЕНО: Логирование статуса позиции
-                if position:
-                    self.log_info(f"Изображение создано с позицией: {position}")
-                else:
-                    self.log_info(f"Изображение создано БЕЗ позиции (для настройки позже)")
-                    self.stats.add_warning(f"Изображение {image_uuid[-8:]} создано без позиции")
-                
-                return task_image
-            
-        except Exception as e:
-            self.log_error(f"Ошибка создания изображения: {e}", e)
-            self.log_error(f"UUID: {image_uuid}")
-            self.log_error(f"Task: {task}")
-            self.log_error(f"Image data keys: {list(image_data.keys())}")
-        
-        return None
-
-    def _update_task_image(self, image: TaskImage, image_data: Dict[str, Any]):
-        """Обновление существующего изображения"""
-        try:
-            # Обновляем метаданные
-            image.position = image_data.get('position', image.position)
-            image.caption = image_data.get('caption', image.caption)
-            image.order = image_data.get('order', image.order)
-            
-            # Обновляем файл изображения если есть новые данные
-            if 'base64_data' in image_data:
-                import base64
-                from django.core.files.base import ContentFile
-                
-                base64_string = image_data['base64_data']
-                if ',' in base64_string:
-                    base64_string = base64_string.split(',')[1]
-                
-                filename = image_data.get('filename', f'updated_{image.image.name}')
-                new_content = ContentFile(
-                    base64.b64decode(base64_string),
-                    name=filename
-                )
-                image.image = new_content
-            
-            image.save()
-            self.log_success(f"Обновлено изображение {image.get_short_uuid()}")
-            
-        except Exception as e:
-            self.log_error(f"Ошибка обновления изображения: {e}", e)
 
     def _analyze_uuid_conflicts(self, json_data: Dict[str, Any]):
         """Анализ конфликтов UUID"""

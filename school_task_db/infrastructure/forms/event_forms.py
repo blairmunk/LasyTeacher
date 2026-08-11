@@ -2,7 +2,7 @@
 
 from django.utils import timezone
 
-from core_logic.interfaces.event_repo import CreateEventParams
+from core_logic.interfaces.event_commands import CreateEventParams
 from core_logic.use_cases.grade_student_work import GradeStudentWorkRequest
 
 

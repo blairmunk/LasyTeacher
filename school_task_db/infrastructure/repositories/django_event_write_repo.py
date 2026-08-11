@@ -5,7 +5,7 @@ from typing import Any, Optional
 
 from django.utils import timezone
 
-from core_logic.interfaces.event_repo import CreateEventParams
+from core_logic.interfaces.event_commands import CreateEventParams
 from core_logic.interfaces.event_write_repo import IEventWriteRepository
 from events.models import Event
 

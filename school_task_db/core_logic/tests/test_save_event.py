@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from core_logic.interfaces.event_repo import CreateEventParams
+from core_logic.interfaces.event_commands import CreateEventParams
 from core_logic.use_cases.save_event import (
     CreateEventUseCase,
     SaveEventResult,

@@ -2,14 +2,16 @@
 
 from core_logic.entities.task import TaskGroupListData, TaskGroupListFilters
 from core_logic.interfaces.task_catalog_repo import ITaskCatalogRepository
-from core_logic.interfaces.task_group_repo import ITaskGroupRepository
+from core_logic.interfaces.task_group_catalog_repo import (
+    ITaskGroupCatalogRepository,
+)
 
 
 class GetTaskGroupListUseCase:
     def __init__(
         self,
         task_catalog_repo: ITaskCatalogRepository,
-        task_group_repo: ITaskGroupRepository,
+        task_group_repo: ITaskGroupCatalogRepository,
     ):
         self.task_catalog_repo = task_catalog_repo
         self.task_group_repo = task_group_repo

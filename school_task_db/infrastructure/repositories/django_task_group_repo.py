@@ -12,13 +12,23 @@ from core_logic.entities.task import (
     TaskGroupListFilters,
     TaskGroupListItem,
 )
-from core_logic.interfaces.task_group_repo import ITaskGroupRepository
+from core_logic.interfaces.task_group_catalog_repo import (
+    ITaskGroupCatalogRepository,
+)
+from core_logic.interfaces.task_group_management_repo import (
+    ITaskGroupManagementRepository,
+)
+from core_logic.interfaces.work_task_group_repo import IWorkTaskGroupRepository
 from core_logic.value_objects.task_print_settings import TASK_BANK_ROLE_CONTROL
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task
 
 
-class DjangoTaskGroupRepository(ITaskGroupRepository):
+class DjangoTaskGroupRepository(
+    ITaskGroupCatalogRepository,
+    ITaskGroupManagementRepository,
+    IWorkTaskGroupRepository,
+):
     @staticmethod
     def _parse_int(value):
         try:

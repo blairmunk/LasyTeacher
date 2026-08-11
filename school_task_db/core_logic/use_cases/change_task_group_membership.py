@@ -3,7 +3,9 @@
 from dataclasses import dataclass
 from typing import Dict, List
 
-from core_logic.interfaces.task_group_repo import ITaskGroupRepository
+from core_logic.interfaces.task_group_management_repo import (
+    ITaskGroupManagementRepository,
+)
 from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_CONTROL,
     validate_task_specific_bank_role,
@@ -30,7 +32,7 @@ class AddTasksToGroupResult:
 
 
 class AddTasksToGroupUseCase:
-    def __init__(self, task_group_repo: ITaskGroupRepository):
+    def __init__(self, task_group_repo: ITaskGroupManagementRepository):
         self.task_group_repo = task_group_repo
 
     def execute(self, request: AddTasksToGroupRequest) -> AddTasksToGroupResult:
@@ -79,7 +81,7 @@ class RemoveTaskFromGroupResult:
 
 
 class RemoveTaskFromGroupUseCase:
-    def __init__(self, task_group_repo: ITaskGroupRepository):
+    def __init__(self, task_group_repo: ITaskGroupManagementRepository):
         self.task_group_repo = task_group_repo
 
     def execute(
@@ -122,7 +124,7 @@ class UpdateTaskGroupRolesResult:
 
 
 class UpdateTaskGroupRolesUseCase:
-    def __init__(self, task_group_repo: ITaskGroupRepository):
+    def __init__(self, task_group_repo: ITaskGroupManagementRepository):
         self.task_group_repo = task_group_repo
 
     def execute(

@@ -1,11 +1,13 @@
 """Build analog group detail screen data."""
 
 from core_logic.entities.task import TaskGroupDetailData
-from core_logic.interfaces.task_group_repo import ITaskGroupRepository
+from core_logic.interfaces.task_group_catalog_repo import (
+    ITaskGroupCatalogRepository,
+)
 
 
 class GetTaskGroupDetailUseCase:
-    def __init__(self, task_group_repo: ITaskGroupRepository):
+    def __init__(self, task_group_repo: ITaskGroupCatalogRepository):
         self.task_group_repo = task_group_repo
 
     def execute(self, group_id: str) -> TaskGroupDetailData:

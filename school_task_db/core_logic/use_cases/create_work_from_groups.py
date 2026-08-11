@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Any, Mapping, List
 
-from core_logic.interfaces.task_group_repo import ITaskGroupRepository
+from core_logic.interfaces.work_task_group_repo import IWorkTaskGroupRepository
 from core_logic.interfaces.work_commands import (
     CreateWorkParams,
     CreateWorkWithSpecificationParams,
@@ -116,7 +116,7 @@ class PrepareCreateWorkFromGroupsSubmissionUseCase:
 class CreateWorkFromGroupsUseCase:
     def __init__(
         self,
-        task_group_repo: ITaskGroupRepository,
+        task_group_repo: IWorkTaskGroupRepository,
         create_work_with_specification_use_case: CreateWorkWithSpecificationUseCase,
         compose_work_variants_use_case: ComposeWorkVariantsUseCase,
     ):

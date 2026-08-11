@@ -2,7 +2,9 @@
 
 from core_logic.entities.task import TaskListData, TaskListFilters
 from core_logic.interfaces.task_catalog_repo import ITaskCatalogRepository
-from core_logic.interfaces.task_group_repo import ITaskGroupRepository
+from core_logic.interfaces.task_group_catalog_repo import (
+    ITaskGroupCatalogRepository,
+)
 from core_logic.interfaces.task_math_status_cache import ITaskMathStatusCache
 from core_logic.interfaces.task_read_repo import ITaskReadRepository
 
@@ -12,7 +14,7 @@ class GetTaskListUseCase:
         self,
         task_repo: ITaskReadRepository,
         task_catalog_repo: ITaskCatalogRepository,
-        task_group_repo: ITaskGroupRepository,
+        task_group_repo: ITaskGroupCatalogRepository,
         math_status_cache: ITaskMathStatusCache,
     ):
         self.task_repo = task_repo

@@ -46,7 +46,7 @@ class GetRemedialWizardPreviewUseCaseTests(TestCase):
     def test_execute_builds_preview_from_repository_source(self):
         repo = FakeStudentRepository()
         use_case = GetRemedialWizardPreviewUseCase(
-            student_repo=repo,
+            student_learning_repo=repo,
             service=RemedialWizardService(shuffle=lambda items: None),
         )
 

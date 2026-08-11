@@ -60,6 +60,7 @@ class GetStudentProfileUseCaseTests(TestCase):
         repo = FakeStudentRepository()
         use_case = GetStudentProfileUseCase(
             student_repo=repo,
+            student_learning_repo=repo,
             analytics_service=StudentAnalyticsService(),
         )
 

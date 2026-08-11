@@ -3,6 +3,9 @@
 from dataclasses import dataclass
 from typing import List
 
+from core_logic.interfaces.student_learning_repo import (
+    IStudentLearningRepository,
+)
 from core_logic.interfaces.student_repo import IStudentRepository
 from core_logic.interfaces.task_repo import ITaskRepository
 from core_logic.interfaces.work_repo import CreateVariantParams, IWorkRepository
@@ -35,11 +38,13 @@ class CreateStudentRemedialVariantUseCase:
     def __init__(
         self,
         student_repo: IStudentRepository,
+        student_learning_repo: IStudentLearningRepository,
         task_repo: ITaskRepository,
         work_repo: IWorkRepository,
         remedial_service: StudentRemedialService | None = None,
     ):
         self.student_repo = student_repo
+        self.student_learning_repo = student_learning_repo
         self.task_repo = task_repo
         self.work_repo = work_repo
         self.remedial_service = remedial_service or StudentRemedialService()
@@ -49,7 +54,9 @@ class CreateStudentRemedialVariantUseCase:
         request: CreateStudentRemedialVariantRequest,
     ) -> CreateStudentRemedialVariantResult:
         task_ids = self.remedial_service.select_task_ids(
-            self.student_repo.get_student_remedial_source(request.student_id),
+            self.student_learning_repo.get_student_remedial_source(
+                request.student_id,
+            ),
             max_tasks=request.max_tasks,
             selected_group_ids=request.group_ids(),
         )

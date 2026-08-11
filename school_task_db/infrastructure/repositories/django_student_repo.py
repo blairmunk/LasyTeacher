@@ -35,6 +35,7 @@ from core_logic.entities.student import (
     WorkRef,
 )
 from core_logic.interfaces.student_repo import IStudentRepository
+from core_logic.interfaces.student_learning_repo import IStudentLearningRepository
 from core_logic.value_objects.attempt_status import (
     resolve_historical_participation_status,
 )
@@ -52,7 +53,7 @@ from tasks.models import Task
 from works.models import WorkAnalogGroup
 
 
-class DjangoStudentRepository(IStudentRepository):
+class DjangoStudentRepository(IStudentRepository, IStudentLearningRepository):
     def _student_detail(self, student):
         return StudentDetail(
             pk=str(student.pk),

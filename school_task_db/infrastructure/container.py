@@ -428,6 +428,7 @@ class Container:
         self._academic_year_repo = None
         self._attempt_snapshot_repo = None
         self._student_repo = None
+        self._student_learning_repo = None
         self._source_repo = None
         self._task_repo = None
         self._task_catalog_repo = None
@@ -499,6 +500,12 @@ class Container:
         if self._student_repo is None:
             self._student_repo = DjangoStudentRepository()
         return self._student_repo
+
+    @property
+    def student_learning_repo(self):
+        if self._student_learning_repo is None:
+            self._student_learning_repo = self.student_repo
+        return self._student_learning_repo
 
     @property
     def source_repo(self):
@@ -848,7 +855,7 @@ class Container:
 
     def remedial_service(self):
         return RemedialService(
-            student_repo=self.student_repo,
+            student_learning_repo=self.student_learning_repo,
             task_repo=self.task_repo,
             task_group_repo=self.task_group_repo,
             remedial_source_repo=self.remedial_source_repo,
@@ -881,6 +888,7 @@ class Container:
     def create_student_remedial_variant_use_case(self):
         return CreateStudentRemedialVariantUseCase(
             student_repo=self.student_repo,
+            student_learning_repo=self.student_learning_repo,
             task_repo=self.task_repo,
             work_repo=self.work_repo,
         )
@@ -911,7 +919,7 @@ class Container:
 
     def get_remedial_wizard_preview_use_case(self):
         return GetRemedialWizardPreviewUseCase(
-            student_repo=self.student_repo,
+            student_learning_repo=self.student_learning_repo,
         )
 
     def get_remedial_wizard_start_use_case(self):
@@ -922,6 +930,7 @@ class Container:
     def get_student_profile_use_case(self):
         return GetStudentProfileUseCase(
             student_repo=self.student_repo,
+            student_learning_repo=self.student_learning_repo,
             analytics_service=self.analytics_service(),
         )
 
@@ -962,7 +971,7 @@ class Container:
 
     def get_student_remedial_work_use_case(self):
         return GetStudentRemedialWorkUseCase(
-            student_repo=self.student_repo,
+            student_learning_repo=self.student_learning_repo,
         )
 
     def create_student_use_case(self):

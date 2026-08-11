@@ -253,7 +253,7 @@ class DjangoRemedialRepositoryTests(TestCase):
 
     def test_repositories_feed_the_pure_remedial_service(self):
         service = RemedialService(
-            student_repo=DjangoStudentRepository(),
+            student_learning_repo=DjangoStudentRepository(),
             task_repo=DjangoTaskRepository(),
             task_group_repo=DjangoTaskGroupRepository(),
             remedial_source_repo=DjangoRemedialSourceRepository(),
@@ -1216,7 +1216,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         work_repo = DjangoWorkRepository()
         event_repo = DjangoEventRepository()
         service = RemedialService(
-            student_repo=student_repo,
+            student_learning_repo=student_repo,
             task_repo=task_repo,
             task_group_repo=DjangoTaskGroupRepository(),
             remedial_source_repo=DjangoRemedialSourceRepository(),
@@ -1287,7 +1287,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         work_repo = DjangoWorkRepository()
         event_repo = DjangoEventRepository()
         service = RemedialService(
-            student_repo=student_repo,
+            student_learning_repo=student_repo,
             task_repo=task_repo,
             task_group_repo=DjangoTaskGroupRepository(),
             remedial_source_repo=DjangoRemedialSourceRepository(),

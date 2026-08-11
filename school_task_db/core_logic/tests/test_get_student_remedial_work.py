@@ -57,7 +57,7 @@ class GetStudentRemedialWorkUseCaseTests(TestCase):
     def test_execute_builds_remedial_analysis_from_repository_source(self):
         repo = FakeStudentRepository()
         use_case = GetStudentRemedialWorkUseCase(
-            student_repo=repo,
+            student_learning_repo=repo,
             service=StudentRemedialService(shuffle=lambda items: None),
         )
 

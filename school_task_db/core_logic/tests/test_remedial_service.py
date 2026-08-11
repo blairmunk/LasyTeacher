@@ -94,7 +94,7 @@ class RemedialServiceTests(TestCase):
     def service(self, results=None, attempted_task_ids=None):
         task_repo = FakeTaskRepository()
         return RemedialService(
-            student_repo=FakeStudentRepository(
+            student_learning_repo=FakeStudentRepository(
                 results,
                 attempted_task_ids=attempted_task_ids,
             ),

@@ -69,6 +69,7 @@ class CreateStudentRemedialVariantUseCaseTests(TestCase):
         work_repo = FakeWorkRepository()
         use_case = CreateStudentRemedialVariantUseCase(
             student_repo=student_repo,
+            student_learning_repo=student_repo,
             task_repo=FakeTaskRepository(),
             work_repo=work_repo,
             remedial_service=StudentRemedialService(
@@ -121,6 +122,7 @@ class CreateStudentRemedialVariantUseCaseTests(TestCase):
         student_repo.source = StudentRemedialSource()
         use_case = CreateStudentRemedialVariantUseCase(
             student_repo=student_repo,
+            student_learning_repo=student_repo,
             task_repo=FakeTaskRepository(),
             work_repo=FakeWorkRepository(),
             remedial_service=StudentRemedialService(

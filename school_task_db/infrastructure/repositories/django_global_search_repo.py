@@ -1,86 +1,23 @@
-"""Django implementation of the core repository."""
+"""Django read adapter for global application search."""
 
 from django.db.models import Count, Q, Sum
 
-from core.models import ImportLog
 from core_logic.entities.core import (
-    ImportLogItem,
     SearchGroupResult,
     SearchTaskResult,
     SearchVariantResult,
     SearchWorkResult,
 )
-from core_logic.interfaces.dashboard_summary_repo import (
-    IDashboardSummaryRepository,
-)
 from core_logic.interfaces.global_search_repo import IGlobalSearchRepository
-from core_logic.interfaces.import_log_repo import IImportLogRepository
-from core_logic.services.import_log_service import ImportLogService
 from core_logic.value_objects.variant_display import (
     resolve_variant_display_name,
 )
-from events.models import Event
-from students.models import Student
 from task_groups.models import AnalogGroup
 from tasks.models import Task
 from works.models import Variant, Work
 
 
-class DjangoCoreRepository(
-    IDashboardSummaryRepository,
-    IImportLogRepository,
-    IGlobalSearchRepository,
-):
-    def count_tasks(self) -> int:
-        return Task.objects.count()
-
-    def count_works(self) -> int:
-        return Work.objects.count()
-
-    def count_variants(self) -> int:
-        return Variant.objects.count()
-
-    def count_orphan_variants(self) -> int:
-        return Variant.objects.filter(work__isnull=True).count()
-
-    def count_students(self) -> int:
-        return Student.objects.count()
-
-    def count_events(self) -> int:
-        return Event.objects.count()
-
-    def count_analog_groups(self) -> int:
-        return AnalogGroup.objects.count()
-
-    def get_recent_import_logs(self, limit: int):
-        return self._import_log_items(ImportLog.objects.all()[:limit])
-
-    def get_import_logs(self):
-        return self._import_log_items(ImportLog.objects.all())
-
-    def _import_log_items(self, logs):
-        return [
-            ImportLogItem(
-                filename=log.filename,
-                mode_display=log.get_mode_display(),
-                dry_run=log.dry_run,
-                tasks_created=log.tasks_created,
-                tasks_updated=log.tasks_updated,
-                tasks_skipped=log.tasks_skipped,
-                errors_count=log.errors_count,
-                duration_ms=log.duration_ms,
-                duration_human=ImportLogService.duration_human(
-                    log.duration_ms,
-                ),
-                file_size_human=ImportLogService.file_size_human(
-                    log.file_size,
-                ),
-                status_icon=ImportLogService.status_icon(log.status),
-                created_at=log.created_at,
-            )
-            for log in logs
-        ]
-
+class DjangoGlobalSearchRepository(IGlobalSearchRepository):
     def search_by_uuid(self, query: str):
         return {
             'tasks': self._task_results(
@@ -111,7 +48,8 @@ class DjangoCoreRepository(
             'groups': self._group_results(self._search_groups_by_text(words)),
         }
 
-    def _search_model_by_uuid(self, model_class, query, related_uuid_fields=None):
+    @staticmethod
+    def _search_model_by_uuid(model_class, query, related_uuid_fields=None):
         clean = query.replace('#', '').replace('-', '').replace(' ', '').strip().lower()
         if len(clean) < 3:
             return model_class.objects.none()
@@ -141,7 +79,8 @@ class DjangoCoreRepository(
             return model_class.objects.none()
         return model_class.objects.filter(id__in=matching_ids)
 
-    def _search_tasks_by_text(self, words):
+    @staticmethod
+    def _search_tasks_by_text(words):
         task_q = Q()
         for word in words:
             word_q = (
@@ -166,13 +105,15 @@ class DjangoCoreRepository(
                 )
             return Task.objects.filter(task_q_fb).distinct()[:30]
 
-    def _search_works_by_text(self, words):
+    @staticmethod
+    def _search_works_by_text(words):
         work_q = Q()
         for word in words:
             work_q &= Q(name__icontains=word)
         return Work.objects.filter(work_q)[:20]
 
-    def _search_variants_by_text(self, words):
+    @staticmethod
+    def _search_variants_by_text(words):
         variant_q = Q()
         number_search = None
         text_words = []
@@ -200,13 +141,15 @@ class DjangoCoreRepository(
             )[:20]
         return Variant.objects.none()
 
-    def _search_groups_by_text(self, words):
+    @staticmethod
+    def _search_groups_by_text(words):
         group_q = Q()
         for word in words:
             group_q &= Q(name__icontains=word)
         return AnalogGroup.objects.filter(group_q)[:20]
 
-    def _task_results(self, tasks):
+    @staticmethod
+    def _task_results(tasks):
         return [
             SearchTaskResult(
                 pk=str(task.pk),
@@ -217,7 +160,8 @@ class DjangoCoreRepository(
             for task in tasks
         ]
 
-    def _work_results(self, works):
+    @staticmethod
+    def _work_results(works):
         return [
             SearchWorkResult(
                 pk=str(work.pk),
@@ -229,7 +173,8 @@ class DjangoCoreRepository(
             for work in works
         ]
 
-    def _variant_results(self, variants):
+    @staticmethod
+    def _variant_results(variants):
         variants = variants.select_related(
             'work',
             'assigned_student',
@@ -241,9 +186,7 @@ class DjangoCoreRepository(
             SearchVariantResult(
                 pk=str(variant.pk),
                 display_name=resolve_variant_display_name(
-                    work_name=(
-                        variant.work.name if variant.work else ''
-                    ),
+                    work_name=(variant.work.name if variant.work else ''),
                     work_name_snapshot=variant.work_name_snapshot,
                     variant_type=variant.variant_type,
                     assigned_student_name=(
@@ -261,7 +204,8 @@ class DjangoCoreRepository(
             for variant in variants
         ]
 
-    def _group_results(self, groups):
+    @staticmethod
+    def _group_results(groups):
         return [
             SearchGroupResult(
                 pk=str(group.pk),

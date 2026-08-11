@@ -92,7 +92,15 @@ from infrastructure.repositories.django_attempt_snapshot_repo import (
     DjangoAttemptSnapshotRepository,
 )
 from infrastructure.repositories.django_codifier_repo import DjangoCodifierRepository
-from infrastructure.repositories.django_core_repo import DjangoCoreRepository
+from infrastructure.repositories.django_dashboard_summary_repo import (
+    DjangoDashboardSummaryRepository,
+)
+from infrastructure.repositories.django_global_search_repo import (
+    DjangoGlobalSearchRepository,
+)
+from infrastructure.repositories.django_import_log_repo import (
+    DjangoImportLogRepository,
+)
 from infrastructure.repositories.django_curriculum_repo import (
     DjangoCurriculumRepository,
 )
@@ -1261,7 +1269,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             duration_ms=1500,
             file_size=1536,
         )
-        repo = DjangoCoreRepository()
+        repo = DjangoImportLogRepository()
 
         recent_logs = list(repo.get_recent_import_logs(limit=1))
         import_logs = list(repo.get_import_logs())
@@ -2028,7 +2036,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             number=1,
             work_name_snapshot='Сирота',
         )
-        repo = DjangoCoreRepository()
+        repo = DjangoDashboardSummaryRepository()
 
         self.assertEqual(repo.count_tasks(), 4)
         self.assertEqual(repo.count_works(), 1)
@@ -2040,7 +2048,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertIsNotNone(orphan.pk)
 
     def test_core_repository_returns_global_search_results(self):
-        repo = DjangoCoreRepository()
+        repo = DjangoGlobalSearchRepository()
 
         text_results = repo.search_by_text(['слабое'])
         uuid_results = repo.search_by_uuid(self.source_work.get_short_uuid())

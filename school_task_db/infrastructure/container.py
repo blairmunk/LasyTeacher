@@ -303,7 +303,15 @@ from infrastructure.repositories.django_attempt_snapshot_repo import (
     DjangoAttemptSnapshotRepository,
 )
 from infrastructure.repositories.django_codifier_repo import DjangoCodifierRepository
-from infrastructure.repositories.django_core_repo import DjangoCoreRepository
+from infrastructure.repositories.django_dashboard_summary_repo import (
+    DjangoDashboardSummaryRepository,
+)
+from infrastructure.repositories.django_global_search_repo import (
+    DjangoGlobalSearchRepository,
+)
+from infrastructure.repositories.django_import_log_repo import (
+    DjangoImportLogRepository,
+)
 from infrastructure.repositories.django_curriculum_repo import (
     DjangoCurriculumRepository,
 )
@@ -538,7 +546,9 @@ class Container:
         self._student_digest_repo = None
         self._curriculum_repo = None
         self._codifier_repo = None
-        self._core_repo = None
+        self._dashboard_summary_repo = None
+        self._global_search_repo = None
+        self._import_log_repo = None
         self._settings_repo = None
         self._presentation_profile_repo = None
         self._codifier_form_adapter = None
@@ -895,10 +905,22 @@ class Container:
         return self._codifier_repo
 
     @property
-    def core_repo(self):
-        if self._core_repo is None:
-            self._core_repo = DjangoCoreRepository()
-        return self._core_repo
+    def dashboard_summary_repo(self):
+        if self._dashboard_summary_repo is None:
+            self._dashboard_summary_repo = DjangoDashboardSummaryRepository()
+        return self._dashboard_summary_repo
+
+    @property
+    def global_search_repo(self):
+        if self._global_search_repo is None:
+            self._global_search_repo = DjangoGlobalSearchRepository()
+        return self._global_search_repo
+
+    @property
+    def import_log_repo(self):
+        if self._import_log_repo is None:
+            self._import_log_repo = DjangoImportLogRepository()
+        return self._import_log_repo
 
     @property
     def settings_repo(self):
@@ -1264,7 +1286,7 @@ class Container:
 
     def get_dashboard_summary_use_case(self):
         return GetDashboardSummaryUseCase(
-            core_repo=self.core_repo,
+            core_repo=self.dashboard_summary_repo,
         )
 
     def get_presentation_profile_list_use_case(self):
@@ -1305,17 +1327,17 @@ class Container:
 
     def get_global_search_use_case(self):
         return GetGlobalSearchUseCase(
-            core_repo=self.core_repo,
+            core_repo=self.global_search_repo,
         )
 
     def get_import_page_use_case(self):
         return GetImportPageUseCase(
-            core_repo=self.core_repo,
+            core_repo=self.import_log_repo,
         )
 
     def get_import_history_use_case(self):
         return GetImportHistoryUseCase(
-            core_repo=self.core_repo,
+            core_repo=self.import_log_repo,
         )
 
     def get_site_settings_use_case(self):

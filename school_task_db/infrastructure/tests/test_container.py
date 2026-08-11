@@ -249,7 +249,15 @@ from infrastructure.repositories.django_codifier_repo import DjangoCodifierRepos
 from infrastructure.repositories.django_academic_year_repo import (
     DjangoAcademicYearRepository,
 )
-from infrastructure.repositories.django_core_repo import DjangoCoreRepository
+from infrastructure.repositories.django_dashboard_summary_repo import (
+    DjangoDashboardSummaryRepository,
+)
+from infrastructure.repositories.django_global_search_repo import (
+    DjangoGlobalSearchRepository,
+)
+from infrastructure.repositories.django_import_log_repo import (
+    DjangoImportLogRepository,
+)
 from infrastructure.repositories.django_curriculum_repo import (
     DjangoCurriculumRepository,
 )
@@ -1150,7 +1158,18 @@ class ContainerTests(SimpleTestCase):
         )
         self.assertIsInstance(container.curriculum_repo, DjangoCurriculumRepository)
         self.assertIsInstance(container.codifier_repo, DjangoCodifierRepository)
-        self.assertIsInstance(container.core_repo, DjangoCoreRepository)
+        self.assertIsInstance(
+            container.dashboard_summary_repo,
+            DjangoDashboardSummaryRepository,
+        )
+        self.assertIsInstance(
+            container.global_search_repo,
+            DjangoGlobalSearchRepository,
+        )
+        self.assertIsInstance(
+            container.import_log_repo,
+            DjangoImportLogRepository,
+        )
         self.assertIsInstance(container.settings_repo, DjangoSettingsRepository)
         self.assertIsInstance(
             container.presentation_profile_repo,

@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 from core_logic.entities.core import ImportHistoryData, ImportPageData
-from core_logic.interfaces.core_repo import ICoreRepository
+from core_logic.interfaces.import_log_repo import IImportLogRepository
 
 
 @dataclass(frozen=True)
@@ -12,7 +12,7 @@ class ImportPageRequest:
 
 
 class GetImportPageUseCase:
-    def __init__(self, core_repo: ICoreRepository):
+    def __init__(self, core_repo: IImportLogRepository):
         self.core_repo = core_repo
 
     def execute(self, request: ImportPageRequest) -> ImportPageData:
@@ -24,7 +24,7 @@ class GetImportPageUseCase:
 
 
 class GetImportHistoryUseCase:
-    def __init__(self, core_repo: ICoreRepository):
+    def __init__(self, core_repo: IImportLogRepository):
         self.core_repo = core_repo
 
     def execute(self) -> ImportHistoryData:

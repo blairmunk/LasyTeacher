@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 from core_logic.entities.core import GlobalSearchData
-from core_logic.interfaces.core_repo import ICoreRepository
+from core_logic.interfaces.global_search_repo import IGlobalSearchRepository
 
 
 @dataclass(frozen=True)
@@ -12,7 +12,7 @@ class GlobalSearchRequest:
 
 
 class GetGlobalSearchUseCase:
-    def __init__(self, core_repo: ICoreRepository):
+    def __init__(self, core_repo: IGlobalSearchRepository):
         self.core_repo = core_repo
 
     def execute(self, request: GlobalSearchRequest) -> GlobalSearchData:

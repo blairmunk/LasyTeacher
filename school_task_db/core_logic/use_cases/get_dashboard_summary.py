@@ -1,11 +1,13 @@
 """Build dashboard summary data for the index page."""
 
 from core_logic.entities.core import DashboardSummaryData
-from core_logic.interfaces.core_repo import ICoreRepository
+from core_logic.interfaces.dashboard_summary_repo import (
+    IDashboardSummaryRepository,
+)
 
 
 class GetDashboardSummaryUseCase:
-    def __init__(self, core_repo: ICoreRepository):
+    def __init__(self, core_repo: IDashboardSummaryRepository):
         self.core_repo = core_repo
 
     def execute(self) -> DashboardSummaryData:

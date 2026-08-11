@@ -10,7 +10,11 @@ from core_logic.entities.core import (
     SearchVariantResult,
     SearchWorkResult,
 )
-from core_logic.interfaces.core_repo import ICoreRepository
+from core_logic.interfaces.dashboard_summary_repo import (
+    IDashboardSummaryRepository,
+)
+from core_logic.interfaces.global_search_repo import IGlobalSearchRepository
+from core_logic.interfaces.import_log_repo import IImportLogRepository
 from core_logic.services.import_log_service import ImportLogService
 from core_logic.value_objects.variant_display import (
     resolve_variant_display_name,
@@ -22,7 +26,11 @@ from tasks.models import Task
 from works.models import Variant, Work
 
 
-class DjangoCoreRepository(ICoreRepository):
+class DjangoCoreRepository(
+    IDashboardSummaryRepository,
+    IImportLogRepository,
+    IGlobalSearchRepository,
+):
     def count_tasks(self) -> int:
         return Task.objects.count()
 

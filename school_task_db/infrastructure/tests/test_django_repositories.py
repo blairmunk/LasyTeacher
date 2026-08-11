@@ -177,6 +177,9 @@ from infrastructure.repositories.django_work_document_repo import (
 from infrastructure.repositories.django_remedial_sheet_repo import (
     DjangoRemedialSheetRepository,
 )
+from infrastructure.repositories.django_remedial_task_group_repo import (
+    DjangoRemedialTaskGroupRepository,
+)
 from infrastructure.repositories.django_remedial_source_repo import (
     DjangoRemedialSourceRepository,
 )
@@ -304,7 +307,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             student_remedial_repo=DjangoStudentRemedialRepository(),
             student_profile_repo=DjangoStudentProfileRepository(),
             task_repo=DjangoTaskSelectionRepository(),
-            task_group_repo=DjangoTaskGroupRepository(),
+            task_group_repo=DjangoRemedialTaskGroupRepository(),
             remedial_source_repo=DjangoRemedialSourceRepository(),
         )
 
@@ -1275,7 +1278,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             student_remedial_repo=DjangoStudentRemedialRepository(),
             student_profile_repo=DjangoStudentProfileRepository(),
             task_repo=task_repo,
-            task_group_repo=DjangoTaskGroupRepository(),
+            task_group_repo=DjangoRemedialTaskGroupRepository(),
             remedial_source_repo=DjangoRemedialSourceRepository(),
         )
         use_case = CreateRemedialFromEventUseCase(
@@ -1352,7 +1355,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             student_remedial_repo=DjangoStudentRemedialRepository(),
             student_profile_repo=DjangoStudentProfileRepository(),
             task_repo=task_repo,
-            task_group_repo=DjangoTaskGroupRepository(),
+            task_group_repo=DjangoRemedialTaskGroupRepository(),
             remedial_source_repo=DjangoRemedialSourceRepository(),
         )
 

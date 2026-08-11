@@ -269,16 +269,6 @@ class DjangoTaskGroupRepository(ITaskGroupRepository):
         groups.delete()
         return deleted_count
 
-    def get_group_ids_for_tasks(self, task_ids: Set[str]) -> Set[str]:
-        if not task_ids:
-            return set()
-        return {
-            str(group_id)
-            for group_id in TaskGroup.objects.filter(
-                task_id__in=task_ids,
-            ).values_list('group_id', flat=True)
-        }
-
     def count_existing_group_ids(self, group_ids: Set[str]) -> int:
         if not group_ids:
             return 0
@@ -291,11 +281,3 @@ class DjangoTaskGroupRepository(ITaskGroupRepository):
         if membership and membership.task.difficulty:
             return membership.task.difficulty
         return 1
-
-    def get_tasks_in_group(self, group_id: str) -> Set[str]:
-        return {
-            str(task_id)
-            for task_id in TaskGroup.objects.filter(
-                group_id=group_id,
-            ).values_list('task_id', flat=True)
-        }

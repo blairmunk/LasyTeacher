@@ -111,17 +111,9 @@ class ITaskGroupRepository(ABC):
         """Delete analog groups and return deleted group count."""
 
     @abstractmethod
-    def get_group_ids_for_tasks(self, task_ids: Set[str]) -> Set[str]:
-        """Return analog-group IDs containing the given tasks."""
-
-    @abstractmethod
     def count_existing_group_ids(self, group_ids: Set[str]) -> int:
         """Return how many selected analog groups exist."""
 
     @abstractmethod
     def get_first_task_difficulty_for_group(self, group_id: str) -> int:
         """Return first task difficulty for a group, or 1."""
-
-    @abstractmethod
-    def get_tasks_in_group(self, group_id: str) -> Set[str]:
-        """Return all task IDs in an analog group."""

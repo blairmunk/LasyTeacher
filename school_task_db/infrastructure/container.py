@@ -423,6 +423,9 @@ from infrastructure.repositories.django_work_document_repo import (
 from infrastructure.repositories.django_remedial_sheet_repo import (
     DjangoRemedialSheetRepository,
 )
+from infrastructure.repositories.django_remedial_task_group_repo import (
+    DjangoRemedialTaskGroupRepository,
+)
 from infrastructure.repositories.django_remedial_source_repo import (
     DjangoRemedialSourceRepository,
 )
@@ -498,6 +501,7 @@ class Container:
         self._orphan_variant_repo = None
         self._work_document_repo = None
         self._remedial_sheet_repo = None
+        self._remedial_task_group_repo = None
         self._remedial_source_repo = None
         self._event_read_repo = None
         self._event_write_repo = None
@@ -701,6 +705,14 @@ class Container:
         if self._remedial_sheet_repo is None:
             self._remedial_sheet_repo = DjangoRemedialSheetRepository()
         return self._remedial_sheet_repo
+
+    @property
+    def remedial_task_group_repo(self):
+        if self._remedial_task_group_repo is None:
+            self._remedial_task_group_repo = (
+                DjangoRemedialTaskGroupRepository()
+            )
+        return self._remedial_task_group_repo
 
     @property
     def remedial_source_repo(self):
@@ -1005,7 +1017,7 @@ class Container:
             student_remedial_repo=self.student_remedial_repo,
             student_profile_repo=self.student_profile_repo,
             task_repo=self.task_selection_repo,
-            task_group_repo=self.task_group_repo,
+            task_group_repo=self.remedial_task_group_repo,
             remedial_source_repo=self.remedial_source_repo,
         )
 

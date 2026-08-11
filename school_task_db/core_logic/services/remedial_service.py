@@ -15,7 +15,9 @@ from core_logic.interfaces.student_profile_repo import IStudentProfileRepository
 from core_logic.interfaces.remedial_source_repo import (
     IRemedialSourceRepository,
 )
-from core_logic.interfaces.task_group_repo import ITaskGroupRepository
+from core_logic.interfaces.remedial_task_group_repo import (
+    IRemedialTaskGroupRepository,
+)
 from core_logic.interfaces.task_selection_repo import ITaskSelectionRepository
 from core_logic.services.student_task_result_service import (
     StudentTaskResultService,
@@ -65,7 +67,7 @@ class RemedialService:
         student_remedial_repo: IStudentRemedialRepository,
         student_profile_repo: IStudentProfileRepository,
         task_repo: ITaskSelectionRepository,
-        task_group_repo: ITaskGroupRepository,
+        task_group_repo: IRemedialTaskGroupRepository,
         remedial_source_repo: IRemedialSourceRepository,
         config: Optional[RemedialConfig] = None,
         task_result_service=None,

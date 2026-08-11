@@ -109,6 +109,9 @@ from infrastructure.repositories.django_review_task_repo import (
 )
 from infrastructure.repositories.django_source_repo import DjangoSourceRepository
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
+from infrastructure.repositories.django_student_learning_repo import (
+    DjangoStudentLearningRepository,
+)
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_task_catalog_repo import (
     DjangoTaskCatalogRepository,
@@ -253,7 +256,7 @@ class DjangoRemedialRepositoryTests(TestCase):
 
     def test_repositories_feed_the_pure_remedial_service(self):
         service = RemedialService(
-            student_learning_repo=DjangoStudentRepository(),
+            student_learning_repo=DjangoStudentLearningRepository(),
             task_repo=DjangoTaskRepository(),
             task_group_repo=DjangoTaskGroupRepository(),
             remedial_source_repo=DjangoRemedialSourceRepository(),
@@ -293,7 +296,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.mark.save(update_fields=['task_scores'])
 
         results = StudentTaskResultService().build(
-            DjangoStudentRepository().get_task_results_source_for_event(
+            DjangoStudentLearningRepository().get_task_results_source_for_event(
                 student_id=str(self.student.pk),
                 event_id=str(self.event.pk),
             ),
@@ -325,7 +328,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         capture_attempt_snapshot(self.mark)
 
         results = StudentTaskResultService().build(
-            DjangoStudentRepository().get_task_results_source_for_event(
+            DjangoStudentLearningRepository().get_task_results_source_for_event(
                 student_id=str(self.student.pk),
                 event_id=str(self.event.pk),
             ),
@@ -346,12 +349,17 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.event.save(update_fields=['name'])
         self.source_work.name = 'Изменённая работа'
         self.source_work.save(update_fields=['name'])
-        repo = DjangoStudentRepository()
+        student_repo = DjangoStudentRepository()
+        learning_repo = DjangoStudentLearningRepository()
 
-        groups = repo.get_student_groups(str(self.student.pk))
-        participations = repo.get_profile_participations(str(self.student.pk))
-        task_logs = repo.get_task_logs(str(self.student.pk))
-        work_groups = repo.get_work_group_refs([str(self.source_work.pk)])
+        groups = student_repo.get_student_groups(str(self.student.pk))
+        participations = learning_repo.get_profile_participations(
+            str(self.student.pk),
+        )
+        task_logs = learning_repo.get_task_logs(str(self.student.pk))
+        work_groups = learning_repo.get_work_group_refs(
+            [str(self.source_work.pk)],
+        )
 
         self.assertEqual(groups[0].name, '9Б')
         self.assertEqual(participations[0].event.name, original_event_name)
@@ -1216,7 +1224,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         work_repo = DjangoWorkRepository()
         event_repo = DjangoEventRepository()
         service = RemedialService(
-            student_learning_repo=student_repo,
+            student_learning_repo=DjangoStudentLearningRepository(),
             task_repo=task_repo,
             task_group_repo=DjangoTaskGroupRepository(),
             remedial_source_repo=DjangoRemedialSourceRepository(),
@@ -1287,7 +1295,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         work_repo = DjangoWorkRepository()
         event_repo = DjangoEventRepository()
         service = RemedialService(
-            student_learning_repo=student_repo,
+            student_learning_repo=DjangoStudentLearningRepository(),
             task_repo=task_repo,
             task_group_repo=DjangoTaskGroupRepository(),
             remedial_source_repo=DjangoRemedialSourceRepository(),

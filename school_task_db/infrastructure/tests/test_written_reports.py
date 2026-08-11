@@ -28,8 +28,8 @@ from infrastructure.repositories.django_event_performance_report_repo import (
 from infrastructure.repositories.django_student_digest_repo import (
     DjangoStudentDigestRepository,
 )
-from infrastructure.repositories.django_student_repo import (
-    DjangoStudentRepository,
+from infrastructure.repositories.django_student_learning_repo import (
+    DjangoStudentLearningRepository,
 )
 from infrastructure.tests.variant_task_factory import (
     capture_attempt_snapshot,
@@ -249,7 +249,7 @@ class WrittenReportRepositoryTests(TestCase):
             start_date=dt.date(2026, 10, 13),
             end_date=dt.date(2026, 10, 19),
         )
-        profile_rows = DjangoStudentRepository().get_profile_participations(
+        profile_rows = DjangoStudentLearningRepository().get_profile_participations(
             str(self.student.pk),
         )
 

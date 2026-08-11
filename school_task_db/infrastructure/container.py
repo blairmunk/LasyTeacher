@@ -343,6 +343,9 @@ from infrastructure.repositories.django_reports_dashboard_repo import (
 from infrastructure.repositories.django_settings_repo import DjangoSettingsRepository
 from infrastructure.repositories.django_source_repo import DjangoSourceRepository
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
+from infrastructure.repositories.django_student_learning_repo import (
+    DjangoStudentLearningRepository,
+)
 from infrastructure.repositories.django_student_digest_repo import (
     DjangoStudentDigestRepository,
 )
@@ -504,7 +507,7 @@ class Container:
     @property
     def student_learning_repo(self):
         if self._student_learning_repo is None:
-            self._student_learning_repo = self.student_repo
+            self._student_learning_repo = DjangoStudentLearningRepository()
         return self._student_learning_repo
 
     @property

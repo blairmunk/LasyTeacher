@@ -325,6 +325,15 @@ from infrastructure.repositories.django_work_specification_repo import (
 from infrastructure.repositories.django_work_variant_creation_repo import (
     DjangoWorkVariantCreationRepository,
 )
+from infrastructure.repositories.django_variant_generation_form_repo import (
+    DjangoVariantGenerationFormRepository,
+)
+from infrastructure.repositories.django_work_spec_sync_repo import (
+    DjangoWorkSpecSyncRepository,
+)
+from infrastructure.repositories.django_work_variant_composition_repo import (
+    DjangoWorkVariantCompositionRepository,
+)
 from infrastructure.repositories.django_work_read_repo import (
     DjangoWorkReadRepository,
 )
@@ -915,6 +924,10 @@ class ContainerTests(SimpleTestCase):
             variant_generation_form_use_case,
             GetVariantGenerationFormUseCase,
         )
+        self.assertIsInstance(
+            variant_generation_form_use_case.work_repo,
+            DjangoVariantGenerationFormRepository,
+        )
         self.assertIsInstance(variant_list_use_case, GetVariantListUseCase)
         self.assertIsInstance(
             orphan_variant_list_use_case,
@@ -922,6 +935,14 @@ class ContainerTests(SimpleTestCase):
         )
         self.assertIsInstance(sync_work_groups_use_case, SyncWorkAnalogGroupsUseCase)
         self.assertIsInstance(compose_variants_use_case, ComposeWorkVariantsUseCase)
+        self.assertIsInstance(
+            sync_work_groups_use_case.work_repo,
+            DjangoWorkSpecSyncRepository,
+        )
+        self.assertIsInstance(
+            compose_variants_use_case.work_repo,
+            DjangoWorkVariantCompositionRepository,
+        )
         self.assertIsInstance(
             create_from_orphans_use_case,
             CreateWorkFromOrphansUseCase,

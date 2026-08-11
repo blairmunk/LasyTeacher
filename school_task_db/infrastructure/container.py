@@ -399,8 +399,14 @@ from infrastructure.repositories.django_work_specification_repo import (
 from infrastructure.repositories.django_work_variant_creation_repo import (
     DjangoWorkVariantCreationRepository,
 )
-from infrastructure.repositories.django_work_variant_generation_repo import (
-    DjangoWorkVariantGenerationRepository,
+from infrastructure.repositories.django_variant_generation_form_repo import (
+    DjangoVariantGenerationFormRepository,
+)
+from infrastructure.repositories.django_work_spec_sync_repo import (
+    DjangoWorkSpecSyncRepository,
+)
+from infrastructure.repositories.django_work_variant_composition_repo import (
+    DjangoWorkVariantCompositionRepository,
 )
 from infrastructure.repositories.django_work_read_repo import (
     DjangoWorkReadRepository,
@@ -483,7 +489,9 @@ class Container:
         self._task_image_audit_repo = None
         self._work_specification_repo = None
         self._work_variant_creation_repo = None
-        self._work_variant_generation_repo = None
+        self._variant_generation_form_repo = None
+        self._work_variant_composition_repo = None
+        self._work_spec_sync_repo = None
         self._work_read_repo = None
         self._variant_read_repo = None
         self._variant_lifecycle_repo = None
@@ -637,12 +645,26 @@ class Container:
         return self._work_variant_creation_repo
 
     @property
-    def work_variant_generation_repo(self):
-        if self._work_variant_generation_repo is None:
-            self._work_variant_generation_repo = (
-                DjangoWorkVariantGenerationRepository()
+    def variant_generation_form_repo(self):
+        if self._variant_generation_form_repo is None:
+            self._variant_generation_form_repo = (
+                DjangoVariantGenerationFormRepository()
             )
-        return self._work_variant_generation_repo
+        return self._variant_generation_form_repo
+
+    @property
+    def work_variant_composition_repo(self):
+        if self._work_variant_composition_repo is None:
+            self._work_variant_composition_repo = (
+                DjangoWorkVariantCompositionRepository()
+            )
+        return self._work_variant_composition_repo
+
+    @property
+    def work_spec_sync_repo(self):
+        if self._work_spec_sync_repo is None:
+            self._work_spec_sync_repo = DjangoWorkSpecSyncRepository()
+        return self._work_spec_sync_repo
 
     @property
     def work_read_repo(self):
@@ -1626,7 +1648,7 @@ class Container:
 
     def get_variant_generation_form_use_case(self):
         return GetVariantGenerationFormUseCase(
-            work_repo=self.work_variant_generation_repo,
+            work_repo=self.variant_generation_form_repo,
         )
 
     def get_variant_list_use_case(self):
@@ -1646,13 +1668,13 @@ class Container:
 
     def sync_work_analog_groups_use_case(self):
         return SyncWorkAnalogGroupsUseCase(
-            work_repo=self.work_variant_generation_repo,
+            work_repo=self.work_spec_sync_repo,
             transaction_manager=self.transaction_manager,
         )
 
     def compose_work_variants_use_case(self):
         return ComposeWorkVariantsUseCase(
-            work_repo=self.work_variant_generation_repo,
+            work_repo=self.work_variant_composition_repo,
             transaction_manager=self.transaction_manager,
         )
 

@@ -128,7 +128,12 @@ from infrastructure.repositories.django_task_export_repo import (
 from infrastructure.repositories.django_task_group_repo import (
     DjangoTaskGroupRepository,
 )
-from infrastructure.repositories.django_work_repo import DjangoWorkRepository
+from infrastructure.repositories.django_work_specification_repo import (
+    DjangoWorkSpecificationRepository,
+)
+from infrastructure.repositories.django_work_variant_creation_repo import (
+    DjangoWorkVariantCreationRepository,
+)
 from infrastructure.repositories.django_work_variant_generation_repo import (
     DjangoWorkVariantGenerationRepository,
 )
@@ -518,7 +523,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(event.location, '202')
 
     def test_work_repository_returns_update_lock_context(self):
-        repo = DjangoWorkRepository()
+        repo = DjangoWorkSpecificationRepository()
 
         context = repo.get_work_update_context(str(self.source_work.pk))
         missing = repo.get_work_update_context(
@@ -541,7 +546,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             order=10,
         )
 
-        updated = DjangoWorkRepository().update_work_with_specification(
+        updated = DjangoWorkSpecificationRepository().update_work_with_specification(
             CreateWorkWithSpecificationParams(
                 work=CreateWorkParams(
                     work_id=str(work.pk),
@@ -582,7 +587,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(block.body, 'Покажите ход решения.')
 
     def test_work_repository_creates_work_with_variants(self):
-        repo = DjangoWorkRepository()
+        repo = DjangoWorkVariantCreationRepository()
 
         created = repo.create_work_with_variants(
             CreateWorkWithVariantsParams(
@@ -668,7 +673,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
 
     def test_work_repository_rolls_back_work_when_variant_creation_fails(self):
-        repo = DjangoWorkRepository()
+        repo = DjangoWorkVariantCreationRepository()
         original_create_variant = repo._create_variant_from_plan
         work_count = Work.objects.count()
         variant_count = Variant.objects.count()
@@ -724,7 +729,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             description='Энергия характеризует способность совершать работу.',
         )
 
-        work_id = DjangoWorkRepository().create_work_with_specification(
+        work_id = DjangoWorkSpecificationRepository().create_work_with_specification(
             CreateWorkWithSpecificationParams(
                 work=CreateWorkParams(
                     name='Работа со спецификацией',
@@ -1233,7 +1238,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         source_attempt = capture_attempt_snapshot(self.mark)
         student_repo = DjangoStudentRepository()
         task_repo = DjangoTaskRepository()
-        work_repo = DjangoWorkRepository()
+        work_repo = DjangoWorkVariantCreationRepository()
         event_repo = DjangoEventRepository()
         service = RemedialService(
             student_learning_repo=DjangoStudentLearningRepository(),
@@ -1305,7 +1310,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         capture_attempt_snapshot(self.mark)
         student_repo = DjangoStudentRepository()
         task_repo = DjangoTaskRepository()
-        work_repo = DjangoWorkRepository()
+        work_repo = DjangoWorkVariantCreationRepository()
         event_repo = DjangoEventRepository()
         service = RemedialService(
             student_learning_repo=DjangoStudentLearningRepository(),
@@ -2508,7 +2513,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(Work.objects.count(), work_count)
 
     def test_work_repository_creates_work_with_variant_from_tasks(self):
-        repo = DjangoWorkRepository()
+        repo = DjangoWorkVariantCreationRepository()
 
         created = repo.create_work_with_variant_from_tasks(
             CreateWorkWithVariantFromTasksParams(

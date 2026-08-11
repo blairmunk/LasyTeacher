@@ -374,7 +374,12 @@ from infrastructure.repositories.django_task_image_audit_repo import (
 from infrastructure.repositories.django_task_db_health_repo import (
     DjangoTaskDBHealthRepository,
 )
-from infrastructure.repositories.django_work_repo import DjangoWorkRepository
+from infrastructure.repositories.django_work_specification_repo import (
+    DjangoWorkSpecificationRepository,
+)
+from infrastructure.repositories.django_work_variant_creation_repo import (
+    DjangoWorkVariantCreationRepository,
+)
 from infrastructure.repositories.django_work_variant_generation_repo import (
     DjangoWorkVariantGenerationRepository,
 )
@@ -451,7 +456,8 @@ class Container:
         self._task_group_repo = None
         self._task_math_status_cache = None
         self._task_image_audit_repo = None
-        self._work_repo = None
+        self._work_specification_repo = None
+        self._work_variant_creation_repo = None
         self._work_variant_generation_repo = None
         self._work_read_repo = None
         self._variant_read_repo = None
@@ -571,10 +577,18 @@ class Container:
         return self._task_image_audit_repo
 
     @property
-    def work_repo(self):
-        if self._work_repo is None:
-            self._work_repo = DjangoWorkRepository()
-        return self._work_repo
+    def work_specification_repo(self):
+        if self._work_specification_repo is None:
+            self._work_specification_repo = DjangoWorkSpecificationRepository()
+        return self._work_specification_repo
+
+    @property
+    def work_variant_creation_repo(self):
+        if self._work_variant_creation_repo is None:
+            self._work_variant_creation_repo = (
+                DjangoWorkVariantCreationRepository()
+            )
+        return self._work_variant_creation_repo
 
     @property
     def work_variant_generation_repo(self):
@@ -925,7 +939,7 @@ class Container:
         return CreateRemedialFromEventUseCase(
             remedial_service=self.remedial_service(),
             task_repo=self.task_repo,
-            work_repo=self.work_repo,
+            work_repo=self.work_variant_creation_repo,
             event_repo=self.event_repo,
             event_attempt_repo=self.event_attempt_repo,
             transaction_manager=self.transaction_manager,
@@ -936,14 +950,14 @@ class Container:
             student_repo=self.student_repo,
             student_learning_repo=self.student_learning_repo,
             task_repo=self.task_repo,
-            work_repo=self.work_repo,
+            work_repo=self.work_variant_creation_repo,
         )
 
     def create_remedial_wizard_work_use_case(self):
         return CreateRemedialWizardWorkUseCase(
             student_repo=self.student_repo,
             task_repo=self.task_repo,
-            work_repo=self.work_repo,
+            work_repo=self.work_variant_creation_repo,
             event_repo=self.event_repo,
             transaction_manager=self.transaction_manager,
         )
@@ -1648,17 +1662,17 @@ class Container:
     def create_work_from_tasks_use_case(self):
         return CreateWorkFromTasksUseCase(
             task_repo=self.task_repo,
-            work_repo=self.work_repo,
+            work_repo=self.work_variant_creation_repo,
         )
 
     def create_work_with_specification_use_case(self):
         return CreateWorkWithSpecificationUseCase(
-            work_repo=self.work_repo,
+            work_repo=self.work_specification_repo,
         )
 
     def update_work_with_specification_use_case(self):
         return UpdateWorkWithSpecificationUseCase(
-            work_repo=self.work_repo,
+            work_repo=self.work_specification_repo,
         )
 
     def get_variant_delete_info_use_case(self):

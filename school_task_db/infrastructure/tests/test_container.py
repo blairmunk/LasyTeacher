@@ -319,6 +319,15 @@ from infrastructure.repositories.django_task_write_repo import (
 from infrastructure.repositories.django_task_selection_repo import (
     DjangoTaskSelectionRepository,
 )
+from infrastructure.repositories.django_task_group_catalog_repo import (
+    DjangoTaskGroupCatalogRepository,
+)
+from infrastructure.repositories.django_task_group_management_repo import (
+    DjangoTaskGroupManagementRepository,
+)
+from infrastructure.repositories.django_work_task_group_repo import (
+    DjangoWorkTaskGroupRepository,
+)
 from infrastructure.repositories.django_work_specification_repo import (
     DjangoWorkSpecificationRepository,
 )
@@ -788,8 +797,16 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(task_group_detail_use_case, GetTaskGroupDetailUseCase)
         self.assertIsInstance(task_group_list_use_case, GetTaskGroupListUseCase)
         self.assertIsInstance(
+            task_group_detail_use_case.task_group_repo,
+            DjangoTaskGroupCatalogRepository,
+        )
+        self.assertIsInstance(
             create_analog_group_use_case,
             CreateAnalogGroupUseCase,
+        )
+        self.assertIsInstance(
+            create_analog_group_use_case.task_group_repo,
+            DjangoTaskGroupManagementRepository,
         )
         self.assertIsInstance(
             update_analog_group_use_case,
@@ -951,6 +968,10 @@ class ContainerTests(SimpleTestCase):
             CreateWorkFromOrphansUseCase,
         )
         self.assertIsInstance(create_from_groups_use_case, CreateWorkFromGroupsUseCase)
+        self.assertIsInstance(
+            create_from_groups_use_case.task_group_repo,
+            DjangoWorkTaskGroupRepository,
+        )
         self.assertIsInstance(create_from_tasks_use_case, CreateWorkFromTasksUseCase)
         self.assertIsInstance(
             create_work_with_specification_use_case,

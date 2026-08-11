@@ -384,8 +384,14 @@ from infrastructure.repositories.django_task_catalog_repo import (
 from infrastructure.repositories.django_task_export_repo import (
     DjangoTaskExportRepository,
 )
-from infrastructure.repositories.django_task_group_repo import (
-    DjangoTaskGroupRepository,
+from infrastructure.repositories.django_task_group_catalog_repo import (
+    DjangoTaskGroupCatalogRepository,
+)
+from infrastructure.repositories.django_task_group_management_repo import (
+    DjangoTaskGroupManagementRepository,
+)
+from infrastructure.repositories.django_work_task_group_repo import (
+    DjangoWorkTaskGroupRepository,
 )
 from infrastructure.repositories.django_task_image_audit_repo import (
     DjangoTaskImageAuditRepository,
@@ -487,7 +493,9 @@ class Container:
         self._task_selection_repo = None
         self._task_catalog_repo = None
         self._task_export_repo = None
-        self._task_group_repo = None
+        self._task_group_catalog_repo = None
+        self._task_group_management_repo = None
+        self._work_task_group_repo = None
         self._task_math_status_cache = None
         self._task_image_audit_repo = None
         self._work_specification_repo = None
@@ -617,10 +625,24 @@ class Container:
         return self._task_export_repo
 
     @property
-    def task_group_repo(self):
-        if self._task_group_repo is None:
-            self._task_group_repo = DjangoTaskGroupRepository()
-        return self._task_group_repo
+    def task_group_catalog_repo(self):
+        if self._task_group_catalog_repo is None:
+            self._task_group_catalog_repo = DjangoTaskGroupCatalogRepository()
+        return self._task_group_catalog_repo
+
+    @property
+    def task_group_management_repo(self):
+        if self._task_group_management_repo is None:
+            self._task_group_management_repo = (
+                DjangoTaskGroupManagementRepository()
+            )
+        return self._task_group_management_repo
+
+    @property
+    def work_task_group_repo(self):
+        if self._work_task_group_repo is None:
+            self._work_task_group_repo = DjangoWorkTaskGroupRepository()
+        return self._work_task_group_repo
 
     @property
     def task_math_status_cache(self):
@@ -1163,34 +1185,34 @@ class Container:
         return GetTaskListUseCase(
             task_repo=self.task_read_repo,
             task_catalog_repo=self.task_catalog_repo,
-            task_group_repo=self.task_group_repo,
+            task_group_repo=self.task_group_catalog_repo,
             math_status_cache=self.task_math_status_cache,
         )
 
     def get_task_group_list_use_case(self):
         return GetTaskGroupListUseCase(
             task_catalog_repo=self.task_catalog_repo,
-            task_group_repo=self.task_group_repo,
+            task_group_repo=self.task_group_catalog_repo,
         )
 
     def get_task_group_detail_use_case(self):
         return GetTaskGroupDetailUseCase(
-            task_group_repo=self.task_group_repo,
+            task_group_repo=self.task_group_catalog_repo,
         )
 
     def create_analog_group_use_case(self):
         return CreateAnalogGroupUseCase(
-            task_group_repo=self.task_group_repo,
+            task_group_repo=self.task_group_management_repo,
         )
 
     def update_analog_group_use_case(self):
         return UpdateAnalogGroupUseCase(
-            task_group_repo=self.task_group_repo,
+            task_group_repo=self.task_group_management_repo,
         )
 
     def get_add_tasks_to_group_use_case(self):
         return GetAddTasksToGroupUseCase(
-            task_group_repo=self.task_group_repo,
+            task_group_repo=self.task_group_catalog_repo,
         )
 
     def get_course_detail_use_case(self):
@@ -1755,7 +1777,7 @@ class Container:
 
     def create_work_from_groups_use_case(self):
         return CreateWorkFromGroupsUseCase(
-            task_group_repo=self.task_group_repo,
+            task_group_repo=self.work_task_group_repo,
             create_work_with_specification_use_case=(
                 self.create_work_with_specification_use_case()
             ),
@@ -1795,7 +1817,7 @@ class Container:
 
     def delete_task_groups_use_case(self):
         return DeleteTaskGroupsUseCase(
-            task_group_repo=self.task_group_repo,
+            task_group_repo=self.task_group_management_repo,
         )
 
     def delete_task_use_case(self):
@@ -1805,34 +1827,34 @@ class Container:
 
     def add_tasks_to_group_use_case(self):
         return AddTasksToGroupUseCase(
-            task_group_repo=self.task_group_repo,
+            task_group_repo=self.task_group_management_repo,
         )
 
     def remove_task_from_group_use_case(self):
         return RemoveTaskFromGroupUseCase(
-            task_group_repo=self.task_group_repo,
+            task_group_repo=self.task_group_management_repo,
         )
 
     def update_task_group_roles_use_case(self):
         return UpdateTaskGroupRolesUseCase(
-            task_group_repo=self.task_group_repo,
+            task_group_repo=self.task_group_management_repo,
         )
 
     def bulk_create_group_from_tasks_use_case(self):
         return BulkCreateGroupFromTasksUseCase(
             task_repo=self.task_selection_repo,
-            task_group_repo=self.task_group_repo,
+            task_group_repo=self.task_group_management_repo,
         )
 
     def bulk_add_tasks_to_group_use_case(self):
         return BulkAddTasksToGroupUseCase(
             task_repo=self.task_selection_repo,
-            task_group_repo=self.task_group_repo,
+            task_group_repo=self.task_group_management_repo,
         )
 
     def bulk_remove_tasks_from_groups_use_case(self):
         return BulkRemoveTasksFromGroupsUseCase(
-            task_group_repo=self.task_group_repo,
+            task_group_repo=self.task_group_management_repo,
         )
 
     def bulk_delete_variants_use_case(self):

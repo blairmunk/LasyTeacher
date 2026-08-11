@@ -144,8 +144,11 @@ from infrastructure.repositories.django_task_catalog_repo import (
 from infrastructure.repositories.django_task_export_repo import (
     DjangoTaskExportRepository,
 )
-from infrastructure.repositories.django_task_group_repo import (
-    DjangoTaskGroupRepository,
+from infrastructure.repositories.django_task_group_catalog_repo import (
+    DjangoTaskGroupCatalogRepository,
+)
+from infrastructure.repositories.django_task_group_management_repo import (
+    DjangoTaskGroupManagementRepository,
 )
 from infrastructure.repositories.django_work_specification_repo import (
     DjangoWorkSpecificationRepository,
@@ -916,7 +919,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             str(self.weak_group.pk),
             [
                 option.pk
-                for option in DjangoTaskGroupRepository().get_list_analog_groups()
+                for option in DjangoTaskGroupCatalogRepository().get_list_analog_groups()
             ],
         )
 
@@ -947,7 +950,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         math_status_cache.get_tasks_with_errors_ids.assert_called_once_with()
 
     def test_task_group_repository_returns_filtered_list_data(self):
-        repo = DjangoTaskGroupRepository()
+        repo = DjangoTaskGroupCatalogRepository()
 
         groups = repo.get_list_task_groups(
             TaskGroupListFilters(
@@ -974,7 +977,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(repo.count_task_group_memberships(), 4)
 
     def test_task_group_repository_returns_detail_data(self):
-        repo = DjangoTaskGroupRepository()
+        repo = DjangoTaskGroupCatalogRepository()
 
         group = repo.get_analog_group_detail(str(self.weak_group.pk))
         missing_group = repo.get_analog_group_detail(
@@ -990,7 +993,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(tasks[0].task_type_display, 'Расчётная задача')
 
     def test_task_group_repository_returns_add_tasks_form_data(self):
-        repo = DjangoTaskGroupRepository()
+        repo = DjangoTaskGroupCatalogRepository()
 
         group = repo.get_analog_group_detail(str(self.weak_group.pk))
         available_tasks = repo.get_available_tasks_for_analog_group(
@@ -2176,7 +2179,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
 
     def test_task_group_repository_mutates_bulk_memberships(self):
-        repo = DjangoTaskGroupRepository()
+        repo = DjangoTaskGroupManagementRepository()
         new_group_id = repo.create_analog_group(
             name='Новая группа',
             description='Описание',
@@ -2233,7 +2236,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
 
     def test_task_group_repository_updates_roles(self):
-        repo = DjangoTaskGroupRepository()
+        repo = DjangoTaskGroupManagementRepository()
         group = AnalogGroup.objects.create(name='Роли')
         other_group = AnalogGroup.objects.create(name='Другая группа')
         first_membership = TaskGroup.objects.create(

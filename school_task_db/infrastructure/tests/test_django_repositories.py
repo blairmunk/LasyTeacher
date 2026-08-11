@@ -129,6 +129,9 @@ from infrastructure.repositories.django_task_group_repo import (
     DjangoTaskGroupRepository,
 )
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
+from infrastructure.repositories.django_work_variant_generation_repo import (
+    DjangoWorkVariantGenerationRepository,
+)
 from infrastructure.repositories.django_work_read_repo import (
     DjangoWorkReadRepository,
 )
@@ -1680,7 +1683,7 @@ class DjangoRemedialRepositoryTests(TestCase):
 
     def test_work_repository_returns_list_page_data(self):
         read_repo = DjangoWorkReadRepository()
-        repo = DjangoWorkRepository()
+        repo = DjangoWorkVariantGenerationRepository()
 
         works = read_repo.get_list_works()
         work = repo.get_work_generation_target(str(self.source_work.pk))
@@ -2073,7 +2076,7 @@ class DjangoRemedialRepositoryTests(TestCase):
 
     def test_work_repository_syncs_analog_groups_from_variants(self):
         WorkAnalogGroup.objects.filter(work=self.source_work).delete()
-        repo = DjangoWorkRepository()
+        repo = DjangoWorkVariantGenerationRepository()
 
         result = SyncWorkAnalogGroupsUseCase(
             repo,
@@ -2095,7 +2098,7 @@ class DjangoRemedialRepositoryTests(TestCase):
 
     def test_work_repository_does_not_sync_missing_work(self):
         result = SyncWorkAnalogGroupsUseCase(
-            DjangoWorkRepository(),
+            DjangoWorkVariantGenerationRepository(),
             transaction_manager=DjangoTransactionManager(),
         ).execute(
             SyncWorkAnalogGroupsRequest(
@@ -2108,7 +2111,7 @@ class DjangoRemedialRepositoryTests(TestCase):
 
     def test_work_repository_rejects_stale_specification_sync_plan(self):
         WorkAnalogGroup.objects.filter(work=self.source_work).delete()
-        repo = DjangoWorkRepository()
+        repo = DjangoWorkVariantGenerationRepository()
         source = repo.get_work_spec_sync_source(str(self.source_work.pk))
         plan = WorkSpecSyncService().build_plan(source.variant_group_ids)
         self.source_work.variant_counter += 1
@@ -2217,7 +2220,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(other_membership.bank_role, 'control')
 
     def test_work_repository_composes_variants(self):
-        repo = DjangoWorkRepository()
+        repo = DjangoWorkVariantGenerationRepository()
         existing_count = Variant.objects.filter(work=self.source_work).count()
         existing_counter = self.source_work.variant_counter
 
@@ -2244,7 +2247,7 @@ class DjangoRemedialRepositoryTests(TestCase):
 
     def test_compose_variants_use_case_handles_missing_work(self):
         result = ComposeWorkVariantsUseCase(
-            DjangoWorkRepository(),
+            DjangoWorkVariantGenerationRepository(),
             transaction_manager=DjangoTransactionManager(),
         ).execute(
             ComposeWorkVariantsRequest(
@@ -2257,7 +2260,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(result.created_count, 0)
 
     def test_work_repository_rejects_stale_variant_composition_plan(self):
-        repo = DjangoWorkRepository()
+        repo = DjangoWorkVariantGenerationRepository()
         composition_source = repo.get_variant_composition_source(
             str(self.source_work.pk),
         )
@@ -2350,7 +2353,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             title='Инструкция',
             body='Покажите ход решения.',
         )
-        repo = DjangoWorkRepository()
+        repo = DjangoWorkVariantGenerationRepository()
 
         result = ComposeWorkVariantsUseCase(
             repo,

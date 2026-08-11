@@ -375,6 +375,9 @@ from infrastructure.repositories.django_task_db_health_repo import (
     DjangoTaskDBHealthRepository,
 )
 from infrastructure.repositories.django_work_repo import DjangoWorkRepository
+from infrastructure.repositories.django_work_variant_generation_repo import (
+    DjangoWorkVariantGenerationRepository,
+)
 from infrastructure.repositories.django_work_read_repo import (
     DjangoWorkReadRepository,
 )
@@ -449,6 +452,7 @@ class Container:
         self._task_math_status_cache = None
         self._task_image_audit_repo = None
         self._work_repo = None
+        self._work_variant_generation_repo = None
         self._work_read_repo = None
         self._variant_read_repo = None
         self._variant_lifecycle_repo = None
@@ -571,6 +575,14 @@ class Container:
         if self._work_repo is None:
             self._work_repo = DjangoWorkRepository()
         return self._work_repo
+
+    @property
+    def work_variant_generation_repo(self):
+        if self._work_variant_generation_repo is None:
+            self._work_variant_generation_repo = (
+                DjangoWorkVariantGenerationRepository()
+            )
+        return self._work_variant_generation_repo
 
     @property
     def work_read_repo(self):
@@ -1527,7 +1539,7 @@ class Container:
 
     def get_variant_generation_form_use_case(self):
         return GetVariantGenerationFormUseCase(
-            work_repo=self.work_repo,
+            work_repo=self.work_variant_generation_repo,
         )
 
     def get_variant_list_use_case(self):
@@ -1547,13 +1559,13 @@ class Container:
 
     def sync_work_analog_groups_use_case(self):
         return SyncWorkAnalogGroupsUseCase(
-            work_repo=self.work_repo,
+            work_repo=self.work_variant_generation_repo,
             transaction_manager=self.transaction_manager,
         )
 
     def compose_work_variants_use_case(self):
         return ComposeWorkVariantsUseCase(
-            work_repo=self.work_repo,
+            work_repo=self.work_variant_generation_repo,
             transaction_manager=self.transaction_manager,
         )
 

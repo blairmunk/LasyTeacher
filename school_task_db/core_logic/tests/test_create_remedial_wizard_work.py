@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from unittest import TestCase
 
 from core_logic.entities.task import TaskEntity
-from core_logic.interfaces.work_repo import (
+from core_logic.interfaces.work_commands import (
     CreatedWorkWithVariantsRef,
     CreateWorkParams,
     CreateWorkWithVariantsParams,

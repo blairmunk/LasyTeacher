@@ -4,7 +4,7 @@ from django.http import Http404, JsonResponse
 from django.views.generic import TemplateView
 from django.views.decorators.http import require_http_methods
 
-from core_logic.interfaces.work_repo import CreateWorkWithSpecificationParams
+from core_logic.interfaces.work_commands import CreateWorkWithSpecificationParams
 from core_logic.use_cases.prepare_work_variant_submission import (
     PrepareVariantActionSubmissionRequest,
 )

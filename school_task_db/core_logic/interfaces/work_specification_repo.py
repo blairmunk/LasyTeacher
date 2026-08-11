@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from core_logic.interfaces.work_repo import (
+from core_logic.interfaces.work_commands import (
     CreateWorkWithSpecificationParams,
     WorkUpdateContext,
 )

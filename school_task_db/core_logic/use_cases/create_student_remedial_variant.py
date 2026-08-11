@@ -8,7 +8,7 @@ from core_logic.interfaces.student_learning_repo import (
 )
 from core_logic.interfaces.student_repo import IStudentRepository
 from core_logic.interfaces.task_repo import ITaskRepository
-from core_logic.interfaces.work_repo import CreateVariantParams
+from core_logic.interfaces.work_commands import CreateVariantParams
 from core_logic.interfaces.work_variant_creation_repo import (
     IWorkVariantCreationRepository,
 )

@@ -7,7 +7,7 @@ from core_logic.interfaces.event_repo import CreateEventParams, IEventRepository
 from core_logic.interfaces.student_repo import IStudentRepository
 from core_logic.interfaces.task_repo import ITaskRepository
 from core_logic.interfaces.transaction_manager import ITransactionManager
-from core_logic.interfaces.work_repo import (
+from core_logic.interfaces.work_commands import (
     CreateWorkParams,
     CreateWorkWithVariantsParams,
     NewWorkVariantParams,

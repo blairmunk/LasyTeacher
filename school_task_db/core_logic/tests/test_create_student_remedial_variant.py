@@ -6,7 +6,7 @@ from core_logic.entities.student import (
     StudentRemedialSource,
 )
 from core_logic.entities.task import TaskEntity
-from core_logic.interfaces.work_repo import CreateVariantParams
+from core_logic.interfaces.work_commands import CreateVariantParams
 from core_logic.services.student_remedial_service import StudentRemedialService
 from core_logic.use_cases.create_student_remedial_variant import (
     CreateStudentRemedialVariantRequest,

@@ -11,7 +11,7 @@ from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
 
 from core.models import AcademicYear
-from core_logic.interfaces.work_repo import (
+from core_logic.interfaces.work_commands import (
     CreateWorkParams,
     WorkContentBlockParams,
     WorkTaskSelectionParams,

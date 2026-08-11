@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from typing import List
 
-from core_logic.interfaces.work_repo import (
+from core_logic.interfaces.work_commands import (
     CreateWorkParams,
     CreateWorkWithSpecificationParams,
     WorkContentBlockParams,

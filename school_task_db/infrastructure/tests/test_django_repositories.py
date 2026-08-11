@@ -28,7 +28,7 @@ from core_logic.interfaces.event_repo import (
 from core_logic.interfaces.orphan_variant_repo import (
     CreateWorkFromOrphanVariantsParams,
 )
-from core_logic.interfaces.work_repo import (
+from core_logic.interfaces.work_commands import (
     CreateWorkParams,
     CreateWorkWithSpecificationParams,
     CreateWorkWithVariantsParams,

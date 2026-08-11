@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from core_logic.interfaces.work_repo import (
+from core_logic.interfaces.work_commands import (
     CreateWorkParams,
     CreateWorkWithSpecificationParams,
     WorkTaskSelectionParams,

@@ -2,7 +2,7 @@
 
 from django.db import transaction
 
-from core_logic.interfaces.work_repo import (
+from core_logic.interfaces.work_commands import (
     CreatedWorkVariantRef,
     CreatedWorkWithVariantsRef,
     CreateVariantParams,

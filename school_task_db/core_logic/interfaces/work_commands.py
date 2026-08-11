@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 from typing import List, Optional
+
 from core_logic.entities.work_variant_composition import VariantCreationPlan
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,

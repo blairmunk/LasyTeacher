@@ -118,7 +118,12 @@ from infrastructure.repositories.django_student_repo import DjangoStudentReposit
 from infrastructure.repositories.django_student_learning_repo import (
     DjangoStudentLearningRepository,
 )
-from infrastructure.repositories.django_task_repo import DjangoTaskRepository
+from infrastructure.repositories.django_task_read_repo import (
+    DjangoTaskReadRepository,
+)
+from infrastructure.repositories.django_task_write_repo import (
+    DjangoTaskWriteRepository,
+)
 from infrastructure.repositories.django_task_selection_repo import (
     DjangoTaskSelectionRepository,
 )
@@ -854,7 +859,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(missing_result.status, 'not_found')
 
     def test_task_repository_returns_filtered_task_list_data(self):
-        repo = DjangoTaskRepository()
+        repo = DjangoTaskReadRepository()
 
         grouped_tasks = repo.get_list_tasks(
             TaskListFilters(
@@ -899,7 +904,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         math_status_cache.get_tasks_with_errors_ids.return_value = {
             self.original_ok.pk,
         }
-        repo = DjangoTaskRepository(math_status_cache=math_status_cache)
+        repo = DjangoTaskReadRepository(math_status_cache=math_status_cache)
 
         with_math = repo.get_list_tasks(
             TaskListFilters(math_filter='with_math')
@@ -984,7 +989,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
 
     def test_task_repository_returns_detail_and_reference_data(self):
-        repo = DjangoTaskRepository()
+        repo = DjangoTaskReadRepository()
 
         detail_task = repo.get_task(str(self.original_weak.pk))
         missing_task = repo.get_task('00000000-0000-0000-0000-000000000000')
@@ -1043,7 +1048,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(source.year, 2026)
 
     def test_task_repository_creates_and_updates_task(self):
-        repo = DjangoTaskRepository()
+        repo = DjangoTaskWriteRepository()
 
         create_result = repo.create_task(
             TaskSaveParams(
@@ -1093,7 +1098,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(missing_result.status, 'not_found')
 
     def test_task_repository_saves_task_images(self):
-        repo = DjangoTaskRepository()
+        repo = DjangoTaskWriteRepository()
         task = Task.objects.create(
             text='Задача с рисунком',
             answer='Ответ',
@@ -1208,7 +1213,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
 
     def test_task_repository_deletes_task(self):
-        repo = DjangoTaskRepository()
+        repo = DjangoTaskWriteRepository()
         task_id = str(self.too_hard.pk)
 
         deleted_count = repo.delete_task(task_id)

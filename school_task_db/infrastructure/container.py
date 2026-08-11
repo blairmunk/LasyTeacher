@@ -358,7 +358,12 @@ from infrastructure.repositories.django_student_digest_repo import (
 from infrastructure.repositories.django_student_performance_repo import (
     DjangoStudentPerformanceRepository,
 )
-from infrastructure.repositories.django_task_repo import DjangoTaskRepository
+from infrastructure.repositories.django_task_read_repo import (
+    DjangoTaskReadRepository,
+)
+from infrastructure.repositories.django_task_write_repo import (
+    DjangoTaskWriteRepository,
+)
 from infrastructure.repositories.django_task_selection_repo import (
     DjangoTaskSelectionRepository,
 )
@@ -453,7 +458,8 @@ class Container:
         self._student_repo = None
         self._student_learning_repo = None
         self._source_repo = None
-        self._task_repo = None
+        self._task_read_repo = None
+        self._task_write_repo = None
         self._task_selection_repo = None
         self._task_catalog_repo = None
         self._task_export_repo = None
@@ -543,12 +549,18 @@ class Container:
         return self._source_repo
 
     @property
-    def task_repo(self):
-        if self._task_repo is None:
-            self._task_repo = DjangoTaskRepository(
+    def task_read_repo(self):
+        if self._task_read_repo is None:
+            self._task_read_repo = DjangoTaskReadRepository(
                 math_status_cache=self.task_math_status_cache,
             )
-        return self._task_repo
+        return self._task_read_repo
+
+    @property
+    def task_write_repo(self):
+        if self._task_write_repo is None:
+            self._task_write_repo = DjangoTaskWriteRepository()
+        return self._task_write_repo
 
     @property
     def task_selection_repo(self):
@@ -1067,7 +1079,7 @@ class Container:
 
     def get_task_list_use_case(self):
         return GetTaskListUseCase(
-            task_repo=self.task_repo,
+            task_repo=self.task_read_repo,
             task_catalog_repo=self.task_catalog_repo,
             task_group_repo=self.task_group_repo,
             math_status_cache=self.task_math_status_cache,
@@ -1239,7 +1251,7 @@ class Container:
 
     def get_task_detail_use_case(self):
         return GetTaskDetailUseCase(
-            task_repo=self.task_repo,
+            task_repo=self.task_read_repo,
         )
 
     def get_subtopic_options_use_case(self):
@@ -1269,19 +1281,19 @@ class Container:
 
     def create_task_use_case(self):
         return CreateTaskUseCase(
-            task_repo=self.task_repo,
+            task_repo=self.task_write_repo,
             task_catalog_repo=self.task_catalog_repo,
         )
 
     def update_task_use_case(self):
         return UpdateTaskUseCase(
-            task_repo=self.task_repo,
+            task_repo=self.task_write_repo,
             task_catalog_repo=self.task_catalog_repo,
         )
 
     def save_task_images_use_case(self):
         return SaveTaskImagesUseCase(
-            task_repo=self.task_repo,
+            task_repo=self.task_write_repo,
         )
 
     def grade_student_work_use_case(self):
@@ -1702,7 +1714,7 @@ class Container:
 
     def delete_task_use_case(self):
         return DeleteTaskUseCase(
-            task_repo=self.task_repo,
+            task_repo=self.task_write_repo,
         )
 
     def add_tasks_to_group_use_case(self):

@@ -296,7 +296,12 @@ from infrastructure.repositories.django_student_performance_repo import (
     DjangoStudentPerformanceRepository,
 )
 from infrastructure.repositories.django_settings_repo import DjangoSettingsRepository
-from infrastructure.repositories.django_task_repo import DjangoTaskRepository
+from infrastructure.repositories.django_task_read_repo import (
+    DjangoTaskReadRepository,
+)
+from infrastructure.repositories.django_task_write_repo import (
+    DjangoTaskWriteRepository,
+)
 from infrastructure.repositories.django_task_selection_repo import (
     DjangoTaskSelectionRepository,
 )
@@ -962,7 +967,14 @@ class ContainerTests(SimpleTestCase):
             container.academic_year_repo,
             DjangoAcademicYearRepository,
         )
-        self.assertIsInstance(container.task_repo, DjangoTaskRepository)
+        self.assertIsInstance(
+            container.task_read_repo,
+            DjangoTaskReadRepository,
+        )
+        self.assertIsInstance(
+            container.task_write_repo,
+            DjangoTaskWriteRepository,
+        )
         self.assertIsInstance(
             container.task_selection_repo,
             DjangoTaskSelectionRepository,

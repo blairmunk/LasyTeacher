@@ -378,6 +378,9 @@ from infrastructure.repositories.django_work_read_repo import (
 from infrastructure.repositories.django_variant_read_repo import (
     DjangoVariantReadRepository,
 )
+from infrastructure.repositories.django_variant_lifecycle_repo import (
+    DjangoVariantLifecycleRepository,
+)
 from infrastructure.repositories.django_work_document_repo import (
     DjangoWorkDocumentRepository,
 )
@@ -445,6 +448,7 @@ class Container:
         self._work_repo = None
         self._work_read_repo = None
         self._variant_read_repo = None
+        self._variant_lifecycle_repo = None
         self._work_document_repo = None
         self._remedial_source_repo = None
         self._event_repo = None
@@ -575,6 +579,12 @@ class Container:
         if self._variant_read_repo is None:
             self._variant_read_repo = DjangoVariantReadRepository()
         return self._variant_read_repo
+
+    @property
+    def variant_lifecycle_repo(self):
+        if self._variant_lifecycle_repo is None:
+            self._variant_lifecycle_repo = DjangoVariantLifecycleRepository()
+        return self._variant_lifecycle_repo
 
     @property
     def work_document_repo(self):
@@ -1631,12 +1641,12 @@ class Container:
 
     def get_variant_delete_info_use_case(self):
         return GetVariantDeleteInfoUseCase(
-            variant_repo=self.work_repo,
+            variant_repo=self.variant_lifecycle_repo,
         )
 
     def delete_variant_use_case(self):
         return DeleteVariantUseCase(
-            variant_repo=self.work_repo,
+            variant_repo=self.variant_lifecycle_repo,
         )
 
     def delete_task_groups_use_case(self):
@@ -1683,7 +1693,7 @@ class Container:
 
     def bulk_delete_variants_use_case(self):
         return BulkDeleteVariantsUseCase(
-            variant_repo=self.work_repo,
+            variant_repo=self.variant_lifecycle_repo,
         )
 
 

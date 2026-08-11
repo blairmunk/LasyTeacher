@@ -132,6 +132,9 @@ from infrastructure.repositories.django_work_read_repo import (
 from infrastructure.repositories.django_variant_read_repo import (
     DjangoVariantReadRepository,
 )
+from infrastructure.repositories.django_variant_lifecycle_repo import (
+    DjangoVariantLifecycleRepository,
+)
 from infrastructure.repositories.django_work_document_repo import (
     DjangoWorkDocumentRepository,
 )
@@ -2539,7 +2542,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
 
     def test_work_repository_returns_variant_delete_info(self):
-        repo = DjangoWorkRepository()
+        repo = DjangoVariantLifecycleRepository()
 
         info = repo.get_variant_delete_info(str(self.source_variant.pk))
         missing_info = repo.get_variant_delete_info(
@@ -2552,7 +2555,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertIsNone(missing_info)
 
     def test_work_repository_detaches_variant_from_work(self):
-        repo = DjangoWorkRepository()
+        repo = DjangoVariantLifecycleRepository()
 
         short_id = repo.detach_variant_from_work(str(self.source_variant.pk))
 
@@ -2567,7 +2570,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             work_name_snapshot=self.source_work.name,
         )
         variant_id = str(variant.pk)
-        repo = DjangoWorkRepository()
+        repo = DjangoVariantLifecycleRepository()
 
         work_id = repo.delete_variant(variant_id)
 
@@ -2591,7 +2594,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             number=1,
             work_name_snapshot=other_work.name,
         )
-        repo = DjangoWorkRepository()
+        repo = DjangoVariantLifecycleRepository()
 
         deleted_count = repo.bulk_delete_work_variants(
             work_id=str(self.source_work.pk),

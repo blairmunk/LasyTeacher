@@ -23,8 +23,12 @@ from core_logic.entities.work_spec_sync import (
     WorkSpecSyncSaveResult,
     WorkSpecSyncSource,
 )
-from core_logic.interfaces.work_variant_generation_repo import (
-    IWorkVariantGenerationRepository,
+from core_logic.interfaces.variant_generation_form_repo import (
+    IVariantGenerationFormRepository,
+)
+from core_logic.interfaces.work_spec_sync_repo import IWorkSpecSyncRepository
+from core_logic.interfaces.work_variant_composition_repo import (
+    IWorkVariantCompositionRepository,
 )
 from infrastructure.repositories.django_variant_content_persistence import (
     persist_variant_content,
@@ -40,7 +44,9 @@ from works.models import (
 
 
 class DjangoWorkVariantGenerationRepository(
-    IWorkVariantGenerationRepository,
+    IVariantGenerationFormRepository,
+    IWorkVariantCompositionRepository,
+    IWorkSpecSyncRepository,
 ):
     def get_work_generation_target(self, work_id: str):
         work = Work.objects.filter(pk=work_id).first()

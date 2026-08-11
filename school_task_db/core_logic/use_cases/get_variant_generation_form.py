@@ -1,8 +1,8 @@
 """Build data for the work variant generation form."""
 
 from core_logic.entities.work import VariantGenerationFormData
-from core_logic.interfaces.work_variant_generation_repo import (
-    IWorkVariantGenerationRepository,
+from core_logic.interfaces.variant_generation_form_repo import (
+    IVariantGenerationFormRepository,
 )
 from core_logic.services.work_variant_composition_service import (
     WorkVariantCompositionService,
@@ -12,7 +12,7 @@ from core_logic.services.work_variant_composition_service import (
 class GetVariantGenerationFormUseCase:
     def __init__(
         self,
-        work_repo: IWorkVariantGenerationRepository,
+        work_repo: IVariantGenerationFormRepository,
         composition_service: WorkVariantCompositionService | None = None,
     ):
         self.work_repo = work_repo

@@ -3,8 +3,8 @@
 from dataclasses import dataclass
 
 from core_logic.entities.work import SyncWorkAnalogGroupsResult
-from core_logic.interfaces.work_variant_generation_repo import (
-    IWorkVariantGenerationRepository,
+from core_logic.interfaces.work_spec_sync_repo import (
+    IWorkSpecSyncRepository,
 )
 from core_logic.interfaces.transaction_manager import ITransactionManager
 from core_logic.services.work_spec_sync_service import WorkSpecSyncService
@@ -21,7 +21,7 @@ class SyncWorkAnalogGroupsRequest:
 class SyncWorkAnalogGroupsUseCase:
     def __init__(
         self,
-        work_repo: IWorkVariantGenerationRepository,
+        work_repo: IWorkSpecSyncRepository,
         transaction_manager: ITransactionManager,
         sync_service=None,
     ):

@@ -3,8 +3,8 @@
 from dataclasses import dataclass
 from typing import List
 
-from core_logic.interfaces.student_learning_repo import (
-    IStudentLearningRepository,
+from core_logic.interfaces.student_remedial_repo import (
+    IStudentRemedialRepository,
 )
 from core_logic.interfaces.student_repo import IStudentRepository
 from core_logic.interfaces.task_selection_repo import ITaskSelectionRepository
@@ -41,7 +41,7 @@ class CreateStudentRemedialVariantUseCase:
     def __init__(
         self,
         student_repo: IStudentRepository,
-        student_learning_repo: IStudentLearningRepository,
+        student_learning_repo: IStudentRemedialRepository,
         task_repo: ITaskSelectionRepository,
         work_repo: IWorkVariantCreationRepository,
         remedial_service: StudentRemedialService | None = None,

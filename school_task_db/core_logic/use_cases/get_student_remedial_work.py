@@ -1,8 +1,8 @@
 """Build data for a student's remedial work page."""
 
 from core_logic.entities.student import StudentRemedialWorkData
-from core_logic.interfaces.student_learning_repo import (
-    IStudentLearningRepository,
+from core_logic.interfaces.student_remedial_repo import (
+    IStudentRemedialRepository,
 )
 from core_logic.services.student_remedial_service import StudentRemedialService
 
@@ -10,7 +10,7 @@ from core_logic.services.student_remedial_service import StudentRemedialService
 class GetStudentRemedialWorkUseCase:
     def __init__(
         self,
-        student_learning_repo: IStudentLearningRepository,
+        student_learning_repo: IStudentRemedialRepository,
         service: StudentRemedialService | None = None,
     ):
         self.student_learning_repo = student_learning_repo

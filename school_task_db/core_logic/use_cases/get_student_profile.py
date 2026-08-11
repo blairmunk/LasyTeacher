@@ -1,7 +1,7 @@
 """Build student profile page data."""
 
-from core_logic.interfaces.student_learning_repo import (
-    IStudentLearningRepository,
+from core_logic.interfaces.student_profile_repo import (
+    IStudentProfileRepository,
 )
 from core_logic.interfaces.student_repo import IStudentRepository
 from core_logic.services.analytics_service import (
@@ -14,7 +14,7 @@ class GetStudentProfileUseCase:
     def __init__(
         self,
         student_repo: IStudentRepository,
-        student_learning_repo: IStudentLearningRepository,
+        student_learning_repo: IStudentProfileRepository,
         analytics_service: StudentAnalyticsService,
     ):
         self.student_repo = student_repo

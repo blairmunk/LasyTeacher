@@ -3,8 +3,8 @@
 from dataclasses import dataclass
 
 from core_logic.entities.student import RemedialWizardPreviewData
-from core_logic.interfaces.student_learning_repo import (
-    IStudentLearningRepository,
+from core_logic.interfaces.student_remedial_repo import (
+    IStudentRemedialRepository,
 )
 from core_logic.services.remedial_wizard_service import RemedialWizardService
 
@@ -21,7 +21,7 @@ class RemedialWizardPreviewRequest:
 class GetRemedialWizardPreviewUseCase:
     def __init__(
         self,
-        student_learning_repo: IStudentLearningRepository,
+        student_learning_repo: IStudentRemedialRepository,
         service: RemedialWizardService | None = None,
     ):
         self.student_learning_repo = student_learning_repo

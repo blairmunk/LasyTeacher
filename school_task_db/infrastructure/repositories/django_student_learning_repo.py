@@ -24,7 +24,10 @@ from core_logic.entities.student import (
     WorkGroupRef,
     WorkRef,
 )
-from core_logic.interfaces.student_learning_repo import IStudentLearningRepository
+from core_logic.interfaces.student_profile_repo import IStudentProfileRepository
+from core_logic.interfaces.student_remedial_repo import (
+    IStudentRemedialRepository,
+)
 from core_logic.value_objects.attempt_status import (
     resolve_historical_participation_status,
 )
@@ -41,7 +44,10 @@ from tasks.models import Task
 from works.models import WorkAnalogGroup
 
 
-class DjangoStudentLearningRepository(IStudentLearningRepository):
+class DjangoStudentLearningRepository(
+    IStudentProfileRepository,
+    IStudentRemedialRepository,
+):
     def get_task_results_source_for_event(
         self,
         student_id: str,

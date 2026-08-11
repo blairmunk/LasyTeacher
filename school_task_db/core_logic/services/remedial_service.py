@@ -8,8 +8,8 @@ from dataclasses import dataclass, field
 from typing import List, Optional, Set
 
 from core_logic.entities.student import TaskResult
-from core_logic.interfaces.student_learning_repo import (
-    IStudentLearningRepository,
+from core_logic.interfaces.student_remedial_repo import (
+    IStudentRemedialRepository,
 )
 from core_logic.interfaces.remedial_source_repo import (
     IRemedialSourceRepository,
@@ -61,7 +61,7 @@ class RemedialTaskSelection:
 class RemedialService:
     def __init__(
         self,
-        student_learning_repo: IStudentLearningRepository,
+        student_learning_repo: IStudentRemedialRepository,
         task_repo: ITaskSelectionRepository,
         task_group_repo: ITaskGroupRepository,
         remedial_source_repo: IRemedialSourceRepository,

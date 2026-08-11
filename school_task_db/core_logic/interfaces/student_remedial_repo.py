@@ -1,19 +1,16 @@
-"""Student learning history repository interface."""
+"""Repository interface for student remedial planning sources."""
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Optional
 
 from core_logic.entities.student import (
     RemedialWizardPreviewSource,
-    StudentParticipationProfile,
     StudentRemedialSource,
-    StudentTaskResultProfile,
     TaskResultsSource,
-    WorkGroupRef,
 )
 
 
-class IStudentLearningRepository(ABC):
+class IStudentRemedialRepository(ABC):
     @abstractmethod
     def get_task_results_source_for_event(
         self,
@@ -21,20 +18,6 @@ class IStudentLearningRepository(ABC):
         event_id: str,
     ) -> Optional[TaskResultsSource]:
         """Return task-level grading facts for an event."""
-
-    @abstractmethod
-    def get_profile_participations(
-        self,
-        student_id: str,
-    ) -> List[StudentParticipationProfile]:
-        """Return participation history for a student profile."""
-
-    @abstractmethod
-    def get_task_logs(
-        self,
-        student_id: str,
-    ) -> List[StudentTaskResultProfile]:
-        """Return task-level learning history for a student."""
 
     @abstractmethod
     def get_student_remedial_source(
@@ -49,7 +32,3 @@ class IStudentLearningRepository(ABC):
         group_id: str,
     ) -> Optional[RemedialWizardPreviewSource]:
         """Return facts needed for class remedial planning."""
-
-    @abstractmethod
-    def get_work_group_refs(self, work_ids: List[str]) -> List[WorkGroupRef]:
-        """Return analog groups used by works."""

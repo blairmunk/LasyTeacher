@@ -414,6 +414,9 @@ from infrastructure.repositories.django_variant_lifecycle_repo import (
 from infrastructure.repositories.django_work_document_repo import (
     DjangoWorkDocumentRepository,
 )
+from infrastructure.repositories.django_remedial_sheet_repo import (
+    DjangoRemedialSheetRepository,
+)
 from infrastructure.repositories.django_remedial_source_repo import (
     DjangoRemedialSourceRepository,
 )
@@ -486,6 +489,7 @@ class Container:
         self._variant_lifecycle_repo = None
         self._orphan_variant_repo = None
         self._work_document_repo = None
+        self._remedial_sheet_repo = None
         self._remedial_source_repo = None
         self._event_read_repo = None
         self._event_write_repo = None
@@ -669,6 +673,12 @@ class Container:
         if self._work_document_repo is None:
             self._work_document_repo = DjangoWorkDocumentRepository()
         return self._work_document_repo
+
+    @property
+    def remedial_sheet_repo(self):
+        if self._remedial_sheet_repo is None:
+            self._remedial_sheet_repo = DjangoRemedialSheetRepository()
+        return self._remedial_sheet_repo
 
     @property
     def remedial_source_repo(self):
@@ -1631,7 +1641,7 @@ class Container:
 
     def get_remedial_sheet_data_use_case(self):
         return GetRemedialSheetDataUseCase(
-            remedial_repo=self.work_document_repo,
+            remedial_repo=self.remedial_sheet_repo,
         )
 
     def sync_work_analog_groups_use_case(self):
@@ -1662,7 +1672,7 @@ class Container:
 
     def render_remedial_sheet_document_use_case(self):
         return RenderRemedialSheetDocumentUseCase(
-            remedial_repo=self.work_document_repo,
+            remedial_repo=self.remedial_sheet_repo,
             presentation_profile_repo=self.presentation_profile_repo,
             render_document_from_recipe_use_case=(
                 self.render_document_from_recipe_use_case()
@@ -1692,7 +1702,7 @@ class Container:
     def render_remedial_sheet_batch_document_use_case(self):
         return RenderRemedialSheetBatchDocumentUseCase(
             work_repo=self.work_document_repo,
-            remedial_repo=self.work_document_repo,
+            remedial_repo=self.remedial_sheet_repo,
             presentation_profile_repo=self.presentation_profile_repo,
             render_document_from_recipe_use_case=(
                 self.render_document_from_recipe_use_case()

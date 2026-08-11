@@ -334,6 +334,9 @@ from infrastructure.repositories.django_variant_read_repo import (
 from infrastructure.repositories.django_work_document_repo import (
     DjangoWorkDocumentRepository,
 )
+from infrastructure.repositories.django_remedial_sheet_repo import (
+    DjangoRemedialSheetRepository,
+)
 from infrastructure.repositories.django_remedial_source_repo import (
     DjangoRemedialSourceRepository,
 )
@@ -1020,6 +1023,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             container.work_document_repo,
             DjangoWorkDocumentRepository,
+        )
+        self.assertIsInstance(
+            container.remedial_sheet_repo,
+            DjangoRemedialSheetRepository,
         )
         self.assertIsInstance(
             container.remedial_source_repo,

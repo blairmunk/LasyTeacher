@@ -168,6 +168,9 @@ from infrastructure.repositories.django_variant_lifecycle_repo import (
 from infrastructure.repositories.django_work_document_repo import (
     DjangoWorkDocumentRepository,
 )
+from infrastructure.repositories.django_remedial_sheet_repo import (
+    DjangoRemedialSheetRepository,
+)
 from infrastructure.repositories.django_remedial_source_repo import (
     DjangoRemedialSourceRepository,
 )
@@ -1427,7 +1430,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
 
         variant_ids = (
-            DjangoWorkDocumentRepository()
+            DjangoRemedialSheetRepository()
             .get_work_personal_remedial_variant_ids(
                 str(remedial_work.pk),
             )
@@ -1507,7 +1510,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertIsNone(source)
 
     def test_work_repository_returns_none_for_missing_remedial_sheet(self):
-        sheet_data = DjangoWorkDocumentRepository().get_remedial_sheet_source(
+        sheet_data = DjangoRemedialSheetRepository().get_remedial_sheet_source(
             '00000000-0000-0000-0000-000000000000',
         )
 
@@ -1532,7 +1535,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             source_attempt_snapshot=attempt,
         )
 
-        source = DjangoWorkDocumentRepository().get_remedial_sheet_source(
+        source = DjangoRemedialSheetRepository().get_remedial_sheet_source(
             str(remedial_variant.pk),
         )
 
@@ -1560,7 +1563,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             source_attempt_snapshot=attempt,
         )
 
-        source = DjangoWorkDocumentRepository().get_remedial_sheet_source(
+        source = DjangoRemedialSheetRepository().get_remedial_sheet_source(
             str(remedial_variant.pk),
         )
         original = next(
@@ -1596,7 +1599,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
 
         sheet_data = GetRemedialSheetDataUseCase(
-            DjangoWorkDocumentRepository(),
+            DjangoRemedialSheetRepository(),
         ).execute(str(remedial_variant.pk))
 
         self.assertEqual(len(sheet_data.content_blocks), 1)
@@ -1664,7 +1667,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
 
         sheet_data = GetRemedialSheetDataUseCase(
-            DjangoWorkDocumentRepository(),
+            DjangoRemedialSheetRepository(),
         ).execute(str(remedial_variant.pk))
 
         self.assertEqual(sheet_data.mark.score, 4)

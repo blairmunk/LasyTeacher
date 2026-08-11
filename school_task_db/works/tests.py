@@ -29,6 +29,9 @@ from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_work_document_repo import (
     DjangoWorkDocumentRepository,
 )
+from infrastructure.repositories.django_remedial_sheet_repo import (
+    DjangoRemedialSheetRepository,
+)
 from infrastructure.tests.variant_task_factory import (
     capture_attempt_snapshot,
     create_variant_task,
@@ -1635,7 +1638,7 @@ class WorkDetailViewTests(TestCase):
         )
 
         sheet_data = GetRemedialSheetDataUseCase(
-            DjangoWorkDocumentRepository(),
+            DjangoRemedialSheetRepository(),
         ).execute(str(remedial_variant.pk))
 
         self.assertEqual(sheet_data.variant.pk, str(remedial_variant.pk))

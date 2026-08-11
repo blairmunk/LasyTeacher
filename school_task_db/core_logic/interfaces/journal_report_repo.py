@@ -1,20 +1,13 @@
-"""Port for class journal report data."""
+"""Read port for one class journal report."""
 
 from abc import ABC, abstractmethod
 from typing import Any
 
 from core_logic.entities.academic_year import AcademicYearRef
-from core_logic.entities.journal import JournalSelectData, JournalSource
+from core_logic.entities.journal import JournalSource
 
 
-class IJournalRepository(ABC):
-    @abstractmethod
-    def get_journal_select(
-        self,
-        year: AcademicYearRef | None,
-    ) -> JournalSelectData:
-        """Return course-group pairs available for journal view."""
-
+class IJournalReportRepository(ABC):
     @abstractmethod
     def get_journal_source(
         self,

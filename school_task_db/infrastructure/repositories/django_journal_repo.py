@@ -18,7 +18,8 @@ from core_logic.entities.report_refs import (
     ReportVariantRef,
     ReportWorkRef,
 )
-from core_logic.interfaces.journal_repo import IJournalRepository
+from core_logic.interfaces.journal_catalog_repo import IJournalCatalogRepository
+from core_logic.interfaces.journal_report_repo import IJournalReportRepository
 from core_logic.services.event_service import EventService
 from core_logic.value_objects.attempt_status import (
     resolve_historical_participation_status,
@@ -31,7 +32,10 @@ from infrastructure.services.django_attempt_snapshot_queries import (
 from students.models import StudentGroup
 
 
-class DjangoJournalRepository(IJournalRepository):
+class DjangoJournalRepository(
+    IJournalCatalogRepository,
+    IJournalReportRepository,
+):
     def get_journal_select(self, year):
         courses = self._course_scope(year).order_by('grade_level', 'name')
         groups = self._group_scope(year).order_by('name')

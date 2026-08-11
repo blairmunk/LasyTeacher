@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.journal import JournalSelectData
-from core_logic.interfaces.journal_repo import IJournalRepository
+from core_logic.interfaces.journal_catalog_repo import IJournalCatalogRepository
 
 
 @dataclass(frozen=True)
@@ -13,7 +13,7 @@ class JournalSelectRequest:
 
 
 class GetJournalSelectUseCase:
-    def __init__(self, report_repo: IJournalRepository):
+    def __init__(self, report_repo: IJournalCatalogRepository):
         self.report_repo = report_repo
 
     def execute(self, request: JournalSelectRequest) -> JournalSelectData:

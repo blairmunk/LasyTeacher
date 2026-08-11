@@ -5,7 +5,7 @@ from typing import Any
 
 from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.journal import JournalData
-from core_logic.interfaces.journal_repo import IJournalRepository
+from core_logic.interfaces.journal_report_repo import IJournalReportRepository
 from core_logic.services.journal_service import JournalService
 
 
@@ -20,7 +20,7 @@ class JournalRequest:
 class GetJournalUseCase:
     def __init__(
         self,
-        report_repo: IJournalRepository,
+        report_repo: IJournalReportRepository,
         journal_service: JournalService | None = None,
     ):
         self.report_repo = report_repo

@@ -1,14 +1,14 @@
 """Build event detail page data."""
 
 from core_logic.entities.event import EventDetailData
-from core_logic.interfaces.event_repo import IEventRepository
+from core_logic.interfaces.event_read_repo import IEventReadRepository
 from core_logic.services.event_service import EventService
 
 
 class GetEventDetailUseCase:
     def __init__(
         self,
-        event_repo: IEventRepository,
+        event_repo: IEventReadRepository,
         event_service: EventService,
     ):
         self.event_repo = event_repo

@@ -75,7 +75,10 @@ class EventMutationUseCaseTests(TestCase):
 
     def test_assign_event_variants_filters_empty_assignments(self):
         repo = FakeMutationEventRepository()
-        use_case = AssignEventVariantsUseCase(event_repo=repo)
+        use_case = AssignEventVariantsUseCase(
+            event_repo=repo,
+            event_participation_repo=repo,
+        )
 
         result = use_case.execute(
             AssignEventVariantsRequest(
@@ -90,7 +93,10 @@ class EventMutationUseCaseTests(TestCase):
     def test_assign_event_variants_rejects_aggregate_work(self):
         repo = FakeMutationEventRepository()
         repo.requires_variants = False
-        use_case = AssignEventVariantsUseCase(event_repo=repo)
+        use_case = AssignEventVariantsUseCase(
+            event_repo=repo,
+            event_participation_repo=repo,
+        )
 
         result = use_case.execute(
             AssignEventVariantsRequest(
@@ -105,7 +111,10 @@ class EventMutationUseCaseTests(TestCase):
 
     def test_assign_single_variant_requires_selection(self):
         repo = FakeMutationEventRepository()
-        use_case = AssignSingleEventVariantUseCase(event_repo=repo)
+        use_case = AssignSingleEventVariantUseCase(
+            event_repo=repo,
+            event_participation_repo=repo,
+        )
 
         result = use_case.execute(
             AssignSingleEventVariantRequest(
@@ -122,7 +131,10 @@ class EventMutationUseCaseTests(TestCase):
     def test_assign_single_variant_handles_missing_event(self):
         repo = FakeMutationEventRepository()
         repo.status = None
-        use_case = AssignSingleEventVariantUseCase(event_repo=repo)
+        use_case = AssignSingleEventVariantUseCase(
+            event_repo=repo,
+            event_participation_repo=repo,
+        )
 
         result = use_case.execute(
             AssignSingleEventVariantRequest(
@@ -138,7 +150,10 @@ class EventMutationUseCaseTests(TestCase):
 
     def test_assign_single_variant_returns_feedback_data(self):
         repo = FakeMutationEventRepository()
-        use_case = AssignSingleEventVariantUseCase(event_repo=repo)
+        use_case = AssignSingleEventVariantUseCase(
+            event_repo=repo,
+            event_participation_repo=repo,
+        )
 
         result = use_case.execute(
             AssignSingleEventVariantRequest(
@@ -157,6 +172,7 @@ class EventMutationUseCaseTests(TestCase):
         repo = FakeMutationEventRepository()
         use_case = ChangeEventStatusUseCase(
             event_repo=repo,
+            event_write_repo=repo,
             event_service=EventService(),
         )
 
@@ -175,6 +191,7 @@ class EventMutationUseCaseTests(TestCase):
         repo = FakeMutationEventRepository()
         use_case = ChangeEventStatusUseCase(
             event_repo=repo,
+            event_write_repo=repo,
             event_service=EventService(),
         )
 

@@ -81,7 +81,8 @@ class CreateRemedialWizardWorkUseCaseTests(TestCase):
             student_repo=FakeStudentRepository(),
             task_repo=FakeTaskRepository(),
             work_repo=work_repo,
-            event_repo=event_repo,
+            event_write_repo=event_repo,
+            event_participation_repo=event_repo,
             transaction_manager=transaction_manager,
         )
 
@@ -153,7 +154,8 @@ class CreateRemedialWizardWorkUseCaseTests(TestCase):
             student_repo=FakeStudentRepository(),
             task_repo=FakeTaskRepository(),
             work_repo=FakeWorkRepository(),
-            event_repo=FakeEventRepository(),
+            event_write_repo=FakeEventRepository(),
+            event_participation_repo=FakeEventRepository(),
             transaction_manager=transaction_manager,
         )
 

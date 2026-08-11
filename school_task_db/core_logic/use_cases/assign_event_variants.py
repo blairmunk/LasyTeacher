@@ -3,7 +3,10 @@
 from dataclasses import dataclass
 from typing import Mapping
 
-from core_logic.interfaces.event_repo import IEventRepository
+from core_logic.interfaces.event_participation_repo import (
+    IEventParticipationRepository,
+)
+from core_logic.interfaces.event_read_repo import IEventReadRepository
 
 
 @dataclass(frozen=True)
@@ -19,8 +22,13 @@ class AssignEventVariantsResult:
 
 
 class AssignEventVariantsUseCase:
-    def __init__(self, event_repo: IEventRepository):
+    def __init__(
+        self,
+        event_repo: IEventReadRepository,
+        event_participation_repo: IEventParticipationRepository,
+    ):
         self.event_repo = event_repo
+        self.event_participation_repo = event_participation_repo
 
     def execute(
         self,
@@ -43,7 +51,7 @@ class AssignEventVariantsUseCase:
             if participation_id and variant_id
         }
         return AssignEventVariantsResult(
-            assigned_count=self.event_repo.assign_variants(
+            assigned_count=self.event_participation_repo.assign_variants(
                 event_id=request.event_id,
                 assignments=assignments,
             )

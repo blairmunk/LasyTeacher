@@ -4,7 +4,12 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 from core_logic.interfaces.event_attempt_repo import IEventAttemptRepository
-from core_logic.interfaces.event_repo import CreateEventParams, IEventRepository
+from core_logic.interfaces.event_participation_repo import (
+    IEventParticipationRepository,
+)
+from core_logic.interfaces.event_read_repo import IEventReadRepository
+from core_logic.interfaces.event_repo import CreateEventParams
+from core_logic.interfaces.event_write_repo import IEventWriteRepository
 from core_logic.interfaces.task_selection_repo import ITaskSelectionRepository
 from core_logic.interfaces.transaction_manager import ITransactionManager
 from core_logic.interfaces.work_commands import (
@@ -55,7 +60,9 @@ class CreateRemedialFromEventUseCase:
         remedial_service: RemedialService,
         task_repo: ITaskSelectionRepository,
         work_repo: IWorkVariantCreationRepository,
-        event_repo: IEventRepository,
+        event_repo: IEventReadRepository,
+        event_write_repo: IEventWriteRepository,
+        event_participation_repo: IEventParticipationRepository,
         event_attempt_repo: IEventAttemptRepository,
         transaction_manager: ITransactionManager,
     ):
@@ -63,6 +70,8 @@ class CreateRemedialFromEventUseCase:
         self.task_repo = task_repo
         self.work_repo = work_repo
         self.event_repo = event_repo
+        self.event_write_repo = event_write_repo
+        self.event_participation_repo = event_participation_repo
         self.event_attempt_repo = event_attempt_repo
         self.transaction_manager = transaction_manager
 
@@ -212,7 +221,7 @@ class CreateRemedialFromEventUseCase:
 
             new_event_id = None
             if request.create_event:
-                new_event_id = self.event_repo.create_event(
+                new_event_id = self.event_write_repo.create_event(
                     CreateEventParams(
                         name=work_name,
                         work_id=work_id,
@@ -222,7 +231,7 @@ class CreateRemedialFromEventUseCase:
                     )
                 )
                 for student_id, variant_id in variant_ids:
-                    self.event_repo.create_participation(
+                    self.event_participation_repo.create_participation(
                         event_id=new_event_id,
                         student_id=student_id,
                         variant_id=variant_id,

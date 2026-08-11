@@ -963,6 +963,8 @@ class Container:
             task_repo=self.task_selection_repo,
             work_repo=self.work_variant_creation_repo,
             event_repo=self.event_repo,
+            event_write_repo=self.event_repo,
+            event_participation_repo=self.event_repo,
             event_attempt_repo=self.event_attempt_repo,
             transaction_manager=self.transaction_manager,
         )
@@ -980,7 +982,8 @@ class Container:
             student_repo=self.student_repo,
             task_repo=self.task_selection_repo,
             work_repo=self.work_variant_creation_repo,
-            event_repo=self.event_repo,
+            event_write_repo=self.event_repo,
+            event_participation_repo=self.event_repo,
             transaction_manager=self.transaction_manager,
         )
 
@@ -1465,16 +1468,19 @@ class Container:
     def assign_event_variants_use_case(self):
         return AssignEventVariantsUseCase(
             event_repo=self.event_repo,
+            event_participation_repo=self.event_repo,
         )
 
     def assign_single_event_variant_use_case(self):
         return AssignSingleEventVariantUseCase(
             event_repo=self.event_repo,
+            event_participation_repo=self.event_repo,
         )
 
     def change_event_status_use_case(self):
         return ChangeEventStatusUseCase(
             event_repo=self.event_repo,
+            event_write_repo=self.event_repo,
             event_service=self.event_service(),
         )
 

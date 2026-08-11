@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from core_logic.entities.event import EventEntity, EventParticipationRow
-from core_logic.interfaces.event_repo import IEventRepository
+from core_logic.interfaces.event_read_repo import IEventReadRepository
 
 
 @dataclass(frozen=True)
@@ -15,7 +15,7 @@ class EventParticipantSelectionData:
 
 
 class GetEventParticipantSelectionUseCase:
-    def __init__(self, event_repo: IEventRepository):
+    def __init__(self, event_repo: IEventReadRepository):
         self.event_repo = event_repo
 
     def execute(self, event_id: str) -> EventParticipantSelectionData:

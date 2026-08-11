@@ -3,7 +3,11 @@
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
-from core_logic.interfaces.event_repo import CreateEventParams, IEventRepository
+from core_logic.interfaces.event_participation_repo import (
+    IEventParticipationRepository,
+)
+from core_logic.interfaces.event_repo import CreateEventParams
+from core_logic.interfaces.event_write_repo import IEventWriteRepository
 from core_logic.interfaces.student_repo import IStudentRepository
 from core_logic.interfaces.task_selection_repo import ITaskSelectionRepository
 from core_logic.interfaces.transaction_manager import ITransactionManager
@@ -46,13 +50,15 @@ class CreateRemedialWizardWorkUseCase:
         student_repo: IStudentRepository,
         task_repo: ITaskSelectionRepository,
         work_repo: IWorkVariantCreationRepository,
-        event_repo: IEventRepository,
+        event_write_repo: IEventWriteRepository,
+        event_participation_repo: IEventParticipationRepository,
         transaction_manager: ITransactionManager,
     ):
         self.student_repo = student_repo
         self.task_repo = task_repo
         self.work_repo = work_repo
-        self.event_repo = event_repo
+        self.event_write_repo = event_write_repo
+        self.event_participation_repo = event_participation_repo
         self.transaction_manager = transaction_manager
 
     def execute(
@@ -135,7 +141,7 @@ class CreateRemedialWizardWorkUseCase:
             event_id = None
             if request.create_event:
                 group_name = self.student_repo.get_group_name(request.group_id)
-                event_id = self.event_repo.create_event(
+                event_id = self.event_write_repo.create_event(
                     CreateEventParams(
                         name=request.work_name,
                         work_id=work_id,
@@ -144,7 +150,7 @@ class CreateRemedialWizardWorkUseCase:
                     )
                 )
                 for student_id, variant_id in variant_ids:
-                    self.event_repo.create_participation(
+                    self.event_participation_repo.create_participation(
                         event_id=event_id,
                         student_id=student_id,
                         variant_id=variant_id,

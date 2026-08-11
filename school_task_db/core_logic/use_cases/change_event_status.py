@@ -2,7 +2,8 @@
 
 from dataclasses import dataclass
 
-from core_logic.interfaces.event_repo import IEventRepository
+from core_logic.interfaces.event_read_repo import IEventReadRepository
+from core_logic.interfaces.event_write_repo import IEventWriteRepository
 from core_logic.services.event_service import EventService
 
 
@@ -23,10 +24,12 @@ class ChangeEventStatusResult:
 class ChangeEventStatusUseCase:
     def __init__(
         self,
-        event_repo: IEventRepository,
+        event_repo: IEventReadRepository,
+        event_write_repo: IEventWriteRepository,
         event_service: EventService,
     ):
         self.event_repo = event_repo
+        self.event_write_repo = event_write_repo
         self.event_service = event_service
 
     def execute(self, request: ChangeEventStatusRequest) -> ChangeEventStatusResult:
@@ -48,7 +51,7 @@ class ChangeEventStatusUseCase:
                 new_status=request.new_status,
             )
 
-        self.event_repo.set_event_status(
+        self.event_write_repo.set_event_status(
             event_id=request.event_id,
             status=request.new_status,
         )

@@ -2,7 +2,8 @@
 
 from dataclasses import dataclass
 
-from core_logic.interfaces.event_repo import CreateEventParams, IEventRepository
+from core_logic.interfaces.event_repo import CreateEventParams
+from core_logic.interfaces.event_write_repo import IEventWriteRepository
 
 
 @dataclass(frozen=True)
@@ -12,7 +13,7 @@ class SaveEventResult:
 
 
 class CreateEventUseCase:
-    def __init__(self, event_repo: IEventRepository):
+    def __init__(self, event_repo: IEventWriteRepository):
         self.event_repo = event_repo
 
     def execute(self, params: CreateEventParams) -> SaveEventResult:
@@ -21,7 +22,7 @@ class CreateEventUseCase:
 
 
 class UpdateEventUseCase:
-    def __init__(self, event_repo: IEventRepository):
+    def __init__(self, event_repo: IEventWriteRepository):
         self.event_repo = event_repo
 
     def execute(self, params: CreateEventParams) -> SaveEventResult:

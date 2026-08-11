@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from core_logic.entities.event import EventEntity, WorkSummary
 from core_logic.interfaces.event_attempt_repo import IEventAttemptRepository
-from core_logic.interfaces.event_repo import IEventRepository
+from core_logic.interfaces.event_read_repo import IEventReadRepository
 from core_logic.services.remedial_service import REMEDIAL_SOURCE_EVENT_STATUSES
 from core_logic.value_objects.task_scores import normalize_task_scores
 
@@ -23,7 +23,7 @@ class RemedialEventPreviewResult:
 class GetRemedialEventPreviewUseCase:
     def __init__(
         self,
-        event_repo: IEventRepository,
+        event_repo: IEventReadRepository,
         event_attempt_repo: IEventAttemptRepository,
     ):
         self.event_repo = event_repo

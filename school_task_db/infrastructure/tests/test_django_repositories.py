@@ -1259,6 +1259,8 @@ class DjangoRemedialRepositoryTests(TestCase):
             task_repo=task_repo,
             work_repo=work_repo,
             event_repo=event_repo,
+            event_write_repo=event_repo,
+            event_participation_repo=event_repo,
             event_attempt_repo=DjangoEventAttemptRepository(),
             transaction_manager=DjangoTransactionManager(),
         )
@@ -1336,6 +1338,8 @@ class DjangoRemedialRepositoryTests(TestCase):
             task_repo=task_repo,
             work_repo=work_repo,
             event_repo=event_repo,
+            event_write_repo=event_repo,
+            event_participation_repo=event_repo,
             event_attempt_repo=DjangoEventAttemptRepository(),
             transaction_manager=DjangoTransactionManager(),
         )

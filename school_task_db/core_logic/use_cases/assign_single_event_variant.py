@@ -4,7 +4,10 @@ from dataclasses import dataclass
 from typing import Optional
 
 from core_logic.entities.event import EventVariantAssignmentResult
-from core_logic.interfaces.event_repo import IEventRepository
+from core_logic.interfaces.event_participation_repo import (
+    IEventParticipationRepository,
+)
+from core_logic.interfaces.event_read_repo import IEventReadRepository
 
 
 @dataclass(frozen=True)
@@ -22,8 +25,13 @@ class AssignSingleEventVariantResult:
 
 
 class AssignSingleEventVariantUseCase:
-    def __init__(self, event_repo: IEventRepository):
+    def __init__(
+        self,
+        event_repo: IEventReadRepository,
+        event_participation_repo: IEventParticipationRepository,
+    ):
         self.event_repo = event_repo
+        self.event_participation_repo = event_participation_repo
 
     def execute(
         self,
@@ -49,7 +57,7 @@ class AssignSingleEventVariantUseCase:
 
         return AssignSingleEventVariantResult(
             success=True,
-            assignment=self.event_repo.assign_variant(
+            assignment=self.event_participation_repo.assign_variant(
                 event_id=request.event_id,
                 participation_id=request.participation_id,
                 variant_id=request.variant_id,

@@ -20,13 +20,22 @@ from core_logic.entities.event import (
     EventWorkScanRef,
     WorkSummary,
 )
-from core_logic.interfaces.event_repo import CreateEventParams, IEventRepository
+from core_logic.interfaces.event_participation_repo import (
+    IEventParticipationRepository,
+)
+from core_logic.interfaces.event_read_repo import IEventReadRepository
+from core_logic.interfaces.event_repo import CreateEventParams
+from core_logic.interfaces.event_write_repo import IEventWriteRepository
 from events.models import Event, EventParticipation, Mark
 from students.models import StudentGroup
 from works.models import Variant
 
 
-class DjangoEventRepository(IEventRepository):
+class DjangoEventRepository(
+    IEventReadRepository,
+    IEventWriteRepository,
+    IEventParticipationRepository,
+):
     def get_list_events(self):
         return [
             EventListItem(

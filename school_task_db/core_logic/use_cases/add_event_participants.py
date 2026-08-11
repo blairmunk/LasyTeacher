@@ -3,7 +3,9 @@
 from dataclasses import dataclass
 from typing import Iterable
 
-from core_logic.interfaces.event_repo import IEventRepository
+from core_logic.interfaces.event_participation_repo import (
+    IEventParticipationRepository,
+)
 
 
 @dataclass(frozen=True)
@@ -18,7 +20,7 @@ class AddEventParticipantsResult:
 
 
 class AddEventParticipantsUseCase:
-    def __init__(self, event_repo: IEventRepository):
+    def __init__(self, event_repo: IEventParticipationRepository):
         self.event_repo = event_repo
 
     def execute(

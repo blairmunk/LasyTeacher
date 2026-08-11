@@ -13,7 +13,7 @@ from core_logic.entities.document_rendering import (
 from core_logic.interfaces.presentation_profile_repo import (
     IPresentationProfileRepository,
 )
-from core_logic.interfaces.work_document_repo import IWorkDocumentRepository
+from core_logic.interfaces.remedial_sheet_repo import IRemedialSheetRepository
 from core_logic.use_cases.presentation_profile_selection import (
     resolve_document_presentation_profile,
 )
@@ -51,22 +51,22 @@ class RenderRemedialSheetDocumentRequest:
 class RenderRemedialSheetDocumentUseCase:
     def __init__(
         self,
-        work_repo: IWorkDocumentRepository,
+        remedial_repo: IRemedialSheetRepository,
         render_document_from_recipe_use_case: RenderDocumentFromRecipeUseCase,
         presentation_profile_repo: IPresentationProfileRepository | None = None,
     ):
-        self.work_repo = work_repo
+        self.remedial_repo = remedial_repo
         self.render_document_from_recipe_use_case = (
             render_document_from_recipe_use_case
         )
         self.presentation_profile_repo = presentation_profile_repo
-        self.get_sheet_data = GetRemedialSheetDataUseCase(work_repo)
+        self.get_sheet_data = GetRemedialSheetDataUseCase(remedial_repo)
 
     def execute(
         self,
         request: RenderRemedialSheetDocumentRequest,
     ) -> DocumentRenderResult:
-        variant_type = self.work_repo.get_variant_type(request.variant_id)
+        variant_type = self.remedial_repo.get_variant_type(request.variant_id)
         if variant_type is None:
             return DocumentRenderResult(
                 status=DOCUMENT_RENDER_STATUS_NOT_FOUND,

@@ -17,6 +17,7 @@ from core_logic.entities.work import (
     WorkDocumentRef,
 )
 from core_logic.interfaces.work_document_repo import IWorkDocumentRepository
+from core_logic.interfaces.remedial_sheet_repo import IRemedialSheetRepository
 from core_logic.value_objects.task_content_snapshot import (
     task_content_snapshot_from_mapping,
 )
@@ -39,7 +40,10 @@ from works.models import (
 )
 
 
-class DjangoWorkDocumentRepository(IWorkDocumentRepository):
+class DjangoWorkDocumentRepository(
+    IWorkDocumentRepository,
+    IRemedialSheetRepository,
+):
     def get_work_document_source(
         self,
         work_id: str,

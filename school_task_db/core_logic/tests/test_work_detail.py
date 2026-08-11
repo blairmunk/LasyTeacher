@@ -580,7 +580,7 @@ class WorkDetailTests(TestCase):
 
     def test_get_remedial_sheet_data_use_case_returns_repository_data(self):
         repo = FakeWorkRepository()
-        use_case = GetRemedialSheetDataUseCase(work_repo=repo)
+        use_case = GetRemedialSheetDataUseCase(remedial_repo=repo)
 
         result = use_case.execute('variant-1')
 
@@ -593,7 +593,7 @@ class WorkDetailTests(TestCase):
     def test_get_remedial_sheet_data_use_case_handles_missing_variant(self):
         repo = FakeWorkRepository()
         repo.remedial_sheet_source = None
-        use_case = GetRemedialSheetDataUseCase(work_repo=repo)
+        use_case = GetRemedialSheetDataUseCase(remedial_repo=repo)
 
         result = use_case.execute('missing')
 
@@ -609,7 +609,7 @@ class WorkDetailTests(TestCase):
             source_work=None,
             mark=None,
         )
-        use_case = GetRemedialSheetDataUseCase(work_repo=repo)
+        use_case = GetRemedialSheetDataUseCase(remedial_repo=repo)
 
         result = use_case.execute('variant-1')
 
@@ -624,7 +624,7 @@ class WorkDetailTests(TestCase):
             source_work='source-work',
             mark=None,
         )
-        use_case = GetRemedialSheetDataUseCase(work_repo=repo)
+        use_case = GetRemedialSheetDataUseCase(remedial_repo=repo)
 
         result = use_case.execute('variant-1')
 

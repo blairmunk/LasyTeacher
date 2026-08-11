@@ -1,21 +1,21 @@
 """Build data for rendering a remedial sheet."""
 
 from core_logic.entities.work import RemedialSheetData
-from core_logic.interfaces.work_document_repo import IWorkDocumentRepository
+from core_logic.interfaces.remedial_sheet_repo import IRemedialSheetRepository
 from core_logic.services.remedial_sheet_service import RemedialSheetService
 
 
 class GetRemedialSheetDataUseCase:
     def __init__(
         self,
-        work_repo: IWorkDocumentRepository,
+        remedial_repo: IRemedialSheetRepository,
         sheet_service: RemedialSheetService | None = None,
     ):
-        self.work_repo = work_repo
+        self.remedial_repo = remedial_repo
         self.sheet_service = sheet_service or RemedialSheetService()
 
     def execute(self, variant_id: str) -> RemedialSheetData:
-        source = self.work_repo.get_remedial_sheet_source(variant_id)
+        source = self.remedial_repo.get_remedial_sheet_source(variant_id)
         if source is None:
             return RemedialSheetData(
                 variant=None,

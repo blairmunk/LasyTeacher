@@ -11,6 +11,7 @@ from core_logic.entities.document_rendering import (
 from core_logic.interfaces.presentation_profile_repo import (
     IPresentationProfileRepository,
 )
+from core_logic.interfaces.remedial_sheet_repo import IRemedialSheetRepository
 from core_logic.interfaces.work_document_repo import IWorkDocumentRepository
 from core_logic.use_cases.presentation_profile_selection import (
     resolve_document_presentation_profile,
@@ -47,10 +48,12 @@ class RenderRemedialSheetBatchDocumentUseCase:
     def __init__(
         self,
         work_repo: IWorkDocumentRepository,
+        remedial_repo: IRemedialSheetRepository,
         render_document_from_recipe_use_case: RenderDocumentFromRecipeUseCase,
         presentation_profile_repo: IPresentationProfileRepository | None = None,
     ):
         self.work_repo = work_repo
+        self.remedial_repo = remedial_repo
         self.render_document_from_recipe_use_case = (
             render_document_from_recipe_use_case
         )
@@ -67,7 +70,7 @@ class RenderRemedialSheetBatchDocumentUseCase:
                 renderer_type=request.render_target.renderer_type,
             )
 
-        variant_ids = self.work_repo.get_work_personal_remedial_variant_ids(
+        variant_ids = self.remedial_repo.get_work_personal_remedial_variant_ids(
             request.work_id,
         )
         if not variant_ids:

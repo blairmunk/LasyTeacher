@@ -1631,7 +1631,7 @@ class Container:
 
     def get_remedial_sheet_data_use_case(self):
         return GetRemedialSheetDataUseCase(
-            work_repo=self.work_document_repo,
+            remedial_repo=self.work_document_repo,
         )
 
     def sync_work_analog_groups_use_case(self):
@@ -1662,7 +1662,7 @@ class Container:
 
     def render_remedial_sheet_document_use_case(self):
         return RenderRemedialSheetDocumentUseCase(
-            work_repo=self.work_document_repo,
+            remedial_repo=self.work_document_repo,
             presentation_profile_repo=self.presentation_profile_repo,
             render_document_from_recipe_use_case=(
                 self.render_document_from_recipe_use_case()
@@ -1692,6 +1692,7 @@ class Container:
     def render_remedial_sheet_batch_document_use_case(self):
         return RenderRemedialSheetBatchDocumentUseCase(
             work_repo=self.work_document_repo,
+            remedial_repo=self.work_document_repo,
             presentation_profile_repo=self.presentation_profile_repo,
             render_document_from_recipe_use_case=(
                 self.render_document_from_recipe_use_case()

@@ -42,6 +42,9 @@ from core_logic.interfaces.work_variant_generation_repo import (
 from infrastructure.services.task_content_snapshots import (
     build_task_content_snapshots,
 )
+from infrastructure.repositories.django_variant_content_persistence import (
+    persist_variant_content,
+)
 from task_groups.models import TaskGroup
 from tasks.models import Task
 from works.models import (
@@ -219,7 +222,7 @@ class DjangoWorkRepository(
                     max_score_snapshot=variant_plan.max_score_snapshot,
                     duration_snapshot=variant_plan.duration_snapshot,
                 )
-                self._persist_variant_content(variant, variant_plan)
+                persist_variant_content(variant, variant_plan)
 
             work.variant_counter = plan.next_variant_counter
             work.save()
@@ -442,49 +445,8 @@ class DjangoWorkRepository(
             source_participation_id=params.source_participation_id,
             source_attempt_snapshot_id=params.source_attempt_snapshot_id,
         )
-        self._persist_variant_content(variant, plan)
+        persist_variant_content(variant, plan)
         return str(variant.pk)
-
-    @staticmethod
-    def _persist_variant_content(variant, plan):
-        task_snapshots = DjangoWorkRepository._task_snapshots(
-            task_plan.task_id for task_plan in plan.tasks
-        )
-        VariantTask.objects.bulk_create(
-            [
-                VariantTask(
-                    variant=variant,
-                    task_id=task_plan.task_id,
-                    task_snapshot=task_snapshots[
-                        str(task_plan.task_id)
-                    ].to_mapping(),
-                    source_selection_id=task_plan.source_selection_id,
-                    content_order=task_plan.content_order,
-                    order=task_plan.order,
-                    max_points=task_plan.max_points,
-                    weight=task_plan.weight,
-                    bank_role=task_plan.bank_role,
-                    render_mode=task_plan.render_mode,
-                    is_assessable=task_plan.is_assessable,
-                    blank_cells_after=task_plan.blank_cells_after,
-                    blank_cells_rows=task_plan.blank_cells_rows,
-                )
-                for task_plan in plan.tasks
-            ]
-        )
-        VariantContentBlockSnapshot.objects.bulk_create(
-            [
-                VariantContentBlockSnapshot(
-                    variant=variant,
-                    source_content_id=block.source_content_id,
-                    content_type=block.content_type,
-                    order=block.order,
-                    title=block.title,
-                    content=dict(block.content),
-                )
-                for block in plan.content_blocks
-            ]
-        )
 
     def create_work_with_variant_from_tasks(
         self,
@@ -531,18 +493,6 @@ class DjangoWorkRepository(
             variant_id=str(variant.pk),
             tasks_count=len(ordered_tasks),
         )
-
-    @staticmethod
-    def _task_snapshots(task_ids):
-        tasks = Task.objects.filter(pk__in=set(task_ids)).select_related(
-            'topic',
-            'subtopic',
-            'source',
-        ).prefetch_related(
-            'codifier_requirements__codifier',
-            'images',
-        )
-        return build_task_content_snapshots(tasks)
 
     @staticmethod
     def _task_bank_roles(analog_group_id):

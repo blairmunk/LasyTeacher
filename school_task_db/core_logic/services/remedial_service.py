@@ -15,7 +15,7 @@ from core_logic.interfaces.remedial_source_repo import (
     IRemedialSourceRepository,
 )
 from core_logic.interfaces.task_group_repo import ITaskGroupRepository
-from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.interfaces.task_selection_repo import ITaskSelectionRepository
 from core_logic.services.student_task_result_service import (
     StudentTaskResultService,
 )
@@ -62,7 +62,7 @@ class RemedialService:
     def __init__(
         self,
         student_learning_repo: IStudentLearningRepository,
-        task_repo: ITaskRepository,
+        task_repo: ITaskSelectionRepository,
         task_group_repo: ITaskGroupRepository,
         remedial_source_repo: IRemedialSourceRepository,
         config: Optional[RemedialConfig] = None,

@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.interfaces.task_selection_repo import ITaskSelectionRepository
 from core_logic.interfaces.work_commands import (
     CreateWorkWithVariantFromTasksParams,
 )
@@ -35,7 +35,7 @@ class CreateWorkFromTasksResult:
 class CreateWorkFromTasksUseCase:
     def __init__(
         self,
-        task_repo: ITaskRepository,
+        task_repo: ITaskSelectionRepository,
         work_repo: IWorkVariantCreationRepository,
     ):
         self.task_repo = task_repo

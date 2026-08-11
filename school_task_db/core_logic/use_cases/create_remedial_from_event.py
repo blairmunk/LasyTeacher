@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from core_logic.interfaces.event_attempt_repo import IEventAttemptRepository
 from core_logic.interfaces.event_repo import CreateEventParams, IEventRepository
-from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.interfaces.task_selection_repo import ITaskSelectionRepository
 from core_logic.interfaces.transaction_manager import ITransactionManager
 from core_logic.interfaces.work_commands import (
     CreateWorkParams,
@@ -53,7 +53,7 @@ class CreateRemedialFromEventUseCase:
     def __init__(
         self,
         remedial_service: RemedialService,
-        task_repo: ITaskRepository,
+        task_repo: ITaskSelectionRepository,
         work_repo: IWorkVariantCreationRepository,
         event_repo: IEventRepository,
         event_attempt_repo: IEventAttemptRepository,

@@ -7,7 +7,7 @@ from core_logic.interfaces.student_learning_repo import (
     IStudentLearningRepository,
 )
 from core_logic.interfaces.student_repo import IStudentRepository
-from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.interfaces.task_selection_repo import ITaskSelectionRepository
 from core_logic.interfaces.work_commands import CreateVariantParams
 from core_logic.interfaces.work_variant_creation_repo import (
     IWorkVariantCreationRepository,
@@ -42,7 +42,7 @@ class CreateStudentRemedialVariantUseCase:
         self,
         student_repo: IStudentRepository,
         student_learning_repo: IStudentLearningRepository,
-        task_repo: ITaskRepository,
+        task_repo: ITaskSelectionRepository,
         work_repo: IWorkVariantCreationRepository,
         remedial_service: StudentRemedialService | None = None,
     ):

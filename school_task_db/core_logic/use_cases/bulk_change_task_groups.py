@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import List
 
 from core_logic.interfaces.task_group_repo import ITaskGroupRepository
-from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.interfaces.task_selection_repo import ITaskSelectionRepository
 
 
 @dataclass(frozen=True)
@@ -29,7 +29,7 @@ class BulkCreateGroupFromTasksResult:
 class BulkCreateGroupFromTasksUseCase:
     def __init__(
         self,
-        task_repo: ITaskRepository,
+        task_repo: ITaskSelectionRepository,
         task_group_repo: ITaskGroupRepository,
     ):
         self.task_repo = task_repo
@@ -102,7 +102,7 @@ class BulkAddTasksToGroupResult:
 class BulkAddTasksToGroupUseCase:
     def __init__(
         self,
-        task_repo: ITaskRepository,
+        task_repo: ITaskSelectionRepository,
         task_group_repo: ITaskGroupRepository,
     ):
         self.task_repo = task_repo

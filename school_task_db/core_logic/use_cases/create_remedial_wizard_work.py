@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 
 from core_logic.interfaces.event_repo import CreateEventParams, IEventRepository
 from core_logic.interfaces.student_repo import IStudentRepository
-from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.interfaces.task_selection_repo import ITaskSelectionRepository
 from core_logic.interfaces.transaction_manager import ITransactionManager
 from core_logic.interfaces.work_commands import (
     CreateWorkParams,
@@ -44,7 +44,7 @@ class CreateRemedialWizardWorkUseCase:
     def __init__(
         self,
         student_repo: IStudentRepository,
-        task_repo: ITaskRepository,
+        task_repo: ITaskSelectionRepository,
         work_repo: IWorkVariantCreationRepository,
         event_repo: IEventRepository,
         transaction_manager: ITransactionManager,

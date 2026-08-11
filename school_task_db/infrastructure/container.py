@@ -359,6 +359,9 @@ from infrastructure.repositories.django_student_performance_repo import (
     DjangoStudentPerformanceRepository,
 )
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
+from infrastructure.repositories.django_task_selection_repo import (
+    DjangoTaskSelectionRepository,
+)
 from infrastructure.repositories.django_task_catalog_repo import (
     DjangoTaskCatalogRepository,
 )
@@ -451,6 +454,7 @@ class Container:
         self._student_learning_repo = None
         self._source_repo = None
         self._task_repo = None
+        self._task_selection_repo = None
         self._task_catalog_repo = None
         self._task_export_repo = None
         self._task_group_repo = None
@@ -545,6 +549,12 @@ class Container:
                 math_status_cache=self.task_math_status_cache,
             )
         return self._task_repo
+
+    @property
+    def task_selection_repo(self):
+        if self._task_selection_repo is None:
+            self._task_selection_repo = DjangoTaskSelectionRepository()
+        return self._task_selection_repo
 
     @property
     def task_catalog_repo(self):
@@ -915,7 +925,7 @@ class Container:
     def remedial_service(self):
         return RemedialService(
             student_learning_repo=self.student_learning_repo,
-            task_repo=self.task_repo,
+            task_repo=self.task_selection_repo,
             task_group_repo=self.task_group_repo,
             remedial_source_repo=self.remedial_source_repo,
         )
@@ -938,7 +948,7 @@ class Container:
     def create_remedial_from_event_use_case(self):
         return CreateRemedialFromEventUseCase(
             remedial_service=self.remedial_service(),
-            task_repo=self.task_repo,
+            task_repo=self.task_selection_repo,
             work_repo=self.work_variant_creation_repo,
             event_repo=self.event_repo,
             event_attempt_repo=self.event_attempt_repo,
@@ -949,14 +959,14 @@ class Container:
         return CreateStudentRemedialVariantUseCase(
             student_repo=self.student_repo,
             student_learning_repo=self.student_learning_repo,
-            task_repo=self.task_repo,
+            task_repo=self.task_selection_repo,
             work_repo=self.work_variant_creation_repo,
         )
 
     def create_remedial_wizard_work_use_case(self):
         return CreateRemedialWizardWorkUseCase(
             student_repo=self.student_repo,
-            task_repo=self.task_repo,
+            task_repo=self.task_selection_repo,
             work_repo=self.work_variant_creation_repo,
             event_repo=self.event_repo,
             transaction_manager=self.transaction_manager,
@@ -1661,7 +1671,7 @@ class Container:
 
     def create_work_from_tasks_use_case(self):
         return CreateWorkFromTasksUseCase(
-            task_repo=self.task_repo,
+            task_repo=self.task_selection_repo,
             work_repo=self.work_variant_creation_repo,
         )
 
@@ -1712,13 +1722,13 @@ class Container:
 
     def bulk_create_group_from_tasks_use_case(self):
         return BulkCreateGroupFromTasksUseCase(
-            task_repo=self.task_repo,
+            task_repo=self.task_selection_repo,
             task_group_repo=self.task_group_repo,
         )
 
     def bulk_add_tasks_to_group_use_case(self):
         return BulkAddTasksToGroupUseCase(
-            task_repo=self.task_repo,
+            task_repo=self.task_selection_repo,
             task_group_repo=self.task_group_repo,
         )
 

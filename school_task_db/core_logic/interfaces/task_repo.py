@@ -1,10 +1,9 @@
 """Task repository interface."""
 
 from abc import ABC, abstractmethod
-from typing import List, Optional, Set
+from typing import List, Optional
 
 from core_logic.entities.task import (
-    TaskEntity,
     TaskDetailGroup,
     TaskDetailTask,
     TaskListItem,
@@ -54,21 +53,5 @@ class ITaskRepository(ABC):
         """Return task count without analog groups."""
 
     @abstractmethod
-    def get_by_ids(self, task_ids: Set[str]) -> List[TaskEntity]:
-        """Return tasks by IDs."""
-
-    @abstractmethod
-    def count_existing_task_ids(self, task_ids: Set[str]) -> int:
-        """Return how many tasks from the given IDs exist."""
-
-    @abstractmethod
     def delete_task(self, task_id: str) -> int:
         """Delete one task and return deleted object count."""
-
-    @abstractmethod
-    def get_tasks_by_difficulty(
-        self,
-        task_ids: Set[str],
-        max_difficulty: int,
-    ) -> List[TaskEntity]:
-        """Return tasks from task_ids with difficulty not greater than max_difficulty."""

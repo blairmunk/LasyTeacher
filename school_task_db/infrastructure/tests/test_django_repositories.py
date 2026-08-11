@@ -119,6 +119,9 @@ from infrastructure.repositories.django_student_learning_repo import (
     DjangoStudentLearningRepository,
 )
 from infrastructure.repositories.django_task_repo import DjangoTaskRepository
+from infrastructure.repositories.django_task_selection_repo import (
+    DjangoTaskSelectionRepository,
+)
 from infrastructure.repositories.django_task_catalog_repo import (
     DjangoTaskCatalogRepository,
 )
@@ -274,7 +277,7 @@ class DjangoRemedialRepositoryTests(TestCase):
     def test_repositories_feed_the_pure_remedial_service(self):
         service = RemedialService(
             student_learning_repo=DjangoStudentLearningRepository(),
-            task_repo=DjangoTaskRepository(),
+            task_repo=DjangoTaskSelectionRepository(),
             task_group_repo=DjangoTaskGroupRepository(),
             remedial_source_repo=DjangoRemedialSourceRepository(),
         )
@@ -1237,7 +1240,7 @@ class DjangoRemedialRepositoryTests(TestCase):
     def test_create_remedial_use_case_creates_django_objects(self):
         source_attempt = capture_attempt_snapshot(self.mark)
         student_repo = DjangoStudentRepository()
-        task_repo = DjangoTaskRepository()
+        task_repo = DjangoTaskSelectionRepository()
         work_repo = DjangoWorkVariantCreationRepository()
         event_repo = DjangoEventRepository()
         service = RemedialService(
@@ -1309,7 +1312,7 @@ class DjangoRemedialRepositoryTests(TestCase):
     def test_remedial_transaction_rolls_back_work_when_participation_fails(self):
         capture_attempt_snapshot(self.mark)
         student_repo = DjangoStudentRepository()
-        task_repo = DjangoTaskRepository()
+        task_repo = DjangoTaskSelectionRepository()
         work_repo = DjangoWorkVariantCreationRepository()
         event_repo = DjangoEventRepository()
         service = RemedialService(
@@ -2153,7 +2156,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertFalse(missing_updated)
         self.assertTrue(repo.analog_group_name_exists('Обновлённая группа'))
         self.assertEqual(
-            DjangoTaskRepository().count_existing_task_ids(
+            DjangoTaskSelectionRepository().count_existing_task_ids(
                 {str(self.original_weak.pk)},
             ),
             1,

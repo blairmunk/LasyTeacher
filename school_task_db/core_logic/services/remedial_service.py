@@ -11,6 +11,7 @@ from core_logic.entities.student import TaskResult
 from core_logic.interfaces.student_remedial_repo import (
     IStudentRemedialRepository,
 )
+from core_logic.interfaces.student_profile_repo import IStudentProfileRepository
 from core_logic.interfaces.remedial_source_repo import (
     IRemedialSourceRepository,
 )
@@ -61,14 +62,16 @@ class RemedialTaskSelection:
 class RemedialService:
     def __init__(
         self,
-        student_learning_repo: IStudentRemedialRepository,
+        student_remedial_repo: IStudentRemedialRepository,
+        student_profile_repo: IStudentProfileRepository,
         task_repo: ITaskSelectionRepository,
         task_group_repo: ITaskGroupRepository,
         remedial_source_repo: IRemedialSourceRepository,
         config: Optional[RemedialConfig] = None,
         task_result_service=None,
     ):
-        self.student_learning_repo = student_learning_repo
+        self.student_remedial_repo = student_remedial_repo
+        self.student_profile_repo = student_profile_repo
         self.task_repo = task_repo
         self.task_group_repo = task_group_repo
         self.remedial_source_repo = remedial_source_repo
@@ -100,7 +103,7 @@ class RemedialService:
         )
 
         task_results = self.task_result_service.build(
-            self.student_learning_repo.get_task_results_source_for_event(
+            self.student_remedial_repo.get_task_results_source_for_event(
                 student_id,
                 event_id,
             ),
@@ -172,7 +175,7 @@ class RemedialService:
     def _student_attempted_task_ids(self, student_id: str) -> Set[str]:
         return {
             str(log.task.pk)
-            for log in self.student_learning_repo.get_task_logs(student_id)
+            for log in self.student_profile_repo.get_task_logs(student_id)
         }
 
     def find_weak_tasks(self, results: List[TaskResult]) -> Set[str]:

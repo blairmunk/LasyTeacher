@@ -297,6 +297,12 @@ from infrastructure.repositories.django_task_db_health_repo import (
     DjangoTaskDBHealthRepository,
 )
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
+from infrastructure.repositories.django_student_profile_repo import (
+    DjangoStudentProfileRepository,
+)
+from infrastructure.repositories.django_student_remedial_repo import (
+    DjangoStudentRemedialRepository,
+)
 from infrastructure.repositories.django_student_digest_repo import (
     DjangoStudentDigestRepository,
 )
@@ -971,6 +977,14 @@ class ContainerTests(SimpleTestCase):
         )
         self.assertIsInstance(rendered_file_use_case, GetRenderedDocumentFileUseCase)
         self.assertIsInstance(container.student_repo, DjangoStudentRepository)
+        self.assertIsInstance(
+            container.student_profile_repo,
+            DjangoStudentProfileRepository,
+        )
+        self.assertIsInstance(
+            container.student_remedial_repo,
+            DjangoStudentRemedialRepository,
+        )
         self.assertIsInstance(
             container.academic_year_repo,
             DjangoAcademicYearRepository,

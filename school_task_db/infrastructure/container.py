@@ -357,8 +357,11 @@ from infrastructure.repositories.django_reports_dashboard_repo import (
 from infrastructure.repositories.django_settings_repo import DjangoSettingsRepository
 from infrastructure.repositories.django_source_repo import DjangoSourceRepository
 from infrastructure.repositories.django_student_repo import DjangoStudentRepository
-from infrastructure.repositories.django_student_learning_repo import (
-    DjangoStudentLearningRepository,
+from infrastructure.repositories.django_student_profile_repo import (
+    DjangoStudentProfileRepository,
+)
+from infrastructure.repositories.django_student_remedial_repo import (
+    DjangoStudentRemedialRepository,
 )
 from infrastructure.repositories.django_student_digest_repo import (
     DjangoStudentDigestRepository,
@@ -464,7 +467,8 @@ class Container:
         self._academic_year_repo = None
         self._attempt_snapshot_repo = None
         self._student_repo = None
-        self._student_learning_repo = None
+        self._student_profile_repo = None
+        self._student_remedial_repo = None
         self._source_repo = None
         self._task_read_repo = None
         self._task_write_repo = None
@@ -547,10 +551,16 @@ class Container:
         return self._student_repo
 
     @property
-    def student_learning_repo(self):
-        if self._student_learning_repo is None:
-            self._student_learning_repo = DjangoStudentLearningRepository()
-        return self._student_learning_repo
+    def student_profile_repo(self):
+        if self._student_profile_repo is None:
+            self._student_profile_repo = DjangoStudentProfileRepository()
+        return self._student_profile_repo
+
+    @property
+    def student_remedial_repo(self):
+        if self._student_remedial_repo is None:
+            self._student_remedial_repo = DjangoStudentRemedialRepository()
+        return self._student_remedial_repo
 
     @property
     def source_repo(self):
@@ -960,7 +970,8 @@ class Container:
 
     def remedial_service(self):
         return RemedialService(
-            student_learning_repo=self.student_learning_repo,
+            student_remedial_repo=self.student_remedial_repo,
+            student_profile_repo=self.student_profile_repo,
             task_repo=self.task_selection_repo,
             task_group_repo=self.task_group_repo,
             remedial_source_repo=self.remedial_source_repo,
@@ -996,7 +1007,7 @@ class Container:
     def create_student_remedial_variant_use_case(self):
         return CreateStudentRemedialVariantUseCase(
             student_repo=self.student_repo,
-            student_learning_repo=self.student_learning_repo,
+            student_learning_repo=self.student_remedial_repo,
             task_repo=self.task_selection_repo,
             work_repo=self.work_variant_creation_repo,
         )
@@ -1029,7 +1040,7 @@ class Container:
 
     def get_remedial_wizard_preview_use_case(self):
         return GetRemedialWizardPreviewUseCase(
-            student_learning_repo=self.student_learning_repo,
+            student_learning_repo=self.student_remedial_repo,
         )
 
     def get_remedial_wizard_start_use_case(self):
@@ -1040,7 +1051,7 @@ class Container:
     def get_student_profile_use_case(self):
         return GetStudentProfileUseCase(
             student_repo=self.student_repo,
-            student_learning_repo=self.student_learning_repo,
+            student_learning_repo=self.student_profile_repo,
             analytics_service=self.analytics_service(),
         )
 
@@ -1081,7 +1092,7 @@ class Container:
 
     def get_student_remedial_work_use_case(self):
         return GetStudentRemedialWorkUseCase(
-            student_learning_repo=self.student_learning_repo,
+            student_learning_repo=self.student_remedial_repo,
         )
 
     def create_student_use_case(self):

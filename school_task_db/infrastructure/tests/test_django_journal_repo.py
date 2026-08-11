@@ -3,8 +3,11 @@ from django.utils import timezone
 
 from curriculum.models import Course
 from events.models import Event, EventParticipation, Mark
-from infrastructure.repositories.django_journal_repo import (
-    DjangoJournalRepository,
+from infrastructure.repositories.django_journal_catalog_repo import (
+    DjangoJournalCatalogRepository,
+)
+from infrastructure.repositories.django_journal_report_repo import (
+    DjangoJournalReportRepository,
 )
 from infrastructure.tests.variant_task_factory import capture_attempt_snapshot
 from students.models import Student, StudentGroup
@@ -37,7 +40,7 @@ class DjangoJournalRepositoryTests(TestCase):
             status='assigned',
         )
 
-        data = DjangoJournalRepository().get_journal_select(year=None)
+        data = DjangoJournalCatalogRepository().get_journal_select(year=None)
 
         self.assertEqual(data.groups[0].pk, str(group.pk))
         self.assertEqual(data.groups[0].name, group.name)
@@ -104,7 +107,7 @@ class DjangoJournalRepositoryTests(TestCase):
         participation.status = 'absent'
         participation.save(update_fields=['variant', 'status'])
 
-        data = DjangoJournalRepository().get_journal_source(
+        data = DjangoJournalReportRepository().get_journal_source(
             course_id=course.pk,
             group_id=group.pk,
             year=None,

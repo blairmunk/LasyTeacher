@@ -305,7 +305,12 @@ from infrastructure.repositories.django_heatmap_matrix_repo import (
 from infrastructure.repositories.django_reports_dashboard_repo import (
     DjangoReportsDashboardRepository,
 )
-from infrastructure.repositories.django_journal_repo import DjangoJournalRepository
+from infrastructure.repositories.django_journal_catalog_repo import (
+    DjangoJournalCatalogRepository,
+)
+from infrastructure.repositories.django_journal_report_repo import (
+    DjangoJournalReportRepository,
+)
 from infrastructure.repositories.django_task_db_health_repo import (
     DjangoTaskDBHealthRepository,
 )
@@ -1151,7 +1156,14 @@ class ContainerTests(SimpleTestCase):
             container.heatmap_overview_repo,
             DjangoHeatmapOverviewRepository,
         )
-        self.assertIsInstance(container.journal_repo, DjangoJournalRepository)
+        self.assertIsInstance(
+            container.journal_catalog_repo,
+            DjangoJournalCatalogRepository,
+        )
+        self.assertIsInstance(
+            container.journal_report_repo,
+            DjangoJournalReportRepository,
+        )
         self.assertIsInstance(
             container.task_db_health_repo,
             DjangoTaskDBHealthRepository,

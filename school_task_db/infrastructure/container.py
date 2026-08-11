@@ -342,8 +342,11 @@ from infrastructure.repositories.django_event_performance_report_repo import (
 from infrastructure.repositories.django_events_status_repo import (
     DjangoEventsStatusRepository,
 )
-from infrastructure.repositories.django_journal_repo import (
-    DjangoJournalRepository,
+from infrastructure.repositories.django_journal_catalog_repo import (
+    DjangoJournalCatalogRepository,
+)
+from infrastructure.repositories.django_journal_report_repo import (
+    DjangoJournalReportRepository,
 )
 from infrastructure.repositories.django_review_overview_repo import (
     DjangoReviewOverviewRepository,
@@ -540,7 +543,8 @@ class Container:
         self._heatmap_detail_repo = None
         self._heatmap_matrix_repo = None
         self._heatmap_overview_repo = None
-        self._journal_repo = None
+        self._journal_catalog_repo = None
+        self._journal_report_repo = None
         self._task_db_health_repo = None
         self._event_performance_report_repo = None
         self._student_digest_repo = None
@@ -867,10 +871,16 @@ class Container:
         return self._heatmap_overview_repo
 
     @property
-    def journal_repo(self):
-        if self._journal_repo is None:
-            self._journal_repo = DjangoJournalRepository()
-        return self._journal_repo
+    def journal_catalog_repo(self):
+        if self._journal_catalog_repo is None:
+            self._journal_catalog_repo = DjangoJournalCatalogRepository()
+        return self._journal_catalog_repo
+
+    @property
+    def journal_report_repo(self):
+        if self._journal_report_repo is None:
+            self._journal_report_repo = DjangoJournalReportRepository()
+        return self._journal_report_repo
 
     @property
     def task_db_health_repo(self):
@@ -1572,12 +1582,12 @@ class Container:
 
     def get_journal_select_use_case(self):
         return GetJournalSelectUseCase(
-            report_repo=self.journal_repo,
+            report_repo=self.journal_catalog_repo,
         )
 
     def get_journal_use_case(self):
         return GetJournalUseCase(
-            report_repo=self.journal_repo,
+            report_repo=self.journal_report_repo,
         )
 
     def get_task_db_health_use_case(self):

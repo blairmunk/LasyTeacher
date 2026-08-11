@@ -310,6 +310,9 @@ from infrastructure.repositories.django_curriculum_repo import (
 from infrastructure.repositories.django_presentation_profile_repo import (
     DjangoPresentationProfileRepository,
 )
+from infrastructure.repositories.django_event_attempt_repo import (
+    DjangoEventAttemptRepository,
+)
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_participation_grading_repo import (
     DjangoParticipationGradingRepository,
@@ -594,7 +597,7 @@ class Container:
     @property
     def event_attempt_repo(self):
         if self._event_attempt_repo is None:
-            self._event_attempt_repo = self.event_repo
+            self._event_attempt_repo = DjangoEventAttemptRepository()
         return self._event_attempt_repo
 
     @property

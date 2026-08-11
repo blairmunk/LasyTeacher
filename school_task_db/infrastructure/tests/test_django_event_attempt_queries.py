@@ -5,7 +5,9 @@ from events.models import AttemptSnapshot, Event, EventParticipation, Mark
 from infrastructure.repositories.django_attempt_snapshot_repo import (
     DjangoAttemptSnapshotRepository,
 )
-from infrastructure.repositories.django_event_repo import DjangoEventRepository
+from infrastructure.repositories.django_event_attempt_repo import (
+    DjangoEventAttemptRepository,
+)
 from students.models import Student
 from works.models import Variant, Work
 
@@ -109,7 +111,7 @@ class DjangoEventAttemptQueryTests(TestCase):
             student=second_student,
             status='assigned',
         )
-        repo = DjangoEventRepository()
+        repo = DjangoEventAttemptRepository()
 
         attempt_ref = repo.get_latest_student_attempt(
             str(self.event.pk),
@@ -125,7 +127,7 @@ class DjangoEventAttemptQueryTests(TestCase):
         self.assertEqual(unchecked_row.task_scores, {})
 
     def _read_attempt(self):
-        repo = DjangoEventRepository()
+        repo = DjangoEventAttemptRepository()
         return (
             repo.get_latest_student_attempt(
                 str(self.event.pk),

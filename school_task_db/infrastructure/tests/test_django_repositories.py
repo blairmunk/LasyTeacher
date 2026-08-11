@@ -96,6 +96,9 @@ from infrastructure.repositories.django_core_repo import DjangoCoreRepository
 from infrastructure.repositories.django_curriculum_repo import (
     DjangoCurriculumRepository,
 )
+from infrastructure.repositories.django_event_attempt_repo import (
+    DjangoEventAttemptRepository,
+)
 from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_participation_grading_repo import (
     DjangoParticipationGradingRepository,
@@ -1234,7 +1237,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             task_repo=task_repo,
             work_repo=work_repo,
             event_repo=event_repo,
-            event_attempt_repo=event_repo,
+            event_attempt_repo=DjangoEventAttemptRepository(),
             transaction_manager=DjangoTransactionManager(),
         )
 
@@ -1311,7 +1314,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             task_repo=task_repo,
             work_repo=work_repo,
             event_repo=event_repo,
-            event_attempt_repo=event_repo,
+            event_attempt_repo=DjangoEventAttemptRepository(),
             transaction_manager=DjangoTransactionManager(),
         )
         work_name = 'Откатываемая работа над ошибками'

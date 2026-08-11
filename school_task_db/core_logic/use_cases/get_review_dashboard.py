@@ -1,14 +1,14 @@
 """Build review dashboard data."""
 
 from core_logic.entities.review import ReviewDashboardData
-from core_logic.interfaces.review_repo import IReviewRepository
+from core_logic.interfaces.review_overview_repo import IReviewOverviewRepository
 from core_logic.services.review_service import ReviewService
 
 
 class GetReviewDashboardUseCase:
     def __init__(
         self,
-        review_repo: IReviewRepository,
+        review_repo: IReviewOverviewRepository,
         review_service: ReviewService,
     ):
         self.review_repo = review_repo

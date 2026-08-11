@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 from core_logic.entities.review import ReviewParticipationStatusChange
-from core_logic.interfaces.review_repo import IReviewRepository
+from core_logic.interfaces.review_workflow_repo import IReviewWorkflowRepository
 
 
 @dataclass(frozen=True)
@@ -12,7 +12,7 @@ class ToggleParticipationAbsentRequest:
 
 
 class ToggleParticipationAbsentUseCase:
-    def __init__(self, review_repo: IReviewRepository):
+    def __init__(self, review_repo: IReviewWorkflowRepository):
         self.review_repo = review_repo
 
     def execute(

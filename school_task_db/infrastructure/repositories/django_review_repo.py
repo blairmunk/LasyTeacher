@@ -15,7 +15,8 @@ from core_logic.entities.review import (
     ReviewSaveNavigation,
     ReviewVariantRef,
 )
-from core_logic.interfaces.review_repo import IReviewRepository
+from core_logic.interfaces.review_overview_repo import IReviewOverviewRepository
+from core_logic.interfaces.review_workflow_repo import IReviewWorkflowRepository
 from events.models import Event, EventParticipation, Mark
 from infrastructure.repositories.django_review_refs import (
     review_event_ref,
@@ -28,7 +29,10 @@ from review.models import ReviewComment
 from works.models import Variant, VariantTask
 
 
-class DjangoReviewRepository(IReviewRepository):
+class DjangoReviewRepository(
+    IReviewOverviewRepository,
+    IReviewWorkflowRepository,
+):
     def get_dashboard_events(self) -> List[ReviewEventProgress]:
         events = Event.objects.annotate(
             total_participants=Count('eventparticipation'),

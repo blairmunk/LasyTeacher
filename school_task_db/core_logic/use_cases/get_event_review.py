@@ -2,7 +2,7 @@
 
 from core_logic.entities.review import EventReviewData
 from core_logic.interfaces.event_read_repo import IEventReadRepository
-from core_logic.interfaces.review_repo import IReviewRepository
+from core_logic.interfaces.review_overview_repo import IReviewOverviewRepository
 from core_logic.services.review_service import ReviewService
 
 
@@ -10,7 +10,7 @@ class GetEventReviewUseCase:
     def __init__(
         self,
         event_repo: IEventReadRepository,
-        review_repo: IReviewRepository,
+        review_repo: IReviewOverviewRepository,
         review_service: ReviewService,
     ):
         self.event_repo = event_repo

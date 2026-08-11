@@ -1,7 +1,7 @@
 """Build data for checking a student's work."""
 
 from core_logic.entities.review import ParticipationReviewData
-from core_logic.interfaces.review_repo import IReviewRepository
+from core_logic.interfaces.review_workflow_repo import IReviewWorkflowRepository
 from core_logic.interfaces.review_task_repo import IReviewTaskRepository
 from core_logic.services.review_service import ReviewService
 
@@ -9,7 +9,7 @@ from core_logic.services.review_service import ReviewService
 class GetParticipationReviewUseCase:
     def __init__(
         self,
-        review_repo: IReviewRepository,
+        review_repo: IReviewWorkflowRepository,
         review_task_repo: IReviewTaskRepository,
         review_service: ReviewService,
     ):

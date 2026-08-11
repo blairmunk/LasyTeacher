@@ -1,37 +1,19 @@
-"""Review repository interface."""
+"""Persistence port for the participation review workflow."""
 
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
 from core_logic.entities.review import (
-    EventReviewParticipationRow,
     ReviewCommentRef,
-    ReviewEventProgress,
     ReviewEventRef,
     ReviewMarkRef,
     ReviewParticipationAbsenceContext,
     ReviewParticipationRef,
     ReviewSaveNavigation,
-    ReviewVariantRef,
 )
 
 
-class IReviewRepository(ABC):
-    @abstractmethod
-    def get_dashboard_events(self) -> List[ReviewEventProgress]:
-        """Return event progress rows for the review dashboard."""
-
-    @abstractmethod
-    def get_event_review_participations(
-        self,
-        event_id: str,
-    ) -> List[EventReviewParticipationRow]:
-        """Return participation rows for event review."""
-
-    @abstractmethod
-    def get_available_variants(self, event_id: str) -> List[ReviewVariantRef]:
-        """Return variants that can be assigned during event review."""
-
+class IReviewWorkflowRepository(ABC):
     @abstractmethod
     def get_participation(self, participation_id: str) -> ReviewParticipationRef:
         """Return participation details for the review screen."""
@@ -45,8 +27,11 @@ class IReviewRepository(ABC):
         """Return the existing mark or create one with default max points."""
 
     @abstractmethod
-    def get_review_participations(self, event_id: str) -> List[ReviewParticipationRef]:
-        """Return non-absent participations ordered for review navigation."""
+    def get_review_participations(
+        self,
+        event_id: str,
+    ) -> List[ReviewParticipationRef]:
+        """Return non-absent participations for review navigation."""
 
     @abstractmethod
     def get_typical_comments(self, limit: int = 10) -> List[ReviewCommentRef]:

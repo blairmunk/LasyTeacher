@@ -50,7 +50,8 @@ class FakeEventRepository:
 class GetRemedialEventPreviewUseCaseTests(TestCase):
     def test_execute_builds_preview_rows_and_counts_weak_students(self):
         result = GetRemedialEventPreviewUseCase(
-            event_repo=FakeEventRepository()
+            event_repo=FakeEventRepository(),
+            event_attempt_repo=FakeEventRepository(),
         ).execute('event-1')
 
         self.assertTrue(result.success)
@@ -72,7 +73,8 @@ class GetRemedialEventPreviewUseCaseTests(TestCase):
 
     def test_execute_returns_failure_for_missing_event(self):
         result = GetRemedialEventPreviewUseCase(
-            event_repo=FakeEventRepository()
+            event_repo=FakeEventRepository(),
+            event_attempt_repo=FakeEventRepository(),
         ).execute('missing')
 
         self.assertFalse(result.success)
@@ -91,6 +93,7 @@ class GetRemedialEventPreviewUseCaseTests(TestCase):
 
         result = GetRemedialEventPreviewUseCase(
             event_repo=repo,
+            event_attempt_repo=repo,
         ).execute('event-1')
 
         self.assertFalse(result.success)

@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 from core_logic.entities.event import EventEntity, WorkSummary
+from core_logic.interfaces.event_attempt_repo import IEventAttemptRepository
 from core_logic.interfaces.event_repo import IEventRepository
 from core_logic.services.remedial_service import REMEDIAL_SOURCE_EVENT_STATUSES
 from core_logic.value_objects.task_scores import normalize_task_scores
@@ -20,8 +21,13 @@ class RemedialEventPreviewResult:
 
 
 class GetRemedialEventPreviewUseCase:
-    def __init__(self, event_repo: IEventRepository):
+    def __init__(
+        self,
+        event_repo: IEventRepository,
+        event_attempt_repo: IEventAttemptRepository,
+    ):
         self.event_repo = event_repo
+        self.event_attempt_repo = event_attempt_repo
 
     def execute(self, event_id: str) -> RemedialEventPreviewResult:
         event = self.event_repo.get_by_id(event_id)
@@ -41,7 +47,9 @@ class GetRemedialEventPreviewUseCase:
 
         analysis = [
             self._analyze_participation(item)
-            for item in self.event_repo.get_participation_attempts(event_id)
+            for item in self.event_attempt_repo.get_participation_attempts(
+                event_id,
+            )
         ]
         weak_students = sum(
             1

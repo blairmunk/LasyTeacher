@@ -10,8 +10,6 @@ from core_logic.entities.event import (
     EventParticipationRef,
     EventVariantAssignmentResult,
     EventVariantRef,
-    CheckedAttemptRef,
-    ParticipationAttemptData,
 )
 
 
@@ -79,21 +77,6 @@ class IEventRepository(ABC):
         participation_id: str,
     ) -> Optional[EventParticipationRef]:
         """Return a lightweight participation reference by ID."""
-
-    @abstractmethod
-    def get_latest_student_attempt(
-        self,
-        event_id: str,
-        student_id: str,
-    ) -> Optional[CheckedAttemptRef]:
-        """Return the latest captured attempt for a student and event."""
-
-    @abstractmethod
-    def get_participation_attempts(
-        self,
-        event_id: str,
-    ) -> List[ParticipationAttemptData]:
-        """Return participations with their latest captured attempts."""
 
     @abstractmethod
     def create_event(self, params: CreateEventParams) -> str:

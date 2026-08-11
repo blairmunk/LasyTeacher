@@ -24,6 +24,7 @@ from core_logic.entities.event import (
     VariantSummary,
     WorkSummary,
 )
+from core_logic.interfaces.event_attempt_repo import IEventAttemptRepository
 from core_logic.interfaces.event_repo import CreateEventParams, IEventRepository
 from events.models import Event, EventParticipation, Mark
 from infrastructure.services.django_attempt_snapshot_queries import (
@@ -33,7 +34,7 @@ from students.models import StudentGroup
 from works.models import Variant
 
 
-class DjangoEventRepository(IEventRepository):
+class DjangoEventRepository(IEventRepository, IEventAttemptRepository):
     def get_list_events(self):
         return [
             EventListItem(

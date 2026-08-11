@@ -3,6 +3,7 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
 
+from core_logic.interfaces.event_attempt_repo import IEventAttemptRepository
 from core_logic.interfaces.event_repo import CreateEventParams, IEventRepository
 from core_logic.interfaces.task_repo import ITaskRepository
 from core_logic.interfaces.transaction_manager import ITransactionManager
@@ -53,12 +54,14 @@ class CreateRemedialFromEventUseCase:
         task_repo: ITaskRepository,
         work_repo: IWorkRepository,
         event_repo: IEventRepository,
+        event_attempt_repo: IEventAttemptRepository,
         transaction_manager: ITransactionManager,
     ):
         self.remedial_service = remedial_service
         self.task_repo = task_repo
         self.work_repo = work_repo
         self.event_repo = event_repo
+        self.event_attempt_repo = event_attempt_repo
         self.transaction_manager = transaction_manager
 
     def execute(
@@ -102,7 +105,7 @@ class CreateRemedialFromEventUseCase:
                 message='Количество заданий должно быть больше нуля.',
             )
         for student_id in request.selected_student_ids:
-            attempt = self.event_repo.get_latest_student_attempt(
+            attempt = self.event_attempt_repo.get_latest_student_attempt(
                 request.event_id,
                 student_id,
             )

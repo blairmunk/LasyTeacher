@@ -1234,6 +1234,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             task_repo=task_repo,
             work_repo=work_repo,
             event_repo=event_repo,
+            event_attempt_repo=event_repo,
             transaction_manager=DjangoTransactionManager(),
         )
 
@@ -1310,6 +1311,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             task_repo=task_repo,
             work_repo=work_repo,
             event_repo=event_repo,
+            event_attempt_repo=event_repo,
             transaction_manager=DjangoTransactionManager(),
         )
         work_name = 'Откатываемая работа над ошибками'

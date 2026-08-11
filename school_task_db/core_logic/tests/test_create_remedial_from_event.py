@@ -117,6 +117,7 @@ class CreateRemedialFromEventUseCaseTests(TestCase):
             task_repo=task_repo,
             work_repo=work_repo,
             event_repo=event_repo,
+            event_attempt_repo=event_repo,
             transaction_manager=transaction_manager,
         )
 
@@ -197,6 +198,7 @@ class CreateRemedialFromEventUseCaseTests(TestCase):
             task_repo=FakeTaskRepository(),
             work_repo=FakeWorkRepository(),
             event_repo=FakeEventRepository(),
+            event_attempt_repo=FakeEventRepository(),
             transaction_manager=transaction_manager,
         )
 
@@ -219,6 +221,7 @@ class CreateRemedialFromEventUseCaseTests(TestCase):
             task_repo=FakeTaskRepository(),
             work_repo=FakeWorkRepository(),
             event_repo=event_repo,
+            event_attempt_repo=event_repo,
             transaction_manager=FakeTransactionManager(),
         )
 
@@ -239,6 +242,7 @@ class CreateRemedialFromEventUseCaseTests(TestCase):
             task_repo=FakeTaskRepository(),
             work_repo=FakeWorkRepository(),
             event_repo=FakeEventRepository(),
+            event_attempt_repo=FakeEventRepository(),
             transaction_manager=FakeTransactionManager(),
         )
 

@@ -445,6 +445,7 @@ class Container:
         self._work_document_repo = None
         self._remedial_source_repo = None
         self._event_repo = None
+        self._event_attempt_repo = None
         self._participation_grading_repo = None
         self._review_repo = None
         self._review_session_repo = None
@@ -589,6 +590,12 @@ class Container:
         if self._event_repo is None:
             self._event_repo = DjangoEventRepository()
         return self._event_repo
+
+    @property
+    def event_attempt_repo(self):
+        if self._event_attempt_repo is None:
+            self._event_attempt_repo = self.event_repo
+        return self._event_attempt_repo
 
     @property
     def participation_grading_repo(self):
@@ -885,6 +892,7 @@ class Container:
             task_repo=self.task_repo,
             work_repo=self.work_repo,
             event_repo=self.event_repo,
+            event_attempt_repo=self.event_attempt_repo,
             transaction_manager=self.transaction_manager,
         )
 
@@ -908,6 +916,7 @@ class Container:
     def get_remedial_event_preview_use_case(self):
         return GetRemedialEventPreviewUseCase(
             event_repo=self.event_repo,
+            event_attempt_repo=self.event_attempt_repo,
         )
 
     def create_event_use_case(self):

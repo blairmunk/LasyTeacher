@@ -11,7 +11,6 @@ from core_logic.entities.student import (
     RemedialWizardPreviewSource,
     RemedialWizardTask,
     RemedialWizardTaskLog,
-    StudentDetail,
     StudentGroupRef,
     StudentParticipationProfile,
     StudentRemedialCandidateTask,
@@ -35,8 +34,12 @@ from events.models import EventParticipation
 from infrastructure.services.django_attempt_snapshot_queries import (
     latest_attempts_by_participation,
 )
-from infrastructure.services.django_captured_task_result_queries import (
-    latest_assessable_task_results,
+from infrastructure.repositories.django_student_learning_support import (
+    first_analog_groups,
+    latest_task_history,
+    result_is_correct,
+    result_percentage,
+    student_detail,
 )
 from students.models import StudentGroup
 from task_groups.models import AnalogGroup, TaskGroup
@@ -196,8 +199,8 @@ class DjangoStudentLearningRepository(
         return rows
 
     def get_task_logs(self, student_id: str) -> List[StudentTaskResultProfile]:
-        results = self._latest_task_history([student_id])
-        analog_groups = self._first_analog_groups(
+        results = latest_task_history([student_id])
+        analog_groups = first_analog_groups(
             result.task.task_id for result in results
         )
         return [
@@ -216,8 +219,8 @@ class DjangoStudentLearningRepository(
                 difficulty=result.task.difficulty,
                 points=result.points,
                 max_points=result.max_points,
-                is_correct=self._result_is_correct(result),
-                percentage=self._result_percentage(result),
+                is_correct=result_is_correct(result),
+                percentage=result_percentage(result),
                 completed_at=result.captured_at,
             )
             for result in sorted(
@@ -231,8 +234,8 @@ class DjangoStudentLearningRepository(
         self,
         student_id: str,
     ) -> StudentRemedialSource:
-        task_results = self._latest_task_history([student_id])
-        analog_groups = self._first_analog_groups(
+        task_results = latest_task_history([student_id])
+        analog_groups = first_analog_groups(
             result.task.task_id for result in task_results
         )
         group_ids = {group.pk for group in analog_groups.values()}
@@ -263,8 +266,8 @@ class DjangoStudentLearningRepository(
                         if result.task.topic_id
                         else None
                     ),
-                    percentage=self._result_percentage(result),
-                    is_correct=self._result_is_correct(result),
+                    percentage=result_percentage(result),
+                    is_correct=result_is_correct(result),
                 )
                 for result in task_results
             ),
@@ -286,10 +289,10 @@ class DjangoStudentLearningRepository(
         students = list(
             group.students.all().order_by('last_name', 'first_name')
         )
-        task_results = self._latest_task_history(
+        task_results = latest_task_history(
             [student.pk for student in students],
         )
-        analog_groups_by_task = self._first_analog_groups(
+        analog_groups_by_task = first_analog_groups(
             result.task.task_id for result in task_results
         )
         group_ids = {group.pk for group in analog_groups_by_task.values()}
@@ -307,7 +310,7 @@ class DjangoStudentLearningRepository(
 
         return RemedialWizardPreviewSource(
             group=StudentGroupRef(pk=str(group.pk), name=group.name),
-            students=tuple(self._student_detail(student) for student in students),
+            students=tuple(student_detail(student) for student in students),
             task_logs=tuple(
                 RemedialWizardTaskLog(
                     student_id=result.student_id,
@@ -317,7 +320,7 @@ class DjangoStudentLearningRepository(
                         if result.task.task_id in analog_groups_by_task
                         else None
                     ),
-                    percentage=self._result_percentage(result),
+                    percentage=result_percentage(result),
                 )
                 for result in task_results
             ),
@@ -352,43 +355,3 @@ class DjangoStudentLearningRepository(
                 work_id__in=work_ids,
             ).select_related('analog_group')
         ]
-
-    @staticmethod
-    def _student_detail(student):
-        return StudentDetail(
-            pk=str(student.pk),
-            first_name=student.first_name,
-            last_name=student.last_name,
-            middle_name=student.middle_name,
-            email=student.email,
-            short_uuid=student.get_short_uuid(),
-            full_name=student.get_full_name(),
-            short_name=student.get_short_name(),
-        )
-
-    @staticmethod
-    def _latest_task_history(student_ids):
-        participation_ids = EventParticipation.objects.filter(
-            student_id__in=student_ids,
-        ).values_list('pk', flat=True)
-        return latest_assessable_task_results(participation_ids)
-
-    @staticmethod
-    def _first_analog_groups(task_ids):
-        groups = {}
-        for membership in TaskGroup.objects.filter(
-            task_id__in=set(task_ids),
-        ).select_related('group').order_by('pk'):
-            groups.setdefault(str(membership.task_id), membership.group)
-        return groups
-
-    @staticmethod
-    def _result_percentage(result):
-        if not result.max_points or result.max_points <= 0:
-            return None
-        return round(result.points / result.max_points * 100, 1)
-
-    @classmethod
-    def _result_is_correct(cls, result):
-        percentage = cls._result_percentage(result)
-        return percentage >= 70 if percentage is not None else None

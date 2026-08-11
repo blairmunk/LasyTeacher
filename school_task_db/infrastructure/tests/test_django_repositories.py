@@ -99,7 +99,15 @@ from infrastructure.repositories.django_curriculum_repo import (
 from infrastructure.repositories.django_event_attempt_repo import (
     DjangoEventAttemptRepository,
 )
-from infrastructure.repositories.django_event_repo import DjangoEventRepository
+from infrastructure.repositories.django_event_participation_repo import (
+    DjangoEventParticipationRepository,
+)
+from infrastructure.repositories.django_event_read_repo import (
+    DjangoEventReadRepository,
+)
+from infrastructure.repositories.django_event_write_repo import (
+    DjangoEventWriteRepository,
+)
 from infrastructure.repositories.django_participation_grading_repo import (
     DjangoParticipationGradingRepository,
 )
@@ -480,7 +488,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertIsNone(missing_student_group)
 
     def test_event_repository_creates_and_updates_event(self):
-        repo = DjangoEventRepository()
+        repo = DjangoEventWriteRepository()
         course = Course.objects.create(
             name='Механика',
             subject='Физика',
@@ -1247,7 +1255,9 @@ class DjangoRemedialRepositoryTests(TestCase):
         student_repo = DjangoStudentRepository()
         task_repo = DjangoTaskSelectionRepository()
         work_repo = DjangoWorkVariantCreationRepository()
-        event_repo = DjangoEventRepository()
+        event_repo = DjangoEventReadRepository()
+        event_write_repo = DjangoEventWriteRepository()
+        event_participation_repo = DjangoEventParticipationRepository()
         service = RemedialService(
             student_learning_repo=DjangoStudentLearningRepository(),
             task_repo=task_repo,
@@ -1259,8 +1269,8 @@ class DjangoRemedialRepositoryTests(TestCase):
             task_repo=task_repo,
             work_repo=work_repo,
             event_repo=event_repo,
-            event_write_repo=event_repo,
-            event_participation_repo=event_repo,
+            event_write_repo=event_write_repo,
+            event_participation_repo=event_participation_repo,
             event_attempt_repo=DjangoEventAttemptRepository(),
             transaction_manager=DjangoTransactionManager(),
         )
@@ -1321,7 +1331,9 @@ class DjangoRemedialRepositoryTests(TestCase):
         student_repo = DjangoStudentRepository()
         task_repo = DjangoTaskSelectionRepository()
         work_repo = DjangoWorkVariantCreationRepository()
-        event_repo = DjangoEventRepository()
+        event_repo = DjangoEventReadRepository()
+        event_write_repo = DjangoEventWriteRepository()
+        event_participation_repo = DjangoEventParticipationRepository()
         service = RemedialService(
             student_learning_repo=DjangoStudentLearningRepository(),
             task_repo=task_repo,
@@ -1332,14 +1344,14 @@ class DjangoRemedialRepositoryTests(TestCase):
         def fail_participation(**kwargs):
             raise RuntimeError('participation creation failed')
 
-        event_repo.create_participation = fail_participation
+        event_participation_repo.create_participation = fail_participation
         use_case = CreateRemedialFromEventUseCase(
             remedial_service=service,
             task_repo=task_repo,
             work_repo=work_repo,
             event_repo=event_repo,
-            event_write_repo=event_repo,
-            event_participation_repo=event_repo,
+            event_write_repo=event_write_repo,
+            event_participation_repo=event_participation_repo,
             event_attempt_repo=DjangoEventAttemptRepository(),
             transaction_manager=DjangoTransactionManager(),
         )
@@ -2749,7 +2761,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(self.event.status, 'graded')
 
     def test_event_repository_returns_list_and_detail_page_data(self):
-        repo = DjangoEventRepository()
+        repo = DjangoEventReadRepository()
 
         events = repo.get_list_events()
         participations = repo.get_detail_participations(str(self.event.pk))
@@ -2772,7 +2784,9 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(participation_ref.event_id, str(self.event.pk))
 
     def test_event_repository_mutates_participants_variants_and_status(self):
-        repo = DjangoEventRepository()
+        read_repo = DjangoEventReadRepository()
+        write_repo = DjangoEventWriteRepository()
+        participation_repo = DjangoEventParticipationRepository()
         second_student = Student.objects.create(
             last_name='Сидоров',
             first_name='Сидор',
@@ -2783,7 +2797,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             work_name_snapshot=self.source_work.name,
         )
 
-        created_count = repo.add_participants(
+        created_count = participation_repo.add_participants(
             event_id=str(self.event.pk),
             student_ids=[str(self.student.pk), str(second_student.pk)],
         )
@@ -2791,17 +2805,17 @@ class DjangoRemedialRepositoryTests(TestCase):
             event=self.event,
             student=second_student,
         )
-        assigned_count = repo.assign_variants(
+        assigned_count = participation_repo.assign_variants(
             event_id=str(self.event.pk),
             assignments={str(second_participation.pk): str(second_variant.pk)},
         )
-        single_assignment = repo.assign_variant(
+        single_assignment = participation_repo.assign_variant(
             event_id=str(self.event.pk),
             participation_id=str(self.participation.pk),
             variant_id=str(second_variant.pk),
         )
-        status = repo.get_event_status(str(self.event.pk))
-        repo.set_event_status(str(self.event.pk), 'reviewing')
+        status = read_repo.get_event_status(str(self.event.pk))
+        write_repo.set_event_status(str(self.event.pk), 'reviewing')
 
         self.participation.refresh_from_db()
         second_participation.refresh_from_db()

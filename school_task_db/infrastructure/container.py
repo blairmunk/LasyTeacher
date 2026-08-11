@@ -313,7 +313,15 @@ from infrastructure.repositories.django_presentation_profile_repo import (
 from infrastructure.repositories.django_event_attempt_repo import (
     DjangoEventAttemptRepository,
 )
-from infrastructure.repositories.django_event_repo import DjangoEventRepository
+from infrastructure.repositories.django_event_participation_repo import (
+    DjangoEventParticipationRepository,
+)
+from infrastructure.repositories.django_event_read_repo import (
+    DjangoEventReadRepository,
+)
+from infrastructure.repositories.django_event_write_repo import (
+    DjangoEventWriteRepository,
+)
 from infrastructure.repositories.django_participation_grading_repo import (
     DjangoParticipationGradingRepository,
 )
@@ -475,7 +483,9 @@ class Container:
         self._orphan_variant_repo = None
         self._work_document_repo = None
         self._remedial_source_repo = None
-        self._event_repo = None
+        self._event_read_repo = None
+        self._event_write_repo = None
+        self._event_participation_repo = None
         self._event_attempt_repo = None
         self._participation_grading_repo = None
         self._review_repo = None
@@ -657,10 +667,24 @@ class Container:
         return self._remedial_source_repo
 
     @property
-    def event_repo(self):
-        if self._event_repo is None:
-            self._event_repo = DjangoEventRepository()
-        return self._event_repo
+    def event_read_repo(self):
+        if self._event_read_repo is None:
+            self._event_read_repo = DjangoEventReadRepository()
+        return self._event_read_repo
+
+    @property
+    def event_write_repo(self):
+        if self._event_write_repo is None:
+            self._event_write_repo = DjangoEventWriteRepository()
+        return self._event_write_repo
+
+    @property
+    def event_participation_repo(self):
+        if self._event_participation_repo is None:
+            self._event_participation_repo = (
+                DjangoEventParticipationRepository()
+            )
+        return self._event_participation_repo
 
     @property
     def event_attempt_repo(self):
@@ -962,9 +986,9 @@ class Container:
             remedial_service=self.remedial_service(),
             task_repo=self.task_selection_repo,
             work_repo=self.work_variant_creation_repo,
-            event_repo=self.event_repo,
-            event_write_repo=self.event_repo,
-            event_participation_repo=self.event_repo,
+            event_repo=self.event_read_repo,
+            event_write_repo=self.event_write_repo,
+            event_participation_repo=self.event_participation_repo,
             event_attempt_repo=self.event_attempt_repo,
             transaction_manager=self.transaction_manager,
         )
@@ -982,25 +1006,25 @@ class Container:
             student_repo=self.student_repo,
             task_repo=self.task_selection_repo,
             work_repo=self.work_variant_creation_repo,
-            event_write_repo=self.event_repo,
-            event_participation_repo=self.event_repo,
+            event_write_repo=self.event_write_repo,
+            event_participation_repo=self.event_participation_repo,
             transaction_manager=self.transaction_manager,
         )
 
     def get_remedial_event_preview_use_case(self):
         return GetRemedialEventPreviewUseCase(
-            event_repo=self.event_repo,
+            event_repo=self.event_read_repo,
             event_attempt_repo=self.event_attempt_repo,
         )
 
     def create_event_use_case(self):
         return CreateEventUseCase(
-            event_repo=self.event_repo,
+            event_repo=self.event_write_repo,
         )
 
     def update_event_use_case(self):
         return UpdateEventUseCase(
-            event_repo=self.event_repo,
+            event_repo=self.event_write_repo,
         )
 
     def get_remedial_wizard_preview_use_case(self):
@@ -1323,36 +1347,36 @@ class Container:
 
     def get_event_review_use_case(self):
         return GetEventReviewUseCase(
-            event_repo=self.event_repo,
+            event_repo=self.event_read_repo,
             review_repo=self.review_repo,
             review_service=self.review_service(),
         )
 
     def get_event_list_use_case(self):
         return GetEventListUseCase(
-            event_repo=self.event_repo,
+            event_repo=self.event_read_repo,
             event_service=self.event_service(),
         )
 
     def get_event_detail_use_case(self):
         return GetEventDetailUseCase(
-            event_repo=self.event_repo,
+            event_repo=self.event_read_repo,
             event_service=self.event_service(),
         )
 
     def get_event_participant_selection_use_case(self):
         return GetEventParticipantSelectionUseCase(
-            event_repo=self.event_repo,
+            event_repo=self.event_read_repo,
         )
 
     def get_event_participation_ref_use_case(self):
         return GetEventParticipationRefUseCase(
-            event_repo=self.event_repo,
+            event_repo=self.event_read_repo,
         )
 
     def get_event_variant_assignment_use_case(self):
         return GetEventVariantAssignmentUseCase(
-            event_repo=self.event_repo,
+            event_repo=self.event_read_repo,
         )
 
     def get_events_status_report_use_case(self):
@@ -1462,25 +1486,25 @@ class Container:
 
     def add_event_participants_use_case(self):
         return AddEventParticipantsUseCase(
-            event_repo=self.event_repo,
+            event_repo=self.event_participation_repo,
         )
 
     def assign_event_variants_use_case(self):
         return AssignEventVariantsUseCase(
-            event_repo=self.event_repo,
-            event_participation_repo=self.event_repo,
+            event_repo=self.event_read_repo,
+            event_participation_repo=self.event_participation_repo,
         )
 
     def assign_single_event_variant_use_case(self):
         return AssignSingleEventVariantUseCase(
-            event_repo=self.event_repo,
-            event_participation_repo=self.event_repo,
+            event_repo=self.event_read_repo,
+            event_participation_repo=self.event_participation_repo,
         )
 
     def change_event_status_use_case(self):
         return ChangeEventStatusUseCase(
-            event_repo=self.event_repo,
-            event_write_repo=self.event_repo,
+            event_repo=self.event_read_repo,
+            event_write_repo=self.event_write_repo,
             event_service=self.event_service(),
         )
 

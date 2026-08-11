@@ -257,7 +257,15 @@ from infrastructure.repositories.django_presentation_profile_repo import (
     DjangoPresentationProfileRepository,
 )
 from infrastructure.container import Container
-from infrastructure.repositories.django_event_repo import DjangoEventRepository
+from infrastructure.repositories.django_event_participation_repo import (
+    DjangoEventParticipationRepository,
+)
+from infrastructure.repositories.django_event_read_repo import (
+    DjangoEventReadRepository,
+)
+from infrastructure.repositories.django_event_write_repo import (
+    DjangoEventWriteRepository,
+)
 from infrastructure.repositories.django_participation_grading_repo import (
     DjangoParticipationGradingRepository,
 )
@@ -1003,7 +1011,18 @@ class ContainerTests(SimpleTestCase):
             container.remedial_source_repo,
             DjangoRemedialSourceRepository,
         )
-        self.assertIsInstance(container.event_repo, DjangoEventRepository)
+        self.assertIsInstance(
+            container.event_read_repo,
+            DjangoEventReadRepository,
+        )
+        self.assertIsInstance(
+            container.event_write_repo,
+            DjangoEventWriteRepository,
+        )
+        self.assertIsInstance(
+            container.event_participation_repo,
+            DjangoEventParticipationRepository,
+        )
         self.assertIsInstance(
             container.participation_grading_repo,
             DjangoParticipationGradingRepository,

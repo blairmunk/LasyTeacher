@@ -12,10 +12,15 @@ from core_logic.interfaces.work_repo import (
     CreateWorkWithSpecificationParams,
     CreateWorkWithVariantsParams,
     CreateWorkWithVariantFromTasksParams,
-    IWorkRepository,
     WorkContentBlockParams,
     WorkTaskSelectionParams,
     WorkUpdateContext,
+)
+from core_logic.interfaces.work_specification_repo import (
+    IWorkSpecificationRepository,
+)
+from core_logic.interfaces.work_variant_creation_repo import (
+    IWorkVariantCreationRepository,
 )
 from infrastructure.services.task_content_snapshots import (
     build_task_content_snapshots,
@@ -33,7 +38,10 @@ from works.models import (
 )
 
 
-class DjangoWorkRepository(IWorkRepository):
+class DjangoWorkRepository(
+    IWorkSpecificationRepository,
+    IWorkVariantCreationRepository,
+):
 
     def _create_work(self, params: CreateWorkParams) -> str:
         work = Work.objects.create(

@@ -6,7 +6,9 @@ from typing import List
 from core_logic.interfaces.task_repo import ITaskRepository
 from core_logic.interfaces.work_repo import (
     CreateWorkWithVariantFromTasksParams,
-    IWorkRepository,
+)
+from core_logic.interfaces.work_variant_creation_repo import (
+    IWorkVariantCreationRepository,
 )
 
 
@@ -34,7 +36,7 @@ class CreateWorkFromTasksUseCase:
     def __init__(
         self,
         task_repo: ITaskRepository,
-        work_repo: IWorkRepository,
+        work_repo: IWorkVariantCreationRepository,
     ):
         self.task_repo = task_repo
         self.work_repo = work_repo

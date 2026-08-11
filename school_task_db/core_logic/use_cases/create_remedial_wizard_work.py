@@ -10,8 +10,10 @@ from core_logic.interfaces.transaction_manager import ITransactionManager
 from core_logic.interfaces.work_repo import (
     CreateWorkParams,
     CreateWorkWithVariantsParams,
-    IWorkRepository,
     NewWorkVariantParams,
+)
+from core_logic.interfaces.work_variant_creation_repo import (
+    IWorkVariantCreationRepository,
 )
 from core_logic.services.remedial_variant_content_service import (
     build_remedial_variant_creation_plan,
@@ -43,7 +45,7 @@ class CreateRemedialWizardWorkUseCase:
         self,
         student_repo: IStudentRepository,
         task_repo: ITaskRepository,
-        work_repo: IWorkRepository,
+        work_repo: IWorkVariantCreationRepository,
         event_repo: IEventRepository,
         transaction_manager: ITransactionManager,
     ):

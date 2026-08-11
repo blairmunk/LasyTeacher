@@ -10,8 +10,10 @@ from core_logic.interfaces.transaction_manager import ITransactionManager
 from core_logic.interfaces.work_repo import (
     CreateWorkParams,
     CreateWorkWithVariantsParams,
-    IWorkRepository,
     NewWorkVariantParams,
+)
+from core_logic.interfaces.work_variant_creation_repo import (
+    IWorkVariantCreationRepository,
 )
 from core_logic.services.remedial_service import (
     REMEDIAL_SOURCE_EVENT_STATUSES,
@@ -52,7 +54,7 @@ class CreateRemedialFromEventUseCase:
         self,
         remedial_service: RemedialService,
         task_repo: ITaskRepository,
-        work_repo: IWorkRepository,
+        work_repo: IWorkVariantCreationRepository,
         event_repo: IEventRepository,
         event_attempt_repo: IEventAttemptRepository,
         transaction_manager: ITransactionManager,

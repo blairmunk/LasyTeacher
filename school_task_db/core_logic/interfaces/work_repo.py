@@ -1,6 +1,5 @@
-"""Work repository interface."""
+"""Command data transferred to work repository ports."""
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import List, Optional
 from core_logic.entities.work_variant_composition import VariantCreationPlan
@@ -118,44 +117,3 @@ class CreatedWorkVariantRef:
     work_id: str
     variant_id: str
     tasks_count: int
-
-
-class IWorkRepository(ABC):
-    @abstractmethod
-    def get_work_update_context(
-        self,
-        work_id: str,
-    ) -> Optional[WorkUpdateContext]:
-        """Return facts needed to validate a work update."""
-
-    @abstractmethod
-    def update_work_with_specification(
-        self,
-        params: CreateWorkWithSpecificationParams,
-    ) -> bool:
-        """Atomically update a work and its complete content plan."""
-
-    @abstractmethod
-    def create_work_with_specification(
-        self,
-        params: CreateWorkWithSpecificationParams,
-    ) -> str:
-        """Create a work and its specification atomically."""
-
-    @abstractmethod
-    def create_work_with_variants(
-        self,
-        params: CreateWorkWithVariantsParams,
-    ) -> CreatedWorkWithVariantsRef:
-        """Create a work and all supplied variants atomically."""
-
-    @abstractmethod
-    def create_variant_from_plan(self, params: CreateVariantParams) -> str:
-        """Persist one immutable variant creation plan and return its ID."""
-
-    @abstractmethod
-    def create_work_with_variant_from_tasks(
-        self,
-        params: CreateWorkWithVariantFromTasksParams,
-    ) -> CreatedWorkVariantRef:
-        """Create a work and its first variant from selected tasks."""

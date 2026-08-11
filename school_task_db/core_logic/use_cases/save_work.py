@@ -6,9 +6,11 @@ from typing import List
 from core_logic.interfaces.work_repo import (
     CreateWorkParams,
     CreateWorkWithSpecificationParams,
-    IWorkRepository,
     WorkContentBlockParams,
     WorkTaskSelectionParams,
+)
+from core_logic.interfaces.work_specification_repo import (
+    IWorkSpecificationRepository,
 )
 from core_logic.value_objects.work_content_plan import (
     WORK_CONTENT_TEXT,
@@ -34,7 +36,7 @@ class UpdateWorkWithSpecificationRequest:
 
 
 class CreateWorkWithSpecificationUseCase:
-    def __init__(self, work_repo: IWorkRepository):
+    def __init__(self, work_repo: IWorkSpecificationRepository):
         self.work_repo = work_repo
 
     def execute(
@@ -53,7 +55,7 @@ class CreateWorkWithSpecificationUseCase:
 
 
 class UpdateWorkWithSpecificationUseCase:
-    def __init__(self, work_repo: IWorkRepository):
+    def __init__(self, work_repo: IWorkSpecificationRepository):
         self.work_repo = work_repo
 
     def execute(

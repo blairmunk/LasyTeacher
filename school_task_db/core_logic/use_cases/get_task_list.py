@@ -4,13 +4,13 @@ from core_logic.entities.task import TaskListData, TaskListFilters
 from core_logic.interfaces.task_catalog_repo import ITaskCatalogRepository
 from core_logic.interfaces.task_group_repo import ITaskGroupRepository
 from core_logic.interfaces.task_math_status_cache import ITaskMathStatusCache
-from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.interfaces.task_read_repo import ITaskReadRepository
 
 
 class GetTaskListUseCase:
     def __init__(
         self,
-        task_repo: ITaskRepository,
+        task_repo: ITaskReadRepository,
         task_catalog_repo: ITaskCatalogRepository,
         task_group_repo: ITaskGroupRepository,
         math_status_cache: ITaskMathStatusCache,

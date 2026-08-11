@@ -18,7 +18,8 @@ from core_logic.entities.task import (
     TaskSaveParams,
     TaskSaveResult,
 )
-from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.interfaces.task_read_repo import ITaskReadRepository
+from core_logic.interfaces.task_write_repo import ITaskWriteRepository
 from core_logic.interfaces.task_math_status_cache import ITaskMathStatusCache
 from infrastructure.services.task_image_presentation import (
     TaskImagePresentationService,
@@ -30,7 +31,7 @@ from task_groups.models import TaskGroup
 from tasks.models import Task, TaskImage
 
 
-class DjangoTaskRepository(ITaskRepository):
+class DjangoTaskRepository(ITaskReadRepository, ITaskWriteRepository):
     def __init__(
         self,
         math_status_cache: ITaskMathStatusCache = task_math_status_cache,

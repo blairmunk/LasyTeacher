@@ -1,11 +1,11 @@
 """Build task detail screen data."""
 
 from core_logic.entities.task import TaskDetailData
-from core_logic.interfaces.task_repo import ITaskRepository
+from core_logic.interfaces.task_read_repo import ITaskReadRepository
 
 
 class GetTaskDetailUseCase:
-    def __init__(self, task_repo: ITaskRepository):
+    def __init__(self, task_repo: ITaskReadRepository):
         self.task_repo = task_repo
 
     def execute(self, task_id: str) -> TaskDetailData:

@@ -317,6 +317,9 @@ from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_participation_grading_repo import (
     DjangoParticipationGradingRepository,
 )
+from infrastructure.repositories.django_orphan_variant_repo import (
+    DjangoOrphanVariantRepository,
+)
 from infrastructure.repositories.django_event_performance_report_repo import (
     DjangoEventPerformanceReportRepository,
 )
@@ -449,6 +452,7 @@ class Container:
         self._work_read_repo = None
         self._variant_read_repo = None
         self._variant_lifecycle_repo = None
+        self._orphan_variant_repo = None
         self._work_document_repo = None
         self._remedial_source_repo = None
         self._event_repo = None
@@ -585,6 +589,12 @@ class Container:
         if self._variant_lifecycle_repo is None:
             self._variant_lifecycle_repo = DjangoVariantLifecycleRepository()
         return self._variant_lifecycle_repo
+
+    @property
+    def orphan_variant_repo(self):
+        if self._orphan_variant_repo is None:
+            self._orphan_variant_repo = DjangoOrphanVariantRepository()
+        return self._orphan_variant_repo
 
     @property
     def work_document_repo(self):
@@ -1527,7 +1537,7 @@ class Container:
 
     def get_orphan_variant_list_use_case(self):
         return GetOrphanVariantListUseCase(
-            orphan_variant_repo=self.work_repo,
+            orphan_variant_repo=self.orphan_variant_repo,
         )
 
     def get_remedial_sheet_data_use_case(self):
@@ -1606,7 +1616,7 @@ class Container:
 
     def create_work_from_orphans_use_case(self):
         return CreateWorkFromOrphansUseCase(
-            orphan_variant_repo=self.work_repo,
+            orphan_variant_repo=self.orphan_variant_repo,
         )
 
     def create_work_from_groups_use_case(self):

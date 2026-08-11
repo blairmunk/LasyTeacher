@@ -103,6 +103,9 @@ from infrastructure.repositories.django_event_repo import DjangoEventRepository
 from infrastructure.repositories.django_participation_grading_repo import (
     DjangoParticipationGradingRepository,
 )
+from infrastructure.repositories.django_orphan_variant_repo import (
+    DjangoOrphanVariantRepository,
+)
 from infrastructure.repositories.django_review_repo import DjangoReviewRepository
 from infrastructure.repositories.django_review_session_repo import (
     DjangoReviewSessionRepository,
@@ -2056,7 +2059,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             number=7,
             work_name_snapshot='Сирота',
         )
-        repo = DjangoWorkRepository()
+        repo = DjangoOrphanVariantRepository()
 
         variants = repo.get_orphan_variants()
         total_orphans = repo.count_orphan_variants()
@@ -2460,7 +2463,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             weight=6,
         )
         use_case = CreateWorkFromOrphansUseCase(
-            orphan_variant_repo=DjangoWorkRepository(),
+            orphan_variant_repo=DjangoOrphanVariantRepository(),
         )
 
         result = use_case.execute(
@@ -2489,7 +2492,7 @@ class DjangoRemedialRepositoryTests(TestCase):
     def test_work_repository_does_not_create_work_for_non_orphan_variant(self):
         work_count = Work.objects.count()
 
-        created = DjangoWorkRepository().create_work_from_orphan_variants(
+        created = DjangoOrphanVariantRepository().create_work_from_orphan_variants(
             CreateWorkFromOrphanVariantsParams(
                 name='Не должна сохраниться',
                 work_type='remedial',

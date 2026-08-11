@@ -337,7 +337,12 @@ from infrastructure.repositories.django_events_status_repo import (
 from infrastructure.repositories.django_journal_repo import (
     DjangoJournalRepository,
 )
-from infrastructure.repositories.django_review_repo import DjangoReviewRepository
+from infrastructure.repositories.django_review_overview_repo import (
+    DjangoReviewOverviewRepository,
+)
+from infrastructure.repositories.django_review_workflow_repo import (
+    DjangoReviewWorkflowRepository,
+)
 from infrastructure.repositories.django_review_session_repo import (
     DjangoReviewSessionRepository,
 )
@@ -516,7 +521,8 @@ class Container:
         self._event_participation_repo = None
         self._event_attempt_repo = None
         self._participation_grading_repo = None
-        self._review_repo = None
+        self._review_overview_repo = None
+        self._review_workflow_repo = None
         self._review_session_repo = None
         self._review_task_repo = None
         self._events_status_repo = None
@@ -783,10 +789,16 @@ class Container:
         return self._transaction_manager
 
     @property
-    def review_repo(self):
-        if self._review_repo is None:
-            self._review_repo = DjangoReviewRepository()
-        return self._review_repo
+    def review_overview_repo(self):
+        if self._review_overview_repo is None:
+            self._review_overview_repo = DjangoReviewOverviewRepository()
+        return self._review_overview_repo
+
+    @property
+    def review_workflow_repo(self):
+        if self._review_workflow_repo is None:
+            self._review_workflow_repo = DjangoReviewWorkflowRepository()
+        return self._review_workflow_repo
 
     @property
     def review_session_repo(self):
@@ -1411,21 +1423,21 @@ class Container:
 
     def get_participation_review_use_case(self):
         return GetParticipationReviewUseCase(
-            review_repo=self.review_repo,
+            review_repo=self.review_workflow_repo,
             review_task_repo=self.review_task_repo,
             review_service=self.review_service(),
         )
 
     def get_review_dashboard_use_case(self):
         return GetReviewDashboardUseCase(
-            review_repo=self.review_repo,
+            review_repo=self.review_overview_repo,
             review_service=self.review_service(),
         )
 
     def get_event_review_use_case(self):
         return GetEventReviewUseCase(
             event_repo=self.event_read_repo,
-            review_repo=self.review_repo,
+            review_repo=self.review_overview_repo,
             review_service=self.review_service(),
         )
 
@@ -1592,12 +1604,12 @@ class Container:
 
     def finalize_review_event_use_case(self):
         return FinalizeReviewEventUseCase(
-            review_repo=self.review_repo,
+            review_repo=self.review_workflow_repo,
         )
 
     def toggle_participation_absent_use_case(self):
         return ToggleParticipationAbsentUseCase(
-            review_repo=self.review_repo,
+            review_repo=self.review_workflow_repo,
         )
 
     def prepare_participation_review_submission_use_case(self):
@@ -1645,7 +1657,7 @@ class Container:
 
     def get_review_save_navigation_use_case(self):
         return GetReviewSaveNavigationUseCase(
-            review_repo=self.review_repo,
+            review_repo=self.review_workflow_repo,
         )
 
     def get_recent_review_sessions_use_case(self):

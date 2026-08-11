@@ -275,7 +275,12 @@ from infrastructure.repositories.django_event_performance_report_repo import (
 from infrastructure.repositories.django_events_status_repo import (
     DjangoEventsStatusRepository,
 )
-from infrastructure.repositories.django_review_repo import DjangoReviewRepository
+from infrastructure.repositories.django_review_overview_repo import (
+    DjangoReviewOverviewRepository,
+)
+from infrastructure.repositories.django_review_workflow_repo import (
+    DjangoReviewWorkflowRepository,
+)
 from infrastructure.repositories.django_review_session_repo import (
     DjangoReviewSessionRepository,
 )
@@ -1097,7 +1102,14 @@ class ContainerTests(SimpleTestCase):
             container.participation_grading_repo,
             DjangoParticipationGradingRepository,
         )
-        self.assertIsInstance(container.review_repo, DjangoReviewRepository)
+        self.assertIsInstance(
+            container.review_overview_repo,
+            DjangoReviewOverviewRepository,
+        )
+        self.assertIsInstance(
+            container.review_workflow_repo,
+            DjangoReviewWorkflowRepository,
+        )
         self.assertIsInstance(
             container.review_session_repo,
             DjangoReviewSessionRepository,

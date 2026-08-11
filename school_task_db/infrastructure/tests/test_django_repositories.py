@@ -114,7 +114,12 @@ from infrastructure.repositories.django_participation_grading_repo import (
 from infrastructure.repositories.django_orphan_variant_repo import (
     DjangoOrphanVariantRepository,
 )
-from infrastructure.repositories.django_review_repo import DjangoReviewRepository
+from infrastructure.repositories.django_review_overview_repo import (
+    DjangoReviewOverviewRepository,
+)
+from infrastructure.repositories.django_review_workflow_repo import (
+    DjangoReviewWorkflowRepository,
+)
 from infrastructure.repositories.django_review_session_repo import (
     DjangoReviewSessionRepository,
 )
@@ -2872,7 +2877,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.original_weak.save(update_fields=['text', 'answer', 'difficulty'])
         self.topic.name = 'Изменённая тема банка'
         self.topic.save(update_fields=['name'])
-        repo = DjangoReviewRepository()
+        repo = DjangoReviewWorkflowRepository()
         review_task_repo = DjangoReviewTaskRepository()
 
         participation = repo.get_participation(str(self.participation.pk))
@@ -2905,7 +2910,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(comments[0].text, 'Аккуратнее с единицами')
 
     def test_review_repository_returns_dashboard_and_event_review_data(self):
-        repo = DjangoReviewRepository()
+        repo = DjangoReviewOverviewRepository()
 
         dashboard_events = repo.get_dashboard_events()
         event_rows = repo.get_event_review_participations(str(self.event.pk))
@@ -2928,7 +2933,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(available_variants[0].number, 1)
 
     def test_review_repository_finalizes_event_and_toggles_absent(self):
-        repo = DjangoReviewRepository()
+        repo = DjangoReviewWorkflowRepository()
         self.event.status = 'reviewing'
         self.event.save()
         second_student = Student.objects.create(
@@ -2966,7 +2971,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertFalse(checked_result.changed)
 
     def test_review_repository_returns_save_navigation(self):
-        repo = DjangoReviewRepository()
+        repo = DjangoReviewWorkflowRepository()
         second_student = Student.objects.create(
             last_name='Сидоров',
             first_name='Сидор',

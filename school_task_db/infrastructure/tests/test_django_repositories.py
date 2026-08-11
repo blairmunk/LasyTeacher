@@ -113,6 +113,9 @@ from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_task_catalog_repo import (
     DjangoTaskCatalogRepository,
 )
+from infrastructure.repositories.django_task_export_repo import (
+    DjangoTaskExportRepository,
+)
 from infrastructure.repositories.django_task_group_repo import (
     DjangoTaskGroupRepository,
 )
@@ -1119,7 +1122,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertFalse(TaskImage.objects.filter(pk=image.pk).exists())
         self.assertEqual(missing_result.status, 'not_found')
 
-    def test_task_repository_builds_task_export_payload(self):
+    def test_task_export_repository_builds_payload(self):
         source = Source.objects.create(
             name='Сборник задач',
             short_name='Сборник',
@@ -1132,7 +1135,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.original_weak.source = source
         self.original_weak.source_detail = 'стр. 1'
         self.original_weak.save()
-        repo = DjangoTaskRepository()
+        repo = DjangoTaskExportRepository()
 
         payload = ExportTasksUseCase(repo).execute(ExportTasksRequest(
             filters=TaskExportFilters(topic_id=str(self.topic.pk)),

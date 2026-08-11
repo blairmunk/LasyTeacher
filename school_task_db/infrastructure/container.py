@@ -353,6 +353,9 @@ from infrastructure.repositories.django_task_repo import DjangoTaskRepository
 from infrastructure.repositories.django_task_catalog_repo import (
     DjangoTaskCatalogRepository,
 )
+from infrastructure.repositories.django_task_export_repo import (
+    DjangoTaskExportRepository,
+)
 from infrastructure.repositories.django_task_group_repo import (
     DjangoTaskGroupRepository,
 )
@@ -428,6 +431,7 @@ class Container:
         self._source_repo = None
         self._task_repo = None
         self._task_catalog_repo = None
+        self._task_export_repo = None
         self._task_group_repo = None
         self._task_math_status_cache = None
         self._task_image_audit_repo = None
@@ -515,6 +519,12 @@ class Container:
         if self._task_catalog_repo is None:
             self._task_catalog_repo = DjangoTaskCatalogRepository()
         return self._task_catalog_repo
+
+    @property
+    def task_export_repo(self):
+        if self._task_export_repo is None:
+            self._task_export_repo = DjangoTaskExportRepository()
+        return self._task_export_repo
 
     @property
     def task_group_repo(self):
@@ -1144,7 +1154,7 @@ class Container:
 
     def export_tasks_use_case(self):
         return ExportTasksUseCase(
-            task_repo=self.task_repo,
+            task_export_repo=self.task_export_repo,
         )
 
     def get_task_detail_use_case(self):

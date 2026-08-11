@@ -10,7 +10,7 @@ from core_logic.entities.task import (
 from core_logic.use_cases.export_tasks import ExportTasksRequest, ExportTasksUseCase
 
 
-class FakeTaskRepository:
+class FakeTaskExportRepository:
     def __init__(self):
         self.filters = None
         topic = TaskExportTopicRef('Динамика', 'Физика', 9)
@@ -46,9 +46,9 @@ class FakeTaskRepository:
 
 class ExportTasksUseCaseTests(TestCase):
     def test_execute_delegates_payload_building_to_repository(self):
-        repo = FakeTaskRepository()
+        repo = FakeTaskExportRepository()
         filters = TaskExportFilters(topic_id='topic-1', subject='Физика', grade='9')
-        use_case = ExportTasksUseCase(task_repo=repo)
+        use_case = ExportTasksUseCase(task_export_repo=repo)
 
         data = use_case.execute(
             ExportTasksRequest(filters=filters, export_date='2026-07-17'),
@@ -68,7 +68,9 @@ class ExportTasksUseCaseTests(TestCase):
         self.assertEqual(len(data.payload['analog_groups']), 1)
 
     def test_execute_can_omit_group_and_topic_catalogs(self):
-        payload = ExportTasksUseCase(task_repo=FakeTaskRepository()).execute(
+        payload = ExportTasksUseCase(
+            task_export_repo=FakeTaskExportRepository(),
+        ).execute(
             ExportTasksRequest(
                 filters=TaskExportFilters(),
                 export_date='2026-07-17',

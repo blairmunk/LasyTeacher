@@ -5,7 +5,6 @@ from typing import List, Optional, Set
 
 from core_logic.entities.task import (
     TaskEntity,
-    TaskExportFilters,
     TaskDetailGroup,
     TaskDetailTask,
     TaskListItem,
@@ -45,13 +44,6 @@ class ITaskRepository(ABC):
     @abstractmethod
     def get_task_detail_groups(self, task_id: str) -> List[TaskDetailGroup]:
         """Return analog-group read models for one task detail page."""
-
-    @abstractmethod
-    def get_task_export_sources(
-        self,
-        filters: TaskExportFilters,
-    ) -> list:
-        """Return normalized task records for portable export."""
 
     @abstractmethod
     def count_tasks(self) -> int:

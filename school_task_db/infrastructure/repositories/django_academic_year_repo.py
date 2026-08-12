@@ -5,10 +5,18 @@ from django.db import transaction
 
 from core.models import AcademicYear
 from core_logic.entities.academic_year import AcademicYearRef
-from core_logic.interfaces.academic_year_repo import IAcademicYearRepository
+from core_logic.interfaces.academic_year_activation_repo import (
+    IAcademicYearActivationRepository,
+)
+from core_logic.interfaces.academic_year_catalog_repo import (
+    IAcademicYearCatalogRepository,
+)
 
 
-class DjangoAcademicYearRepository(IAcademicYearRepository):
+class DjangoAcademicYearRepository(
+    IAcademicYearCatalogRepository,
+    IAcademicYearActivationRepository,
+):
     def get_academic_year(self, year_id: str) -> AcademicYearRef | None:
         if not year_id:
             return None

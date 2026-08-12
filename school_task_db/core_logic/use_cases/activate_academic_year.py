@@ -3,7 +3,9 @@
 from dataclasses import dataclass
 
 from core_logic.entities.academic_year import AcademicYearRef
-from core_logic.interfaces.academic_year_repo import IAcademicYearRepository
+from core_logic.interfaces.academic_year_activation_repo import (
+    IAcademicYearActivationRepository,
+)
 
 
 @dataclass(frozen=True)
@@ -12,7 +14,10 @@ class ActivateAcademicYearRequest:
 
 
 class ActivateAcademicYearUseCase:
-    def __init__(self, academic_year_repo: IAcademicYearRepository):
+    def __init__(
+        self,
+        academic_year_repo: IAcademicYearActivationRepository,
+    ):
         self.academic_year_repo = academic_year_repo
 
     def execute(

@@ -2,7 +2,12 @@ import datetime as dt
 from unittest import TestCase
 
 from core_logic.entities.academic_year import AcademicYearRef
-from core_logic.interfaces.academic_year_repo import IAcademicYearRepository
+from core_logic.interfaces.academic_year_activation_repo import (
+    IAcademicYearActivationRepository,
+)
+from core_logic.interfaces.academic_year_catalog_repo import (
+    IAcademicYearCatalogRepository,
+)
 from core_logic.use_cases.get_academic_year_list import (
     GetAcademicYearListUseCase,
 )
@@ -16,7 +21,10 @@ from core_logic.use_cases.resolve_academic_year import (
 )
 
 
-class FakeAcademicYearRepository(IAcademicYearRepository):
+class FakeAcademicYearRepository(
+    IAcademicYearCatalogRepository,
+    IAcademicYearActivationRepository,
+):
     def __init__(self, years, active_year=None):
         self.years = years
         self.active_year = active_year

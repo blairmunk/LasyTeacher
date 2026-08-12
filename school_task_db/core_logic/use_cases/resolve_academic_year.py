@@ -3,7 +3,9 @@
 from dataclasses import dataclass
 
 from core_logic.entities.academic_year import AcademicYearRef
-from core_logic.interfaces.academic_year_repo import IAcademicYearRepository
+from core_logic.interfaces.academic_year_catalog_repo import (
+    IAcademicYearCatalogRepository,
+)
 
 
 @dataclass(frozen=True)
@@ -22,7 +24,7 @@ class AcademicYearSelection:
 
 
 class ResolveAcademicYearUseCase:
-    def __init__(self, academic_year_repo: IAcademicYearRepository):
+    def __init__(self, academic_year_repo: IAcademicYearCatalogRepository):
         self.academic_year_repo = academic_year_repo
 
     def execute(
@@ -42,4 +44,3 @@ class ResolveAcademicYearUseCase:
         if not year_id:
             return None
         return self.academic_year_repo.get_academic_year(year_id)
-

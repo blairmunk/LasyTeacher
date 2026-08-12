@@ -8,7 +8,9 @@ from core_logic.interfaces.event_participation_repo import (
 )
 from core_logic.interfaces.event_commands import CreateEventParams
 from core_logic.interfaces.event_write_repo import IEventWriteRepository
-from core_logic.interfaces.student_repo import IStudentRepository
+from core_logic.interfaces.student_group_catalog_repo import (
+    IStudentGroupCatalogRepository,
+)
 from core_logic.interfaces.task_selection_repo import ITaskSelectionRepository
 from core_logic.interfaces.transaction_manager import ITransactionManager
 from core_logic.interfaces.work_commands import (
@@ -47,7 +49,7 @@ class CreateRemedialWizardWorkResult:
 class CreateRemedialWizardWorkUseCase:
     def __init__(
         self,
-        student_repo: IStudentRepository,
+        student_repo: IStudentGroupCatalogRepository,
         task_repo: ITaskSelectionRepository,
         work_repo: IWorkVariantCreationRepository,
         event_write_repo: IEventWriteRepository,

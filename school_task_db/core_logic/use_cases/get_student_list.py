@@ -2,11 +2,11 @@
 
 from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.student import StudentListData
-from core_logic.interfaces.student_repo import IStudentRepository
+from core_logic.interfaces.student_catalog_repo import IStudentCatalogRepository
 
 
 class GetStudentListUseCase:
-    def __init__(self, student_repo: IStudentRepository):
+    def __init__(self, student_repo: IStudentCatalogRepository):
         self.student_repo = student_repo
 
     def execute(

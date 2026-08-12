@@ -3,7 +3,7 @@
 from core_logic.interfaces.student_profile_repo import (
     IStudentProfileRepository,
 )
-from core_logic.interfaces.student_repo import IStudentRepository
+from core_logic.interfaces.student_catalog_repo import IStudentCatalogRepository
 from core_logic.services.analytics_service import (
     StudentAnalyticsService,
     StudentProfileData,
@@ -13,7 +13,7 @@ from core_logic.services.analytics_service import (
 class GetStudentProfileUseCase:
     def __init__(
         self,
-        student_repo: IStudentRepository,
+        student_repo: IStudentCatalogRepository,
         student_learning_repo: IStudentProfileRepository,
         analytics_service: StudentAnalyticsService,
     ):

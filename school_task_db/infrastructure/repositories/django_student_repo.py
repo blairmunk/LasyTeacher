@@ -16,11 +16,23 @@ from core_logic.entities.student import (
     StudentGroupRef,
     StudentListItem,
 )
-from core_logic.interfaces.student_repo import IStudentRepository
+from core_logic.interfaces.student_catalog_repo import IStudentCatalogRepository
+from core_logic.interfaces.student_command_repo import IStudentCommandRepository
+from core_logic.interfaces.student_group_catalog_repo import (
+    IStudentGroupCatalogRepository,
+)
+from core_logic.interfaces.student_group_command_repo import (
+    IStudentGroupCommandRepository,
+)
 from students.models import Student, StudentGroup
 
 
-class DjangoStudentRepository(IStudentRepository):
+class DjangoStudentRepository(
+    IStudentCatalogRepository,
+    IStudentCommandRepository,
+    IStudentGroupCatalogRepository,
+    IStudentGroupCommandRepository,
+):
     @staticmethod
     def _student_detail(student):
         return StudentDetail(

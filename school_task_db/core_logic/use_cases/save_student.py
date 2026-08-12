@@ -6,11 +6,14 @@ from core_logic.entities.student import (
     SaveStudentParams,
     SaveStudentResult,
 )
-from core_logic.interfaces.student_repo import IStudentRepository
+from core_logic.interfaces.student_command_repo import IStudentCommandRepository
+from core_logic.interfaces.student_group_command_repo import (
+    IStudentGroupCommandRepository,
+)
 
 
 class CreateStudentUseCase:
-    def __init__(self, student_repo: IStudentRepository):
+    def __init__(self, student_repo: IStudentCommandRepository):
         self.student_repo = student_repo
 
     def execute(self, params: SaveStudentParams) -> SaveStudentResult:
@@ -18,7 +21,7 @@ class CreateStudentUseCase:
 
 
 class UpdateStudentUseCase:
-    def __init__(self, student_repo: IStudentRepository):
+    def __init__(self, student_repo: IStudentCommandRepository):
         self.student_repo = student_repo
 
     def execute(self, params: SaveStudentParams) -> SaveStudentResult:
@@ -26,7 +29,7 @@ class UpdateStudentUseCase:
 
 
 class CreateStudentGroupUseCase:
-    def __init__(self, student_repo: IStudentRepository):
+    def __init__(self, student_repo: IStudentGroupCommandRepository):
         self.student_repo = student_repo
 
     def execute(
@@ -37,7 +40,7 @@ class CreateStudentGroupUseCase:
 
 
 class UpdateStudentGroupUseCase:
-    def __init__(self, student_repo: IStudentRepository):
+    def __init__(self, student_repo: IStudentGroupCommandRepository):
         self.student_repo = student_repo
 
     def execute(

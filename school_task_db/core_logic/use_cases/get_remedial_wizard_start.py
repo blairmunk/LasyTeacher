@@ -4,7 +4,9 @@ from dataclasses import dataclass
 from typing import List, Tuple
 
 from core_logic.entities.student import StudentGroupRef
-from core_logic.interfaces.student_repo import IStudentRepository
+from core_logic.interfaces.student_group_catalog_repo import (
+    IStudentGroupCatalogRepository,
+)
 
 
 LIMIT_CHOICES: Tuple[Tuple[str, str], ...] = (
@@ -21,7 +23,7 @@ class RemedialWizardStartData:
 
 
 class GetRemedialWizardStartUseCase:
-    def __init__(self, student_repo: IStudentRepository):
+    def __init__(self, student_repo: IStudentGroupCatalogRepository):
         self.student_repo = student_repo
 
     def execute(self) -> RemedialWizardStartData:

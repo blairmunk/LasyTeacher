@@ -6,7 +6,7 @@ from typing import List
 from core_logic.interfaces.student_remedial_repo import (
     IStudentRemedialRepository,
 )
-from core_logic.interfaces.student_repo import IStudentRepository
+from core_logic.interfaces.student_catalog_repo import IStudentCatalogRepository
 from core_logic.interfaces.task_selection_repo import ITaskSelectionRepository
 from core_logic.interfaces.work_commands import CreateVariantParams
 from core_logic.interfaces.work_variant_creation_repo import (
@@ -40,7 +40,7 @@ class CreateStudentRemedialVariantResult:
 class CreateStudentRemedialVariantUseCase:
     def __init__(
         self,
-        student_repo: IStudentRepository,
+        student_repo: IStudentCatalogRepository,
         student_learning_repo: IStudentRemedialRepository,
         task_repo: ITaskSelectionRepository,
         work_repo: IWorkVariantCreationRepository,

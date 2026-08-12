@@ -19,6 +19,9 @@ from core_logic.use_cases.assign_single_event_variant import (
     AssignSingleEventVariantUseCase,
 )
 from core_logic.use_cases.bulk_delete_variants import BulkDeleteVariantsUseCase
+from core_logic.use_cases.backfill_task_classifications import (
+    BackfillTaskClassificationsUseCase,
+)
 from core_logic.use_cases.bulk_change_task_groups import (
     BulkAddTasksToGroupUseCase,
     BulkCreateGroupFromTasksUseCase,
@@ -457,6 +460,9 @@ from infrastructure.repositories.django_task_command_repo import (
 from infrastructure.repositories.django_task_classification_repo import (
     DjangoTaskClassificationRepository,
 )
+from infrastructure.repositories.django_task_classification_backfill_repo import (
+    DjangoTaskClassificationBackfillRepository,
+)
 from infrastructure.repositories.django_task_image_command_repo import (
     DjangoTaskImageCommandRepository,
 )
@@ -595,6 +601,7 @@ class Container:
         self._task_read_repo = None
         self._task_command_repo = None
         self._task_classification_repo = None
+        self._task_classification_backfill_repo = None
         self._task_image_command_repo = None
         self._task_lifecycle_command_repo = None
         self._task_selection_repo = None
@@ -791,6 +798,14 @@ class Container:
                 DjangoTaskClassificationRepository()
             )
         return self._task_classification_repo
+
+    @property
+    def task_classification_backfill_repo(self):
+        if self._task_classification_backfill_repo is None:
+            self._task_classification_backfill_repo = (
+                DjangoTaskClassificationBackfillRepository()
+            )
+        return self._task_classification_backfill_repo
 
     @property
     def task_image_command_repo(self):
@@ -1531,6 +1546,12 @@ class Container:
     def seed_references_use_case(self):
         return SeedReferencesUseCase(
             reference_repo=self.reference_seed_repo,
+            transaction_manager=self.transaction_manager,
+        )
+
+    def backfill_task_classifications_use_case(self):
+        return BackfillTaskClassificationsUseCase(
+            backfill_repo=self.task_classification_backfill_repo,
             transaction_manager=self.transaction_manager,
         )
 

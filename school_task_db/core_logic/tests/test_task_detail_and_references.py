@@ -1,14 +1,12 @@
 from unittest import TestCase
 
 from core_logic.entities.task import (
-    ReferenceElementOption,
     SelectOption,
     TaskDetailGroup,
     TaskDetailTask,
 )
 from core_logic.use_cases.get_task_detail import GetTaskDetailUseCase
 from core_logic.use_cases.get_task_reference_options import (
-    GetCodifierElementsUseCase,
     GetSubtopicOptionsUseCase,
 )
 
@@ -29,7 +27,6 @@ class FakeTaskRepository:
         self.groups = [TaskDetailGroup(pk='group-1', name='Скорость')]
         self.detail_task_id = None
         self.subtopic_topic_id = None
-        self.reference_request = None
 
     def get_task(self, task_id):
         return self.task if task_id == self.task.pk else None
@@ -42,9 +39,6 @@ class FakeTaskRepository:
         self.subtopic_topic_id = topic_id
         return [SelectOption(id='subtopic-1', name='Кинематика')]
 
-    def get_reference_element_options(self, subject, category):
-        self.reference_request = (subject, category)
-        return [ReferenceElementOption(code='1.1', name='Механика')]
 
 
 class TaskDetailAndReferenceUseCaseTests(TestCase):
@@ -85,12 +79,3 @@ class TaskDetailAndReferenceUseCaseTests(TestCase):
 
         self.assertEqual(repo.subtopic_topic_id, 'topic-1')
         self.assertEqual(result.subtopics[0].name, 'Кинематика')
-
-    def test_codifier_options_returns_repository_options(self):
-        repo = FakeTaskRepository()
-        use_case = GetCodifierElementsUseCase(task_catalog_repo=repo)
-
-        result = use_case.execute(subject='physics', category='content')
-
-        self.assertEqual(repo.reference_request, ('physics', 'content'))
-        self.assertEqual(result.elements[0].code, '1.1')

@@ -248,18 +248,6 @@ def load_subtopics(request):
     return JsonResponse(container.task_form_adapter.subtopic_options_payload(result))
 
 
-def load_codifier_elements(request):
-    """AJAX для загрузки элементов кодификатора"""
-    params = container.task_form_adapter.codifier_elements_params_from_query(
-        request.GET,
-    )
-    result = container.get_codifier_elements_use_case().execute(
-        subject=params['subject'],
-        category=params['category'],
-    )
-    return JsonResponse(container.task_form_adapter.codifier_elements_payload(result))
-
-
 # === Bulk actions ===
 
 @require_POST

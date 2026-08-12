@@ -138,25 +138,11 @@ class TaskFormAdapter:
     def subtopic_options_topic_id_from_query(self, query):
         return query.get('topic_id', '')
 
-    def codifier_elements_params_from_query(self, query):
-        return {
-            'subject': query.get('subject', ''),
-            'category': query.get('category', ''),
-        }
-
     def subtopic_options_payload(self, result):
         return {
             'subtopics': [
                 {'id': option.id, 'name': option.name}
                 for option in result.subtopics
-            ],
-        }
-
-    def codifier_elements_payload(self, result):
-        return {
-            'elements': [
-                {'code': element.code, 'name': element.name}
-                for element in result.elements
             ],
         }
 

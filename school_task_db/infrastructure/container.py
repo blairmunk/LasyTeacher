@@ -206,7 +206,6 @@ from core_logic.use_cases.get_task_group_detail import GetTaskGroupDetailUseCase
 from core_logic.use_cases.get_task_group_list import GetTaskGroupListUseCase
 from core_logic.use_cases.get_task_list import GetTaskListUseCase
 from core_logic.use_cases.get_task_reference_options import (
-    GetCodifierElementsUseCase,
     GetSubtopicOptionsUseCase,
 )
 from core_logic.use_cases.get_topic_subtopics import GetTopicSubtopicsUseCase
@@ -472,9 +471,6 @@ from infrastructure.repositories.django_task_lifecycle_command_repo import (
 from infrastructure.repositories.django_task_selection_repo import (
     DjangoTaskSelectionRepository,
 )
-from infrastructure.repositories.django_task_reference_catalog_repo import (
-    DjangoTaskReferenceCatalogRepository,
-)
 from infrastructure.repositories.django_task_taxonomy_repo import (
     DjangoTaskTaxonomyRepository,
 )
@@ -605,7 +601,6 @@ class Container:
         self._task_image_command_repo = None
         self._task_lifecycle_command_repo = None
         self._task_selection_repo = None
-        self._task_reference_catalog_repo = None
         self._reference_seed_repo = None
         self._task_taxonomy_repo = None
         self._task_export_repo = None
@@ -826,14 +821,6 @@ class Container:
         if self._task_selection_repo is None:
             self._task_selection_repo = DjangoTaskSelectionRepository()
         return self._task_selection_repo
-
-    @property
-    def task_reference_catalog_repo(self):
-        if self._task_reference_catalog_repo is None:
-            self._task_reference_catalog_repo = (
-                DjangoTaskReferenceCatalogRepository()
-            )
-        return self._task_reference_catalog_repo
 
     @property
     def reference_seed_repo(self):
@@ -1735,11 +1722,6 @@ class Container:
     def get_subtopic_options_use_case(self):
         return GetSubtopicOptionsUseCase(
             task_catalog_repo=self.task_taxonomy_repo,
-        )
-
-    def get_codifier_elements_use_case(self):
-        return GetCodifierElementsUseCase(
-            task_catalog_repo=self.task_reference_catalog_repo,
         )
 
     def get_source_list_use_case(self):

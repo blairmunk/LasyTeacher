@@ -186,7 +186,6 @@ from core_logic.use_cases.get_task_group_list import GetTaskGroupListUseCase
 from core_logic.use_cases.get_task_import_sample import GetTaskImportSampleUseCase
 from core_logic.use_cases.get_task_list import GetTaskListUseCase
 from core_logic.use_cases.get_task_reference_options import (
-    GetCodifierElementsUseCase,
     GetSubtopicOptionsUseCase,
 )
 from core_logic.use_cases.get_topic_subtopics import GetTopicSubtopicsUseCase
@@ -388,9 +387,6 @@ from infrastructure.repositories.django_task_lifecycle_command_repo import (
 )
 from infrastructure.repositories.django_task_selection_repo import (
     DjangoTaskSelectionRepository,
-)
-from infrastructure.repositories.django_task_reference_catalog_repo import (
-    DjangoTaskReferenceCatalogRepository,
 )
 from infrastructure.repositories.django_task_taxonomy_repo import (
     DjangoTaskTaxonomyRepository,
@@ -635,7 +631,6 @@ class ContainerTests(SimpleTestCase):
         task_list_use_case = container.get_task_list_use_case()
         task_detail_use_case = container.get_task_detail_use_case()
         subtopic_options_use_case = container.get_subtopic_options_use_case()
-        codifier_elements_use_case = container.get_codifier_elements_use_case()
         source_list_use_case = container.get_source_list_use_case()
         create_presentation_profile_use_case = container.create_presentation_profile_use_case()
         update_presentation_profile_use_case = container.update_presentation_profile_use_case()
@@ -830,7 +825,6 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(task_list_use_case, GetTaskListUseCase)
         self.assertIsInstance(task_detail_use_case, GetTaskDetailUseCase)
         self.assertIsInstance(subtopic_options_use_case, GetSubtopicOptionsUseCase)
-        self.assertIsInstance(codifier_elements_use_case, GetCodifierElementsUseCase)
         self.assertIsInstance(source_list_use_case, GetSourceListUseCase)
         self.assertIsInstance(
             source_list_use_case.source_repo,
@@ -1250,10 +1244,6 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             container.task_selection_repo,
             DjangoTaskSelectionRepository,
-        )
-        self.assertIsInstance(
-            container.task_reference_catalog_repo,
-            DjangoTaskReferenceCatalogRepository,
         )
         self.assertIsInstance(
             container.task_taxonomy_repo,

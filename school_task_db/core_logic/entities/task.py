@@ -404,12 +404,6 @@ class SelectOption:
 
 
 @dataclass(frozen=True)
-class ReferenceElementOption:
-    code: str
-    name: str
-
-
-@dataclass(frozen=True)
 class SourceListData:
     sources: List["SourceListItem"]
 

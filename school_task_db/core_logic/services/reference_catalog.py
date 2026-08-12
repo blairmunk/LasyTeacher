@@ -22,11 +22,3 @@ def parse_subject_reference_items(items_text: str):
         if code and name:
             items[code] = name
     return list(items.items())
-
-
-def merge_reference_choices(catalogs):
-    merged = {}
-    for choices in catalogs:
-        for code, name in choices:
-            merged.setdefault(code, name)
-    return list(merged.items())

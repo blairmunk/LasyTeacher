@@ -1152,17 +1152,12 @@ class TaskFormAdapterTests(SimpleTestCase):
         self.assertEqual(create_work.work_type, 'quiz')
 
     def test_builds_reference_option_params_from_query(self):
-        query = QueryDict('topic_id=t1&subject=physics&category=requirements')
+        query = QueryDict('topic_id=t1')
         adapter = TaskFormAdapter()
 
         topic_id = adapter.subtopic_options_topic_id_from_query(query)
-        codifier_params = adapter.codifier_elements_params_from_query(query)
 
         self.assertEqual(topic_id, 't1')
-        self.assertEqual(codifier_params, {
-            'subject': 'physics',
-            'category': 'requirements',
-        })
 
     def test_builds_task_list_filters_from_query(self):
         query = QueryDict(
@@ -1280,19 +1275,10 @@ class TaskFormAdapterTests(SimpleTestCase):
                 SimpleNamespace(id='s1', name='Кинематика'),
             ],
         )
-        elements = SimpleNamespace(
-            elements=[
-                SimpleNamespace(code='1.1', name='Механика'),
-            ],
-        )
 
         self.assertEqual(
             adapter.subtopic_options_payload(subtopics),
             {'subtopics': [{'id': 's1', 'name': 'Кинематика'}]},
-        )
-        self.assertEqual(
-            adapter.codifier_elements_payload(elements),
-            {'elements': [{'code': '1.1', 'name': 'Механика'}]},
         )
 
     def test_builds_bulk_action_response_payloads(self):

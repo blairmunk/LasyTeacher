@@ -353,8 +353,11 @@ from infrastructure.repositories.django_orphan_variant_attachment_repo import (
 from infrastructure.repositories.django_orphan_variant_catalog_repo import (
     DjangoOrphanVariantCatalogRepository,
 )
-from infrastructure.repositories.django_event_performance_report_repo import (
-    DjangoEventPerformanceReportRepository,
+from infrastructure.repositories.django_event_performance_report_query_repo import (
+    DjangoEventPerformanceReportQueryRepository,
+)
+from infrastructure.repositories.django_event_report_narrative_command_repo import (
+    DjangoEventReportNarrativeCommandRepository,
 )
 from infrastructure.repositories.django_events_status_repo import (
     DjangoEventsStatusRepository,
@@ -594,7 +597,8 @@ class Container:
         self._journal_catalog_repo = None
         self._journal_report_repo = None
         self._task_db_health_repo = None
-        self._event_performance_report_repo = None
+        self._event_performance_report_query_repo = None
+        self._event_report_narrative_command_repo = None
         self._student_digest_repo = None
         self._course_catalog_repo = None
         self._topic_catalog_repo = None
@@ -997,12 +1001,20 @@ class Container:
         return self._task_db_health_repo
 
     @property
-    def event_performance_report_repo(self):
-        if self._event_performance_report_repo is None:
-            self._event_performance_report_repo = (
-                DjangoEventPerformanceReportRepository()
+    def event_performance_report_query_repo(self):
+        if self._event_performance_report_query_repo is None:
+            self._event_performance_report_query_repo = (
+                DjangoEventPerformanceReportQueryRepository()
             )
-        return self._event_performance_report_repo
+        return self._event_performance_report_query_repo
+
+    @property
+    def event_report_narrative_command_repo(self):
+        if self._event_report_narrative_command_repo is None:
+            self._event_report_narrative_command_repo = (
+                DjangoEventReportNarrativeCommandRepository()
+            )
+        return self._event_report_narrative_command_repo
 
     @property
     def student_digest_repo(self):
@@ -1645,12 +1657,12 @@ class Container:
 
     def get_event_performance_report_use_case(self):
         return GetEventPerformanceReportUseCase(
-            report_repo=self.event_performance_report_repo,
+            report_repo=self.event_performance_report_query_repo,
         )
 
     def save_event_report_narrative_use_case(self):
         return SaveEventReportNarrativeUseCase(
-            report_repo=self.event_performance_report_repo,
+            report_repo=self.event_report_narrative_command_repo,
         )
 
     def get_student_digests_use_case(self):

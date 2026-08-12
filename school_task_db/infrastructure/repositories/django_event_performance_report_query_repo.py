@@ -7,14 +7,9 @@ from core_logic.entities.event_performance_report import (
     EventReportEventRef,
     EventReportNarrative,
     EventReportParticipantFact,
-    SaveEventReportNarrativeParams,
-    SaveEventReportNarrativeResult,
 )
 from core_logic.interfaces.event_performance_report_query_repo import (
     IEventPerformanceReportQueryRepository,
-)
-from core_logic.interfaces.event_report_narrative_command_repo import (
-    IEventReportNarrativeCommandRepository,
 )
 from core_logic.services.event_report_task_fact_service import (
     EventReportTaskFactService,
@@ -35,9 +30,8 @@ from infrastructure.services.django_captured_task_result_queries import (
 from reports.models import EventReportNarrativeModel
 
 
-class DjangoEventPerformanceReportRepository(
+class DjangoEventPerformanceReportQueryRepository(
     IEventPerformanceReportQueryRepository,
-    IEventReportNarrativeCommandRepository,
 ):
     def __init__(self, task_fact_service=None):
         self.task_fact_service = (
@@ -161,24 +155,6 @@ class DjangoEventPerformanceReportRepository(
             task_scores=task_facts.task_scores,
             specification=task_facts.specification,
             narrative=self._narrative(narrative_model),
-        )
-
-    def save_event_report_narrative(self, params):
-        if not Event.objects.filter(pk=params.event_id).exists():
-            return SaveEventReportNarrativeResult(status='not_found')
-        narrative = params.narrative
-        EventReportNarrativeModel.objects.update_or_create(
-            event_id=params.event_id,
-            defaults={
-                'possible_causes': narrative.possible_causes,
-                'recommendations': narrative.recommendations,
-                'planned_actions': narrative.planned_actions,
-                'additional_notes': narrative.additional_notes,
-            },
-        )
-        return SaveEventReportNarrativeResult(
-            status='saved',
-            event_id=params.event_id,
         )
 
     @staticmethod

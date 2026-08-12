@@ -22,8 +22,11 @@ from core_logic.value_objects.work_assessment import (
 from curriculum.models import Course, SubTopic, Topic
 from document_engine.models import PresentationProfile
 from events.models import AttemptTaskSnapshot, Event, EventParticipation, Mark
-from infrastructure.repositories.django_event_performance_report_repo import (
-    DjangoEventPerformanceReportRepository,
+from infrastructure.repositories.django_event_performance_report_query_repo import (
+    DjangoEventPerformanceReportQueryRepository,
+)
+from infrastructure.repositories.django_event_report_narrative_command_repo import (
+    DjangoEventReportNarrativeCommandRepository,
 )
 from infrastructure.repositories.django_student_digest_repo import (
     DjangoStudentDigestRepository,
@@ -169,7 +172,7 @@ class WrittenReportRepositoryTests(TestCase):
         self.attempt = capture_attempt_snapshot(self.mark)
 
     def test_event_report_repository_returns_normalized_attempt_facts(self):
-        repo = DjangoEventPerformanceReportRepository()
+        repo = DjangoEventPerformanceReportQueryRepository()
 
         source = repo.get_event_report_source(str(self.event.pk))
 
@@ -192,7 +195,7 @@ class WrittenReportRepositoryTests(TestCase):
         self.work.name = 'Переименованная работа'
         self.work.save(update_fields=['name'])
 
-        source = DjangoEventPerformanceReportRepository().get_event_report_source(
+        source = DjangoEventPerformanceReportQueryRepository().get_event_report_source(
             str(self.event.pk),
         )
 
@@ -206,7 +209,7 @@ class WrittenReportRepositoryTests(TestCase):
         self.student.last_name = 'Переименованный'
         self.student.save(update_fields=['last_name'])
 
-        source = DjangoEventPerformanceReportRepository().get_event_report_source(
+        source = DjangoEventPerformanceReportQueryRepository().get_event_report_source(
             str(self.event.pk),
         )
 
@@ -241,7 +244,7 @@ class WrittenReportRepositoryTests(TestCase):
         self.participation.save(update_fields=['status'])
 
         event_source = (
-            DjangoEventPerformanceReportRepository()
+            DjangoEventPerformanceReportQueryRepository()
             .get_event_report_source(str(self.event.pk))
         )
         digest_source = DjangoStudentDigestRepository().get_student_digest_source(
@@ -299,7 +302,7 @@ class WrittenReportRepositoryTests(TestCase):
         )
         capture_attempt_snapshot(second_mark)
 
-        source = DjangoEventPerformanceReportRepository().get_event_report_source(
+        source = DjangoEventPerformanceReportQueryRepository().get_event_report_source(
             str(self.event.pk),
         )
         report = EventPerformanceReportService().build(source)
@@ -319,7 +322,7 @@ class WrittenReportRepositoryTests(TestCase):
         self.mark.save()
 
         event_source = (
-            DjangoEventPerformanceReportRepository()
+            DjangoEventPerformanceReportQueryRepository()
             .get_event_report_source(str(self.event.pk))
         )
         digest_source = DjangoStudentDigestRepository().get_student_digest_source(
@@ -345,7 +348,7 @@ class WrittenReportRepositoryTests(TestCase):
         capture_attempt_snapshot(self.mark)
 
         event_source = (
-            DjangoEventPerformanceReportRepository()
+            DjangoEventPerformanceReportQueryRepository()
             .get_event_report_source(str(self.event.pk))
         )
         digest_source = DjangoStudentDigestRepository().get_student_digest_source(
@@ -364,9 +367,10 @@ class WrittenReportRepositoryTests(TestCase):
         )
 
     def test_event_report_repository_saves_narrative(self):
-        repo = DjangoEventPerformanceReportRepository()
+        command_repo = DjangoEventReportNarrativeCommandRepository()
+        query_repo = DjangoEventPerformanceReportQueryRepository()
 
-        result = repo.save_event_report_narrative(
+        result = command_repo.save_event_report_narrative(
             SaveEventReportNarrativeParams(
                 event_id=str(self.event.pk),
                 narrative=EventReportNarrative(
@@ -377,7 +381,7 @@ class WrittenReportRepositoryTests(TestCase):
                 ),
             )
         )
-        source = repo.get_event_report_source(str(self.event.pk))
+        source = query_repo.get_event_report_source(str(self.event.pk))
 
         self.assertEqual(result.status, 'saved')
         self.assertEqual(source.narrative.planned_actions, 'Консультация')
@@ -394,7 +398,7 @@ class WrittenReportRepositoryTests(TestCase):
         self.content_entry.name = 'Изменённый элемент содержания'
         self.content_entry.save(update_fields=['name'])
 
-        source = DjangoEventPerformanceReportRepository().get_event_report_source(
+        source = DjangoEventPerformanceReportQueryRepository().get_event_report_source(
             str(self.event.pk),
         )
 
@@ -414,7 +418,7 @@ class WrittenReportRepositoryTests(TestCase):
             attempt__participation=self.participation,
         ).update(task_content_snapshot={})
 
-        source = DjangoEventPerformanceReportRepository().get_event_report_source(
+        source = DjangoEventPerformanceReportQueryRepository().get_event_report_source(
             str(self.event.pk),
         )
 
@@ -439,7 +443,7 @@ class WrittenReportRepositoryTests(TestCase):
             'is_assessable',
         ])
 
-        source = DjangoEventPerformanceReportRepository().get_event_report_source(
+        source = DjangoEventPerformanceReportQueryRepository().get_event_report_source(
             str(self.event.pk),
         )
 
@@ -507,7 +511,7 @@ class WrittenReportRepositoryTests(TestCase):
             reverse('reports:event-performance', args=[self.event.pk]),
             fetch_redirect_response=False,
         )
-        source = DjangoEventPerformanceReportRepository().get_event_report_source(
+        source = DjangoEventPerformanceReportQueryRepository().get_event_report_source(
             str(self.event.pk),
         )
         self.assertEqual(source.narrative.recommendations, 'Повторить формулы')
@@ -542,7 +546,7 @@ class WrittenReportRepositoryTests(TestCase):
         work.assessment_mode = 'variant'
         work.save(update_fields=['assessment_mode'])
 
-        source = DjangoEventPerformanceReportRepository().get_event_report_source(
+        source = DjangoEventPerformanceReportQueryRepository().get_event_report_source(
             str(event.pk),
         )
         response = self.client.get(

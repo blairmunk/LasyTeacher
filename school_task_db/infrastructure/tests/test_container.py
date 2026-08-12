@@ -291,8 +291,11 @@ from infrastructure.repositories.django_event_write_repo import (
 from infrastructure.repositories.django_participation_grading_repo import (
     DjangoParticipationGradingRepository,
 )
-from infrastructure.repositories.django_event_performance_report_repo import (
-    DjangoEventPerformanceReportRepository,
+from infrastructure.repositories.django_event_performance_report_query_repo import (
+    DjangoEventPerformanceReportQueryRepository,
+)
+from infrastructure.repositories.django_event_report_narrative_command_repo import (
+    DjangoEventReportNarrativeCommandRepository,
 )
 from infrastructure.repositories.django_events_status_repo import (
     DjangoEventsStatusRepository,
@@ -488,9 +491,12 @@ class ContainerTests(SimpleTestCase):
         )
         self.assertIsInstance(
             event_report.report_repo,
-            DjangoEventPerformanceReportRepository,
+            DjangoEventPerformanceReportQueryRepository,
         )
-        self.assertIs(save_narrative.report_repo, event_report.report_repo)
+        self.assertIsInstance(
+            save_narrative.report_repo,
+            DjangoEventReportNarrativeCommandRepository,
+        )
         self.assertIsInstance(
             student_digests.digest_repo,
             DjangoStudentDigestRepository,

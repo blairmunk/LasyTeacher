@@ -3,9 +3,9 @@ from unittest import TestCase
 
 from core_logic.entities.event import CheckedAttemptRef, EventEntity
 from core_logic.entities.task import TaskEntity
-from core_logic.interfaces.work_commands import (
+from core_logic.entities.work_specification_commands import CreateWorkParams
+from core_logic.entities.work_variant_creation_commands import (
     CreatedWorkWithVariantsRef,
-    CreateWorkParams,
     CreateWorkWithVariantsParams,
 )
 from core_logic.services.remedial_service import (

@@ -2,11 +2,11 @@
 
 from django.db import transaction
 
-from core_logic.interfaces.work_commands import (
+from core_logic.entities.work_specification_commands import CreateWorkParams
+from core_logic.entities.work_variant_creation_commands import (
     CreatedWorkVariantRef,
     CreatedWorkWithVariantsRef,
     CreateVariantParams,
-    CreateWorkParams,
     CreateWorkWithVariantFromTasksParams,
     CreateWorkWithVariantsParams,
 )

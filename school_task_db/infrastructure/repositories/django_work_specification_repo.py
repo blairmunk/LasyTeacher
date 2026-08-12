@@ -4,7 +4,7 @@ from typing import List
 
 from django.db import transaction
 
-from core_logic.interfaces.work_commands import (
+from core_logic.entities.work_specification_commands import (
     CreateWorkWithSpecificationParams,
     WorkContentBlockParams,
     WorkTaskSelectionParams,

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import List
 
 from core_logic.interfaces.task_selection_repo import ITaskSelectionRepository
-from core_logic.interfaces.work_commands import (
+from core_logic.entities.work_variant_creation_commands import (
     CreateWorkWithVariantFromTasksParams,
 )
 from core_logic.interfaces.work_variant_creation_repo import (

@@ -2,7 +2,7 @@
 
 from django.core.paginator import Paginator
 
-from core_logic.interfaces.work_commands import (
+from core_logic.entities.work_specification_commands import (
     CreateWorkParams,
     WorkContentBlockParams,
     WorkTaskSelectionParams,

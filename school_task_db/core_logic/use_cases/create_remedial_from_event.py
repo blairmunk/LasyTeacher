@@ -12,8 +12,8 @@ from core_logic.interfaces.event_commands import CreateEventParams
 from core_logic.interfaces.event_write_repo import IEventWriteRepository
 from core_logic.interfaces.task_selection_repo import ITaskSelectionRepository
 from core_logic.interfaces.transaction_manager import ITransactionManager
-from core_logic.interfaces.work_commands import (
-    CreateWorkParams,
+from core_logic.entities.work_specification_commands import CreateWorkParams
+from core_logic.entities.work_variant_creation_commands import (
     CreateWorkWithVariantsParams,
     NewWorkVariantParams,
 )

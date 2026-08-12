@@ -28,14 +28,16 @@ from core_logic.interfaces.event_commands import (
 from core_logic.interfaces.orphan_variant_repo import (
     CreateWorkFromOrphanVariantsParams,
 )
-from core_logic.interfaces.work_commands import (
+from core_logic.entities.work_specification_commands import (
     CreateWorkParams,
     CreateWorkWithSpecificationParams,
+    WorkContentBlockParams,
+    WorkTaskSelectionParams,
+)
+from core_logic.entities.work_variant_creation_commands import (
     CreateWorkWithVariantsParams,
     CreateWorkWithVariantFromTasksParams,
     NewWorkVariantParams,
-    WorkContentBlockParams,
-    WorkTaskSelectionParams,
 )
 from core_logic.entities.task import (
     SourceCreateParams,

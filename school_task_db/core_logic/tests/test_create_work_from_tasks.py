@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from core_logic.interfaces.work_commands import (
+from core_logic.entities.work_variant_creation_commands import (
     CreatedWorkVariantRef,
     CreateWorkWithVariantFromTasksParams,
 )

@@ -1,9 +1,8 @@
-"""Command data transferred to work repository ports."""
+"""Command data for creating and updating work specifications."""
 
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List
 
-from core_logic.entities.work_variant_composition import VariantCreationPlan
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
     TASK_BANK_ROLE_ANY,
@@ -27,17 +26,6 @@ class CreateWorkParams:
 
     def __post_init__(self):
         validate_work_assessment_mode(self.assessment_mode)
-
-
-@dataclass(frozen=True)
-class CreateVariantParams:
-    work_id: Optional[str]
-    student_id: str
-    plan: VariantCreationPlan
-    source_work_id: Optional[str] = None
-    source_participation_id: Optional[str] = None
-    source_attempt_snapshot_id: Optional[str] = None
-    variant_type: str = 'remedial'
 
 
 @dataclass(frozen=True)
@@ -82,39 +70,3 @@ class WorkUpdateContext:
     @property
     def assessment_mode_locked(self) -> bool:
         return self.has_variants or self.has_events
-
-
-@dataclass(frozen=True)
-class NewWorkVariantParams:
-    student_id: str
-    plan: VariantCreationPlan
-    source_work_id: Optional[str] = None
-    source_participation_id: Optional[str] = None
-    source_attempt_snapshot_id: Optional[str] = None
-    variant_type: str = 'remedial'
-
-
-@dataclass(frozen=True)
-class CreateWorkWithVariantsParams:
-    work: CreateWorkParams
-    variants: List[NewWorkVariantParams]
-
-
-@dataclass(frozen=True)
-class CreatedWorkWithVariantsRef:
-    work_id: str
-    variant_ids: List[str]
-
-
-@dataclass(frozen=True)
-class CreateWorkWithVariantFromTasksParams:
-    name: str
-    work_type: str
-    task_ids: List[str]
-
-
-@dataclass(frozen=True)
-class CreatedWorkVariantRef:
-    work_id: str
-    variant_id: str
-    tasks_count: int

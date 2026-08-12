@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any, Mapping, List
 
 from core_logic.interfaces.work_task_group_repo import IWorkTaskGroupRepository
-from core_logic.interfaces.work_commands import (
+from core_logic.entities.work_specification_commands import (
     CreateWorkParams,
     CreateWorkWithSpecificationParams,
     WorkTaskSelectionParams,

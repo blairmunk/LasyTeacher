@@ -13,8 +13,8 @@ from core_logic.interfaces.student_group_catalog_repo import (
 )
 from core_logic.interfaces.task_selection_repo import ITaskSelectionRepository
 from core_logic.interfaces.transaction_manager import ITransactionManager
-from core_logic.interfaces.work_commands import (
-    CreateWorkParams,
+from core_logic.entities.work_specification_commands import CreateWorkParams
+from core_logic.entities.work_variant_creation_commands import (
     CreateWorkWithVariantsParams,
     NewWorkVariantParams,
 )

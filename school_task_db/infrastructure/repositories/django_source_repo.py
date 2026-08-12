@@ -7,11 +7,15 @@ from core_logic.entities.task import (
     SourceCreateResult,
     SourceListItem,
 )
-from core_logic.interfaces.source_repo import ISourceRepository
+from core_logic.interfaces.source_catalog_repo import ISourceCatalogRepository
+from core_logic.interfaces.source_command_repo import ISourceCommandRepository
 from tasks.models import Source
 
 
-class DjangoSourceRepository(ISourceRepository):
+class DjangoSourceRepository(
+    ISourceCatalogRepository,
+    ISourceCommandRepository,
+):
     def get_source_list_sources(self):
         return [
             SourceListItem(

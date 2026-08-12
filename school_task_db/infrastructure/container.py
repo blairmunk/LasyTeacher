@@ -82,6 +82,7 @@ from core_logic.use_cases.update_presentation_profile import (
     UpdatePresentationProfileUseCase,
 )
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
+from core_logic.use_cases.import_students import ImportStudentsUseCase
 from core_logic.use_cases.get_add_tasks_to_group import GetAddTasksToGroupUseCase
 from core_logic.use_cases.get_academic_year_list import (
     GetAcademicYearListUseCase,
@@ -417,6 +418,12 @@ from infrastructure.repositories.django_student_group_catalog_repo import (
 from infrastructure.repositories.django_student_group_command_repo import (
     DjangoStudentGroupCommandRepository,
 )
+from infrastructure.repositories.django_student_import_command_repo import (
+    DjangoStudentImportCommandRepository,
+)
+from infrastructure.repositories.django_student_import_snapshot_repo import (
+    DjangoStudentImportSnapshotRepository,
+)
 from infrastructure.repositories.django_student_profile_repo import (
     DjangoStudentProfileRepository,
 )
@@ -558,6 +565,8 @@ class Container:
         self._student_command_repo = None
         self._student_group_catalog_repo = None
         self._student_group_command_repo = None
+        self._student_import_snapshot_repo = None
+        self._student_import_command_repo = None
         self._student_profile_repo = None
         self._student_remedial_repo = None
         self._source_catalog_repo = None
@@ -693,6 +702,22 @@ class Container:
                 DjangoStudentGroupCommandRepository()
             )
         return self._student_group_command_repo
+
+    @property
+    def student_import_snapshot_repo(self):
+        if self._student_import_snapshot_repo is None:
+            self._student_import_snapshot_repo = (
+                DjangoStudentImportSnapshotRepository()
+            )
+        return self._student_import_snapshot_repo
+
+    @property
+    def student_import_command_repo(self):
+        if self._student_import_command_repo is None:
+            self._student_import_command_repo = (
+                DjangoStudentImportCommandRepository()
+            )
+        return self._student_import_command_repo
 
     @property
     def student_profile_repo(self):
@@ -1415,6 +1440,13 @@ class Container:
     def update_student_group_use_case(self):
         return UpdateStudentGroupUseCase(
             student_repo=self.student_group_command_repo,
+        )
+
+    def import_students_use_case(self):
+        return ImportStudentsUseCase(
+            snapshot_repo=self.student_import_snapshot_repo,
+            command_repo=self.student_import_command_repo,
+            transaction_manager=self.transaction_manager,
         )
 
     def get_task_list_use_case(self):

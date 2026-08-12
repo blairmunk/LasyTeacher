@@ -3,6 +3,7 @@
 from core_logic.entities.student_import import (
     ImportStudentsRequest,
     ImportStudentsResult,
+    StudentImportPlan,
 )
 from core_logic.interfaces.student_import_command_repo import (
     IStudentImportCommandRepository,
@@ -28,13 +29,20 @@ class ImportStudentsUseCase:
         self.planner = planner or StudentImportPlanner()
 
     def execute(self, request: ImportStudentsRequest) -> ImportStudentsResult:
-        snapshot = self.snapshot_repo.get_student_import_snapshot()
-        plan = self.planner.build(request.rows, snapshot)
-        if not request.dry_run:
+        if request.dry_run:
+            plan = self._build_plan(request)
+        else:
             with self.transaction_manager.atomic():
+                plan = self._build_plan(request)
                 self.command_repo.apply_student_import_plan(plan)
         return ImportStudentsResult(
             status='planned' if request.dry_run else 'imported',
             dry_run=request.dry_run,
             stats=plan.stats,
+        )
+
+    def _build_plan(self, request: ImportStudentsRequest) -> StudentImportPlan:
+        return self.planner.build(
+            request.rows,
+            self.snapshot_repo.get_student_import_snapshot(),
         )

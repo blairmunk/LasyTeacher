@@ -177,8 +177,14 @@ from infrastructure.repositories.django_student_remedial_repo import (
 from infrastructure.repositories.django_task_read_repo import (
     DjangoTaskReadRepository,
 )
-from infrastructure.repositories.django_task_write_repo import (
-    DjangoTaskWriteRepository,
+from infrastructure.repositories.django_task_command_repo import (
+    DjangoTaskCommandRepository,
+)
+from infrastructure.repositories.django_task_image_command_repo import (
+    DjangoTaskImageCommandRepository,
+)
+from infrastructure.repositories.django_task_lifecycle_command_repo import (
+    DjangoTaskLifecycleCommandRepository,
 )
 from infrastructure.repositories.django_task_selection_repo import (
     DjangoTaskSelectionRepository,
@@ -1126,7 +1132,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(source.year, 2026)
 
     def test_task_repository_creates_and_updates_task(self):
-        repo = DjangoTaskWriteRepository()
+        repo = DjangoTaskCommandRepository()
 
         create_result = repo.create_task(
             TaskSaveParams(
@@ -1176,7 +1182,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(missing_result.status, 'not_found')
 
     def test_task_repository_saves_task_images(self):
-        repo = DjangoTaskWriteRepository()
+        repo = DjangoTaskImageCommandRepository()
         task = Task.objects.create(
             text='Задача с рисунком',
             answer='Ответ',
@@ -1291,7 +1297,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
 
     def test_task_repository_deletes_task(self):
-        repo = DjangoTaskWriteRepository()
+        repo = DjangoTaskLifecycleCommandRepository()
         task_id = str(self.too_hard.pk)
 
         deleted_count = repo.delete_task(task_id)

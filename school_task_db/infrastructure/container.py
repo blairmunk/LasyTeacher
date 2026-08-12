@@ -451,8 +451,14 @@ from infrastructure.repositories.django_student_performance_repo import (
 from infrastructure.repositories.django_task_read_repo import (
     DjangoTaskReadRepository,
 )
-from infrastructure.repositories.django_task_write_repo import (
-    DjangoTaskWriteRepository,
+from infrastructure.repositories.django_task_command_repo import (
+    DjangoTaskCommandRepository,
+)
+from infrastructure.repositories.django_task_image_command_repo import (
+    DjangoTaskImageCommandRepository,
+)
+from infrastructure.repositories.django_task_lifecycle_command_repo import (
+    DjangoTaskLifecycleCommandRepository,
 )
 from infrastructure.repositories.django_task_selection_repo import (
     DjangoTaskSelectionRepository,
@@ -584,7 +590,9 @@ class Container:
         self._source_catalog_repo = None
         self._source_command_repo = None
         self._task_read_repo = None
-        self._task_write_repo = None
+        self._task_command_repo = None
+        self._task_image_command_repo = None
+        self._task_lifecycle_command_repo = None
         self._task_selection_repo = None
         self._task_reference_catalog_repo = None
         self._reference_seed_repo = None
@@ -767,10 +775,24 @@ class Container:
         return self._task_read_repo
 
     @property
-    def task_write_repo(self):
-        if self._task_write_repo is None:
-            self._task_write_repo = DjangoTaskWriteRepository()
-        return self._task_write_repo
+    def task_command_repo(self):
+        if self._task_command_repo is None:
+            self._task_command_repo = DjangoTaskCommandRepository()
+        return self._task_command_repo
+
+    @property
+    def task_image_command_repo(self):
+        if self._task_image_command_repo is None:
+            self._task_image_command_repo = DjangoTaskImageCommandRepository()
+        return self._task_image_command_repo
+
+    @property
+    def task_lifecycle_command_repo(self):
+        if self._task_lifecycle_command_repo is None:
+            self._task_lifecycle_command_repo = (
+                DjangoTaskLifecycleCommandRepository()
+            )
+        return self._task_lifecycle_command_repo
 
     @property
     def task_selection_repo(self):
@@ -1704,19 +1726,19 @@ class Container:
 
     def create_task_use_case(self):
         return CreateTaskUseCase(
-            task_repo=self.task_write_repo,
+            task_repo=self.task_command_repo,
             task_catalog_repo=self.task_taxonomy_repo,
         )
 
     def update_task_use_case(self):
         return UpdateTaskUseCase(
-            task_repo=self.task_write_repo,
+            task_repo=self.task_command_repo,
             task_catalog_repo=self.task_taxonomy_repo,
         )
 
     def save_task_images_use_case(self):
         return SaveTaskImagesUseCase(
-            task_repo=self.task_write_repo,
+            task_repo=self.task_image_command_repo,
         )
 
     def grade_student_work_use_case(self):
@@ -2142,7 +2164,7 @@ class Container:
 
     def delete_task_use_case(self):
         return DeleteTaskUseCase(
-            task_repo=self.task_write_repo,
+            task_repo=self.task_lifecycle_command_repo,
         )
 
     def add_tasks_to_group_use_case(self):

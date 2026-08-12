@@ -377,8 +377,14 @@ from infrastructure.repositories.django_site_settings_query_repo import (
 from infrastructure.repositories.django_task_read_repo import (
     DjangoTaskReadRepository,
 )
-from infrastructure.repositories.django_task_write_repo import (
-    DjangoTaskWriteRepository,
+from infrastructure.repositories.django_task_command_repo import (
+    DjangoTaskCommandRepository,
+)
+from infrastructure.repositories.django_task_image_command_repo import (
+    DjangoTaskImageCommandRepository,
+)
+from infrastructure.repositories.django_task_lifecycle_command_repo import (
+    DjangoTaskLifecycleCommandRepository,
 )
 from infrastructure.repositories.django_task_selection_repo import (
     DjangoTaskSelectionRepository,
@@ -1230,8 +1236,16 @@ class ContainerTests(SimpleTestCase):
             DjangoTaskReadRepository,
         )
         self.assertIsInstance(
-            container.task_write_repo,
-            DjangoTaskWriteRepository,
+            container.task_command_repo,
+            DjangoTaskCommandRepository,
+        )
+        self.assertIsInstance(
+            container.task_image_command_repo,
+            DjangoTaskImageCommandRepository,
+        )
+        self.assertIsInstance(
+            container.task_lifecycle_command_repo,
+            DjangoTaskLifecycleCommandRepository,
         )
         self.assertIsInstance(
             container.task_selection_repo,

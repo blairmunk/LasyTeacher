@@ -1,8 +1,8 @@
 """Explicit document presentation profile selection."""
 
 from core_logic.entities.document import DocumentPresentationProfile
-from core_logic.interfaces.presentation_profile_repo import (
-    IPresentationProfileRepository,
+from core_logic.interfaces.presentation_profile_catalog_repo import (
+    IPresentationProfileCatalogRepository,
 )
 
 
@@ -10,7 +10,9 @@ def resolve_document_presentation_profile(
     document_type: str,
     request_presentation_profile: DocumentPresentationProfile | None = None,
     request_presentation_profile_id: str = '',
-    presentation_profile_repo: IPresentationProfileRepository | None = None,
+    presentation_profile_repo: (
+        IPresentationProfileCatalogRepository | None
+    ) = None,
 ) -> DocumentPresentationProfile | None:
     if request_presentation_profile is not None:
         return (

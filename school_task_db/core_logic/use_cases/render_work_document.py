@@ -10,8 +10,8 @@ from core_logic.entities.document_rendering import (
     DOCUMENT_RENDER_STATUS_VARIANTS_NOT_REQUIRED,
     DocumentRenderResult,
 )
-from core_logic.interfaces.presentation_profile_repo import (
-    IPresentationProfileRepository,
+from core_logic.interfaces.presentation_profile_catalog_repo import (
+    IPresentationProfileCatalogRepository,
 )
 from core_logic.interfaces.work_document_repo import IWorkDocumentRepository
 from core_logic.use_cases.presentation_profile_selection import (
@@ -51,7 +51,9 @@ class RenderWorkDocumentUseCase:
         self,
         work_repo: IWorkDocumentRepository,
         render_document_from_recipe_use_case: RenderDocumentFromRecipeUseCase,
-        presentation_profile_repo: IPresentationProfileRepository | None = None,
+        presentation_profile_repo: (
+            IPresentationProfileCatalogRepository | None
+        ) = None,
     ):
         self.work_repo = work_repo
         self.render_document_from_recipe_use_case = (

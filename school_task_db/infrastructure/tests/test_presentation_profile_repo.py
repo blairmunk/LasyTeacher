@@ -6,7 +6,12 @@ from core_logic.entities.document import (
     DocumentPresentationProfile,
     UpdatePresentationProfileParams,
 )
-from core_logic.interfaces.presentation_profile_repo import IPresentationProfileRepository
+from core_logic.interfaces.presentation_profile_catalog_repo import (
+    IPresentationProfileCatalogRepository,
+)
+from core_logic.interfaces.presentation_profile_command_repo import (
+    IPresentationProfileCommandRepository,
+)
 from document_engine.models import PresentationProfile
 from infrastructure.repositories.django_presentation_profile_repo import (
     DjangoPresentationProfileRepository,
@@ -17,7 +22,11 @@ class DjangoPresentationProfileRepositoryTests(TestCase):
     def test_implements_clean_port(self):
         self.assertIsInstance(
             DjangoPresentationProfileRepository(),
-            IPresentationProfileRepository,
+            IPresentationProfileCatalogRepository,
+        )
+        self.assertIsInstance(
+            DjangoPresentationProfileRepository(),
+            IPresentationProfileCommandRepository,
         )
 
     def test_lists_profiles_filtered_by_document_type(self):

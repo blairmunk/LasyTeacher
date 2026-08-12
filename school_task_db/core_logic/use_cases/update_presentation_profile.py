@@ -4,8 +4,8 @@ from core_logic.entities.document import (
     UpdatePresentationProfileParams,
     UpdatePresentationProfileResult,
 )
-from core_logic.interfaces.presentation_profile_repo import (
-    IPresentationProfileRepository,
+from core_logic.interfaces.presentation_profile_command_repo import (
+    IPresentationProfileCommandRepository,
 )
 from core_logic.value_objects.document_type_catalog import validate_document_type
 
@@ -20,7 +20,7 @@ class UpdatePresentationProfileUseCase:
 
     def __init__(
         self,
-        presentation_profile_repo: IPresentationProfileRepository,
+        presentation_profile_repo: IPresentationProfileCommandRepository,
     ):
         self.presentation_profile_repo = presentation_profile_repo
 

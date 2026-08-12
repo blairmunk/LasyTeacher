@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from typing import List, Tuple
 
 from core_logic.entities.document import DocumentPresentationProfile
-from core_logic.interfaces.presentation_profile_repo import (
-    IPresentationProfileRepository,
+from core_logic.interfaces.presentation_profile_catalog_repo import (
+    IPresentationProfileCatalogRepository,
 )
 from core_logic.value_objects.document_type_catalog import (
     DocumentTypeCatalogItem,
@@ -30,7 +30,9 @@ class GetPresentationProfileEditorDataUseCase:
 
     def __init__(
         self,
-        presentation_profile_repo: IPresentationProfileRepository | None = None,
+        presentation_profile_repo: (
+            IPresentationProfileCatalogRepository | None
+        ) = None,
     ):
         self.presentation_profile_repo = presentation_profile_repo
 

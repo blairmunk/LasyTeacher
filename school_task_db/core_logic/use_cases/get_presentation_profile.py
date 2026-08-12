@@ -3,8 +3,8 @@
 from dataclasses import dataclass
 
 from core_logic.entities.document import DocumentPresentationProfile
-from core_logic.interfaces.presentation_profile_repo import (
-    IPresentationProfileRepository,
+from core_logic.interfaces.presentation_profile_catalog_repo import (
+    IPresentationProfileCatalogRepository,
 )
 
 
@@ -22,7 +22,10 @@ class GetPresentationProfileData:
 class GetPresentationProfileUseCase:
     """Get one document presentation profile for editing."""
 
-    def __init__(self, presentation_profile_repo: IPresentationProfileRepository):
+    def __init__(
+        self,
+        presentation_profile_repo: IPresentationProfileCatalogRepository,
+    ):
         self.presentation_profile_repo = presentation_profile_repo
 
     def execute(

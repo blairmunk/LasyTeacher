@@ -9,8 +9,8 @@ from core_logic.entities.document_rendering import (
     DocumentRenderResult,
 )
 from core_logic.entities.student_digest import StudentDigestRequest
-from core_logic.interfaces.presentation_profile_repo import (
-    IPresentationProfileRepository,
+from core_logic.interfaces.presentation_profile_catalog_repo import (
+    IPresentationProfileCatalogRepository,
 )
 from core_logic.use_cases.presentation_profile_selection import (
     resolve_document_presentation_profile,
@@ -44,7 +44,9 @@ class RenderStudentDigestDocumentUseCase:
         self,
         get_student_digests_use_case,
         render_document_from_recipe_use_case: RenderDocumentFromRecipeUseCase,
-        presentation_profile_repo: IPresentationProfileRepository | None = None,
+        presentation_profile_repo: (
+            IPresentationProfileCatalogRepository | None
+        ) = None,
     ):
         self.get_student_digests_use_case = get_student_digests_use_case
         self.render_document_from_recipe_use_case = (

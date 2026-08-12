@@ -8,8 +8,8 @@ from core_logic.entities.document_rendering import (
     DOCUMENT_RENDER_STATUS_NOT_FOUND,
     DocumentRenderResult,
 )
-from core_logic.interfaces.presentation_profile_repo import (
-    IPresentationProfileRepository,
+from core_logic.interfaces.presentation_profile_catalog_repo import (
+    IPresentationProfileCatalogRepository,
 )
 from core_logic.interfaces.remedial_sheet_repo import IRemedialSheetRepository
 from core_logic.interfaces.work_document_repo import IWorkDocumentRepository
@@ -50,7 +50,9 @@ class RenderRemedialSheetBatchDocumentUseCase:
         work_repo: IWorkDocumentRepository,
         remedial_repo: IRemedialSheetRepository,
         render_document_from_recipe_use_case: RenderDocumentFromRecipeUseCase,
-        presentation_profile_repo: IPresentationProfileRepository | None = None,
+        presentation_profile_repo: (
+            IPresentationProfileCatalogRepository | None
+        ) = None,
     ):
         self.work_repo = work_repo
         self.remedial_repo = remedial_repo

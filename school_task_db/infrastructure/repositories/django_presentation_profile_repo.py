@@ -7,13 +7,19 @@ from core_logic.entities.document import (
     DocumentPresentationProfile,
     UpdatePresentationProfileParams,
 )
-from core_logic.interfaces.presentation_profile_repo import (
-    IPresentationProfileRepository,
+from core_logic.interfaces.presentation_profile_catalog_repo import (
+    IPresentationProfileCatalogRepository,
+)
+from core_logic.interfaces.presentation_profile_command_repo import (
+    IPresentationProfileCommandRepository,
 )
 from document_engine.models import PresentationProfile
 
 
-class DjangoPresentationProfileRepository(IPresentationProfileRepository):
+class DjangoPresentationProfileRepository(
+    IPresentationProfileCatalogRepository,
+    IPresentationProfileCommandRepository,
+):
     """Persist document presentation profiles with Django ORM."""
 
     def list_presentation_profiles(

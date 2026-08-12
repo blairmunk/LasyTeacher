@@ -4,8 +4,8 @@ from core_logic.entities.work import (
     WorkDetailData,
     WorkDetailSpecPreviewItem,
 )
-from core_logic.interfaces.presentation_profile_repo import (
-    IPresentationProfileRepository,
+from core_logic.interfaces.presentation_profile_catalog_repo import (
+    IPresentationProfileCatalogRepository,
 )
 from core_logic.interfaces.work_read_repo import IWorkReadRepository
 from core_logic.services.work_service import WorkService
@@ -30,7 +30,9 @@ class GetWorkDetailUseCase:
         self,
         work_read_repo: IWorkReadRepository,
         work_service: WorkService,
-        presentation_profile_repo: IPresentationProfileRepository | None = None,
+        presentation_profile_repo: (
+            IPresentationProfileCatalogRepository | None
+        ) = None,
         score_allocation_service=None,
         composition_service=None,
     ):

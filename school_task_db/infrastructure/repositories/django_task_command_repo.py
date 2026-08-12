@@ -37,8 +37,6 @@ class DjangoTaskCommandRepository(ITaskCommandRepository):
             'task_type': params.task_type,
             'difficulty': params.difficulty,
             'cognitive_level': params.cognitive_level,
-            'content_element': params.content_element,
-            'requirement_element': params.requirement_element,
             'short_solution': params.short_solution,
             'full_solution': params.full_solution,
             'hint': params.hint,

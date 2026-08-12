@@ -234,8 +234,6 @@ class TaskFormAdapter:
                 'cognitive_level',
                 'understand',
             ),
-            content_element=form.cleaned_data.get('content_element', ''),
-            requirement_element=form.cleaned_data.get('requirement_element', ''),
             content_entry_ids=tuple(
                 str(entry.pk) for entry in content_entries
             ),

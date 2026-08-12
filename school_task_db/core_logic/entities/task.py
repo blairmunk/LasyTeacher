@@ -341,8 +341,6 @@ class TaskSaveParams:
     task_id: str = ''
     subtopic_id: Optional[str] = None
     cognitive_level: str = 'understand'
-    content_element: str = ''
-    requirement_element: str = ''
     content_entry_ids: Tuple[str, ...] = ()
     requirement_ids: Tuple[str, ...] = ()
     short_solution: str = ''

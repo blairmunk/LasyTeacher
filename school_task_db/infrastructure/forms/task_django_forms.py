@@ -88,9 +88,6 @@ class TaskForm(forms.ModelForm):
             'class': 'form-select'
         })
 
-        # Кодификатор необязателен
-        self.fields['content_element'].required = False
-        self.fields['requirement_element'].required = False
         self._configure_codifier_fields()
 
         # === Новые поля ===
@@ -109,7 +106,6 @@ class TaskForm(forms.ModelForm):
         fields = [
             'text', 'answer', 'topic', 'subtopic',
             'task_type', 'difficulty', 'cognitive_level',
-            'content_element', 'requirement_element',
             'codifier_content_entries', 'codifier_requirements',
             'short_solution', 'full_solution', 'hint', 'instruction',
             'estimated_time',
@@ -123,8 +119,6 @@ class TaskForm(forms.ModelForm):
             'hint': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'instruction': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'estimated_time': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
-            'content_element': forms.HiddenInput(),
-            'requirement_element': forms.HiddenInput(),
             # Новые виджеты
             'source_detail': forms.TextInput(attrs={
                 'class': 'form-control',

@@ -20,6 +20,7 @@ def persist_variant_content(variant: Variant, plan) -> None:
         'source',
     ).prefetch_related(
         'codifier_requirements__codifier',
+        'codifier_content_entries__codifier',
         'images',
     )
     task_snapshots = build_task_content_snapshots(tasks)

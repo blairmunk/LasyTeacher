@@ -11,11 +11,17 @@ from core_logic.value_objects.task_content_snapshot import (
 def build_task_content_snapshots(tasks):
     """Return snapshots keyed by task id without leaking ORM rows to core."""
     tasks = list(tasks)
-    entries_by_code = _content_entries_by_code(tasks)
+    legacy_entries_by_code = _legacy_content_entries_by_code(tasks)
     return {
         str(task.pk): _build_task_content_snapshot(
             task,
-            entries_by_code.get(task.content_element.strip(), ()),
+            _task_content_entries(
+                task,
+                legacy_entries_by_code.get(
+                    task.content_element.strip(),
+                    (),
+                ),
+            ),
         )
         for task in tasks
     }
@@ -74,7 +80,7 @@ def _build_task_content_snapshot(task, content_entries):
     )
 
 
-def _content_entries_by_code(tasks):
+def _legacy_content_entries_by_code(tasks):
     codes = {
         task.content_element.strip()
         for task in tasks
@@ -117,3 +123,10 @@ def _select_content_entries(task, candidates):
     if not selected and len(candidates) == 1:
         return tuple(candidates)
     return tuple(selected)
+
+
+def _task_content_entries(task, legacy_candidates):
+    explicit_entries = tuple(task.codifier_content_entries.all())
+    if explicit_entries:
+        return explicit_entries
+    return _select_content_entries(task, legacy_candidates)

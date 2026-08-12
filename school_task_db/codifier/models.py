@@ -82,6 +82,13 @@ class ContentEntry(BaseModel):
         'Класс изучения', max_length=20, blank=True,
         help_text='7, 8, 9 или 7, 9')
 
+    tasks = models.ManyToManyField(
+        'tasks.Task',
+        blank=True,
+        related_name='codifier_content_entries',
+        verbose_name='Задания',
+    )
+
     class Meta:
         verbose_name = 'Элемент содержания'
         verbose_name_plural = 'Элементы содержания'

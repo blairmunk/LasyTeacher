@@ -1,13 +1,10 @@
-"""Django repository for variant detach and deletion workflows."""
+"""Django read adapter for variant lifecycle decisions."""
 
-from typing import List, Optional
+from typing import Optional
 
 from django.db.models import Sum
 
 from core_logic.entities.work import VariantDeleteInfo
-from core_logic.interfaces.variant_lifecycle_command_repo import (
-    IVariantLifecycleCommandRepository,
-)
 from core_logic.interfaces.variant_lifecycle_query_repo import (
     IVariantLifecycleQueryRepository,
 )
@@ -31,9 +28,8 @@ def _variant_display_name(variant: Variant) -> str:
     )
 
 
-class DjangoVariantLifecycleRepository(
+class DjangoVariantLifecycleQueryRepository(
     IVariantLifecycleQueryRepository,
-    IVariantLifecycleCommandRepository,
 ):
     def get_variant_delete_info(
         self,
@@ -45,8 +41,9 @@ class DjangoVariantLifecycleRepository(
         ).filter(pk=variant_id).first()
         if variant is None:
             return None
+        variant_tasks = VariantTask.objects.filter(variant_id=variant_id)
         return VariantDeleteInfo(
-            task_count=VariantTask.objects.filter(variant_id=variant_id).count(),
+            task_count=variant_tasks.count(),
             participation_count=EventParticipation.objects.filter(
                 variant_id=variant_id,
             ).count(),
@@ -55,35 +52,9 @@ class DjangoVariantLifecycleRepository(
             work_id=str(variant.work_id or ''),
             work_name=variant.work.name if variant.work else '',
             total_max_points=(
-                VariantTask.objects.filter(
-                    variant_id=variant_id,
-                ).aggregate(total=Sum('max_points'))['total']
-                or 0
+                variant_tasks.aggregate(total=Sum('max_points'))['total'] or 0
             ),
         )
-
-    def detach_variant_from_work(self, variant_id: str) -> str:
-        variant = Variant.objects.get(pk=variant_id)
-        variant_short_id = variant.get_short_uuid()
-        variant.work = None
-        variant.save()
-        return variant_short_id
-
-    def delete_variant(self, variant_id: str) -> str:
-        variant = Variant.objects.get(pk=variant_id)
-        work_id = str(variant.work_id or '')
-        variant.delete()
-        return work_id
-
-    def bulk_delete_work_variants(
-        self,
-        work_id: str,
-        variant_ids: List[str],
-    ) -> int:
-        return Variant.objects.filter(
-            pk__in=variant_ids,
-            work_id=work_id,
-        ).delete()[0]
 
     def count_work_variants(self, work_id: str) -> int:
         return Variant.objects.filter(work_id=work_id).count()

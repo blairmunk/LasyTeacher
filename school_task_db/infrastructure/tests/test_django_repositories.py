@@ -213,8 +213,11 @@ from infrastructure.repositories.django_work_read_repo import (
 from infrastructure.repositories.django_variant_read_repo import (
     DjangoVariantReadRepository,
 )
-from infrastructure.repositories.django_variant_lifecycle_repo import (
-    DjangoVariantLifecycleRepository,
+from infrastructure.repositories.django_variant_lifecycle_command_repo import (
+    DjangoVariantLifecycleCommandRepository,
+)
+from infrastructure.repositories.django_variant_lifecycle_query_repo import (
+    DjangoVariantLifecycleQueryRepository,
 )
 from infrastructure.repositories.django_work_document_repo import (
     DjangoWorkDocumentRepository,
@@ -2646,7 +2649,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
 
     def test_work_repository_returns_variant_delete_info(self):
-        repo = DjangoVariantLifecycleRepository()
+        repo = DjangoVariantLifecycleQueryRepository()
 
         info = repo.get_variant_delete_info(str(self.source_variant.pk))
         missing_info = repo.get_variant_delete_info(
@@ -2659,7 +2662,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertIsNone(missing_info)
 
     def test_work_repository_detaches_variant_from_work(self):
-        repo = DjangoVariantLifecycleRepository()
+        repo = DjangoVariantLifecycleCommandRepository()
 
         short_id = repo.detach_variant_from_work(str(self.source_variant.pk))
 
@@ -2674,7 +2677,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             work_name_snapshot=self.source_work.name,
         )
         variant_id = str(variant.pk)
-        repo = DjangoVariantLifecycleRepository()
+        repo = DjangoVariantLifecycleCommandRepository()
 
         work_id = repo.delete_variant(variant_id)
 
@@ -2698,9 +2701,10 @@ class DjangoRemedialRepositoryTests(TestCase):
             number=1,
             work_name_snapshot=other_work.name,
         )
-        repo = DjangoVariantLifecycleRepository()
+        command_repo = DjangoVariantLifecycleCommandRepository()
+        query_repo = DjangoVariantLifecycleQueryRepository()
 
-        deleted_count = repo.bulk_delete_work_variants(
+        deleted_count = command_repo.bulk_delete_work_variants(
             work_id=str(self.source_work.pk),
             variant_ids=[
                 str(first_variant.pk),
@@ -2713,7 +2717,10 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertFalse(Variant.objects.filter(pk=first_variant.pk).exists())
         self.assertFalse(Variant.objects.filter(pk=second_variant.pk).exists())
         self.assertTrue(Variant.objects.filter(pk=other_variant.pk).exists())
-        self.assertEqual(repo.count_work_variants(str(self.source_work.pk)), 1)
+        self.assertEqual(
+            query_repo.count_work_variants(str(self.source_work.pk)),
+            1,
+        )
 
     def test_event_repository_grades_participation_and_syncs_review_state(self):
         self.event.status = 'completed'

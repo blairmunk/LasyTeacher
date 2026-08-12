@@ -480,8 +480,11 @@ from infrastructure.repositories.django_work_read_repo import (
 from infrastructure.repositories.django_variant_read_repo import (
     DjangoVariantReadRepository,
 )
-from infrastructure.repositories.django_variant_lifecycle_repo import (
-    DjangoVariantLifecycleRepository,
+from infrastructure.repositories.django_variant_lifecycle_command_repo import (
+    DjangoVariantLifecycleCommandRepository,
+)
+from infrastructure.repositories.django_variant_lifecycle_query_repo import (
+    DjangoVariantLifecycleQueryRepository,
 )
 from infrastructure.repositories.django_work_document_repo import (
     DjangoWorkDocumentRepository,
@@ -571,7 +574,8 @@ class Container:
         self._work_spec_sync_repo = None
         self._work_read_repo = None
         self._variant_read_repo = None
-        self._variant_lifecycle_repo = None
+        self._variant_lifecycle_query_repo = None
+        self._variant_lifecycle_command_repo = None
         self._orphan_variant_catalog_repo = None
         self._orphan_variant_attachment_repo = None
         self._work_document_repo = None
@@ -827,10 +831,20 @@ class Container:
         return self._variant_read_repo
 
     @property
-    def variant_lifecycle_repo(self):
-        if self._variant_lifecycle_repo is None:
-            self._variant_lifecycle_repo = DjangoVariantLifecycleRepository()
-        return self._variant_lifecycle_repo
+    def variant_lifecycle_query_repo(self):
+        if self._variant_lifecycle_query_repo is None:
+            self._variant_lifecycle_query_repo = (
+                DjangoVariantLifecycleQueryRepository()
+            )
+        return self._variant_lifecycle_query_repo
+
+    @property
+    def variant_lifecycle_command_repo(self):
+        if self._variant_lifecycle_command_repo is None:
+            self._variant_lifecycle_command_repo = (
+                DjangoVariantLifecycleCommandRepository()
+            )
+        return self._variant_lifecycle_command_repo
 
     @property
     def orphan_variant_catalog_repo(self):
@@ -2001,13 +2015,13 @@ class Container:
 
     def get_variant_delete_info_use_case(self):
         return GetVariantDeleteInfoUseCase(
-            variant_repo=self.variant_lifecycle_repo,
+            variant_repo=self.variant_lifecycle_query_repo,
         )
 
     def delete_variant_use_case(self):
         return DeleteVariantUseCase(
-            variant_query_repo=self.variant_lifecycle_repo,
-            variant_command_repo=self.variant_lifecycle_repo,
+            variant_query_repo=self.variant_lifecycle_query_repo,
+            variant_command_repo=self.variant_lifecycle_command_repo,
         )
 
     def delete_task_groups_use_case(self):
@@ -2054,8 +2068,8 @@ class Container:
 
     def bulk_delete_variants_use_case(self):
         return BulkDeleteVariantsUseCase(
-            variant_query_repo=self.variant_lifecycle_repo,
-            variant_command_repo=self.variant_lifecycle_repo,
+            variant_query_repo=self.variant_lifecycle_query_repo,
+            variant_command_repo=self.variant_lifecycle_command_repo,
         )
 
 

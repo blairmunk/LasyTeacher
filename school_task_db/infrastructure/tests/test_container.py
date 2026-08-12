@@ -418,6 +418,12 @@ from infrastructure.repositories.django_work_read_repo import (
 from infrastructure.repositories.django_variant_read_repo import (
     DjangoVariantReadRepository,
 )
+from infrastructure.repositories.django_variant_lifecycle_command_repo import (
+    DjangoVariantLifecycleCommandRepository,
+)
+from infrastructure.repositories.django_variant_lifecycle_query_repo import (
+    DjangoVariantLifecycleQueryRepository,
+)
 from infrastructure.repositories.django_work_document_repo import (
     DjangoWorkDocumentRepository,
 )
@@ -1090,7 +1096,19 @@ class ContainerTests(SimpleTestCase):
             UpdateWorkWithSpecificationUseCase,
         )
         self.assertIsInstance(variant_delete_info_use_case, GetVariantDeleteInfoUseCase)
+        self.assertIsInstance(
+            variant_delete_info_use_case.variant_repo,
+            DjangoVariantLifecycleQueryRepository,
+        )
         self.assertIsInstance(delete_variant_use_case, DeleteVariantUseCase)
+        self.assertIsInstance(
+            delete_variant_use_case.variant_query_repo,
+            DjangoVariantLifecycleQueryRepository,
+        )
+        self.assertIsInstance(
+            delete_variant_use_case.variant_command_repo,
+            DjangoVariantLifecycleCommandRepository,
+        )
         self.assertIsInstance(delete_task_groups_use_case, DeleteTaskGroupsUseCase)
         self.assertIsInstance(delete_task_use_case, DeleteTaskUseCase)
         self.assertIsInstance(add_tasks_to_group_use_case, AddTasksToGroupUseCase)
@@ -1111,6 +1129,14 @@ class ContainerTests(SimpleTestCase):
             BulkRemoveTasksFromGroupsUseCase,
         )
         self.assertIsInstance(bulk_delete_variants_use_case, BulkDeleteVariantsUseCase)
+        self.assertIsInstance(
+            bulk_delete_variants_use_case.variant_query_repo,
+            DjangoVariantLifecycleQueryRepository,
+        )
+        self.assertIsInstance(
+            bulk_delete_variants_use_case.variant_command_repo,
+            DjangoVariantLifecycleCommandRepository,
+        )
         self.assertIsInstance(
             render_from_recipe_use_case,
             RenderDocumentFromRecipeUseCase,

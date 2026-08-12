@@ -264,6 +264,7 @@ from core_logic.use_cases.prepare_task_import_file import (
 )
 from core_logic.use_cases.refresh_task_math_cache import RefreshTaskMathCacheUseCase
 from core_logic.use_cases.resolve_academic_year import ResolveAcademicYearUseCase
+from core_logic.use_cases.seed_references import SeedReferencesUseCase
 from core_logic.use_cases.save_analog_group import (
     CreateAnalogGroupUseCase,
     UpdateAnalogGroupUseCase,
@@ -401,6 +402,9 @@ from infrastructure.repositories.django_heatmap_matrix_repo import (
 )
 from infrastructure.repositories.django_reports_dashboard_repo import (
     DjangoReportsDashboardRepository,
+)
+from infrastructure.repositories.django_reference_seed_repo import (
+    DjangoReferenceSeedRepository,
 )
 from infrastructure.repositories.django_site_settings_command_repo import (
     DjangoSiteSettingsCommandRepository,
@@ -583,6 +587,7 @@ class Container:
         self._task_write_repo = None
         self._task_selection_repo = None
         self._task_reference_catalog_repo = None
+        self._reference_seed_repo = None
         self._task_taxonomy_repo = None
         self._task_export_repo = None
         self._task_group_catalog_repo = None
@@ -780,6 +785,12 @@ class Container:
                 DjangoTaskReferenceCatalogRepository()
             )
         return self._task_reference_catalog_repo
+
+    @property
+    def reference_seed_repo(self):
+        if self._reference_seed_repo is None:
+            self._reference_seed_repo = DjangoReferenceSeedRepository()
+        return self._reference_seed_repo
 
     @property
     def task_taxonomy_repo(self):
@@ -1480,6 +1491,12 @@ class Container:
     def import_curriculum_use_case(self):
         return ImportCurriculumUseCase(
             curriculum_repo=self.curriculum_import_repo,
+            transaction_manager=self.transaction_manager,
+        )
+
+    def seed_references_use_case(self):
+        return SeedReferencesUseCase(
+            reference_repo=self.reference_seed_repo,
             transaction_manager=self.transaction_manager,
         )
 

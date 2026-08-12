@@ -1,24 +1,13 @@
 """Repository port for orphan variant workflows."""
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from typing import List, Optional
 
+from core_logic.entities.orphan_variant_commands import (
+    CreatedWorkFromOrphanVariantsRef,
+    CreateWorkFromOrphanVariantsParams,
+)
 from core_logic.entities.work import OrphanVariantListItem, OrphanVariantRef
-
-
-@dataclass(frozen=True)
-class CreateWorkFromOrphanVariantsParams:
-    name: str
-    work_type: str
-    max_score: int
-    variant_ids: List[str]
-
-
-@dataclass(frozen=True)
-class CreatedWorkFromOrphanVariantsRef:
-    work_id: str
-    variant_count: int
 
 
 class IOrphanVariantRepository(ABC):

@@ -22,10 +22,10 @@ from core_logic.services.remedial_variant_content_service import (
     build_remedial_variant_creation_plan,
 )
 from core_logic.services.work_spec_sync_service import WorkSpecSyncService
-from core_logic.interfaces.event_commands import (
+from core_logic.entities.event_commands import (
     CreateEventParams,
 )
-from core_logic.interfaces.orphan_variant_repo import (
+from core_logic.entities.orphan_variant_commands import (
     CreateWorkFromOrphanVariantsParams,
 )
 from core_logic.entities.work_specification_commands import (

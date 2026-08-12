@@ -4,8 +4,10 @@ from dataclasses import dataclass
 from typing import List
 
 from core_logic.entities.work import CreateWorkFromOrphansResult
-from core_logic.interfaces.orphan_variant_repo import (
+from core_logic.entities.orphan_variant_commands import (
     CreateWorkFromOrphanVariantsParams,
+)
+from core_logic.interfaces.orphan_variant_repo import (
     IOrphanVariantRepository,
 )
 

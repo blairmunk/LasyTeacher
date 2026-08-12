@@ -8,7 +8,7 @@ from core_logic.interfaces.event_participation_repo import (
     IEventParticipationRepository,
 )
 from core_logic.interfaces.event_read_repo import IEventReadRepository
-from core_logic.interfaces.event_commands import CreateEventParams
+from core_logic.entities.event_commands import CreateEventParams
 from core_logic.interfaces.event_write_repo import IEventWriteRepository
 from core_logic.interfaces.task_selection_repo import ITaskSelectionRepository
 from core_logic.interfaces.transaction_manager import ITransactionManager

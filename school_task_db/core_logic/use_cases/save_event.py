@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from core_logic.interfaces.event_commands import CreateEventParams
+from core_logic.entities.event_commands import CreateEventParams
 from core_logic.interfaces.event_write_repo import IEventWriteRepository
 
 

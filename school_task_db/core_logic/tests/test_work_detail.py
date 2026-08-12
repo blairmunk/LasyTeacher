@@ -28,7 +28,7 @@ from core_logic.entities.work_spec_sync import (
     WorkSpecSyncSaveResult,
     WorkSpecSyncSource,
 )
-from core_logic.interfaces.orphan_variant_repo import (
+from core_logic.entities.orphan_variant_commands import (
     CreatedWorkFromOrphanVariantsRef,
 )
 from core_logic.services.work_service import WorkService

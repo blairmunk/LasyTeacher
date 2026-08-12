@@ -1,4 +1,4 @@
-"""Command data transferred to event repository ports."""
+"""Command data for creating and updating events."""
 
 from dataclasses import dataclass
 from typing import Any, Optional

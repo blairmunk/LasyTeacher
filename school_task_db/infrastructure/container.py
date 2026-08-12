@@ -312,8 +312,11 @@ from infrastructure.repositories.django_global_search_repo import (
 from infrastructure.repositories.django_import_log_repo import (
     DjangoImportLogRepository,
 )
-from infrastructure.repositories.django_curriculum_repo import (
-    DjangoCurriculumRepository,
+from infrastructure.repositories.django_course_catalog_repo import (
+    DjangoCourseCatalogRepository,
+)
+from infrastructure.repositories.django_topic_catalog_repo import (
+    DjangoTopicCatalogRepository,
 )
 from infrastructure.repositories.django_presentation_profile_repo import (
     DjangoPresentationProfileRepository,
@@ -548,7 +551,8 @@ class Container:
         self._task_db_health_repo = None
         self._event_performance_report_repo = None
         self._student_digest_repo = None
-        self._curriculum_repo = None
+        self._course_catalog_repo = None
+        self._topic_catalog_repo = None
         self._codifier_repo = None
         self._dashboard_summary_repo = None
         self._global_search_repo = None
@@ -903,10 +907,16 @@ class Container:
         return self._student_digest_repo
 
     @property
-    def curriculum_repo(self):
-        if self._curriculum_repo is None:
-            self._curriculum_repo = DjangoCurriculumRepository()
-        return self._curriculum_repo
+    def course_catalog_repo(self):
+        if self._course_catalog_repo is None:
+            self._course_catalog_repo = DjangoCourseCatalogRepository()
+        return self._course_catalog_repo
+
+    @property
+    def topic_catalog_repo(self):
+        if self._topic_catalog_repo is None:
+            self._topic_catalog_repo = DjangoTopicCatalogRepository()
+        return self._topic_catalog_repo
 
     @property
     def codifier_repo(self):
@@ -1261,27 +1271,27 @@ class Container:
 
     def get_course_detail_use_case(self):
         return GetCourseDetailUseCase(
-            curriculum_repo=self.curriculum_repo,
+            curriculum_repo=self.course_catalog_repo,
         )
 
     def get_course_list_use_case(self):
         return GetCourseListUseCase(
-            curriculum_repo=self.curriculum_repo,
+            curriculum_repo=self.course_catalog_repo,
         )
 
     def get_topic_subtopics_use_case(self):
         return GetTopicSubtopicsUseCase(
-            curriculum_repo=self.curriculum_repo,
+            curriculum_repo=self.topic_catalog_repo,
         )
 
     def get_topic_list_use_case(self):
         return GetTopicListUseCase(
-            curriculum_repo=self.curriculum_repo,
+            curriculum_repo=self.topic_catalog_repo,
         )
 
     def get_topic_detail_use_case(self):
         return GetTopicDetailUseCase(
-            curriculum_repo=self.curriculum_repo,
+            curriculum_repo=self.topic_catalog_repo,
         )
 
     def get_codifier_list_use_case(self):

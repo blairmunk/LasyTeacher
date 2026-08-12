@@ -258,8 +258,11 @@ from infrastructure.repositories.django_global_search_repo import (
 from infrastructure.repositories.django_import_log_repo import (
     DjangoImportLogRepository,
 )
-from infrastructure.repositories.django_curriculum_repo import (
-    DjangoCurriculumRepository,
+from infrastructure.repositories.django_course_catalog_repo import (
+    DjangoCourseCatalogRepository,
+)
+from infrastructure.repositories.django_topic_catalog_repo import (
+    DjangoTopicCatalogRepository,
 )
 from infrastructure.repositories.django_presentation_profile_repo import (
     DjangoPresentationProfileRepository,
@@ -1168,7 +1171,14 @@ class ContainerTests(SimpleTestCase):
             container.task_db_health_repo,
             DjangoTaskDBHealthRepository,
         )
-        self.assertIsInstance(container.curriculum_repo, DjangoCurriculumRepository)
+        self.assertIsInstance(
+            container.course_catalog_repo,
+            DjangoCourseCatalogRepository,
+        )
+        self.assertIsInstance(
+            container.topic_catalog_repo,
+            DjangoTopicCatalogRepository,
+        )
         self.assertIsInstance(container.codifier_repo, DjangoCodifierRepository)
         self.assertIsInstance(
             container.dashboard_summary_repo,

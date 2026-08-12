@@ -101,8 +101,11 @@ from infrastructure.repositories.django_global_search_repo import (
 from infrastructure.repositories.django_import_log_repo import (
     DjangoImportLogRepository,
 )
-from infrastructure.repositories.django_curriculum_repo import (
-    DjangoCurriculumRepository,
+from infrastructure.repositories.django_course_catalog_repo import (
+    DjangoCourseCatalogRepository,
+)
+from infrastructure.repositories.django_topic_catalog_repo import (
+    DjangoTopicCatalogRepository,
 )
 from infrastructure.repositories.django_event_attempt_repo import (
     DjangoEventAttemptRepository,
@@ -1818,16 +1821,17 @@ class DjangoRemedialRepositoryTests(TestCase):
             work=self.source_work,
             order=1,
         )
-        repo = DjangoCurriculumRepository()
+        course_repo = DjangoCourseCatalogRepository()
+        topic_repo = DjangoTopicCatalogRepository()
 
-        courses = repo.get_courses()
-        loaded_course = repo.get_course(str(course.pk))
-        missing_course = repo.get_course(
+        courses = course_repo.get_courses()
+        loaded_course = course_repo.get_course(str(course.pk))
+        missing_course = course_repo.get_course(
             '550e8400-e29b-41d4-a716-446655440000',
         )
-        assignments = repo.get_course_assignments(str(course.pk))
-        work_groups = repo.get_work_analog_groups(str(self.source_work.pk))
-        variants_count = repo.count_work_variants(str(self.source_work.pk))
+        assignments = course_repo.get_course_assignments(str(course.pk))
+        work_groups = course_repo.get_work_analog_groups(str(self.source_work.pk))
+        variants_count = course_repo.count_work_variants(str(self.source_work.pk))
         topic = Topic.objects.create(
             name='Кинематика',
             subject='Физика',
@@ -1840,14 +1844,14 @@ class DjangoRemedialRepositoryTests(TestCase):
             description='Описание',
             order=1,
         )
-        subtopics = repo.get_topic_subtopics(str(topic.pk))
-        missing_subtopics = repo.get_topic_subtopics(
+        subtopics = topic_repo.get_topic_subtopics(str(topic.pk))
+        missing_subtopics = topic_repo.get_topic_subtopics(
             '550e8400-e29b-41d4-a716-446655440000',
         )
-        topics = repo.get_topics()
-        loaded_topic = repo.get_topic(str(topic.pk))
-        topic_detail_subtopics = repo.get_topic_detail_subtopics(str(topic.pk))
-        missing_topic = repo.get_topic(
+        topics = topic_repo.get_topics()
+        loaded_topic = topic_repo.get_topic(str(topic.pk))
+        topic_detail_subtopics = topic_repo.get_topic_detail_subtopics(str(topic.pk))
+        missing_topic = topic_repo.get_topic(
             '550e8400-e29b-41d4-a716-446655440000',
         )
 
@@ -1901,7 +1905,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             year=year_2027,
         )
 
-        courses = DjangoCurriculumRepository().get_courses(year=year_2026)
+        courses = DjangoCourseCatalogRepository().get_courses(year=year_2026)
 
         self.assertEqual([course.pk for course in courses], [str(course_2026.pk)])
 

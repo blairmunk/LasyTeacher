@@ -341,8 +341,11 @@ from infrastructure.repositories.django_event_write_repo import (
 from infrastructure.repositories.django_participation_grading_repo import (
     DjangoParticipationGradingRepository,
 )
-from infrastructure.repositories.django_orphan_variant_repo import (
-    DjangoOrphanVariantRepository,
+from infrastructure.repositories.django_orphan_variant_attachment_repo import (
+    DjangoOrphanVariantAttachmentRepository,
+)
+from infrastructure.repositories.django_orphan_variant_catalog_repo import (
+    DjangoOrphanVariantCatalogRepository,
 )
 from infrastructure.repositories.django_event_performance_report_repo import (
     DjangoEventPerformanceReportRepository,
@@ -548,7 +551,8 @@ class Container:
         self._work_read_repo = None
         self._variant_read_repo = None
         self._variant_lifecycle_repo = None
-        self._orphan_variant_repo = None
+        self._orphan_variant_catalog_repo = None
+        self._orphan_variant_attachment_repo = None
         self._work_document_repo = None
         self._remedial_sheet_repo = None
         self._remedial_task_group_repo = None
@@ -789,10 +793,20 @@ class Container:
         return self._variant_lifecycle_repo
 
     @property
-    def orphan_variant_repo(self):
-        if self._orphan_variant_repo is None:
-            self._orphan_variant_repo = DjangoOrphanVariantRepository()
-        return self._orphan_variant_repo
+    def orphan_variant_catalog_repo(self):
+        if self._orphan_variant_catalog_repo is None:
+            self._orphan_variant_catalog_repo = (
+                DjangoOrphanVariantCatalogRepository()
+            )
+        return self._orphan_variant_catalog_repo
+
+    @property
+    def orphan_variant_attachment_repo(self):
+        if self._orphan_variant_attachment_repo is None:
+            self._orphan_variant_attachment_repo = (
+                DjangoOrphanVariantAttachmentRepository()
+            )
+        return self._orphan_variant_attachment_repo
 
     @property
     def work_document_repo(self):
@@ -1806,7 +1820,7 @@ class Container:
 
     def get_orphan_variant_list_use_case(self):
         return GetOrphanVariantListUseCase(
-            orphan_variant_repo=self.orphan_variant_repo,
+            orphan_variant_repo=self.orphan_variant_catalog_repo,
         )
 
     def get_remedial_sheet_data_use_case(self):
@@ -1886,7 +1900,7 @@ class Container:
 
     def create_work_from_orphans_use_case(self):
         return CreateWorkFromOrphansUseCase(
-            orphan_variant_repo=self.orphan_variant_repo,
+            orphan_variant_repo=self.orphan_variant_attachment_repo,
         )
 
     def create_work_from_groups_use_case(self):

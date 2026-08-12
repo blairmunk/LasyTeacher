@@ -129,8 +129,11 @@ from infrastructure.repositories.django_event_write_repo import (
 from infrastructure.repositories.django_participation_grading_repo import (
     DjangoParticipationGradingRepository,
 )
-from infrastructure.repositories.django_orphan_variant_repo import (
-    DjangoOrphanVariantRepository,
+from infrastructure.repositories.django_orphan_variant_attachment_repo import (
+    DjangoOrphanVariantAttachmentRepository,
+)
+from infrastructure.repositories.django_orphan_variant_catalog_repo import (
+    DjangoOrphanVariantCatalogRepository,
 )
 from infrastructure.repositories.django_review_overview_repo import (
     DjangoReviewOverviewRepository,
@@ -2149,7 +2152,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             number=7,
             work_name_snapshot='Сирота',
         )
-        repo = DjangoOrphanVariantRepository()
+        repo = DjangoOrphanVariantCatalogRepository()
 
         variants = repo.get_orphan_variants()
         total_orphans = repo.count_orphan_variants()
@@ -2553,7 +2556,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             weight=6,
         )
         use_case = CreateWorkFromOrphansUseCase(
-            orphan_variant_repo=DjangoOrphanVariantRepository(),
+            orphan_variant_repo=DjangoOrphanVariantAttachmentRepository(),
         )
 
         result = use_case.execute(
@@ -2582,12 +2585,15 @@ class DjangoRemedialRepositoryTests(TestCase):
     def test_work_repository_does_not_create_work_for_non_orphan_variant(self):
         work_count = Work.objects.count()
 
-        created = DjangoOrphanVariantRepository().create_work_from_orphan_variants(
-            CreateWorkFromOrphanVariantsParams(
-                name='Не должна сохраниться',
-                work_type='remedial',
-                max_score=0,
-                variant_ids=[str(self.source_variant.pk)],
+        created = (
+            DjangoOrphanVariantAttachmentRepository()
+            .create_work_from_orphan_variants(
+                CreateWorkFromOrphanVariantsParams(
+                    name='Не должна сохраниться',
+                    work_type='remedial',
+                    max_score=0,
+                    variant_ids=[str(self.source_variant.pk)],
+                )
             )
         )
 

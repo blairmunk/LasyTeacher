@@ -362,6 +362,12 @@ from infrastructure.repositories.django_task_reference_catalog_repo import (
 from infrastructure.repositories.django_task_taxonomy_repo import (
     DjangoTaskTaxonomyRepository,
 )
+from infrastructure.repositories.django_orphan_variant_attachment_repo import (
+    DjangoOrphanVariantAttachmentRepository,
+)
+from infrastructure.repositories.django_orphan_variant_catalog_repo import (
+    DjangoOrphanVariantCatalogRepository,
+)
 from infrastructure.repositories.django_task_group_catalog_repo import (
     DjangoTaskGroupCatalogRepository,
 )
@@ -996,6 +1002,10 @@ class ContainerTests(SimpleTestCase):
             orphan_variant_list_use_case,
             GetOrphanVariantListUseCase,
         )
+        self.assertIsInstance(
+            orphan_variant_list_use_case.orphan_variant_repo,
+            DjangoOrphanVariantCatalogRepository,
+        )
         self.assertIsInstance(sync_work_groups_use_case, SyncWorkAnalogGroupsUseCase)
         self.assertIsInstance(compose_variants_use_case, ComposeWorkVariantsUseCase)
         self.assertIsInstance(
@@ -1009,6 +1019,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             create_from_orphans_use_case,
             CreateWorkFromOrphansUseCase,
+        )
+        self.assertIsInstance(
+            create_from_orphans_use_case.orphan_variant_repo,
+            DjangoOrphanVariantAttachmentRepository,
         )
         self.assertIsInstance(create_from_groups_use_case, CreateWorkFromGroupsUseCase)
         self.assertIsInstance(

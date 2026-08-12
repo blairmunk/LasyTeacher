@@ -136,3 +136,37 @@ class BuiltInCodifierImportCommandTests(TestCase):
         self.assertNotEqual(CodifierSpec.objects.get().pk, original_pk)
         self.assertEqual(ContentEntry.objects.count(), 61)
         self.assertIn('Удалён кодификатор ОГЭ 2026', output.getvalue())
+
+    def test_physics_topics_command_builds_catalog_and_bindings(self):
+        call_command('load_codifier_oge', stdout=StringIO())
+        call_command('load_codifier_ege', stdout=StringIO())
+        output = StringIO()
+
+        call_command('load_physics_topics', stdout=output)
+
+        self.assertEqual(Topic.objects.filter(subject='Физика').count(), 31)
+        self.assertEqual(
+            sum(
+                topic.subtopics.count()
+                for topic in Topic.objects.filter(subject='Физика')
+            ),
+            113,
+        )
+        entry = ContentEntry.objects.get(
+            codifier__short_name='ОГЭ 2026',
+            code='1.3',
+        )
+        self.assertEqual(entry.topic.name, 'Механическое движение')
+        self.assertEqual(entry.subtopic.name, 'Скорость')
+        self.assertIn('Привязано: 159 элементов', output.getvalue())
+        self.assertIn('Привязано 159/184', output.getvalue())
+
+    def test_physics_topics_command_reports_missing_codifiers(self):
+        output = StringIO()
+
+        call_command('load_physics_topics', stdout=output)
+
+        self.assertEqual(Topic.objects.count(), 31)
+        self.assertEqual(ContentEntry.objects.count(), 0)
+        self.assertIn('Проблемы:', output.getvalue())
+        self.assertIn('ОГЭ 2026 1.1 — не найден', output.getvalue())

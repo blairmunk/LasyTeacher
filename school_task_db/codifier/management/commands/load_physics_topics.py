@@ -7,10 +7,15 @@
 """
 
 from django.core.management.base import BaseCommand
-from django.db import transaction
 
-from curriculum.models import Topic, SubTopic
-from codifier.models import CodifierSpec, ContentEntry
+from core_logic.entities.curriculum_import import (
+    CodifierContentBindingItem,
+    CurriculumImportDefinition,
+    CurriculumImportRequest,
+    CurriculumSubtopicImportItem,
+    CurriculumTopicImportItem,
+)
+from infrastructure.container import container
 
 
 # === Темы физики ===
@@ -410,6 +415,56 @@ BINDINGS = {
     ('ЕГЭ 2026', '5.3.5'): ('Физика атомного ядра', 'Ядерные реакции. Деление и синтез'),
 }
 
+PHYSICS_SECTIONS = (
+    'Механика',
+    'Тепловые явления',
+    'МКТ и термодинамика',
+    'Электромагнитные явления',
+    'Оптика',
+    'Квантовая физика',
+    'СТО',
+)
+
+
+def build_physics_curriculum_definition():
+    return CurriculumImportDefinition(
+        subject='Физика',
+        sections=PHYSICS_SECTIONS,
+        topics=tuple(
+            CurriculumTopicImportItem(
+                section=section,
+                name=topic_name,
+                grade_level=grade_level,
+                order=topic_order,
+                subtopics=tuple(
+                    CurriculumSubtopicImportItem(name=name, order=order)
+                    for name, order in subtopics
+                ),
+            )
+            for topic_order, (
+                section,
+                topic_name,
+                grade_level,
+                subtopics,
+            ) in enumerate(PHYSICS_TOPICS, start=1)
+        ),
+        bindings=tuple(
+            CodifierContentBindingItem(
+                codifier_short_name=codifier_name,
+                content_code=content_code,
+                topic_name=topic_name,
+                subtopic_name=subtopic_name or '',
+            )
+            for (
+                codifier_name,
+                content_code,
+            ), (
+                topic_name,
+                subtopic_name,
+            ) in BINDINGS.items()
+        ),
+    )
+
 
 class Command(BaseCommand):
     help = 'Создание физических тем и привязка к кодификаторам'
@@ -422,96 +477,38 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        result = container.import_curriculum_use_case().execute(
+            CurriculumImportRequest(
+                definition=build_physics_curriculum_definition(),
+                clear_existing=options['clear'],
+            ),
+        )
         if options['clear']:
-            # Удаляем только физические секции
-            physics_sections = [
-                'Механика', 'Тепловые явления', 'МКТ и термодинамика',
-                'Электромагнитные явления', 'Оптика', 'Квантовая физика', 'СТО',
-            ]
-            deleted_sub, _ = SubTopic.objects.filter(
-                topic__section__in=physics_sections
-            ).delete()
-            deleted_top, _ = Topic.objects.filter(
-                section__in=physics_sections
-            ).delete()
             self.stdout.write(self.style.WARNING(
-                f'Удалено: {deleted_top} тем, {deleted_sub} подтем'
+                f'Удалено: {result.topics_deleted} тем, '
+                f'{result.subtopics_deleted} подтем',
             ))
 
-        with transaction.atomic():
-            # 1. Создаём темы и подтемы
-            topic_map = {}      # name → Topic
-            subtopic_map = {}   # name → SubTopic
-            topic_count = 0
-            subtopic_count = 0
+        self.stdout.write(
+            f'📚 Тем: {result.topics_created}, '
+            f'подтем: {result.subtopics_created}',
+        )
+        self.stdout.write(f'🔗 Привязано: {result.bindings_applied} элементов')
 
-            for section, topic_name, grade, subtopics in PHYSICS_TOPICS:
-                topic, created = Topic.objects.get_or_create(
-                    name=topic_name,
-                    section=section,
-                    defaults={
-                        'subject': 'Физика',
-                        'grade_level': grade,
-                        'order': topic_count + 1,
-                    }
+        if result.issues:
+            self.stdout.write(self.style.WARNING('\nПроблемы:'))
+            for issue in result.issues:
+                reason = (
+                    'найдено несколько элементов'
+                    if issue.reason == 'entry_ambiguous'
+                    else 'не найден'
                 )
-                topic_map[topic_name] = topic
-                if created:
-                    topic_count += 1
+                self.stdout.write(
+                    f'  ❌ {issue.codifier_short_name} '
+                    f'{issue.content_code} — {reason}',
+                )
 
-                for sub_name, order in subtopics:
-                    subtopic, created = SubTopic.objects.get_or_create(
-                        topic=topic,
-                        name=sub_name,
-                        defaults={'order': order}
-                    )
-                    subtopic_map[sub_name] = subtopic
-                    if created:
-                        subtopic_count += 1
-
-            self.stdout.write(f'📚 Тем: {topic_count}, подтем: {subtopic_count}')
-
-            # 2. Привязка ContentEntry → Topic/SubTopic
-            bound = 0
-            errors = []
-
-            for (cod_name, code), (topic_name, subtopic_name) in BINDINGS.items():
-                try:
-                    entry = ContentEntry.objects.get(
-                        codifier__short_name=cod_name,
-                        code=code,
-                    )
-                except ContentEntry.DoesNotExist:
-                    errors.append(f'❌ {cod_name} {code} — не найден')
-                    continue
-
-                topic = topic_map.get(topic_name)
-                if not topic:
-                    errors.append(f'❌ {cod_name} {code} — тема «{topic_name}» не найдена')
-                    continue
-
-                entry.topic = topic
-
-                if subtopic_name:
-                    subtopic = subtopic_map.get(subtopic_name)
-                    if subtopic:
-                        entry.subtopic = subtopic
-                    else:
-                        errors.append(f'⚠️  {cod_name} {code} — подтема «{subtopic_name}» не найдена')
-
-                entry.save()
-                bound += 1
-
-            self.stdout.write(f'🔗 Привязано: {bound} элементов')
-
-            if errors:
-                self.stdout.write(self.style.WARNING('\nПроблемы:'))
-                for e in errors:
-                    self.stdout.write(f'  {e}')
-
-            # 3. Статистика
-            total_entries = ContentEntry.objects.count()
-            bound_entries = ContentEntry.objects.filter(topic__isnull=False).count()
-            self.stdout.write(self.style.SUCCESS(
-                f'\n🎉 Готово! Привязано {bound_entries}/{total_entries} элементов кодификаторов'
-            ))
+        self.stdout.write(self.style.SUCCESS(
+            f'\n🎉 Готово! Привязано {result.bound_codifier_entries}/'
+            f'{result.total_codifier_entries} элементов кодификаторов',
+        ))

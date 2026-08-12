@@ -387,7 +387,12 @@ from infrastructure.repositories.django_heatmap_matrix_repo import (
 from infrastructure.repositories.django_reports_dashboard_repo import (
     DjangoReportsDashboardRepository,
 )
-from infrastructure.repositories.django_settings_repo import DjangoSettingsRepository
+from infrastructure.repositories.django_site_settings_command_repo import (
+    DjangoSiteSettingsCommandRepository,
+)
+from infrastructure.repositories.django_site_settings_query_repo import (
+    DjangoSiteSettingsQueryRepository,
+)
 from infrastructure.repositories.django_source_catalog_repo import (
     DjangoSourceCatalogRepository,
 )
@@ -598,7 +603,8 @@ class Container:
         self._dashboard_summary_repo = None
         self._global_search_repo = None
         self._import_log_repo = None
-        self._settings_repo = None
+        self._site_settings_query_repo = None
+        self._site_settings_command_repo = None
         self._presentation_profile_catalog_repo = None
         self._presentation_profile_command_repo = None
         self._codifier_form_adapter = None
@@ -1047,10 +1053,18 @@ class Container:
         return self._import_log_repo
 
     @property
-    def settings_repo(self):
-        if self._settings_repo is None:
-            self._settings_repo = DjangoSettingsRepository()
-        return self._settings_repo
+    def site_settings_query_repo(self):
+        if self._site_settings_query_repo is None:
+            self._site_settings_query_repo = DjangoSiteSettingsQueryRepository()
+        return self._site_settings_query_repo
+
+    @property
+    def site_settings_command_repo(self):
+        if self._site_settings_command_repo is None:
+            self._site_settings_command_repo = (
+                DjangoSiteSettingsCommandRepository()
+            )
+        return self._site_settings_command_repo
 
     @property
     def presentation_profile_catalog_repo(self):
@@ -1476,12 +1490,12 @@ class Container:
 
     def get_site_settings_use_case(self):
         return GetSiteSettingsUseCase(
-            settings_repo=self.settings_repo,
+            settings_repo=self.site_settings_query_repo,
         )
 
     def save_site_settings_use_case(self):
         return SaveSiteSettingsUseCase(
-            settings_repo=self.settings_repo,
+            settings_repo=self.site_settings_command_repo,
         )
 
     def validate_task_import_json_use_case(self):

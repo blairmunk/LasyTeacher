@@ -2,7 +2,12 @@ from django.test import TestCase
 from django.urls import reverse
 
 from core_logic.entities.site_settings import SaveSiteSettingsParams
-from infrastructure.repositories.django_settings_repo import DjangoSettingsRepository
+from infrastructure.repositories.django_site_settings_command_repo import (
+    DjangoSiteSettingsCommandRepository,
+)
+from infrastructure.repositories.django_site_settings_query_repo import (
+    DjangoSiteSettingsQueryRepository,
+)
 from site_settings.models import SiteSettings
 
 
@@ -42,11 +47,12 @@ class SiteSettingsViewTests(TestCase):
         self.assertEqual(settings.default_variants_count, 4)
 
 
-class DjangoSettingsRepositoryTests(TestCase):
+class DjangoSettingsRepositoryAdaptersTests(TestCase):
     def test_returns_and_saves_singleton_settings(self):
-        repo = DjangoSettingsRepository()
+        command_repo = DjangoSiteSettingsCommandRepository()
+        query_repo = DjangoSiteSettingsQueryRepository()
 
-        result = repo.save_site_settings(
+        result = command_repo.save_site_settings(
             SaveSiteSettingsParams(
                 school_name='Гимназия',
                 teacher_name='Петрова',
@@ -58,7 +64,7 @@ class DjangoSettingsRepositoryTests(TestCase):
                 pdf_margin_bottom=13,
             )
         )
-        settings = repo.get_site_settings()
+        settings = query_repo.get_site_settings()
 
         self.assertEqual(result.status, 'saved')
         self.assertEqual(settings.school_name, 'Гимназия')

@@ -358,7 +358,12 @@ from infrastructure.repositories.django_student_digest_repo import (
 from infrastructure.repositories.django_student_performance_repo import (
     DjangoStudentPerformanceRepository,
 )
-from infrastructure.repositories.django_settings_repo import DjangoSettingsRepository
+from infrastructure.repositories.django_site_settings_command_repo import (
+    DjangoSiteSettingsCommandRepository,
+)
+from infrastructure.repositories.django_site_settings_query_repo import (
+    DjangoSiteSettingsQueryRepository,
+)
 from infrastructure.repositories.django_task_read_repo import (
     DjangoTaskReadRepository,
 )
@@ -936,8 +941,16 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(import_history_use_case, GetImportHistoryUseCase)
         self.assertIsInstance(site_settings_use_case, GetSiteSettingsUseCase)
         self.assertIsInstance(
+            site_settings_use_case.settings_repo,
+            DjangoSiteSettingsQueryRepository,
+        )
+        self.assertIsInstance(
             save_site_settings_use_case,
             SaveSiteSettingsUseCase,
+        )
+        self.assertIsInstance(
+            save_site_settings_use_case.settings_repo,
+            DjangoSiteSettingsCommandRepository,
         )
         self.assertIsInstance(
             import_validation_use_case,
@@ -1294,7 +1307,14 @@ class ContainerTests(SimpleTestCase):
             container.import_log_repo,
             DjangoImportLogRepository,
         )
-        self.assertIsInstance(container.settings_repo, DjangoSettingsRepository)
+        self.assertIsInstance(
+            container.site_settings_query_repo,
+            DjangoSiteSettingsQueryRepository,
+        )
+        self.assertIsInstance(
+            container.site_settings_command_repo,
+            DjangoSiteSettingsCommandRepository,
+        )
         self.assertIsInstance(
             container.presentation_profile_catalog_repo,
             DjangoPresentationProfileCatalogRepository,

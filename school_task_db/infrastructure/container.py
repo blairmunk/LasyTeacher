@@ -83,6 +83,7 @@ from core_logic.use_cases.update_presentation_profile import (
 )
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.import_students import ImportStudentsUseCase
+from core_logic.use_cases.import_codifier import ImportCodifierUseCase
 from core_logic.use_cases.get_add_tasks_to_group import GetAddTasksToGroupUseCase
 from core_logic.use_cases.get_academic_year_list import (
     GetAcademicYearListUseCase,
@@ -311,6 +312,9 @@ from infrastructure.repositories.django_codifier_catalog_repo import (
 )
 from infrastructure.repositories.django_codifier_detail_repo import (
     DjangoCodifierDetailRepository,
+)
+from infrastructure.repositories.django_codifier_import_repo import (
+    DjangoCodifierImportRepository,
 )
 from infrastructure.repositories.django_dashboard_summary_repo import (
     DjangoDashboardSummaryRepository,
@@ -625,6 +629,7 @@ class Container:
         self._topic_catalog_repo = None
         self._codifier_catalog_repo = None
         self._codifier_detail_repo = None
+        self._codifier_import_repo = None
         self._dashboard_summary_repo = None
         self._global_search_repo = None
         self._import_log_repo = None
@@ -1114,6 +1119,12 @@ class Container:
         return self._codifier_detail_repo
 
     @property
+    def codifier_import_repo(self):
+        if self._codifier_import_repo is None:
+            self._codifier_import_repo = DjangoCodifierImportRepository()
+        return self._codifier_import_repo
+
+    @property
     def dashboard_summary_repo(self):
         if self._dashboard_summary_repo is None:
             self._dashboard_summary_repo = DjangoDashboardSummaryRepository()
@@ -1446,6 +1457,12 @@ class Container:
         return ImportStudentsUseCase(
             snapshot_repo=self.student_import_snapshot_repo,
             command_repo=self.student_import_command_repo,
+            transaction_manager=self.transaction_manager,
+        )
+
+    def import_codifier_use_case(self):
+        return ImportCodifierUseCase(
+            codifier_repo=self.codifier_import_repo,
             transaction_manager=self.transaction_manager,
         )
 

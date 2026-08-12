@@ -1,22 +1,14 @@
-"""Persistence boundary for event performance reports."""
+"""Command persistence boundary for event report narratives."""
 
 from abc import ABC, abstractmethod
 
 from core_logic.entities.event_performance_report import (
-    EventPerformanceReportSource,
     SaveEventReportNarrativeParams,
     SaveEventReportNarrativeResult,
 )
 
 
-class IEventPerformanceReportRepository(ABC):
-    @abstractmethod
-    def get_event_report_source(
-        self,
-        event_id: str,
-    ) -> EventPerformanceReportSource | None:
-        """Return normalized facts for one event report."""
-
+class IEventReportNarrativeCommandRepository(ABC):
     @abstractmethod
     def save_event_report_narrative(
         self,

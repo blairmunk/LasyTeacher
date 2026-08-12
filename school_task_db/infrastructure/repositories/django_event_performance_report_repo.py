@@ -10,8 +10,11 @@ from core_logic.entities.event_performance_report import (
     SaveEventReportNarrativeParams,
     SaveEventReportNarrativeResult,
 )
-from core_logic.interfaces.event_performance_report_repo import (
-    IEventPerformanceReportRepository,
+from core_logic.interfaces.event_performance_report_query_repo import (
+    IEventPerformanceReportQueryRepository,
+)
+from core_logic.interfaces.event_report_narrative_command_repo import (
+    IEventReportNarrativeCommandRepository,
 )
 from core_logic.services.event_report_task_fact_service import (
     EventReportTaskFactService,
@@ -33,7 +36,8 @@ from reports.models import EventReportNarrativeModel
 
 
 class DjangoEventPerformanceReportRepository(
-    IEventPerformanceReportRepository,
+    IEventPerformanceReportQueryRepository,
+    IEventReportNarrativeCommandRepository,
 ):
     def __init__(self, task_fact_service=None):
         self.task_fact_service = (

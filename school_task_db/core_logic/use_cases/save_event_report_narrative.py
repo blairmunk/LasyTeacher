@@ -3,13 +3,16 @@
 from core_logic.entities.event_performance_report import (
     SaveEventReportNarrativeParams,
 )
-from core_logic.interfaces.event_performance_report_repo import (
-    IEventPerformanceReportRepository,
+from core_logic.interfaces.event_report_narrative_command_repo import (
+    IEventReportNarrativeCommandRepository,
 )
 
 
 class SaveEventReportNarrativeUseCase:
-    def __init__(self, report_repo: IEventPerformanceReportRepository):
+    def __init__(
+        self,
+        report_repo: IEventReportNarrativeCommandRepository,
+    ):
         self.report_repo = report_repo
 
     def execute(self, params: SaveEventReportNarrativeParams):

@@ -1,3 +1,6 @@
+from io import StringIO
+
+from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 
@@ -82,3 +85,54 @@ class CodifierViewsTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 404)
+
+
+class BuiltInCodifierImportCommandTests(TestCase):
+    def test_imports_oge_and_ege_definitions(self):
+        oge_output = StringIO()
+        ege_output = StringIO()
+
+        call_command('load_codifier_oge', stdout=oge_output)
+        call_command('load_codifier_ege', stdout=ege_output)
+
+        self.assertEqual(CodifierSpec.objects.count(), 2)
+        self.assertEqual(
+            ContentEntry.objects.filter(codifier__exam_type='oge').count(),
+            61,
+        )
+        self.assertEqual(
+            ContentEntry.objects.filter(codifier__exam_type='ege').count(),
+            123,
+        )
+        self.assertEqual(
+            Requirement.objects.filter(codifier__exam_type='oge').count(),
+            11,
+        )
+        self.assertEqual(
+            Requirement.objects.filter(codifier__exam_type='ege').count(),
+            10,
+        )
+        self.assertIn('Кодификатор ОГЭ 2026 загружен', oge_output.getvalue())
+        self.assertIn('Кодификатор ЕГЭ 2026 загружен', ege_output.getvalue())
+
+    def test_reports_existing_codifier_without_duplicate_data(self):
+        call_command('load_codifier_oge', stdout=StringIO())
+        output = StringIO()
+
+        call_command('load_codifier_oge', stdout=output)
+
+        self.assertEqual(CodifierSpec.objects.count(), 1)
+        self.assertEqual(ContentEntry.objects.count(), 61)
+        self.assertIn('уже существует', output.getvalue())
+
+    def test_clear_replaces_existing_codifier(self):
+        call_command('load_codifier_oge', stdout=StringIO())
+        original_pk = CodifierSpec.objects.get().pk
+        output = StringIO()
+
+        call_command('load_codifier_oge', '--clear', stdout=output)
+
+        self.assertEqual(CodifierSpec.objects.count(), 1)
+        self.assertNotEqual(CodifierSpec.objects.get().pk, original_pk)
+        self.assertEqual(ContentEntry.objects.count(), 61)
+        self.assertIn('Удалён кодификатор ОГЭ 2026', output.getvalue())

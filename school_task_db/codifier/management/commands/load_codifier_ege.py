@@ -7,10 +7,10 @@
     python manage.py load_codifier_ege --clear
 """
 
-from django.core.management.base import BaseCommand
-from django.db import transaction
-
-from codifier.models import CodifierSpec, ContentEntry, Requirement
+from codifier.management.built_in_codifier_import import (
+    BuiltInCodifierImportCommand,
+    build_codifier_definition,
+)
 
 
 # === ДАННЫЕ: Элементы содержания (3 уровня) ===
@@ -260,76 +260,14 @@ REQUIREMENTS_DATA = [
 ]
 
 
-class Command(BaseCommand):
+class Command(BuiltInCodifierImportCommand):
     help = 'Загрузка кодификатора ЕГЭ 2026 по физике'
-
-    def add_arguments(self, parser):
-        parser.add_argument(
-            '--clear',
-            action='store_true',
-            help='Удалить существующий кодификатор ЕГЭ 2026 перед загрузкой',
-        )
-
-    def handle(self, *args, **options):
-        if options['clear']:
-            deleted, _ = CodifierSpec.objects.filter(
-                exam_type='ege', year=2026, subject='Физика'
-            ).delete()
-            if deleted:
-                self.stdout.write(self.style.WARNING(
-                    f'Удалён кодификатор ЕГЭ 2026 ({deleted} объектов)'
-                ))
-
-        if CodifierSpec.objects.filter(
-            exam_type='ege', year=2026, subject='Физика'
-        ).exists():
-            self.stdout.write(self.style.ERROR(
-                'Кодификатор ЕГЭ 2026 уже существует. '
-                'Используйте --clear для перезагрузки.'
-            ))
-            return
-
-        with transaction.atomic():
-            spec = CodifierSpec.objects.create(
-                name='Кодификатор ЕГЭ 2026 по физике',
-                short_name='ЕГЭ 2026',
-                subject='Физика',
-                exam_type='ege',
-                year=2026,
-                is_active=True,
-            )
-            self.stdout.write(f'✅ Создан: {spec}')
-
-            entries_map = {}
-            content_count = 0
-
-            for code, name, parent_code, grade in CONTENT_DATA:
-                parent = entries_map.get(parent_code) if parent_code else None
-                entry = ContentEntry.objects.create(
-                    codifier=spec,
-                    code=code,
-                    name=name,
-                    parent=parent,
-                    grade_studied=grade,
-                )
-                entries_map[code] = entry
-                content_count += 1
-
-            self.stdout.write(f'   📋 Элементов содержания: {content_count}')
-
-            req_count = 0
-            for code, name, level in REQUIREMENTS_DATA:
-                Requirement.objects.create(
-                    codifier=spec,
-                    code=code,
-                    name=name,
-                    cognitive_level=level,
-                )
-                req_count += 1
-
-            self.stdout.write(f'   📝 Требований: {req_count}')
-
-        self.stdout.write(self.style.SUCCESS(
-            f'\n🎉 Кодификатор ЕГЭ 2026 загружен: '
-            f'{content_count} элементов, {req_count} требований'
-        ))
+    definition = build_codifier_definition(
+        name='Кодификатор ЕГЭ 2026 по физике',
+        short_name='ЕГЭ 2026',
+        subject='Физика',
+        exam_type='ege',
+        year=2026,
+        content_data=CONTENT_DATA,
+        requirements_data=REQUIREMENTS_DATA,
+    )

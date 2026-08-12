@@ -51,6 +51,9 @@ class TaskContentSnapshot:
     source_detail: str = ''
     content_element: str = ''
     requirement_element: str = ''
+    codifier_content_entries: Tuple[TaskCodifierSnapshot, ...] = field(
+        default_factory=tuple,
+    )
     codifier_requirements: Tuple[TaskCodifierSnapshot, ...] = field(
         default_factory=tuple,
     )
@@ -67,6 +70,11 @@ class TaskContentSnapshot:
             raise ValueError(
                 f'Unsupported task snapshot schema: {self.schema_version}',
             )
+        object.__setattr__(
+            self,
+            'codifier_content_entries',
+            tuple(self.codifier_content_entries),
+        )
         object.__setattr__(
             self,
             'codifier_requirements',
@@ -87,6 +95,10 @@ class TaskContentSnapshot:
         if not value:
             raise ValueError('Variant task has no task content snapshot')
         data = dict(value)
+        data['codifier_content_entries'] = tuple(
+            TaskCodifierSnapshot(**item)
+            for item in data.get('codifier_content_entries', ())
+        )
         data['codifier_requirements'] = tuple(
             TaskCodifierSnapshot(**item)
             for item in data.get('codifier_requirements', ())
@@ -131,6 +143,16 @@ def task_content_snapshot_payload(value) -> Mapping[str, Any]:
         'source_detail': snapshot.source_detail,
         'content_element': snapshot.content_element,
         'requirement_element': snapshot.requirement_element,
+        'codifier_content_entries': tuple(
+            {
+                'codifier_id': item.codifier_id,
+                'codifier_name': item.codifier_name,
+                'codifier_short_name': item.codifier_short_name,
+                'code': item.code,
+                'name': item.name,
+            }
+            for item in snapshot.codifier_content_entries
+        ),
         'codifier_requirements': tuple(
             {
                 'codifier_id': item.codifier_id,

@@ -15,6 +15,15 @@ class TaskContentSnapshotTests(TestCase):
             text='Условие',
             answer='Ответ',
             topic_name='Динамика',
+            codifier_content_entries=(
+                TaskCodifierSnapshot(
+                    codifier_id='codifier-1',
+                    codifier_name='ОГЭ по физике',
+                    codifier_short_name='ОГЭ',
+                    code='1.2',
+                    name='Динамика',
+                ),
+            ),
             codifier_requirements=(
                 TaskCodifierSnapshot(
                     codifier_id='codifier-1',
@@ -42,6 +51,15 @@ class TaskContentSnapshotTests(TestCase):
             answer='Ответ',
             topic_name='Динамика',
             source_name='Сборник',
+            codifier_content_entries=(
+                TaskCodifierSnapshot(
+                    codifier_id='codifier-1',
+                    codifier_name='ОГЭ по физике',
+                    codifier_short_name='ОГЭ',
+                    code='1.2',
+                    name='Динамика',
+                ),
+            ),
             codifier_requirements=(
                 TaskCodifierSnapshot(
                     codifier_id='codifier-1',
@@ -67,6 +85,10 @@ class TaskContentSnapshotTests(TestCase):
         self.assertEqual(payload['text'], 'Условие')
         self.assertEqual(payload['topic'], 'Динамика')
         self.assertEqual(payload['source'], 'Сборник')
+        self.assertEqual(
+            payload['codifier_content_entries'][0]['code'],
+            '1.2',
+        )
         self.assertEqual(
             payload['codifier_requirements'][0]['code'],
             '2.3',

@@ -28,6 +28,16 @@ def build_task_content_snapshots(tasks):
 
 
 def _build_task_content_snapshot(task, content_entries):
+    content_snapshots = tuple(
+        TaskCodifierSnapshot(
+            codifier_id=str(entry.codifier_id),
+            codifier_name=entry.codifier.name,
+            codifier_short_name=entry.codifier.short_name,
+            code=entry.code,
+            name=entry.name,
+        )
+        for entry in content_entries
+    )
     requirements = tuple(
         TaskCodifierSnapshot(
             codifier_id=str(requirement.codifier_id),
@@ -62,6 +72,7 @@ def _build_task_content_snapshot(task, content_entries):
         source_detail=task.source_detail,
         content_element=task.content_element.strip(),
         requirement_element=task.requirement_element.strip(),
+        codifier_content_entries=content_snapshots,
         codifier_requirements=requirements,
         content_element_descriptions=tuple(dict.fromkeys(
             f'{entry.codifier.short_name}: {entry.name}'

@@ -60,6 +60,11 @@ class TaskContentSnapshotClassificationTests(TestCase):
             snapshot.content_element_descriptions,
             ('ЕГЭ 2026: ЕГЭ: динамика',),
         )
+        self.assertEqual(snapshot.codifier_content_entries[0].code, '1.2')
+        self.assertEqual(
+            snapshot.codifier_content_entries[0].codifier_short_name,
+            'ЕГЭ 2026',
+        )
 
     def test_legacy_code_matching_remains_when_explicit_entries_are_empty(self):
         snapshot = build_task_content_snapshots([self.task])[str(self.task.pk)]

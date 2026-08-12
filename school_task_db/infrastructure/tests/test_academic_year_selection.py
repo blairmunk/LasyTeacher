@@ -6,13 +6,16 @@ from django.urls import reverse
 
 from core.models import AcademicYear
 from curriculum.models import Course
-from infrastructure.repositories.django_academic_year_repo import (
-    DjangoAcademicYearRepository,
+from infrastructure.repositories.django_academic_year_activation_repo import (
+    DjangoAcademicYearActivationRepository,
+)
+from infrastructure.repositories.django_academic_year_catalog_repo import (
+    DjangoAcademicYearCatalogRepository,
 )
 from students.models import Student, StudentGroup
 
 
-class DjangoAcademicYearRepositoryTests(TestCase):
+class DjangoAcademicYearRepositoryAdaptersTests(TestCase):
     def setUp(self):
         self.active_year = AcademicYear.objects.create(
             name='2026-2027',
@@ -25,12 +28,15 @@ class DjangoAcademicYearRepositoryTests(TestCase):
             start_date=dt.date(2025, 9, 1),
             end_date=dt.date(2026, 8, 31),
         )
-        self.repo = DjangoAcademicYearRepository()
+        self.catalog_repo = DjangoAcademicYearCatalogRepository()
+        self.activation_repo = DjangoAcademicYearActivationRepository()
 
     def test_returns_clean_refs_in_display_order(self):
-        years = self.repo.get_academic_years()
-        active_year = self.repo.get_active_academic_year()
-        older_year = self.repo.get_academic_year(str(self.older_year.pk))
+        years = self.catalog_repo.get_academic_years()
+        active_year = self.catalog_repo.get_active_academic_year()
+        older_year = self.catalog_repo.get_academic_year(
+            str(self.older_year.pk),
+        )
 
         self.assertEqual(
             [year.pk for year in years],
@@ -41,10 +47,14 @@ class DjangoAcademicYearRepositoryTests(TestCase):
         self.assertEqual(older_year.name, '2025-2026')
 
     def test_invalid_id_returns_none(self):
-        self.assertIsNone(self.repo.get_academic_year('not-a-uuid'))
+        self.assertIsNone(
+            self.catalog_repo.get_academic_year('not-a-uuid')
+        )
 
     def test_activation_switches_the_single_active_year(self):
-        result = self.repo.activate_academic_year(str(self.older_year.pk))
+        result = self.activation_repo.activate_academic_year(
+            str(self.older_year.pk),
+        )
 
         self.active_year.refresh_from_db()
         self.older_year.refresh_from_db()
@@ -54,7 +64,9 @@ class DjangoAcademicYearRepositoryTests(TestCase):
         self.assertEqual(result.pk, str(self.older_year.pk))
 
     def test_activation_returns_none_for_invalid_id(self):
-        self.assertIsNone(self.repo.activate_academic_year('not-a-uuid'))
+        self.assertIsNone(
+            self.activation_repo.activate_academic_year('not-a-uuid')
+        )
 
     def test_database_rejects_a_second_active_year(self):
         with self.assertRaises(IntegrityError), transaction.atomic():

@@ -296,8 +296,11 @@ from core_logic.use_cases.validate_task_import_json import (
 from core_logic.use_cases.validate_review_work_scan import (
     ValidateReviewWorkScanUseCase,
 )
-from infrastructure.repositories.django_academic_year_repo import (
-    DjangoAcademicYearRepository,
+from infrastructure.repositories.django_academic_year_activation_repo import (
+    DjangoAcademicYearActivationRepository,
+)
+from infrastructure.repositories.django_academic_year_catalog_repo import (
+    DjangoAcademicYearCatalogRepository,
 )
 from infrastructure.repositories.django_attempt_snapshot_repo import (
     DjangoAttemptSnapshotRepository,
@@ -528,7 +531,8 @@ class Container:
     """Wires pure use cases to Django infrastructure adapters."""
 
     def __init__(self):
-        self._academic_year_repo = None
+        self._academic_year_catalog_repo = None
+        self._academic_year_activation_repo = None
         self._attempt_snapshot_repo = None
         self._student_catalog_repo = None
         self._student_command_repo = None
@@ -615,10 +619,20 @@ class Container:
         self._transaction_manager = None
 
     @property
-    def academic_year_repo(self):
-        if self._academic_year_repo is None:
-            self._academic_year_repo = DjangoAcademicYearRepository()
-        return self._academic_year_repo
+    def academic_year_catalog_repo(self):
+        if self._academic_year_catalog_repo is None:
+            self._academic_year_catalog_repo = (
+                DjangoAcademicYearCatalogRepository()
+            )
+        return self._academic_year_catalog_repo
+
+    @property
+    def academic_year_activation_repo(self):
+        if self._academic_year_activation_repo is None:
+            self._academic_year_activation_repo = (
+                DjangoAcademicYearActivationRepository()
+            )
+        return self._academic_year_activation_repo
 
     @property
     def attempt_snapshot_repo(self):
@@ -1278,17 +1292,17 @@ class Container:
 
     def resolve_academic_year_use_case(self):
         return ResolveAcademicYearUseCase(
-            academic_year_repo=self.academic_year_repo,
+            academic_year_repo=self.academic_year_catalog_repo,
         )
 
     def get_academic_year_list_use_case(self):
         return GetAcademicYearListUseCase(
-            academic_year_repo=self.academic_year_repo,
+            academic_year_repo=self.academic_year_catalog_repo,
         )
 
     def activate_academic_year_use_case(self):
         return ActivateAcademicYearUseCase(
-            academic_year_repo=self.academic_year_repo,
+            academic_year_repo=self.academic_year_activation_repo,
         )
 
     def get_student_group_list_use_case(self):

@@ -251,8 +251,11 @@ from infrastructure.repositories.django_codifier_catalog_repo import (
 from infrastructure.repositories.django_codifier_detail_repo import (
     DjangoCodifierDetailRepository,
 )
-from infrastructure.repositories.django_academic_year_repo import (
-    DjangoAcademicYearRepository,
+from infrastructure.repositories.django_academic_year_activation_repo import (
+    DjangoAcademicYearActivationRepository,
+)
+from infrastructure.repositories.django_academic_year_catalog_repo import (
+    DjangoAcademicYearCatalogRepository,
 )
 from infrastructure.repositories.django_dashboard_summary_repo import (
     DjangoDashboardSummaryRepository,
@@ -491,7 +494,7 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(use_case, ActivateAcademicYearUseCase)
         self.assertIsInstance(
             use_case.academic_year_repo,
-            DjangoAcademicYearRepository,
+            DjangoAcademicYearActivationRepository,
         )
 
     def test_document_engine_uses_sectioned_renderer_factory(self):
@@ -1120,8 +1123,12 @@ class ContainerTests(SimpleTestCase):
             DjangoStudentRemedialRepository,
         )
         self.assertIsInstance(
-            container.academic_year_repo,
-            DjangoAcademicYearRepository,
+            container.academic_year_catalog_repo,
+            DjangoAcademicYearCatalogRepository,
+        )
+        self.assertIsInstance(
+            container.academic_year_activation_repo,
+            DjangoAcademicYearActivationRepository,
         )
         self.assertIsInstance(
             container.task_read_repo,

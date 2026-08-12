@@ -4,6 +4,10 @@ from unittest.mock import patch
 from django.test import SimpleTestCase
 
 from core_logic.use_cases.add_event_participants import AddEventParticipantsUseCase
+from core_logic.use_cases.analyze_task_images import (
+    AnalyzeTaskImagesUseCase,
+    ApplyTaskImagePositionSuggestionsUseCase,
+)
 from core_logic.use_cases.activate_academic_year import (
     ActivateAcademicYearUseCase,
 )
@@ -385,6 +389,12 @@ from infrastructure.repositories.django_task_reference_catalog_repo import (
 from infrastructure.repositories.django_task_taxonomy_repo import (
     DjangoTaskTaxonomyRepository,
 )
+from infrastructure.repositories.django_task_image_audit_command_repo import (
+    DjangoTaskImageAuditCommandRepository,
+)
+from infrastructure.repositories.django_task_image_audit_query_repo import (
+    DjangoTaskImageAuditQueryRepository,
+)
 from infrastructure.repositories.django_orphan_variant_attachment_repo import (
     DjangoOrphanVariantAttachmentRepository,
 )
@@ -518,6 +528,28 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             use_case.academic_year_repo,
             DjangoAcademicYearActivationRepository,
+        )
+
+    def test_wires_task_image_audit_use_cases_to_separate_adapters(self):
+        container = Container()
+
+        analyze_use_case = container.analyze_task_images_use_case()
+        apply_use_case = (
+            container.apply_task_image_position_suggestions_use_case()
+        )
+
+        self.assertIsInstance(analyze_use_case, AnalyzeTaskImagesUseCase)
+        self.assertIsInstance(
+            analyze_use_case.image_repo,
+            DjangoTaskImageAuditQueryRepository,
+        )
+        self.assertIsInstance(
+            apply_use_case,
+            ApplyTaskImagePositionSuggestionsUseCase,
+        )
+        self.assertIsInstance(
+            apply_use_case.image_repo,
+            DjangoTaskImageAuditCommandRepository,
         )
 
     def test_document_engine_uses_sectioned_renderer_factory(self):

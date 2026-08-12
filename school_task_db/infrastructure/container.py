@@ -456,8 +456,11 @@ from infrastructure.repositories.django_task_group_management_repo import (
 from infrastructure.repositories.django_work_task_group_repo import (
     DjangoWorkTaskGroupRepository,
 )
-from infrastructure.repositories.django_task_image_audit_repo import (
-    DjangoTaskImageAuditRepository,
+from infrastructure.repositories.django_task_image_audit_command_repo import (
+    DjangoTaskImageAuditCommandRepository,
+)
+from infrastructure.repositories.django_task_image_audit_query_repo import (
+    DjangoTaskImageAuditQueryRepository,
 )
 from infrastructure.repositories.django_task_db_health_repo import (
     DjangoTaskDBHealthRepository,
@@ -569,7 +572,8 @@ class Container:
         self._task_group_management_repo = None
         self._work_task_group_repo = None
         self._task_math_status_cache = None
-        self._task_image_audit_repo = None
+        self._task_image_audit_query_repo = None
+        self._task_image_audit_command_repo = None
         self._work_specification_repo = None
         self._work_variant_creation_repo = None
         self._variant_generation_form_repo = None
@@ -781,10 +785,20 @@ class Container:
         return self._task_math_status_cache
 
     @property
-    def task_image_audit_repo(self):
-        if self._task_image_audit_repo is None:
-            self._task_image_audit_repo = DjangoTaskImageAuditRepository()
-        return self._task_image_audit_repo
+    def task_image_audit_query_repo(self):
+        if self._task_image_audit_query_repo is None:
+            self._task_image_audit_query_repo = (
+                DjangoTaskImageAuditQueryRepository()
+            )
+        return self._task_image_audit_query_repo
+
+    @property
+    def task_image_audit_command_repo(self):
+        if self._task_image_audit_command_repo is None:
+            self._task_image_audit_command_repo = (
+                DjangoTaskImageAuditCommandRepository()
+            )
+        return self._task_image_audit_command_repo
 
     @property
     def work_specification_repo(self):
@@ -1775,12 +1789,12 @@ class Container:
 
     def analyze_task_images_use_case(self):
         return AnalyzeTaskImagesUseCase(
-            image_repo=self.task_image_audit_repo,
+            image_repo=self.task_image_audit_query_repo,
         )
 
     def apply_task_image_position_suggestions_use_case(self):
         return ApplyTaskImagePositionSuggestionsUseCase(
-            image_repo=self.task_image_audit_repo,
+            image_repo=self.task_image_audit_command_repo,
         )
 
     def add_event_participants_use_case(self):

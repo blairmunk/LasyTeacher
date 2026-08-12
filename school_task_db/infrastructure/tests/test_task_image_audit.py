@@ -6,13 +6,16 @@ from django.test import TestCase
 
 from core_logic.entities.task_image_audit import TaskImagePositionSuggestion
 from curriculum.models import Topic
-from infrastructure.repositories.django_task_image_audit_repo import (
-    DjangoTaskImageAuditRepository,
+from infrastructure.repositories.django_task_image_audit_command_repo import (
+    DjangoTaskImageAuditCommandRepository,
+)
+from infrastructure.repositories.django_task_image_audit_query_repo import (
+    DjangoTaskImageAuditQueryRepository,
 )
 from tasks.models import Task, TaskImage
 
 
-class DjangoTaskImageAuditRepositoryTests(TestCase):
+class DjangoTaskImageAuditRepositoryAdaptersTests(TestCase):
     def setUp(self):
         topic = Topic.objects.create(
             name='Оптика',
@@ -40,10 +43,11 @@ class DjangoTaskImageAuditRepositoryTests(TestCase):
         )
 
     def test_lists_audit_sources_and_updates_only_missing_positions(self):
-        repo = DjangoTaskImageAuditRepository()
+        query_repo = DjangoTaskImageAuditQueryRepository()
+        command_repo = DjangoTaskImageAuditCommandRepository()
 
-        sources = repo.list_task_images()
-        updated = repo.apply_position_suggestions([
+        sources = query_repo.list_task_images()
+        updated = command_repo.apply_position_suggestions([
             TaskImagePositionSuggestion(
                 image_id=str(self.missing_image.pk),
                 position='bottom_70',

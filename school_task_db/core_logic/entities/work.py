@@ -236,8 +236,20 @@ class VariantListItem:
 
 
 @dataclass(frozen=True)
+class WorkAnalogGroupOption:
+    id: str
+    name: str
+
+    @property
+    def pk(self) -> str:
+        return self.id
+
+
+@dataclass(frozen=True)
 class WorkFormData:
-    analog_group_options: Any
+    analog_group_options: List[WorkAnalogGroupOption] = field(
+        default_factory=list,
+    )
 
 
 @dataclass(frozen=True)

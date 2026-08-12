@@ -2118,6 +2118,10 @@ class DjangoRemedialRepositoryTests(TestCase):
             {group.name for group in analog_group_options},
             {self.weak_group.name, self.ok_group.name},
         )
+        self.assertEqual(
+            {group.pk for group in analog_group_options},
+            {str(self.weak_group.pk), str(self.ok_group.pk)},
+        )
 
     def test_work_repository_returns_variant_detail_page_data(self):
         repo = DjangoVariantReadRepository()

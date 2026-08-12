@@ -8,6 +8,7 @@ from core_logic.entities.work import (
     WorkDetailSpecGroup,
     WorkDetailVariant,
     WorkDetailWork,
+    WorkAnalogGroupOption,
     WorkListItem,
 )
 from core_logic.interfaces.work_read_repo import IWorkReadRepository
@@ -47,7 +48,10 @@ class DjangoWorkReadRepository(IWorkReadRepository):
         ]
 
     def get_work_form_analog_group_options(self):
-        return AnalogGroup.objects.all()
+        return [
+            WorkAnalogGroupOption(id=str(group.pk), name=group.name)
+            for group in AnalogGroup.objects.all().order_by('name')
+        ]
 
     def get_work_detail(self, work_id: str):
         work = Work.objects.filter(pk=work_id).first()

@@ -1,13 +1,14 @@
 """Work screen read repository interface."""
 
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from core_logic.entities.work import (
     WorkDetailContentBlock,
     WorkDetailSpecGroup,
     WorkDetailVariant,
     WorkDetailWork,
+    WorkAnalogGroupOption,
     WorkListItem,
 )
 
@@ -18,7 +19,9 @@ class IWorkReadRepository(ABC):
         """Return works for the work list page."""
 
     @abstractmethod
-    def get_work_form_analog_group_options(self) -> Any:
+    def get_work_form_analog_group_options(
+        self,
+    ) -> List[WorkAnalogGroupOption]:
         """Return analog group options for the work form page."""
 
     @abstractmethod

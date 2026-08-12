@@ -219,6 +219,8 @@ class TaskFormAdapter:
     def task_params_from_form(self, form, task_id=''):
         subtopic = form.cleaned_data.get('subtopic')
         source = form.cleaned_data.get('source')
+        content_entries = form.cleaned_data.get('codifier_content_entries', ())
+        requirements = form.cleaned_data.get('codifier_requirements', ())
         return TaskSaveParams(
             task_id=task_id,
             text=form.cleaned_data['text'],
@@ -233,6 +235,12 @@ class TaskFormAdapter:
             ),
             content_element=form.cleaned_data.get('content_element', ''),
             requirement_element=form.cleaned_data.get('requirement_element', ''),
+            content_entry_ids=tuple(
+                str(entry.pk) for entry in content_entries
+            ),
+            requirement_ids=tuple(
+                str(requirement.pk) for requirement in requirements
+            ),
             short_solution=form.cleaned_data.get('short_solution', ''),
             full_solution=form.cleaned_data.get('full_solution', ''),
             hint=form.cleaned_data.get('hint', ''),

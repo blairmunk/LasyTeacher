@@ -454,6 +454,9 @@ from infrastructure.repositories.django_task_read_repo import (
 from infrastructure.repositories.django_task_command_repo import (
     DjangoTaskCommandRepository,
 )
+from infrastructure.repositories.django_task_classification_repo import (
+    DjangoTaskClassificationRepository,
+)
 from infrastructure.repositories.django_task_image_command_repo import (
     DjangoTaskImageCommandRepository,
 )
@@ -591,6 +594,7 @@ class Container:
         self._source_command_repo = None
         self._task_read_repo = None
         self._task_command_repo = None
+        self._task_classification_repo = None
         self._task_image_command_repo = None
         self._task_lifecycle_command_repo = None
         self._task_selection_repo = None
@@ -779,6 +783,14 @@ class Container:
         if self._task_command_repo is None:
             self._task_command_repo = DjangoTaskCommandRepository()
         return self._task_command_repo
+
+    @property
+    def task_classification_repo(self):
+        if self._task_classification_repo is None:
+            self._task_classification_repo = (
+                DjangoTaskClassificationRepository()
+            )
+        return self._task_classification_repo
 
     @property
     def task_image_command_repo(self):
@@ -1728,12 +1740,14 @@ class Container:
         return CreateTaskUseCase(
             task_repo=self.task_command_repo,
             task_catalog_repo=self.task_taxonomy_repo,
+            classification_repo=self.task_classification_repo,
         )
 
     def update_task_use_case(self):
         return UpdateTaskUseCase(
             task_repo=self.task_command_repo,
             task_catalog_repo=self.task_taxonomy_repo,
+            classification_repo=self.task_classification_repo,
         )
 
     def save_task_images_use_case(self):

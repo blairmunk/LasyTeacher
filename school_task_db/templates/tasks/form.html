@@ -133,12 +133,16 @@
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="{{ form.content_element.id_for_label }}" class="form-label">{{ form.content_element.label }}</label>
-                            {{ form.content_element|add_class:"form-control" }}
+                            <label for="{{ form.codifier_content_entries.id_for_label }}" class="form-label">{{ form.codifier_content_entries.label }}</label>
+                            {{ form.codifier_content_entries }}
+                            {{ form.content_element }}
+                            {% if form.codifier_content_entries.errors %}<div class="text-danger small">{{ form.codifier_content_entries.errors }}</div>{% endif %}
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="{{ form.requirement_element.id_for_label }}" class="form-label">{{ form.requirement_element.label }}</label>
-                            {{ form.requirement_element|add_class:"form-control" }}
+                            <label for="{{ form.codifier_requirements.id_for_label }}" class="form-label">{{ form.codifier_requirements.label }}</label>
+                            {{ form.codifier_requirements }}
+                            {{ form.requirement_element }}
+                            {% if form.codifier_requirements.errors %}<div class="text-danger small">{{ form.codifier_requirements.errors }}</div>{% endif %}
                         </div>
                     </div>
                 </div>

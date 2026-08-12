@@ -19,9 +19,18 @@ class FakeTaskRepository:
         self.updated_params = None
         self.saved_images = None
         self.subtopic_topics = {}
+        self.classification_errors = ()
 
     def get_subtopic_topic_id(self, subtopic_id):
         return self.subtopic_topics.get(subtopic_id)
+
+    def get_classification_errors(
+        self,
+        topic_id,
+        content_entry_ids,
+        requirement_ids,
+    ):
+        return self.classification_errors
 
     def create_task(self, params):
         self.created_params = params
@@ -47,7 +56,7 @@ class SaveTaskUseCaseTests(TestCase):
             difficulty=2,
         )
 
-        result = CreateTaskUseCase(repo, repo).execute(params)
+        result = CreateTaskUseCase(repo, repo, repo).execute(params)
 
         self.assertEqual(result.task_id, 'task-1')
         self.assertEqual(repo.created_params, params)
@@ -63,7 +72,7 @@ class SaveTaskUseCaseTests(TestCase):
             difficulty=2,
         )
 
-        result = UpdateTaskUseCase(repo, repo).execute(params)
+        result = UpdateTaskUseCase(repo, repo, repo).execute(params)
 
         self.assertEqual(result.status, 'updated')
         self.assertEqual(repo.updated_params, params)
@@ -80,13 +89,31 @@ class SaveTaskUseCaseTests(TestCase):
             difficulty=2,
         )
 
-        result = CreateTaskUseCase(repo, repo).execute(params)
+        result = CreateTaskUseCase(repo, repo, repo).execute(params)
 
         self.assertEqual(result.status, 'invalid')
         self.assertEqual(
             result.errors,
             ('Выбранная подтема не принадлежит выбранной теме',),
         )
+        self.assertIsNone(repo.created_params)
+
+    def test_create_task_rejects_invalid_explicit_classification(self):
+        repo = FakeTaskRepository()
+        repo.classification_errors = ('Элемент другого предмета',)
+        params = TaskSaveParams(
+            text='Задача',
+            answer='Ответ',
+            topic_id='topic-1',
+            task_type='computational',
+            difficulty=2,
+            content_entry_ids=('entry-1',),
+        )
+
+        result = CreateTaskUseCase(repo, repo, repo).execute(params)
+
+        self.assertEqual(result.status, 'invalid')
+        self.assertEqual(result.errors, ('Элемент другого предмета',))
         self.assertIsNone(repo.created_params)
 
     def test_save_task_images_delegates_to_repository(self):

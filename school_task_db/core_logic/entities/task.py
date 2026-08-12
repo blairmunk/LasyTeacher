@@ -314,6 +314,8 @@ class TaskSaveParams:
     cognitive_level: str = 'understand'
     content_element: str = ''
     requirement_element: str = ''
+    content_entry_ids: Tuple[str, ...] = ()
+    requirement_ids: Tuple[str, ...] = ()
     short_solution: str = ''
     full_solution: str = ''
     hint: str = ''
@@ -325,6 +327,14 @@ class TaskSaveParams:
     year: Optional[int] = None
     is_verified: bool = False
     teacher_notes: str = ''
+
+    def __post_init__(self):
+        object.__setattr__(self, 'content_entry_ids', tuple(dict.fromkeys(
+            self.content_entry_ids,
+        )))
+        object.__setattr__(self, 'requirement_ids', tuple(dict.fromkeys(
+            self.requirement_ids,
+        )))
 
 
 @dataclass(frozen=True)

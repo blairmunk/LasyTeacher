@@ -1,6 +1,9 @@
 from django import forms
+from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.utils.functional import cached_property
 
+from codifier.models import ContentEntry, Requirement
 from curriculum.models import Topic, SubTopic
 from core_logic.value_objects.task_validation import (
     validate_task_topic_selection,
@@ -31,6 +34,25 @@ class SourceForm(forms.ModelForm):
 
 class TaskForm(forms.ModelForm):
     """Форма создания/редактирования задания"""
+
+    codifier_content_entries = forms.ModelMultipleChoiceField(
+        label='Элементы содержания',
+        queryset=ContentEntry.objects.none(),
+        required=False,
+        widget=forms.SelectMultiple(attrs={
+            'class': 'form-select',
+            'size': 8,
+        }),
+    )
+    codifier_requirements = forms.ModelMultipleChoiceField(
+        label='Проверяемые требования',
+        queryset=Requirement.objects.none(),
+        required=False,
+        widget=forms.SelectMultiple(attrs={
+            'class': 'form-select',
+            'size': 8,
+        }),
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -69,6 +91,7 @@ class TaskForm(forms.ModelForm):
         # Кодификатор необязателен
         self.fields['content_element'].required = False
         self.fields['requirement_element'].required = False
+        self._configure_codifier_fields()
 
         # === Новые поля ===
         self.fields['source'].required = False
@@ -87,6 +110,7 @@ class TaskForm(forms.ModelForm):
             'text', 'answer', 'topic', 'subtopic',
             'task_type', 'difficulty', 'cognitive_level',
             'content_element', 'requirement_element',
+            'codifier_content_entries', 'codifier_requirements',
             'short_solution', 'full_solution', 'hint', 'instruction',
             'estimated_time',
             # Новые поля
@@ -99,8 +123,8 @@ class TaskForm(forms.ModelForm):
             'hint': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'instruction': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'estimated_time': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
-            'content_element': forms.TextInput(attrs={'class': 'form-control'}),
-            'requirement_element': forms.TextInput(attrs={'class': 'form-control'}),
+            'content_element': forms.HiddenInput(),
+            'requirement_element': forms.HiddenInput(),
             # Новые виджеты
             'source_detail': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -117,6 +141,65 @@ class TaskForm(forms.ModelForm):
                 'placeholder': 'Личные пометки, типичные ошибки учеников...'
             }),
         }
+
+    def _configure_codifier_fields(self):
+        topic = self._selected_topic()
+        current_content_ids = ()
+        current_requirement_ids = ()
+        if self.instance.pk:
+            current_content_ids = tuple(
+                self.instance.codifier_content_entries.values_list(
+                    'pk',
+                    flat=True,
+                )
+            )
+            current_requirement_ids = tuple(
+                self.instance.codifier_requirements.values_list(
+                    'pk',
+                    flat=True,
+                )
+            )
+            self.initial['codifier_content_entries'] = current_content_ids
+            self.initial['codifier_requirements'] = current_requirement_ids
+
+        content_entries = ContentEntry.objects.all()
+        requirements = Requirement.objects.all()
+        if topic is not None:
+            content_entries = content_entries.filter(
+                codifier__subject=topic.subject,
+            )
+            requirements = requirements.filter(
+                codifier__subject=topic.subject,
+            )
+        self.fields['codifier_content_entries'].queryset = (
+            content_entries.filter(
+                Q(codifier__is_active=True) | Q(pk__in=current_content_ids),
+            ).select_related('codifier').order_by(
+                '-codifier__year',
+                'codifier__exam_type',
+                'code',
+            )
+        )
+        self.fields['codifier_requirements'].queryset = (
+            requirements.filter(
+                Q(codifier__is_active=True) | Q(pk__in=current_requirement_ids),
+            ).select_related('codifier').order_by(
+                '-codifier__year',
+                'codifier__exam_type',
+                'code',
+            )
+        )
+
+    def _selected_topic(self):
+        topic_id = self.data.get('topic') if self.is_bound else None
+        if topic_id:
+            try:
+                return Topic.objects.filter(pk=topic_id).first()
+            except (ValueError, ValidationError):
+                return None
+        if self.instance.pk:
+            return self.instance.topic
+        return None
 
     def clean(self):
         cleaned_data = super().clean()

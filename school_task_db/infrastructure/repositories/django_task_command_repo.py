@@ -8,6 +8,7 @@ from tasks.models import Task
 class DjangoTaskCommandRepository(ITaskCommandRepository):
     def create_task(self, params: TaskSaveParams) -> TaskSaveResult:
         task = Task.objects.create(**self._task_values(params))
+        self._set_classifications(task, params)
         return TaskSaveResult(status='created', task_id=str(task.pk))
 
     def update_task(self, params: TaskSaveParams) -> TaskSaveResult:
@@ -18,7 +19,13 @@ class DjangoTaskCommandRepository(ITaskCommandRepository):
         for field, value in self._task_values(params).items():
             setattr(task, field, value)
         task.save()
+        self._set_classifications(task, params)
         return TaskSaveResult(status='updated', task_id=str(task.pk))
+
+    @staticmethod
+    def _set_classifications(task, params):
+        task.codifier_content_entries.set(params.content_entry_ids)
+        task.codifier_requirements.set(params.requirement_ids)
 
     @staticmethod
     def _task_values(params: TaskSaveParams):

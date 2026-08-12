@@ -306,8 +306,11 @@ from infrastructure.repositories.django_review_overview_repo import (
 from infrastructure.repositories.django_review_workflow_repo import (
     DjangoReviewWorkflowRepository,
 )
-from infrastructure.repositories.django_review_session_repo import (
-    DjangoReviewSessionRepository,
+from infrastructure.repositories.django_review_session_command_repo import (
+    DjangoReviewSessionCommandRepository,
+)
+from infrastructure.repositories.django_review_session_query_repo import (
+    DjangoReviewSessionQueryRepository,
 )
 from infrastructure.repositories.django_review_task_repo import (
     DjangoReviewTaskRepository,
@@ -1036,11 +1039,11 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(sync_session_use_case, SyncReviewSessionUseCase)
         self.assertIsInstance(
             recent_sessions_use_case.session_repo,
-            DjangoReviewSessionRepository,
+            DjangoReviewSessionQueryRepository,
         )
-        self.assertIs(
+        self.assertIsInstance(
             sync_session_use_case.session_repo,
-            recent_sessions_use_case.session_repo,
+            DjangoReviewSessionCommandRepository,
         )
         self.assertIsInstance(work_detail_use_case, GetWorkDetailUseCase)
         self.assertIsInstance(work_form_data_use_case, GetWorkFormDataUseCase)
@@ -1267,8 +1270,12 @@ class ContainerTests(SimpleTestCase):
             DjangoReviewWorkflowRepository,
         )
         self.assertIsInstance(
-            container.review_session_repo,
-            DjangoReviewSessionRepository,
+            container.review_session_query_repo,
+            DjangoReviewSessionQueryRepository,
+        )
+        self.assertIsInstance(
+            container.review_session_command_repo,
+            DjangoReviewSessionCommandRepository,
         )
         self.assertIsInstance(
             container.review_task_repo,

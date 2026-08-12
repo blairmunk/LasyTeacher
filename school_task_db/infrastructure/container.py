@@ -374,8 +374,11 @@ from infrastructure.repositories.django_review_overview_repo import (
 from infrastructure.repositories.django_review_workflow_repo import (
     DjangoReviewWorkflowRepository,
 )
-from infrastructure.repositories.django_review_session_repo import (
-    DjangoReviewSessionRepository,
+from infrastructure.repositories.django_review_session_command_repo import (
+    DjangoReviewSessionCommandRepository,
+)
+from infrastructure.repositories.django_review_session_query_repo import (
+    DjangoReviewSessionQueryRepository,
 )
 from infrastructure.repositories.django_review_task_repo import (
     DjangoReviewTaskRepository,
@@ -589,7 +592,8 @@ class Container:
         self._participation_grading_repo = None
         self._review_overview_repo = None
         self._review_workflow_repo = None
-        self._review_session_repo = None
+        self._review_session_query_repo = None
+        self._review_session_command_repo = None
         self._review_task_repo = None
         self._events_status_repo = None
         self._reports_dashboard_repo = None
@@ -941,10 +945,20 @@ class Container:
         return self._review_workflow_repo
 
     @property
-    def review_session_repo(self):
-        if self._review_session_repo is None:
-            self._review_session_repo = DjangoReviewSessionRepository()
-        return self._review_session_repo
+    def review_session_query_repo(self):
+        if self._review_session_query_repo is None:
+            self._review_session_query_repo = (
+                DjangoReviewSessionQueryRepository()
+            )
+        return self._review_session_query_repo
+
+    @property
+    def review_session_command_repo(self):
+        if self._review_session_command_repo is None:
+            self._review_session_command_repo = (
+                DjangoReviewSessionCommandRepository()
+            )
+        return self._review_session_command_repo
 
     @property
     def review_task_repo(self):
@@ -1858,12 +1872,12 @@ class Container:
 
     def get_recent_review_sessions_use_case(self):
         return GetRecentReviewSessionsUseCase(
-            session_repo=self.review_session_repo,
+            session_repo=self.review_session_query_repo,
         )
 
     def sync_review_session_use_case(self):
         return SyncReviewSessionUseCase(
-            session_repo=self.review_session_repo,
+            session_repo=self.review_session_command_repo,
         )
 
     def get_work_detail_use_case(self):

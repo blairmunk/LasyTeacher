@@ -1,36 +1,14 @@
-"""Django persistence adapter for reviewer sessions."""
-
-from typing import List
+"""Django command adapter for reviewer session progress."""
 
 from core_logic.entities.review import ReviewSessionRef
 from core_logic.interfaces.review_session_command_repo import (
     IReviewSessionCommandRepository,
 )
-from core_logic.interfaces.review_session_query_repo import (
-    IReviewSessionQueryRepository,
-)
 from infrastructure.repositories.django_review_refs import review_session_ref
 from review.models import ReviewSession
 
 
-class DjangoReviewSessionRepository(
-    IReviewSessionQueryRepository,
-    IReviewSessionCommandRepository,
-):
-    def get_recent_sessions(
-        self,
-        reviewer_id: str,
-        limit: int = 5,
-    ) -> List[ReviewSessionRef]:
-        sessions = ReviewSession.objects.filter(
-            reviewer_id=reviewer_id,
-        ).select_related(
-            'event',
-            'event__work',
-            'event__course',
-        ).order_by('-started_at')[:limit]
-        return [review_session_ref(session) for session in sessions]
-
+class DjangoReviewSessionCommandRepository(IReviewSessionCommandRepository):
     def sync_review_session(
         self,
         reviewer_id: str,

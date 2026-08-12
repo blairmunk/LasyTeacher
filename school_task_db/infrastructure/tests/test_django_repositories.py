@@ -141,8 +141,11 @@ from infrastructure.repositories.django_review_overview_repo import (
 from infrastructure.repositories.django_review_workflow_repo import (
     DjangoReviewWorkflowRepository,
 )
-from infrastructure.repositories.django_review_session_repo import (
-    DjangoReviewSessionRepository,
+from infrastructure.repositories.django_review_session_command_repo import (
+    DjangoReviewSessionCommandRepository,
+)
+from infrastructure.repositories.django_review_session_query_repo import (
+    DjangoReviewSessionQueryRepository,
 )
 from infrastructure.repositories.django_review_task_repo import (
     DjangoReviewTaskRepository,
@@ -3064,22 +3067,23 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertTrue(all_checked_navigation.all_checked)
 
     def test_review_repository_syncs_and_returns_review_sessions(self):
-        repo = DjangoReviewSessionRepository()
+        command_repo = DjangoReviewSessionCommandRepository()
+        query_repo = DjangoReviewSessionQueryRepository()
         reviewer = User.objects.create_user(username='teacher')
 
-        session_ref = repo.sync_review_session(
+        session_ref = command_repo.sync_review_session(
             reviewer_id=str(reviewer.pk),
             event_id=str(self.event.pk),
             total_participations=3,
             checked_participations=1,
         )
-        updated_ref = repo.sync_review_session(
+        updated_ref = command_repo.sync_review_session(
             reviewer_id=str(reviewer.pk),
             event_id=str(self.event.pk),
             total_participations=3,
             checked_participations=2,
         )
-        recent_sessions = repo.get_recent_sessions(str(reviewer.pk))
+        recent_sessions = query_repo.get_recent_sessions(str(reviewer.pk))
         session = ReviewSession.objects.get(
             reviewer=reviewer,
             event=self.event,

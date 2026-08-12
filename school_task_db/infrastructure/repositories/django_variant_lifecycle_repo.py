@@ -5,8 +5,11 @@ from typing import List, Optional
 from django.db.models import Sum
 
 from core_logic.entities.work import VariantDeleteInfo
-from core_logic.interfaces.variant_lifecycle_repo import (
-    IVariantLifecycleRepository,
+from core_logic.interfaces.variant_lifecycle_command_repo import (
+    IVariantLifecycleCommandRepository,
+)
+from core_logic.interfaces.variant_lifecycle_query_repo import (
+    IVariantLifecycleQueryRepository,
 )
 from core_logic.value_objects.variant_display import (
     resolve_variant_display_name,
@@ -28,7 +31,10 @@ def _variant_display_name(variant: Variant) -> str:
     )
 
 
-class DjangoVariantLifecycleRepository(IVariantLifecycleRepository):
+class DjangoVariantLifecycleRepository(
+    IVariantLifecycleQueryRepository,
+    IVariantLifecycleCommandRepository,
+):
     def get_variant_delete_info(
         self,
         variant_id: str,

@@ -2006,7 +2006,8 @@ class Container:
 
     def delete_variant_use_case(self):
         return DeleteVariantUseCase(
-            variant_repo=self.variant_lifecycle_repo,
+            variant_query_repo=self.variant_lifecycle_repo,
+            variant_command_repo=self.variant_lifecycle_repo,
         )
 
     def delete_task_groups_use_case(self):
@@ -2053,7 +2054,8 @@ class Container:
 
     def bulk_delete_variants_use_case(self):
         return BulkDeleteVariantsUseCase(
-            variant_repo=self.variant_lifecycle_repo,
+            variant_query_repo=self.variant_lifecycle_repo,
+            variant_command_repo=self.variant_lifecycle_repo,
         )
 
 

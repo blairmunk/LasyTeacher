@@ -3,13 +3,13 @@
 from typing import Optional
 
 from core_logic.entities.work import VariantDeleteInfo
-from core_logic.interfaces.variant_lifecycle_repo import (
-    IVariantLifecycleRepository,
+from core_logic.interfaces.variant_lifecycle_query_repo import (
+    IVariantLifecycleQueryRepository,
 )
 
 
 class GetVariantDeleteInfoUseCase:
-    def __init__(self, variant_repo: IVariantLifecycleRepository):
+    def __init__(self, variant_repo: IVariantLifecycleQueryRepository):
         self.variant_repo = variant_repo
 
     def execute(self, variant_id: str) -> Optional[VariantDeleteInfo]:

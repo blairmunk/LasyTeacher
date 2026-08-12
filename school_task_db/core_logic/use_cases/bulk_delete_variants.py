@@ -4,8 +4,11 @@ from dataclasses import dataclass
 from typing import List
 
 from core_logic.entities.work import BulkDeleteVariantsResult
-from core_logic.interfaces.variant_lifecycle_repo import (
-    IVariantLifecycleRepository,
+from core_logic.interfaces.variant_lifecycle_command_repo import (
+    IVariantLifecycleCommandRepository,
+)
+from core_logic.interfaces.variant_lifecycle_query_repo import (
+    IVariantLifecycleQueryRepository,
 )
 
 
@@ -16,8 +19,13 @@ class BulkDeleteVariantsRequest:
 
 
 class BulkDeleteVariantsUseCase:
-    def __init__(self, variant_repo: IVariantLifecycleRepository):
-        self.variant_repo = variant_repo
+    def __init__(
+        self,
+        variant_query_repo: IVariantLifecycleQueryRepository,
+        variant_command_repo: IVariantLifecycleCommandRepository,
+    ):
+        self.variant_query_repo = variant_query_repo
+        self.variant_command_repo = variant_command_repo
 
     def execute(
         self,
@@ -26,14 +34,14 @@ class BulkDeleteVariantsUseCase:
         if not request.variant_ids:
             return BulkDeleteVariantsResult(status='empty_selection')
 
-        deleted_count = self.variant_repo.bulk_delete_work_variants(
+        deleted_count = self.variant_command_repo.bulk_delete_work_variants(
             work_id=request.work_id,
             variant_ids=request.variant_ids,
         )
         return BulkDeleteVariantsResult(
             status='deleted',
             deleted_count=deleted_count,
-            remaining_count=self.variant_repo.count_work_variants(
+            remaining_count=self.variant_query_repo.count_work_variants(
                 request.work_id,
             ),
         )

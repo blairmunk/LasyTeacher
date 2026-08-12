@@ -905,7 +905,10 @@ class WorkDetailTests(TestCase):
     def test_delete_variant_use_case_returns_not_found_for_missing_variant(self):
         repo = FakeWorkRepository()
         repo.variant_delete_info = None
-        use_case = DeleteVariantUseCase(variant_repo=repo)
+        use_case = DeleteVariantUseCase(
+            variant_query_repo=repo,
+            variant_command_repo=repo,
+        )
 
         result = use_case.execute(
             DeleteVariantRequest(variant_id='missing-variant', action='delete')
@@ -920,7 +923,10 @@ class WorkDetailTests(TestCase):
             task_count=2,
             participation_count=1,
         )
-        use_case = DeleteVariantUseCase(variant_repo=repo)
+        use_case = DeleteVariantUseCase(
+            variant_query_repo=repo,
+            variant_command_repo=repo,
+        )
 
         result = use_case.execute(
             DeleteVariantRequest(variant_id='variant-1', action='delete')
@@ -932,7 +938,10 @@ class WorkDetailTests(TestCase):
 
     def test_delete_variant_use_case_detaches_variant(self):
         repo = FakeWorkRepository()
-        use_case = DeleteVariantUseCase(variant_repo=repo)
+        use_case = DeleteVariantUseCase(
+            variant_query_repo=repo,
+            variant_command_repo=repo,
+        )
 
         result = use_case.execute(
             DeleteVariantRequest(variant_id='variant-1', action='detach')
@@ -944,7 +953,10 @@ class WorkDetailTests(TestCase):
 
     def test_delete_variant_use_case_deletes_variant_without_participations(self):
         repo = FakeWorkRepository()
-        use_case = DeleteVariantUseCase(variant_repo=repo)
+        use_case = DeleteVariantUseCase(
+            variant_query_repo=repo,
+            variant_command_repo=repo,
+        )
 
         result = use_case.execute(
             DeleteVariantRequest(variant_id='variant-1', action='delete')
@@ -957,7 +969,10 @@ class WorkDetailTests(TestCase):
     def test_bulk_delete_variants_use_case_deletes_selected_variants(self):
         repo = FakeWorkRepository()
         repo.remaining_variant_count = 4
-        use_case = BulkDeleteVariantsUseCase(variant_repo=repo)
+        use_case = BulkDeleteVariantsUseCase(
+            variant_query_repo=repo,
+            variant_command_repo=repo,
+        )
 
         result = use_case.execute(
             BulkDeleteVariantsRequest(
@@ -976,7 +991,10 @@ class WorkDetailTests(TestCase):
 
     def test_bulk_delete_variants_use_case_handles_empty_selection(self):
         repo = FakeWorkRepository()
-        use_case = BulkDeleteVariantsUseCase(variant_repo=repo)
+        use_case = BulkDeleteVariantsUseCase(
+            variant_query_repo=repo,
+            variant_command_repo=repo,
+        )
 
         result = use_case.execute(
             BulkDeleteVariantsRequest(work_id='work-1', variant_ids=[])

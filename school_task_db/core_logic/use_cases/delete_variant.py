@@ -3,8 +3,11 @@
 from dataclasses import dataclass
 
 from core_logic.entities.work import DeleteVariantResult
-from core_logic.interfaces.variant_lifecycle_repo import (
-    IVariantLifecycleRepository,
+from core_logic.interfaces.variant_lifecycle_command_repo import (
+    IVariantLifecycleCommandRepository,
+)
+from core_logic.interfaces.variant_lifecycle_query_repo import (
+    IVariantLifecycleQueryRepository,
 )
 
 
@@ -15,19 +18,28 @@ class DeleteVariantRequest:
 
 
 class DeleteVariantUseCase:
-    def __init__(self, variant_repo: IVariantLifecycleRepository):
-        self.variant_repo = variant_repo
+    def __init__(
+        self,
+        variant_query_repo: IVariantLifecycleQueryRepository,
+        variant_command_repo: IVariantLifecycleCommandRepository,
+    ):
+        self.variant_query_repo = variant_query_repo
+        self.variant_command_repo = variant_command_repo
 
     def execute(self, request: DeleteVariantRequest) -> DeleteVariantResult:
-        info = self.variant_repo.get_variant_delete_info(request.variant_id)
+        info = self.variant_query_repo.get_variant_delete_info(
+            request.variant_id,
+        )
         if info is None:
             return DeleteVariantResult(status='not_found')
 
         if request.action == 'detach':
             return DeleteVariantResult(
                 status='detached',
-                variant_short_id=self.variant_repo.detach_variant_from_work(
-                    request.variant_id,
+                variant_short_id=(
+                    self.variant_command_repo.detach_variant_from_work(
+                        request.variant_id,
+                    )
                 ),
             )
 
@@ -39,5 +51,7 @@ class DeleteVariantUseCase:
 
         return DeleteVariantResult(
             status='deleted',
-            redirect_work_id=self.variant_repo.delete_variant(request.variant_id),
+            redirect_work_id=self.variant_command_repo.delete_variant(
+                request.variant_id,
+            ),
         )

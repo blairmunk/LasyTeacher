@@ -9,22 +9,17 @@ CSV columns:
 """
 
 import csv
-from datetime import date
 from pathlib import Path
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from core.models import AcademicYear
+from core_logic.entities.student_import import StudentImportValidationError
+from core_logic.services.student_csv_import_parser import (
+    parse_student_csv_rows,
+)
 from students.models import Student, StudentGroup
-
-
-CLASS_COLUMNS = ('class', 'group', 'student_group', 'класс', 'группа')
-YEAR_COLUMNS = ('academic_year', 'year', 'учебный_год', 'год')
-LAST_NAME_COLUMNS = ('last_name', 'lastname', 'фамилия')
-FIRST_NAME_COLUMNS = ('first_name', 'firstname', 'имя')
-MIDDLE_NAME_COLUMNS = ('middle_name', 'middlename', 'отчество')
-EMAIL_COLUMNS = ('email', 'почта')
 
 
 class Command(BaseCommand):
@@ -44,7 +39,10 @@ class Command(BaseCommand):
         if not csv_path.exists():
             raise CommandError(f'CSV файл не найден: {csv_path}')
 
-        rows = self._read_rows(csv_path)
+        try:
+            rows = parse_student_csv_rows(self._read_rows(csv_path))
+        except StudentImportValidationError as error:
+            raise CommandError(str(error)) from error
         stats = ImportStats()
         self._dry_run_year_names = set()
         self._dry_run_group_keys = set()
@@ -52,8 +50,8 @@ class Command(BaseCommand):
         self._dry_run_membership_keys = set()
 
         with transaction.atomic():
-            for row_number, row in enumerate(rows, start=2):
-                self._import_row(row, row_number, dry_run=dry_run, stats=stats)
+            for row in rows:
+                self._import_row(row, dry_run=dry_run, stats=stats)
 
             if dry_run:
                 transaction.set_rollback(True)
@@ -82,47 +80,39 @@ class Command(BaseCommand):
         except UnicodeDecodeError as error:
             raise CommandError(f'Не удалось прочитать CSV как UTF-8: {error}')
 
-    def _import_row(self, row, row_number, dry_run, stats):
+    def _import_row(self, row, dry_run, stats):
         stats.rows += 1
-        group_name = _row_value(row, CLASS_COLUMNS)
-        academic_year_name = _row_value(row, YEAR_COLUMNS)
-        last_name = _row_value(row, LAST_NAME_COLUMNS)
-        first_name = _row_value(row, FIRST_NAME_COLUMNS)
-        middle_name = _row_value(row, MIDDLE_NAME_COLUMNS)
-        email = _row_value(row, EMAIL_COLUMNS)
-
-        if not group_name:
-            raise CommandError(f'Строка {row_number}: класс обязателен.')
-        if not last_name:
-            raise CommandError(f'Строка {row_number}: фамилия обязательна.')
-        if not first_name:
-            raise CommandError(f'Строка {row_number}: имя обязательно.')
 
         academic_year = self._get_or_create_year(
-            academic_year_name,
+            row,
             dry_run=dry_run,
             stats=stats,
         )
         group = self._get_or_create_group(
-            group_name,
+            row.group_name,
             academic_year=academic_year,
-            academic_year_name=academic_year_name,
+            academic_year_name=row.academic_year_name,
             dry_run=dry_run,
             stats=stats,
         )
         student = self._get_or_create_student(
-            last_name=last_name,
-            first_name=first_name,
-            middle_name=middle_name,
-            email=email,
+            last_name=row.last_name,
+            first_name=row.first_name,
+            middle_name=row.middle_name,
+            email=row.email,
             dry_run=dry_run,
             stats=stats,
         )
 
         if dry_run:
             membership_key = (
-                _group_key(group_name, academic_year_name),
-                _student_key(last_name, first_name, middle_name, email),
+                _group_key(row.group_name, row.academic_year_name),
+                _student_key(
+                    row.last_name,
+                    row.first_name,
+                    row.middle_name,
+                    row.email,
+                ),
             )
             if group and student and group.students.filter(pk=student.pk).exists():
                 return
@@ -135,7 +125,8 @@ class Command(BaseCommand):
             group.students.add(student)
             stats.memberships_created += 1
 
-    def _get_or_create_year(self, name, dry_run, stats):
+    def _get_or_create_year(self, row, dry_run, stats):
+        name = row.academic_year_name
         if not name:
             return AcademicYear.objects.filter(is_active=True).first()
 
@@ -143,7 +134,6 @@ class Command(BaseCommand):
         if academic_year:
             return academic_year
 
-        start_year, end_year = _parse_academic_year(name)
         if dry_run:
             if name not in self._dry_run_year_names:
                 self._dry_run_year_names.add(name)
@@ -154,8 +144,8 @@ class Command(BaseCommand):
         has_active_year = AcademicYear.objects.filter(is_active=True).exists()
         return AcademicYear.objects.create(
             name=name,
-            start_date=date(start_year, 9, 1),
-            end_date=date(end_year, 8, 31),
+            start_date=row.academic_year_start,
+            end_date=row.academic_year_end,
             is_active=not has_active_year,
         )
 
@@ -257,14 +247,6 @@ class ImportStats:
         self.memberships_created = 0
 
 
-def _row_value(row, aliases):
-    for alias in aliases:
-        value = row.get(alias)
-        if value is not None:
-            return value.strip()
-    return ''
-
-
 def _group_key(name, academic_year_name):
     return name, academic_year_name
 
@@ -273,27 +255,6 @@ def _student_key(last_name, first_name, middle_name, email):
     if email:
         return 'email', email.lower()
     return 'name', last_name, first_name, middle_name
-
-
-def _parse_academic_year(name):
-    normalized = name.replace('–', '-').replace('—', '-')
-    parts = normalized.split('-')
-    if len(parts) != 2:
-        raise CommandError(
-            f'Учебный год должен быть в формате 2026-2027: {name}'
-        )
-    try:
-        start_year = int(parts[0])
-        end_year = int(parts[1])
-    except ValueError:
-        raise CommandError(
-            f'Учебный год должен быть в формате 2026-2027: {name}'
-        )
-    if end_year != start_year + 1:
-        raise CommandError(
-            f'Учебный год должен покрывать два соседних года: {name}'
-        )
-    return start_year, end_year
 
 
 def _find_student(last_name, first_name, middle_name, email):

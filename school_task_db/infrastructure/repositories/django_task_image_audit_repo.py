@@ -3,11 +3,19 @@
 from django.db import transaction
 
 from core_logic.entities.task_image_audit import TaskImageAuditSource
-from core_logic.interfaces.task_image_audit_repo import ITaskImageAuditRepository
+from core_logic.interfaces.task_image_audit_command_repo import (
+    ITaskImageAuditCommandRepository,
+)
+from core_logic.interfaces.task_image_audit_query_repo import (
+    ITaskImageAuditQueryRepository,
+)
 from tasks.models import TaskImage
 
 
-class DjangoTaskImageAuditRepository(ITaskImageAuditRepository):
+class DjangoTaskImageAuditRepository(
+    ITaskImageAuditQueryRepository,
+    ITaskImageAuditCommandRepository,
+):
     def list_task_images(self):
         return [
             TaskImageAuditSource(

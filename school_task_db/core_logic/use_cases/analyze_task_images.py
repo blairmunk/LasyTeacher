@@ -8,7 +8,12 @@ from core_logic.entities.task_image_audit import (
     TaskImagePositionCount,
     TaskImagePositionSuggestion,
 )
-from core_logic.interfaces.task_image_audit_repo import ITaskImageAuditRepository
+from core_logic.interfaces.task_image_audit_command_repo import (
+    ITaskImageAuditCommandRepository,
+)
+from core_logic.interfaces.task_image_audit_query_repo import (
+    ITaskImageAuditQueryRepository,
+)
 from core_logic.value_objects.task_image_position import (
     suggest_task_image_position,
     task_image_position_label,
@@ -20,7 +25,7 @@ MISSING_POSITION_LABEL = 'Позиция не задана'
 
 
 class AnalyzeTaskImagesUseCase:
-    def __init__(self, image_repo: ITaskImageAuditRepository):
+    def __init__(self, image_repo: ITaskImageAuditQueryRepository):
         self.image_repo = image_repo
 
     def execute(self) -> TaskImageAuditData:
@@ -64,7 +69,7 @@ class AnalyzeTaskImagesUseCase:
 
 
 class ApplyTaskImagePositionSuggestionsUseCase:
-    def __init__(self, image_repo: ITaskImageAuditRepository):
+    def __init__(self, image_repo: ITaskImageAuditCommandRepository):
         self.image_repo = image_repo
 
     def execute(

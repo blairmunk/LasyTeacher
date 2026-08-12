@@ -14,8 +14,11 @@ from core_logic.entities.orphan_variant_commands import (
     CreatedWorkFromOrphanVariantsRef,
     CreateWorkFromOrphanVariantsParams,
 )
-from core_logic.interfaces.orphan_variant_repo import (
-    IOrphanVariantRepository,
+from core_logic.interfaces.orphan_variant_attachment_repo import (
+    IOrphanVariantAttachmentRepository,
+)
+from core_logic.interfaces.orphan_variant_catalog_repo import (
+    IOrphanVariantCatalogRepository,
 )
 from core_logic.value_objects.variant_display import (
     resolve_variant_display_name,
@@ -36,7 +39,10 @@ def _variant_display_name(variant: Variant) -> str:
     )
 
 
-class DjangoOrphanVariantRepository(IOrphanVariantRepository):
+class DjangoOrphanVariantRepository(
+    IOrphanVariantCatalogRepository,
+    IOrphanVariantAttachmentRepository,
+):
     def get_orphan_variants(self):
         return [
             OrphanVariantListItem(

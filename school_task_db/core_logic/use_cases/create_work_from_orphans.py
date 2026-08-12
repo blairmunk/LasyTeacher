@@ -7,8 +7,8 @@ from core_logic.entities.work import CreateWorkFromOrphansResult
 from core_logic.entities.orphan_variant_commands import (
     CreateWorkFromOrphanVariantsParams,
 )
-from core_logic.interfaces.orphan_variant_repo import (
-    IOrphanVariantRepository,
+from core_logic.interfaces.orphan_variant_attachment_repo import (
+    IOrphanVariantAttachmentRepository,
 )
 
 
@@ -22,7 +22,10 @@ class CreateWorkFromOrphansRequest:
 
 
 class CreateWorkFromOrphansUseCase:
-    def __init__(self, orphan_variant_repo: IOrphanVariantRepository):
+    def __init__(
+        self,
+        orphan_variant_repo: IOrphanVariantAttachmentRepository,
+    ):
         self.orphan_variant_repo = orphan_variant_repo
 
     def execute(

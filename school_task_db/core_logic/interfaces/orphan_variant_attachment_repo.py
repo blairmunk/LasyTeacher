@@ -1,4 +1,4 @@
-"""Repository port for orphan variant workflows."""
+"""Repository port for attaching orphan variants to a new work."""
 
 from abc import ABC, abstractmethod
 from typing import List, Optional
@@ -7,18 +7,10 @@ from core_logic.entities.orphan_variant_commands import (
     CreatedWorkFromOrphanVariantsRef,
     CreateWorkFromOrphanVariantsParams,
 )
-from core_logic.entities.work import OrphanVariantListItem, OrphanVariantRef
+from core_logic.entities.work import OrphanVariantRef
 
 
-class IOrphanVariantRepository(ABC):
-    @abstractmethod
-    def get_orphan_variants(self) -> List[OrphanVariantListItem]:
-        """Return orphan variants for the orphan list page."""
-
-    @abstractmethod
-    def count_orphan_variants(self) -> int:
-        """Return orphan variant count."""
-
+class IOrphanVariantAttachmentRepository(ABC):
     @abstractmethod
     def get_orphan_variant_refs(
         self,

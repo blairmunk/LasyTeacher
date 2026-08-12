@@ -3,14 +3,20 @@
 from typing import List
 
 from core_logic.entities.task import ReferenceElementOption, SelectOption
-from core_logic.interfaces.task_catalog_repo import ITaskCatalogRepository
+from core_logic.interfaces.task_reference_catalog_repo import (
+    ITaskReferenceCatalogRepository,
+)
+from core_logic.interfaces.task_taxonomy_repo import ITaskTaxonomyRepository
 from core_logic.services.reference_catalog import merge_reference_choices
 from curriculum.models import SubTopic, Topic
 from references.models import SubjectReference
 from tasks.models import Source, Task
 
 
-class DjangoTaskCatalogRepository(ITaskCatalogRepository):
+class DjangoTaskCatalogRepository(
+    ITaskTaxonomyRepository,
+    ITaskReferenceCatalogRepository,
+):
     def get_subtopic_topic_id(self, subtopic_id: str):
         topic_id = SubTopic.objects.filter(pk=subtopic_id).values_list(
             'topic_id',

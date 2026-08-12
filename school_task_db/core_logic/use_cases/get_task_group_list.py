@@ -1,7 +1,7 @@
 """Build analog group list screen data."""
 
 from core_logic.entities.task import TaskGroupListData, TaskGroupListFilters
-from core_logic.interfaces.task_catalog_repo import ITaskCatalogRepository
+from core_logic.interfaces.task_taxonomy_repo import ITaskTaxonomyRepository
 from core_logic.interfaces.task_group_catalog_repo import (
     ITaskGroupCatalogRepository,
 )
@@ -10,7 +10,7 @@ from core_logic.interfaces.task_group_catalog_repo import (
 class GetTaskGroupListUseCase:
     def __init__(
         self,
-        task_catalog_repo: ITaskCatalogRepository,
+        task_catalog_repo: ITaskTaxonomyRepository,
         task_group_repo: ITaskGroupCatalogRepository,
     ):
         self.task_catalog_repo = task_catalog_repo

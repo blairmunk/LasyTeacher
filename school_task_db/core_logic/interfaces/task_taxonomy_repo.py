@@ -1,12 +1,12 @@
-"""Read-only catalog used by task workflows."""
+"""Read port for task topics, sources, subtopics and types."""
 
 from abc import ABC, abstractmethod
 from typing import List, Optional, Tuple
 
-from core_logic.entities.task import ReferenceElementOption, SelectOption
+from core_logic.entities.task import SelectOption
 
 
-class ITaskCatalogRepository(ABC):
+class ITaskTaxonomyRepository(ABC):
     @abstractmethod
     def get_subtopic_topic_id(self, subtopic_id: str) -> Optional[str]:
         """Return the parent topic ID for a subtopic, or None."""
@@ -26,14 +26,6 @@ class ITaskCatalogRepository(ABC):
     @abstractmethod
     def get_subtopic_options(self, topic_id: str) -> List[SelectOption]:
         """Return subtopic options for task editing."""
-
-    @abstractmethod
-    def get_reference_element_options(
-        self,
-        subject: str,
-        category: str,
-    ) -> List[ReferenceElementOption]:
-        """Return merged active codifier options."""
 
     @abstractmethod
     def get_task_type_choices(self) -> List[Tuple[str, str]]:

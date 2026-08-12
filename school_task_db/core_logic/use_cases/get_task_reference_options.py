@@ -4,7 +4,10 @@ from dataclasses import dataclass
 from typing import List
 
 from core_logic.entities.task import ReferenceElementOption, SelectOption
-from core_logic.interfaces.task_catalog_repo import ITaskCatalogRepository
+from core_logic.interfaces.task_reference_catalog_repo import (
+    ITaskReferenceCatalogRepository,
+)
+from core_logic.interfaces.task_taxonomy_repo import ITaskTaxonomyRepository
 
 
 @dataclass(frozen=True)
@@ -13,7 +16,7 @@ class SubtopicOptionsResult:
 
 
 class GetSubtopicOptionsUseCase:
-    def __init__(self, task_catalog_repo: ITaskCatalogRepository):
+    def __init__(self, task_catalog_repo: ITaskTaxonomyRepository):
         self.task_catalog_repo = task_catalog_repo
 
     def execute(self, topic_id: str) -> SubtopicOptionsResult:
@@ -30,7 +33,7 @@ class CodifierElementsResult:
 
 
 class GetCodifierElementsUseCase:
-    def __init__(self, task_catalog_repo: ITaskCatalogRepository):
+    def __init__(self, task_catalog_repo: ITaskReferenceCatalogRepository):
         self.task_catalog_repo = task_catalog_repo
 
     def execute(self, subject: str, category: str) -> CodifierElementsResult:

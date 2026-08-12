@@ -1,7 +1,7 @@
 """Build task list screen data."""
 
 from core_logic.entities.task import TaskListData, TaskListFilters
-from core_logic.interfaces.task_catalog_repo import ITaskCatalogRepository
+from core_logic.interfaces.task_taxonomy_repo import ITaskTaxonomyRepository
 from core_logic.interfaces.task_group_catalog_repo import (
     ITaskGroupCatalogRepository,
 )
@@ -13,7 +13,7 @@ class GetTaskListUseCase:
     def __init__(
         self,
         task_repo: ITaskReadRepository,
-        task_catalog_repo: ITaskCatalogRepository,
+        task_catalog_repo: ITaskTaxonomyRepository,
         task_group_repo: ITaskGroupCatalogRepository,
         math_status_cache: ITaskMathStatusCache,
     ):

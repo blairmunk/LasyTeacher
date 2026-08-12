@@ -8,7 +8,7 @@ from core_logic.entities.task import (
     TaskSaveParams,
     TaskSaveResult,
 )
-from core_logic.interfaces.task_catalog_repo import ITaskCatalogRepository
+from core_logic.interfaces.task_taxonomy_repo import ITaskTaxonomyRepository
 from core_logic.interfaces.task_write_repo import ITaskWriteRepository
 from core_logic.value_objects.task_validation import (
     validate_task_topic_selection,
@@ -17,7 +17,7 @@ from core_logic.value_objects.task_validation import (
 
 def _validate_task_params(
     params: TaskSaveParams,
-    task_catalog_repo: ITaskCatalogRepository,
+    task_catalog_repo: ITaskTaxonomyRepository,
 ) -> tuple[str, ...]:
     subtopic_topic_id = None
     if params.subtopic_id:
@@ -35,7 +35,7 @@ class CreateTaskUseCase:
     def __init__(
         self,
         task_repo: ITaskWriteRepository,
-        task_catalog_repo: ITaskCatalogRepository,
+        task_catalog_repo: ITaskTaxonomyRepository,
     ):
         self.task_repo = task_repo
         self.task_catalog_repo = task_catalog_repo
@@ -51,7 +51,7 @@ class UpdateTaskUseCase:
     def __init__(
         self,
         task_repo: ITaskWriteRepository,
-        task_catalog_repo: ITaskCatalogRepository,
+        task_catalog_repo: ITaskTaxonomyRepository,
     ):
         self.task_repo = task_repo
         self.task_catalog_repo = task_catalog_repo

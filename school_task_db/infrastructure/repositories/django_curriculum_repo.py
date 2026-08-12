@@ -12,12 +12,16 @@ from core_logic.entities.curriculum import (
     TopicDetailTopic,
     TopicListItem,
 )
-from core_logic.interfaces.curriculum_repo import ICurriculumRepository
+from core_logic.interfaces.course_catalog_repo import ICourseCatalogRepository
+from core_logic.interfaces.topic_catalog_repo import ITopicCatalogRepository
 from curriculum.models import Course, CourseAssignment, Topic
 from works.models import Variant, WorkAnalogGroup
 
 
-class DjangoCurriculumRepository(ICurriculumRepository):
+class DjangoCurriculumRepository(
+    ICourseCatalogRepository,
+    ITopicCatalogRepository,
+):
     def get_courses(self, year=None):
         courses = Course.objects.select_related('year')
         if year:

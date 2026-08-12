@@ -1,11 +1,11 @@
 """Build topic detail screen data."""
 
 from core_logic.entities.curriculum import TopicDetailData
-from core_logic.interfaces.curriculum_repo import ICurriculumRepository
+from core_logic.interfaces.topic_catalog_repo import ITopicCatalogRepository
 
 
 class GetTopicDetailUseCase:
-    def __init__(self, curriculum_repo: ICurriculumRepository):
+    def __init__(self, curriculum_repo: ITopicCatalogRepository):
         self.curriculum_repo = curriculum_repo
 
     def execute(self, topic_id: str) -> TopicDetailData:

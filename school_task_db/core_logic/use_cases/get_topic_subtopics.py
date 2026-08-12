@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from core_logic.entities.curriculum import TopicSubtopicsData
-from core_logic.interfaces.curriculum_repo import ICurriculumRepository
+from core_logic.interfaces.topic_catalog_repo import ITopicCatalogRepository
 
 
 @dataclass(frozen=True)
@@ -13,7 +13,7 @@ class TopicSubtopicsRequest:
 
 
 class GetTopicSubtopicsUseCase:
-    def __init__(self, curriculum_repo: ICurriculumRepository):
+    def __init__(self, curriculum_repo: ITopicCatalogRepository):
         self.curriculum_repo = curriculum_repo
 
     def execute(self, request: TopicSubtopicsRequest) -> TopicSubtopicsData:

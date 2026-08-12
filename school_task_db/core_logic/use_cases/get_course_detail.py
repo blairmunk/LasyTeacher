@@ -4,11 +4,11 @@ from collections import Counter
 from dataclasses import replace
 
 from core_logic.entities.curriculum import CourseDetailData
-from core_logic.interfaces.curriculum_repo import ICurriculumRepository
+from core_logic.interfaces.course_catalog_repo import ICourseCatalogRepository
 
 
 class GetCourseDetailUseCase:
-    def __init__(self, curriculum_repo: ICurriculumRepository):
+    def __init__(self, curriculum_repo: ICourseCatalogRepository):
         self.curriculum_repo = curriculum_repo
 
     def execute(self, course_id: str) -> CourseDetailData:

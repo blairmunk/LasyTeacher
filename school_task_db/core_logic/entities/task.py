@@ -289,6 +289,13 @@ class TaskDetailImage:
 
 
 @dataclass(frozen=True)
+class TaskDetailClassification:
+    codifier_name: str
+    code: str
+    name: str
+
+
+@dataclass(frozen=True)
 class TaskDetailTask:
     pk: str
     topic: str
@@ -312,6 +319,10 @@ class TaskDetailTask:
     teacher_notes: str = ''
     images: List[TaskDetailImage] = None
     created_at: Any = None
+    content_entries: Tuple[TaskDetailClassification, ...] = ()
+    requirements: Tuple[TaskDetailClassification, ...] = ()
+    legacy_content_element: str = ''
+    legacy_requirement_element: str = ''
 
 
 @dataclass(frozen=True)

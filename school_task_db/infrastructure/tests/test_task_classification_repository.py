@@ -8,6 +8,9 @@ from infrastructure.forms.task_django_forms import TaskForm
 from infrastructure.repositories.django_task_export_repo import (
     DjangoTaskExportRepository,
 )
+from infrastructure.repositories.django_task_read_repo import (
+    DjangoTaskReadRepository,
+)
 from infrastructure.repositories.django_task_classification_repo import (
     DjangoTaskClassificationRepository,
 )
@@ -185,3 +188,21 @@ class DjangoTaskClassificationRepositoryTests(TestCase):
         self.assertEqual(source.content_entries[0].year, 2026)
         self.assertEqual(source.content_entries[0].code, '1.1')
         self.assertEqual(source.requirements[0].code, '2.1')
+
+    def test_task_detail_exposes_explicit_classification_labels(self):
+        task = Task.objects.create(
+            text='Найти силу',
+            answer='10 Н',
+            topic=self.physics_topic,
+            task_type='computational',
+            difficulty=2,
+        )
+        self.physics_entry.tasks.add(task)
+        self.physics_requirement.tasks.add(task)
+
+        detail = DjangoTaskReadRepository().get_task(str(task.pk))
+
+        self.assertEqual(detail.content_entries[0].codifier_name, 'ОГЭ Физика')
+        self.assertEqual(detail.content_entries[0].code, '1.1')
+        self.assertEqual(detail.content_entries[0].name, 'Динамика')
+        self.assertEqual(detail.requirements[0].code, '2.1')

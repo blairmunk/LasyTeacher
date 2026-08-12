@@ -95,6 +95,42 @@
                     </small>
                     {% endif %}
                 </div>
+
+                {% if task.content_entries or task.requirements or task.legacy_content_element or task.legacy_requirement_element %}
+                <div class="border-top border-bottom py-3 mb-4">
+                    {% if task.content_entries %}
+                    <div class="mb-2">
+                        <strong>Элементы содержания:</strong>
+                        {% for item in task.content_entries %}
+                        <span class="badge bg-light text-dark border" title="{{ item.name }}">
+                            {{ item.codifier_name }} · {{ item.code }} · {{ item.name }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                    {% elif task.legacy_content_element %}
+                    <div class="mb-2">
+                        <strong>Элемент содержания:</strong>
+                        <span class="badge bg-light text-dark border">{{ task.legacy_content_element }}</span>
+                    </div>
+                    {% endif %}
+
+                    {% if task.requirements %}
+                    <div>
+                        <strong>Проверяемые требования:</strong>
+                        {% for item in task.requirements %}
+                        <span class="badge bg-light text-dark border" title="{{ item.name }}">
+                            {{ item.codifier_name }} · {{ item.code }} · {{ item.name }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                    {% elif task.legacy_requirement_element %}
+                    <div>
+                        <strong>Требование:</strong>
+                        <span class="badge bg-light text-dark border">{{ task.legacy_requirement_element }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
                 <div class="mb-4">
                     <h5>Текст задания</h5>
                     <div class="border p-3 bg-light task-content">

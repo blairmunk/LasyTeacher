@@ -4,6 +4,7 @@ from django.db.models import Count, Exists, OuterRef, Q
 
 from core_logic.entities.task import (
     TaskDetailGroup,
+    TaskDetailClassification,
     TaskDetailImage,
     TaskDetailSource,
     TaskDetailTask,
@@ -137,7 +138,11 @@ class DjangoTaskReadRepository(ITaskReadRepository):
             'topic',
             'subtopic',
             'source',
-        ).prefetch_related('images').filter(pk=task_id).first()
+        ).prefetch_related(
+            'images',
+            'codifier_content_entries__codifier',
+            'codifier_requirements__codifier',
+        ).filter(pk=task_id).first()
         if task is None:
             return None
 
@@ -184,6 +189,24 @@ class DjangoTaskReadRepository(ITaskReadRepository):
                 for image in task.images.all()
             ],
             created_at=task.created_at,
+            content_entries=tuple(
+                TaskDetailClassification(
+                    codifier_name=entry.codifier.short_name,
+                    code=entry.code,
+                    name=entry.name,
+                )
+                for entry in task.codifier_content_entries.all()
+            ),
+            requirements=tuple(
+                TaskDetailClassification(
+                    codifier_name=requirement.codifier.short_name,
+                    code=requirement.code,
+                    name=requirement.name,
+                )
+                for requirement in task.codifier_requirements.all()
+            ),
+            legacy_content_element=task.content_element,
+            legacy_requirement_element=task.requirement_element,
         )
 
     def get_task_detail_groups(self, task_id: str):

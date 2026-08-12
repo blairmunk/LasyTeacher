@@ -1,6 +1,12 @@
 from django.core.management.base import BaseCommand
-from django.db import transaction
-from references.models import SimpleReference, SubjectReference
+
+from core_logic.entities.reference_seed import (
+    ReferenceSeedDefinition,
+    SeedReferencesRequest,
+    SimpleReferenceSeedItem,
+    SubjectReferenceSeedItem,
+)
+from infrastructure.container import container
 
 class Command(BaseCommand):
     help = 'Инициализация простых справочников начальными данными'
@@ -9,27 +15,38 @@ class Command(BaseCommand):
         parser.add_argument(
             '--force',
             action='store_true',
-            help='Пересоздать существующие справочники'
+            help='Обновить существующие справочники начальными данными',
         )
 
     def handle(self, *args, **options):
-        force = options.get('force', False)
-        
-        with transaction.atomic():
-            self.stdout.write(self.style.SUCCESS('🚀 Инициализация простых справочников...'))
-            
-            created_count = 0
-            created_count += self.create_simple_references(force)
-            created_count += self.create_subject_references(force)
-
-        self.stdout.write(
-            self.style.SUCCESS(f'✅ Готово! Создано {created_count} справочников.')
+        self.stdout.write(self.style.SUCCESS(
+            '🚀 Инициализация простых справочников...',
+        ))
+        result = container.seed_references_use_case().execute(
+            SeedReferencesRequest(
+                definition=ReferenceSeedDefinition(
+                    simple_references=self.simple_reference_items(),
+                    subject_references=self.subject_reference_items(),
+                ),
+                replace_existing=options.get('force', False),
+            ),
         )
 
-    def create_simple_references(self, force=False):
-        """Создание простых справочников"""
-        self.stdout.write('  📝 Создание простых справочников...')
-        
+        self.stdout.write('  📝 Простые справочники')
+        self._write_mutations(result.mutations, 'simple')
+        self.stdout.write('  📚 Предметные справочники')
+        self._write_mutations(result.mutations, 'subject')
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f'✅ Готово! Создано: {result.created_count}; '
+                f'обновлено: {result.updated_count}; '
+                f'без изменений: {result.skipped_count}.',
+            ),
+        )
+
+    @staticmethod
+    def simple_reference_items():
         references_data = [
             # Типы заданий
             ('task_types', '''Расчётная задача
@@ -102,40 +119,16 @@ class Command(BaseCommand):
 Творческий подход'''),
         ]
         
-        created_count = 0
-        
-        for category, items_text in references_data:
-            if force:
-                # Удаляем существующий при --force
-                SimpleReference.objects.filter(category=category).delete()
-            
-            obj, created = SimpleReference.objects.get_or_create(
+        return tuple(
+            SimpleReferenceSeedItem(
                 category=category,
-                defaults={
-                    'items_text': items_text,
-                    'is_active': True
-                }
+                items_text=items_text,
             )
-            
-            if created:
-                created_count += 1
-                items_count = len(obj.get_items_list())
-                self.stdout.write(f'    ✅ {obj.get_category_display()}: {items_count} элементов')
-            elif force:
-                # Обновляем содержимое при --force
-                obj.items_text = items_text
-                obj.save()
-                items_count = len(obj.get_items_list())
-                self.stdout.write(f'    🔄 {obj.get_category_display()}: обновлено, {items_count} элементов')
-            else:
-                self.stdout.write(f'    ⚠️  {obj.get_category_display()}: уже существует')
-        
-        return created_count
+            for category, items_text in references_data
+        )
 
-    def create_subject_references(self, force=False):
-        """Создание справочников кодификатора по предметам"""
-        self.stdout.write('  📚 Создание справочников кодификатора...')
-        
+    @staticmethod
+    def subject_reference_items():
         # Элементы содержания для математики  
         math_content = '''1.1|Натуральные числа
 1.2|Дроби
@@ -192,12 +185,12 @@ class Command(BaseCommand):
 
         subject_references_data = [
             # Математика (разные классы)
-            ('mathematics', '5-6', 'content_elements', math_content),
-            ('mathematics', '7-9', 'requirement_elements', math_requirements),
+            ('Математика', '5-6', 'content_elements', math_content),
+            ('Математика', '7-9', 'requirement_elements', math_requirements),
             
             # Физика  
-            ('physics', '7-9', 'content_elements', physics_content),
-            ('physics', '7-9', 'requirement_elements', '''1.1|Понимание смысла физических понятий
+            ('Физика', '7-9', 'content_elements', physics_content),
+            ('Физика', '7-9', 'requirement_elements', '''1.1|Понимание смысла физических понятий
 1.2|Понимание смысла физических законов
 1.3|Понимание принципов действия приборов
 2.1|Описание и объяснение физических явлений
@@ -206,7 +199,7 @@ class Command(BaseCommand):
 2.4|Проведение простых физических опытов'''),
             
             # Алгебра (упрощенный вариант)
-            ('algebra', '7-9', 'content_elements', '''1.1|Числа и вычисления
+            ('Алгебра', '7-9', 'content_elements', '''1.1|Числа и вычисления
 2.1|Алгебраические выражения
 2.2|Многочлены и их разложение
 3.1|Уравнения и их системы
@@ -215,7 +208,7 @@ class Command(BaseCommand):
 5.1|Функции и их свойства'''),
             
             # Геометрия
-            ('geometry', '7-11', 'content_elements', '''6.1|Начальные понятия геометрии
+            ('Геометрия', '7-11', 'content_elements', '''6.1|Начальные понятия геометрии
 6.2|Треугольник
 6.3|Четырёхугольники
 6.4|Многоугольники
@@ -225,37 +218,33 @@ class Command(BaseCommand):
 8.1|Тела и поверхности в пространстве'''),
         ]
         
-        created_count = 0
-        
-        for subject, grade_level, category, items_text in subject_references_data:
-            if force:
-                SubjectReference.objects.filter(
-                    subject=subject, 
-                    grade_level=grade_level, 
-                    category=category
-                ).delete()
-            
-            obj, created = SubjectReference.objects.get_or_create(
+        return tuple(
+            SubjectReferenceSeedItem(
                 subject=subject,
                 grade_level=grade_level,
                 category=category,
-                defaults={
-                    'items_text': items_text,
-                    'is_active': True
-                }
+                items_text=items_text,
             )
-            
-            if created:
-                created_count += 1
-                grade_text = f" ({grade_level})" if grade_level else " (все классы)"
-                items_count = len(obj.get_items_dict())
-                # ИСПРАВЛЕНО: используем obj.subject вместо obj.get_subject_display()
-                self.stdout.write(f'    ✅ {obj.subject}{grade_text} - {obj.get_category_display()}: {items_count} элементов')
-            elif force:
-                obj.items_text = items_text
-                obj.save()
-                self.stdout.write(f'    🔄 {obj.subject} - {obj.get_category_display()}: обновлено')
-            else:
-                self.stdout.write(f'    ⚠️  {obj.subject} - {obj.get_category_display()}: уже существует')
-        
-        return created_count
+            for subject, grade_level, category, items_text
+            in subject_references_data
+        )
+
+    def _write_mutations(self, mutations, reference_type):
+        icons = {
+            'created': '✅',
+            'updated': '🔄',
+            'skipped': '⚠️ ',
+        }
+        labels = {
+            'created': 'создан',
+            'updated': 'обновлён',
+            'skipped': 'уже существует',
+        }
+        for mutation in mutations:
+            if mutation.reference_type != reference_type:
+                continue
+            self.stdout.write(
+                f'    {icons[mutation.status]} {mutation.display_name}: '
+                f'{labels[mutation.status]}, '
+                f'{mutation.items_count} элементов',
+            )

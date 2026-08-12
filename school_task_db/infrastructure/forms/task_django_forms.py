@@ -1,6 +1,5 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from django.db.models import Q
 from django.utils.functional import cached_property
 
 from codifier.models import ContentEntry, Requirement
@@ -10,6 +9,9 @@ from core_logic.value_objects.task_validation import (
 )
 from infrastructure.services.task_image_presentation import (
     TaskImagePresentationService,
+)
+from infrastructure.services.django_task_classification_queries import (
+    task_classification_querysets,
 )
 from tasks.models import Task, TaskImage, Source
 
@@ -156,33 +158,13 @@ class TaskForm(forms.ModelForm):
             self.initial['codifier_content_entries'] = current_content_ids
             self.initial['codifier_requirements'] = current_requirement_ids
 
-        content_entries = ContentEntry.objects.all()
-        requirements = Requirement.objects.all()
-        if topic is not None:
-            content_entries = content_entries.filter(
-                codifier__subject=topic.subject,
-            )
-            requirements = requirements.filter(
-                codifier__subject=topic.subject,
-            )
-        self.fields['codifier_content_entries'].queryset = (
-            content_entries.filter(
-                Q(codifier__is_active=True) | Q(pk__in=current_content_ids),
-            ).select_related('codifier').order_by(
-                '-codifier__year',
-                'codifier__exam_type',
-                'code',
-            )
+        content_entries, requirements = task_classification_querysets(
+            topic=topic,
+            current_content_ids=current_content_ids,
+            current_requirement_ids=current_requirement_ids,
         )
-        self.fields['codifier_requirements'].queryset = (
-            requirements.filter(
-                Q(codifier__is_active=True) | Q(pk__in=current_requirement_ids),
-            ).select_related('codifier').order_by(
-                '-codifier__year',
-                'codifier__exam_type',
-                'code',
-            )
-        )
+        self.fields['codifier_content_entries'].queryset = content_entries
+        self.fields['codifier_requirements'].queryset = requirements
 
     def _selected_topic(self):
         topic_id = self.data.get('topic') if self.is_bound else None

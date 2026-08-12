@@ -1,14 +1,49 @@
 from django.contrib import admin
 from .models import Source
 from django import forms
+from django.core.exceptions import ValidationError
 from .models import Task, TaskImage
+from codifier.models import ContentEntry, Requirement
 from curriculum.models import Topic, SubTopic
 from core_logic.value_objects.task_validation import (
     validate_task_topic_selection,
 )
+from infrastructure.services.django_task_classification_queries import (
+    task_classification_querysets,
+)
 
 class TaskAdminForm(forms.ModelForm):
     """Кастомная форма для админки с фильтрацией подтем"""
+
+    codifier_content_entries = forms.ModelMultipleChoiceField(
+        label='Элементы содержания',
+        queryset=ContentEntry.objects.none(),
+        required=False,
+    )
+    codifier_requirements = forms.ModelMultipleChoiceField(
+        label='Проверяемые требования',
+        queryset=Requirement.objects.none(),
+        required=False,
+    )
+
+    class Meta:
+        model = Task
+        fields = [
+            'text',
+            'answer',
+            'topic',
+            'subtopic',
+            'short_solution',
+            'full_solution',
+            'hint',
+            'instruction',
+            'task_type',
+            'difficulty',
+            'cognitive_level',
+            'estimated_time',
+            'codifier_content_entries',
+            'codifier_requirements',
+        ]
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -22,6 +57,55 @@ class TaskAdminForm(forms.ModelForm):
         # Подтема необязательна
         self.fields['subtopic'].required = False
         self.fields['subtopic'].empty_label = "--- Выберите подтему (необязательно) ---"
+        self._configure_codifier_fields()
+
+    def _configure_codifier_fields(self):
+        topic = self._selected_topic()
+        current_content_ids = ()
+        current_requirement_ids = ()
+        if self.instance.pk:
+            current_content_ids = tuple(
+                self.instance.codifier_content_entries.values_list(
+                    'pk',
+                    flat=True,
+                )
+            )
+            current_requirement_ids = tuple(
+                self.instance.codifier_requirements.values_list(
+                    'pk',
+                    flat=True,
+                )
+            )
+            self.initial['codifier_content_entries'] = current_content_ids
+            self.initial['codifier_requirements'] = current_requirement_ids
+
+        content_entries, requirements = task_classification_querysets(
+            topic=topic,
+            current_content_ids=current_content_ids,
+            current_requirement_ids=current_requirement_ids,
+        )
+        self.fields['codifier_content_entries'].queryset = content_entries
+        self.fields['codifier_requirements'].queryset = requirements
+
+    def _selected_topic(self):
+        topic_id = self.data.get('topic') if self.is_bound else None
+        if topic_id:
+            try:
+                return Topic.objects.filter(pk=topic_id).first()
+            except (ValueError, ValidationError):
+                return None
+        if self.instance.pk:
+            return self.instance.topic
+        return None
+
+    def _save_m2m(self):
+        super()._save_m2m()
+        self.instance.codifier_content_entries.set(
+            self.cleaned_data.get('codifier_content_entries', ()),
+        )
+        self.instance.codifier_requirements.set(
+            self.cleaned_data.get('codifier_requirements', ()),
+        )
     
     def clean(self):
         """Валидация для админки"""
@@ -78,7 +162,10 @@ class TaskAdmin(admin.ModelAdmin):
             'fields': ['task_type', 'difficulty', 'cognitive_level', 'estimated_time']
         }),
         ('Кодификатор', {
-            'fields': ['content_element', 'requirement_element'],
+            'fields': [
+                'codifier_content_entries',
+                'codifier_requirements',
+            ],
             'classes': ['collapse']
         }),
         ('Служебная информация', {

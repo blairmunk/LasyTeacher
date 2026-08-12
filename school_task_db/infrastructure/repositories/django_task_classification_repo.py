@@ -8,6 +8,9 @@ from core_logic.interfaces.task_classification_repo import (
     ITaskClassificationRepository,
 )
 from curriculum.models import Topic
+from infrastructure.services.django_task_classification_queries import (
+    task_classification_querysets,
+)
 
 
 class DjangoTaskClassificationRepository(ITaskClassificationRepository):
@@ -19,14 +22,13 @@ class DjangoTaskClassificationRepository(ITaskClassificationRepository):
                 requirements=[],
             )
 
+        content_entries, requirements = task_classification_querysets(
+            topic=topic,
+        )
         return TaskClassificationOptions(
-            content_entries=self._get_options(
-                ContentEntry,
-                topic.subject,
-            ),
+            content_entries=self._get_options(content_entries),
             requirements=self._get_options(
-                Requirement,
-                topic.subject,
+                requirements,
                 code_prefix='Тр. ',
             ),
         )
@@ -70,15 +72,7 @@ class DjangoTaskClassificationRepository(ITaskClassificationRepository):
             return None
 
     @staticmethod
-    def _get_options(model, subject, code_prefix=''):
-        objects = model.objects.filter(
-            codifier__subject=subject,
-            codifier__is_active=True,
-        ).select_related('codifier').order_by(
-            '-codifier__year',
-            'codifier__exam_type',
-            'code',
-        )
+    def _get_options(objects, code_prefix=''):
         return [
             SelectOption(
                 id=str(item.pk),

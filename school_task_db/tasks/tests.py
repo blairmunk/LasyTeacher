@@ -9,8 +9,92 @@ from codifier.models import CodifierSpec, ContentEntry, Requirement
 from curriculum.models import SubTopic, Topic
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Source, Task
+from tasks.admin import TaskAdminForm
 from tasks.signals import invalidate_task_math_cache_on_save
 from works.models import Variant, VariantTask, Work
+
+
+class TaskAdminClassificationTests(TestCase):
+    def setUp(self):
+        self.physics_topic = Topic.objects.create(
+            name='Динамика',
+            subject='Физика',
+            section='Механика',
+            grade_level=9,
+        )
+        self.physics_codifier = CodifierSpec.objects.create(
+            name='ОГЭ по физике 2026',
+            short_name='ОГЭ Физика',
+            subject='Физика',
+            exam_type='oge',
+            year=2026,
+        )
+        chemistry_codifier = CodifierSpec.objects.create(
+            name='ОГЭ по химии 2026',
+            short_name='ОГЭ Химия',
+            subject='Химия',
+            exam_type='oge',
+            year=2026,
+        )
+        self.content_entry = ContentEntry.objects.create(
+            codifier=self.physics_codifier,
+            code='1.1',
+            name='Динамика',
+        )
+        self.requirement = Requirement.objects.create(
+            codifier=self.physics_codifier,
+            code='2.1',
+            name='Решать задачи',
+        )
+        self.chemistry_entry = ContentEntry.objects.create(
+            codifier=chemistry_codifier,
+            code='1.1',
+            name='Строение атома',
+        )
+
+    def test_admin_form_saves_explicit_classifications_by_topic_subject(self):
+        task = Task.objects.create(
+            text='Старое условие',
+            answer='10 Н',
+            topic=self.physics_topic,
+            task_type='computational',
+            difficulty=2,
+            content_element='legacy-1.1',
+            requirement_element='legacy-2.1',
+        )
+        form = TaskAdminForm(
+            data={
+                'text': 'Новое условие',
+                'answer': '10 Н',
+                'topic': str(self.physics_topic.pk),
+                'subtopic': '',
+                'task_type': 'computational',
+                'difficulty': 2,
+                'cognitive_level': 'apply',
+                'estimated_time': '',
+                'codifier_content_entries': [str(self.content_entry.pk)],
+                'codifier_requirements': [str(self.requirement.pk)],
+            },
+            instance=task,
+        )
+
+        self.assertNotIn(
+            self.chemistry_entry,
+            form.fields['codifier_content_entries'].queryset,
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+        saved = form.save()
+
+        self.assertEqual(
+            list(saved.codifier_content_entries.all()),
+            [self.content_entry],
+        )
+        self.assertEqual(
+            list(saved.codifier_requirements.all()),
+            [self.requirement],
+        )
+        self.assertEqual(saved.content_element, 'legacy-1.1')
+        self.assertEqual(saved.requirement_element, 'legacy-2.1')
 
 
 class TaskMathCacheSignalTests(TestCase):

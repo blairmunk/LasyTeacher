@@ -1,19 +1,14 @@
-"""Site settings repository interface."""
+"""Command repository port for site settings."""
 
 from abc import ABC, abstractmethod
 
 from core_logic.entities.site_settings import (
     SaveSiteSettingsParams,
     SaveSiteSettingsResult,
-    SiteSettingsData,
 )
 
 
-class ISettingsRepository(ABC):
-    @abstractmethod
-    def get_site_settings(self) -> SiteSettingsData:
-        """Return singleton site settings."""
-
+class ISiteSettingsCommandRepository(ABC):
     @abstractmethod
     def save_site_settings(
         self,

@@ -4,11 +4,13 @@ from core_logic.entities.site_settings import (
     SaveSiteSettingsParams,
     SaveSiteSettingsResult,
 )
-from core_logic.interfaces.settings_repo import ISettingsRepository
+from core_logic.interfaces.site_settings_command_repo import (
+    ISiteSettingsCommandRepository,
+)
 
 
 class SaveSiteSettingsUseCase:
-    def __init__(self, settings_repo: ISettingsRepository):
+    def __init__(self, settings_repo: ISiteSettingsCommandRepository):
         self.settings_repo = settings_repo
 
     def execute(

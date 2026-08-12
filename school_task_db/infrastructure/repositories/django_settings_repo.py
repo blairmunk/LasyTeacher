@@ -5,11 +5,19 @@ from core_logic.entities.site_settings import (
     SaveSiteSettingsResult,
     SiteSettingsData,
 )
-from core_logic.interfaces.settings_repo import ISettingsRepository
+from core_logic.interfaces.site_settings_command_repo import (
+    ISiteSettingsCommandRepository,
+)
+from core_logic.interfaces.site_settings_query_repo import (
+    ISiteSettingsQueryRepository,
+)
 from site_settings.models import SiteSettings
 
 
-class DjangoSettingsRepository(ISettingsRepository):
+class DjangoSettingsRepository(
+    ISiteSettingsQueryRepository,
+    ISiteSettingsCommandRepository,
+):
     def get_site_settings(self) -> SiteSettingsData:
         settings = SiteSettings.get()
         return SiteSettingsData(

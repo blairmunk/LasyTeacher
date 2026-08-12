@@ -30,3 +30,17 @@ class ExecuteTaskImportUseCaseTests(TestCase):
 
         self.assertEqual(service.request, request)
         self.assertEqual(result.log_id, 'log-1')
+
+    def test_execute_rejects_unknown_version_before_import_service(self):
+        service = FakeTaskImportService()
+        request = TaskImportRequest(
+            data={'version': '9.0', 'tasks': []},
+            filename='tasks.json',
+            file_size=100,
+        )
+
+        result = ExecuteTaskImportUseCase(service).execute(request)
+
+        self.assertFalse(result.success)
+        self.assertIn('Неподдерживаемая версия', result.error)
+        self.assertIsNone(service.request)

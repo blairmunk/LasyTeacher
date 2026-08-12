@@ -7,6 +7,10 @@ from core_logic.entities.core import ImportJsonValidationData
 from core_logic.value_objects.task_print_settings import (
     validate_task_specific_bank_role,
 )
+from core_logic.value_objects.task_transfer_format import (
+    task_transfer_format_error,
+    task_transfer_format_warning,
+)
 
 
 @dataclass(frozen=True)
@@ -29,6 +33,16 @@ class ValidateTaskImportJsonUseCase:
                 is_valid=False,
                 errors=['Корневой элемент должен быть объектом {}'],
             )
+
+        version_error = task_transfer_format_error(data)
+        if version_error:
+            return ImportJsonValidationData(
+                is_valid=False,
+                errors=[version_error],
+            )
+        version_warning = task_transfer_format_warning(data)
+        if version_warning:
+            warnings.append(version_warning)
 
         if 'tasks' not in data:
             return ImportJsonValidationData(

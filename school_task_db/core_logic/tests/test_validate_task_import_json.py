@@ -30,6 +30,29 @@ class ValidateTaskImportJsonUseCaseTests(TestCase):
         self.assertFalse(data.is_valid)
         self.assertEqual(data.errors, ['"tasks" должен быть массивом'])
 
+    def test_rejects_unknown_transfer_format_version(self):
+        data = self.use_case.execute(
+            ValidateTaskImportJsonRequest(
+                data={'version': '9.0', 'tasks': []},
+            ),
+        )
+
+        self.assertFalse(data.is_valid)
+        self.assertIn('Неподдерживаемая версия', data.errors[0])
+
+    def test_accepts_old_version_with_migration_warning(self):
+        data = self.use_case.execute(
+            ValidateTaskImportJsonRequest(
+                data={'format_version': '1.2', 'tasks': []},
+            ),
+        )
+
+        self.assertTrue(data.is_valid)
+        self.assertTrue(any(
+            'актуальном формате 1.4' in warning
+            for warning in data.warnings
+        ))
+
     def test_validates_tasks_groups_and_summary(self):
         group_id = '770e8400-e29b-41d4-a716-446655440001'
         data = self.use_case.execute(

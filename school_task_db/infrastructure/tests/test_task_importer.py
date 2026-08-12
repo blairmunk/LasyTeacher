@@ -3,12 +3,70 @@ from tempfile import TemporaryDirectory
 
 from django.test import TestCase
 
+from codifier.models import CodifierSpec, ContentEntry, Requirement
 from infrastructure.importers.tasks import TaskImporter
 from task_groups.models import TaskGroup
 from tasks.models import Task, TaskImage
 
 
 class TaskImporterTests(TestCase):
+    def test_imports_portable_explicit_classifications(self):
+        codifier = CodifierSpec.objects.create(
+            name='ОГЭ по физике 2026',
+            short_name='ОГЭ 2026',
+            subject='Физика',
+            exam_type='oge',
+            year=2026,
+        )
+        content_entry = ContentEntry.objects.create(
+            codifier=codifier,
+            code='1.1',
+            name='Динамика',
+        )
+        requirement = Requirement.objects.create(
+            codifier=codifier,
+            code='2.1',
+            name='Решать задачи',
+        )
+        task_id = '550e8400-e29b-41d4-a716-446655440001'
+        payload = self._task_payload(
+            task_id=task_id,
+            group_id='770e8400-e29b-41d4-a716-446655440001',
+        )
+        reference = {
+            'subject': 'Физика',
+            'exam_type': 'oge',
+            'year': 2026,
+        }
+        payload['tasks'][0]['codifier_content_entries'] = [
+            {**reference, 'code': '1.1'},
+        ]
+        payload['tasks'][0]['codifier_requirements'] = [
+            {**reference, 'code': '2.1'},
+        ]
+
+        self._import(payload)
+
+        task = Task.objects.get(pk=task_id)
+        self.assertEqual(
+            list(task.codifier_content_entries.all()),
+            [content_entry],
+        )
+        self.assertEqual(
+            list(task.codifier_requirements.all()),
+            [requirement],
+        )
+
+        payload['tasks'][0]['codifier_content_entries'] = []
+        payload['tasks'][0].pop('codifier_requirements')
+        self._import(payload)
+        task.refresh_from_db()
+        self.assertFalse(task.codifier_content_entries.exists())
+        self.assertEqual(
+            list(task.codifier_requirements.all()),
+            [requirement],
+        )
+
     def test_persists_and_updates_group_bank_role(self):
         group_id = '770e8400-e29b-41d4-a716-446655440001'
         task_id = '550e8400-e29b-41d4-a716-446655440001'

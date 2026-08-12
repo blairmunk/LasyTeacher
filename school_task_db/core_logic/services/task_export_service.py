@@ -53,7 +53,7 @@ class TaskExportService:
             images.extend(self._image_row(image) for image in task.images)
 
         payload = {
-            'version': '1.2',
+            'version': '1.3',
             'export_date': export_date,
             'sources': list(sources.values()),
             'tasks': task_rows,
@@ -80,6 +80,14 @@ class TaskExportService:
             'cognitive_level': task.cognitive_level,
             'content_element': task.content_element,
             'requirement_element': task.requirement_element,
+            'codifier_content_entries': [
+                TaskExportService._classification_row(item)
+                for item in task.content_entries
+            ],
+            'codifier_requirements': [
+                TaskExportService._classification_row(item)
+                for item in task.requirements
+            ],
             'estimated_time': task.estimated_time,
             'grade': task.grade,
             'year': task.year,
@@ -111,6 +119,17 @@ class TaskExportService:
                 'year': task.source.year,
             }
         return row
+
+    @staticmethod
+    def _classification_row(item):
+        return {
+            'subject': item.subject,
+            'exam_type': item.exam_type,
+            'year': item.year,
+            'code': item.code,
+            'name': item.name,
+            'codifier_name': item.codifier_name,
+        }
 
     @staticmethod
     def _image_row(image):

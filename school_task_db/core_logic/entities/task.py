@@ -125,6 +125,16 @@ class TaskExportGroupRef:
 
 
 @dataclass(frozen=True)
+class TaskExportClassificationRef:
+    subject: str
+    exam_type: str
+    year: int
+    code: str
+    name: str = ''
+    codifier_name: str = ''
+
+
+@dataclass(frozen=True)
 class TaskExportImageSource:
     pk: str
     task_id: str
@@ -159,10 +169,18 @@ class TaskExportTaskSource:
     source: Optional[TaskExportSourceRef] = None
     groups: tuple[TaskExportGroupRef, ...] = field(default_factory=tuple)
     images: tuple[TaskExportImageSource, ...] = field(default_factory=tuple)
+    content_entries: tuple[TaskExportClassificationRef, ...] = field(
+        default_factory=tuple,
+    )
+    requirements: tuple[TaskExportClassificationRef, ...] = field(
+        default_factory=tuple,
+    )
 
     def __post_init__(self):
         object.__setattr__(self, 'groups', tuple(self.groups))
         object.__setattr__(self, 'images', tuple(self.images))
+        object.__setattr__(self, 'content_entries', tuple(self.content_entries))
+        object.__setattr__(self, 'requirements', tuple(self.requirements))
 
 
 @dataclass(frozen=True)

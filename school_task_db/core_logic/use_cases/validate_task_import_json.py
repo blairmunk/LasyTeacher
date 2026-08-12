@@ -123,7 +123,45 @@ class ValidateTaskImportJsonUseCase:
         if not task.get('groups') and not task.get('group_name'):
             warnings.append(f'Задание #{task_number}: нет привязки к группе')
 
+        self._validate_classifications(
+            task,
+            task_number,
+            task_errors,
+        )
+
         return task_errors
+
+    @staticmethod
+    def _validate_classifications(task, task_number, errors):
+        for field_name in (
+            'codifier_content_entries',
+            'codifier_requirements',
+        ):
+            references = task.get(field_name)
+            if references is None:
+                continue
+            if not isinstance(references, list):
+                errors.append(
+                    f'Задание #{task_number}: {field_name} должен быть массивом',
+                )
+                continue
+            for index, reference in enumerate(references, start=1):
+                if not isinstance(reference, dict):
+                    errors.append(
+                        f'Задание #{task_number}: {field_name}[{index}] '
+                        'должен быть объектом',
+                    )
+                    continue
+                missing = [
+                    key
+                    for key in ('subject', 'exam_type', 'year', 'code')
+                    if reference.get(key) in (None, '')
+                ]
+                if missing:
+                    errors.append(
+                        f'Задание #{task_number}: {field_name}[{index}] '
+                        f'не содержит {", ".join(missing)}',
+                    )
 
     def _validate_groups(self, groups_data, errors):
         group_uuids = set()

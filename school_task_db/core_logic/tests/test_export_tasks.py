@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 from core_logic.entities.task import (
+    TaskExportClassificationRef,
     TaskExportFilters,
     TaskExportGroupRef,
     TaskExportSourceRef,
@@ -29,6 +30,14 @@ class FakeTaskExportRepository:
                 topic=topic,
                 source=source,
                 groups=groups,
+                content_entries=(TaskExportClassificationRef(
+                    subject='Физика',
+                    exam_type='oge',
+                    year=2026,
+                    code='1.1',
+                    name='Механика',
+                    codifier_name='ОГЭ 2026',
+                ),),
             ),
             TaskExportTaskSource(
                 pk='task-2',
@@ -55,7 +64,7 @@ class ExportTasksUseCaseTests(TestCase):
         )
 
         self.assertEqual(repo.filters, filters)
-        self.assertEqual(data.payload['version'], '1.2')
+        self.assertEqual(data.payload['version'], '1.3')
         self.assertEqual(data.payload['export_date'], '2026-07-17')
         self.assertEqual(data.payload['tasks'][0]['id'], 'task-1')
         self.assertEqual(
@@ -66,6 +75,17 @@ class ExportTasksUseCaseTests(TestCase):
         self.assertEqual(len(data.payload['topics']), 1)
         self.assertEqual(len(data.payload['sources']), 1)
         self.assertEqual(len(data.payload['analog_groups']), 1)
+        self.assertEqual(
+            data.payload['tasks'][0]['codifier_content_entries'][0],
+            {
+                'subject': 'Физика',
+                'exam_type': 'oge',
+                'year': 2026,
+                'code': '1.1',
+                'name': 'Механика',
+                'codifier_name': 'ОГЭ 2026',
+            },
+        )
 
     def test_execute_can_omit_group_and_topic_catalogs(self):
         payload = ExportTasksUseCase(

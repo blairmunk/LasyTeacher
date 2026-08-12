@@ -5,10 +5,14 @@ from core_logic.entities.task import TaskSaveParams
 from curriculum.models import Topic
 from infrastructure.container import Container
 from infrastructure.forms.task_django_forms import TaskForm
+from infrastructure.repositories.django_task_export_repo import (
+    DjangoTaskExportRepository,
+)
 from infrastructure.repositories.django_task_classification_repo import (
     DjangoTaskClassificationRepository,
 )
 from tasks.models import Task
+from core_logic.entities.task import TaskExportFilters
 
 
 class DjangoTaskClassificationRepositoryTests(TestCase):
@@ -160,3 +164,24 @@ class DjangoTaskClassificationRepositoryTests(TestCase):
             container.task_classification_repo,
             DjangoTaskClassificationRepository,
         )
+
+    def test_export_repository_uses_portable_natural_keys(self):
+        task = Task.objects.create(
+            text='Найти силу',
+            answer='10 Н',
+            topic=self.physics_topic,
+            task_type='computational',
+            difficulty=2,
+        )
+        self.physics_entry.tasks.add(task)
+        self.physics_requirement.tasks.add(task)
+
+        source = DjangoTaskExportRepository().get_task_export_sources(
+            TaskExportFilters(topic_id=str(self.physics_topic.pk)),
+        )[0]
+
+        self.assertEqual(source.content_entries[0].subject, 'Физика')
+        self.assertEqual(source.content_entries[0].exam_type, 'oge')
+        self.assertEqual(source.content_entries[0].year, 2026)
+        self.assertEqual(source.content_entries[0].code, '1.1')
+        self.assertEqual(source.requirements[0].code, '2.1')

@@ -8,10 +8,10 @@ class GetTaskImportSampleUseCase:
         return TaskImportSampleData(
             filename='sample_import.json',
             payload={
-                'version': '1.2',
+                'version': '1.3',
                 'description': (
                     'Пример файла для импорта заданий '
-                    '(v1.2 — с ролями заданий в группах)'
+                    '(v1.3 — с явными связями кодификаторов)'
                 ),
                 'sources': [
                     {
@@ -69,6 +69,8 @@ class GetTaskImportSampleUseCase:
                         'teacher_notes': (
                             'Базовое задание, дети справляются хорошо'
                         ),
+                        'codifier_content_entries': [],
+                        'codifier_requirements': [],
                         'source': {
                             'name': 'Перышкин А.В. Физика. 8 класс',
                             'short_name': 'Перышкин-8',
@@ -100,6 +102,8 @@ class GetTaskImportSampleUseCase:
                         'cognitive_level': 'apply',
                         'grade': 6,
                         'is_verified': False,
+                        'codifier_content_entries': [],
+                        'codifier_requirements': [],
                         'topic': {
                             'name': 'Обыкновенные дроби',
                             'subject': 'Математика',

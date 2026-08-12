@@ -4,11 +4,19 @@ from tasks.models import Task
 
 
 class TaskRecordImporter:
-    def __init__(self, runtime, context, topic_importer, source_importer):
+    def __init__(
+        self,
+        runtime,
+        context,
+        topic_importer,
+        source_importer,
+        classification_importer,
+    ):
         self.runtime = runtime
         self.context = context
         self.topic_importer = topic_importer
         self.source_importer = source_importer
+        self.classification_importer = classification_importer
 
     def import_tasks(self, tasks_data):
         self.runtime._write('📝 Импорт заданий...')
@@ -32,6 +40,7 @@ class TaskRecordImporter:
         ):
             if self.runtime.mode == 'update':
                 self._update_task(task, task_data)
+                self.classification_importer.apply(task, task_data)
                 self.runtime.stats.record_updated('tasks', task.pk)
             self.context.add_task(task_uuid, task)
             return
@@ -40,6 +49,7 @@ class TaskRecordImporter:
 
         task = self._create_task(task_uuid, task_data)
         if task:
+            self.classification_importer.apply(task, task_data)
             self.context.add_task(task_uuid, task)
             self.runtime.stats.record_created('tasks', task.pk)
             self.runtime.log_success(

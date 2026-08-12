@@ -425,7 +425,7 @@ class CoreViewsTests(TestCase):
             response['Content-Disposition'],
             'attachment; filename="sample_import.json"',
         )
-        self.assertEqual(payload['version'], '1.2')
+        self.assertEqual(payload['version'], '1.3')
         self.assertEqual(len(payload['tasks']), 2)
         self.assertEqual(payload['task_images'], [])
 
@@ -459,7 +459,7 @@ class CoreViewsTests(TestCase):
         self.assertTrue(
             response['Content-Disposition'].startswith('attachment; filename="export_'),
         )
-        self.assertEqual(payload['version'], '1.2')
+        self.assertEqual(payload['version'], '1.3')
         self.assertEqual(len(payload['tasks']), 1)
         self.assertEqual(payload['tasks'][0]['id'], str(task.pk))
         self.assertEqual(
@@ -502,7 +502,7 @@ class CoreViewsTests(TestCase):
             )
             payload = json.loads(output_path.read_text(encoding='utf-8'))
 
-        self.assertEqual(payload['version'], '1.2')
+        self.assertEqual(payload['version'], '1.3')
         self.assertEqual(len(payload['tasks']), 1)
         self.assertEqual(len(payload['analog_groups']), 1)
         self.assertEqual(len(payload['topics']), 1)

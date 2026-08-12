@@ -149,3 +149,44 @@ class ValidateTaskImportJsonUseCaseTests(TestCase):
 
         self.assertFalse(data.is_valid)
         self.assertIn('Unsupported specific task bank role', data.errors[0])
+
+    def test_validates_portable_codifier_references(self):
+        task = {
+            'id': '550e8400-e29b-41d4-a716-446655440001',
+            'text': 'Задача',
+            'codifier_content_entries': [{
+                'subject': 'Физика',
+                'exam_type': 'oge',
+                'year': 2026,
+                'code': '1.1',
+            }],
+            'codifier_requirements': [{
+                'subject': 'Физика',
+                'exam_type': 'oge',
+                'code': '2.1',
+            }],
+        }
+
+        data = self.use_case.execute(
+            ValidateTaskImportJsonRequest(data={'tasks': [task]}),
+        )
+
+        self.assertFalse(data.is_valid)
+        self.assertIn(
+            'codifier_requirements[1] не содержит year',
+            data.errors[0],
+        )
+
+    def test_rejects_non_array_codifier_references(self):
+        task = {
+            'id': '550e8400-e29b-41d4-a716-446655440001',
+            'text': 'Задача',
+            'codifier_content_entries': {},
+        }
+
+        data = self.use_case.execute(
+            ValidateTaskImportJsonRequest(data={'tasks': [task]}),
+        )
+
+        self.assertFalse(data.is_valid)
+        self.assertIn('должен быть массивом', data.errors[0])

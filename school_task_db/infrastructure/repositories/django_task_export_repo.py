@@ -4,6 +4,7 @@ import base64
 
 from core_logic.entities.task import (
     TaskExportFilters,
+    TaskExportClassificationRef,
     TaskExportGroupRef,
     TaskExportImageSource,
     TaskExportSourceRef,
@@ -33,6 +34,8 @@ class DjangoTaskExportRepository(ITaskExportRepository):
         ).prefetch_related(
             'images',
             'taskgroup_set__group',
+            'codifier_content_entries__codifier',
+            'codifier_requirements__codifier',
         )
 
         if filters.topic_id:
@@ -101,6 +104,25 @@ class DjangoTaskExportRepository(ITaskExportRepository):
                 for membership in task.taskgroup_set.all()
             ),
             images=self._task_export_images(task),
+            content_entries=tuple(
+                self._classification_ref(entry)
+                for entry in task.codifier_content_entries.all()
+            ),
+            requirements=tuple(
+                self._classification_ref(requirement)
+                for requirement in task.codifier_requirements.all()
+            ),
+        )
+
+    @staticmethod
+    def _classification_ref(item):
+        return TaskExportClassificationRef(
+            subject=item.codifier.subject,
+            exam_type=item.codifier.exam_type,
+            year=item.codifier.year,
+            code=item.code,
+            name=item.name,
+            codifier_name=item.codifier.short_name,
         )
 
     @staticmethod

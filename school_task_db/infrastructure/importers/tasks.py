@@ -6,6 +6,7 @@ from typing import Any, Dict
 from django.db import transaction
 
 from .base import BaseImporter, ImportContext
+from .task_classifications import TaskClassificationImporter
 from .task_groups import TaskGroupImporter
 from .task_images import TaskImageImporter
 from .task_preview import TaskImportPreviewAnalyzer
@@ -23,12 +24,14 @@ class TaskImporter(BaseImporter):
         self.image_importer = TaskImageImporter(self, self.context)
         self.group_importer = TaskGroupImporter(self, self.context)
         self.source_importer = TaskSourceImporter(self)
+        self.classification_importer = TaskClassificationImporter(self)
         self.topic_importer = TaskTopicImporter(self, self.context)
         self.record_importer = TaskRecordImporter(
             self,
             self.context,
             self.topic_importer,
             self.source_importer,
+            self.classification_importer,
         )
         self.preview_analyzer = TaskImportPreviewAnalyzer(
             self,

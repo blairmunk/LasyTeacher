@@ -1,5 +1,7 @@
 """Django read adapter for task import history."""
 
+from typing import Iterable, List
+
 from core.models import ImportLog
 from core_logic.entities.core import ImportLogItem
 from core_logic.interfaces.import_log_repo import IImportLogRepository
@@ -7,14 +9,14 @@ from core_logic.services.import_log_service import ImportLogService
 
 
 class DjangoImportLogRepository(IImportLogRepository):
-    def get_recent_import_logs(self, limit: int):
+    def get_recent_import_logs(self, limit: int) -> List[ImportLogItem]:
         return self._import_log_items(ImportLog.objects.all()[:limit])
 
-    def get_import_logs(self):
+    def get_import_logs(self) -> List[ImportLogItem]:
         return self._import_log_items(ImportLog.objects.all())
 
     @staticmethod
-    def _import_log_items(logs):
+    def _import_log_items(logs: Iterable[ImportLog]) -> List[ImportLogItem]:
         return [
             ImportLogItem(
                 filename=log.filename,

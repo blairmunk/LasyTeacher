@@ -1,6 +1,7 @@
 """Core app screen DTOs."""
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 
@@ -53,7 +54,7 @@ class ImportLogItem:
     duration_human: str
     file_size_human: str
     status_icon: str
-    created_at: Any
+    created_at: datetime
 
 
 @dataclass(frozen=True)
@@ -82,12 +83,12 @@ class GlobalSearchData:
 
 @dataclass(frozen=True)
 class ImportPageData:
-    recent_imports: Any
+    recent_imports: List[ImportLogItem] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
 class ImportHistoryData:
-    imports: Any
+    imports: List[ImportLogItem] = field(default_factory=list)
 
 
 @dataclass(frozen=True)

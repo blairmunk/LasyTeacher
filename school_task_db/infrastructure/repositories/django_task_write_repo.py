@@ -8,11 +8,21 @@ from core_logic.entities.task import (
     TaskSaveParams,
     TaskSaveResult,
 )
-from core_logic.interfaces.task_write_repo import ITaskWriteRepository
+from core_logic.interfaces.task_command_repo import ITaskCommandRepository
+from core_logic.interfaces.task_image_command_repo import (
+    ITaskImageCommandRepository,
+)
+from core_logic.interfaces.task_lifecycle_command_repo import (
+    ITaskLifecycleCommandRepository,
+)
 from tasks.models import Task, TaskImage
 
 
-class DjangoTaskWriteRepository(ITaskWriteRepository):
+class DjangoTaskWriteRepository(
+    ITaskCommandRepository,
+    ITaskImageCommandRepository,
+    ITaskLifecycleCommandRepository,
+):
     def create_task(self, params: TaskSaveParams) -> TaskSaveResult:
         task = Task.objects.create(**self._task_values(params))
         return TaskSaveResult(status='created', task_id=str(task.pk))

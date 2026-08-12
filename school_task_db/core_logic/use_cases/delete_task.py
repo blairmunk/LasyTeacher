@@ -2,7 +2,9 @@
 
 from dataclasses import dataclass
 
-from core_logic.interfaces.task_write_repo import ITaskWriteRepository
+from core_logic.interfaces.task_lifecycle_command_repo import (
+    ITaskLifecycleCommandRepository,
+)
 
 
 @dataclass(frozen=True)
@@ -22,7 +24,7 @@ class DeleteTaskResult:
 
 
 class DeleteTaskUseCase:
-    def __init__(self, task_repo: ITaskWriteRepository):
+    def __init__(self, task_repo: ITaskLifecycleCommandRepository):
         self.task_repo = task_repo
 
     def execute(self, request: DeleteTaskRequest) -> DeleteTaskResult:

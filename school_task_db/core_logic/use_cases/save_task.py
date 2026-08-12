@@ -9,7 +9,10 @@ from core_logic.entities.task import (
     TaskSaveResult,
 )
 from core_logic.interfaces.task_taxonomy_repo import ITaskTaxonomyRepository
-from core_logic.interfaces.task_write_repo import ITaskWriteRepository
+from core_logic.interfaces.task_command_repo import ITaskCommandRepository
+from core_logic.interfaces.task_image_command_repo import (
+    ITaskImageCommandRepository,
+)
 from core_logic.value_objects.task_validation import (
     validate_task_topic_selection,
 )
@@ -34,7 +37,7 @@ def _validate_task_params(
 class CreateTaskUseCase:
     def __init__(
         self,
-        task_repo: ITaskWriteRepository,
+        task_repo: ITaskCommandRepository,
         task_catalog_repo: ITaskTaxonomyRepository,
     ):
         self.task_repo = task_repo
@@ -50,7 +53,7 @@ class CreateTaskUseCase:
 class UpdateTaskUseCase:
     def __init__(
         self,
-        task_repo: ITaskWriteRepository,
+        task_repo: ITaskCommandRepository,
         task_catalog_repo: ITaskTaxonomyRepository,
     ):
         self.task_repo = task_repo
@@ -64,7 +67,7 @@ class UpdateTaskUseCase:
 
 
 class SaveTaskImagesUseCase:
-    def __init__(self, task_repo: ITaskWriteRepository):
+    def __init__(self, task_repo: ITaskImageCommandRepository):
         self.task_repo = task_repo
 
     def execute(

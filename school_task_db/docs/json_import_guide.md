@@ -1,6 +1,7 @@
-# 📥 Руководство по импорту заданий из JSON
+# Руководство по импорту заданий из JSON
 
-Система импорта заданий поддерживает детерминированный импорт данных через UUID с автоматическим созданием зависимостей.
+Актуальный формат банка заданий — `1.4`. Задания и группы переносятся по UUID,
+а классификации — по устойчивому естественному ключу кодификатора.
 
 ## 🚀 Быстрый старт
 
@@ -22,11 +23,7 @@ python manage.py import_tasks tasks.json --mode update --verbose
 
 ```json
 {
-  "format_version": "1.0",
-  "metadata": {
-    "description": "Описание импорта",
-    "created_at": "2024-08-26T15:00:00Z"
-  },
+  "version": "1.4",
   "tasks": [
     {
       "id": "22222222-2222-2222-2222-222222222222",
@@ -46,12 +43,8 @@ python manage.py import_tasks tasks.json --mode update --verbose
 
 ```json
 {
-  "format_version": "1.0",
-  "metadata": {
-    "description": "Импорт заданий по математике 8 класс",
-    "created_at": "2024-08-26T15:00:00Z",
-    "author": "Иванов И.И."
-  },
+  "version": "1.4",
+  "description": "Импорт заданий по математике 8 класс",
   "topics": [
     {
       "name": "Квадратные уравнения",
@@ -86,20 +79,38 @@ python manage.py import_tasks tasks.json --mode update --verbose
       "subtopic": {
         "name": "Полные квадратные уравнения"
       },
-      "content_element": "2.3.1",
-      "requirement_element": "2.1.3",
+      "codifier_content_entries": [
+        {
+          "subject": "Математика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "2.3.1"
+        }
+      ],
+      "codifier_requirements": [
+        {
+          "subject": "Математика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "2.1.3"
+        }
+      ],
       "task_type": "computational",
       "difficulty": 3,
       "cognitive_level": "apply",
       "estimated_time": 5,
-      "groups": ["11111111-1111-1111-1111-111111111111"],
-      "group_name": "Квадратные уравнения - базовый уровень"
+      "groups": [
+        {
+          "id": "11111111-1111-1111-1111-111111111111",
+          "bank_role": "control"
+        }
+      ]
     }
   ],
   "task_images": [
     {
       "id": "33333333-3333-3333-3333-333333333333",
-      "task_uuid": "22222222-2222-2222-2222-222222222222",
+      "task_id": "22222222-2222-2222-2222-222222222222",
       "filename": "graph.png",
       "base64_data": "iVBORw0KGgoAAAANSUhEUgAA...",
       "position": "right_40",
@@ -108,6 +119,36 @@ python manage.py import_tasks tasks.json --mode update --verbose
     }
   ]
 }
+```
+
+## Классификация заданий
+
+`codifier_content_entries` и `codifier_requirements` содержат ссылки на уже
+импортированный кодификатор. Внутренние UUID записей кодификатора не
+используются: они могут различаться в разных базах.
+
+```json
+{
+  "subject": "Физика",
+  "exam_type": "oge",
+  "year": 2026,
+  "code": "1.2.3"
+}
+```
+
+При обновлении задания действуют следующие правила:
+
+* поле отсутствует — существующие связи этого типа сохраняются;
+* передан пустой массив `[]` — существующие связи очищаются;
+* передан массив ссылок — связи заменяются найденными элементами.
+
+Старые поля `content_element` и `requirement_element` всё ещё принимаются для
+совместимости. Они сохраняют текст кода, но не создают однозначную связь с
+конкретным кодификатором. Для старого банка после импорта используйте:
+
+```bash
+python manage.py backfill_task_classifications
+python manage.py backfill_task_classifications --apply
 ```
 
 ## ⚙️ Параметры команды

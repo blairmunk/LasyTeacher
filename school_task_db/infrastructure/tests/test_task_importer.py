@@ -67,6 +67,25 @@ class TaskImporterTests(TestCase):
             [requirement],
         )
 
+    def test_imports_legacy_classification_codes_without_inventing_relations(self):
+        task_id = '550e8400-e29b-41d4-a716-446655440001'
+        payload = self._task_payload(
+            task_id=task_id,
+            group_id='770e8400-e29b-41d4-a716-446655440001',
+        )
+        payload['tasks'][0].update({
+            'content_element': '1.2',
+            'requirement_element': '2.1',
+        })
+
+        self._import(payload)
+
+        task = Task.objects.get(pk=task_id)
+        self.assertEqual(task.content_element, '1.2')
+        self.assertEqual(task.requirement_element, '2.1')
+        self.assertFalse(task.codifier_content_entries.exists())
+        self.assertFalse(task.codifier_requirements.exists())
+
     def test_persists_and_updates_group_bank_role(self):
         group_id = '770e8400-e29b-41d4-a716-446655440001'
         task_id = '550e8400-e29b-41d4-a716-446655440001'

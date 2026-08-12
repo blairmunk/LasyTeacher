@@ -190,3 +190,21 @@ class ValidateTaskImportJsonUseCaseTests(TestCase):
 
         self.assertFalse(data.is_valid)
         self.assertIn('должен быть массивом', data.errors[0])
+
+    def test_warns_that_legacy_classification_does_not_create_relation(self):
+        task = {
+            'id': '550e8400-e29b-41d4-a716-446655440001',
+            'text': 'Задача',
+            'content_element': '1.1',
+            'requirement_element': '2.1',
+        }
+
+        data = self.use_case.execute(
+            ValidateTaskImportJsonRequest(data={'tasks': [task]}),
+        )
+
+        self.assertTrue(data.is_valid)
+        self.assertTrue(any(
+            'legacy-поля' in warning
+            for warning in data.warnings
+        ))

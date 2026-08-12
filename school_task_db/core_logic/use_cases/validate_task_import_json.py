@@ -123,6 +123,14 @@ class ValidateTaskImportJsonUseCase:
         if not task.get('groups') and not task.get('group_name'):
             warnings.append(f'Задание #{task_number}: нет привязки к группе')
 
+        if task.get('content_element') or task.get('requirement_element'):
+            warnings.append(
+                f'Задание #{task_number}: используются legacy-поля '
+                'content_element/requirement_element; они будут сохранены '
+                'для совместимости, но не создадут явную связь с '
+                'кодификатором',
+            )
+
         self._validate_classifications(
             task,
             task_number,

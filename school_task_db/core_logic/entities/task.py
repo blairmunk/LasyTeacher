@@ -157,8 +157,6 @@ class TaskExportTaskSource:
     difficulty: int = 0
     task_type: str = ''
     cognitive_level: str = ''
-    content_element: str = ''
-    requirement_element: str = ''
     estimated_time: Any = None
     grade: Any = None
     year: Any = None

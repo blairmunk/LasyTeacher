@@ -1,6 +1,9 @@
 """Build sample task import JSON payload."""
 
 from core_logic.entities.task_import import TaskImportSampleData
+from core_logic.value_objects.task_transfer_format import (
+    TASK_TRANSFER_FORMAT_VERSION,
+)
 
 
 class GetTaskImportSampleUseCase:
@@ -8,10 +11,10 @@ class GetTaskImportSampleUseCase:
         return TaskImportSampleData(
             filename='sample_import.json',
             payload={
-                'version': '1.3',
+                'version': TASK_TRANSFER_FORMAT_VERSION,
                 'description': (
                     'Пример файла для импорта заданий '
-                    '(v1.3 — с явными связями кодификаторов)'
+                    '(v1.4 — с явными связями кодификаторов)'
                 ),
                 'sources': [
                     {

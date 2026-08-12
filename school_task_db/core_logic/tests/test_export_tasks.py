@@ -64,7 +64,7 @@ class ExportTasksUseCaseTests(TestCase):
         )
 
         self.assertEqual(repo.filters, filters)
-        self.assertEqual(data.payload['version'], '1.3')
+        self.assertEqual(data.payload['version'], '1.4')
         self.assertEqual(data.payload['export_date'], '2026-07-17')
         self.assertEqual(data.payload['tasks'][0]['id'], 'task-1')
         self.assertEqual(
@@ -86,6 +86,8 @@ class ExportTasksUseCaseTests(TestCase):
                 'codifier_name': 'ОГЭ 2026',
             },
         )
+        self.assertNotIn('content_element', data.payload['tasks'][0])
+        self.assertNotIn('requirement_element', data.payload['tasks'][0])
 
     def test_execute_can_omit_group_and_topic_catalogs(self):
         payload = ExportTasksUseCase(

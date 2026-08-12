@@ -1287,7 +1287,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         tasks_by_id = {task['id']: task for task in payload['tasks']}
         weak_task = tasks_by_id[str(self.original_weak.pk)]
 
-        self.assertEqual(payload['version'], '1.3')
+        self.assertEqual(payload['version'], '1.4')
         self.assertEqual(payload['export_date'], '2026-07-17')
         self.assertEqual(weak_task['text'], self.original_weak.text)
         self.assertEqual(weak_task['source']['short_name'], 'Сборник')

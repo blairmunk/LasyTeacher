@@ -60,8 +60,6 @@ class DjangoTaskExportRepository(ITaskExportRepository):
             difficulty=task.difficulty,
             task_type=task.task_type,
             cognitive_level=getattr(task, 'cognitive_level', ''),
-            content_element=getattr(task, 'content_element', ''),
-            requirement_element=getattr(task, 'requirement_element', ''),
             estimated_time=getattr(task, 'estimated_time', None),
             grade=task.grade,
             year=task.year,

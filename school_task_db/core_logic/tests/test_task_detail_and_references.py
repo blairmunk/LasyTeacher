@@ -2,12 +2,16 @@ from unittest import TestCase
 
 from core_logic.entities.task import (
     SelectOption,
+    TaskClassificationOptions,
     TaskDetailGroup,
     TaskDetailTask,
 )
 from core_logic.use_cases.get_task_detail import GetTaskDetailUseCase
 from core_logic.use_cases.get_task_reference_options import (
     GetSubtopicOptionsUseCase,
+)
+from core_logic.use_cases.get_task_classification_options import (
+    GetTaskClassificationOptionsUseCase,
 )
 
 
@@ -38,6 +42,18 @@ class FakeTaskRepository:
     def get_subtopic_options(self, topic_id):
         self.subtopic_topic_id = topic_id
         return [SelectOption(id='subtopic-1', name='Кинематика')]
+
+
+class FakeTaskClassificationRepository:
+    def __init__(self):
+        self.topic_id = None
+
+    def get_classification_options(self, topic_id):
+        self.topic_id = topic_id
+        return TaskClassificationOptions(
+            content_entries=[SelectOption(id='content-1', name='1.1 · Сила')],
+            requirements=[SelectOption(id='requirement-1', name='2.1 · Решать')],
+        )
 
 
 
@@ -79,3 +95,23 @@ class TaskDetailAndReferenceUseCaseTests(TestCase):
 
         self.assertEqual(repo.subtopic_topic_id, 'topic-1')
         self.assertEqual(result.subtopics[0].name, 'Кинематика')
+
+    def test_classification_options_reject_empty_topic(self):
+        repo = FakeTaskClassificationRepository()
+        use_case = GetTaskClassificationOptionsUseCase(repo)
+
+        result = use_case.execute('')
+
+        self.assertEqual(result.content_entries, [])
+        self.assertEqual(result.requirements, [])
+        self.assertIsNone(repo.topic_id)
+
+    def test_classification_options_return_repository_values(self):
+        repo = FakeTaskClassificationRepository()
+        use_case = GetTaskClassificationOptionsUseCase(repo)
+
+        result = use_case.execute('topic-1')
+
+        self.assertEqual(repo.topic_id, 'topic-1')
+        self.assertEqual(result.content_entries[0].id, 'content-1')
+        self.assertEqual(result.requirements[0].id, 'requirement-1')

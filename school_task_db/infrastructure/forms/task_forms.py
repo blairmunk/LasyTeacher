@@ -146,6 +146,21 @@ class TaskFormAdapter:
             ],
         }
 
+    def classification_options_topic_id_from_query(self, query):
+        return query.get('topic_id', '')
+
+    def classification_options_payload(self, result):
+        return {
+            'content_entries': [
+                {'id': option.id, 'name': option.name}
+                for option in result.content_entries
+            ],
+            'requirements': [
+                {'id': option.id, 'name': option.name}
+                for option in result.requirements
+            ],
+        }
+
     def task_list_filters_from_query(self, query):
         return TaskListFilters(
             search=query.get('search', ''),

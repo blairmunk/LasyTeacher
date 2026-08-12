@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
+from codifier.models import CodifierSpec, ContentEntry, Requirement
 from curriculum.models import SubTopic, Topic
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Source, Task
@@ -288,6 +289,69 @@ class TaskBulkGroupAjaxTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {'subtopics': []})
+
+    def test_load_classifications_returns_only_topic_subject_options(self):
+        physics = CodifierSpec.objects.create(
+            name='ОГЭ по физике 2026',
+            short_name='ОГЭ Физика',
+            subject='Физика',
+            exam_type='oge',
+            year=2026,
+        )
+        chemistry = CodifierSpec.objects.create(
+            name='ОГЭ по химии 2026',
+            short_name='ОГЭ Химия',
+            subject='Химия',
+            exam_type='oge',
+            year=2026,
+        )
+        content = ContentEntry.objects.create(
+            codifier=physics,
+            code='1.1',
+            name='Кинематика',
+        )
+        requirement = Requirement.objects.create(
+            codifier=physics,
+            code='2.1',
+            name='Решать задачи',
+        )
+        ContentEntry.objects.create(
+            codifier=chemistry,
+            code='1.1',
+            name='Строение атома',
+        )
+
+        response = self.client.get(
+            reverse('tasks:ajax-load-classifications'),
+            {'topic_id': str(self.topic.pk)},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                'content_entries': [{
+                    'id': str(content.pk),
+                    'name': 'ОГЭ Физика · 1.1 · Кинематика',
+                }],
+                'requirements': [{
+                    'id': str(requirement.pk),
+                    'name': 'ОГЭ Физика · Тр. 2.1 · Решать задачи',
+                }],
+            },
+        )
+
+    def test_load_classifications_returns_empty_for_missing_topic(self):
+        response = self.client.get(
+            reverse('tasks:ajax-load-classifications'),
+            {'topic_id': ''},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {'content_entries': [], 'requirements': []},
+        )
 
     def test_source_list_returns_sources_with_task_count(self):
         source = Source.objects.create(name='Задачник')

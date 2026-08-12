@@ -248,6 +248,19 @@ def load_subtopics(request):
     return JsonResponse(container.task_form_adapter.subtopic_options_payload(result))
 
 
+def load_classifications(request):
+    """Return explicit codifier options compatible with a task topic."""
+    result = container.get_task_classification_options_use_case().execute(
+        topic_id=(
+            container.task_form_adapter
+            .classification_options_topic_id_from_query(request.GET)
+        ),
+    )
+    return JsonResponse(
+        container.task_form_adapter.classification_options_payload(result),
+    )
+
+
 # === Bulk actions ===
 
 @require_POST

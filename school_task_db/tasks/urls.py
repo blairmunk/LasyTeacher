@@ -16,6 +16,11 @@ urlpatterns = [
 
     # AJAX endpoints
     path('ajax/load-subtopics/', views.load_subtopics, name='ajax-load-subtopics'),
+    path(
+        'ajax/load-classifications/',
+        views.load_classifications,
+        name='ajax-load-classifications',
+    ),
 
     # Bulk actions
     path('ajax/bulk-create-group/', views.bulk_create_group, name='bulk-create-group'),

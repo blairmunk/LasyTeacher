@@ -412,49 +412,103 @@
 document.addEventListener('DOMContentLoaded', function() {
     const topicSelect = document.getElementById('id_topic');
     const subtopicSelect = document.getElementById('id_subtopic');
+    const contentEntrySelect = document.getElementById('id_codifier_content_entries');
+    const requirementSelect = document.getElementById('id_codifier_requirements');
+    const subtopicOptionsUrl = "{% url 'tasks:ajax-load-subtopics' %}";
+    const classificationOptionsUrl = "{% url 'tasks:ajax-load-classifications' %}";
+
+    function selectedValues(select) {
+        return new Set(
+            Array.from(select?.selectedOptions || []).map(option => option.value),
+        );
+    }
+
+    function replaceOptions(select, options, selected = new Set()) {
+        if (!select) {
+            return;
+        }
+        select.innerHTML = '';
+        options.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.id;
+            option.textContent = item.name;
+            option.selected = selected.has(item.id);
+            select.appendChild(option);
+        });
+    }
+
+    async function fetchOptions(url, topicId) {
+        const params = new URLSearchParams({topic_id: topicId});
+        const response = await fetch(`${url}?${params.toString()}`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+    }
     
     if (topicSelect && subtopicSelect) {
-        // Сохраняем все подтемы для восстановления
-        const allSubtopics = Array.from(subtopicSelect.options).slice(1); // Убираем первый option (empty)
-        
-        function filterSubtopics(topicId) {
+        async function filterSubtopics(topicId, preserveSelection = false) {
+            const selected = preserveSelection
+                ? selectedValues(subtopicSelect)
+                : new Set();
             if (!topicId) {
-                // Если тема не выбрана - показываем подсказку
                 subtopicSelect.innerHTML = '<option value="">--- Сначала выберите тему ---</option>';
                 return;
             }
-            
-            // Показываем загрузку
+
             subtopicSelect.innerHTML = '<option value="">--- Загрузка... ---</option>';
-            
-            fetch(`/tasks/ajax/load-subtopics/?topic_id=${topicId}`)
-                .then(response => response.json())
-                .then(data => {
-                    subtopicSelect.innerHTML = '<option value="">--- Выберите подтему (необязательно) ---</option>';
-                    
-                    data.subtopics.forEach(subtopic => {
-                        const option = document.createElement('option');
-                        option.value = subtopic.id;
-                        option.textContent = subtopic.name;
-                        subtopicSelect.appendChild(option);
-                    });
-                })
-                .catch(error => {
-                    console.error('Ошибка загрузки подтем:', error);
-                    subtopicSelect.innerHTML = '<option value="">--- Ошибка загрузки ---</option>';
+
+            try {
+                const data = await fetchOptions(subtopicOptionsUrl, topicId);
+                subtopicSelect.innerHTML = '<option value="">--- Выберите подтему (необязательно) ---</option>';
+                data.subtopics.forEach(subtopic => {
+                    const option = document.createElement('option');
+                    option.value = subtopic.id;
+                    option.textContent = subtopic.name;
+                    option.selected = selected.has(subtopic.id);
+                    subtopicSelect.appendChild(option);
                 });
+            } catch (error) {
+                console.error('Ошибка загрузки подтем:', error);
+                subtopicSelect.innerHTML = '<option value="">--- Ошибка загрузки ---</option>';
+            }
+        }
+
+        async function filterClassifications(topicId) {
+            if (!contentEntrySelect || !requirementSelect) {
+                return;
+            }
+            if (!topicId) {
+                replaceOptions(contentEntrySelect, []);
+                replaceOptions(requirementSelect, []);
+                return;
+            }
+
+            contentEntrySelect.disabled = true;
+            requirementSelect.disabled = true;
+            try {
+                const data = await fetchOptions(classificationOptionsUrl, topicId);
+                replaceOptions(contentEntrySelect, data.content_entries);
+                replaceOptions(requirementSelect, data.requirements);
+            } catch (error) {
+                console.error('Ошибка загрузки кодификатора:', error);
+            } finally {
+                contentEntrySelect.disabled = false;
+                requirementSelect.disabled = false;
+            }
         }
         
         topicSelect.addEventListener('change', function() {
             filterSubtopics(this.value);
+            filterClassifications(this.value);
         });
         
-        // Инициализация при загрузке
         if (!topicSelect.value) {
             subtopicSelect.innerHTML = '<option value="">--- Сначала выберите тему ---</option>';
+            replaceOptions(contentEntrySelect, []);
+            replaceOptions(requirementSelect, []);
         } else {
-            // Если тема уже выбрана (при редактировании) - фильтруем подтемы
-            filterSubtopics(topicSelect.value);
+            filterSubtopics(topicSelect.value, true);
         }
     }
 

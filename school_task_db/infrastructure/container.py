@@ -205,6 +205,9 @@ from core_logic.use_cases.get_task_db_health import GetTaskDBHealthUseCase
 from core_logic.use_cases.get_task_group_detail import GetTaskGroupDetailUseCase
 from core_logic.use_cases.get_task_group_list import GetTaskGroupListUseCase
 from core_logic.use_cases.get_task_list import GetTaskListUseCase
+from core_logic.use_cases.get_task_classification_options import (
+    GetTaskClassificationOptionsUseCase,
+)
 from core_logic.use_cases.get_task_reference_options import (
     GetSubtopicOptionsUseCase,
 )
@@ -1722,6 +1725,11 @@ class Container:
     def get_subtopic_options_use_case(self):
         return GetSubtopicOptionsUseCase(
             task_catalog_repo=self.task_taxonomy_repo,
+        )
+
+    def get_task_classification_options_use_case(self):
+        return GetTaskClassificationOptionsUseCase(
+            classification_repo=self.task_classification_repo,
         )
 
     def get_source_list_use_case(self):

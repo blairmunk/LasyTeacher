@@ -85,6 +85,44 @@ class DjangoTaskClassificationRepositoryTests(TestCase):
         self.assertEqual(len(invalid), 2)
         self.assertIn('другого предмета', invalid[0])
 
+    def test_options_include_only_active_codifiers_for_topic_subject(self):
+        inactive = CodifierSpec.objects.create(
+            name='Старый кодификатор по физике',
+            short_name='Физика 2025',
+            subject='Физика',
+            exam_type='oge',
+            year=2025,
+            is_active=False,
+        )
+        ContentEntry.objects.create(
+            codifier=inactive,
+            code='9.1',
+            name='Устаревший элемент',
+        )
+
+        options = DjangoTaskClassificationRepository().get_classification_options(
+            str(self.physics_topic.pk),
+        )
+
+        self.assertEqual(
+            [option.id for option in options.content_entries],
+            [str(self.physics_entry.pk)],
+        )
+        self.assertEqual(
+            [option.id for option in options.requirements],
+            [str(self.physics_requirement.pk)],
+        )
+        self.assertIn('ОГЭ Физика · 1.1 · Динамика', options.content_entries[0].name)
+        self.assertIn('Тр. 2.1', options.requirements[0].name)
+
+    def test_options_are_empty_for_invalid_topic(self):
+        options = DjangoTaskClassificationRepository().get_classification_options(
+            'invalid-topic-id',
+        )
+
+        self.assertEqual(options.content_entries, [])
+        self.assertEqual(options.requirements, [])
+
     def test_use_case_creates_and_updates_explicit_classifications(self):
         container = Container()
         create_result = container.create_task_use_case().execute(

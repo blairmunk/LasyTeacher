@@ -1156,8 +1156,12 @@ class TaskFormAdapterTests(SimpleTestCase):
         adapter = TaskFormAdapter()
 
         topic_id = adapter.subtopic_options_topic_id_from_query(query)
+        classification_topic_id = (
+            adapter.classification_options_topic_id_from_query(query)
+        )
 
         self.assertEqual(topic_id, 't1')
+        self.assertEqual(classification_topic_id, 't1')
 
     def test_builds_task_list_filters_from_query(self):
         query = QueryDict(
@@ -1279,6 +1283,18 @@ class TaskFormAdapterTests(SimpleTestCase):
         self.assertEqual(
             adapter.subtopic_options_payload(subtopics),
             {'subtopics': [{'id': 's1', 'name': 'Кинематика'}]},
+        )
+
+        classifications = SimpleNamespace(
+            content_entries=[SimpleNamespace(id='c1', name='1.1 · Сила')],
+            requirements=[SimpleNamespace(id='r1', name='2.1 · Решать')],
+        )
+        self.assertEqual(
+            adapter.classification_options_payload(classifications),
+            {
+                'content_entries': [{'id': 'c1', 'name': '1.1 · Сила'}],
+                'requirements': [{'id': 'r1', 'name': '2.1 · Решать'}],
+            },
         )
 
     def test_builds_bulk_action_response_payloads(self):

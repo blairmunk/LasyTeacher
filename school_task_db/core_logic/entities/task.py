@@ -404,6 +404,12 @@ class SelectOption:
 
 
 @dataclass(frozen=True)
+class TaskClassificationOptions:
+    content_entries: List[SelectOption]
+    requirements: List[SelectOption]
+
+
+@dataclass(frozen=True)
 class SourceListData:
     sources: List["SourceListItem"]
 

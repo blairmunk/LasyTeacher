@@ -2670,7 +2670,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(short_id, self.source_variant.get_short_uuid())
         self.assertIsNone(self.source_variant.work)
 
-    def test_work_repository_deletes_variant_and_returns_previous_work_id(self):
+    def test_work_repository_deletes_unreferenced_variant(self):
         variant = Variant.objects.create(
             work=self.source_work,
             number=99,
@@ -2679,10 +2679,24 @@ class DjangoRemedialRepositoryTests(TestCase):
         variant_id = str(variant.pk)
         repo = DjangoVariantLifecycleCommandRepository()
 
-        work_id = repo.delete_variant(variant_id)
+        outcome = repo.delete_variant_if_unreferenced(variant_id)
 
-        self.assertEqual(work_id, str(self.source_work.pk))
+        self.assertEqual(outcome.status, 'deleted')
+        self.assertEqual(outcome.work_id, str(self.source_work.pk))
         self.assertFalse(Variant.objects.filter(pk=variant_id).exists())
+
+    def test_work_repository_blocks_deleting_referenced_variant(self):
+        repo = DjangoVariantLifecycleCommandRepository()
+
+        outcome = repo.delete_variant_if_unreferenced(
+            str(self.source_variant.pk),
+        )
+
+        self.assertEqual(outcome.status, 'blocked_has_participations')
+        self.assertEqual(outcome.participation_count, 1)
+        self.assertTrue(
+            Variant.objects.filter(pk=self.source_variant.pk).exists()
+        )
 
     def test_work_repository_bulk_deletes_only_selected_work_variants(self):
         other_work = Work.objects.create(name='Другая работа')

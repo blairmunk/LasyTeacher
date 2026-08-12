@@ -10,6 +10,7 @@ from core_logic.entities.work import (
     RemedialTaskRef,
     RemedialTrainingTaskRow,
     VariantDeleteInfo,
+    VariantDeletionOutcome,
     VariantDetailTask,
     VariantDetailTaskRow,
     VariantDetailVariant,
@@ -138,6 +139,10 @@ class FakeWorkRepository:
             variant_count=0,
         )
         self.variant_delete_info = VariantDeleteInfo(task_count=0)
+        self.variant_deletion_outcome = VariantDeletionOutcome(
+            status='deleted',
+            work_id='work-1',
+        )
         self.detached_variant_id = None
         self.deleted_variant_id = None
         self.bulk_deleted_request = None
@@ -322,9 +327,9 @@ class FakeWorkRepository:
         self.detached_variant_id = variant_id
         return 'ABCD'
 
-    def delete_variant(self, variant_id):
+    def delete_variant_if_unreferenced(self, variant_id):
         self.deleted_variant_id = variant_id
-        return 'work-1'
+        return self.variant_deletion_outcome
 
     def bulk_delete_work_variants(self, work_id, variant_ids):
         self.bulk_deleted_request = (work_id, variant_ids)
@@ -964,6 +969,25 @@ class WorkDetailTests(TestCase):
 
         self.assertEqual(result.status, 'deleted')
         self.assertEqual(result.redirect_work_id, 'work-1')
+        self.assertEqual(repo.deleted_variant_id, 'variant-1')
+
+    def test_delete_variant_use_case_handles_late_participation(self):
+        repo = FakeWorkRepository()
+        repo.variant_deletion_outcome = VariantDeletionOutcome(
+            status='blocked_has_participations',
+            participation_count=1,
+        )
+        use_case = DeleteVariantUseCase(
+            variant_query_repo=repo,
+            variant_command_repo=repo,
+        )
+
+        result = use_case.execute(
+            DeleteVariantRequest(variant_id='variant-1', action='delete')
+        )
+
+        self.assertEqual(result.status, 'blocked_has_participations')
+        self.assertEqual(result.participation_count, 1)
         self.assertEqual(repo.deleted_variant_id, 'variant-1')
 
     def test_bulk_delete_variants_use_case_deletes_selected_variants(self):

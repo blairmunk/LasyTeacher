@@ -545,6 +545,13 @@ class VariantDeleteInfo:
 
 
 @dataclass(frozen=True)
+class VariantDeletionOutcome:
+    status: str
+    work_id: str = ''
+    participation_count: int = 0
+
+
+@dataclass(frozen=True)
 class DeleteVariantResult:
     status: str
     redirect_work_id: str = ''

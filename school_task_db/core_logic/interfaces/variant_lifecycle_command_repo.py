@@ -3,6 +3,8 @@
 from abc import ABC, abstractmethod
 from typing import List
 
+from core_logic.entities.work import VariantDeletionOutcome
+
 
 class IVariantLifecycleCommandRepository(ABC):
     @abstractmethod
@@ -10,8 +12,11 @@ class IVariantLifecycleCommandRepository(ABC):
         """Detach a variant and return its short identifier."""
 
     @abstractmethod
-    def delete_variant(self, variant_id: str) -> str:
-        """Delete a variant and return its previous work ID, if any."""
+    def delete_variant_if_unreferenced(
+        self,
+        variant_id: str,
+    ) -> VariantDeletionOutcome:
+        """Atomically delete an unreferenced variant and return the outcome."""
 
     @abstractmethod
     def bulk_delete_work_variants(

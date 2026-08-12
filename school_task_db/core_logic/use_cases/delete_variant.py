@@ -49,9 +49,17 @@ class DeleteVariantUseCase:
                 participation_count=info.participation_count,
             )
 
+        outcome = self.variant_command_repo.delete_variant_if_unreferenced(
+            request.variant_id,
+        )
+        if outcome.status == 'not_found':
+            return DeleteVariantResult(status='not_found')
+        if outcome.status == 'blocked_has_participations':
+            return DeleteVariantResult(
+                status='blocked_has_participations',
+                participation_count=outcome.participation_count,
+            )
         return DeleteVariantResult(
             status='deleted',
-            redirect_work_id=self.variant_command_repo.delete_variant(
-                request.variant_id,
-            ),
+            redirect_work_id=outcome.work_id,
         )

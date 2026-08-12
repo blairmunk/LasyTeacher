@@ -84,6 +84,7 @@ from core_logic.use_cases.update_presentation_profile import (
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.import_students import ImportStudentsUseCase
 from core_logic.use_cases.import_codifier import ImportCodifierUseCase
+from core_logic.use_cases.import_curriculum import ImportCurriculumUseCase
 from core_logic.use_cases.get_add_tasks_to_group import GetAddTasksToGroupUseCase
 from core_logic.use_cases.get_academic_year_list import (
     GetAcademicYearListUseCase,
@@ -327,6 +328,9 @@ from infrastructure.repositories.django_import_log_repo import (
 )
 from infrastructure.repositories.django_course_catalog_repo import (
     DjangoCourseCatalogRepository,
+)
+from infrastructure.repositories.django_curriculum_import_repo import (
+    DjangoCurriculumImportRepository,
 )
 from infrastructure.repositories.django_topic_catalog_repo import (
     DjangoTopicCatalogRepository,
@@ -627,6 +631,7 @@ class Container:
         self._student_digest_repo = None
         self._course_catalog_repo = None
         self._topic_catalog_repo = None
+        self._curriculum_import_repo = None
         self._codifier_catalog_repo = None
         self._codifier_detail_repo = None
         self._codifier_import_repo = None
@@ -1125,6 +1130,12 @@ class Container:
         return self._codifier_import_repo
 
     @property
+    def curriculum_import_repo(self):
+        if self._curriculum_import_repo is None:
+            self._curriculum_import_repo = DjangoCurriculumImportRepository()
+        return self._curriculum_import_repo
+
+    @property
     def dashboard_summary_repo(self):
         if self._dashboard_summary_repo is None:
             self._dashboard_summary_repo = DjangoDashboardSummaryRepository()
@@ -1463,6 +1474,12 @@ class Container:
     def import_codifier_use_case(self):
         return ImportCodifierUseCase(
             codifier_repo=self.codifier_import_repo,
+            transaction_manager=self.transaction_manager,
+        )
+
+    def import_curriculum_use_case(self):
+        return ImportCurriculumUseCase(
+            curriculum_repo=self.curriculum_import_repo,
             transaction_manager=self.transaction_manager,
         )
 

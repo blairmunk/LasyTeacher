@@ -272,8 +272,11 @@ from infrastructure.repositories.django_course_catalog_repo import (
 from infrastructure.repositories.django_topic_catalog_repo import (
     DjangoTopicCatalogRepository,
 )
-from infrastructure.repositories.django_presentation_profile_repo import (
-    DjangoPresentationProfileRepository,
+from infrastructure.repositories.django_presentation_profile_catalog_repo import (
+    DjangoPresentationProfileCatalogRepository,
+)
+from infrastructure.repositories.django_presentation_profile_command_repo import (
+    DjangoPresentationProfileCommandRepository,
 )
 from infrastructure.container import Container
 from infrastructure.repositories.django_event_participation_repo import (
@@ -780,12 +783,24 @@ class ContainerTests(SimpleTestCase):
             CreatePresentationProfileUseCase,
         )
         self.assertIsInstance(
+            create_presentation_profile_use_case.presentation_profile_repo,
+            DjangoPresentationProfileCommandRepository,
+        )
+        self.assertIsInstance(
             update_presentation_profile_use_case,
             UpdatePresentationProfileUseCase,
         )
         self.assertIsInstance(
+            update_presentation_profile_use_case.presentation_profile_repo,
+            DjangoPresentationProfileCommandRepository,
+        )
+        self.assertIsInstance(
             print_settings_list_use_case,
             GetPresentationProfileListUseCase,
+        )
+        self.assertIsInstance(
+            print_settings_list_use_case.presentation_profile_repo,
+            DjangoPresentationProfileCatalogRepository,
         )
         self.assertIsInstance(
             document_section_catalog_use_case,
@@ -1281,8 +1296,12 @@ class ContainerTests(SimpleTestCase):
         )
         self.assertIsInstance(container.settings_repo, DjangoSettingsRepository)
         self.assertIsInstance(
-            container.presentation_profile_repo,
-            DjangoPresentationProfileRepository,
+            container.presentation_profile_catalog_repo,
+            DjangoPresentationProfileCatalogRepository,
+        )
+        self.assertIsInstance(
+            container.presentation_profile_command_repo,
+            DjangoPresentationProfileCommandRepository,
         )
         self.assertIsInstance(
             container.codifier_form_adapter,

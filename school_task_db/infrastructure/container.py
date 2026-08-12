@@ -326,8 +326,11 @@ from infrastructure.repositories.django_course_catalog_repo import (
 from infrastructure.repositories.django_topic_catalog_repo import (
     DjangoTopicCatalogRepository,
 )
-from infrastructure.repositories.django_presentation_profile_repo import (
-    DjangoPresentationProfileRepository,
+from infrastructure.repositories.django_presentation_profile_catalog_repo import (
+    DjangoPresentationProfileCatalogRepository,
+)
+from infrastructure.repositories.django_presentation_profile_command_repo import (
+    DjangoPresentationProfileCommandRepository,
 )
 from infrastructure.repositories.django_event_attempt_repo import (
     DjangoEventAttemptRepository,
@@ -596,7 +599,8 @@ class Container:
         self._global_search_repo = None
         self._import_log_repo = None
         self._settings_repo = None
-        self._presentation_profile_repo = None
+        self._presentation_profile_catalog_repo = None
+        self._presentation_profile_command_repo = None
         self._codifier_form_adapter = None
         self._core_form_adapter = None
         self._curriculum_form_adapter = None
@@ -1049,10 +1053,20 @@ class Container:
         return self._settings_repo
 
     @property
-    def presentation_profile_repo(self):
-        if self._presentation_profile_repo is None:
-            self._presentation_profile_repo = DjangoPresentationProfileRepository()
-        return self._presentation_profile_repo
+    def presentation_profile_catalog_repo(self):
+        if self._presentation_profile_catalog_repo is None:
+            self._presentation_profile_catalog_repo = (
+                DjangoPresentationProfileCatalogRepository()
+            )
+        return self._presentation_profile_catalog_repo
+
+    @property
+    def presentation_profile_command_repo(self):
+        if self._presentation_profile_command_repo is None:
+            self._presentation_profile_command_repo = (
+                DjangoPresentationProfileCommandRepository()
+            )
+        return self._presentation_profile_command_repo
 
     @property
     def core_form_adapter(self):
@@ -1411,22 +1425,22 @@ class Container:
 
     def get_presentation_profile_list_use_case(self):
         return GetPresentationProfileListUseCase(
-            presentation_profile_repo=self.presentation_profile_repo,
+            presentation_profile_repo=self.presentation_profile_catalog_repo,
         )
 
     def get_presentation_profile_use_case(self):
         return GetPresentationProfileUseCase(
-            presentation_profile_repo=self.presentation_profile_repo,
+            presentation_profile_repo=self.presentation_profile_catalog_repo,
         )
 
     def create_presentation_profile_use_case(self):
         return CreatePresentationProfileUseCase(
-            presentation_profile_repo=self.presentation_profile_repo,
+            presentation_profile_repo=self.presentation_profile_command_repo,
         )
 
     def update_presentation_profile_use_case(self):
         return UpdatePresentationProfileUseCase(
-            presentation_profile_repo=self.presentation_profile_repo,
+            presentation_profile_repo=self.presentation_profile_command_repo,
         )
 
     def get_document_section_catalog_use_case(self):
@@ -1434,12 +1448,12 @@ class Container:
 
     def get_presentation_profile_editor_data_use_case(self):
         return GetPresentationProfileEditorDataUseCase(
-            presentation_profile_repo=self.presentation_profile_repo,
+            presentation_profile_repo=self.presentation_profile_catalog_repo,
         )
 
     def get_presentation_profile_form_data_use_case(self):
         return GetPresentationProfileFormDataUseCase(
-            presentation_profile_repo=self.presentation_profile_repo,
+            presentation_profile_repo=self.presentation_profile_catalog_repo,
         )
 
     def get_document_type_catalog_use_case(self):
@@ -1816,7 +1830,7 @@ class Container:
         return GetWorkDetailUseCase(
             work_read_repo=self.work_read_repo,
             work_service=self.work_service(),
-            presentation_profile_repo=self.presentation_profile_repo,
+            presentation_profile_repo=self.presentation_profile_catalog_repo,
         )
 
     def get_work_list_use_case(self):
@@ -1869,7 +1883,7 @@ class Container:
     def render_work_document_use_case(self):
         return RenderWorkDocumentUseCase(
             work_repo=self.work_document_repo,
-            presentation_profile_repo=self.presentation_profile_repo,
+            presentation_profile_repo=self.presentation_profile_catalog_repo,
             render_document_from_recipe_use_case=(
                 self.render_document_from_recipe_use_case()
             ),
@@ -1883,7 +1897,7 @@ class Container:
     def render_remedial_sheet_document_use_case(self):
         return RenderRemedialSheetDocumentUseCase(
             remedial_repo=self.remedial_sheet_repo,
-            presentation_profile_repo=self.presentation_profile_repo,
+            presentation_profile_repo=self.presentation_profile_catalog_repo,
             render_document_from_recipe_use_case=(
                 self.render_document_from_recipe_use_case()
             ),
@@ -1894,7 +1908,7 @@ class Container:
             get_event_report_use_case=(
                 self.get_event_performance_report_use_case()
             ),
-            presentation_profile_repo=self.presentation_profile_repo,
+            presentation_profile_repo=self.presentation_profile_catalog_repo,
             render_document_from_recipe_use_case=(
                 self.render_document_from_recipe_use_case()
             ),
@@ -1903,7 +1917,7 @@ class Container:
     def render_student_digest_document_use_case(self):
         return RenderStudentDigestDocumentUseCase(
             get_student_digests_use_case=self.get_student_digests_use_case(),
-            presentation_profile_repo=self.presentation_profile_repo,
+            presentation_profile_repo=self.presentation_profile_catalog_repo,
             render_document_from_recipe_use_case=(
                 self.render_document_from_recipe_use_case()
             ),
@@ -1913,7 +1927,7 @@ class Container:
         return RenderRemedialSheetBatchDocumentUseCase(
             work_repo=self.work_document_repo,
             remedial_repo=self.remedial_sheet_repo,
-            presentation_profile_repo=self.presentation_profile_repo,
+            presentation_profile_repo=self.presentation_profile_catalog_repo,
             render_document_from_recipe_use_case=(
                 self.render_document_from_recipe_use_case()
             ),

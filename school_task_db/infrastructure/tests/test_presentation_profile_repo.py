@@ -13,19 +13,22 @@ from core_logic.interfaces.presentation_profile_command_repo import (
     IPresentationProfileCommandRepository,
 )
 from document_engine.models import PresentationProfile
-from infrastructure.repositories.django_presentation_profile_repo import (
-    DjangoPresentationProfileRepository,
+from infrastructure.repositories.django_presentation_profile_catalog_repo import (
+    DjangoPresentationProfileCatalogRepository,
+)
+from infrastructure.repositories.django_presentation_profile_command_repo import (
+    DjangoPresentationProfileCommandRepository,
 )
 
 
-class DjangoPresentationProfileRepositoryTests(TestCase):
+class DjangoPresentationProfileRepositoryAdaptersTests(TestCase):
     def test_implements_clean_port(self):
         self.assertIsInstance(
-            DjangoPresentationProfileRepository(),
+            DjangoPresentationProfileCatalogRepository(),
             IPresentationProfileCatalogRepository,
         )
         self.assertIsInstance(
-            DjangoPresentationProfileRepository(),
+            DjangoPresentationProfileCommandRepository(),
             IPresentationProfileCommandRepository,
         )
 
@@ -39,8 +42,11 @@ class DjangoPresentationProfileRepositoryTests(TestCase):
             document_type=PresentationProfile.DocumentType.ANSWER_KEY,
         )
 
-        profiles = DjangoPresentationProfileRepository().list_presentation_profiles(
-            document_type=PresentationProfile.DocumentType.WORKSHEET,
+        profiles = (
+            DjangoPresentationProfileCatalogRepository()
+            .list_presentation_profiles(
+                document_type=PresentationProfile.DocumentType.WORKSHEET,
+            )
         )
 
         self.assertEqual(len(profiles), 1)
@@ -54,9 +60,12 @@ class DjangoPresentationProfileRepositoryTests(TestCase):
             document_type=PresentationProfile.DocumentType.WORKSHEET,
         )
 
-        profile = DjangoPresentationProfileRepository().get_presentation_profile(
-            presentation_profile_id=str(model.pk),
-            document_type=PresentationProfile.DocumentType.WORKSHEET,
+        profile = (
+            DjangoPresentationProfileCatalogRepository()
+            .get_presentation_profile(
+                presentation_profile_id=str(model.pk),
+                document_type=PresentationProfile.DocumentType.WORKSHEET,
+            )
         )
 
         self.assertEqual(profile.presentation_profile_id, str(model.pk))
@@ -68,25 +77,35 @@ class DjangoPresentationProfileRepositoryTests(TestCase):
             document_type=PresentationProfile.DocumentType.WORKSHEET,
         )
 
-        profile = DjangoPresentationProfileRepository().get_presentation_profile(
-            presentation_profile_id=str(model.pk),
-            document_type=PresentationProfile.DocumentType.ANSWER_KEY,
+        profile = (
+            DjangoPresentationProfileCatalogRepository()
+            .get_presentation_profile(
+                presentation_profile_id=str(model.pk),
+                document_type=PresentationProfile.DocumentType.ANSWER_KEY,
+            )
         )
 
         self.assertIsNone(profile)
 
     def test_creates_profile_preserving_presentation(self):
-        profile_id = DjangoPresentationProfileRepository().create_presentation_profile(
-            CreatePresentationProfileParams(
-                name='Рабочий лист',
-                document_type=PresentationProfile.DocumentType.WORK,
-                is_default=True,
-                presentation=DocumentPresentation(
-                    custom_css='body { font-size: 12pt; }',
-                    custom_latex_preamble='\\usepackage{multicol}',
-                    html_template_override='<main>{{ body_content }}</main>',
-                    latex_template_override='\\begin{document}{{ body_content }}',
-                ),
+        profile_id = (
+            DjangoPresentationProfileCommandRepository()
+            .create_presentation_profile(
+                CreatePresentationProfileParams(
+                    name='Рабочий лист',
+                    document_type=PresentationProfile.DocumentType.WORK,
+                    is_default=True,
+                    presentation=DocumentPresentation(
+                        custom_css='body { font-size: 12pt; }',
+                        custom_latex_preamble='\\usepackage{multicol}',
+                        html_template_override=(
+                            '<main>{{ body_content }}</main>'
+                        ),
+                        latex_template_override=(
+                            '\\begin{document}{{ body_content }}'
+                        ),
+                    ),
+                )
             )
         )
 
@@ -113,7 +132,7 @@ class DjangoPresentationProfileRepositoryTests(TestCase):
             is_default=True,
         )
 
-        DjangoPresentationProfileRepository().create_presentation_profile(
+        DjangoPresentationProfileCommandRepository().create_presentation_profile(
             CreatePresentationProfileParams(
                 name='Новый профиль',
                 document_type=PresentationProfile.DocumentType.WORK,
@@ -130,19 +149,26 @@ class DjangoPresentationProfileRepositoryTests(TestCase):
             document_type=PresentationProfile.DocumentType.WORK,
         )
 
-        updated = DjangoPresentationProfileRepository().update_presentation_profile(
-            UpdatePresentationProfileParams(
-                presentation_profile_id=str(model.pk),
-                name='Новый профиль',
-                description='Новое описание',
-                document_type=PresentationProfile.DocumentType.WORK,
-                is_default=True,
-                presentation=DocumentPresentation(
-                    custom_css='.task { margin: 1rem; }',
-                    custom_latex_preamble='\\usepackage{geometry}',
-                    html_template_override='<article>{{ body_content }}</article>',
-                    latex_template_override='\\section*{Лист}{{ body_content }}',
-                ),
+        updated = (
+            DjangoPresentationProfileCommandRepository()
+            .update_presentation_profile(
+                UpdatePresentationProfileParams(
+                    presentation_profile_id=str(model.pk),
+                    name='Новый профиль',
+                    description='Новое описание',
+                    document_type=PresentationProfile.DocumentType.WORK,
+                    is_default=True,
+                    presentation=DocumentPresentation(
+                        custom_css='.task { margin: 1rem; }',
+                        custom_latex_preamble='\\usepackage{geometry}',
+                        html_template_override=(
+                            '<article>{{ body_content }}</article>'
+                        ),
+                        latex_template_override=(
+                            '\\section*{Лист}{{ body_content }}'
+                        ),
+                    ),
+                )
             )
         )
 
@@ -158,11 +184,16 @@ class DjangoPresentationProfileRepositoryTests(TestCase):
         )
 
     def test_update_returns_false_for_missing_profile(self):
-        updated = DjangoPresentationProfileRepository().update_presentation_profile(
-            UpdatePresentationProfileParams(
-                presentation_profile_id='550e8400-e29b-41d4-a716-446655440000',
-                name='Профиль',
-                document_type=PresentationProfile.DocumentType.WORK,
+        updated = (
+            DjangoPresentationProfileCommandRepository()
+            .update_presentation_profile(
+                UpdatePresentationProfileParams(
+                    presentation_profile_id=(
+                        '550e8400-e29b-41d4-a716-446655440000'
+                    ),
+                    name='Профиль',
+                    document_type=PresentationProfile.DocumentType.WORK,
+                )
             )
         )
 

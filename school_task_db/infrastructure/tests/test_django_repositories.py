@@ -172,8 +172,8 @@ from infrastructure.repositories.django_task_write_repo import (
 from infrastructure.repositories.django_task_selection_repo import (
     DjangoTaskSelectionRepository,
 )
-from infrastructure.repositories.django_task_catalog_repo import (
-    DjangoTaskCatalogRepository,
+from infrastructure.repositories.django_task_taxonomy_repo import (
+    DjangoTaskTaxonomyRepository,
 )
 from infrastructure.repositories.django_task_export_repo import (
     DjangoTaskExportRepository,
@@ -946,7 +946,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(list(ungrouped_tasks), [])
         self.assertEqual(repo.count_tasks(), 4)
         self.assertEqual(repo.count_ungrouped_tasks(), 0)
-        task_catalog = DjangoTaskCatalogRepository()
+        task_catalog = DjangoTaskTaxonomyRepository()
         self.assertEqual(list(task_catalog.get_subtopics_for_topic('')), [])
         self.assertIn(
             str(self.topic.pk),
@@ -1058,7 +1058,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         detail_task = repo.get_task(str(self.original_weak.pk))
         missing_task = repo.get_task('00000000-0000-0000-0000-000000000000')
         task_groups = repo.get_task_detail_groups(str(self.original_weak.pk))
-        task_catalog = DjangoTaskCatalogRepository()
+        task_catalog = DjangoTaskTaxonomyRepository()
         subtopics = task_catalog.get_subtopic_options(str(self.topic.pk))
         missing_subtopics = task_catalog.get_subtopic_options(
             '00000000-0000-0000-0000-000000000000',

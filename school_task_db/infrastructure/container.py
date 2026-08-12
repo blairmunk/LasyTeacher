@@ -413,8 +413,11 @@ from infrastructure.repositories.django_task_write_repo import (
 from infrastructure.repositories.django_task_selection_repo import (
     DjangoTaskSelectionRepository,
 )
-from infrastructure.repositories.django_task_catalog_repo import (
-    DjangoTaskCatalogRepository,
+from infrastructure.repositories.django_task_reference_catalog_repo import (
+    DjangoTaskReferenceCatalogRepository,
+)
+from infrastructure.repositories.django_task_taxonomy_repo import (
+    DjangoTaskTaxonomyRepository,
 )
 from infrastructure.repositories.django_task_export_repo import (
     DjangoTaskExportRepository,
@@ -529,7 +532,8 @@ class Container:
         self._task_read_repo = None
         self._task_write_repo = None
         self._task_selection_repo = None
-        self._task_catalog_repo = None
+        self._task_reference_catalog_repo = None
+        self._task_taxonomy_repo = None
         self._task_export_repo = None
         self._task_group_catalog_repo = None
         self._task_group_management_repo = None
@@ -679,10 +683,18 @@ class Container:
         return self._task_selection_repo
 
     @property
-    def task_catalog_repo(self):
-        if self._task_catalog_repo is None:
-            self._task_catalog_repo = DjangoTaskCatalogRepository()
-        return self._task_catalog_repo
+    def task_reference_catalog_repo(self):
+        if self._task_reference_catalog_repo is None:
+            self._task_reference_catalog_repo = (
+                DjangoTaskReferenceCatalogRepository()
+            )
+        return self._task_reference_catalog_repo
+
+    @property
+    def task_taxonomy_repo(self):
+        if self._task_taxonomy_repo is None:
+            self._task_taxonomy_repo = DjangoTaskTaxonomyRepository()
+        return self._task_taxonomy_repo
 
     @property
     def task_export_repo(self):
@@ -1286,14 +1298,14 @@ class Container:
     def get_task_list_use_case(self):
         return GetTaskListUseCase(
             task_repo=self.task_read_repo,
-            task_catalog_repo=self.task_catalog_repo,
+            task_catalog_repo=self.task_taxonomy_repo,
             task_group_repo=self.task_group_catalog_repo,
             math_status_cache=self.task_math_status_cache,
         )
 
     def get_task_group_list_use_case(self):
         return GetTaskGroupListUseCase(
-            task_catalog_repo=self.task_catalog_repo,
+            task_catalog_repo=self.task_taxonomy_repo,
             task_group_repo=self.task_group_catalog_repo,
         )
 
@@ -1462,12 +1474,12 @@ class Container:
 
     def get_subtopic_options_use_case(self):
         return GetSubtopicOptionsUseCase(
-            task_catalog_repo=self.task_catalog_repo,
+            task_catalog_repo=self.task_taxonomy_repo,
         )
 
     def get_codifier_elements_use_case(self):
         return GetCodifierElementsUseCase(
-            task_catalog_repo=self.task_catalog_repo,
+            task_catalog_repo=self.task_reference_catalog_repo,
         )
 
     def get_source_list_use_case(self):
@@ -1488,13 +1500,13 @@ class Container:
     def create_task_use_case(self):
         return CreateTaskUseCase(
             task_repo=self.task_write_repo,
-            task_catalog_repo=self.task_catalog_repo,
+            task_catalog_repo=self.task_taxonomy_repo,
         )
 
     def update_task_use_case(self):
         return UpdateTaskUseCase(
             task_repo=self.task_write_repo,
-            task_catalog_repo=self.task_catalog_repo,
+            task_catalog_repo=self.task_taxonomy_repo,
         )
 
     def save_task_images_use_case(self):

@@ -356,6 +356,12 @@ from infrastructure.repositories.django_task_write_repo import (
 from infrastructure.repositories.django_task_selection_repo import (
     DjangoTaskSelectionRepository,
 )
+from infrastructure.repositories.django_task_reference_catalog_repo import (
+    DjangoTaskReferenceCatalogRepository,
+)
+from infrastructure.repositories.django_task_taxonomy_repo import (
+    DjangoTaskTaxonomyRepository,
+)
 from infrastructure.repositories.django_task_group_catalog_repo import (
     DjangoTaskGroupCatalogRepository,
 )
@@ -1100,6 +1106,14 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             container.task_selection_repo,
             DjangoTaskSelectionRepository,
+        )
+        self.assertIsInstance(
+            container.task_reference_catalog_repo,
+            DjangoTaskReferenceCatalogRepository,
+        )
+        self.assertIsInstance(
+            container.task_taxonomy_repo,
+            DjangoTaskTaxonomyRepository,
         )
         self.assertIsInstance(
             container.work_specification_repo,

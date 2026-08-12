@@ -1,22 +1,14 @@
-"""Django task catalog adapter."""
+"""Django read adapter for task taxonomy options."""
 
 from typing import List
 
-from core_logic.entities.task import ReferenceElementOption, SelectOption
-from core_logic.interfaces.task_reference_catalog_repo import (
-    ITaskReferenceCatalogRepository,
-)
+from core_logic.entities.task import SelectOption
 from core_logic.interfaces.task_taxonomy_repo import ITaskTaxonomyRepository
-from core_logic.services.reference_catalog import merge_reference_choices
 from curriculum.models import SubTopic, Topic
-from references.models import SubjectReference
 from tasks.models import Source, Task
 
 
-class DjangoTaskCatalogRepository(
-    ITaskTaxonomyRepository,
-    ITaskReferenceCatalogRepository,
-):
+class DjangoTaskTaxonomyRepository(ITaskTaxonomyRepository):
     def get_subtopic_topic_id(self, subtopic_id: str):
         topic_id = SubTopic.objects.filter(pk=subtopic_id).values_list(
             'topic_id',
@@ -56,24 +48,6 @@ class DjangoTaskCatalogRepository(
         return [
             SelectOption(id=str(subtopic.id), name=subtopic.name)
             for subtopic in topic.subtopics.all().order_by('order', 'name')
-        ]
-
-    def get_reference_element_options(
-        self,
-        subject: str,
-        category: str,
-    ) -> List[ReferenceElementOption]:
-        catalogs = (
-            reference.get_choices()
-            for reference in SubjectReference.objects.filter(
-                subject=subject,
-                category=category,
-                is_active=True,
-            ).order_by('grade_level', 'created_at')
-        )
-        return [
-            ReferenceElementOption(code=code, name=name)
-            for code, name in merge_reference_choices(catalogs)
         ]
 
     def get_task_type_choices(self):

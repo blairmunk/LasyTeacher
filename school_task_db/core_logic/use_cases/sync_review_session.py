@@ -3,7 +3,9 @@
 from dataclasses import dataclass
 
 from core_logic.entities.review import ReviewSessionRef
-from core_logic.interfaces.review_session_repo import IReviewSessionRepository
+from core_logic.interfaces.review_session_command_repo import (
+    IReviewSessionCommandRepository,
+)
 
 
 @dataclass(frozen=True)
@@ -15,7 +17,7 @@ class SyncReviewSessionRequest:
 
 
 class SyncReviewSessionUseCase:
-    def __init__(self, session_repo: IReviewSessionRepository):
+    def __init__(self, session_repo: IReviewSessionCommandRepository):
         self.session_repo = session_repo
 
     def execute(self, request: SyncReviewSessionRequest) -> ReviewSessionRef:

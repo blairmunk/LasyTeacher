@@ -4,7 +4,9 @@ from dataclasses import dataclass
 from typing import List
 
 from core_logic.entities.review import ReviewSessionRef
-from core_logic.interfaces.review_session_repo import IReviewSessionRepository
+from core_logic.interfaces.review_session_query_repo import (
+    IReviewSessionQueryRepository,
+)
 
 
 @dataclass(frozen=True)
@@ -14,7 +16,7 @@ class GetRecentReviewSessionsRequest:
 
 
 class GetRecentReviewSessionsUseCase:
-    def __init__(self, session_repo: IReviewSessionRepository):
+    def __init__(self, session_repo: IReviewSessionQueryRepository):
         self.session_repo = session_repo
 
     def execute(

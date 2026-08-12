@@ -3,12 +3,20 @@
 from typing import List
 
 from core_logic.entities.review import ReviewSessionRef
-from core_logic.interfaces.review_session_repo import IReviewSessionRepository
+from core_logic.interfaces.review_session_command_repo import (
+    IReviewSessionCommandRepository,
+)
+from core_logic.interfaces.review_session_query_repo import (
+    IReviewSessionQueryRepository,
+)
 from infrastructure.repositories.django_review_refs import review_session_ref
 from review.models import ReviewSession
 
 
-class DjangoReviewSessionRepository(IReviewSessionRepository):
+class DjangoReviewSessionRepository(
+    IReviewSessionQueryRepository,
+    IReviewSessionCommandRepository,
+):
     def get_recent_sessions(
         self,
         reviewer_id: str,
@@ -46,4 +54,3 @@ class DjangoReviewSessionRepository(IReviewSessionRepository):
         session.checked_participations = checked_participations
         session.save()
         return review_session_ref(session)
-

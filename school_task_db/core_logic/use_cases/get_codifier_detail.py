@@ -1,11 +1,11 @@
 """Build codifier detail screen data."""
 
 from core_logic.entities.codifier import CodifierDetailData
-from core_logic.interfaces.codifier_repo import ICodifierRepository
+from core_logic.interfaces.codifier_detail_repo import ICodifierDetailRepository
 
 
 class GetCodifierDetailUseCase:
-    def __init__(self, codifier_repo: ICodifierRepository):
+    def __init__(self, codifier_repo: ICodifierDetailRepository):
         self.codifier_repo = codifier_repo
 
     def execute(self, codifier_id: str) -> CodifierDetailData:

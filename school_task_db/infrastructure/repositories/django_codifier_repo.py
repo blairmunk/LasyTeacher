@@ -12,12 +12,18 @@ from core_logic.entities.codifier import (
     CodifierRequirement,
     CodifierSiblingCode,
 )
-from core_logic.interfaces.codifier_repo import ICodifierRepository
+from core_logic.interfaces.codifier_catalog_repo import (
+    ICodifierCatalogRepository,
+)
+from core_logic.interfaces.codifier_detail_repo import ICodifierDetailRepository
 from core_logic.services.codifier_service import CodifierService
 from codifier.models import CodifierSpec, ContentEntry, Requirement
 
 
-class DjangoCodifierRepository(ICodifierRepository):
+class DjangoCodifierRepository(
+    ICodifierCatalogRepository,
+    ICodifierDetailRepository,
+):
     def get_list_codifiers(self):
         return [
             CodifierListItem(

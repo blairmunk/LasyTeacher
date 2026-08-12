@@ -96,6 +96,14 @@ class DjangoEventPerformanceReportQueryRepository(
                 captured = captured_task_result_snapshot(task_result)
                 if captured is None:
                     continue
+                content_entries = tuple(
+                    f'{item.codifier_short_name}: {item.code}'
+                    for item in captured.task.codifier_content_entries
+                )
+                requirements = tuple(
+                    f'{item.codifier_short_name}: {item.code}'
+                    for item in captured.task.codifier_requirements
+                )
                 captured_tasks.append(
                     EventReportCapturedTaskFact(
                         order=captured.order,
@@ -109,12 +117,16 @@ class DjangoEventPerformanceReportQueryRepository(
                         source_selection_id=captured.source_selection_id,
                         content_order=captured.content_order,
                         is_assessable=captured.is_assessable,
-                        content_element=captured.task.content_element,
-                        requirement_element=captured.task.requirement_element,
-                        codifier_requirements=tuple(
-                            f'{item.codifier_short_name}: {item.code}'
-                            for item in captured.task.codifier_requirements
+                        content_element=(
+                            '' if content_entries
+                            else captured.task.content_element
                         ),
+                        requirement_element=(
+                            '' if requirements
+                            else captured.task.requirement_element
+                        ),
+                        codifier_content_entries=content_entries,
+                        codifier_requirements=requirements,
                         content_element_descriptions=(
                             captured.task.content_element_descriptions
                         ),

@@ -52,6 +52,7 @@ class EventReportTaskFactService:
                 task.subtopic_name,
                 task.content_element,
                 task.requirement_element,
+                task.codifier_content_entries,
                 task.codifier_requirements,
                 task.content_element_descriptions,
             )
@@ -66,6 +67,9 @@ class EventReportTaskFactService:
                     subtopic_name=task.subtopic_name,
                     content_element=task.content_element,
                     requirement_element=task.requirement_element,
+                    codifier_content_entries=(
+                        task.codifier_content_entries
+                    ),
                     codifier_requirements=task.codifier_requirements,
                     content_element_descriptions=(
                         task.content_element_descriptions

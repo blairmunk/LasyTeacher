@@ -70,12 +70,18 @@ class EventReportCapturedTaskFact:
     comment: str = ''
     content_element: str = ''
     requirement_element: str = ''
+    codifier_content_entries: Tuple[str, ...] = field(default_factory=tuple)
     codifier_requirements: Tuple[str, ...] = field(default_factory=tuple)
     content_element_descriptions: Tuple[str, ...] = field(
         default_factory=tuple,
     )
 
     def __post_init__(self):
+        object.__setattr__(
+            self,
+            'codifier_content_entries',
+            tuple(self.codifier_content_entries),
+        )
         object.__setattr__(
             self,
             'codifier_requirements',
@@ -109,6 +115,7 @@ class EventReportSpecificationFact:
     subtopic_name: str = ''
     content_element: str = ''
     requirement_element: str = ''
+    codifier_content_entries: Tuple[str, ...] = field(default_factory=tuple)
     codifier_requirements: Tuple[str, ...] = field(default_factory=tuple)
     content_element_descriptions: Tuple[str, ...] = field(
         default_factory=tuple,

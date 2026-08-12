@@ -144,9 +144,13 @@ class EventPerformanceReportService:
                         if fact.subtopic_name
                     )),
                     content_elements=tuple(dict.fromkeys(
-                        fact.content_element
+                        value
                         for fact in facts
-                        if fact.content_element
+                        for value in (
+                            fact.content_element,
+                            *fact.codifier_content_entries,
+                        )
+                        if value
                     )),
                     content_element_descriptions=tuple(dict.fromkeys(
                         description

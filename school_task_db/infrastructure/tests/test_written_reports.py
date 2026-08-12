@@ -104,6 +104,7 @@ class WrittenReportRepositoryTests(TestCase):
             topic=self.topic,
             subtopic=self.subtopic,
         )
+        self.content_entry.tasks.add(self.task)
         self.work = Work.objects.create(
             name='Контрольная по динамике',
             work_type='test',
@@ -228,8 +229,12 @@ class WrittenReportRepositoryTests(TestCase):
         self.assertEqual(source.task_scores[0].points, 0)
         self.assertEqual(source.task_scores[0].comment, 'Ошибка в формуле')
         self.assertEqual(source.specification[0].order, 1)
-        self.assertEqual(source.specification[0].content_element, '1.2')
-        self.assertEqual(source.specification[0].requirement_element, '2.1')
+        self.assertEqual(source.specification[0].content_element, '')
+        self.assertEqual(source.specification[0].requirement_element, '')
+        self.assertEqual(
+            source.specification[0].codifier_content_entries,
+            ('ОГЭ 2026: 1.2',),
+        )
         self.assertEqual(
             source.specification[0].codifier_requirements,
             ('ОГЭ 2026: 2.3',),
@@ -402,8 +407,12 @@ class WrittenReportRepositoryTests(TestCase):
             str(self.event.pk),
         )
 
-        self.assertEqual(source.specification[0].content_element, '1.2')
-        self.assertEqual(source.specification[0].requirement_element, '2.1')
+        self.assertEqual(source.specification[0].content_element, '')
+        self.assertEqual(source.specification[0].requirement_element, '')
+        self.assertEqual(
+            source.specification[0].codifier_content_entries,
+            ('ОГЭ 2026: 1.2',),
+        )
         self.assertEqual(
             source.specification[0].codifier_requirements,
             ('ОГЭ 2026: 2.3',),
@@ -412,6 +421,26 @@ class WrittenReportRepositoryTests(TestCase):
             source.specification[0].content_element_descriptions,
             ('ОГЭ 2026: Применение второго закона Ньютона',),
         )
+
+    def test_event_report_uses_legacy_codes_for_old_task_snapshot(self):
+        task_snapshot = AttemptTaskSnapshot.objects.get(
+            attempt__participation=self.participation,
+        )
+        payload = dict(task_snapshot.task_content_snapshot)
+        payload.pop('codifier_content_entries', None)
+        payload.pop('codifier_requirements', None)
+        task_snapshot.task_content_snapshot = payload
+        task_snapshot.save(update_fields=['task_content_snapshot'])
+
+        source = DjangoEventPerformanceReportQueryRepository().get_event_report_source(
+            str(self.event.pk),
+        )
+
+        specification = source.specification[0]
+        self.assertEqual(specification.content_element, '1.2')
+        self.assertEqual(specification.requirement_element, '2.1')
+        self.assertEqual(specification.codifier_content_entries, ())
+        self.assertEqual(specification.codifier_requirements, ())
 
     def test_event_report_skips_broken_task_snapshot(self):
         AttemptTaskSnapshot.objects.filter(
@@ -453,7 +482,11 @@ class WrittenReportRepositoryTests(TestCase):
             source.specification[0].group_key,
             'selection:spec-row-1:slot:1',
         )
-        self.assertEqual(source.specification[0].content_element, '1.2')
+        self.assertEqual(source.specification[0].content_element, '')
+        self.assertEqual(
+            source.specification[0].codifier_content_entries,
+            ('ОГЭ 2026: 1.2',),
+        )
 
     def test_student_digest_repository_returns_marks_and_absences(self):
         repo = DjangoStudentDigestRepository()

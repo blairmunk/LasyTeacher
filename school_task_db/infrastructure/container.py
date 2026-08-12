@@ -382,7 +382,12 @@ from infrastructure.repositories.django_reports_dashboard_repo import (
     DjangoReportsDashboardRepository,
 )
 from infrastructure.repositories.django_settings_repo import DjangoSettingsRepository
-from infrastructure.repositories.django_source_repo import DjangoSourceRepository
+from infrastructure.repositories.django_source_catalog_repo import (
+    DjangoSourceCatalogRepository,
+)
+from infrastructure.repositories.django_source_command_repo import (
+    DjangoSourceCommandRepository,
+)
 from infrastructure.repositories.django_student_catalog_repo import (
     DjangoStudentCatalogRepository,
 )
@@ -531,7 +536,8 @@ class Container:
         self._student_group_command_repo = None
         self._student_profile_repo = None
         self._student_remedial_repo = None
-        self._source_repo = None
+        self._source_catalog_repo = None
+        self._source_command_repo = None
         self._task_read_repo = None
         self._task_write_repo = None
         self._task_selection_repo = None
@@ -661,10 +667,16 @@ class Container:
         return self._student_remedial_repo
 
     @property
-    def source_repo(self):
-        if self._source_repo is None:
-            self._source_repo = DjangoSourceRepository()
-        return self._source_repo
+    def source_catalog_repo(self):
+        if self._source_catalog_repo is None:
+            self._source_catalog_repo = DjangoSourceCatalogRepository()
+        return self._source_catalog_repo
+
+    @property
+    def source_command_repo(self):
+        if self._source_command_repo is None:
+            self._source_command_repo = DjangoSourceCommandRepository()
+        return self._source_command_repo
 
     @property
     def task_read_repo(self):
@@ -1498,12 +1510,12 @@ class Container:
 
     def get_source_list_use_case(self):
         return GetSourceListUseCase(
-            source_repo=self.source_repo,
+            source_repo=self.source_catalog_repo,
         )
 
     def create_source_use_case(self):
         return CreateSourceUseCase(
-            source_repo=self.source_repo,
+            source_repo=self.source_command_repo,
         )
 
     def refresh_task_math_cache_use_case(self):

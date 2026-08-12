@@ -340,6 +340,12 @@ from infrastructure.repositories.django_student_profile_repo import (
 from infrastructure.repositories.django_student_remedial_repo import (
     DjangoStudentRemedialRepository,
 )
+from infrastructure.repositories.django_source_catalog_repo import (
+    DjangoSourceCatalogRepository,
+)
+from infrastructure.repositories.django_source_command_repo import (
+    DjangoSourceCommandRepository,
+)
 from infrastructure.repositories.django_student_digest_repo import (
     DjangoStudentDigestRepository,
 )
@@ -763,6 +769,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(codifier_elements_use_case, GetCodifierElementsUseCase)
         self.assertIsInstance(source_list_use_case, GetSourceListUseCase)
         self.assertIsInstance(
+            source_list_use_case.source_repo,
+            DjangoSourceCatalogRepository,
+        )
+        self.assertIsInstance(
             create_presentation_profile_use_case,
             CreatePresentationProfileUseCase,
         )
@@ -928,6 +938,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(sample_import_use_case, GetTaskImportSampleUseCase)
         self.assertIsInstance(export_tasks_use_case, ExportTasksUseCase)
         self.assertIsInstance(create_source_use_case, CreateSourceUseCase)
+        self.assertIsInstance(
+            create_source_use_case.source_repo,
+            DjangoSourceCommandRepository,
+        )
         self.assertIsInstance(
             participant_selection_use_case,
             GetEventParticipantSelectionUseCase,

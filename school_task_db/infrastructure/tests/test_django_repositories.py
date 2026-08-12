@@ -147,7 +147,12 @@ from infrastructure.repositories.django_review_session_repo import (
 from infrastructure.repositories.django_review_task_repo import (
     DjangoReviewTaskRepository,
 )
-from infrastructure.repositories.django_source_repo import DjangoSourceRepository
+from infrastructure.repositories.django_source_catalog_repo import (
+    DjangoSourceCatalogRepository,
+)
+from infrastructure.repositories.django_source_command_repo import (
+    DjangoSourceCommandRepository,
+)
 from infrastructure.repositories.django_student_catalog_repo import (
     DjangoStudentCatalogRepository,
 )
@@ -1083,7 +1088,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         source = Source.objects.create(name='Сборник задач')
         self.original_weak.source = source
         self.original_weak.save()
-        repo = DjangoSourceRepository()
+        repo = DjangoSourceCatalogRepository()
 
         sources = repo.get_source_list_sources()
 
@@ -1093,7 +1098,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(sources[0].task_count, 1)
 
     def test_source_repository_creates_source(self):
-        repo = DjangoSourceRepository()
+        repo = DjangoSourceCommandRepository()
 
         result = repo.create_source(
             SourceCreateParams(

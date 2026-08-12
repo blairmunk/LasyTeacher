@@ -91,7 +91,12 @@ from events.models import AttemptSnapshot, Event, EventParticipation, Mark
 from infrastructure.repositories.django_attempt_snapshot_repo import (
     DjangoAttemptSnapshotRepository,
 )
-from infrastructure.repositories.django_codifier_repo import DjangoCodifierRepository
+from infrastructure.repositories.django_codifier_catalog_repo import (
+    DjangoCodifierCatalogRepository,
+)
+from infrastructure.repositories.django_codifier_detail_repo import (
+    DjangoCodifierDetailRepository,
+)
 from infrastructure.repositories.django_dashboard_summary_repo import (
     DjangoDashboardSummaryRepository,
 )
@@ -1934,16 +1939,17 @@ class DjangoRemedialRepositoryTests(TestCase):
             code='1',
             name='Знать понятия',
         )
-        repo = DjangoCodifierRepository()
+        catalog_repo = DjangoCodifierCatalogRepository()
+        detail_repo = DjangoCodifierDetailRepository()
 
-        codifiers = repo.get_list_codifiers()
-        loaded_codifier = repo.get_codifier(str(codifier.pk))
-        missing_codifier = repo.get_codifier(
+        codifiers = catalog_repo.get_list_codifiers()
+        loaded_codifier = detail_repo.get_codifier(str(codifier.pk))
+        missing_codifier = detail_repo.get_codifier(
             '550e8400-e29b-41d4-a716-446655440000',
         )
-        content_tree = repo.get_content_tree(str(codifier.pk))
-        requirements = repo.get_requirements(str(codifier.pk))
-        coverage = repo.get_coverage(str(codifier.pk))
+        content_tree = detail_repo.get_content_tree(str(codifier.pk))
+        requirements = detail_repo.get_requirements(str(codifier.pk))
+        coverage = detail_repo.get_coverage(str(codifier.pk))
 
         self.assertEqual(codifiers[0].pk, str(codifier.pk))
         self.assertEqual(codifiers[0].short_name, codifier.short_name)
@@ -2019,7 +2025,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             subtopic=self.subtopic,
         )
 
-        repo = DjangoCodifierRepository()
+        repo = DjangoCodifierDetailRepository()
         tree = repo.get_content_tree(str(codifier.pk))
         coverage = repo.get_coverage(str(codifier.pk))
 

@@ -302,7 +302,12 @@ from infrastructure.repositories.django_academic_year_repo import (
 from infrastructure.repositories.django_attempt_snapshot_repo import (
     DjangoAttemptSnapshotRepository,
 )
-from infrastructure.repositories.django_codifier_repo import DjangoCodifierRepository
+from infrastructure.repositories.django_codifier_catalog_repo import (
+    DjangoCodifierCatalogRepository,
+)
+from infrastructure.repositories.django_codifier_detail_repo import (
+    DjangoCodifierDetailRepository,
+)
 from infrastructure.repositories.django_dashboard_summary_repo import (
     DjangoDashboardSummaryRepository,
 )
@@ -553,7 +558,8 @@ class Container:
         self._student_digest_repo = None
         self._course_catalog_repo = None
         self._topic_catalog_repo = None
-        self._codifier_repo = None
+        self._codifier_catalog_repo = None
+        self._codifier_detail_repo = None
         self._dashboard_summary_repo = None
         self._global_search_repo = None
         self._import_log_repo = None
@@ -919,10 +925,16 @@ class Container:
         return self._topic_catalog_repo
 
     @property
-    def codifier_repo(self):
-        if self._codifier_repo is None:
-            self._codifier_repo = DjangoCodifierRepository()
-        return self._codifier_repo
+    def codifier_catalog_repo(self):
+        if self._codifier_catalog_repo is None:
+            self._codifier_catalog_repo = DjangoCodifierCatalogRepository()
+        return self._codifier_catalog_repo
+
+    @property
+    def codifier_detail_repo(self):
+        if self._codifier_detail_repo is None:
+            self._codifier_detail_repo = DjangoCodifierDetailRepository()
+        return self._codifier_detail_repo
 
     @property
     def dashboard_summary_repo(self):
@@ -1296,12 +1308,12 @@ class Container:
 
     def get_codifier_list_use_case(self):
         return GetCodifierListUseCase(
-            codifier_repo=self.codifier_repo,
+            codifier_repo=self.codifier_catalog_repo,
         )
 
     def get_codifier_detail_use_case(self):
         return GetCodifierDetailUseCase(
-            codifier_repo=self.codifier_repo,
+            codifier_repo=self.codifier_detail_repo,
         )
 
     def get_dashboard_summary_use_case(self):

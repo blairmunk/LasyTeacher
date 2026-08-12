@@ -245,7 +245,12 @@ from core_logic.use_cases.validate_task_import_json import (
     ValidateTaskImportJsonUseCase,
 )
 from core_logic.use_cases.validate_review_work_scan import ValidateReviewWorkScanUseCase
-from infrastructure.repositories.django_codifier_repo import DjangoCodifierRepository
+from infrastructure.repositories.django_codifier_catalog_repo import (
+    DjangoCodifierCatalogRepository,
+)
+from infrastructure.repositories.django_codifier_detail_repo import (
+    DjangoCodifierDetailRepository,
+)
 from infrastructure.repositories.django_academic_year_repo import (
     DjangoAcademicYearRepository,
 )
@@ -1179,7 +1184,14 @@ class ContainerTests(SimpleTestCase):
             container.topic_catalog_repo,
             DjangoTopicCatalogRepository,
         )
-        self.assertIsInstance(container.codifier_repo, DjangoCodifierRepository)
+        self.assertIsInstance(
+            container.codifier_catalog_repo,
+            DjangoCodifierCatalogRepository,
+        )
+        self.assertIsInstance(
+            container.codifier_detail_repo,
+            DjangoCodifierDetailRepository,
+        )
         self.assertIsInstance(
             container.dashboard_summary_repo,
             DjangoDashboardSummaryRepository,

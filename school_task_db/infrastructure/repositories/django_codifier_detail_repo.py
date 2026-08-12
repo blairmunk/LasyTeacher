@@ -1,4 +1,4 @@
-"""Django implementation of the codifier repository."""
+"""Django read adapter for codifier structure and coverage."""
 
 from collections import defaultdict
 
@@ -7,40 +7,16 @@ from django.db.models import Count, Q
 from core_logic.entities.codifier import (
     CodifierContentEntry,
     CodifierDetailSpec,
-    CodifierListItem,
     CodifierObjectRef,
     CodifierRequirement,
     CodifierSiblingCode,
-)
-from core_logic.interfaces.codifier_catalog_repo import (
-    ICodifierCatalogRepository,
 )
 from core_logic.interfaces.codifier_detail_repo import ICodifierDetailRepository
 from core_logic.services.codifier_service import CodifierService
 from codifier.models import CodifierSpec, ContentEntry, Requirement
 
 
-class DjangoCodifierRepository(
-    ICodifierCatalogRepository,
-    ICodifierDetailRepository,
-):
-    def get_list_codifiers(self):
-        return [
-            CodifierListItem(
-                pk=str(codifier.pk),
-                short_name=codifier.short_name,
-                name=codifier.name,
-                exam_type=codifier.exam_type,
-                is_active=codifier.is_active,
-                content_entries_count=codifier.content_entries.count(),
-                requirements_count=codifier.requirements.count(),
-            )
-            for codifier in CodifierSpec.objects.prefetch_related(
-                'content_entries',
-                'requirements',
-            )
-        ]
-
+class DjangoCodifierDetailRepository(ICodifierDetailRepository):
     def get_codifier(self, codifier_id: str):
         codifier = CodifierSpec.objects.prefetch_related(
             'content_entries',
@@ -166,7 +142,8 @@ class DjangoCodifierRepository(
             ],
         )
 
-    def _get_sibling_codes(self, entries):
+    @staticmethod
+    def _get_sibling_codes(entries):
         topic_ids = {entry.topic_id for entry in entries if entry.topic_id}
         subtopic_ids = {
             entry.subtopic_id for entry in entries if entry.subtopic_id

@@ -322,7 +322,18 @@ from infrastructure.repositories.django_journal_report_repo import (
 from infrastructure.repositories.django_task_db_health_repo import (
     DjangoTaskDBHealthRepository,
 )
-from infrastructure.repositories.django_student_repo import DjangoStudentRepository
+from infrastructure.repositories.django_student_catalog_repo import (
+    DjangoStudentCatalogRepository,
+)
+from infrastructure.repositories.django_student_command_repo import (
+    DjangoStudentCommandRepository,
+)
+from infrastructure.repositories.django_student_group_catalog_repo import (
+    DjangoStudentGroupCatalogRepository,
+)
+from infrastructure.repositories.django_student_group_command_repo import (
+    DjangoStudentGroupCommandRepository,
+)
 from infrastructure.repositories.django_student_profile_repo import (
     DjangoStudentProfileRepository,
 )
@@ -1050,7 +1061,22 @@ class ContainerTests(SimpleTestCase):
             RenderDocumentFromRecipeUseCase,
         )
         self.assertIsInstance(rendered_file_use_case, GetRenderedDocumentFileUseCase)
-        self.assertIsInstance(container.student_repo, DjangoStudentRepository)
+        self.assertIsInstance(
+            container.student_catalog_repo,
+            DjangoStudentCatalogRepository,
+        )
+        self.assertIsInstance(
+            container.student_command_repo,
+            DjangoStudentCommandRepository,
+        )
+        self.assertIsInstance(
+            container.student_group_catalog_repo,
+            DjangoStudentGroupCatalogRepository,
+        )
+        self.assertIsInstance(
+            container.student_group_command_repo,
+            DjangoStudentGroupCommandRepository,
+        )
         self.assertIsInstance(
             container.student_profile_repo,
             DjangoStudentProfileRepository,

@@ -15,9 +15,6 @@ from infrastructure.tests.variant_task_factory import (
     capture_attempt_snapshot,
     create_variant_task,
 )
-from infrastructure.repositories.django_student_repo import (
-    DjangoStudentRepository,
-)
 from students.models import Student, StudentGroup
 from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Task

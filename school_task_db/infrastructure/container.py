@@ -380,7 +380,18 @@ from infrastructure.repositories.django_reports_dashboard_repo import (
 )
 from infrastructure.repositories.django_settings_repo import DjangoSettingsRepository
 from infrastructure.repositories.django_source_repo import DjangoSourceRepository
-from infrastructure.repositories.django_student_repo import DjangoStudentRepository
+from infrastructure.repositories.django_student_catalog_repo import (
+    DjangoStudentCatalogRepository,
+)
+from infrastructure.repositories.django_student_command_repo import (
+    DjangoStudentCommandRepository,
+)
+from infrastructure.repositories.django_student_group_catalog_repo import (
+    DjangoStudentGroupCatalogRepository,
+)
+from infrastructure.repositories.django_student_group_command_repo import (
+    DjangoStudentGroupCommandRepository,
+)
 from infrastructure.repositories.django_student_profile_repo import (
     DjangoStudentProfileRepository,
 )
@@ -508,7 +519,10 @@ class Container:
     def __init__(self):
         self._academic_year_repo = None
         self._attempt_snapshot_repo = None
-        self._student_repo = None
+        self._student_catalog_repo = None
+        self._student_command_repo = None
+        self._student_group_catalog_repo = None
+        self._student_group_command_repo = None
         self._student_profile_repo = None
         self._student_remedial_repo = None
         self._source_repo = None
@@ -599,10 +613,32 @@ class Container:
         return self._attempt_snapshot_repo
 
     @property
-    def student_repo(self):
-        if self._student_repo is None:
-            self._student_repo = DjangoStudentRepository()
-        return self._student_repo
+    def student_catalog_repo(self):
+        if self._student_catalog_repo is None:
+            self._student_catalog_repo = DjangoStudentCatalogRepository()
+        return self._student_catalog_repo
+
+    @property
+    def student_command_repo(self):
+        if self._student_command_repo is None:
+            self._student_command_repo = DjangoStudentCommandRepository()
+        return self._student_command_repo
+
+    @property
+    def student_group_catalog_repo(self):
+        if self._student_group_catalog_repo is None:
+            self._student_group_catalog_repo = (
+                DjangoStudentGroupCatalogRepository()
+            )
+        return self._student_group_catalog_repo
+
+    @property
+    def student_group_command_repo(self):
+        if self._student_group_command_repo is None:
+            self._student_group_command_repo = (
+                DjangoStudentGroupCommandRepository()
+            )
+        return self._student_group_command_repo
 
     @property
     def student_profile_repo(self):
@@ -1138,7 +1174,7 @@ class Container:
 
     def create_student_remedial_variant_use_case(self):
         return CreateStudentRemedialVariantUseCase(
-            student_repo=self.student_repo,
+            student_repo=self.student_catalog_repo,
             student_learning_repo=self.student_remedial_repo,
             task_repo=self.task_selection_repo,
             work_repo=self.work_variant_creation_repo,
@@ -1146,7 +1182,7 @@ class Container:
 
     def create_remedial_wizard_work_use_case(self):
         return CreateRemedialWizardWorkUseCase(
-            student_repo=self.student_repo,
+            student_repo=self.student_group_catalog_repo,
             task_repo=self.task_selection_repo,
             work_repo=self.work_variant_creation_repo,
             event_write_repo=self.event_write_repo,
@@ -1177,29 +1213,29 @@ class Container:
 
     def get_remedial_wizard_start_use_case(self):
         return GetRemedialWizardStartUseCase(
-            student_repo=self.student_repo,
+            student_repo=self.student_group_catalog_repo,
         )
 
     def get_student_profile_use_case(self):
         return GetStudentProfileUseCase(
-            student_repo=self.student_repo,
+            student_repo=self.student_catalog_repo,
             student_learning_repo=self.student_profile_repo,
             analytics_service=self.analytics_service(),
         )
 
     def get_student_detail_use_case(self):
         return GetStudentDetailUseCase(
-            student_repo=self.student_repo,
+            student_repo=self.student_catalog_repo,
         )
 
     def get_student_group_detail_use_case(self):
         return GetStudentGroupDetailUseCase(
-            student_repo=self.student_repo,
+            student_repo=self.student_group_catalog_repo,
         )
 
     def get_student_list_use_case(self):
         return GetStudentListUseCase(
-            student_repo=self.student_repo,
+            student_repo=self.student_catalog_repo,
         )
 
     def resolve_academic_year_use_case(self):
@@ -1219,7 +1255,7 @@ class Container:
 
     def get_student_group_list_use_case(self):
         return GetStudentGroupListUseCase(
-            student_repo=self.student_repo,
+            student_repo=self.student_group_catalog_repo,
         )
 
     def get_student_remedial_work_use_case(self):
@@ -1229,22 +1265,22 @@ class Container:
 
     def create_student_use_case(self):
         return CreateStudentUseCase(
-            student_repo=self.student_repo,
+            student_repo=self.student_command_repo,
         )
 
     def update_student_use_case(self):
         return UpdateStudentUseCase(
-            student_repo=self.student_repo,
+            student_repo=self.student_command_repo,
         )
 
     def create_student_group_use_case(self):
         return CreateStudentGroupUseCase(
-            student_repo=self.student_repo,
+            student_repo=self.student_group_command_repo,
         )
 
     def update_student_group_use_case(self):
         return UpdateStudentGroupUseCase(
-            student_repo=self.student_repo,
+            student_repo=self.student_group_command_repo,
         )
 
     def get_task_list_use_case(self):

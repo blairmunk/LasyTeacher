@@ -143,7 +143,18 @@ from infrastructure.repositories.django_review_task_repo import (
     DjangoReviewTaskRepository,
 )
 from infrastructure.repositories.django_source_repo import DjangoSourceRepository
-from infrastructure.repositories.django_student_repo import DjangoStudentRepository
+from infrastructure.repositories.django_student_catalog_repo import (
+    DjangoStudentCatalogRepository,
+)
+from infrastructure.repositories.django_student_command_repo import (
+    DjangoStudentCommandRepository,
+)
+from infrastructure.repositories.django_student_group_catalog_repo import (
+    DjangoStudentGroupCatalogRepository,
+)
+from infrastructure.repositories.django_student_group_command_repo import (
+    DjangoStudentGroupCommandRepository,
+)
 from infrastructure.repositories.django_student_profile_repo import (
     DjangoStudentProfileRepository,
 )
@@ -422,7 +433,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.event.save(update_fields=['name'])
         self.source_work.name = 'Изменённая работа'
         self.source_work.save(update_fields=['name'])
-        student_repo = DjangoStudentRepository()
+        student_repo = DjangoStudentCatalogRepository()
         learning_repo = DjangoStudentProfileRepository()
 
         groups = student_repo.get_student_groups(str(self.student.pk))
@@ -449,10 +460,11 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(work_groups[0].group_name, self.weak_group.name)
 
     def test_student_repository_returns_list_page_data(self):
-        repo = DjangoStudentRepository()
+        student_repo = DjangoStudentCatalogRepository()
+        group_repo = DjangoStudentGroupCatalogRepository()
 
-        students = repo.get_list_students()
-        student_groups = repo.get_list_student_groups()
+        students = student_repo.get_list_students()
+        student_groups = group_repo.get_list_student_groups()
 
         self.assertEqual(students[0].pk, str(self.student.pk))
         self.assertEqual(students[0].last_name, self.student.last_name)
@@ -493,23 +505,25 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
         group_2026.students.add(student_2026)
         group_2027.students.add(student_2027)
-        repo = DjangoStudentRepository()
+        student_repo = DjangoStudentCatalogRepository()
+        group_repo = DjangoStudentGroupCatalogRepository()
 
-        students = repo.get_list_students(year=year_2026)
-        groups = repo.get_list_student_groups(year=year_2026)
+        students = student_repo.get_list_students(year=year_2026)
+        groups = group_repo.get_list_student_groups(year=year_2026)
 
         self.assertEqual([student.pk for student in students], [str(student_2026.pk)])
         self.assertEqual([group.pk for group in groups], [str(group_2026.pk)])
 
     def test_student_repository_returns_detail_page_objects(self):
-        repo = DjangoStudentRepository()
+        student_repo = DjangoStudentCatalogRepository()
+        group_repo = DjangoStudentGroupCatalogRepository()
 
-        student = repo.get_student(str(self.student.pk))
-        missing_student = repo.get_student(
+        student = student_repo.get_student(str(self.student.pk))
+        missing_student = student_repo.get_student(
             '00000000-0000-0000-0000-000000000000',
         )
-        student_group = repo.get_student_group(str(self.group.pk))
-        missing_student_group = repo.get_student_group(
+        student_group = group_repo.get_student_group(str(self.group.pk))
+        missing_student_group = group_repo.get_student_group(
             '00000000-0000-0000-0000-000000000000',
         )
 
@@ -838,7 +852,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(content_blocks[1].body, 'Покажите вычисления.')
 
     def test_student_repository_creates_and_updates_student(self):
-        repo = DjangoStudentRepository()
+        repo = DjangoStudentCommandRepository()
 
         create_result = repo.create_student(
             SaveStudentParams(
@@ -873,7 +887,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(missing_result.status, 'not_found')
 
     def test_student_repository_creates_and_updates_student_group(self):
-        repo = DjangoStudentRepository()
+        repo = DjangoStudentGroupCommandRepository()
         second_student = Student.objects.create(
             first_name='Пётр',
             last_name='Петров',
@@ -1292,7 +1306,6 @@ class DjangoRemedialRepositoryTests(TestCase):
 
     def test_create_remedial_use_case_creates_django_objects(self):
         source_attempt = capture_attempt_snapshot(self.mark)
-        student_repo = DjangoStudentRepository()
         task_repo = DjangoTaskSelectionRepository()
         work_repo = DjangoWorkVariantCreationRepository()
         event_repo = DjangoEventReadRepository()
@@ -1369,7 +1382,6 @@ class DjangoRemedialRepositoryTests(TestCase):
 
     def test_remedial_transaction_rolls_back_work_when_participation_fails(self):
         capture_attempt_snapshot(self.mark)
-        student_repo = DjangoStudentRepository()
         task_repo = DjangoTaskSelectionRepository()
         work_repo = DjangoWorkVariantCreationRepository()
         event_repo = DjangoEventReadRepository()

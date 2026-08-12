@@ -4,9 +4,11 @@ from django.db import transaction
 from django.utils import timezone
 
 from core_logic.entities.event import ParticipationGradingContext
-from core_logic.interfaces.participation_grading_repo import (
+from core_logic.entities.grading import (
     GradeParticipationParams,
     GradeParticipationResult,
+)
+from core_logic.interfaces.participation_grading_repo import (
     IParticipationGradingRepository,
 )
 from events.models import Event, EventParticipation, Mark
@@ -90,4 +92,3 @@ class DjangoParticipationGradingRepository(
                 score=mark.score,
                 event_status=event.status,
             )
-

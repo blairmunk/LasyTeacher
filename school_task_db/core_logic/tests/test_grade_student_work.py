@@ -4,7 +4,7 @@ from unittest import TestCase
 from core_logic.entities.event import ParticipationGradingContext
 from core_logic.entities.attempt_snapshot import AttemptSnapshotRef
 from core_logic.entities.review import ReviewTaskRef, ReviewVariantTaskRef
-from core_logic.interfaces.participation_grading_repo import (
+from core_logic.entities.grading import (
     GradeParticipationResult,
 )
 from core_logic.services.grading_service import GradingService

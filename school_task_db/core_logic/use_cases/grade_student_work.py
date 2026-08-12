@@ -3,9 +3,11 @@
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
-from core_logic.interfaces.participation_grading_repo import (
+from core_logic.entities.grading import (
     GradeParticipationParams,
     GradeParticipationResult,
+)
+from core_logic.interfaces.participation_grading_repo import (
     IParticipationGradingRepository,
 )
 from core_logic.interfaces.attempt_snapshot_repo import (

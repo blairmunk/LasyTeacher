@@ -277,14 +277,14 @@ class ReportFormAdapter:
         student_id,
     ):
         return HeatmapStudentDetailRequest(
-            topic_id=topic_id,
-            student_id=student_id,
+            topic_id=str(topic_id),
+            student_id=str(student_id),
             subtopic_id=query.get('subtopic'),
         )
 
     def heatmap_subtopic_detail_request_from_query(self, query, subtopic_id):
         return HeatmapSubtopicDetailRequest(
-            subtopic_id=subtopic_id,
+            subtopic_id=str(subtopic_id),
             group_id=query.get('group'),
         )
 

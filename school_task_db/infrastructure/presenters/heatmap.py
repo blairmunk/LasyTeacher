@@ -245,13 +245,18 @@ class HeatmapPresenter:
             **group_params,
             'student_rows': [
                 {
-                    **row,
+                    'student': row.student,
+                    'points': row.points,
+                    'max_points': row.max_points,
+                    'pct': row.pct,
+                    'css': row.css,
+                    'events': row.events,
                     'url': self._heatmap_student_cell_url(
                         topic_id=detail.topic.pk,
-                        student_id=row['student'].pk,
+                        student_id=row.student.pk,
                         subtopic_id=detail.subtopic.pk,
                         group_suffix=group_params['group_suffix'],
-                        has_data=row['pct'] is not None,
+                        has_data=row.pct is not None,
                     ),
                 }
                 for row in detail.student_rows

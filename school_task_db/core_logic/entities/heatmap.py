@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Optional
 
 from core_logic.entities.report_refs import (
     ReportActivityRef,
@@ -73,12 +73,12 @@ class HeatmapDetailScoreFact:
 class HeatmapSubtopicDetailSource:
     subtopic: ReportHeatmapColumnRef
     topic: ReportHeatmapColumnRef
-    groups: List[ReportGroupRef]
+    groups: tuple[ReportGroupRef, ...]
     selected_group: ReportGroupRef | None
-    students: List[ReportStudentRef]
-    tasks: List[ReportTaskRef]
-    scores: List[HeatmapDetailScoreFact]
-    courses: List[ReportCourseRef]
+    students: tuple[ReportStudentRef, ...]
+    tasks: tuple[ReportTaskRef, ...]
+    scores: tuple[HeatmapDetailScoreFact, ...]
+    courses: tuple[ReportCourseRef, ...]
 
 
 @dataclass(frozen=True)
@@ -86,10 +86,51 @@ class HeatmapStudentDetailSource:
     topic: ReportHeatmapColumnRef
     student: ReportStudentRef
     selected_subtopic: ReportHeatmapColumnRef | None
-    subtopics: List[ReportHeatmapColumnRef]
-    tasks: List[ReportTaskRef]
-    scores: List[HeatmapDetailScoreFact]
-    courses: List[ReportCourseRef]
+    subtopics: tuple[ReportHeatmapColumnRef, ...]
+    tasks: tuple[ReportTaskRef, ...]
+    scores: tuple[HeatmapDetailScoreFact, ...]
+    courses: tuple[ReportCourseRef, ...]
+
+
+@dataclass(frozen=True)
+class HeatmapStudentTaskDetail:
+    event: ReportActivityRef | None
+    task: ReportTaskRef
+    subtopic: ReportHeatmapColumnRef | None
+    points: float
+    max_points: float
+    pct: int
+    css: str
+
+
+@dataclass(frozen=True)
+class HeatmapStudentSubtopicSummary:
+    subtopic: ReportHeatmapColumnRef
+    pct: Optional[int]
+    css: str
+    is_selected: bool
+    points: Optional[float] = None
+    max_points: Optional[float] = None
+
+
+@dataclass(frozen=True)
+class HeatmapSubtopicStudentRow:
+    student: ReportStudentRef
+    pct: Optional[int]
+    css: str
+    events: tuple[str, ...]
+    points: Optional[float] = None
+    max_points: Optional[float] = None
+
+
+@dataclass(frozen=True)
+class HeatmapSubtopicTaskRow:
+    task: ReportTaskRef
+    avg_pct: int
+    css: str
+    students_count: int
+    total_points: float
+    total_max: float
 
 
 @dataclass(frozen=True)
@@ -169,28 +210,28 @@ class HeatmapSubtopicMatrixData:
 
 @dataclass(frozen=True)
 class HeatmapSubtopicDetailData:
-    subtopic: Any
-    topic: Any
-    groups: Any
-    selected_group: Any
-    student_rows: List[dict]
-    task_rows: List[dict]
-    overall_pct: Any
+    subtopic: ReportHeatmapColumnRef
+    topic: ReportHeatmapColumnRef
+    groups: tuple[ReportGroupRef, ...]
+    selected_group: ReportGroupRef | None
+    student_rows: tuple[HeatmapSubtopicStudentRow, ...]
+    task_rows: tuple[HeatmapSubtopicTaskRow, ...]
+    overall_pct: Optional[int]
     overall_css: str
     total_students: int
     students_with_data: int
-    courses: Any
+    courses: tuple[ReportCourseRef, ...]
     active_report: str = 'heatmap'
-    active_course_pk: Any = None
+    active_course_pk: Optional[str] = None
 
 
 @dataclass(frozen=True)
 class HeatmapStudentDetailData:
-    topic: Any
-    student: Any
-    selected_subtopic: Any
-    details: List[dict]
-    subtopic_summary: List[dict]
-    courses: Any
+    topic: ReportHeatmapColumnRef
+    student: ReportStudentRef
+    selected_subtopic: ReportHeatmapColumnRef | None
+    details: tuple[HeatmapStudentTaskDetail, ...]
+    subtopic_summary: tuple[HeatmapStudentSubtopicSummary, ...]
+    courses: tuple[ReportCourseRef, ...]
     active_report: str = 'heatmap'
-    active_course_pk: Any = None
+    active_course_pk: Optional[str] = None

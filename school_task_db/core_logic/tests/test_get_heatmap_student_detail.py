@@ -52,9 +52,9 @@ class FakeReportRepository:
                 full_name='Иванов Иван',
             ),
             selected_subtopic=subtopic,
-            subtopics=[subtopic],
-            tasks=[task],
-            scores=[
+            subtopics=(subtopic,),
+            tasks=(task,),
+            scores=(
                 HeatmapDetailScoreFact(
                     student_id='student-1',
                     task_id=task.pk,
@@ -62,8 +62,8 @@ class FakeReportRepository:
                     points=8,
                     max_points=10,
                 ),
-            ],
-            courses=[ReportCourseRef(pk='course-1', name='Физика 7')],
+            ),
+            courses=(ReportCourseRef(pk='course-1', name='Физика 7'),),
         )
 
 
@@ -83,7 +83,7 @@ class GetHeatmapStudentDetailUseCaseTests(TestCase):
         self.assertEqual(repo.topic_id, 'topic-1')
         self.assertEqual(repo.student_id, 'student-1')
         self.assertEqual(repo.subtopic_id, 'subtopic-1')
-        self.assertEqual(data.details[0]['task'].pk, 'task-1')
-        self.assertEqual(data.details[0]['pct'], 80)
-        self.assertEqual(data.subtopic_summary[0]['pct'], 80)
+        self.assertEqual(data.details[0].task.pk, 'task-1')
+        self.assertEqual(data.details[0].pct, 80)
+        self.assertEqual(data.subtopic_summary[0].pct, 80)
         self.assertEqual(data.active_report, 'heatmap')

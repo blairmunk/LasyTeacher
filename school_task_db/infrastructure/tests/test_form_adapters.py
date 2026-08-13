@@ -12,6 +12,7 @@ from core_logic.entities.heatmap import (
     HeatmapColumnAverage,
     HeatmapMatrixCell,
     HeatmapMatrixRow,
+    HeatmapSubtopicStudentRow,
 )
 from core_logic.entities.core import (
     DashboardSummaryData,
@@ -674,6 +675,8 @@ class ReportFormAdapterTests(SimpleTestCase):
         adapter = ReportFormAdapter()
         course_id = uuid.UUID('00000000-0000-0000-0000-000000000001')
         topic_id = uuid.UUID('00000000-0000-0000-0000-000000000002')
+        student_id = uuid.UUID('00000000-0000-0000-0000-000000000003')
+        subtopic_id = uuid.UUID('00000000-0000-0000-0000-000000000004')
 
         params = adapter.heatmap_params_from_query(query)
         group_url_params = (
@@ -690,12 +693,12 @@ class ReportFormAdapterTests(SimpleTestCase):
         )
         student = adapter.heatmap_student_detail_request_from_query(
             query,
-            topic_id='t1',
-            student_id='st1',
+            topic_id=topic_id,
+            student_id=student_id,
         )
         subtopic = adapter.heatmap_subtopic_detail_request_from_query(
             query,
-            subtopic_id='s1',
+            subtopic_id=subtopic_id,
         )
 
         self.assertEqual(params, {
@@ -712,10 +715,10 @@ class ReportFormAdapterTests(SimpleTestCase):
         self.assertEqual(course.group_id, 'g1')
         self.assertEqual(drilldown.topic_id, str(topic_id))
         self.assertEqual(drilldown.group_id, 'g1')
-        self.assertEqual(student.topic_id, 't1')
-        self.assertEqual(student.student_id, 'st1')
+        self.assertEqual(student.topic_id, str(topic_id))
+        self.assertEqual(student.student_id, str(student_id))
         self.assertEqual(student.subtopic_id, 's1')
-        self.assertEqual(subtopic.subtopic_id, 's1')
+        self.assertEqual(subtopic.subtopic_id, str(subtopic_id))
         self.assertEqual(subtopic.group_id, 'g1')
 
     def test_builds_course_timeline_chart_json(self):
@@ -877,12 +880,16 @@ class ReportFormAdapterTests(SimpleTestCase):
             selected_group=SimpleNamespace(
                 pk='00000000-0000-0000-0000-000000000003',
             ),
-            student_rows=[{
-                'student': SimpleNamespace(
+            student_rows=(HeatmapSubtopicStudentRow(
+                student=SimpleNamespace(
                     pk='00000000-0000-0000-0000-000000000004',
                 ),
-                'pct': 60,
-            }],
+                points=3,
+                max_points=5,
+                pct=60,
+                css='moderate',
+                events=('КР',),
+            ),),
         )
 
         context = HeatmapPresenter().heatmap_subtopic_student_rows(detail)

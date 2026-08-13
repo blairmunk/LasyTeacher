@@ -5,8 +5,12 @@ from collections import defaultdict
 from core_logic.entities.heatmap import (
     HeatmapStudentDetailData,
     HeatmapStudentDetailSource,
+    HeatmapStudentSubtopicSummary,
+    HeatmapStudentTaskDetail,
     HeatmapSubtopicDetailData,
     HeatmapSubtopicDetailSource,
+    HeatmapSubtopicStudentRow,
+    HeatmapSubtopicTaskRow,
 )
 from core_logic.services.heatmap_matrix_service import performance_color_class
 
@@ -51,20 +55,24 @@ class HeatmapDetailService:
                 if score.max_points > 0
                 else 0
             )
-            details.append({
-                'event': score.event,
-                'task': task,
-                'subtopic': subtopic,
-                'points': score.points,
-                'max_points': score.max_points,
-                'pct': pct,
-                'css': performance_color_class(pct),
-            })
+            details.append(HeatmapStudentTaskDetail(
+                event=score.event,
+                task=task,
+                subtopic=subtopic,
+                points=score.points,
+                max_points=score.max_points,
+                pct=pct,
+                css=performance_color_class(pct),
+            ))
 
         details.sort(key=lambda detail: (
-            detail['subtopic'].name if detail['subtopic'] else '',
-            detail['event'] is None,
-            detail['event'].planned_date if detail['event'] else None,
+            detail.subtopic.name if detail.subtopic else '',
+            detail.event is None,
+            (
+                detail.event.planned_date.isoformat()
+                if detail.event and detail.event.planned_date
+                else ''
+            ),
         ))
 
         subtopic_summary = []
@@ -73,28 +81,28 @@ class HeatmapDetailService:
             is_selected = subtopic.pk == selected_subtopic_id
             if data and data['max_points'] > 0:
                 pct = round(data['points'] / data['max_points'] * 100)
-                subtopic_summary.append({
-                    'subtopic': subtopic,
-                    'points': data['points'],
-                    'max_points': data['max_points'],
-                    'pct': pct,
-                    'css': performance_color_class(pct),
-                    'is_selected': is_selected,
-                })
+                subtopic_summary.append(HeatmapStudentSubtopicSummary(
+                    subtopic=subtopic,
+                    points=data['points'],
+                    max_points=data['max_points'],
+                    pct=pct,
+                    css=performance_color_class(pct),
+                    is_selected=is_selected,
+                ))
             else:
-                subtopic_summary.append({
-                    'subtopic': subtopic,
-                    'pct': None,
-                    'css': 'no-data',
-                    'is_selected': is_selected,
-                })
+                subtopic_summary.append(HeatmapStudentSubtopicSummary(
+                    subtopic=subtopic,
+                    pct=None,
+                    css='no-data',
+                    is_selected=is_selected,
+                ))
 
         return HeatmapStudentDetailData(
             topic=source.topic,
             student=source.student,
             selected_subtopic=source.selected_subtopic,
-            details=details,
-            subtopic_summary=subtopic_summary,
+            details=tuple(details),
+            subtopic_summary=tuple(subtopic_summary),
             courses=source.courses,
         )
 
@@ -130,21 +138,21 @@ class HeatmapDetailService:
             data = student_agg.get(student.pk)
             if data and data['max_points'] > 0:
                 pct = round(data['points'] / data['max_points'] * 100)
-                student_rows.append({
-                    'student': student,
-                    'points': data['points'],
-                    'max_points': data['max_points'],
-                    'pct': pct,
-                    'css': performance_color_class(pct),
-                    'events': sorted(data['events']),
-                })
+                student_rows.append(HeatmapSubtopicStudentRow(
+                    student=student,
+                    points=data['points'],
+                    max_points=data['max_points'],
+                    pct=pct,
+                    css=performance_color_class(pct),
+                    events=tuple(sorted(data['events'])),
+                ))
             else:
-                student_rows.append({
-                    'student': student,
-                    'pct': None,
-                    'css': 'no-data',
-                    'events': [],
-                })
+                student_rows.append(HeatmapSubtopicStudentRow(
+                    student=student,
+                    pct=None,
+                    css='no-data',
+                    events=(),
+                ))
 
         task_rows = []
         for task in source.tasks:
@@ -152,14 +160,14 @@ class HeatmapDetailService:
             if not data or data['max_points'] <= 0:
                 continue
             avg_pct = round(data['points'] / data['max_points'] * 100)
-            task_rows.append({
-                'task': task,
-                'avg_pct': avg_pct,
-                'css': performance_color_class(avg_pct),
-                'students_count': len(data['student_ids']),
-                'total_points': data['points'],
-                'total_max': data['max_points'],
-            })
+            task_rows.append(HeatmapSubtopicTaskRow(
+                task=task,
+                avg_pct=avg_pct,
+                css=performance_color_class(avg_pct),
+                students_count=len(data['student_ids']),
+                total_points=data['points'],
+                total_max=data['max_points'],
+            ))
 
         total_points = sum(data['points'] for data in student_agg.values())
         total_max = sum(data['max_points'] for data in student_agg.values())
@@ -174,15 +182,15 @@ class HeatmapDetailService:
             topic=source.topic,
             groups=source.groups,
             selected_group=source.selected_group,
-            student_rows=student_rows,
-            task_rows=task_rows,
+            student_rows=tuple(student_rows),
+            task_rows=tuple(task_rows),
             overall_pct=overall_pct,
             overall_css=performance_color_class(overall_pct),
             total_students=len(source.students),
             students_with_data=sum(
                 1
                 for row in student_rows
-                if row['pct'] is not None
+                if row.pct is not None
             ),
             courses=source.courses,
         )

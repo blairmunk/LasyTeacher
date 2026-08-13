@@ -320,11 +320,11 @@ class ReportsViewsTests(TestCase):
             str(subtopic.pk),
         )
         self.assertEqual(
-            response.context['details'][0]['task'].pk,
+            response.context['details'][0].task.pk,
             str(task.pk),
         )
-        self.assertEqual(response.context['details'][0]['pct'], 80)
-        self.assertEqual(response.context['subtopic_summary'][0]['pct'], 80)
+        self.assertEqual(response.context['details'][0].pct, 80)
+        self.assertEqual(response.context['subtopic_summary'][0].pct, 80)
 
     def test_heatmap_subtopic_view_uses_clean_detail_data(self):
         student = Student.objects.create(last_name='Иванов', first_name='Иван')
@@ -389,8 +389,8 @@ class ReportsViewsTests(TestCase):
         self.assertEqual(response.context['total_students'], 1)
         self.assertEqual(response.context['student_rows'][0]['pct'], 80)
         self.assertIn(f'group={group.pk}', response.context['student_rows'][0]['url'])
-        self.assertEqual(response.context['task_rows'][0]['task'].pk, str(task.pk))
-        self.assertEqual(response.context['task_rows'][0]['avg_pct'], 80)
+        self.assertEqual(response.context['task_rows'][0].task.pk, str(task.pk))
+        self.assertEqual(response.context['task_rows'][0].avg_pct, 80)
 
     def test_dashboard_view_uses_clean_report_data(self):
         now = timezone.now()

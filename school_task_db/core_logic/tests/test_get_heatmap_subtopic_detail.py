@@ -45,11 +45,11 @@ class FakeReportRepository:
                 name='Скорость',
                 section='Кинематика',
             ),
-            groups=[ReportGroupRef(pk='group-1', name='7А')],
+            groups=(ReportGroupRef(pk='group-1', name='7А'),),
             selected_group=ReportGroupRef(pk='group-1', name='7А'),
-            students=[student],
-            tasks=[task],
-            scores=[
+            students=(student,),
+            tasks=(task,),
+            scores=(
                 HeatmapDetailScoreFact(
                     student_id=student.pk,
                     task_id=task.pk,
@@ -57,8 +57,8 @@ class FakeReportRepository:
                     points=8,
                     max_points=10,
                 ),
-            ],
-            courses=[ReportCourseRef(pk='course-1', name='Физика 7')],
+            ),
+            courses=(ReportCourseRef(pk='course-1', name='Физика 7'),),
         )
 
 
@@ -76,6 +76,6 @@ class GetHeatmapSubtopicDetailUseCaseTests(TestCase):
 
         self.assertEqual(repo.subtopic_id, 'subtopic-1')
         self.assertEqual(repo.group_id, 'group-1')
-        self.assertEqual(data.student_rows[0]['pct'], 80)
-        self.assertEqual(data.task_rows[0]['avg_pct'], 80)
+        self.assertEqual(data.student_rows[0].pct, 80)
+        self.assertEqual(data.task_rows[0].avg_pct, 80)
         self.assertEqual(data.active_report, 'heatmap')

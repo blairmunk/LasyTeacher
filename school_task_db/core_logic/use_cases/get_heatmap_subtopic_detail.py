@@ -1,7 +1,7 @@
 """Build detailed subtopic heatmap data."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Optional
 
 from core_logic.entities.heatmap import HeatmapSubtopicDetailData
 from core_logic.interfaces.heatmap_detail_repo import IHeatmapDetailRepository
@@ -10,8 +10,8 @@ from core_logic.services.heatmap_detail_service import HeatmapDetailService
 
 @dataclass(frozen=True)
 class HeatmapSubtopicDetailRequest:
-    subtopic_id: Any
-    group_id: Any = None
+    subtopic_id: str
+    group_id: Optional[str] = None
 
 
 class GetHeatmapSubtopicDetailUseCase:

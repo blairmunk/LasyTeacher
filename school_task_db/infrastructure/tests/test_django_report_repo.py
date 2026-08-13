@@ -283,8 +283,8 @@ class DjangoReportRepositoriesTests(TestCase):
             DjangoHeatmapDetailRepository(),
         ).execute(
             HeatmapSubtopicDetailRequest(
-                subtopic_id=subtopic.pk,
-                group_id=selected_group.pk,
+                subtopic_id=str(subtopic.pk),
+                group_id=str(selected_group.pk),
             ),
         )
 
@@ -299,25 +299,25 @@ class DjangoReportRepositoriesTests(TestCase):
         self.assertEqual(data.students_with_data, 1)
         self.assertEqual(data.overall_pct, 80)
         self.assertEqual(data.overall_css, 'good')
-        self.assertEqual(data.student_rows[0]['student'].pk, str(selected_student.pk))
+        self.assertEqual(data.student_rows[0].student.pk, str(selected_student.pk))
         self.assertEqual(
-            data.student_rows[0]['student'].short_name,
+            data.student_rows[0].student.short_name,
             selected_student.get_short_name(),
         )
-        self.assertEqual(data.student_rows[0]['points'], 8)
-        self.assertEqual(data.student_rows[0]['max_points'], 10)
-        self.assertEqual(data.student_rows[0]['pct'], 80)
-        self.assertEqual(data.student_rows[0]['events'], ['КР'])
-        self.assertEqual(data.student_rows[1]['student'].pk, str(empty_student.pk))
-        self.assertIsNone(data.student_rows[1]['pct'])
-        self.assertEqual(data.task_rows[0]['task'].pk, str(task.pk))
-        self.assertEqual(data.task_rows[0]['task'].text, 'Задача 1')
+        self.assertEqual(data.student_rows[0].points, 8)
+        self.assertEqual(data.student_rows[0].max_points, 10)
+        self.assertEqual(data.student_rows[0].pct, 80)
+        self.assertEqual(data.student_rows[0].events, ('КР',))
+        self.assertEqual(data.student_rows[1].student.pk, str(empty_student.pk))
+        self.assertIsNone(data.student_rows[1].pct)
+        self.assertEqual(data.task_rows[0].task.pk, str(task.pk))
+        self.assertEqual(data.task_rows[0].task.text, 'Задача 1')
         self.assertEqual(
-            data.task_rows[0]['task'].difficulty_display,
+            data.task_rows[0].task.difficulty_display,
             task.get_difficulty_display(),
         )
-        self.assertEqual(data.task_rows[0]['avg_pct'], 80)
-        self.assertEqual(data.task_rows[0]['students_count'], 1)
+        self.assertEqual(data.task_rows[0].avg_pct, 80)
+        self.assertEqual(data.task_rows[0].students_count, 1)
         self.assertEqual(data.active_report, 'heatmap')
 
     def test_get_heatmap_student_detail_returns_details_and_summary(self):
@@ -377,9 +377,9 @@ class DjangoReportRepositoriesTests(TestCase):
             DjangoHeatmapDetailRepository(),
         ).execute(
             HeatmapStudentDetailRequest(
-                topic_id=topic.pk,
-                student_id=student.pk,
-                subtopic_id=subtopic.pk,
+                topic_id=str(topic.pk),
+                student_id=str(student.pk),
+                subtopic_id=str(subtopic.pk),
             ),
         )
 
@@ -388,19 +388,19 @@ class DjangoReportRepositoriesTests(TestCase):
         self.assertEqual(data.student.full_name, student.get_full_name())
         self.assertEqual(data.selected_subtopic.pk, str(subtopic.pk))
         self.assertEqual(len(data.details), 1)
-        self.assertEqual(data.details[0]['task'].pk, str(task.pk))
-        self.assertEqual(data.details[0]['pct'], 80)
+        self.assertEqual(data.details[0].task.pk, str(task.pk))
+        self.assertEqual(data.details[0].pct, 80)
         self.assertEqual(
-            data.subtopic_summary[0]['subtopic'].pk,
+            data.subtopic_summary[0].subtopic.pk,
             str(subtopic.pk),
         )
-        self.assertEqual(data.subtopic_summary[0]['pct'], 80)
-        self.assertTrue(data.subtopic_summary[0]['is_selected'])
+        self.assertEqual(data.subtopic_summary[0].pct, 80)
+        self.assertTrue(data.subtopic_summary[0].is_selected)
         self.assertEqual(
-            data.subtopic_summary[1]['subtopic'].pk,
+            data.subtopic_summary[1].subtopic.pk,
             str(other_subtopic.pk),
         )
-        self.assertIsNone(data.subtopic_summary[1]['pct'])
+        self.assertIsNone(data.subtopic_summary[1].pct)
         self.assertEqual(data.active_report, 'heatmap')
 
     def test_get_heatmap_course_overview_returns_course_scope(self):

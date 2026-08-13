@@ -64,14 +64,14 @@ class DjangoHeatmapDetailRepository(IHeatmapDetailRepository):
                 name=topic.name,
                 section=topic.section,
             ),
-            groups=[
+            groups=tuple(
                 ReportGroupRef(
                     pk=str(group.pk),
                     name=group.name,
                     students_count=group.students.count(),
                 )
                 for group in group_models
-            ],
+            ),
             selected_group=(
                 ReportGroupRef(
                     pk=str(selected_group_model.pk),
@@ -81,15 +81,15 @@ class DjangoHeatmapDetailRepository(IHeatmapDetailRepository):
                 if selected_group_model
                 else None
             ),
-            students=[
+            students=tuple(
                 report_student_ref(student)
                 for student in students
-            ],
-            tasks=sorted(
+            ),
+            tasks=tuple(sorted(
                 task_refs.values(),
                 key=lambda task: (task.difficulty, task.text, task.pk),
-            ),
-            scores=[
+            )),
+            scores=tuple(
                 HeatmapDetailScoreFact(
                     student_id=result.student_id,
                     task_id=result.task.task_id,
@@ -103,8 +103,8 @@ class DjangoHeatmapDetailRepository(IHeatmapDetailRepository):
                     ),
                 )
                 for result in task_results
-            ],
-            courses=[
+            ),
+            courses=tuple(
                 ReportCourseRef(
                     pk=str(course.pk),
                     name=course.name,
@@ -113,7 +113,7 @@ class DjangoHeatmapDetailRepository(IHeatmapDetailRepository):
                     'grade_level',
                     'name',
                 )
-            ],
+            ),
         )
 
     def get_heatmap_student_detail_source(
@@ -161,18 +161,18 @@ class DjangoHeatmapDetailRepository(IHeatmapDetailRepository):
                 if selected_subtopic_model
                 else None
             ),
-            subtopics=[
+            subtopics=tuple(
                 ReportHeatmapColumnRef(
                     pk=str(subtopic.pk),
                     name=subtopic.name,
                 )
                 for subtopic in subtopic_models
-            ],
-            tasks=sorted(
+            ),
+            tasks=tuple(sorted(
                 task_refs.values(),
                 key=lambda task: (task.difficulty, task.text, task.pk),
-            ),
-            scores=[
+            )),
+            scores=tuple(
                 HeatmapDetailScoreFact(
                     student_id=result.student_id,
                     task_id=result.task.task_id,
@@ -186,8 +186,8 @@ class DjangoHeatmapDetailRepository(IHeatmapDetailRepository):
                     ),
                 )
                 for result in task_results
-            ],
-            courses=[
+            ),
+            courses=tuple(
                 ReportCourseRef(
                     pk=str(course.pk),
                     name=course.name,
@@ -196,5 +196,5 @@ class DjangoHeatmapDetailRepository(IHeatmapDetailRepository):
                     'grade_level',
                     'name',
                 )
-            ],
+            ),
         )

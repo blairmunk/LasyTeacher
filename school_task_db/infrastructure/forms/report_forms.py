@@ -18,10 +18,10 @@ from core_logic.use_cases.get_events_status_report import (
 from core_logic.use_cases.get_heatmap_course_report import (
     HeatmapCourseReportRequest,
 )
-from core_logic.use_cases.get_heatmap_drilldown_overview import (
-    HeatmapDrilldownOverviewRequest,
+from core_logic.use_cases.get_heatmap_drilldown_report import (
+    HeatmapDrilldownReportRequest,
 )
-from core_logic.use_cases.get_heatmap_overview import HeatmapOverviewRequest
+from core_logic.use_cases.get_heatmap_report import HeatmapReportRequest
 from core_logic.use_cases.get_heatmap_student_detail import (
     HeatmapStudentDetailRequest,
 )
@@ -252,9 +252,12 @@ class ReportFormAdapter:
             'transpose': query.get('transpose') == '1',
         }
 
-    def heatmap_overview_request_from_query(self, query):
+    def heatmap_report_request_from_query(self, query):
         params = self.heatmap_params_from_query(query)
-        return HeatmapOverviewRequest(group_id=params['group_id'])
+        return HeatmapReportRequest(
+            group_id=params['group_id'],
+            section_filter=params['section'],
+        )
 
     def heatmap_course_report_request_from_query(self, query, course_id):
         params = self.heatmap_params_from_query(query)
@@ -263,9 +266,9 @@ class ReportFormAdapter:
             group_id=params['group_id'],
         )
 
-    def heatmap_drilldown_overview_request_from_query(self, query, topic_id):
+    def heatmap_drilldown_report_request_from_query(self, query, topic_id):
         params = self.heatmap_params_from_query(query)
-        return HeatmapDrilldownOverviewRequest(
+        return HeatmapDrilldownReportRequest(
             topic_id=str(topic_id),
             group_id=params['group_id'],
         )

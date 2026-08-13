@@ -682,12 +682,12 @@ class ReportFormAdapterTests(SimpleTestCase):
         group_url_params = (
             HeatmapPresenter().heatmap_group_url_params_from_query(query)
         )
-        overview = adapter.heatmap_overview_request_from_query(query)
+        overview = adapter.heatmap_report_request_from_query(query)
         course = adapter.heatmap_course_report_request_from_query(
             query,
             course_id=course_id,
         )
-        drilldown = adapter.heatmap_drilldown_overview_request_from_query(
+        drilldown = adapter.heatmap_drilldown_report_request_from_query(
             query,
             topic_id=topic_id,
         )
@@ -711,6 +711,7 @@ class ReportFormAdapterTests(SimpleTestCase):
             'group_suffix': '&group=g1',
         })
         self.assertEqual(overview.group_id, 'g1')
+        self.assertEqual(overview.section_filter, 'Mechanics')
         self.assertEqual(course.course_id, str(course_id))
         self.assertEqual(course.group_id, 'g1')
         self.assertEqual(drilldown.topic_id, str(topic_id))

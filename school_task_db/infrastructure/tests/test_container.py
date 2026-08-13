@@ -100,7 +100,11 @@ from core_logic.use_cases.get_heatmap_course_timeline import (
 from core_logic.use_cases.get_heatmap_drilldown_overview import (
     GetHeatmapDrilldownOverviewUseCase,
 )
+from core_logic.use_cases.get_heatmap_drilldown_report import (
+    GetHeatmapDrilldownReportUseCase,
+)
 from core_logic.use_cases.get_heatmap_overview import GetHeatmapOverviewUseCase
+from core_logic.use_cases.get_heatmap_report import GetHeatmapReportUseCase
 from core_logic.use_cases.get_heatmap_student_detail import (
     GetHeatmapStudentDetailUseCase,
 )
@@ -689,6 +693,9 @@ class ContainerTests(SimpleTestCase):
         heatmap_drilldown_overview_use_case = (
             container.get_heatmap_drilldown_overview_use_case()
         )
+        heatmap_drilldown_report_use_case = (
+            container.get_heatmap_drilldown_report_use_case()
+        )
         heatmap_student_detail_use_case = (
             container.get_heatmap_student_detail_use_case()
         )
@@ -696,6 +703,7 @@ class ContainerTests(SimpleTestCase):
             container.get_heatmap_subtopic_detail_use_case()
         )
         heatmap_overview_use_case = container.get_heatmap_overview_use_case()
+        heatmap_report_use_case = container.get_heatmap_report_use_case()
         heatmap_subtopic_matrix_use_case = (
             container.get_heatmap_subtopic_matrix_use_case()
         )
@@ -978,6 +986,10 @@ class ContainerTests(SimpleTestCase):
             GetHeatmapDrilldownOverviewUseCase,
         )
         self.assertIsInstance(
+            heatmap_drilldown_report_use_case,
+            GetHeatmapDrilldownReportUseCase,
+        )
+        self.assertIsInstance(
             heatmap_student_detail_use_case,
             GetHeatmapStudentDetailUseCase,
         )
@@ -986,6 +998,7 @@ class ContainerTests(SimpleTestCase):
             GetHeatmapSubtopicDetailUseCase,
         )
         self.assertIsInstance(heatmap_overview_use_case, GetHeatmapOverviewUseCase)
+        self.assertIsInstance(heatmap_report_use_case, GetHeatmapReportUseCase)
         self.assertIsInstance(
             heatmap_subtopic_matrix_use_case,
             GetHeatmapSubtopicMatrixUseCase,

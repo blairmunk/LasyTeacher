@@ -216,6 +216,19 @@ class HeatmapSubtopicMatrixData:
 
 
 @dataclass(frozen=True)
+class HeatmapReportData:
+    overview: HeatmapOverviewData
+    matrix: HeatmapTopicMatrixData
+    section_filter: str = ''
+
+
+@dataclass(frozen=True)
+class HeatmapDrilldownReportData:
+    overview: HeatmapDrilldownOverviewData
+    matrix: HeatmapSubtopicMatrixData
+
+
+@dataclass(frozen=True)
 class HeatmapSubtopicDetailData:
     subtopic: ReportHeatmapColumnRef
     topic: ReportHeatmapColumnRef

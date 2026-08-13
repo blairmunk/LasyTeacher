@@ -7,12 +7,6 @@ from django.views import View
 from django.views.generic import TemplateView
 from django.utils import timezone
 
-from core_logic.use_cases.get_heatmap_subtopic_matrix import (
-    HeatmapSubtopicMatrixRequest,
-)
-from core_logic.use_cases.get_heatmap_topic_matrix import (
-    HeatmapTopicMatrixRequest,
-)
 from core_logic.use_cases.get_journal_select import JournalSelectRequest
 from core_logic.use_cases.get_presentation_profile_list import (
     GetPresentationProfileListRequest,
@@ -273,13 +267,14 @@ class HeatmapView(View):
         params = container.report_form_adapter.heatmap_params_from_query(
             request.GET,
         )
-        section = params['section']
         transpose = params['transpose']
-        overview = container.get_heatmap_overview_use_case().execute(
-            container.report_form_adapter.heatmap_overview_request_from_query(
+        report = container.get_heatmap_report_use_case().execute(
+            container.report_form_adapter.heatmap_report_request_from_query(
                 request.GET,
             ),
         )
+        overview = report.overview
+        section = report.section_filter
 
         groups = overview.groups
         group = overview.selected_group
@@ -295,12 +290,7 @@ class HeatmapView(View):
                 'courses': overview.courses,
             })
 
-        matrix = container.get_heatmap_topic_matrix_use_case().execute(
-            HeatmapTopicMatrixRequest(
-                student_ids=tuple(student.pk for student in students),
-                section_filter=section,
-            ),
-        )
+        matrix = report.matrix
         matrix_context = (
             container.heatmap_presenter.heatmap_topic_matrix_context(
                 matrix,
@@ -325,6 +315,7 @@ class HeatmapView(View):
             'active_course_pk': overview.active_course_pk,
             'courses': overview.courses,
         })
+
 
 class HeatmapCourseView(View):
     """Тепловая карта по курсу: ученики × темы курса"""
@@ -400,23 +391,18 @@ class HeatmapDrilldownView(View):
             request.GET,
         )
         transpose = params['transpose']
-        overview = container.get_heatmap_drilldown_overview_use_case().execute(
-            container.report_form_adapter.heatmap_drilldown_overview_request_from_query(
+        report = container.get_heatmap_drilldown_report_use_case().execute(
+            container.report_form_adapter.heatmap_drilldown_report_request_from_query(
                 request.GET,
                 topic_id=topic_pk,
             ),
         )
+        overview = report.overview
 
         topic = overview.topic
         groups = overview.groups
         group = overview.selected_group
-        students = overview.students
-        matrix = container.get_heatmap_subtopic_matrix_use_case().execute(
-            HeatmapSubtopicMatrixRequest(
-                student_ids=tuple(student.pk for student in students),
-                topic_id=str(topic_pk),
-            ),
-        )
+        matrix = report.matrix
         matrix_context = (
             container.heatmap_presenter.heatmap_subtopic_matrix_context(
                 matrix,

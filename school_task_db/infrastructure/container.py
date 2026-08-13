@@ -131,7 +131,11 @@ from core_logic.use_cases.get_heatmap_course_timeline import (
 from core_logic.use_cases.get_heatmap_drilldown_overview import (
     GetHeatmapDrilldownOverviewUseCase,
 )
+from core_logic.use_cases.get_heatmap_drilldown_report import (
+    GetHeatmapDrilldownReportUseCase,
+)
 from core_logic.use_cases.get_heatmap_overview import GetHeatmapOverviewUseCase
+from core_logic.use_cases.get_heatmap_report import GetHeatmapReportUseCase
 from core_logic.use_cases.get_heatmap_student_detail import (
     GetHeatmapStudentDetailUseCase,
 )
@@ -1866,6 +1870,12 @@ class Container:
             report_repo=self.heatmap_overview_repo,
         )
 
+    def get_heatmap_drilldown_report_use_case(self):
+        return GetHeatmapDrilldownReportUseCase(
+            overview_use_case=self.get_heatmap_drilldown_overview_use_case(),
+            matrix_use_case=self.get_heatmap_subtopic_matrix_use_case(),
+        )
+
     def get_heatmap_student_detail_use_case(self):
         return GetHeatmapStudentDetailUseCase(
             report_repo=self.heatmap_detail_repo,
@@ -1884,6 +1894,12 @@ class Container:
     def get_heatmap_topic_matrix_use_case(self):
         return GetHeatmapTopicMatrixUseCase(
             report_repo=self.heatmap_matrix_repo,
+        )
+
+    def get_heatmap_report_use_case(self):
+        return GetHeatmapReportUseCase(
+            overview_use_case=self.get_heatmap_overview_use_case(),
+            matrix_use_case=self.get_heatmap_topic_matrix_use_case(),
         )
 
     def get_work_analysis_report_use_case(self):

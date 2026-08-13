@@ -1,4 +1,4 @@
-from django.test import SimpleTestCase
+from unittest import TestCase
 
 from core_logic.value_objects.task_import import (
     TASK_IMPORT_MODE_SKIP,
@@ -8,7 +8,7 @@ from core_logic.value_objects.task_import import (
 )
 
 
-class TaskImportModeTests(SimpleTestCase):
+class TaskImportModeTests(TestCase):
     def test_supported_modes_are_returned_unchanged(self):
         for mode in (
             TASK_IMPORT_MODE_STRICT,

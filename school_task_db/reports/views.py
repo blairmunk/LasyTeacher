@@ -303,7 +303,7 @@ class HeatmapView(View):
 
         matrix = container.get_heatmap_topic_matrix_use_case().execute(
             HeatmapTopicMatrixRequest(
-                student_ids=[student.pk for student in students],
+                student_ids=tuple(student.pk for student in students),
                 section_filter=section,
             ),
         )
@@ -350,8 +350,8 @@ class HeatmapCourseView(View):
         course_groups = overview.groups
         group = overview.selected_group
         students = overview.students
-        student_ids = [student.pk for student in students]
-        work_ids = [work.pk for work in overview.course_works]
+        student_ids = tuple(student.pk for student in students)
+        work_ids = tuple(work.pk for work in overview.course_works)
 
         if not students:
             return render(request, 'reports/heatmap_course.html', {
@@ -381,8 +381,8 @@ class HeatmapCourseView(View):
 
         timeline = container.get_heatmap_course_timeline_use_case().execute(
             HeatmapCourseTimelineRequest(
-                student_ids=tuple(student_ids),
-                work_ids=tuple(work_ids),
+                student_ids=student_ids,
+                work_ids=work_ids,
             ),
         )
         timeline_json = (
@@ -431,8 +431,8 @@ class HeatmapDrilldownView(View):
         students = overview.students
         matrix = container.get_heatmap_subtopic_matrix_use_case().execute(
             HeatmapSubtopicMatrixRequest(
-                student_ids=[student.pk for student in students],
-                topic_id=topic_pk,
+                student_ids=tuple(student.pk for student in students),
+                topic_id=str(topic_pk),
             ),
         )
         matrix_context = (

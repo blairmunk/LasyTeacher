@@ -3,8 +3,11 @@
 from collections import defaultdict
 
 from core_logic.entities.heatmap import (
+    HeatmapColumnAverage,
     HeatmapCourseTimelineData,
     HeatmapCourseTimelineSource,
+    HeatmapMatrixCell,
+    HeatmapMatrixRow,
     HeatmapMatrixSource,
     HeatmapSubtopicMatrixData,
     HeatmapTopicMatrixData,
@@ -59,10 +62,7 @@ class HeatmapMatrixService:
         self,
         source: HeatmapMatrixSource,
     ) -> HeatmapTopicMatrixData:
-        columns, rows, col_averages = self._build_matrix(
-            source,
-            column_key='topic',
-        )
+        columns, rows, col_averages = self._build_matrix(source)
         return HeatmapTopicMatrixData(
             columns=columns,
             rows=rows,
@@ -73,19 +73,16 @@ class HeatmapMatrixService:
         self,
         source: HeatmapMatrixSource,
     ) -> HeatmapSubtopicMatrixData:
-        columns, rows, col_averages = self._build_matrix(
-            source,
-            column_key='subtopic',
-        )
+        columns, rows, col_averages = self._build_matrix(source)
         return HeatmapSubtopicMatrixData(
             columns=columns,
             rows=rows,
             col_averages=col_averages,
         )
 
-    def _build_matrix(self, source, column_key):
+    def _build_matrix(self, source: HeatmapMatrixSource):
         if not source.columns:
-            return [], [], []
+            return (), (), ()
 
         aggregated = defaultdict(lambda: {'points': 0, 'max_points': 0})
         for score in source.scores:
@@ -104,27 +101,27 @@ class HeatmapMatrixService:
                     pct = round(data['points'] / data['max_points'] * 100)
                     total_points += data['points']
                     total_max += data['max_points']
-                    cells.append({
-                        'pct': pct,
-                        'points': data['points'],
-                        'max_points': data['max_points'],
-                        'css': self.color_class(pct),
-                        column_key: column,
-                    })
+                    cells.append(HeatmapMatrixCell(
+                        column=column,
+                        pct=pct,
+                        points=data['points'],
+                        max_points=data['max_points'],
+                        css=self.color_class(pct),
+                    ))
                 else:
-                    cells.append({
-                        'pct': None,
-                        'css': 'no-data',
-                        column_key: column,
-                    })
+                    cells.append(HeatmapMatrixCell(
+                        column=column,
+                        pct=None,
+                        css='no-data',
+                    ))
 
             avg = round(total_points / total_max * 100) if total_max > 0 else None
-            rows.append({
-                'student': student,
-                'cells': cells,
-                'avg': avg,
-                'avg_css': self.color_class(avg),
-            })
+            rows.append(HeatmapMatrixRow(
+                student=student,
+                cells=tuple(cells),
+                avg=avg,
+                avg_css=self.color_class(avg),
+            ))
 
         col_averages = []
         for column in source.columns:
@@ -137,12 +134,12 @@ class HeatmapMatrixService:
                 for student in source.students
             )
             avg = round(points / max_points * 100) if max_points > 0 else None
-            col_averages.append({
-                'pct': avg,
-                'css': self.color_class(avg),
-            })
+            col_averages.append(HeatmapColumnAverage(
+                pct=avg,
+                css=self.color_class(avg),
+            ))
 
-        return source.columns, rows, col_averages
+        return source.columns, tuple(rows), tuple(col_averages)
 
     @staticmethod
     def color_class(pct):

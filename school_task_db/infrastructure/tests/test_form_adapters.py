@@ -8,6 +8,11 @@ from django.test import SimpleTestCase
 
 from infrastructure.forms.presentation_profile_django_forms import PresentationProfileForm
 from core_logic.entities.document import DocumentPresentation, DocumentPresentationProfile
+from core_logic.entities.heatmap import (
+    HeatmapColumnAverage,
+    HeatmapMatrixCell,
+    HeatmapMatrixRow,
+)
 from core_logic.entities.core import (
     DashboardSummaryData,
     GlobalSearchData,
@@ -740,14 +745,14 @@ class ReportFormAdapterTests(SimpleTestCase):
             section='Механика',
         )
         matrix = SimpleNamespace(
-            columns=[topic],
-            rows=[{
-                'student': student,
-                'cells': [{'pct': 80, 'css': 'good'}],
-                'avg': 80,
-                'avg_css': 'good',
-            }],
-            col_averages=[{'pct': 80, 'css': 'good'}],
+            columns=(topic,),
+            rows=(HeatmapMatrixRow(
+                student=student,
+                cells=(HeatmapMatrixCell(topic, 80, 'good'),),
+                avg=80,
+                avg_css='good',
+            ),),
+            col_averages=(HeatmapColumnAverage(80, 'good'),),
         )
         adapter = HeatmapPresenter()
 
@@ -802,14 +807,14 @@ class ReportFormAdapterTests(SimpleTestCase):
         )
         topic_id = '00000000-0000-0000-0000-000000000003'
         matrix = SimpleNamespace(
-            columns=[subtopic],
-            rows=[{
-                'student': student,
-                'cells': [{'pct': 80, 'css': 'good'}],
-                'avg': 80,
-                'avg_css': 'good',
-            }],
-            col_averages=[{'pct': 80, 'css': 'good'}],
+            columns=(subtopic,),
+            rows=(HeatmapMatrixRow(
+                student=student,
+                cells=(HeatmapMatrixCell(subtopic, 80, 'good'),),
+                avg=80,
+                avg_css='good',
+            ),),
+            col_averages=(HeatmapColumnAverage(80, 'good'),),
         )
         adapter = HeatmapPresenter()
 
@@ -844,14 +849,14 @@ class ReportFormAdapterTests(SimpleTestCase):
             name='Равномерное движение',
         )
         matrix = SimpleNamespace(
-            columns=[subtopic],
-            rows=[{
-                'student': student,
-                'cells': [{'pct': None, 'css': 'no-data'}],
-                'avg': None,
-                'avg_css': 'no-data',
-            }],
-            col_averages=[{'pct': None, 'css': 'no-data'}],
+            columns=(subtopic,),
+            rows=(HeatmapMatrixRow(
+                student=student,
+                cells=(HeatmapMatrixCell(subtopic, None, 'no-data'),),
+                avg=None,
+                avg_css='no-data',
+            ),),
+            col_averages=(HeatmapColumnAverage(None, 'no-data'),),
         )
 
         context = HeatmapPresenter().heatmap_subtopic_matrix_context(

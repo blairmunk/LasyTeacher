@@ -31,9 +31,32 @@ class HeatmapScoreFact:
 
 @dataclass(frozen=True)
 class HeatmapMatrixSource:
-    students: List[ReportStudentRef]
-    columns: List[ReportHeatmapColumnRef]
-    scores: List[HeatmapScoreFact]
+    students: tuple[ReportStudentRef, ...]
+    columns: tuple[ReportHeatmapColumnRef, ...]
+    scores: tuple[HeatmapScoreFact, ...]
+
+
+@dataclass(frozen=True)
+class HeatmapMatrixCell:
+    column: ReportHeatmapColumnRef
+    pct: Optional[int]
+    css: str
+    points: Optional[float] = None
+    max_points: Optional[float] = None
+
+
+@dataclass(frozen=True)
+class HeatmapMatrixRow:
+    student: ReportStudentRef
+    cells: tuple[HeatmapMatrixCell, ...]
+    avg: Optional[int]
+    avg_css: str
+
+
+@dataclass(frozen=True)
+class HeatmapColumnAverage:
+    pct: Optional[int]
+    css: str
 
 
 @dataclass(frozen=True)
@@ -82,9 +105,9 @@ class HeatmapOverviewData:
 
 @dataclass(frozen=True)
 class HeatmapTopicMatrixData:
-    columns: List[Any]
-    rows: List[dict]
-    col_averages: List[dict]
+    columns: tuple[ReportHeatmapColumnRef, ...]
+    rows: tuple[HeatmapMatrixRow, ...]
+    col_averages: tuple[HeatmapColumnAverage, ...]
 
 
 @dataclass(frozen=True)
@@ -139,9 +162,9 @@ class HeatmapDrilldownOverviewData:
 
 @dataclass(frozen=True)
 class HeatmapSubtopicMatrixData:
-    columns: List[Any]
-    rows: List[dict]
-    col_averages: List[dict]
+    columns: tuple[ReportHeatmapColumnRef, ...]
+    rows: tuple[HeatmapMatrixRow, ...]
+    col_averages: tuple[HeatmapColumnAverage, ...]
 
 
 @dataclass(frozen=True)

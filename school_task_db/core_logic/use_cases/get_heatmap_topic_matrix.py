@@ -1,7 +1,6 @@
 """Build student-topic heatmap matrix data."""
 
 from dataclasses import dataclass
-from typing import Any, List
 
 from core_logic.entities.heatmap import HeatmapTopicMatrixData
 from core_logic.interfaces.heatmap_matrix_repo import IHeatmapMatrixRepository
@@ -10,7 +9,7 @@ from core_logic.services.heatmap_matrix_service import HeatmapMatrixService
 
 @dataclass(frozen=True)
 class HeatmapTopicMatrixRequest:
-    student_ids: List[Any]
+    student_ids: tuple[str, ...]
     section_filter: str = ''
 
 

@@ -59,8 +59,8 @@ class DjangoHeatmapMatrixRepository(IHeatmapMatrixRepository):
                 max_points=result.max_points,
             ))
         return HeatmapMatrixSource(
-            students=[report_student_ref(student) for student in students],
-            columns=sorted(
+            students=tuple(report_student_ref(student) for student in students),
+            columns=tuple(sorted(
                 columns.values(),
                 key=lambda item: (
                     item.section,
@@ -68,8 +68,8 @@ class DjangoHeatmapMatrixRepository(IHeatmapMatrixRepository):
                     item.name,
                     item.pk,
                 ),
-            ),
-            scores=scores,
+            )),
+            scores=tuple(scores),
         )
 
     def get_heatmap_course_topic_matrix_source(self, student_ids, work_ids):
@@ -110,8 +110,8 @@ class DjangoHeatmapMatrixRepository(IHeatmapMatrixRepository):
                 max_points=result.max_points,
             ))
         return HeatmapMatrixSource(
-            students=[report_student_ref(student) for student in students],
-            columns=sorted(
+            students=tuple(report_student_ref(student) for student in students),
+            columns=tuple(sorted(
                 columns.values(),
                 key=lambda item: (
                     item.section,
@@ -119,8 +119,8 @@ class DjangoHeatmapMatrixRepository(IHeatmapMatrixRepository):
                     item.name,
                     item.pk,
                 ),
-            ),
-            scores=scores,
+            )),
+            scores=tuple(scores),
         )
 
     def get_heatmap_course_timeline_source(self, student_ids, work_ids):
@@ -191,16 +191,16 @@ class DjangoHeatmapMatrixRepository(IHeatmapMatrixRepository):
                 max_points=result.max_points,
             ))
         return HeatmapMatrixSource(
-            students=[report_student_ref(student) for student in students],
-            columns=sorted(
+            students=tuple(report_student_ref(student) for student in students),
+            columns=tuple(sorted(
                 columns.values(),
                 key=lambda item: (
                     subtopic_orders.get(item.pk, 0),
                     item.name,
                     item.pk,
                 ),
-            ),
-            scores=scores,
+            )),
+            scores=tuple(scores),
         )
 
     @staticmethod

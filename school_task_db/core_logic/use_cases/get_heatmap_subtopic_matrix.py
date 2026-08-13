@@ -1,7 +1,6 @@
 """Build student-subtopic heatmap matrix data."""
 
 from dataclasses import dataclass
-from typing import Any, List
 
 from core_logic.entities.heatmap import HeatmapSubtopicMatrixData
 from core_logic.interfaces.heatmap_matrix_repo import IHeatmapMatrixRepository
@@ -10,8 +9,8 @@ from core_logic.services.heatmap_matrix_service import HeatmapMatrixService
 
 @dataclass(frozen=True)
 class HeatmapSubtopicMatrixRequest:
-    student_ids: List[Any]
-    topic_id: Any
+    student_ids: tuple[str, ...]
+    topic_id: str
 
 
 class GetHeatmapSubtopicMatrixUseCase:

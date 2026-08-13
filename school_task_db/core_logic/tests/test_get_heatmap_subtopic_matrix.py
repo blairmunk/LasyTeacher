@@ -23,26 +23,26 @@ class FakeReportRepository:
         self.student_ids = student_ids
         self.topic_id = topic_id
         return HeatmapMatrixSource(
-            students=[
+            students=(
                 ReportStudentRef(
                     pk='student-1',
                     full_name='Иванов Иван',
                 ),
-            ],
-            columns=[
+            ),
+            columns=(
                 ReportHeatmapColumnRef(
                     pk='subtopic-1',
                     name='Средняя скорость',
                 ),
-            ],
-            scores=[
+            ),
+            scores=(
                 HeatmapScoreFact(
                     student_id='student-1',
                     column_id='subtopic-1',
                     points=8,
                     max_points=10,
                 ),
-            ],
+            ),
         )
 
 
@@ -53,13 +53,14 @@ class GetHeatmapSubtopicMatrixUseCaseTests(TestCase):
 
         data = use_case.execute(
             HeatmapSubtopicMatrixRequest(
-                student_ids=['student-1'],
+                student_ids=('student-1',),
                 topic_id='topic-1',
             ),
         )
 
-        self.assertEqual(repo.student_ids, ['student-1'])
+        self.assertEqual(repo.student_ids, ('student-1',))
         self.assertEqual(repo.topic_id, 'topic-1')
         self.assertEqual(data.columns[0].pk, 'subtopic-1')
-        self.assertEqual(data.rows[0]['cells'][0]['subtopic'].pk, 'subtopic-1')
-        self.assertEqual(data.col_averages, [{'pct': 80, 'css': 'good'}])
+        self.assertEqual(data.rows[0].cells[0].column.pk, 'subtopic-1')
+        self.assertEqual(data.col_averages[0].pct, 80)
+        self.assertEqual(data.col_averages[0].css, 'good')

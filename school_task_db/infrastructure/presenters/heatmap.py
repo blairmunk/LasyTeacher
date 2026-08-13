@@ -44,14 +44,17 @@ class HeatmapPresenter:
                 'grid_row_header': 'Ученик',
                 'grid_rows': [
                     {
-                        'label': row['student'].short_name,
+                        'label': row.student.short_name,
                         'url': reverse(
                             'students:detail',
-                            args=[row['student'].pk],
+                            args=[row.student.pk],
                         ),
-                        'cells': row['cells'],
-                        'avg': row['avg'],
-                        'avg_css': row['avg_css'],
+                        'cells': [
+                            self._matrix_cell_context(cell, 'topic')
+                            for cell in row.cells
+                        ],
+                        'avg': row.avg,
+                        'avg_css': row.avg_css,
                     }
                     for row in rows
                 ],
@@ -62,7 +65,10 @@ class HeatmapPresenter:
                     }
                     for topic in columns
                 ],
-                'grid_col_averages': col_averages,
+                'grid_col_averages': [
+                    self._column_average_context(average)
+                    for average in col_averages
+                ],
                 'has_data': bool(rows and columns),
             }
 
@@ -80,23 +86,26 @@ class HeatmapPresenter:
                         + group_param
                     ),
                     'cells': [
-                        row['cells'][column_index]
+                        self._matrix_cell_context(
+                            row.cells[column_index],
+                            'topic',
+                        )
                         for row in rows
                     ],
-                    'avg': col_averages[column_index]['pct'],
-                    'avg_css': col_averages[column_index]['css'],
+                    'avg': col_averages[column_index].pct,
+                    'avg_css': col_averages[column_index].css,
                 }
                 for column_index, topic in enumerate(columns)
             ],
             'grid_col_headers': [
                 {
-                    'label': row['student'].short_name,
-                    'title': row['student'].full_name,
+                    'label': row.student.short_name,
+                    'title': row.student.full_name,
                 }
                 for row in rows
             ],
             'grid_col_averages': [
-                {'pct': row['avg'], 'css': row['avg_css']}
+                {'pct': row.avg, 'css': row.avg_css}
                 for row in rows
             ],
             'has_data': bool(rows and columns),
@@ -120,22 +129,22 @@ class HeatmapPresenter:
         if not transpose:
             grid_rows = []
             for row in rows:
-                student_id = row['student'].pk
+                student_id = row.student.pk
                 cells = [
                     {
-                        **cell,
+                        **self._matrix_cell_context(cell, 'subtopic'),
                         'url': self._heatmap_student_cell_url(
                             topic_id=topic_id,
                             student_id=student_id,
                             subtopic_id=columns[index].pk,
                             group_suffix=group_suffix,
-                            has_data=cell['pct'] is not None,
+                            has_data=cell.pct is not None,
                         ),
                     }
-                    for index, cell in enumerate(row['cells'])
+                    for index, cell in enumerate(row.cells)
                 ]
                 grid_rows.append({
-                    'label': row['student'].short_name,
+                    'label': row.student.short_name,
                     'url': (
                         reverse(
                             'reports:heatmap-student',
@@ -144,8 +153,8 @@ class HeatmapPresenter:
                         + group_param
                     ),
                     'cells': cells,
-                    'avg': row['avg'],
-                    'avg_css': row['avg_css'],
+                    'avg': row.avg,
+                    'avg_css': row.avg_css,
                 })
             return {
                 **group_params,
@@ -165,7 +174,10 @@ class HeatmapPresenter:
                     }
                     for subtopic in columns
                 ],
-                'grid_col_averages': col_averages,
+                'grid_col_averages': [
+                    self._column_average_context(average)
+                    for average in col_averages
+                ],
                 'has_data': bool(rows and columns),
             }
 
@@ -173,15 +185,15 @@ class HeatmapPresenter:
         for column_index, subtopic in enumerate(columns):
             cells = []
             for row in rows:
-                cell = row['cells'][column_index]
+                cell = row.cells[column_index]
                 cells.append({
-                    **cell,
+                    **self._matrix_cell_context(cell, 'subtopic'),
                     'url': self._heatmap_student_cell_url(
                         topic_id=topic_id,
-                        student_id=row['student'].pk,
+                        student_id=row.student.pk,
                         subtopic_id=subtopic.pk,
                         group_suffix=group_suffix,
-                        has_data=cell['pct'] is not None,
+                        has_data=cell.pct is not None,
                     ),
                 })
             grid_rows.append({
@@ -194,8 +206,8 @@ class HeatmapPresenter:
                     + group_param
                 ),
                 'cells': cells,
-                'avg': col_averages[column_index]['pct'],
-                'avg_css': col_averages[column_index]['css'],
+                'avg': col_averages[column_index].pct,
+                'avg_css': col_averages[column_index].css,
             })
         return {
             **group_params,
@@ -203,12 +215,12 @@ class HeatmapPresenter:
             'grid_rows': grid_rows,
             'grid_col_headers': [
                 {
-                    'label': row['student'].short_name,
-                    'title': row['student'].full_name,
+                    'label': row.student.short_name,
+                    'title': row.student.full_name,
                     'url': (
                         reverse(
                             'reports:heatmap-student',
-                            args=[topic_id, row['student'].pk],
+                            args=[topic_id, row.student.pk],
                         )
                         + group_param
                     ),
@@ -216,7 +228,7 @@ class HeatmapPresenter:
                 for row in rows
             ],
             'grid_col_averages': [
-                {'pct': row['avg'], 'css': row['avg_css']}
+                {'pct': row.avg, 'css': row.avg_css}
                 for row in rows
             ],
             'has_data': bool(rows and columns),
@@ -299,6 +311,20 @@ class HeatmapPresenter:
             },
             'config': {'displayModeBar': False, 'responsive': True},
         })
+
+    @staticmethod
+    def _matrix_cell_context(cell, column_key):
+        return {
+            'pct': cell.pct,
+            'points': cell.points,
+            'max_points': cell.max_points,
+            'css': cell.css,
+            column_key: cell.column,
+        }
+
+    @staticmethod
+    def _column_average_context(average):
+        return {'pct': average.pct, 'css': average.css}
 
     def _heatmap_student_cell_url(
         self,

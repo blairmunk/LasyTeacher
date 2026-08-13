@@ -176,26 +176,27 @@ class DjangoReportRepositoriesTests(TestCase):
             DjangoHeatmapMatrixRepository(),
         ).execute(
             HeatmapSubtopicMatrixRequest(
-                student_ids=[student.pk],
-                topic_id=topic.pk,
+                student_ids=(str(student.pk),),
+                topic_id=str(topic.pk),
             ),
         )
 
         self.assertEqual(data.columns[0].pk, str(subtopic.pk))
         self.assertEqual(data.columns[0].name, subtopic.name)
         self.assertEqual(len(data.rows), 1)
-        self.assertEqual(data.rows[0]['student'].pk, str(student.pk))
+        self.assertEqual(data.rows[0].student.pk, str(student.pk))
         self.assertEqual(
-            data.rows[0]['student'].short_name,
+            data.rows[0].student.short_name,
             student.get_short_name(),
         )
-        self.assertEqual(data.rows[0]['avg'], 80)
-        self.assertEqual(data.rows[0]['cells'][0]['pct'], 80)
+        self.assertEqual(data.rows[0].avg, 80)
+        self.assertEqual(data.rows[0].cells[0].pct, 80)
         self.assertEqual(
-            data.rows[0]['cells'][0]['subtopic'].pk,
+            data.rows[0].cells[0].column.pk,
             str(subtopic.pk),
         )
-        self.assertEqual(data.col_averages, [{'pct': 80, 'css': 'good'}])
+        self.assertEqual(data.col_averages[0].pct, 80)
+        self.assertEqual(data.col_averages[0].css, 'good')
 
     def test_get_heatmap_subtopic_detail_returns_student_and_task_rows(self):
         selected_student = Student.objects.create(
@@ -545,7 +546,7 @@ class DjangoReportRepositoriesTests(TestCase):
             DjangoHeatmapMatrixRepository(),
         ).execute(
             HeatmapTopicMatrixRequest(
-                student_ids=[student.pk],
+                student_ids=(str(student.pk),),
                 section_filter='Кинематика',
             ),
         )
@@ -553,16 +554,17 @@ class DjangoReportRepositoriesTests(TestCase):
         self.assertEqual(data.columns[0].pk, str(topic.pk))
         self.assertEqual(data.columns[0].name, topic.name)
         self.assertEqual(len(data.rows), 1)
-        self.assertEqual(data.rows[0]['student'].pk, str(student.pk))
+        self.assertEqual(data.rows[0].student.pk, str(student.pk))
         self.assertEqual(
-            data.rows[0]['student'].short_name,
+            data.rows[0].student.short_name,
             student.get_short_name(),
         )
-        self.assertEqual(data.rows[0]['avg'], 80)
-        self.assertEqual(data.rows[0]['avg_css'], 'good')
-        self.assertEqual(data.rows[0]['cells'][0]['pct'], 80)
-        self.assertEqual(data.rows[0]['cells'][0]['css'], 'good')
-        self.assertEqual(data.col_averages, [{'pct': 80, 'css': 'good'}])
+        self.assertEqual(data.rows[0].avg, 80)
+        self.assertEqual(data.rows[0].avg_css, 'good')
+        self.assertEqual(data.rows[0].cells[0].pct, 80)
+        self.assertEqual(data.rows[0].cells[0].css, 'good')
+        self.assertEqual(data.col_averages[0].pct, 80)
+        self.assertEqual(data.col_averages[0].css, 'good')
 
     def test_heatmap_reads_captured_attempt_instead_of_live_mark(self):
         student = Student.objects.create(last_name='Иванов', first_name='Иван')
@@ -610,14 +612,14 @@ class DjangoReportRepositoriesTests(TestCase):
             DjangoHeatmapMatrixRepository(),
         ).execute(
             HeatmapTopicMatrixRequest(
-                student_ids=[student.pk],
+                student_ids=(str(student.pk),),
                 section_filter='Кинематика',
             ),
         )
 
-        self.assertEqual(data.rows[0]['cells'][0]['points'], 3)
-        self.assertEqual(data.rows[0]['cells'][0]['max_points'], 4)
-        self.assertEqual(data.rows[0]['cells'][0]['pct'], 75)
+        self.assertEqual(data.rows[0].cells[0].points, 3)
+        self.assertEqual(data.rows[0].cells[0].max_points, 4)
+        self.assertEqual(data.rows[0].cells[0].pct, 75)
 
     def test_get_heatmap_course_topic_matrix_returns_course_scores(self):
         student = Student.objects.create(last_name='Иванов', first_name='Иван')
@@ -707,22 +709,23 @@ class DjangoReportRepositoriesTests(TestCase):
             DjangoHeatmapMatrixRepository(),
         ).execute(
             HeatmapCourseTopicMatrixRequest(
-                student_ids=[student.pk],
-                work_ids=[course_work.pk],
+                student_ids=(str(student.pk),),
+                work_ids=(str(course_work.pk),),
             ),
         )
 
         self.assertEqual(data.columns[0].pk, str(topic.pk))
         self.assertEqual(data.columns[0].name, topic.name)
         self.assertEqual(len(data.rows), 1)
-        self.assertEqual(data.rows[0]['student'].pk, str(student.pk))
+        self.assertEqual(data.rows[0].student.pk, str(student.pk))
         self.assertEqual(
-            data.rows[0]['student'].short_name,
+            data.rows[0].student.short_name,
             student.get_short_name(),
         )
-        self.assertEqual(data.rows[0]['avg'], 80)
-        self.assertEqual(data.rows[0]['cells'][0]['pct'], 80)
-        self.assertEqual(data.col_averages, [{'pct': 80, 'css': 'good'}])
+        self.assertEqual(data.rows[0].avg, 80)
+        self.assertEqual(data.rows[0].cells[0].pct, 80)
+        self.assertEqual(data.col_averages[0].pct, 80)
+        self.assertEqual(data.col_averages[0].css, 'good')
 
     def test_get_heatmap_course_timeline_returns_event_averages(self):
         now = timezone.now()

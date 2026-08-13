@@ -1,7 +1,7 @@
 """Port for heatmap overview data."""
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Optional
 
 from core_logic.entities.heatmap import (
     HeatmapCourseOverviewData,
@@ -12,21 +12,24 @@ from core_logic.entities.heatmap import (
 
 class IHeatmapOverviewRepository(ABC):
     @abstractmethod
-    def get_heatmap_overview(self, group_id: Any) -> HeatmapOverviewData:
+    def get_heatmap_overview(
+        self,
+        group_id: Optional[str],
+    ) -> HeatmapOverviewData:
         """Return base heatmap data."""
 
     @abstractmethod
     def get_heatmap_course_overview(
         self,
-        course_id: Any,
-        group_id: Any,
+        course_id: str,
+        group_id: Optional[str],
     ) -> HeatmapCourseOverviewData:
         """Return base course heatmap data."""
 
     @abstractmethod
     def get_heatmap_drilldown_overview(
         self,
-        topic_id: Any,
-        group_id: Any,
+        topic_id: str,
+        group_id: Optional[str],
     ) -> HeatmapDrilldownOverviewData:
         """Return base topic drilldown heatmap data."""

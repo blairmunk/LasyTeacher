@@ -41,7 +41,7 @@ class ReportsViewsTests(TestCase):
             str(group.pk),
         )
         self.assertEqual(response.context['selected_section'], 'Кинематика')
-        self.assertEqual(response.context['sections'], ['Кинематика'])
+        self.assertEqual(response.context['sections'], ('Кинематика',))
         self.assertFalse(response.context['has_data'])
 
     def test_heatmap_view_uses_clean_topic_matrix_data(self):

@@ -481,7 +481,7 @@ class DjangoReportRepositoriesTests(TestCase):
         )
         self.assertEqual(data.selected_group.pk, str(selected_group.pk))
         self.assertEqual(data.students[0].pk, str(selected_student.pk))
-        self.assertEqual(data.sections, ['Кинематика'])
+        self.assertEqual(data.sections, ('Кинематика',))
         self.assertEqual(data.courses[0].pk, str(course.pk))
         self.assertEqual(data.active_report, 'heatmap')
 

@@ -1,7 +1,7 @@
 """Build base topic drilldown heatmap page data."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Optional
 
 from core_logic.entities.heatmap import HeatmapDrilldownOverviewData
 from core_logic.interfaces.heatmap_overview_repo import IHeatmapOverviewRepository
@@ -9,8 +9,8 @@ from core_logic.interfaces.heatmap_overview_repo import IHeatmapOverviewReposito
 
 @dataclass(frozen=True)
 class HeatmapDrilldownOverviewRequest:
-    topic_id: Any
-    group_id: Any = None
+    topic_id: str
+    group_id: Optional[str] = None
 
 
 class GetHeatmapDrilldownOverviewUseCase:

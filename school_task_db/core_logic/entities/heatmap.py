@@ -1,7 +1,7 @@
 """DTOs for heatmap reports."""
 
 from dataclasses import dataclass
-from typing import Any, List
+from typing import Any, List, Optional
 
 from core_logic.entities.report_refs import (
     ReportActivityRef,
@@ -70,13 +70,13 @@ class HeatmapStudentDetailSource:
 
 @dataclass(frozen=True)
 class HeatmapOverviewData:
-    groups: List[ReportGroupRef]
-    selected_group: ReportGroupRef | None
-    students: List[ReportStudentRef]
-    sections: List[str]
-    courses: List[ReportCourseRef]
+    groups: tuple[ReportGroupRef, ...]
+    selected_group: Optional[ReportGroupRef]
+    students: tuple[ReportStudentRef, ...]
+    sections: tuple[str, ...]
+    courses: tuple[ReportCourseRef, ...]
     active_report: str = 'heatmap'
-    active_course_pk: Any = None
+    active_course_pk: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -89,13 +89,13 @@ class HeatmapTopicMatrixData:
 @dataclass(frozen=True)
 class HeatmapCourseOverviewData:
     course: ReportCourseRef
-    groups: List[ReportGroupRef]
-    selected_group: ReportGroupRef | None
-    students: List[ReportStudentRef]
-    course_works: List[ReportWorkRef]
-    courses: List[ReportCourseRef]
+    groups: tuple[ReportGroupRef, ...]
+    selected_group: Optional[ReportGroupRef]
+    students: tuple[ReportStudentRef, ...]
+    course_works: tuple[ReportWorkRef, ...]
+    courses: tuple[ReportCourseRef, ...]
     active_report: str = 'heatmap-course'
-    active_course_pk: Any = None
+    active_course_pk: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -128,12 +128,12 @@ class HeatmapCourseTimelineSource:
 @dataclass(frozen=True)
 class HeatmapDrilldownOverviewData:
     topic: ReportHeatmapColumnRef
-    groups: List[ReportGroupRef]
-    selected_group: ReportGroupRef | None
-    students: List[ReportStudentRef]
-    courses: List[ReportCourseRef]
+    groups: tuple[ReportGroupRef, ...]
+    selected_group: Optional[ReportGroupRef]
+    students: tuple[ReportStudentRef, ...]
+    courses: tuple[ReportCourseRef, ...]
     active_report: str = 'heatmap'
-    active_course_pk: Any = None
+    active_course_pk: Optional[str] = None
 
 
 @dataclass(frozen=True)

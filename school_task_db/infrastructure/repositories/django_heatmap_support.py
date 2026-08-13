@@ -63,13 +63,13 @@ def report_course_ref(course):
 
 
 def active_course_refs():
-    return [
+    return tuple(
         report_course_ref(course)
         for course in Course.objects.filter(is_active=True).order_by(
             'grade_level',
             'name',
         )
-    ]
+    )
 
 
 def report_heatmap_column_ref(item):

@@ -37,13 +37,13 @@ class DjangoHeatmapOverviewRepository(IHeatmapOverviewRepository):
 
         return HeatmapDrilldownOverviewData(
             topic=report_heatmap_column_ref(topic),
-            groups=[report_group_ref(group) for group in groups],
+            groups=tuple(report_group_ref(group) for group in groups),
             selected_group=(
                 report_group_ref(selected_group)
                 if selected_group
                 else None
             ),
-            students=[report_student_ref(student) for student in students],
+            students=tuple(report_student_ref(student) for student in students),
             courses=active_course_refs(),
         )
 
@@ -76,14 +76,14 @@ class DjangoHeatmapOverviewRepository(IHeatmapOverviewRepository):
 
         return HeatmapCourseOverviewData(
             course=report_course_ref(course),
-            groups=[report_group_ref(group) for group in course_groups],
+            groups=tuple(report_group_ref(group) for group in course_groups),
             selected_group=(
                 report_group_ref(selected_group)
                 if selected_group
                 else None
             ),
-            students=[report_student_ref(student) for student in students],
-            course_works=[report_work_ref(work) for work in course_works],
+            students=tuple(report_student_ref(student) for student in students),
+            course_works=tuple(report_work_ref(work) for work in course_works),
             courses=active_course_refs(),
             active_course_pk=str(course.pk),
         )
@@ -107,13 +107,13 @@ class DjangoHeatmapOverviewRepository(IHeatmapOverviewRepository):
         )
 
         return HeatmapOverviewData(
-            groups=[report_group_ref(group) for group in groups],
+            groups=tuple(report_group_ref(group) for group in groups),
             selected_group=(
                 report_group_ref(selected_group)
                 if selected_group
                 else None
             ),
-            students=[report_student_ref(student) for student in students],
-            sections=sections,
+            students=tuple(report_student_ref(student) for student in students),
+            sections=tuple(sections),
             courses=active_course_refs(),
         )

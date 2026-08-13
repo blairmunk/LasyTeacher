@@ -1,4 +1,5 @@
 import datetime as dt
+import uuid
 from types import SimpleNamespace
 
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -666,6 +667,8 @@ class ReportFormAdapterTests(SimpleTestCase):
     def test_builds_heatmap_params_and_requests_from_query(self):
         query = QueryDict('group=g1&section=Mechanics&transpose=1&subtopic=s1')
         adapter = ReportFormAdapter()
+        course_id = uuid.UUID('00000000-0000-0000-0000-000000000001')
+        topic_id = uuid.UUID('00000000-0000-0000-0000-000000000002')
 
         params = adapter.heatmap_params_from_query(query)
         group_url_params = (
@@ -674,11 +677,11 @@ class ReportFormAdapterTests(SimpleTestCase):
         overview = adapter.heatmap_overview_request_from_query(query)
         course = adapter.heatmap_course_overview_request_from_query(
             query,
-            course_id='c1',
+            course_id=course_id,
         )
         drilldown = adapter.heatmap_drilldown_overview_request_from_query(
             query,
-            topic_id='t1',
+            topic_id=topic_id,
         )
         student = adapter.heatmap_student_detail_request_from_query(
             query,
@@ -700,9 +703,9 @@ class ReportFormAdapterTests(SimpleTestCase):
             'group_suffix': '&group=g1',
         })
         self.assertEqual(overview.group_id, 'g1')
-        self.assertEqual(course.course_id, 'c1')
+        self.assertEqual(course.course_id, str(course_id))
         self.assertEqual(course.group_id, 'g1')
-        self.assertEqual(drilldown.topic_id, 't1')
+        self.assertEqual(drilldown.topic_id, str(topic_id))
         self.assertEqual(drilldown.group_id, 'g1')
         self.assertEqual(student.topic_id, 't1')
         self.assertEqual(student.student_id, 'st1')

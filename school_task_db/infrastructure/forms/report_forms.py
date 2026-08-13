@@ -259,14 +259,14 @@ class ReportFormAdapter:
     def heatmap_course_overview_request_from_query(self, query, course_id):
         params = self.heatmap_params_from_query(query)
         return HeatmapCourseOverviewRequest(
-            course_id=course_id,
+            course_id=str(course_id),
             group_id=params['group_id'],
         )
 
     def heatmap_drilldown_overview_request_from_query(self, query, topic_id):
         params = self.heatmap_params_from_query(query)
         return HeatmapDrilldownOverviewRequest(
-            topic_id=topic_id,
+            topic_id=str(topic_id),
             group_id=params['group_id'],
         )
 

@@ -66,6 +66,6 @@ class CourseDetailView(TemplateView):
 def topic_subtopics_api(request, topic_id):
     """API для получения подтем определенной темы"""
     data = container.get_topic_subtopics_use_case().execute(
-        TopicSubtopicsRequest(topic_id=topic_id),
+        TopicSubtopicsRequest(topic_id=str(topic_id)),
     )
     return JsonResponse(container.curriculum_form_adapter.topic_subtopics_payload(data))

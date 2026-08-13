@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+from core_logic.entities.curriculum import TopicSubtopicOption
 from core_logic.use_cases.get_topic_subtopics import (
     GetTopicSubtopicsUseCase,
     TopicSubtopicsRequest,
@@ -12,11 +13,7 @@ class FakeCurriculumRepository:
 
     def get_topic_subtopics(self, topic_id):
         self.topic_id = topic_id
-        return [{
-            'id': 'subtopic-1',
-            'name': 'Скорость',
-            'description': '',
-        }]
+        return [TopicSubtopicOption(id='subtopic-1', name='Скорость')]
 
 
 class GetTopicSubtopicsUseCaseTests(TestCase):
@@ -27,8 +24,7 @@ class GetTopicSubtopicsUseCaseTests(TestCase):
         data = use_case.execute(TopicSubtopicsRequest(topic_id='topic-1'))
 
         self.assertEqual(repo.topic_id, 'topic-1')
-        self.assertEqual(data.subtopics, [{
-            'id': 'subtopic-1',
-            'name': 'Скорость',
-            'description': '',
-        }])
+        self.assertEqual(
+            data.subtopics,
+            (TopicSubtopicOption(id='subtopic-1', name='Скорость'),),
+        )

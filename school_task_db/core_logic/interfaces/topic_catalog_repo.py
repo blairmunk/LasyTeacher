@@ -1,12 +1,13 @@
 """Read port for curriculum topics and subtopics."""
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List, Optional, Sequence
 
 from core_logic.entities.curriculum import (
     TopicDetailSubtopic,
     TopicDetailTopic,
     TopicListItem,
+    TopicSubtopicOption,
 )
 
 
@@ -27,5 +28,8 @@ class ITopicCatalogRepository(ABC):
         """Return ordered subtopics for one topic detail page."""
 
     @abstractmethod
-    def get_topic_subtopics(self, topic_id: str) -> list:
-        """Return serialized subtopics for dependent form fields."""
+    def get_topic_subtopics(
+        self,
+        topic_id: str,
+    ) -> Sequence[TopicSubtopicOption]:
+        """Return subtopic options for dependent form fields."""

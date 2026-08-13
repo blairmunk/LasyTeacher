@@ -1,7 +1,6 @@
 """Build serialized subtopic options for one topic."""
 
 from dataclasses import dataclass
-from typing import Any
 
 from core_logic.entities.curriculum import TopicSubtopicsData
 from core_logic.interfaces.topic_catalog_repo import ITopicCatalogRepository
@@ -9,7 +8,7 @@ from core_logic.interfaces.topic_catalog_repo import ITopicCatalogRepository
 
 @dataclass(frozen=True)
 class TopicSubtopicsRequest:
-    topic_id: Any
+    topic_id: str
 
 
 class GetTopicSubtopicsUseCase:
@@ -18,7 +17,9 @@ class GetTopicSubtopicsUseCase:
 
     def execute(self, request: TopicSubtopicsRequest) -> TopicSubtopicsData:
         return TopicSubtopicsData(
-            subtopics=self.curriculum_repo.get_topic_subtopics(
-                topic_id=str(request.topic_id),
+            subtopics=tuple(
+                self.curriculum_repo.get_topic_subtopics(
+                    topic_id=request.topic_id,
+                )
             ),
         )

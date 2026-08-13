@@ -121,5 +121,12 @@ class CourseDetailWorkGroup:
 
 
 @dataclass(frozen=True)
+class TopicSubtopicOption:
+    id: str
+    name: str
+    description: str = ''
+
+
+@dataclass(frozen=True)
 class TopicSubtopicsData:
-    subtopics: List[dict] = field(default_factory=list)
+    subtopics: tuple[TopicSubtopicOption, ...] = field(default_factory=tuple)

@@ -202,7 +202,15 @@ class CurriculumFormAdapterTests(SimpleTestCase):
             works_by_type={'КР': 1},
             groups_coverage={'Алгебра': 2},
         )
-        subtopics_data = SimpleNamespace(subtopics=[{'id': 'subtopic-1'}])
+        subtopics_data = SimpleNamespace(
+            subtopics=[
+                SimpleNamespace(
+                    id='subtopic-1',
+                    name='Скорость',
+                    description='',
+                )
+            ]
+        )
 
         self.assertEqual(
             adapter.topic_detail_context(topic_detail),
@@ -224,7 +232,13 @@ class CurriculumFormAdapterTests(SimpleTestCase):
         )
         self.assertEqual(
             adapter.topic_subtopics_payload(subtopics_data),
-            {'subtopics': [{'id': 'subtopic-1'}]},
+            {
+                'subtopics': [{
+                    'id': 'subtopic-1',
+                    'name': 'Скорость',
+                    'description': '',
+                }]
+            },
         )
 
 

@@ -34,5 +34,12 @@ class CurriculumFormAdapter:
 
     def topic_subtopics_payload(self, data):
         return {
-            'subtopics': data.subtopics,
+            'subtopics': [
+                {
+                    'id': subtopic.id,
+                    'name': subtopic.name,
+                    'description': subtopic.description,
+                }
+                for subtopic in data.subtopics
+            ],
         }

@@ -6,6 +6,7 @@ from core_logic.entities.curriculum import (
     TopicDetailSubtopic,
     TopicDetailTopic,
     TopicListItem,
+    TopicSubtopicOption,
 )
 from core_logic.interfaces.topic_catalog_repo import ITopicCatalogRepository
 from curriculum.models import Topic
@@ -62,15 +63,15 @@ class DjangoTopicCatalogRepository(ITopicCatalogRepository):
             for subtopic in topic.subtopics.all().order_by('order')
         ]
 
-    def get_topic_subtopics(self, topic_id: str) -> list:
+    def get_topic_subtopics(self, topic_id: str):
         topic = Topic.objects.filter(pk=topic_id).first()
         if not topic:
-            return []
-        return [
-            {
-                'id': str(subtopic.pk),
-                'name': subtopic.name,
-                'description': subtopic.description,
-            }
+            return ()
+        return tuple(
+            TopicSubtopicOption(
+                id=str(subtopic.pk),
+                name=subtopic.name,
+                description=subtopic.description,
+            )
             for subtopic in topic.subtopics.all().order_by('order')
-        ]
+        )

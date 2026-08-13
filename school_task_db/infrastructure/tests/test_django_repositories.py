@@ -1931,12 +1931,10 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(assignments[0].work.name, self.source_work.name)
         self.assertEqual(work_groups[0].group_name, self.weak_group.name)
         self.assertEqual(variants_count, 1)
-        self.assertEqual(subtopics, [{
-            'id': str(subtopic.pk),
-            'name': 'Средняя скорость',
-            'description': 'Описание',
-        }])
-        self.assertEqual(missing_subtopics, [])
+        self.assertEqual(subtopics[0].id, str(subtopic.pk))
+        self.assertEqual(subtopics[0].name, 'Средняя скорость')
+        self.assertEqual(subtopics[0].description, 'Описание')
+        self.assertEqual(missing_subtopics, ())
         loaded_list_topic = next(item for item in topics if item.pk == str(topic.pk))
         self.assertEqual(loaded_list_topic.subtopics_count, 1)
         self.assertEqual(loaded_topic.pk, str(topic.pk))

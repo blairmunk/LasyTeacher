@@ -1,10 +1,11 @@
 """Repository interface for event read models."""
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Optional
 
 from core_logic.entities.event import (
     EventEntity,
+    EventListItem,
     EventParticipationRef,
     EventParticipationRow,
     EventVariantRef,
@@ -13,18 +14,21 @@ from core_logic.entities.event import (
 
 class IEventReadRepository(ABC):
     @abstractmethod
-    def get_list_events(self) -> List[object]:
+    def get_list_events(self) -> tuple[EventListItem, ...]:
         """Return events for the list page."""
 
     @abstractmethod
     def get_detail_participations(
         self,
         event_id: str,
-    ) -> List[EventParticipationRow]:
+    ) -> tuple[EventParticipationRow, ...]:
         """Return event detail participation rows."""
 
     @abstractmethod
-    def get_available_variants(self, event_id: str) -> List[EventVariantRef]:
+    def get_available_variants(
+        self,
+        event_id: str,
+    ) -> tuple[EventVariantRef, ...]:
         """Return variants available for assignment."""
 
     @abstractmethod

@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from core_logic.entities.event import (
     EventEntity,
+    EventListItem,
     EventParticipationRow,
     EventStudentRef,
     EventVariantRef,
@@ -20,25 +21,21 @@ class EventServiceTests(TestCase):
         self.assertEqual(service.progress_percentage(0, 0), 0)
 
     def test_build_list_data_categorizes_events_by_status(self):
-        class Event:
-            def __init__(self, status):
-                self.status = status
+        planned = EventListItem('event-1', 'План', 'planned', 'Запланировано')
+        completed = EventListItem('event-2', 'Работа', 'completed', 'Завершено')
+        reviewing = EventListItem('event-3', 'Проверка', 'reviewing', 'На проверке')
+        graded = EventListItem('event-4', 'Итог', 'graded', 'Проверено')
 
-        planned = Event('planned')
-        completed = Event('completed')
-        reviewing = Event('reviewing')
-        graded = Event('graded')
-
-        data = EventService().build_list_data([
+        data = EventService().build_list_data((
             planned,
             completed,
             reviewing,
             graded,
-        ])
+        ))
 
-        self.assertEqual(data.planned_events, [planned])
-        self.assertEqual(data.active_events, [completed, reviewing])
-        self.assertEqual(data.graded_events, [graded])
+        self.assertEqual(data.planned_events, (planned,))
+        self.assertEqual(data.active_events, (completed, reviewing))
+        self.assertEqual(data.graded_events, (graded,))
 
     def test_build_detail_data_calculates_review_flags_and_status_ui(self):
         student = EventStudentRef(pk='s1', last_name='Иванов', first_name='Иван')
@@ -46,15 +43,15 @@ class EventServiceTests(TestCase):
         detail = EventService().build_detail_data(
             status='completed',
             has_work=True,
-            participations=[
+            participations=(
                 EventParticipationRow(
                     pk='p1',
                     status='completed',
                     student=student,
                     variant=EventVariantRef(pk='v1', number=1),
-                )
-            ],
-            available_variants=[EventVariantRef(pk='v1', number=1)],
+                ),
+            ),
+            available_variants=(EventVariantRef(pk='v1', number=1),),
         )
 
         self.assertTrue(detail.some_variants_assigned)
@@ -78,7 +75,7 @@ class EventServiceTests(TestCase):
             event=event,
             status=event.status,
             has_work=True,
-            participations=[
+            participations=(
                 EventParticipationRow(
                     pk='p1',
                     status='completed',
@@ -88,8 +85,8 @@ class EventServiceTests(TestCase):
                         first_name='Иван',
                     ),
                 ),
-            ],
-            available_variants=[],
+            ),
+            available_variants=(),
         )
 
         self.assertFalse(detail.variants_required)

@@ -24,7 +24,7 @@ from works.models import Variant
 
 class DjangoEventReadRepository(IEventReadRepository):
     def get_list_events(self):
-        return [
+        return tuple(
             EventListItem(
                 pk=str(event.pk),
                 name=event.name,
@@ -50,7 +50,7 @@ class DjangoEventReadRepository(IEventReadRepository):
             ).annotate(
                 participant_count=Count('eventparticipation'),
             ).order_by('-planned_date')
-        ]
+        )
 
     def get_detail_participations(self, event_id: str):
         participations = EventParticipation.objects.filter(
@@ -66,7 +66,7 @@ class DjangoEventReadRepository(IEventReadRepository):
                 participation_id__in=[p.pk for p in participations]
             )
         }
-        return [
+        return tuple(
             EventParticipationRow(
                 pk=str(participation.pk),
                 status=participation.status,
@@ -91,16 +91,16 @@ class DjangoEventReadRepository(IEventReadRepository):
                 ),
             )
             for participation in participations
-        ]
+        )
 
     def get_available_variants(self, event_id: str):
         event = Event.objects.select_related('work').filter(pk=event_id).first()
         if not event or not event.work_id:
-            return []
-        return [
+            return ()
+        return tuple(
             EventVariantRef(pk=str(variant.pk), number=variant.number)
             for variant in Variant.objects.filter(work=event.work).order_by('number')
-        ]
+        )
 
     def get_event_status(self, event_id: str) -> Optional[str]:
         return Event.objects.filter(pk=event_id).values_list(

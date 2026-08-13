@@ -1,9 +1,8 @@
 """Pure event screen calculations."""
 
-from typing import List
-
 from core_logic.entities.event import (
     EventDetailData,
+    EventListItem,
     EventListData,
     EventParticipationRow,
     EventStatusStep,
@@ -61,29 +60,32 @@ class EventService:
             return 0
         return round(completed_count / participants_count * 100)
 
-    def build_list_data(self, events: List[object]) -> EventListData:
+    def build_list_data(
+        self,
+        events: tuple[EventListItem, ...],
+    ) -> EventListData:
         return EventListData(
             events=events,
-            planned_events=[
+            planned_events=tuple(
                 event for event in events
                 if event.status in ('planned', 'in_progress')
-            ],
-            active_events=[
+            ),
+            active_events=tuple(
                 event for event in events
                 if event.status in ('completed', 'reviewing')
-            ],
-            graded_events=[
+            ),
+            graded_events=tuple(
                 event for event in events
                 if event.status == 'graded'
-            ],
+            ),
         )
 
     def build_detail_data(
         self,
         status: str,
         has_work: bool,
-        participations: List[EventParticipationRow],
-        available_variants: List[EventVariantRef],
+        participations: tuple[EventParticipationRow, ...],
+        available_variants: tuple[EventVariantRef, ...],
         event=None,
     ) -> EventDetailData:
         active_participations = [
@@ -126,8 +128,8 @@ class EventService:
             can_review=can_review,
             status_color=self.status_color(status),
             status_steps=self.status_steps(status),
-            available_variants=available_variants if has_work else [],
-            status_transitions=self.TRANSITIONS.get(status, []),
+            available_variants=available_variants if has_work else (),
+            status_transitions=tuple(self.TRANSITIONS.get(status, ())),
         )
 
     def status_color(self, status: str) -> str:
@@ -148,7 +150,7 @@ class EventService:
             [],
         )
 
-    def status_steps(self, status: str) -> List[EventStatusStep]:
+    def status_steps(self, status: str) -> tuple[EventStatusStep, ...]:
         steps = []
         current_found = False
         for code, label, color in self.STATUS_FLOW:
@@ -165,4 +167,4 @@ class EventService:
                     passed=passed,
                 )
             )
-        return steps
+        return tuple(steps)

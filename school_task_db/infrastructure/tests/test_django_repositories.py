@@ -2897,6 +2897,9 @@ class DjangoRemedialRepositoryTests(TestCase):
         participation_ref = repo.get_participation_ref(str(self.participation.pk))
         event_by_id = {str(event.pk): event for event in events}
 
+        self.assertIsInstance(events, tuple)
+        self.assertIsInstance(participations, tuple)
+        self.assertIsInstance(available_variants, tuple)
         self.assertIn(str(self.event.pk), event_by_id)
         self.assertEqual(event_by_id[str(self.event.pk)].participant_count, 1)
         self.assertEqual(participations[0].student.last_name, self.student.last_name)

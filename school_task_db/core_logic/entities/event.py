@@ -1,7 +1,8 @@
 """Event-related domain entities."""
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, NamedTuple, Optional
+from datetime import datetime
+from typing import Any, Dict, NamedTuple, Optional
 
 from core_logic.value_objects.work_assessment import (
     WORK_ASSESSMENT_MODE_VARIANT,
@@ -84,7 +85,7 @@ class EventListItem:
     name: str
     status: str
     status_display: str
-    planned_date: Any = None
+    planned_date: Optional[datetime] = None
     participant_count: int = 0
     work: Optional[WorkSummary] = None
     course: Optional[CourseSummary] = None
@@ -100,7 +101,7 @@ class EventEntity:
     status_display: str = ''
     course_id: Optional[str] = None
     course_name: str = ''
-    planned_date: Any = None
+    planned_date: Optional[datetime] = None
     location: str = ''
     description: str = ''
     short_uuid: str = ''
@@ -200,10 +201,10 @@ class EventStatusTransition(NamedTuple):
 
 @dataclass(frozen=True)
 class EventListData:
-    events: List[Any] = field(default_factory=list)
-    planned_events: List[Any] = field(default_factory=list)
-    active_events: List[Any] = field(default_factory=list)
-    graded_events: List[Any] = field(default_factory=list)
+    events: tuple[EventListItem, ...] = field(default_factory=tuple)
+    planned_events: tuple[EventListItem, ...] = field(default_factory=tuple)
+    active_events: tuple[EventListItem, ...] = field(default_factory=tuple)
+    graded_events: tuple[EventListItem, ...] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True)
@@ -254,12 +255,18 @@ class EventParticipationRow:
 @dataclass(frozen=True)
 class EventDetailData:
     event: Optional[EventEntity] = None
-    participations: List[EventParticipationRow] = field(default_factory=list)
+    participations: tuple[EventParticipationRow, ...] = field(
+        default_factory=tuple,
+    )
     some_variants_assigned: bool = False
     all_variants_assigned: bool = False
     variants_required: bool = True
     can_review: bool = False
     status_color: str = 'secondary'
-    status_steps: List[EventStatusStep] = field(default_factory=list)
-    available_variants: List[EventVariantRef] = field(default_factory=list)
-    status_transitions: List[EventStatusTransition] = field(default_factory=list)
+    status_steps: tuple[EventStatusStep, ...] = field(default_factory=tuple)
+    available_variants: tuple[EventVariantRef, ...] = field(
+        default_factory=tuple,
+    )
+    status_transitions: tuple[EventStatusTransition, ...] = field(
+        default_factory=tuple,
+    )

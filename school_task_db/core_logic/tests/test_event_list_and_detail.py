@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from core_logic.entities.event import (
     EventEntity,
+    EventListItem,
     EventParticipationRow,
     EventParticipationRef,
     EventStudentRef,
@@ -23,17 +24,16 @@ from core_logic.use_cases.get_event_variant_assignment import (
 
 class FakeEventRepository:
     def __init__(self):
-        class Event:
-            def __init__(self, status):
-                self.status = status
-
-        self.events = [Event('planned'), Event('graded')]
+        self.events = (
+            EventListItem('event-1', 'План', 'planned', 'Запланировано'),
+            EventListItem('event-2', 'Итог', 'graded', 'Проверено'),
+        )
 
     def get_list_events(self):
         return self.events
 
     def get_detail_participations(self, event_id):
-        return [
+        return (
             EventParticipationRow(
                 pk='p1',
                 status='completed',
@@ -43,11 +43,11 @@ class FakeEventRepository:
                     first_name='Иван',
                 ),
                 variant=EventVariantRef(pk='v1', number=1),
-            )
-        ]
+            ),
+        )
 
     def get_available_variants(self, event_id):
-        return [EventVariantRef(pk='v1', number=1)]
+        return (EventVariantRef(pk='v1', number=1),)
 
     def get_by_id(self, event_id):
         if event_id == 'missing':
@@ -105,7 +105,7 @@ class EventListAndDetailUseCaseTests(TestCase):
         result = use_case.execute(event_id='missing')
 
         self.assertIsNone(result.event)
-        self.assertEqual(result.participations, [])
+        self.assertEqual(result.participations, ())
 
     def test_event_participant_selection_returns_current_participants(self):
         use_case = GetEventParticipantSelectionUseCase(

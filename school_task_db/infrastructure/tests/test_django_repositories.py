@@ -3012,7 +3012,12 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
         self.assertFalse(variant_tasks[2].is_assessable)
         self.assertEqual(mark.score, 2)
-        self.assertEqual(mark.task_scores[str(self.original_weak.pk)]['points'], 0)
+        weak_score = next(
+            score
+            for score in mark.task_scores
+            if score.task_id == str(self.original_weak.pk)
+        )
+        self.assertEqual(weak_score.points, 0)
         self.assertEqual(navigation[0].pk, str(self.participation.pk))
         self.assertEqual(comments[0].text, 'Аккуратнее с единицами')
 

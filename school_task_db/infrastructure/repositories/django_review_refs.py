@@ -11,6 +11,7 @@ from core_logic.entities.review import (
     ReviewWorkRef,
     ReviewWorkScanRef,
 )
+from core_logic.value_objects.task_scores import normalize_task_scores
 
 
 def review_event_ref(event) -> ReviewEventRef:
@@ -93,7 +94,7 @@ def review_mark_ref(mark) -> ReviewMarkRef:
         mistakes_analysis=mark.mistakes_analysis,
         recommendations=mark.recommendations,
         work_scan=work_scan,
-        task_scores=mark.task_scores or {},
+        task_scores=normalize_task_scores(mark.task_scores),
     )
 
 

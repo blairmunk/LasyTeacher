@@ -17,6 +17,7 @@ from core_logic.services.review_service import ReviewService
 from core_logic.value_objects.work_assessment import (
     WORK_ASSESSMENT_MODE_AGGREGATE,
 )
+from core_logic.value_objects.task_scores import normalize_task_scores
 
 
 class ReviewServiceTests(TestCase):
@@ -262,13 +263,15 @@ class ReviewServiceTests(TestCase):
                     weight=3,
                 ),
             ],
-            existing_scores={
-                'task-1': {
-                    'points': 10,
-                    'max_points': 99,
-                    'comment': 'Верно',
+            existing_scores=normalize_task_scores(
+                {
+                    'task-1': {
+                        'points': 10,
+                        'max_points': 99,
+                        'comment': 'Верно',
+                    }
                 }
-            },
+            ),
         )
 
         self.assertEqual(rows[0].task, task)
@@ -291,14 +294,16 @@ class ReviewServiceTests(TestCase):
                     weight=3,
                 ),
             ],
-            existing_scores={
-                'task-1': {'points': 1, 'max_points': 3},
-                'variant-task-1': {
-                    'points': 2,
-                    'max_points': 3,
-                    'comment': 'По snapshot-строке',
-                },
-            },
+            existing_scores=normalize_task_scores(
+                {
+                    'task-1': {'points': 1, 'max_points': 3},
+                    'variant-task-1': {
+                        'points': 2,
+                        'max_points': 3,
+                        'comment': 'По snapshot-строке',
+                    },
+                }
+            ),
         )
 
         self.assertEqual(rows[0].points, 2)
@@ -316,14 +321,16 @@ class ReviewServiceTests(TestCase):
                     weight=3,
                 ),
             ],
-            existing_scores={
-                'stored-score-row-1': {
-                    'task_id': 'task-1',
-                    'points': 2,
-                    'max_points': 3,
-                    'comment': 'По task_id внутри payload',
-                },
-            },
+            existing_scores=normalize_task_scores(
+                {
+                    'stored-score-row-1': {
+                        'task_id': 'task-1',
+                        'points': 2,
+                        'max_points': 3,
+                        'comment': 'По task_id внутри payload',
+                    },
+                }
+            ),
         )
 
         self.assertEqual(rows[0].points, 2)

@@ -17,6 +17,7 @@ from core_logic.use_cases.get_participation_review import (
 from core_logic.value_objects.work_assessment import (
     WORK_ASSESSMENT_MODE_AGGREGATE,
 )
+from core_logic.value_objects.task_scores import normalize_task_scores
 
 
 class FakeReviewRepository:
@@ -37,7 +38,9 @@ class FakeReviewRepository:
         return ReviewMarkRef(
             pk='mark-1',
             max_points=default_max_points,
-            task_scores={'task-1': {'points': 1, 'max_points': 2}},
+            task_scores=normalize_task_scores(
+                {'task-1': {'points': 1, 'max_points': 2}}
+            ),
         )
 
     def get_review_participations(self, event_id):

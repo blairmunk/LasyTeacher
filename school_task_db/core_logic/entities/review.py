@@ -9,6 +9,7 @@ from core_logic.value_objects.review_session import (
     review_session_is_completed,
     review_session_progress_percentage,
 )
+from core_logic.value_objects.task_scores import TaskScoreRecord
 from core_logic.value_objects.work_assessment import (
     WORK_ASSESSMENT_MODE_VARIANT,
     work_requires_variants,
@@ -130,7 +131,10 @@ class ReviewMarkRef:
     mistakes_analysis: str = ''
     recommendations: str = ''
     work_scan: Optional[ReviewWorkScanRef] = None
-    task_scores: Dict[str, dict] = field(default_factory=dict)
+    task_scores: tuple[TaskScoreRecord, ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        object.__setattr__(self, 'task_scores', tuple(self.task_scores))
 
 
 @dataclass(frozen=True)

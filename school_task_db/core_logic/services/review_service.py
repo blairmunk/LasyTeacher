@@ -17,9 +17,7 @@ from core_logic.entities.review import (
     ReviewTaskScoreRow,
     ReviewVariantTaskRef,
 )
-from core_logic.value_objects.task_scores import (
-    resolve_task_score_record,
-)
+from core_logic.value_objects.task_scores import TaskScoreRecord
 
 
 @dataclass(frozen=True)
@@ -262,12 +260,12 @@ class ReviewService:
     def build_task_score_rows(
         self,
         variant_tasks: List[ReviewVariantTaskRef],
-        existing_scores: dict,
+        existing_scores: tuple[TaskScoreRecord, ...],
     ) -> List[ReviewTaskScoreRow]:
         rows = []
         for index, variant_task in enumerate(variant_tasks, start=1):
             task_id = str(variant_task.task.id)
-            score_data = self._variant_task_score_data(
+            score = self._variant_task_score(
                 existing_scores=existing_scores,
                 variant_task=variant_task,
                 task_id=task_id,
@@ -278,7 +276,7 @@ class ReviewService:
             )
             points = min(
                 max(
-                    self._int_or_default(score_data.get('points'), 0),
+                    self._int_or_default(score.points if score else None, 0),
                     0,
                 ),
                 max_points,
@@ -290,7 +288,7 @@ class ReviewService:
                     points=points,
                     max_points=max_points,
                     variant_task_id=variant_task.variant_task_id,
-                    comment=score_data.get('comment', ''),
+                    comment=score.comment if score else '',
                 )
             )
         return rows
@@ -357,17 +355,23 @@ class ReviewService:
             return default
 
     @staticmethod
-    def _variant_task_score_data(
-        existing_scores: dict,
+    def _variant_task_score(
+        existing_scores: tuple[TaskScoreRecord, ...],
         variant_task: ReviewVariantTaskRef,
         task_id: str,
-    ) -> dict:
-        score_record = resolve_task_score_record(
-            existing_scores,
-            variant_task_id=variant_task.variant_task_id,
-            task_id=task_id,
-        )
-        return score_record.raw if score_record else {}
+    ) -> Optional[TaskScoreRecord]:
+        variant_task_id = str(variant_task.variant_task_id or '')
+        if variant_task_id:
+            for score in existing_scores:
+                if (
+                    score.variant_task_id == variant_task_id
+                    or score.score_key == variant_task_id
+                ):
+                    return score
+        for score in existing_scores:
+            if score.task_id == task_id or score.score_key == task_id:
+                return score
+        return None
 
     def _blocked_event_review(
         self,

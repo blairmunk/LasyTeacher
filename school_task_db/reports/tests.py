@@ -564,11 +564,11 @@ class ReportsViewsTests(TestCase):
             response.context['selected_group'].pk,
             str(group.pk),
         )
-        self.assertEqual(student_stat['student'].pk, str(student.pk))
-        self.assertEqual(student_stat['student'].full_name, student.get_full_name())
-        self.assertEqual(student_stat['average_pct'], 70)
-        self.assertEqual(student_stat['completion_rate'], 100)
-        self.assertEqual(response.context['summary_stats']['total_students'], 1)
+        self.assertEqual(student_stat.student.pk, str(student.pk))
+        self.assertEqual(student_stat.student.full_name, student.get_full_name())
+        self.assertEqual(student_stat.average_pct, 70)
+        self.assertEqual(student_stat.completion_rate, 100)
+        self.assertEqual(response.context['summary_stats'].total_students, 1)
 
     def test_journal_select_view_uses_clean_report_data(self):
         student = Student.objects.create(last_name='Иванов', first_name='Иван')

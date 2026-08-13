@@ -17,22 +17,22 @@ from core_logic.entities.report_refs import (
 @dataclass(frozen=True)
 class StudentPerformanceParticipationFact:
     status: str
-    created_at: Any
+    created_at: datetime
 
 
 @dataclass(frozen=True)
 class StudentPerformanceItemSource:
     student: ReportStudentRef
-    participations: List[StudentPerformanceParticipationFact]
-    marks: List[ReportMarkFact]
+    participations: tuple[StudentPerformanceParticipationFact, ...]
+    marks: tuple[ReportMarkFact, ...]
 
 
 @dataclass(frozen=True)
 class StudentPerformanceSource:
-    students: List[StudentPerformanceItemSource]
-    groups: List[ReportGroupRef]
+    students: tuple[StudentPerformanceItemSource, ...]
+    groups: tuple[ReportGroupRef, ...]
     selected_group: ReportGroupRef | None
-    courses: List[ReportCourseRef]
+    courses: tuple[ReportCourseRef, ...]
 
 @dataclass(frozen=True)
 class WorkAnalysisItemSource:
@@ -111,14 +111,35 @@ class WorkAnalysisReportData:
 
 
 @dataclass(frozen=True)
+class StudentPerformanceStat:
+    student: ReportStudentRef
+    total_participations: int
+    completed_participations: int
+    completion_rate: float
+    total_marks: int
+    average_score: float
+    average_pct: Optional[int]
+    last_activity: StudentPerformanceParticipationFact
+
+
+@dataclass(frozen=True)
+class StudentPerformanceSummary:
+    total_students: int
+    high_performers: int
+    need_attention: int
+    avg_completion_rate: float
+    avg_pct: int
+
+
+@dataclass(frozen=True)
 class StudentPerformanceReportData:
-    students_stats: List[dict]
-    groups: Any
-    selected_group: Any
-    summary_stats: dict
-    courses: Any
+    students_stats: tuple[StudentPerformanceStat, ...]
+    groups: tuple[ReportGroupRef, ...]
+    selected_group: Optional[ReportGroupRef]
+    summary_stats: StudentPerformanceSummary
+    courses: tuple[ReportCourseRef, ...]
     active_report: str = 'student-performance'
-    active_course_pk: Any = None
+    active_course_pk: Optional[str] = None
 
 
 @dataclass(frozen=True)

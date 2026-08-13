@@ -1,7 +1,7 @@
 """Build student performance report."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Optional
 
 from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.report_summary import StudentPerformanceReportData
@@ -16,7 +16,7 @@ from core_logic.services.student_performance_service import (
 @dataclass(frozen=True)
 class StudentPerformanceReportRequest:
     year: AcademicYearRef | None = None
-    group_id: Any = None
+    group_id: Optional[str] = None
 
 
 class GetStudentPerformanceReportUseCase:

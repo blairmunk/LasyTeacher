@@ -70,7 +70,7 @@ class GetStudentPerformanceReportUseCaseTests(TestCase):
 
         self.assertEqual(repo.year, '2026')
         self.assertEqual(repo.group_id, 'group-1')
-        self.assertEqual(data.students_stats[0]['student'].pk, 'student-1')
-        self.assertEqual(data.students_stats[0]['average_pct'], 90)
-        self.assertEqual(data.summary_stats['total_students'], 1)
-        self.assertEqual(data.summary_stats['high_performers'], 1)
+        self.assertEqual(data.students_stats[0].student.pk, 'student-1')
+        self.assertEqual(data.students_stats[0].average_pct, 90)
+        self.assertEqual(data.summary_stats.total_students, 1)
+        self.assertEqual(data.summary_stats.high_performers, 1)

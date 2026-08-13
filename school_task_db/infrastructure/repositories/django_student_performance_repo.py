@@ -73,23 +73,25 @@ class DjangoStudentPerformanceRepository(IStudentPerformanceRepository):
             )
 
         return StudentPerformanceSource(
-            students=[
+            students=tuple(
                 StudentPerformanceItemSource(
                     student=report_student_ref(student),
-                    participations=participations_by_student[student.pk],
-                    marks=marks_by_student[student.pk],
+                    participations=tuple(
+                        participations_by_student[student.pk],
+                    ),
+                    marks=tuple(marks_by_student[student.pk]),
                 )
                 for student in students
                 if participations_by_student[student.pk]
-            ],
-            groups=[report_group_ref(group) for group in groups],
+            ),
+            groups=tuple(report_group_ref(group) for group in groups),
             selected_group=(
                 report_group_ref(selected_group)
                 if selected_group
                 else None
             ),
-            courses=[
+            courses=tuple(
                 report_course_ref(course)
                 for course in courses.order_by('grade_level', 'name')
-            ],
+            ),
         )

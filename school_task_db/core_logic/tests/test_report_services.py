@@ -101,19 +101,17 @@ class ReportServicesTests(TestCase):
         report = StudentPerformanceService().build(source)
 
         stat = report.students_stats[0]
-        self.assertEqual(stat['total_participations'], 2)
-        self.assertEqual(stat['completed_participations'], 1)
-        self.assertEqual(stat['completion_rate'], 50)
-        self.assertEqual(stat['average_score'], 4.5)
-        self.assertEqual(stat['average_pct'], 75)
-        self.assertEqual(stat['last_activity'], latest)
-        self.assertEqual(report.summary_stats, {
-            'total_students': 1,
-            'high_performers': 0,
-            'need_attention': 0,
-            'avg_completion_rate': 50,
-            'avg_pct': 75,
-        })
+        self.assertEqual(stat.total_participations, 2)
+        self.assertEqual(stat.completed_participations, 1)
+        self.assertEqual(stat.completion_rate, 50)
+        self.assertEqual(stat.average_score, 4.5)
+        self.assertEqual(stat.average_pct, 75)
+        self.assertEqual(stat.last_activity, latest)
+        self.assertEqual(report.summary_stats.total_students, 1)
+        self.assertEqual(report.summary_stats.high_performers, 0)
+        self.assertEqual(report.summary_stats.need_attention, 0)
+        self.assertEqual(report.summary_stats.avg_completion_rate, 50)
+        self.assertEqual(report.summary_stats.avg_pct, 75)
 
     def test_student_without_scored_marks_has_no_average_percentage(self):
         source = StudentPerformanceSource(
@@ -139,8 +137,8 @@ class ReportServicesTests(TestCase):
 
         report = StudentPerformanceService().build(source)
 
-        self.assertIsNone(report.students_stats[0]['average_pct'])
-        self.assertEqual(report.summary_stats['avg_pct'], 0)
+        self.assertIsNone(report.students_stats[0].average_pct)
+        self.assertEqual(report.summary_stats.avg_pct, 0)
 
     def test_builds_work_analysis_from_mark_facts(self):
         source = WorkAnalysisSource(

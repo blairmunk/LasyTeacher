@@ -1,7 +1,7 @@
 """Normalized access to per-task review scores."""
 
-from dataclasses import dataclass, field, replace
-from typing import Any, Mapping, Tuple
+from dataclasses import dataclass, replace
+from typing import Mapping, Optional, Tuple
 
 
 @dataclass(frozen=True)
@@ -9,10 +9,9 @@ class TaskScoreRecord:
     score_key: str
     task_id: str
     variant_task_id: str = ''
-    points: Any = None
-    max_points: Any = None
+    points: Optional[float] = None
+    max_points: Optional[float] = None
     comment: str = ''
-    raw: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
         object.__setattr__(self, 'score_key', str(self.score_key).strip())
@@ -22,8 +21,13 @@ class TaskScoreRecord:
             'variant_task_id',
             str(self.variant_task_id).strip(),
         )
+        object.__setattr__(self, 'points', _optional_float(self.points))
+        object.__setattr__(
+            self,
+            'max_points',
+            _optional_float(self.max_points),
+        )
         object.__setattr__(self, 'comment', str(self.comment or ''))
-        object.__setattr__(self, 'raw', dict(self.raw or {}))
         if not self.score_key:
             raise ValueError('score_key is required')
         if not self.task_id:
@@ -54,7 +58,6 @@ def normalize_task_scores(task_scores) -> Tuple[TaskScoreRecord, ...]:
                     points=raw.get('points'),
                     max_points=raw.get('max_points'),
                     comment=raw.get('comment', ''),
-                    raw=raw,
                 )
             )
         except ValueError:
@@ -170,3 +173,12 @@ def resolve_normalized_task_score_record(
             None,
         )
     return None
+
+
+def _optional_float(value) -> Optional[float]:
+    if value is None or value == '':
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None

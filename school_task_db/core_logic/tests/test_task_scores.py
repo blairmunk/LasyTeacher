@@ -26,10 +26,17 @@ class TaskScoreNormalizationTests(TestCase):
         self.assertEqual(records[0].score_key, 'task-1')
         self.assertEqual(records[0].task_id, 'task-1')
         self.assertEqual(records[0].variant_task_id, '')
-        self.assertEqual(records[0].points, 2)
-        self.assertEqual(records[0].max_points, 3)
+        self.assertEqual(records[0].points, 2.0)
+        self.assertEqual(records[0].max_points, 3.0)
         self.assertEqual(records[0].comment, 'Верно')
-        self.assertEqual(records[0].raw['points'], 2)
+
+    def test_normalizes_numeric_strings_and_discards_invalid_numbers(self):
+        records = normalize_task_scores({
+            'task-1': {'points': '2.5', 'max_points': 'bad'},
+        })
+
+        self.assertEqual(records[0].points, 2.5)
+        self.assertIsNone(records[0].max_points)
 
     def test_normalizes_variant_task_keyed_scores(self):
         records = normalize_task_scores({

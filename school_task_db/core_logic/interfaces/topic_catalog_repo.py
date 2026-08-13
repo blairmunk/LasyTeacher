@@ -1,7 +1,7 @@
 """Read port for curriculum topics and subtopics."""
 
 from abc import ABC, abstractmethod
-from typing import List, Optional, Sequence
+from typing import Optional, Sequence
 
 from core_logic.entities.curriculum import (
     TopicDetailSubtopic,
@@ -13,7 +13,7 @@ from core_logic.entities.curriculum import (
 
 class ITopicCatalogRepository(ABC):
     @abstractmethod
-    def get_topics(self) -> List[TopicListItem]:
+    def get_topics(self) -> Sequence[TopicListItem]:
         """Return topics for the topic list page."""
 
     @abstractmethod
@@ -24,7 +24,7 @@ class ITopicCatalogRepository(ABC):
     def get_topic_detail_subtopics(
         self,
         topic_id: str,
-    ) -> List[TopicDetailSubtopic]:
+    ) -> Sequence[TopicDetailSubtopic]:
         """Return ordered subtopics for one topic detail page."""
 
     @abstractmethod

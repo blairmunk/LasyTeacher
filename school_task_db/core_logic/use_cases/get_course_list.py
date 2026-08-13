@@ -13,4 +13,6 @@ class GetCourseListUseCase:
         self,
         year: AcademicYearRef | None = None,
     ) -> CourseListData:
-        return CourseListData(courses=self.curriculum_repo.get_courses(year=year))
+        return CourseListData(
+            courses=tuple(self.curriculum_repo.get_courses(year=year)),
+        )

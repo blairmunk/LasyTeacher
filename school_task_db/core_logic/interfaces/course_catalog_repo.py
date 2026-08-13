@@ -1,7 +1,7 @@
 """Read port for course catalog and detail screens."""
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Optional, Sequence
 
 from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.curriculum import (
@@ -17,7 +17,7 @@ class ICourseCatalogRepository(ABC):
     def get_courses(
         self,
         year: AcademicYearRef | None = None,
-    ) -> List[CourseListItem]:
+    ) -> Sequence[CourseListItem]:
         """Return courses for the course list page."""
 
     @abstractmethod
@@ -28,14 +28,14 @@ class ICourseCatalogRepository(ABC):
     def get_course_assignments(
         self,
         course_id: str,
-    ) -> List[CourseDetailAssignment]:
+    ) -> Sequence[CourseDetailAssignment]:
         """Return ordered assignment read models for one course."""
 
     @abstractmethod
     def get_work_analog_groups(
         self,
         work_id: str,
-    ) -> List[CourseDetailWorkGroup]:
+    ) -> Sequence[CourseDetailWorkGroup]:
         """Return analog-group specification rows for one work."""
 
     @abstractmethod

@@ -9,4 +9,4 @@ class GetTopicListUseCase:
         self.curriculum_repo = curriculum_repo
 
     def execute(self) -> TopicListData:
-        return TopicListData(topics=self.curriculum_repo.get_topics())
+        return TopicListData(topics=tuple(self.curriculum_repo.get_topics()))

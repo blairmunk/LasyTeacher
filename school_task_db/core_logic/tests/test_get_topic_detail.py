@@ -41,7 +41,7 @@ class GetTopicDetailUseCaseTests(TestCase):
         data = GetTopicDetailUseCase(curriculum_repo=repo).execute('topic-1')
 
         self.assertEqual(data.topic, repo.topic)
-        self.assertEqual(data.subtopics, repo.subtopics)
+        self.assertEqual(data.subtopics, tuple(repo.subtopics))
 
     def test_execute_returns_empty_data_for_missing_topic(self):
         repo = FakeCurriculumRepository()
@@ -49,4 +49,4 @@ class GetTopicDetailUseCaseTests(TestCase):
         data = GetTopicDetailUseCase(curriculum_repo=repo).execute('missing-topic')
 
         self.assertIsNone(data.topic)
-        self.assertEqual(data.subtopics, [])
+        self.assertEqual(data.subtopics, ())

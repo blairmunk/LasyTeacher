@@ -28,6 +28,6 @@ class GetCourseListUseCaseTests(TestCase):
 
         data = GetCourseListUseCase(curriculum_repo=repo).execute(year='year-1')
 
-        self.assertEqual(data.courses, repo.courses)
+        self.assertEqual(data.courses, tuple(repo.courses))
         self.assertEqual(data.courses[0].assignments_count, 2)
         self.assertEqual(repo.year, 'year-1')

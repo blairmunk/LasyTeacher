@@ -62,5 +62,5 @@ class GetCourseDetailUseCaseTests(TestCase):
         data = use_case.execute('missing-course')
 
         self.assertIsNone(data.course)
-        self.assertEqual(data.assignments, [])
+        self.assertEqual(data.assignments, ())
         self.assertEqual(data.total_variants, 0)

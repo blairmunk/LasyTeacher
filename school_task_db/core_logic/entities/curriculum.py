@@ -2,12 +2,12 @@
 
 from dataclasses import dataclass, field
 from datetime import date
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 
 @dataclass(frozen=True)
 class CourseListData:
-    courses: List["CourseListItem"] = field(default_factory=list)
+    courses: tuple['CourseListItem', ...] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True)
@@ -27,7 +27,7 @@ class CourseListItem:
 
 @dataclass(frozen=True)
 class TopicListData:
-    topics: List["TopicListItem"] = field(default_factory=list)
+    topics: tuple['TopicListItem', ...] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True)
@@ -47,7 +47,7 @@ class TopicListItem:
 @dataclass(frozen=True)
 class TopicDetailData:
     topic: Optional["TopicDetailTopic"] = None
-    subtopics: List["TopicDetailSubtopic"] = field(default_factory=list)
+    subtopics: tuple['TopicDetailSubtopic', ...] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True)
@@ -74,7 +74,7 @@ class TopicDetailSubtopic:
 @dataclass(frozen=True)
 class CourseDetailData:
     course: Optional["CourseDetailCourse"] = None
-    assignments: List["CourseDetailAssignment"] = field(default_factory=list)
+    assignments: tuple['CourseDetailAssignment', ...] = field(default_factory=tuple)
     total_variants: int = 0
     works_by_type: Dict[str, int] = field(default_factory=dict)
     groups_coverage: Dict[str, int] = field(default_factory=dict)

@@ -15,5 +15,7 @@ class GetTopicDetailUseCase:
 
         return TopicDetailData(
             topic=topic,
-            subtopics=self.curriculum_repo.get_topic_detail_subtopics(topic_id),
+            subtopics=tuple(
+                self.curriculum_repo.get_topic_detail_subtopics(topic_id),
+            ),
         )

@@ -45,7 +45,7 @@ class GetCourseDetailUseCase:
 
         return CourseDetailData(
             course=course,
-            assignments=assignments,
+            assignments=tuple(assignments),
             total_variants=total_variants,
             works_by_type=dict(works_by_type),
             groups_coverage=dict(groups_coverage.most_common()),

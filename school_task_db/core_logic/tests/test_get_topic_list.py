@@ -30,5 +30,5 @@ class GetTopicListUseCaseTests(TestCase):
 
         data = GetTopicListUseCase(curriculum_repo=repo).execute()
 
-        self.assertEqual(data.topics, repo.topics)
+        self.assertEqual(data.topics, tuple(repo.topics))
         self.assertEqual(data.topics[0].subtopics_count, 2)

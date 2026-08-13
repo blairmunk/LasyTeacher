@@ -127,7 +127,6 @@ TEST_SLICES = {
         'curriculum.tests',
         'document_engine.tests.test_views',
         'events.tests',
-        'references.tests',
         'reports.tests',
         'review.tests',
         'site_settings.tests',

@@ -67,14 +67,14 @@ class GetStudentRemedialWorkUseCaseTests(TestCase):
         self.assertFalse(result.no_data)
         self.assertEqual(result.done_count, 2)
         self.assertEqual(result.total_available, 1)
-        self.assertEqual(result.remedial_groups[0]['avg_pct'], 50.0)
-        self.assertEqual(result.remedial_groups[0]['correct'], 1)
-        self.assertEqual(result.remedial_groups[0]['wrong'], 1)
+        self.assertEqual(result.remedial_groups[0].avg_pct, 50.0)
+        self.assertEqual(result.remedial_groups[0].correct, 1)
+        self.assertEqual(result.remedial_groups[0].wrong, 1)
         self.assertEqual(
-            result.remedial_groups[0]['available_tasks'][0].pk,
+            result.remedial_groups[0].available_tasks[0].pk,
             'new-1',
         )
-        self.assertEqual(result.weak_topics[0]['topic__name'], 'Скорость')
+        self.assertEqual(result.weak_topics[0].topic.name, 'Скорость')
 
     def test_service_reports_no_data_for_empty_history(self):
         result = StudentRemedialService().analyze(StudentRemedialSource())

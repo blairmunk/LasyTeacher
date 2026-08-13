@@ -146,7 +146,7 @@
                 {% for wt in weak_topics %}
                 <div class="list-group-item d-flex justify-content-between align-items-center">
                     <div>
-                        <strong>{{ wt.topic__name }}</strong>
+                        <strong>{{ wt.topic.name }}</strong>
                         <small class="text-muted ms-2">{{ wt.correct }}/{{ wt.total }} верно</small>
                     </div>
                     <span class="badge bg-{% if wt.avg_pct < 30 %}danger{% elif wt.avg_pct < 55 %}warning text-dark{% else %}info{% endif %}">

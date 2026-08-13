@@ -5,7 +5,9 @@ from collections import defaultdict
 
 from core_logic.entities.student import (
     ObjectRef,
+    StudentRemedialGroup,
     StudentRemedialSource,
+    StudentWeakTopic,
     StudentRemedialWorkData,
 )
 
@@ -35,7 +37,6 @@ class StudentRemedialService:
                 topic_logs[topic_id].append(task_log)
 
         remedial_groups = []
-        total_available = 0
         for group_id, logs in group_logs.items():
             avg_pct = self._average_percentage(logs)
             if avg_pct is None or avg_pct >= 70:
@@ -46,22 +47,24 @@ class StudentRemedialService:
                 for task in group_tasks
                 if task.task_id not in done_task_ids
             ]
-            remedial_groups.append({
-                'group': group_refs[group_id],
-                'avg_pct': round(avg_pct, 1),
-                'total_done': len(logs),
-                'correct': sum(log.is_correct is True for log in logs),
-                'wrong': sum(log.is_correct is False for log in logs),
-                'available_count': len(available_tasks),
-                'available_tasks': [
-                    ObjectRef(pk=task.task_id, name=task.text)
-                    for task in available_tasks[:5]
-                ],
-                'group_total': len(group_tasks),
-            })
-        remedial_groups.sort(key=lambda row: row['avg_pct'])
+            remedial_groups.append(
+                StudentRemedialGroup(
+                    group=group_refs[group_id],
+                    avg_pct=round(avg_pct, 1),
+                    total_done=len(logs),
+                    correct=sum(log.is_correct is True for log in logs),
+                    wrong=sum(log.is_correct is False for log in logs),
+                    available_count=len(available_tasks),
+                    available_tasks=tuple(
+                        ObjectRef(pk=task.task_id, name=task.text)
+                        for task in available_tasks[:5]
+                    ),
+                    group_total=len(group_tasks),
+                )
+            )
+        remedial_groups.sort(key=lambda row: row.avg_pct)
         total_available = sum(
-            row['available_count']
+            row.available_count
             for row in remedial_groups
         )
 
@@ -70,18 +73,19 @@ class StudentRemedialService:
             avg_pct = self._average_percentage(logs)
             if avg_pct is None or avg_pct >= 70:
                 continue
-            weak_topics.append({
-                'topic': topic_id,
-                'topic__name': topic_refs[topic_id].name,
-                'total': len(logs),
-                'correct': sum(log.is_correct is True for log in logs),
-                'avg_pct': avg_pct,
-            })
-        weak_topics.sort(key=lambda row: row['avg_pct'])
+            weak_topics.append(
+                StudentWeakTopic(
+                    topic=topic_refs[topic_id],
+                    total=len(logs),
+                    correct=sum(log.is_correct is True for log in logs),
+                    avg_pct=avg_pct,
+                )
+            )
+        weak_topics.sort(key=lambda row: row.avg_pct)
 
         return StudentRemedialWorkData(
-            remedial_groups=remedial_groups,
-            weak_topics=weak_topics[:10],
+            remedial_groups=tuple(remedial_groups),
+            weak_topics=tuple(weak_topics[:10]),
             total_available=total_available,
             done_count=len(done_task_ids),
         )

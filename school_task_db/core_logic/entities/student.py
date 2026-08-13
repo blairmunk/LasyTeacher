@@ -250,12 +250,49 @@ class SaveStudentGroupResult:
 
 
 @dataclass(frozen=True)
+class StudentRemedialGroup:
+    group: ObjectRef
+    avg_pct: float
+    total_done: int
+    correct: int
+    wrong: int
+    available_count: int
+    group_total: int
+    available_tasks: tuple[ObjectRef, ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        object.__setattr__(
+            self,
+            'available_tasks',
+            tuple(self.available_tasks),
+        )
+
+
+@dataclass(frozen=True)
+class StudentWeakTopic:
+    topic: ObjectRef
+    total: int
+    correct: int
+    avg_pct: float
+
+
+@dataclass(frozen=True)
 class StudentRemedialWorkData:
     no_data: bool = False
-    remedial_groups: List[dict] = field(default_factory=list)
-    weak_topics: Any = None
+    remedial_groups: tuple[StudentRemedialGroup, ...] = field(
+        default_factory=tuple,
+    )
+    weak_topics: tuple[StudentWeakTopic, ...] = field(default_factory=tuple)
     total_available: int = 0
     done_count: int = 0
+
+    def __post_init__(self):
+        object.__setattr__(
+            self,
+            'remedial_groups',
+            tuple(self.remedial_groups),
+        )
+        object.__setattr__(self, 'weak_topics', tuple(self.weak_topics))
 
 
 @dataclass(frozen=True)

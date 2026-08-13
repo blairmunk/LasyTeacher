@@ -1091,8 +1091,8 @@ class StudentFormAdapterTests(SimpleTestCase):
 
         self.assertEqual(context['student'], student)
         self.assertEqual(context['object'], student)
-        self.assertEqual(context['remedial_groups'], ['group-1'])
-        self.assertEqual(context['weak_topics'], ['topic-1'])
+        self.assertEqual(context['remedial_groups'], ('group-1',))
+        self.assertEqual(context['weak_topics'], ('topic-1',))
         self.assertEqual(context['total_available'], 3)
         self.assertEqual(context['done_count'], 1)
         self.assertNotIn('no_data', context)

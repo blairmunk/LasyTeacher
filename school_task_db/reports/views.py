@@ -381,8 +381,8 @@ class HeatmapCourseView(View):
 
         timeline = container.get_heatmap_course_timeline_use_case().execute(
             HeatmapCourseTimelineRequest(
-                student_ids=student_ids,
-                work_ids=work_ids,
+                student_ids=tuple(student_ids),
+                work_ids=tuple(work_ids),
             ),
         )
         timeline_json = (

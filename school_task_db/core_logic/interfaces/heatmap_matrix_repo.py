@@ -29,8 +29,8 @@ class IHeatmapMatrixRepository(ABC):
     @abstractmethod
     def get_heatmap_course_timeline_source(
         self,
-        student_ids: list,
-        work_ids: list,
+        student_ids: tuple[str, ...],
+        work_ids: tuple[str, ...],
     ) -> HeatmapCourseTimelineSource:
         """Return normalized facts for a course timeline chart."""
 

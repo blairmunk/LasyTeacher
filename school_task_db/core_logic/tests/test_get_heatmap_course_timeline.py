@@ -22,20 +22,20 @@ class FakeReportRepository:
         self.student_ids = student_ids
         self.work_ids = work_ids
         return HeatmapCourseTimelineSource(
-            events=[
+            events=(
                 HeatmapTimelineEventRef(
                     pk='event-1',
                     name='КР',
                     planned_date=datetime(2026, 1, 1),
                 ),
-            ],
-            marks=[
+            ),
+            marks=(
                 HeatmapTimelineMarkFact(
                     event_id='event-1',
                     points=8,
                     max_points=10,
                 ),
-            ],
+            ),
         )
 
 
@@ -46,13 +46,13 @@ class GetHeatmapCourseTimelineUseCaseTests(TestCase):
 
         data = use_case.execute(
             HeatmapCourseTimelineRequest(
-                student_ids=['student-1'],
-                work_ids=['work-1'],
+                student_ids=('student-1',),
+                work_ids=('work-1',),
             ),
         )
 
-        self.assertEqual(repo.student_ids, ['student-1'])
-        self.assertEqual(repo.work_ids, ['work-1'])
-        self.assertEqual(data.dates, ['2026-01-01'])
-        self.assertEqual(data.averages, [80])
-        self.assertEqual(data.labels, ['КР'])
+        self.assertEqual(repo.student_ids, ('student-1',))
+        self.assertEqual(repo.work_ids, ('work-1',))
+        self.assertEqual(data.dates, ('2026-01-01',))
+        self.assertEqual(data.averages, (80,))
+        self.assertEqual(data.labels, ('КР',))

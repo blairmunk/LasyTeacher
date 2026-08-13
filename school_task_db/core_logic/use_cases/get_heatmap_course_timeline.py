@@ -1,7 +1,6 @@
 """Build course heatmap timeline data."""
 
 from dataclasses import dataclass
-from typing import Any, List
 
 from core_logic.entities.heatmap import HeatmapCourseTimelineData
 from core_logic.interfaces.heatmap_matrix_repo import IHeatmapMatrixRepository
@@ -10,8 +9,8 @@ from core_logic.services.heatmap_matrix_service import HeatmapMatrixService
 
 @dataclass(frozen=True)
 class HeatmapCourseTimelineRequest:
-    student_ids: List[Any]
-    work_ids: List[Any]
+    student_ids: tuple[str, ...]
+    work_ids: tuple[str, ...]
 
 
 class GetHeatmapCourseTimelineUseCase:

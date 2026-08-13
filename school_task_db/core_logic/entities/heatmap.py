@@ -1,6 +1,7 @@
 """DTOs for heatmap reports."""
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, List, Optional
 
 from core_logic.entities.report_refs import (
@@ -100,16 +101,16 @@ class HeatmapCourseOverviewData:
 
 @dataclass(frozen=True)
 class HeatmapCourseTimelineData:
-    dates: List[str]
-    averages: List[int]
-    labels: List[str]
+    dates: tuple[str, ...]
+    averages: tuple[int, ...]
+    labels: tuple[str, ...]
 
 
 @dataclass(frozen=True)
 class HeatmapTimelineEventRef:
     pk: str
     name: str
-    planned_date: Any
+    planned_date: datetime
 
 
 @dataclass(frozen=True)
@@ -121,8 +122,8 @@ class HeatmapTimelineMarkFact:
 
 @dataclass(frozen=True)
 class HeatmapCourseTimelineSource:
-    events: List[HeatmapTimelineEventRef]
-    marks: List[HeatmapTimelineMarkFact]
+    events: tuple[HeatmapTimelineEventRef, ...]
+    marks: tuple[HeatmapTimelineMarkFact, ...]
 
 
 @dataclass(frozen=True)

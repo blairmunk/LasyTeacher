@@ -50,9 +50,9 @@ class HeatmapMatrixService:
             labels.append(event.name)
 
         return HeatmapCourseTimelineData(
-            dates=dates,
-            averages=averages,
-            labels=labels,
+            dates=tuple(dates),
+            averages=tuple(averages),
+            labels=tuple(labels),
         )
 
     def build_topic_matrix(

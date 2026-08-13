@@ -140,15 +140,15 @@ class DjangoHeatmapMatrixRepository(IHeatmapMatrixRepository):
         )
 
         return HeatmapCourseTimelineSource(
-            events=[
+            events=tuple(
                 HeatmapTimelineEventRef(
                     pk=str(event.pk),
                     name=event.name,
                     planned_date=event.planned_date,
                 )
                 for event in events
-            ],
-            marks=[
+            ),
+            marks=tuple(
                 HeatmapTimelineMarkFact(
                     event_id=str(participation.event_id),
                     points=attempt.points or 0,
@@ -156,7 +156,7 @@ class DjangoHeatmapMatrixRepository(IHeatmapMatrixRepository):
                 )
                 for participation in participations
                 if (attempt := attempts.get(participation.pk)) is not None
-            ],
+            ),
         )
 
     def get_heatmap_subtopic_matrix_source(self, student_ids, topic_id):

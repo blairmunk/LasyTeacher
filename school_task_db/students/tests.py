@@ -739,16 +739,16 @@ class RemedialFromEventViewTests(TestCase):
             self.student.get_full_name(),
         )
         self.assertEqual(response.context['student_groups'][0].name, '9А')
-        self.assertEqual(response.context['stats']['total_works'], 1)
-        self.assertEqual(response.context['stats']['graded_works'], 1)
-        self.assertEqual(response.context['stats']['avg_score'], 2)
-        self.assertEqual(response.context['stats']['student_level'], 'medium')
-        self.assertEqual(response.context['task_log_stats']['total'], 2)
+        self.assertEqual(response.context['stats'].total_works, 1)
+        self.assertEqual(response.context['stats'].graded_works, 1)
+        self.assertEqual(response.context['stats'].avg_score, 2)
+        self.assertEqual(response.context['stats'].student_level, 'medium')
+        self.assertEqual(response.context['task_log_stats'].total, 2)
         heatmap_group_names = {
-            row['name'] for row in response.context['heatmap_groups']
+            row.name for row in response.context['heatmap_groups']
         }
         self.assertIn('Скорость', heatmap_group_names)
-        self.assertEqual(response.context['group_scores'][0]['name'], 'Скорость')
+        self.assertEqual(response.context['group_scores'][0].name, 'Скорость')
         self.assertEqual(response.context['participations_data'][0].score, 2)
 
     def test_student_detail_returns_404_for_missing_student(self):

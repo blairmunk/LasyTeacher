@@ -67,5 +67,5 @@ class GetStudentProfileUseCaseTests(TestCase):
         profile = use_case.execute('s1')
 
         self.assertEqual(repo.requested_work_ids, ['w1'])
-        self.assertEqual(profile.stats['graded_works'], 1)
-        self.assertEqual(profile.group_scores[0]['name'], 'Скорость')
+        self.assertEqual(profile.stats.graded_works, 1)
+        self.assertEqual(profile.group_scores[0].name, 'Скорость')

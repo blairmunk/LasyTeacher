@@ -117,21 +117,21 @@ class StudentFormAdapter:
             )
         if profile.scores_timeline:
             context['dynamics_chart_json'] = self._dynamics_chart_json(profile)
-        if profile.stats.get('graded_works', 0) > 0:
+        if profile.stats.graded_works > 0:
             context['score_chart_json'] = plotly_utils.to_json(
                 plotly_utils.score_distribution_config(
-                    profile.stats.get('score_counts', {}),
+                    profile.stats.score_counts,
                     title='Распределение оценок',
                 )
             )
         return context
 
     def _mini_heatmap_json(self, student, profile):
-        group_names = [group['name'] for group in profile.group_scores]
+        group_names = [group.name for group in profile.group_scores]
         heatmap_chart = plotly_utils.heatmap_config(
             students=[student.short_name],
             groups=group_names,
-            matrix=[[group['avg'] for group in profile.group_scores]],
+            matrix=[[group.avg for group in profile.group_scores]],
             title='Успеваемость по темам',
         )
         heatmap_chart['layout']['height'] = 150
@@ -184,7 +184,7 @@ class StudentFormAdapter:
                 'plot_bgcolor': '#f8f9fa',
                 'shapes': self._average_score_shapes(
                     dates,
-                    profile.stats.get('avg_score', 0),
+                    profile.stats.avg_score,
                 ),
             },
             'config': {'responsive': True, 'displayModeBar': False},

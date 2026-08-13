@@ -1,7 +1,7 @@
 """Repository interface for remedial sheet document sources."""
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Optional
 
 from core_logic.entities.work import RemedialSheetSource
 
@@ -11,7 +11,7 @@ class IRemedialSheetRepository(ABC):
     def get_work_personal_remedial_variant_ids(
         self,
         work_id: str,
-    ) -> List[str]:
+    ) -> tuple[str, ...]:
         """Return ordered personalized remedial variant IDs."""
 
     @abstractmethod

@@ -1,6 +1,6 @@
 """Django read adapter for personalized remedial sheet sources."""
 
-from typing import List, Optional
+from typing import Optional
 
 from django.db.models import Q
 
@@ -98,8 +98,8 @@ class DjangoRemedialSheetRepository(IRemedialSheetRepository):
         if attempt:
             mark_ref = RemedialMarkRef(
                 score=attempt.score,
-                points=attempt.points,
-                max_points=attempt.max_points,
+                points=self._optional_float(attempt.points),
+                max_points=self._optional_float(attempt.max_points),
             )
             for task_result in attempt.task_results.order_by(
                 'order_snapshot',
@@ -137,8 +137,8 @@ class DjangoRemedialSheetRepository(IRemedialSheetRepository):
             student=student_ref,
             source_work=source_work_ref,
             mark=mark_ref,
-            original_tasks=original_tasks,
-            new_tasks=[
+            original_tasks=tuple(original_tasks),
+            new_tasks=tuple(
                 RemedialTrainingTaskRow(
                     pk=str(variant_task.pk),
                     task_id=str(variant_task.task_id),
@@ -162,8 +162,8 @@ class DjangoRemedialSheetRepository(IRemedialSheetRepository):
                     blank_cells_rows=variant_task.blank_cells_rows,
                 )
                 for variant_task in new_tasks
-            ],
-            content_blocks=[
+            ),
+            content_blocks=tuple(
                 RemedialContentBlockRow(
                     pk=str(block.pk),
                     source_content_id=block.source_content_id,
@@ -176,7 +176,7 @@ class DjangoRemedialSheetRepository(IRemedialSheetRepository):
                     'order',
                     'pk',
                 )
-            ],
+            ),
         )
 
     @staticmethod
@@ -200,8 +200,8 @@ class DjangoRemedialSheetRepository(IRemedialSheetRepository):
     def get_work_personal_remedial_variant_ids(
         self,
         work_id: str,
-    ) -> List[str]:
-        return [
+    ) -> tuple[str, ...]:
+        return tuple(
             str(variant_id)
             for variant_id in Variant.objects.filter(
                 work_id=work_id,
@@ -216,4 +216,8 @@ class DjangoRemedialSheetRepository(IRemedialSheetRepository):
                 'pk',
                 flat=True,
             )
-        ]
+        )
+
+    @staticmethod
+    def _optional_float(value) -> Optional[float]:
+        return float(value) if value is not None else None

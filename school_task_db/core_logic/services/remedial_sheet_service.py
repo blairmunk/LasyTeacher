@@ -29,7 +29,7 @@ class RemedialSheetService:
             student=source.student,
             source_work=source.source_work,
             mark=source.mark,
-            original_tasks=original_tasks,
+            original_tasks=tuple(original_tasks),
             new_tasks=source.new_tasks,
             content_blocks=source.content_blocks,
         )

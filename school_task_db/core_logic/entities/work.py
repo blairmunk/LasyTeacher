@@ -377,8 +377,8 @@ class VariantDetailTaskRow:
 class RemedialOriginalTaskRow:
     task: "RemedialTaskRef"
     order: int
-    points: Any
-    max_points: Any
+    points: Optional[float]
+    max_points: Optional[float]
     pct: float
     status: str
     group_name: str = ''
@@ -436,9 +436,9 @@ class RemedialContentBlockRow:
 
 @dataclass(frozen=True)
 class RemedialMarkRef:
-    score: Any = None
-    points: Any = None
-    max_points: Any = None
+    score: Optional[int] = None
+    points: Optional[float] = None
+    max_points: Optional[float] = None
 
 
 @dataclass(frozen=True)
@@ -453,14 +453,23 @@ class RemedialSheetData:
     student: Optional[VariantDetailStudentRef]
     source_work: Optional[VariantDetailRef]
     mark: Optional[RemedialMarkRef]
-    original_tasks: List[RemedialOriginalTaskRow] = field(default_factory=list)
-    new_tasks: List[RemedialTrainingTaskRow] = field(default_factory=list)
-    content_blocks: List[RemedialContentBlockRow] = field(
-        default_factory=list,
+    original_tasks: tuple[RemedialOriginalTaskRow, ...] = field(
+        default_factory=tuple,
+    )
+    new_tasks: tuple[RemedialTrainingTaskRow, ...] = field(
+        default_factory=tuple,
+    )
+    content_blocks: tuple[RemedialContentBlockRow, ...] = field(
+        default_factory=tuple,
     )
     status: str = 'ready'
     message: str = ''
     redirect_work_id: str = ''
+
+    def __post_init__(self):
+        object.__setattr__(self, 'original_tasks', tuple(self.original_tasks))
+        object.__setattr__(self, 'new_tasks', tuple(self.new_tasks))
+        object.__setattr__(self, 'content_blocks', tuple(self.content_blocks))
 
 
 @dataclass(frozen=True)
@@ -468,8 +477,8 @@ class RemedialOriginalTaskSource:
     task: RemedialTaskRef
     order: int
     group_name: str = ''
-    points: Any = None
-    max_points: Any = None
+    points: Optional[float] = None
+    max_points: Optional[float] = None
 
 
 @dataclass(frozen=True)
@@ -478,13 +487,20 @@ class RemedialSheetSource:
     student: Optional[VariantDetailStudentRef]
     source_work: Optional[VariantDetailRef]
     mark: Optional[RemedialMarkRef]
-    original_tasks: List[RemedialOriginalTaskSource] = field(
-        default_factory=list,
+    original_tasks: tuple[RemedialOriginalTaskSource, ...] = field(
+        default_factory=tuple,
     )
-    new_tasks: List[RemedialTrainingTaskRow] = field(default_factory=list)
-    content_blocks: List[RemedialContentBlockRow] = field(
-        default_factory=list,
+    new_tasks: tuple[RemedialTrainingTaskRow, ...] = field(
+        default_factory=tuple,
     )
+    content_blocks: tuple[RemedialContentBlockRow, ...] = field(
+        default_factory=tuple,
+    )
+
+    def __post_init__(self):
+        object.__setattr__(self, 'original_tasks', tuple(self.original_tasks))
+        object.__setattr__(self, 'new_tasks', tuple(self.new_tasks))
+        object.__setattr__(self, 'content_blocks', tuple(self.content_blocks))
 
 @dataclass(frozen=True)
 class OrphanVariantListData:

@@ -1549,11 +1549,11 @@ class DjangoRemedialRepositoryTests(TestCase):
 
         self.assertEqual(
             variant_ids,
-            [
+            (
                 str(first_variant.pk),
                 str(second_variant.pk),
                 str(participation_variant.pk),
-            ],
+            ),
         )
 
     def test_work_repository_returns_variant_ids_for_work(self):
@@ -1655,6 +1655,13 @@ class DjangoRemedialRepositoryTests(TestCase):
             for row in source.original_tasks
             if row.task.pk == str(self.original_weak.pk)
         )
+        self.assertIsInstance(source.original_tasks, tuple)
+        self.assertIsInstance(source.new_tasks, tuple)
+        self.assertIsInstance(source.content_blocks, tuple)
+        self.assertIsInstance(original.points, float)
+        self.assertIsInstance(original.max_points, float)
+        self.assertIsInstance(source.mark.points, float)
+        self.assertIsInstance(source.mark.max_points, float)
         self.assertEqual(original.task.text, self.original_weak.text)
 
     def test_remedial_sheet_uses_frozen_specification_block_name(self):

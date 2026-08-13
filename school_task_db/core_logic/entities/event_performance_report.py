@@ -1,7 +1,7 @@
 """Domain data for a written report about one completed event."""
 
 from dataclasses import dataclass, field
-from typing import Any, Tuple
+from datetime import datetime
 
 from core_logic.value_objects.work_assessment import (
     WORK_ASSESSMENT_MODE_VARIANT,
@@ -15,7 +15,7 @@ class EventReportEventRef:
     name: str
     status: str
     status_display: str
-    planned_date: Any
+    planned_date: datetime
     work_name: str
     course_name: str = ''
     work_assessment_mode: str = WORK_ASSESSMENT_MODE_VARIANT
@@ -28,7 +28,7 @@ class EventReportEventRef:
 @dataclass(frozen=True)
 class EventReportCapturedEventFact:
     name: str
-    planned_date: Any
+    planned_date: datetime
     work_name: str
     work_assessment_mode: str = WORK_ASSESSMENT_MODE_VARIANT
 
@@ -70,9 +70,9 @@ class EventReportCapturedTaskFact:
     comment: str = ''
     content_element: str = ''
     requirement_element: str = ''
-    codifier_content_entries: Tuple[str, ...] = field(default_factory=tuple)
-    codifier_requirements: Tuple[str, ...] = field(default_factory=tuple)
-    content_element_descriptions: Tuple[str, ...] = field(
+    codifier_content_entries: tuple[str, ...] = field(default_factory=tuple)
+    codifier_requirements: tuple[str, ...] = field(default_factory=tuple)
+    content_element_descriptions: tuple[str, ...] = field(
         default_factory=tuple,
     )
 
@@ -115,19 +115,36 @@ class EventReportSpecificationFact:
     subtopic_name: str = ''
     content_element: str = ''
     requirement_element: str = ''
-    codifier_content_entries: Tuple[str, ...] = field(default_factory=tuple)
-    codifier_requirements: Tuple[str, ...] = field(default_factory=tuple)
-    content_element_descriptions: Tuple[str, ...] = field(
+    codifier_content_entries: tuple[str, ...] = field(default_factory=tuple)
+    codifier_requirements: tuple[str, ...] = field(default_factory=tuple)
+    content_element_descriptions: tuple[str, ...] = field(
         default_factory=tuple,
     )
+
+    def __post_init__(self):
+        object.__setattr__(
+            self,
+            'codifier_content_entries',
+            tuple(self.codifier_content_entries),
+        )
+        object.__setattr__(
+            self,
+            'codifier_requirements',
+            tuple(self.codifier_requirements),
+        )
+        object.__setattr__(
+            self,
+            'content_element_descriptions',
+            tuple(self.content_element_descriptions),
+        )
 
 
 @dataclass(frozen=True)
 class EventReportTaskFacts:
-    task_scores: Tuple[EventReportTaskScoreFact, ...] = field(
+    task_scores: tuple[EventReportTaskScoreFact, ...] = field(
         default_factory=tuple,
     )
-    specification: Tuple[EventReportSpecificationFact, ...] = field(
+    specification: tuple[EventReportSpecificationFact, ...] = field(
         default_factory=tuple,
     )
 
@@ -139,18 +156,23 @@ class EventReportTaskFacts:
 @dataclass(frozen=True)
 class EventPerformanceReportSource:
     event: EventReportEventRef
-    participants: Tuple[EventReportParticipantFact, ...] = field(
+    participants: tuple[EventReportParticipantFact, ...] = field(
         default_factory=tuple,
     )
-    task_scores: Tuple[EventReportTaskScoreFact, ...] = field(
+    task_scores: tuple[EventReportTaskScoreFact, ...] = field(
         default_factory=tuple,
     )
-    specification: Tuple[EventReportSpecificationFact, ...] = field(
+    specification: tuple[EventReportSpecificationFact, ...] = field(
         default_factory=tuple,
     )
     narrative: EventReportNarrative = field(
         default_factory=EventReportNarrative,
     )
+
+    def __post_init__(self):
+        object.__setattr__(self, 'participants', tuple(self.participants))
+        object.__setattr__(self, 'task_scores', tuple(self.task_scores))
+        object.__setattr__(self, 'specification', tuple(self.specification))
 
 
 @dataclass(frozen=True)
@@ -165,18 +187,18 @@ class EventReportTaskSummary:
     zero_count: int
     error_percentage: float
     average_percentage: float
-    failed_students: Tuple[str, ...] = field(default_factory=tuple)
-    comments: Tuple[str, ...] = field(default_factory=tuple)
+    failed_students: tuple[str, ...] = field(default_factory=tuple)
+    comments: tuple[str, ...] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True)
 class EventReportSpecificationItem:
     order: int
-    topics: Tuple[str, ...]
-    subtopics: Tuple[str, ...]
-    content_elements: Tuple[str, ...]
-    content_element_descriptions: Tuple[str, ...]
-    requirement_elements: Tuple[str, ...]
+    topics: tuple[str, ...]
+    subtopics: tuple[str, ...]
+    content_elements: tuple[str, ...]
+    content_element_descriptions: tuple[str, ...]
+    requirement_elements: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -208,15 +230,15 @@ class EventPerformanceReportData:
     average_percentage: float | None
     pass_percentage: float
     quality_percentage: float
-    grade_distribution: Tuple[tuple[int, int], ...]
-    specification_items: Tuple[EventReportSpecificationItem, ...]
-    teacher_notes: Tuple[EventReportTeacherNote, ...]
-    task_summaries: Tuple[EventReportTaskSummary, ...]
-    weak_topics: Tuple[EventReportTopicSummary, ...]
-    common_errors: Tuple[str, ...]
-    suggested_causes: Tuple[str, ...]
-    suggested_recommendations: Tuple[str, ...]
-    suggested_actions: Tuple[str, ...]
+    grade_distribution: tuple[tuple[int, int], ...]
+    specification_items: tuple[EventReportSpecificationItem, ...]
+    teacher_notes: tuple[EventReportTeacherNote, ...]
+    task_summaries: tuple[EventReportTaskSummary, ...]
+    weak_topics: tuple[EventReportTopicSummary, ...]
+    common_errors: tuple[str, ...]
+    suggested_causes: tuple[str, ...]
+    suggested_recommendations: tuple[str, ...]
+    suggested_actions: tuple[str, ...]
 
 
 @dataclass(frozen=True)

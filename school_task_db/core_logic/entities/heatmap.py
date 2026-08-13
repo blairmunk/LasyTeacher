@@ -191,6 +191,13 @@ class HeatmapCourseTimelineSource:
 
 
 @dataclass(frozen=True)
+class HeatmapCourseReportData:
+    overview: HeatmapCourseOverviewData
+    matrix: HeatmapTopicMatrixData
+    timeline: HeatmapCourseTimelineData
+
+
+@dataclass(frozen=True)
 class HeatmapDrilldownOverviewData:
     topic: ReportHeatmapColumnRef
     groups: tuple[ReportGroupRef, ...]

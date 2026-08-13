@@ -7,12 +7,6 @@ from django.views import View
 from django.views.generic import TemplateView
 from django.utils import timezone
 
-from core_logic.use_cases.get_heatmap_course_topic_matrix import (
-    HeatmapCourseTopicMatrixRequest,
-)
-from core_logic.use_cases.get_heatmap_course_timeline import (
-    HeatmapCourseTimelineRequest,
-)
 from core_logic.use_cases.get_heatmap_subtopic_matrix import (
     HeatmapSubtopicMatrixRequest,
 )
@@ -340,18 +334,17 @@ class HeatmapCourseView(View):
             request.GET,
         )
         transpose = params['transpose']
-        overview = container.get_heatmap_course_overview_use_case().execute(
-            container.report_form_adapter.heatmap_course_overview_request_from_query(
+        report = container.get_heatmap_course_report_use_case().execute(
+            container.report_form_adapter.heatmap_course_report_request_from_query(
                 request.GET,
                 course_id=course_pk,
             ),
         )
+        overview = report.overview
         course = overview.course
         course_groups = overview.groups
         group = overview.selected_group
         students = overview.students
-        student_ids = tuple(student.pk for student in students)
-        work_ids = tuple(work.pk for work in overview.course_works)
 
         if not students:
             return render(request, 'reports/heatmap_course.html', {
@@ -365,12 +358,7 @@ class HeatmapCourseView(View):
                 'courses': overview.courses,
             })
 
-        matrix = container.get_heatmap_course_topic_matrix_use_case().execute(
-            HeatmapCourseTopicMatrixRequest(
-                student_ids=student_ids,
-                work_ids=work_ids,
-            ),
-        )
+        matrix = report.matrix
         matrix_context = (
             container.heatmap_presenter.heatmap_topic_matrix_context(
                 matrix,
@@ -379,15 +367,9 @@ class HeatmapCourseView(View):
             )
         )
 
-        timeline = container.get_heatmap_course_timeline_use_case().execute(
-            HeatmapCourseTimelineRequest(
-                student_ids=student_ids,
-                work_ids=work_ids,
-            ),
-        )
         timeline_json = (
             container.heatmap_presenter.heatmap_course_timeline_json(
-                timeline,
+                report.timeline,
             )
         )
 

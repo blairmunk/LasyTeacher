@@ -15,8 +15,8 @@ from core_logic.entities.student_digest import (
 from core_logic.use_cases.get_events_status_report import (
     EventsStatusReportRequest,
 )
-from core_logic.use_cases.get_heatmap_course_overview import (
-    HeatmapCourseOverviewRequest,
+from core_logic.use_cases.get_heatmap_course_report import (
+    HeatmapCourseReportRequest,
 )
 from core_logic.use_cases.get_heatmap_drilldown_overview import (
     HeatmapDrilldownOverviewRequest,
@@ -256,9 +256,9 @@ class ReportFormAdapter:
         params = self.heatmap_params_from_query(query)
         return HeatmapOverviewRequest(group_id=params['group_id'])
 
-    def heatmap_course_overview_request_from_query(self, query, course_id):
+    def heatmap_course_report_request_from_query(self, query, course_id):
         params = self.heatmap_params_from_query(query)
-        return HeatmapCourseOverviewRequest(
+        return HeatmapCourseReportRequest(
             course_id=str(course_id),
             group_id=params['group_id'],
         )

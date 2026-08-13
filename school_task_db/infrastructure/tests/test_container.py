@@ -88,6 +88,9 @@ from core_logic.use_cases.get_global_search import GetGlobalSearchUseCase
 from core_logic.use_cases.get_heatmap_course_overview import (
     GetHeatmapCourseOverviewUseCase,
 )
+from core_logic.use_cases.get_heatmap_course_report import (
+    GetHeatmapCourseReportUseCase,
+)
 from core_logic.use_cases.get_heatmap_course_topic_matrix import (
     GetHeatmapCourseTopicMatrixUseCase,
 )
@@ -674,6 +677,9 @@ class ContainerTests(SimpleTestCase):
         heatmap_course_overview_use_case = (
             container.get_heatmap_course_overview_use_case()
         )
+        heatmap_course_report_use_case = (
+            container.get_heatmap_course_report_use_case()
+        )
         heatmap_course_topic_matrix_use_case = (
             container.get_heatmap_course_topic_matrix_use_case()
         )
@@ -954,6 +960,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             heatmap_course_overview_use_case,
             GetHeatmapCourseOverviewUseCase,
+        )
+        self.assertIsInstance(
+            heatmap_course_report_use_case,
+            GetHeatmapCourseReportUseCase,
         )
         self.assertIsInstance(
             heatmap_course_topic_matrix_use_case,

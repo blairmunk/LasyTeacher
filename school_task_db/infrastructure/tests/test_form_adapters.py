@@ -683,7 +683,7 @@ class ReportFormAdapterTests(SimpleTestCase):
             HeatmapPresenter().heatmap_group_url_params_from_query(query)
         )
         overview = adapter.heatmap_overview_request_from_query(query)
-        course = adapter.heatmap_course_overview_request_from_query(
+        course = adapter.heatmap_course_report_request_from_query(
             query,
             course_id=course_id,
         )

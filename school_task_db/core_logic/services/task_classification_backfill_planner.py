@@ -12,62 +12,92 @@ from core_logic.entities.task_classification_backfill import (
 def plan_task_classification_backfill(snapshot):
     content_by_code = defaultdict(list)
     requirements_by_code = defaultdict(list)
+    content_by_id = {}
+    requirements_by_id = {}
     for entry in snapshot.content_entries:
         content_by_code[entry.code].append(entry)
+        content_by_id[entry.pk] = entry
     for requirement in snapshot.requirements:
         requirements_by_code[requirement.code].append(requirement)
+        requirements_by_id[requirement.pk] = requirement
 
     mutations = []
     issues = []
     for task in snapshot.tasks:
         content_codifier_ids = set(task.content_codifier_ids)
-        if task.legacy_content_code and not task.content_entry_ids:
-            candidates, reason = _content_candidates(
-                task,
-                content_by_code[task.legacy_content_code],
-            )
-            if len(candidates) == 1:
-                selected = candidates[0]
-                mutations.append(TaskClassificationBackfillMutation(
-                    task_id=task.pk,
-                    relation_type='content',
-                    target_id=selected.pk,
-                    reason=reason,
-                ))
-                content_codifier_ids.add(selected.codifier_id)
-            else:
-                issues.append(_issue(
-                    task.pk,
-                    'content',
+        if task.legacy_content_code:
+            if task.content_entry_ids:
+                if not _relation_contains_code(
+                    task.content_entry_ids,
                     task.legacy_content_code,
-                    candidates,
-                ))
-
-        if task.legacy_requirement_code and not task.requirement_ids:
-            candidates = requirements_by_code[task.legacy_requirement_code]
-            if content_codifier_ids:
-                candidates = [
-                    item for item in candidates
-                    if item.codifier_id in content_codifier_ids
-                ]
-            if len(candidates) == 1:
-                mutations.append(TaskClassificationBackfillMutation(
-                    task_id=task.pk,
-                    relation_type='requirement',
-                    target_id=candidates[0].pk,
-                    reason=(
-                        'content_codifier'
-                        if content_codifier_ids
-                        else 'unique_code'
-                    ),
-                ))
+                    content_by_id,
+                ):
+                    issues.append(_mismatch_issue(
+                        task.pk,
+                        'content',
+                        task.legacy_content_code,
+                        task.content_entry_ids,
+                    ))
             else:
-                issues.append(_issue(
-                    task.pk,
-                    'requirement',
+                candidates, reason = _content_candidates(
+                    task,
+                    content_by_code[task.legacy_content_code],
+                )
+                if len(candidates) == 1:
+                    selected = candidates[0]
+                    mutations.append(TaskClassificationBackfillMutation(
+                        task_id=task.pk,
+                        relation_type='content',
+                        target_id=selected.pk,
+                        reason=reason,
+                    ))
+                    content_codifier_ids.add(selected.codifier_id)
+                else:
+                    issues.append(_issue(
+                        task.pk,
+                        'content',
+                        task.legacy_content_code,
+                        candidates,
+                    ))
+
+        if task.legacy_requirement_code:
+            if task.requirement_ids:
+                if not _relation_contains_code(
+                    task.requirement_ids,
                     task.legacy_requirement_code,
-                    candidates,
-                ))
+                    requirements_by_id,
+                ):
+                    issues.append(_mismatch_issue(
+                        task.pk,
+                        'requirement',
+                        task.legacy_requirement_code,
+                        task.requirement_ids,
+                    ))
+            else:
+                candidates = requirements_by_code[task.legacy_requirement_code]
+                if content_codifier_ids:
+                    candidates = [
+                        item for item in candidates
+                        if item.codifier_id in content_codifier_ids
+                    ]
+                if len(candidates) == 1:
+                    mutations.append(TaskClassificationBackfillMutation(
+                        task_id=task.pk,
+                        relation_type='requirement',
+                        target_id=candidates[0].pk,
+                        reason=(
+                            'content_codifier'
+                            if content_codifier_ids
+                            else 'unique_code'
+                        ),
+                    ))
+                else:
+                    issues.append(_issue(
+                        task.pk,
+                        'requirement',
+                        task.legacy_requirement_code,
+                        candidates,
+                    ))
 
     return TaskClassificationBackfillPlan(
         mutations=tuple(mutations),
@@ -110,4 +140,22 @@ def _issue(task_id, relation_type, code, candidates):
         code=code,
         status='ambiguous' if candidates else 'unresolved',
         candidate_ids=tuple(item.pk for item in candidates),
+    )
+
+
+def _relation_contains_code(relation_ids, legacy_code, items_by_id):
+    return any(
+        items_by_id.get(item_id)
+        and items_by_id[item_id].code == legacy_code
+        for item_id in relation_ids
+    )
+
+
+def _mismatch_issue(task_id, relation_type, code, relation_ids):
+    return TaskClassificationBackfillIssue(
+        task_id=task_id,
+        relation_type=relation_type,
+        code=code,
+        status='mismatch',
+        candidate_ids=tuple(relation_ids),
     )

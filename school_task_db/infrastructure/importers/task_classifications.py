@@ -36,7 +36,7 @@ class TaskClassificationImporter:
             return
         resolved = []
         for reference in task_data[field_name]:
-            item = self._resolve(model, reference)
+            item = self.resolve(model, reference)
             if item is None:
                 reference_values = (
                     reference
@@ -59,7 +59,7 @@ class TaskClassificationImporter:
         relation.set(resolved)
 
     @staticmethod
-    def _resolve(model, reference):
+    def resolve(model, reference):
         if not isinstance(reference, dict):
             return None
         return model.objects.filter(
@@ -68,3 +68,22 @@ class TaskClassificationImporter:
             codifier__year=reference.get('year'),
             code=reference.get('code', ''),
         ).first()
+
+    def missing_references(self, task_data):
+        missing = []
+        for field_name, model in (
+            ('codifier_content_entries', ContentEntry),
+            ('codifier_requirements', Requirement),
+        ):
+            for reference in task_data.get(field_name, []):
+                if self.resolve(model, reference) is not None:
+                    continue
+                values = reference if isinstance(reference, dict) else {}
+                missing.append(
+                    f'{field_name}: '
+                    f'{values.get("subject", "?")} '
+                    f'{values.get("exam_type", "?")} '
+                    f'{values.get("year", "?")} '
+                    f'{values.get("code", "?")}',
+                )
+        return missing

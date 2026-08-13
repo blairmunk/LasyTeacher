@@ -175,7 +175,34 @@ class TaskImporterTests(TestCase):
                 'missing_topics': 1,
                 'missing_groups': 0,
                 'broken_references': 0,
+                'missing_classifications': 0,
             },
+        )
+
+    def test_dry_run_reports_missing_classification_references(self):
+        payload = self._task_payload(
+            task_id='550e8400-e29b-41d4-a716-446655440001',
+            group_id='770e8400-e29b-41d4-a716-446655440001',
+        )
+        payload['tasks'][0]['codifier_content_entries'] = [{
+            'subject': 'Физика',
+            'exam_type': 'oge',
+            'year': 2099,
+            'code': 'missing',
+        }]
+
+        context = TaskImporter(
+            mode='update',
+            dry_run=True,
+            create_missing=True,
+            output=lambda _message: None,
+        ).import_tasks_from_json(payload)
+
+        self.assertEqual(
+            context.preview_summary['dependency_counts'][
+                'missing_classifications'
+            ],
+            1,
         )
 
     def test_imports_base64_task_image_through_image_component(self):

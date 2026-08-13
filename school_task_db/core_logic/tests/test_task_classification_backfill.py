@@ -88,7 +88,7 @@ class TaskClassificationBackfillPlannerTests(TestCase):
                 content_codifier_ids=('oge',),
             ),),
             content_entries=(
-                BackfillContentEntryRef('candidate', 'oge', '1.1'),
+                BackfillContentEntryRef('existing', 'oge', '1.1'),
             ),
             requirements=(),
         )
@@ -97,3 +97,24 @@ class TaskClassificationBackfillPlannerTests(TestCase):
 
         self.assertEqual(plan.mutations, ())
         self.assertEqual(plan.issues, ())
+
+    def test_reports_mismatch_for_incompatible_explicit_relation(self):
+        snapshot = TaskClassificationBackfillSnapshot(
+            tasks=(BackfillTaskRef(
+                pk='task-1',
+                topic_id='topic',
+                legacy_content_code='1.1',
+                content_entry_ids=('existing',),
+                content_codifier_ids=('oge',),
+            ),),
+            content_entries=(
+                BackfillContentEntryRef('existing', 'oge', '9.9'),
+            ),
+            requirements=(),
+        )
+
+        plan = plan_task_classification_backfill(snapshot)
+
+        self.assertEqual(plan.mutations, ())
+        self.assertEqual(plan.issues[0].status, 'mismatch')
+        self.assertEqual(plan.issues[0].candidate_ids, ('existing',))

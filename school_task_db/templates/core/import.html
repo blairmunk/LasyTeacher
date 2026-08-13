@@ -450,6 +450,7 @@ function buildPreviewTable(preview) {
     html += `<tr><td>Отсутствующих тем</td><td>${dependencyCounts.missing_topics || 0}</td></tr>`;
     html += `<tr><td>Отсутствующих групп</td><td>${dependencyCounts.missing_groups || 0}</td></tr>`;
     html += `<tr><td>Проблемных ссылок</td><td>${dependencyCounts.broken_references || 0}</td></tr>`;
+    html += `<tr><td>Классификаций не найдено</td><td>${dependencyCounts.missing_classifications || 0}</td></tr>`;
     html += '</tbody></table>';
     return html;
 }

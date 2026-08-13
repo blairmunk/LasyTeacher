@@ -197,6 +197,8 @@ class DjangoTaskImportService(ITaskImportService):
                 f"{dependency_counts.get('missing_groups', 0)}",
                 '  Проблемных ссылок: '
                 f"{dependency_counts.get('broken_references', 0)}",
+                '  Классификаций не найдено: '
+                f"{dependency_counts.get('missing_classifications', 0)}",
             ])
         else:
             lines.extend([

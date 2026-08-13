@@ -6,10 +6,17 @@ from tasks.models import Task
 
 
 class TaskImportPreviewAnalyzer:
-    def __init__(self, runtime, group_importer, topic_importer):
+    def __init__(
+        self,
+        runtime,
+        group_importer,
+        topic_importer,
+        classification_importer,
+    ):
         self.runtime = runtime
         self.group_importer = group_importer
         self.topic_importer = topic_importer
+        self.classification_importer = classification_importer
 
     def analyze(self, json_data):
         tasks_data = json_data.get('tasks', [])
@@ -107,16 +114,31 @@ class TaskImportPreviewAnalyzer:
             tasks_data,
             json_data.get('analog_groups', []),
         )
+        missing_classifications = self._missing_classifications(tasks_data)
         self._write_dependencies(
             missing_topics,
             missing_groups,
             broken_references,
+            missing_classifications,
         )
         return {
             'missing_topics': len(missing_topics),
             'missing_groups': len(missing_groups),
             'broken_references': len(broken_references),
+            'missing_classifications': len(missing_classifications),
         }
+
+    def _missing_classifications(self, tasks_data):
+        missing = []
+        for task_data in tasks_data:
+            task_id = str(task_data.get('id', ''))[-8:] or '?'
+            missing.extend(
+                f'Задание {task_id}: {reference}'
+                for reference in (
+                    self.classification_importer.missing_references(task_data)
+                )
+            )
+        return missing
 
     def _missing_topics(self, tasks_data):
         missing = set()
@@ -182,6 +204,7 @@ class TaskImportPreviewAnalyzer:
         missing_topics,
         missing_groups,
         broken_references,
+        missing_classifications,
     ):
         if missing_topics:
             self._write_missing('📚 ОТСУТСТВУЮЩИЕ ТЕМЫ', missing_topics)
@@ -197,6 +220,11 @@ class TaskImportPreviewAnalyzer:
                 self.runtime._write('    ⚠️ Связи будут пропущены')
         if broken_references:
             self._write_missing('🔗 ПРОБЛЕМНЫЕ СВЯЗИ', broken_references)
+        if missing_classifications:
+            self._write_missing(
+                'КЛАССИФИКАЦИИ НЕ НАЙДЕНЫ',
+                missing_classifications,
+            )
 
     def _write_missing(self, label, values):
         sorted_values = sorted(values)

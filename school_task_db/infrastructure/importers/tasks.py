@@ -37,6 +37,7 @@ class TaskImporter(BaseImporter):
             self,
             self.group_importer,
             self.topic_importer,
+            self.classification_importer,
         )
     
     def import_tasks_from_json(self, json_data: Dict[str, Any]) -> ImportContext:

@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, List, Mapping, Optional
+from typing import Mapping, Optional
 
 from core_logic.entities.report_refs import (
     ReportCourseRef,

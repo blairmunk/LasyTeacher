@@ -9,7 +9,7 @@ from codifier.models import CodifierSpec
 
 class DjangoCodifierCatalogRepository(ICodifierCatalogRepository):
     def get_list_codifiers(self):
-        return [
+        return tuple(
             CodifierListItem(
                 pk=str(codifier.pk),
                 short_name=codifier.short_name,
@@ -23,4 +23,4 @@ class DjangoCodifierCatalogRepository(ICodifierCatalogRepository):
                 'content_entries',
                 'requirements',
             )
-        ]
+        )

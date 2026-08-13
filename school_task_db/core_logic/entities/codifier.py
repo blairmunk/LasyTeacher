@@ -1,12 +1,7 @@
-"""Codifier screen DTOs."""
+"""Codifier screen read models."""
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
-
-
-@dataclass(frozen=True)
-class CodifierListData:
-    codifiers: Any
+from typing import Optional, Tuple
 
 
 @dataclass(frozen=True)
@@ -18,14 +13,6 @@ class CodifierListItem:
     is_active: bool
     content_entries_count: int = 0
     requirements_count: int = 0
-
-
-@dataclass(frozen=True)
-class CodifierDetailData:
-    codifier: Any = None
-    content_tree: List["CodifierContentEntry"] = field(default_factory=list)
-    requirements: List["CodifierRequirement"] = field(default_factory=list)
-    coverage: Dict[str, int] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -52,12 +39,12 @@ class CodifierSiblingCode:
 class CodifierContentEntry:
     code: str
     name: str
-    topic: Any = None
-    subtopic: Any = None
+    topic: Optional[CodifierObjectRef] = None
+    subtopic: Optional[CodifierObjectRef] = None
     grade_studied: str = ''
     task_count: int = 0
-    sibling_codes: List[CodifierSiblingCode] = field(default_factory=list)
-    children: List["CodifierContentEntry"] = field(default_factory=list)
+    sibling_codes: Tuple[CodifierSiblingCode, ...] = field(default_factory=tuple)
+    children: Tuple['CodifierContentEntry', ...] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True)
@@ -67,3 +54,24 @@ class CodifierRequirement:
     cognitive_level: str = ''
     cognitive_level_display: str = ''
     task_count: int = 0
+
+
+@dataclass(frozen=True)
+class CodifierCoverage:
+    total: int = 0
+    covered: int = 0
+    uncovered: int = 0
+    pct: int = 0
+
+
+@dataclass(frozen=True)
+class CodifierListData:
+    codifiers: Tuple[CodifierListItem, ...] = field(default_factory=tuple)
+
+
+@dataclass(frozen=True)
+class CodifierDetailData:
+    codifier: Optional[CodifierDetailSpec] = None
+    content_tree: Tuple[CodifierContentEntry, ...] = field(default_factory=tuple)
+    requirements: Tuple[CodifierRequirement, ...] = field(default_factory=tuple)
+    coverage: CodifierCoverage = field(default_factory=CodifierCoverage)

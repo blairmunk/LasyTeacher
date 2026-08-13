@@ -73,8 +73,8 @@ class CodifierViewsTests(TestCase):
         self.assertEqual(response.context['content_tree'][0].name, self.root.name)
         self.assertEqual(response.context['requirements'][0].code, self.requirement.code)
         self.assertEqual(response.context['requirements'][0].name, self.requirement.name)
-        self.assertEqual(response.context['coverage']['total'], 1)
-        self.assertEqual(response.context['coverage']['covered'], 1)
+        self.assertEqual(response.context['coverage'].total, 1)
+        self.assertEqual(response.context['coverage'].covered, 1)
 
     def test_codifier_detail_returns_404_for_missing_codifier(self):
         response = self.client.get(

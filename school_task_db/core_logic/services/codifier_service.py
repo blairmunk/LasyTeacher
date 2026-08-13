@@ -1,5 +1,7 @@
 """Pure codifier calculations."""
 
+from core_logic.entities.codifier import CodifierCoverage
+
 
 class CodifierService:
     @staticmethod
@@ -11,19 +13,14 @@ class CodifierService:
         )
 
     @staticmethod
-    def coverage(total: int, covered: int) -> dict:
+    def coverage(total: int, covered: int) -> CodifierCoverage:
         if total <= 0:
-            return {
-                'total': 0,
-                'covered': 0,
-                'uncovered': 0,
-                'pct': 0,
-            }
+            return CodifierCoverage()
 
         covered = max(0, min(covered, total))
-        return {
-            'total': total,
-            'covered': covered,
-            'uncovered': total - covered,
-            'pct': round(covered / total * 100),
-        }
+        return CodifierCoverage(
+            total=total,
+            covered=covered,
+            uncovered=total - covered,
+            pct=round(covered / total * 100),
+        )

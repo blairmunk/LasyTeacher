@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+from core_logic.entities.codifier import CodifierCoverage
 from core_logic.use_cases.get_codifier_detail import GetCodifierDetailUseCase
 from core_logic.use_cases.get_codifier_list import GetCodifierListUseCase
 
@@ -10,7 +11,12 @@ class FakeCodifierRepository:
         self.codifier = 'codifier-1'
         self.content_tree = ['entry-1']
         self.requirements = ['requirement-1']
-        self.coverage = {'total': 2, 'covered': 1, 'pct': 50}
+        self.coverage = CodifierCoverage(
+            total=2,
+            covered=1,
+            uncovered=1,
+            pct=50,
+        )
 
     def get_list_codifiers(self):
         return self.codifiers
@@ -35,7 +41,7 @@ class GetCodifierListUseCaseTests(TestCase):
 
         data = use_case.execute()
 
-        self.assertEqual(data.codifiers, ['codifier-1'])
+        self.assertEqual(data.codifiers, ('codifier-1',))
 
 
 class GetCodifierDetailUseCaseTests(TestCase):
@@ -46,9 +52,9 @@ class GetCodifierDetailUseCaseTests(TestCase):
         data = use_case.execute('codifier-1')
 
         self.assertEqual(data.codifier, 'codifier-1')
-        self.assertEqual(data.content_tree, ['entry-1'])
-        self.assertEqual(data.requirements, ['requirement-1'])
-        self.assertEqual(data.coverage, {'total': 2, 'covered': 1, 'pct': 50})
+        self.assertEqual(data.content_tree, ('entry-1',))
+        self.assertEqual(data.requirements, ('requirement-1',))
+        self.assertEqual(data.coverage, repo.coverage)
 
     def test_execute_returns_empty_data_for_missing_codifier(self):
         repo = FakeCodifierRepository()
@@ -57,6 +63,6 @@ class GetCodifierDetailUseCaseTests(TestCase):
         data = use_case.execute('missing-codifier')
 
         self.assertIsNone(data.codifier)
-        self.assertEqual(data.content_tree, [])
-        self.assertEqual(data.requirements, [])
-        self.assertEqual(data.coverage, {})
+        self.assertEqual(data.content_tree, ())
+        self.assertEqual(data.requirements, ())
+        self.assertEqual(data.coverage, CodifierCoverage())

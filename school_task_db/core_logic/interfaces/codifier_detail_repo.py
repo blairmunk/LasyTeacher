@@ -1,10 +1,11 @@
 """Read port for codifier structure and coverage."""
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Optional, Sequence
 
 from core_logic.entities.codifier import (
     CodifierContentEntry,
+    CodifierCoverage,
     CodifierDetailSpec,
     CodifierRequirement,
 )
@@ -16,13 +17,19 @@ class ICodifierDetailRepository(ABC):
         """Return one codifier detail read model by id or None."""
 
     @abstractmethod
-    def get_content_tree(self, codifier_id: str) -> List[CodifierContentEntry]:
+    def get_content_tree(
+        self,
+        codifier_id: str,
+    ) -> Sequence[CodifierContentEntry]:
         """Return root content entries for one codifier."""
 
     @abstractmethod
-    def get_requirements(self, codifier_id: str) -> List[CodifierRequirement]:
+    def get_requirements(
+        self,
+        codifier_id: str,
+    ) -> Sequence[CodifierRequirement]:
         """Return requirement read models for one codifier."""
 
     @abstractmethod
-    def get_coverage(self, codifier_id: str) -> dict:
+    def get_coverage(self, codifier_id: str) -> CodifierCoverage:
         """Return content coverage for one codifier."""

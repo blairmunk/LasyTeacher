@@ -2024,8 +2024,8 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(content_tree[0].children[0].topic.name, self.topic.name)
         self.assertEqual(requirements[0].code, requirement.code)
         self.assertEqual(requirements[0].name, requirement.name)
-        self.assertEqual(coverage['total'], 1)
-        self.assertEqual(coverage['covered'], 1)
+        self.assertEqual(coverage.total, 1)
+        self.assertEqual(coverage.covered, 1)
         self.assertEqual(leaf.parent, root)
 
     def test_codifier_repository_builds_deep_naturally_sorted_tree(self):
@@ -2097,8 +2097,8 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(deep_data.code, deep.code)
         self.assertEqual(deep_data.task_count, 1)
         self.assertEqual(deep_data.sibling_codes[0].code, sibling.code)
-        self.assertEqual(coverage['total'], 3)
-        self.assertEqual(coverage['covered'], 2)
+        self.assertEqual(coverage.total, 3)
+        self.assertEqual(coverage.covered, 2)
 
     def test_core_repository_returns_dashboard_counts(self):
         orphan = Variant.objects.create(

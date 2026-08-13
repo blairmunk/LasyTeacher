@@ -52,17 +52,17 @@ class DjangoCodifierDetailRepository(ICodifierDetailRepository):
             )
 
         sibling_codes = self._get_sibling_codes(entries)
-        return [
+        return tuple(
             self._build_content_entry(
                 entry,
                 children_by_parent=children_by_parent,
                 sibling_codes=sibling_codes,
             )
             for entry in children_by_parent[None]
-        ]
+        )
 
     def get_requirements(self, codifier_id: str):
-        return [
+        return tuple(
             CodifierRequirement(
                 code=requirement.code,
                 name=requirement.name,
@@ -77,7 +77,7 @@ class DjangoCodifierDetailRepository(ICodifierDetailRepository):
             for requirement in Requirement.objects.filter(
                 codifier_id=codifier_id,
             ).annotate(task_count=Count('tasks'))
-        ]
+        )
 
     def get_coverage(self, codifier_id: str) -> dict:
         leaves = ContentEntry.objects.filter(
@@ -123,7 +123,7 @@ class DjangoCodifierDetailRepository(ICodifierDetailRepository):
                 if entry.subtopic_id
                 else entry.topic_task_count
             ),
-            sibling_codes=[
+            sibling_codes=tuple(
                 CodifierSiblingCode(
                     codifier=CodifierObjectRef(
                         short_name=sibling.codifier.short_name,
@@ -131,15 +131,15 @@ class DjangoCodifierDetailRepository(ICodifierDetailRepository):
                     code=sibling.code,
                 )
                 for sibling in sibling_codes.get(entry.pk, [])
-            ],
-            children=[
+            ),
+            children=tuple(
                 self._build_content_entry(
                     child,
                     children_by_parent=children_by_parent,
                     sibling_codes=sibling_codes,
                 )
                 for child in children_by_parent[entry.pk]
-            ],
+            ),
         )
 
     @staticmethod

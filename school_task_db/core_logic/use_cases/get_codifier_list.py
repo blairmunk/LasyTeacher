@@ -12,5 +12,5 @@ class GetCodifierListUseCase:
 
     def execute(self) -> CodifierListData:
         return CodifierListData(
-            codifiers=self.codifier_repo.get_list_codifiers(),
+            codifiers=tuple(self.codifier_repo.get_list_codifiers()),
         )

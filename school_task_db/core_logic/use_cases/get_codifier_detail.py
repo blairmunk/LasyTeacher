@@ -15,7 +15,11 @@ class GetCodifierDetailUseCase:
 
         return CodifierDetailData(
             codifier=codifier,
-            content_tree=self.codifier_repo.get_content_tree(codifier_id),
-            requirements=self.codifier_repo.get_requirements(codifier_id),
+            content_tree=tuple(
+                self.codifier_repo.get_content_tree(codifier_id),
+            ),
+            requirements=tuple(
+                self.codifier_repo.get_requirements(codifier_id),
+            ),
             coverage=self.codifier_repo.get_coverage(codifier_id),
         )

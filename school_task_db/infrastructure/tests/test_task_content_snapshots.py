@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from codifier.models import CodifierSpec, ContentEntry
+from codifier.models import CodifierSpec, ContentEntry, Requirement
 from curriculum.models import Topic
 from infrastructure.services.task_content_snapshots import (
     build_task_content_snapshots,
@@ -50,6 +50,11 @@ class TaskContentSnapshotClassificationTests(TestCase):
             name='ЕГЭ: динамика',
             topic=self.topic,
         )
+        self.requirement = Requirement.objects.create(
+            codifier=ege,
+            code='2.1',
+            name='Решать задачи',
+        )
 
     def test_explicit_entries_take_precedence_over_legacy_code_matching(self):
         self.ege_entry.tasks.add(self.task)
@@ -65,6 +70,17 @@ class TaskContentSnapshotClassificationTests(TestCase):
             snapshot.codifier_content_entries[0].codifier_short_name,
             'ЕГЭ 2026',
         )
+        self.assertEqual(snapshot.content_element, '')
+
+    def test_explicit_requirements_suppress_legacy_requirement_code(self):
+        self.task.requirement_element = '2.1'
+        self.task.save(update_fields=['requirement_element'])
+        self.requirement.tasks.add(self.task)
+
+        snapshot = build_task_content_snapshots([self.task])[str(self.task.pk)]
+
+        self.assertEqual(snapshot.requirement_element, '')
+        self.assertEqual(snapshot.codifier_requirements[0].code, '2.1')
 
     def test_legacy_code_matching_remains_when_explicit_entries_are_empty(self):
         snapshot = build_task_content_snapshots([self.task])[str(self.task.pk)]
@@ -76,3 +92,4 @@ class TaskContentSnapshotClassificationTests(TestCase):
                 'ЕГЭ 2026: ЕГЭ: динамика',
             },
         )
+        self.assertEqual(snapshot.content_element, '1.2')

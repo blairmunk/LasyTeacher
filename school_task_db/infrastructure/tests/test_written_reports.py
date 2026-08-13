@@ -429,6 +429,8 @@ class WrittenReportRepositoryTests(TestCase):
         payload = dict(task_snapshot.task_content_snapshot)
         payload.pop('codifier_content_entries', None)
         payload.pop('codifier_requirements', None)
+        payload['content_element'] = '1.2'
+        payload['requirement_element'] = '2.1'
         task_snapshot.task_content_snapshot = payload
         task_snapshot.save(update_fields=['task_content_snapshot'])
 

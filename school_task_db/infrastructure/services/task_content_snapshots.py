@@ -12,22 +12,26 @@ def build_task_content_snapshots(tasks):
     """Return snapshots keyed by task id without leaking ORM rows to core."""
     tasks = list(tasks)
     legacy_entries_by_code = _legacy_content_entries_by_code(tasks)
-    return {
-        str(task.pk): _build_task_content_snapshot(
+    snapshots = {}
+    for task in tasks:
+        content_entries, has_explicit_content = _task_content_entries(
             task,
-            _task_content_entries(
-                task,
-                legacy_entries_by_code.get(
-                    task.content_element.strip(),
-                    (),
-                ),
-            ),
+            legacy_entries_by_code.get(task.content_element.strip(), ()),
         )
-        for task in tasks
-    }
+        snapshots[str(task.pk)] = _build_task_content_snapshot(
+            task,
+            content_entries,
+            has_explicit_content=has_explicit_content,
+        )
+    return snapshots
 
 
-def _build_task_content_snapshot(task, content_entries):
+def _build_task_content_snapshot(
+    task,
+    content_entries,
+    *,
+    has_explicit_content,
+):
     content_snapshots = tuple(
         TaskCodifierSnapshot(
             codifier_id=str(entry.codifier_id),
@@ -38,6 +42,7 @@ def _build_task_content_snapshot(task, content_entries):
         )
         for entry in content_entries
     )
+    explicit_requirements = tuple(task.codifier_requirements.all())
     requirements = tuple(
         TaskCodifierSnapshot(
             codifier_id=str(requirement.codifier_id),
@@ -46,7 +51,7 @@ def _build_task_content_snapshot(task, content_entries):
             code=requirement.code,
             name=requirement.name,
         )
-        for requirement in task.codifier_requirements.all()
+        for requirement in explicit_requirements
     )
     selected_entries = _select_content_entries(task, content_entries)
     return TaskContentSnapshot(
@@ -70,8 +75,13 @@ def _build_task_content_snapshot(task, content_entries):
         source_id=str(task.source_id or ''),
         source_name=str(task.source) if task.source_id else '',
         source_detail=task.source_detail,
-        content_element=task.content_element.strip(),
-        requirement_element=task.requirement_element.strip(),
+        content_element=(
+            '' if has_explicit_content else task.content_element.strip()
+        ),
+        requirement_element=(
+            '' if explicit_requirements
+            else task.requirement_element.strip()
+        ),
         codifier_content_entries=content_snapshots,
         codifier_requirements=requirements,
         content_element_descriptions=tuple(dict.fromkeys(
@@ -139,5 +149,5 @@ def _select_content_entries(task, candidates):
 def _task_content_entries(task, legacy_candidates):
     explicit_entries = tuple(task.codifier_content_entries.all())
     if explicit_entries:
-        return explicit_entries
-    return _select_content_entries(task, legacy_candidates)
+        return explicit_entries, True
+    return _select_content_entries(task, legacy_candidates), False

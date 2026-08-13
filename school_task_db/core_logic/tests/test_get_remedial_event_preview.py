@@ -64,15 +64,18 @@ class GetRemedialEventPreviewUseCaseTests(TestCase):
         self.assertEqual(len(result.analysis), 2)
 
         weak_row = result.analysis[0]
-        self.assertEqual(weak_row['student'].get_full_name(), 'Иванов Иван')
-        self.assertEqual(weak_row['score_pct'], 71.4)
-        self.assertEqual(weak_row['weak_tasks'], ['t1'])
-        self.assertEqual(weak_row['weak_tasks_count'], 1)
-        self.assertEqual(weak_row['status'], 'weak')
+        self.assertEqual(weak_row.student.get_full_name(), 'Иванов Иван')
+        self.assertEqual(weak_row.score_pct, 71.4)
+        self.assertEqual(weak_row.weak_tasks, ('t1',))
+        self.assertEqual(weak_row.weak_tasks_count, 1)
+        self.assertEqual(weak_row.status, 'weak')
+        self.assertEqual(weak_row.status_label, 'Нужна работа')
 
         unchecked_row = result.analysis[1]
-        self.assertIsNone(unchecked_row['score_pct'])
-        self.assertEqual(unchecked_row['status'], 'Не проверено')
+        self.assertIsNone(unchecked_row.score_pct)
+        self.assertFalse(unchecked_row.is_checked)
+        self.assertEqual(unchecked_row.status, 'unchecked')
+        self.assertEqual(unchecked_row.status_label, 'Не проверено')
 
     def test_execute_returns_failure_for_missing_event(self):
         result = GetRemedialEventPreviewUseCase(

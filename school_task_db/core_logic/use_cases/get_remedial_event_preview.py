@@ -1,12 +1,50 @@
 """Build remedial-from-event preview data."""
 
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Optional
 
-from core_logic.entities.event import EventEntity, WorkSummary
+from core_logic.entities.event import (
+    EventEntity,
+    ParticipationAttemptData,
+    StudentSummary,
+    VariantSummary,
+    WorkSummary,
+)
 from core_logic.interfaces.event_attempt_repo import IEventAttemptRepository
 from core_logic.interfaces.event_read_repo import IEventReadRepository
 from core_logic.services.remedial_service import REMEDIAL_SOURCE_EVENT_STATUSES
+
+
+@dataclass(frozen=True)
+class RemedialEventPreviewItem:
+    student: StudentSummary
+    variant: Optional[VariantSummary]
+    score_pct: Optional[float]
+    points: Optional[float]
+    max_points: Optional[float]
+    mark_score: Optional[int]
+    weak_tasks: tuple[str, ...] = field(default_factory=tuple)
+    status: str = 'unchecked'
+
+    def __post_init__(self):
+        object.__setattr__(self, 'weak_tasks', tuple(self.weak_tasks))
+
+    @property
+    def weak_tasks_count(self) -> int:
+        return len(self.weak_tasks)
+
+    @property
+    def is_checked(self) -> bool:
+        return self.status != 'unchecked'
+
+    @property
+    def status_label(self) -> str:
+        return {
+            'weak': 'Нужна работа',
+            'needs_attention': 'Внимание',
+            'ok': 'OK',
+            'unchecked': 'Не проверено',
+        }.get(self.status, self.status)
 
 
 @dataclass(frozen=True)
@@ -14,7 +52,9 @@ class RemedialEventPreviewResult:
     success: bool
     event: Optional[EventEntity] = None
     work: Optional[WorkSummary] = None
-    analysis: List[dict] = field(default_factory=list)
+    analysis: tuple[RemedialEventPreviewItem, ...] = field(
+        default_factory=tuple,
+    )
     weak_students: int = 0
     message: str = ''
 
@@ -44,16 +84,16 @@ class GetRemedialEventPreviewUseCase:
                 ),
             )
 
-        analysis = [
+        analysis = tuple(
             self._analyze_participation(item)
             for item in self.event_attempt_repo.get_participation_attempts(
                 event_id,
             )
-        ]
+        )
         weak_students = sum(
             1
             for row in analysis
-            if row.get('status') in ('weak', 'needs_attention')
+            if row.status in ('weak', 'needs_attention')
         )
 
         return RemedialEventPreviewResult(
@@ -64,15 +104,19 @@ class GetRemedialEventPreviewUseCase:
             weak_students=weak_students,
         )
 
-    def _analyze_participation(self, item) -> dict:
+    def _analyze_participation(
+        self,
+        item: ParticipationAttemptData,
+    ) -> RemedialEventPreviewItem:
         if item.score is None and item.points is None and item.max_points is None:
-            return {
-                'student': item.student,
-                'variant': item.variant,
-                'score_pct': None,
-                'weak_tasks': [],
-                'status': 'Не проверено',
-            }
+            return RemedialEventPreviewItem(
+                student=item.student,
+                variant=item.variant,
+                score_pct=None,
+                points=None,
+                max_points=None,
+                mark_score=None,
+            )
 
         max_points = float(item.max_points) if item.max_points else 0
         points = float(item.points) if item.points else 0
@@ -102,14 +146,13 @@ class GetRemedialEventPreviewUseCase:
         else:
             status = 'ok'
 
-        return {
-            'student': item.student,
-            'variant': item.variant,
-            'score_pct': score_pct,
-            'points': points,
-            'max_points': max_points,
-            'mark_score': item.score,
-            'weak_tasks_count': len(weak_tasks),
-            'weak_tasks': weak_tasks,
-            'status': status,
-        }
+        return RemedialEventPreviewItem(
+            student=item.student,
+            variant=item.variant,
+            score_pct=score_pct,
+            points=points,
+            max_points=max_points,
+            mark_score=item.score,
+            weak_tasks=tuple(weak_tasks),
+            status=status,
+        )

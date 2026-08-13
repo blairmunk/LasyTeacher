@@ -37,7 +37,7 @@
                 </thead>
                 <tbody>
                     {% for a in analysis %}
-                    <tr class="{% if a.status == 'weak' %}table-warning{% elif a.status == 'Не проверено' %}table-light{% endif %}">
+                    <tr class="{% if a.status == 'weak' %}table-warning{% elif a.status == 'unchecked' %}table-light{% endif %}">
                         <td>
                             {% if a.status == 'weak' %}
                             <input type="checkbox" name="selected_students"
@@ -47,7 +47,7 @@
                             <input type="checkbox" name="selected_students"
                                    value="{{ a.student.pk }}"
                                    class="form-check-input student-cb">
-                            {% elif a.score_pct != None %}
+                            {% elif a.is_checked %}
                             <input type="checkbox" name="selected_students"
                                    value="{{ a.student.pk }}"
                                    class="form-check-input student-cb">
@@ -92,7 +92,7 @@
                             {% elif a.status == 'ok' %}
                             <span class="badge bg-success">OK</span>
                             {% else %}
-                            <small class="text-muted">{{ a.status }}</small>
+                            <small class="text-muted">{{ a.status_label }}</small>
                             {% endif %}
                         </td>
                     </tr>

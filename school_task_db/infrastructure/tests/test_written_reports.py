@@ -662,6 +662,25 @@ class WrittenReportRepositoryTests(TestCase):
         self.assertContains(comments_response, 'Нужна консультация')
         self.assertContains(comments_response, 'Комментарии учителя')
 
+    def test_student_digest_view_recovers_from_reversed_period(self):
+        response = self.client.get(
+            reverse('reports:student-digests'),
+            {
+                'apply': '1',
+                'group': str(self.group.pk),
+                'start_date': '2026-10-20',
+                'end_date': '2026-10-13',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('Начало периода', response.context['form_error'])
+        self.assertIsNone(response.context['page'].selected_group)
+        self.assertLessEqual(
+            response.context['page'].start_date,
+            response.context['page'].end_date,
+        )
+
     def test_student_digest_view_and_document_can_select_one_student(self):
         query = {
             'apply': '1',

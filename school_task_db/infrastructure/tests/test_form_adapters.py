@@ -537,6 +537,23 @@ class ReportFormAdapterTests(SimpleTestCase):
         self.assertFalse(request.options.include_teacher_comments)
         self.assertFalse(request.options.include_task_comments)
 
+    def test_builds_student_digest_page_request_with_fallback_date(self):
+        request = ReportFormAdapter().student_digest_page_request_from_query(
+            QueryDict(
+                'apply=1&group=g1'
+                '&start_date=2026-10-20&end_date=2026-10-13'
+            ),
+            year='year-1',
+            today=dt.date(2026, 10, 21),
+        )
+
+        self.assertEqual(request.digest_request.group_id, 'g1')
+        self.assertEqual(
+            request.digest_request.start_date,
+            dt.date(2026, 10, 20),
+        )
+        self.assertEqual(request.fallback_end_date, dt.date(2026, 10, 21))
+
     def test_builds_written_report_document_requests(self):
         adapter = ReportFormAdapter()
         data = QueryDict(

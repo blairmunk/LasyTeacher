@@ -174,30 +174,14 @@ class StudentDigestView(View):
     template_name = 'reports/student_digests.html'
 
     def get(self, request):
-        digest_request = (
-            container.report_form_adapter.student_digest_request_from_query(
+        result = container.get_student_digest_page_use_case().execute(
+            container.report_form_adapter.student_digest_page_request_from_query(
                 request.GET,
                 year=getattr(request, 'current_year', None),
                 today=timezone.localdate(),
-            )
+            ),
         )
-        form_error = ''
-        try:
-            page = container.get_student_digests_use_case().execute(
-                digest_request,
-            )
-        except ValueError as error:
-            form_error = str(error)
-            fallback_request = (
-                container.report_form_adapter.student_digest_request_from_query(
-                    {},
-                    year=getattr(request, 'current_year', None),
-                    today=timezone.localdate(),
-                )
-            )
-            page = container.get_student_digests_use_case().execute(
-                fallback_request,
-            )
+        page = result.page
         profiles = container.get_presentation_profile_list_use_case().execute(
             GetPresentationProfileListRequest(
                 document_type=STUDENT_DIGEST_DOCUMENT_TYPE,
@@ -206,7 +190,7 @@ class StudentDigestView(View):
         return render(request, self.template_name, {
             'page': page,
             'presentation_profiles': profiles.presentation_profiles,
-            'form_error': form_error,
+            'form_error': result.form_error,
             'active_report': page.active_report,
         })
 

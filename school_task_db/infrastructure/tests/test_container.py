@@ -214,6 +214,9 @@ from core_logic.use_cases.get_student_performance_report import (
     GetStudentPerformanceReportUseCase,
 )
 from core_logic.use_cases.get_student_digests import GetStudentDigestsUseCase
+from core_logic.use_cases.get_student_digest_page import (
+    GetStudentDigestPageUseCase,
+)
 from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionUseCase,
 )
@@ -499,6 +502,7 @@ class ContainerTests(SimpleTestCase):
         event_report = container.get_event_performance_report_use_case()
         save_narrative = container.save_event_report_narrative_use_case()
         student_digests = container.get_student_digests_use_case()
+        student_digest_page = container.get_student_digest_page_use_case()
         event_report_document = (
             container.render_event_performance_report_document_use_case()
         )
@@ -509,6 +513,10 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(event_report, GetEventPerformanceReportUseCase)
         self.assertIsInstance(save_narrative, SaveEventReportNarrativeUseCase)
         self.assertIsInstance(student_digests, GetStudentDigestsUseCase)
+        self.assertIsInstance(
+            student_digest_page,
+            GetStudentDigestPageUseCase,
+        )
         self.assertIsInstance(
             event_report_document,
             RenderEventPerformanceReportDocumentUseCase,

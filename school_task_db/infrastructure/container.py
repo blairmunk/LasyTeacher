@@ -237,6 +237,9 @@ from core_logic.use_cases.get_student_performance_report import (
     GetStudentPerformanceReportUseCase,
 )
 from core_logic.use_cases.get_student_digests import GetStudentDigestsUseCase
+from core_logic.use_cases.get_student_digest_page import (
+    GetStudentDigestPageUseCase,
+)
 from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUseCase
 from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionUseCase,
@@ -1831,6 +1834,11 @@ class Container:
     def get_student_digests_use_case(self):
         return GetStudentDigestsUseCase(
             digest_repo=self.student_digest_repo,
+        )
+
+    def get_student_digest_page_use_case(self):
+        return GetStudentDigestPageUseCase(
+            get_student_digests_use_case=self.get_student_digests_use_case(),
         )
 
     def get_reports_dashboard_use_case(self):

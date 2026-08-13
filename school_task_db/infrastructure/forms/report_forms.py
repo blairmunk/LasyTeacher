@@ -33,6 +33,9 @@ from core_logic.use_cases.get_reports_dashboard import ReportsDashboardRequest
 from core_logic.use_cases.get_student_performance_report import (
     StudentPerformanceReportRequest,
 )
+from core_logic.use_cases.get_student_digest_page import (
+    StudentDigestPageRequest,
+)
 from core_logic.use_cases.get_work_analysis_report import WorkAnalysisReportRequest
 from core_logic.use_cases.render_event_performance_report_document import (
     RenderEventPerformanceReportDocumentRequest,
@@ -110,6 +113,16 @@ class ReportFormAdapter:
                 include_absences=enabled('include_absences'),
                 retake_score_threshold=threshold,
             ),
+        )
+
+    def student_digest_page_request_from_query(self, query, year, today):
+        return StudentDigestPageRequest(
+            digest_request=self.student_digest_request_from_query(
+                query,
+                year=year,
+                today=today,
+            ),
+            fallback_end_date=today,
         )
 
     def event_report_document_request(self, event_id, data):

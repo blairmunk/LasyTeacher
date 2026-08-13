@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.test import TestCase
 from django.utils import timezone
 
@@ -10,6 +12,7 @@ from events.models import (
     Mark,
 )
 from infrastructure.services.django_captured_task_result_queries import (
+    captured_task_result_snapshot,
     latest_assessable_task_results,
 )
 from students.models import Student
@@ -71,15 +74,25 @@ class DjangoCapturedTaskResultQueryTests(TestCase):
             (self.participation.pk,),
         )
 
+        self.assertIsInstance(results, tuple)
         self.assertEqual(len(results), 1)
         result = results[0]
         self.assertEqual(result.task.task_id, selected.task_id_snapshot)
         self.assertEqual(result.task.text, 'Зафиксированное условие')
-        self.assertEqual(result.points, 0)
-        self.assertEqual(result.max_points, 5)
+        self.assertEqual(result.points, 0.0)
+        self.assertIsInstance(result.points, float)
+        self.assertEqual(result.max_points, 5.0)
+        self.assertIsInstance(result.max_points, float)
+        self.assertIsInstance(result.event_date, datetime)
+        self.assertIsInstance(result.captured_at, datetime)
         self.assertEqual(result.comment, 'Проверьте формулу')
         self.assertEqual(result.student_id, str(self.participation.student_id))
         self.assertEqual(result.event_id, str(self.participation.event_id))
+
+        captured = captured_task_result_snapshot(selected)
+        self.assertIsNone(captured.points)
+        self.assertEqual(captured.max_points, 5.0)
+        self.assertEqual(captured.task, result.task)
 
     def _attempt(self, revision):
         participation = self.participation

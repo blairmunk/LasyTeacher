@@ -1,7 +1,7 @@
 """Repository interface for checked event attempts."""
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Optional
 
 from core_logic.entities.event import CheckedAttemptRef, ParticipationAttemptData
 
@@ -19,5 +19,5 @@ class IEventAttemptRepository(ABC):
     def get_participation_attempts(
         self,
         event_id: str,
-    ) -> List[ParticipationAttemptData]:
+    ) -> tuple[ParticipationAttemptData, ...]:
         """Return participations with their latest captured attempts."""

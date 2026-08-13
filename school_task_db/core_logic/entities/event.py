@@ -2,8 +2,9 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, NamedTuple, Optional
+from typing import Any, NamedTuple, Optional
 
+from core_logic.value_objects.task_scores import TaskScoreRecord
 from core_logic.value_objects.work_assessment import (
     WORK_ASSESSMENT_MODE_VARIANT,
     work_requires_variants,
@@ -180,7 +181,10 @@ class ParticipationAttemptData:
     score: Optional[int] = None
     points: Optional[float] = None
     max_points: Optional[float] = None
-    task_scores: Dict[str, dict] = None
+    task_scores: tuple[TaskScoreRecord, ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        object.__setattr__(self, 'task_scores', tuple(self.task_scores))
 
 
 @dataclass(frozen=True)

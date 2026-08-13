@@ -7,7 +7,6 @@ from core_logic.entities.event import EventEntity, WorkSummary
 from core_logic.interfaces.event_attempt_repo import IEventAttemptRepository
 from core_logic.interfaces.event_read_repo import IEventReadRepository
 from core_logic.services.remedial_service import REMEDIAL_SOURCE_EVENT_STATUSES
-from core_logic.value_objects.task_scores import normalize_task_scores
 
 
 @dataclass(frozen=True)
@@ -80,7 +79,7 @@ class GetRemedialEventPreviewUseCase:
         score_pct = round(points / max_points * 100, 1) if max_points > 0 else 0
 
         weak_tasks = []
-        for score_record in normalize_task_scores(item.task_scores):
+        for score_record in item.task_scores:
             task_points = score_record.points or 0
             task_max_points = score_record.max_points or 1
             if task_max_points <= 0:

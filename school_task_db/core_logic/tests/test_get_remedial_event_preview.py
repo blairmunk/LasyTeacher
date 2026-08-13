@@ -9,6 +9,7 @@ from core_logic.entities.event import (
 from core_logic.use_cases.get_remedial_event_preview import (
     GetRemedialEventPreviewUseCase,
 )
+from core_logic.value_objects.task_scores import normalize_task_scores
 
 
 class FakeEventRepository:
@@ -24,27 +25,29 @@ class FakeEventRepository:
         )
 
     def get_participation_attempts(self, event_id):
-        return [
+        return (
             ParticipationAttemptData(
                 student=StudentSummary(id='s1', full_name='Иванов Иван'),
                 variant=VariantSummary(id='v1', number=1),
                 score=2,
                 points=5,
                 max_points=7,
-                task_scores={
-                    't1': {'points': 0, 'max_points': 2},
-                    'variant-task-2': {
-                        'task_id': 't2',
-                        'points': 5,
-                        'max_points': 5,
-                    },
-                },
+                task_scores=normalize_task_scores(
+                    {
+                        't1': {'points': 0, 'max_points': 2},
+                        'variant-task-2': {
+                            'task_id': 't2',
+                            'points': 5,
+                            'max_points': 5,
+                        },
+                    }
+                ),
             ),
             ParticipationAttemptData(
                 student=StudentSummary(id='s2', full_name='Петров Пётр'),
                 variant=None,
             ),
-        ]
+        )
 
 
 class GetRemedialEventPreviewUseCaseTests(TestCase):

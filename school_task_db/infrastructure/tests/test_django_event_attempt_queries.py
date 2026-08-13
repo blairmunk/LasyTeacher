@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.utils import timezone
 
+from core_logic.value_objects.task_scores import normalize_task_scores
 from events.models import AttemptSnapshot, Event, EventParticipation, Mark
 from infrastructure.repositories.django_attempt_snapshot_repo import (
     DjangoAttemptSnapshotRepository,
@@ -66,7 +67,10 @@ class DjangoEventAttemptQueryTests(TestCase):
         self.assertEqual(attempt_ref.score, 2)
         self.assertEqual(participation_result.score, 2)
         self.assertEqual(participation_result.points, 5)
-        self.assertEqual(participation_result.task_scores, original_task_scores)
+        self.assertEqual(
+            participation_result.task_scores,
+            normalize_task_scores(original_task_scores),
+        )
 
     def test_remedial_preview_uses_captured_variant(self):
         replacement_variant = Variant.objects.create(
@@ -99,7 +103,7 @@ class DjangoEventAttemptQueryTests(TestCase):
         self.assertEqual(attempt_ref.score, 5)
         self.assertEqual(participation_result.score, 5)
         self.assertEqual(participation_result.points, 7)
-        self.assertEqual(participation_result.task_scores, {})
+        self.assertEqual(participation_result.task_scores, ())
 
     def test_unchecked_participation_has_no_captured_attempt(self):
         second_student = Student.objects.create(
@@ -124,7 +128,7 @@ class DjangoEventAttemptQueryTests(TestCase):
 
         self.assertIsNone(attempt_ref)
         self.assertIsNone(unchecked_row.score)
-        self.assertEqual(unchecked_row.task_scores, {})
+        self.assertEqual(unchecked_row.task_scores, ())
 
     def _read_attempt(self):
         repo = DjangoEventAttemptRepository()

@@ -9,6 +9,7 @@ from core_logic.entities.event import (
     VariantSummary,
 )
 from core_logic.interfaces.event_attempt_repo import IEventAttemptRepository
+from core_logic.value_objects.task_scores import normalize_task_scores
 from events.models import EventParticipation
 from infrastructure.services.django_attempt_snapshot_queries import (
     latest_attempts_by_participation,
@@ -85,9 +86,9 @@ class DjangoEventAttemptRepository(IEventAttemptRepository):
                     score=attempt.score if attempt else None,
                     points=attempt.points if attempt else None,
                     max_points=attempt.max_points if attempt else None,
-                    task_scores=(
+                    task_scores=normalize_task_scores(
                         attempt.task_scores_snapshot if attempt else {}
                     ),
                 )
             )
-        return result
+        return tuple(result)

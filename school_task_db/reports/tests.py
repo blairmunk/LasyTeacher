@@ -602,10 +602,10 @@ class ReportsViewsTests(TestCase):
         self.assertEqual(response.context['courses'][0].pk, str(course.pk))
         self.assertEqual(response.context['groups'][0].pk, str(group.pk))
         link = response.context['journal_links'][0]
-        self.assertEqual(link['course'].pk, str(course.pk))
-        self.assertEqual(link['group'].pk, str(group.pk))
-        self.assertEqual(link['group'].students_count, 1)
-        self.assertEqual(link['event_count'], 1)
+        self.assertEqual(link.course.pk, str(course.pk))
+        self.assertEqual(link.group.pk, str(group.pk))
+        self.assertEqual(link.group.students_count, 1)
+        self.assertEqual(link.event_count, 1)
 
     def test_journal_view_uses_clean_report_data(self):
         now = timezone.now()
@@ -669,12 +669,12 @@ class ReportsViewsTests(TestCase):
         self.assertEqual(response.context['students_with_debts'], 1)
         self.assertEqual(len(response.context['rows']), 1)
         self.assertEqual(
-            response.context['rows'][0]['student'].pk,
+            response.context['rows'][0].student.pk,
             str(missing_student.pk),
         )
-        self.assertEqual(response.context['rows'][0]['cells'][0]['status'], 'missing')
-        self.assertEqual(response.context['event_stats'][0]['graded'], 1)
-        self.assertEqual(response.context['event_stats'][0]['missing'], 1)
+        self.assertEqual(response.context['rows'][0].cells[0].status, 'missing')
+        self.assertEqual(response.context['event_stats'][0].graded, 1)
+        self.assertEqual(response.context['event_stats'][0].missing, 1)
 
     def test_db_health_view_uses_clean_report_data(self):
         topic = Topic.objects.create(

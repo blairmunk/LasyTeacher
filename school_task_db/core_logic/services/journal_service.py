@@ -1,6 +1,12 @@
 """Pure calculations for class journal reports."""
 
-from core_logic.entities.journal import JournalData, JournalSource
+from core_logic.entities.journal import (
+    JournalCell,
+    JournalData,
+    JournalEventStat,
+    JournalRow,
+    JournalSource,
+)
 
 
 class JournalService:
@@ -15,97 +21,124 @@ class JournalService:
         }
         all_rows = []
         for student in source.students:
-            cells = [
+            cells = tuple(
                 self._cell(
                     event,
                     entries.get((student.pk, event.pk)),
                 )
                 for event in source.events
-            ]
+            )
             scores = [
-                cell['score']
+                cell.score
                 for cell in cells
-                if cell['status'] == 'graded'
+                if cell.status == 'graded' and cell.score is not None
             ]
-            all_rows.append({
-                'student': student,
-                'cells': cells,
-                'avg_score': (
+            all_rows.append(JournalRow(
+                student=student,
+                cells=cells,
+                avg_score=(
                     round(sum(scores) / len(scores), 1)
                     if scores
                     else None
                 ),
-                'score_count': len(scores),
-                'debts': sum(
+                score_count=len(scores),
+                debts=sum(
                     1
                     for cell in cells
-                    if cell['status'] in ('absent', 'missing')
+                    if cell.status in ('absent', 'missing')
                 ),
-            })
+            ))
 
         rows = (
-            [row for row in all_rows if row['debts'] > 0]
+            tuple(row for row in all_rows if row.debts > 0)
             if show_debts_only
-            else all_rows
+            else tuple(all_rows)
         )
         return JournalData(
             course=source.course,
             group=source.group,
-            events=source.events,
+            events=tuple(source.events),
             event_stats=self._event_stats(source.events, all_rows),
             rows=rows,
             all_rows_count=len(all_rows),
             show_debts_only=show_debts_only,
-            total_debts=sum(row['debts'] for row in all_rows),
+            total_debts=sum(row.debts for row in all_rows),
             students_with_debts=sum(
-                1 for row in all_rows if row['debts'] > 0
+                1 for row in all_rows if row.debts > 0
             ),
-            courses=source.courses,
+            courses=tuple(source.courses),
         )
 
     def _cell(self, event, entry):
         participation = entry.participation if entry else None
         mark = entry.mark if entry else None
-        cell = {
-            'event': event,
-            'participation': participation,
-            'mark': mark,
-            'score': None,
-            'status': 'missing',
-            'css_class': 'journal-missing',
-            'display': '',
-            'variant': entry.variant if entry else None,
-        }
+        variant = entry.variant if entry else None
+
         if participation is None:
-            return cell
+            return JournalCell(
+                event=event,
+                participation=None,
+                mark=None,
+                score=None,
+                status='missing',
+                css_class='journal-missing',
+                display='',
+                variant=variant,
+            )
         if participation.status == 'absent':
-            cell.update(
+            return JournalCell(
+                event=event,
+                participation=participation,
+                mark=mark,
+                score=None,
                 status='absent',
-                display='Н',
                 css_class='journal-absent',
+                display='Н',
+                variant=variant,
             )
-        elif mark is not None and mark.score is not None:
-            cell.update(
-                status='graded',
+        if mark is not None and mark.score is not None:
+            return JournalCell(
+                event=event,
+                participation=participation,
+                mark=mark,
                 score=mark.score,
-                display=str(mark.score),
+                status='graded',
                 css_class=self._score_css(mark.score),
+                display=str(mark.score),
+                variant=variant,
             )
-        elif participation.status in ('assigned', 'started'):
-            cell.update(
+        if participation.status in ('assigned', 'started'):
+            return JournalCell(
+                event=event,
+                participation=participation,
+                mark=mark,
+                score=None,
                 status='in_progress',
-                display='…',
                 css_class='journal-progress',
+                display='…',
+                variant=variant,
             )
-        elif participation.status == 'completed':
-            cell.update(
+        if participation.status == 'completed':
+            return JournalCell(
+                event=event,
+                participation=participation,
+                mark=mark,
+                score=None,
                 status='completed',
-                display='✓',
                 css_class='journal-completed',
+                display='✓',
+                variant=variant,
             )
-        else:
-            cell.update(status='assigned', display='–', css_class='')
-        return cell
+        return JournalCell(
+            event=event,
+            participation=participation,
+            mark=mark,
+            score=None,
+            status='assigned',
+            css_class='',
+            display='–',
+            variant=variant,
+        )
 
     @staticmethod
     def _score_css(score):
@@ -124,20 +157,14 @@ class JournalService:
             cells = [
                 cell
                 for row in rows
-                for cell in row['cells']
-                if cell['event'].pk == event.pk
+                for cell in row.cells
+                if cell.event.pk == event.pk
             ]
-            stats.append({
-                'event': event,
-                'graded': sum(
-                    1 for cell in cells if cell['status'] == 'graded'
-                ),
-                'absent': sum(
-                    1 for cell in cells if cell['status'] == 'absent'
-                ),
-                'missing': sum(
-                    1 for cell in cells if cell['status'] == 'missing'
-                ),
-                'total': len(cells),
-            })
-        return stats
+            stats.append(JournalEventStat(
+                event=event,
+                graded=sum(1 for cell in cells if cell.status == 'graded'),
+                absent=sum(1 for cell in cells if cell.status == 'absent'),
+                missing=sum(1 for cell in cells if cell.status == 'missing'),
+                total=len(cells),
+            ))
+        return tuple(stats)

@@ -46,10 +46,10 @@ class DjangoJournalRepositoryTests(TestCase):
         self.assertEqual(data.groups[0].name, group.name)
         self.assertEqual(data.courses[0].pk, str(course.pk))
         self.assertEqual(data.courses[0].name, course.name)
-        self.assertEqual(data.journal_links[0]['course'].pk, str(course.pk))
-        self.assertEqual(data.journal_links[0]['group'].pk, str(group.pk))
-        self.assertEqual(data.journal_links[0]['group'].students_count, 1)
-        self.assertEqual(data.journal_links[0]['event_count'], 1)
+        self.assertEqual(data.journal_links[0].course.pk, str(course.pk))
+        self.assertEqual(data.journal_links[0].group.pk, str(group.pk))
+        self.assertEqual(data.journal_links[0].group.students_count, 1)
+        self.assertEqual(data.journal_links[0].event_count, 1)
         self.assertEqual(data.active_report, 'journal')
 
     def test_returns_snapshot_grades_and_variants(self):

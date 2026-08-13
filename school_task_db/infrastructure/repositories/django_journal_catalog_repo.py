@@ -1,6 +1,6 @@
 """Django read adapter for available class journals."""
 
-from core_logic.entities.journal import JournalSelectData
+from core_logic.entities.journal import JournalSelectData, JournalSelectLink
 from core_logic.interfaces.journal_catalog_repo import IJournalCatalogRepository
 from events.models import Event
 from infrastructure.repositories.django_journal_refs import (
@@ -26,14 +26,14 @@ class DjangoJournalCatalogRepository(IJournalCatalogRepository):
                     course=course,
                     eventparticipation__student__in=group.students.all(),
                 ).distinct().count()
-                journal_links.append({
-                    'course': course_ref(course),
-                    'group': group_ref(group),
-                    'event_count': event_count,
-                })
+                journal_links.append(JournalSelectLink(
+                    course=course_ref(course),
+                    group=group_ref(group),
+                    event_count=event_count,
+                ))
 
         return JournalSelectData(
-            journal_links=journal_links,
-            groups=[group_ref(group) for group in groups],
-            courses=[course_ref(course) for course in courses],
+            journal_links=tuple(journal_links),
+            groups=tuple(group_ref(group) for group in groups),
+            courses=tuple(course_ref(course) for course in courses),
         )

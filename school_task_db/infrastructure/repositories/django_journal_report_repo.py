@@ -103,16 +103,16 @@ class DjangoJournalReportRepository(IJournalReportRepository):
                 name=group.name,
                 students_count=len(students),
             ),
-            students=[student_ref(student) for student in students],
-            events=[event_refs[event.id] for event in events],
-            entries=entries,
-            courses=[
+            students=tuple(student_ref(student) for student in students),
+            events=tuple(event_refs[event.id] for event in events),
+            entries=tuple(entries),
+            courses=tuple(
                 course_ref(item)
                 for item in course_scope(year).order_by(
                     'grade_level',
                     'name',
                 )
-            ],
+            ),
         )
 
     def _event_ref(self, event):

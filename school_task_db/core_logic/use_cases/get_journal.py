@@ -1,7 +1,6 @@
 """Build class journal data."""
 
 from dataclasses import dataclass
-from typing import Any
 
 from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.journal import JournalData
@@ -11,8 +10,8 @@ from core_logic.services.journal_service import JournalService
 
 @dataclass(frozen=True)
 class JournalRequest:
-    course_id: Any
-    group_id: Any
+    course_id: str
+    group_id: str
     year: AcademicYearRef | None = None
     show_debts_only: bool = False
 

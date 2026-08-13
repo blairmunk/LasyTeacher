@@ -33,6 +33,7 @@ def captured_task_result_snapshot(
         points=_optional_float(task_result.points),
         max_points=float(max_points),
         comment=str(task_result.comment or ''),
+        variant_task_id=str(task_result.variant_task_id or ''),
         source_selection_id=str(
             task_result.source_selection_id_snapshot or '',
         ),

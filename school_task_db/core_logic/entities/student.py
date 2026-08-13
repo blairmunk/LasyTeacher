@@ -3,7 +3,9 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, List, Mapping, Optional
+from typing import Any, List, Optional
+
+from core_logic.value_objects.task_scores import TaskScoreRecord
 
 
 class StudentLevel(Enum):
@@ -55,14 +57,14 @@ class TaskResultGroupRef:
 
 @dataclass(frozen=True)
 class TaskResultsSource:
-    task_scores: Mapping[str, Any]
+    task_scores: tuple[TaskScoreRecord, ...] = field(default_factory=tuple)
     variant_tasks: tuple[TaskResultVariantRow, ...] = field(
         default_factory=tuple,
     )
     groups: tuple[TaskResultGroupRef, ...] = field(default_factory=tuple)
 
     def __post_init__(self):
-        object.__setattr__(self, 'task_scores', dict(self.task_scores))
+        object.__setattr__(self, 'task_scores', tuple(self.task_scores))
         object.__setattr__(self, 'variant_tasks', tuple(self.variant_tasks))
         object.__setattr__(self, 'groups', tuple(self.groups))
 

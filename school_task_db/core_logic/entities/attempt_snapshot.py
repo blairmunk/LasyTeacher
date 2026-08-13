@@ -22,6 +22,7 @@ class CapturedAttemptTaskResult:
     points: Optional[float]
     max_points: float
     comment: str
+    variant_task_id: str
     source_selection_id: str
     source_selection_name: str
     content_order: int

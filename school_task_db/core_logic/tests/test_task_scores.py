@@ -1,7 +1,9 @@
 from unittest import TestCase
 
 from core_logic.value_objects.task_scores import (
+    TaskScoreRecord,
     normalize_task_scores,
+    resolve_normalized_task_score_record,
     resolve_task_score_record,
     task_score_records_for_attempt,
     task_score_records_by_score_key,
@@ -139,6 +141,26 @@ class TaskScoreNormalizationTests(TestCase):
 
         self.assertEqual(record.score_key, 'task-1')
         self.assertEqual(record.points, 2)
+
+    def test_resolves_already_normalized_variant_task_score(self):
+        records = (
+            TaskScoreRecord('task-1', 'task-1', points=1),
+            TaskScoreRecord(
+                'variant-task-1',
+                'task-1',
+                variant_task_id='variant-task-1',
+                points=3,
+            ),
+        )
+
+        record = resolve_normalized_task_score_record(
+            records,
+            variant_task_id='variant-task-1',
+            task_id='task-1',
+        )
+
+        self.assertEqual(record.score_key, 'variant-task-1')
+        self.assertEqual(record.points, 3)
 
     def test_skips_invalid_scores(self):
         self.assertEqual(normalize_task_scores(None), ())

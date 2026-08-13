@@ -12,6 +12,7 @@ from core_logic.services.remedial_service import (
     RemedialSelectionLimits,
     RemedialService,
 )
+from core_logic.value_objects.task_scores import TaskScoreRecord
 
 
 class FakeStudentRepository:
@@ -21,14 +22,15 @@ class FakeStudentRepository:
 
     def get_task_results_source_for_event(self, student_id, event_id):
         return TaskResultsSource(
-            task_scores={
-                result.task_id: {
-                    'task_id': result.task_id,
-                    'points': result.points,
-                    'max_points': result.max_points,
-                }
+            task_scores=tuple(
+                TaskScoreRecord(
+                    score_key=result.task_id,
+                    task_id=result.task_id,
+                    points=result.points,
+                    max_points=result.max_points,
+                )
                 for result in self.results
-            },
+            ),
             groups=tuple(
                 TaskResultGroupRef(
                     task_id=result.task_id,

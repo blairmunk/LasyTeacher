@@ -19,6 +19,7 @@ from core_logic.entities.student import (
 from core_logic.interfaces.student_remedial_repo import (
     IStudentRemedialRepository,
 )
+from core_logic.value_objects.task_scores import TaskScoreRecord
 from events.models import EventParticipation
 from infrastructure.repositories.django_student_learning_support import (
     first_analog_groups,
@@ -29,6 +30,9 @@ from infrastructure.repositories.django_student_learning_support import (
 )
 from infrastructure.services.django_attempt_snapshot_queries import (
     latest_attempts_by_participation,
+)
+from infrastructure.services.django_captured_task_result_queries import (
+    captured_task_result_snapshot,
 )
 from students.models import StudentGroup
 from task_groups.models import AnalogGroup, TaskGroup
@@ -54,41 +58,41 @@ class DjangoStudentRemedialRepository(IStudentRemedialRepository):
         if attempt is None:
             return None
 
-        task_results = [
-            result
+        task_results = tuple(
+            captured
             for result in attempt.captured_task_results
-            if result.is_assessable_snapshot
-        ]
-        task_scores = {}
+            if (captured := captured_task_result_snapshot(result)) is not None
+            and captured.is_assessable
+        )
+        task_scores = []
         variant_tasks = []
         for result in task_results:
-            variant_task_id = str(result.variant_task_id or '')
-            score_key = variant_task_id or result.task_id_snapshot
-            task_scores[score_key] = {
-                'task_id': result.task_id_snapshot,
-                'variant_task_id': variant_task_id,
-                'points': result.points,
-                'max_points': (
-                    result.checked_max_points
-                    if result.checked_max_points is not None
-                    else result.expected_max_points_snapshot
-                ),
-                'comment': result.comment,
-            }
+            variant_task_id = result.variant_task_id
+            score_key = variant_task_id or result.task.task_id
+            task_scores.append(
+                TaskScoreRecord(
+                    score_key=score_key,
+                    task_id=result.task.task_id,
+                    variant_task_id=variant_task_id,
+                    points=result.points,
+                    max_points=result.max_points,
+                    comment=result.comment,
+                )
+            )
             if variant_task_id:
                 variant_tasks.append(TaskResultVariantRow(
                     variant_task_id=variant_task_id,
-                    task_id=result.task_id_snapshot,
+                    task_id=result.task.task_id,
                 ))
         candidate_task_ids = [
-            result.task_id_snapshot
+            result.task.task_id
             for result in task_results
         ]
         task_groups = TaskGroup.objects.filter(
             task_id__in=candidate_task_ids,
         ).select_related('group')
         return TaskResultsSource(
-            task_scores=task_scores,
+            task_scores=tuple(task_scores),
             variant_tasks=tuple(variant_tasks),
             groups=tuple(
                 TaskResultGroupRef(

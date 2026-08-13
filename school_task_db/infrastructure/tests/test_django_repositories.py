@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from core.models import AcademicYear, ImportLog
 from core_logic.entities.review import ReviewTaskScoreValue
+from core_logic.value_objects.task_scores import TaskScoreRecord
 from core_logic.services.grading_service import GradingService
 from core_logic.services.remedial_service import RemedialService
 from core_logic.services.student_task_result_service import (
@@ -402,12 +403,28 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.mark.task_scores = {}
         self.mark.save(update_fields=['task_scores'])
 
-        results = StudentTaskResultService().build(
-            DjangoStudentRemedialRepository().get_task_results_source_for_event(
+        source = (
+            DjangoStudentRemedialRepository()
+            .get_task_results_source_for_event(
                 student_id=str(self.student.pk),
                 event_id=str(self.event.pk),
-            ),
+            )
         )
+        self.assertIsInstance(source.task_scores, tuple)
+        self.assertTrue(
+            all(
+                isinstance(score, TaskScoreRecord)
+                for score in source.task_scores
+            )
+        )
+        self.assertTrue(
+            all(
+                isinstance(score.max_points, float)
+                for score in source.task_scores
+            )
+        )
+
+        results = StudentTaskResultService().build(source)
         result_by_task = {result.task_id: result for result in results}
 
         weak_result = result_by_task[str(self.original_weak.pk)]

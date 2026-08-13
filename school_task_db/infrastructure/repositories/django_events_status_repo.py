@@ -14,17 +14,17 @@ class DjangoEventsStatusRepository(IEventsStatusRepository):
     def get_events_status_source(self, year):
         events, participations, courses = event_scope(year)
         return EventsStatusSource(
-            events=[
+            events=tuple(
                 report_event_ref(event)
                 for event in event_summary_queryset(events).order_by(
                     '-planned_date',
                 )
-            ],
-            participation_statuses=list(
+            ),
+            participation_statuses=tuple(
                 participations.values_list('status', flat=True)
             ),
-            courses=[
+            courses=tuple(
                 report_course_ref(course)
                 for course in courses.order_by('grade_level', 'name')
-            ],
+            ),
         )

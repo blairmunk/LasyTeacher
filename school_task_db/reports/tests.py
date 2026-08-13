@@ -467,14 +467,15 @@ class ReportsViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['active_report'], 'events-status')
-        self.assertEqual(response.context['events_by_status'], [
-            {'status': 'planned', 'count': 1},
-        ])
+        self.assertEqual(response.context['events_by_status'][0].status, 'planned')
+        self.assertEqual(response.context['events_by_status'][0].count, 1)
         self.assertEqual(response.context['overdue_events'][0].pk, str(planned.pk))
         self.assertEqual(response.context['overdue_events'][0].name, 'Просроченная')
-        self.assertEqual(response.context['participation_stats'], [
-            {'status': 'assigned', 'count': 1},
-        ])
+        self.assertEqual(
+            response.context['participation_stats'][0].status,
+            'assigned',
+        )
+        self.assertEqual(response.context['participation_stats'][0].count, 1)
 
     def test_work_analysis_view_uses_clean_report_data(self):
         now = timezone.now()

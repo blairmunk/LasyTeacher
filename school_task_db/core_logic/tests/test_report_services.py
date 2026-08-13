@@ -3,6 +3,7 @@ from unittest import TestCase
 
 from core_logic.entities.report_summary import (
     EventsStatusSource,
+    ReportStatusCount,
     StudentPerformanceItemSource,
     StudentPerformanceParticipationFact,
     StudentPerformanceSource,
@@ -53,15 +54,15 @@ class ReportServicesTests(TestCase):
 
         report = EventsStatusService().build(source, now)
 
-        self.assertEqual(report.events_by_status, [
-            {'status': 'completed', 'count': 1},
-            {'status': 'planned', 'count': 1},
-            {'status': 'reviewing', 'count': 1},
-        ])
-        self.assertEqual(report.participation_stats, [
-            {'status': 'assigned', 'count': 1},
-            {'status': 'graded', 'count': 2},
-        ])
+        self.assertEqual(report.events_by_status, (
+            ReportStatusCount(status='completed', count=1),
+            ReportStatusCount(status='planned', count=1),
+            ReportStatusCount(status='reviewing', count=1),
+        ))
+        self.assertEqual(report.participation_stats, (
+            ReportStatusCount(status='assigned', count=1),
+            ReportStatusCount(status='graded', count=2),
+        ))
         self.assertEqual(report.overdue_events[0].pk, 'planned')
         self.assertEqual(report.long_reviewing[0].pk, 'reviewing')
         self.assertEqual(report.completed_unchecked[0].pk, 'completed')

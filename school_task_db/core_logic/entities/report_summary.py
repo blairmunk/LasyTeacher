@@ -50,22 +50,28 @@ class WorkAnalysisSource:
 
 @dataclass(frozen=True)
 class EventsStatusSource:
-    events: List[ReportEventRef]
-    participation_statuses: List[str]
-    courses: List[ReportCourseRef]
+    events: tuple[ReportEventRef, ...]
+    participation_statuses: tuple[str, ...]
+    courses: tuple[ReportCourseRef, ...]
+
+
+@dataclass(frozen=True)
+class ReportStatusCount:
+    status: str
+    count: int
 
 
 @dataclass(frozen=True)
 class EventsStatusReportData:
-    events_by_status: List[dict]
-    overdue_events: Any
-    long_reviewing: Any
-    completed_unchecked: Any
-    participation_stats: List[dict]
-    all_events: Any
-    courses: Any
+    events_by_status: tuple[ReportStatusCount, ...]
+    overdue_events: tuple[ReportEventRef, ...]
+    long_reviewing: tuple[ReportEventRef, ...]
+    completed_unchecked: tuple[ReportEventRef, ...]
+    participation_stats: tuple[ReportStatusCount, ...]
+    all_events: tuple[ReportEventRef, ...]
+    courses: tuple[ReportCourseRef, ...]
     active_report: str = 'events-status'
-    active_course_pk: Any = None
+    active_course_pk: Optional[str] = None
 
 
 @dataclass(frozen=True)

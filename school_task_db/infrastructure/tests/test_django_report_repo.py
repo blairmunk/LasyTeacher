@@ -824,11 +824,11 @@ class DjangoReportRepositoriesTests(TestCase):
         )
 
         status_counts = {
-            item['status']: item['count']
+            item.status: item.count
             for item in data.events_by_status
         }
         participation_counts = {
-            item['status']: item['count']
+            item.status: item.count
             for item in data.participation_stats
         }
 

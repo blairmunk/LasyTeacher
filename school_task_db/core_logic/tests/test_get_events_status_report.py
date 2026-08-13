@@ -3,6 +3,7 @@ from unittest import TestCase
 
 from core_logic.entities.report_summary import (
     EventsStatusSource,
+    ReportStatusCount,
 )
 from core_logic.entities.report_refs import (
     ReportEventRef,
@@ -21,7 +22,7 @@ class FakeReportRepository:
     def get_events_status_source(self, year):
         self.year = year
         return EventsStatusSource(
-            events=[
+            events=(
                 ReportEventRef(
                     pk='event-1',
                     name='Событие',
@@ -36,9 +37,9 @@ class FakeReportRepository:
                         duration=45,
                     ),
                 ),
-            ],
-            participation_statuses=['assigned'],
-            courses=[],
+            ),
+            participation_statuses=('assigned',),
+            courses=(),
         )
 
 
@@ -56,9 +57,13 @@ class GetEventsStatusReportUseCaseTests(TestCase):
         )
 
         self.assertEqual(repo.year, '2026')
-        self.assertEqual(data.events_by_status, [{'status': 'planned', 'count': 1}])
-        self.assertEqual(data.participation_stats, [
-            {'status': 'assigned', 'count': 1},
-        ])
+        self.assertEqual(
+            data.events_by_status,
+            (ReportStatusCount(status='planned', count=1),),
+        )
+        self.assertEqual(
+            data.participation_stats,
+            (ReportStatusCount(status='assigned', count=1),),
+        )
         self.assertEqual(data.all_events[0].pk, 'event-1')
         self.assertEqual(data.overdue_events[0].pk, 'event-1')

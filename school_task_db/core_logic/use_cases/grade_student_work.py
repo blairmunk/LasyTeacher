@@ -1,12 +1,13 @@
 """Use case for saving a checked student work."""
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from core_logic.entities.grading import (
     GradeParticipationParams,
     GradeParticipationResult,
 )
+from core_logic.entities.review import ReviewTaskScoreValue
 from core_logic.interfaces.participation_grading_repo import (
     IParticipationGradingRepository,
 )
@@ -31,7 +32,7 @@ class GradeStudentWorkRequest:
     checked_by_display_name: str = ''
     checked_by_username: str = ''
     work_scan: Optional[Any] = None
-    task_scores: Optional[Dict[str, dict]] = None
+    task_scores: Optional[tuple[ReviewTaskScoreValue, ...]] = None
     is_retake: bool = False
     is_excellent: bool = False
     needs_attention: bool = False

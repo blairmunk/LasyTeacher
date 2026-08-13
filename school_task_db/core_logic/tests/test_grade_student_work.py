@@ -3,7 +3,11 @@ from unittest import TestCase
 
 from core_logic.entities.event import ParticipationGradingContext
 from core_logic.entities.attempt_snapshot import AttemptSnapshotRef
-from core_logic.entities.review import ReviewTaskRef, ReviewVariantTaskRef
+from core_logic.entities.review import (
+    ReviewTaskRef,
+    ReviewTaskScoreValue,
+    ReviewVariantTaskRef,
+)
 from core_logic.entities.grading import (
     GradeParticipationResult,
 )
@@ -96,7 +100,13 @@ class GradeStudentWorkUseCaseTests(TestCase):
                 teacher_comment='Хорошо',
                 checked_by_display_name='',
                 checked_by_username='teacher',
-                task_scores={'task-1': {'points': 8, 'max_points': 10}},
+                task_scores=(
+                    ReviewTaskScoreValue(
+                        score_key='task-1',
+                        points=8,
+                        max_points=10,
+                    ),
+                ),
             )
         )
 
@@ -109,7 +119,13 @@ class GradeStudentWorkUseCaseTests(TestCase):
         self.assertEqual(repo.graded_params.checked_by, 'teacher')
         self.assertEqual(
             repo.graded_params.task_scores,
-            {'task-1': {'points': 8, 'max_points': 10}},
+            (
+                ReviewTaskScoreValue(
+                    score_key='task-1',
+                    points=8,
+                    max_points=10,
+                ),
+            ),
         )
         self.assertEqual(repo.graded_params.event_status, 'reviewing')
         self.assertEqual(attempt_snapshot_repo.mark_ids, ['mark-1'])
@@ -217,25 +233,28 @@ class GradeStudentWorkUseCaseTests(TestCase):
                 score=4,
                 points=99,
                 max_points=99,
-                task_scores={
-                    'variant-task-1': {
-                        'task_id': 'task-1',
-                        'variant_task_id': 'variant-task-1',
-                        'points': 10,
-                        'max_points': 99,
-                        'comment': 'Проверено',
-                    },
-                    'variant-task-2': {
-                        'task_id': 'task-2',
-                        'variant_task_id': 'variant-task-2',
-                        'points': 5,
-                        'max_points': 5,
-                    },
-                    'foreign-task': {
-                        'points': 100,
-                        'max_points': 100,
-                    },
-                },
+                task_scores=(
+                    ReviewTaskScoreValue(
+                        score_key='variant-task-1',
+                        task_id='task-1',
+                        variant_task_id='variant-task-1',
+                        points=10,
+                        max_points=99,
+                        comment='Проверено',
+                    ),
+                    ReviewTaskScoreValue(
+                        score_key='variant-task-2',
+                        task_id='task-2',
+                        variant_task_id='variant-task-2',
+                        points=5,
+                        max_points=5,
+                    ),
+                    ReviewTaskScoreValue(
+                        score_key='foreign-task',
+                        points=100,
+                        max_points=100,
+                    ),
+                ),
             )
         )
 
@@ -244,13 +263,14 @@ class GradeStudentWorkUseCaseTests(TestCase):
         self.assertEqual(event_repo.graded_params.max_points, 3)
         self.assertEqual(
             event_repo.graded_params.task_scores,
-            {
-                'variant-task-1': {
-                    'task_id': 'task-1',
-                    'variant_task_id': 'variant-task-1',
-                    'points': 3,
-                    'max_points': 3,
-                    'comment': 'Проверено',
-                },
-            },
+            (
+                ReviewTaskScoreValue(
+                    score_key='variant-task-1',
+                    task_id='task-1',
+                    variant_task_id='variant-task-1',
+                    points=3,
+                    max_points=3,
+                    comment='Проверено',
+                ),
+            ),
         )

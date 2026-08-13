@@ -1,8 +1,9 @@
 """Pure grading decisions."""
 
-from collections.abc import Mapping
-
-from core_logic.entities.review import NormalizedReviewTaskScores
+from core_logic.entities.review import (
+    NormalizedReviewTaskScores,
+    ReviewTaskScoreValue,
+)
 
 
 class GradingService:
@@ -24,17 +25,8 @@ class GradingService:
         return current_status
 
     def normalize_task_scores(self, variant_tasks, submitted_scores):
-        submitted_scores = (
-            submitted_scores
-            if isinstance(submitted_scores, Mapping)
-            else {}
-        )
-        score_rows = [
-            (str(key), value)
-            for key, value in submitted_scores.items()
-            if isinstance(value, Mapping)
-        ]
-        normalized = {}
+        score_rows = tuple(submitted_scores)
+        normalized = []
         points_total = 0
         max_points_total = 0
         for variant_task in variant_tasks:
@@ -49,44 +41,46 @@ class GradingService:
             )
             max_points = max(self._int_or_default(variant_task.weight, 0), 0)
             points = min(
-                max(self._int_or_default(submitted.get('points'), 0), 0),
+                max(self._int_or_default(submitted.points, 0), 0),
                 max_points,
             )
             score_key = variant_task_id or task_id
-            normalized_score = {
-                'task_id': task_id,
-                'points': points,
-                'max_points': max_points,
-                'comment': str(submitted.get('comment') or ''),
-            }
-            if variant_task_id:
-                normalized_score['variant_task_id'] = variant_task_id
-            normalized[score_key] = normalized_score
+            normalized.append(
+                ReviewTaskScoreValue(
+                    score_key=score_key,
+                    task_id=task_id,
+                    variant_task_id=variant_task_id,
+                    points=points,
+                    max_points=max_points,
+                    comment=submitted.comment,
+                )
+            )
             points_total += points
             max_points_total += max_points
 
         return NormalizedReviewTaskScores(
-            task_scores=normalized,
+            task_scores=tuple(normalized),
             points=points_total,
             max_points=max_points_total,
         )
 
     @staticmethod
     def _submitted_task_score(score_rows, variant_task_id, task_id):
-        for score_key, score in score_rows:
-            submitted_variant_task_id = str(
-                score.get('variant_task_id') or ''
-            )
+        for score in score_rows:
+            submitted_variant_task_id = score.variant_task_id
             if variant_task_id and (
-                score_key == variant_task_id
+                score.score_key == variant_task_id
                 or submitted_variant_task_id == variant_task_id
             ):
                 return score
-        for score_key, score in score_rows:
-            submitted_task_id = str(score.get('task_id') or '')
-            if score_key == task_id or submitted_task_id == task_id:
+        for score in score_rows:
+            if score.score_key == task_id or score.task_id == task_id:
                 return score
-        return {}
+        return ReviewTaskScoreValue(
+            score_key=variant_task_id or task_id,
+            points=0,
+            max_points=0,
+        )
 
     @staticmethod
     def _int_or_default(value, default):

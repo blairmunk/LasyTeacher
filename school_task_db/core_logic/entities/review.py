@@ -134,6 +134,28 @@ class ReviewMarkRef:
 
 
 @dataclass(frozen=True)
+class ReviewTaskScoreValue:
+    score_key: str
+    points: int
+    max_points: int
+    comment: str = ''
+    task_id: str = ''
+    variant_task_id: str = ''
+
+    def __post_init__(self):
+        object.__setattr__(self, 'score_key', str(self.score_key).strip())
+        object.__setattr__(self, 'task_id', str(self.task_id).strip())
+        object.__setattr__(
+            self,
+            'variant_task_id',
+            str(self.variant_task_id).strip(),
+        )
+        object.__setattr__(self, 'comment', str(self.comment or ''))
+        if not self.score_key:
+            raise ValueError('score_key is required')
+
+
+@dataclass(frozen=True)
 class ReviewScoreCalculation:
     score: int
     percentage: float
@@ -141,9 +163,12 @@ class ReviewScoreCalculation:
 
 @dataclass(frozen=True)
 class NormalizedReviewTaskScores:
-    task_scores: Dict[str, dict]
+    task_scores: tuple[ReviewTaskScoreValue, ...]
     points: int
     max_points: int
+
+    def __post_init__(self):
+        object.__setattr__(self, 'task_scores', tuple(self.task_scores))
 
 
 @dataclass(frozen=True)
@@ -180,7 +205,10 @@ class ReviewSubmissionData:
     teacher_comment: str
     mistakes_analysis: str
     recommendations: str
-    task_scores: Dict[str, dict]
+    task_scores: tuple[ReviewTaskScoreValue, ...]
+
+    def __post_init__(self):
+        object.__setattr__(self, 'task_scores', tuple(self.task_scores))
 
 
 @dataclass(frozen=True)

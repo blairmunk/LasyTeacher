@@ -1,6 +1,10 @@
 from unittest import TestCase
 
-from core_logic.entities.review import ReviewTaskRef, ReviewVariantTaskRef
+from core_logic.entities.review import (
+    ReviewTaskRef,
+    ReviewTaskScoreValue,
+    ReviewVariantTaskRef,
+)
 from core_logic.services.grading_service import GradingService
 
 
@@ -28,25 +32,27 @@ class GradingServiceTests(TestCase):
                     weight=4,
                 ),
             ],
-            submitted_scores={
-                'task-1': {
-                    'points': '3',
-                    'max_points': 100,
-                    'comment': 'Верно',
-                },
-            },
+            submitted_scores=(
+                ReviewTaskScoreValue(
+                    score_key='task-1',
+                    points=3,
+                    max_points=100,
+                    comment='Верно',
+                ),
+            ),
         )
 
         self.assertEqual(result.points, 3)
         self.assertEqual(result.max_points, 4)
         self.assertEqual(
             result.task_scores,
-            {
-                'task-1': {
-                    'task_id': 'task-1',
-                    'points': 3,
-                    'max_points': 4,
-                    'comment': 'Верно',
-                },
-            },
+            (
+                ReviewTaskScoreValue(
+                    score_key='task-1',
+                    task_id='task-1',
+                    points=3,
+                    max_points=4,
+                    comment='Верно',
+                ),
+            ),
         )

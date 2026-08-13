@@ -12,6 +12,7 @@ from core_logic.entities.review import (
     ReviewParticipationRef,
     ReviewScoreCalculation,
     ReviewSubmissionData,
+    ReviewTaskScoreValue,
     ReviewVariantRef,
     ReviewTaskScoreRow,
     ReviewVariantTaskRef,
@@ -72,7 +73,7 @@ class ReviewService:
         )
 
     def parse_submission(self, data: Mapping[str, object]) -> ReviewSubmissionData:
-        task_scores = {}
+        task_scores = []
         for key, value in data.items():
             if not key.startswith('task_'):
                 continue
@@ -80,24 +81,23 @@ class ReviewService:
                 continue
 
             score_key = key[5:]
-            score_data = {
-                'points': self._int_or_default(value, 0),
-                'max_points': self._int_or_default(
-                    data.get(f'task_{score_key}_max'),
-                    5,
-                ),
-                'comment': data.get(f'task_{score_key}_comment', ''),
-            }
             task_id = str(data.get(f'task_{score_key}_task_id') or '').strip()
             variant_task_id = str(
                 data.get(f'task_{score_key}_variant_task_id') or ''
             ).strip()
-            if task_id and task_id != score_key:
-                score_data['task_id'] = task_id
-            if variant_task_id:
-                score_data['variant_task_id'] = variant_task_id
-
-            task_scores[score_key] = score_data
+            task_scores.append(
+                ReviewTaskScoreValue(
+                    score_key=score_key,
+                    points=self._int_or_default(value, 0),
+                    max_points=self._int_or_default(
+                        data.get(f'task_{score_key}_max'),
+                        5,
+                    ),
+                    comment=data.get(f'task_{score_key}_comment', ''),
+                    task_id=(task_id if task_id != score_key else ''),
+                    variant_task_id=variant_task_id,
+                )
+            )
 
         return ReviewSubmissionData(
             score=self._int_or_none(data.get('score')),
@@ -106,7 +106,7 @@ class ReviewService:
             teacher_comment=data.get('teacher_comment', ''),
             mistakes_analysis=data.get('mistakes_analysis', ''),
             recommendations=data.get('recommendations', ''),
-            task_scores=task_scores,
+            task_scores=tuple(task_scores),
         )
 
     def validate_work_scan(

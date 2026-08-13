@@ -7,6 +7,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from core.models import AcademicYear, ImportLog
+from core_logic.entities.review import ReviewTaskScoreValue
 from core_logic.services.grading_service import GradingService
 from core_logic.services.remedial_service import RemedialService
 from core_logic.services.student_task_result_service import (
@@ -2802,20 +2803,22 @@ class DjangoRemedialRepositoryTests(TestCase):
                 max_points=7,
                 teacher_comment='Хорошая работа',
                 checked_by_username='teacher',
-                task_scores={
-                    str(variant_task.pk): {
-                        'task_id': str(self.original_weak.pk),
-                        'points': 1,
-                        'max_points': 2,
-                        'comment': 'Повторить',
-                    },
-                    str(demo_variant_task.pk): {
-                        'task_id': str(self.original_ok.pk),
-                        'points': 5,
-                        'max_points': 5,
-                        'comment': 'Не должно сохраниться',
-                    },
-                },
+                task_scores=(
+                    ReviewTaskScoreValue(
+                        score_key=str(variant_task.pk),
+                        task_id=str(self.original_weak.pk),
+                        points=1,
+                        max_points=2,
+                        comment='Повторить',
+                    ),
+                    ReviewTaskScoreValue(
+                        score_key=str(demo_variant_task.pk),
+                        task_id=str(self.original_ok.pk),
+                        points=5,
+                        max_points=5,
+                        comment='Не должно сохраниться',
+                    ),
+                ),
             )
         )
 

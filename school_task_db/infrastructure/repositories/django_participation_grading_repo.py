@@ -67,7 +67,20 @@ class DjangoParticipationGradingRepository(
             mark.is_excellent = params.is_excellent
             mark.needs_attention = params.needs_attention
             if params.task_scores is not None:
-                mark.task_scores = params.task_scores
+                mark.task_scores = {
+                    score.score_key: {
+                        'task_id': score.task_id or score.score_key,
+                        'points': score.points,
+                        'max_points': score.max_points,
+                        'comment': score.comment,
+                        **(
+                            {'variant_task_id': score.variant_task_id}
+                            if score.variant_task_id
+                            else {}
+                        ),
+                    }
+                    for score in params.task_scores
+                }
             if params.work_scan is not None:
                 if mark.work_scan:
                     mark.work_scan.delete(save=False)

@@ -189,7 +189,8 @@ class ReviewActionUseCaseTests(TestCase):
         )
 
         self.assertEqual(result.score, 5)
-        self.assertEqual(result.task_scores['t1']['points'], 3)
+        self.assertEqual(result.task_scores[0].score_key, 't1')
+        self.assertEqual(result.task_scores[0].points, 3)
 
     def test_validate_work_scan_use_case_uses_review_service(self):
         use_case = ValidateReviewWorkScanUseCase(review_service=ReviewService())

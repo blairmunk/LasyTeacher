@@ -8,6 +8,7 @@ from core_logic.entities.review import (
     ReviewParticipationRef,
     ReviewStudentRef,
     ReviewTaskRef,
+    ReviewTaskScoreValue,
     ReviewVariantRef,
     ReviewVariantTaskRef,
     ReviewWorkRef,
@@ -57,13 +58,14 @@ class ReviewServiceTests(TestCase):
         self.assertEqual(submission.teacher_comment, 'Хорошо')
         self.assertEqual(
             submission.task_scores,
-            {
-                'task-1': {
-                    'points': 2,
-                    'max_points': 3,
-                    'comment': 'Верно',
-                }
-            },
+            (
+                ReviewTaskScoreValue(
+                    score_key='task-1',
+                    points=2,
+                    max_points=3,
+                    comment='Верно',
+                ),
+            ),
         )
 
     def test_parse_submission_tolerates_empty_numbers(self):
@@ -78,8 +80,8 @@ class ReviewServiceTests(TestCase):
         self.assertIsNone(submission.score)
         self.assertIsNone(submission.points)
         self.assertIsNone(submission.max_points)
-        self.assertEqual(submission.task_scores['task-1']['points'], 0)
-        self.assertEqual(submission.task_scores['task-1']['max_points'], 5)
+        self.assertEqual(submission.task_scores[0].points, 0)
+        self.assertEqual(submission.task_scores[0].max_points, 5)
 
     def test_parse_submission_accepts_variant_task_score_keys(self):
         submission = ReviewService().parse_submission({
@@ -92,15 +94,16 @@ class ReviewServiceTests(TestCase):
 
         self.assertEqual(
             submission.task_scores,
-            {
-                'variant-task-1': {
-                    'points': 2,
-                    'max_points': 3,
-                    'comment': 'Верно',
-                    'task_id': 'task-1',
-                    'variant_task_id': 'variant-task-1',
-                }
-            },
+            (
+                ReviewTaskScoreValue(
+                    score_key='variant-task-1',
+                    points=2,
+                    max_points=3,
+                    comment='Верно',
+                    task_id='task-1',
+                    variant_task_id='variant-task-1',
+                ),
+            ),
         )
 
     def test_validate_work_scan_accepts_supported_files(self):

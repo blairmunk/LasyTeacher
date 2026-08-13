@@ -1,7 +1,9 @@
 """Command and result data for participation grading."""
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Optional
+
+from core_logic.entities.review import ReviewTaskScoreValue
 
 
 @dataclass(frozen=True)
@@ -15,7 +17,7 @@ class GradeParticipationParams:
     recommendations: str = ''
     checked_by: str = ''
     work_scan: Optional[Any] = None
-    task_scores: Optional[Dict[str, dict]] = None
+    task_scores: Optional[tuple[ReviewTaskScoreValue, ...]] = None
     is_retake: bool = False
     is_excellent: bool = False
     needs_attention: bool = False

@@ -11,6 +11,7 @@ from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
 
 from core.models import AcademicYear
+from core_logic.entities.review import ReviewTaskScoreValue
 from core_logic.entities.work_specification_commands import (
     CreateWorkParams,
     WorkContentBlockParams,
@@ -480,7 +481,7 @@ class Command(BaseCommand):
         )
 
     def _grade_participation(self, participation, student_index):
-        task_scores = {}
+        task_scores = []
         total_points = 0
         max_points = 0
         for variant_task in participation.variant.varianttask_set.filter(
@@ -493,17 +494,20 @@ class Command(BaseCommand):
                 else 0
             )
             points = max(available - deduction, 0)
-            task_scores[str(variant_task.pk)] = {
-                'variant_task_id': str(variant_task.pk),
-                'task_id': str(variant_task.task_id),
-                'points': points,
-                'max_points': available,
-                'comment': (
-                    'Проверить ход решения.'
-                    if points < available
-                    else ''
-                ),
-            }
+            task_scores.append(
+                ReviewTaskScoreValue(
+                    score_key=str(variant_task.pk),
+                    variant_task_id=str(variant_task.pk),
+                    task_id=str(variant_task.task_id),
+                    points=points,
+                    max_points=available,
+                    comment=(
+                        'Проверить ход решения.'
+                        if points < available
+                        else ''
+                    ),
+                )
+            )
             total_points += points
             max_points += available
         percentage = (
@@ -516,7 +520,7 @@ class Command(BaseCommand):
             GradeStudentWorkRequest(
                 participation_id=str(participation.pk),
                 score=score,
-                task_scores=task_scores,
+                task_scores=tuple(task_scores),
                 teacher_comment='Тестовая проверенная работа.',
                 mistakes_analysis=(
                     'Автоматически созданный пример анализа ошибок.'

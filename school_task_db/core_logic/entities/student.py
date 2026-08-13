@@ -342,13 +342,35 @@ class RemedialWizardPreviewSource:
 
 
 @dataclass(frozen=True)
+class RemedialWizardPreviewItem:
+    student: StudentDetail
+    student_level: str
+    overall_avg: float
+    weak_groups: int
+    tasks_count: int
+    total_weight: int
+    est_time: int
+    available: bool
+    reason: str = ''
+    task_ids: tuple[str, ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        object.__setattr__(self, 'task_ids', tuple(self.task_ids))
+
+
+@dataclass(frozen=True)
 class RemedialWizardPreviewData:
     status: str = 'ready'
     group: Optional[StudentGroupRef] = None
-    preview: List[dict] = field(default_factory=list)
+    preview: tuple[RemedialWizardPreviewItem, ...] = field(
+        default_factory=tuple,
+    )
     threshold: int = 70
     limit_type: str = 'tasks'
     limit_value: int = 10
     work_name: str = 'Работа над ошибками'
     students_with_tasks: int = 0
     total_tasks: int = 0
+
+    def __post_init__(self):
+        object.__setattr__(self, 'preview', tuple(self.preview))

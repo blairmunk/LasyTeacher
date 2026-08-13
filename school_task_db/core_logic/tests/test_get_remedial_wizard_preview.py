@@ -66,7 +66,7 @@ class GetRemedialWizardPreviewUseCaseTests(TestCase):
         self.assertEqual(result.limit_type, 'weight')
         self.assertEqual(result.limit_value, 15)
         self.assertEqual(result.work_name, 'Повторение')
-        self.assertEqual(result.preview[0]['student_level'], 'unknown')
+        self.assertEqual(result.preview[0].student_level, 'unknown')
 
     def test_start_use_case_returns_groups_and_limit_choices(self):
         repo = FakeStudentRepository()
@@ -109,10 +109,10 @@ class RemedialWizardServiceTests(TestCase):
         result = self._build(source)
 
         row = result.preview[0]
-        self.assertEqual(row['student_level'], 'medium')
-        self.assertEqual(row['task_ids'], ['replacement'])
-        self.assertEqual(row['total_weight'], 3)
-        self.assertEqual(row['est_time'], 8)
+        self.assertEqual(row.student_level, 'medium')
+        self.assertEqual(row.task_ids, ('replacement',))
+        self.assertEqual(row.total_weight, 3)
+        self.assertEqual(row.est_time, 8)
 
     def test_weak_student_uses_tasks_not_harder_than_effective_difficulty(self):
         source = self._source(
@@ -138,7 +138,7 @@ class RemedialWizardServiceTests(TestCase):
 
         result = self._build(source)
 
-        self.assertEqual(result.preview[0]['task_ids'], ['easy'])
+        self.assertEqual(result.preview[0].task_ids, ('easy',))
 
     def test_strong_student_uses_harder_tasks_and_honours_task_limit(self):
         source = self._source(
@@ -164,8 +164,8 @@ class RemedialWizardServiceTests(TestCase):
 
         result = self._build(source, limit_value=1)
 
-        self.assertEqual(result.preview[0]['student_level'], 'strong')
-        self.assertEqual(result.preview[0]['task_ids'], ['hard-1'])
+        self.assertEqual(result.preview[0].student_level, 'strong')
+        self.assertEqual(result.preview[0].task_ids, ('hard-1',))
 
     def test_missing_group_returns_not_found(self):
         result = self._build(None)

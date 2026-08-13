@@ -590,10 +590,13 @@ class RemedialFromEventViewTests(TestCase):
         self.assertEqual(response.context['total_tasks'], 1)
         preview = response.context['preview']
         self.assertEqual(len(preview), 1)
-        self.assertEqual(preview[0]['student'].pk, str(self.student.pk))
-        self.assertEqual(preview[0]['student'].full_name, self.student.get_full_name())
-        self.assertEqual(preview[0]['student_level'], 'medium')
-        self.assertEqual(preview[0]['tasks_count'], 1)
+        self.assertEqual(preview[0].student.pk, str(self.student.pk))
+        self.assertEqual(
+            preview[0].student.full_name,
+            self.student.get_full_name(),
+        )
+        self.assertEqual(preview[0].student_level, 'medium')
+        self.assertEqual(preview[0].tasks_count, 1)
 
     def test_remedial_wizard_step3_creates_work_variants_and_event(self):
         group = StudentGroup.objects.create(name='9А')

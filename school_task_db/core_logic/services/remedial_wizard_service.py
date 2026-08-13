@@ -5,6 +5,7 @@ from collections import defaultdict
 
 from core_logic.entities.student import (
     RemedialWizardPreviewData,
+    RemedialWizardPreviewItem,
     RemedialWizardPreviewSource,
 )
 from core_logic.value_objects.analog_group_difficulty import (
@@ -90,53 +91,49 @@ class RemedialWizardService:
                 limit_type=limit_type,
                 limit_value=limit_value,
             )
-            preview.append({
-                'student': student,
-                'student_level': student_level,
-                'student_level_label': {
-                    'weak': 'Слабый',
-                    'medium': 'Средний',
-                    'strong': 'Сильный',
-                }[student_level],
-                'overall_avg': round(overall_avg, 1),
-                'weak_groups': len(weak_group_ids),
-                'tasks_count': len(selected),
-                'total_weight': sum(task.difficulty for task in selected),
-                'est_time': sum(self._task_time(task) for task in selected),
-                'available': bool(selected),
-                'reason': (
-                    ''
-                    if selected
-                    else 'Нет слабых групп или все задания решены'
-                ),
-                'task_ids': [task.task_id for task in selected],
-            })
+            preview.append(
+                RemedialWizardPreviewItem(
+                    student=student,
+                    student_level=student_level,
+                    overall_avg=round(overall_avg, 1),
+                    weak_groups=len(weak_group_ids),
+                    tasks_count=len(selected),
+                    total_weight=sum(task.difficulty for task in selected),
+                    est_time=sum(self._task_time(task) for task in selected),
+                    available=bool(selected),
+                    reason=(
+                        ''
+                        if selected
+                        else 'Нет слабых групп или все задания решены'
+                    ),
+                    task_ids=tuple(task.task_id for task in selected),
+                )
+            )
 
         return RemedialWizardPreviewData(
             group=source.group,
-            preview=preview,
+            preview=tuple(preview),
             threshold=threshold,
             limit_type=limit_type,
             limit_value=limit_value,
             work_name=work_name,
-            students_with_tasks=sum(1 for row in preview if row['available']),
-            total_tasks=sum(row['tasks_count'] for row in preview),
+            students_with_tasks=sum(1 for row in preview if row.available),
+            total_tasks=sum(row.tasks_count for row in preview),
         )
 
     @staticmethod
     def _no_data_row(student):
-        return {
-            'student': student,
-            'student_level': 'unknown',
-            'student_level_label': '—',
-            'overall_avg': 0,
-            'weak_groups': 0,
-            'tasks_count': 0,
-            'total_weight': 0,
-            'est_time': 0,
-            'available': False,
-            'reason': 'Нет данных',
-        }
+        return RemedialWizardPreviewItem(
+            student=student,
+            student_level='unknown',
+            overall_avg=0,
+            weak_groups=0,
+            tasks_count=0,
+            total_weight=0,
+            est_time=0,
+            available=False,
+            reason='Нет данных',
+        )
 
     @staticmethod
     def _student_level(overall_avg):

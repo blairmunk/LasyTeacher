@@ -48,18 +48,18 @@ class DjangoTaskDBHealthRepository(ITaskDBHealthRepository):
             total_works=total_works,
             total_variants=total_variants,
             orphan_variants_count=orphan_variants.count(),
-            orphan_variant_samples=[
+            orphan_variant_samples=tuple(
                 self._variant_ref(variant)
                 for variant in orphan_variants.order_by('-created_at')[:10]
-            ],
-            group_sizes=[
+            ),
+            group_sizes=tuple(
                 TaskGroupSizeFact(
                     group=self._analog_group_ref(group),
                     task_count=group.task_count,
                 )
                 for group in group_records
-            ],
-            coverage=[
+            ),
+            coverage=tuple(
                 TaskCoverageFact(
                     work=self._work_ref(work_group.work),
                     group=self._analog_group_ref(work_group.analog_group),
@@ -70,19 +70,19 @@ class DjangoTaskDBHealthRepository(ITaskDBHealthRepository):
                     'work',
                     'analog_group',
                 ).annotate(available=Count('analog_group__taskgroup'))
-            ],
+            ),
             ungrouped_tasks_count=ungrouped_count,
             works_no_variants_count=works_no_variants.count(),
-            works_no_variant_samples=[
+            works_no_variant_samples=tuple(
                 self._work_ref(work)
                 for work in works_no_variants[:10]
-            ],
+            ),
             works_no_spec_count=works_no_spec.count(),
-            works_no_spec_samples=[
+            works_no_spec_samples=tuple(
                 self._work_ref(work)
                 for work in works_no_spec[:10]
-            ],
-            difficulty_counts=[
+            ),
+            difficulty_counts=tuple(
                 TaskDistributionFact(
                     key=item['difficulty'],
                     count=item['count'],
@@ -90,8 +90,8 @@ class DjangoTaskDBHealthRepository(ITaskDBHealthRepository):
                 for item in Task.objects.values('difficulty').annotate(
                     count=Count('id'),
                 ).order_by('difficulty')
-            ],
-            type_counts=[
+            ),
+            type_counts=tuple(
                 TaskDistributionFact(
                     key=item['task_type'],
                     count=item['count'],
@@ -103,13 +103,13 @@ class DjangoTaskDBHealthRepository(ITaskDBHealthRepository):
                 for item in Task.objects.values('task_type').annotate(
                     count=Count('id'),
                 ).order_by('-count')
-            ],
-            most_used_tasks=[
+            ),
+            most_used_tasks=tuple(
                 self._task_usage_ref(task)
                 for task in Task.objects.annotate(
                     variant_count=Count('varianttask'),
                 ).filter(variant_count__gt=0).order_by('-variant_count')[:10]
-            ],
+            ),
             unverified_tasks_count=Task.objects.filter(
                 is_verified=False,
             ).count(),
@@ -119,13 +119,13 @@ class DjangoTaskDBHealthRepository(ITaskDBHealthRepository):
             no_grade_tasks_count=Task.objects.filter(
                 grade__isnull=True,
             ).count(),
-            courses=[
+            courses=tuple(
                 ReportCourseRef(pk=str(course.pk), name=course.name)
                 for course in Course.objects.filter(is_active=True).order_by(
                     'grade_level',
                     'name',
                 )
-            ],
+            ),
         )
 
     @staticmethod

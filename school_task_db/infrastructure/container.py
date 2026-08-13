@@ -1686,6 +1686,7 @@ class Container:
     def execute_task_import_use_case(self):
         return ExecuteTaskImportUseCase(
             task_import_service=self.task_import_service,
+            validate_json_use_case=self.validate_task_import_json_use_case(),
         )
 
     def execute_task_import_submission_use_case(self):

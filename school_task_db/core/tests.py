@@ -317,6 +317,32 @@ class CoreViewsTests(TestCase):
             with self.assertRaisesRegex(CommandError, 'Невалидный JSON'):
                 call_command('import_tasks', str(json_file))
 
+    def test_import_tasks_command_rejects_invalid_structure_before_writes(self):
+        payload = {
+            'version': '1.4',
+            'tasks': [{
+                'id': '550e8400-e29b-41d4-a716-446655440011',
+                'text': 'Задача с некорректной классификацией',
+                'codifier_requirements': [{
+                    'subject': 'Физика',
+                    'exam_type': 'oge',
+                    'code': '2.1',
+                }],
+            }],
+        }
+        with TemporaryDirectory() as temp_dir:
+            json_file = Path(temp_dir) / 'invalid-structure.json'
+            json_file.write_text(
+                json.dumps(payload, ensure_ascii=False),
+                encoding='utf-8',
+            )
+
+            with self.assertRaisesRegex(CommandError, 'не содержит year'):
+                call_command('import_tasks', str(json_file))
+
+        self.assertFalse(Task.objects.filter(text__contains='некорректной').exists())
+        self.assertFalse(ImportLog.objects.exists())
+
     def test_validate_json_command_accepts_canonical_task_bank(self):
         output = StringIO()
 

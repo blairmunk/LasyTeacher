@@ -44,3 +44,28 @@ class ExecuteTaskImportUseCaseTests(TestCase):
         self.assertFalse(result.success)
         self.assertIn('Неподдерживаемая версия', result.error)
         self.assertIsNone(service.request)
+
+    def test_execute_rejects_invalid_classification_before_import_service(self):
+        service = FakeTaskImportService()
+        request = TaskImportRequest(
+            data={
+                'version': '1.4',
+                'tasks': [{
+                    'id': '550e8400-e29b-41d4-a716-446655440001',
+                    'text': 'Задание',
+                    'codifier_content_entries': [{
+                        'subject': 'Физика',
+                        'exam_type': 'oge',
+                        'code': '1.1',
+                    }],
+                }],
+            },
+            filename='tasks.json',
+            file_size=100,
+        )
+
+        result = ExecuteTaskImportUseCase(service).execute(request)
+
+        self.assertFalse(result.success)
+        self.assertIn('не содержит year', result.error)
+        self.assertIsNone(service.request)

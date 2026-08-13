@@ -55,22 +55,25 @@ class DjangoWorkAnalysisRepository(IWorkAnalysisRepository):
                 WorkAnalysisItemSource(
                     work=report_work_ref(work),
                     events_count=len(work_events),
-                    marks=[
+                    marks=tuple(
                         ReportMarkFact(
                             score=attempt.score,
                             points=attempt.points,
                             max_points=attempt.max_points,
                         )
                         for attempt in attempts_by_work[work.pk]
-                    ],
-                    events=[report_event_ref(event) for event in work_events],
+                    ),
+                    events=tuple(
+                        report_event_ref(event)
+                        for event in work_events
+                    ),
                 ),
             )
 
         return WorkAnalysisSource(
-            works=work_sources,
-            courses=[
+            works=tuple(work_sources),
+            courses=tuple(
                 report_course_ref(course)
                 for course in courses.order_by('grade_level', 'name')
-            ],
+            ),
         )

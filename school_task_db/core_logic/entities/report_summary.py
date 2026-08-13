@@ -38,14 +38,14 @@ class StudentPerformanceSource:
 class WorkAnalysisItemSource:
     work: ReportWorkRef
     events_count: int
-    marks: List[ReportMarkFact]
-    events: List['ReportEventRef'] = field(default_factory=list)
+    marks: tuple[ReportMarkFact, ...]
+    events: tuple[ReportEventRef, ...] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True)
 class WorkAnalysisSource:
-    works: List[WorkAnalysisItemSource]
-    courses: List[ReportCourseRef]
+    works: tuple[WorkAnalysisItemSource, ...]
+    courses: tuple[ReportCourseRef, ...]
 
 
 @dataclass(frozen=True)
@@ -75,12 +75,39 @@ class EventsStatusReportData:
 
 
 @dataclass(frozen=True)
+class WorkScoreDistributionItem:
+    score: int
+    count: int
+
+
+@dataclass(frozen=True)
+class WorkAnalysisItem:
+    work: ReportWorkRef
+    events: tuple[ReportEventRef, ...]
+    events_count: int
+    total_marks: int
+    average_score: float
+    average_percentage: int
+    score_distribution: tuple[WorkScoreDistributionItem, ...]
+    difficulty_assessment: str
+
+
+@dataclass(frozen=True)
+class WorkAnalysisSummary:
+    total_works: int
+    total_marks: int
+    easy_works: int
+    hard_works: int
+    avg_score: float
+
+
+@dataclass(frozen=True)
 class WorkAnalysisReportData:
-    works_analysis: List[dict]
-    summary_stats: dict
-    courses: Any
+    works_analysis: tuple[WorkAnalysisItem, ...]
+    summary_stats: WorkAnalysisSummary
+    courses: tuple[ReportCourseRef, ...]
     active_report: str = 'work-analysis'
-    active_course_pk: Any = None
+    active_course_pk: Optional[str] = None
 
 
 @dataclass(frozen=True)

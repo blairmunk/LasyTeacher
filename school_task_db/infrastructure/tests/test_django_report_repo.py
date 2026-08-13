@@ -897,26 +897,27 @@ class DjangoReportRepositoriesTests(TestCase):
         )
         work_stat = data.works_analysis[0]
 
-        self.assertEqual(work_stat['work'].pk, str(work.pk))
-        self.assertEqual(work_stat['work'].name, 'Контрольная')
-        self.assertEqual(work_stat['work'].work_type, work.work_type)
+        self.assertEqual(work_stat.work.pk, str(work.pk))
+        self.assertEqual(work_stat.work.name, 'Контрольная')
+        self.assertEqual(work_stat.work.work_type, work.work_type)
         self.assertEqual(
-            work_stat['work'].work_type_display,
+            work_stat.work.work_type_display,
             work.get_work_type_display(),
         )
-        self.assertEqual(work_stat['work'].variant_count, 0)
-        self.assertEqual(work_stat['events_count'], 1)
-        self.assertEqual(work_stat['events'][0].pk, str(event.pk))
-        self.assertEqual(work_stat['total_marks'], 1)
-        self.assertEqual(work_stat['average_score'], 4)
-        self.assertEqual(work_stat['average_percentage'], 80)
-        self.assertEqual(work_stat['difficulty_assessment'], 'Средняя')
-        self.assertEqual(work_stat['score_distribution'], [
-            {'score': 4, 'count': 1},
-        ])
-        self.assertEqual(data.summary_stats['total_works'], 1)
-        self.assertEqual(data.summary_stats['total_marks'], 1)
-        self.assertEqual(data.summary_stats['avg_score'], 4)
+        self.assertEqual(work_stat.work.variant_count, 0)
+        self.assertEqual(work_stat.events_count, 1)
+        self.assertEqual(work_stat.events[0].pk, str(event.pk))
+        self.assertEqual(work_stat.total_marks, 1)
+        self.assertEqual(work_stat.average_score, 4)
+        self.assertEqual(work_stat.average_percentage, 80)
+        self.assertEqual(work_stat.difficulty_assessment, 'Средняя')
+        self.assertEqual(
+            [(item.score, item.count) for item in work_stat.score_distribution],
+            [(4, 1)],
+        )
+        self.assertEqual(data.summary_stats.total_works, 1)
+        self.assertEqual(data.summary_stats.total_marks, 1)
+        self.assertEqual(data.summary_stats.avg_score, 4)
         self.assertEqual(data.active_report, 'work-analysis')
 
     def test_get_student_performance_report_returns_group_stats(self):

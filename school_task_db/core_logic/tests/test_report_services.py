@@ -174,21 +174,24 @@ class ReportServicesTests(TestCase):
         report = WorkAnalysisService().build(source)
 
         first = report.works_analysis[0]
-        self.assertEqual(first['events_count'], 2)
-        self.assertEqual(first['events'][0].pk, 'event-1')
-        self.assertEqual(first['total_marks'], 2)
-        self.assertEqual(first['average_score'], 4.5)
-        self.assertEqual(first['average_percentage'], 80)
-        self.assertEqual(first['difficulty_assessment'], 'Средняя')
-        self.assertEqual(first['score_distribution'], [
-            {'score': 4, 'count': 1},
-            {'score': 5, 'count': 1},
-        ])
-        self.assertEqual(report.works_analysis[1]['difficulty_assessment'], 'Очень сложная')
-        self.assertEqual(report.summary_stats['total_works'], 2)
-        self.assertEqual(report.summary_stats['total_marks'], 3)
-        self.assertEqual(report.summary_stats['hard_works'], 1)
-        self.assertEqual(report.summary_stats['avg_score'], 3.25)
+        self.assertEqual(first.events_count, 2)
+        self.assertEqual(first.events[0].pk, 'event-1')
+        self.assertEqual(first.total_marks, 2)
+        self.assertEqual(first.average_score, 4.5)
+        self.assertEqual(first.average_percentage, 80)
+        self.assertEqual(first.difficulty_assessment, 'Средняя')
+        self.assertEqual(
+            [(item.score, item.count) for item in first.score_distribution],
+            [(4, 1), (5, 1)],
+        )
+        self.assertEqual(
+            report.works_analysis[1].difficulty_assessment,
+            'Очень сложная',
+        )
+        self.assertEqual(report.summary_stats.total_works, 2)
+        self.assertEqual(report.summary_stats.total_marks, 3)
+        self.assertEqual(report.summary_stats.hard_works, 1)
+        self.assertEqual(report.summary_stats.avg_score, 3.25)
 
     def test_work_without_marks_has_zero_summary_values(self):
         source = WorkAnalysisSource(
@@ -205,10 +208,10 @@ class ReportServicesTests(TestCase):
         report = WorkAnalysisService().build(source)
 
         work = report.works_analysis[0]
-        self.assertEqual(work['average_score'], 0)
-        self.assertEqual(work['average_percentage'], 0)
-        self.assertEqual(work['score_distribution'], [])
-        self.assertEqual(work['difficulty_assessment'], 'Очень сложная')
+        self.assertEqual(work.average_score, 0)
+        self.assertEqual(work.average_percentage, 0)
+        self.assertEqual(work.score_distribution, ())
+        self.assertEqual(work.difficulty_assessment, 'Очень сложная')
 
     @staticmethod
     def _work(pk, name):

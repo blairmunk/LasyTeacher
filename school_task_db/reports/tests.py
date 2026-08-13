@@ -511,11 +511,11 @@ class ReportsViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['active_report'], 'work-analysis')
-        self.assertEqual(work_stat['work'].pk, str(work.pk))
-        self.assertEqual(work_stat['work'].name, 'Контрольная')
-        self.assertEqual(work_stat['average_percentage'], 100)
-        self.assertEqual(work_stat['difficulty_assessment'], 'Легкая')
-        self.assertEqual(response.context['summary_stats']['total_works'], 1)
+        self.assertEqual(work_stat.work.pk, str(work.pk))
+        self.assertEqual(work_stat.work.name, 'Контрольная')
+        self.assertEqual(work_stat.average_percentage, 100)
+        self.assertEqual(work_stat.difficulty_assessment, 'Легкая')
+        self.assertEqual(response.context['summary_stats'].total_works, 1)
         self.assertContains(
             response,
             reverse('reports:event-performance', args=[event.pk]),

@@ -3,8 +3,11 @@
 from collections import Counter
 
 from core_logic.entities.report_summary import (
+    WorkAnalysisItem,
     WorkAnalysisReportData,
     WorkAnalysisSource,
+    WorkAnalysisSummary,
+    WorkScoreDistributionItem,
 )
 
 
@@ -33,49 +36,52 @@ class WorkAnalysisService:
                 else 0
             )
             score_counts = Counter(scores)
-            score_distribution = [
-                {'score': score, 'count': score_counts[score]}
+            score_distribution = tuple(
+                WorkScoreDistributionItem(
+                    score=score,
+                    count=score_counts[score],
+                )
                 for score in sorted(score_counts)
-            ]
+            )
 
-            works_analysis.append({
-                'work': item.work,
-                'events': item.events,
-                'events_count': item.events_count,
-                'total_marks': len(item.marks),
-                'average_score': average_score,
-                'average_percentage': average_percentage,
-                'score_distribution': score_distribution,
-                'difficulty_assessment': self.assess_difficulty(
+            works_analysis.append(WorkAnalysisItem(
+                work=item.work,
+                events=tuple(item.events),
+                events_count=item.events_count,
+                total_marks=len(item.marks),
+                average_score=average_score,
+                average_percentage=average_percentage,
+                score_distribution=score_distribution,
+                difficulty_assessment=self.assess_difficulty(
                     average_percentage,
                 ),
-            })
+            ))
 
         return WorkAnalysisReportData(
-            works_analysis=works_analysis,
-            summary_stats={
-                'total_works': len(works_analysis),
-                'total_marks': sum(
-                    work['total_marks']
+            works_analysis=tuple(works_analysis),
+            summary_stats=WorkAnalysisSummary(
+                total_works=len(works_analysis),
+                total_marks=sum(
+                    work.total_marks
                     for work in works_analysis
                 ),
-                'easy_works': sum(
+                easy_works=sum(
                     1
                     for work in works_analysis
-                    if work['difficulty_assessment'] == 'Легкая'
+                    if work.difficulty_assessment == 'Легкая'
                 ),
-                'hard_works': sum(
+                hard_works=sum(
                     1
                     for work in works_analysis
-                    if work['difficulty_assessment'] in (
+                    if work.difficulty_assessment in (
                         'Сложная',
                         'Очень сложная',
                     )
                 ),
-                'avg_score': (
+                avg_score=(
                     round(
                         sum(
-                            work['average_score']
+                            work.average_score
                             for work in works_analysis
                         ) / len(works_analysis),
                         2,
@@ -83,8 +89,8 @@ class WorkAnalysisService:
                     if works_analysis
                     else 0
                 ),
-            },
-            courses=source.courses,
+            ),
+            courses=tuple(source.courses),
         )
 
     @staticmethod

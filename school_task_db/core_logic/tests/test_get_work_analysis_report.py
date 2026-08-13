@@ -49,6 +49,6 @@ class GetWorkAnalysisReportUseCaseTests(TestCase):
         data = use_case.execute(WorkAnalysisReportRequest(year='2026'))
 
         self.assertEqual(repo.year, '2026')
-        self.assertEqual(data.works_analysis[0]['work'].pk, 'work-1')
-        self.assertEqual(data.works_analysis[0]['average_percentage'], 80)
-        self.assertEqual(data.summary_stats['total_works'], 1)
+        self.assertEqual(data.works_analysis[0].work.pk, 'work-1')
+        self.assertEqual(data.works_analysis[0].average_percentage, 80)
+        self.assertEqual(data.summary_stats.total_works, 1)

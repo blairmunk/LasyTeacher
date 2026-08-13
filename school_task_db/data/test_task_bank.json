@@ -1,5 +1,5 @@
 {
-  "version": "1.0",
+  "version": "1.4",
   "description": "Replaceable sample physics bank for grades 7-9",
   "sources": [
     {
@@ -75,7 +75,15 @@
       "estimated_time": 3,
       "topic": {"name": "Механическое движение", "subject": "Физика", "grade_level": 7},
       "subtopic": "Скорость",
-      "content_element": "1.3",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "1.3"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 7,
       "source": "Учебные задачи 7-9",
       "source_detail": "Демонстрационный пример",
@@ -94,7 +102,15 @@
       "estimated_time": 3,
       "topic": {"name": "Механическое движение", "subject": "Физика", "grade_level": 7},
       "subtopic": "Скорость",
-      "content_element": "1.3",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "1.3"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 7,
       "source": "Тест-банк 7-9",
       "source_detail": "Скорость, №2",
@@ -113,7 +129,15 @@
       "estimated_time": 4,
       "topic": {"name": "Механическое движение", "subject": "Физика", "grade_level": 7},
       "subtopic": "Скорость",
-      "content_element": "1.3",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "1.3"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 7,
       "source": "ОГЭ-тренажёр",
       "source_detail": "Раздел 1, №3",
@@ -132,7 +156,15 @@
       "estimated_time": 5,
       "topic": {"name": "Механическое движение", "subject": "Физика", "grade_level": 7},
       "subtopic": "Скорость",
-      "content_element": "1.3",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "1.3"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 7,
       "source": "ОГЭ-тренажёр",
       "source_detail": "Раздел 1, №4",
@@ -152,7 +184,15 @@
       "estimated_time": 3,
       "topic": {"name": "Масса и плотность", "subject": "Физика", "grade_level": 7},
       "subtopic": "Плотность вещества",
-      "content_element": "1.8",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "1.8"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 7,
       "source": "Учебные задачи 7-9",
       "source_detail": "Демонстрационный пример",
@@ -171,7 +211,15 @@
       "estimated_time": 4,
       "topic": {"name": "Масса и плотность", "subject": "Физика", "grade_level": 7},
       "subtopic": "Плотность вещества",
-      "content_element": "1.8",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "1.8"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 7,
       "source": "Тест-банк 7-9",
       "source_detail": "Плотность, №2",
@@ -190,7 +238,15 @@
       "estimated_time": 4,
       "topic": {"name": "Масса и плотность", "subject": "Физика", "grade_level": 7},
       "subtopic": "Плотность вещества",
-      "content_element": "1.8",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "1.8"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 7,
       "source": "ОГЭ-тренажёр",
       "source_detail": "Раздел 1, №8",
@@ -209,7 +265,15 @@
       "estimated_time": 5,
       "topic": {"name": "Масса и плотность", "subject": "Физика", "grade_level": 7},
       "subtopic": "Плотность вещества",
-      "content_element": "1.8",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "1.8"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 7,
       "source": "ОГЭ-тренажёр",
       "source_detail": "Раздел 1, №9",
@@ -229,7 +293,15 @@
       "estimated_time": 4,
       "topic": {"name": "Количество теплоты", "subject": "Физика", "grade_level": 8},
       "subtopic": "Количество теплоты. Удельная теплоёмкость",
-      "content_element": "2.7",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "2.7"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 8,
       "source": "Учебные задачи 7-9",
       "source_detail": "Демонстрационный пример",
@@ -248,7 +320,15 @@
       "estimated_time": 5,
       "topic": {"name": "Количество теплоты", "subject": "Физика", "grade_level": 8},
       "subtopic": "Количество теплоты. Удельная теплоёмкость",
-      "content_element": "2.7",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "2.7"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 8,
       "source": "Тест-банк 7-9",
       "source_detail": "Теплота, №2",
@@ -267,7 +347,15 @@
       "estimated_time": 5,
       "topic": {"name": "Количество теплоты", "subject": "Физика", "grade_level": 8},
       "subtopic": "Количество теплоты. Удельная теплоёмкость",
-      "content_element": "2.7",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "2.7"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 8,
       "source": "ОГЭ-тренажёр",
       "source_detail": "Раздел 2, №7",
@@ -286,7 +374,15 @@
       "estimated_time": 5,
       "topic": {"name": "Количество теплоты", "subject": "Физика", "grade_level": 8},
       "subtopic": "Количество теплоты. Удельная теплоёмкость",
-      "content_element": "2.7",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "2.7"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 8,
       "source": "ОГЭ-тренажёр",
       "source_detail": "Раздел 2, №8",
@@ -306,7 +402,15 @@
       "estimated_time": 3,
       "topic": {"name": "Постоянный ток", "subject": "Физика", "grade_level": 8},
       "subtopic": "Закон Ома для участка цепи",
-      "content_element": "3.7",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "3.7"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 8,
       "source": "Учебные задачи 7-9",
       "source_detail": "Демонстрационный пример",
@@ -325,7 +429,15 @@
       "estimated_time": 3,
       "topic": {"name": "Постоянный ток", "subject": "Физика", "grade_level": 8},
       "subtopic": "Закон Ома для участка цепи",
-      "content_element": "3.7",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "3.7"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 8,
       "source": "Тест-банк 7-9",
       "source_detail": "Закон Ома, №2",
@@ -344,7 +456,15 @@
       "estimated_time": 4,
       "topic": {"name": "Постоянный ток", "subject": "Физика", "grade_level": 8},
       "subtopic": "Закон Ома для участка цепи",
-      "content_element": "3.7",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "3.7"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 8,
       "source": "ОГЭ-тренажёр",
       "source_detail": "Раздел 3, №7",
@@ -363,7 +483,15 @@
       "estimated_time": 4,
       "topic": {"name": "Постоянный ток", "subject": "Физика", "grade_level": 8},
       "subtopic": "Закон Ома для участка цепи",
-      "content_element": "3.7",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "3.7"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 8,
       "source": "ОГЭ-тренажёр",
       "source_detail": "Раздел 3, №8",
@@ -383,7 +511,15 @@
       "estimated_time": 4,
       "topic": {"name": "Равноускоренное движение", "subject": "Физика", "grade_level": 9},
       "subtopic": "Ускорение",
-      "content_element": "1.5",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "1.5"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 9,
       "source": "Учебные задачи 7-9",
       "source_detail": "Демонстрационный пример",
@@ -402,7 +538,15 @@
       "estimated_time": 4,
       "topic": {"name": "Равноускоренное движение", "subject": "Физика", "grade_level": 9},
       "subtopic": "Ускорение",
-      "content_element": "1.5",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "1.5"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 9,
       "source": "Тест-банк 7-9",
       "source_detail": "Ускорение, №2",
@@ -421,7 +565,15 @@
       "estimated_time": 5,
       "topic": {"name": "Равноускоренное движение", "subject": "Физика", "grade_level": 9},
       "subtopic": "Ускорение",
-      "content_element": "1.5",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "1.5"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 9,
       "source": "ОГЭ-тренажёр",
       "source_detail": "Раздел 1, №5",
@@ -440,7 +592,15 @@
       "estimated_time": 4,
       "topic": {"name": "Равноускоренное движение", "subject": "Физика", "grade_level": 9},
       "subtopic": "Ускорение",
-      "content_element": "1.5",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "1.5"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 9,
       "source": "ОГЭ-тренажёр",
       "source_detail": "Раздел 1, №6",
@@ -460,7 +620,15 @@
       "estimated_time": 3,
       "topic": {"name": "Законы Ньютона", "subject": "Физика", "grade_level": 9},
       "subtopic": "Второй закон Ньютона",
-      "content_element": "1.10",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "1.10"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 9,
       "source": "Учебные задачи 7-9",
       "source_detail": "Демонстрационный пример",
@@ -479,7 +647,15 @@
       "estimated_time": 3,
       "topic": {"name": "Законы Ньютона", "subject": "Физика", "grade_level": 9},
       "subtopic": "Второй закон Ньютона",
-      "content_element": "1.10",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "1.10"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 9,
       "source": "Тест-банк 7-9",
       "source_detail": "Второй закон Ньютона, №2",
@@ -498,7 +674,15 @@
       "estimated_time": 4,
       "topic": {"name": "Законы Ньютона", "subject": "Физика", "grade_level": 9},
       "subtopic": "Второй закон Ньютона",
-      "content_element": "1.10",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "1.10"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 9,
       "source": "ОГЭ-тренажёр",
       "source_detail": "Раздел 1, №10",
@@ -517,7 +701,15 @@
       "estimated_time": 5,
       "topic": {"name": "Законы Ньютона", "subject": "Физика", "grade_level": 9},
       "subtopic": "Второй закон Ньютона",
-      "content_element": "1.10",
+      "codifier_content_entries": [
+        {
+          "subject": "Физика",
+          "exam_type": "oge",
+          "year": 2026,
+          "code": "1.10"
+        }
+      ],
+      "codifier_requirements": [],
       "grade": 9,
       "source": "ОГЭ-тренажёр",
       "source_detail": "Раздел 1, №11",

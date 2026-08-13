@@ -9,6 +9,7 @@ from unittest.mock import patch
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -315,6 +316,55 @@ class CoreViewsTests(TestCase):
 
             with self.assertRaisesRegex(CommandError, 'Невалидный JSON'):
                 call_command('import_tasks', str(json_file))
+
+    def test_validate_json_command_accepts_canonical_task_bank(self):
+        output = StringIO()
+
+        call_command(
+            'validate_json',
+            str(Path(settings.BASE_DIR) / 'data' / 'test_task_bank.json'),
+            verbose=True,
+            stdout=output,
+        )
+
+        self.assertIn('Файл валиден', output.getvalue())
+        self.assertIn('заданий=24', output.getvalue())
+
+    def test_validate_json_command_rejects_unknown_version(self):
+        with TemporaryDirectory() as temp_dir:
+            json_file = Path(temp_dir) / 'future.json'
+            json_file.write_text(
+                json.dumps({'version': '9.0', 'tasks': []}),
+                encoding='utf-8',
+            )
+
+            with self.assertRaisesRegex(
+                CommandError,
+                'Не прошли проверку',
+            ):
+                call_command(
+                    'validate_json',
+                    str(json_file),
+                    stderr=StringIO(),
+                )
+
+    def test_validate_json_command_reports_old_version_warning(self):
+        with TemporaryDirectory() as temp_dir:
+            json_file = Path(temp_dir) / 'legacy.json'
+            json_file.write_text(
+                json.dumps({'version': '1.2', 'tasks': []}),
+                encoding='utf-8',
+            )
+            output = StringIO()
+
+            call_command(
+                'validate_json',
+                str(json_file),
+                verbose=True,
+                stdout=output,
+            )
+
+        self.assertIn('актуальном формате 1.4', output.getvalue())
 
     def test_build_test_scenario_is_idempotent_and_builds_learning_logs(self):
         year = AcademicYear.objects.create(

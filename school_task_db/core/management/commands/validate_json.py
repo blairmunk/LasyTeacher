@@ -1,135 +1,82 @@
-"""
-Валидация JSON файлов перед импортом
-"""
-import json
+"""Validate portable task-bank JSON files through the clean use case."""
+
 from pathlib import Path
+
 from django.core.management.base import BaseCommand, CommandError
 
+from core_logic.entities.task_import import TaskImportFileRequest
+from core_logic.use_cases.validate_task_import_json import (
+    ValidateTaskImportJsonRequest,
+)
+from infrastructure.container import container
+
+
 class Command(BaseCommand):
-    help = 'Валидация JSON файлов импорта'
+    help = 'Проверить JSON-файлы банка заданий без изменения базы'
 
     def add_arguments(self, parser):
-        parser.add_argument('json_files', nargs='+', help='JSON файлы для валидации')
-        parser.add_argument('--verbose', action='store_true', help='Подробная диагностика')
+        parser.add_argument(
+            'json_files',
+            nargs='+',
+            help='JSON-файлы банка заданий',
+        )
+        parser.add_argument(
+            '--verbose',
+            action='store_true',
+            help='Показать предупреждения и сводку',
+        )
 
     def handle(self, *args, **options):
-        self.stdout.write("🔍 ВАЛИДАЦИЯ JSON ФАЙЛОВ:")
-        
-        total_files = len(options['json_files'])
-        valid_files = 0
-        
-        for json_file_path in options['json_files']:
-            self.stdout.write(f"\n📄 Проверка: {json_file_path}")
-            
-            if self.validate_file(json_file_path, options['verbose']):
-                valid_files += 1
-        
-        self.stdout.write("\n📊 ИТОГИ ВАЛИДАЦИИ:")
-        self.stdout.write(f"  ✅ Валидных файлов: {valid_files}")
-        self.stdout.write(f"  ❌ Невалидных файлов: {total_files - valid_files}")
-        self.stdout.write(f"  🎯 Успешность: {(valid_files/total_files)*100:.1f}%")
+        invalid_files = []
+        for file_name in options['json_files']:
+            path = Path(file_name)
+            self.stdout.write(f'Проверка: {path}')
+            error = self._validate_file(path, verbose=options['verbose'])
+            if error:
+                invalid_files.append((path, error))
+                self.stderr.write(self.style.ERROR(error))
+            else:
+                self.stdout.write(self.style.SUCCESS('Файл валиден.'))
 
-    def validate_file(self, file_path: str, verbose: bool) -> bool:
-        """Валидация одного файла"""
-        path = Path(file_path)
-        
-        # Проверка существования файла
-        if not path.exists():
-            self.stdout.write(f"  ❌ Файл не найден: {file_path}")
-            return False
-        
-        # Проверка JSON синтаксиса
+        if invalid_files:
+            names = ', '.join(str(path) for path, _error in invalid_files)
+            raise CommandError(
+                f'Не прошли проверку файлов: {len(invalid_files)} ({names})',
+            )
+
+    def _validate_file(self, path, *, verbose):
+        if not path.is_file():
+            return f'Файл не найден: {path}'
         try:
-            with open(path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-        except json.JSONDecodeError as e:
-            self.stdout.write(f"  ❌ Ошибка JSON синтаксиса: {e}")
-            return False
-        except Exception as e:
-            self.stdout.write(f"  ❌ Ошибка чтения файла: {e}")
-            return False
-        
-        # Валидация структуры
-        issues = []
-        
-        # Проверка основных секций
-        if 'tasks' not in data:
-            issues.append("Отсутствует секция 'tasks'")
-        
-        # Проверка заданий
-        if 'tasks' in data:
-            for i, task in enumerate(data['tasks']):
-                task_issues = self.validate_task(task, i)
-                issues.extend(task_issues)
-        
-        # Проверка групп
-        if 'analog_groups' in data:
-            for i, group in enumerate(data['analog_groups']):
-                group_issues = self.validate_group(group, i)
-                issues.extend(group_issues)
-        
-        # Вывод результата
-        if issues:
-            self.stdout.write(f"  ❌ Найдено проблем: {len(issues)}")
-            if verbose:
-                for issue in issues[:10]:  # Показываем первые 10
-                    self.stdout.write(f"    • {issue}")
-                if len(issues) > 10:
-                    self.stdout.write(f"    ... и еще {len(issues) - 10}")
-            return False
-        else:
-            self.stdout.write("  ✅ Файл валиден")
-            if verbose:
-                tasks_count = len(data.get('tasks', []))
-                groups_count = len(data.get('analog_groups', []))
-                self.stdout.write(
-                    f"    📊 Заданий: {tasks_count}, групп: {groups_count}"
-                )
-            return True
+            content = path.read_bytes()
+        except OSError as error:
+            return f'Ошибка чтения файла: {error}'
 
-    def validate_task(self, task: dict, index: int) -> list:
-        """Валидация задания"""
-        issues = []
-        
-        # Обязательные поля
-        required_fields = ['text']
-        for field in required_fields:
-            if field not in task or not task[field]:
-                issues.append(f"Задание {index}: отсутствует поле '{field}'")
-        
-        # UUID формат
-        if 'id' in task:
-            try:
-                import uuid
-                uuid.UUID(task['id'])
-            except ValueError:
-                issues.append(f"Задание {index}: некорректный UUID '{task['id']}'")
-        
-        # Валидация полей
-        if 'difficulty' in task:
-            try:
-                diff = int(task['difficulty'])
-                if not (1 <= diff <= 5):
-                    issues.append(f"Задание {index}: difficulty должно быть 1-5")
-            except (ValueError, TypeError):
-                issues.append(f"Задание {index}: difficulty должно быть числом")
-        
-        return issues
+        prepared = container.prepare_task_import_file_use_case().execute(
+            TaskImportFileRequest(
+                filename=path.name,
+                file_size=len(content),
+                content=content,
+            ),
+        )
+        if not prepared.success:
+            return prepared.error
 
-    def validate_group(self, group: dict, index: int) -> list:
-        """Валидация группы"""
-        issues = []
-        
-        # Обязательные поля
-        if 'name' not in group or not group['name']:
-            issues.append(f"Группа {index}: отсутствует имя")
-        
-        # UUID формат
-        if 'id' in group:
-            try:
-                import uuid
-                uuid.UUID(group['id'])
-            except ValueError:
-                issues.append(f"Группа {index}: некорректный UUID '{group['id']}'")
-        
-        return issues
+        validation = container.validate_task_import_json_use_case().execute(
+            ValidateTaskImportJsonRequest(data=prepared.data),
+        )
+        if not validation.is_valid:
+            return '; '.join(validation.errors)
+
+        if verbose:
+            for warning in validation.warnings:
+                self.stdout.write(self.style.WARNING(f'Предупреждение: {warning}'))
+            summary = validation.summary
+            self.stdout.write(
+                'Сводка: '
+                f'заданий={summary.get("tasks_total", 0)}, '
+                f'групп={summary.get("groups_total", 0)}, '
+                f'тем={summary.get("topics_total", 0)}, '
+                f'изображений={summary.get("images_total", 0)}',
+            )
+        return ''

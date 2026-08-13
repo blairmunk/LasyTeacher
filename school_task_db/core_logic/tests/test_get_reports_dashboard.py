@@ -30,7 +30,7 @@ class FakeReportRepository:
         return ReportsDashboardSource(
             total_students=1,
             total_works=3,
-            events=[
+            events=(
                 ReportEventRef(
                     pk='event-1',
                     name='КР',
@@ -45,41 +45,41 @@ class FakeReportRepository:
                         duration=45,
                     ),
                 ),
-            ],
-            participations=[
+            ),
+            participations=(
                 DashboardParticipationFact(
                     student_id='student-1',
                     event_id='event-1',
                     status='graded',
                 ),
-            ],
-            marks=[
+            ),
+            marks=(
                 DashboardMarkFact(
                     student_id='student-1',
                     event_id='event-1',
                     score=5,
                     checked_at=datetime(2026, 1, 10),
                 ),
-            ],
-            groups=[
+            ),
+            groups=(
                 DashboardGroupSource(
                     group=ReportGroupRef(
                         pk='group-1',
                         name='7А',
                         students_count=1,
                     ),
-                    student_ids=['student-1'],
-                    course_links=[
+                    student_ids=('student-1',),
+                    course_links=(
                         DashboardCourseGroupRef(
                             course_id='course-1',
                             course_name='Физика 7',
                             group_id='group-1',
                             group_name='7А',
                         ),
-                    ],
+                    ),
                 ),
-            ],
-            courses=[course],
+            ),
+            courses=(course,),
         )
 
 
@@ -101,6 +101,6 @@ class GetReportsDashboardUseCaseTests(TestCase):
         self.assertEqual(data.total_events, 1)
         self.assertEqual(data.total_courses, 1)
         self.assertEqual(data.score_counts, {5: 1})
-        self.assertEqual(data.class_stats[0]['completion_rate'], 100)
-        self.assertEqual(data.box_data, {'Контрольная': [5]})
+        self.assertEqual(data.class_stats[0].completion_rate, 100)
+        self.assertEqual(data.box_data, {'Контрольная': (5,)})
         self.assertEqual(data.active_report, 'dashboard')

@@ -1,7 +1,8 @@
 """DTOs for dashboard and summary reports."""
 
 from dataclasses import dataclass, field
-from typing import Any, List
+from datetime import datetime
+from typing import Any, List, Mapping, Optional
 
 from core_logic.entities.report_refs import (
     ReportCourseRef,
@@ -96,22 +97,22 @@ class ReportsDashboardData:
     total_marks: int
     average_score: float
     marks_last_month: int
-    score_counts: dict
+    score_counts: Mapping[int, int]
     events_planned: int
     events_completed: int
     events_graded: int
-    monthly_labels: List[str]
-    monthly_values: List[int]
-    class_stats: List[dict]
-    class_names: List[str]
-    class_avg_scores: List[float]
-    class_completion: List[float]
-    recent_events: Any
-    event_status_counts: dict
-    box_data: dict
-    courses: Any
+    monthly_labels: tuple[str, ...]
+    monthly_values: tuple[int, ...]
+    class_stats: tuple['DashboardClassStat', ...]
+    class_names: tuple[str, ...]
+    class_avg_scores: tuple[float, ...]
+    class_completion: tuple[float, ...]
+    recent_events: tuple[ReportEventRef, ...]
+    event_status_counts: Mapping[str, int]
+    box_data: Mapping[str, tuple[int, ...]]
+    courses: tuple[ReportCourseRef, ...]
     active_report: str = 'dashboard'
-    active_course_pk: Any = None
+    active_course_pk: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -126,7 +127,7 @@ class DashboardMarkFact:
     student_id: str
     event_id: str
     score: int | None
-    checked_at: Any = None
+    checked_at: Optional[datetime] = None
 
 
 @dataclass(frozen=True)
@@ -138,18 +139,32 @@ class DashboardCourseGroupRef:
 
 
 @dataclass(frozen=True)
+class DashboardClassStat:
+    id: str
+    name: str
+    students_count: int
+    total_participations: int
+    completed_participations: int
+    average_score: float
+    completion_rate: float
+    heatmap_links: tuple[DashboardCourseGroupRef, ...] = field(
+        default_factory=tuple,
+    )
+
+
+@dataclass(frozen=True)
 class DashboardGroupSource:
     group: ReportGroupRef
-    student_ids: List[str]
-    course_links: List[DashboardCourseGroupRef]
+    student_ids: tuple[str, ...]
+    course_links: tuple[DashboardCourseGroupRef, ...]
 
 
 @dataclass(frozen=True)
 class ReportsDashboardSource:
     total_students: int
     total_works: int
-    events: List[ReportEventRef]
-    participations: List[DashboardParticipationFact]
-    marks: List[DashboardMarkFact]
-    groups: List[DashboardGroupSource]
-    courses: List[ReportCourseRef]
+    events: tuple[ReportEventRef, ...]
+    participations: tuple[DashboardParticipationFact, ...]
+    marks: tuple[DashboardMarkFact, ...]
+    groups: tuple[DashboardGroupSource, ...]
+    courses: tuple[ReportCourseRef, ...]

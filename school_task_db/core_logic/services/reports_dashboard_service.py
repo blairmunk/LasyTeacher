@@ -4,6 +4,7 @@ from collections import Counter
 from datetime import timedelta
 
 from core_logic.entities.report_summary import (
+    DashboardClassStat,
     ReportsDashboardData,
     ReportsDashboardSource,
 )
@@ -56,16 +57,19 @@ class ReportsDashboardService:
             events_planned=event_status_counts['planned'],
             events_completed=event_status_counts['completed'],
             events_graded=event_status_counts['graded'],
-            monthly_labels=monthly_labels,
-            monthly_values=monthly_values,
-            class_stats=class_stats,
-            class_names=[stat['name'] for stat in class_stats],
-            class_avg_scores=[stat['average_score'] for stat in class_stats],
-            class_completion=[stat['completion_rate'] for stat in class_stats],
-            recent_events=source.events[:10],
+            monthly_labels=tuple(monthly_labels),
+            monthly_values=tuple(monthly_values),
+            class_stats=tuple(class_stats),
+            class_names=tuple(stat.name for stat in class_stats),
+            class_avg_scores=tuple(stat.average_score for stat in class_stats),
+            class_completion=tuple(stat.completion_rate for stat in class_stats),
+            recent_events=tuple(source.events[:10]),
             event_status_counts=dict(event_status_counts),
-            box_data=marks_by_event,
-            courses=source.courses,
+            box_data={
+                name: tuple(event_scores)
+                for name, event_scores in marks_by_event.items()
+            },
+            courses=tuple(source.courses),
         )
 
     @staticmethod
@@ -115,26 +119,18 @@ class ReportsDashboardService:
             else 0
         )
         total_participations = len(participations)
-        return {
-            'name': group_source.group.name,
-            'students_count': group_source.group.students_count,
-            'total_participations': total_participations,
-            'completed_participations': completed_count,
-            'average_score': average_score,
-            'completion_rate': round(
+        return DashboardClassStat(
+            id=group_source.group.pk,
+            name=group_source.group.name,
+            students_count=group_source.group.students_count,
+            total_participations=total_participations,
+            completed_participations=completed_count,
+            average_score=average_score,
+            completion_rate=round(
                 completed_count / total_participations * 100
                 if total_participations > 0
                 else 0,
                 1,
             ),
-            'id': group_source.group.pk,
-            'heatmap_links': [
-                {
-                    'course_id': link.course_id,
-                    'course_name': link.course_name,
-                    'group_id': link.group_id,
-                    'group_name': link.group_name,
-                }
-                for link in group_source.course_links
-            ],
-        }
+            heatmap_links=tuple(group_source.course_links),
+        )

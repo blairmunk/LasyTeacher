@@ -1,7 +1,8 @@
 """Shared immutable references used by report DTOs."""
 
 from dataclasses import dataclass
-from typing import Any
+from datetime import datetime
+from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -38,7 +39,7 @@ class ReportTaskRef:
 class ReportActivityRef:
     pk: str
     name: str
-    planned_date: Any = None
+    planned_date: Optional[datetime] = None
 
 
 @dataclass(frozen=True)
@@ -86,10 +87,10 @@ class ReportEventRef:
     name: str
     status: str
     status_display: str
-    planned_date: Any
-    actual_end: Any = None
+    planned_date: datetime
+    work: ReportWorkRef
+    actual_end: Optional[datetime] = None
     location: str = ''
-    work: Any = None
     participants_count: int = 0
     graded_count: int = 0
     progress_percentage: int = 0

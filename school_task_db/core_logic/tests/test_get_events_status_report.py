@@ -6,6 +6,7 @@ from core_logic.entities.report_summary import (
 )
 from core_logic.entities.report_refs import (
     ReportEventRef,
+    ReportWorkRef,
 )
 from core_logic.use_cases.get_events_status_report import (
     EventsStatusReportRequest,
@@ -27,6 +28,13 @@ class FakeReportRepository:
                     status='planned',
                     status_display='Запланировано',
                     planned_date=datetime(2026, 7, 1, 12, 0),
+                    work=ReportWorkRef(
+                        pk='work-1',
+                        name='Работа',
+                        work_type='test',
+                        work_type_display='Работа',
+                        duration=45,
+                    ),
                 ),
             ],
             participation_statuses=['assigned'],

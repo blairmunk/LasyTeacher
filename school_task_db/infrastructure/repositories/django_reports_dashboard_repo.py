@@ -49,8 +49,8 @@ class DjangoReportsDashboardRepository(IReportsDashboardRepository):
         return ReportsDashboardSource(
             total_students=students.count(),
             total_works=Work.objects.count(),
-            events=[report_event_ref(event) for event in event_rows],
-            participations=[
+            events=tuple(report_event_ref(event) for event in event_rows),
+            participations=tuple(
                 DashboardParticipationFact(
                     student_id=str(participation.student_id),
                     event_id=str(participation.event_id),
@@ -60,8 +60,8 @@ class DjangoReportsDashboardRepository(IReportsDashboardRepository):
                     ),
                 )
                 for participation in participation_rows
-            ],
-            marks=[
+            ),
+            marks=tuple(
                 DashboardMarkFact(
                     student_id=str(participation.student_id),
                     event_id=str(participation.event_id),
@@ -70,15 +70,15 @@ class DjangoReportsDashboardRepository(IReportsDashboardRepository):
                 )
                 for participation in participation_rows
                 if (attempt := attempts.get(participation.pk)) is not None
-            ],
-            groups=[
+            ),
+            groups=tuple(
                 self._group_source(group, year)
                 for group in groups.order_by('name')
-            ],
-            courses=[
+            ),
+            courses=tuple(
                 report_course_ref(course)
                 for course in courses.order_by('grade_level', 'name')
-            ],
+            ),
         )
 
     @staticmethod
@@ -88,11 +88,11 @@ class DjangoReportsDashboardRepository(IReportsDashboardRepository):
             linked_courses = linked_courses.filter(year_id=year.pk)
         return DashboardGroupSource(
             group=report_group_ref(group),
-            student_ids=[
+            student_ids=tuple(
                 str(student_id)
                 for student_id in group.students.values_list('pk', flat=True)
-            ],
-            course_links=[
+            ),
+            course_links=tuple(
                 DashboardCourseGroupRef(
                     course_id=str(course.pk),
                     course_name=course.name,
@@ -100,5 +100,5 @@ class DjangoReportsDashboardRepository(IReportsDashboardRepository):
                     group_name=group.name,
                 )
                 for course in linked_courses
-            ],
+            ),
         )

@@ -227,5 +227,12 @@ class ReportServicesTests(TestCase):
             status=status,
             status_display=status,
             planned_date=planned_date,
+            work=ReportWorkRef(
+                pk='work-1',
+                name='Работа',
+                work_type='test',
+                work_type_display='Работа',
+                duration=45,
+            ),
             actual_end=actual_end,
         )

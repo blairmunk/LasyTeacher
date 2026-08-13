@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 from unittest import TestCase
+import datetime as dt
 
 from core_logic.entities.task import TaskEntity
 from core_logic.entities.work_specification_commands import CreateWorkParams
@@ -96,7 +97,7 @@ class CreateRemedialWizardWorkUseCaseTests(TestCase):
                 },
                 work_name='Работа над ошибками 9А',
                 create_event=True,
-                event_date='2026-03-10',
+                event_date=dt.date(2026, 3, 10),
             )
         )
 

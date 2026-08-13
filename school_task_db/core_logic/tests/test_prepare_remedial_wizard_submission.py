@@ -1,4 +1,5 @@
 from unittest import TestCase
+import datetime as dt
 
 from core_logic.use_cases.create_remedial_wizard_work import (
     CreateRemedialWizardWorkRequest,
@@ -80,7 +81,7 @@ class PrepareRemedialWizardSubmissionUseCaseTests(TestCase):
                 },
                 work_name='Работа над ошибками 9А',
                 create_event=True,
-                event_date='2026-03-10',
+                event_date=dt.date(2026, 3, 10),
             ),
         )
 
@@ -97,3 +98,12 @@ class PrepareRemedialWizardSubmissionUseCaseTests(TestCase):
 
         self.assertEqual(result.student_task_ids, {})
         self.assertFalse(result.create_event)
+
+    def test_prepare_create_submission_rejects_invalid_event_date(self):
+        result = PrepareRemedialWizardCreateSubmissionUseCase().execute(
+            PrepareRemedialWizardSubmissionRequest(
+                data={'event_date': ['not-a-date']},
+            ),
+        )
+
+        self.assertIsNone(result.event_date)

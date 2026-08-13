@@ -1,6 +1,7 @@
 """Prepare remedial wizard POST data for use cases."""
 
 from dataclasses import dataclass
+from datetime import date
 from typing import Dict, List, Mapping, Sequence
 
 from core_logic.use_cases.create_remedial_wizard_work import (
@@ -45,7 +46,7 @@ class PrepareRemedialWizardCreateSubmissionUseCase:
             student_task_ids=_student_task_ids(data, selected_student_ids),
             work_name=_first(data, 'work_name', 'Работа над ошибками'),
             create_event=_first(data, 'create_event') == '1',
-            event_date=_first(data, 'event_date'),
+            event_date=_optional_date(_first(data, 'event_date')),
         )
 
 
@@ -72,6 +73,13 @@ def _int(value: str, default: int) -> int:
         return int(value)
     except (TypeError, ValueError):
         return default
+
+
+def _optional_date(value: str) -> date | None:
+    try:
+        return date.fromisoformat(value) if value else None
+    except ValueError:
+        return None
 
 
 def _student_task_ids(

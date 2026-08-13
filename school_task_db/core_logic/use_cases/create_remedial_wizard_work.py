@@ -1,6 +1,7 @@
 """Create remedial work, variants and optional event from wizard step 3."""
 
 from dataclasses import dataclass
+from datetime import date
 from typing import Dict, List, Optional
 
 from core_logic.interfaces.event_participation_repo import (
@@ -33,7 +34,7 @@ class CreateRemedialWizardWorkRequest:
     student_task_ids: Dict[str, List[str]]
     work_name: str = 'Работа над ошибками'
     create_event: bool = False
-    event_date: str = ''
+    event_date: Optional[date] = None
 
 
 @dataclass(frozen=True)

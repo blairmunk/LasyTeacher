@@ -1,6 +1,7 @@
 """Prepare remedial-from-event POST data for creation use case."""
 
 from dataclasses import dataclass
+from datetime import date
 from typing import Mapping, Sequence
 
 from core_logic.use_cases.create_remedial_from_event import (
@@ -25,7 +26,7 @@ class PrepareRemedialFromEventSubmissionUseCase:
             selected_student_ids=_list(data, 'selected_students'),
             work_name=_first(data, 'work_name'),
             create_event=_first(data, 'create_event') == '1',
-            event_date=_first(data, 'event_date'),
+            event_date=_optional_date(_first(data, 'event_date')),
             tasks_per_group=_bounded_int(
                 _first(data, 'tasks_per_group', '1'),
                 default=1,
@@ -70,3 +71,10 @@ def _bounded_int(
     except (TypeError, ValueError):
         return default
     return min(max(parsed, minimum), maximum)
+
+
+def _optional_date(value: str) -> date | None:
+    try:
+        return date.fromisoformat(value) if value else None
+    except ValueError:
+        return None

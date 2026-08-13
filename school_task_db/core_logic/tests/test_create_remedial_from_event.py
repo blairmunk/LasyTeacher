@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 from unittest import TestCase
+import datetime as dt
 
 from core_logic.entities.event import CheckedAttemptRef, EventEntity
 from core_logic.entities.task import TaskEntity
@@ -129,7 +130,7 @@ class CreateRemedialFromEventUseCaseTests(TestCase):
                 selected_student_ids=['student-1'],
                 work_name='Работа над ошибками',
                 create_event=True,
-                event_date='2026-03-10',
+                event_date=dt.date(2026, 3, 10),
                 tasks_per_group=2,
                 max_total_tasks=6,
             )

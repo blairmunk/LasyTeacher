@@ -1,7 +1,7 @@
 """Django repository for event write operations."""
 
 import datetime as dt
-from typing import Any, Optional
+from typing import Optional
 
 from django.utils import timezone
 
@@ -43,21 +43,15 @@ class DjangoEventWriteRepository(IEventWriteRepository):
         Event.objects.filter(pk=event_id).update(status=status)
 
     @staticmethod
-    def _parse_planned_date(date_value: Optional[Any]):
+    def _parse_planned_date(
+        date_value: Optional[dt.date | dt.datetime],
+    ) -> dt.datetime:
         if isinstance(date_value, dt.datetime):
             if timezone.is_naive(date_value):
                 return timezone.make_aware(date_value)
             return date_value
 
-        if isinstance(date_value, dt.date):
-            date_obj = date_value
-        elif date_value:
-            try:
-                date_obj = dt.datetime.strptime(date_value, '%Y-%m-%d').date()
-            except ValueError:
-                date_obj = timezone.now().date()
-        else:
-            date_obj = timezone.now().date()
+        date_obj = date_value or timezone.now().date()
 
         return timezone.make_aware(
             dt.datetime.combine(date_obj, dt.time(9, 0))

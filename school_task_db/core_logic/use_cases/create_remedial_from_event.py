@@ -1,6 +1,7 @@
 """Create remedial work from an existing event."""
 
 from dataclasses import dataclass, field
+from datetime import date
 from typing import List, Optional
 
 from core_logic.interfaces.event_attempt_repo import IEventAttemptRepository
@@ -36,7 +37,7 @@ class RemedialFromEventRequest:
     selected_student_ids: List[str]
     work_name: str = ''
     create_event: bool = False
-    event_date: Optional[str] = None
+    event_date: Optional[date] = None
     tasks_per_group: int = 1
     max_total_tasks: int = 10
 

@@ -1383,7 +1383,7 @@ class DjangoRemedialRepositoryTests(TestCase):
                 selected_student_ids=[str(self.student.pk)],
                 work_name='Работа над ошибками 9Б',
                 create_event=True,
-                event_date='2026-03-10',
+                event_date=dt.date(2026, 3, 10),
             )
         )
 
@@ -1466,7 +1466,7 @@ class DjangoRemedialRepositoryTests(TestCase):
                     selected_student_ids=[str(self.student.pk)],
                     work_name=work_name,
                     create_event=True,
-                    event_date='2026-03-10',
+                    event_date=dt.date(2026, 3, 10),
                 )
             )
 

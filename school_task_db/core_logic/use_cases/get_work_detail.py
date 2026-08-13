@@ -108,9 +108,11 @@ class GetWorkDetailUseCase:
 
     def _presentation_profiles(self, document_type: str):
         if self.presentation_profile_repo is None:
-            return []
-        return self.presentation_profile_repo.list_presentation_profiles(
-            document_type,
+            return ()
+        return tuple(
+            self.presentation_profile_repo.list_presentation_profiles(
+                document_type,
+            ),
         )
 
     def _build_spec_preview(

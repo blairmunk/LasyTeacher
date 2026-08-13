@@ -1,7 +1,6 @@
 """Prepare data for the presentation profile editor."""
 
 from dataclasses import dataclass
-from typing import List, Tuple
 
 from core_logic.entities.document import DocumentPresentationProfile
 from core_logic.interfaces.presentation_profile_catalog_repo import (
@@ -21,8 +20,8 @@ class GetPresentationProfileEditorDataRequest:
 
 @dataclass(frozen=True)
 class PresentationProfileEditorData:
-    document_types: Tuple[DocumentTypeCatalogItem, ...]
-    presentation_profiles: List[DocumentPresentationProfile]
+    document_types: tuple[DocumentTypeCatalogItem, ...]
+    presentation_profiles: tuple[DocumentPresentationProfile, ...]
 
 
 class GetPresentationProfileEditorDataUseCase:
@@ -53,9 +52,11 @@ class GetPresentationProfileEditorDataUseCase:
     def _presentation_profiles(
         self,
         document_type: str,
-    ) -> List[DocumentPresentationProfile]:
+    ) -> tuple[DocumentPresentationProfile, ...]:
         if self.presentation_profile_repo is None:
-            return []
-        return self.presentation_profile_repo.list_presentation_profiles(
-            document_type=document_type,
+            return ()
+        return tuple(
+            self.presentation_profile_repo.list_presentation_profiles(
+                document_type=document_type,
+            ),
         )

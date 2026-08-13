@@ -264,7 +264,7 @@ class PresentationProfileFormAdapterTests(SimpleTestCase):
         )
         editor_data = PresentationProfileEditorData(
             document_types=get_document_type_catalog(renderable_only=True),
-            presentation_profiles=[
+            presentation_profiles=(
                 DocumentPresentationProfile(
                     name='Строгий профиль',
                     document_type=WORK_DOCUMENT_TYPE,
@@ -275,7 +275,7 @@ class PresentationProfileFormAdapterTests(SimpleTestCase):
                         custom_latex_preamble='\\small',
                     ),
                 ),
-            ],
+            ),
         )
 
         context = adapter.editor_context(editor_data, request)

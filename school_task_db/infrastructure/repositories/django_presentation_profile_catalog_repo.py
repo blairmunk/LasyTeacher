@@ -1,6 +1,6 @@
 """Django read adapter for document presentation profiles."""
 
-from typing import List, Optional
+from typing import Optional
 
 from core_logic.entities.document import DocumentPresentationProfile
 from core_logic.interfaces.presentation_profile_catalog_repo import (
@@ -15,11 +15,11 @@ class DjangoPresentationProfileCatalogRepository(
     def list_presentation_profiles(
         self,
         document_type: str = '',
-    ) -> List[DocumentPresentationProfile]:
+    ) -> tuple[DocumentPresentationProfile, ...]:
         queryset = PresentationProfile.objects.all()
         if document_type:
             queryset = queryset.filter(document_type=document_type)
-        return [profile.to_domain_profile() for profile in queryset]
+        return tuple(profile.to_domain_profile() for profile in queryset)
 
     def get_presentation_profile(
         self,

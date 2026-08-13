@@ -49,6 +49,7 @@ class DjangoPresentationProfileRepositoryAdaptersTests(TestCase):
             )
         )
 
+        self.assertIsInstance(profiles, tuple)
         self.assertEqual(len(profiles), 1)
         self.assertIsInstance(profiles[0], DocumentPresentationProfile)
         self.assertEqual(profiles[0].name, 'Рабочий лист')

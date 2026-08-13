@@ -29,12 +29,12 @@ class WorkDetailData:
     analog_groups: List["WorkDetailSpecGroup"] = field(default_factory=list)
     spec_preview: List["WorkDetailSpecPreviewItem"] = field(default_factory=list)
     content_plan: WorkContentPlan = field(default_factory=WorkContentPlan)
-    work_presentation_profiles: List[DocumentPresentationProfile] = field(
-        default_factory=list,
+    work_presentation_profiles: tuple[DocumentPresentationProfile, ...] = field(
+        default_factory=tuple,
     )
-    remedial_sheet_presentation_profiles: List[
-        DocumentPresentationProfile
-    ] = field(default_factory=list)
+    remedial_sheet_presentation_profiles: tuple[
+        DocumentPresentationProfile, ...
+    ] = field(default_factory=tuple)
     show_sync_button: bool = False
 
 

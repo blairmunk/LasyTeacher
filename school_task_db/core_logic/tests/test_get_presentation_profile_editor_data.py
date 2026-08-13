@@ -63,4 +63,4 @@ class GetPresentationProfileEditorDataUseCaseTests(TestCase):
                 STUDENT_DIGEST_DOCUMENT_TYPE,
             ],
         )
-        self.assertEqual(data.presentation_profiles, [])
+        self.assertEqual(data.presentation_profiles, ())

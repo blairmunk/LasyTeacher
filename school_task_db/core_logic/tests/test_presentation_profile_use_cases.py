@@ -86,6 +86,7 @@ class GetPresentationProfileUseCaseTests(TestCase):
             repo.requested_document_type,
             WORKSHEET_DOCUMENT_TYPE,
         )
+        self.assertIsInstance(data.presentation_profiles, tuple)
         self.assertEqual(data.presentation_profiles[0].name, 'Рабочий лист')
 
     def test_returns_profile_by_clean_identifiers(self):

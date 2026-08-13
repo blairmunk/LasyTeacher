@@ -1,7 +1,6 @@
 """Build document presentation profile list data."""
 
 from dataclasses import dataclass
-from typing import List
 
 from core_logic.entities.document import DocumentPresentationProfile
 from core_logic.interfaces.presentation_profile_catalog_repo import (
@@ -16,7 +15,7 @@ class GetPresentationProfileListRequest:
 
 @dataclass(frozen=True)
 class PresentationProfileListData:
-    presentation_profiles: List[DocumentPresentationProfile]
+    presentation_profiles: tuple[DocumentPresentationProfile, ...]
 
 
 class GetPresentationProfileListUseCase:
@@ -34,7 +33,7 @@ class GetPresentationProfileListUseCase:
     ) -> PresentationProfileListData:
         request = request or GetPresentationProfileListRequest()
         return PresentationProfileListData(
-            presentation_profiles=(
+            presentation_profiles=tuple(
                 self.presentation_profile_repo.list_presentation_profiles(
                     document_type=request.document_type,
                 )

@@ -10,6 +10,17 @@ from core_logic.use_cases.prepare_student_remedial_submission import (
 
 
 class PrepareStudentRemedialSubmissionUseCaseTests(TestCase):
+    def test_creation_request_copies_selected_groups(self):
+        group_ids = ['group-1']
+
+        request = CreateStudentRemedialVariantRequest(
+            student_id='student-1',
+            selected_group_ids=group_ids,
+        )
+        group_ids.append('group-2')
+
+        self.assertEqual(request.selected_group_ids, ('group-1',))
+
     def test_execute_prepares_creation_request(self):
         result = PrepareStudentRemedialSubmissionUseCase().execute(
             PrepareStudentRemedialSubmissionRequest(
@@ -39,7 +50,7 @@ class PrepareStudentRemedialSubmissionUseCaseTests(TestCase):
         )
 
         self.assertEqual(result.max_tasks, 10)
-        self.assertEqual(result.selected_group_ids, [])
+        self.assertEqual(result.selected_group_ids, ())
 
     def test_execute_uses_default_for_invalid_max_tasks(self):
         result = PrepareStudentRemedialSubmissionUseCase().execute(

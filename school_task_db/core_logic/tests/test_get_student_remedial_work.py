@@ -106,4 +106,4 @@ class GetStudentRemedialWorkUseCaseTests(TestCase):
             selected_group_ids=[],
         )
 
-        self.assertEqual(selected, ['new-1', 'new-2'])
+        self.assertEqual(selected, ('new-1', 'new-2'))

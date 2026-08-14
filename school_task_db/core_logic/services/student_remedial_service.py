@@ -2,6 +2,7 @@
 
 import random
 from collections import defaultdict
+from typing import Sequence
 
 from core_logic.entities.student import (
     ObjectRef,
@@ -95,8 +96,8 @@ class StudentRemedialService:
         source: StudentRemedialSource,
         *,
         max_tasks: int,
-        selected_group_ids: list[str],
-    ) -> list[str]:
+        selected_group_ids: Sequence[str],
+    ) -> tuple[str, ...]:
         done_task_ids = {task_log.task_id for task_log in source.task_logs}
         tasks_by_group = self._tasks_by_group(source)
         group_ids = selected_group_ids or self._weak_group_ids(source)
@@ -113,7 +114,7 @@ class StudentRemedialService:
             self.shuffle(available_ids)
             take = min(2, max_tasks - len(selected), len(available_ids))
             selected.extend(available_ids[:take])
-        return selected
+        return tuple(selected)
 
     @staticmethod
     def _tasks_by_group(source):

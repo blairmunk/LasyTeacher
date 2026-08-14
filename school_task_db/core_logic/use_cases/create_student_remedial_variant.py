@@ -1,7 +1,6 @@
 """Create an orphan remedial variant for one student."""
 
-from dataclasses import dataclass
-from typing import List
+from dataclasses import dataclass, field
 
 from core_logic.interfaces.student_remedial_repo import (
     IStudentRemedialRepository,
@@ -22,10 +21,14 @@ from core_logic.services.remedial_variant_content_service import (
 class CreateStudentRemedialVariantRequest:
     student_id: str
     max_tasks: int = 10
-    selected_group_ids: List[str] = None
+    selected_group_ids: tuple[str, ...] = field(default_factory=tuple)
 
-    def group_ids(self) -> List[str]:
-        return self.selected_group_ids or []
+    def __post_init__(self):
+        object.__setattr__(
+            self,
+            'selected_group_ids',
+            tuple(self.selected_group_ids),
+        )
 
 
 @dataclass(frozen=True)
@@ -61,7 +64,7 @@ class CreateStudentRemedialVariantUseCase:
                 request.student_id,
             ),
             max_tasks=request.max_tasks,
-            selected_group_ids=request.group_ids(),
+            selected_group_ids=request.selected_group_ids,
         )
         if not task_ids:
             return CreateStudentRemedialVariantResult(

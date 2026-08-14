@@ -219,8 +219,10 @@ class DjangoTaskClassificationRepositoryTests(TestCase):
 
         source = DjangoTaskExportRepository().get_task_export_sources(
             TaskExportFilters(topic_id=str(self.physics_topic.pk)),
-        )[0]
+        )
 
+        self.assertIsInstance(source, tuple)
+        source = source[0]
         self.assertEqual(source.content_entries[0].subject, 'Физика')
         self.assertEqual(source.content_entries[0].exam_type, 'oge')
         self.assertEqual(source.content_entries[0].year, 2026)

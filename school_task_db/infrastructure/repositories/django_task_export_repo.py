@@ -20,10 +20,10 @@ from tasks.models import Task
 
 class DjangoTaskExportRepository(ITaskExportRepository):
     def get_task_export_sources(self, filters: TaskExportFilters):
-        return [
+        return tuple(
             self._task_export_source(task)
             for task in self._get_export_tasks(filters)
-        ]
+        )
 
     @staticmethod
     def _get_export_tasks(filters: TaskExportFilters):

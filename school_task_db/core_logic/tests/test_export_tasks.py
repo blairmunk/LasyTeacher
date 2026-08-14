@@ -23,7 +23,7 @@ class FakeTaskExportRepository:
                 bank_role='demo',
             ),
         )
-        self.sources = [
+        self.sources = (
             TaskExportTaskSource(
                 pk='task-1',
                 text='Задание 1',
@@ -46,7 +46,7 @@ class FakeTaskExportRepository:
                 source=source,
                 groups=groups,
             ),
-        ]
+        )
 
     def get_task_export_sources(self, filters):
         self.filters = filters

@@ -124,7 +124,7 @@ class TaskExportSourceRef:
     short_name: str = ''
     source_type: str = ''
     author: str = ''
-    year: Any = None
+    year: Optional[int] = None
     url: str = ''
     isbn: str = ''
 
@@ -171,9 +171,9 @@ class TaskExportTaskSource:
     difficulty: int = 0
     task_type: str = ''
     cognitive_level: str = ''
-    estimated_time: Any = None
-    grade: Any = None
-    year: Any = None
+    estimated_time: Optional[int] = None
+    grade: Optional[int] = None
+    year: Optional[int] = None
     is_verified: bool = False
     teacher_notes: str = ''
     source_detail: str = ''

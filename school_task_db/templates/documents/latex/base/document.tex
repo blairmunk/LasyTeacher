@@ -57,16 +57,11 @@
   \par\nobreak\smallskip}
 \newcommand{\schoolgrid}[3]{%
 \par\noindent
-\begingroup
-\newdimen\schoolgridcell
-% #3 remains available for custom preambles; the default grid fills \linewidth.
-\schoolgridcell=\linewidth
-\advance\schoolgridcell by -0.2pt
-\divide\schoolgridcell by #2
-\begin{tikzpicture}[x=\schoolgridcell,y=\schoolgridcell,baseline]
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[x=#3mm,y=#3mm,baseline]
 \draw[step=1,draw=schoolgrid,line width=0.2pt] (0,0) grid (#2,-#1);
 \end{tikzpicture}%
-\endgroup
+}%
 \par
 }
 {{ custom_latex_preamble|safe }}

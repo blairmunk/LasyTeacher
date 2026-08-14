@@ -2,7 +2,8 @@
 
 from dataclasses import dataclass, field
 from datetime import date
-from typing import Dict, Optional
+from types import MappingProxyType
+from typing import Mapping, Optional
 
 
 @dataclass(frozen=True)
@@ -76,8 +77,21 @@ class CourseDetailData:
     course: Optional["CourseDetailCourse"] = None
     assignments: tuple['CourseDetailAssignment', ...] = field(default_factory=tuple)
     total_variants: int = 0
-    works_by_type: Dict[str, int] = field(default_factory=dict)
-    groups_coverage: Dict[str, int] = field(default_factory=dict)
+    works_by_type: Mapping[str, int] = field(default_factory=dict)
+    groups_coverage: Mapping[str, int] = field(default_factory=dict)
+
+    def __post_init__(self):
+        object.__setattr__(self, 'assignments', tuple(self.assignments))
+        object.__setattr__(
+            self,
+            'works_by_type',
+            MappingProxyType(dict(self.works_by_type)),
+        )
+        object.__setattr__(
+            self,
+            'groups_coverage',
+            MappingProxyType(dict(self.groups_coverage)),
+        )
 
 
 @dataclass(frozen=True)

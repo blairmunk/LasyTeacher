@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 from core_logic.entities.curriculum import (
+    CourseDetailData,
     CourseDetailAssignment,
     CourseDetailCourse,
     CourseDetailWork,
@@ -40,6 +41,30 @@ class FakeCurriculumRepository:
 
 
 class GetCourseDetailUseCaseTests(TestCase):
+    def test_course_detail_data_copies_nested_collections(self):
+        assignments = [
+            CourseDetailAssignment(
+                order=1,
+                work=FakeCurriculumRepository().work,
+                weight=1,
+            ),
+        ]
+        works_by_type = {'Контрольная работа': 1}
+        groups_coverage = {'Скорость': 1}
+
+        data = CourseDetailData(
+            assignments=assignments,
+            works_by_type=works_by_type,
+            groups_coverage=groups_coverage,
+        )
+        assignments.clear()
+        works_by_type.clear()
+        groups_coverage.clear()
+
+        self.assertEqual(len(data.assignments), 1)
+        self.assertEqual(dict(data.works_by_type), {'Контрольная работа': 1})
+        self.assertEqual(dict(data.groups_coverage), {'Скорость': 1})
+
     def test_execute_builds_course_detail_data(self):
         repo = FakeCurriculumRepository()
         use_case = GetCourseDetailUseCase(curriculum_repo=repo)

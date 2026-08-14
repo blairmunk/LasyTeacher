@@ -9,7 +9,7 @@ from tasks.models import Source
 
 class DjangoSourceCatalogRepository(ISourceCatalogRepository):
     def get_source_list_sources(self):
-        return [
+        return tuple(
             SourceListItem(
                 pk=str(source.pk),
                 name=source.name,
@@ -23,4 +23,4 @@ class DjangoSourceCatalogRepository(ISourceCatalogRepository):
             for source in Source.objects.annotate(
                 task_count=Count('task'),
             ).order_by('name')
-        ]
+        )

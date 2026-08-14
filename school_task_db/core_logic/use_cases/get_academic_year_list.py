@@ -10,7 +10,14 @@ from core_logic.interfaces.academic_year_catalog_repo import (
 
 @dataclass(frozen=True)
 class AcademicYearListData:
-    academic_years: list[AcademicYearRef]
+    academic_years: tuple[AcademicYearRef, ...]
+
+    def __post_init__(self):
+        object.__setattr__(
+            self,
+            'academic_years',
+            tuple(self.academic_years),
+        )
 
 
 class GetAcademicYearListUseCase:

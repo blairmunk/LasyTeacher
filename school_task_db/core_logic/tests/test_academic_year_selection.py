@@ -89,7 +89,17 @@ class AcademicYearSelectionTests(TestCase):
 
         self.assertIsNone(selection.current_year)
         self.assertEqual(selection.year_id, '')
-        self.assertEqual(years.academic_years, [])
+        self.assertEqual(years.academic_years, ())
+
+    def test_academic_year_list_copies_repository_collection(self):
+        result = GetAcademicYearListUseCase(self.repo).execute()
+
+        self.repo.years.clear()
+
+        self.assertEqual(
+            result.academic_years,
+            (self.active_year, self.selected_year),
+        )
 
     def test_activate_academic_year_delegates_to_repository(self):
         result = ActivateAcademicYearUseCase(self.repo).execute(

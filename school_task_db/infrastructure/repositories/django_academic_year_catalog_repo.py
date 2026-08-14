@@ -26,8 +26,8 @@ class DjangoAcademicYearCatalogRepository(IAcademicYearCatalogRepository):
         year = AcademicYear.objects.filter(is_active=True).first()
         return academic_year_to_ref(year) if year else None
 
-    def get_academic_years(self) -> list[AcademicYearRef]:
-        return [
+    def get_academic_years(self) -> tuple[AcademicYearRef, ...]:
+        return tuple(
             academic_year_to_ref(year)
             for year in AcademicYear.objects.all().order_by('-start_date')
-        ]
+        )

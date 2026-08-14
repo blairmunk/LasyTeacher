@@ -15,5 +15,5 @@ class IAcademicYearCatalogRepository(ABC):
         """Return the globally active academic year or None."""
 
     @abstractmethod
-    def get_academic_years(self) -> list[AcademicYearRef]:
+    def get_academic_years(self) -> tuple[AcademicYearRef, ...]:
         """Return all academic years in display order."""

@@ -20,6 +20,7 @@ from core_logic.services.event_service import EventService
 from core_logic.value_objects.attempt_status import (
     resolve_historical_participation_status,
 )
+from core_logic.value_objects.short_uuid import format_short_uuid
 from curriculum.models import Course
 from events.models import Event, EventParticipation
 from infrastructure.repositories.django_journal_refs import (
@@ -179,7 +180,7 @@ class DjangoJournalReportRepository(IJournalReportRepository):
         variant_id = attempt.variant_id_snapshot
         return ReportVariantRef(
             pk=variant_id,
-            short_uuid=variant_id[-4:].upper(),
+            short_uuid=format_short_uuid(variant_id),
             number=attempt.variant_number_snapshot,
             work_name_snapshot=attempt.work_name_snapshot,
         )

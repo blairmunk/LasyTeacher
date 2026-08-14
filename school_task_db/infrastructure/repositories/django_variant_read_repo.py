@@ -21,6 +21,7 @@ from core_logic.value_objects.variant_display import (
 from core_logic.value_objects.task_content_snapshot import (
     task_content_snapshot_from_mapping,
 )
+from core_logic.value_objects.short_uuid import format_short_uuid
 from infrastructure.services.task_image_presentation import (
     TaskImagePresentationService,
 )
@@ -150,7 +151,7 @@ class DjangoVariantReadRepository(IVariantReadRepository):
                     answer=task.answer,
                     task_type_display=task.task_type_display,
                     difficulty=task.difficulty,
-                    short_uuid=task.task_id[-4:].upper(),
+                    short_uuid=format_short_uuid(task.task_id),
                     images=tuple(
                         VariantDetailImage(
                             caption=image.caption,

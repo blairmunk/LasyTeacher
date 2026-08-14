@@ -39,6 +39,14 @@ class FakeStudentRepository:
 
 
 class SaveStudentUseCaseTests(TestCase):
+    def test_student_group_params_copy_student_ids(self):
+        student_ids = ['student-1']
+
+        params = SaveStudentGroupParams(name='9А', student_ids=student_ids)
+        student_ids.append('student-2')
+
+        self.assertEqual(params.student_ids, ('student-1',))
+
     def test_create_student_delegates_to_repository(self):
         repo = FakeStudentRepository()
         params = SaveStudentParams(

@@ -26,10 +26,10 @@ class StudentFormAdapter:
         return SaveStudentGroupParams(
             group_id=group_id,
             name=form.cleaned_data['name'],
-            student_ids=[
+            student_ids=tuple(
                 str(student.pk)
                 for student in form.cleaned_data.get('students', [])
-            ],
+            ),
         )
 
     def student_group_form_initial(self, group):

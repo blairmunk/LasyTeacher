@@ -16,7 +16,7 @@ class DjangoStudentCatalogRepository(IStudentCatalogRepository):
             students = students.filter(
                 studentgroup__academic_year_id=year.pk,
             ).distinct()
-        return [
+        return tuple(
             StudentListItem(
                 pk=str(student.pk),
                 last_name=student.last_name,
@@ -26,7 +26,7 @@ class DjangoStudentCatalogRepository(IStudentCatalogRepository):
                 created_at=student.created_at,
             )
             for student in students.order_by('last_name', 'first_name')
-        ]
+        )
 
     def get_student(self, student_id: str):
         student = Student.objects.filter(pk=student_id).first()
@@ -44,9 +44,9 @@ class DjangoStudentCatalogRepository(IStudentCatalogRepository):
         )
 
     def get_student_groups(self, student_id: str):
-        return [
+        return tuple(
             StudentGroupRef(pk=str(group.pk), name=group.name)
             for group in StudentGroup.objects.filter(
                 students__id=student_id,
             ).order_by('name')
-        ]
+        )

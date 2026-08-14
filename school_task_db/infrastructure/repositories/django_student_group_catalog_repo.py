@@ -19,7 +19,7 @@ class DjangoStudentGroupCatalogRepository(IStudentGroupCatalogRepository):
         groups = StudentGroup.objects.select_related('academic_year')
         if year:
             groups = groups.filter(academic_year_id=year.pk)
-        return [
+        return tuple(
             StudentGroupListItem(
                 pk=str(group.pk),
                 name=group.name,
@@ -30,7 +30,7 @@ class DjangoStudentGroupCatalogRepository(IStudentGroupCatalogRepository):
             for group in groups.annotate(
                 students_count=Count('students'),
             ).order_by('name')
-        ]
+        )
 
     def get_student_group(self, group_id: str):
         group = StudentGroup.objects.select_related(
@@ -46,7 +46,7 @@ class DjangoStudentGroupCatalogRepository(IStudentGroupCatalogRepository):
             name=group.name,
             short_uuid=group.get_short_uuid(),
             created_at=group.created_at,
-            students=[
+            students=tuple(
                 StudentGroupDetailStudent(
                     pk=str(student.pk),
                     last_name=student.last_name,
@@ -59,16 +59,16 @@ class DjangoStudentGroupCatalogRepository(IStudentGroupCatalogRepository):
                     'last_name',
                     'first_name',
                 )
-            ],
+            ),
         )
 
     def get_all_student_groups(self):
-        return [
+        return tuple(
             StudentGroupRef(pk=str(group.pk), name=str(group))
             for group in StudentGroup.objects.select_related(
                 'academic_year',
             ).order_by('name')
-        ]
+        )
 
     def get_group_name(self, group_id: str):
         group = StudentGroup.objects.filter(pk=group_id).first()

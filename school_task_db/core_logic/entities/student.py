@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from core_logic.value_objects.task_scores import TaskScoreRecord
 
@@ -151,7 +151,10 @@ class WorkGroupRef:
 
 @dataclass(frozen=True)
 class StudentListData:
-    students: List["StudentListItem"]
+    students: tuple["StudentListItem", ...]
+
+    def __post_init__(self):
+        object.__setattr__(self, 'students', tuple(self.students))
 
 
 @dataclass(frozen=True)
@@ -198,7 +201,10 @@ class SaveStudentResult:
 
 @dataclass(frozen=True)
 class StudentGroupListData:
-    student_groups: List["StudentGroupListItem"]
+    student_groups: tuple["StudentGroupListItem", ...]
+
+    def __post_init__(self):
+        object.__setattr__(self, 'student_groups', tuple(self.student_groups))
 
 
 @dataclass(frozen=True)
@@ -231,7 +237,12 @@ class StudentGroupDetail:
     name: str
     short_uuid: str
     created_at: datetime
-    students: List[StudentGroupDetailStudent] = field(default_factory=list)
+    students: tuple[StudentGroupDetailStudent, ...] = field(
+        default_factory=tuple,
+    )
+
+    def __post_init__(self):
+        object.__setattr__(self, 'students', tuple(self.students))
 
     @property
     def students_count(self) -> int:
@@ -241,8 +252,11 @@ class StudentGroupDetail:
 @dataclass(frozen=True)
 class SaveStudentGroupParams:
     name: str
-    student_ids: List[str] = field(default_factory=list)
+    student_ids: tuple[str, ...] = field(default_factory=tuple)
     group_id: str = ''
+
+    def __post_init__(self):
+        object.__setattr__(self, 'student_ids', tuple(self.student_ids))
 
 
 @dataclass(frozen=True)

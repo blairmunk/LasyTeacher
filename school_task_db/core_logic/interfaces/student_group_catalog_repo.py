@@ -1,7 +1,7 @@
 """Read port for student groups/classes."""
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Optional
 
 from core_logic.entities.academic_year import AcademicYearRef
 from core_logic.entities.student import (
@@ -16,7 +16,7 @@ class IStudentGroupCatalogRepository(ABC):
     def get_list_student_groups(
         self,
         year: AcademicYearRef | None = None,
-    ) -> List[StudentGroupListItem]:
+    ) -> tuple[StudentGroupListItem, ...]:
         """Return student groups/classes for the group list page."""
 
     @abstractmethod
@@ -27,7 +27,7 @@ class IStudentGroupCatalogRepository(ABC):
         """Return one student group detail read model, or None."""
 
     @abstractmethod
-    def get_all_student_groups(self) -> List[StudentGroupRef]:
+    def get_all_student_groups(self) -> tuple[StudentGroupRef, ...]:
         """Return all student groups/classes for selection controls."""
 
     @abstractmethod

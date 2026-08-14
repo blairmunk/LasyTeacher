@@ -27,8 +27,11 @@ class GetStudentListUseCaseTests(TestCase):
 
         data = use_case.execute(year='year-1')
 
-        self.assertEqual(data.students, ['student-1'])
+        self.assertEqual(data.students, ('student-1',))
         self.assertEqual(repo.students_year, 'year-1')
+
+        repo.students.append('student-2')
+        self.assertEqual(data.students, ('student-1',))
 
 
 class GetStudentGroupListUseCaseTests(TestCase):
@@ -38,5 +41,8 @@ class GetStudentGroupListUseCaseTests(TestCase):
 
         data = use_case.execute(year='year-1')
 
-        self.assertEqual(data.student_groups, ['group-1'])
+        self.assertEqual(data.student_groups, ('group-1',))
         self.assertEqual(repo.groups_year, 'year-1')
+
+        repo.student_groups.append('group-2')
+        self.assertEqual(data.student_groups, ('group-1',))

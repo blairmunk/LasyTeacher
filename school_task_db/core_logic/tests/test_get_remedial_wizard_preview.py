@@ -74,8 +74,14 @@ class GetRemedialWizardPreviewUseCaseTests(TestCase):
 
         result = use_case.execute()
 
-        self.assertEqual(result.groups, [StudentGroupRef(pk='group-1', name='9А')])
+        self.assertEqual(
+            result.groups,
+            (StudentGroupRef(pk='group-1', name='9А'),),
+        )
         self.assertEqual(result.limit_choices, LIMIT_CHOICES)
+
+        repo.groups.clear()
+        self.assertEqual(len(result.groups), 1)
 
 
 class RemedialWizardServiceTests(TestCase):

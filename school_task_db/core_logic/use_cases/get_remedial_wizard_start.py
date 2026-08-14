@@ -1,7 +1,7 @@
 """Build step 1 data for the remedial wizard."""
 
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import Tuple
 
 from core_logic.entities.student import StudentGroupRef
 from core_logic.interfaces.student_group_catalog_repo import (
@@ -18,8 +18,11 @@ LIMIT_CHOICES: Tuple[Tuple[str, str], ...] = (
 
 @dataclass(frozen=True)
 class RemedialWizardStartData:
-    groups: List[StudentGroupRef]
+    groups: tuple[StudentGroupRef, ...]
     limit_choices: Tuple[Tuple[str, str], ...] = LIMIT_CHOICES
+
+    def __post_init__(self):
+        object.__setattr__(self, 'groups', tuple(self.groups))
 
 
 class GetRemedialWizardStartUseCase:

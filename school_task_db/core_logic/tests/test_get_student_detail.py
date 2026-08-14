@@ -1,6 +1,10 @@
 from unittest import TestCase
 
-from core_logic.entities.student import StudentDetail, StudentGroupDetail
+from core_logic.entities.student import (
+    StudentDetail,
+    StudentGroupDetail,
+    StudentGroupDetailStudent,
+)
 from core_logic.use_cases.get_student_detail import GetStudentDetailUseCase
 from core_logic.use_cases.get_student_group_detail import (
     GetStudentGroupDetailUseCase,
@@ -50,6 +54,27 @@ class GetStudentDetailUseCaseTests(TestCase):
 
 
 class GetStudentGroupDetailUseCaseTests(TestCase):
+    def test_student_group_detail_copies_students(self):
+        students = [
+            StudentGroupDetailStudent(
+                pk='student-1',
+                first_name='Иван',
+                last_name='Петров',
+            ),
+        ]
+
+        group = StudentGroupDetail(
+            pk='group-1',
+            name='9А',
+            short_uuid='abcd1234',
+            created_at=None,
+            students=students,
+        )
+        students.clear()
+
+        self.assertEqual(len(group.students), 1)
+        self.assertEqual(group.students_count, 1)
+
     def test_execute_returns_student_group_detail_data(self):
         repo = FakeStudentRepository()
         use_case = GetStudentGroupDetailUseCase(student_repo=repo)

@@ -1,7 +1,6 @@
 """Add participants to an event."""
 
 from dataclasses import dataclass
-from typing import Iterable
 
 from core_logic.interfaces.event_participation_repo import (
     IEventParticipationRepository,
@@ -11,7 +10,10 @@ from core_logic.interfaces.event_participation_repo import (
 @dataclass(frozen=True)
 class AddEventParticipantsRequest:
     event_id: str
-    student_ids: Iterable[str]
+    student_ids: tuple[str, ...]
+
+    def __post_init__(self):
+        object.__setattr__(self, 'student_ids', tuple(self.student_ids))
 
 
 @dataclass(frozen=True)
@@ -27,7 +29,7 @@ class AddEventParticipantsUseCase:
         self,
         request: AddEventParticipantsRequest,
     ) -> AddEventParticipantsResult:
-        unique_student_ids = list(dict.fromkeys(
+        unique_student_ids = tuple(dict.fromkeys(
             str(student_id)
             for student_id in request.student_ids
             if student_id

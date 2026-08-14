@@ -15,6 +15,30 @@ from core_logic.use_cases.prepare_remedial_wizard_submission import (
 
 
 class PrepareRemedialWizardSubmissionUseCaseTests(TestCase):
+    def test_create_request_copies_nested_input_collections(self):
+        selected_student_ids = ['student-1']
+        task_ids = ['task-1']
+        student_task_ids = {'student-1': task_ids}
+
+        request = CreateRemedialWizardWorkRequest(
+            group_id='group-1',
+            selected_student_ids=selected_student_ids,
+            student_task_ids=student_task_ids,
+            work_name='Работа над ошибками',
+            create_event=False,
+            event_date=None,
+        )
+
+        selected_student_ids.append('student-2')
+        task_ids.append('task-2')
+        student_task_ids['student-2'] = ['task-3']
+
+        self.assertEqual(request.selected_student_ids, ('student-1',))
+        self.assertEqual(
+            dict(request.student_task_ids),
+            {'student-1': ('task-1',)},
+        )
+
     def test_prepare_preview_submission_parses_parameters(self):
         result = PrepareRemedialWizardPreviewSubmissionUseCase().execute(
             PrepareRemedialWizardSubmissionRequest(

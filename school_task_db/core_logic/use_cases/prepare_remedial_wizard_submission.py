@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import date
-from typing import Dict, List, Mapping, Sequence
+from typing import Mapping, Sequence
 
 from core_logic.use_cases.create_remedial_wizard_work import (
     CreateRemedialWizardWorkRequest,
@@ -61,11 +61,11 @@ def _first(
     return str(values[0])
 
 
-def _list(data: Mapping[str, Sequence[str]], key: str) -> List[str]:
+def _list(data: Mapping[str, Sequence[str]], key: str) -> tuple[str, ...]:
     values = data.get(key)
     if not values:
-        return []
-    return [str(value) for value in values]
+        return ()
+    return tuple(str(value) for value in values)
 
 
 def _int(value: str, default: int) -> int:
@@ -84,16 +84,16 @@ def _optional_date(value: str) -> date | None:
 
 def _student_task_ids(
     data: Mapping[str, Sequence[str]],
-    selected_student_ids: List[str],
-) -> Dict[str, List[str]]:
+    selected_student_ids: Sequence[str],
+) -> dict[str, tuple[str, ...]]:
     student_tasks = {}
     for student_id in selected_student_ids:
         task_ids_raw = _first(data, f'task_ids_{student_id}')
-        task_ids = [
+        task_ids = tuple(
             task_id.strip()
             for task_id in task_ids_raw.split(',')
             if task_id.strip()
-        ]
+        )
         if task_ids:
             student_tasks[student_id] = task_ids
     return student_tasks

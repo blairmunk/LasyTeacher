@@ -1,6 +1,6 @@
 """Django repository for event participation commands."""
 
-from typing import Dict, List
+from typing import Mapping, Sequence
 
 from django.db import transaction
 
@@ -13,7 +13,7 @@ from works.models import Variant
 
 
 class DjangoEventParticipationRepository(IEventParticipationRepository):
-    def add_participants(self, event_id: str, student_ids: List[str]) -> int:
+    def add_participants(self, event_id: str, student_ids: Sequence[str]) -> int:
         created_count = 0
         with transaction.atomic():
             for student_id in student_ids:
@@ -29,7 +29,7 @@ class DjangoEventParticipationRepository(IEventParticipationRepository):
     def assign_variants(
         self,
         event_id: str,
-        assignments: Dict[str, str],
+        assignments: Mapping[str, str],
     ) -> int:
         assigned_count = 0
         with transaction.atomic():

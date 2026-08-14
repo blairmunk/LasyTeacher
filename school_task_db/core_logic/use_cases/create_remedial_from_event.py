@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import date
-from typing import List, Optional
+from typing import Optional
 
 from core_logic.interfaces.event_attempt_repo import IEventAttemptRepository
 from core_logic.interfaces.event_participation_repo import (
@@ -34,12 +34,19 @@ from core_logic.services.remedial_variant_content_service import (
 @dataclass(frozen=True)
 class RemedialFromEventRequest:
     event_id: str
-    selected_student_ids: List[str]
+    selected_student_ids: tuple[str, ...]
     work_name: str = ''
     create_event: bool = False
     event_date: Optional[date] = None
     tasks_per_group: int = 1
     max_total_tasks: int = 10
+
+    def __post_init__(self):
+        object.__setattr__(
+            self,
+            'selected_student_ids',
+            tuple(self.selected_student_ids),
+        )
 
 
 @dataclass(frozen=True)
@@ -52,7 +59,10 @@ class RemedialFromEventResult:
     students_without_review: int = 0
     students_with_shortage: int = 0
     message: str = ''
-    errors: List[str] = field(default_factory=list)
+    errors: tuple[str, ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        object.__setattr__(self, 'errors', tuple(self.errors))
 
 
 class CreateRemedialFromEventUseCase:

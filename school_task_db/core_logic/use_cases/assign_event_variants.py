@@ -1,6 +1,7 @@
 """Assign variants to event participations."""
 
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Mapping
 
 from core_logic.interfaces.event_participation_repo import (
@@ -13,6 +14,13 @@ from core_logic.interfaces.event_read_repo import IEventReadRepository
 class AssignEventVariantsRequest:
     event_id: str
     assignments: Mapping[str, str]
+
+    def __post_init__(self):
+        object.__setattr__(
+            self,
+            'assignments',
+            MappingProxyType(dict(self.assignments)),
+        )
 
 
 @dataclass(frozen=True)

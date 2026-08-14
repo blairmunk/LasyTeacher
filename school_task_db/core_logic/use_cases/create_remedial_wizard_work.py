@@ -2,7 +2,8 @@
 
 from dataclasses import dataclass
 from datetime import date
-from typing import Dict, List, Optional
+from types import MappingProxyType
+from typing import Mapping, Optional
 
 from core_logic.interfaces.event_participation_repo import (
     IEventParticipationRepository,
@@ -30,11 +31,26 @@ from core_logic.services.remedial_variant_content_service import (
 @dataclass(frozen=True)
 class CreateRemedialWizardWorkRequest:
     group_id: str
-    selected_student_ids: List[str]
-    student_task_ids: Dict[str, List[str]]
+    selected_student_ids: tuple[str, ...]
+    student_task_ids: Mapping[str, tuple[str, ...]]
     work_name: str = 'Работа над ошибками'
     create_event: bool = False
     event_date: Optional[date] = None
+
+    def __post_init__(self):
+        object.__setattr__(
+            self,
+            'selected_student_ids',
+            tuple(self.selected_student_ids),
+        )
+        object.__setattr__(
+            self,
+            'student_task_ids',
+            MappingProxyType({
+                str(student_id): tuple(task_ids)
+                for student_id, task_ids in self.student_task_ids.items()
+            }),
+        )
 
 
 @dataclass(frozen=True)

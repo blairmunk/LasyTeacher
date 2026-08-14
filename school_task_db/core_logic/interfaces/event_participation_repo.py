@@ -1,21 +1,21 @@
 """Repository interface for event participation commands."""
 
 from abc import ABC, abstractmethod
-from typing import Dict, List
+from typing import Mapping, Sequence
 
 from core_logic.entities.event import EventVariantAssignmentResult
 
 
 class IEventParticipationRepository(ABC):
     @abstractmethod
-    def add_participants(self, event_id: str, student_ids: List[str]) -> int:
+    def add_participants(self, event_id: str, student_ids: Sequence[str]) -> int:
         """Add assigned participations and return the number created."""
 
     @abstractmethod
     def assign_variants(
         self,
         event_id: str,
-        assignments: Dict[str, str],
+        assignments: Mapping[str, str],
     ) -> int:
         """Assign variants and return the number changed."""
 

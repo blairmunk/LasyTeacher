@@ -71,7 +71,29 @@ class EventMutationUseCaseTests(TestCase):
         )
 
         self.assertEqual(result.created_count, 2)
-        self.assertEqual(repo.student_ids, ['student-1', 'student-2'])
+        self.assertEqual(repo.student_ids, ('student-1', 'student-2'))
+
+    def test_event_mutation_requests_copy_input_collections(self):
+        student_ids = ['student-1']
+        assignments = {'participation-1': 'variant-1'}
+
+        participants_request = AddEventParticipantsRequest(
+            event_id='event-1',
+            student_ids=student_ids,
+        )
+        variants_request = AssignEventVariantsRequest(
+            event_id='event-1',
+            assignments=assignments,
+        )
+
+        student_ids.append('student-2')
+        assignments['participation-2'] = 'variant-2'
+
+        self.assertEqual(participants_request.student_ids, ('student-1',))
+        self.assertEqual(
+            dict(variants_request.assignments),
+            {'participation-1': 'variant-1'},
+        )
 
     def test_assign_event_variants_filters_empty_assignments(self):
         repo = FakeMutationEventRepository()

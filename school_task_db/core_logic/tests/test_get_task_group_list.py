@@ -40,9 +40,9 @@ class GetTaskGroupListUseCaseTests(TestCase):
         data = use_case.execute(filters)
 
         self.assertEqual(repo.filters, filters)
-        self.assertEqual(data.analog_groups, ['group-1'])
-        self.assertEqual(data.topics, ['topic-1'])
-        self.assertEqual(data.subtopics, ['subtopic-for-topic-1'])
+        self.assertEqual(data.analog_groups, ('group-1',))
+        self.assertEqual(data.topics, ('topic-1',))
+        self.assertEqual(data.subtopics, ('subtopic-for-topic-1',))
         self.assertEqual(data.difficulties[0], (1, 'Базовый'))
         self.assertEqual(data.total_groups, 5)
         self.assertEqual(data.empty_groups, 1)

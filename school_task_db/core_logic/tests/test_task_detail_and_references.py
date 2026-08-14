@@ -28,7 +28,7 @@ class FakeTaskRepository:
             short_uuid='abcd1234',
             images=[],
         )
-        self.groups = [TaskDetailGroup(pk='group-1', name='Скорость')]
+        self.groups = (TaskDetailGroup(pk='group-1', name='Скорость'),)
         self.detail_task_id = None
         self.subtopic_topic_id = None
 
@@ -75,7 +75,7 @@ class TaskDetailAndReferenceUseCaseTests(TestCase):
         detail = use_case.execute('missing-task')
 
         self.assertIsNone(detail.task)
-        self.assertIsNone(detail.task_groups)
+        self.assertEqual(detail.task_groups, ())
         self.assertIsNone(repo.detail_task_id)
 
     def test_subtopic_options_rejects_empty_topic(self):
@@ -102,8 +102,8 @@ class TaskDetailAndReferenceUseCaseTests(TestCase):
 
         result = use_case.execute('')
 
-        self.assertEqual(result.content_entries, [])
-        self.assertEqual(result.requirements, [])
+        self.assertEqual(result.content_entries, ())
+        self.assertEqual(result.requirements, ())
         self.assertIsNone(repo.topic_id)
 
     def test_classification_options_return_repository_values(self):

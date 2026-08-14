@@ -1,6 +1,7 @@
+from datetime import datetime
 from unittest import TestCase
 
-from core_logic.entities.task import TaskListFilters
+from core_logic.entities.task import SelectOption, TaskListFilters, TaskListItem
 from core_logic.use_cases.get_task_list import GetTaskListUseCase
 
 
@@ -10,22 +11,36 @@ class FakeTaskRepository:
 
     def get_list_tasks(self, filters):
         self.filters = filters
-        return ['task-1']
+        return (
+            TaskListItem(
+                pk='task-1',
+                text='Задание',
+                topic_name='Динамика',
+                task_type_display='Расчётная задача',
+                difficulty_display='Базовый',
+                display_id='task-1',
+                created_at=datetime(2026, 8, 14),
+            ),
+        )
 
     def get_list_topics(self):
-        return ['topic-1']
+        return (SelectOption('topic-1', 'Динамика'),)
 
     def get_list_analog_groups(self):
-        return ['group-1']
+        return (SelectOption('group-1', 'Скорость'),)
 
     def get_list_sources(self):
-        return ['source-1']
+        return (SelectOption('source-1', 'Сборник'),)
 
     def get_subtopics_for_topic(self, topic_id):
-        return [f'subtopic-for-{topic_id}'] if topic_id else []
+        return (
+            (SelectOption(f'subtopic-for-{topic_id}', 'Подтема'),)
+            if topic_id
+            else ()
+        )
 
     def get_task_type_choices(self):
-        return [('computational', 'Расчётная задача')]
+        return (('computational', 'Расчётная задача'),)
 
     def count_tasks(self):
         return 7
@@ -58,12 +73,15 @@ class GetTaskListUseCaseTests(TestCase):
         data = use_case.execute(filters, include_cache_stats=True)
 
         self.assertEqual(repo.filters, filters)
-        self.assertEqual(data.tasks, ['task-1'])
-        self.assertEqual(data.topics, ['topic-1'])
-        self.assertEqual(data.analog_groups, ['group-1'])
-        self.assertEqual(data.sources, ['source-1'])
-        self.assertEqual(data.subtopics, ['subtopic-for-topic-1'])
-        self.assertEqual(data.task_types, [('computational', 'Расчётная задача')])
+        self.assertEqual(data.tasks[0].pk, 'task-1')
+        self.assertEqual(data.topics[0].pk, 'topic-1')
+        self.assertEqual(data.analog_groups[0].pk, 'group-1')
+        self.assertEqual(data.sources[0].pk, 'source-1')
+        self.assertEqual(data.subtopics[0].pk, 'subtopic-for-topic-1')
+        self.assertEqual(
+            data.task_types,
+            (('computational', 'Расчётная задача'),),
+        )
         self.assertEqual(data.grade_choices[0], (7, '7 класс'))
         self.assertEqual(data.total_tasks, 7)
         self.assertEqual(data.ungrouped_count, 2)

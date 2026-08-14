@@ -36,7 +36,7 @@ class SourceListAndMathCacheUseCaseTests(TestCase):
         result = use_case.execute()
 
         self.assertTrue(repo.sources_requested)
-        self.assertEqual(result.sources, ['source-1'])
+        self.assertEqual(result.sources, ('source-1',))
 
     def test_refresh_math_cache_counts_stats(self):
         cache = FakeTaskMathStatusCache()

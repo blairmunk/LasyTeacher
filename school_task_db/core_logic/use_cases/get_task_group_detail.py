@@ -13,7 +13,7 @@ class GetTaskGroupDetailUseCase:
     def execute(self, group_id: str) -> TaskGroupDetailData:
         group = self.task_group_repo.get_analog_group_detail(group_id)
         if group is None:
-            return TaskGroupDetailData(tasks=None)
+            return TaskGroupDetailData()
 
         return TaskGroupDetailData(
             group=group,

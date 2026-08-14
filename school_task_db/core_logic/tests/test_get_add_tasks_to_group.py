@@ -1,5 +1,9 @@
 from unittest import TestCase
 
+from core_logic.entities.task import (
+    AddTasksToGroupTask,
+    TaskGroupDetailGroup,
+)
 from core_logic.use_cases.get_add_tasks_to_group import (
     AddTasksToGroupFormRequest,
     GetAddTasksToGroupUseCase,
@@ -7,9 +11,19 @@ from core_logic.use_cases.get_add_tasks_to_group import (
 
 
 class FakeTaskRepository:
-    def __init__(self, group='group-1'):
+    def __init__(self, group=None, missing=False):
+        if not missing and group is None:
+            group = TaskGroupDetailGroup(pk='group-1', name='Скорость')
         self.group = group
-        self.available_tasks = ['task-2']
+        self.available_tasks = (
+            AddTasksToGroupTask(
+                pk='task-2',
+                topic='Динамика',
+                text='Задание',
+                task_type_display='Расчётная задача',
+                difficulty_display='Базовый',
+            ),
+        )
         self.available_request = None
 
     def get_analog_group_detail(self, group_id):
@@ -30,13 +44,13 @@ class GetAddTasksToGroupUseCaseTests(TestCase):
         )
 
         self.assertEqual(data.status, 'ready')
-        self.assertEqual(data.group, 'group-1')
-        self.assertEqual(data.available_tasks, ['task-2'])
+        self.assertEqual(data.group.pk, 'group-1')
+        self.assertEqual(data.available_tasks[0].pk, 'task-2')
         self.assertEqual(data.search, 'скорость')
         self.assertEqual(repo.available_request, ('group-1', 'скорость'))
 
     def test_execute_returns_not_found_without_loading_available_tasks(self):
-        repo = FakeTaskRepository(group=None)
+        repo = FakeTaskRepository(missing=True)
         use_case = GetAddTasksToGroupUseCase(task_group_repo=repo)
 
         data = use_case.execute(

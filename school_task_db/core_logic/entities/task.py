@@ -1,6 +1,7 @@
 """Task-related domain entities."""
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
 from core_logic.value_objects.task_print_settings import (
@@ -34,17 +35,30 @@ class TaskListFilters:
 
 @dataclass(frozen=True)
 class TaskListData:
-    tasks: List["TaskListItem"]
-    topics: List["SelectOption"]
-    analog_groups: List["SelectOption"]
-    sources: List["SelectOption"]
-    subtopics: List["SelectOption"]
-    task_types: List[Tuple[str, str]]
-    difficulties: List[Tuple[int, str]]
-    grade_choices: List[Tuple[int, str]]
+    tasks: tuple["TaskListItem", ...]
+    topics: tuple["SelectOption", ...]
+    analog_groups: tuple["SelectOption", ...]
+    sources: tuple["SelectOption", ...]
+    subtopics: tuple["SelectOption", ...]
+    task_types: tuple[Tuple[str, str], ...]
+    difficulties: tuple[Tuple[int, str], ...]
+    grade_choices: tuple[Tuple[int, str], ...]
     total_tasks: int
     ungrouped_count: int
     cache_stats: Any = None
+
+    def __post_init__(self):
+        for field_name in (
+            'tasks',
+            'topics',
+            'analog_groups',
+            'sources',
+            'subtopics',
+            'task_types',
+            'difficulties',
+            'grade_choices',
+        ):
+            object.__setattr__(self, field_name, tuple(getattr(self, field_name)))
 
 
 @dataclass(frozen=True)
@@ -71,7 +85,7 @@ class TaskListItem:
     task_type_display: str
     difficulty_display: str
     display_id: str
-    created_at: Any
+    created_at: datetime
     subtopic: Optional[TaskListSubtopicRef] = None
     source: Optional[TaskListSourceRef] = None
     grade: Optional[int] = None
@@ -195,13 +209,22 @@ class TaskGroupListFilters:
 
 @dataclass(frozen=True)
 class TaskGroupListData:
-    analog_groups: List["TaskGroupListItem"]
-    topics: List["SelectOption"]
-    subtopics: List["SelectOption"]
-    difficulties: List[Tuple[int, str]]
+    analog_groups: tuple["TaskGroupListItem", ...]
+    topics: tuple["SelectOption", ...]
+    subtopics: tuple["SelectOption", ...]
+    difficulties: tuple[Tuple[int, str], ...]
     total_groups: int
     empty_groups: int
     total_tasks_in_groups: int
+
+    def __post_init__(self):
+        for field_name in (
+            'analog_groups',
+            'topics',
+            'subtopics',
+            'difficulties',
+        ):
+            object.__setattr__(self, field_name, tuple(getattr(self, field_name)))
 
 
 @dataclass(frozen=True)
@@ -217,7 +240,10 @@ class TaskGroupListItem:
 @dataclass(frozen=True)
 class TaskGroupDetailData:
     group: Optional["TaskGroupDetailGroup"] = None
-    tasks: List["TaskGroupDetailTask"] = None
+    tasks: tuple["TaskGroupDetailTask", ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        object.__setattr__(self, 'tasks', tuple(self.tasks))
 
 
 @dataclass(frozen=True)
@@ -244,10 +270,15 @@ class TaskGroupDetailTask:
 
 @dataclass(frozen=True)
 class AddTasksToGroupData:
-    group: Any = None
-    available_tasks: List["AddTasksToGroupTask"] = None
+    group: Optional[TaskGroupDetailGroup] = None
+    available_tasks: tuple["AddTasksToGroupTask", ...] = field(
+        default_factory=tuple,
+    )
     search: str = ''
     status: str = 'ready'
+
+    def __post_init__(self):
+        object.__setattr__(self, 'available_tasks', tuple(self.available_tasks))
 
 
 @dataclass(frozen=True)
@@ -258,14 +289,17 @@ class AddTasksToGroupTask:
     task_type_display: str
     difficulty_display: str
     section: str = ''
-    created_at: Any = None
+    created_at: Optional[datetime] = None
     image_count: int = 0
 
 
 @dataclass(frozen=True)
 class TaskDetailData:
     task: Optional["TaskDetailTask"] = None
-    task_groups: List["TaskDetailGroup"] = None
+    task_groups: tuple["TaskDetailGroup", ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        object.__setattr__(self, 'task_groups', tuple(self.task_groups))
 
 
 @dataclass(frozen=True)
@@ -315,12 +349,17 @@ class TaskDetailTask:
     is_verified: bool = False
     estimated_time: Optional[int] = None
     teacher_notes: str = ''
-    images: List[TaskDetailImage] = None
-    created_at: Any = None
+    images: tuple[TaskDetailImage, ...] = field(default_factory=tuple)
+    created_at: Optional[datetime] = None
     content_entries: Tuple[TaskDetailClassification, ...] = ()
     requirements: Tuple[TaskDetailClassification, ...] = ()
     legacy_content_element: str = ''
     legacy_requirement_element: str = ''
+
+    def __post_init__(self):
+        object.__setattr__(self, 'images', tuple(self.images))
+        object.__setattr__(self, 'content_entries', tuple(self.content_entries))
+        object.__setattr__(self, 'requirements', tuple(self.requirements))
 
 
 @dataclass(frozen=True)
@@ -401,13 +440,20 @@ class SelectOption:
 
 @dataclass(frozen=True)
 class TaskClassificationOptions:
-    content_entries: List[SelectOption]
-    requirements: List[SelectOption]
+    content_entries: tuple[SelectOption, ...]
+    requirements: tuple[SelectOption, ...]
+
+    def __post_init__(self):
+        object.__setattr__(self, 'content_entries', tuple(self.content_entries))
+        object.__setattr__(self, 'requirements', tuple(self.requirements))
 
 
 @dataclass(frozen=True)
 class SourceListData:
-    sources: List["SourceListItem"]
+    sources: tuple["SourceListItem", ...]
+
+    def __post_init__(self):
+        object.__setattr__(self, 'sources', tuple(self.sources))
 
 
 @dataclass(frozen=True)

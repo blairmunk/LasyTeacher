@@ -105,7 +105,7 @@ class DjangoTaskGroupCatalogRepository(ITaskGroupCatalogRepository):
         else:
             queryset = queryset.order_by('name')
 
-        return [
+        return tuple(
             TaskGroupListItem(
                 pk=str(group.pk),
                 name=group.name,
@@ -115,7 +115,7 @@ class DjangoTaskGroupCatalogRepository(ITaskGroupCatalogRepository):
                 sample_task_text=group.sample_task_text or '',
             )
             for group in queryset
-        ]
+        )
 
     def get_analog_group_detail(self, group_id: str):
         group = AnalogGroup.objects.filter(pk=group_id).first()
@@ -137,7 +137,7 @@ class DjangoTaskGroupCatalogRepository(ITaskGroupCatalogRepository):
             'task__subtopic',
         ).prefetch_related('task__images')
 
-        return [
+        return tuple(
             TaskGroupDetailTask(
                 pk=str(membership.task.pk),
                 topic=str(membership.task.topic),
@@ -148,7 +148,7 @@ class DjangoTaskGroupCatalogRepository(ITaskGroupCatalogRepository):
                 bank_role=membership.bank_role,
             )
             for membership in memberships
-        ]
+        )
 
     def get_available_tasks_for_analog_group(self, group_id: str, search: str):
         existing_task_ids = TaskGroup.objects.filter(
@@ -167,7 +167,7 @@ class DjangoTaskGroupCatalogRepository(ITaskGroupCatalogRepository):
                 | Q(topic__name__icontains=search)
             )
 
-        return [
+        return tuple(
             AddTasksToGroupTask(
                 pk=str(task.pk),
                 topic=str(task.topic),
@@ -179,13 +179,13 @@ class DjangoTaskGroupCatalogRepository(ITaskGroupCatalogRepository):
                 image_count=task.image_count,
             )
             for task in tasks
-        ]
+        )
 
     def get_list_analog_groups(self):
-        return [
+        return tuple(
             SelectOption(id=str(group.pk), name=group.name)
             for group in AnalogGroup.objects.all().order_by('name')
-        ]
+        )
 
     def count_analog_groups(self) -> int:
         return AnalogGroup.objects.count()

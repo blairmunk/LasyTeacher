@@ -1,7 +1,7 @@
 """Repository interface for task read models."""
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Optional
 
 from core_logic.entities.task import (
     TaskDetailGroup,
@@ -13,7 +13,7 @@ from core_logic.entities.task import (
 
 class ITaskReadRepository(ABC):
     @abstractmethod
-    def get_list_tasks(self, filters: TaskListFilters) -> List[TaskListItem]:
+    def get_list_tasks(self, filters: TaskListFilters) -> tuple[TaskListItem, ...]:
         """Return tasks for the task list page."""
 
     @abstractmethod
@@ -21,7 +21,7 @@ class ITaskReadRepository(ABC):
         """Return one task detail read model, if it exists."""
 
     @abstractmethod
-    def get_task_detail_groups(self, task_id: str) -> List[TaskDetailGroup]:
+    def get_task_detail_groups(self, task_id: str) -> tuple[TaskDetailGroup, ...]:
         """Return analog-group read models for one task detail page."""
 
     @abstractmethod

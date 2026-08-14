@@ -1,7 +1,7 @@
 """Read port for task-group catalog pages."""
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Optional
 
 from core_logic.entities.task import (
     AddTasksToGroupTask,
@@ -18,7 +18,7 @@ class ITaskGroupCatalogRepository(ABC):
     def get_list_task_groups(
         self,
         filters: TaskGroupListFilters,
-    ) -> List[TaskGroupListItem]:
+    ) -> tuple[TaskGroupListItem, ...]:
         """Return analog groups for the group list page."""
 
     @abstractmethod
@@ -32,7 +32,7 @@ class ITaskGroupCatalogRepository(ABC):
     def get_task_group_detail_tasks(
         self,
         group_id: str,
-    ) -> List[TaskGroupDetailTask]:
+    ) -> tuple[TaskGroupDetailTask, ...]:
         """Return task read models for one analog group."""
 
     @abstractmethod
@@ -40,11 +40,11 @@ class ITaskGroupCatalogRepository(ABC):
         self,
         group_id: str,
         search: str,
-    ) -> List[AddTasksToGroupTask]:
+    ) -> tuple[AddTasksToGroupTask, ...]:
         """Return tasks not yet assigned to an analog group."""
 
     @abstractmethod
-    def get_list_analog_groups(self) -> List[SelectOption]:
+    def get_list_analog_groups(self) -> tuple[SelectOption, ...]:
         """Return analog-group select options."""
 
     @abstractmethod

@@ -98,7 +98,7 @@ class DjangoTaskReadRepository(ITaskReadRepository):
         elif filters.verified == '0':
             queryset = queryset.filter(is_verified=False)
 
-        return [
+        return tuple(
             TaskListItem(
                 pk=str(task.pk),
                 text=task.text,
@@ -131,7 +131,7 @@ class DjangoTaskReadRepository(ITaskReadRepository):
                 image_count=task.image_count,
             )
             for task in queryset
-        ]
+        )
 
     def get_task(self, task_id: str):
         task = Task.objects.select_related(
@@ -174,7 +174,7 @@ class DjangoTaskReadRepository(ITaskReadRepository):
             is_verified=task.is_verified,
             estimated_time=task.estimated_time,
             teacher_notes=task.teacher_notes,
-            images=[
+            images=tuple(
                 TaskDetailImage(
                     caption=image.caption,
                     position=image.position,
@@ -187,7 +187,7 @@ class DjangoTaskReadRepository(ITaskReadRepository):
                     ),
                 )
                 for image in task.images.all()
-            ],
+            ),
             created_at=task.created_at,
             content_entries=tuple(
                 TaskDetailClassification(
@@ -213,13 +213,13 @@ class DjangoTaskReadRepository(ITaskReadRepository):
         task_groups = TaskGroup.objects.filter(
             task_id=task_id,
         ).select_related('group')
-        return [
+        return tuple(
             TaskDetailGroup(
                 pk=str(task_group.group.pk),
                 name=task_group.group.name,
             )
             for task_group in task_groups
-        ]
+        )
 
     def count_tasks(self) -> int:
         return Task.objects.count()

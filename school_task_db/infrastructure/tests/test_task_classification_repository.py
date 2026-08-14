@@ -120,8 +120,8 @@ class DjangoTaskClassificationRepositoryTests(TestCase):
             'invalid-topic-id',
         )
 
-        self.assertEqual(options.content_entries, [])
-        self.assertEqual(options.requirements, [])
+        self.assertEqual(options.content_entries, ())
+        self.assertEqual(options.requirements, ())
 
     def test_use_case_creates_and_updates_explicit_classifications(self):
         container = Container()

@@ -7,15 +7,15 @@ from core_logic.use_cases.get_task_group_detail import GetTaskGroupDetailUseCase
 class FakeTaskRepository:
     def __init__(self):
         self.group = TaskGroupDetailGroup(pk='group-1', name='Скорость')
-        self.detail_tasks = [
+        self.detail_tasks = (
             TaskGroupDetailTask(
                 pk='task-1',
                 topic='Кинематика',
                 text='Задача',
                 task_type_display='Расчётная задача',
                 difficulty_display='Средняя',
-            )
-        ]
+            ),
+        )
         self.requested_group_id = None
 
     def get_analog_group_detail(self, group_id):
@@ -44,5 +44,5 @@ class GetTaskGroupDetailUseCaseTests(TestCase):
         data = use_case.execute('missing-group')
 
         self.assertIsNone(data.group)
-        self.assertIsNone(data.tasks)
+        self.assertEqual(data.tasks, ())
         self.assertIsNone(repo.requested_group_id)

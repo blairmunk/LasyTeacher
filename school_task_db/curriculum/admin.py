@@ -12,9 +12,9 @@ class SubTopicInline(admin.TabularInline):
 class TopicAdmin(admin.ModelAdmin):
     list_display = ['get_short_uuid', 'name', 'subject', 'grade_level', 'section', 'subtopics_count', 'order']
     list_filter = ['subject', 'grade_level', 'difficulty_level']
-    search_fields = ['name', 'section', 'description']
+    search_fields = ['name', 'section', 'description', '=id']
     list_editable = ['order']
-    readonly_fields = ['uuid', 'get_short_uuid']
+    readonly_fields = ['id', 'get_short_uuid']
     inlines = [SubTopicInline]
 
     def get_queryset(self, request):
@@ -30,7 +30,7 @@ class TopicAdmin(admin.ModelAdmin):
             'fields': ['subject', 'grade_level', 'section', 'difficulty_level', 'order']
         }),
         ('Служебная информация', {
-            'fields': ['uuid', 'get_short_uuid'],
+            'fields': ['id', 'get_short_uuid'],
             'classes': ['collapse']
         })
     ]
@@ -48,9 +48,9 @@ class TopicAdmin(admin.ModelAdmin):
 class SubTopicAdmin(admin.ModelAdmin):
     list_display = ['get_short_uuid', 'name', 'topic', 'order']
     list_filter = ['topic__subject', 'topic__grade_level', 'topic__section']
-    search_fields = ['name', 'description', 'topic__name']
+    search_fields = ['name', 'description', 'topic__name', '=id']
     list_editable = ['order']
-    readonly_fields = ['uuid', 'get_short_uuid']
+    readonly_fields = ['id', 'get_short_uuid']
     
     def get_short_uuid(self, obj):
         return obj.get_short_uuid()
@@ -66,8 +66,8 @@ class CourseAdmin(admin.ModelAdmin):
     list_display = ['get_short_uuid', 'name', 'subject', 'grade_level', 'year', 'is_active']
     list_filter = ['subject', 'grade_level', 'year', 'is_active']
     filter_horizontal = ['student_groups']  # ← удобный виджет для M2M
-    search_fields = ['name', 'description']
-    readonly_fields = ['uuid']
+    search_fields = ['name', 'description', '=id']
+    readonly_fields = ['id']
     inlines = [CourseAssignmentInline]
     
     def get_short_uuid(self, obj):

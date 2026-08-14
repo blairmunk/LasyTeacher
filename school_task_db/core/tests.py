@@ -180,22 +180,6 @@ class CoreViewsTests(TestCase):
             reverse('events:detail', kwargs={'pk': event.pk}),
         )
 
-    def test_model_uuid_lookup_requires_an_unambiguous_suffix(self):
-        first = Work.objects.create(
-            id='10000000-0000-0000-0000-00000000a1b2',
-            name='Первая работа',
-        )
-
-        self.assertEqual(str(Work.get_by_uuid('#A1B2').id), str(first.id))
-        self.assertEqual(str(Work.get_by_uuid(str(first.pk)).id), str(first.id))
-
-        Work.objects.create(
-            id='20000000-0000-0000-0000-00000000a1b2',
-            name='Вторая работа',
-        )
-
-        self.assertIsNone(Work.get_by_uuid('#A1B2'))
-
     def test_import_page_uses_clean_import_page_data(self):
         for index in range(6):
             ImportLog.objects.create(filename=f'import-{index}.json')

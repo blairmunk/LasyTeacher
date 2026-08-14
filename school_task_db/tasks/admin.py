@@ -127,9 +127,21 @@ class TaskAdminForm(forms.ModelForm):
 
 @admin.register(Source)
 class SourceAdmin(admin.ModelAdmin):
-    list_display = ['short_name', 'name', 'source_type', 'author', 'year']
+    list_display = [
+        'get_short_uuid',
+        'short_name',
+        'name',
+        'source_type',
+        'author',
+        'year',
+    ]
     list_filter = ['source_type', 'year']
-    search_fields = ['name', 'short_name', 'author']
+    search_fields = ['name', 'short_name', 'author', 'isbn', '=id']
+    readonly_fields = ['id']
+
+    @admin.display(description='UUID')
+    def get_short_uuid(self, obj):
+        return obj.get_short_uuid()
 
 class TaskImageInline(admin.TabularInline):
     model = TaskImage
@@ -142,8 +154,8 @@ class TaskAdmin(admin.ModelAdmin):
     
     list_display = ['get_short_uuid', 'text_preview', 'get_topic_name', 'task_type', 'get_difficulty_display', 'images_count', 'created_at']
     list_filter = ['task_type', 'difficulty', 'topic__subject', 'cognitive_level']
-    search_fields = ['text', 'topic__name', 'topic__section', 'uuid']
-    readonly_fields = ['uuid', 'get_short_uuid', 'get_medium_uuid']
+    search_fields = ['text', 'topic__name', 'topic__section', '=id']
+    readonly_fields = ['id', 'get_short_uuid', 'get_medium_uuid']
     inlines = [TaskImageInline]
     
     fieldsets = [
@@ -169,7 +181,7 @@ class TaskAdmin(admin.ModelAdmin):
             'classes': ['collapse']
         }),
         ('Служебная информация', {
-            'fields': ['uuid', 'get_short_uuid'],
+            'fields': ['id', 'get_short_uuid'],
             'classes': ['collapse']
         })
     ]

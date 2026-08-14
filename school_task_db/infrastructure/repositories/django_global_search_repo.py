@@ -1,7 +1,6 @@
 """Django read adapter for global application search."""
 
-from django.db.models import CharField, Count, Q, Sum, Value
-from django.db.models.functions import Cast, Replace
+from django.db.models import Count, Q, Sum
 
 from core_logic.entities.core import (
     GlobalSearchResults,
@@ -18,10 +17,6 @@ from core_logic.entities.core import (
     SearchWorkResult,
 )
 from core_logic.interfaces.global_search_repo import IGlobalSearchRepository
-from core_logic.value_objects.short_uuid import (
-    is_uuid_search_fragment,
-    normalize_uuid_fragment,
-)
 from core_logic.value_objects.variant_display import (
     resolve_variant_display_name,
 )
@@ -31,6 +26,8 @@ from students.models import Student, StudentGroup
 from task_groups.models import AnalogGroup
 from tasks.models import Source, Task
 from works.models import Variant, Work
+
+from .django_uuid_lookup import filter_by_uuid_suffix
 
 
 class DjangoGlobalSearchRepository(IGlobalSearchRepository):
@@ -82,16 +79,7 @@ class DjangoGlobalSearchRepository(IGlobalSearchRepository):
 
     @staticmethod
     def _search_model_by_uuid(model_class, query):
-        fragment = normalize_uuid_fragment(query)
-        if not is_uuid_search_fragment(fragment):
-            return model_class.objects.none()
-        return model_class.objects.annotate(
-            uuid_search_value=Replace(
-                Cast('id', output_field=CharField()),
-                Value('-'),
-                Value(''),
-            ),
-        ).filter(uuid_search_value__iendswith=fragment)
+        return filter_by_uuid_suffix(model_class, query)
 
     @staticmethod
     def _search_tasks_by_text(words):

@@ -47,8 +47,8 @@ class WorkContentBlockInline(admin.TabularInline):
 class WorkAdmin(admin.ModelAdmin):
     list_display = ['get_short_uuid', 'name', 'work_type', 'duration', 'variant_counter', 'created_at']
     list_filter = ['work_type', 'duration', 'created_at']
-    search_fields = ['name', 'uuid']
-    readonly_fields = ['uuid', 'variant_counter']
+    search_fields = ['name', '=id']
+    readonly_fields = ['id', 'variant_counter']
     inlines = [WorkAnalogGroupInline, WorkContentBlockInline]
 
     def get_short_uuid(self, obj):
@@ -60,8 +60,8 @@ class WorkAdmin(admin.ModelAdmin):
 class VariantAdmin(admin.ModelAdmin):
     list_display = ['get_short_uuid', 'work', 'number', 'tasks_count', 'created_at']
     list_filter = ['work', 'work__work_type', 'created_at']
-    search_fields = ['work__name', 'number', 'uuid']
-    readonly_fields = ['uuid']
+    search_fields = ['work__name', 'number', '=id']
+    readonly_fields = ['id']
     inlines = [VariantTaskInline, VariantContentBlockSnapshotInline]
 
     def get_short_uuid(self, obj):

@@ -7,15 +7,21 @@ from .models import Student, StudentGroup
 class StudentAdmin(admin.ModelAdmin):
     list_display = ['get_short_uuid', 'last_name', 'first_name', 'middle_name', 'email', 'created_at']
     list_filter = ['created_at']
-    search_fields = ['last_name', 'first_name', 'middle_name', 'email', 'uuid']
-    readonly_fields = ['uuid', 'get_short_uuid']
+    search_fields = [
+        'last_name',
+        'first_name',
+        'middle_name',
+        'email',
+        '=id',
+    ]
+    readonly_fields = ['id', 'get_short_uuid']
     
     fieldsets = [
         ('Основная информация', {
             'fields': ['last_name', 'first_name', 'middle_name', 'email']
         }),
         ('Служебная информация', {
-            'fields': ['uuid', 'get_short_uuid'],
+            'fields': ['id', 'get_short_uuid'],
             'classes': ['collapse']
         })
     ]
@@ -27,9 +33,9 @@ class StudentAdmin(admin.ModelAdmin):
 @admin.register(StudentGroup)
 class StudentGroupAdmin(admin.ModelAdmin):
     list_display = ['get_short_uuid', 'name', 'get_students_count_safe', 'created_at']  # ИЗМЕНЕНО название метода
-    search_fields = ['name', 'uuid']
+    search_fields = ['name', '=id']
     filter_horizontal = ['students']
-    readonly_fields = ['uuid', 'get_short_uuid']
+    readonly_fields = ['id', 'get_short_uuid']
 
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(
@@ -44,7 +50,7 @@ class StudentGroupAdmin(admin.ModelAdmin):
             'fields': ['students']
         }),
         ('Служебная информация', {
-            'fields': ['uuid', 'get_short_uuid'],
+            'fields': ['id', 'get_short_uuid'],
             'classes': ['collapse']
         })
     ]

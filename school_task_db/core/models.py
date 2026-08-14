@@ -5,9 +5,6 @@ import uuid
 from core_logic.value_objects.short_uuid import (
     MEDIUM_UUID_LENGTH,
     format_short_uuid,
-    is_uuid_search_fragment,
-    normalize_uuid_fragment,
-    uuid_matches_suffix,
 )
 
 
@@ -34,40 +31,6 @@ class BaseModel(models.Model):
         """Красивый ID для отображения пользователю"""
         return f"#{self.get_short_uuid()}"
     
-    @classmethod
-    def get_by_uuid(cls, uuid_str):
-        """Return an exact UUID or one unambiguous suffix match."""
-        fragment = normalize_uuid_fragment(uuid_str)
-        if not is_uuid_search_fragment(fragment):
-            return None
-
-        if len(fragment) == 32:
-            try:
-                return cls.objects.filter(id=uuid.UUID(fragment)).first()
-            except ValueError:
-                return None
-
-        matching_ids = [
-            object_id
-            for object_id in cls.objects.values_list('id', flat=True).iterator()
-            if uuid_matches_suffix(object_id, fragment)
-        ]
-        if len(matching_ids) == 1:
-            return cls.objects.filter(id=matching_ids[0]).first()
-        return None
-    
-    # НОВОЕ: удобные методы для совместимости
-    @property
-    def uuid(self):
-        """Алиас для совместимости со старым кодом"""
-        return self.id
-    
-    @property
-    def pk(self):
-        """Primary key - теперь UUID"""
-        return self.id
-
-
 class BaseModelWithOrder(BaseModel):
     """Базовая модель с полем порядка"""
     order = models.PositiveIntegerField('Порядок', default=1)

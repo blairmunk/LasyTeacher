@@ -71,8 +71,8 @@ class EventParticipationInline(admin.TabularInline):
 class EventAdmin(admin.ModelAdmin):
     list_display = ['get_short_uuid', 'name', 'work', 'planned_date', 'status', 'get_participants_count', 'get_progress']
     list_filter = ['status', 'planned_date', 'work__work_type', 'course']
-    search_fields = ['name', 'work__name', 'uuid']  # ОБЯЗАТЕЛЬНО для автокомплита
-    readonly_fields = ['uuid', 'get_short_uuid']
+    search_fields = ['name', 'work__name', '=id']
+    readonly_fields = ['id', 'get_short_uuid']
     inlines = [EventParticipationInline]
 
     def get_queryset(self, request):
@@ -101,7 +101,7 @@ class EventAdmin(admin.ModelAdmin):
             'fields': ['status', 'description', 'location']
         }),
         ('Служебная информация', {
-            'fields': ['uuid', 'get_short_uuid'],
+            'fields': ['id', 'get_short_uuid'],
             'classes': ['collapse']
         })
     ]
@@ -126,8 +126,13 @@ class EventAdmin(admin.ModelAdmin):
 class EventParticipationAdmin(admin.ModelAdmin):
     list_display = ['get_short_uuid', 'event', 'student', 'variant', 'status', 'completed_at']
     list_filter = ['status', 'event__work', 'completed_at']
-    search_fields = ['event__name', 'student__last_name', 'student__first_name', 'uuid']  # ОБЯЗАТЕЛЬНО для автокомплита
-    readonly_fields = ['uuid', 'get_short_uuid']
+    search_fields = [
+        'event__name',
+        'student__last_name',
+        'student__first_name',
+        '=id',
+    ]
+    readonly_fields = ['id', 'get_short_uuid']
     # ВРЕМЕННО УБИРАЕМ autocomplete_fields
     autocomplete_fields = ['event', 'student', 'variant']
     
@@ -142,7 +147,7 @@ class EventParticipationAdmin(admin.ModelAdmin):
             'fields': ['seat_number']
         }),
         ('Служебная информация', {
-            'fields': ['uuid', 'get_short_uuid'],
+            'fields': ['id', 'get_short_uuid'],
             'classes': ['collapse']
         })
     ]
@@ -155,9 +160,14 @@ class EventParticipationAdmin(admin.ModelAdmin):
 class MarkAdmin(admin.ModelAdmin):
     list_display = ['get_short_uuid', 'get_student_name', 'get_event_name', 'score', 'points', 'get_percentage', 'checked_at']
     list_filter = ['score', 'checked_at', 'is_retake', 'is_excellent', 'needs_attention', 'participation__event__work']
-    search_fields = ['participation__student__last_name', 'participation__student__first_name', 
-                    'participation__event__name', 'teacher_comment', 'uuid']  # ОБЯЗАТЕЛЬНО для автокомплита
-    readonly_fields = ['uuid', 'get_short_uuid', 'get_percentage']
+    search_fields = [
+        'participation__student__last_name',
+        'participation__student__first_name',
+        'participation__event__name',
+        'teacher_comment',
+        '=id',
+    ]
+    readonly_fields = ['id', 'get_short_uuid', 'get_percentage']
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related(
@@ -184,7 +194,7 @@ class MarkAdmin(admin.ModelAdmin):
             'fields': ['is_retake', 'is_excellent', 'needs_attention']
         }),
         ('Служебная информация', {
-            'fields': ['uuid', 'get_short_uuid'],
+            'fields': ['id', 'get_short_uuid'],
             'classes': ['collapse']
         })
     ]

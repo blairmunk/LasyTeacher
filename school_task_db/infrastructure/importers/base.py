@@ -5,6 +5,10 @@ import uuid
 from typing import Any, Dict, Optional
 
 from core_logic.value_objects.task_import import validate_task_import_mode
+from infrastructure.repositories.django_uuid_lookup import (
+    get_unambiguous_by_uuid,
+)
+
 
 class ImportStats:
     """Статистика импорта"""
@@ -133,7 +137,7 @@ class BaseImporter:
             return self._cache[cache_key]
         
         try:
-            obj = model_class.get_by_uuid(uuid_str)
+            obj = get_unambiguous_by_uuid(model_class, uuid_str)
             self._cache[cache_key] = obj
             return obj
         except Exception as e:

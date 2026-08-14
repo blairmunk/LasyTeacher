@@ -13,8 +13,8 @@ class TaskGroupInline(admin.TabularInline):
 class AnalogGroupAdmin(admin.ModelAdmin):
     list_display = ['get_short_uuid', 'name', 'difficulty', 'created_at']
     list_filter = ['difficulty', 'created_at']
-    search_fields = ['name', 'description', 'uuid']
-    readonly_fields = ['uuid']
+    search_fields = ['name', 'description', '=id']
+    readonly_fields = ['id']
     inlines = [TaskGroupInline]
 
     def get_short_uuid(self, obj):

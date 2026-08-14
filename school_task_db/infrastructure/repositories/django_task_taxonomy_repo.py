@@ -1,7 +1,5 @@
 """Django read adapter for task taxonomy options."""
 
-from typing import List
-
 from core_logic.entities.task import SelectOption
 from core_logic.interfaces.task_taxonomy_repo import ITaskTaxonomyRepository
 from curriculum.models import SubTopic, Topic
@@ -17,38 +15,38 @@ class DjangoTaskTaxonomyRepository(ITaskTaxonomyRepository):
         return str(topic_id) if topic_id else None
 
     def get_list_topics(self):
-        return [
+        return tuple(
             SelectOption(id=str(topic.pk), name=topic.name)
             for topic in Topic.objects.all().order_by('section', 'name')
-        ]
+        )
 
     def get_list_sources(self):
-        return [
+        return tuple(
             SelectOption(id=str(source.pk), name=str(source))
             for source in Source.objects.all().order_by('name')
-        ]
+        )
 
     def get_subtopics_for_topic(self, topic_id: str):
         if not topic_id:
-            return []
-        return [
+            return ()
+        return tuple(
             SelectOption(id=str(subtopic.pk), name=subtopic.name)
             for subtopic in SubTopic.objects.filter(
                 topic_id=topic_id,
             ).order_by('order', 'name')
-        ]
+        )
 
-    def get_subtopic_options(self, topic_id: str) -> List[SelectOption]:
+    def get_subtopic_options(self, topic_id: str) -> tuple[SelectOption, ...]:
         if not topic_id:
-            return []
+            return ()
         try:
             topic = Topic.objects.get(pk=topic_id)
         except (Topic.DoesNotExist, ValueError):
-            return []
-        return [
+            return ()
+        return tuple(
             SelectOption(id=str(subtopic.id), name=subtopic.name)
             for subtopic in topic.subtopics.all().order_by('order', 'name')
-        ]
+        )
 
     def get_task_type_choices(self):
-        return list(Task.TASK_TYPES)
+        return tuple(Task.TASK_TYPES)

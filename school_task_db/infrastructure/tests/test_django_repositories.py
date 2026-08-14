@@ -1112,7 +1112,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(task_groups[0].name, self.weak_group.name)
         self.assertEqual(subtopics[0].id, str(self.subtopic.pk))
         self.assertEqual(subtopics[0].name, self.subtopic.name)
-        self.assertEqual(missing_subtopics, [])
+        self.assertEqual(missing_subtopics, ())
 
     def test_source_repository_returns_list_with_task_count(self):
         source = Source.objects.create(name='Сборник задач')

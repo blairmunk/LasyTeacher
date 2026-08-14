@@ -84,7 +84,7 @@ class TaskDetailAndReferenceUseCaseTests(TestCase):
 
         result = use_case.execute('')
 
-        self.assertEqual(result.subtopics, [])
+        self.assertEqual(result.subtopics, ())
         self.assertIsNone(repo.subtopic_topic_id)
 
     def test_subtopic_options_returns_repository_options(self):

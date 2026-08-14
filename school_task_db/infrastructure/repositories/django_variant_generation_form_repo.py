@@ -28,7 +28,7 @@ class DjangoVariantGenerationFormRepository(
         )
 
     def get_variant_generation_group_sources(self, work_id: str):
-        return [
+        return tuple(
             VariantGenerationGroupSource(
                 group_name=work_group.analog_group.name,
                 requested_count=work_group.count,
@@ -42,7 +42,7 @@ class DjangoVariantGenerationFormRepository(
             ).select_related(
                 'analog_group',
             ).order_by('order', 'pk')
-        ]
+        )
 
     @staticmethod
     def _task_bank_roles(analog_group_id):

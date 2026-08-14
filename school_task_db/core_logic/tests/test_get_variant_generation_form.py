@@ -59,4 +59,4 @@ class GetVariantGenerationFormUseCaseTests(TestCase):
 
         self.assertEqual(data.status, 'not_found')
         self.assertIsNone(data.work)
-        self.assertEqual(data.work_groups, [])
+        self.assertEqual(data.work_groups, ())

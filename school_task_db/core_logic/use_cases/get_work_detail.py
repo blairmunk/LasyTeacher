@@ -140,7 +140,7 @@ class GetWorkDetailUseCase:
             preview['per_task'] = allocation.points
             preview['total_points'] += allocation.points
 
-        return [
+        return tuple(
             WorkDetailSpecPreviewItem(
                 wg=groups_by_id[group_id],
                 per_task=preview['per_task'],
@@ -148,4 +148,4 @@ class GetWorkDetailUseCase:
                 available_count=groups_by_id[group_id].available_count,
             )
             for group_id, preview in preview_by_group_id.items()
-        ]
+        )

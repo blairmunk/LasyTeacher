@@ -1,7 +1,7 @@
 """Variant read repository interface."""
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Optional
 
 from core_logic.entities.work import (
     VariantDetailTaskRow,
@@ -12,7 +12,7 @@ from core_logic.entities.work import (
 
 class IVariantReadRepository(ABC):
     @abstractmethod
-    def get_list_variants(self) -> List[VariantListItem]:
+    def get_list_variants(self) -> tuple[VariantListItem, ...]:
         """Return variants for the variant list page."""
 
     @abstractmethod
@@ -26,7 +26,7 @@ class IVariantReadRepository(ABC):
     def get_variant_detail_tasks(
         self,
         variant_id: str,
-    ) -> List[VariantDetailTaskRow]:
+    ) -> tuple[VariantDetailTaskRow, ...]:
         """Return ordered task read models for the variant detail page."""
 
     @abstractmethod

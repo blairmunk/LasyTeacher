@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, List, Mapping, Optional
+from typing import Any, Mapping, Optional
 
 from core_logic.entities.document import DocumentPresentationProfile
 from core_logic.value_objects.work_content_plan import WorkContentPlan
@@ -25,9 +25,9 @@ from core_logic.value_objects.task_print_settings import (
 class WorkDetailData:
     work: Optional["WorkDetailWork"] = None
     effective_max_score: int = 0
-    variants: List["WorkDetailVariant"] = field(default_factory=list)
-    analog_groups: List["WorkDetailSpecGroup"] = field(default_factory=list)
-    spec_preview: List["WorkDetailSpecPreviewItem"] = field(default_factory=list)
+    variants: tuple["WorkDetailVariant", ...] = field(default_factory=tuple)
+    analog_groups: tuple["WorkDetailSpecGroup", ...] = field(default_factory=tuple)
+    spec_preview: tuple["WorkDetailSpecPreviewItem", ...] = field(default_factory=tuple)
     content_plan: WorkContentPlan = field(default_factory=WorkContentPlan)
     work_presentation_profiles: tuple[DocumentPresentationProfile, ...] = field(
         default_factory=tuple,
@@ -36,6 +36,16 @@ class WorkDetailData:
         DocumentPresentationProfile, ...
     ] = field(default_factory=tuple)
     show_sync_button: bool = False
+
+    def __post_init__(self):
+        for field_name in (
+            'variants',
+            'analog_groups',
+            'spec_preview',
+            'work_presentation_profiles',
+            'remedial_sheet_presentation_profiles',
+        ):
+            object.__setattr__(self, field_name, tuple(getattr(self, field_name)))
 
 
 @dataclass(frozen=True)
@@ -162,8 +172,11 @@ class WorkDetailVariant:
 
 @dataclass(frozen=True)
 class WorkListData:
-    works: List["WorkListItem"]
+    works: tuple["WorkListItem", ...]
     filters: Optional["WorkListFilters"] = None
+
+    def __post_init__(self):
+        object.__setattr__(self, 'works', tuple(self.works))
 
 
 @dataclass(frozen=True)
@@ -205,7 +218,10 @@ class WorkListItem:
 
 @dataclass(frozen=True)
 class VariantListData:
-    variants: List["VariantListItem"]
+    variants: tuple["VariantListItem", ...]
+
+    def __post_init__(self):
+        object.__setattr__(self, 'variants', tuple(self.variants))
 
 
 @dataclass(frozen=True)
@@ -247,16 +263,26 @@ class WorkAnalogGroupOption:
 
 @dataclass(frozen=True)
 class WorkFormData:
-    analog_group_options: List[WorkAnalogGroupOption] = field(
-        default_factory=list,
+    analog_group_options: tuple[WorkAnalogGroupOption, ...] = field(
+        default_factory=tuple,
     )
+
+    def __post_init__(self):
+        object.__setattr__(
+            self,
+            'analog_group_options',
+            tuple(self.analog_group_options),
+        )
 
 
 @dataclass(frozen=True)
 class VariantGenerationFormData:
     work: Optional["VariantGenerationWork"] = None
-    work_groups: List["VariantGenerationGroup"] = field(default_factory=list)
+    work_groups: tuple["VariantGenerationGroup", ...] = field(default_factory=tuple)
     status: str = 'ready'
+
+    def __post_init__(self):
+        object.__setattr__(self, 'work_groups', tuple(self.work_groups))
 
 
 @dataclass(frozen=True)
@@ -301,8 +327,11 @@ class VariantGenerationGroupSource:
 @dataclass(frozen=True)
 class VariantDetailData:
     variant: Optional["VariantDetailVariant"] = None
-    variant_tasks: List["VariantDetailTaskRow"] = field(default_factory=list)
+    variant_tasks: tuple["VariantDetailTaskRow", ...] = field(default_factory=tuple)
     total_max_points: int = 0
+
+    def __post_init__(self):
+        object.__setattr__(self, 'variant_tasks', tuple(self.variant_tasks))
 
 
 @dataclass(frozen=True)
@@ -358,7 +387,10 @@ class VariantDetailTask:
     task_type_display: str
     difficulty: int
     short_uuid: str
-    images: List[VariantDetailImage] = field(default_factory=list)
+    images: tuple[VariantDetailImage, ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        object.__setattr__(self, 'images', tuple(self.images))
 
 
 @dataclass(frozen=True)
@@ -504,8 +536,11 @@ class RemedialSheetSource:
 
 @dataclass(frozen=True)
 class OrphanVariantListData:
-    variants: List["OrphanVariantListItem"]
+    variants: tuple["OrphanVariantListItem", ...]
     total_orphans: int = 0
+
+    def __post_init__(self):
+        object.__setattr__(self, 'variants', tuple(self.variants))
 
 
 @dataclass(frozen=True)

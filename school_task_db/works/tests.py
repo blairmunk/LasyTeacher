@@ -217,8 +217,8 @@ class WorkDetailViewTests(TestCase):
         self.assertEqual(response.context['work'].pk, str(self.work.pk))
         self.assertEqual(response.context['work'].name, self.work.name)
         self.assertEqual(len(response.context['variants']), 1)
-        self.assertEqual(response.context['analog_groups'], [])
-        self.assertEqual(response.context['spec_preview'], [])
+        self.assertEqual(response.context['analog_groups'], ())
+        self.assertEqual(response.context['spec_preview'], ())
         self.assertTrue(response.context['show_sync_button'])
 
     def test_detail_exposes_document_rendering_dom_markers(self):
@@ -851,7 +851,7 @@ class WorkDetailViewTests(TestCase):
         self.assertTemplateUsed(response, 'works/compose_variants.html')
         self.assertEqual(response.context['work'].pk, str(self.work.pk))
         self.assertEqual(response.context['work'].name, self.work.name)
-        self.assertEqual(response.context['work_groups'], [])
+        self.assertEqual(response.context['work_groups'], ())
         self.assertIn('form', response.context)
 
     def test_create_work_from_orphans_view_uses_clean_use_case(self):

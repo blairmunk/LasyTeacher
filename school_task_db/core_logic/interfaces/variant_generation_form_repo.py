@@ -1,7 +1,7 @@
 """Read port for the work variant generation form."""
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Optional
 
 from core_logic.entities.work import (
     VariantGenerationGroupSource,
@@ -21,5 +21,5 @@ class IVariantGenerationFormRepository(ABC):
     def get_variant_generation_group_sources(
         self,
         work_id: str,
-    ) -> List[VariantGenerationGroupSource]:
+    ) -> tuple[VariantGenerationGroupSource, ...]:
         """Return unfiltered specification facts for the form."""

@@ -33,7 +33,7 @@ class DjangoWorkReadRepository(IWorkReadRepository):
             elif filters.variant_status == 'without_variants':
                 queryset = queryset.filter(variant_count=0)
 
-        return [
+        return tuple(
             WorkListItem(
                 pk=str(work.pk),
                 name=work.name,
@@ -45,13 +45,13 @@ class DjangoWorkReadRepository(IWorkReadRepository):
                 assessment_mode=work.assessment_mode,
             )
             for work in queryset.order_by('-created_at')
-        ]
+        )
 
     def get_work_form_analog_group_options(self):
-        return [
+        return tuple(
             WorkAnalogGroupOption(id=str(group.pk), name=group.name)
             for group in AnalogGroup.objects.all().order_by('name')
-        ]
+        )
 
     def get_work_detail(self, work_id: str):
         work = Work.objects.filter(pk=work_id).first()
@@ -104,20 +104,20 @@ class DjangoWorkReadRepository(IWorkReadRepository):
                     ),
                 )
             )
-        return result
+        return tuple(result)
 
     def get_detail_analog_groups(self, work_id: str):
-        return [
+        return tuple(
             self._build_work_detail_spec_group(work_group)
             for work_group in WorkAnalogGroup.objects.filter(
                 work_id=work_id,
             ).select_related(
                 'analog_group',
             ).order_by('order', 'pk')
-        ]
+        )
 
     def get_detail_content_blocks(self, work_id: str):
-        return [
+        return tuple(
             WorkDetailContentBlock(
                 pk=str(block.pk),
                 content_type=block.content_type,
@@ -133,7 +133,7 @@ class DjangoWorkReadRepository(IWorkReadRepository):
             for block in WorkContentBlock.objects.filter(
                 work_id=work_id,
             ).prefetch_related('topics').order_by('order', 'pk')
-        ]
+        )
 
     def _build_work_detail_spec_group(self, work_group):
         return WorkDetailSpecGroup(

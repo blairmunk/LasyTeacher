@@ -32,7 +32,7 @@ class DjangoOrphanVariantCatalogRepository(
     IOrphanVariantCatalogRepository,
 ):
     def get_orphan_variants(self):
-        return [
+        return tuple(
             OrphanVariantListItem(
                 pk=str(variant.pk),
                 display_name=_variant_display_name(variant),
@@ -58,7 +58,7 @@ class DjangoOrphanVariantCatalogRepository(
                 task_count=Count('varianttask'),
                 total_max_points_value=Sum('varianttask__max_points'),
             ).order_by('-created_at')
-        ]
+        )
 
     def count_orphan_variants(self) -> int:
         return Variant.objects.filter(work__isnull=True).count()

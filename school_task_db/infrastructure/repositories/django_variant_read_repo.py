@@ -42,7 +42,7 @@ def _variant_display_name(variant):
 
 class DjangoVariantReadRepository(IVariantReadRepository):
     def get_list_variants(self):
-        return [
+        return tuple(
             VariantListItem(
                 pk=str(variant.pk),
                 number=variant.number,
@@ -76,7 +76,7 @@ class DjangoVariantReadRepository(IVariantReadRepository):
             ).annotate(
                 task_count=Count('varianttask'),
             ).order_by('-created_at')
-        ]
+        )
 
     def get_variant_detail(self, variant_id: str):
         variant = Variant.objects.select_related(
@@ -151,7 +151,7 @@ class DjangoVariantReadRepository(IVariantReadRepository):
                     task_type_display=task.task_type_display,
                     difficulty=task.difficulty,
                     short_uuid=task.task_id[-4:].upper(),
-                    images=[
+                    images=tuple(
                         VariantDetailImage(
                             caption=image.caption,
                             position=image.position,
@@ -163,7 +163,7 @@ class DjangoVariantReadRepository(IVariantReadRepository):
                             ),
                         )
                         for image in task.images
-                    ],
+                    ),
                 ),
                 order=variant_task.order,
                 max_points=variant_task.max_points,
@@ -173,7 +173,7 @@ class DjangoVariantReadRepository(IVariantReadRepository):
                 blank_cells_after=variant_task.blank_cells_after,
                 blank_cells_rows=variant_task.blank_cells_rows,
             ))
-        return result
+        return tuple(result)
 
     def get_variant_total_max_points(self, variant_id: str) -> int:
         aggregate = VariantTask.objects.filter(

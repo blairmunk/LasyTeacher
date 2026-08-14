@@ -405,8 +405,8 @@ class WorkDetailTests(TestCase):
         result = use_case.execute('work-1')
 
         self.assertEqual(result.work.name, 'Контрольная')
-        self.assertEqual(result.variants, ['variant-1'])
-        self.assertEqual(result.spec_preview, [])
+        self.assertEqual(result.variants, ('variant-1',))
+        self.assertEqual(result.spec_preview, ())
         self.assertEqual(
             result.work_presentation_profiles[0].presentation_profile_id,
             'template-work',
@@ -502,7 +502,7 @@ class WorkDetailTests(TestCase):
         result = use_case.execute('missing-work')
 
         self.assertIsNone(result.work)
-        self.assertEqual(result.variants, [])
+        self.assertEqual(result.variants, ())
 
     def test_get_work_list_use_case_builds_list_context_data(self):
         repo = FakeWorkRepository()
@@ -511,7 +511,7 @@ class WorkDetailTests(TestCase):
 
         result = use_case.execute()
 
-        self.assertEqual(result.works, ['work-1'])
+        self.assertEqual(result.works, ('work-1',))
         self.assertEqual(result.filters, WorkListFilters())
 
     def test_get_work_list_use_case_passes_filters_to_repository(self):
@@ -536,7 +536,7 @@ class WorkDetailTests(TestCase):
 
         result = use_case.execute()
 
-        self.assertEqual(result.variants, ['variant-1'])
+        self.assertEqual(result.variants, ('variant-1',))
 
     def test_get_work_form_data_use_case_builds_form_context_data(self):
         repo = FakeWorkRepository()
@@ -545,7 +545,7 @@ class WorkDetailTests(TestCase):
 
         result = use_case.execute()
 
-        self.assertEqual(result.analog_group_options, ['group-1'])
+        self.assertEqual(result.analog_group_options, ('group-1',))
 
     def test_get_variant_detail_use_case_builds_detail_context_data(self):
         repo = FakeWorkRepository()
@@ -571,7 +571,7 @@ class WorkDetailTests(TestCase):
         result = use_case.execute('variant-1')
 
         self.assertEqual(result.variant, repo.variant_detail)
-        self.assertEqual(result.variant_tasks, repo.variant_detail_tasks)
+        self.assertEqual(result.variant_tasks, tuple(repo.variant_detail_tasks))
         self.assertEqual(result.total_max_points, 7)
 
     def test_get_variant_detail_use_case_returns_empty_data_for_missing_variant(self):
@@ -581,7 +581,7 @@ class WorkDetailTests(TestCase):
         result = use_case.execute('missing-variant')
 
         self.assertIsNone(result.variant)
-        self.assertEqual(result.variant_tasks, [])
+        self.assertEqual(result.variant_tasks, ())
 
     def test_get_remedial_sheet_data_use_case_returns_repository_data(self):
         repo = FakeWorkRepository()
@@ -644,7 +644,7 @@ class WorkDetailTests(TestCase):
 
         result = use_case.execute()
 
-        self.assertEqual(result.variants, ['variant-1'])
+        self.assertEqual(result.variants, ('variant-1',))
         self.assertEqual(result.total_orphans, 1)
 
     def test_sync_work_analog_groups_use_case_delegates_to_repository(self):

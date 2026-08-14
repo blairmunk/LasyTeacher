@@ -204,6 +204,20 @@ class FakePresentationProfileRepository:
 
 
 class DocumentRenderingUseCaseTests(TestCase):
+    def test_render_results_copy_file_collections(self):
+        files = [GeneratedDocumentFile(filename='work.html', size_kb=1.0)]
+
+        document = GeneratedDocument(file_type='html', files=files)
+        result = DocumentRenderResult(
+            status='generated',
+            renderer_type='html',
+            files=files,
+        )
+        files.clear()
+
+        self.assertEqual(len(document.files), 1)
+        self.assertEqual(len(result.files), 1)
+
     def test_document_render_result_exposes_renderer_type(self):
         result = DocumentRenderResult(status='generated', renderer_type='html')
 
@@ -948,7 +962,7 @@ class DocumentRenderingUseCaseTests(TestCase):
 
         self.assertFalse(result.success)
         self.assertEqual(result.status, 'empty')
-        self.assertEqual(result.files, [])
+        self.assertEqual(result.files, ())
 
     def test_get_rendered_document_file_delegates_to_service(self):
         service = FakeRenderedDocumentFileStore()

@@ -1,7 +1,7 @@
 """Document rendering DTOs."""
 
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Optional
 
 
 DOCUMENT_RENDER_STATUS_GENERATED = 'generated'
@@ -30,30 +30,22 @@ class GeneratedDocumentFile:
 @dataclass(frozen=True)
 class GeneratedDocument:
     file_type: str
-    files: List[GeneratedDocumentFile] = field(default_factory=list)
+    files: tuple[GeneratedDocumentFile, ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        object.__setattr__(self, 'files', tuple(self.files))
 
 
-@dataclass(frozen=True, init=False)
+@dataclass(frozen=True)
 class DocumentRenderResult:
     status: str
-    renderer_type: str
+    renderer_type: str = ''
     file_type: str = ''
-    files: List[GeneratedDocumentFile] = field(default_factory=list)
+    files: tuple[GeneratedDocumentFile, ...] = field(default_factory=tuple)
     source_name: str = ''
 
-    def __init__(
-        self,
-        status: str,
-        renderer_type: str = '',
-        file_type: str = '',
-        files: Optional[List[GeneratedDocumentFile]] = None,
-        source_name: str = '',
-    ):
-        object.__setattr__(self, 'status', status)
-        object.__setattr__(self, 'renderer_type', renderer_type)
-        object.__setattr__(self, 'file_type', file_type)
-        object.__setattr__(self, 'files', files or [])
-        object.__setattr__(self, 'source_name', source_name)
+    def __post_init__(self):
+        object.__setattr__(self, 'files', tuple(self.files))
 
     @property
     def success(self) -> bool:

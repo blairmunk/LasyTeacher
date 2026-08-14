@@ -242,14 +242,24 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
             result = renderer.render(
                 DocumentRenderRequest(
                     document=document,
-                    render_target=RenderTarget(renderer_type='latex'),
+                    render_target=RenderTarget(
+                        renderer_type='latex',
+                        page_format='A5',
+                    ),
                 )
             )
 
             latex = (Path(output_dir) / 'work.tex').read_text(encoding='utf-8')
             self.assertEqual(result.file_type, 'latex')
             self.assertEqual(result.files[0].filename, 'work.tex')
-            self.assertIn(r'\documentclass', latex)
+            self.assertIn(
+                r'\documentclass[11pt,a5paper]{article}',
+                latex,
+            )
+            self.assertIn(
+                r'\geometry{left=9mm,right=9mm,top=9mm,bottom=9mm}',
+                latex,
+            )
             self.assertIn(r'\newenvironment{schooltheory}', latex)
             self.assertIn(r'\begin{tcolorbox}', latex)
             self.assertIn(

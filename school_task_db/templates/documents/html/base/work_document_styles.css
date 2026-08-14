@@ -123,6 +123,13 @@ h4 {
     white-space: nowrap;
 }
 
+.document-variant-id {
+    color: var(--document-muted);
+    font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
+    font-size: 0.82em;
+    font-weight: 500;
+}
+
 .document-student-fields {
     display: grid;
     grid-column: 1 / -1;

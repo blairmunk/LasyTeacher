@@ -3,6 +3,7 @@
 {% for variant in payload.variants %}
 {% if payload.show_variant_heading != False %}
 \schoolvariantheading{ {{ variant.title }} }
+{% if variant.short_uuid %}{\small\sffamily\color{schoolmuted}\hfill ID варианта: \#{{ variant.short_uuid }}\par}{% endif %}
 {% if variant.duration or variant.max_score %}
 {\small\sffamily\color{schoolmuted}%
 {% if variant.duration %}Время: {{ variant.duration }} минут{% endif %}%

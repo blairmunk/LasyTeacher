@@ -2,12 +2,13 @@
 {% else %}\begin{schoolheader}
 {% endif %}
 \noindent{\Large\sffamily\bfseries {{ section.title|default:payload.title }}\par}
-{% if payload.duration or payload.max_score %}
+{% if payload.duration or payload.max_score or payload.variant_short_uuid %}
 \smallskip
 {\small\sffamily\color{schoolmuted}%
 {% if payload.duration %}Время выполнения: {{ payload.duration }} минут{% endif %}%
 {% if payload.duration and payload.max_score %}\hspace{7mm}{\color{schoolgrid}|}\hspace{7mm}{% endif %}%
 {% if payload.max_score %}Максимальный балл: {{ payload.max_score }}{% endif %}\par}
+{% if payload.variant_short_uuid %}{\small\sffamily\color{schoolmuted}\hfill ID варианта: \#{{ payload.variant_short_uuid }}\par}{% endif %}
 {% endif %}
 {% if payload.show_student_fields %}
 \smallskip

@@ -3,6 +3,7 @@
 from infrastructure.services.variant_document_content_payloads import (
     build_variant_section_content_payload,
 )
+from core_logic.value_objects.short_uuid import format_short_uuid
 
 
 class WorkVariantDocumentPayloadBuilder:
@@ -20,6 +21,7 @@ class WorkVariantDocumentPayloadBuilder:
         )
         return {
             'id': str(variant.pk),
+            'short_uuid': format_short_uuid(variant.pk),
             'number': variant.number,
             'title': f'Вариант {variant.number}',
             'max_score': variant.max_score_snapshot,

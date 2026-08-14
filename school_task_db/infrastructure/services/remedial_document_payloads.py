@@ -10,6 +10,7 @@ from infrastructure.services.task_document_payloads import (
 from infrastructure.services.variant_document_content_payloads import (
     build_variant_section_content_payload,
 )
+from core_logic.value_objects.short_uuid import format_short_uuid
 
 
 class RemedialSheetDataProvider:
@@ -39,6 +40,9 @@ class RemedialHeaderPayloadBuilder:
         return {
             **dict(request.section.options),
             'title': 'Работа над ошибками',
+            'variant_short_uuid': format_short_uuid(
+                _remedial_variant_id(request),
+            ),
             'student': _student_payload(sheet_data.student),
             'source_work': _work_ref_payload(sheet_data.source_work),
             'mark': _mark_payload(sheet_data.mark),

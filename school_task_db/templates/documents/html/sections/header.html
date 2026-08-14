@@ -1,12 +1,15 @@
 <header class="document-section document-section-{{ section.section_type }} document-header">
     <h1>{{ section.title|default:payload.title|default:document.title }}</h1>
-    {% if payload.duration or payload.max_score %}
+    {% if payload.duration or payload.max_score or payload.variant_short_uuid %}
         <p class="document-header-meta">
             {% if payload.duration %}
                 <span>Время выполнения: {{ payload.duration }} мин.</span>
             {% endif %}
             {% if payload.max_score %}
                 <span>Максимальный балл: {{ payload.max_score }}</span>
+            {% endif %}
+            {% if payload.variant_short_uuid %}
+                <span class="document-variant-id">ID варианта: #{{ payload.variant_short_uuid }}</span>
             {% endif %}
         </p>
     {% endif %}

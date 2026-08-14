@@ -13,5 +13,8 @@
                 {{ payload.mark.points }}/{{ payload.mark.max_points }} баллов
             </span>
         {% endif %}
+        {% if payload.variant_short_uuid %}
+            <span class="document-variant-id">ID варианта: #{{ payload.variant_short_uuid }}</span>
+        {% endif %}
     </p>
 </header>

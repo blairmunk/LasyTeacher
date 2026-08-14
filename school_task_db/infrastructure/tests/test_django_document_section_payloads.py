@@ -150,6 +150,26 @@ class DjangoWorkHeaderPayloadBuilderTests(TestCase):
 
         self.assertEqual(payload['max_score'], 12)
 
+    def test_work_variant_header_contains_printed_short_uuid(self):
+        work = Work.objects.create(name='Контрольная')
+        variant = Variant.objects.create(
+            work=work,
+            number=1,
+            work_name_snapshot=work.name,
+        )
+
+        payload = WorkHeaderPayloadBuilder(
+            work_document_repo=DjangoWorkDocumentRepository(),
+        ).build_payload(
+            build_request(
+                work,
+                HEADER_SECTION,
+                options={'variant_id': str(variant.pk)},
+            ),
+        )
+
+        self.assertEqual(payload['variant_short_uuid'], variant.get_short_uuid())
+
 
 class VariantSectionContentPayloadTests(TestCase):
     def test_rejects_unsupported_variant_section(self):
@@ -343,6 +363,10 @@ class DjangoWorkVariantSectionPayloadBuilderTests(TestCase):
         self.assertEqual(len(payload['variants']), 1)
         variant_payload = payload['variants'][0]
         self.assertEqual(variant_payload['number'], 2)
+        self.assertEqual(
+            variant_payload['short_uuid'],
+            variant.get_short_uuid(),
+        )
         self.assertEqual(variant_payload['max_score'], 8)
         self.assertEqual(variant_payload['duration'], 40)
         self.assertEqual(
@@ -741,6 +765,7 @@ class DjangoRemedialSectionPayloadBuilderTests(TestCase):
         )
 
         self.assertEqual(payload['title'], 'Работа над ошибками')
+        self.assertEqual(payload['variant_short_uuid'], 'ANT1')
         self.assertEqual(
             payload['student'],
             {

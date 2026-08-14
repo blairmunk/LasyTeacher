@@ -215,6 +215,8 @@ class SectionedDocumentDefaultsTests(TestCase):
             self.assertEqual(result.files[0].filename, filename)
             self.assertIn('<h1>Контрольная. Вариант 1</h1>', html)
             self.assertIn('<h1>Контрольная. Вариант 2</h1>', html)
+            self.assertIn(f'#{first_variant.get_short_uuid()}', html)
+            self.assertIn(f'#{second_variant.get_short_uuid()}', html)
             self.assertIn('Первое задание', html)
             self.assertIn('Второе задание', html)
             self.assertIn('page-break-after: always', html)
@@ -424,6 +426,10 @@ class SectionedDocumentDefaultsTests(TestCase):
             self.assertEqual(result.files[0].filename, filename)
             self.assertIn(r'\documentclass', latex)
             self.assertIn(r'\schoolvariantheading{ Вариант 1 }', latex)
+            self.assertIn(
+                rf'ID варианта: \#{variant.get_short_uuid()}',
+                latex,
+            )
             self.assertIn(r'Найдите силу \& ускорение \(F=ma\)', latex)
             self.assertIn(
                 r'\renewcommand{\familydefault}{\sfdefault}',
@@ -515,6 +521,7 @@ class SectionedDocumentDefaultsTests(TestCase):
             self.assertEqual(result.file_type, 'html')
             self.assertEqual(result.files[0].filename, filename)
             self.assertIn('Работа над ошибками', html)
+            self.assertIn(f'#{remedial_variant.get_short_uuid()}', html)
             self.assertIn('Петров Пётр', html)
             self.assertIn('Исходная работа', html)
             self.assertIn('Исходное задание', html)

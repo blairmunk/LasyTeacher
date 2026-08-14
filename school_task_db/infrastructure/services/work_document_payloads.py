@@ -4,6 +4,7 @@ from core_logic.services.work_score_allocation_service import (
     WorkScoreAllocationService,
     WorkScoreSpecRow,
 )
+from core_logic.value_objects.short_uuid import format_short_uuid
 from infrastructure.services.document_build_cache import (
     document_payload_cache,
     document_section_input_key,
@@ -80,13 +81,16 @@ class WorkHeaderPayloadBuilder:
             title = f'{work.name}. Вариант {variant.number}'
             duration = variant.duration_snapshot
             max_score = variant.max_score_snapshot
-        return {
+        payload = {
             **dict(request.section.options),
             'title': title,
             'work_type': work.work_type,
             'duration': duration,
             'max_score': max_score,
         }
+        if variant is not None:
+            payload['variant_short_uuid'] = format_short_uuid(variant.pk)
+        return payload
 
 
 class WorkVariantSectionPayloadBuilder:

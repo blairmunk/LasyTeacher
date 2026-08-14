@@ -9,5 +9,6 @@
 {% if payload.mark %}
 {\small\sffamily\color{schoolmuted} Оценка: {{ payload.mark.score }} \hspace{7mm} Баллы: {{ payload.mark.points }}/{{ payload.mark.max_points }}\par}
 {% endif %}
+{% if payload.variant_short_uuid %}{\small\sffamily\color{schoolmuted}\hfill ID варианта: \#{{ payload.variant_short_uuid }}\par}{% endif %}
 \vspace{1mm}\color{schoolaccent}\hrule\color{black}\vspace{3mm}
 \end{schoolheader}

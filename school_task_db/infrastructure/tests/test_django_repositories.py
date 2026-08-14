@@ -2556,6 +2556,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             is_assessable=False,
             blank_cells_after=True,
             blank_cells_rows=9,
+            page_break_after=True,
         )
         practice_selection = WorkAnalogGroup.objects.create(
             work=work,
@@ -2608,6 +2609,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertFalse(rows[0].is_assessable)
         self.assertTrue(rows[0].blank_cells_after)
         self.assertEqual(rows[0].blank_cells_rows, 9)
+        self.assertTrue(rows[0].page_break_after)
         self.assertEqual(rows[0].max_points, 0)
         self.assertEqual(rows[0].task_snapshot['text'], demo_task.text)
         self.assertEqual(
@@ -2622,6 +2624,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(rows[1].content_order, practice_selection.order)
         self.assertTrue(rows[1].is_assessable)
         self.assertEqual(rows[1].blank_cells_rows, DEFAULT_BLANK_CELLS_ROWS)
+        self.assertFalse(rows[1].page_break_after)
         self.assertEqual(rows[1].max_points, 3)
 
         snapshots = list(

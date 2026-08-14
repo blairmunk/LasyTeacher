@@ -94,6 +94,10 @@ class WorkAnalogGroup(BaseModel):
         'Строк клеток',
         default=DEFAULT_BLANK_CELLS_ROWS,
     )
+    page_break_after = models.BooleanField(
+        'Разрыв страницы после задания',
+        default=False,
+    )
 
     class Meta:
         verbose_name = 'Группа заданий в работе'
@@ -269,6 +273,10 @@ class VariantTask(BaseModel):
     blank_cells_rows = models.PositiveIntegerField(
         'Строк клеток',
         default=DEFAULT_BLANK_CELLS_ROWS,
+    )
+    page_break_after = models.BooleanField(
+        'Разрыв страницы после задания',
+        default=False,
     )
 
     class Meta:

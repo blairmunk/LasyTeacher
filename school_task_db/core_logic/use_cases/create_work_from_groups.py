@@ -32,6 +32,7 @@ class GroupSpecRequest:
     is_assessable: bool = True
     blank_cells_after: bool = False
     blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
+    page_break_after: bool = False
 
 
 @dataclass(frozen=True)
@@ -103,6 +104,10 @@ class PrepareCreateWorkFromGroupsSubmissionUseCase:
                     blank_cells_rows=_int_or_default(
                         group_data.get('blank_cells_rows'),
                         DEFAULT_BLANK_CELLS_ROWS,
+                    ),
+                    page_break_after=_bool_or_default(
+                        group_data.get('page_break_after'),
+                        False,
                     ),
                 )
                 for index, group_data in enumerate(groups_data, 1)
@@ -176,6 +181,7 @@ class CreateWorkFromGroupsUseCase:
                     is_assessable=group.is_assessable,
                     blank_cells_after=group.blank_cells_after,
                     blank_cells_rows=group.blank_cells_rows,
+                    page_break_after=group.page_break_after,
                 )
             )
 

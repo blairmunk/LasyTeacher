@@ -42,6 +42,7 @@ def persist_variant_content(variant: Variant, plan) -> None:
                 is_assessable=task_plan.is_assessable,
                 blank_cells_after=task_plan.blank_cells_after,
                 blank_cells_rows=task_plan.blank_cells_rows,
+                page_break_after=task_plan.page_break_after,
             )
             for task_plan in plan.tasks
         ]

@@ -140,6 +140,7 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                                                 'latex_cell_size_mm': '4.0',
                                             },
                                         },
+                                        {'block_type': 'page_break'},
                                     ],
                                     'tasks': [
                                         {
@@ -303,7 +304,7 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
             self.assertIn('Подсказка: F = ma', latex)
             self.assertIn(r'\textbf{Решение.}', latex)
             self.assertIn('Подставим в формулу', latex)
-            self.assertIn(r'\clearpage', latex)
+            self.assertEqual(latex.count(r'\clearpage'), 2)
             self.assertIn(r'\schoolsectionheading{ Черновик }', latex)
             self.assertEqual(
                 latex.count(r'\schoolgrid{ 2 }{ 3 }{ 4.0 }'),

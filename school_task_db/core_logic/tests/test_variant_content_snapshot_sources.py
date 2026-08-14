@@ -23,6 +23,7 @@ class VariantContentSnapshotSourceTests(TestCase):
                     is_assessable=True,
                     blank_cells_after=True,
                     blank_cells_rows=8,
+                    page_break_after=True,
                 ),
                 SimpleNamespace(
                     pk='variant-task-1',
@@ -57,5 +58,6 @@ class VariantContentSnapshotSourceTests(TestCase):
         )
         self.assertFalse(snapshot.items[0].is_assessable)
         self.assertEqual(snapshot.items[1].blank_cells_rows, 8)
+        self.assertTrue(snapshot.items[1].page_break_after)
         self.assertEqual(snapshot.content_blocks[0].snapshot_id, 'content-1')
         self.assertEqual(snapshot.content_blocks[0].title, 'Теория')

@@ -72,6 +72,8 @@
                         </div>
                         {% elif block.block_type == 'blank_cells' %}
                             {% include "documents/html/partials/blank_cells_grid.html" with grid=block.blank_cells extra_class="task-blank-cells" %}
+                        {% elif block.block_type == 'page_break' %}
+                            <div class="document-page-break" aria-hidden="true"></div>
                         {% endif %}
                     {% empty %}
                         <p>В варианте нет содержательных блоков.</p>

@@ -14,6 +14,7 @@ from core_logic.value_objects.task_print_settings import (
 )
 from core_logic.value_objects.variant_print_plan import (
     VARIANT_PRINT_BLOCK_BLANK_CELLS,
+    VARIANT_PRINT_BLOCK_PAGE_BREAK,
     VARIANT_PRINT_BLOCK_TASK,
     VARIANT_PRINT_BLOCK_TEXT,
     VARIANT_PRINT_BLOCK_THEORY,
@@ -146,6 +147,7 @@ class VariantPrintPlanTests(TestCase):
                     max_points=3,
                     blank_cells_after=True,
                     blank_cells_rows=8,
+                    page_break_after=True,
                 ),
                 VariantContentItem(
                     variant_task_id='vt-1',
@@ -182,6 +184,7 @@ class VariantPrintPlanTests(TestCase):
                     max_points=3,
                     blank_cells_after=True,
                     blank_cells_rows=8,
+                    page_break_after=True,
                 ),
                 VariantContentItem(
                     variant_task_id='vt-1',
@@ -205,6 +208,7 @@ class VariantPrintPlanTests(TestCase):
                 VARIANT_PRINT_BLOCK_TASK,
                 VARIANT_PRINT_BLOCK_TASK,
                 VARIANT_PRINT_BLOCK_BLANK_CELLS,
+                VARIANT_PRINT_BLOCK_PAGE_BREAK,
             ],
         )
         self.assertEqual(
@@ -235,6 +239,35 @@ class VariantPrintPlanTests(TestCase):
             'selection-practice',
         )
         self.assertEqual(plan.blocks[2].options, {'rows': 8})
+        self.assertEqual(
+            plan.blocks[3].variant_task_id,
+            'vt-2',
+        )
+
+    def test_places_page_break_after_task_when_blank_cells_are_hidden(self):
+        content_snapshot = build_variant_content_snapshot(
+            variant_id='variant-1',
+            items=[
+                VariantContentItem(
+                    variant_task_id='vt-1',
+                    task_id='task-1',
+                    order=1,
+                    blank_cells_after=True,
+                    blank_cells_rows=8,
+                    page_break_after=True,
+                ),
+            ],
+        )
+
+        plan = build_variant_print_plan_from_snapshot(
+            content_snapshot,
+            VariantPrintOverrides(hide_blank_cells=True),
+        )
+
+        self.assertEqual(
+            [block.block_type for block in plan.blocks],
+            [VARIANT_PRINT_BLOCK_TASK, VARIANT_PRINT_BLOCK_PAGE_BREAK],
+        )
 
     def test_print_overrides_can_hide_all_blank_cells(self):
         content_snapshot = build_variant_content_snapshot(

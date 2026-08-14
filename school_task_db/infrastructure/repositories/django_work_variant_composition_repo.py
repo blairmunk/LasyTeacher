@@ -120,6 +120,7 @@ class DjangoWorkVariantCompositionRepository(
             is_assessable=work_group.is_assessable,
             blank_cells_after=work_group.blank_cells_after,
             blank_cells_rows=work_group.blank_cells_rows,
+            page_break_after=work_group.page_break_after,
         )
 
     @staticmethod

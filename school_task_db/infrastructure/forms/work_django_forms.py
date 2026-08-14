@@ -60,6 +60,7 @@ class WorkAnalogGroupForm(forms.ModelForm):
             'is_assessable',
             'blank_cells_after',
             'blank_cells_rows',
+            'page_break_after',
         ]
         widgets = {
             'analog_group': forms.Select(attrs={'class': 'form-select'}),
@@ -78,6 +79,7 @@ class WorkAnalogGroupForm(forms.ModelForm):
             'render_mode': forms.Select(attrs={'class': 'form-select form-select-sm'}),
             'is_assessable': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'blank_cells_after': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'page_break_after': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'blank_cells_rows': forms.NumberInput(attrs={
                 'class': 'form-control form-control-sm',
                 'min': 1,

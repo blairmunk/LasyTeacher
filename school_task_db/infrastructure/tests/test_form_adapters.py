@@ -1796,6 +1796,7 @@ class WorkFormAdapterTests(SimpleTestCase):
                     'is_assessable': False,
                     'blank_cells_after': True,
                     'blank_cells_rows': 8,
+                    'page_break_after': True,
                 },
                 {'DELETE': True, 'analog_group': analog_group},
                 {},
@@ -1813,6 +1814,7 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertFalse(specs[0].is_assessable)
         self.assertTrue(specs[0].blank_cells_after)
         self.assertEqual(specs[0].blank_cells_rows, 8)
+        self.assertTrue(specs[0].page_break_after)
 
     def test_builds_work_content_blocks_from_formset(self):
         first_topic = SimpleNamespace(pk='topic-1')

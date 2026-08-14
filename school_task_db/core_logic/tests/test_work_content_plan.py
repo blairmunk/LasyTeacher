@@ -76,6 +76,7 @@ class WorkContentPlanTests(TestCase):
                 'is_assessable': False,
                 'blank_cells_after': True,
                 'blank_cells_rows': 8,
+                'page_break_after': True,
                 'weight': 3,
             },
         )()
@@ -93,6 +94,7 @@ class WorkContentPlanTests(TestCase):
         )
         self.assertFalse(block.selection.is_assessable)
         self.assertEqual(block.selection.blank_cells_rows, 8)
+        self.assertTrue(block.selection.page_break_after)
 
     def test_builds_plan_from_persistent_content_rows(self):
         theory_row = type(

@@ -162,6 +162,12 @@
                                     {{ f.blank_cells_rows }}
                                     {% if f.blank_cells_rows.errors %}<div class="text-danger small">{{ f.blank_cells_rows.errors }}</div>{% endif %}
                                 </div>
+                                <div class="col-md-auto">
+                                    <div class="form-check mb-1">
+                                        {{ f.page_break_after }}
+                                        <label for="{{ f.page_break_after.id_for_label }}" class="form-check-label small">Разрыв после</label>
+                                    </div>
+                                </div>
                             </div>
                             {{ f.id }}
                         </div>
@@ -634,6 +640,12 @@
                     <label for="id_${prefix}-blank_cells_rows" class="form-label small text-muted mb-1">Строк</label>
                     <input type="number" name="${prefix}-blank_cells_rows" id="id_${prefix}-blank_cells_rows"
                            value="6" min="1" max="40" class="form-control form-control-sm" style="width: 80px">
+                </div>
+                <div class="col-md-auto">
+                    <div class="form-check mb-1">
+                        <input type="checkbox" name="${prefix}-page_break_after" id="id_${prefix}-page_break_after" class="form-check-input">
+                        <label for="id_${prefix}-page_break_after" class="form-check-label small">Разрыв после</label>
+                    </div>
                 </div>
             </div>
         </div>`;

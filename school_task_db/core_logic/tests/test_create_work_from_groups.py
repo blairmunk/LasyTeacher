@@ -90,6 +90,7 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
                             'is_assessable': 'false',
                             'blank_cells_after': 'true',
                             'blank_cells_rows': '8',
+                            'page_break_after': 'true',
                         },
                         {'id': 'g2'},
                     ],
@@ -119,6 +120,8 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         self.assertFalse(result.groups[0].is_assessable)
         self.assertTrue(result.groups[0].blank_cells_after)
         self.assertEqual(result.groups[0].blank_cells_rows, 8)
+        self.assertTrue(result.groups[0].page_break_after)
+        self.assertFalse(result.groups[1].page_break_after)
         self.assertEqual(result.groups[1].id, 'g2')
         self.assertEqual(result.groups[1].order, 2)
         self.assertEqual(result.groups[1].count, 1)

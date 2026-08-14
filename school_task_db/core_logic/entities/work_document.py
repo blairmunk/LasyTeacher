@@ -32,6 +32,7 @@ class WorkDocumentTaskSource:
     is_assessable: bool = True
     blank_cells_after: bool = False
     blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
+    page_break_after: bool = False
 
     def __post_init__(self):
         object.__setattr__(self, 'task_snapshot', dict(self.task_snapshot))

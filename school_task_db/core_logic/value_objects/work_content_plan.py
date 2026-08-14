@@ -135,6 +135,11 @@ def build_work_content_plan(
                         is_assessable=row.is_assessable,
                         blank_cells_after=row.blank_cells_after,
                         blank_cells_rows=row.blank_cells_rows,
+                        page_break_after=getattr(
+                            row,
+                            'page_break_after',
+                            False,
+                        ),
                         weight=row.weight,
                     ),
                 )

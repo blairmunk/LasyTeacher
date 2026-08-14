@@ -73,6 +73,7 @@ class DjangoWorkSpecificationRepository(IWorkSpecificationRepository):
                     is_assessable=spec.is_assessable,
                     blank_cells_after=spec.blank_cells_after,
                     blank_cells_rows=spec.blank_cells_rows,
+                    page_break_after=spec.page_break_after,
                 )
                 for spec in params.specs
             ])
@@ -102,6 +103,7 @@ class DjangoWorkSpecificationRepository(IWorkSpecificationRepository):
                 is_assessable=spec.is_assessable,
                 blank_cells_after=spec.blank_cells_after,
                 blank_cells_rows=spec.blank_cells_rows,
+                page_break_after=spec.page_break_after,
             )
             for spec in specs
         ])

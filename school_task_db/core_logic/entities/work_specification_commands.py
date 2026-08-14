@@ -38,6 +38,7 @@ class WorkTaskSelectionParams:
     is_assessable: bool = True
     blank_cells_after: bool = False
     blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
+    page_break_after: bool = False
 
 
 @dataclass(frozen=True)

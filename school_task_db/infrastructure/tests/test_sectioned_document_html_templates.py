@@ -131,6 +131,7 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
                                                 'cells_range': range(6),
                                             },
                                         },
+                                        {'block_type': 'page_break'},
                                         {
                                             'block_type': 'text',
                                             'title': 'Самопроверка',
@@ -208,3 +209,13 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
             self.assertIn('Решение:', html)
             self.assertIn('Подставим в формулу', html)
             self.assertIn('task-blank-cells', html)
+            self.assertIn(
+                '<div class="document-page-break" aria-hidden="true"></div>',
+                html,
+            )
+            self.assertLess(
+                html.index('task-blank-cells'),
+                html.index(
+                    '<div class="document-page-break" aria-hidden="true"></div>'
+                ),
+            )

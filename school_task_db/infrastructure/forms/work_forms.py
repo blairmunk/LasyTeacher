@@ -230,6 +230,7 @@ class WorkFormAdapter:
                     blank_cells_rows=(
                         row.get('blank_cells_rows') or DEFAULT_BLANK_CELLS_ROWS
                     ),
+                    page_break_after=row.get('page_break_after', False),
                 )
             )
         return tuple(specs)

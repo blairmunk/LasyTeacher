@@ -43,6 +43,9 @@
 {% elif block.block_type == 'blank_cells' %}
 \schoolgrid{ {{ block.blank_cells.rows }} }{ {{ block.blank_cells.columns }} }{ {{ block.blank_cells.latex_cell_size_mm }} }
 
+{% elif block.block_type == 'page_break' %}
+\clearpage
+
 {% endif %}
 {% empty %}
 \textit{Тренировочные задания не созданы.}

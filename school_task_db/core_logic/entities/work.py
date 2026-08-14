@@ -114,6 +114,7 @@ class WorkDetailSpecGroup:
     is_assessable: bool = True
     blank_cells_after: bool = False
     blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
+    page_break_after: bool = False
     task_bank_roles: tuple[str, ...] = field(default_factory=tuple)
 
     def __post_init__(self):
@@ -403,6 +404,7 @@ class VariantDetailTaskRow:
     is_assessable: bool = True
     blank_cells_after: bool = False
     blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
+    page_break_after: bool = False
 
 
 @dataclass(frozen=True)
@@ -451,6 +453,7 @@ class RemedialTrainingTaskRow:
     is_assessable: bool = True
     blank_cells_after: bool = False
     blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
+    page_break_after: bool = False
 
 
 @dataclass(frozen=True)

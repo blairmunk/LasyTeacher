@@ -23,6 +23,7 @@ class VariantTaskSnapshotDataTests(TestCase):
             is_assessable=False,
             blank_cells_after=True,
             blank_cells_rows=9,
+            page_break_after=True,
         )
 
         data = variant_task_content_decisions(variant_task)
@@ -37,6 +38,7 @@ class VariantTaskSnapshotDataTests(TestCase):
                 'is_assessable': False,
                 'blank_cells_after': True,
                 'blank_cells_rows': 9,
+                'page_break_after': True,
             },
         )
 
@@ -53,5 +55,6 @@ class VariantTaskSnapshotDataTests(TestCase):
                 'is_assessable': True,
                 'blank_cells_after': False,
                 'blank_cells_rows': DEFAULT_BLANK_CELLS_ROWS,
+                'page_break_after': False,
             },
         )

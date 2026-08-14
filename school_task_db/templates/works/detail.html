@@ -96,6 +96,9 @@
                                     {% if item.wg.blank_cells_after %}
                                     <span class="badge bg-info text-dark">клетки: {{ item.wg.blank_cells_rows }}</span>
                                     {% endif %}
+                                    {% if item.wg.page_break_after %}
+                                    <span class="badge bg-warning text-dark">разрыв после</span>
+                                    {% endif %}
                                 </td>
                                 <td class="text-center fw-bold">{{ item.wg.count }}</td>
                                 <td class="text-center">

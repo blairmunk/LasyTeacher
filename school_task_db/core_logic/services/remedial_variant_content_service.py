@@ -41,6 +41,7 @@ def build_remedial_variant_creation_plan(
                 is_assessable=True,
                 blank_cells_after=False,
                 blank_cells_rows=DEFAULT_BLANK_CELLS_ROWS,
+                page_break_after=False,
             )
         )
     return VariantCreationPlan(

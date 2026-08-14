@@ -43,6 +43,7 @@ from core_logic.value_objects.task_print_settings import (
 )
 from core_logic.value_objects.variant_print_plan import (
     VARIANT_PRINT_BLOCK_BLANK_CELLS,
+    VARIANT_PRINT_BLOCK_PAGE_BREAK,
     VARIANT_PRINT_BLOCK_TASK,
     VARIANT_PRINT_BLOCK_TEXT,
     VARIANT_PRINT_BLOCK_THEORY,
@@ -346,6 +347,7 @@ class DjangoWorkVariantSectionPayloadBuilderTests(TestCase):
             is_assessable=False,
             blank_cells_after=True,
             blank_cells_rows=7,
+            page_break_after=True,
         )
         builder = WorkVariantSectionPayloadBuilder(
             work_document_repo=DjangoWorkDocumentRepository(),
@@ -375,6 +377,7 @@ class DjangoWorkVariantSectionPayloadBuilderTests(TestCase):
                 VARIANT_PRINT_BLOCK_TASK,
                 VARIANT_PRINT_BLOCK_TASK,
                 VARIANT_PRINT_BLOCK_BLANK_CELLS,
+                VARIANT_PRINT_BLOCK_PAGE_BREAK,
             ],
         )
         self.assertEqual(
@@ -395,6 +398,10 @@ class DjangoWorkVariantSectionPayloadBuilderTests(TestCase):
             variant_payload['print_blocks'][2]['blank_cells']['rows'],
             7,
         )
+        self.assertEqual(
+            variant_payload['print_blocks'][3]['variant_task_id'],
+            str(demo_variant_task.pk),
+        )
         self.assertNotIn('tasks', variant_payload)
         task_payload = variant_payload['print_blocks'][0]['task']
         self.assertEqual(task_payload['variant_task_id'], str(variant_task.pk))
@@ -404,6 +411,7 @@ class DjangoWorkVariantSectionPayloadBuilderTests(TestCase):
         self.assertEqual(task_payload['render_mode'], TASK_RENDER_MODE_TASK_ONLY)
         self.assertTrue(task_payload['is_assessable'])
         self.assertFalse(task_payload['blank_cells_after'])
+        self.assertFalse(task_payload['page_break_after'])
         self.assertEqual(
             task_payload['blank_cells_rows'],
             DEFAULT_BLANK_CELLS_ROWS,

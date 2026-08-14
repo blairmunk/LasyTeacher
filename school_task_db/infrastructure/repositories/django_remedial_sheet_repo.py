@@ -160,6 +160,7 @@ class DjangoRemedialSheetRepository(IRemedialSheetRepository):
                     is_assessable=variant_task.is_assessable,
                     blank_cells_after=variant_task.blank_cells_after,
                     blank_cells_rows=variant_task.blank_cells_rows,
+                    page_break_after=variant_task.page_break_after,
                 )
                 for variant_task in new_tasks
             ),

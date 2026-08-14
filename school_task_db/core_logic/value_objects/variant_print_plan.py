@@ -12,6 +12,7 @@ from core_logic.value_objects.variant_content_snapshot import (
 
 VARIANT_PRINT_BLOCK_TASK = 'task'
 VARIANT_PRINT_BLOCK_BLANK_CELLS = 'blank_cells'
+VARIANT_PRINT_BLOCK_PAGE_BREAK = 'page_break'
 VARIANT_PRINT_BLOCK_THEORY = 'theory'
 VARIANT_PRINT_BLOCK_TEXT = 'text'
 
@@ -19,6 +20,7 @@ VARIANT_PRINT_BLOCK_TYPES = frozenset(
     (
         VARIANT_PRINT_BLOCK_TASK,
         VARIANT_PRINT_BLOCK_BLANK_CELLS,
+        VARIANT_PRINT_BLOCK_PAGE_BREAK,
         VARIANT_PRINT_BLOCK_THEORY,
         VARIANT_PRINT_BLOCK_TEXT,
     )
@@ -129,6 +131,18 @@ def build_variant_print_plan_from_snapshot(
                     content_order=_task_content_order(row),
                     content_role=row.bank_role,
                     options=blank_cells_options,
+                )
+            )
+        if row.page_break_after:
+            task_blocks.append(
+                VariantPrintBlock(
+                    block_type=VARIANT_PRINT_BLOCK_PAGE_BREAK,
+                    variant_task_id=row.variant_task_id,
+                    task_id=row.task_id,
+                    source_selection_id=row.source_selection_id,
+                    order=row.order,
+                    content_order=_task_content_order(row),
+                    content_role=row.bank_role,
                 )
             )
         ordered_block_groups.append(

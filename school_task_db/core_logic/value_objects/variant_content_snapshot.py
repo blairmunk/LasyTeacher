@@ -35,6 +35,7 @@ class VariantContentItem:
     is_assessable: bool = True
     blank_cells_after: bool = False
     blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
+    page_break_after: bool = False
 
     def __post_init__(self):
         if not self.variant_task_id:
@@ -155,6 +156,7 @@ def variant_content_item_from_source(source) -> VariantContentItem:
         is_assessable=decisions['is_assessable'],
         blank_cells_after=decisions['blank_cells_after'],
         blank_cells_rows=decisions['blank_cells_rows'],
+        page_break_after=decisions['page_break_after'],
     )
 
 
@@ -189,4 +191,5 @@ def variant_task_content_decisions(source) -> Mapping[str, Any]:
             'blank_cells_rows',
             DEFAULT_BLANK_CELLS_ROWS,
         ),
+        'page_break_after': getattr(source, 'page_break_after', False),
     }

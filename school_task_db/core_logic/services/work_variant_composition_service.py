@@ -67,6 +67,7 @@ class WorkVariantCompositionService:
                     is_assessable=row.is_assessable,
                     blank_cells_after=row.blank_cells_after,
                     blank_cells_rows=row.blank_cells_rows,
+                    page_break_after=row.page_break_after,
                 )
                 for row in source.spec_rows
             ),
@@ -176,6 +177,7 @@ class WorkVariantCompositionService:
                         is_assessable=row.is_assessable,
                         blank_cells_after=row.blank_cells_after,
                         blank_cells_rows=row.blank_cells_rows,
+                        page_break_after=row.page_break_after,
                     )
                 )
                 task_order += 1

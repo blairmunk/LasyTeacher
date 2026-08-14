@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+from core_logic.entities.task import TaskMathStatusSnapshot
 from core_logic.use_cases.get_source_list import GetSourceListUseCase
 from core_logic.use_cases.refresh_task_math_cache import (
     RefreshTaskMathCacheUseCase,
@@ -21,11 +22,10 @@ class FakeTaskMathStatusCache:
 
     def refresh_cache(self):
         self.refreshed = True
-        return {
-            'with_math': {'task-1', 'task-2'},
-            'with_errors': {'task-2'},
-            'with_warnings': set(),
-        }
+        return TaskMathStatusSnapshot(
+            with_math={'task-1', 'task-2'},
+            with_errors={'task-2'},
+        )
 
 
 class SourceListAndMathCacheUseCaseTests(TestCase):

@@ -75,11 +75,15 @@ class DjangoTaskMathStatusCacheTests(TestCase):
         result = DjangoTaskMathStatusCache.get_all_tasks_math_status(
             force_refresh=True,
         )
+        math_task_ids = DjangoTaskMathStatusCache.get_tasks_with_math_ids()
+        error_task_ids = DjangoTaskMathStatusCache.get_tasks_with_errors_ids()
 
         self.assertNotIn(plain_task.id, result['with_math'])
         self.assertIn(formula_task.id, result['with_math'])
         self.assertIn(formula_task.id, result['with_warnings'])
         self.assertFalse(result['with_errors'])
+        self.assertEqual(math_task_ids, frozenset({str(formula_task.id)}))
+        self.assertEqual(error_task_ids, frozenset())
 
     def test_invalidates_single_and_aggregate_cache_separately(self):
         task_key = DjangoTaskMathStatusCache.get_task_cache_key('task-1')

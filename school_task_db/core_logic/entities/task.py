@@ -44,6 +44,21 @@ class TaskMathCacheStats:
 
 
 @dataclass(frozen=True)
+class TaskMathStatusSnapshot:
+    with_math: frozenset[str] = field(default_factory=frozenset)
+    with_errors: frozenset[str] = field(default_factory=frozenset)
+    with_warnings: frozenset[str] = field(default_factory=frozenset)
+
+    def __post_init__(self):
+        for field_name in ('with_math', 'with_errors', 'with_warnings'):
+            object.__setattr__(
+                self,
+                field_name,
+                frozenset(str(value) for value in getattr(self, field_name)),
+            )
+
+
+@dataclass(frozen=True)
 class TaskListData:
     tasks: tuple["TaskListItem", ...]
     topics: tuple["SelectOption", ...]

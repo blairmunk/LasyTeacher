@@ -4,10 +4,33 @@ from unittest.mock import patch
 from django.core.management import call_command
 from django.test import SimpleTestCase
 
-from core_logic.entities.task import TaskMathCacheStats
+from core_logic.entities.task import TaskMathCacheStats, TaskMathStatusSnapshot
 
 
 class ManageMathCacheCommandTests(SimpleTestCase):
+    @patch(
+        'tasks.management.commands.manage_math_cache.task_math_status_cache'
+    )
+    def test_refresh_uses_typed_snapshot(self, math_status_cache):
+        math_status_cache.refresh_cache.return_value = TaskMathStatusSnapshot(
+            with_math={'task-1', 'task-2'},
+            with_errors={'task-2'},
+            with_warnings={'task-1'},
+        )
+        stdout = StringIO()
+
+        call_command(
+            'manage_math_cache',
+            action='refresh',
+            force=True,
+            stdout=stdout,
+        )
+
+        output = stdout.getvalue()
+        self.assertIn('Заданий с формулами: 2', output)
+        self.assertIn('Заданий с ошибками: 1', output)
+        self.assertIn('Заданий с предупреждениями: 1', output)
+
     @patch(
         'tasks.management.commands.manage_math_cache.task_math_status_cache'
     )

@@ -5,7 +5,7 @@ from typing import Any, Dict, Set
 
 from django.core.cache import cache
 
-from core_logic.entities.task import TaskMathCacheStats
+from core_logic.entities.task import TaskMathCacheStats, TaskMathStatusSnapshot
 from core_logic.interfaces.task_math_status_cache import ITaskMathStatusCache
 from core_logic.services.formula_processor import formula_processor
 from tasks.models import Task
@@ -150,26 +150,26 @@ class DjangoTaskMathStatusCache(ITaskMathStatusCache):
         return result
     
     @classmethod
-    def get_tasks_with_math_ids(cls) -> Set[int]:
+    def get_tasks_with_math_ids(cls) -> frozenset[str]:
         """Получает ID заданий с формулами"""
         cached_ids = cache.get(cls.CACHE_KEY_WITH_MATH)
         if cached_ids is not None:
-            return cached_ids
+            return frozenset(str(task_id) for task_id in cached_ids)
         
         # Если кэш отдельных ID не найден, получаем полные данные
         all_status = cls.get_all_tasks_math_status()
-        return all_status['with_math']
+        return frozenset(str(task_id) for task_id in all_status['with_math'])
     
     @classmethod
-    def get_tasks_with_errors_ids(cls) -> Set[int]:
+    def get_tasks_with_errors_ids(cls) -> frozenset[str]:
         """Получает ID заданий с ошибками в формулах"""
         cached_ids = cache.get(cls.CACHE_KEY_WITH_ERRORS)
         if cached_ids is not None:
-            return cached_ids
+            return frozenset(str(task_id) for task_id in cached_ids)
         
         # Если кэш отдельных ID не найден, получаем полные данные
         all_status = cls.get_all_tasks_math_status()
-        return all_status['with_errors']
+        return frozenset(str(task_id) for task_id in all_status['with_errors'])
     
     @classmethod
     def invalidate_task_cache(cls, task_id: int):
@@ -211,10 +211,15 @@ class DjangoTaskMathStatusCache(ITaskMathStatusCache):
         return processed_count
     
     @classmethod
-    def refresh_cache(cls):
+    def refresh_cache(cls) -> TaskMathStatusSnapshot:
         """Принудительно обновляет кэш"""
         logger.info("Принудительное обновление кэша статуса формул")
-        return cls.get_all_tasks_math_status(force_refresh=True)
+        status = cls.get_all_tasks_math_status(force_refresh=True)
+        return TaskMathStatusSnapshot(
+            with_math=status['with_math'],
+            with_errors=status['with_errors'],
+            with_warnings=status['with_warnings'],
+        )
     
     @classmethod
     def get_cache_stats(cls) -> TaskMathCacheStats:

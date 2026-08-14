@@ -85,9 +85,9 @@ class Command(BaseCommand):
             stats = task_math_status_cache.refresh_cache()
             
             self.stdout.write(self.style.SUCCESS("✅ Кэш успешно обновлен!"))
-            self.stdout.write(f"  📐 Заданий с формулами: {len(stats['with_math'])}")
-            self.stdout.write(f"  ❌ Заданий с ошибками: {len(stats['with_errors'])}")
-            self.stdout.write(f"  ⚠️ Заданий с предупреждениями: {len(stats['with_warnings'])}")
+            self.stdout.write(f"  📐 Заданий с формулами: {len(stats.with_math)}")
+            self.stdout.write(f"  ❌ Заданий с ошибками: {len(stats.with_errors)}")
+            self.stdout.write(f"  ⚠️ Заданий с предупреждениями: {len(stats.with_warnings)}")
             
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"❌ Ошибка обновления кэша: {e}"))

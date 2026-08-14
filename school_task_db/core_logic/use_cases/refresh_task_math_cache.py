@@ -12,8 +12,8 @@ class RefreshTaskMathCacheUseCase:
         stats = self.math_status_cache.refresh_cache()
         return MathCacheRefreshResult(
             status='refreshed',
-            with_math_count=len(stats.get('with_math', [])),
-            with_errors_count=len(stats.get('with_errors', [])),
-            with_warnings_count=len(stats.get('with_warnings', [])),
+            with_math_count=len(stats.with_math),
+            with_errors_count=len(stats.with_errors),
+            with_warnings_count=len(stats.with_warnings),
             message='Кэш успешно обновлен',
         )

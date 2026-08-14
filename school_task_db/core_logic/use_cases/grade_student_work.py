@@ -1,7 +1,7 @@
 """Use case for saving a checked student work."""
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Optional
 
 from core_logic.entities.grading import (
     GradeParticipationParams,
@@ -18,6 +18,7 @@ from core_logic.interfaces.review_task_repo import IReviewTaskRepository
 from core_logic.interfaces.transaction_manager import ITransactionManager
 from core_logic.services.grading_service import GradingService
 from core_logic.value_objects.mark_validation import validate_mark_values
+from core_logic.value_objects.uploaded_file import UploadedFile
 
 
 @dataclass(frozen=True)
@@ -31,7 +32,7 @@ class GradeStudentWorkRequest:
     recommendations: str = ''
     checked_by_display_name: str = ''
     checked_by_username: str = ''
-    work_scan: Optional[Any] = None
+    work_scan: Optional[UploadedFile] = None
     task_scores: Optional[tuple[ReviewTaskScoreValue, ...]] = None
     is_retake: bool = False
     is_excellent: bool = False

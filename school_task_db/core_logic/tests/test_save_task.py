@@ -13,6 +13,16 @@ from core_logic.use_cases.save_task import (
 )
 
 
+class FakeUploadedFile:
+    name = 'task.png'
+
+    def read(self, size=-1):
+        return b'image' if size != 0 else b''
+
+    def chunks(self, chunk_size=None):
+        yield b'image'
+
+
 class FakeTaskRepository:
     def __init__(self):
         self.created_params = None
@@ -118,7 +128,7 @@ class SaveTaskUseCaseTests(TestCase):
 
     def test_save_task_images_delegates_to_repository(self):
         repo = FakeTaskRepository()
-        images = [TaskImageSaveParams(image='image')]
+        images = [TaskImageSaveParams(image=FakeUploadedFile())]
 
         result = SaveTaskImagesUseCase(repo).execute(
             task_id='task-1',
@@ -127,4 +137,4 @@ class SaveTaskUseCaseTests(TestCase):
 
         self.assertEqual(result.status, 'saved')
         self.assertEqual(result.created_images, 1)
-        self.assertEqual(repo.saved_images, ('task-1', images))
+        self.assertEqual(repo.saved_images, ('task-1', tuple(images)))

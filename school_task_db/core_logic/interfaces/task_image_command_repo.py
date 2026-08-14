@@ -1,7 +1,7 @@
 """Command persistence port for task images."""
 
 from abc import ABC, abstractmethod
-from typing import List
+from typing import Sequence
 
 from core_logic.entities.task import (
     TaskImageSaveParams,
@@ -14,6 +14,6 @@ class ITaskImageCommandRepository(ABC):
     def save_task_images(
         self,
         task_id: str,
-        images: List[TaskImageSaveParams],
+        images: Sequence[TaskImageSaveParams],
     ) -> TaskImagesSaveResult:
         """Persist task images and return change counts."""

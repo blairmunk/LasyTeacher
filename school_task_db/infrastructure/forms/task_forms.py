@@ -270,7 +270,7 @@ class TaskFormAdapter:
                     delete=row.get('DELETE', False),
                 )
             )
-        return images
+        return tuple(images)
 
     def source_params_from_form(self, form):
         return SourceCreateParams(

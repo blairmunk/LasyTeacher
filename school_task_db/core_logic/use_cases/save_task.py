@@ -1,6 +1,6 @@
 """Create and update tasks."""
 
-from typing import List
+from typing import Sequence
 
 from core_logic.entities.task import (
     TaskImageSaveParams,
@@ -96,6 +96,9 @@ class SaveTaskImagesUseCase:
     def execute(
         self,
         task_id: str,
-        images: List[TaskImageSaveParams],
+        images: Sequence[TaskImageSaveParams],
     ) -> TaskImagesSaveResult:
-        return self.task_repo.save_task_images(task_id=task_id, images=images)
+        return self.task_repo.save_task_images(
+            task_id=task_id,
+            images=tuple(images),
+        )

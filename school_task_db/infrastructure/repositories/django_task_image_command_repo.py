@@ -1,6 +1,6 @@
 """Django command adapter for task images."""
 
-from typing import List
+from typing import Sequence
 
 from core_logic.entities.task import (
     TaskImageSaveParams,
@@ -16,7 +16,7 @@ class DjangoTaskImageCommandRepository(ITaskImageCommandRepository):
     def save_task_images(
         self,
         task_id: str,
-        images: List[TaskImageSaveParams],
+        images: Sequence[TaskImageSaveParams],
     ) -> TaskImagesSaveResult:
         if not Task.objects.filter(pk=task_id).exists():
             return TaskImagesSaveResult(status='not_found')

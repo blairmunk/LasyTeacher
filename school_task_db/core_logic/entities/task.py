@@ -8,6 +8,7 @@ from core_logic.value_objects.task_print_settings import (
     TASK_BANK_ROLE_CONTROL,
     TASK_BANK_ROLE_LABELS,
 )
+from core_logic.value_objects.uploaded_file import UploadedFile
 
 
 @dataclass(frozen=True)
@@ -420,7 +421,7 @@ class TaskSaveResult:
 @dataclass(frozen=True)
 class TaskImageSaveParams:
     image_id: str = ''
-    image: Any = None
+    image: Optional[UploadedFile] = None
     position: str = ''
     caption: str = ''
     order: int = 1

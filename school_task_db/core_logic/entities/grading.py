@@ -1,9 +1,10 @@
 """Command and result data for participation grading."""
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Optional
 
 from core_logic.entities.review import ReviewTaskScoreValue
+from core_logic.value_objects.uploaded_file import UploadedFile
 
 
 @dataclass(frozen=True)
@@ -16,7 +17,7 @@ class GradeParticipationParams:
     mistakes_analysis: str = ''
     recommendations: str = ''
     checked_by: str = ''
-    work_scan: Optional[Any] = None
+    work_scan: Optional[UploadedFile] = None
     task_scores: Optional[tuple[ReviewTaskScoreValue, ...]] = None
     is_retake: bool = False
     is_excellent: bool = False

@@ -45,6 +45,7 @@ class DocumentRenderFormValueTests(TestCase):
             'hide_blank_cells': '1',
             'append_answers': '1',
             'break_between_variants': '0',
+            'include_task_page_breaks': '0',
         })
 
         self.assertEqual(
@@ -55,6 +56,7 @@ class DocumentRenderFormValueTests(TestCase):
                 hide_blank_cells=True,
                 append_answers=True,
                 break_between_variants=False,
+                include_task_page_breaks=False,
             ),
         )
 

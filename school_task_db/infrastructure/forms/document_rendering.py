@@ -24,6 +24,9 @@ def work_print_overrides_from_data(
 ) -> WorkDocumentPrintOverrides:
     return WorkDocumentPrintOverrides(
         break_between_variants=data.get('break_between_variants', '1') == '1',
+        include_task_page_breaks=(
+            data.get('include_task_page_breaks', '1') == '1'
+        ),
         hide_theory=data.get('hide_theory', '0') == '1',
         hide_text=data.get('hide_text', '0') == '1',
         hide_blank_cells=data.get('hide_blank_cells', '0') == '1',

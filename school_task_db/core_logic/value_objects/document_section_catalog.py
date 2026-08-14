@@ -487,6 +487,14 @@ def _validate_task_list_options(options) -> None:
             f'Section {TASK_LIST_SECTION} option hide_blank_cells '
             'must be boolean'
         )
+    if (
+        'hide_task_page_breaks' in options
+        and not isinstance(options['hide_task_page_breaks'], bool)
+    ):
+        raise ValueError(
+            f'Section {TASK_LIST_SECTION} option hide_task_page_breaks '
+            'must be boolean'
+        )
 
 
 def _section_order_items(section_order):

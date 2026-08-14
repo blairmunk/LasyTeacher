@@ -38,6 +38,7 @@ class WorkDocumentPrintOverrides:
     hide_blank_cells: bool = False
     append_answers: bool = False
     break_between_variants: bool = True
+    include_task_page_breaks: bool = True
 
     @property
     def hidden_content_types(self) -> tuple[str, ...]:

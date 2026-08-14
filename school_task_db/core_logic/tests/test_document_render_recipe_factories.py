@@ -160,6 +160,15 @@ class DocumentRenderRecipeFactoriesTests(TestCase):
         )
         self.assertTrue(recipe.sections[1].options['hide_blank_cells'])
 
+    def test_work_print_overrides_can_hide_task_page_breaks(self):
+        recipe = build_work_document_recipe_for_render(
+            WorkDocumentPrintOverrides(include_task_page_breaks=False),
+        )
+
+        self.assertTrue(
+            recipe.sections[1].options['hide_task_page_breaks'],
+        )
+
     def test_build_work_document_recipe_can_disable_variant_breaks(self):
         recipe = build_work_document_recipe_for_render(
             print_overrides=WorkDocumentPrintOverrides(

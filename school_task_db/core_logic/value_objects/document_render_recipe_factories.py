@@ -150,6 +150,8 @@ def apply_work_document_print_overrides(
             section_options['hidden_content_types'] = hidden_content_types
         if overrides.hide_blank_cells:
             section_options['hide_blank_cells'] = True
+        if not overrides.include_task_page_breaks:
+            section_options['hide_task_page_breaks'] = True
         sections.append(_section_with_options(section, section_options))
 
     if overrides.append_answers:

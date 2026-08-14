@@ -269,6 +269,29 @@ class VariantPrintPlanTests(TestCase):
             [VARIANT_PRINT_BLOCK_TASK, VARIANT_PRINT_BLOCK_PAGE_BREAK],
         )
 
+    def test_print_override_can_hide_task_page_break(self):
+        content_snapshot = build_variant_content_snapshot(
+            variant_id='variant-1',
+            items=[
+                VariantContentItem(
+                    variant_task_id='vt-1',
+                    task_id='task-1',
+                    order=1,
+                    page_break_after=True,
+                ),
+            ],
+        )
+
+        plan = build_variant_print_plan_from_snapshot(
+            content_snapshot,
+            VariantPrintOverrides(hide_task_page_breaks=True),
+        )
+
+        self.assertEqual(
+            [block.block_type for block in plan.blocks],
+            [VARIANT_PRINT_BLOCK_TASK],
+        )
+
     def test_print_overrides_can_hide_all_blank_cells(self):
         content_snapshot = build_variant_content_snapshot(
             variant_id='variant-1',

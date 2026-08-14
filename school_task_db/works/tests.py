@@ -246,6 +246,7 @@ class WorkDetailViewTests(TestCase):
         self.assertContains(response, 'append_answers')
         self.assertContains(response, 'Печать')
         self.assertContains(response, 'break_between_variants')
+        self.assertContains(response, 'include_task_page_breaks')
 
     def test_detail_exposes_work_template_selector(self):
         template = PresentationProfile.objects.create(

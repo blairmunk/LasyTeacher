@@ -32,6 +32,7 @@ class VariantPrintOverrides:
 
     hidden_content_types: Tuple[str, ...] = field(default_factory=tuple)
     hide_blank_cells: bool = False
+    hide_task_page_breaks: bool = False
 
     def __post_init__(self):
         hidden_content_types = _tuple_option(self.hidden_content_types)
@@ -133,7 +134,7 @@ def build_variant_print_plan_from_snapshot(
                     options=blank_cells_options,
                 )
             )
-        if row.page_break_after:
+        if row.page_break_after and not overrides.hide_task_page_breaks:
             task_blocks.append(
                 VariantPrintBlock(
                     block_type=VARIANT_PRINT_BLOCK_PAGE_BREAK,
@@ -212,6 +213,9 @@ def build_variant_print_overrides_from_options(
             options.get('hidden_content_types'),
         ),
         hide_blank_cells=bool(options.get('hide_blank_cells', False)),
+        hide_task_page_breaks=bool(
+            options.get('hide_task_page_breaks', False),
+        ),
     )
 
 

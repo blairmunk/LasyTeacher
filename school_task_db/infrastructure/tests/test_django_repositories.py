@@ -757,7 +757,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(work.variant_counter, 2)
         self.assertEqual(
             [str(variant.pk) for variant in variants],
-            created.variant_ids,
+            list(created.variant_ids),
         )
         self.assertEqual(
             [variant.max_score_snapshot for variant in variants],

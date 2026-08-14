@@ -1,7 +1,7 @@
 """Command data for persisting new work variants."""
 
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Optional
 
 from core_logic.entities.work_specification_commands import CreateWorkParams
 from core_logic.entities.work_variant_composition import VariantCreationPlan
@@ -31,13 +31,19 @@ class NewWorkVariantParams:
 @dataclass(frozen=True)
 class CreateWorkWithVariantsParams:
     work: CreateWorkParams
-    variants: List[NewWorkVariantParams]
+    variants: tuple[NewWorkVariantParams, ...]
+
+    def __post_init__(self):
+        object.__setattr__(self, 'variants', tuple(self.variants))
 
 
 @dataclass(frozen=True)
 class CreatedWorkWithVariantsRef:
     work_id: str
-    variant_ids: List[str]
+    variant_ids: tuple[str, ...]
+
+    def __post_init__(self):
+        object.__setattr__(self, 'variant_ids', tuple(self.variant_ids))
 
 
 @dataclass(frozen=True)

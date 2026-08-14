@@ -183,11 +183,18 @@ class VariantCreationPlan:
         default_factory=tuple,
     )
 
+    def __post_init__(self):
+        object.__setattr__(self, 'tasks', tuple(self.tasks))
+        object.__setattr__(self, 'content_blocks', tuple(self.content_blocks))
+
 
 @dataclass(frozen=True)
 class WorkVariantCompositionPlan:
     variants: Tuple[VariantCreationPlan, ...]
     next_variant_counter: int
+
+    def __post_init__(self):
+        object.__setattr__(self, 'variants', tuple(self.variants))
 
 
 @dataclass(frozen=True)

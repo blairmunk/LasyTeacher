@@ -42,7 +42,7 @@ class DjangoWorkVariantCreationRepository(IWorkVariantCreationRepository):
     ) -> CreatedWorkWithVariantsRef:
         with transaction.atomic():
             work_id = self._create_work(params.work)
-            variant_ids = [
+            variant_ids = tuple(
                 self._create_variant_from_plan(
                     CreateVariantParams(
                         work_id=work_id,
@@ -59,7 +59,7 @@ class DjangoWorkVariantCreationRepository(IWorkVariantCreationRepository):
                     )
                 )
                 for variant in params.variants
-            ]
+            )
         return CreatedWorkWithVariantsRef(
             work_id=work_id,
             variant_ids=variant_ids,

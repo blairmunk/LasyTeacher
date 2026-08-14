@@ -136,7 +136,7 @@ class GetParticipationReviewUseCaseTests(TestCase):
 
         self.assertEqual(repo.default_max_points, 12)
         self.assertEqual(result.mark.max_points, 12)
-        self.assertEqual(result.tasks_with_scores, [])
+        self.assertEqual(result.tasks_with_scores, ())
 
     def test_aggregate_review_without_scale_keeps_maximum_empty(self):
         repo = FakeReviewRepository()

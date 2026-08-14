@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from core_logic.entities.event import EventEntity
 from core_logic.entities.review import (
+    EventReviewData,
     EventReviewParticipationRow,
     ReviewEventProgress,
     ReviewEventRef,
@@ -68,6 +69,16 @@ class FakeEventRepository:
 
 
 class ReviewDashboardAndEventUseCaseTests(TestCase):
+    def test_event_review_copies_and_protects_score_distribution(self):
+        distribution = {5: 2}
+
+        review = EventReviewData(score_distribution=distribution)
+        distribution[5] = 3
+
+        self.assertEqual(review.score_distribution[5], 2)
+        with self.assertRaises(TypeError):
+            review.score_distribution[5] = 4
+
     def test_dashboard_use_case_returns_categorized_events(self):
         use_case = GetReviewDashboardUseCase(
             review_repo=FakeReviewRepository(),
@@ -103,4 +114,4 @@ class ReviewDashboardAndEventUseCaseTests(TestCase):
         review = use_case.execute('missing')
 
         self.assertIsNone(review.event)
-        self.assertEqual(review.participations_data, [])
+        self.assertEqual(review.participations_data, ())

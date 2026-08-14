@@ -1,7 +1,5 @@
 """Django read adapter for reviewer sessions."""
 
-from typing import List
-
 from core_logic.entities.review import ReviewSessionRef
 from core_logic.interfaces.review_session_query_repo import (
     IReviewSessionQueryRepository,
@@ -15,7 +13,7 @@ class DjangoReviewSessionQueryRepository(IReviewSessionQueryRepository):
         self,
         reviewer_id: str,
         limit: int = 5,
-    ) -> List[ReviewSessionRef]:
+    ) -> tuple[ReviewSessionRef, ...]:
         sessions = ReviewSession.objects.filter(
             reviewer_id=reviewer_id,
         ).select_related(
@@ -23,4 +21,4 @@ class DjangoReviewSessionQueryRepository(IReviewSessionQueryRepository):
             'event__work',
             'event__course',
         ).order_by('-started_at')[:limit]
-        return [review_session_ref(session) for session in sessions]
+        return tuple(review_session_ref(session) for session in sessions)

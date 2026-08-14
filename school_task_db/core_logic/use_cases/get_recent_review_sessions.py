@@ -1,7 +1,6 @@
 """Get recent review sessions for a reviewer."""
 
 from dataclasses import dataclass
-from typing import List
 
 from core_logic.entities.review import ReviewSessionRef
 from core_logic.interfaces.review_session_query_repo import (
@@ -22,8 +21,10 @@ class GetRecentReviewSessionsUseCase:
     def execute(
         self,
         request: GetRecentReviewSessionsRequest,
-    ) -> List[ReviewSessionRef]:
-        return self.session_repo.get_recent_sessions(
-            reviewer_id=request.reviewer_id,
-            limit=request.limit,
+    ) -> tuple[ReviewSessionRef, ...]:
+        return tuple(
+            self.session_repo.get_recent_sessions(
+                reviewer_id=request.reviewer_id,
+                limit=request.limit,
+            )
         )

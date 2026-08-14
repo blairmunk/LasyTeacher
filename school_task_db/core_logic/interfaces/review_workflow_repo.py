@@ -1,7 +1,7 @@
 """Persistence port for the participation review workflow."""
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Optional
 
 from core_logic.entities.review import (
     ReviewCommentRef,
@@ -30,11 +30,11 @@ class IReviewWorkflowRepository(ABC):
     def get_review_participations(
         self,
         event_id: str,
-    ) -> List[ReviewParticipationRef]:
+    ) -> tuple[ReviewParticipationRef, ...]:
         """Return non-absent participations for review navigation."""
 
     @abstractmethod
-    def get_typical_comments(self, limit: int = 10) -> List[ReviewCommentRef]:
+    def get_typical_comments(self, limit: int = 10) -> tuple[ReviewCommentRef, ...]:
         """Return active quick comments for the review form."""
 
     @abstractmethod

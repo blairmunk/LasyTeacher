@@ -1,7 +1,5 @@
 """Django read adapter for review overview screens."""
 
-from typing import List
-
 from django.db.models import Count, Q
 
 from core_logic.entities.review import (
@@ -25,7 +23,7 @@ from works.models import Variant
 
 
 class DjangoReviewOverviewRepository(IReviewOverviewRepository):
-    def get_dashboard_events(self) -> List[ReviewEventProgress]:
+    def get_dashboard_events(self) -> tuple[ReviewEventProgress, ...]:
         events = Event.objects.annotate(
             total_participants=Count('eventparticipation'),
             graded_participants=Count(
@@ -62,12 +60,12 @@ class DjangoReviewOverviewRepository(IReviewOverviewRepository):
                     remaining=active - event.graded_participants,
                 )
             )
-        return result
+        return tuple(result)
 
     def get_event_review_participations(
         self,
         event_id: str,
-    ) -> List[EventReviewParticipationRow]:
+    ) -> tuple[EventReviewParticipationRow, ...]:
         participations = EventParticipation.objects.filter(
             event_id=event_id,
         ).select_related(
@@ -110,16 +108,16 @@ class DjangoReviewOverviewRepository(IReviewOverviewRepository):
                     ),
                 )
             )
-        return result
+        return tuple(result)
 
-    def get_available_variants(self, event_id: str) -> List[ReviewVariantRef]:
+    def get_available_variants(self, event_id: str) -> tuple[ReviewVariantRef, ...]:
         event = Event.objects.select_related('work').filter(pk=event_id).first()
         if not event or not event.work_id:
-            return []
+            return ()
 
         variants = Variant.objects.filter(work=event.work).order_by('number')
         task_counts = variant_task_counts([variant.pk for variant in variants])
-        return [
+        return tuple(
             review_variant_ref(variant, task_counts=task_counts)
             for variant in variants
-        ]
+        )

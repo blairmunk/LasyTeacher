@@ -1,7 +1,6 @@
 """Read-only persistence port for reviewer sessions."""
 
 from abc import ABC, abstractmethod
-from typing import List
 
 from core_logic.entities.review import ReviewSessionRef
 
@@ -12,5 +11,5 @@ class IReviewSessionQueryRepository(ABC):
         self,
         reviewer_id: str,
         limit: int = 5,
-    ) -> List[ReviewSessionRef]:
+    ) -> tuple[ReviewSessionRef, ...]:
         """Return recent review sessions for a reviewer."""

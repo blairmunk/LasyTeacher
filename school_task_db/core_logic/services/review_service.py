@@ -1,7 +1,7 @@
 """Pure helpers for the participation review screen."""
 
 from dataclasses import dataclass
-from typing import Mapping, List, Optional
+from typing import Mapping, Optional, Sequence
 
 from core_logic.entities.review import (
     EventReviewData,
@@ -133,7 +133,7 @@ class ReviewService:
 
     def build_dashboard(
         self,
-        events: List[ReviewEventProgress],
+        events: Sequence[ReviewEventProgress],
     ) -> ReviewDashboardData:
         needs_review = []
         in_progress = []
@@ -172,8 +172,8 @@ class ReviewService:
 
     def build_event_review(
         self,
-        participations: List[EventReviewParticipationRow],
-        available_variants: List[ReviewVariantRef],
+        participations: Sequence[EventReviewParticipationRow],
+        available_variants: Sequence[ReviewVariantRef],
         event=None,
     ) -> EventReviewData:
         total_participants = len(participations)
@@ -259,9 +259,9 @@ class ReviewService:
 
     def build_task_score_rows(
         self,
-        variant_tasks: List[ReviewVariantTaskRef],
+        variant_tasks: Sequence[ReviewVariantTaskRef],
         existing_scores: tuple[TaskScoreRecord, ...],
-    ) -> List[ReviewTaskScoreRow]:
+    ) -> tuple[ReviewTaskScoreRow, ...]:
         rows = []
         for index, variant_task in enumerate(variant_tasks, start=1):
             task_id = str(variant_task.task.id)
@@ -291,21 +291,21 @@ class ReviewService:
                     comment=score.comment if score else '',
                 )
             )
-        return rows
+        return tuple(rows)
 
     def assessable_variant_tasks(
         self,
-        variant_tasks: List[ReviewVariantTaskRef],
-    ) -> List[ReviewVariantTaskRef]:
-        return [
+        variant_tasks: Sequence[ReviewVariantTaskRef],
+    ) -> tuple[ReviewVariantTaskRef, ...]:
+        return tuple(
             variant_task
             for variant_task in variant_tasks
             if variant_task.is_assessable
-        ]
+        )
 
     def build_navigation(
         self,
-        participations: List[ReviewParticipationRef],
+        participations: Sequence[ReviewParticipationRef],
         current_participation_id: str,
     ) -> ReviewNavigation:
         total = len(participations)
@@ -376,8 +376,8 @@ class ReviewService:
     def _blocked_event_review(
         self,
         block_reason: str,
-        participations: List[EventReviewParticipationRow],
-        available_variants: List[ReviewVariantRef],
+        participations: Sequence[EventReviewParticipationRow],
+        available_variants: Sequence[ReviewVariantRef],
         has_participants: bool,
         variants_assigned: bool,
         all_variants_assigned: bool,

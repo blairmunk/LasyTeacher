@@ -353,7 +353,7 @@ class ReviewServiceTests(TestCase):
             [demo_task, assessable_task],
         )
 
-        self.assertEqual(result, [assessable_task])
+        self.assertEqual(result, (assessable_task,))
 
     def test_build_navigation_returns_neighbors_and_progress(self):
         service = ReviewService()

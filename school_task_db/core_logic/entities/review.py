@@ -2,7 +2,8 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, List, Optional
+from types import MappingProxyType
+from typing import Mapping, Optional
 
 from core_logic.entities.event import EventEntity
 from core_logic.value_objects.review_session import (
@@ -254,10 +255,15 @@ class ReviewEventProgress:
 
 @dataclass(frozen=True)
 class ReviewDashboardData:
-    needs_review: List[ReviewEventProgress]
-    in_progress: List[ReviewEventProgress]
-    fully_graded: List[ReviewEventProgress]
+    needs_review: tuple[ReviewEventProgress, ...]
+    in_progress: tuple[ReviewEventProgress, ...]
+    fully_graded: tuple[ReviewEventProgress, ...]
     total_events: int
+
+    def __post_init__(self):
+        object.__setattr__(self, 'needs_review', tuple(self.needs_review))
+        object.__setattr__(self, 'in_progress', tuple(self.in_progress))
+        object.__setattr__(self, 'fully_graded', tuple(self.fully_graded))
 
 
 @dataclass(frozen=True)
@@ -300,25 +306,56 @@ class EventReviewData:
     variants_required: bool = True
     blocked: bool = False
     block_reason: str = ''
-    available_variants: List[ReviewVariantRef] = field(default_factory=list)
-    participations_data: List[EventReviewParticipationRow] = field(default_factory=list)
+    available_variants: tuple[ReviewVariantRef, ...] = field(default_factory=tuple)
+    participations_data: tuple[EventReviewParticipationRow, ...] = field(
+        default_factory=tuple,
+    )
     total_participants: int = 0
     active_participants: int = 0
     graded_participants: int = 0
     absent_participants: int = 0
     progress_percentage: float = 0
     avg_score: float = 0
-    score_distribution: Dict[int, int] = field(default_factory=dict)
+    score_distribution: Mapping[int, int] = field(default_factory=dict)
+
+    def __post_init__(self):
+        object.__setattr__(
+            self,
+            'available_variants',
+            tuple(self.available_variants),
+        )
+        object.__setattr__(
+            self,
+            'participations_data',
+            tuple(self.participations_data),
+        )
+        object.__setattr__(
+            self,
+            'score_distribution',
+            MappingProxyType(dict(self.score_distribution)),
+        )
 
 
 @dataclass(frozen=True)
 class ParticipationReviewData:
     participation: ReviewParticipationRef
     mark: ReviewMarkRef
-    tasks_with_scores: List[ReviewTaskScoreRow]
-    typical_comments: List[ReviewCommentRef]
+    tasks_with_scores: tuple[ReviewTaskScoreRow, ...]
+    typical_comments: tuple[ReviewCommentRef, ...]
     previous_participation: Optional[ReviewParticipationRef]
     next_participation: Optional[ReviewParticipationRef]
     current_position: int
     total_positions: int
     navigation_progress: float
+
+    def __post_init__(self):
+        object.__setattr__(
+            self,
+            'tasks_with_scores',
+            tuple(self.tasks_with_scores),
+        )
+        object.__setattr__(
+            self,
+            'typical_comments',
+            tuple(self.typical_comments),
+        )

@@ -1,7 +1,5 @@
 """Django read adapter for variant task snapshots used by review."""
 
-from typing import List
-
 from core_logic.entities.review import (
     ReviewTaskRef,
     ReviewTopicRef,
@@ -19,12 +17,12 @@ class DjangoReviewTaskRepository(IReviewTaskRepository):
     def get_variant_tasks(
         self,
         participation_id: str,
-    ) -> List[ReviewVariantTaskRef]:
+    ) -> tuple[ReviewVariantTaskRef, ...]:
         participation = EventParticipation.objects.select_related(
             'variant',
         ).get(pk=participation_id)
         if not participation.variant:
-            return []
+            return ()
 
         variant_tasks = VariantTask.objects.filter(
             variant=participation.variant,
@@ -55,4 +53,4 @@ class DjangoReviewTaskRepository(IReviewTaskRepository):
                 weight=variant_task.max_points or variant_task.weight,
                 is_assessable=variant_task.is_assessable,
             ))
-        return result
+        return tuple(result)

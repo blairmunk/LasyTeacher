@@ -1,6 +1,6 @@
 """Django adapter for the participation review workflow."""
 
-from typing import List, Optional
+from typing import Optional
 
 from core_logic.entities.review import (
     ReviewCommentRef,
@@ -47,7 +47,7 @@ class DjangoReviewWorkflowRepository(IReviewWorkflowRepository):
     def get_review_participations(
         self,
         event_id: str,
-    ) -> List[ReviewParticipationRef]:
+    ) -> tuple[ReviewParticipationRef, ...]:
         participations = EventParticipation.objects.filter(
             event_id=event_id,
         ).exclude(
@@ -63,18 +63,18 @@ class DjangoReviewWorkflowRepository(IReviewWorkflowRepository):
         task_counts = variant_task_counts(
             [p.variant_id for p in participations if p.variant_id]
         )
-        return [
+        return tuple(
             review_participation_ref(participation, task_counts=task_counts)
             for participation in participations
-        ]
+        )
 
-    def get_typical_comments(self, limit: int = 10) -> List[ReviewCommentRef]:
-        return [
+    def get_typical_comments(self, limit: int = 10) -> tuple[ReviewCommentRef, ...]:
+        return tuple(
             ReviewCommentRef(text=comment.text)
             for comment in ReviewComment.objects.filter(
                 is_active=True,
             ).order_by('-usage_count')[:limit]
-        ]
+        )
 
     def finalize_event(self, event_id: str) -> ReviewEventRef:
         event = Event.objects.select_related('work', 'course').get(pk=event_id)

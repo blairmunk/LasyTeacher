@@ -129,7 +129,7 @@ class EventListAndDetailUseCaseTests(TestCase):
         result = use_case.execute(event_id='missing')
 
         self.assertEqual(result.status, 'not_found')
-        self.assertEqual(result.current_participants, [])
+        self.assertEqual(result.current_participants, ())
 
     def test_event_variant_assignment_returns_participations_and_variants(self):
         use_case = GetEventVariantAssignmentUseCase(

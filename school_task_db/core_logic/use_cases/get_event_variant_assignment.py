@@ -1,7 +1,7 @@
 """Build variant-assignment form data for an event."""
 
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Optional
 
 from core_logic.entities.event import EventEntity, EventParticipationRow, EventVariantRef
 from core_logic.interfaces.event_read_repo import IEventReadRepository
@@ -10,9 +10,13 @@ from core_logic.interfaces.event_read_repo import IEventReadRepository
 @dataclass(frozen=True)
 class EventVariantAssignmentData:
     event: Optional[EventEntity]
-    participations: List[EventParticipationRow]
-    variants: List[EventVariantRef]
+    participations: tuple[EventParticipationRow, ...]
+    variants: tuple[EventVariantRef, ...]
     status: str = 'ready'
+
+    def __post_init__(self):
+        object.__setattr__(self, 'participations', tuple(self.participations))
+        object.__setattr__(self, 'variants', tuple(self.variants))
 
 
 class GetEventVariantAssignmentUseCase:
@@ -24,15 +28,15 @@ class GetEventVariantAssignmentUseCase:
         if not event:
             return EventVariantAssignmentData(
                 event=None,
-                participations=[],
-                variants=[],
+                participations=(),
+                variants=(),
                 status='not_found',
             )
         if not event.requires_variants:
             return EventVariantAssignmentData(
                 event=event,
-                participations=[],
-                variants=[],
+                participations=(),
+                variants=(),
                 status='variants_not_required',
             )
         return EventVariantAssignmentData(

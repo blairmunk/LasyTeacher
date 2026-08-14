@@ -1,7 +1,7 @@
 """Build participant-selection page data for an event."""
 
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Optional
 
 from core_logic.entities.event import EventEntity, EventParticipationRow
 from core_logic.interfaces.event_read_repo import IEventReadRepository
@@ -10,8 +10,15 @@ from core_logic.interfaces.event_read_repo import IEventReadRepository
 @dataclass(frozen=True)
 class EventParticipantSelectionData:
     event: Optional[EventEntity]
-    current_participants: List[EventParticipationRow]
+    current_participants: tuple[EventParticipationRow, ...]
     status: str = 'ready'
+
+    def __post_init__(self):
+        object.__setattr__(
+            self,
+            'current_participants',
+            tuple(self.current_participants),
+        )
 
 
 class GetEventParticipantSelectionUseCase:
@@ -23,7 +30,7 @@ class GetEventParticipantSelectionUseCase:
         if not event:
             return EventParticipantSelectionData(
                 event=None,
-                current_participants=[],
+                current_participants=(),
                 status='not_found',
             )
         return EventParticipantSelectionData(

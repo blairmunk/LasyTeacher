@@ -2,7 +2,7 @@ from types import SimpleNamespace
 from unittest import TestCase
 
 from core_logic.value_objects.task_print_settings import (
-    DEFAULT_BLANK_CELLS_ROWS,
+    DEFAULT_BLANK_SPACE_AREA_CM2,
     TASK_BANK_ROLE_CONTROL,
     TASK_BANK_ROLE_DEMO,
     TASK_RENDER_MODE_TASK_ONLY,
@@ -22,7 +22,7 @@ class VariantTaskSnapshotDataTests(TestCase):
             render_mode=TASK_RENDER_MODE_WITH_FULL_SOLUTION,
             is_assessable=False,
             blank_cells_after=True,
-            blank_cells_rows=9,
+            blank_space_area_cm2=60,
             page_break_after=True,
         )
 
@@ -37,7 +37,7 @@ class VariantTaskSnapshotDataTests(TestCase):
                 'render_mode': TASK_RENDER_MODE_WITH_FULL_SOLUTION,
                 'is_assessable': False,
                 'blank_cells_after': True,
-                'blank_cells_rows': 9,
+                'blank_space_area_cm2': 60,
                 'page_break_after': True,
             },
         )
@@ -54,7 +54,7 @@ class VariantTaskSnapshotDataTests(TestCase):
                 'render_mode': TASK_RENDER_MODE_TASK_ONLY,
                 'is_assessable': True,
                 'blank_cells_after': False,
-                'blank_cells_rows': DEFAULT_BLANK_CELLS_ROWS,
+                'blank_space_area_cm2': DEFAULT_BLANK_SPACE_AREA_CM2,
                 'page_break_after': False,
             },
         )

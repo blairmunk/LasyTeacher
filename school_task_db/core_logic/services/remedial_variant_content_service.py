@@ -5,7 +5,7 @@ from core_logic.entities.work_variant_composition import (
     VariantTaskCreationPlan,
 )
 from core_logic.value_objects.task_print_settings import (
-    DEFAULT_BLANK_CELLS_ROWS,
+    DEFAULT_BLANK_SPACE_AREA_CM2,
     TASK_BANK_ROLE_REMEDIAL,
     TASK_RENDER_MODE_TASK_ONLY,
 )
@@ -40,7 +40,7 @@ def build_remedial_variant_creation_plan(
                 render_mode=TASK_RENDER_MODE_TASK_ONLY,
                 is_assessable=True,
                 blank_cells_after=False,
-                blank_cells_rows=DEFAULT_BLANK_CELLS_ROWS,
+                blank_space_area_cm2=DEFAULT_BLANK_SPACE_AREA_CM2,
                 page_break_after=False,
             )
         )

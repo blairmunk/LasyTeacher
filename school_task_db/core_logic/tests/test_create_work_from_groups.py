@@ -89,7 +89,7 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
                             'render_mode': TASK_RENDER_MODE_WITH_FULL_SOLUTION,
                             'is_assessable': 'false',
                             'blank_cells_after': 'true',
-                            'blank_cells_rows': '8',
+                            'blank_space_area_cm2': '50',
                             'page_break_after': 'true',
                         },
                         {'id': 'g2'},
@@ -119,7 +119,7 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         )
         self.assertFalse(result.groups[0].is_assessable)
         self.assertTrue(result.groups[0].blank_cells_after)
-        self.assertEqual(result.groups[0].blank_cells_rows, 8)
+        self.assertEqual(result.groups[0].blank_space_area_cm2, 50)
         self.assertTrue(result.groups[0].page_break_after)
         self.assertFalse(result.groups[1].page_break_after)
         self.assertEqual(result.groups[1].id, 'g2')
@@ -299,7 +299,7 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
                         render_mode=TASK_RENDER_MODE_WITH_FULL_SOLUTION,
                         is_assessable=False,
                         blank_cells_after=True,
-                        blank_cells_rows=8,
+                        blank_space_area_cm2=50,
                     ),
                 ],
                 work_name='Рабочий лист',
@@ -314,7 +314,7 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         )
         self.assertFalse(created_group.is_assessable)
         self.assertTrue(created_group.blank_cells_after)
-        self.assertEqual(created_group.blank_cells_rows, 8)
+        self.assertEqual(created_group.blank_space_area_cm2, 50)
 
     def test_execute_rejects_invalid_group_role_filter(self):
         task_repo = FakeTaskGroupRepository()

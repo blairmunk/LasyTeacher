@@ -22,7 +22,7 @@ class VariantContentSnapshotSourceTests(TestCase):
                     render_mode='task_only',
                     is_assessable=True,
                     blank_cells_after=True,
-                    blank_cells_rows=8,
+                    blank_space_area_cm2=50,
                     page_break_after=True,
                 ),
                 SimpleNamespace(
@@ -36,7 +36,7 @@ class VariantContentSnapshotSourceTests(TestCase):
                     render_mode='with_full_solution',
                     is_assessable=False,
                     blank_cells_after=False,
-                    blank_cells_rows=5,
+                    blank_space_area_cm2=30,
                 ),
             ],
             content_blocks=[
@@ -57,7 +57,7 @@ class VariantContentSnapshotSourceTests(TestCase):
             ['variant-task-1', 'variant-task-2'],
         )
         self.assertFalse(snapshot.items[0].is_assessable)
-        self.assertEqual(snapshot.items[1].blank_cells_rows, 8)
+        self.assertEqual(snapshot.items[1].blank_space_area_cm2, 50)
         self.assertTrue(snapshot.items[1].page_break_after)
         self.assertEqual(snapshot.content_blocks[0].snapshot_id, 'content-1')
         self.assertEqual(snapshot.content_blocks[0].title, 'Теория')

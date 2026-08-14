@@ -12,7 +12,7 @@ from core_logic.value_objects.work_assessment import (
     work_requires_variants,
 )
 from core_logic.value_objects.task_print_settings import (
-    DEFAULT_BLANK_CELLS_ROWS,
+    DEFAULT_BLANK_SPACE_AREA_CM2,
     TASK_BANK_ROLE_LABELS,
     TASK_BANK_ROLE_ANY,
     TASK_BANK_ROLE_CONTROL,
@@ -113,7 +113,7 @@ class WorkDetailSpecGroup:
     render_mode: str = TASK_RENDER_MODE_TASK_ONLY
     is_assessable: bool = True
     blank_cells_after: bool = False
-    blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
+    blank_space_area_cm2: int = DEFAULT_BLANK_SPACE_AREA_CM2
     page_break_after: bool = False
     task_bank_roles: tuple[str, ...] = field(default_factory=tuple)
 
@@ -403,7 +403,7 @@ class VariantDetailTaskRow:
     render_mode: str = TASK_RENDER_MODE_TASK_ONLY
     is_assessable: bool = True
     blank_cells_after: bool = False
-    blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
+    blank_space_area_cm2: int = DEFAULT_BLANK_SPACE_AREA_CM2
     page_break_after: bool = False
 
 
@@ -452,7 +452,7 @@ class RemedialTrainingTaskRow:
     render_mode: str = TASK_RENDER_MODE_TASK_ONLY
     is_assessable: bool = True
     blank_cells_after: bool = False
-    blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
+    blank_space_area_cm2: int = DEFAULT_BLANK_SPACE_AREA_CM2
     page_break_after: bool = False
 
 

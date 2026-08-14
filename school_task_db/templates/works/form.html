@@ -158,9 +158,9 @@
                                     </div>
                                 </div>
                                 <div class="col-md-auto">
-                                    <label for="{{ f.blank_cells_rows.id_for_label }}" class="form-label small text-muted mb-1">Строк</label>
-                                    {{ f.blank_cells_rows }}
-                                    {% if f.blank_cells_rows.errors %}<div class="text-danger small">{{ f.blank_cells_rows.errors }}</div>{% endif %}
+                                    <label for="{{ f.blank_space_area_cm2.id_for_label }}" class="form-label small text-muted mb-1">Площадь, см²</label>
+                                    {{ f.blank_space_area_cm2 }}
+                                    {% if f.blank_space_area_cm2.errors %}<div class="text-danger small">{{ f.blank_space_area_cm2.errors }}</div>{% endif %}
                                 </div>
                                 <div class="col-md-auto">
                                     <div class="form-check mb-1">
@@ -637,9 +637,9 @@
                     </div>
                 </div>
                 <div class="col-md-auto">
-                    <label for="id_${prefix}-blank_cells_rows" class="form-label small text-muted mb-1">Строк</label>
-                    <input type="number" name="${prefix}-blank_cells_rows" id="id_${prefix}-blank_cells_rows"
-                           value="6" min="1" max="40" class="form-control form-control-sm" style="width: 80px">
+                    <label for="id_${prefix}-blank_space_area_cm2" class="form-label small text-muted mb-1">Площадь, см²</label>
+                    <input type="number" name="${prefix}-blank_space_area_cm2" id="id_${prefix}-blank_space_area_cm2"
+                           value="40" min="5" max="500" step="5" class="form-control form-control-sm" style="width: 80px">
                 </div>
                 <div class="col-md-auto">
                     <div class="form-check mb-1">

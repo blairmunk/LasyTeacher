@@ -209,6 +209,14 @@ def _variant_print_blocks_payload(
         elif block.block_type == VARIANT_PRINT_BLOCK_BLANK_CELLS:
             block_payload['blank_cells'] = build_blank_cells_payload(
                 block.options,
+                page_format=(
+                    request.render_target.page_format
+                    if (
+                        request is not None
+                        and request.render_target is not None
+                    )
+                    else 'A4'
+                ),
             )
         elif block.block_type in ('theory', 'text'):
             block_payload['content'] = _format_static_content(

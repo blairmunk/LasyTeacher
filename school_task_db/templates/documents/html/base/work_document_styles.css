@@ -259,21 +259,23 @@ h4 {
 }
 
 .blank-cells-grid {
-    --grid-cell-size: var(--grid-row-height, 24px);
+    --grid-cell-size: 5mm;
     display: grid;
-    grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+    grid-template-columns: repeat(var(--grid-columns), var(--grid-cell-size));
     width: min(100%, var(--grid-max-width, 100%));
     overflow: hidden;
     margin: 2.5mm 0 5mm;
-    border-top: 0.35mm solid var(--document-grid);
-    border-left: 0.35mm solid var(--document-grid);
+    box-shadow:
+        inset 0.35mm 0 var(--document-grid),
+        inset 0 0.35mm var(--document-grid);
     break-before: avoid;
     break-inside: avoid;
 }
 
 .blank-cells-grid > span {
-    aspect-ratio: 1;
-    min-width: 0;
+    box-sizing: border-box;
+    width: var(--grid-cell-size);
+    height: var(--grid-cell-size);
     border-right: 0.35mm solid var(--document-grid);
     border-bottom: 0.35mm solid var(--document-grid);
 }

@@ -121,7 +121,7 @@ class SaveWorkUseCaseTests(TestCase):
                     order=1,
                     count=1,
                     weight=1,
-                    blank_cells_rows=0,
+                    blank_space_area_cm2=0,
                 )
             ],
         )
@@ -129,7 +129,7 @@ class SaveWorkUseCaseTests(TestCase):
         result = CreateWorkWithSpecificationUseCase(repo).execute(params)
 
         self.assertEqual(result.status, 'invalid')
-        self.assertIn('blank_cells_rows must be positive', result.errors[0])
+        self.assertIn('blank_space_area_cm2 must be positive', result.errors[0])
         self.assertIsNone(repo.created_with_specification)
 
     def test_update_work_with_specification_delegates_complete_change(self):

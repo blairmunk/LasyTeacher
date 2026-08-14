@@ -1,9 +1,5 @@
 """Renderer payload preparation for task-like document rows."""
 
-from core_logic.value_objects.task_print_settings import (
-    DEFAULT_BLANK_CELLS_COLUMNS,
-    DEFAULT_BLANK_CELLS_ROW_HEIGHT,
-)
 from core_logic.value_objects.task_content_snapshot import (
     task_content_snapshot_payload,
 )
@@ -30,24 +26,22 @@ def build_variant_task_payload(
     if payload['blank_cells_after']:
         payload['blank_cells'] = build_blank_cells_payload(
             {
-                'rows': payload['blank_cells_rows'],
-                'columns': getattr(
-                    variant_task,
-                    'blank_cells_columns',
-                    DEFAULT_BLANK_CELLS_COLUMNS,
-                ),
-                'row_height': getattr(
-                    variant_task,
-                    'blank_cells_row_height',
-                    DEFAULT_BLANK_CELLS_ROW_HEIGHT,
-                ),
-            }
+                'area_cm2': payload['blank_space_area_cm2'],
+            },
+            page_format=_request_page_format(request),
         )
     return format_task_payload(
         payload,
         task_payload_formatter,
         request=request,
     )
+
+
+def _request_page_format(request):
+    render_target = getattr(request, 'render_target', None)
+    if render_target is None:
+        return 'A4'
+    return render_target.page_format
 
 
 def _variant_task_content_payload(variant_task):

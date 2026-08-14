@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping, Tuple
 
 from core_logic.value_objects.task_print_settings import (
-    DEFAULT_BLANK_CELLS_ROWS,
+    DEFAULT_BLANK_SPACE_AREA_CM2,
     TASK_BANK_ROLE_CONTROL,
     TASK_RENDER_MODE_TASK_ONLY,
     validate_task_render_mode,
@@ -34,7 +34,7 @@ class VariantContentItem:
     render_mode: str = TASK_RENDER_MODE_TASK_ONLY
     is_assessable: bool = True
     blank_cells_after: bool = False
-    blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
+    blank_space_area_cm2: int = DEFAULT_BLANK_SPACE_AREA_CM2
     page_break_after: bool = False
 
     def __post_init__(self):
@@ -46,8 +46,8 @@ class VariantContentItem:
             raise ValueError('order must be positive')
         if self.max_points < 0:
             raise ValueError('max_points must be non-negative')
-        if self.blank_cells_rows < 1:
-            raise ValueError('blank_cells_rows must be positive')
+        if self.blank_space_area_cm2 < 1:
+            raise ValueError('blank_space_area_cm2 must be positive')
         validate_task_specific_bank_role(self.bank_role)
         validate_task_render_mode(self.render_mode)
 
@@ -155,7 +155,7 @@ def variant_content_item_from_source(source) -> VariantContentItem:
         render_mode=decisions['render_mode'],
         is_assessable=decisions['is_assessable'],
         blank_cells_after=decisions['blank_cells_after'],
-        blank_cells_rows=decisions['blank_cells_rows'],
+        blank_space_area_cm2=decisions['blank_space_area_cm2'],
         page_break_after=decisions['page_break_after'],
     )
 
@@ -186,10 +186,10 @@ def variant_task_content_decisions(source) -> Mapping[str, Any]:
         ),
         'is_assessable': getattr(source, 'is_assessable', True),
         'blank_cells_after': getattr(source, 'blank_cells_after', False),
-        'blank_cells_rows': getattr(
+        'blank_space_area_cm2': getattr(
             source,
-            'blank_cells_rows',
-            DEFAULT_BLANK_CELLS_ROWS,
+            'blank_space_area_cm2',
+            DEFAULT_BLANK_SPACE_AREA_CM2,
         ),
         'page_break_after': getattr(source, 'page_break_after', False),
     }

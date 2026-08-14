@@ -37,9 +37,7 @@ from core_logic.value_objects.document_recipes import (
     WORKSHEET_DOCUMENT_TYPE,
 )
 from core_logic.value_objects.task_print_settings import (
-    DEFAULT_BLANK_CELLS_COLUMNS,
-    DEFAULT_BLANK_CELLS_ROW_HEIGHT,
-    DEFAULT_BLANK_CELLS_ROWS,
+    DEFAULT_BLANK_SPACE_AREA_CM2,
 )
 from core_logic.value_objects.variant_content_snapshot import (
     VARIANT_STATIC_CONTENT_TYPES,
@@ -304,11 +302,9 @@ DOCUMENT_SECTION_CATALOG = (
         ),
         description='Разлинованное место для решения или черновика.',
         is_repeatable=True,
-        options_hint='Размер отдельного блока клеток.',
+        options_hint='Площадь отдельного поля в квадратных сантиметрах.',
         options_example={
-            'rows': DEFAULT_BLANK_CELLS_ROWS,
-            'columns': DEFAULT_BLANK_CELLS_COLUMNS,
-            'row_height': DEFAULT_BLANK_CELLS_ROW_HEIGHT,
+            'area_cm2': DEFAULT_BLANK_SPACE_AREA_CM2,
         },
     ),
     DocumentSectionCatalogItem(
@@ -424,6 +420,7 @@ def _validate_document_section_options(section_type, options) -> None:
 
 def _validate_blank_cells_options(options) -> None:
     for option_name, max_value in (
+        ('area_cm2', 500),
         ('rows', 40),
         ('columns', 40),
         ('row_height', 120),

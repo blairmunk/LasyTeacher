@@ -118,7 +118,7 @@ class WorkVariantCompositionServiceTests(TestCase):
         )
         self.assertFalse(demo_task.is_assessable)
         self.assertTrue(demo_task.blank_cells_after)
-        self.assertEqual(demo_task.blank_cells_rows, 9)
+        self.assertEqual(demo_task.blank_space_area_cm2, 60)
 
         self.assertEqual(practice_task.task_id, 'practice-2')
         self.assertEqual(
@@ -249,7 +249,7 @@ class WorkVariantCompositionServiceTests(TestCase):
                     render_mode=TASK_RENDER_MODE_WITH_FULL_SOLUTION,
                     is_assessable=False,
                     blank_cells_after=True,
-                    blank_cells_rows=9,
+                    blank_space_area_cm2=60,
                 ),
                 WorkVariantSpecRow(
                     spec_row_id='practice-row',

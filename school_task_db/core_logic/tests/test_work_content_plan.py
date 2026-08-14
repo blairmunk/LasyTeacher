@@ -75,7 +75,7 @@ class WorkContentPlanTests(TestCase):
                 'render_mode': TASK_RENDER_MODE_WITH_FULL_SOLUTION,
                 'is_assessable': False,
                 'blank_cells_after': True,
-                'blank_cells_rows': 8,
+                'blank_space_area_cm2': 50,
                 'page_break_after': True,
                 'weight': 3,
             },
@@ -93,7 +93,7 @@ class WorkContentPlanTests(TestCase):
             TASK_RENDER_MODE_WITH_FULL_SOLUTION,
         )
         self.assertFalse(block.selection.is_assessable)
-        self.assertEqual(block.selection.blank_cells_rows, 8)
+        self.assertEqual(block.selection.blank_space_area_cm2, 50)
         self.assertTrue(block.selection.page_break_after)
 
     def test_builds_plan_from_persistent_content_rows(self):

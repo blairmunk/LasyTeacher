@@ -55,7 +55,7 @@ class VariantPrintOverrides:
             return {}
         if not item.blank_cells_after:
             return {}
-        return {'rows': item.blank_cells_rows}
+        return {'area_cm2': item.blank_space_area_cm2}
 
     def includes_content_block(self, block: VariantContentBlockItem) -> bool:
         return block.content_type not in self.hidden_content_types

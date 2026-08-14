@@ -83,7 +83,7 @@ from core_logic.use_cases.toggle_participation_absent import (
     ToggleParticipationAbsentUseCase,
 )
 from core_logic.value_objects.task_print_settings import (
-    DEFAULT_BLANK_CELLS_ROWS,
+    DEFAULT_BLANK_SPACE_AREA_CM2,
     TASK_BANK_ROLE_DEMO,
     TASK_BANK_ROLE_PRACTICE,
     TASK_BANK_ROLE_REMEDIAL,
@@ -2555,7 +2555,7 @@ class DjangoRemedialRepositoryTests(TestCase):
             render_mode=TASK_RENDER_MODE_WITH_FULL_SOLUTION,
             is_assessable=False,
             blank_cells_after=True,
-            blank_cells_rows=9,
+            blank_space_area_cm2=60,
             page_break_after=True,
         )
         practice_selection = WorkAnalogGroup.objects.create(
@@ -2608,7 +2608,7 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(rows[0].render_mode, TASK_RENDER_MODE_WITH_FULL_SOLUTION)
         self.assertFalse(rows[0].is_assessable)
         self.assertTrue(rows[0].blank_cells_after)
-        self.assertEqual(rows[0].blank_cells_rows, 9)
+        self.assertEqual(rows[0].blank_space_area_cm2, 60)
         self.assertTrue(rows[0].page_break_after)
         self.assertEqual(rows[0].max_points, 0)
         self.assertEqual(rows[0].task_snapshot['text'], demo_task.text)
@@ -2623,7 +2623,10 @@ class DjangoRemedialRepositoryTests(TestCase):
         )
         self.assertEqual(rows[1].content_order, practice_selection.order)
         self.assertTrue(rows[1].is_assessable)
-        self.assertEqual(rows[1].blank_cells_rows, DEFAULT_BLANK_CELLS_ROWS)
+        self.assertEqual(
+            rows[1].blank_space_area_cm2,
+            DEFAULT_BLANK_SPACE_AREA_CM2,
+        )
         self.assertFalse(rows[1].page_break_after)
         self.assertEqual(rows[1].max_points, 3)
 

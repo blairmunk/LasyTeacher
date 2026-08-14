@@ -3,7 +3,7 @@ from django.urls import reverse
 
 from core.models import BaseModel
 from core_logic.value_objects.task_print_settings import (
-    DEFAULT_BLANK_CELLS_ROWS,
+    DEFAULT_BLANK_SPACE_AREA_CM2,
     TASK_BANK_ROLE_ANY,
     TASK_BANK_ROLE_CHOICES,
     TASK_BANK_ROLE_CONTROL,
@@ -90,9 +90,9 @@ class WorkAnalogGroup(BaseModel):
         'Пустые клетки после задания',
         default=False,
     )
-    blank_cells_rows = models.PositiveIntegerField(
-        'Строк клеток',
-        default=DEFAULT_BLANK_CELLS_ROWS,
+    blank_space_area_cm2 = models.PositiveIntegerField(
+        'Площадь поля для ответа, см²',
+        default=DEFAULT_BLANK_SPACE_AREA_CM2,
     )
     page_break_after = models.BooleanField(
         'Разрыв страницы после задания',
@@ -270,9 +270,9 @@ class VariantTask(BaseModel):
         'Пустые клетки после задания',
         default=False,
     )
-    blank_cells_rows = models.PositiveIntegerField(
-        'Строк клеток',
-        default=DEFAULT_BLANK_CELLS_ROWS,
+    blank_space_area_cm2 = models.PositiveIntegerField(
+        'Площадь поля для ответа, см²',
+        default=DEFAULT_BLANK_SPACE_AREA_CM2,
     )
     page_break_after = models.BooleanField(
         'Разрыв страницы после задания',

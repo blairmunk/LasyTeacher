@@ -1795,7 +1795,7 @@ class WorkFormAdapterTests(SimpleTestCase):
                     'render_mode': TASK_RENDER_MODE_WITH_FULL_SOLUTION,
                     'is_assessable': False,
                     'blank_cells_after': True,
-                    'blank_cells_rows': 8,
+                    'blank_space_area_cm2': 50,
                     'page_break_after': True,
                 },
                 {'DELETE': True, 'analog_group': analog_group},
@@ -1813,7 +1813,7 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertEqual(specs[0].render_mode, TASK_RENDER_MODE_WITH_FULL_SOLUTION)
         self.assertFalse(specs[0].is_assessable)
         self.assertTrue(specs[0].blank_cells_after)
-        self.assertEqual(specs[0].blank_cells_rows, 8)
+        self.assertEqual(specs[0].blank_space_area_cm2, 50)
         self.assertTrue(specs[0].page_break_after)
 
     def test_builds_work_content_blocks_from_formset(self):

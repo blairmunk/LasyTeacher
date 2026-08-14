@@ -34,7 +34,7 @@ from core_logic.value_objects.document_recipes import (
     WORK_DOCUMENT_TYPE,
 )
 from core_logic.value_objects.task_print_settings import (
-    DEFAULT_BLANK_CELLS_ROWS,
+    DEFAULT_BLANK_SPACE_AREA_CM2,
     TASK_BANK_ROLE_CONTROL,
     TASK_BANK_ROLE_DEMO,
     TASK_BANK_ROLE_PRACTICE,
@@ -346,7 +346,7 @@ class DjangoWorkVariantSectionPayloadBuilderTests(TestCase):
             render_mode=TASK_RENDER_MODE_WITH_FULL_SOLUTION,
             is_assessable=False,
             blank_cells_after=True,
-            blank_cells_rows=7,
+            blank_space_area_cm2=45,
             page_break_after=True,
         )
         builder = WorkVariantSectionPayloadBuilder(
@@ -396,7 +396,7 @@ class DjangoWorkVariantSectionPayloadBuilderTests(TestCase):
         )
         self.assertEqual(
             variant_payload['print_blocks'][2]['blank_cells']['rows'],
-            7,
+            5,
         )
         self.assertEqual(
             variant_payload['print_blocks'][3]['variant_task_id'],
@@ -413,8 +413,8 @@ class DjangoWorkVariantSectionPayloadBuilderTests(TestCase):
         self.assertFalse(task_payload['blank_cells_after'])
         self.assertFalse(task_payload['page_break_after'])
         self.assertEqual(
-            task_payload['blank_cells_rows'],
-            DEFAULT_BLANK_CELLS_ROWS,
+            task_payload['blank_space_area_cm2'],
+            DEFAULT_BLANK_SPACE_AREA_CM2,
         )
         self.assertEqual(task_payload['text'], 'Найдите силу')
         self.assertEqual(task_payload['answer'], '10 Н')
@@ -717,16 +717,16 @@ class DjangoWorkTechnicalPayloadBuilderTests(TestCase):
             build_request(
                 work,
                 BLANK_CELLS_SECTION,
-                options={'rows': '2', 'columns': '3', 'row_height': '18'},
+                options={'area_cm2': '40'},
             )
         )
 
-        self.assertEqual(payload['rows'], 2)
-        self.assertEqual(payload['columns'], 3)
-        self.assertEqual(payload['row_height'], 18)
-        self.assertEqual(payload['css_max_width'], 54)
-        self.assertEqual(list(payload['rows_range']), [0, 1])
-        self.assertEqual(list(payload['cells_range']), [0, 1, 2, 3, 4, 5])
+        self.assertEqual(payload['area_cm2'], 40)
+        self.assertEqual(payload['rows'], 5)
+        self.assertEqual(payload['columns'], 37)
+        self.assertEqual(payload['cell_size_mm'], 5)
+        self.assertEqual(payload['css_max_width_mm'], 185)
+        self.assertEqual(len(payload['cells_range']), 185)
 
     def create_task(self, description='Теория темы', **overrides):
         topic = Topic.objects.create(
@@ -905,7 +905,7 @@ class DjangoRemedialSectionPayloadBuilderTests(TestCase):
             max_points=3,
             render_mode=TASK_RENDER_MODE_WITH_FULL_SOLUTION,
             blank_cells_after=True,
-            blank_cells_rows=7,
+            blank_space_area_cm2=45,
         )
         sheet_data = RemedialSheetData(
             variant=variant,
@@ -947,7 +947,7 @@ class DjangoRemedialSectionPayloadBuilderTests(TestCase):
         )
         self.assertEqual(
             payload['print_blocks'][1]['blank_cells']['rows'],
-            7,
+            5,
         )
         self.assertEqual(
             payload['print_blocks'][2]['variant_task_id'],
@@ -968,7 +968,7 @@ class DjangoRemedialSectionPayloadBuilderTests(TestCase):
             order=1,
             max_points=2,
             blank_cells_after=True,
-            blank_cells_rows=6,
+            blank_space_area_cm2=40,
         )
         sheet_data = RemedialSheetData(
             variant=variant,

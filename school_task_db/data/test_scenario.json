@@ -163,7 +163,7 @@
           "render_mode": "task_only",
           "is_assessable": true,
           "blank_cells_after": true,
-          "blank_cells_rows": 5
+          "blank_space_area_cm2": 33
         },
         {
           "analog_group_id": "77000000-0000-0007-0000-000000000002",
@@ -174,7 +174,7 @@
           "render_mode": "task_only",
           "is_assessable": true,
           "blank_cells_after": true,
-          "blank_cells_rows": 7
+          "blank_space_area_cm2": 46
         }
       ],
       "course_assignment": {
@@ -236,7 +236,7 @@
           "render_mode": "task_only",
           "is_assessable": true,
           "blank_cells_after": true,
-          "blank_cells_rows": 6
+          "blank_space_area_cm2": 39
         },
         {
           "analog_group_id": "77000000-0000-0008-0000-000000000002",
@@ -247,7 +247,7 @@
           "render_mode": "task_only",
           "is_assessable": true,
           "blank_cells_after": true,
-          "blank_cells_rows": 8
+          "blank_space_area_cm2": 52
         }
       ],
       "course_assignment": {
@@ -292,7 +292,7 @@
           "render_mode": "task_only",
           "is_assessable": true,
           "blank_cells_after": true,
-          "blank_cells_rows": 7
+          "blank_space_area_cm2": 46
         },
         {
           "analog_group_id": "77000000-0000-0009-0000-000000000002",
@@ -303,7 +303,7 @@
           "render_mode": "task_only",
           "is_assessable": true,
           "blank_cells_after": true,
-          "blank_cells_rows": 7
+          "blank_space_area_cm2": 46
         }
       ],
       "course_assignment": {

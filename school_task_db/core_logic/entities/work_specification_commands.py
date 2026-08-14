@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 
 from core_logic.value_objects.task_print_settings import (
-    DEFAULT_BLANK_CELLS_ROWS,
+    DEFAULT_BLANK_SPACE_AREA_CM2,
     TASK_BANK_ROLE_ANY,
     TASK_RENDER_MODE_TASK_ONLY,
 )
@@ -37,7 +37,7 @@ class WorkTaskSelectionParams:
     render_mode: str = TASK_RENDER_MODE_TASK_ONLY
     is_assessable: bool = True
     blank_cells_after: bool = False
-    blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
+    blank_space_area_cm2: int = DEFAULT_BLANK_SPACE_AREA_CM2
     page_break_after: bool = False
 
 

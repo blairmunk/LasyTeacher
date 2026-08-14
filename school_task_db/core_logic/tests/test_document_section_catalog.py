@@ -175,7 +175,10 @@ class DocumentSectionCatalogTests(TestCase):
             section_by_type[TASK_LIST_SECTION].options_example,
         )
         self.assertTrue(section_by_type[BLANK_CELLS_SECTION].has_options)
-        self.assertIn('rows', section_by_type[BLANK_CELLS_SECTION].options_example)
+        self.assertIn(
+            'area_cm2',
+            section_by_type[BLANK_CELLS_SECTION].options_example,
+        )
         self.assertFalse(section_by_type[HEADER_SECTION].has_options)
 
     def test_validates_supported_sections(self):
@@ -212,17 +215,14 @@ class DocumentSectionCatalogTests(TestCase):
                 ),
                 DocumentSectionSpec(
                     section_type=BLANK_CELLS_SECTION,
-                    options={
-                        'rows': '8',
-                        'columns': 20,
-                        'row_height': 30,
-                    },
+                    options={'area_cm2': 40},
                 ),
             ],
         )
 
     def test_rejects_invalid_blank_cells_dimensions(self):
         for option_name, value in (
+            ('area_cm2', 0),
             ('rows', 0),
             ('columns', 41),
             ('row_height', 'large'),

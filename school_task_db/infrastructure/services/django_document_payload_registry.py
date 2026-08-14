@@ -58,7 +58,14 @@ from infrastructure.services.variant_document_content_payloads import (
 
 class BlankCellsPayloadBuilder:
     def build_payload(self, request):
-        return build_blank_cells_payload(request.section.options)
+        return build_blank_cells_payload(
+            request.section.options,
+            page_format=(
+                request.render_target.page_format
+                if request.render_target is not None
+                else 'A4'
+            ),
+        )
 
 
 def build_work_section_payload_builder_registry(

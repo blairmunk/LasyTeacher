@@ -64,8 +64,8 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
                         payload={
                             'title': 'Черновик',
                             'columns': 3,
-                            'row_height': 18,
-                            'css_max_width': 54,
+                            'cell_size_mm': 5,
+                            'css_max_width_mm': 15,
                             'cells_range': range(6),
                         },
                     ),
@@ -126,8 +126,8 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
                                             'block_type': 'blank_cells',
                                             'blank_cells': {
                                                 'columns': 3,
-                                                'row_height': 18,
-                                                'css_max_width': 54,
+                                                'cell_size_mm': 5,
+                                                'css_max_width_mm': 15,
                                                 'cells_range': range(6),
                                             },
                                         },
@@ -155,8 +155,8 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
                                             'blank_cells_after': True,
                                             'blank_cells': {
                                                 'columns': 3,
-                                                'row_height': 18,
-                                                'css_max_width': 54,
+                                                'cell_size_mm': 5,
+                                                'css_max_width_mm': 15,
                                                 'cells_range': range(6),
                                             },
                                         },
@@ -191,9 +191,11 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
             self.assertIn('page-break-after: always', html)
             self.assertIn('Черновик', html)
             self.assertIn('--grid-columns: 3', html)
-            self.assertIn('--grid-row-height: 18px', html)
-            self.assertIn('--grid-max-width: 54px', html)
-            self.assertIn('aspect-ratio: 1', html)
+            self.assertIn('--grid-cell-size: 5mm', html)
+            self.assertIn('--grid-max-width: 15mm', html)
+            self.assertIn('width: var(--grid-cell-size)', html)
+            self.assertIn('height: var(--grid-cell-size)', html)
+            self.assertIn('box-sizing: border-box', html)
             self.assertIn('Шкала перевода баллов', html)
             self.assertIn('document-section-score_table', html)
             self.assertIn('<td>85%</td>', html)

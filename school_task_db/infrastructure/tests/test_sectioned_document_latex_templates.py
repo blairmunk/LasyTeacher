@@ -137,7 +137,7 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                                             'blank_cells': {
                                                 'rows': 2,
                                                 'columns': 3,
-                                                'latex_cell_size_mm': '4.0',
+                                                'latex_cell_size_mm': '5.0',
                                             },
                                         },
                                         {'block_type': 'page_break'},
@@ -158,7 +158,7 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                                             'blank_cells': {
                                                 'rows': 2,
                                                 'columns': 3,
-                                                'latex_cell_size_mm': '4.0',
+                                                'latex_cell_size_mm': '5.0',
                                             },
                                         },
                                     ],
@@ -175,7 +175,7 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                             'title': 'Черновик',
                             'rows': 2,
                             'columns': 3,
-                            'latex_cell_size_mm': '4.0',
+                            'latex_cell_size_mm': '5.0',
                         },
                     ),
                     DocumentSection(
@@ -279,8 +279,9 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
             self.assertIn(r'\begin{schoolblankcells}', latex)
             self.assertIn(r'\usepackage{tikz}', latex)
             self.assertIn(r'\newcommand{\schoolgrid}[3]', latex)
-            self.assertIn(r'\resizebox{\linewidth}{!}', latex)
+            self.assertNotIn(r'\resizebox{\linewidth}{!}', latex)
             self.assertIn(r'x=#3mm,y=#3mm', latex)
+            self.assertIn(r'\pgfresetboundingbox', latex)
             self.assertIn(r'\begin{schoolscoretable}', latex)
             self.assertIn(r'\begin{schoolanswers}', latex)
             self.assertIn(r'\begin{schoolshortsolutions}', latex)
@@ -307,7 +308,7 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
             self.assertEqual(latex.count(r'\clearpage'), 2)
             self.assertIn(r'\schoolsectionheading{ Черновик }', latex)
             self.assertEqual(
-                latex.count(r'\schoolgrid{ 2 }{ 3 }{ 4.0 }'),
+                latex.count(r'\schoolgrid{ 2 }{ 3 }{ 5.0 }'),
                 2,
             )
             self.assertNotIn(r'\begin{tabular}{|*{ 3 }', latex)

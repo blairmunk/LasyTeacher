@@ -146,7 +146,7 @@ class VariantPrintPlanTests(TestCase):
                     is_assessable=True,
                     max_points=3,
                     blank_cells_after=True,
-                    blank_cells_rows=8,
+                    blank_space_area_cm2=50,
                     page_break_after=True,
                 ),
                 VariantContentItem(
@@ -183,7 +183,7 @@ class VariantPrintPlanTests(TestCase):
                     is_assessable=True,
                     max_points=3,
                     blank_cells_after=True,
-                    blank_cells_rows=8,
+                    blank_space_area_cm2=50,
                     page_break_after=True,
                 ),
                 VariantContentItem(
@@ -238,7 +238,7 @@ class VariantPrintPlanTests(TestCase):
             plan.blocks[2].source_selection_id,
             'selection-practice',
         )
-        self.assertEqual(plan.blocks[2].options, {'rows': 8})
+        self.assertEqual(plan.blocks[2].options, {'area_cm2': 50})
         self.assertEqual(
             plan.blocks[3].variant_task_id,
             'vt-2',
@@ -253,7 +253,7 @@ class VariantPrintPlanTests(TestCase):
                     task_id='task-1',
                     order=1,
                     blank_cells_after=True,
-                    blank_cells_rows=8,
+                    blank_space_area_cm2=50,
                     page_break_after=True,
                 ),
             ],
@@ -301,7 +301,7 @@ class VariantPrintPlanTests(TestCase):
                     task_id='task-1',
                     order=1,
                     blank_cells_after=True,
-                    blank_cells_rows=8,
+                    blank_space_area_cm2=50,
                 ),
             ],
         )
@@ -419,11 +419,14 @@ class VariantPrintPlanTests(TestCase):
                 bank_role=TASK_BANK_ROLE_ANY,
             )
 
-    def test_rejects_non_positive_blank_cells_rows(self):
-        with self.assertRaisesRegex(ValueError, 'blank_cells_rows must be positive'):
+    def test_rejects_non_positive_blank_space_area(self):
+        with self.assertRaisesRegex(
+            ValueError,
+            'blank_space_area_cm2 must be positive',
+        ):
             VariantContentItem(
                 variant_task_id='vt-1',
                 task_id='task-1',
                 order=1,
-                blank_cells_rows=0,
+                blank_space_area_cm2=0,
             )

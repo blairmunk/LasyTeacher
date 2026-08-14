@@ -57,11 +57,11 @@
   \par\nobreak\smallskip}
 \newcommand{\schoolgrid}[3]{%
 \par\noindent
-\resizebox{\linewidth}{!}{%
 \begin{tikzpicture}[x=#3mm,y=#3mm,baseline]
 \draw[step=1,draw=schoolgrid,line width=0.2pt] (0,0) grid (#2,-#1);
+\pgfresetboundingbox
+\path[use as bounding box] (0,0) rectangle (#2,-#1);
 \end{tikzpicture}%
-}%
 \par
 }
 {{ custom_latex_preamble|safe }}

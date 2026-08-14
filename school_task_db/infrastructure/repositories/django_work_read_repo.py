@@ -152,7 +152,7 @@ class DjangoWorkReadRepository(IWorkReadRepository):
             render_mode=work_group.render_mode,
             is_assessable=work_group.is_assessable,
             blank_cells_after=work_group.blank_cells_after,
-            blank_cells_rows=work_group.blank_cells_rows,
+            blank_space_area_cm2=work_group.blank_space_area_cm2,
             page_break_after=work_group.page_break_after,
             task_bank_roles=self._task_bank_roles(
                 work_group.analog_group_id,

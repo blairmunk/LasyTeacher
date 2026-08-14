@@ -357,8 +357,18 @@ class Command(BaseCommand):
             render_mode=data.get('render_mode', 'task_only'),
             is_assessable=data.get('is_assessable', True),
             blank_cells_after=data.get('blank_cells_after', False),
-            blank_cells_rows=data.get('blank_cells_rows', 6),
+            blank_space_area_cm2=self._blank_space_area(data),
         )
+
+    @staticmethod
+    def _blank_space_area(data):
+        area = data.get('blank_space_area_cm2')
+        if area is not None:
+            return area
+        legacy_rows = data.get('blank_cells_rows')
+        if legacy_rows is None:
+            return 40
+        return max(1, round(legacy_rows * 6.5))
 
     def _content_block(self, data):
         return WorkContentBlockParams(

@@ -2,7 +2,7 @@ from django import forms
 from django.forms import inlineformset_factory
 
 from core_logic.value_objects.task_print_settings import (
-    DEFAULT_BLANK_CELLS_ROWS,
+    DEFAULT_BLANK_SPACE_AREA_CM2,
     TASK_BANK_ROLE_ANY,
     TASK_RENDER_MODE_TASK_ONLY,
 )
@@ -59,7 +59,7 @@ class WorkAnalogGroupForm(forms.ModelForm):
             'render_mode',
             'is_assessable',
             'blank_cells_after',
-            'blank_cells_rows',
+            'blank_space_area_cm2',
             'page_break_after',
         ]
         widgets = {
@@ -80,10 +80,11 @@ class WorkAnalogGroupForm(forms.ModelForm):
             'is_assessable': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'blank_cells_after': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'page_break_after': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'blank_cells_rows': forms.NumberInput(attrs={
+            'blank_space_area_cm2': forms.NumberInput(attrs={
                 'class': 'form-control form-control-sm',
-                'min': 1,
-                'max': 40,
+                'min': 5,
+                'max': 500,
+                'step': 5,
                 'style': 'width: 80px',
             }),
         }
@@ -92,7 +93,7 @@ class WorkAnalogGroupForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['bank_role_filter'].required = False
         self.fields['render_mode'].required = False
-        self.fields['blank_cells_rows'].required = False
+        self.fields['blank_space_area_cm2'].required = False
         self.fields['is_assessable'].initial = True
 
     def clean_bank_role_filter(self):
@@ -101,8 +102,11 @@ class WorkAnalogGroupForm(forms.ModelForm):
     def clean_render_mode(self):
         return self.cleaned_data['render_mode'] or TASK_RENDER_MODE_TASK_ONLY
 
-    def clean_blank_cells_rows(self):
-        return self.cleaned_data['blank_cells_rows'] or DEFAULT_BLANK_CELLS_ROWS
+    def clean_blank_space_area_cm2(self):
+        return (
+            self.cleaned_data['blank_space_area_cm2']
+            or DEFAULT_BLANK_SPACE_AREA_CM2
+        )
 
 
 WorkAnalogGroupFormSet = inlineformset_factory(

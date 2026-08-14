@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 from core_logic.value_objects.task_print_settings import (
-    DEFAULT_BLANK_CELLS_ROWS,
+    DEFAULT_BLANK_SPACE_AREA_CM2,
     TASK_BANK_ROLE_ANY,
     TASK_RENDER_MODE_TASK_ONLY,
     validate_task_bank_role,
@@ -22,7 +22,7 @@ class WorkTaskSelectionSpec:
     render_mode: str = TASK_RENDER_MODE_TASK_ONLY
     is_assessable: bool = True
     blank_cells_after: bool = False
-    blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
+    blank_space_area_cm2: int = DEFAULT_BLANK_SPACE_AREA_CM2
     page_break_after: bool = False
     weight: int = 1
 
@@ -33,7 +33,7 @@ class WorkTaskSelectionSpec:
             raise ValueError('count must be positive')
         if self.weight < 0:
             raise ValueError('weight must be non-negative')
-        if self.blank_cells_rows < 1:
-            raise ValueError('blank_cells_rows must be positive')
+        if self.blank_space_area_cm2 < 1:
+            raise ValueError('blank_space_area_cm2 must be positive')
         validate_task_bank_role(self.bank_role_filter)
         validate_task_render_mode(self.render_mode)

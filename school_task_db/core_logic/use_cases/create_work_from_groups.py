@@ -15,7 +15,7 @@ from core_logic.use_cases.compose_work_variants import (
 )
 from core_logic.use_cases.save_work import CreateWorkWithSpecificationUseCase
 from core_logic.value_objects.task_print_settings import (
-    DEFAULT_BLANK_CELLS_ROWS,
+    DEFAULT_BLANK_SPACE_AREA_CM2,
     TASK_BANK_ROLE_ANY,
     TASK_RENDER_MODE_TASK_ONLY,
 )
@@ -31,7 +31,7 @@ class GroupSpecRequest:
     render_mode: str = TASK_RENDER_MODE_TASK_ONLY
     is_assessable: bool = True
     blank_cells_after: bool = False
-    blank_cells_rows: int = DEFAULT_BLANK_CELLS_ROWS
+    blank_space_area_cm2: int = DEFAULT_BLANK_SPACE_AREA_CM2
     page_break_after: bool = False
 
 
@@ -101,9 +101,8 @@ class PrepareCreateWorkFromGroupsSubmissionUseCase:
                         group_data.get('blank_cells_after'),
                         False,
                     ),
-                    blank_cells_rows=_int_or_default(
-                        group_data.get('blank_cells_rows'),
-                        DEFAULT_BLANK_CELLS_ROWS,
+                    blank_space_area_cm2=_blank_space_area_from_data(
+                        group_data,
                     ),
                     page_break_after=_bool_or_default(
                         group_data.get('page_break_after'),
@@ -180,7 +179,7 @@ class CreateWorkFromGroupsUseCase:
                     render_mode=group.render_mode,
                     is_assessable=group.is_assessable,
                     blank_cells_after=group.blank_cells_after,
-                    blank_cells_rows=group.blank_cells_rows,
+                    blank_space_area_cm2=group.blank_space_area_cm2,
                     page_break_after=group.page_break_after,
                 )
             )
@@ -242,6 +241,17 @@ def _int_or_default(value, default):
         return int(value)
     except (TypeError, ValueError):
         return default
+
+
+def _blank_space_area_from_data(group_data):
+    area = group_data.get('blank_space_area_cm2')
+    if area not in (None, ''):
+        return _int_or_default(area, DEFAULT_BLANK_SPACE_AREA_CM2)
+    legacy_rows = group_data.get('blank_cells_rows')
+    if legacy_rows in (None, ''):
+        return DEFAULT_BLANK_SPACE_AREA_CM2
+    rows = _int_or_default(legacy_rows, 6)
+    return max(1, round(rows * 6.5))
 
 
 def _bool_or_default(value, default):

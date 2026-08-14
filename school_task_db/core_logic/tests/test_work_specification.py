@@ -49,10 +49,13 @@ class WorkTaskSelectionSpecTests(TestCase):
 
         self.assertEqual(spec.bank_role_filter, TASK_BANK_ROLE_ANY)
 
-    def test_rejects_non_positive_blank_cells_rows(self):
-        with self.assertRaisesRegex(ValueError, 'blank_cells_rows must be positive'):
+    def test_rejects_non_positive_blank_space_area(self):
+        with self.assertRaisesRegex(
+            ValueError,
+            'blank_space_area_cm2 must be positive',
+        ):
             WorkTaskSelectionSpec(
                 analog_group_id='group-1',
                 count=1,
-                blank_cells_rows=0,
+                blank_space_area_cm2=0,
             )

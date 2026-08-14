@@ -23,7 +23,7 @@ from infrastructure.forms.document_rendering import (
     work_print_overrides_from_data,
 )
 from core_logic.value_objects.task_print_settings import (
-    DEFAULT_BLANK_CELLS_ROWS,
+    DEFAULT_BLANK_SPACE_AREA_CM2,
     TASK_BANK_ROLE_ANY,
     TASK_RENDER_MODE_TASK_ONLY,
 )
@@ -227,8 +227,9 @@ class WorkFormAdapter:
                     ),
                     is_assessable=row.get('is_assessable', True),
                     blank_cells_after=row.get('blank_cells_after', False),
-                    blank_cells_rows=(
-                        row.get('blank_cells_rows') or DEFAULT_BLANK_CELLS_ROWS
+                    blank_space_area_cm2=(
+                        row.get('blank_space_area_cm2')
+                        or DEFAULT_BLANK_SPACE_AREA_CM2
                     ),
                     page_break_after=row.get('page_break_after', False),
                 )

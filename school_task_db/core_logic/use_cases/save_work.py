@@ -131,7 +131,7 @@ def validate_work_specification_specs(
                 render_mode=spec.render_mode,
                 is_assessable=spec.is_assessable,
                 blank_cells_after=spec.blank_cells_after,
-                blank_cells_rows=spec.blank_cells_rows,
+                blank_space_area_cm2=spec.blank_space_area_cm2,
                 page_break_after=spec.page_break_after,
                 weight=spec.weight,
             )

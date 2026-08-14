@@ -66,7 +66,7 @@ class WorkVariantCompositionService:
                     render_mode=row.render_mode,
                     is_assessable=row.is_assessable,
                     blank_cells_after=row.blank_cells_after,
-                    blank_cells_rows=row.blank_cells_rows,
+                    blank_space_area_cm2=row.blank_space_area_cm2,
                     page_break_after=row.page_break_after,
                 )
                 for row in source.spec_rows
@@ -176,7 +176,7 @@ class WorkVariantCompositionService:
                         render_mode=row.render_mode,
                         is_assessable=row.is_assessable,
                         blank_cells_after=row.blank_cells_after,
-                        blank_cells_rows=row.blank_cells_rows,
+                        blank_space_area_cm2=row.blank_space_area_cm2,
                         page_break_after=row.page_break_after,
                     )
                 )

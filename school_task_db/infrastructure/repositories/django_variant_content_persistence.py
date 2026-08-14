@@ -41,7 +41,7 @@ def persist_variant_content(variant: Variant, plan) -> None:
                 render_mode=task_plan.render_mode,
                 is_assessable=task_plan.is_assessable,
                 blank_cells_after=task_plan.blank_cells_after,
-                blank_cells_rows=task_plan.blank_cells_rows,
+                blank_space_area_cm2=task_plan.blank_space_area_cm2,
                 page_break_after=task_plan.page_break_after,
             )
             for task_plan in plan.tasks

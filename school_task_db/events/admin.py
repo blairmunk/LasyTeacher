@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.db.models import Count, Q
 
 from core_logic.services.event_service import EventService
+from core_logic.services.review_service import ReviewService
 from .models import (
     AttemptSnapshot,
     AttemptTaskSnapshot,

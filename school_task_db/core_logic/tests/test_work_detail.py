@@ -835,7 +835,7 @@ class WorkDetailTests(TestCase):
         self.assertEqual(repo.created_from_orphans_params.max_score, 5)
         self.assertEqual(
             repo.created_from_orphans_params.variant_ids,
-            ['variant-1', 'variant-2'],
+            ('variant-1', 'variant-2'),
         )
 
     def test_create_work_from_orphans_use_case_handles_empty_and_missing_selection(self):
@@ -1010,8 +1010,23 @@ class WorkDetailTests(TestCase):
         self.assertEqual(result.remaining_count, 4)
         self.assertEqual(
             repo.bulk_deleted_request,
-            ('work-1', ['variant-1', 'variant-2']),
+            ('work-1', ('variant-1', 'variant-2')),
         )
+
+    def test_variant_id_commands_copy_mutable_inputs(self):
+        variant_ids = ['variant-1']
+
+        delete_request = BulkDeleteVariantsRequest(
+            work_id='work-1',
+            variant_ids=variant_ids,
+        )
+        orphan_request = CreateWorkFromOrphansRequest(
+            variant_ids=variant_ids,
+        )
+        variant_ids.append('variant-2')
+
+        self.assertEqual(delete_request.variant_ids, ('variant-1',))
+        self.assertEqual(orphan_request.variant_ids, ('variant-1',))
 
     def test_bulk_delete_variants_use_case_handles_empty_selection(self):
         repo = FakeWorkRepository()

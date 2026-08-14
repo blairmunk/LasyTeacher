@@ -1,7 +1,7 @@
 """Create a work from selected orphan variants."""
 
 from dataclasses import dataclass
-from typing import List
+from typing import Sequence
 
 from core_logic.entities.work import CreateWorkFromOrphansResult
 from core_logic.entities.orphan_variant_commands import (
@@ -17,8 +17,11 @@ DEFAULT_ORPHAN_WORK_NAME = 'Работа над ошибками'
 
 @dataclass(frozen=True)
 class CreateWorkFromOrphansRequest:
-    variant_ids: List[str]
+    variant_ids: tuple[str, ...]
     work_name: str = DEFAULT_ORPHAN_WORK_NAME
+
+    def __post_init__(self):
+        object.__setattr__(self, 'variant_ids', tuple(self.variant_ids))
 
 
 class CreateWorkFromOrphansUseCase:
@@ -47,10 +50,10 @@ class CreateWorkFromOrphansUseCase:
             CreateWorkFromOrphanVariantsParams(
                 name=work_name,
                 work_type=self._detect_work_type(
-                    [variant.variant_type for variant in variants],
+                    tuple(variant.variant_type for variant in variants),
                 ),
                 max_score=max_score,
-                variant_ids=[variant.pk for variant in variants],
+                variant_ids=tuple(variant.pk for variant in variants),
             )
         )
         if created is None:
@@ -63,7 +66,7 @@ class CreateWorkFromOrphansUseCase:
             variant_count=created.variant_count,
         )
 
-    def _detect_work_type(self, variant_types: List[str]) -> str:
+    def _detect_work_type(self, variant_types: Sequence[str]) -> str:
         if 'remedial' in variant_types:
             return 'remedial'
         if 'individual' in variant_types:

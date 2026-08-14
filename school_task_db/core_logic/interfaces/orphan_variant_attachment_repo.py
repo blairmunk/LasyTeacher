@@ -1,7 +1,7 @@
 """Repository port for attaching orphan variants to a new work."""
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Optional, Sequence
 
 from core_logic.entities.orphan_variant_commands import (
     CreatedWorkFromOrphanVariantsRef,
@@ -14,8 +14,8 @@ class IOrphanVariantAttachmentRepository(ABC):
     @abstractmethod
     def get_orphan_variant_refs(
         self,
-        variant_ids: List[str],
-    ) -> List[OrphanVariantRef]:
+        variant_ids: Sequence[str],
+    ) -> tuple[OrphanVariantRef, ...]:
         """Return selected orphan variant refs ordered for attaching."""
 
     @abstractmethod

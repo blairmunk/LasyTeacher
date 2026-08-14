@@ -1,6 +1,6 @@
 """Django adapter for attaching orphan variants to a new work."""
 
-from typing import List, Optional
+from typing import Optional, Sequence
 
 from django.db import transaction
 from django.db.models import Sum
@@ -21,9 +21,9 @@ class DjangoOrphanVariantAttachmentRepository(
 ):
     def get_orphan_variant_refs(
         self,
-        variant_ids: List[str],
-    ) -> List[OrphanVariantRef]:
-        return [
+        variant_ids: Sequence[str],
+    ) -> tuple[OrphanVariantRef, ...]:
+        return tuple(
             OrphanVariantRef(
                 pk=str(variant.pk),
                 variant_type=variant.variant_type,
@@ -35,7 +35,7 @@ class DjangoOrphanVariantAttachmentRepository(
             ).annotate(
                 total_max_points_value=Sum('varianttask__max_points'),
             ).order_by('created_at')
-        ]
+        )
 
     def create_work_from_orphan_variants(
         self,

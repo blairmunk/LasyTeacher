@@ -1,6 +1,6 @@
 """Django command adapter for variant detach and deletion workflows."""
 
-from typing import List
+from typing import Sequence
 
 from django.db import transaction
 from django.db.models.deletion import ProtectedError
@@ -58,7 +58,7 @@ class DjangoVariantLifecycleCommandRepository(
     def bulk_delete_work_variants(
         self,
         work_id: str,
-        variant_ids: List[str],
+        variant_ids: Sequence[str],
     ) -> int:
         return Variant.objects.filter(
             pk__in=variant_ids,

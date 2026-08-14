@@ -1,7 +1,7 @@
 """Command repository port for variant detach and deletion workflows."""
 
 from abc import ABC, abstractmethod
-from typing import List
+from typing import Sequence
 
 from core_logic.entities.work import VariantDeletionOutcome
 
@@ -22,6 +22,6 @@ class IVariantLifecycleCommandRepository(ABC):
     def bulk_delete_work_variants(
         self,
         work_id: str,
-        variant_ids: List[str],
+        variant_ids: Sequence[str],
     ) -> int:
         """Delete selected variants belonging to a work."""

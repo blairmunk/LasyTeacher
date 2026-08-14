@@ -1,7 +1,6 @@
 """Bulk delete variants from a work."""
 
 from dataclasses import dataclass
-from typing import List
 
 from core_logic.entities.work import BulkDeleteVariantsResult
 from core_logic.interfaces.variant_lifecycle_command_repo import (
@@ -15,7 +14,10 @@ from core_logic.interfaces.variant_lifecycle_query_repo import (
 @dataclass(frozen=True)
 class BulkDeleteVariantsRequest:
     work_id: str
-    variant_ids: List[str]
+    variant_ids: tuple[str, ...]
+
+    def __post_init__(self):
+        object.__setattr__(self, 'variant_ids', tuple(self.variant_ids))
 
 
 class BulkDeleteVariantsUseCase:

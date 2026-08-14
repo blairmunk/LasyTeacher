@@ -1,7 +1,6 @@
 """Command data for attaching orphan variants to a new work."""
 
 from dataclasses import dataclass
-from typing import List
 
 
 @dataclass(frozen=True)
@@ -9,7 +8,10 @@ class CreateWorkFromOrphanVariantsParams:
     name: str
     work_type: str
     max_score: int
-    variant_ids: List[str]
+    variant_ids: tuple[str, ...]
+
+    def __post_init__(self):
+        object.__setattr__(self, 'variant_ids', tuple(self.variant_ids))
 
 
 @dataclass(frozen=True)

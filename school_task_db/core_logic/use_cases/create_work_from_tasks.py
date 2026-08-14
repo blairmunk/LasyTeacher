@@ -1,7 +1,6 @@
 """Create a work and first variant from selected tasks."""
 
 from dataclasses import dataclass
-from typing import List
 
 from core_logic.interfaces.task_selection_repo import ITaskSelectionRepository
 from core_logic.entities.work_variant_creation_commands import (
@@ -14,9 +13,12 @@ from core_logic.interfaces.work_variant_creation_repo import (
 
 @dataclass(frozen=True)
 class CreateWorkFromTasksRequest:
-    task_ids: List[str]
+    task_ids: tuple[str, ...]
     work_name: str
     work_type: str = 'test'
+
+    def __post_init__(self):
+        object.__setattr__(self, 'task_ids', tuple(self.task_ids))
 
 
 @dataclass(frozen=True)
@@ -45,7 +47,7 @@ class CreateWorkFromTasksUseCase:
         self,
         request: CreateWorkFromTasksRequest,
     ) -> CreateWorkFromTasksResult:
-        task_ids = [str(task_id) for task_id in request.task_ids if task_id]
+        task_ids = tuple(str(task_id) for task_id in request.task_ids if task_id)
         if not task_ids:
             return CreateWorkFromTasksResult(
                 status='empty_tasks',

@@ -1,7 +1,6 @@
 """Bulk task-group operations for selected tasks."""
 
 from dataclasses import dataclass
-from typing import List
 
 from core_logic.interfaces.task_group_management_repo import (
     ITaskGroupManagementRepository,
@@ -11,8 +10,11 @@ from core_logic.interfaces.task_selection_repo import ITaskSelectionRepository
 
 @dataclass(frozen=True)
 class BulkCreateGroupFromTasksRequest:
-    task_ids: List[str]
+    task_ids: tuple[str, ...]
     group_name: str
+
+    def __post_init__(self):
+        object.__setattr__(self, 'task_ids', tuple(self.task_ids))
 
 
 @dataclass(frozen=True)
@@ -41,7 +43,7 @@ class BulkCreateGroupFromTasksUseCase:
         self,
         request: BulkCreateGroupFromTasksRequest,
     ) -> BulkCreateGroupFromTasksResult:
-        task_ids = [str(task_id) for task_id in request.task_ids if task_id]
+        task_ids = tuple(str(task_id) for task_id in request.task_ids if task_id)
         if not task_ids:
             return BulkCreateGroupFromTasksResult(
                 status='empty_tasks',
@@ -84,8 +86,11 @@ class BulkCreateGroupFromTasksUseCase:
 
 @dataclass(frozen=True)
 class BulkAddTasksToGroupRequest:
-    task_ids: List[str]
+    task_ids: tuple[str, ...]
     group_id: str
+
+    def __post_init__(self):
+        object.__setattr__(self, 'task_ids', tuple(self.task_ids))
 
 
 @dataclass(frozen=True)
@@ -111,7 +116,7 @@ class BulkAddTasksToGroupUseCase:
         self.task_group_repo = task_group_repo
 
     def execute(self, request: BulkAddTasksToGroupRequest) -> BulkAddTasksToGroupResult:
-        task_ids = [str(task_id) for task_id in request.task_ids if task_id]
+        task_ids = tuple(str(task_id) for task_id in request.task_ids if task_id)
         if not task_ids:
             return BulkAddTasksToGroupResult(
                 status='empty_tasks',
@@ -153,7 +158,10 @@ class BulkAddTasksToGroupUseCase:
 
 @dataclass(frozen=True)
 class BulkRemoveTasksFromGroupsRequest:
-    task_ids: List[str]
+    task_ids: tuple[str, ...]
+
+    def __post_init__(self):
+        object.__setattr__(self, 'task_ids', tuple(self.task_ids))
 
 
 @dataclass(frozen=True)
@@ -175,7 +183,7 @@ class BulkRemoveTasksFromGroupsUseCase:
         self,
         request: BulkRemoveTasksFromGroupsRequest,
     ) -> BulkRemoveTasksFromGroupsResult:
-        task_ids = [str(task_id) for task_id in request.task_ids if task_id]
+        task_ids = tuple(str(task_id) for task_id in request.task_ids if task_id)
         if not task_ids:
             return BulkRemoveTasksFromGroupsResult(
                 status='empty_tasks',

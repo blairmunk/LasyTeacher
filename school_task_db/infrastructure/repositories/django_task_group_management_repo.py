@@ -1,6 +1,6 @@
 """Django command adapter for task groups and memberships."""
 
-from typing import List
+from typing import Mapping, Sequence
 
 from core_logic.interfaces.task_group_management_repo import (
     ITaskGroupManagementRepository,
@@ -38,7 +38,7 @@ class DjangoTaskGroupManagementRepository(ITaskGroupManagementRepository):
     def add_tasks_to_group(
         self,
         group_id: str,
-        task_ids: List[str],
+        task_ids: Sequence[str],
         bank_role: str = TASK_BANK_ROLE_CONTROL,
     ) -> int:
         created_count = 0
@@ -52,7 +52,11 @@ class DjangoTaskGroupManagementRepository(ITaskGroupManagementRepository):
                 created_count += 1
         return created_count
 
-    def update_task_group_roles(self, group_id: str, task_roles: dict) -> int:
+    def update_task_group_roles(
+        self,
+        group_id: str,
+        task_roles: Mapping[str, str],
+    ) -> int:
         updated_count = 0
         for task_id, bank_role in task_roles.items():
             updated_count += TaskGroup.objects.filter(
@@ -67,12 +71,12 @@ class DjangoTaskGroupManagementRepository(ITaskGroupManagementRepository):
             task_id=task_id,
         ).delete()[0]
 
-    def remove_tasks_from_all_groups(self, task_ids: List[str]) -> int:
+    def remove_tasks_from_all_groups(self, task_ids: Sequence[str]) -> int:
         if not task_ids:
             return 0
         return TaskGroup.objects.filter(task_id__in=task_ids).delete()[0]
 
-    def delete_groups(self, group_ids: List[str]) -> int:
+    def delete_groups(self, group_ids: Sequence[str]) -> int:
         if not group_ids:
             return 0
 

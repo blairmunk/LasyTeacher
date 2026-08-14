@@ -1,7 +1,7 @@
 """Command port for managing task groups and their memberships."""
 
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional
+from typing import Mapping, Optional, Sequence
 
 from core_logic.value_objects.task_print_settings import TASK_BANK_ROLE_CONTROL
 
@@ -32,7 +32,7 @@ class ITaskGroupManagementRepository(ABC):
     def add_tasks_to_group(
         self,
         group_id: str,
-        task_ids: List[str],
+        task_ids: Sequence[str],
         bank_role: str = TASK_BANK_ROLE_CONTROL,
     ) -> int:
         """Add tasks to a group and return created membership count."""
@@ -41,7 +41,7 @@ class ITaskGroupManagementRepository(ABC):
     def update_task_group_roles(
         self,
         group_id: str,
-        task_roles: Dict[str, str],
+        task_roles: Mapping[str, str],
     ) -> int:
         """Update roles for existing task memberships."""
 
@@ -50,9 +50,9 @@ class ITaskGroupManagementRepository(ABC):
         """Remove one task membership and return deleted row count."""
 
     @abstractmethod
-    def remove_tasks_from_all_groups(self, task_ids: List[str]) -> int:
+    def remove_tasks_from_all_groups(self, task_ids: Sequence[str]) -> int:
         """Remove selected tasks from every group."""
 
     @abstractmethod
-    def delete_groups(self, group_ids: List[str]) -> int:
+    def delete_groups(self, group_ids: Sequence[str]) -> int:
         """Delete analog groups and return deleted group count."""

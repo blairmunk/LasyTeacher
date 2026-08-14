@@ -66,7 +66,7 @@ class BulkChangeTaskGroupsUseCaseTests(TestCase):
             repo.created_groups,
             [('group-2', 'Кинематика', 'Создана из выбранных заданий')],
         )
-        self.assertEqual(repo.added_requests, [('group-2', ['task-1', 'task-2'])])
+        self.assertEqual(repo.added_requests, [('group-2', ('task-1', 'task-2'))])
 
     def test_create_group_rejects_duplicate_name(self):
         repo = FakeTaskRepository()
@@ -106,7 +106,7 @@ class BulkChangeTaskGroupsUseCaseTests(TestCase):
         self.assertEqual(result.skipped_count, 0)
         self.assertEqual(
             repo.added_requests,
-            [('group-1', ['task-1', 'task-2', 'missing-task'])],
+            [('group-1', ('task-1', 'task-2', 'missing-task'))],
         )
 
     def test_add_tasks_to_group_rejects_missing_group(self):
@@ -134,4 +134,12 @@ class BulkChangeTaskGroupsUseCaseTests(TestCase):
 
         self.assertTrue(result.success)
         self.assertEqual(result.removed_count, 2)
-        self.assertEqual(repo.removed_request, ['task-1', 'task-2'])
+        self.assertEqual(repo.removed_request, ('task-1', 'task-2'))
+
+    def test_request_copies_mutable_task_id_input(self):
+        task_ids = ['task-1']
+
+        request = BulkRemoveTasksFromGroupsRequest(task_ids=task_ids)
+        task_ids.append('task-2')
+
+        self.assertEqual(request.task_ids, ('task-1',))

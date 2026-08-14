@@ -1213,12 +1213,12 @@ class TaskFormAdapterTests(SimpleTestCase):
         remove = adapter.bulk_remove_from_groups_request_from_body(body)
         create_work = adapter.create_work_from_tasks_request_from_body(body)
 
-        self.assertEqual(create_group.task_ids, ['t1', 't2'])
+        self.assertEqual(create_group.task_ids, ('t1', 't2'))
         self.assertEqual(create_group.group_name, 'New group')
-        self.assertEqual(add_to_group.task_ids, ['t1', 't2'])
+        self.assertEqual(add_to_group.task_ids, ('t1', 't2'))
         self.assertEqual(add_to_group.group_id, 'g1')
-        self.assertEqual(remove.task_ids, ['t1', 't2'])
-        self.assertEqual(create_work.task_ids, ['t1', 't2'])
+        self.assertEqual(remove.task_ids, ('t1', 't2'))
+        self.assertEqual(create_work.task_ids, ('t1', 't2'))
         self.assertEqual(create_work.work_name, 'Control work')
         self.assertEqual(create_work.work_type, 'quiz')
 
@@ -1460,7 +1460,7 @@ class TaskGroupFormAdapterTests(SimpleTestCase):
 
         delete_groups = adapter.delete_task_groups_request_from_body(body)
 
-        self.assertEqual(delete_groups.group_ids, ['g1', 'g2'])
+        self.assertEqual(delete_groups.group_ids, ('g1', 'g2'))
 
     def test_builds_task_group_list_filters_from_query(self):
         query = QueryDict(

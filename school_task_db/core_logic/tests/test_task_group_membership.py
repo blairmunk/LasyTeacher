@@ -51,7 +51,7 @@ class TaskGroupMembershipUseCaseTests(TestCase):
         self.assertEqual(result.created_count, 2)
         self.assertEqual(
             repo.added_request,
-            ('group-1', ['task-1', 'task-2'], TASK_BANK_ROLE_DEMO),
+            ('group-1', ('task-1', 'task-2'), TASK_BANK_ROLE_DEMO),
         )
 
     def test_add_tasks_to_group_rejects_unknown_bank_role(self):
@@ -115,6 +115,20 @@ class TaskGroupMembershipUseCaseTests(TestCase):
         self.assertEqual(
             repo.updated_roles_request,
             ('group-1', {'task-1': TASK_BANK_ROLE_DEMO}),
+        )
+
+    def test_update_roles_request_copies_mutable_mapping(self):
+        task_roles = {'task-1': TASK_BANK_ROLE_DEMO}
+
+        request = UpdateTaskGroupRolesRequest(
+            group_id='group-1',
+            task_roles=task_roles,
+        )
+        task_roles['task-2'] = TASK_BANK_ROLE_DEMO
+
+        self.assertEqual(
+            dict(request.task_roles),
+            {'task-1': TASK_BANK_ROLE_DEMO},
         )
 
     def test_update_task_group_roles_rejects_unknown_role(self):

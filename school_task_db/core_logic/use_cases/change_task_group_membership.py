@@ -1,7 +1,8 @@
 """Mutate task membership in analog groups."""
 
 from dataclasses import dataclass
-from typing import Dict, List
+from types import MappingProxyType
+from typing import Mapping
 
 from core_logic.interfaces.task_group_management_repo import (
     ITaskGroupManagementRepository,
@@ -15,8 +16,11 @@ from core_logic.value_objects.task_print_settings import (
 @dataclass(frozen=True)
 class AddTasksToGroupRequest:
     group_id: str
-    task_ids: List[str]
+    task_ids: tuple[str, ...]
     bank_role: str = TASK_BANK_ROLE_CONTROL
+
+    def __post_init__(self):
+        object.__setattr__(self, 'task_ids', tuple(self.task_ids))
 
 
 @dataclass(frozen=True)
@@ -42,7 +46,7 @@ class AddTasksToGroupUseCase:
         if group_name is None:
             return AddTasksToGroupResult(status='not_found')
 
-        task_ids = [str(task_id) for task_id in request.task_ids if task_id]
+        task_ids = tuple(str(task_id) for task_id in request.task_ids if task_id)
         try:
             validate_task_specific_bank_role(request.bank_role)
         except ValueError as error:
@@ -108,7 +112,14 @@ class RemoveTaskFromGroupUseCase:
 @dataclass(frozen=True)
 class UpdateTaskGroupRolesRequest:
     group_id: str
-    task_roles: Dict[str, str]
+    task_roles: Mapping[str, str]
+
+    def __post_init__(self):
+        object.__setattr__(
+            self,
+            'task_roles',
+            MappingProxyType(dict(self.task_roles)),
+        )
 
 
 @dataclass(frozen=True)

@@ -1,7 +1,6 @@
 """Delete selected analog task groups."""
 
 from dataclasses import dataclass
-from typing import List
 
 from core_logic.interfaces.task_group_management_repo import (
     ITaskGroupManagementRepository,
@@ -10,7 +9,10 @@ from core_logic.interfaces.task_group_management_repo import (
 
 @dataclass(frozen=True)
 class DeleteTaskGroupsRequest:
-    group_ids: List[str]
+    group_ids: tuple[str, ...]
+
+    def __post_init__(self):
+        object.__setattr__(self, 'group_ids', tuple(self.group_ids))
 
 
 @dataclass(frozen=True)
@@ -29,7 +31,7 @@ class DeleteTaskGroupsUseCase:
         self.task_group_repo = task_group_repo
 
     def execute(self, request: DeleteTaskGroupsRequest) -> DeleteTaskGroupsResult:
-        group_ids = [str(group_id) for group_id in request.group_ids if group_id]
+        group_ids = tuple(str(group_id) for group_id in request.group_ids if group_id)
         if not group_ids:
             return DeleteTaskGroupsResult(
                 status='empty_selection',

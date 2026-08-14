@@ -52,8 +52,8 @@ class PrepareUpdateTaskGroupRolesSubmissionUseCase:
 def _list(data: Mapping[str, Sequence[str]], key: str):
     values = data.get(key)
     if not values:
-        return []
-    return [str(value) for value in values]
+        return ()
+    return tuple(str(value) for value in values)
 
 
 def _first(data: Mapping[str, Sequence[str]], key: str):

@@ -42,7 +42,7 @@ class PrepareTaskGroupMembershipSubmissionUseCaseTests(TestCase):
             )
         )
 
-        self.assertEqual(result.task_ids, [])
+        self.assertEqual(result.task_ids, ())
         self.assertEqual(result.bank_role, 'control')
 
     def test_prepare_update_task_group_roles_submission(self):

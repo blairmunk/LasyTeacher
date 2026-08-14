@@ -27,7 +27,7 @@ class DeleteTaskGroupsUseCaseTests(TestCase):
         self.assertTrue(result.success)
         self.assertEqual(result.deleted_count, 2)
         self.assertEqual(result.message, 'Удалено 2 групп')
-        self.assertEqual(repo.deleted_group_ids, ['group-1', 'group-2'])
+        self.assertEqual(repo.deleted_group_ids, ('group-1', 'group-2'))
 
     def test_execute_rejects_empty_selection(self):
         repo = FakeTaskRepository()

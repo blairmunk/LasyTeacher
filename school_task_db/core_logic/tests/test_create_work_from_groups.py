@@ -61,6 +61,20 @@ class FakeComposeWorkVariantsUseCase:
 
 
 class CreateWorkFromGroupsUseCaseTests(TestCase):
+    def test_request_copies_group_collection(self):
+        groups = [GroupSpecRequest(id='group-1')]
+
+        request = CreateWorkFromGroupsRequest(
+            groups=groups,
+            work_name='Контрольная',
+        )
+        groups.clear()
+
+        self.assertEqual(
+            request.groups,
+            (GroupSpecRequest(id='group-1'),),
+        )
+
     def test_prepare_submission_builds_request_from_body(self):
         result = PrepareCreateWorkFromGroupsSubmissionUseCase().execute(
             PrepareCreateWorkFromGroupsSubmissionRequest(
@@ -145,7 +159,7 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
             )
         )
 
-        self.assertEqual(empty_result.groups, [])
+        self.assertEqual(empty_result.groups, ())
         self.assertFalse(bool_result.auto_generate)
 
     def test_execute_creates_work_spec_and_generates_variants(self):

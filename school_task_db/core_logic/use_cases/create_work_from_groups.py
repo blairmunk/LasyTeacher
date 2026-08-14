@@ -1,7 +1,7 @@
 """Create a work specification from selected analog groups."""
 
 from dataclasses import dataclass
-from typing import Any, Mapping, List
+from typing import Any, Mapping
 
 from core_logic.interfaces.work_task_group_repo import IWorkTaskGroupRepository
 from core_logic.entities.work_specification_commands import (
@@ -36,12 +36,15 @@ class GroupSpecRequest:
 
 @dataclass(frozen=True)
 class CreateWorkFromGroupsRequest:
-    groups: List[GroupSpecRequest]
+    groups: tuple[GroupSpecRequest, ...]
     work_name: str
     work_type: str = 'test'
     max_score: int = 0
     auto_generate: bool = False
     variant_count: int = 2
+
+    def __post_init__(self):
+        object.__setattr__(self, 'groups', tuple(self.groups))
 
 
 @dataclass(frozen=True)
@@ -75,7 +78,7 @@ class PrepareCreateWorkFromGroupsSubmissionUseCase:
             groups_data = []
 
         return CreateWorkFromGroupsRequest(
-            groups=[
+            groups=tuple(
                 GroupSpecRequest(
                     id=str(group_data.get('id', '')),
                     order=_int_or_default(group_data.get('order'), index),
@@ -104,7 +107,7 @@ class PrepareCreateWorkFromGroupsSubmissionUseCase:
                 )
                 for index, group_data in enumerate(groups_data, 1)
                 if isinstance(group_data, Mapping)
-            ],
+            ),
             work_name=str(body.get('work_name', '')),
             work_type=str(body.get('work_type', 'test')),
             max_score=_int_or_default(body.get('max_score'), 0),

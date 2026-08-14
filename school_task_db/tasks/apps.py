@@ -6,4 +6,4 @@ class TasksConfig(AppConfig):
     name = 'tasks'
 
     def ready(self):
-        from tasks import signals  # noqa: F401
+        from infrastructure.signals import task_cache  # noqa: F401

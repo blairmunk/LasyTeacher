@@ -42,6 +42,29 @@ class FakeWorkRepository:
         return self.update_result
 
 class SaveWorkUseCaseTests(TestCase):
+    def test_specification_command_copies_mutable_collections(self):
+        topic_ids = ['topic-1']
+        block = WorkContentBlockParams(
+            content_type='theory',
+            order=1,
+            topic_ids=topic_ids,
+        )
+        specs = []
+        content_blocks = [block]
+
+        params = CreateWorkWithSpecificationParams(
+            work=CreateWorkParams(name='Рабочий лист'),
+            specs=specs,
+            content_blocks=content_blocks,
+        )
+        topic_ids.append('topic-2')
+        specs.append(object())
+        content_blocks.clear()
+
+        self.assertEqual(block.topic_ids, ('topic-1',))
+        self.assertEqual(params.specs, ())
+        self.assertEqual(params.content_blocks, (block,))
+
     def test_create_work_with_specification_validates_and_delegates(self):
         repo = FakeWorkRepository()
         params = CreateWorkWithSpecificationParams(

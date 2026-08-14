@@ -1,6 +1,6 @@
 """Django repository for saving work specifications."""
 
-from typing import List
+from typing import Sequence
 
 from django.db import transaction
 
@@ -85,8 +85,8 @@ class DjangoWorkSpecificationRepository(IWorkSpecificationRepository):
     def _replace_work_content_plan(
         self,
         work_id: str,
-        specs: List[WorkTaskSelectionParams],
-        content_blocks: List[WorkContentBlockParams],
+        specs: Sequence[WorkTaskSelectionParams],
+        content_blocks: Sequence[WorkContentBlockParams],
     ):
         WorkAnalogGroup.objects.filter(work_id=work_id).delete()
         WorkContentBlock.objects.filter(work_id=work_id).delete()
@@ -110,7 +110,7 @@ class DjangoWorkSpecificationRepository(IWorkSpecificationRepository):
     @staticmethod
     def _create_work_content_blocks(
         work_id: str,
-        content_blocks: List[WorkContentBlockParams],
+        content_blocks: Sequence[WorkContentBlockParams],
     ):
         for params in content_blocks:
             block = WorkContentBlock.objects.create(

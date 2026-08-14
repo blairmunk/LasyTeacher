@@ -1,7 +1,6 @@
 """Command data for creating and updating work specifications."""
 
 from dataclasses import dataclass, field
-from typing import List
 
 from core_logic.value_objects.task_print_settings import (
     DEFAULT_BLANK_CELLS_ROWS,
@@ -47,17 +46,24 @@ class WorkContentBlockParams:
     order: int
     title: str = ''
     body: str = ''
-    topic_ids: List[str] = field(default_factory=list)
+    topic_ids: tuple[str, ...] = field(default_factory=tuple)
     include_subtopics: bool = False
+
+    def __post_init__(self):
+        object.__setattr__(self, 'topic_ids', tuple(self.topic_ids))
 
 
 @dataclass(frozen=True)
 class CreateWorkWithSpecificationParams:
     work: CreateWorkParams
-    specs: List[WorkTaskSelectionParams]
-    content_blocks: List[WorkContentBlockParams] = field(
-        default_factory=list,
+    specs: tuple[WorkTaskSelectionParams, ...]
+    content_blocks: tuple[WorkContentBlockParams, ...] = field(
+        default_factory=tuple,
     )
+
+    def __post_init__(self):
+        object.__setattr__(self, 'specs', tuple(self.specs))
+        object.__setattr__(self, 'content_blocks', tuple(self.content_blocks))
 
 
 @dataclass(frozen=True)

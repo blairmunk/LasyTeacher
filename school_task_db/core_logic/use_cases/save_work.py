@@ -1,7 +1,7 @@
 """Create and update works."""
 
 from dataclasses import dataclass, field
-from typing import List
+from typing import Sequence
 
 from core_logic.entities.work_specification_commands import (
     CreateWorkParams,
@@ -29,10 +29,14 @@ class SaveWorkResult:
 @dataclass(frozen=True)
 class UpdateWorkWithSpecificationRequest:
     work: CreateWorkParams
-    specs: List[WorkTaskSelectionParams]
-    content_blocks: List[WorkContentBlockParams] = field(
-        default_factory=list,
+    specs: tuple[WorkTaskSelectionParams, ...]
+    content_blocks: tuple[WorkContentBlockParams, ...] = field(
+        default_factory=tuple,
     )
+
+    def __post_init__(self):
+        object.__setattr__(self, 'specs', tuple(self.specs))
+        object.__setattr__(self, 'content_blocks', tuple(self.content_blocks))
 
 
 class CreateWorkWithSpecificationUseCase:
@@ -114,7 +118,7 @@ def _assessment_mode_update_error(
 
 
 def validate_work_specification_specs(
-    specs: List[WorkTaskSelectionParams],
+    specs: Sequence[WorkTaskSelectionParams],
 ) -> tuple[str, ...]:
     errors = []
     for index, spec in enumerate(specs, start=1):
@@ -135,7 +139,7 @@ def validate_work_specification_specs(
     return tuple(errors)
 
 def validate_work_content_blocks(
-    content_blocks: List[WorkContentBlockParams],
+    content_blocks: Sequence[WorkContentBlockParams],
 ) -> tuple[str, ...]:
     errors = []
     for index, block in enumerate(content_blocks, start=1):
@@ -169,8 +173,8 @@ def validate_work_content_blocks(
 
 
 def validate_work_content_plan(
-    specs: List[WorkTaskSelectionParams],
-    content_blocks: List[WorkContentBlockParams],
+    specs: Sequence[WorkTaskSelectionParams],
+    content_blocks: Sequence[WorkContentBlockParams],
 ) -> tuple[str, ...]:
     errors = list(validate_work_specification_specs(specs))
     errors.extend(validate_work_content_blocks(content_blocks))

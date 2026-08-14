@@ -1843,7 +1843,7 @@ class WorkFormAdapterTests(SimpleTestCase):
         self.assertEqual(blocks[0].title, 'Опорная теория')
         self.assertEqual(
             blocks[0].topic_ids,
-            ['topic-1', 'topic-2'],
+            ('topic-1', 'topic-2'),
         )
         self.assertTrue(blocks[0].include_subtopics)
         self.assertEqual(blocks[1].content_type, 'text')

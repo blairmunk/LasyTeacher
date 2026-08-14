@@ -184,7 +184,7 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
         )
         self.assertEqual(
             work_repo.created_groups,
-            [
+            (
                 WorkTaskSelectionParams(
                     analog_group_id='group-1',
                     order=1,
@@ -199,7 +199,7 @@ class CreateWorkFromGroupsUseCaseTests(TestCase):
                     weight=5,
                     bank_role_filter='any',
                 ),
-            ],
+            ),
         )
         self.assertEqual(compose_use_case.request.work_id, 'work-1')
         self.assertEqual(compose_use_case.request.count, 3)

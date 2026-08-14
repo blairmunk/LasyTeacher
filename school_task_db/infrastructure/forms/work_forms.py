@@ -232,7 +232,7 @@ class WorkFormAdapter:
                     ),
                 )
             )
-        return specs
+        return tuple(specs)
 
     def work_content_blocks_from_formset(self, formset):
         content_blocks = []
@@ -255,10 +255,10 @@ class WorkFormAdapter:
                         if is_theory
                         else (row.get('body') or '').strip()
                     ),
-                    topic_ids=[
+                    topic_ids=tuple(
                         str(topic.pk)
                         for topic in row.get('topics') or ()
-                    ] if is_theory else [],
+                    ) if is_theory else (),
                     include_subtopics=(
                         row.get('include_subtopics', False)
                         if is_theory
@@ -266,7 +266,7 @@ class WorkFormAdapter:
                     ),
                 )
             )
-        return content_blocks
+        return tuple(content_blocks)
 
     def compose_variants_request_from_form(self, form, work_id):
         return ComposeWorkVariantsRequest(

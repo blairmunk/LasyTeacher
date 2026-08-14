@@ -5,6 +5,7 @@ from typing import Any, Dict, Set
 
 from django.core.cache import cache
 
+from core_logic.entities.task import TaskMathCacheStats
 from core_logic.interfaces.task_math_status_cache import ITaskMathStatusCache
 from core_logic.services.formula_processor import formula_processor
 from tasks.models import Task
@@ -216,19 +217,19 @@ class DjangoTaskMathStatusCache(ITaskMathStatusCache):
         return cls.get_all_tasks_math_status(force_refresh=True)
     
     @classmethod
-    def get_cache_stats(cls) -> Dict[str, Any]:
+    def get_cache_stats(cls) -> TaskMathCacheStats:
         """Получает статистику кэша"""
         all_status = cache.get(cls.CACHE_KEY_ALL_MATH)
         with_math = cache.get(cls.CACHE_KEY_WITH_MATH)
         with_errors = cache.get(cls.CACHE_KEY_WITH_ERRORS)
         
-        return {
-            'all_status_cached': all_status is not None,
-            'with_math_cached': with_math is not None,
-            'with_errors_cached': with_errors is not None,
-            'total_with_math': len(with_math) if with_math else 0,
-            'total_with_errors': len(with_errors) if with_errors else 0,
-        }
+        return TaskMathCacheStats(
+            all_status_cached=all_status is not None,
+            with_math_cached=with_math is not None,
+            with_errors_cached=with_errors is not None,
+            total_with_math=len(with_math) if with_math else 0,
+            total_with_errors=len(with_errors) if with_errors else 0,
+        )
 
     @classmethod
     def get_cache_inventory(cls, sample_size: int = 100) -> Dict[str, int]:

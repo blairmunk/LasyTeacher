@@ -34,6 +34,15 @@ class TaskListFilters:
 
 
 @dataclass(frozen=True)
+class TaskMathCacheStats:
+    all_status_cached: bool
+    with_math_cached: bool
+    with_errors_cached: bool
+    total_with_math: int
+    total_with_errors: int
+
+
+@dataclass(frozen=True)
 class TaskListData:
     tasks: tuple["TaskListItem", ...]
     topics: tuple["SelectOption", ...]
@@ -45,7 +54,7 @@ class TaskListData:
     grade_choices: tuple[Tuple[int, str], ...]
     total_tasks: int
     ungrouped_count: int
-    cache_stats: Any = None
+    cache_stats: Optional[TaskMathCacheStats] = None
 
     def __post_init__(self):
         for field_name in (

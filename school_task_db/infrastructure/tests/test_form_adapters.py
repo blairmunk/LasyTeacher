@@ -8,6 +8,7 @@ from django.test import SimpleTestCase
 
 from infrastructure.forms.presentation_profile_django_forms import PresentationProfileForm
 from core_logic.entities.document import DocumentPresentation, DocumentPresentationProfile
+from core_logic.entities.task import TaskMathCacheStats
 from core_logic.entities.heatmap import (
     HeatmapColumnAverage,
     HeatmapMatrixCell,
@@ -1281,7 +1282,13 @@ class TaskFormAdapterTests(SimpleTestCase):
             difficulties=[(1, 'Легкая')],
             total_tasks=3,
             ungrouped_count=1,
-            cache_stats={'with_math': 2},
+            cache_stats=TaskMathCacheStats(
+                all_status_cached=True,
+                with_math_cached=True,
+                with_errors_cached=True,
+                total_with_math=2,
+                total_with_errors=1,
+            ),
         )
 
         context = TaskFormAdapter().task_list_context(
@@ -1301,7 +1308,7 @@ class TaskFormAdapterTests(SimpleTestCase):
         self.assertEqual(context['difficulties'], [(1, 'Легкая')])
         self.assertEqual(context['total_tasks'], 3)
         self.assertEqual(context['ungrouped_count'], 1)
-        self.assertEqual(context['cache_stats'], {'with_math': 2})
+        self.assertEqual(context['cache_stats'].total_with_math, 2)
         self.assertEqual(context['search_query'], 'force')
 
     def test_builds_task_page_contexts(self):

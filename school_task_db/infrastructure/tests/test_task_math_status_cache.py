@@ -18,6 +18,18 @@ class DjangoTaskMathStatusCacheTests(TestCase):
     def tearDown(self):
         cache.clear()
 
+    def test_cache_stats_returns_typed_aggregate(self):
+        cache.set(DjangoTaskMathStatusCache.CACHE_KEY_WITH_MATH, {'task-1'})
+        cache.set(DjangoTaskMathStatusCache.CACHE_KEY_WITH_ERRORS, set())
+
+        stats = DjangoTaskMathStatusCache.get_cache_stats()
+
+        self.assertFalse(stats.all_status_cached)
+        self.assertTrue(stats.with_math_cached)
+        self.assertTrue(stats.with_errors_cached)
+        self.assertEqual(stats.total_with_math, 1)
+        self.assertEqual(stats.total_with_errors, 0)
+
     @patch(
         'infrastructure.services.task_math_status_cache.formula_processor'
     )

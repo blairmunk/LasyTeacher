@@ -3,6 +3,8 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Set
 
+from core_logic.entities.task import TaskMathCacheStats
+
 
 class ITaskMathStatusCache(ABC):
     @abstractmethod
@@ -14,7 +16,7 @@ class ITaskMathStatusCache(ABC):
         """Return IDs of tasks with invalid mathematical markup."""
 
     @abstractmethod
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self) -> TaskMathCacheStats:
         """Return cache availability and aggregate counters."""
 
     @abstractmethod

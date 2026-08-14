@@ -4,19 +4,21 @@ from unittest.mock import patch
 from django.core.management import call_command
 from django.test import SimpleTestCase
 
+from core_logic.entities.task import TaskMathCacheStats
+
 
 class ManageMathCacheCommandTests(SimpleTestCase):
     @patch(
         'tasks.management.commands.manage_math_cache.task_math_status_cache'
     )
     def test_stats_uses_adapter_inventory(self, math_status_cache):
-        math_status_cache.get_cache_stats.return_value = {
-            'all_status_cached': True,
-            'with_math_cached': True,
-            'with_errors_cached': True,
-            'total_with_math': 3,
-            'total_with_errors': 1,
-        }
+        math_status_cache.get_cache_stats.return_value = TaskMathCacheStats(
+            all_status_cached=True,
+            with_math_cached=True,
+            with_errors_cached=True,
+            total_with_math=3,
+            total_with_errors=1,
+        )
         math_status_cache.get_cache_inventory.return_value = {
             'total_tasks': 5,
             'sample_size': 5,

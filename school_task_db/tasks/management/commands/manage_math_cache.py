@@ -53,13 +53,13 @@ class Command(BaseCommand):
         
         stats = task_math_status_cache.get_cache_stats()
         
-        self.stdout.write(f"  Основной кэш: {'✅' if stats['all_status_cached'] else '❌'}")
-        self.stdout.write(f"  Задания с формулами: {'✅' if stats['with_math_cached'] else '❌'}")
-        self.stdout.write(f"  Задания с ошибками: {'✅' if stats['with_errors_cached'] else '❌'}")
+        self.stdout.write(f"  Основной кэш: {'✅' if stats.all_status_cached else '❌'}")
+        self.stdout.write(f"  Задания с формулами: {'✅' if stats.with_math_cached else '❌'}")
+        self.stdout.write(f"  Задания с ошибками: {'✅' if stats.with_errors_cached else '❌'}")
         
-        if stats['with_math_cached']:
-            self.stdout.write(f"  📐 Всего заданий с формулами: {stats['total_with_math']}")
-            self.stdout.write(f"  ❌ Заданий с ошибками в формулах: {stats['total_with_errors']}")
+        if stats.with_math_cached:
+            self.stdout.write(f"  📐 Всего заданий с формулами: {stats.total_with_math}")
+            self.stdout.write(f"  ❌ Заданий с ошибками в формулах: {stats.total_with_errors}")
         
         inventory = task_math_status_cache.get_cache_inventory()
         if inventory['total_tasks'] > 0:

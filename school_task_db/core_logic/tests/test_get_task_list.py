@@ -1,7 +1,12 @@
 from datetime import datetime
 from unittest import TestCase
 
-from core_logic.entities.task import SelectOption, TaskListFilters, TaskListItem
+from core_logic.entities.task import (
+    SelectOption,
+    TaskListFilters,
+    TaskListItem,
+    TaskMathCacheStats,
+)
 from core_logic.use_cases.get_task_list import GetTaskListUseCase
 
 
@@ -55,7 +60,13 @@ class FakeTaskMathStatusCache:
 
     def get_cache_stats(self):
         self.stats_requested = True
-        return {'total': 7}
+        return TaskMathCacheStats(
+            all_status_cached=True,
+            with_math_cached=True,
+            with_errors_cached=True,
+            total_with_math=7,
+            total_with_errors=1,
+        )
 
 
 class GetTaskListUseCaseTests(TestCase):
@@ -85,7 +96,7 @@ class GetTaskListUseCaseTests(TestCase):
         self.assertEqual(data.grade_choices[0], (7, '7 класс'))
         self.assertEqual(data.total_tasks, 7)
         self.assertEqual(data.ungrouped_count, 2)
-        self.assertEqual(data.cache_stats, {'total': 7})
+        self.assertEqual(data.cache_stats.total_with_math, 7)
         self.assertTrue(cache.stats_requested)
 
     def test_execute_skips_cache_stats_for_non_staff_context(self):

@@ -1,5 +1,4 @@
 \begin{schoolblankcells}
 {% if section.title or payload.title %}\schoolsectionheading{ {{ section.title|default:payload.title }} }{% endif %}
-\noindent
 \schoolgrid{ {{ payload.rows }} }{ {{ payload.columns }} }{ {{ payload.latex_cell_size_mm }} }
 \end{schoolblankcells}

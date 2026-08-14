@@ -41,9 +41,7 @@
 
 {% endif %}
 {% elif block.block_type == 'blank_cells' %}
-\begin{center}
 \schoolgrid{ {{ block.blank_cells.rows }} }{ {{ block.blank_cells.columns }} }{ {{ block.blank_cells.latex_cell_size_mm }} }
-\end{center}
 
 {% endif %}
 {% empty %}

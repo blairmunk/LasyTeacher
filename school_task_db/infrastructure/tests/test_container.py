@@ -481,7 +481,7 @@ from infrastructure.presenters.report_document import (
 )
 from infrastructure.presenters.work_document import WorkDocumentWebPresenter
 from infrastructure.services.document_engine import (
-    DjangoDocumentEngine,
+    SectionedDocumentEngine,
 )
 from infrastructure.services.django_transaction_manager import (
     DjangoTransactionManager,
@@ -606,7 +606,7 @@ class ContainerTests(SimpleTestCase):
         ) as factory:
             result = container.document_engine
 
-        self.assertIsInstance(result, DjangoDocumentEngine)
+        self.assertIsInstance(result, SectionedDocumentEngine)
         self.assertIs(result.document_builder, document_builder)
         self.assertIs(
             result.document_renderer_registry,
@@ -1460,6 +1460,6 @@ class ContainerTests(SimpleTestCase):
         )
         self.assertIsInstance(
             container.document_engine,
-            DjangoDocumentEngine,
+            SectionedDocumentEngine,
         )
         self.assertIsInstance(container.task_import_service, DjangoTaskImportService)

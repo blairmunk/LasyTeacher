@@ -547,7 +547,7 @@ from infrastructure.repositories.django_work_analysis_repo import (
     DjangoWorkAnalysisRepository,
 )
 from infrastructure.services.document_engine import (
-    DjangoDocumentEngine,
+    SectionedDocumentEngine,
 )
 from infrastructure.services.rendered_document_file_store import (
     RenderedDocumentFileStore,
@@ -1346,7 +1346,7 @@ class Container:
                 ),
                 file_store=self.rendered_document_file_store,
             )
-            self._document_engine = DjangoDocumentEngine(
+            self._document_engine = SectionedDocumentEngine(
                 document_builder=components.document_builder,
                 document_renderer_registry=(
                     components.document_renderer_registry

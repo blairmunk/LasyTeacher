@@ -1,4 +1,4 @@
-"""Django document engine."""
+"""Infrastructure orchestration for section-based document rendering."""
 
 from core_logic.entities.document_rendering import (
     GeneratedDocument,
@@ -12,7 +12,9 @@ from core_logic.value_objects.document_render_plan import DocumentRenderPlan
 from core_logic.value_objects.document_render_requests import DocumentRenderRequest
 
 
-class DjangoDocumentEngine(IDocumentEngine):
+class SectionedDocumentEngine(IDocumentEngine):
+    """Build a document from its recipe and dispatch it to a renderer."""
+
     def __init__(
         self,
         document_builder=None,

@@ -23,7 +23,7 @@ from core_logic.value_objects.document_render_plan import (
 )
 from curriculum.models import Topic
 from infrastructure.services.document_engine import (
-    DjangoDocumentEngine,
+    SectionedDocumentEngine,
 )
 from infrastructure.services.task_import_service import DjangoTaskImportService
 from tasks.models import Task
@@ -59,10 +59,10 @@ class FakeSectionPayloadBuilder:
         return self.payload
 
 
-class DjangoDocumentEngineTests(TestCase):
+class SectionedDocumentEngineTests(TestCase):
     def test_build_document_uses_configured_builder(self):
         builder = FakeDocumentBuilder()
-        service = DjangoDocumentEngine(
+        service = SectionedDocumentEngine(
             document_builder=builder,
         )
         source = DocumentSourceRef(source_type='work', source_id='work-1')
@@ -85,7 +85,7 @@ class DjangoDocumentEngineTests(TestCase):
         )
         payload_registry.register('header', payload_builder, document_type='work')
         registry = FakeDocumentRendererRegistry()
-        service = DjangoDocumentEngine(
+        service = SectionedDocumentEngine(
             section_payload_builder_registry=payload_registry,
             document_renderer_registry=registry,
         )
@@ -111,7 +111,7 @@ class DjangoDocumentEngineTests(TestCase):
         document = Document(title='Контрольная', document_type='work')
         builder = FakeDocumentBuilder(document=document)
         registry = FakeDocumentRendererRegistry()
-        service = DjangoDocumentEngine(
+        service = SectionedDocumentEngine(
             document_builder=builder,
             document_renderer_registry=registry,
         )
@@ -131,7 +131,7 @@ class DjangoDocumentEngineTests(TestCase):
         document = Document(title='Разбор', document_type='remedial_sheet')
         builder = FakeDocumentBuilder(document=document)
         registry = FakeDocumentRendererRegistry()
-        service = DjangoDocumentEngine(
+        service = SectionedDocumentEngine(
             document_builder=builder,
             document_renderer_registry=registry,
         )
@@ -151,7 +151,7 @@ class DjangoDocumentEngineTests(TestCase):
         self.assertEqual(registry.request.render_target.renderer_type, 'pdf')
 
     def test_render_document_requires_render_plan(self):
-        service = DjangoDocumentEngine()
+        service = SectionedDocumentEngine()
 
         with self.assertRaisesRegex(
             ValueError,

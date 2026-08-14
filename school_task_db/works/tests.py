@@ -1163,7 +1163,7 @@ class WorkDetailViewTests(TestCase):
     def test_render_work_ajax_uses_specification_and_print_overrides(self):
         with patch(
             'infrastructure.services.document_engine.'
-            'DjangoDocumentEngine.render_document',
+            'SectionedDocumentEngine.render_document',
             return_value=GeneratedDocument(file_type='html', files=[]),
         ) as render_document:
             response = self.client.post(
@@ -1223,7 +1223,7 @@ class WorkDetailViewTests(TestCase):
     def test_render_work_ajax_uses_document_service(self):
         with patch(
             'infrastructure.services.document_engine.'
-            'DjangoDocumentEngine.render_document',
+            'SectionedDocumentEngine.render_document',
             return_value=GeneratedDocument(
                 file_type='html',
                 files=[
@@ -1267,7 +1267,7 @@ class WorkDetailViewTests(TestCase):
 
         with patch(
             'infrastructure.services.document_engine.'
-            'DjangoDocumentEngine.render_document',
+            'SectionedDocumentEngine.render_document',
         ) as render_document:
             response = self.client.post(
                 reverse('works:render_work_ajax', args=[remedial_work.pk]),
@@ -1343,7 +1343,7 @@ class WorkDetailViewTests(TestCase):
 
         with patch(
             'infrastructure.services.document_engine.'
-            'DjangoDocumentEngine.render_document',
+            'SectionedDocumentEngine.render_document',
             return_value=GeneratedDocument(
                 file_type='pdf',
                 files=[
@@ -1381,7 +1381,7 @@ class WorkDetailViewTests(TestCase):
     def test_render_remedial_sheet_ajax_rejects_regular_variant(self):
         with patch(
             'infrastructure.services.document_engine.'
-            'DjangoDocumentEngine.render_document',
+            'SectionedDocumentEngine.render_document',
         ) as render_document:
             response = self.client.post(
                 reverse(
@@ -1411,7 +1411,7 @@ class WorkDetailViewTests(TestCase):
 
         with patch(
             'infrastructure.services.document_engine.'
-            'DjangoDocumentEngine.render_document',
+            'SectionedDocumentEngine.render_document',
         ) as render_document:
             response = self.client.post(
                 reverse(
@@ -1448,7 +1448,7 @@ class WorkDetailViewTests(TestCase):
 
         with patch(
             'infrastructure.services.document_engine.'
-            'DjangoDocumentEngine.render_document',
+            'SectionedDocumentEngine.render_document',
         ) as render_document:
             response = self.client.post(
                 reverse(
@@ -1498,7 +1498,7 @@ class WorkDetailViewTests(TestCase):
 
         with patch(
             'infrastructure.services.document_engine.'
-            'DjangoDocumentEngine.render_document',
+            'SectionedDocumentEngine.render_document',
             return_value=GeneratedDocument(
                 file_type='pdf',
                 files=[

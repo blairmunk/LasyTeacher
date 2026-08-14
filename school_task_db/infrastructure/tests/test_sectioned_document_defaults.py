@@ -55,7 +55,7 @@ from curriculum.models import Topic
 from infrastructure.repositories.django_work_document_repo import (
     DjangoWorkDocumentRepository,
 )
-from infrastructure.services.document_engine import DjangoDocumentEngine
+from infrastructure.services.document_engine import SectionedDocumentEngine
 from infrastructure.services.rendered_document_file_store import (
     RenderedDocumentFileStore,
 )
@@ -119,7 +119,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 file_store=file_store,
                 work_document_repo=DjangoWorkDocumentRepository(),
             )
-            engine = DjangoDocumentEngine(
+            engine = SectionedDocumentEngine(
                 document_builder=components.document_builder,
                 document_renderer_registry=components.document_renderer_registry,
             )
@@ -193,7 +193,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 ),
                 work_document_repo=DjangoWorkDocumentRepository(),
             )
-            engine = DjangoDocumentEngine(
+            engine = SectionedDocumentEngine(
                 document_builder=components.document_builder,
                 document_renderer_registry=components.document_renderer_registry,
             )
@@ -245,7 +245,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 ),
                 work_document_repo=DjangoWorkDocumentRepository(),
             )
-            engine = DjangoDocumentEngine(
+            engine = SectionedDocumentEngine(
                 document_builder=components.document_builder,
                 document_renderer_registry=components.document_renderer_registry,
             )
@@ -293,7 +293,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 ),
                 work_document_repo=DjangoWorkDocumentRepository(),
             )
-            engine = DjangoDocumentEngine(
+            engine = SectionedDocumentEngine(
                 document_builder=components.document_builder,
                 document_renderer_registry=components.document_renderer_registry,
             )
@@ -350,7 +350,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 ),
                 work_document_repo=DjangoWorkDocumentRepository(),
             )
-            engine = DjangoDocumentEngine(
+            engine = SectionedDocumentEngine(
                 document_builder=components.document_builder,
                 document_renderer_registry=components.document_renderer_registry,
             )
@@ -399,7 +399,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 ),
                 work_document_repo=DjangoWorkDocumentRepository(),
             )
-            engine = DjangoDocumentEngine(
+            engine = SectionedDocumentEngine(
                 document_builder=components.document_builder,
                 document_renderer_registry=components.document_renderer_registry,
             )
@@ -500,7 +500,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 file_store=file_store,
                 get_remedial_sheet_data=lambda variant_id: sheet_data,
             )
-            engine = DjangoDocumentEngine(
+            engine = SectionedDocumentEngine(
                 document_builder=components.document_builder,
                 document_renderer_registry=components.document_renderer_registry,
             )
@@ -595,7 +595,7 @@ class SectionedDocumentDefaultsTests(TestCase):
                 ),
                 get_remedial_sheet_data=lambda variant_id: sheet_data,
             )
-            engine = DjangoDocumentEngine(
+            engine = SectionedDocumentEngine(
                 document_builder=components.document_builder,
                 document_renderer_registry=components.document_renderer_registry,
             )

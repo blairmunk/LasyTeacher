@@ -114,6 +114,7 @@ class TaskExportService:
             }
         if task.source:
             row['source'] = {
+                'id': task.source.pk,
                 'name': task.source.name,
                 'short_name': task.source.short_name,
                 'source_type': task.source.source_type,

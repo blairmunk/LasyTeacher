@@ -13,6 +13,7 @@ class DjangoSourceCatalogRepository(ISourceCatalogRepository):
             SourceListItem(
                 pk=str(source.pk),
                 name=source.name,
+                short_uuid=source.get_short_uuid(),
                 short_name=source.short_name,
                 source_type_display=source.get_source_type_display(),
                 author=source.author,

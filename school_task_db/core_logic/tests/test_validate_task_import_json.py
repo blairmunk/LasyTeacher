@@ -74,6 +74,10 @@ class ValidateTaskImportJsonUseCaseTests(TestCase):
                     'analog_groups': [{'id': group_id, 'name': 'Группа'}],
                     'topics': [{'name': 'Тема'}],
                     'task_images': [{'id': 'image'}],
+                    'sources': [{
+                        'id': '880e8400-e29b-41d4-a716-446655440001',
+                        'name': 'Сборник',
+                    }],
                 },
             ),
         )
@@ -91,8 +95,29 @@ class ValidateTaskImportJsonUseCaseTests(TestCase):
                 'groups_total': 1,
                 'topics_total': 1,
                 'images_total': 1,
+                'sources_total': 1,
             },
         )
+
+    def test_validates_source_uuid_and_warns_for_legacy_source(self):
+        data = self.use_case.execute(
+            ValidateTaskImportJsonRequest(
+                data={
+                    'tasks': [],
+                    'sources': [
+                        {'id': 'not-a-uuid', 'name': 'Некорректный'},
+                        {'name': 'Старый формат'},
+                    ],
+                },
+            ),
+        )
+
+        self.assertFalse(data.is_valid)
+        self.assertIn('Источник #1: некорректный UUID', data.errors[0])
+        self.assertTrue(any(
+            'Источник #2: отсутствует id' in warning
+            for warning in data.warnings
+        ))
 
     def test_warns_about_missing_group_reference(self):
         data = self.use_case.execute(

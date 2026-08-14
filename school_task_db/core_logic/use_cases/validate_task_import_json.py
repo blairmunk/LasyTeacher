@@ -63,6 +63,7 @@ class ValidateTaskImportJsonUseCase:
         groups_data = data.get('analog_groups', [])
         topics_data = data.get('topics', [])
         images_data = data.get('task_images', [])
+        sources_data = data.get('sources', [])
 
         tasks_ok = 0
         tasks_errors = 0
@@ -83,6 +84,7 @@ class ValidateTaskImportJsonUseCase:
                 tasks_ok += 1
 
         group_uuids = self._validate_groups(groups_data, errors)
+        self._validate_sources(sources_data, errors, warnings)
         self._validate_task_group_links(
             tasks,
             group_uuids,
@@ -97,6 +99,7 @@ class ValidateTaskImportJsonUseCase:
             'groups_total': len(groups_data),
             'topics_total': len(topics_data),
             'images_total': len(images_data),
+            'sources_total': len(sources_data),
         }
 
         return ImportJsonValidationData(
@@ -201,6 +204,41 @@ class ValidateTaskImportJsonUseCase:
                 errors.append(f'Группа #{group_number}: отсутствует name')
 
         return group_uuids
+
+    @staticmethod
+    def _validate_sources(sources_data, errors, warnings):
+        if not isinstance(sources_data, list):
+            errors.append('"sources" должен быть массивом')
+            return
+
+        source_uuids = set()
+        for index, source in enumerate(sources_data, start=1):
+            if not isinstance(source, dict):
+                errors.append(f'Источник #{index}: должен быть объектом')
+                continue
+            if not source.get('name'):
+                errors.append(f'Источник #{index}: отсутствует name')
+
+            source_uuid = source.get('id') or source.get('uuid')
+            if not source_uuid:
+                warnings.append(
+                    f'Источник #{index}: отсутствует id (UUID); '
+                    'будет сопоставлен по ISBN или названию',
+                )
+                continue
+            try:
+                normalized_uuid = str(UUID(str(source_uuid)))
+            except (TypeError, ValueError):
+                errors.append(
+                    f'Источник #{index}: некорректный UUID '
+                    f'"{source_uuid}"',
+                )
+                continue
+            if normalized_uuid in source_uuids:
+                errors.append(
+                    f'Источник #{index}: дублирующийся id {source_uuid}',
+                )
+            source_uuids.add(normalized_uuid)
 
     def _validate_task_group_links(
         self,

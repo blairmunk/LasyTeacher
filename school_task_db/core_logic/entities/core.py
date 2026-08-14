@@ -98,6 +98,15 @@ class SearchCourseResult:
 
 
 @dataclass(frozen=True)
+class SearchSourceResult:
+    pk: str
+    name: str
+    short_name: str
+    source_type_display: str
+    short_uuid: str
+
+
+@dataclass(frozen=True)
 class GlobalSearchResults:
     tasks: tuple[SearchTaskResult, ...] = field(default_factory=tuple)
     works: tuple[SearchWorkResult, ...] = field(default_factory=tuple)
@@ -110,6 +119,7 @@ class GlobalSearchResults:
     events: tuple[SearchEventResult, ...] = field(default_factory=tuple)
     topics: tuple[SearchTopicResult, ...] = field(default_factory=tuple)
     courses: tuple[SearchCourseResult, ...] = field(default_factory=tuple)
+    sources: tuple[SearchSourceResult, ...] = field(default_factory=tuple)
 
     def __post_init__(self):
         for field_name in self.__dataclass_fields__:

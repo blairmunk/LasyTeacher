@@ -6,7 +6,7 @@ from django.test import TestCase
 from codifier.models import CodifierSpec, ContentEntry, Requirement
 from infrastructure.importers.tasks import TaskImporter
 from task_groups.models import TaskGroup
-from tasks.models import Task, TaskImage
+from tasks.models import Source, Task, TaskImage
 
 
 class TaskImporterTests(TestCase):
@@ -257,17 +257,20 @@ class TaskImporterTests(TestCase):
 
     def test_catalog_source_is_resolved_and_updated_for_task(self):
         task_id = '550e8400-e29b-41d4-a716-446655440001'
+        source_id = '880e8400-e29b-41d4-a716-446655440001'
         payload = self._task_payload(
             task_id=task_id,
             group_id='770e8400-e29b-41d4-a716-446655440001',
         )
         payload['sources'] = [{
+            'id': source_id,
             'name': 'Сборник задач по физике',
             'short_name': 'Сборник-9',
             'source_type': 'problem_book',
             'author': 'Первый автор',
         }]
         payload['tasks'][0]['source'] = {
+            'id': source_id,
             'name': 'Сборник задач по физике',
             'short_name': 'Сборник-9',
         }
@@ -275,13 +278,40 @@ class TaskImporterTests(TestCase):
         self._import(payload)
 
         task = Task.objects.select_related('source').get(pk=task_id)
+        self.assertEqual(str(task.source.pk), source_id)
         self.assertEqual(task.source.short_name, 'Сборник-9')
         self.assertEqual(task.source.author, 'Первый автор')
 
+        payload['sources'][0]['name'] = 'Исправленное название'
         payload['sources'][0]['author'] = 'Новый автор'
+        payload['tasks'][0]['source']['name'] = 'Исправленное название'
         self._import(payload)
         task.source.refresh_from_db()
+        self.assertEqual(Source.objects.count(), 1)
+        self.assertEqual(task.source.name, 'Исправленное название')
         self.assertEqual(task.source.author, 'Новый автор')
+
+    def test_source_import_uses_isbn_before_a_changed_name(self):
+        existing = Source.objects.create(
+            name='Физика. Первое название',
+            isbn='978-5-00000-001-1',
+        )
+        payload = self._task_payload(
+            task_id='550e8400-e29b-41d4-a716-446655440001',
+            group_id='770e8400-e29b-41d4-a716-446655440001',
+        )
+        payload['sources'] = [{
+            'id': '880e8400-e29b-41d4-a716-446655440002',
+            'name': 'Физика. Название с исправлением',
+            'isbn': existing.isbn,
+        }]
+        payload['tasks'][0]['source'] = payload['sources'][0]
+
+        self._import(payload)
+
+        task = Task.objects.select_related('source').get()
+        self.assertEqual(Source.objects.count(), 1)
+        self.assertEqual(task.source_id, existing.pk)
 
     def test_subtopic_is_created_once_and_bound_to_task_topic(self):
         task_id = '550e8400-e29b-41d4-a716-446655440001'

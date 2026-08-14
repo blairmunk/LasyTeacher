@@ -283,6 +283,30 @@
             </div>
         </div>
         {% endif %}
+
+        {% if results.sources %}
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-secondary text-white d-flex justify-content-between">
+                    <h6 class="mb-0"><i class="fas fa-book"></i> Источники заданий</h6>
+                    <span class="badge bg-white text-secondary">{{ results.sources|length }}</span>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for source in results.sources %}
+                    <a href="{% url 'tasks:source-list' %}#source-{{ source.pk }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-bold">{{ source.name }}</span>
+                            <span class="badge bg-secondary" style="font-family:monospace;">#{{ source.short_uuid }}</span>
+                        </div>
+                        <small class="text-muted">
+                            {{ source.short_name|default:source.source_type_display }}
+                        </small>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
     {% endif %}
 

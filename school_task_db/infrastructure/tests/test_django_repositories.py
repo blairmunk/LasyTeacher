@@ -1124,6 +1124,7 @@ class DjangoRemedialRepositoryTests(TestCase):
 
         self.assertEqual(sources[0].pk, str(source.pk))
         self.assertEqual(sources[0].name, source.name)
+        self.assertEqual(sources[0].short_uuid, source.get_short_uuid())
         self.assertEqual(sources[0].source_type_display, source.get_source_type_display())
         self.assertEqual(sources[0].task_count, 1)
 
@@ -2196,6 +2197,19 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(student_results.students[0].pk, str(self.student.pk))
         self.assertEqual(group_results.student_groups[0].pk, str(self.group.pk))
         self.assertEqual(event_results.events[0].pk, str(self.event.pk))
+
+    def test_global_search_includes_task_sources(self):
+        source = Source.objects.create(
+            name='Сборник задач Перышкина',
+            short_name='Перышкин-8',
+        )
+        repo = DjangoGlobalSearchRepository()
+
+        uuid_results = repo.search_by_uuid(source.get_short_uuid())
+        text_results = repo.search_by_text(['Перышкин-8'])
+
+        self.assertEqual(uuid_results.sources[0].pk, str(source.pk))
+        self.assertEqual(text_results.sources[0].pk, str(source.pk))
 
     def test_work_repository_returns_variant_list_page_data(self):
         repo = DjangoVariantReadRepository()

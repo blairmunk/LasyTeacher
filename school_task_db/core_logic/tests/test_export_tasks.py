@@ -74,6 +74,10 @@ class ExportTasksUseCaseTests(TestCase):
         self.assertEqual(len(data.payload['tasks']), 2)
         self.assertEqual(len(data.payload['topics']), 1)
         self.assertEqual(len(data.payload['sources']), 1)
+        self.assertEqual(
+            data.payload['tasks'][0]['source']['id'],
+            'source-1',
+        )
         self.assertEqual(len(data.payload['analog_groups']), 1)
         self.assertEqual(
             data.payload['tasks'][0]['codifier_content_entries'][0],

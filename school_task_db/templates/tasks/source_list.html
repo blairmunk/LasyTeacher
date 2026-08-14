@@ -26,9 +26,10 @@
             </thead>
             <tbody>
                 {% for source in sources %}
-                <tr>
+                <tr id="source-{{ source.pk }}">
                     <td>
                         <strong>{{ source.name }}</strong>
+                        <span class="uuid-badge ms-1">#{{ source.short_uuid }}</span>
                         {% if source.short_name %}
                             <br><small class="text-muted">{{ source.short_name }}</small>
                         {% endif %}

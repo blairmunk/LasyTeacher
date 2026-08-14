@@ -11,6 +11,7 @@ from core_logic.entities.core import (
     SearchRelatedResult,
     SearchStudentGroupResult,
     SearchStudentResult,
+    SearchSourceResult,
     SearchTaskResult,
     SearchTopicResult,
     SearchVariantResult,
@@ -28,7 +29,7 @@ from curriculum.models import Course, Topic
 from events.models import Event
 from students.models import Student, StudentGroup
 from task_groups.models import AnalogGroup
-from tasks.models import Task
+from tasks.models import Source, Task
 from works.models import Variant, Work
 
 
@@ -58,6 +59,9 @@ class DjangoGlobalSearchRepository(IGlobalSearchRepository):
             courses=self._course_results(
                 self._search_model_by_uuid(Course, query),
             ),
+            sources=self._source_results(
+                self._search_model_by_uuid(Source, query),
+            ),
         )
 
     def search_by_text(self, words):
@@ -73,6 +77,7 @@ class DjangoGlobalSearchRepository(IGlobalSearchRepository):
             events=self._event_results(self._search_events_by_text(words)),
             topics=self._topic_results(self._search_topics_by_text(words)),
             courses=self._course_results(self._search_courses_by_text(words)),
+            sources=self._source_results(self._search_sources_by_text(words)),
         )
 
     @staticmethod
@@ -203,6 +208,18 @@ class DjangoGlobalSearchRepository(IGlobalSearchRepository):
                 | Q(description__icontains=word)
             )
         return Course.objects.filter(course_q)[:20]
+
+    @staticmethod
+    def _search_sources_by_text(words):
+        source_q = Q()
+        for word in words:
+            source_q &= (
+                Q(name__icontains=word)
+                | Q(short_name__icontains=word)
+                | Q(author__icontains=word)
+                | Q(isbn__icontains=word)
+            )
+        return Source.objects.filter(source_q)[:20]
 
     @staticmethod
     def _task_results(tasks):
@@ -345,6 +362,19 @@ class DjangoGlobalSearchRepository(IGlobalSearchRepository):
                 short_uuid=course.get_short_uuid(),
             )
             for course in courses
+        )
+
+    @staticmethod
+    def _source_results(sources):
+        return tuple(
+            SearchSourceResult(
+                pk=str(source.pk),
+                name=source.name,
+                short_name=source.short_name,
+                source_type_display=source.get_source_type_display(),
+                short_uuid=source.get_short_uuid(),
+            )
+            for source in sources
         )
 
     @staticmethod

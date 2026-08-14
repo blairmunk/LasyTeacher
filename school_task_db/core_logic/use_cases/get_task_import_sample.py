@@ -14,10 +14,12 @@ class GetTaskImportSampleUseCase:
                 'version': TASK_TRANSFER_FORMAT_VERSION,
                 'description': (
                     'Пример файла для импорта заданий '
-                    '(v1.4 — с явными связями кодификаторов)'
+                    '(v1.4 — с UUID источников и явными связями '
+                    'кодификаторов)'
                 ),
                 'sources': [
                     {
+                        'id': '880e8400-e29b-41d4-a716-446655440001',
                         'name': 'Перышкин А.В. Физика. 8 класс',
                         'short_name': 'Перышкин-8',
                         'source_type': 'textbook',
@@ -75,6 +77,7 @@ class GetTaskImportSampleUseCase:
                         'codifier_content_entries': [],
                         'codifier_requirements': [],
                         'source': {
+                            'id': '880e8400-e29b-41d4-a716-446655440001',
                             'name': 'Перышкин А.В. Физика. 8 класс',
                             'short_name': 'Перышкин-8',
                         },

@@ -486,6 +486,7 @@ class SourceListItem:
     pk: str
     name: str
     source_type_display: str
+    short_uuid: str = ''
     short_name: str = ''
     author: str = ''
     year: Optional[int] = None

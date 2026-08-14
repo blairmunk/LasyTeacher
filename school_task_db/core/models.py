@@ -2,6 +2,14 @@
 from django.db import models
 import uuid
 
+from core_logic.value_objects.short_uuid import (
+    MEDIUM_UUID_LENGTH,
+    format_short_uuid,
+    is_uuid_search_fragment,
+    normalize_uuid_fragment,
+    uuid_matches_suffix,
+)
+
 
 class BaseModel(models.Model):
     """Базовая модель с UUID как primary key"""
@@ -16,11 +24,11 @@ class BaseModel(models.Model):
     
     def get_short_uuid(self):
         """Возвращает последние 4 символа UUID для отображения"""
-        return str(self.id)[-4:].upper()
+        return format_short_uuid(self.id)
     
     def get_medium_uuid(self):
         """Возвращает последние 8 символов UUID"""
-        return str(self.id)[-8:].upper()
+        return format_short_uuid(self.id, MEDIUM_UUID_LENGTH)
     
     def get_display_id(self):
         """Красивый ID для отображения пользователю"""
@@ -28,18 +36,24 @@ class BaseModel(models.Model):
     
     @classmethod
     def get_by_uuid(cls, uuid_str):
-        """УПРОЩЕНО: теперь UUID = primary key"""
-        try:
-            if len(uuid_str) == 36:
-                # Полный UUID
-                return cls.objects.get(id=uuid_str)  # id теперь UUID
-            elif len(uuid_str) >= 3:
-                # Поиск по окончанию UUID
-                uuid_str = uuid_str.lower().replace('#', '')
-                matches = cls.objects.filter(id__iendswith=uuid_str)
-                return matches.first() if matches.count() == 1 else None
-        except (cls.DoesNotExist, ValueError):
-            pass
+        """Return an exact UUID or one unambiguous suffix match."""
+        fragment = normalize_uuid_fragment(uuid_str)
+        if not is_uuid_search_fragment(fragment):
+            return None
+
+        if len(fragment) == 32:
+            try:
+                return cls.objects.filter(id=uuid.UUID(fragment)).first()
+            except ValueError:
+                return None
+
+        matching_ids = [
+            object_id
+            for object_id in cls.objects.values_list('id', flat=True).iterator()
+            if uuid_matches_suffix(object_id, fragment)
+        ]
+        if len(matching_ids) == 1:
+            return cls.objects.filter(id=matching_ids[0]).first()
         return None
     
     # НОВОЕ: удобные методы для совместимости

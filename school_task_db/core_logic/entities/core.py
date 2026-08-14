@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 
 @dataclass(frozen=True)
@@ -30,7 +30,15 @@ class SearchVariantResult:
     task_count: int
     total_max_points: int
     short_uuid: str
-    has_work: bool = False
+    work: Optional["SearchRelatedResult"] = None
+    events: tuple["SearchRelatedResult", ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        object.__setattr__(self, 'events', tuple(self.events))
+
+    @property
+    def has_work(self) -> bool:
+        return self.work is not None
 
 
 @dataclass(frozen=True)
@@ -39,6 +47,80 @@ class SearchGroupResult:
     name: str
     task_count: int
     short_uuid: str
+
+
+@dataclass(frozen=True)
+class SearchRelatedResult:
+    pk: str
+    name: str
+
+
+@dataclass(frozen=True)
+class SearchStudentResult:
+    pk: str
+    full_name: str
+    short_uuid: str
+
+
+@dataclass(frozen=True)
+class SearchStudentGroupResult:
+    pk: str
+    name: str
+    students_count: int
+    short_uuid: str
+
+
+@dataclass(frozen=True)
+class SearchEventResult:
+    pk: str
+    name: str
+    planned_date: Optional[datetime]
+    status_display: str
+    short_uuid: str
+
+
+@dataclass(frozen=True)
+class SearchTopicResult:
+    pk: str
+    name: str
+    subject: str
+    grade_level: int
+    short_uuid: str
+
+
+@dataclass(frozen=True)
+class SearchCourseResult:
+    pk: str
+    name: str
+    subject: str
+    grade_level: int
+    short_uuid: str
+
+
+@dataclass(frozen=True)
+class GlobalSearchResults:
+    tasks: tuple[SearchTaskResult, ...] = field(default_factory=tuple)
+    works: tuple[SearchWorkResult, ...] = field(default_factory=tuple)
+    variants: tuple[SearchVariantResult, ...] = field(default_factory=tuple)
+    groups: tuple[SearchGroupResult, ...] = field(default_factory=tuple)
+    students: tuple[SearchStudentResult, ...] = field(default_factory=tuple)
+    student_groups: tuple[SearchStudentGroupResult, ...] = field(
+        default_factory=tuple,
+    )
+    events: tuple[SearchEventResult, ...] = field(default_factory=tuple)
+    topics: tuple[SearchTopicResult, ...] = field(default_factory=tuple)
+    courses: tuple[SearchCourseResult, ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        for field_name in self.__dataclass_fields__:
+            object.__setattr__(self, field_name, tuple(getattr(self, field_name)))
+
+    @property
+    def total_count(self) -> int:
+        return sum(
+            len(getattr(self, field_name))
+            for field_name in self.__dataclass_fields__
+        )
 
 
 @dataclass(frozen=True)
@@ -71,15 +153,10 @@ class DashboardSummaryData:
 @dataclass(frozen=True)
 class GlobalSearchData:
     query: str = ''
-    results: Dict[str, Any] = None
+    results: GlobalSearchResults = field(default_factory=GlobalSearchResults)
     total_found: int = 0
     search_mode: Optional[str] = None
     found_text: str = ''
-
-    def __post_init__(self):
-        if self.results is None:
-            object.__setattr__(self, 'results', {})
-
 
 @dataclass(frozen=True)
 class ImportPageData:

@@ -110,10 +110,12 @@
                 </div>
                 <div class="list-group list-group-flush">
                     {% for variant in results.variants %}
-                    <a href="{% url 'works:variant-detail' variant.pk %}" class="list-group-item list-group-item-action">
+                    <div class="list-group-item">
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="me-2">
-                                <div class="fw-bold">{{ variant.display_name }}</div>
+                                <a href="{% url 'works:variant-detail' variant.pk %}" class="fw-bold text-decoration-none">
+                                    {{ variant.display_name }}
+                                </a>
                                 <small class="text-muted">
                                     Вариант {{ variant.number }} •
                                     {{ variant.task_count }} заданий •
@@ -122,10 +124,26 @@
                                         <span class="text-warning"><i class="fas fa-unlink"></i> сирота</span>
                                     {% endif %}
                                 </small>
+                                {% if variant.work or variant.events %}
+                                <div class="small mt-1">
+                                    {% if variant.work %}
+                                    <a href="{% url 'works:detail' variant.work.pk %}" class="me-2">
+                                        <i class="fas fa-file-alt"></i> {{ variant.work.name }}
+                                    </a>
+                                    {% endif %}
+                                    {% for event in variant.events %}
+                                    <a href="{% url 'events:detail' event.pk %}" class="me-2">
+                                        <i class="fas fa-calendar-check"></i> {{ event.name }}
+                                    </a>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
                             </div>
-                            <span class="badge bg-secondary" style="font-family:monospace;">#{{ variant.short_uuid }}</span>
+                            <a href="{% url 'works:variant-detail' variant.pk %}" class="badge bg-secondary text-decoration-none" style="font-family:monospace;">
+                                #{{ variant.short_uuid }}
+                            </a>
                         </div>
-                    </a>
+                    </div>
                     {% endfor %}
                 </div>
             </div>
@@ -152,6 +170,113 @@
                             </div>
                             <span class="badge bg-secondary" style="font-family:monospace;">#{{ group.short_uuid }}</span>
                         </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if results.students %}
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-success text-white d-flex justify-content-between">
+                    <h6 class="mb-0"><i class="fas fa-user-graduate"></i> Ученики</h6>
+                    <span class="badge bg-white text-success">{{ results.students|length }}</span>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for student in results.students %}
+                    <a href="{% url 'students:detail' student.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between">
+                        <span class="fw-bold">{{ student.full_name }}</span>
+                        <span class="badge bg-secondary" style="font-family:monospace;">#{{ student.short_uuid }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if results.student_groups %}
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-secondary text-white d-flex justify-content-between">
+                    <h6 class="mb-0"><i class="fas fa-users"></i> Классы</h6>
+                    <span class="badge bg-white text-secondary">{{ results.student_groups|length }}</span>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for group in results.student_groups %}
+                    <a href="{% url 'students:group-detail' group.pk %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-bold">{{ group.name }}</span>
+                            <span class="badge bg-secondary" style="font-family:monospace;">#{{ group.short_uuid }}</span>
+                        </div>
+                        <small class="text-muted">{{ group.students_count }} учеников</small>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if results.events %}
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-info text-white d-flex justify-content-between">
+                    <h6 class="mb-0"><i class="fas fa-calendar-check"></i> События</h6>
+                    <span class="badge bg-white text-info">{{ results.events|length }}</span>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for event in results.events %}
+                    <a href="{% url 'events:detail' event.pk %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-bold">{{ event.name }}</span>
+                            <span class="badge bg-secondary" style="font-family:monospace;">#{{ event.short_uuid }}</span>
+                        </div>
+                        <small class="text-muted">{{ event.planned_date|date:"d.m.Y" }} • {{ event.status_display }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if results.topics %}
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between">
+                    <h6 class="mb-0"><i class="fas fa-book-open"></i> Темы</h6>
+                    <span class="badge bg-white text-primary">{{ results.topics|length }}</span>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for topic in results.topics %}
+                    <a href="{% url 'curriculum:topic-detail' topic.pk %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-bold">{{ topic.name }}</span>
+                            <span class="badge bg-secondary" style="font-family:monospace;">#{{ topic.short_uuid }}</span>
+                        </div>
+                        <small class="text-muted">{{ topic.subject }} • {{ topic.grade_level }} класс</small>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if results.courses %}
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-dark text-white d-flex justify-content-between">
+                    <h6 class="mb-0"><i class="fas fa-graduation-cap"></i> Курсы</h6>
+                    <span class="badge bg-white text-dark">{{ results.courses|length }}</span>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for course in results.courses %}
+                    <a href="{% url 'curriculum:course-detail' course.pk %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-bold">{{ course.name }}</span>
+                            <span class="badge bg-secondary" style="font-family:monospace;">#{{ course.short_uuid }}</span>
+                        </div>
+                        <small class="text-muted">{{ course.subject }} • {{ course.grade_level }} класс</small>
                     </a>
                     {% endfor %}
                 </div>

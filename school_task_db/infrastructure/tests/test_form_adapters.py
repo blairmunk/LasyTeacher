@@ -18,6 +18,7 @@ from core_logic.entities.heatmap import (
 from core_logic.entities.core import (
     DashboardSummaryData,
     GlobalSearchData,
+    GlobalSearchResults,
 )
 from core_logic.entities.work import (
     WorkListData,
@@ -97,7 +98,7 @@ class CoreFormAdapterTests(SimpleTestCase):
     def test_builds_global_search_context(self):
         search_data = GlobalSearchData(
             query='force',
-            results={'tasks': ['task-1']},
+            results=GlobalSearchResults(tasks=('task-1',)),
             total_found=1,
             search_mode='text',
             found_text='1 результат',
@@ -106,7 +107,10 @@ class CoreFormAdapterTests(SimpleTestCase):
         context = CoreFormAdapter().global_search_context(search_data)
 
         self.assertEqual(context['query'], 'force')
-        self.assertEqual(context['results'], {'tasks': ['task-1']})
+        self.assertEqual(
+            context['results'],
+            GlobalSearchResults(tasks=('task-1',)),
+        )
         self.assertEqual(context['total_found'], 1)
         self.assertEqual(context['search_mode'], 'text')
         self.assertEqual(context['found_text'], '1 результат')

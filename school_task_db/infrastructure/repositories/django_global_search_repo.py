@@ -1,17 +1,32 @@
 """Django read adapter for global application search."""
 
-from django.db.models import Count, Q, Sum
+from django.db.models import CharField, Count, Q, Sum, Value
+from django.db.models.functions import Cast, Replace
 
 from core_logic.entities.core import (
+    GlobalSearchResults,
+    SearchCourseResult,
+    SearchEventResult,
     SearchGroupResult,
+    SearchRelatedResult,
+    SearchStudentGroupResult,
+    SearchStudentResult,
     SearchTaskResult,
+    SearchTopicResult,
     SearchVariantResult,
     SearchWorkResult,
 )
 from core_logic.interfaces.global_search_repo import IGlobalSearchRepository
+from core_logic.value_objects.short_uuid import (
+    is_uuid_search_fragment,
+    normalize_uuid_fragment,
+)
 from core_logic.value_objects.variant_display import (
     resolve_variant_display_name,
 )
+from curriculum.models import Course, Topic
+from events.models import Event
+from students.models import Student, StudentGroup
 from task_groups.models import AnalogGroup
 from tasks.models import Task
 from works.models import Variant, Work
@@ -19,65 +34,59 @@ from works.models import Variant, Work
 
 class DjangoGlobalSearchRepository(IGlobalSearchRepository):
     def search_by_uuid(self, query: str):
-        return {
-            'tasks': self._task_results(
-                self._search_model_by_uuid(
-                    Task,
-                    query,
-                    related_uuid_fields=['topic', 'subtopic'],
-                )
+        return GlobalSearchResults(
+            tasks=self._task_results(self._search_model_by_uuid(Task, query)),
+            works=self._work_results(self._search_model_by_uuid(Work, query)),
+            variants=self._variant_results(
+                self._search_model_by_uuid(Variant, query),
             ),
-            'works': self._work_results(self._search_model_by_uuid(Work, query)),
-            'variants': self._variant_results(
-                self._search_model_by_uuid(
-                    Variant,
-                    query,
-                    related_uuid_fields=['work'],
-                )
-            ),
-            'groups': self._group_results(
+            groups=self._group_results(
                 self._search_model_by_uuid(AnalogGroup, query),
             ),
-        }
+            students=self._student_results(
+                self._search_model_by_uuid(Student, query),
+            ),
+            student_groups=self._student_group_results(
+                self._search_model_by_uuid(StudentGroup, query),
+            ),
+            events=self._event_results(
+                self._search_model_by_uuid(Event, query),
+            ),
+            topics=self._topic_results(
+                self._search_model_by_uuid(Topic, query),
+            ),
+            courses=self._course_results(
+                self._search_model_by_uuid(Course, query),
+            ),
+        )
 
     def search_by_text(self, words):
-        return {
-            'tasks': self._task_results(self._search_tasks_by_text(words)),
-            'works': self._work_results(self._search_works_by_text(words)),
-            'variants': self._variant_results(self._search_variants_by_text(words)),
-            'groups': self._group_results(self._search_groups_by_text(words)),
-        }
+        return GlobalSearchResults(
+            tasks=self._task_results(self._search_tasks_by_text(words)),
+            works=self._work_results(self._search_works_by_text(words)),
+            variants=self._variant_results(self._search_variants_by_text(words)),
+            groups=self._group_results(self._search_groups_by_text(words)),
+            students=self._student_results(self._search_students_by_text(words)),
+            student_groups=self._student_group_results(
+                self._search_student_groups_by_text(words),
+            ),
+            events=self._event_results(self._search_events_by_text(words)),
+            topics=self._topic_results(self._search_topics_by_text(words)),
+            courses=self._course_results(self._search_courses_by_text(words)),
+        )
 
     @staticmethod
-    def _search_model_by_uuid(model_class, query, related_uuid_fields=None):
-        clean = query.replace('#', '').replace('-', '').replace(' ', '').strip().lower()
-        if len(clean) < 3:
+    def _search_model_by_uuid(model_class, query):
+        fragment = normalize_uuid_fragment(query)
+        if not is_uuid_search_fragment(fragment):
             return model_class.objects.none()
-
-        matching_ids = set()
-        for obj_id in model_class.objects.values_list('id', flat=True).iterator():
-            id_clean = str(obj_id).replace('-', '').lower()
-            if clean in id_clean:
-                matching_ids.add(obj_id)
-
-        if related_uuid_fields:
-            for field in related_uuid_fields:
-                fk_field = f'{field}_id'
-                try:
-                    for obj_id, fk_id in model_class.objects.values_list(
-                        'id',
-                        fk_field,
-                    ).iterator():
-                        if fk_id:
-                            fk_clean = str(fk_id).replace('-', '').lower()
-                            if clean in fk_clean:
-                                matching_ids.add(obj_id)
-                except Exception:
-                    pass
-
-        if not matching_ids:
-            return model_class.objects.none()
-        return model_class.objects.filter(id__in=matching_ids)
+        return model_class.objects.annotate(
+            uuid_search_value=Replace(
+                Cast('id', output_field=CharField()),
+                Value('-'),
+                Value(''),
+            ),
+        ).filter(uuid_search_value__iendswith=fragment)
 
     @staticmethod
     def _search_tasks_by_text(words):
@@ -91,19 +100,10 @@ class DjangoGlobalSearchRepository(IGlobalSearchRepository):
             )
             task_q &= word_q
 
-        try:
-            return Task.objects.filter(task_q).distinct().select_related(
-                'topic',
-                'subtopic',
-            )[:30]
-        except Exception:
-            task_q_fb = Q()
-            for word in words:
-                task_q_fb &= (
-                    Q(text__icontains=word)
-                    | Q(answer__icontains=word)
-                )
-            return Task.objects.filter(task_q_fb).distinct()[:30]
+        return Task.objects.filter(task_q).distinct().select_related(
+            'topic',
+            'subtopic',
+        )[:30]
 
     @staticmethod
     def _search_works_by_text(words):
@@ -149,8 +149,64 @@ class DjangoGlobalSearchRepository(IGlobalSearchRepository):
         return AnalogGroup.objects.filter(group_q)[:20]
 
     @staticmethod
+    def _search_students_by_text(words):
+        student_q = Q()
+        for word in words:
+            student_q &= (
+                Q(last_name__icontains=word)
+                | Q(first_name__icontains=word)
+                | Q(middle_name__icontains=word)
+            )
+        return Student.objects.filter(student_q)[:30]
+
+    @staticmethod
+    def _search_student_groups_by_text(words):
+        group_q = Q()
+        for word in words:
+            group_q &= (
+                Q(name__icontains=word)
+                | Q(academic_year__name__icontains=word)
+            )
+        return StudentGroup.objects.filter(group_q).select_related(
+            'academic_year',
+        )[:20]
+
+    @staticmethod
+    def _search_events_by_text(words):
+        event_q = Q()
+        for word in words:
+            event_q &= (
+                Q(name__icontains=word)
+                | Q(description__icontains=word)
+                | Q(work__name__icontains=word)
+            )
+        return Event.objects.filter(event_q).select_related('work').distinct()[:20]
+
+    @staticmethod
+    def _search_topics_by_text(words):
+        topic_q = Q()
+        for word in words:
+            topic_q &= (
+                Q(name__icontains=word)
+                | Q(subject__icontains=word)
+                | Q(section__icontains=word)
+            )
+        return Topic.objects.filter(topic_q)[:20]
+
+    @staticmethod
+    def _search_courses_by_text(words):
+        course_q = Q()
+        for word in words:
+            course_q &= (
+                Q(name__icontains=word)
+                | Q(subject__icontains=word)
+                | Q(description__icontains=word)
+            )
+        return Course.objects.filter(course_q)[:20]
+
+    @staticmethod
     def _task_results(tasks):
-        return [
+        return tuple(
             SearchTaskResult(
                 pk=str(task.pk),
                 topic=str(task.topic),
@@ -158,11 +214,11 @@ class DjangoGlobalSearchRepository(IGlobalSearchRepository):
                 short_uuid=task.get_short_uuid(),
             )
             for task in tasks
-        ]
+        )
 
     @staticmethod
     def _work_results(works):
-        return [
+        return tuple(
             SearchWorkResult(
                 pk=str(work.pk),
                 name=work.name,
@@ -171,18 +227,21 @@ class DjangoGlobalSearchRepository(IGlobalSearchRepository):
                 short_uuid=work.get_short_uuid(),
             )
             for work in works
-        ]
+        )
 
     @staticmethod
     def _variant_results(variants):
         variants = variants.select_related(
             'work',
             'assigned_student',
+            'source_participation__event',
+        ).prefetch_related(
+            'eventparticipation_set__event',
         ).annotate(
             task_count_value=Count('varianttask'),
             total_max_points_value=Sum('varianttask__max_points'),
         )
-        return [
+        return tuple(
             SearchVariantResult(
                 pk=str(variant.pk),
                 display_name=resolve_variant_display_name(
@@ -199,19 +258,108 @@ class DjangoGlobalSearchRepository(IGlobalSearchRepository):
                 task_count=variant.task_count_value,
                 total_max_points=variant.total_max_points_value or 0,
                 short_uuid=variant.get_short_uuid(),
-                has_work=variant.work_id is not None,
+                work=(
+                    SearchRelatedResult(
+                        pk=str(variant.work.pk),
+                        name=variant.work.name,
+                    )
+                    if variant.work
+                    else None
+                ),
+                events=DjangoGlobalSearchRepository._variant_events(variant),
             )
             for variant in variants
-        ]
+        )
 
     @staticmethod
     def _group_results(groups):
-        return [
+        groups = groups.annotate(task_count_value=Count('taskgroup'))
+        return tuple(
             SearchGroupResult(
                 pk=str(group.pk),
                 name=group.name,
-                task_count=group.taskgroup_set.count(),
+                task_count=group.task_count_value,
                 short_uuid=group.get_short_uuid(),
             )
             for group in groups
-        ]
+        )
+
+    @staticmethod
+    def _student_results(students):
+        return tuple(
+            SearchStudentResult(
+                pk=str(student.pk),
+                full_name=student.get_full_name(),
+                short_uuid=student.get_short_uuid(),
+            )
+            for student in students
+        )
+
+    @staticmethod
+    def _student_group_results(groups):
+        groups = groups.annotate(students_count_value=Count('students'))
+        return tuple(
+            SearchStudentGroupResult(
+                pk=str(group.pk),
+                name=str(group),
+                students_count=group.students_count_value,
+                short_uuid=group.get_short_uuid(),
+            )
+            for group in groups
+        )
+
+    @staticmethod
+    def _event_results(events):
+        return tuple(
+            SearchEventResult(
+                pk=str(event.pk),
+                name=event.name,
+                planned_date=event.planned_date,
+                status_display=event.get_status_display(),
+                short_uuid=event.get_short_uuid(),
+            )
+            for event in events
+        )
+
+    @staticmethod
+    def _topic_results(topics):
+        return tuple(
+            SearchTopicResult(
+                pk=str(topic.pk),
+                name=topic.name,
+                subject=topic.subject,
+                grade_level=topic.grade_level,
+                short_uuid=topic.get_short_uuid(),
+            )
+            for topic in topics
+        )
+
+    @staticmethod
+    def _course_results(courses):
+        return tuple(
+            SearchCourseResult(
+                pk=str(course.pk),
+                name=course.name,
+                subject=course.subject,
+                grade_level=course.grade_level,
+                short_uuid=course.get_short_uuid(),
+            )
+            for course in courses
+        )
+
+    @staticmethod
+    def _variant_events(variant):
+        events_by_id = {
+            str(participation.event.pk): SearchRelatedResult(
+                pk=str(participation.event.pk),
+                name=participation.event.name,
+            )
+            for participation in variant.eventparticipation_set.all()
+        }
+        if variant.source_participation_id:
+            event = variant.source_participation.event
+            events_by_id.setdefault(
+                str(event.pk),
+                SearchRelatedResult(pk=str(event.pk), name=event.name),
+            )
+        return tuple(events_by_id.values())

@@ -124,9 +124,9 @@ class CoreViewsTests(TestCase):
         self.assertEqual(response.context['query'], 'скорость')
         self.assertEqual(response.context['search_mode'], 'text')
         self.assertEqual(response.context['total_found'], 3)
-        self.assertEqual(response.context['results']['tasks'][0].pk, str(task.pk))
-        self.assertEqual(response.context['results']['works'][0].pk, str(work.pk))
-        self.assertEqual(response.context['results']['groups'][0].pk, str(group.pk))
+        self.assertEqual(response.context['results'].tasks[0].pk, str(task.pk))
+        self.assertEqual(response.context['results'].works[0].pk, str(work.pk))
+        self.assertEqual(response.context['results'].groups[0].pk, str(group.pk))
         self.assertEqual(response.context['found_text'], '3 результата')
 
     def test_global_search_empty_query_returns_empty_context(self):
@@ -134,10 +134,67 @@ class CoreViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['query'], '')
-        self.assertEqual(response.context['results'], {})
+        self.assertEqual(response.context['results'].total_count, 0)
         self.assertEqual(response.context['total_found'], 0)
         self.assertIsNone(response.context['search_mode'])
         self.assertEqual(response.context['found_text'], '')
+
+    def test_global_uuid_search_renders_variant_work_and_event_links(self):
+        work = Work.objects.create(
+            id='10000000-0000-0000-0000-00000000a1b2',
+            name='Контрольная с навигацией',
+        )
+        variant = Variant.objects.create(
+            id='20000000-0000-0000-0000-00000000c3d4',
+            work=work,
+            number=2,
+            work_name_snapshot=work.name,
+        )
+        student = Student.objects.create(last_name='Петров', first_name='Пётр')
+        event = Event.objects.create(
+            id='30000000-0000-0000-0000-00000000e5f6',
+            name='Проведение контрольной',
+            work=work,
+            planned_date=timezone.now(),
+        )
+        EventParticipation.objects.create(
+            event=event,
+            student=student,
+            variant=variant,
+        )
+
+        response = self.client.get(reverse('core:search'), {'q': '#C3D4'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['total_found'], 1)
+        self.assertContains(
+            response,
+            reverse('works:variant-detail', kwargs={'pk': variant.pk}),
+        )
+        self.assertContains(
+            response,
+            reverse('works:detail', kwargs={'pk': work.pk}),
+        )
+        self.assertContains(
+            response,
+            reverse('events:detail', kwargs={'pk': event.pk}),
+        )
+
+    def test_model_uuid_lookup_requires_an_unambiguous_suffix(self):
+        first = Work.objects.create(
+            id='10000000-0000-0000-0000-00000000a1b2',
+            name='Первая работа',
+        )
+
+        self.assertEqual(str(Work.get_by_uuid('#A1B2').id), str(first.id))
+        self.assertEqual(str(Work.get_by_uuid(str(first.pk)).id), str(first.id))
+
+        Work.objects.create(
+            id='20000000-0000-0000-0000-00000000a1b2',
+            name='Вторая работа',
+        )
+
+        self.assertIsNone(Work.get_by_uuid('#A1B2'))
 
     def test_import_page_uses_clean_import_page_data(self):
         for index in range(6):

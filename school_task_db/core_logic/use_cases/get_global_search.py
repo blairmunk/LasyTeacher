@@ -2,8 +2,12 @@
 
 from dataclasses import dataclass
 
-from core_logic.entities.core import GlobalSearchData
+from core_logic.entities.core import GlobalSearchData, GlobalSearchResults
 from core_logic.interfaces.global_search_repo import IGlobalSearchRepository
+from core_logic.value_objects.short_uuid import (
+    is_uuid_search_fragment,
+    normalize_uuid_fragment,
+)
 
 
 @dataclass(frozen=True)
@@ -22,27 +26,24 @@ class GetGlobalSearchUseCase:
         if not query:
             return GlobalSearchData(query=raw_query)
 
-        hex_clean = query.replace('#', '').replace('-', '').replace(' ', '').lower()
-        is_hex = len(hex_clean) >= 3 and all(
-            char in '0123456789abcdef'
-            for char in hex_clean
-        )
+        uuid_fragment = normalize_uuid_fragment(query)
+        is_uuid = is_uuid_search_fragment(uuid_fragment)
 
-        results = {}
+        results = GlobalSearchResults()
         total_found = 0
         search_mode = None
 
-        if is_hex:
+        if is_uuid:
             search_mode = 'uuid'
-            results = self.core_repo.search_by_uuid(hex_clean)
-            total_found = self._count_results(results)
+            results = self.core_repo.search_by_uuid(uuid_fragment)
+            total_found = results.total_count
 
-        if not is_hex or total_found == 0:
-            search_mode = 'uuid+text' if is_hex else 'text'
+        if not is_uuid or total_found == 0:
+            search_mode = 'uuid+text' if is_uuid else 'text'
             words = self._split_words(query)
             if words:
                 results = self.core_repo.search_by_text(words)
-                total_found = self._count_results(results)
+                total_found = results.total_count
 
         return GlobalSearchData(
             query=raw_query,
@@ -60,11 +61,8 @@ class GetGlobalSearchUseCase:
     def _split_words(self, query: str):
         words = [word for word in query.split() if len(word) >= 2]
         if not words and len(query) >= 2:
-            return [query]
-        return words
-
-    def _count_results(self, results) -> int:
-        return sum(len(result) for result in results.values())
+            return (query,)
+        return tuple(words)
 
     def _pluralize_results(self, count: int) -> str:
         if 11 <= count % 100 <= 19:

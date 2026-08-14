@@ -2146,12 +2146,56 @@ class DjangoRemedialRepositoryTests(TestCase):
         text_results = repo.search_by_text(['слабое'])
         uuid_results = repo.search_by_uuid(self.source_work.get_short_uuid())
 
-        self.assertEqual(text_results['tasks'][0].pk, str(self.original_weak.pk))
-        self.assertEqual(text_results['tasks'][0].text, self.original_weak.text)
-        self.assertEqual(list(text_results['works']), [])
-        self.assertEqual(list(text_results['groups']), [])
-        self.assertEqual(uuid_results['works'][0].pk, str(self.source_work.pk))
-        self.assertEqual(uuid_results['works'][0].name, self.source_work.name)
+        self.assertEqual(text_results.tasks[0].pk, str(self.original_weak.pk))
+        self.assertEqual(text_results.tasks[0].text, self.original_weak.text)
+        self.assertEqual(text_results.works, ())
+        self.assertEqual(text_results.groups, ())
+        self.assertEqual(uuid_results.works[0].pk, str(self.source_work.pk))
+        self.assertEqual(uuid_results.works[0].name, self.source_work.name)
+
+    def test_global_uuid_search_matches_only_own_uuid_suffix(self):
+        work = Work.objects.create(
+            id='10000000-0000-0000-0000-00000000a1b2',
+            name='Работа с известным UUID',
+        )
+        Variant.objects.create(
+            id='20000000-0000-0000-0000-00000000c3d4',
+            work=work,
+            number=1,
+            work_name_snapshot=work.name,
+        )
+
+        results = DjangoGlobalSearchRepository().search_by_uuid('#A1B2')
+
+        self.assertEqual(tuple(item.pk for item in results.works), (str(work.pk),))
+        self.assertEqual(results.variants, ())
+
+    def test_global_search_exposes_variant_navigation_context(self):
+        results = DjangoGlobalSearchRepository().search_by_uuid(
+            self.source_variant.get_short_uuid(),
+        )
+        variant = next(
+            item
+            for item in results.variants
+            if item.pk == str(self.source_variant.pk)
+        )
+
+        self.assertEqual(variant.work.pk, str(self.source_work.pk))
+        self.assertEqual(
+            tuple(event.pk for event in variant.events),
+            (str(self.event.pk),),
+        )
+
+    def test_global_search_includes_students_classes_and_events(self):
+        repo = DjangoGlobalSearchRepository()
+
+        student_results = repo.search_by_uuid(self.student.get_short_uuid())
+        group_results = repo.search_by_uuid(self.group.get_short_uuid())
+        event_results = repo.search_by_uuid(self.event.get_short_uuid())
+
+        self.assertEqual(student_results.students[0].pk, str(self.student.pk))
+        self.assertEqual(group_results.student_groups[0].pk, str(self.group.pk))
+        self.assertEqual(event_results.events[0].pk, str(self.event.pk))
 
     def test_work_repository_returns_variant_list_page_data(self):
         repo = DjangoVariantReadRepository()

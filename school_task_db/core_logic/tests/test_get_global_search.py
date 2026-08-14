@@ -1,8 +1,13 @@
 from unittest import TestCase
 
+from core_logic.entities.core import GlobalSearchResults
 from core_logic.use_cases.get_global_search import (
     GetGlobalSearchUseCase,
     GlobalSearchRequest,
+)
+from core_logic.value_objects.short_uuid import (
+    format_short_uuid,
+    uuid_matches_suffix,
 )
 
 
@@ -10,8 +15,8 @@ class FakeCoreRepository:
     def __init__(self):
         self.uuid_query = None
         self.text_words = None
-        self.uuid_results = {'tasks': ['task'], 'works': []}
-        self.text_results = {'tasks': ['task-1', 'task-2'], 'works': []}
+        self.uuid_results = GlobalSearchResults(tasks=('task',))
+        self.text_results = GlobalSearchResults(tasks=('task-1', 'task-2'))
 
     def search_by_uuid(self, query):
         self.uuid_query = query
@@ -30,7 +35,7 @@ class GetGlobalSearchUseCaseTests(TestCase):
         data = use_case.execute(GlobalSearchRequest(raw_query='  '))
 
         self.assertEqual(data.query, '')
-        self.assertEqual(data.results, {})
+        self.assertEqual(data.results, GlobalSearchResults())
         self.assertEqual(data.total_found, 0)
         self.assertIsNone(data.search_mode)
         self.assertEqual(data.found_text, '')
@@ -49,13 +54,13 @@ class GetGlobalSearchUseCaseTests(TestCase):
 
     def test_execute_falls_back_to_text_when_uuid_search_is_empty(self):
         repo = FakeCoreRepository()
-        repo.uuid_results = {'tasks': []}
+        repo.uuid_results = GlobalSearchResults()
         use_case = GetGlobalSearchUseCase(core_repo=repo)
 
         data = use_case.execute(GlobalSearchRequest(raw_query='abc'))
 
         self.assertEqual(repo.uuid_query, 'abc')
-        self.assertEqual(repo.text_words, ['abc'])
+        self.assertEqual(repo.text_words, ('abc',))
         self.assertEqual(data.search_mode, 'uuid+text')
         self.assertEqual(data.total_found, 2)
 
@@ -66,7 +71,14 @@ class GetGlobalSearchUseCaseTests(TestCase):
         data = use_case.execute(GlobalSearchRequest(raw_query='  сила ток  '))
 
         self.assertIsNone(repo.uuid_query)
-        self.assertEqual(repo.text_words, ['сила', 'ток'])
+        self.assertEqual(repo.text_words, ('сила', 'ток'))
         self.assertEqual(data.search_mode, 'text')
         self.assertEqual(data.total_found, 2)
         self.assertEqual(data.found_text, '2 результата')
+
+    def test_short_uuid_rule_matches_only_the_uuid_suffix(self):
+        value = '550e8400-e29b-41d4-a716-44665544a7b3'
+
+        self.assertEqual(format_short_uuid(value), 'A7B3')
+        self.assertTrue(uuid_matches_suffix(value, '#A7-B3'))
+        self.assertFalse(uuid_matches_suffix(value, '41d4'))

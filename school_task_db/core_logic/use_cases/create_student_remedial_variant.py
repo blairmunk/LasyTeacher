@@ -69,7 +69,7 @@ class CreateStudentRemedialVariantUseCase:
                 message='Нет доступных заданий для работы над ошибками.',
         )
 
-        tasks = self.task_repo.get_by_ids(set(task_ids))
+        tasks = self.task_repo.get_by_ids(task_ids)
         student = self.student_repo.get_student(request.student_id)
         if student is None:
             return CreateStudentRemedialVariantResult(

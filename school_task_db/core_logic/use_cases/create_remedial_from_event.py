@@ -163,7 +163,7 @@ class CreateRemedialFromEventUseCase:
         selection_plans = [
             build_remedial_variant_creation_plan(
                 task_ids=selection.task_ids,
-                tasks=self.task_repo.get_by_ids(set(selection.task_ids)),
+                tasks=self.task_repo.get_by_ids(selection.task_ids),
                 number=number,
                 work_name=work_name,
             )

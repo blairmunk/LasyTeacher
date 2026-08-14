@@ -98,7 +98,7 @@ class CreateRemedialWizardWorkUseCase:
         for student_id, task_ids in student_task_ids.items():
             plan = build_remedial_variant_creation_plan(
                 task_ids=task_ids,
-                tasks=self.task_repo.get_by_ids(set(task_ids)),
+                tasks=self.task_repo.get_by_ids(task_ids),
                 number=len(student_plans) + 1,
                 work_name=request.work_name,
             )

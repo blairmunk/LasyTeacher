@@ -2314,6 +2314,15 @@ class DjangoRemedialRepositoryTests(TestCase):
             1,
         )
 
+        selected_tasks = DjangoTaskSelectionRepository().get_by_ids((
+            str(self.replacement.pk),
+            str(self.original_weak.pk),
+        ))
+        self.assertEqual(
+            tuple(task.id for task in selected_tasks),
+            (str(self.replacement.pk), str(self.original_weak.pk)),
+        )
+
         created_count = repo.add_tasks_to_group(
             new_group_id,
             [str(self.original_weak.pk), str(self.replacement.pk)],

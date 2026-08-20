@@ -59,9 +59,6 @@ from infrastructure.repositories.django_presentation_profile_catalog_repo import
 from infrastructure.repositories.django_presentation_profile_command_repo import (
     DjangoPresentationProfileCommandRepository,
 )
-from infrastructure.repositories.django_remedial_sheet_repo import (
-    DjangoRemedialSheetRepository,
-)
 from infrastructure.repositories.django_work_document_repo import (
     DjangoWorkDocumentRepository,
 )
@@ -79,7 +76,6 @@ class DocumentCompositionMixin:
 
     def _initialize_document_composition(self):
         self._work_document_repo = None
-        self._remedial_sheet_repo = None
         self._presentation_profile_catalog_repo = None
         self._presentation_profile_command_repo = None
         self._presentation_profile_form_adapter = None
@@ -94,12 +90,6 @@ class DocumentCompositionMixin:
         if self._work_document_repo is None:
             self._work_document_repo = DjangoWorkDocumentRepository()
         return self._work_document_repo
-
-    @property
-    def remedial_sheet_repo(self):
-        if self._remedial_sheet_repo is None:
-            self._remedial_sheet_repo = DjangoRemedialSheetRepository()
-        return self._remedial_sheet_repo
 
     @property
     def presentation_profile_catalog_repo(self):

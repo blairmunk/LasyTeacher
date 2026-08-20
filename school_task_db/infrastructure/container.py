@@ -1,7 +1,6 @@
 """Small dependency container for application use cases."""
 
 from core_logic.services.analytics_service import StudentAnalyticsService
-from core_logic.services.remedial_service import RemedialService
 from core_logic.use_cases.analyze_task_images import (
     AnalyzeTaskImagesUseCase,
     ApplyTaskImagePositionSuggestionsUseCase,
@@ -22,16 +21,7 @@ from core_logic.use_cases.change_task_group_membership import (
     RemoveTaskFromGroupUseCase,
     UpdateTaskGroupRolesUseCase,
 )
-from core_logic.use_cases.create_remedial_from_event import (
-    CreateRemedialFromEventUseCase,
-)
 from core_logic.use_cases.create_source import CreateSourceUseCase
-from core_logic.use_cases.create_student_remedial_variant import (
-    CreateStudentRemedialVariantUseCase,
-)
-from core_logic.use_cases.create_remedial_wizard_work import (
-    CreateRemedialWizardWorkUseCase,
-)
 from core_logic.use_cases.delete_task_groups import DeleteTaskGroupsUseCase
 from core_logic.use_cases.delete_task import DeleteTaskUseCase
 from core_logic.use_cases.execute_task_import import ExecuteTaskImportUseCase
@@ -56,27 +46,12 @@ from core_logic.use_cases.get_import_views import (
     GetImportHistoryUseCase,
     GetImportPageUseCase,
 )
-from core_logic.use_cases.get_remedial_event_preview import (
-    GetRemedialEventPreviewUseCase,
-)
-from core_logic.use_cases.get_remedial_sheet_data import (
-    GetRemedialSheetDataUseCase,
-)
-from core_logic.use_cases.get_remedial_wizard_preview import (
-    GetRemedialWizardPreviewUseCase,
-)
-from core_logic.use_cases.get_remedial_wizard_start import (
-    GetRemedialWizardStartUseCase,
-)
 from core_logic.use_cases.get_site_settings import GetSiteSettingsUseCase
 from core_logic.use_cases.get_student_detail import GetStudentDetailUseCase
 from core_logic.use_cases.get_student_group_detail import GetStudentGroupDetailUseCase
 from core_logic.use_cases.get_student_group_list import GetStudentGroupListUseCase
 from core_logic.use_cases.get_student_list import GetStudentListUseCase
 from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
-from core_logic.use_cases.get_student_remedial_work import (
-    GetStudentRemedialWorkUseCase,
-)
 from core_logic.use_cases.get_task_detail import GetTaskDetailUseCase
 from core_logic.use_cases.get_task_db_health import GetTaskDBHealthUseCase
 from core_logic.use_cases.get_task_group_detail import GetTaskGroupDetailUseCase
@@ -91,16 +66,6 @@ from core_logic.use_cases.get_task_reference_options import (
 from core_logic.use_cases.get_topic_subtopics import GetTopicSubtopicsUseCase
 from core_logic.use_cases.get_topic_detail import GetTopicDetailUseCase
 from core_logic.use_cases.get_topic_list import GetTopicListUseCase
-from core_logic.use_cases.prepare_remedial_from_event_submission import (
-    PrepareRemedialFromEventSubmissionUseCase,
-)
-from core_logic.use_cases.prepare_remedial_wizard_submission import (
-    PrepareRemedialWizardCreateSubmissionUseCase,
-    PrepareRemedialWizardPreviewSubmissionUseCase,
-)
-from core_logic.use_cases.prepare_student_remedial_submission import (
-    PrepareStudentRemedialSubmissionUseCase,
-)
 from core_logic.use_cases.prepare_task_group_membership_submission import (
     PrepareAddTasksToGroupSubmissionUseCase,
     PrepareUpdateTaskGroupRolesSubmissionUseCase,
@@ -202,9 +167,6 @@ from infrastructure.repositories.django_student_import_snapshot_repo import (
 from infrastructure.repositories.django_student_profile_repo import (
     DjangoStudentProfileRepository,
 )
-from infrastructure.repositories.django_student_remedial_repo import (
-    DjangoStudentRemedialRepository,
-)
 from infrastructure.repositories.django_task_read_repo import (
     DjangoTaskReadRepository,
 )
@@ -247,12 +209,6 @@ from infrastructure.repositories.django_task_image_audit_query_repo import (
 from infrastructure.repositories.django_task_db_health_repo import (
     DjangoTaskDBHealthRepository,
 )
-from infrastructure.repositories.django_remedial_task_group_repo import (
-    DjangoRemedialTaskGroupRepository,
-)
-from infrastructure.repositories.django_remedial_source_repo import (
-    DjangoRemedialSourceRepository,
-)
 from infrastructure.services.django_transaction_manager import (
     DjangoTransactionManager,
 )
@@ -269,6 +225,7 @@ from infrastructure.forms.task_group_forms import TaskGroupFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
 from infrastructure.containers.document import DocumentCompositionMixin
 from infrastructure.containers.event import EventCompositionMixin
+from infrastructure.containers.remedial import RemedialCompositionMixin
 from infrastructure.containers.reporting import ReportingCompositionMixin
 from infrastructure.containers.review import ReviewCompositionMixin
 from infrastructure.containers.work import WorkCompositionMixin
@@ -277,6 +234,7 @@ from infrastructure.containers.work import WorkCompositionMixin
 class Container(
     DocumentCompositionMixin,
     EventCompositionMixin,
+    RemedialCompositionMixin,
     ReportingCompositionMixin,
     ReviewCompositionMixin,
     WorkCompositionMixin,
@@ -286,6 +244,7 @@ class Container(
     def __init__(self):
         self._initialize_document_composition()
         self._initialize_event_composition()
+        self._initialize_remedial_composition()
         self._initialize_reporting_composition()
         self._initialize_review_composition()
         self._initialize_work_composition()
@@ -298,7 +257,6 @@ class Container(
         self._student_import_snapshot_repo = None
         self._student_import_command_repo = None
         self._student_profile_repo = None
-        self._student_remedial_repo = None
         self._source_catalog_repo = None
         self._source_command_repo = None
         self._task_read_repo = None
@@ -315,8 +273,6 @@ class Container(
         self._task_math_status_cache = None
         self._task_image_audit_query_repo = None
         self._task_image_audit_command_repo = None
-        self._remedial_task_group_repo = None
-        self._remedial_source_repo = None
         self._task_db_health_repo = None
         self._course_catalog_repo = None
         self._topic_catalog_repo = None
@@ -404,12 +360,6 @@ class Container(
         if self._student_profile_repo is None:
             self._student_profile_repo = DjangoStudentProfileRepository()
         return self._student_profile_repo
-
-    @property
-    def student_remedial_repo(self):
-        if self._student_remedial_repo is None:
-            self._student_remedial_repo = DjangoStudentRemedialRepository()
-        return self._student_remedial_repo
 
     @property
     def source_catalog_repo(self):
@@ -520,20 +470,6 @@ class Container(
                 DjangoTaskImageAuditCommandRepository()
             )
         return self._task_image_audit_command_repo
-
-    @property
-    def remedial_task_group_repo(self):
-        if self._remedial_task_group_repo is None:
-            self._remedial_task_group_repo = (
-                DjangoRemedialTaskGroupRepository()
-            )
-        return self._remedial_task_group_repo
-
-    @property
-    def remedial_source_repo(self):
-        if self._remedial_source_repo is None:
-            self._remedial_source_repo = DjangoRemedialSourceRepository()
-        return self._remedial_source_repo
 
     @property
     def transaction_manager(self):
@@ -663,63 +599,8 @@ class Container(
             self._task_import_service = DjangoTaskImportService()
         return self._task_import_service
 
-    def remedial_service(self):
-        return RemedialService(
-            student_remedial_repo=self.student_remedial_repo,
-            student_profile_repo=self.student_profile_repo,
-            task_repo=self.task_selection_repo,
-            task_group_repo=self.remedial_task_group_repo,
-            remedial_source_repo=self.remedial_source_repo,
-        )
-
     def analytics_service(self):
         return StudentAnalyticsService()
-
-    def create_remedial_from_event_use_case(self):
-        return CreateRemedialFromEventUseCase(
-            remedial_service=self.remedial_service(),
-            task_repo=self.task_selection_repo,
-            work_repo=self.work_variant_creation_repo,
-            event_repo=self.event_read_repo,
-            event_write_repo=self.event_write_repo,
-            event_participation_repo=self.event_participation_repo,
-            event_attempt_repo=self.event_attempt_repo,
-            transaction_manager=self.transaction_manager,
-        )
-
-    def create_student_remedial_variant_use_case(self):
-        return CreateStudentRemedialVariantUseCase(
-            student_repo=self.student_catalog_repo,
-            student_learning_repo=self.student_remedial_repo,
-            task_repo=self.task_selection_repo,
-            work_repo=self.work_variant_creation_repo,
-        )
-
-    def create_remedial_wizard_work_use_case(self):
-        return CreateRemedialWizardWorkUseCase(
-            student_repo=self.student_group_catalog_repo,
-            task_repo=self.task_selection_repo,
-            work_repo=self.work_variant_creation_repo,
-            event_write_repo=self.event_write_repo,
-            event_participation_repo=self.event_participation_repo,
-            transaction_manager=self.transaction_manager,
-        )
-
-    def get_remedial_event_preview_use_case(self):
-        return GetRemedialEventPreviewUseCase(
-            event_repo=self.event_read_repo,
-            event_attempt_repo=self.event_attempt_repo,
-        )
-
-    def get_remedial_wizard_preview_use_case(self):
-        return GetRemedialWizardPreviewUseCase(
-            student_learning_repo=self.student_remedial_repo,
-        )
-
-    def get_remedial_wizard_start_use_case(self):
-        return GetRemedialWizardStartUseCase(
-            student_repo=self.student_group_catalog_repo,
-        )
 
     def get_student_profile_use_case(self):
         return GetStudentProfileUseCase(
@@ -761,11 +642,6 @@ class Container(
     def get_student_group_list_use_case(self):
         return GetStudentGroupListUseCase(
             student_repo=self.student_group_catalog_repo,
-        )
-
-    def get_student_remedial_work_use_case(self):
-        return GetStudentRemedialWorkUseCase(
-            student_learning_repo=self.student_remedial_repo,
         )
 
     def create_student_use_case(self):
@@ -1014,28 +890,11 @@ class Container(
             image_repo=self.task_image_audit_command_repo,
         )
 
-    def prepare_remedial_from_event_submission_use_case(self):
-        return PrepareRemedialFromEventSubmissionUseCase()
-
-    def prepare_remedial_wizard_preview_submission_use_case(self):
-        return PrepareRemedialWizardPreviewSubmissionUseCase()
-
-    def prepare_remedial_wizard_create_submission_use_case(self):
-        return PrepareRemedialWizardCreateSubmissionUseCase()
-
-    def prepare_student_remedial_submission_use_case(self):
-        return PrepareStudentRemedialSubmissionUseCase()
-
     def prepare_add_tasks_to_group_submission_use_case(self):
         return PrepareAddTasksToGroupSubmissionUseCase()
 
     def prepare_update_task_group_roles_submission_use_case(self):
         return PrepareUpdateTaskGroupRolesSubmissionUseCase()
-
-    def get_remedial_sheet_data_use_case(self):
-        return GetRemedialSheetDataUseCase(
-            remedial_repo=self.remedial_sheet_repo,
-        )
 
     def delete_task_groups_use_case(self):
         return DeleteTaskGroupsUseCase(

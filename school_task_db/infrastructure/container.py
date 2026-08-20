@@ -76,44 +76,10 @@ from core_logic.use_cases.get_course_detail import GetCourseDetailUseCase
 from core_logic.use_cases.get_course_list import GetCourseListUseCase
 from core_logic.use_cases.get_dashboard_summary import GetDashboardSummaryUseCase
 from core_logic.use_cases.get_global_search import GetGlobalSearchUseCase
-from core_logic.use_cases.get_heatmap_course_overview import (
-    GetHeatmapCourseOverviewUseCase,
-)
-from core_logic.use_cases.get_heatmap_course_report import (
-    GetHeatmapCourseReportUseCase,
-)
-from core_logic.use_cases.get_heatmap_course_topic_matrix import (
-    GetHeatmapCourseTopicMatrixUseCase,
-)
-from core_logic.use_cases.get_heatmap_course_timeline import (
-    GetHeatmapCourseTimelineUseCase,
-)
-from core_logic.use_cases.get_heatmap_drilldown_overview import (
-    GetHeatmapDrilldownOverviewUseCase,
-)
-from core_logic.use_cases.get_heatmap_drilldown_report import (
-    GetHeatmapDrilldownReportUseCase,
-)
-from core_logic.use_cases.get_heatmap_overview import GetHeatmapOverviewUseCase
-from core_logic.use_cases.get_heatmap_report import GetHeatmapReportUseCase
-from core_logic.use_cases.get_heatmap_student_detail import (
-    GetHeatmapStudentDetailUseCase,
-)
-from core_logic.use_cases.get_heatmap_subtopic_detail import (
-    GetHeatmapSubtopicDetailUseCase,
-)
-from core_logic.use_cases.get_heatmap_subtopic_matrix import (
-    GetHeatmapSubtopicMatrixUseCase,
-)
-from core_logic.use_cases.get_heatmap_topic_matrix import (
-    GetHeatmapTopicMatrixUseCase,
-)
 from core_logic.use_cases.get_import_views import (
     GetImportHistoryUseCase,
     GetImportPageUseCase,
 )
-from core_logic.use_cases.get_journal import GetJournalUseCase
-from core_logic.use_cases.get_journal_select import GetJournalSelectUseCase
 from core_logic.use_cases.get_participation_review import (
     GetParticipationReviewUseCase,
 )
@@ -128,12 +94,6 @@ from core_logic.use_cases.get_event_participation_ref import (
 )
 from core_logic.use_cases.get_event_variant_assignment import (
     GetEventVariantAssignmentUseCase,
-)
-from core_logic.use_cases.get_events_status_report import (
-    GetEventsStatusReportUseCase,
-)
-from core_logic.use_cases.get_event_performance_report import (
-    GetEventPerformanceReportUseCase,
 )
 from core_logic.use_cases.get_orphan_variant_list import GetOrphanVariantListUseCase
 from core_logic.use_cases.get_remedial_event_preview import (
@@ -186,17 +146,6 @@ from core_logic.use_cases.get_variant_list import GetVariantListUseCase
 from core_logic.use_cases.get_work_detail import GetWorkDetailUseCase
 from core_logic.use_cases.get_work_form_data import GetWorkFormDataUseCase
 from core_logic.use_cases.get_work_list import GetWorkListUseCase
-from core_logic.use_cases.get_work_analysis_report import (
-    GetWorkAnalysisReportUseCase,
-)
-from core_logic.use_cases.get_reports_dashboard import GetReportsDashboardUseCase
-from core_logic.use_cases.get_student_performance_report import (
-    GetStudentPerformanceReportUseCase,
-)
-from core_logic.use_cases.get_student_digests import GetStudentDigestsUseCase
-from core_logic.use_cases.get_student_digest_page import (
-    GetStudentDigestPageUseCase,
-)
 from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUseCase
 from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionUseCase,
@@ -241,9 +190,6 @@ from core_logic.use_cases.save_analog_group import (
     UpdateAnalogGroupUseCase,
 )
 from core_logic.use_cases.save_event import CreateEventUseCase, UpdateEventUseCase
-from core_logic.use_cases.save_event_report_narrative import (
-    SaveEventReportNarrativeUseCase,
-)
 from core_logic.use_cases.save_student import (
     CreateStudentGroupUseCase,
     CreateStudentUseCase,
@@ -328,21 +274,6 @@ from infrastructure.repositories.django_orphan_variant_attachment_repo import (
 from infrastructure.repositories.django_orphan_variant_catalog_repo import (
     DjangoOrphanVariantCatalogRepository,
 )
-from infrastructure.repositories.django_event_performance_report_query_repo import (
-    DjangoEventPerformanceReportQueryRepository,
-)
-from infrastructure.repositories.django_event_report_narrative_command_repo import (
-    DjangoEventReportNarrativeCommandRepository,
-)
-from infrastructure.repositories.django_events_status_repo import (
-    DjangoEventsStatusRepository,
-)
-from infrastructure.repositories.django_journal_catalog_repo import (
-    DjangoJournalCatalogRepository,
-)
-from infrastructure.repositories.django_journal_report_repo import (
-    DjangoJournalReportRepository,
-)
 from infrastructure.repositories.django_review_overview_repo import (
     DjangoReviewOverviewRepository,
 )
@@ -357,16 +288,6 @@ from infrastructure.repositories.django_review_session_query_repo import (
 )
 from infrastructure.repositories.django_review_task_repo import (
     DjangoReviewTaskRepository,
-)
-from infrastructure.repositories.django_heatmap_detail_repo import DjangoHeatmapDetailRepository
-from infrastructure.repositories.django_heatmap_overview_repo import (
-    DjangoHeatmapOverviewRepository,
-)
-from infrastructure.repositories.django_heatmap_matrix_repo import (
-    DjangoHeatmapMatrixRepository,
-)
-from infrastructure.repositories.django_reports_dashboard_repo import (
-    DjangoReportsDashboardRepository,
 )
 from infrastructure.repositories.django_site_settings_command_repo import (
     DjangoSiteSettingsCommandRepository,
@@ -403,12 +324,6 @@ from infrastructure.repositories.django_student_profile_repo import (
 )
 from infrastructure.repositories.django_student_remedial_repo import (
     DjangoStudentRemedialRepository,
-)
-from infrastructure.repositories.django_student_digest_repo import (
-    DjangoStudentDigestRepository,
-)
-from infrastructure.repositories.django_student_performance_repo import (
-    DjangoStudentPerformanceRepository,
 )
 from infrastructure.repositories.django_task_read_repo import (
     DjangoTaskReadRepository,
@@ -488,9 +403,6 @@ from infrastructure.repositories.django_remedial_task_group_repo import (
 from infrastructure.repositories.django_remedial_source_repo import (
     DjangoRemedialSourceRepository,
 )
-from infrastructure.repositories.django_work_analysis_repo import (
-    DjangoWorkAnalysisRepository,
-)
 from infrastructure.services.django_transaction_manager import (
     DjangoTransactionManager,
 )
@@ -502,22 +414,22 @@ from infrastructure.forms.codifier_forms import CodifierFormAdapter
 from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
 from infrastructure.forms.event_forms import EventFormAdapter
-from infrastructure.forms.report_forms import ReportFormAdapter
 from infrastructure.forms.review_forms import ReviewFormAdapter
 from infrastructure.forms.settings_forms import SettingsFormAdapter
 from infrastructure.forms.student_forms import StudentFormAdapter
 from infrastructure.forms.task_group_forms import TaskGroupFormAdapter
 from infrastructure.forms.work_forms import WorkFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
-from infrastructure.presenters.heatmap import HeatmapPresenter
 from infrastructure.containers.document import DocumentCompositionMixin
+from infrastructure.containers.reporting import ReportingCompositionMixin
 
 
-class Container(DocumentCompositionMixin):
+class Container(DocumentCompositionMixin, ReportingCompositionMixin):
     """Wires pure use cases to Django infrastructure adapters."""
 
     def __init__(self):
         self._initialize_document_composition()
+        self._initialize_reporting_composition()
         self._academic_year_catalog_repo = None
         self._academic_year_activation_repo = None
         self._attempt_snapshot_repo = None
@@ -569,19 +481,7 @@ class Container(DocumentCompositionMixin):
         self._review_session_query_repo = None
         self._review_session_command_repo = None
         self._review_task_repo = None
-        self._events_status_repo = None
-        self._reports_dashboard_repo = None
-        self._student_performance_repo = None
-        self._work_analysis_repo = None
-        self._heatmap_detail_repo = None
-        self._heatmap_matrix_repo = None
-        self._heatmap_overview_repo = None
-        self._journal_catalog_repo = None
-        self._journal_report_repo = None
         self._task_db_health_repo = None
-        self._event_performance_report_query_repo = None
-        self._event_report_narrative_command_repo = None
-        self._student_digest_repo = None
         self._course_catalog_repo = None
         self._topic_catalog_repo = None
         self._curriculum_import_repo = None
@@ -597,8 +497,6 @@ class Container(DocumentCompositionMixin):
         self._core_form_adapter = None
         self._curriculum_form_adapter = None
         self._event_form_adapter = None
-        self._report_form_adapter = None
-        self._heatmap_presenter = None
         self._review_form_adapter = None
         self._settings_form_adapter = None
         self._student_form_adapter = None
@@ -971,88 +869,10 @@ class Container(DocumentCompositionMixin):
         return self._review_task_repo
 
     @property
-    def events_status_repo(self):
-        if self._events_status_repo is None:
-            self._events_status_repo = DjangoEventsStatusRepository()
-        return self._events_status_repo
-
-    @property
-    def reports_dashboard_repo(self):
-        if self._reports_dashboard_repo is None:
-            self._reports_dashboard_repo = DjangoReportsDashboardRepository()
-        return self._reports_dashboard_repo
-
-    @property
-    def student_performance_repo(self):
-        if self._student_performance_repo is None:
-            self._student_performance_repo = (
-                DjangoStudentPerformanceRepository()
-            )
-        return self._student_performance_repo
-
-    @property
-    def work_analysis_repo(self):
-        if self._work_analysis_repo is None:
-            self._work_analysis_repo = DjangoWorkAnalysisRepository()
-        return self._work_analysis_repo
-
-    @property
-    def heatmap_detail_repo(self):
-        if self._heatmap_detail_repo is None:
-            self._heatmap_detail_repo = DjangoHeatmapDetailRepository()
-        return self._heatmap_detail_repo
-
-    @property
-    def heatmap_matrix_repo(self):
-        if self._heatmap_matrix_repo is None:
-            self._heatmap_matrix_repo = DjangoHeatmapMatrixRepository()
-        return self._heatmap_matrix_repo
-
-    @property
-    def heatmap_overview_repo(self):
-        if self._heatmap_overview_repo is None:
-            self._heatmap_overview_repo = DjangoHeatmapOverviewRepository()
-        return self._heatmap_overview_repo
-
-    @property
-    def journal_catalog_repo(self):
-        if self._journal_catalog_repo is None:
-            self._journal_catalog_repo = DjangoJournalCatalogRepository()
-        return self._journal_catalog_repo
-
-    @property
-    def journal_report_repo(self):
-        if self._journal_report_repo is None:
-            self._journal_report_repo = DjangoJournalReportRepository()
-        return self._journal_report_repo
-
-    @property
     def task_db_health_repo(self):
         if self._task_db_health_repo is None:
             self._task_db_health_repo = DjangoTaskDBHealthRepository()
         return self._task_db_health_repo
-
-    @property
-    def event_performance_report_query_repo(self):
-        if self._event_performance_report_query_repo is None:
-            self._event_performance_report_query_repo = (
-                DjangoEventPerformanceReportQueryRepository()
-            )
-        return self._event_performance_report_query_repo
-
-    @property
-    def event_report_narrative_command_repo(self):
-        if self._event_report_narrative_command_repo is None:
-            self._event_report_narrative_command_repo = (
-                DjangoEventReportNarrativeCommandRepository()
-            )
-        return self._event_report_narrative_command_repo
-
-    @property
-    def student_digest_repo(self):
-        if self._student_digest_repo is None:
-            self._student_digest_repo = DjangoStudentDigestRepository()
-        return self._student_digest_repo
 
     @property
     def course_catalog_repo(self):
@@ -1145,18 +965,6 @@ class Container(DocumentCompositionMixin):
         if self._event_form_adapter is None:
             self._event_form_adapter = EventFormAdapter()
         return self._event_form_adapter
-
-    @property
-    def report_form_adapter(self):
-        if self._report_form_adapter is None:
-            self._report_form_adapter = ReportFormAdapter()
-        return self._report_form_adapter
-
-    @property
-    def heatmap_presenter(self):
-        if self._heatmap_presenter is None:
-            self._heatmap_presenter = HeatmapPresenter()
-        return self._heatmap_presenter
 
     @property
     def review_form_adapter(self):
@@ -1612,120 +1420,6 @@ class Container(DocumentCompositionMixin):
     def get_event_variant_assignment_use_case(self):
         return GetEventVariantAssignmentUseCase(
             event_repo=self.event_read_repo,
-        )
-
-    def get_events_status_report_use_case(self):
-        return GetEventsStatusReportUseCase(
-            report_repo=self.events_status_repo,
-        )
-
-    def get_event_performance_report_use_case(self):
-        return GetEventPerformanceReportUseCase(
-            report_repo=self.event_performance_report_query_repo,
-        )
-
-    def save_event_report_narrative_use_case(self):
-        return SaveEventReportNarrativeUseCase(
-            report_repo=self.event_report_narrative_command_repo,
-        )
-
-    def get_student_digests_use_case(self):
-        return GetStudentDigestsUseCase(
-            digest_repo=self.student_digest_repo,
-        )
-
-    def get_student_digest_page_use_case(self):
-        return GetStudentDigestPageUseCase(
-            get_student_digests_use_case=self.get_student_digests_use_case(),
-        )
-
-    def get_reports_dashboard_use_case(self):
-        return GetReportsDashboardUseCase(
-            report_repo=self.reports_dashboard_repo,
-        )
-
-    def get_heatmap_overview_use_case(self):
-        return GetHeatmapOverviewUseCase(
-            report_repo=self.heatmap_overview_repo,
-        )
-
-    def get_heatmap_course_overview_use_case(self):
-        return GetHeatmapCourseOverviewUseCase(
-            report_repo=self.heatmap_overview_repo,
-        )
-
-    def get_heatmap_course_report_use_case(self):
-        return GetHeatmapCourseReportUseCase(
-            overview_use_case=self.get_heatmap_course_overview_use_case(),
-            matrix_use_case=self.get_heatmap_course_topic_matrix_use_case(),
-            timeline_use_case=self.get_heatmap_course_timeline_use_case(),
-        )
-
-    def get_heatmap_course_topic_matrix_use_case(self):
-        return GetHeatmapCourseTopicMatrixUseCase(
-            report_repo=self.heatmap_matrix_repo,
-        )
-
-    def get_heatmap_course_timeline_use_case(self):
-        return GetHeatmapCourseTimelineUseCase(
-            report_repo=self.heatmap_matrix_repo,
-        )
-
-    def get_heatmap_drilldown_overview_use_case(self):
-        return GetHeatmapDrilldownOverviewUseCase(
-            report_repo=self.heatmap_overview_repo,
-        )
-
-    def get_heatmap_drilldown_report_use_case(self):
-        return GetHeatmapDrilldownReportUseCase(
-            overview_use_case=self.get_heatmap_drilldown_overview_use_case(),
-            matrix_use_case=self.get_heatmap_subtopic_matrix_use_case(),
-        )
-
-    def get_heatmap_student_detail_use_case(self):
-        return GetHeatmapStudentDetailUseCase(
-            report_repo=self.heatmap_detail_repo,
-        )
-
-    def get_heatmap_subtopic_detail_use_case(self):
-        return GetHeatmapSubtopicDetailUseCase(
-            report_repo=self.heatmap_detail_repo,
-        )
-
-    def get_heatmap_subtopic_matrix_use_case(self):
-        return GetHeatmapSubtopicMatrixUseCase(
-            report_repo=self.heatmap_matrix_repo,
-        )
-
-    def get_heatmap_topic_matrix_use_case(self):
-        return GetHeatmapTopicMatrixUseCase(
-            report_repo=self.heatmap_matrix_repo,
-        )
-
-    def get_heatmap_report_use_case(self):
-        return GetHeatmapReportUseCase(
-            overview_use_case=self.get_heatmap_overview_use_case(),
-            matrix_use_case=self.get_heatmap_topic_matrix_use_case(),
-        )
-
-    def get_work_analysis_report_use_case(self):
-        return GetWorkAnalysisReportUseCase(
-            report_repo=self.work_analysis_repo,
-        )
-
-    def get_student_performance_report_use_case(self):
-        return GetStudentPerformanceReportUseCase(
-            report_repo=self.student_performance_repo,
-        )
-
-    def get_journal_select_use_case(self):
-        return GetJournalSelectUseCase(
-            report_repo=self.journal_catalog_repo,
-        )
-
-    def get_journal_use_case(self):
-        return GetJournalUseCase(
-            report_repo=self.journal_report_repo,
         )
 
     def get_task_db_health_use_case(self):

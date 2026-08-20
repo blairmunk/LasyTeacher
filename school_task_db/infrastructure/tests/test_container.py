@@ -601,7 +601,10 @@ class ContainerTests(SimpleTestCase):
             'get_student_digests_use_case',
             return_value=student_digests_use_case,
         ), patch(
-            'infrastructure.container.build_sectioned_document_components',
+            (
+                'infrastructure.containers.document.'
+                'build_sectioned_document_components'
+            ),
             return_value=components,
         ) as factory:
             result = container.document_engine

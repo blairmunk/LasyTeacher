@@ -1,12 +1,8 @@
 """Small dependency container for application use cases."""
 
-from core_logic.services.analytics_service import StudentAnalyticsService
 from core_logic.use_cases.analyze_task_images import (
     AnalyzeTaskImagesUseCase,
     ApplyTaskImagePositionSuggestionsUseCase,
-)
-from core_logic.use_cases.activate_academic_year import (
-    ActivateAcademicYearUseCase,
 )
 from core_logic.use_cases.backfill_task_classifications import (
     BackfillTaskClassificationsUseCase,
@@ -29,13 +25,9 @@ from core_logic.use_cases.execute_task_import_submission import (
     ExecuteTaskImportSubmissionUseCase,
 )
 from core_logic.use_cases.export_tasks import ExportTasksUseCase
-from core_logic.use_cases.import_students import ImportStudentsUseCase
 from core_logic.use_cases.import_codifier import ImportCodifierUseCase
 from core_logic.use_cases.import_curriculum import ImportCurriculumUseCase
 from core_logic.use_cases.get_add_tasks_to_group import GetAddTasksToGroupUseCase
-from core_logic.use_cases.get_academic_year_list import (
-    GetAcademicYearListUseCase,
-)
 from core_logic.use_cases.get_codifier_detail import GetCodifierDetailUseCase
 from core_logic.use_cases.get_codifier_list import GetCodifierListUseCase
 from core_logic.use_cases.get_course_detail import GetCourseDetailUseCase
@@ -47,11 +39,6 @@ from core_logic.use_cases.get_import_views import (
     GetImportPageUseCase,
 )
 from core_logic.use_cases.get_site_settings import GetSiteSettingsUseCase
-from core_logic.use_cases.get_student_detail import GetStudentDetailUseCase
-from core_logic.use_cases.get_student_group_detail import GetStudentGroupDetailUseCase
-from core_logic.use_cases.get_student_group_list import GetStudentGroupListUseCase
-from core_logic.use_cases.get_student_list import GetStudentListUseCase
-from core_logic.use_cases.get_student_profile import GetStudentProfileUseCase
 from core_logic.use_cases.get_task_detail import GetTaskDetailUseCase
 from core_logic.use_cases.get_task_db_health import GetTaskDBHealthUseCase
 from core_logic.use_cases.get_task_group_detail import GetTaskGroupDetailUseCase
@@ -81,16 +68,9 @@ from core_logic.use_cases.prepare_task_import_file import (
     PrepareTaskImportFileUseCase,
 )
 from core_logic.use_cases.refresh_task_math_cache import RefreshTaskMathCacheUseCase
-from core_logic.use_cases.resolve_academic_year import ResolveAcademicYearUseCase
 from core_logic.use_cases.save_analog_group import (
     CreateAnalogGroupUseCase,
     UpdateAnalogGroupUseCase,
-)
-from core_logic.use_cases.save_student import (
-    CreateStudentGroupUseCase,
-    CreateStudentUseCase,
-    UpdateStudentGroupUseCase,
-    UpdateStudentUseCase,
 )
 from core_logic.use_cases.save_site_settings import SaveSiteSettingsUseCase
 from core_logic.use_cases.save_task import (
@@ -100,12 +80,6 @@ from core_logic.use_cases.save_task import (
 )
 from core_logic.use_cases.validate_task_import_json import (
     ValidateTaskImportJsonUseCase,
-)
-from infrastructure.repositories.django_academic_year_activation_repo import (
-    DjangoAcademicYearActivationRepository,
-)
-from infrastructure.repositories.django_academic_year_catalog_repo import (
-    DjangoAcademicYearCatalogRepository,
 )
 from infrastructure.repositories.django_codifier_catalog_repo import (
     DjangoCodifierCatalogRepository,
@@ -145,27 +119,6 @@ from infrastructure.repositories.django_source_catalog_repo import (
 )
 from infrastructure.repositories.django_source_command_repo import (
     DjangoSourceCommandRepository,
-)
-from infrastructure.repositories.django_student_catalog_repo import (
-    DjangoStudentCatalogRepository,
-)
-from infrastructure.repositories.django_student_command_repo import (
-    DjangoStudentCommandRepository,
-)
-from infrastructure.repositories.django_student_group_catalog_repo import (
-    DjangoStudentGroupCatalogRepository,
-)
-from infrastructure.repositories.django_student_group_command_repo import (
-    DjangoStudentGroupCommandRepository,
-)
-from infrastructure.repositories.django_student_import_command_repo import (
-    DjangoStudentImportCommandRepository,
-)
-from infrastructure.repositories.django_student_import_snapshot_repo import (
-    DjangoStudentImportSnapshotRepository,
-)
-from infrastructure.repositories.django_student_profile_repo import (
-    DjangoStudentProfileRepository,
 )
 from infrastructure.repositories.django_task_read_repo import (
     DjangoTaskReadRepository,
@@ -220,7 +173,6 @@ from infrastructure.forms.codifier_forms import CodifierFormAdapter
 from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
 from infrastructure.forms.settings_forms import SettingsFormAdapter
-from infrastructure.forms.student_forms import StudentFormAdapter
 from infrastructure.forms.task_group_forms import TaskGroupFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
 from infrastructure.containers.document import DocumentCompositionMixin
@@ -228,6 +180,7 @@ from infrastructure.containers.event import EventCompositionMixin
 from infrastructure.containers.remedial import RemedialCompositionMixin
 from infrastructure.containers.reporting import ReportingCompositionMixin
 from infrastructure.containers.review import ReviewCompositionMixin
+from infrastructure.containers.student import StudentCompositionMixin
 from infrastructure.containers.work import WorkCompositionMixin
 
 
@@ -237,6 +190,7 @@ class Container(
     RemedialCompositionMixin,
     ReportingCompositionMixin,
     ReviewCompositionMixin,
+    StudentCompositionMixin,
     WorkCompositionMixin,
 ):
     """Wires pure use cases to Django infrastructure adapters."""
@@ -247,16 +201,8 @@ class Container(
         self._initialize_remedial_composition()
         self._initialize_reporting_composition()
         self._initialize_review_composition()
+        self._initialize_student_composition()
         self._initialize_work_composition()
-        self._academic_year_catalog_repo = None
-        self._academic_year_activation_repo = None
-        self._student_catalog_repo = None
-        self._student_command_repo = None
-        self._student_group_catalog_repo = None
-        self._student_group_command_repo = None
-        self._student_import_snapshot_repo = None
-        self._student_import_command_repo = None
-        self._student_profile_repo = None
         self._source_catalog_repo = None
         self._source_command_repo = None
         self._task_read_repo = None
@@ -289,77 +235,10 @@ class Container(
         self._core_form_adapter = None
         self._curriculum_form_adapter = None
         self._settings_form_adapter = None
-        self._student_form_adapter = None
         self._task_group_form_adapter = None
         self._task_form_adapter = None
         self._task_import_service = None
         self._transaction_manager = None
-
-    @property
-    def academic_year_catalog_repo(self):
-        if self._academic_year_catalog_repo is None:
-            self._academic_year_catalog_repo = (
-                DjangoAcademicYearCatalogRepository()
-            )
-        return self._academic_year_catalog_repo
-
-    @property
-    def academic_year_activation_repo(self):
-        if self._academic_year_activation_repo is None:
-            self._academic_year_activation_repo = (
-                DjangoAcademicYearActivationRepository()
-            )
-        return self._academic_year_activation_repo
-
-    @property
-    def student_catalog_repo(self):
-        if self._student_catalog_repo is None:
-            self._student_catalog_repo = DjangoStudentCatalogRepository()
-        return self._student_catalog_repo
-
-    @property
-    def student_command_repo(self):
-        if self._student_command_repo is None:
-            self._student_command_repo = DjangoStudentCommandRepository()
-        return self._student_command_repo
-
-    @property
-    def student_group_catalog_repo(self):
-        if self._student_group_catalog_repo is None:
-            self._student_group_catalog_repo = (
-                DjangoStudentGroupCatalogRepository()
-            )
-        return self._student_group_catalog_repo
-
-    @property
-    def student_group_command_repo(self):
-        if self._student_group_command_repo is None:
-            self._student_group_command_repo = (
-                DjangoStudentGroupCommandRepository()
-            )
-        return self._student_group_command_repo
-
-    @property
-    def student_import_snapshot_repo(self):
-        if self._student_import_snapshot_repo is None:
-            self._student_import_snapshot_repo = (
-                DjangoStudentImportSnapshotRepository()
-            )
-        return self._student_import_snapshot_repo
-
-    @property
-    def student_import_command_repo(self):
-        if self._student_import_command_repo is None:
-            self._student_import_command_repo = (
-                DjangoStudentImportCommandRepository()
-            )
-        return self._student_import_command_repo
-
-    @property
-    def student_profile_repo(self):
-        if self._student_profile_repo is None:
-            self._student_profile_repo = DjangoStudentProfileRepository()
-        return self._student_profile_repo
 
     @property
     def source_catalog_repo(self):
@@ -576,12 +455,6 @@ class Container(
         return self._settings_form_adapter
 
     @property
-    def student_form_adapter(self):
-        if self._student_form_adapter is None:
-            self._student_form_adapter = StudentFormAdapter()
-        return self._student_form_adapter
-
-    @property
     def task_group_form_adapter(self):
         if self._task_group_form_adapter is None:
             self._task_group_form_adapter = TaskGroupFormAdapter()
@@ -598,78 +471,6 @@ class Container(
         if self._task_import_service is None:
             self._task_import_service = DjangoTaskImportService()
         return self._task_import_service
-
-    def analytics_service(self):
-        return StudentAnalyticsService()
-
-    def get_student_profile_use_case(self):
-        return GetStudentProfileUseCase(
-            student_repo=self.student_catalog_repo,
-            student_learning_repo=self.student_profile_repo,
-            analytics_service=self.analytics_service(),
-        )
-
-    def get_student_detail_use_case(self):
-        return GetStudentDetailUseCase(
-            student_repo=self.student_catalog_repo,
-        )
-
-    def get_student_group_detail_use_case(self):
-        return GetStudentGroupDetailUseCase(
-            student_repo=self.student_group_catalog_repo,
-        )
-
-    def get_student_list_use_case(self):
-        return GetStudentListUseCase(
-            student_repo=self.student_catalog_repo,
-        )
-
-    def resolve_academic_year_use_case(self):
-        return ResolveAcademicYearUseCase(
-            academic_year_repo=self.academic_year_catalog_repo,
-        )
-
-    def get_academic_year_list_use_case(self):
-        return GetAcademicYearListUseCase(
-            academic_year_repo=self.academic_year_catalog_repo,
-        )
-
-    def activate_academic_year_use_case(self):
-        return ActivateAcademicYearUseCase(
-            academic_year_repo=self.academic_year_activation_repo,
-        )
-
-    def get_student_group_list_use_case(self):
-        return GetStudentGroupListUseCase(
-            student_repo=self.student_group_catalog_repo,
-        )
-
-    def create_student_use_case(self):
-        return CreateStudentUseCase(
-            student_repo=self.student_command_repo,
-        )
-
-    def update_student_use_case(self):
-        return UpdateStudentUseCase(
-            student_repo=self.student_command_repo,
-        )
-
-    def create_student_group_use_case(self):
-        return CreateStudentGroupUseCase(
-            student_repo=self.student_group_command_repo,
-        )
-
-    def update_student_group_use_case(self):
-        return UpdateStudentGroupUseCase(
-            student_repo=self.student_group_command_repo,
-        )
-
-    def import_students_use_case(self):
-        return ImportStudentsUseCase(
-            snapshot_repo=self.student_import_snapshot_repo,
-            command_repo=self.student_import_command_repo,
-            transaction_manager=self.transaction_manager,
-        )
 
     def import_codifier_use_case(self):
         return ImportCodifierUseCase(

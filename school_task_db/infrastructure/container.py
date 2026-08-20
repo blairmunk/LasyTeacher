@@ -1,9 +1,7 @@
 """Small dependency container for application use cases."""
 
 from core_logic.services.analytics_service import StudentAnalyticsService
-from core_logic.services.grading_service import GradingService
 from core_logic.services.remedial_service import RemedialService
-from core_logic.services.review_service import ReviewService
 from core_logic.use_cases.analyze_task_images import (
     AnalyzeTaskImagesUseCase,
     ApplyTaskImagePositionSuggestionsUseCase,
@@ -19,7 +17,6 @@ from core_logic.use_cases.bulk_change_task_groups import (
     BulkCreateGroupFromTasksUseCase,
     BulkRemoveTasksFromGroupsUseCase,
 )
-from core_logic.use_cases.calculate_review_score import CalculateReviewScoreUseCase
 from core_logic.use_cases.change_task_group_membership import (
     AddTasksToGroupUseCase,
     RemoveTaskFromGroupUseCase,
@@ -37,13 +34,11 @@ from core_logic.use_cases.create_remedial_wizard_work import (
 )
 from core_logic.use_cases.delete_task_groups import DeleteTaskGroupsUseCase
 from core_logic.use_cases.delete_task import DeleteTaskUseCase
-from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
 from core_logic.use_cases.execute_task_import import ExecuteTaskImportUseCase
 from core_logic.use_cases.execute_task_import_submission import (
     ExecuteTaskImportSubmissionUseCase,
 )
 from core_logic.use_cases.export_tasks import ExportTasksUseCase
-from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.import_students import ImportStudentsUseCase
 from core_logic.use_cases.import_codifier import ImportCodifierUseCase
 from core_logic.use_cases.import_curriculum import ImportCurriculumUseCase
@@ -61,28 +56,17 @@ from core_logic.use_cases.get_import_views import (
     GetImportHistoryUseCase,
     GetImportPageUseCase,
 )
-from core_logic.use_cases.get_participation_review import (
-    GetParticipationReviewUseCase,
-)
-from core_logic.use_cases.get_event_review import GetEventReviewUseCase
 from core_logic.use_cases.get_remedial_event_preview import (
     GetRemedialEventPreviewUseCase,
 )
 from core_logic.use_cases.get_remedial_sheet_data import (
     GetRemedialSheetDataUseCase,
 )
-from core_logic.use_cases.get_recent_review_sessions import (
-    GetRecentReviewSessionsUseCase,
-)
 from core_logic.use_cases.get_remedial_wizard_preview import (
     GetRemedialWizardPreviewUseCase,
 )
 from core_logic.use_cases.get_remedial_wizard_start import (
     GetRemedialWizardStartUseCase,
-)
-from core_logic.use_cases.get_review_dashboard import GetReviewDashboardUseCase
-from core_logic.use_cases.get_review_save_navigation import (
-    GetReviewSaveNavigationUseCase,
 )
 from core_logic.use_cases.get_site_settings import GetSiteSettingsUseCase
 from core_logic.use_cases.get_student_detail import GetStudentDetailUseCase
@@ -107,9 +91,6 @@ from core_logic.use_cases.get_task_reference_options import (
 from core_logic.use_cases.get_topic_subtopics import GetTopicSubtopicsUseCase
 from core_logic.use_cases.get_topic_detail import GetTopicDetailUseCase
 from core_logic.use_cases.get_topic_list import GetTopicListUseCase
-from core_logic.use_cases.prepare_participation_review_submission import (
-    PrepareParticipationReviewSubmissionUseCase,
-)
 from core_logic.use_cases.prepare_remedial_from_event_submission import (
     PrepareRemedialFromEventSubmissionUseCase,
 )
@@ -152,24 +133,14 @@ from core_logic.use_cases.save_task import (
     SaveTaskImagesUseCase,
     UpdateTaskUseCase,
 )
-from core_logic.use_cases.sync_review_session import SyncReviewSessionUseCase
-from core_logic.use_cases.toggle_participation_absent import (
-    ToggleParticipationAbsentUseCase,
-)
 from core_logic.use_cases.validate_task_import_json import (
     ValidateTaskImportJsonUseCase,
-)
-from core_logic.use_cases.validate_review_work_scan import (
-    ValidateReviewWorkScanUseCase,
 )
 from infrastructure.repositories.django_academic_year_activation_repo import (
     DjangoAcademicYearActivationRepository,
 )
 from infrastructure.repositories.django_academic_year_catalog_repo import (
     DjangoAcademicYearCatalogRepository,
-)
-from infrastructure.repositories.django_attempt_snapshot_repo import (
-    DjangoAttemptSnapshotRepository,
 )
 from infrastructure.repositories.django_codifier_catalog_repo import (
     DjangoCodifierCatalogRepository,
@@ -197,24 +168,6 @@ from infrastructure.repositories.django_curriculum_import_repo import (
 )
 from infrastructure.repositories.django_topic_catalog_repo import (
     DjangoTopicCatalogRepository,
-)
-from infrastructure.repositories.django_participation_grading_repo import (
-    DjangoParticipationGradingRepository,
-)
-from infrastructure.repositories.django_review_overview_repo import (
-    DjangoReviewOverviewRepository,
-)
-from infrastructure.repositories.django_review_workflow_repo import (
-    DjangoReviewWorkflowRepository,
-)
-from infrastructure.repositories.django_review_session_command_repo import (
-    DjangoReviewSessionCommandRepository,
-)
-from infrastructure.repositories.django_review_session_query_repo import (
-    DjangoReviewSessionQueryRepository,
-)
-from infrastructure.repositories.django_review_task_repo import (
-    DjangoReviewTaskRepository,
 )
 from infrastructure.repositories.django_site_settings_command_repo import (
     DjangoSiteSettingsCommandRepository,
@@ -310,7 +263,6 @@ from infrastructure.services.task_math_status_cache import (
 from infrastructure.forms.codifier_forms import CodifierFormAdapter
 from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
-from infrastructure.forms.review_forms import ReviewFormAdapter
 from infrastructure.forms.settings_forms import SettingsFormAdapter
 from infrastructure.forms.student_forms import StudentFormAdapter
 from infrastructure.forms.task_group_forms import TaskGroupFormAdapter
@@ -318,6 +270,7 @@ from infrastructure.forms.task_forms import TaskFormAdapter
 from infrastructure.containers.document import DocumentCompositionMixin
 from infrastructure.containers.event import EventCompositionMixin
 from infrastructure.containers.reporting import ReportingCompositionMixin
+from infrastructure.containers.review import ReviewCompositionMixin
 from infrastructure.containers.work import WorkCompositionMixin
 
 
@@ -325,6 +278,7 @@ class Container(
     DocumentCompositionMixin,
     EventCompositionMixin,
     ReportingCompositionMixin,
+    ReviewCompositionMixin,
     WorkCompositionMixin,
 ):
     """Wires pure use cases to Django infrastructure adapters."""
@@ -333,10 +287,10 @@ class Container(
         self._initialize_document_composition()
         self._initialize_event_composition()
         self._initialize_reporting_composition()
+        self._initialize_review_composition()
         self._initialize_work_composition()
         self._academic_year_catalog_repo = None
         self._academic_year_activation_repo = None
-        self._attempt_snapshot_repo = None
         self._student_catalog_repo = None
         self._student_command_repo = None
         self._student_group_catalog_repo = None
@@ -363,12 +317,6 @@ class Container(
         self._task_image_audit_command_repo = None
         self._remedial_task_group_repo = None
         self._remedial_source_repo = None
-        self._participation_grading_repo = None
-        self._review_overview_repo = None
-        self._review_workflow_repo = None
-        self._review_session_query_repo = None
-        self._review_session_command_repo = None
-        self._review_task_repo = None
         self._task_db_health_repo = None
         self._course_catalog_repo = None
         self._topic_catalog_repo = None
@@ -384,7 +332,6 @@ class Container(
         self._codifier_form_adapter = None
         self._core_form_adapter = None
         self._curriculum_form_adapter = None
-        self._review_form_adapter = None
         self._settings_form_adapter = None
         self._student_form_adapter = None
         self._task_group_form_adapter = None
@@ -407,12 +354,6 @@ class Container(
                 DjangoAcademicYearActivationRepository()
             )
         return self._academic_year_activation_repo
-
-    @property
-    def attempt_snapshot_repo(self):
-        if self._attempt_snapshot_repo is None:
-            self._attempt_snapshot_repo = DjangoAttemptSnapshotRepository()
-        return self._attempt_snapshot_repo
 
     @property
     def student_catalog_repo(self):
@@ -595,52 +536,10 @@ class Container(
         return self._remedial_source_repo
 
     @property
-    def participation_grading_repo(self):
-        if self._participation_grading_repo is None:
-            self._participation_grading_repo = (
-                DjangoParticipationGradingRepository()
-            )
-        return self._participation_grading_repo
-
-    @property
     def transaction_manager(self):
         if self._transaction_manager is None:
             self._transaction_manager = DjangoTransactionManager()
         return self._transaction_manager
-
-    @property
-    def review_overview_repo(self):
-        if self._review_overview_repo is None:
-            self._review_overview_repo = DjangoReviewOverviewRepository()
-        return self._review_overview_repo
-
-    @property
-    def review_workflow_repo(self):
-        if self._review_workflow_repo is None:
-            self._review_workflow_repo = DjangoReviewWorkflowRepository()
-        return self._review_workflow_repo
-
-    @property
-    def review_session_query_repo(self):
-        if self._review_session_query_repo is None:
-            self._review_session_query_repo = (
-                DjangoReviewSessionQueryRepository()
-            )
-        return self._review_session_query_repo
-
-    @property
-    def review_session_command_repo(self):
-        if self._review_session_command_repo is None:
-            self._review_session_command_repo = (
-                DjangoReviewSessionCommandRepository()
-            )
-        return self._review_session_command_repo
-
-    @property
-    def review_task_repo(self):
-        if self._review_task_repo is None:
-            self._review_task_repo = DjangoReviewTaskRepository()
-        return self._review_task_repo
 
     @property
     def task_db_health_repo(self):
@@ -735,12 +634,6 @@ class Container(
         return self._curriculum_form_adapter
 
     @property
-    def review_form_adapter(self):
-        if self._review_form_adapter is None:
-            self._review_form_adapter = ReviewFormAdapter()
-        return self._review_form_adapter
-
-    @property
     def settings_form_adapter(self):
         if self._settings_form_adapter is None:
             self._settings_form_adapter = SettingsFormAdapter()
@@ -781,12 +674,6 @@ class Container(
 
     def analytics_service(self):
         return StudentAnalyticsService()
-
-    def grading_service(self):
-        return GradingService()
-
-    def review_service(self):
-        return ReviewService()
 
     def create_remedial_from_event_use_case(self):
         return CreateRemedialFromEventUseCase(
@@ -1112,35 +999,6 @@ class Container(
             task_repo=self.task_image_command_repo,
         )
 
-    def grade_student_work_use_case(self):
-        return GradeStudentWorkUseCase(
-            grading_repo=self.participation_grading_repo,
-            review_task_repo=self.review_task_repo,
-            grading_service=self.grading_service(),
-            transaction_manager=self.transaction_manager,
-            attempt_snapshot_repo=self.attempt_snapshot_repo,
-        )
-
-    def get_participation_review_use_case(self):
-        return GetParticipationReviewUseCase(
-            review_repo=self.review_workflow_repo,
-            review_task_repo=self.review_task_repo,
-            review_service=self.review_service(),
-        )
-
-    def get_review_dashboard_use_case(self):
-        return GetReviewDashboardUseCase(
-            review_repo=self.review_overview_repo,
-            review_service=self.review_service(),
-        )
-
-    def get_event_review_use_case(self):
-        return GetEventReviewUseCase(
-            event_repo=self.event_read_repo,
-            review_repo=self.review_overview_repo,
-            review_service=self.review_service(),
-        )
-
     def get_task_db_health_use_case(self):
         return GetTaskDBHealthUseCase(
             report_repo=self.task_db_health_repo,
@@ -1154,26 +1012,6 @@ class Container(
     def apply_task_image_position_suggestions_use_case(self):
         return ApplyTaskImagePositionSuggestionsUseCase(
             image_repo=self.task_image_audit_command_repo,
-        )
-
-    def calculate_review_score_use_case(self):
-        return CalculateReviewScoreUseCase(
-            review_service=self.review_service(),
-        )
-
-    def finalize_review_event_use_case(self):
-        return FinalizeReviewEventUseCase(
-            review_repo=self.review_workflow_repo,
-        )
-
-    def toggle_participation_absent_use_case(self):
-        return ToggleParticipationAbsentUseCase(
-            review_repo=self.review_workflow_repo,
-        )
-
-    def prepare_participation_review_submission_use_case(self):
-        return PrepareParticipationReviewSubmissionUseCase(
-            review_service=self.review_service(),
         )
 
     def prepare_remedial_from_event_submission_use_case(self):
@@ -1193,26 +1031,6 @@ class Container(
 
     def prepare_update_task_group_roles_submission_use_case(self):
         return PrepareUpdateTaskGroupRolesSubmissionUseCase()
-
-    def validate_review_work_scan_use_case(self):
-        return ValidateReviewWorkScanUseCase(
-            review_service=self.review_service(),
-        )
-
-    def get_review_save_navigation_use_case(self):
-        return GetReviewSaveNavigationUseCase(
-            review_repo=self.review_workflow_repo,
-        )
-
-    def get_recent_review_sessions_use_case(self):
-        return GetRecentReviewSessionsUseCase(
-            session_repo=self.review_session_query_repo,
-        )
-
-    def sync_review_session_use_case(self):
-        return SyncReviewSessionUseCase(
-            session_repo=self.review_session_command_repo,
-        )
 
     def get_remedial_sheet_data_use_case(self):
         return GetRemedialSheetDataUseCase(

@@ -5,7 +5,6 @@ from core_logic.services.event_service import EventService
 from core_logic.services.grading_service import GradingService
 from core_logic.services.remedial_service import RemedialService
 from core_logic.services.review_service import ReviewService
-from core_logic.services.work_service import WorkService
 from core_logic.use_cases.add_event_participants import AddEventParticipantsUseCase
 from core_logic.use_cases.analyze_task_images import (
     AnalyzeTaskImagesUseCase,
@@ -18,7 +17,6 @@ from core_logic.use_cases.assign_event_variants import AssignEventVariantsUseCas
 from core_logic.use_cases.assign_single_event_variant import (
     AssignSingleEventVariantUseCase,
 )
-from core_logic.use_cases.bulk_delete_variants import BulkDeleteVariantsUseCase
 from core_logic.use_cases.backfill_task_classifications import (
     BackfillTaskClassificationsUseCase,
 )
@@ -44,15 +42,6 @@ from core_logic.use_cases.create_student_remedial_variant import (
 from core_logic.use_cases.create_remedial_wizard_work import (
     CreateRemedialWizardWorkUseCase,
 )
-from core_logic.use_cases.create_work_from_orphans import (
-    CreateWorkFromOrphansUseCase,
-)
-from core_logic.use_cases.create_work_from_groups import (
-    PrepareCreateWorkFromGroupsSubmissionUseCase,
-    CreateWorkFromGroupsUseCase,
-)
-from core_logic.use_cases.create_work_from_tasks import CreateWorkFromTasksUseCase
-from core_logic.use_cases.delete_variant import DeleteVariantUseCase
 from core_logic.use_cases.delete_task_groups import DeleteTaskGroupsUseCase
 from core_logic.use_cases.delete_task import DeleteTaskUseCase
 from core_logic.use_cases.finalize_review_event import FinalizeReviewEventUseCase
@@ -61,7 +50,6 @@ from core_logic.use_cases.execute_task_import_submission import (
     ExecuteTaskImportSubmissionUseCase,
 )
 from core_logic.use_cases.export_tasks import ExportTasksUseCase
-from core_logic.use_cases.compose_work_variants import ComposeWorkVariantsUseCase
 from core_logic.use_cases.grade_student_work import GradeStudentWorkUseCase
 from core_logic.use_cases.import_students import ImportStudentsUseCase
 from core_logic.use_cases.import_codifier import ImportCodifierUseCase
@@ -95,7 +83,6 @@ from core_logic.use_cases.get_event_participation_ref import (
 from core_logic.use_cases.get_event_variant_assignment import (
     GetEventVariantAssignmentUseCase,
 )
-from core_logic.use_cases.get_orphan_variant_list import GetOrphanVariantListUseCase
 from core_logic.use_cases.get_remedial_event_preview import (
     GetRemedialEventPreviewUseCase,
 )
@@ -138,15 +125,6 @@ from core_logic.use_cases.get_task_reference_options import (
 from core_logic.use_cases.get_topic_subtopics import GetTopicSubtopicsUseCase
 from core_logic.use_cases.get_topic_detail import GetTopicDetailUseCase
 from core_logic.use_cases.get_topic_list import GetTopicListUseCase
-from core_logic.use_cases.get_variant_detail import GetVariantDetailUseCase
-from core_logic.use_cases.get_variant_generation_form import (
-    GetVariantGenerationFormUseCase,
-)
-from core_logic.use_cases.get_variant_list import GetVariantListUseCase
-from core_logic.use_cases.get_work_detail import GetWorkDetailUseCase
-from core_logic.use_cases.get_work_form_data import GetWorkFormDataUseCase
-from core_logic.use_cases.get_work_list import GetWorkListUseCase
-from core_logic.use_cases.get_variant_delete_info import GetVariantDeleteInfoUseCase
 from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionUseCase,
 )
@@ -167,11 +145,6 @@ from core_logic.use_cases.prepare_student_remedial_submission import (
 from core_logic.use_cases.prepare_task_group_membership_submission import (
     PrepareAddTasksToGroupSubmissionUseCase,
     PrepareUpdateTaskGroupRolesSubmissionUseCase,
-)
-from core_logic.use_cases.prepare_work_variant_submission import (
-    PrepareBulkDeleteVariantsSubmissionUseCase,
-    PrepareCreateWorkFromOrphansSubmissionUseCase,
-    PrepareDeleteVariantSubmissionUseCase,
 )
 from core_logic.use_cases.get_source_list import GetSourceListUseCase
 from core_logic.use_cases.get_task_import_sample import GetTaskImportSampleUseCase
@@ -202,12 +175,7 @@ from core_logic.use_cases.save_task import (
     SaveTaskImagesUseCase,
     UpdateTaskUseCase,
 )
-from core_logic.use_cases.save_work import (
-    CreateWorkWithSpecificationUseCase,
-    UpdateWorkWithSpecificationUseCase,
-)
 from core_logic.use_cases.sync_review_session import SyncReviewSessionUseCase
-from core_logic.use_cases.sync_work_analog_groups import SyncWorkAnalogGroupsUseCase
 from core_logic.use_cases.toggle_participation_absent import (
     ToggleParticipationAbsentUseCase,
 )
@@ -267,12 +235,6 @@ from infrastructure.repositories.django_event_write_repo import (
 )
 from infrastructure.repositories.django_participation_grading_repo import (
     DjangoParticipationGradingRepository,
-)
-from infrastructure.repositories.django_orphan_variant_attachment_repo import (
-    DjangoOrphanVariantAttachmentRepository,
-)
-from infrastructure.repositories.django_orphan_variant_catalog_repo import (
-    DjangoOrphanVariantCatalogRepository,
 )
 from infrastructure.repositories.django_review_overview_repo import (
     DjangoReviewOverviewRepository,
@@ -358,9 +320,6 @@ from infrastructure.repositories.django_task_group_catalog_repo import (
 from infrastructure.repositories.django_task_group_management_repo import (
     DjangoTaskGroupManagementRepository,
 )
-from infrastructure.repositories.django_work_task_group_repo import (
-    DjangoWorkTaskGroupRepository,
-)
 from infrastructure.repositories.django_task_image_audit_command_repo import (
     DjangoTaskImageAuditCommandRepository,
 )
@@ -369,33 +328,6 @@ from infrastructure.repositories.django_task_image_audit_query_repo import (
 )
 from infrastructure.repositories.django_task_db_health_repo import (
     DjangoTaskDBHealthRepository,
-)
-from infrastructure.repositories.django_work_specification_repo import (
-    DjangoWorkSpecificationRepository,
-)
-from infrastructure.repositories.django_work_variant_creation_repo import (
-    DjangoWorkVariantCreationRepository,
-)
-from infrastructure.repositories.django_variant_generation_form_repo import (
-    DjangoVariantGenerationFormRepository,
-)
-from infrastructure.repositories.django_work_spec_sync_repo import (
-    DjangoWorkSpecSyncRepository,
-)
-from infrastructure.repositories.django_work_variant_composition_repo import (
-    DjangoWorkVariantCompositionRepository,
-)
-from infrastructure.repositories.django_work_read_repo import (
-    DjangoWorkReadRepository,
-)
-from infrastructure.repositories.django_variant_read_repo import (
-    DjangoVariantReadRepository,
-)
-from infrastructure.repositories.django_variant_lifecycle_command_repo import (
-    DjangoVariantLifecycleCommandRepository,
-)
-from infrastructure.repositories.django_variant_lifecycle_query_repo import (
-    DjangoVariantLifecycleQueryRepository,
 )
 from infrastructure.repositories.django_remedial_task_group_repo import (
     DjangoRemedialTaskGroupRepository,
@@ -418,18 +350,23 @@ from infrastructure.forms.review_forms import ReviewFormAdapter
 from infrastructure.forms.settings_forms import SettingsFormAdapter
 from infrastructure.forms.student_forms import StudentFormAdapter
 from infrastructure.forms.task_group_forms import TaskGroupFormAdapter
-from infrastructure.forms.work_forms import WorkFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
 from infrastructure.containers.document import DocumentCompositionMixin
 from infrastructure.containers.reporting import ReportingCompositionMixin
+from infrastructure.containers.work import WorkCompositionMixin
 
 
-class Container(DocumentCompositionMixin, ReportingCompositionMixin):
+class Container(
+    DocumentCompositionMixin,
+    ReportingCompositionMixin,
+    WorkCompositionMixin,
+):
     """Wires pure use cases to Django infrastructure adapters."""
 
     def __init__(self):
         self._initialize_document_composition()
         self._initialize_reporting_composition()
+        self._initialize_work_composition()
         self._academic_year_catalog_repo = None
         self._academic_year_activation_repo = None
         self._attempt_snapshot_repo = None
@@ -454,21 +391,9 @@ class Container(DocumentCompositionMixin, ReportingCompositionMixin):
         self._task_export_repo = None
         self._task_group_catalog_repo = None
         self._task_group_management_repo = None
-        self._work_task_group_repo = None
         self._task_math_status_cache = None
         self._task_image_audit_query_repo = None
         self._task_image_audit_command_repo = None
-        self._work_specification_repo = None
-        self._work_variant_creation_repo = None
-        self._variant_generation_form_repo = None
-        self._work_variant_composition_repo = None
-        self._work_spec_sync_repo = None
-        self._work_read_repo = None
-        self._variant_read_repo = None
-        self._variant_lifecycle_query_repo = None
-        self._variant_lifecycle_command_repo = None
-        self._orphan_variant_catalog_repo = None
-        self._orphan_variant_attachment_repo = None
         self._remedial_task_group_repo = None
         self._remedial_source_repo = None
         self._event_read_repo = None
@@ -501,7 +426,6 @@ class Container(DocumentCompositionMixin, ReportingCompositionMixin):
         self._settings_form_adapter = None
         self._student_form_adapter = None
         self._task_group_form_adapter = None
-        self._work_form_adapter = None
         self._task_form_adapter = None
         self._task_import_service = None
         self._transaction_manager = None
@@ -673,12 +597,6 @@ class Container(DocumentCompositionMixin, ReportingCompositionMixin):
         return self._task_group_management_repo
 
     @property
-    def work_task_group_repo(self):
-        if self._work_task_group_repo is None:
-            self._work_task_group_repo = DjangoWorkTaskGroupRepository()
-        return self._work_task_group_repo
-
-    @property
     def task_math_status_cache(self):
         if self._task_math_status_cache is None:
             self._task_math_status_cache = task_math_status_cache
@@ -699,86 +617,6 @@ class Container(DocumentCompositionMixin, ReportingCompositionMixin):
                 DjangoTaskImageAuditCommandRepository()
             )
         return self._task_image_audit_command_repo
-
-    @property
-    def work_specification_repo(self):
-        if self._work_specification_repo is None:
-            self._work_specification_repo = DjangoWorkSpecificationRepository()
-        return self._work_specification_repo
-
-    @property
-    def work_variant_creation_repo(self):
-        if self._work_variant_creation_repo is None:
-            self._work_variant_creation_repo = (
-                DjangoWorkVariantCreationRepository()
-            )
-        return self._work_variant_creation_repo
-
-    @property
-    def variant_generation_form_repo(self):
-        if self._variant_generation_form_repo is None:
-            self._variant_generation_form_repo = (
-                DjangoVariantGenerationFormRepository()
-            )
-        return self._variant_generation_form_repo
-
-    @property
-    def work_variant_composition_repo(self):
-        if self._work_variant_composition_repo is None:
-            self._work_variant_composition_repo = (
-                DjangoWorkVariantCompositionRepository()
-            )
-        return self._work_variant_composition_repo
-
-    @property
-    def work_spec_sync_repo(self):
-        if self._work_spec_sync_repo is None:
-            self._work_spec_sync_repo = DjangoWorkSpecSyncRepository()
-        return self._work_spec_sync_repo
-
-    @property
-    def work_read_repo(self):
-        if self._work_read_repo is None:
-            self._work_read_repo = DjangoWorkReadRepository()
-        return self._work_read_repo
-
-    @property
-    def variant_read_repo(self):
-        if self._variant_read_repo is None:
-            self._variant_read_repo = DjangoVariantReadRepository()
-        return self._variant_read_repo
-
-    @property
-    def variant_lifecycle_query_repo(self):
-        if self._variant_lifecycle_query_repo is None:
-            self._variant_lifecycle_query_repo = (
-                DjangoVariantLifecycleQueryRepository()
-            )
-        return self._variant_lifecycle_query_repo
-
-    @property
-    def variant_lifecycle_command_repo(self):
-        if self._variant_lifecycle_command_repo is None:
-            self._variant_lifecycle_command_repo = (
-                DjangoVariantLifecycleCommandRepository()
-            )
-        return self._variant_lifecycle_command_repo
-
-    @property
-    def orphan_variant_catalog_repo(self):
-        if self._orphan_variant_catalog_repo is None:
-            self._orphan_variant_catalog_repo = (
-                DjangoOrphanVariantCatalogRepository()
-            )
-        return self._orphan_variant_catalog_repo
-
-    @property
-    def orphan_variant_attachment_repo(self):
-        if self._orphan_variant_attachment_repo is None:
-            self._orphan_variant_attachment_repo = (
-                DjangoOrphanVariantAttachmentRepository()
-            )
-        return self._orphan_variant_attachment_repo
 
     @property
     def remedial_task_group_repo(self):
@@ -991,12 +829,6 @@ class Container(DocumentCompositionMixin, ReportingCompositionMixin):
         return self._task_group_form_adapter
 
     @property
-    def work_form_adapter(self):
-        if self._work_form_adapter is None:
-            self._work_form_adapter = WorkFormAdapter()
-        return self._work_form_adapter
-
-    @property
     def task_form_adapter(self):
         if self._task_form_adapter is None:
             self._task_form_adapter = TaskFormAdapter()
@@ -1028,9 +860,6 @@ class Container(DocumentCompositionMixin, ReportingCompositionMixin):
 
     def review_service(self):
         return ReviewService()
-
-    def work_service(self):
-        return WorkService()
 
     def create_remedial_from_event_use_case(self):
         return CreateRemedialFromEventUseCase(
@@ -1505,15 +1334,6 @@ class Container(DocumentCompositionMixin, ReportingCompositionMixin):
     def prepare_update_task_group_roles_submission_use_case(self):
         return PrepareUpdateTaskGroupRolesSubmissionUseCase()
 
-    def prepare_delete_variant_submission_use_case(self):
-        return PrepareDeleteVariantSubmissionUseCase()
-
-    def prepare_bulk_delete_variants_submission_use_case(self):
-        return PrepareBulkDeleteVariantsSubmissionUseCase()
-
-    def prepare_create_work_from_orphans_submission_use_case(self):
-        return PrepareCreateWorkFromOrphansSubmissionUseCase()
-
     def validate_review_work_scan_use_case(self):
         return ValidateReviewWorkScanUseCase(
             review_service=self.review_service(),
@@ -1534,104 +1354,9 @@ class Container(DocumentCompositionMixin, ReportingCompositionMixin):
             session_repo=self.review_session_command_repo,
         )
 
-    def get_work_detail_use_case(self):
-        return GetWorkDetailUseCase(
-            work_read_repo=self.work_read_repo,
-            work_service=self.work_service(),
-            presentation_profile_repo=self.presentation_profile_catalog_repo,
-        )
-
-    def get_work_list_use_case(self):
-        return GetWorkListUseCase(
-            work_read_repo=self.work_read_repo,
-        )
-
-    def get_work_form_data_use_case(self):
-        return GetWorkFormDataUseCase(
-            work_read_repo=self.work_read_repo,
-        )
-
-    def get_variant_detail_use_case(self):
-        return GetVariantDetailUseCase(
-            variant_repo=self.variant_read_repo,
-        )
-
-    def get_variant_generation_form_use_case(self):
-        return GetVariantGenerationFormUseCase(
-            work_repo=self.variant_generation_form_repo,
-        )
-
-    def get_variant_list_use_case(self):
-        return GetVariantListUseCase(
-            variant_repo=self.variant_read_repo,
-        )
-
-    def get_orphan_variant_list_use_case(self):
-        return GetOrphanVariantListUseCase(
-            orphan_variant_repo=self.orphan_variant_catalog_repo,
-        )
-
     def get_remedial_sheet_data_use_case(self):
         return GetRemedialSheetDataUseCase(
             remedial_repo=self.remedial_sheet_repo,
-        )
-
-    def sync_work_analog_groups_use_case(self):
-        return SyncWorkAnalogGroupsUseCase(
-            work_repo=self.work_spec_sync_repo,
-            transaction_manager=self.transaction_manager,
-        )
-
-    def compose_work_variants_use_case(self):
-        return ComposeWorkVariantsUseCase(
-            work_repo=self.work_variant_composition_repo,
-            transaction_manager=self.transaction_manager,
-        )
-
-    def create_work_from_orphans_use_case(self):
-        return CreateWorkFromOrphansUseCase(
-            orphan_variant_repo=self.orphan_variant_attachment_repo,
-        )
-
-    def create_work_from_groups_use_case(self):
-        return CreateWorkFromGroupsUseCase(
-            task_group_repo=self.work_task_group_repo,
-            create_work_with_specification_use_case=(
-                self.create_work_with_specification_use_case()
-            ),
-            compose_work_variants_use_case=(
-                self.compose_work_variants_use_case()
-            ),
-        )
-
-    def prepare_create_work_from_groups_submission_use_case(self):
-        return PrepareCreateWorkFromGroupsSubmissionUseCase()
-
-    def create_work_from_tasks_use_case(self):
-        return CreateWorkFromTasksUseCase(
-            task_repo=self.task_selection_repo,
-            work_repo=self.work_variant_creation_repo,
-        )
-
-    def create_work_with_specification_use_case(self):
-        return CreateWorkWithSpecificationUseCase(
-            work_repo=self.work_specification_repo,
-        )
-
-    def update_work_with_specification_use_case(self):
-        return UpdateWorkWithSpecificationUseCase(
-            work_repo=self.work_specification_repo,
-        )
-
-    def get_variant_delete_info_use_case(self):
-        return GetVariantDeleteInfoUseCase(
-            variant_repo=self.variant_lifecycle_query_repo,
-        )
-
-    def delete_variant_use_case(self):
-        return DeleteVariantUseCase(
-            variant_query_repo=self.variant_lifecycle_query_repo,
-            variant_command_repo=self.variant_lifecycle_command_repo,
         )
 
     def delete_task_groups_use_case(self):
@@ -1675,12 +1400,5 @@ class Container(DocumentCompositionMixin, ReportingCompositionMixin):
         return BulkRemoveTasksFromGroupsUseCase(
             task_group_repo=self.task_group_management_repo,
         )
-
-    def bulk_delete_variants_use_case(self):
-        return BulkDeleteVariantsUseCase(
-            variant_query_repo=self.variant_lifecycle_query_repo,
-            variant_command_repo=self.variant_lifecycle_command_repo,
-        )
-
 
 container = Container()

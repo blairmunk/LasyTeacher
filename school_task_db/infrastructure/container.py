@@ -1,21 +1,15 @@
 """Small dependency container for application use cases."""
 
 from core_logic.services.analytics_service import StudentAnalyticsService
-from core_logic.services.event_service import EventService
 from core_logic.services.grading_service import GradingService
 from core_logic.services.remedial_service import RemedialService
 from core_logic.services.review_service import ReviewService
-from core_logic.use_cases.add_event_participants import AddEventParticipantsUseCase
 from core_logic.use_cases.analyze_task_images import (
     AnalyzeTaskImagesUseCase,
     ApplyTaskImagePositionSuggestionsUseCase,
 )
 from core_logic.use_cases.activate_academic_year import (
     ActivateAcademicYearUseCase,
-)
-from core_logic.use_cases.assign_event_variants import AssignEventVariantsUseCase
-from core_logic.use_cases.assign_single_event_variant import (
-    AssignSingleEventVariantUseCase,
 )
 from core_logic.use_cases.backfill_task_classifications import (
     BackfillTaskClassificationsUseCase,
@@ -26,7 +20,6 @@ from core_logic.use_cases.bulk_change_task_groups import (
     BulkRemoveTasksFromGroupsUseCase,
 )
 from core_logic.use_cases.calculate_review_score import CalculateReviewScoreUseCase
-from core_logic.use_cases.change_event_status import ChangeEventStatusUseCase
 from core_logic.use_cases.change_task_group_membership import (
     AddTasksToGroupUseCase,
     RemoveTaskFromGroupUseCase,
@@ -72,17 +65,6 @@ from core_logic.use_cases.get_participation_review import (
     GetParticipationReviewUseCase,
 )
 from core_logic.use_cases.get_event_review import GetEventReviewUseCase
-from core_logic.use_cases.get_event_detail import GetEventDetailUseCase
-from core_logic.use_cases.get_event_list import GetEventListUseCase
-from core_logic.use_cases.get_event_participant_selection import (
-    GetEventParticipantSelectionUseCase,
-)
-from core_logic.use_cases.get_event_participation_ref import (
-    GetEventParticipationRefUseCase,
-)
-from core_logic.use_cases.get_event_variant_assignment import (
-    GetEventVariantAssignmentUseCase,
-)
 from core_logic.use_cases.get_remedial_event_preview import (
     GetRemedialEventPreviewUseCase,
 )
@@ -128,10 +110,6 @@ from core_logic.use_cases.get_topic_list import GetTopicListUseCase
 from core_logic.use_cases.prepare_participation_review_submission import (
     PrepareParticipationReviewSubmissionUseCase,
 )
-from core_logic.use_cases.prepare_event_action_submission import (
-    PrepareAssignSingleVariantSubmissionUseCase,
-    PrepareChangeEventStatusSubmissionUseCase,
-)
 from core_logic.use_cases.prepare_remedial_from_event_submission import (
     PrepareRemedialFromEventSubmissionUseCase,
 )
@@ -162,7 +140,6 @@ from core_logic.use_cases.save_analog_group import (
     CreateAnalogGroupUseCase,
     UpdateAnalogGroupUseCase,
 )
-from core_logic.use_cases.save_event import CreateEventUseCase, UpdateEventUseCase
 from core_logic.use_cases.save_student import (
     CreateStudentGroupUseCase,
     CreateStudentUseCase,
@@ -220,18 +197,6 @@ from infrastructure.repositories.django_curriculum_import_repo import (
 )
 from infrastructure.repositories.django_topic_catalog_repo import (
     DjangoTopicCatalogRepository,
-)
-from infrastructure.repositories.django_event_attempt_repo import (
-    DjangoEventAttemptRepository,
-)
-from infrastructure.repositories.django_event_participation_repo import (
-    DjangoEventParticipationRepository,
-)
-from infrastructure.repositories.django_event_read_repo import (
-    DjangoEventReadRepository,
-)
-from infrastructure.repositories.django_event_write_repo import (
-    DjangoEventWriteRepository,
 )
 from infrastructure.repositories.django_participation_grading_repo import (
     DjangoParticipationGradingRepository,
@@ -345,19 +310,20 @@ from infrastructure.services.task_math_status_cache import (
 from infrastructure.forms.codifier_forms import CodifierFormAdapter
 from infrastructure.forms.core_forms import CoreFormAdapter
 from infrastructure.forms.curriculum_forms import CurriculumFormAdapter
-from infrastructure.forms.event_forms import EventFormAdapter
 from infrastructure.forms.review_forms import ReviewFormAdapter
 from infrastructure.forms.settings_forms import SettingsFormAdapter
 from infrastructure.forms.student_forms import StudentFormAdapter
 from infrastructure.forms.task_group_forms import TaskGroupFormAdapter
 from infrastructure.forms.task_forms import TaskFormAdapter
 from infrastructure.containers.document import DocumentCompositionMixin
+from infrastructure.containers.event import EventCompositionMixin
 from infrastructure.containers.reporting import ReportingCompositionMixin
 from infrastructure.containers.work import WorkCompositionMixin
 
 
 class Container(
     DocumentCompositionMixin,
+    EventCompositionMixin,
     ReportingCompositionMixin,
     WorkCompositionMixin,
 ):
@@ -365,6 +331,7 @@ class Container(
 
     def __init__(self):
         self._initialize_document_composition()
+        self._initialize_event_composition()
         self._initialize_reporting_composition()
         self._initialize_work_composition()
         self._academic_year_catalog_repo = None
@@ -396,10 +363,6 @@ class Container(
         self._task_image_audit_command_repo = None
         self._remedial_task_group_repo = None
         self._remedial_source_repo = None
-        self._event_read_repo = None
-        self._event_write_repo = None
-        self._event_participation_repo = None
-        self._event_attempt_repo = None
         self._participation_grading_repo = None
         self._review_overview_repo = None
         self._review_workflow_repo = None
@@ -421,7 +384,6 @@ class Container(
         self._codifier_form_adapter = None
         self._core_form_adapter = None
         self._curriculum_form_adapter = None
-        self._event_form_adapter = None
         self._review_form_adapter = None
         self._settings_form_adapter = None
         self._student_form_adapter = None
@@ -633,32 +595,6 @@ class Container(
         return self._remedial_source_repo
 
     @property
-    def event_read_repo(self):
-        if self._event_read_repo is None:
-            self._event_read_repo = DjangoEventReadRepository()
-        return self._event_read_repo
-
-    @property
-    def event_write_repo(self):
-        if self._event_write_repo is None:
-            self._event_write_repo = DjangoEventWriteRepository()
-        return self._event_write_repo
-
-    @property
-    def event_participation_repo(self):
-        if self._event_participation_repo is None:
-            self._event_participation_repo = (
-                DjangoEventParticipationRepository()
-            )
-        return self._event_participation_repo
-
-    @property
-    def event_attempt_repo(self):
-        if self._event_attempt_repo is None:
-            self._event_attempt_repo = DjangoEventAttemptRepository()
-        return self._event_attempt_repo
-
-    @property
     def participation_grading_repo(self):
         if self._participation_grading_repo is None:
             self._participation_grading_repo = (
@@ -799,12 +735,6 @@ class Container(
         return self._curriculum_form_adapter
 
     @property
-    def event_form_adapter(self):
-        if self._event_form_adapter is None:
-            self._event_form_adapter = EventFormAdapter()
-        return self._event_form_adapter
-
-    @property
     def review_form_adapter(self):
         if self._review_form_adapter is None:
             self._review_form_adapter = ReviewFormAdapter()
@@ -855,9 +785,6 @@ class Container(
     def grading_service(self):
         return GradingService()
 
-    def event_service(self):
-        return EventService()
-
     def review_service(self):
         return ReviewService()
 
@@ -895,16 +822,6 @@ class Container(
         return GetRemedialEventPreviewUseCase(
             event_repo=self.event_read_repo,
             event_attempt_repo=self.event_attempt_repo,
-        )
-
-    def create_event_use_case(self):
-        return CreateEventUseCase(
-            event_repo=self.event_write_repo,
-        )
-
-    def update_event_use_case(self):
-        return UpdateEventUseCase(
-            event_repo=self.event_write_repo,
         )
 
     def get_remedial_wizard_preview_use_case(self):
@@ -1224,33 +1141,6 @@ class Container(
             review_service=self.review_service(),
         )
 
-    def get_event_list_use_case(self):
-        return GetEventListUseCase(
-            event_repo=self.event_read_repo,
-            event_service=self.event_service(),
-        )
-
-    def get_event_detail_use_case(self):
-        return GetEventDetailUseCase(
-            event_repo=self.event_read_repo,
-            event_service=self.event_service(),
-        )
-
-    def get_event_participant_selection_use_case(self):
-        return GetEventParticipantSelectionUseCase(
-            event_repo=self.event_read_repo,
-        )
-
-    def get_event_participation_ref_use_case(self):
-        return GetEventParticipationRefUseCase(
-            event_repo=self.event_read_repo,
-        )
-
-    def get_event_variant_assignment_use_case(self):
-        return GetEventVariantAssignmentUseCase(
-            event_repo=self.event_read_repo,
-        )
-
     def get_task_db_health_use_case(self):
         return GetTaskDBHealthUseCase(
             report_repo=self.task_db_health_repo,
@@ -1264,30 +1154,6 @@ class Container(
     def apply_task_image_position_suggestions_use_case(self):
         return ApplyTaskImagePositionSuggestionsUseCase(
             image_repo=self.task_image_audit_command_repo,
-        )
-
-    def add_event_participants_use_case(self):
-        return AddEventParticipantsUseCase(
-            event_repo=self.event_participation_repo,
-        )
-
-    def assign_event_variants_use_case(self):
-        return AssignEventVariantsUseCase(
-            event_repo=self.event_read_repo,
-            event_participation_repo=self.event_participation_repo,
-        )
-
-    def assign_single_event_variant_use_case(self):
-        return AssignSingleEventVariantUseCase(
-            event_repo=self.event_read_repo,
-            event_participation_repo=self.event_participation_repo,
-        )
-
-    def change_event_status_use_case(self):
-        return ChangeEventStatusUseCase(
-            event_repo=self.event_read_repo,
-            event_write_repo=self.event_write_repo,
-            event_service=self.event_service(),
         )
 
     def calculate_review_score_use_case(self):
@@ -1309,12 +1175,6 @@ class Container(
         return PrepareParticipationReviewSubmissionUseCase(
             review_service=self.review_service(),
         )
-
-    def prepare_assign_single_variant_submission_use_case(self):
-        return PrepareAssignSingleVariantSubmissionUseCase()
-
-    def prepare_change_event_status_submission_use_case(self):
-        return PrepareChangeEventStatusSubmissionUseCase()
 
     def prepare_remedial_from_event_submission_use_case(self):
         return PrepareRemedialFromEventSubmissionUseCase()

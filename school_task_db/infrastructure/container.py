@@ -9,6 +9,8 @@ from infrastructure.containers.reporting import ReportingCompositionMixin
 from infrastructure.containers.review import ReviewCompositionMixin
 from infrastructure.containers.student import StudentCompositionMixin
 from infrastructure.containers.task import TaskCompositionMixin
+from infrastructure.containers.task_group import TaskGroupCompositionMixin
+from infrastructure.containers.task_transfer import TaskTransferCompositionMixin
 from infrastructure.containers.work import WorkCompositionMixin
 from infrastructure.services.django_transaction_manager import (
     DjangoTransactionManager,
@@ -25,6 +27,8 @@ class Container(
     ReviewCompositionMixin,
     StudentCompositionMixin,
     TaskCompositionMixin,
+    TaskGroupCompositionMixin,
+    TaskTransferCompositionMixin,
     WorkCompositionMixin,
 ):
     """Wires pure use cases to infrastructure adapters."""
@@ -39,6 +43,8 @@ class Container(
         self._initialize_review_composition()
         self._initialize_student_composition()
         self._initialize_task_composition()
+        self._initialize_task_group_composition()
+        self._initialize_task_transfer_composition()
         self._initialize_work_composition()
         self._transaction_manager = None
 

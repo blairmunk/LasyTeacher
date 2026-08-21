@@ -79,8 +79,6 @@ class WrittenReportRepositoryTests(TestCase):
             answer='10 Н',
             topic=self.topic,
             subtopic=self.subtopic,
-            content_element='1.2',
-            requirement_element='2.1',
             task_type='computational',
             difficulty=2,
         )
@@ -392,12 +390,6 @@ class WrittenReportRepositoryTests(TestCase):
         self.assertEqual(source.narrative.planned_actions, 'Консультация')
 
     def test_event_report_uses_variant_task_metadata_snapshot(self):
-        self.task.content_element = '9.9'
-        self.task.requirement_element = '9.8'
-        self.task.save(update_fields=[
-            'content_element',
-            'requirement_element',
-        ])
         self.requirement.code = '9.7'
         self.requirement.save(update_fields=['code'])
         self.content_entry.name = 'Изменённый элемент содержания'

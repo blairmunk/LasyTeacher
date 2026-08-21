@@ -96,7 +96,7 @@
                     {% endif %}
                 </div>
 
-                {% if task.content_entries or task.requirements or task.legacy_content_element or task.legacy_requirement_element %}
+                {% if task.content_entries or task.requirements %}
                 <div class="border-top border-bottom py-3 mb-4">
                     {% if task.content_entries %}
                     <div class="mb-2">
@@ -106,11 +106,6 @@
                             {{ item.codifier_name }} · {{ item.code }} · {{ item.name }}
                         </span>
                         {% endfor %}
-                    </div>
-                    {% elif task.legacy_content_element %}
-                    <div class="mb-2">
-                        <strong>Элемент содержания:</strong>
-                        <span class="badge bg-light text-dark border">{{ task.legacy_content_element }}</span>
                     </div>
                     {% endif %}
 
@@ -122,11 +117,6 @@
                             {{ item.codifier_name }} · {{ item.code }} · {{ item.name }}
                         </span>
                         {% endfor %}
-                    </div>
-                    {% elif task.legacy_requirement_element %}
-                    <div>
-                        <strong>Требование:</strong>
-                        <span class="badge bg-light text-dark border">{{ task.legacy_requirement_element }}</span>
                     </div>
                     {% endif %}
                 </div>

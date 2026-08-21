@@ -81,8 +81,6 @@ class TaskRecordImporter:
             instruction=task_data.get('instruction', ''),
             topic=topic,
             subtopic=subtopic,
-            content_element=task_data.get('content_element', ''),
-            requirement_element=task_data.get('requirement_element', ''),
             task_type=task_data.get('task_type', 'theoretical'),
             difficulty=task_data.get('difficulty', 3),
             cognitive_level=task_data.get('cognitive_level', 'understand'),
@@ -108,14 +106,6 @@ class TaskRecordImporter:
         )
         task.hint = task_data.get('hint', task.hint)
         task.instruction = task_data.get('instruction', task.instruction)
-        task.content_element = task_data.get(
-            'content_element',
-            task.content_element,
-        )
-        task.requirement_element = task_data.get(
-            'requirement_element',
-            task.requirement_element,
-        )
         task.task_type = task_data.get('task_type', task.task_type)
         task.difficulty = task_data.get('difficulty', task.difficulty)
         task.cognitive_level = task_data.get(

@@ -1200,32 +1200,6 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(task.teacher_notes, 'Проверить')
         self.assertEqual(missing_result.status, 'not_found')
 
-    def test_task_repository_preserves_legacy_classification_on_update(self):
-        task = Task.objects.create(
-            text='Старое задание',
-            answer='Ответ',
-            topic=self.topic,
-            task_type='computational',
-            difficulty=2,
-            content_element='1.2',
-            requirement_element='2.1',
-        )
-
-        DjangoTaskCommandRepository().update_task(
-            TaskSaveParams(
-                task_id=str(task.pk),
-                text='Исправленное задание',
-                answer=task.answer,
-                topic_id=str(self.topic.pk),
-                task_type=task.task_type,
-                difficulty=task.difficulty,
-            )
-        )
-
-        task.refresh_from_db()
-        self.assertEqual(task.content_element, '1.2')
-        self.assertEqual(task.requirement_element, '2.1')
-
     def test_task_repository_saves_task_images(self):
         repo = DjangoTaskImageCommandRepository()
         task = Task.objects.create(

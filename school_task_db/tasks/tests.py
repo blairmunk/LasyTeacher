@@ -57,8 +57,6 @@ class TaskAdminClassificationTests(TestCase):
             topic=self.physics_topic,
             task_type='computational',
             difficulty=2,
-            content_element='legacy-1.1',
-            requirement_element='legacy-2.1',
         )
         form = TaskAdminForm(
             data={
@@ -91,8 +89,6 @@ class TaskAdminClassificationTests(TestCase):
             list(saved.codifier_requirements.all()),
             [self.requirement],
         )
-        self.assertEqual(saved.content_element, 'legacy-1.1')
-        self.assertEqual(saved.requirement_element, 'legacy-2.1')
 
 
 class TaskBulkGroupAjaxTests(TestCase):
@@ -140,8 +136,6 @@ class TaskBulkGroupAjaxTests(TestCase):
             'task_type': 'computational',
             'difficulty': '2',
             'cognitive_level': 'understand',
-            'content_element': '',
-            'requirement_element': '',
             'short_solution': '',
             'full_solution': '',
             'hint': '',

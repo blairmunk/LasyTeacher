@@ -378,8 +378,6 @@ class TaskDetailTask:
     created_at: Optional[datetime] = None
     content_entries: Tuple[TaskDetailClassification, ...] = ()
     requirements: Tuple[TaskDetailClassification, ...] = ()
-    legacy_content_element: str = ''
-    legacy_requirement_element: str = ''
 
     def __post_init__(self):
         object.__setattr__(self, 'images', tuple(self.images))

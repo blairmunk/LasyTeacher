@@ -67,7 +67,7 @@ class TaskImporterTests(TestCase):
             [requirement],
         )
 
-    def test_imports_legacy_classification_codes_without_inventing_relations(self):
+    def test_low_level_import_ignores_removed_legacy_classification_fields(self):
         task_id = '550e8400-e29b-41d4-a716-446655440001'
         payload = self._task_payload(
             task_id=task_id,
@@ -81,8 +81,8 @@ class TaskImporterTests(TestCase):
         self._import(payload)
 
         task = Task.objects.get(pk=task_id)
-        self.assertEqual(task.content_element, '1.2')
-        self.assertEqual(task.requirement_element, '2.1')
+        self.assertFalse(hasattr(task, 'content_element'))
+        self.assertFalse(hasattr(task, 'requirement_element'))
         self.assertFalse(task.codifier_content_entries.exists())
         self.assertFalse(task.codifier_requirements.exists())
 

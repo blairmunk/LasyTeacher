@@ -84,10 +84,6 @@ class Task(BaseModel):
                                null=True, blank=True, 
                                verbose_name='Подтема')
     
-    # Кодификатор
-    content_element = models.CharField('Элемент содержания', max_length=100, blank=True)
-    requirement_element = models.CharField('Элемент требований', max_length=100, blank=True)
-    
     # Характеристики
     task_type = models.CharField('Тип задания', max_length=20, choices=TASK_TYPES)
     difficulty = models.IntegerField('Сложность', 

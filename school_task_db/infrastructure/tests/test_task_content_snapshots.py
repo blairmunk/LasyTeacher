@@ -20,7 +20,6 @@ class TaskContentSnapshotClassificationTests(TestCase):
             text='Найти силу',
             answer='10 Н',
             topic=self.topic,
-            content_element='1.2',
             task_type='computational',
             difficulty=2,
         )
@@ -56,7 +55,7 @@ class TaskContentSnapshotClassificationTests(TestCase):
             name='Решать задачи',
         )
 
-    def test_explicit_entries_take_precedence_over_legacy_code_matching(self):
+    def test_snapshot_contains_explicit_content_entries(self):
         self.ege_entry.tasks.add(self.task)
 
         snapshot = build_task_content_snapshots([self.task])[str(self.task.pk)]
@@ -72,9 +71,7 @@ class TaskContentSnapshotClassificationTests(TestCase):
         )
         self.assertEqual(snapshot.content_element, '')
 
-    def test_explicit_requirements_suppress_legacy_requirement_code(self):
-        self.task.requirement_element = '2.1'
-        self.task.save(update_fields=['requirement_element'])
+    def test_snapshot_contains_explicit_requirements(self):
         self.requirement.tasks.add(self.task)
 
         snapshot = build_task_content_snapshots([self.task])[str(self.task.pk)]
@@ -82,14 +79,9 @@ class TaskContentSnapshotClassificationTests(TestCase):
         self.assertEqual(snapshot.requirement_element, '')
         self.assertEqual(snapshot.codifier_requirements[0].code, '2.1')
 
-    def test_legacy_code_matching_remains_when_explicit_entries_are_empty(self):
+    def test_snapshot_does_not_infer_classification_without_relations(self):
         snapshot = build_task_content_snapshots([self.task])[str(self.task.pk)]
 
-        self.assertEqual(
-            set(snapshot.content_element_descriptions),
-            {
-                'ОГЭ 2026: ОГЭ: механическое движение',
-                'ЕГЭ 2026: ЕГЭ: динамика',
-            },
-        )
-        self.assertEqual(snapshot.content_element, '1.2')
+        self.assertEqual(snapshot.content_element_descriptions, ())
+        self.assertEqual(snapshot.codifier_content_entries, ())
+        self.assertEqual(snapshot.content_element, '')

@@ -4,9 +4,6 @@ from core_logic.use_cases.analyze_task_images import (
     AnalyzeTaskImagesUseCase,
     ApplyTaskImagePositionSuggestionsUseCase,
 )
-from core_logic.use_cases.backfill_task_classifications import (
-    BackfillTaskClassificationsUseCase,
-)
 from core_logic.use_cases.create_source import CreateSourceUseCase
 from core_logic.use_cases.delete_task import DeleteTaskUseCase
 from core_logic.use_cases.get_source_list import GetSourceListUseCase
@@ -31,9 +28,6 @@ from infrastructure.repositories.django_source_catalog_repo import (
 )
 from infrastructure.repositories.django_source_command_repo import (
     DjangoSourceCommandRepository,
-)
-from infrastructure.repositories.django_task_classification_backfill_repo import (
-    DjangoTaskClassificationBackfillRepository,
 )
 from infrastructure.repositories.django_task_classification_repo import (
     DjangoTaskClassificationRepository,
@@ -77,7 +71,6 @@ class TaskCompositionMixin:
         self._task_read_repo = None
         self._task_command_repo = None
         self._task_classification_repo = None
-        self._task_classification_backfill_repo = None
         self._task_image_command_repo = None
         self._task_lifecycle_command_repo = None
         self._task_selection_repo = None
@@ -121,14 +114,6 @@ class TaskCompositionMixin:
                 DjangoTaskClassificationRepository()
             )
         return self._task_classification_repo
-
-    @property
-    def task_classification_backfill_repo(self):
-        if self._task_classification_backfill_repo is None:
-            self._task_classification_backfill_repo = (
-                DjangoTaskClassificationBackfillRepository()
-            )
-        return self._task_classification_backfill_repo
 
     @property
     def task_image_command_repo(self):
@@ -189,12 +174,6 @@ class TaskCompositionMixin:
         if self._task_form_adapter is None:
             self._task_form_adapter = TaskFormAdapter()
         return self._task_form_adapter
-
-    def backfill_task_classifications_use_case(self):
-        return BackfillTaskClassificationsUseCase(
-            backfill_repo=self.task_classification_backfill_repo,
-            transaction_manager=self.transaction_manager,
-        )
 
     def get_task_list_use_case(self):
         return GetTaskListUseCase(

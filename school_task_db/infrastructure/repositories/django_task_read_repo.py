@@ -205,8 +205,6 @@ class DjangoTaskReadRepository(ITaskReadRepository):
                 )
                 for requirement in task.codifier_requirements.all()
             ),
-            legacy_content_element=task.content_element,
-            legacy_requirement_element=task.requirement_element,
         )
 
     def get_task_detail_groups(self, task_id: str):

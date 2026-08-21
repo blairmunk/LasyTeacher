@@ -189,14 +189,6 @@ class TaskImportPreviewAnalyzer:
                     broken.append(
                         f"Задание '{task_text}' → группа {group_uuid[-8:]}",
                     )
-
-            group_name = task_data.get('group_name')
-            if (
-                group_name
-                and not task_data.get('groups')
-                and not self.group_importer.exists_by_name(group_name)
-            ):
-                missing.add(f'По имени: {group_name}')
         return missing, broken
 
     def _write_dependencies(

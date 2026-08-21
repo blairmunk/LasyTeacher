@@ -143,8 +143,13 @@ class ValidateTaskImportJsonUseCase:
             warnings.append(f'Задание #{task_number}: нет ответа')
         if not task.get('topic'):
             warnings.append(f'Задание #{task_number}: нет темы')
-        if not task.get('groups') and not task.get('group_name'):
+        if not task.get('groups'):
             warnings.append(f'Задание #{task_number}: нет привязки к группе')
+        if task.get('group_name'):
+            task_errors.append(
+                f'Задание #{task_number}: legacy-поле group_name '
+                'не поддерживается; укажите groups с UUID',
+            )
 
         if task.get('content_element') or task.get('requirement_element'):
             task_errors.append(
@@ -204,7 +209,20 @@ class ValidateTaskImportJsonUseCase:
             if not group.get('id'):
                 errors.append(f'Группа #{group_number}: отсутствует id (UUID)')
             else:
-                group_uuids.add(group['id'])
+                try:
+                    group_uuid = str(UUID(str(group['id'])))
+                except (TypeError, ValueError):
+                    errors.append(
+                        f'Группа #{group_number}: некорректный '
+                        f'UUID "{group["id"]}"',
+                    )
+                else:
+                    if group_uuid in group_uuids:
+                        errors.append(
+                            f'Группа #{group_number}: дублирующийся '
+                            f'id {group["id"]}',
+                        )
+                    group_uuids.add(group_uuid)
             if not group.get('name'):
                 errors.append(f'Группа #{group_number}: отсутствует name')
 
@@ -305,24 +323,37 @@ class ValidateTaskImportJsonUseCase:
     @staticmethod
     def _group_reference_id(group_ref, task_number, errors):
         if isinstance(group_ref, str):
-            return group_ref
-        if not isinstance(group_ref, dict):
+            group_uuid = group_ref
+        elif isinstance(group_ref, dict):
+            group_uuid = (
+                group_ref.get('id') or group_ref.get('group_id') or ''
+            )
+        else:
             errors.append(
                 f'Задание #{task_number}: связь с группой '
                 'должна быть UUID-строкой или объектом',
             )
             return ''
 
-        group_uuid = group_ref.get('id') or group_ref.get('group_id') or ''
         if not group_uuid:
             errors.append(
                 f'Задание #{task_number}: у связи с группой '
                 'отсутствует id',
             )
+            return ''
         try:
-            validate_task_specific_bank_role(
-                group_ref.get('bank_role', 'control'),
+            normalized_uuid = str(UUID(str(group_uuid)))
+        except (TypeError, ValueError):
+            errors.append(
+                f'Задание #{task_number}: у связи с группой '
+                f'некорректный UUID "{group_uuid}"',
             )
-        except ValueError as error:
-            errors.append(f'Задание #{task_number}: {error}')
-        return group_uuid
+            return ''
+        if isinstance(group_ref, dict):
+            try:
+                validate_task_specific_bank_role(
+                    group_ref.get('bank_role', 'control'),
+                )
+            except ValueError as error:
+                errors.append(f'Задание #{task_number}: {error}')
+        return normalized_uuid

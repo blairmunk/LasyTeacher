@@ -109,7 +109,7 @@ class TaskImporterTests(TestCase):
         self.assertEqual(relation.bank_role, 'practice')
         self.assertEqual(relation.group.difficulty, 4)
 
-    def test_group_name_fallback_creates_group_and_membership(self):
+    def test_low_level_import_ignores_removed_group_name_field(self):
         task_id = '550e8400-e29b-41d4-a716-446655440001'
         payload = self._task_payload(
             task_id=task_id,
@@ -121,11 +121,8 @@ class TaskImporterTests(TestCase):
 
         self._import(payload)
 
-        relation = TaskGroup.objects.select_related('group').get(
-            task_id=task_id,
-        )
-        self.assertEqual(relation.group.name, 'Группа по имени')
-        self.assertEqual(relation.bank_role, 'control')
+        self.assertTrue(Task.objects.filter(pk=task_id).exists())
+        self.assertFalse(TaskGroup.objects.filter(task_id=task_id).exists())
 
     def test_existing_task_record_is_updated(self):
         task_id = '550e8400-e29b-41d4-a716-446655440001'

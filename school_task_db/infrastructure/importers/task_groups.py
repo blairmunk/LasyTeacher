@@ -27,7 +27,7 @@ class TaskGroupImporter:
                 )
 
     def _import_group(self, group_data):
-        group_uuid = self.runtime.generate_uuid_if_missing(group_data, 'id')
+        group_uuid = group_data['id']
         group = self.find_by_uuid(group_uuid)
         if group and not self.runtime.should_create_object(
             group,
@@ -78,16 +78,6 @@ class TaskGroupImporter:
                 if group and self._save_relation(task, group, bank_role):
                     created_count += 1
 
-            group_name = task_data.get('group_name')
-            if group_name and not task_data.get('groups'):
-                group = self._get_or_create_by_name(group_name)
-                if group and self._save_relation(
-                    task,
-                    group,
-                    TASK_BANK_ROLE_CONTROL,
-                ):
-                    created_count += 1
-
         self.runtime._write(f'  ✅ Создано связей: {created_count}')
 
     @staticmethod
@@ -105,28 +95,6 @@ class TaskGroupImporter:
 
     def find_by_uuid(self, group_uuid):
         return self.runtime.safe_get_by_uuid(AnalogGroup, group_uuid)
-
-    @staticmethod
-    def exists_by_name(group_name):
-        return AnalogGroup.objects.filter(name=group_name).exists()
-
-    def _get_or_create_by_name(self, group_name):
-        group = AnalogGroup.objects.filter(name=group_name).first()
-        if group or not self.runtime.create_missing:
-            return group
-        try:
-            group = AnalogGroup.objects.create(
-                name=group_name,
-                description='Автоматически создана при импорте заданий',
-            )
-            self.runtime.log_success(f'Создана группа: {group_name}')
-            return group
-        except Exception as error:
-            self.runtime.log_error(
-                f'Ошибка создания группы {group_name}: {error}',
-                error,
-            )
-            return None
 
     def _save_relation(self, task, group, bank_role):
         try:

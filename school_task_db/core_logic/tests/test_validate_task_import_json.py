@@ -163,6 +163,33 @@ class ValidateTaskImportJsonUseCaseTests(TestCase):
             ],
         )
 
+    def test_rejects_group_name_and_invalid_group_uuid(self):
+        data = self.use_case.execute(
+            ValidateTaskImportJsonRequest(
+                data={
+                    'tasks': [{
+                        'id': '550e8400-e29b-41d4-a716-446655440001',
+                        'text': 'Задача',
+                        'group_name': 'Группа по имени',
+                    }],
+                    'analog_groups': [{
+                        'id': 'not-a-uuid',
+                        'name': 'Группа',
+                    }],
+                },
+            ),
+        )
+
+        self.assertFalse(data.is_valid)
+        self.assertTrue(any(
+            'legacy-поле group_name' in error
+            for error in data.errors
+        ))
+        self.assertTrue(any(
+            'Группа #1: некорректный UUID' in error
+            for error in data.errors
+        ))
+
     def test_accepts_group_reference_with_bank_role(self):
         group_id = '770e8400-e29b-41d4-a716-446655440001'
 

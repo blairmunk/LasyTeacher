@@ -1,36 +1,35 @@
-"""Django execution adapter for task-bank imports and previews."""
+"""Application runner coordinating task import preview and persistence."""
 
 from core_logic.entities.task_import import (
     TaskImportPreviewRequest,
     TaskImportRequest,
     TaskImportRunSummary,
 )
-from core_logic.interfaces.task_import import ITaskImportRunner
+from core_logic.interfaces.task_import import (
+    ITaskImportPreviewRepository,
+    ITaskImportRunner,
+    ITaskImportWriteSessionFactory,
+)
+from core_logic.interfaces.transaction_manager import ITransactionManager
 from core_logic.services.task_import_preview_service import (
     TaskImportPreviewService,
 )
 from core_logic.use_cases.apply_task_import import ApplyTaskImportUseCase
-from infrastructure.importers.tasks import DjangoTaskImportWriteSession
-from infrastructure.repositories.django_task_import_preview_repo import (
-    DjangoTaskImportPreviewRepository,
-)
-from infrastructure.services.django_transaction_manager import (
-    DjangoTransactionManager,
-)
 
 
-class DjangoTaskImportRunner(ITaskImportRunner):
+class TaskImportRunnerService(ITaskImportRunner):
     def __init__(
         self,
-        preview_repo=None,
-        preview_service=None,
-        transaction_manager=None,
+        *,
+        write_session_factory: ITaskImportWriteSessionFactory,
+        preview_repo: ITaskImportPreviewRepository,
+        transaction_manager: ITransactionManager,
+        preview_service: TaskImportPreviewService | None = None,
     ):
-        self.preview_repo = preview_repo or DjangoTaskImportPreviewRepository()
+        self.write_session_factory = write_session_factory
+        self.preview_repo = preview_repo
+        self.transaction_manager = transaction_manager
         self.preview_service = preview_service or TaskImportPreviewService()
-        self.transaction_manager = (
-            transaction_manager or DjangoTransactionManager()
-        )
 
     def preview_import(
         self,
@@ -44,11 +43,10 @@ class DjangoTaskImportRunner(ITaskImportRunner):
     ) -> TaskImportRunSummary:
         if request.dry_run:
             return self._preview(request.data)
-        write_session = DjangoTaskImportWriteSession(
+
+        write_session = self.write_session_factory.create(
             mode=request.mode,
-            verbose=True,
             create_missing=request.create_missing,
-            output=lambda _message: None,
         )
         return ApplyTaskImportUseCase(
             write_session=write_session,

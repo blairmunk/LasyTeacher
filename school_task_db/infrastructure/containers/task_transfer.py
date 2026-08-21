@@ -17,6 +17,10 @@ from core_logic.use_cases.preview_task_import_file import (
 from core_logic.use_cases.validate_task_import_json import (
     ValidateTaskImportJsonUseCase,
 )
+from core_logic.services.task_import_runner import TaskImportRunnerService
+from infrastructure.importers.tasks import (
+    DjangoTaskImportWriteSessionFactory,
+)
 from infrastructure.repositories.django_task_export_repo import (
     DjangoTaskExportRepository,
 )
@@ -26,9 +30,6 @@ from infrastructure.repositories.django_task_import_log_repo import (
 from infrastructure.repositories.django_task_import_preview_repo import (
     DjangoTaskImportPreviewRepository,
 )
-from infrastructure.services.django_task_import_runner import (
-    DjangoTaskImportRunner,
-)
 
 
 class TaskTransferCompositionMixin:
@@ -37,6 +38,7 @@ class TaskTransferCompositionMixin:
     def _initialize_task_transfer_composition(self):
         self._task_export_repo = None
         self._task_import_runner = None
+        self._task_import_write_session_factory = None
         self._task_import_log_repo = None
         self._task_import_preview_repo = None
 
@@ -49,11 +51,22 @@ class TaskTransferCompositionMixin:
     @property
     def task_import_runner(self):
         if self._task_import_runner is None:
-            self._task_import_runner = DjangoTaskImportRunner(
+            self._task_import_runner = TaskImportRunnerService(
+                write_session_factory=(
+                    self.task_import_write_session_factory
+                ),
                 preview_repo=self.task_import_preview_repo,
                 transaction_manager=self.transaction_manager,
             )
         return self._task_import_runner
+
+    @property
+    def task_import_write_session_factory(self):
+        if self._task_import_write_session_factory is None:
+            self._task_import_write_session_factory = (
+                DjangoTaskImportWriteSessionFactory()
+            )
+        return self._task_import_write_session_factory
 
     @property
     def task_import_log_repo(self):

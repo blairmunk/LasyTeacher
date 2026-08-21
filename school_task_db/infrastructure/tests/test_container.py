@@ -492,9 +492,10 @@ from infrastructure.repositories.django_task_import_log_repo import (
 from infrastructure.repositories.django_task_import_preview_repo import (
     DjangoTaskImportPreviewRepository,
 )
-from infrastructure.services.django_task_import_runner import (
-    DjangoTaskImportRunner,
+from infrastructure.importers.tasks import (
+    DjangoTaskImportWriteSessionFactory,
 )
+from core_logic.services.task_import_runner import TaskImportRunnerService
 
 
 class ContainerTests(SimpleTestCase):
@@ -1475,7 +1476,11 @@ class ContainerTests(SimpleTestCase):
         )
         self.assertIsInstance(
             container.task_import_runner,
-            DjangoTaskImportRunner,
+            TaskImportRunnerService,
+        )
+        self.assertIsInstance(
+            container.task_import_write_session_factory,
+            DjangoTaskImportWriteSessionFactory,
         )
         self.assertIsInstance(
             container.task_import_log_repo,

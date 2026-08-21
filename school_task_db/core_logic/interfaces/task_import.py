@@ -63,6 +63,19 @@ class ITaskImportWriteSession(ABC):
         """Return facts accumulated by this import session."""
 
 
+class ITaskImportWriteSessionFactory(ABC):
+    """Create isolated persistence state for one task import."""
+
+    @abstractmethod
+    def create(
+        self,
+        *,
+        mode: str,
+        create_missing: bool,
+    ) -> ITaskImportWriteSession:
+        """Return a fresh write session configured for the request."""
+
+
 class ITaskImportLogRepository(ABC):
     @abstractmethod
     def start(self, request: TaskImportRequest) -> str:

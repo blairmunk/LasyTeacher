@@ -12,6 +12,7 @@ from core_logic.entities.document import (
 from core_logic.entities.document_rendering import GeneratedDocument
 from core.models import ImportLog
 from core_logic.entities.task_import import TaskImportPreviewRequest, TaskImportRequest
+from core_logic.services.task_import_runner import TaskImportRunnerService
 from core_logic.use_cases.execute_task_import import ExecuteTaskImportUseCase
 from core_logic.services.document_builder import (
     DocumentSectionPayloadBuilderRegistry,
@@ -29,8 +30,14 @@ from infrastructure.services.document_engine import (
 from infrastructure.repositories.django_task_import_log_repo import (
     DjangoTaskImportLogRepository,
 )
-from infrastructure.services.django_task_import_runner import (
-    DjangoTaskImportRunner,
+from infrastructure.importers.tasks import (
+    DjangoTaskImportWriteSessionFactory,
+)
+from infrastructure.repositories.django_task_import_preview_repo import (
+    DjangoTaskImportPreviewRepository,
+)
+from infrastructure.services.django_transaction_manager import (
+    DjangoTransactionManager,
 )
 from tasks.models import Task
 from works.models import Work
@@ -165,7 +172,7 @@ class SectionedDocumentEngineTests(TestCase):
         ):
             service.render_document(None)
 
-class DjangoTaskImportRunnerTests(TestCase):
+class TaskImportRunnerIntegrationTests(TestCase):
     def test_preview_import_returns_dry_run_context_without_creating_tasks(self):
         topic_id = '660e8400-e29b-41d4-a716-446655440001'
         request = TaskImportPreviewRequest(
@@ -189,7 +196,7 @@ class DjangoTaskImportRunnerTests(TestCase):
             },
         )
 
-        result = DjangoTaskImportRunner().preview_import(request)
+        result = self._runner().preview_import(request)
 
         self.assertEqual(result.preview['file_counts']['tasks'], 1)
         self.assertEqual(result.preview['task_uuid_counts']['new'], 1)
@@ -302,6 +309,16 @@ class DjangoTaskImportRunnerTests(TestCase):
     @staticmethod
     def _execute(request):
         return ExecuteTaskImportUseCase(
-            task_import_runner=DjangoTaskImportRunner(),
+            task_import_runner=(
+                TaskImportRunnerIntegrationTests._runner()
+            ),
             task_import_log_repo=DjangoTaskImportLogRepository(),
         ).execute(request)
+
+    @staticmethod
+    def _runner():
+        return TaskImportRunnerService(
+            write_session_factory=DjangoTaskImportWriteSessionFactory(),
+            preview_repo=DjangoTaskImportPreviewRepository(),
+            transaction_manager=DjangoTransactionManager(),
+        )

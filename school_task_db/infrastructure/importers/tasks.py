@@ -1,7 +1,10 @@
 """Django persistence session for one task-bank import."""
 
 from core_logic.entities.task_import import TaskImportRunSummary
-from core_logic.interfaces.task_import import ITaskImportWriteSession
+from core_logic.interfaces.task_import import (
+    ITaskImportWriteSession,
+    ITaskImportWriteSessionFactory,
+)
 from infrastructure.importers.runtime import (
     TaskImportRegistry,
     TaskImportRuntime,
@@ -74,4 +77,18 @@ class DjangoTaskImportWriteSession(ITaskImportWriteSession):
             errors=len(stats.errors),
             error_messages=tuple(issue.message for issue in stats.errors[:50]),
             context_counts=self.registry.counts(),
+        )
+
+
+class DjangoTaskImportWriteSessionFactory(ITaskImportWriteSessionFactory):
+    def __init__(self, *, verbose: bool = True, output=None):
+        self.verbose = verbose
+        self.output = output or (lambda _message: None)
+
+    def create(self, *, mode: str, create_missing: bool):
+        return DjangoTaskImportWriteSession(
+            mode=mode,
+            verbose=self.verbose,
+            create_missing=create_missing,
+            output=self.output,
         )

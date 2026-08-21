@@ -1,6 +1,8 @@
 """Django analog-group import and task membership handling."""
 
 from core_logic.value_objects.task_import import (
+    TASK_IMPORT_ACTION_UPDATE,
+    TaskImportConflictError,
     parse_task_group_import_reference,
 )
 from task_groups.models import AnalogGroup, TaskGroup
@@ -16,6 +18,8 @@ class TaskGroupImporter:
         for group_data in groups_data:
             try:
                 self._import_group(group_data)
+            except TaskImportConflictError:
+                raise
             except Exception as error:
                 name = group_data.get('name', 'Unknown')
                 self.runtime.log_error(
@@ -26,17 +30,16 @@ class TaskGroupImporter:
     def _import_group(self, group_data):
         group_uuid = group_data['id']
         group = self.find_by_uuid(group_uuid)
-        if group and not self.runtime.should_create_object(
+        action = self.runtime.object_action(
             group,
             group_data,
             'groups',
-        ):
-            if self.runtime.mode == 'update':
+        )
+        if group:
+            if action == TASK_IMPORT_ACTION_UPDATE:
                 self._update_group(group, group_data)
                 self.runtime.stats.record_updated('groups', group.pk)
             self.registry.remember_group(group_uuid, group)
-            return
-        if group:
             return
 
         group = AnalogGroup.objects.create(

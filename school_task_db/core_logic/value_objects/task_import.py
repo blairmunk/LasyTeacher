@@ -25,6 +25,14 @@ TASK_IMPORT_MODE_LABELS = {
     TASK_IMPORT_MODE_SKIP: 'Пропуск дубликатов',
 }
 
+TASK_IMPORT_ACTION_CREATE = 'create'
+TASK_IMPORT_ACTION_UPDATE = 'update'
+TASK_IMPORT_ACTION_SKIP = 'skip'
+
+
+class TaskImportConflictError(ValueError):
+    """An imported UUID conflicts with an existing object in strict mode."""
+
 
 @dataclass(frozen=True)
 class TaskGroupImportReference:
@@ -71,6 +79,26 @@ def validate_task_import_mode(mode: str) -> str:
             f'Неверный режим импорта: {mode}. Доступны: {available}',
         )
     return mode
+
+
+def task_import_action(
+    mode: str,
+    *,
+    exists: bool,
+    object_id: str = '',
+) -> str:
+    validate_task_import_mode(mode)
+    if not exists:
+        return TASK_IMPORT_ACTION_CREATE
+    if mode == TASK_IMPORT_MODE_UPDATE:
+        return TASK_IMPORT_ACTION_UPDATE
+    if mode == TASK_IMPORT_MODE_SKIP:
+        return TASK_IMPORT_ACTION_SKIP
+    suffix = str(object_id or 'unknown')[-8:]
+    raise TaskImportConflictError(
+        f'Объект с UUID {suffix} уже существует '
+        'в strict режиме',
+    )
 
 
 def task_import_mode_label(mode: str) -> str:

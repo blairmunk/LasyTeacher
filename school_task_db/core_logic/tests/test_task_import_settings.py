@@ -1,10 +1,15 @@
 from unittest import TestCase
 
 from core_logic.value_objects.task_import import (
+    TASK_IMPORT_ACTION_CREATE,
+    TASK_IMPORT_ACTION_SKIP,
+    TASK_IMPORT_ACTION_UPDATE,
     TASK_IMPORT_MODE_SKIP,
     TASK_IMPORT_MODE_STRICT,
     TASK_IMPORT_MODE_UPDATE,
+    TaskImportConflictError,
     parse_task_group_import_reference,
+    task_import_action,
     validate_task_import_mode,
 )
 
@@ -22,6 +27,39 @@ class TaskImportModeTests(TestCase):
     def test_unsupported_mode_is_rejected(self):
         with self.assertRaisesRegex(ValueError, 'Неверный режим импорта'):
             validate_task_import_mode('replace')
+
+    def test_new_object_is_created_in_every_mode(self):
+        for mode in (
+            TASK_IMPORT_MODE_STRICT,
+            TASK_IMPORT_MODE_UPDATE,
+            TASK_IMPORT_MODE_SKIP,
+        ):
+            with self.subTest(mode=mode):
+                self.assertEqual(
+                    task_import_action(mode, exists=False),
+                    TASK_IMPORT_ACTION_CREATE,
+                )
+
+    def test_existing_object_is_updated_or_skipped_by_mode(self):
+        self.assertEqual(
+            task_import_action(TASK_IMPORT_MODE_UPDATE, exists=True),
+            TASK_IMPORT_ACTION_UPDATE,
+        )
+        self.assertEqual(
+            task_import_action(TASK_IMPORT_MODE_SKIP, exists=True),
+            TASK_IMPORT_ACTION_SKIP,
+        )
+
+    def test_strict_mode_rejects_existing_object(self):
+        with self.assertRaisesRegex(
+            TaskImportConflictError,
+            '55667788',
+        ):
+            task_import_action(
+                TASK_IMPORT_MODE_STRICT,
+                exists=True,
+                object_id='11223344-55667788',
+            )
 
 
 class TaskGroupImportReferenceTests(TestCase):

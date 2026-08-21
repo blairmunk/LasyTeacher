@@ -1,5 +1,9 @@
 """Django task record import component."""
 
+from core_logic.value_objects.task_import import (
+    TASK_IMPORT_ACTION_UPDATE,
+    TaskImportConflictError,
+)
 from tasks.models import Task
 
 
@@ -23,6 +27,8 @@ class TaskRecordImporter:
         for task_data in tasks_data:
             try:
                 self._import_task(task_data)
+            except TaskImportConflictError:
+                raise
             except Exception as error:
                 preview = task_data.get('text', 'Unknown')[:30]
                 self.runtime.log_error(
@@ -33,18 +39,17 @@ class TaskRecordImporter:
     def _import_task(self, task_data):
         task_uuid = self.runtime.generate_uuid_if_missing(task_data, 'id')
         task = self.runtime.get_by_uuid(Task, task_uuid)
-        if task and not self.runtime.should_create_object(
+        action = self.runtime.object_action(
             task,
             task_data,
             'tasks',
-        ):
-            if self.runtime.mode == 'update':
+        )
+        if task:
+            if action == TASK_IMPORT_ACTION_UPDATE:
                 self._update_task(task, task_data)
                 self.classification_importer.apply(task, task_data)
                 self.runtime.stats.record_updated('tasks', task.pk)
             self.registry.remember_task(task_uuid, task)
-            return
-        if task:
             return
 
         task = self._create_task(task_uuid, task_data)

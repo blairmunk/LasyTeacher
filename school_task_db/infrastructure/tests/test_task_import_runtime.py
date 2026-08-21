@@ -23,7 +23,13 @@ class TaskImportRegistryTests(SimpleTestCase):
         self.assertIsNone(registry.group('missing'))
         self.assertEqual(
             registry.counts(),
-            {'topics': 1, 'subtopics': 0, 'groups': 0, 'tasks': 1},
+            {
+                'topics': 1,
+                'subtopics': 0,
+                'groups': 0,
+                'sources': 0,
+                'tasks': 1,
+            },
         )
 
 
@@ -47,20 +53,20 @@ class TaskImportRuntimeTests(SimpleTestCase):
         runtime = self._runtime(mode='skip')
         existing = SimpleNamespace(pk='task-1')
 
-        should_create = runtime.should_create_object(
+        action = runtime.object_action(
             existing,
             {'id': '550e8400-e29b-41d4-a716-446655440001'},
             'tasks',
         )
 
-        self.assertFalse(should_create)
+        self.assertEqual(action, 'skip')
         self.assertEqual(runtime.stats.skipped_by_type, {'tasks': 1})
 
     def test_strict_rejects_existing_object(self):
         runtime = self._runtime(mode='strict')
 
         with self.assertRaisesRegex(ValueError, 'strict режиме'):
-            runtime.should_create_object(
+            runtime.object_action(
                 SimpleNamespace(pk='task-1'),
                 {'id': '550e8400-e29b-41d4-a716-446655440001'},
                 'tasks',

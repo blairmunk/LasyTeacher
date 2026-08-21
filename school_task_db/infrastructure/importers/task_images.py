@@ -6,6 +6,10 @@ from uuid import UUID
 
 from django.core.files.base import ContentFile
 
+from core_logic.value_objects.task_import import (
+    TASK_IMPORT_ACTION_UPDATE,
+    TaskImportConflictError,
+)
 from tasks.models import Task, TaskImage
 
 
@@ -19,6 +23,8 @@ class TaskImageImporter:
         for image_data in images_data:
             try:
                 self._import_image(image_data)
+            except TaskImportConflictError:
+                raise
             except Exception as error:
                 self.runtime.log_error(
                     f'Ошибка импорта изображения: {error}',
@@ -37,12 +43,13 @@ class TaskImageImporter:
 
         image_uuid = self.runtime.generate_uuid_if_missing(image_data, 'id')
         existing_image = self.runtime.get_by_uuid(TaskImage, image_uuid)
-        if existing_image and not self.runtime.should_create_object(
+        action = self.runtime.object_action(
             existing_image,
             image_data,
             'images',
-        ):
-            if self.runtime.mode == 'update':
+        )
+        if existing_image:
+            if action == TASK_IMPORT_ACTION_UPDATE:
                 if self._update_image(existing_image, image_data):
                     self.runtime.stats.record_updated(
                         'images',

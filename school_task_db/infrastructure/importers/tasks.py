@@ -37,7 +37,10 @@ class DjangoTaskImportWriteSession(ITaskImportWriteSession):
         self.registry = TaskImportRegistry()
         self.image_importer = TaskImageImporter(self.runtime, self.registry)
         self.group_importer = TaskGroupImporter(self.runtime, self.registry)
-        self.source_importer = TaskSourceImporter(self.runtime)
+        self.source_importer = TaskSourceImporter(
+            self.runtime,
+            self.registry,
+        )
         self.classification_importer = TaskClassificationImporter(
             self.runtime,
         )

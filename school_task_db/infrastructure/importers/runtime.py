@@ -4,6 +4,10 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Optional
 from uuid import uuid4
 
+from core_logic.value_objects.task_import import (
+    TASK_IMPORT_ACTION_SKIP,
+    task_import_action,
+)
 from infrastructure.repositories.django_uuid_lookup import (
     get_unambiguous_by_uuid,
 )
@@ -66,6 +70,7 @@ class TaskImportRegistry:
         self._topics = {}
         self._subtopics = {}
         self._groups = {}
+        self._sources = {}
         self._tasks = {}
 
     def remember_topic(self, object_id: str, topic):
@@ -86,6 +91,12 @@ class TaskImportRegistry:
     def group(self, object_id: str):
         return self._groups.get(object_id)
 
+    def remember_source(self, object_id: str, source):
+        self._sources[object_id] = source
+
+    def source(self, object_id: str):
+        return self._sources.get(object_id)
+
     def remember_task(self, object_id: str, task):
         self._tasks[object_id] = task
 
@@ -97,6 +108,7 @@ class TaskImportRegistry:
             'topics': len(self._topics),
             'subtopics': len(self._subtopics),
             'groups': len(self._groups),
+            'sources': len(self._sources),
             'tasks': len(self._tasks),
         }
 
@@ -172,20 +184,17 @@ class TaskImportRuntime:
             self._cache[cache_key] = obj
         return obj
 
-    def should_create_object(
+    def object_action(
         self,
         existing_obj,
         data: Dict[str, Any],
         object_type: str,
-    ) -> bool:
-        if not existing_obj:
-            return True
-        if self.mode == 'strict':
-            raise ValueError(
-                'Объект с UUID '
-                f"{data.get('id', 'unknown')[-8:]} уже существует "
-                'в strict режиме',
-            )
-        if self.mode == 'skip':
+    ) -> str:
+        action = task_import_action(
+            self.mode,
+            exists=existing_obj is not None,
+            object_id=data.get('id', 'unknown'),
+        )
+        if action == TASK_IMPORT_ACTION_SKIP:
             self.stats.record_skipped(object_type, existing_obj.pk)
-        return False
+        return action

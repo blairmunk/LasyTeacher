@@ -2,6 +2,10 @@
 
 from typing import Any
 
+from core_logic.value_objects.task_import import (
+    TASK_IMPORT_ACTION_UPDATE,
+    TaskImportConflictError,
+)
 from curriculum.models import SubTopic, Topic
 
 
@@ -15,6 +19,8 @@ class TaskTopicImporter:
         for topic_data in topics_data:
             try:
                 self._import_topic(topic_data)
+            except TaskImportConflictError:
+                raise
             except Exception as error:
                 name = topic_data.get('name', 'Unknown')
                 self.runtime.log_error(
@@ -25,15 +31,16 @@ class TaskTopicImporter:
     def _import_topic(self, topic_data):
         topic_uuid = str(topic_data['id'])
         topic = self.find(topic_data)
-        if topic and not self.runtime.should_create_object(
+        action = self.runtime.object_action(
             topic,
             topic_data,
             'topics',
-        ):
-            if self.runtime.mode == 'update':
+        )
+        if topic:
+            if action == TASK_IMPORT_ACTION_UPDATE:
                 self._update_topic(topic, topic_data)
                 self.runtime.stats.record_updated('topics', topic.pk)
-        elif not topic and self.runtime.create_missing:
+        elif self.runtime.create_missing:
             topic = Topic.objects.create(
                 id=topic_uuid,
                 name=topic_data['name'],
@@ -89,18 +96,19 @@ class TaskTopicImporter:
                 raise ValueError(
                     f'Подтема {subtopic_uuid[-8:]} принадлежит другой теме',
                 )
-            if subtopic and not self.runtime.should_create_object(
+            action = self.runtime.object_action(
                 subtopic,
                 subtopic_data,
                 'subtopics',
-            ):
-                if self.runtime.mode == 'update':
+            )
+            if subtopic:
+                if action == TASK_IMPORT_ACTION_UPDATE:
                     self._update_subtopic(subtopic, subtopic_data)
                     self.runtime.stats.record_updated(
                         'subtopics',
                         subtopic.pk,
                     )
-            elif not subtopic and self.runtime.create_missing:
+            elif self.runtime.create_missing:
                 subtopic = SubTopic.objects.create(
                     id=subtopic_uuid,
                     topic=topic,

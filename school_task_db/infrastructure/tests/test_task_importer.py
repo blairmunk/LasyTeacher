@@ -6,11 +6,12 @@ from django.test import TestCase
 from codifier.models import CodifierSpec, ContentEntry, Requirement
 from core_logic.entities.task_import import TaskImportRequest
 from core_logic.use_cases.apply_task_import import ApplyTaskImportUseCase
+from core_logic.value_objects.task_import import TaskImportConflictError
 from infrastructure.importers.tasks import DjangoTaskImportWriteSession
 from infrastructure.services.django_transaction_manager import (
     DjangoTransactionManager,
 )
-from task_groups.models import TaskGroup
+from task_groups.models import AnalogGroup, TaskGroup
 from tasks.models import Source, Task, TaskImage
 
 
@@ -223,21 +224,62 @@ class TaskImporterTests(TestCase):
             'short_name': 'Сборник-9',
         }
 
-        self._import(payload)
+        first_summary = self._import(payload)
 
         task = Task.objects.select_related('source').get(pk=task_id)
         self.assertEqual(str(task.source.pk), source_id)
         self.assertEqual(task.source.short_name, 'Сборник-9')
         self.assertEqual(task.source.author, 'Первый автор')
+        self.assertEqual(first_summary.created_by_type['sources'], 1)
+        self.assertEqual(first_summary.context_counts['sources'], 1)
 
         payload['sources'][0]['name'] = 'Исправленное название'
         payload['sources'][0]['author'] = 'Новый автор'
         payload['tasks'][0]['source']['name'] = 'Исправленное название'
-        self._import(payload)
+        second_summary = self._import(payload)
         task.source.refresh_from_db()
         self.assertEqual(Source.objects.count(), 1)
         self.assertEqual(task.source.name, 'Исправленное название')
         self.assertEqual(task.source.author, 'Новый автор')
+        self.assertEqual(second_summary.updated_by_type['sources'], 1)
+
+    def test_skip_mode_does_not_update_existing_source(self):
+        source_id = '880e8400-e29b-41d4-a716-446655440001'
+        Source.objects.create(id=source_id, name='Исходное название')
+        payload = self._task_payload(
+            task_id='550e8400-e29b-41d4-a716-446655440001',
+            group_id='770e8400-e29b-41d4-a716-446655440001',
+        )
+        payload['sources'] = [{
+            'id': source_id,
+            'name': 'Не записывать',
+        }]
+        payload['tasks'][0]['source'] = {'id': source_id}
+
+        summary = self._import(payload, mode='skip')
+
+        source = Source.objects.get(pk=source_id)
+        self.assertEqual(source.name, 'Исходное название')
+        self.assertEqual(summary.skipped_by_type['sources'], 1)
+
+    def test_strict_conflict_rolls_back_earlier_import_stages(self):
+        group_id = '770e8400-e29b-41d4-a716-446655440001'
+        source_id = '880e8400-e29b-41d4-a716-446655440001'
+        AnalogGroup.objects.create(id=group_id, name='Существующая')
+        payload = self._task_payload(
+            task_id='550e8400-e29b-41d4-a716-446655440001',
+            group_id=group_id,
+        )
+        payload['sources'] = [{
+            'id': source_id,
+            'name': 'Должен откатиться',
+        }]
+
+        with self.assertRaises(TaskImportConflictError):
+            self._import(payload, mode='strict')
+
+        self.assertFalse(Source.objects.filter(pk=source_id).exists())
+        self.assertEqual(AnalogGroup.objects.get(pk=group_id).name, 'Существующая')
 
     def test_source_import_does_not_merge_distinct_uuids_by_isbn(self):
         existing = Source.objects.create(
@@ -289,9 +331,9 @@ class TaskImporterTests(TestCase):
         self.assertEqual(task.topic.subtopics.count(), 1)
 
     @staticmethod
-    def _import(payload):
+    def _import(payload, *, mode='update'):
         session = DjangoTaskImportWriteSession(
-            mode='update',
+            mode=mode,
             create_missing=True,
             output=lambda _message: None,
         )
@@ -302,7 +344,7 @@ class TaskImporterTests(TestCase):
             data=payload,
             filename='test-task-bank.json',
             file_size=0,
-            mode='update',
+            mode=mode,
             create_missing=True,
         ))
 

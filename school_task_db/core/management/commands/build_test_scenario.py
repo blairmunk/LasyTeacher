@@ -362,13 +362,7 @@ class Command(BaseCommand):
 
     @staticmethod
     def _blank_space_area(data):
-        area = data.get('blank_space_area_cm2')
-        if area is not None:
-            return area
-        legacy_rows = data.get('blank_cells_rows')
-        if legacy_rows is None:
-            return 40
-        return max(1, round(legacy_rows * 6.5))
+        return data.get('blank_space_area_cm2', 40)
 
     def _content_block(self, data):
         return WorkContentBlockParams(

@@ -244,14 +244,10 @@ def _int_or_default(value, default):
 
 
 def _blank_space_area_from_data(group_data):
-    area = group_data.get('blank_space_area_cm2')
-    if area not in (None, ''):
-        return _int_or_default(area, DEFAULT_BLANK_SPACE_AREA_CM2)
-    legacy_rows = group_data.get('blank_cells_rows')
-    if legacy_rows in (None, ''):
-        return DEFAULT_BLANK_SPACE_AREA_CM2
-    rows = _int_or_default(legacy_rows, 6)
-    return max(1, round(rows * 6.5))
+    return _int_or_default(
+        group_data.get('blank_space_area_cm2'),
+        DEFAULT_BLANK_SPACE_AREA_CM2,
+    )
 
 
 def _bool_or_default(value, default):

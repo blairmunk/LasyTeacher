@@ -4,7 +4,6 @@ from core_logic.entities.task_import import (
     TaskImportExecutionSubmissionRequest,
     TaskImportResult,
 )
-from core_logic.interfaces.task_import import ITaskImportService
 from core_logic.use_cases.execute_task_import import ExecuteTaskImportUseCase
 from core_logic.use_cases.prepare_task_import_file import (
     PrepareTaskImportExecutionSubmissionUseCase,
@@ -14,21 +13,15 @@ from core_logic.use_cases.prepare_task_import_file import (
 class ExecuteTaskImportSubmissionUseCase:
     def __init__(
         self,
-        task_import_service: ITaskImportService,
+        execute_import_use_case: ExecuteTaskImportUseCase,
         prepare_submission_use_case:
             PrepareTaskImportExecutionSubmissionUseCase | None = None,
-        execute_import_use_case: ExecuteTaskImportUseCase | None = None,
     ):
         self.prepare_submission_use_case = (
             prepare_submission_use_case
             or PrepareTaskImportExecutionSubmissionUseCase()
         )
-        self.execute_import_use_case = (
-            execute_import_use_case
-            or ExecuteTaskImportUseCase(
-                task_import_service=task_import_service,
-            )
-        )
+        self.execute_import_use_case = execute_import_use_case
 
     def execute(
         self,

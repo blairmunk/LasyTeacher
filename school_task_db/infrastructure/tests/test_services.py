@@ -12,6 +12,7 @@ from core_logic.entities.document import (
 from core_logic.entities.document_rendering import GeneratedDocument
 from core.models import ImportLog
 from core_logic.entities.task_import import TaskImportPreviewRequest, TaskImportRequest
+from core_logic.use_cases.execute_task_import import ExecuteTaskImportUseCase
 from core_logic.services.document_builder import (
     DocumentSectionPayloadBuilderRegistry,
 )
@@ -25,7 +26,12 @@ from curriculum.models import Topic
 from infrastructure.services.document_engine import (
     SectionedDocumentEngine,
 )
-from infrastructure.services.task_import_service import DjangoTaskImportService
+from infrastructure.repositories.django_task_import_log_repo import (
+    DjangoTaskImportLogRepository,
+)
+from infrastructure.services.django_task_import_runner import (
+    DjangoTaskImportRunner,
+)
 from tasks.models import Task
 from works.models import Work
 
@@ -159,7 +165,7 @@ class SectionedDocumentEngineTests(TestCase):
         ):
             service.render_document(None)
 
-class DjangoTaskImportServiceTests(TestCase):
+class DjangoTaskImportRunnerTests(TestCase):
     def test_preview_import_returns_dry_run_context_without_creating_tasks(self):
         topic_id = '660e8400-e29b-41d4-a716-446655440001'
         request = TaskImportPreviewRequest(
@@ -183,9 +189,8 @@ class DjangoTaskImportServiceTests(TestCase):
             },
         )
 
-        result = DjangoTaskImportService().preview_import(request)
+        result = DjangoTaskImportRunner().preview_import(request)
 
-        self.assertTrue(result.success)
         self.assertEqual(result.preview['file_counts']['tasks'], 1)
         self.assertEqual(result.preview['task_uuid_counts']['new'], 1)
         self.assertEqual(result.preview['task_uuid_counts']['existing'], 0)
@@ -230,7 +235,7 @@ class DjangoTaskImportServiceTests(TestCase):
             create_missing=True,
         )
 
-        result = DjangoTaskImportService().execute_import(request)
+        result = self._execute(request)
         log = ImportLog.objects.get(pk=result.log_id)
 
         self.assertTrue(result.success)
@@ -258,7 +263,7 @@ class DjangoTaskImportServiceTests(TestCase):
             mode='unsupported',
         )
 
-        result = DjangoTaskImportService().execute_import(request)
+        result = self._execute(request)
         log = ImportLog.objects.get(pk=result.log_id)
 
         self.assertFalse(result.success)
@@ -273,7 +278,10 @@ class DjangoTaskImportServiceTests(TestCase):
                 'tasks': [
                     {
                         'id': '550e8400-e29b-41d4-a716-446655440001',
-                        'answer': 'Ответ без условия',
+                        'text': 'Задание без объявленной темы',
+                        'topic': {
+                            'id': '660e8400-e29b-41d4-a716-446655440099',
+                        },
                     },
                 ],
             },
@@ -281,7 +289,7 @@ class DjangoTaskImportServiceTests(TestCase):
             file_size=128,
         )
 
-        result = DjangoTaskImportService().execute_import(request)
+        result = self._execute(request)
         log = ImportLog.objects.get(pk=result.log_id)
 
         self.assertTrue(result.success)
@@ -289,4 +297,11 @@ class DjangoTaskImportServiceTests(TestCase):
         self.assertEqual(log.status, ImportLog.Status.PARTIAL)
         self.assertEqual(log.errors_count, 1)
         self.assertTrue(log.error_messages)
-        self.assertIn('задания', log.error_messages[0])
+        self.assertIn('тему для задания', log.error_messages[0])
+
+    @staticmethod
+    def _execute(request):
+        return ExecuteTaskImportUseCase(
+            task_import_runner=DjangoTaskImportRunner(),
+            task_import_log_repo=DjangoTaskImportLogRepository(),
+        ).execute(request)

@@ -126,3 +126,61 @@ class TaskImportResult:
             'stats': self.stats,
             'message': self.message,
         }
+
+
+@dataclass(frozen=True)
+class TaskImportRunSummary:
+    created_by_type: Mapping[str, int] = field(default_factory=dict)
+    updated_by_type: Mapping[str, int] = field(default_factory=dict)
+    skipped_by_type: Mapping[str, int] = field(default_factory=dict)
+    errors: int = 0
+    error_messages: tuple[str, ...] = field(default_factory=tuple)
+    context_counts: Mapping[str, int] = field(default_factory=dict)
+    preview: Mapping[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self):
+        for field_name in (
+            'created_by_type',
+            'updated_by_type',
+            'skipped_by_type',
+            'context_counts',
+            'preview',
+        ):
+            object.__setattr__(self, field_name, dict(getattr(self, field_name)))
+        object.__setattr__(self, 'error_messages', tuple(self.error_messages))
+
+    @property
+    def tasks_created(self) -> int:
+        return self.created_by_type.get('tasks', 0)
+
+    @property
+    def tasks_updated(self) -> int:
+        return self.updated_by_type.get('tasks', 0)
+
+    @property
+    def tasks_skipped(self) -> int:
+        return self.skipped_by_type.get('tasks', 0)
+
+    @property
+    def status(self) -> str:
+        return 'partial' if self.errors else 'success'
+
+    def operation_counts(self) -> Dict[str, Dict[str, int]]:
+        return {
+            'created': dict(self.created_by_type),
+            'updated': dict(self.updated_by_type),
+            'skipped': dict(self.skipped_by_type),
+        }
+
+    def to_stats(self) -> Dict[str, Any]:
+        context = dict(self.context_counts)
+        return {
+            'created': self.tasks_created,
+            'updated': self.tasks_updated,
+            'skipped': self.tasks_skipped,
+            'errors': self.errors,
+            'by_type': self.operation_counts(),
+            'context': context,
+            'context_counts': dict(context),
+            'preview': dict(self.preview),
+        }

@@ -38,7 +38,6 @@ class ExecuteTaskImportSubmissionUseCaseTests(TestCase):
         )
         execute_use_case = FakeExecuteImportUseCase()
         use_case = ExecuteTaskImportSubmissionUseCase(
-            task_import_service=None,
             prepare_submission_use_case=prepare_use_case,
             execute_import_use_case=execute_use_case,
         )
@@ -63,7 +62,6 @@ class ExecuteTaskImportSubmissionUseCaseTests(TestCase):
         )
         execute_use_case = FakeExecuteImportUseCase()
         use_case = ExecuteTaskImportSubmissionUseCase(
-            task_import_service=None,
             prepare_submission_use_case=prepare_use_case,
             execute_import_use_case=execute_use_case,
         )

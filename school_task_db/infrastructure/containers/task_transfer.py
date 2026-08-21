@@ -20,7 +20,12 @@ from core_logic.use_cases.validate_task_import_json import (
 from infrastructure.repositories.django_task_export_repo import (
     DjangoTaskExportRepository,
 )
-from infrastructure.services.task_import_service import DjangoTaskImportService
+from infrastructure.repositories.django_task_import_log_repo import (
+    DjangoTaskImportLogRepository,
+)
+from infrastructure.services.django_task_import_runner import (
+    DjangoTaskImportRunner,
+)
 
 
 class TaskTransferCompositionMixin:
@@ -28,7 +33,8 @@ class TaskTransferCompositionMixin:
 
     def _initialize_task_transfer_composition(self):
         self._task_export_repo = None
-        self._task_import_service = None
+        self._task_import_runner = None
+        self._task_import_log_repo = None
 
     @property
     def task_export_repo(self):
@@ -37,28 +43,35 @@ class TaskTransferCompositionMixin:
         return self._task_export_repo
 
     @property
-    def task_import_service(self):
-        if self._task_import_service is None:
-            self._task_import_service = DjangoTaskImportService()
-        return self._task_import_service
+    def task_import_runner(self):
+        if self._task_import_runner is None:
+            self._task_import_runner = DjangoTaskImportRunner()
+        return self._task_import_runner
+
+    @property
+    def task_import_log_repo(self):
+        if self._task_import_log_repo is None:
+            self._task_import_log_repo = DjangoTaskImportLogRepository()
+        return self._task_import_log_repo
 
     def validate_task_import_json_use_case(self):
         return ValidateTaskImportJsonUseCase()
 
     def execute_task_import_use_case(self):
         return ExecuteTaskImportUseCase(
-            task_import_service=self.task_import_service,
+            task_import_runner=self.task_import_runner,
+            task_import_log_repo=self.task_import_log_repo,
             validate_json_use_case=self.validate_task_import_json_use_case(),
         )
 
     def execute_task_import_submission_use_case(self):
         return ExecuteTaskImportSubmissionUseCase(
-            task_import_service=self.task_import_service,
+            execute_import_use_case=self.execute_task_import_use_case(),
         )
 
     def preview_task_import_use_case(self):
         return PreviewTaskImportUseCase(
-            task_import_service=self.task_import_service,
+            task_import_runner=self.task_import_runner,
         )
 
     def preview_task_import_file_use_case(self):

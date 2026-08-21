@@ -10,6 +10,12 @@ TASK_IMPORT_MODES = (
     TASK_IMPORT_MODE_SKIP,
 )
 
+TASK_IMPORT_MODE_LABELS = {
+    TASK_IMPORT_MODE_STRICT: 'Строгий',
+    TASK_IMPORT_MODE_UPDATE: 'Обновление',
+    TASK_IMPORT_MODE_SKIP: 'Пропуск дубликатов',
+}
+
 
 def validate_task_import_mode(mode: str) -> str:
     if mode not in TASK_IMPORT_MODES:
@@ -18,3 +24,8 @@ def validate_task_import_mode(mode: str) -> str:
             f'Неверный режим импорта: {mode}. Доступны: {available}',
         )
     return mode
+
+
+def task_import_mode_label(mode: str) -> str:
+    validate_task_import_mode(mode)
+    return TASK_IMPORT_MODE_LABELS[mode]

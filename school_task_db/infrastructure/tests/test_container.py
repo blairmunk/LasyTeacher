@@ -486,7 +486,12 @@ from infrastructure.services.document_engine import (
 from infrastructure.services.django_transaction_manager import (
     DjangoTransactionManager,
 )
-from infrastructure.services.task_import_service import DjangoTaskImportService
+from infrastructure.repositories.django_task_import_log_repo import (
+    DjangoTaskImportLogRepository,
+)
+from infrastructure.services.django_task_import_runner import (
+    DjangoTaskImportRunner,
+)
 
 
 class ContainerTests(SimpleTestCase):
@@ -1465,4 +1470,11 @@ class ContainerTests(SimpleTestCase):
             container.document_engine,
             SectionedDocumentEngine,
         )
-        self.assertIsInstance(container.task_import_service, DjangoTaskImportService)
+        self.assertIsInstance(
+            container.task_import_runner,
+            DjangoTaskImportRunner,
+        )
+        self.assertIsInstance(
+            container.task_import_log_repo,
+            DjangoTaskImportLogRepository,
+        )

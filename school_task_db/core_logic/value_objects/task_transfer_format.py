@@ -1,11 +1,12 @@
 """Version markers for portable task-bank files."""
 
-TASK_TRANSFER_FORMAT_VERSION = '1.4'
+TASK_TRANSFER_FORMAT_VERSION = '1.5'
 SUPPORTED_TASK_TRANSFER_FORMAT_VERSIONS = (
     '1.0',
     '1.1',
     '1.2',
     '1.3',
+    '1.4',
     TASK_TRANSFER_FORMAT_VERSION,
 )
 

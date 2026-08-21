@@ -225,9 +225,16 @@ class CoreViewsTests(TestCase):
         self.assertIsNone(payload['preview'])
 
     def test_validate_import_json_ajax_uses_clean_preview_data(self):
+        topic_id = '660e8400-e29b-41d4-a716-446655440001'
         upload = SimpleUploadedFile(
             'tasks.json',
             json.dumps({
+                'topics': [{
+                    'id': topic_id,
+                    'name': 'Динамика',
+                    'subject': 'Физика',
+                    'grade_level': 9,
+                }],
                 'tasks': [
                     {
                         'id': '550e8400-e29b-41d4-a716-446655440001',
@@ -235,11 +242,7 @@ class CoreViewsTests(TestCase):
                         'answer': 'Ответ',
                         'task_type': 'computational',
                         'difficulty': 2,
-                        'topic': {
-                            'name': 'Динамика',
-                            'subject': 'Физика',
-                            'grade_level': 9,
-                        },
+                        'topic': {'id': topic_id},
                     },
                 ],
             }).encode('utf-8'),
@@ -260,9 +263,16 @@ class CoreViewsTests(TestCase):
         self.assertFalse(Task.objects.filter(text='Задача на силу').exists())
 
     def test_execute_import_json_ajax_uses_clean_import_use_case(self):
+        topic_id = '660e8400-e29b-41d4-a716-446655440001'
         upload = SimpleUploadedFile(
             'tasks.json',
             json.dumps({
+                'topics': [{
+                    'id': topic_id,
+                    'name': 'Динамика',
+                    'subject': 'Физика',
+                    'grade_level': 9,
+                }],
                 'tasks': [
                     {
                         'id': '550e8400-e29b-41d4-a716-446655440001',
@@ -270,11 +280,7 @@ class CoreViewsTests(TestCase):
                         'answer': 'Ответ',
                         'task_type': 'computational',
                         'difficulty': 2,
-                        'topic': {
-                            'name': 'Динамика',
-                            'subject': 'Физика',
-                            'grade_level': 9,
-                        },
+                        'topic': {'id': topic_id},
                     },
                 ],
             }).encode('utf-8'),
@@ -301,9 +307,11 @@ class CoreViewsTests(TestCase):
 
 
     def test_import_tasks_command_uses_clean_import_service(self):
+        topic_id = '660e8400-e29b-41d4-a716-446655440001'
         payload = {
             'topics': [
                 {
+                    'id': topic_id,
                     'name': 'Динамика',
                     'subject': 'Физика',
                     'grade_level': 9,
@@ -317,11 +325,7 @@ class CoreViewsTests(TestCase):
                     'answer': 'Ответ',
                     'task_type': 'computational',
                     'difficulty': 2,
-                    'topic': {
-                        'name': 'Динамика',
-                        'subject': 'Физика',
-                        'grade_level': 9,
-                    },
+                    'topic': {'id': topic_id},
                 },
             ],
         }
@@ -431,7 +435,7 @@ class CoreViewsTests(TestCase):
                 stdout=output,
             )
 
-        self.assertIn('актуальном формате 1.4', output.getvalue())
+        self.assertIn('актуальном формате 1.5', output.getvalue())
 
     def test_build_test_scenario_is_idempotent_and_builds_learning_logs(self):
         year = AcademicYear.objects.create(
@@ -542,7 +546,7 @@ class CoreViewsTests(TestCase):
             response['Content-Disposition'],
             'attachment; filename="sample_import.json"',
         )
-        self.assertEqual(payload['version'], '1.4')
+        self.assertEqual(payload['version'], '1.5')
         self.assertEqual(len(payload['tasks']), 2)
         self.assertEqual(payload['task_images'], [])
 
@@ -576,7 +580,7 @@ class CoreViewsTests(TestCase):
         self.assertTrue(
             response['Content-Disposition'].startswith('attachment; filename="export_'),
         )
-        self.assertEqual(payload['version'], '1.4')
+        self.assertEqual(payload['version'], '1.5')
         self.assertEqual(len(payload['tasks']), 1)
         self.assertEqual(payload['tasks'][0]['id'], str(task.pk))
         self.assertEqual(
@@ -584,6 +588,11 @@ class CoreViewsTests(TestCase):
             [{'id': str(group.pk), 'bank_role': 'control'}],
         )
         self.assertEqual(payload['topics'][0]['name'], topic.name)
+        self.assertEqual(payload['topics'][0]['id'], str(topic.pk))
+        self.assertEqual(
+            payload['tasks'][0]['topic'],
+            {'id': str(topic.pk)},
+        )
         self.assertEqual(payload['sources'][0]['id'], str(source.pk))
 
     def test_export_tasks_command_uses_clean_export_contract(self):
@@ -619,7 +628,7 @@ class CoreViewsTests(TestCase):
             )
             payload = json.loads(output_path.read_text(encoding='utf-8'))
 
-        self.assertEqual(payload['version'], '1.4')
+        self.assertEqual(payload['version'], '1.5')
         self.assertEqual(len(payload['tasks']), 1)
         self.assertEqual(len(payload['analog_groups']), 1)
         self.assertEqual(len(payload['topics']), 1)

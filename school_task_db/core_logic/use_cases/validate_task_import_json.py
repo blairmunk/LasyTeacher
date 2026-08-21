@@ -85,6 +85,10 @@ class ValidateTaskImportJsonUseCase:
 
         group_uuids = self._validate_groups(groups_data, errors)
         source_uuids = self._validate_sources(sources_data, errors)
+        topic_uuids, subtopic_topics = self._validate_topics(
+            topics_data,
+            errors,
+        )
         self._validate_task_group_links(
             tasks,
             group_uuids,
@@ -94,6 +98,13 @@ class ValidateTaskImportJsonUseCase:
         self._validate_task_source_links(
             tasks,
             source_uuids,
+            errors,
+            warnings,
+        )
+        self._validate_task_topic_links(
+            tasks,
+            topic_uuids,
+            subtopic_topics,
             errors,
             warnings,
         )
@@ -199,6 +210,9 @@ class ValidateTaskImportJsonUseCase:
                     )
 
     def _validate_groups(self, groups_data, errors):
+        if not isinstance(groups_data, list):
+            errors.append('"analog_groups" должен быть массивом')
+            return set()
         group_uuids = set()
 
         for index, group in enumerate(groups_data):
@@ -264,6 +278,70 @@ class ValidateTaskImportJsonUseCase:
         return source_uuids
 
     @staticmethod
+    def _validate_topics(topics_data, errors):
+        if not isinstance(topics_data, list):
+            errors.append('"topics" должен быть массивом')
+            return set(), {}
+
+        topic_uuids = set()
+        subtopic_topics = {}
+        for index, topic in enumerate(topics_data, start=1):
+            if not isinstance(topic, dict):
+                errors.append(f'Тема #{index}: должна быть объектом')
+                continue
+            topic_uuid = ValidateTaskImportJsonUseCase._catalog_uuid(
+                topic,
+                label=f'Тема #{index}',
+                seen=topic_uuids,
+                errors=errors,
+            )
+            for field_name in ('name', 'subject', 'grade_level'):
+                if topic.get(field_name) in (None, ''):
+                    errors.append(
+                        f'Тема #{index}: отсутствует {field_name}',
+                    )
+
+            subtopics = topic.get('subtopics', [])
+            if not isinstance(subtopics, list):
+                errors.append(
+                    f'Тема #{index}: subtopics должен быть массивом',
+                )
+                continue
+            for subtopic_index, subtopic in enumerate(subtopics, start=1):
+                label = f'Тема #{index}, подтема #{subtopic_index}'
+                if not isinstance(subtopic, dict):
+                    errors.append(f'{label}: должна быть объектом')
+                    continue
+                subtopic_uuid = ValidateTaskImportJsonUseCase._catalog_uuid(
+                    subtopic,
+                    label=label,
+                    seen=set(subtopic_topics),
+                    errors=errors,
+                )
+                if not subtopic.get('name'):
+                    errors.append(f'{label}: отсутствует name')
+                if subtopic_uuid and topic_uuid:
+                    subtopic_topics[subtopic_uuid] = topic_uuid
+        return topic_uuids, subtopic_topics
+
+    @staticmethod
+    def _catalog_uuid(data, *, label, seen, errors):
+        value = data.get('id') or data.get('uuid')
+        if not value:
+            errors.append(f'{label}: отсутствует id (UUID)')
+            return ''
+        try:
+            normalized = str(UUID(str(value)))
+        except (TypeError, ValueError):
+            errors.append(f'{label}: некорректный UUID "{value}"')
+            return ''
+        if normalized in seen:
+            errors.append(f'{label}: дублирующийся id {value}')
+            return ''
+        seen.add(normalized)
+        return normalized
+
+    @staticmethod
     def _validate_task_source_links(tasks, source_uuids, errors, warnings):
         for index, task in enumerate(tasks, start=1):
             if not isinstance(task, dict) or not task.get('source'):
@@ -295,6 +373,77 @@ class ValidateTaskImportJsonUseCase:
                     f'{normalized_uuid[-8:]}... не найдена в sources '
                     '(будет искать в БД)',
                 )
+
+    @staticmethod
+    def _validate_task_topic_links(
+        tasks,
+        topic_uuids,
+        subtopic_topics,
+        errors,
+        warnings,
+    ):
+        for index, task in enumerate(tasks, start=1):
+            if not isinstance(task, dict):
+                continue
+            topic_uuid = ValidateTaskImportJsonUseCase._task_reference_uuid(
+                task.get('topic'),
+                label=f'Задание #{index}: topic',
+                errors=errors,
+            )
+            if topic_uuid and topic_uuid not in topic_uuids:
+                warnings.append(
+                    f'Задание #{index}: ссылка на тему '
+                    f'{topic_uuid[-8:]}... не найдена в topics '
+                    '(будет искать в БД)',
+                )
+
+            subtopic_ref = task.get('subtopic')
+            if not subtopic_ref:
+                continue
+            subtopic_uuid = ValidateTaskImportJsonUseCase._task_reference_uuid(
+                subtopic_ref,
+                label=f'Задание #{index}: subtopic',
+                errors=errors,
+            )
+            if not subtopic_uuid:
+                continue
+            if not topic_uuid:
+                errors.append(
+                    f'Задание #{index}: subtopic указан без '
+                    'корректной topic',
+                )
+                continue
+            declared_topic_uuid = subtopic_topics.get(subtopic_uuid)
+            if declared_topic_uuid and declared_topic_uuid != topic_uuid:
+                errors.append(
+                    f'Задание #{index}: подтема {subtopic_uuid[-8:]} '
+                    'принадлежит другой теме',
+                )
+            elif not declared_topic_uuid:
+                warnings.append(
+                    f'Задание #{index}: ссылка на подтему '
+                    f'{subtopic_uuid[-8:]}... не найдена в topics '
+                    '(будет искать в БД)',
+                )
+
+    @staticmethod
+    def _task_reference_uuid(reference, *, label, errors):
+        if reference in (None, ''):
+            return ''
+        if not isinstance(reference, dict):
+            errors.append(
+                f'{label} должен быть объектом с id (UUID)',
+            )
+            return ''
+        value = reference.get('id') or reference.get('uuid')
+        if not value:
+            errors.append(f'{label}: отсутствует id (UUID)')
+            return ''
+        try:
+            return str(UUID(str(value)))
+        except (TypeError, ValueError):
+            errors.append(f'{label}: некорректный UUID "{value}"')
+            return ''
 
     def _validate_task_group_links(
         self,

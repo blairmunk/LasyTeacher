@@ -1,5 +1,5 @@
 {
-  "version": "1.4",
+  "version": "1.5",
   "description": "Replaceable sample physics bank for grades 7-9",
   "sources": [
     {
@@ -76,8 +76,12 @@
       "difficulty": 1,
       "cognitive_level": "apply",
       "estimated_time": 3,
-      "topic": {"name": "Механическое движение", "subject": "Физика", "grade_level": 7},
-      "subtopic": "Скорость",
+      "topic": {
+        "id": "66000000-0000-0007-0000-000000000001"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0007-0000-000000000001"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -88,10 +92,17 @@
       ],
       "codifier_requirements": [],
       "grade": 7,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440003"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440003"
+      },
       "source_detail": "Демонстрационный пример",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0007-0000-000000000001", "bank_role": "demo"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0007-0000-000000000001",
+          "bank_role": "demo"
+        }
+      ]
     },
     {
       "id": "55000000-0000-0007-0001-000000000002",
@@ -103,8 +114,12 @@
       "difficulty": 1,
       "cognitive_level": "apply",
       "estimated_time": 3,
-      "topic": {"name": "Механическое движение", "subject": "Физика", "grade_level": 7},
-      "subtopic": "Скорость",
+      "topic": {
+        "id": "66000000-0000-0007-0000-000000000001"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0007-0000-000000000001"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -115,10 +130,17 @@
       ],
       "codifier_requirements": [],
       "grade": 7,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440001"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440001"
+      },
       "source_detail": "Скорость, №2",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0007-0000-000000000001", "bank_role": "practice"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0007-0000-000000000001",
+          "bank_role": "practice"
+        }
+      ]
     },
     {
       "id": "55000000-0000-0007-0001-000000000003",
@@ -130,8 +152,12 @@
       "difficulty": 2,
       "cognitive_level": "apply",
       "estimated_time": 4,
-      "topic": {"name": "Механическое движение", "subject": "Физика", "grade_level": 7},
-      "subtopic": "Скорость",
+      "topic": {
+        "id": "66000000-0000-0007-0000-000000000001"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0007-0000-000000000001"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -142,10 +168,17 @@
       ],
       "codifier_requirements": [],
       "grade": 7,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440002"
+      },
       "source_detail": "Раздел 1, №3",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0007-0000-000000000001", "bank_role": "control"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0007-0000-000000000001",
+          "bank_role": "control"
+        }
+      ]
     },
     {
       "id": "55000000-0000-0007-0001-000000000004",
@@ -157,8 +190,12 @@
       "difficulty": 2,
       "cognitive_level": "apply",
       "estimated_time": 5,
-      "topic": {"name": "Механическое движение", "subject": "Физика", "grade_level": 7},
-      "subtopic": "Скорость",
+      "topic": {
+        "id": "66000000-0000-0007-0000-000000000001"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0007-0000-000000000001"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -169,10 +206,17 @@
       ],
       "codifier_requirements": [],
       "grade": 7,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440002"
+      },
       "source_detail": "Раздел 1, №4",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0007-0000-000000000001", "bank_role": "control"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0007-0000-000000000001",
+          "bank_role": "control"
+        }
+      ]
     },
     {
       "id": "55000000-0000-0007-0002-000000000001",
@@ -185,8 +229,12 @@
       "difficulty": 1,
       "cognitive_level": "apply",
       "estimated_time": 3,
-      "topic": {"name": "Масса и плотность", "subject": "Физика", "grade_level": 7},
-      "subtopic": "Плотность вещества",
+      "topic": {
+        "id": "66000000-0000-0007-0000-000000000002"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0007-0000-000000000002"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -197,10 +245,17 @@
       ],
       "codifier_requirements": [],
       "grade": 7,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440003"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440003"
+      },
       "source_detail": "Демонстрационный пример",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0007-0000-000000000002", "bank_role": "demo"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0007-0000-000000000002",
+          "bank_role": "demo"
+        }
+      ]
     },
     {
       "id": "55000000-0000-0007-0002-000000000002",
@@ -212,8 +267,12 @@
       "difficulty": 2,
       "cognitive_level": "apply",
       "estimated_time": 4,
-      "topic": {"name": "Масса и плотность", "subject": "Физика", "grade_level": 7},
-      "subtopic": "Плотность вещества",
+      "topic": {
+        "id": "66000000-0000-0007-0000-000000000002"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0007-0000-000000000002"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -224,10 +283,17 @@
       ],
       "codifier_requirements": [],
       "grade": 7,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440001"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440001"
+      },
       "source_detail": "Плотность, №2",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0007-0000-000000000002", "bank_role": "practice"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0007-0000-000000000002",
+          "bank_role": "practice"
+        }
+      ]
     },
     {
       "id": "55000000-0000-0007-0002-000000000003",
@@ -239,8 +305,12 @@
       "difficulty": 2,
       "cognitive_level": "apply",
       "estimated_time": 4,
-      "topic": {"name": "Масса и плотность", "subject": "Физика", "grade_level": 7},
-      "subtopic": "Плотность вещества",
+      "topic": {
+        "id": "66000000-0000-0007-0000-000000000002"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0007-0000-000000000002"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -251,10 +321,17 @@
       ],
       "codifier_requirements": [],
       "grade": 7,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440002"
+      },
       "source_detail": "Раздел 1, №8",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0007-0000-000000000002", "bank_role": "control"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0007-0000-000000000002",
+          "bank_role": "control"
+        }
+      ]
     },
     {
       "id": "55000000-0000-0007-0002-000000000004",
@@ -266,8 +343,12 @@
       "difficulty": 2,
       "cognitive_level": "analyze",
       "estimated_time": 5,
-      "topic": {"name": "Масса и плотность", "subject": "Физика", "grade_level": 7},
-      "subtopic": "Плотность вещества",
+      "topic": {
+        "id": "66000000-0000-0007-0000-000000000002"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0007-0000-000000000002"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -278,10 +359,17 @@
       ],
       "codifier_requirements": [],
       "grade": 7,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440002"
+      },
       "source_detail": "Раздел 1, №9",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0007-0000-000000000002", "bank_role": "control"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0007-0000-000000000002",
+          "bank_role": "control"
+        }
+      ]
     },
     {
       "id": "55000000-0000-0008-0001-000000000001",
@@ -294,8 +382,12 @@
       "difficulty": 1,
       "cognitive_level": "apply",
       "estimated_time": 4,
-      "topic": {"name": "Количество теплоты", "subject": "Физика", "grade_level": 8},
-      "subtopic": "Количество теплоты. Удельная теплоёмкость",
+      "topic": {
+        "id": "66000000-0000-0008-0000-000000000001"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0008-0000-000000000001"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -306,10 +398,17 @@
       ],
       "codifier_requirements": [],
       "grade": 8,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440003"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440003"
+      },
       "source_detail": "Демонстрационный пример",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0008-0000-000000000001", "bank_role": "demo"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0008-0000-000000000001",
+          "bank_role": "demo"
+        }
+      ]
     },
     {
       "id": "55000000-0000-0008-0001-000000000002",
@@ -321,8 +420,12 @@
       "difficulty": 2,
       "cognitive_level": "apply",
       "estimated_time": 5,
-      "topic": {"name": "Количество теплоты", "subject": "Физика", "grade_level": 8},
-      "subtopic": "Количество теплоты. Удельная теплоёмкость",
+      "topic": {
+        "id": "66000000-0000-0008-0000-000000000001"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0008-0000-000000000001"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -333,10 +436,17 @@
       ],
       "codifier_requirements": [],
       "grade": 8,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440001"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440001"
+      },
       "source_detail": "Теплота, №2",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0008-0000-000000000001", "bank_role": "practice"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0008-0000-000000000001",
+          "bank_role": "practice"
+        }
+      ]
     },
     {
       "id": "55000000-0000-0008-0001-000000000003",
@@ -348,8 +458,12 @@
       "difficulty": 2,
       "cognitive_level": "apply",
       "estimated_time": 5,
-      "topic": {"name": "Количество теплоты", "subject": "Физика", "grade_level": 8},
-      "subtopic": "Количество теплоты. Удельная теплоёмкость",
+      "topic": {
+        "id": "66000000-0000-0008-0000-000000000001"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0008-0000-000000000001"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -360,10 +474,17 @@
       ],
       "codifier_requirements": [],
       "grade": 8,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440002"
+      },
       "source_detail": "Раздел 2, №7",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0008-0000-000000000001", "bank_role": "control"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0008-0000-000000000001",
+          "bank_role": "control"
+        }
+      ]
     },
     {
       "id": "55000000-0000-0008-0001-000000000004",
@@ -375,8 +496,12 @@
       "difficulty": 2,
       "cognitive_level": "apply",
       "estimated_time": 5,
-      "topic": {"name": "Количество теплоты", "subject": "Физика", "grade_level": 8},
-      "subtopic": "Количество теплоты. Удельная теплоёмкость",
+      "topic": {
+        "id": "66000000-0000-0008-0000-000000000001"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0008-0000-000000000001"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -387,10 +512,17 @@
       ],
       "codifier_requirements": [],
       "grade": 8,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440002"
+      },
       "source_detail": "Раздел 2, №8",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0008-0000-000000000001", "bank_role": "control"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0008-0000-000000000001",
+          "bank_role": "control"
+        }
+      ]
     },
     {
       "id": "55000000-0000-0008-0002-000000000001",
@@ -403,8 +535,12 @@
       "difficulty": 1,
       "cognitive_level": "apply",
       "estimated_time": 3,
-      "topic": {"name": "Постоянный ток", "subject": "Физика", "grade_level": 8},
-      "subtopic": "Закон Ома для участка цепи",
+      "topic": {
+        "id": "66000000-0000-0008-0000-000000000002"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0008-0000-000000000002"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -415,10 +551,17 @@
       ],
       "codifier_requirements": [],
       "grade": 8,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440003"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440003"
+      },
       "source_detail": "Демонстрационный пример",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0008-0000-000000000002", "bank_role": "demo"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0008-0000-000000000002",
+          "bank_role": "demo"
+        }
+      ]
     },
     {
       "id": "55000000-0000-0008-0002-000000000002",
@@ -430,8 +573,12 @@
       "difficulty": 1,
       "cognitive_level": "apply",
       "estimated_time": 3,
-      "topic": {"name": "Постоянный ток", "subject": "Физика", "grade_level": 8},
-      "subtopic": "Закон Ома для участка цепи",
+      "topic": {
+        "id": "66000000-0000-0008-0000-000000000002"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0008-0000-000000000002"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -442,10 +589,17 @@
       ],
       "codifier_requirements": [],
       "grade": 8,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440001"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440001"
+      },
       "source_detail": "Закон Ома, №2",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0008-0000-000000000002", "bank_role": "practice"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0008-0000-000000000002",
+          "bank_role": "practice"
+        }
+      ]
     },
     {
       "id": "55000000-0000-0008-0002-000000000003",
@@ -457,8 +611,12 @@
       "difficulty": 2,
       "cognitive_level": "apply",
       "estimated_time": 4,
-      "topic": {"name": "Постоянный ток", "subject": "Физика", "grade_level": 8},
-      "subtopic": "Закон Ома для участка цепи",
+      "topic": {
+        "id": "66000000-0000-0008-0000-000000000002"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0008-0000-000000000002"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -469,10 +627,17 @@
       ],
       "codifier_requirements": [],
       "grade": 8,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440002"
+      },
       "source_detail": "Раздел 3, №7",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0008-0000-000000000002", "bank_role": "control"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0008-0000-000000000002",
+          "bank_role": "control"
+        }
+      ]
     },
     {
       "id": "55000000-0000-0008-0002-000000000004",
@@ -484,8 +649,12 @@
       "difficulty": 2,
       "cognitive_level": "apply",
       "estimated_time": 4,
-      "topic": {"name": "Постоянный ток", "subject": "Физика", "grade_level": 8},
-      "subtopic": "Закон Ома для участка цепи",
+      "topic": {
+        "id": "66000000-0000-0008-0000-000000000002"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0008-0000-000000000002"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -496,10 +665,17 @@
       ],
       "codifier_requirements": [],
       "grade": 8,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440002"
+      },
       "source_detail": "Раздел 3, №8",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0008-0000-000000000002", "bank_role": "control"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0008-0000-000000000002",
+          "bank_role": "control"
+        }
+      ]
     },
     {
       "id": "55000000-0000-0009-0001-000000000001",
@@ -512,8 +688,12 @@
       "difficulty": 2,
       "cognitive_level": "apply",
       "estimated_time": 4,
-      "topic": {"name": "Равноускоренное движение", "subject": "Физика", "grade_level": 9},
-      "subtopic": "Ускорение",
+      "topic": {
+        "id": "66000000-0000-0009-0000-000000000001"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0009-0000-000000000001"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -524,10 +704,17 @@
       ],
       "codifier_requirements": [],
       "grade": 9,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440003"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440003"
+      },
       "source_detail": "Демонстрационный пример",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0009-0000-000000000001", "bank_role": "demo"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0009-0000-000000000001",
+          "bank_role": "demo"
+        }
+      ]
     },
     {
       "id": "55000000-0000-0009-0001-000000000002",
@@ -539,8 +726,12 @@
       "difficulty": 2,
       "cognitive_level": "apply",
       "estimated_time": 4,
-      "topic": {"name": "Равноускоренное движение", "subject": "Физика", "grade_level": 9},
-      "subtopic": "Ускорение",
+      "topic": {
+        "id": "66000000-0000-0009-0000-000000000001"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0009-0000-000000000001"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -551,10 +742,17 @@
       ],
       "codifier_requirements": [],
       "grade": 9,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440001"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440001"
+      },
       "source_detail": "Ускорение, №2",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0009-0000-000000000001", "bank_role": "practice"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0009-0000-000000000001",
+          "bank_role": "practice"
+        }
+      ]
     },
     {
       "id": "55000000-0000-0009-0001-000000000003",
@@ -566,8 +764,12 @@
       "difficulty": 2,
       "cognitive_level": "analyze",
       "estimated_time": 5,
-      "topic": {"name": "Равноускоренное движение", "subject": "Физика", "grade_level": 9},
-      "subtopic": "Ускорение",
+      "topic": {
+        "id": "66000000-0000-0009-0000-000000000001"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0009-0000-000000000001"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -578,10 +780,17 @@
       ],
       "codifier_requirements": [],
       "grade": 9,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440002"
+      },
       "source_detail": "Раздел 1, №5",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0009-0000-000000000001", "bank_role": "control"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0009-0000-000000000001",
+          "bank_role": "control"
+        }
+      ]
     },
     {
       "id": "55000000-0000-0009-0001-000000000004",
@@ -593,8 +802,12 @@
       "difficulty": 2,
       "cognitive_level": "apply",
       "estimated_time": 4,
-      "topic": {"name": "Равноускоренное движение", "subject": "Физика", "grade_level": 9},
-      "subtopic": "Ускорение",
+      "topic": {
+        "id": "66000000-0000-0009-0000-000000000001"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0009-0000-000000000001"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -605,10 +818,17 @@
       ],
       "codifier_requirements": [],
       "grade": 9,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440002"
+      },
       "source_detail": "Раздел 1, №6",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0009-0000-000000000001", "bank_role": "control"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0009-0000-000000000001",
+          "bank_role": "control"
+        }
+      ]
     },
     {
       "id": "55000000-0000-0009-0002-000000000001",
@@ -621,8 +841,12 @@
       "difficulty": 2,
       "cognitive_level": "apply",
       "estimated_time": 3,
-      "topic": {"name": "Законы Ньютона", "subject": "Физика", "grade_level": 9},
-      "subtopic": "Второй закон Ньютона",
+      "topic": {
+        "id": "66000000-0000-0009-0000-000000000002"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0009-0000-000000000002"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -633,10 +857,17 @@
       ],
       "codifier_requirements": [],
       "grade": 9,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440003"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440003"
+      },
       "source_detail": "Демонстрационный пример",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0009-0000-000000000002", "bank_role": "demo"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0009-0000-000000000002",
+          "bank_role": "demo"
+        }
+      ]
     },
     {
       "id": "55000000-0000-0009-0002-000000000002",
@@ -648,8 +879,12 @@
       "difficulty": 2,
       "cognitive_level": "apply",
       "estimated_time": 3,
-      "topic": {"name": "Законы Ньютона", "subject": "Физика", "grade_level": 9},
-      "subtopic": "Второй закон Ньютона",
+      "topic": {
+        "id": "66000000-0000-0009-0000-000000000002"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0009-0000-000000000002"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -660,10 +895,17 @@
       ],
       "codifier_requirements": [],
       "grade": 9,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440001"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440001"
+      },
       "source_detail": "Второй закон Ньютона, №2",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0009-0000-000000000002", "bank_role": "practice"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0009-0000-000000000002",
+          "bank_role": "practice"
+        }
+      ]
     },
     {
       "id": "55000000-0000-0009-0002-000000000003",
@@ -675,8 +917,12 @@
       "difficulty": 2,
       "cognitive_level": "apply",
       "estimated_time": 4,
-      "topic": {"name": "Законы Ньютона", "subject": "Физика", "grade_level": 9},
-      "subtopic": "Второй закон Ньютона",
+      "topic": {
+        "id": "66000000-0000-0009-0000-000000000002"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0009-0000-000000000002"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -687,10 +933,17 @@
       ],
       "codifier_requirements": [],
       "grade": 9,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440002"
+      },
       "source_detail": "Раздел 1, №10",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0009-0000-000000000002", "bank_role": "control"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0009-0000-000000000002",
+          "bank_role": "control"
+        }
+      ]
     },
     {
       "id": "55000000-0000-0009-0002-000000000004",
@@ -702,8 +955,12 @@
       "difficulty": 3,
       "cognitive_level": "analyze",
       "estimated_time": 5,
-      "topic": {"name": "Законы Ньютона", "subject": "Физика", "grade_level": 9},
-      "subtopic": "Второй закон Ньютона",
+      "topic": {
+        "id": "66000000-0000-0009-0000-000000000002"
+      },
+      "subtopic": {
+        "id": "66100000-0000-0009-0000-000000000002"
+      },
       "codifier_content_entries": [
         {
           "subject": "Физика",
@@ -714,10 +971,103 @@
       ],
       "codifier_requirements": [],
       "grade": 9,
-      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
+      "source": {
+        "id": "880e8400-e29b-41d4-a716-446655440002"
+      },
       "source_detail": "Раздел 1, №11",
       "is_verified": true,
-      "groups": [{"id": "77000000-0000-0009-0000-000000000002", "bank_role": "control"}]
+      "groups": [
+        {
+          "id": "77000000-0000-0009-0000-000000000002",
+          "bank_role": "control"
+        }
+      ]
+    }
+  ],
+  "topics": [
+    {
+      "id": "66000000-0000-0007-0000-000000000001",
+      "name": "Механическое движение",
+      "subject": "Физика",
+      "grade_level": 7,
+      "section": "Механика",
+      "subtopics": [
+        {
+          "id": "66100000-0000-0007-0000-000000000001",
+          "name": "Скорость",
+          "order": 1
+        }
+      ]
+    },
+    {
+      "id": "66000000-0000-0007-0000-000000000002",
+      "name": "Масса и плотность",
+      "subject": "Физика",
+      "grade_level": 7,
+      "section": "Первоначальные сведения о строении вещества",
+      "subtopics": [
+        {
+          "id": "66100000-0000-0007-0000-000000000002",
+          "name": "Плотность вещества",
+          "order": 1
+        }
+      ]
+    },
+    {
+      "id": "66000000-0000-0008-0000-000000000001",
+      "name": "Количество теплоты",
+      "subject": "Физика",
+      "grade_level": 8,
+      "section": "Тепловые явления",
+      "subtopics": [
+        {
+          "id": "66100000-0000-0008-0000-000000000001",
+          "name": "Количество теплоты. Удельная теплоёмкость",
+          "order": 1
+        }
+      ]
+    },
+    {
+      "id": "66000000-0000-0008-0000-000000000002",
+      "name": "Постоянный ток",
+      "subject": "Физика",
+      "grade_level": 8,
+      "section": "Электрические явления",
+      "subtopics": [
+        {
+          "id": "66100000-0000-0008-0000-000000000002",
+          "name": "Закон Ома для участка цепи",
+          "order": 1
+        }
+      ]
+    },
+    {
+      "id": "66000000-0000-0009-0000-000000000001",
+      "name": "Равноускоренное движение",
+      "subject": "Физика",
+      "grade_level": 9,
+      "section": "Механика",
+      "subtopics": [
+        {
+          "id": "66100000-0000-0009-0000-000000000001",
+          "name": "Ускорение",
+          "order": 1
+        }
+      ]
+    },
+    {
+      "id": "66000000-0000-0009-0000-000000000002",
+      "name": "Законы Ньютона",
+      "subject": "Физика",
+      "grade_level": 9,
+      "section": "Механика",
+      "subtopics": [
+        {
+          "id": "66100000-0000-0009-0000-000000000002",
+          "name": "Второй закон Ньютона",
+          "order": 1
+        }
+      ]
     }
   ]
 }

@@ -193,6 +193,8 @@ class DjangoTaskImportService(ITaskImportService):
                 '🔗 Зависимости:',
                 '  Отсутствующих тем: '
                 f"{dependency_counts.get('missing_topics', 0)}",
+                '  Отсутствующих подтем: '
+                f"{dependency_counts.get('missing_subtopics', 0)}",
                 '  Отсутствующих групп: '
                 f"{dependency_counts.get('missing_groups', 0)}",
                 '  Проблемных ссылок: '

@@ -169,7 +169,8 @@ class TaskImporterTests(TestCase):
         self.assertEqual(
             context.preview_summary['dependency_counts'],
             {
-                'missing_topics': 1,
+                'missing_topics': 0,
+                'missing_subtopics': 0,
                 'missing_groups': 0,
                 'broken_references': 0,
                 'missing_classifications': 0,
@@ -320,11 +321,14 @@ class TaskImporterTests(TestCase):
             task_id=task_id,
             group_id='770e8400-e29b-41d4-a716-446655440001',
         )
-        payload['tasks'][0]['subtopic'] = {
+        subtopic_id = '661e8400-e29b-41d4-a716-446655440001'
+        payload['topics'][0]['subtopics'] = [{
+            'id': subtopic_id,
             'name': 'Второй закон Ньютона',
             'description': 'Связь силы и ускорения',
             'order': 2,
-        }
+        }]
+        payload['tasks'][0]['subtopic'] = {'id': subtopic_id}
 
         self._import(payload)
         self._import(payload)
@@ -344,6 +348,7 @@ class TaskImporterTests(TestCase):
 
     @staticmethod
     def _task_payload(*, task_id, group_id):
+        topic_id = '660e8400-e29b-41d4-a716-446655440001'
         return {
             'analog_groups': [{
                 'id': group_id,
@@ -351,6 +356,7 @@ class TaskImporterTests(TestCase):
                 'difficulty': 3,
             }],
             'topics': [{
+                'id': topic_id,
                 'name': 'Динамика',
                 'subject': 'Физика',
                 'grade_level': 9,
@@ -362,11 +368,7 @@ class TaskImporterTests(TestCase):
                 'answer': '2 м/с²',
                 'task_type': 'computational',
                 'difficulty': 2,
-                'topic': {
-                    'name': 'Динамика',
-                    'subject': 'Физика',
-                    'grade_level': 9,
-                },
+                'topic': {'id': topic_id},
                 'groups': [{
                     'id': group_id,
                     'bank_role': 'demo',

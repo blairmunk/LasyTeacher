@@ -23,18 +23,22 @@ class TaskExportService:
         for task in tasks:
             task_rows.append(self._task_row(task))
             if include_topics and task.topic:
-                key = (
-                    task.topic.subject,
-                    task.topic.grade_level,
-                    task.topic.name,
-                )
-                topics.setdefault(key, {
+                topic = topics.setdefault(task.topic.pk, {
+                    'id': task.topic.pk,
                     'name': task.topic.name,
                     'subject': task.topic.subject,
                     'grade_level': task.topic.grade_level,
                     'section': task.topic.section,
                     'description': task.topic.description,
+                    'subtopics': {},
                 })
+                if task.subtopic:
+                    topic['subtopics'].setdefault(task.subtopic.pk, {
+                        'id': task.subtopic.pk,
+                        'name': task.subtopic.name,
+                        'description': task.subtopic.description,
+                        'order': task.subtopic.order,
+                    })
             if task.source:
                 sources.setdefault(task.source.pk, {
                     'id': task.source.pk,
@@ -66,7 +70,13 @@ class TaskExportService:
         if include_groups:
             payload['analog_groups'] = list(groups.values())
         if include_topics:
-            payload['topics'] = list(topics.values())
+            payload['topics'] = [
+                {
+                    **topic,
+                    'subtopics': list(topic['subtopics'].values()),
+                }
+                for topic in topics.values()
+            ]
         return payload
 
     @staticmethod
@@ -106,12 +116,9 @@ class TaskExportService:
             ],
         }
         if task.topic:
-            row['topic'] = {
-                'name': task.topic.name,
-                'subject': task.topic.subject,
-                'grade_level': task.topic.grade_level,
-                'section': task.topic.section,
-            }
+            row['topic'] = {'id': task.topic.pk}
+        if task.subtopic:
+            row['subtopic'] = {'id': task.subtopic.pk}
         if task.source:
             row['source'] = {
                 'id': task.source.pk,

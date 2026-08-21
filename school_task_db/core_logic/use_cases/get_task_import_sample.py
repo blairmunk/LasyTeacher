@@ -14,8 +14,7 @@ class GetTaskImportSampleUseCase:
                 'version': TASK_TRANSFER_FORMAT_VERSION,
                 'description': (
                     'Пример файла для импорта заданий '
-                    '(v1.4 — с UUID источников и явными связями '
-                    'кодификаторов)'
+                    '(v1.5 — с UUID источников, тем, подтем и групп)'
                 ),
                 'sources': [
                     {
@@ -46,11 +45,20 @@ class GetTaskImportSampleUseCase:
                 ],
                 'topics': [
                     {
+                        'id': '660e8400-e29b-41d4-a716-446655440001',
                         'name': 'Линейные уравнения',
                         'subject': 'Математика',
                         'grade_level': 7,
                         'section': 'Алгебра',
                         'description': 'Решение линейных уравнений',
+                    },
+                    {
+                        'id': '660e8400-e29b-41d4-a716-446655440002',
+                        'name': 'Обыкновенные дроби',
+                        'subject': 'Математика',
+                        'grade_level': 6,
+                        'section': 'Арифметика',
+                        'description': 'Действия с обыкновенными дробями',
                     },
                 ],
                 'tasks': [
@@ -83,9 +91,7 @@ class GetTaskImportSampleUseCase:
                         },
                         'source_detail': 'Стр. 45, №12',
                         'topic': {
-                            'name': 'Линейные уравнения',
-                            'subject': 'Математика',
-                            'grade_level': 7,
+                            'id': '660e8400-e29b-41d4-a716-446655440001',
                         },
                         'groups': [{
                             'id': '770e8400-e29b-41d4-a716-446655440001',
@@ -111,9 +117,7 @@ class GetTaskImportSampleUseCase:
                         'codifier_content_entries': [],
                         'codifier_requirements': [],
                         'topic': {
-                            'name': 'Обыкновенные дроби',
-                            'subject': 'Математика',
-                            'grade_level': 6,
+                            'id': '660e8400-e29b-41d4-a716-446655440002',
                         },
                         'groups': [{
                             'id': '770e8400-e29b-41d4-a716-446655440002',

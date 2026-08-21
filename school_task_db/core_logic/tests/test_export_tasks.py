@@ -5,6 +5,7 @@ from core_logic.entities.task import (
     TaskExportFilters,
     TaskExportGroupRef,
     TaskExportSourceRef,
+    TaskExportSubtopicRef,
     TaskExportTaskSource,
     TaskExportTopicRef,
 )
@@ -14,7 +15,16 @@ from core_logic.use_cases.export_tasks import ExportTasksRequest, ExportTasksUse
 class FakeTaskExportRepository:
     def __init__(self):
         self.filters = None
-        topic = TaskExportTopicRef('Динамика', 'Физика', 9)
+        topic = TaskExportTopicRef(
+            pk='topic-1',
+            name='Динамика',
+            subject='Физика',
+            grade_level=9,
+        )
+        subtopic = TaskExportSubtopicRef(
+            pk='subtopic-1',
+            name='Второй закон Ньютона',
+        )
         source = TaskExportSourceRef(pk='source-1', name='Сборник')
         groups = (
             TaskExportGroupRef(
@@ -28,6 +38,7 @@ class FakeTaskExportRepository:
                 pk='task-1',
                 text='Задание 1',
                 topic=topic,
+                subtopic=subtopic,
                 source=source,
                 groups=groups,
                 content_entries=(TaskExportClassificationRef(
@@ -64,7 +75,7 @@ class ExportTasksUseCaseTests(TestCase):
         )
 
         self.assertEqual(repo.filters, filters)
-        self.assertEqual(data.payload['version'], '1.4')
+        self.assertEqual(data.payload['version'], '1.5')
         self.assertEqual(data.payload['export_date'], '2026-07-17')
         self.assertEqual(data.payload['tasks'][0]['id'], 'task-1')
         self.assertEqual(
@@ -73,6 +84,18 @@ class ExportTasksUseCaseTests(TestCase):
         )
         self.assertEqual(len(data.payload['tasks']), 2)
         self.assertEqual(len(data.payload['topics']), 1)
+        self.assertEqual(
+            data.payload['tasks'][0]['topic'],
+            {'id': 'topic-1'},
+        )
+        self.assertEqual(
+            data.payload['tasks'][0]['subtopic'],
+            {'id': 'subtopic-1'},
+        )
+        self.assertEqual(
+            data.payload['topics'][0]['subtopics'][0]['id'],
+            'subtopic-1',
+        )
         self.assertEqual(len(data.payload['sources']), 1)
         self.assertEqual(
             data.payload['tasks'][0]['source']['id'],

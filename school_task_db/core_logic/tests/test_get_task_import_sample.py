@@ -8,7 +8,12 @@ class GetTaskImportSampleUseCaseTests(TestCase):
         data = GetTaskImportSampleUseCase().execute()
 
         self.assertEqual(data.filename, 'sample_import.json')
-        self.assertEqual(data.payload['version'], '1.4')
+        self.assertEqual(data.payload['version'], '1.5')
+        self.assertIn('id', data.payload['topics'][0])
+        self.assertEqual(
+            data.payload['tasks'][0]['topic'],
+            {'id': '660e8400-e29b-41d4-a716-446655440001'},
+        )
         self.assertEqual(
             data.payload['tasks'][0]['groups'][0]['bank_role'],
             'demo',

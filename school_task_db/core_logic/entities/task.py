@@ -135,11 +135,20 @@ class TaskExportData:
 
 @dataclass(frozen=True)
 class TaskExportTopicRef:
+    pk: str
     name: str
     subject: str
     grade_level: int
     section: str = ''
     description: str = ''
+
+
+@dataclass(frozen=True)
+class TaskExportSubtopicRef:
+    pk: str
+    name: str
+    description: str = ''
+    order: int = 1
 
 
 @dataclass(frozen=True)
@@ -203,6 +212,7 @@ class TaskExportTaskSource:
     teacher_notes: str = ''
     source_detail: str = ''
     topic: Optional[TaskExportTopicRef] = None
+    subtopic: Optional[TaskExportSubtopicRef] = None
     source: Optional[TaskExportSourceRef] = None
     groups: tuple[TaskExportGroupRef, ...] = field(default_factory=tuple)
     images: tuple[TaskExportImageSource, ...] = field(default_factory=tuple)

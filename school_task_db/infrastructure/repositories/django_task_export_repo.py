@@ -8,6 +8,7 @@ from core_logic.entities.task import (
     TaskExportGroupRef,
     TaskExportImageSource,
     TaskExportSourceRef,
+    TaskExportSubtopicRef,
     TaskExportTaskSource,
     TaskExportTopicRef,
 )
@@ -68,6 +69,7 @@ class DjangoTaskExportRepository(ITaskExportRepository):
             source_detail=task.source_detail or '',
             topic=(
                 TaskExportTopicRef(
+                    pk=str(task.topic.pk),
                     name=task.topic.name,
                     subject=task.topic.subject,
                     grade_level=task.topic.grade_level,
@@ -75,6 +77,16 @@ class DjangoTaskExportRepository(ITaskExportRepository):
                     description=getattr(task.topic, 'description', ''),
                 )
                 if task.topic
+                else None
+            ),
+            subtopic=(
+                TaskExportSubtopicRef(
+                    pk=str(task.subtopic.pk),
+                    name=task.subtopic.name,
+                    description=task.subtopic.description or '',
+                    order=task.subtopic.order,
+                )
+                if task.subtopic
                 else None
             ),
             source=(

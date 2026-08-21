@@ -49,12 +49,13 @@ class ValidateTaskImportJsonUseCaseTests(TestCase):
 
         self.assertTrue(data.is_valid)
         self.assertTrue(any(
-            'актуальном формате 1.4' in warning
+            'актуальном формате 1.5' in warning
             for warning in data.warnings
         ))
 
     def test_validates_tasks_groups_and_summary(self):
         group_id = '770e8400-e29b-41d4-a716-446655440001'
+        topic_id = '660e8400-e29b-41d4-a716-446655440001'
         data = self.use_case.execute(
             ValidateTaskImportJsonRequest(
                 data={
@@ -63,7 +64,7 @@ class ValidateTaskImportJsonUseCaseTests(TestCase):
                             'id': '550e8400-e29b-41d4-a716-446655440001',
                             'text': 'Задача',
                             'answer': 'Ответ',
-                            'topic': {'name': 'Тема'},
+                            'topic': {'id': topic_id},
                             'groups': [group_id],
                         },
                         {
@@ -72,7 +73,12 @@ class ValidateTaskImportJsonUseCaseTests(TestCase):
                         },
                     ],
                     'analog_groups': [{'id': group_id, 'name': 'Группа'}],
-                    'topics': [{'name': 'Тема'}],
+                    'topics': [{
+                        'id': topic_id,
+                        'name': 'Тема',
+                        'subject': 'Физика',
+                        'grade_level': 9,
+                    }],
                     'task_images': [{'id': 'image'}],
                     'sources': [{
                         'id': '880e8400-e29b-41d4-a716-446655440001',
@@ -137,6 +143,7 @@ class ValidateTaskImportJsonUseCaseTests(TestCase):
         ))
 
     def test_warns_about_missing_group_reference(self):
+        topic_id = '660e8400-e29b-41d4-a716-446655440001'
         data = self.use_case.execute(
             ValidateTaskImportJsonRequest(
                 data={
@@ -145,11 +152,17 @@ class ValidateTaskImportJsonUseCaseTests(TestCase):
                             'id': '550e8400-e29b-41d4-a716-446655440001',
                             'text': 'Задача',
                             'answer': 'Ответ',
-                            'topic': {'name': 'Тема'},
+                            'topic': {'id': topic_id},
                             'groups': ['770e8400-e29b-41d4-a716-446655440001'],
                         },
                     ],
                     'analog_groups': [],
+                    'topics': [{
+                        'id': topic_id,
+                        'name': 'Тема',
+                        'subject': 'Физика',
+                        'grade_level': 9,
+                    }],
                 },
             ),
         )
@@ -298,5 +311,75 @@ class ValidateTaskImportJsonUseCaseTests(TestCase):
         self.assertFalse(data.is_valid)
         self.assertTrue(any(
             'legacy-поля' in error
+            for error in data.errors
+        ))
+
+    def test_requires_uuid_catalog_and_references_for_topics(self):
+        task_id = '550e8400-e29b-41d4-a716-446655440001'
+        data = self.use_case.execute(
+            ValidateTaskImportJsonRequest(data={
+                'version': '1.5',
+                'topics': [{
+                    'name': 'Динамика',
+                    'subject': 'Физика',
+                    'grade_level': 9,
+                }],
+                'tasks': [{
+                    'id': task_id,
+                    'text': 'Задача',
+                    'topic': {'name': 'Динамика'},
+                    'subtopic': 'Второй закон Ньютона',
+                }],
+            }),
+        )
+
+        self.assertFalse(data.is_valid)
+        self.assertTrue(any(
+            'Тема #1: отсутствует id' in error
+            for error in data.errors
+        ))
+        self.assertTrue(any(
+            'topic: отсутствует id' in error
+            for error in data.errors
+        ))
+        self.assertTrue(any(
+            'subtopic должен быть объектом с id' in error
+            for error in data.errors
+        ))
+
+    def test_validates_nested_subtopic_parent(self):
+        topic_id = '660e8400-e29b-41d4-a716-446655440001'
+        other_topic_id = '660e8400-e29b-41d4-a716-446655440002'
+        subtopic_id = '661e8400-e29b-41d4-a716-446655440001'
+        data = self.use_case.execute(
+            ValidateTaskImportJsonRequest(data={
+                'version': '1.5',
+                'topics': [{
+                    'id': topic_id,
+                    'name': 'Динамика',
+                    'subject': 'Физика',
+                    'grade_level': 9,
+                    'subtopics': [{
+                        'id': subtopic_id,
+                        'name': 'Второй закон Ньютона',
+                    }],
+                }, {
+                    'id': other_topic_id,
+                    'name': 'Кинематика',
+                    'subject': 'Физика',
+                    'grade_level': 9,
+                }],
+                'tasks': [{
+                    'id': '550e8400-e29b-41d4-a716-446655440001',
+                    'text': 'Задача',
+                    'topic': {'id': other_topic_id},
+                    'subtopic': {'id': subtopic_id},
+                }],
+            }),
+        )
+
+        self.assertFalse(data.is_valid)
+        self.assertTrue(any(
+            'принадлежит другой теме' in error
             for error in data.errors
         ))

@@ -109,7 +109,12 @@ class TaskImportPreviewAnalyzer:
     def _analyze_dependencies(self, json_data):
         self.runtime._write('\n🔍 АНАЛИЗ ЗАВИСИМОСТЕЙ:')
         tasks_data = json_data.get('tasks', [])
-        missing_topics = self._missing_topics(tasks_data)
+        declared_topics = json_data.get('topics', [])
+        missing_topics = self._missing_topics(tasks_data, declared_topics)
+        missing_subtopics = self._missing_subtopics(
+            tasks_data,
+            declared_topics,
+        )
         missing_groups, broken_references = self._missing_groups(
             tasks_data,
             json_data.get('analog_groups', []),
@@ -117,12 +122,14 @@ class TaskImportPreviewAnalyzer:
         missing_classifications = self._missing_classifications(tasks_data)
         self._write_dependencies(
             missing_topics,
+            missing_subtopics,
             missing_groups,
             broken_references,
             missing_classifications,
         )
         return {
             'missing_topics': len(missing_topics),
+            'missing_subtopics': len(missing_subtopics),
             'missing_groups': len(missing_groups),
             'broken_references': len(broken_references),
             'missing_classifications': len(missing_classifications),
@@ -140,22 +147,46 @@ class TaskImportPreviewAnalyzer:
             )
         return missing
 
-    def _missing_topics(self, tasks_data):
+    def _missing_topics(self, tasks_data, declared_topics):
+        declared_ids = {
+            str(topic.get('id') or topic.get('uuid') or '')
+            for topic in declared_topics
+            if isinstance(topic, dict)
+        }
         missing = set()
         for task_data in tasks_data:
             topic_data = task_data.get('topic')
-            if not topic_data or self.topic_importer.find(topic_data):
+            topic_id = self.topic_importer.reference_id(topic_data)
+            if (
+                not topic_id
+                or topic_id in declared_ids
+                or self.topic_importer.find(topic_data)
+            ):
                 continue
-            if isinstance(topic_data, dict):
-                label = (
-                    f"{topic_data.get('subject', 'Unknown')} - "
-                    f"{topic_data.get('name', 'Unknown')}"
-                )
-                if topic_data.get('grade_level'):
-                    label += f" ({topic_data['grade_level']} класс)"
-            else:
-                label = str(topic_data)
-            missing.add(label)
+            missing.add(topic_id)
+        return missing
+
+    def _missing_subtopics(self, tasks_data, declared_topics):
+        declared_ids = {
+            str(subtopic.get('id') or subtopic.get('uuid') or '')
+            for topic in declared_topics
+            if isinstance(topic, dict)
+            for subtopic in topic.get('subtopics', [])
+            if isinstance(subtopic, dict)
+        }
+        missing = set()
+        for task_data in tasks_data:
+            subtopic_data = task_data.get('subtopic')
+            subtopic_id = self.topic_importer.reference_id(subtopic_data)
+            if not subtopic_id or subtopic_id in declared_ids:
+                continue
+            topic = self.topic_importer.find(task_data.get('topic'))
+            if topic and self.topic_importer.resolve_subtopic(
+                subtopic_data,
+                topic,
+            ):
+                continue
+            missing.add(subtopic_id)
         return missing
 
     def _missing_groups(self, tasks_data, declared_groups):
@@ -194,6 +225,7 @@ class TaskImportPreviewAnalyzer:
     def _write_dependencies(
         self,
         missing_topics,
+        missing_subtopics,
         missing_groups,
         broken_references,
         missing_classifications,
@@ -204,6 +236,12 @@ class TaskImportPreviewAnalyzer:
                 self.runtime._write('    ✅ Будут созданы автоматически')
             else:
                 self.runtime._write('    ⚠️ Задания без тем будут пропущены')
+        if missing_subtopics:
+            self._write_missing(
+                '📖 ОТСУТСТВУЮЩИЕ ПОДТЕМЫ',
+                missing_subtopics,
+            )
+            self.runtime._write('    ⚠️ Задания останутся без подтем')
         if missing_groups:
             self._write_missing('📋 ОТСУТСТВУЮЩИЕ ГРУППЫ', missing_groups)
             if self.runtime.create_missing:

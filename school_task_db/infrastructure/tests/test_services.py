@@ -161,8 +161,15 @@ class SectionedDocumentEngineTests(TestCase):
 
 class DjangoTaskImportServiceTests(TestCase):
     def test_preview_import_returns_dry_run_context_without_creating_tasks(self):
+        topic_id = '660e8400-e29b-41d4-a716-446655440001'
         request = TaskImportPreviewRequest(
             data={
+                'topics': [{
+                    'id': topic_id,
+                    'name': 'Динамика',
+                    'subject': 'Физика',
+                    'grade_level': 9,
+                }],
                 'tasks': [
                     {
                         'id': '550e8400-e29b-41d4-a716-446655440001',
@@ -170,11 +177,7 @@ class DjangoTaskImportServiceTests(TestCase):
                         'answer': 'Ответ',
                         'task_type': 'computational',
                         'difficulty': 2,
-                        'topic': {
-                            'name': 'Динамика',
-                            'subject': 'Физика',
-                            'grade_level': 9,
-                        },
+                        'topic': {'id': topic_id},
                     },
                 ],
             },
@@ -189,8 +192,16 @@ class DjangoTaskImportServiceTests(TestCase):
         self.assertFalse(Task.objects.filter(text='Задача на силу').exists())
 
     def test_execute_import_creates_log_and_tasks(self):
+        topic_id = '660e8400-e29b-41d4-a716-446655440001'
         request = TaskImportRequest(
             data={
+                'topics': [{
+                    'id': topic_id,
+                    'name': 'Динамика',
+                    'subject': 'Физика',
+                    'grade_level': 9,
+                    'section': 'Механика',
+                }],
                 'analog_groups': [
                     {
                         'id': '770e8400-e29b-41d4-a716-446655440001',
@@ -205,12 +216,7 @@ class DjangoTaskImportServiceTests(TestCase):
                         'answer': 'Ответ',
                         'task_type': 'computational',
                         'difficulty': 2,
-                        'topic': {
-                            'name': 'Динамика',
-                            'subject': 'Физика',
-                            'grade_level': 9,
-                            'section': 'Механика',
-                        },
+                        'topic': {'id': topic_id},
                         'groups': [
                             '770e8400-e29b-41d4-a716-446655440001',
                         ],

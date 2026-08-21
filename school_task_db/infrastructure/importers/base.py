@@ -174,6 +174,7 @@ class ImportContext:
     
     def __init__(self):
         self.imported_topics = {}      # uuid -> Topic
+        self.imported_subtopics = {}   # uuid -> SubTopic
         self.imported_groups = {}      # uuid -> AnalogGroup  
         self.imported_tasks = {}       # uuid -> Task
         self.created_dependencies = {} # тип -> список созданных объектов
@@ -184,6 +185,9 @@ class ImportContext:
     
     def add_group(self, uuid_str: str, group):
         self.imported_groups[uuid_str] = group
+
+    def add_subtopic(self, uuid_str: str, subtopic):
+        self.imported_subtopics[uuid_str] = subtopic
     
     def add_task(self, uuid_str: str, task):
         self.imported_tasks[uuid_str] = task
@@ -191,6 +195,7 @@ class ImportContext:
     def get_stats_summary(self) -> Dict[str, int]:
         return {
             'topics': len(self.imported_topics),
+            'subtopics': len(self.imported_subtopics),
             'groups': len(self.imported_groups),
             'tasks': len(self.imported_tasks)
         }

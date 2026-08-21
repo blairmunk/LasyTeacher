@@ -148,61 +148,6 @@ class TaskImporterTests(TestCase):
         self.assertEqual(task.teacher_notes, 'Проверено учителем')
         self.assertTrue(task.is_verified)
 
-    def test_dry_run_accepts_group_role_objects(self):
-        output = []
-        payload = self._task_payload(
-            task_id='550e8400-e29b-41d4-a716-446655440001',
-            group_id='770e8400-e29b-41d4-a716-446655440001',
-        )
-
-        summary = TaskImporter(
-            mode='update',
-            dry_run=True,
-            create_missing=True,
-            output=output.append,
-        ).import_tasks_from_json(payload)
-
-        self.assertIn('🔍 ПРЕДВАРИТЕЛЬНЫЙ ПРОСМОТР (--dry-run)', output)
-        self.assertEqual(summary.preview['file_counts']['tasks'], 1)
-        self.assertEqual(summary.preview['file_counts']['groups'], 1)
-        self.assertEqual(summary.preview['task_uuid_counts']['new'], 1)
-        self.assertEqual(
-            summary.preview['dependency_counts'],
-            {
-                'missing_topics': 0,
-                'missing_subtopics': 0,
-                'missing_groups': 0,
-                'broken_references': 0,
-                'missing_classifications': 0,
-            },
-        )
-
-    def test_dry_run_reports_missing_classification_references(self):
-        payload = self._task_payload(
-            task_id='550e8400-e29b-41d4-a716-446655440001',
-            group_id='770e8400-e29b-41d4-a716-446655440001',
-        )
-        payload['tasks'][0]['codifier_content_entries'] = [{
-            'subject': 'Физика',
-            'exam_type': 'oge',
-            'year': 2099,
-            'code': 'missing',
-        }]
-
-        summary = TaskImporter(
-            mode='update',
-            dry_run=True,
-            create_missing=True,
-            output=lambda _message: None,
-        ).import_tasks_from_json(payload)
-
-        self.assertEqual(
-            summary.preview['dependency_counts'][
-                'missing_classifications'
-            ],
-            1,
-        )
-
     def test_imports_base64_task_image_through_image_component(self):
         task_id = '550e8400-e29b-41d4-a716-446655440001'
         payload = self._task_payload(

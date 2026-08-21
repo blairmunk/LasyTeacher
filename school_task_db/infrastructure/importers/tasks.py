@@ -14,7 +14,6 @@ from infrastructure.importers.task_classifications import (
 )
 from infrastructure.importers.task_groups import TaskGroupImporter
 from infrastructure.importers.task_images import TaskImageImporter
-from infrastructure.importers.task_preview import TaskImportPreviewAnalyzer
 from infrastructure.importers.task_records import TaskRecordImporter
 from infrastructure.importers.task_sources import TaskSourceImporter
 from infrastructure.importers.task_topics import TaskTopicImporter
@@ -25,14 +24,12 @@ class TaskImporter:
         self,
         *,
         mode: str = 'update',
-        dry_run: bool = False,
         verbose: bool = False,
         create_missing: bool = True,
         output=None,
     ):
         self.runtime = TaskImportRuntime(
             mode=mode,
-            dry_run=dry_run,
             verbose=verbose,
             create_missing=create_missing,
             output=output,
@@ -52,24 +49,12 @@ class TaskImporter:
             self.source_importer,
             self.classification_importer,
         )
-        self.preview_analyzer = TaskImportPreviewAnalyzer(
-            self.runtime,
-            self.group_importer,
-            self.topic_importer,
-            self.classification_importer,
-        )
 
     def import_tasks_from_json(
         self,
         json_data: Dict[str, Any],
     ) -> TaskImportRunSummary:
         self.runtime.validate_mode()
-        if self.runtime.dry_run:
-            self.runtime.write('🔍 ПРЕДВАРИТЕЛЬНЫЙ ПРОСМОТР (--dry-run)')
-            return self._summary(
-                preview=self.preview_analyzer.analyze(json_data),
-            )
-
         with transaction.atomic():
             self.runtime.write('🚀 ИМПОРТ ЗАДАНИЙ:')
             if 'sources' in json_data:
@@ -88,7 +73,7 @@ class TaskImporter:
 
         return self._summary()
 
-    def _summary(self, preview=None) -> TaskImportRunSummary:
+    def _summary(self) -> TaskImportRunSummary:
         stats = self.runtime.stats
         return TaskImportRunSummary(
             created_by_type=stats.created_by_type,
@@ -97,5 +82,4 @@ class TaskImporter:
             errors=len(stats.errors),
             error_messages=tuple(issue.message for issue in stats.errors[:50]),
             context_counts=self.registry.counts(),
-            preview=preview or {},
         )

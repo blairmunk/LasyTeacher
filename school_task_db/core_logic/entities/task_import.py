@@ -184,3 +184,62 @@ class TaskImportRunSummary:
             'context_counts': dict(context),
             'preview': dict(self.preview),
         }
+
+
+@dataclass(frozen=True, order=True)
+class TaskImportClassificationKey:
+    kind: str
+    subject: str
+    exam_type: str
+    year: int
+    code: str
+
+
+@dataclass(frozen=True)
+class TaskImportPreviewLookup:
+    task_ids: tuple[str, ...] = field(default_factory=tuple)
+    group_ids: tuple[str, ...] = field(default_factory=tuple)
+    topic_ids: tuple[str, ...] = field(default_factory=tuple)
+    subtopic_ids: tuple[str, ...] = field(default_factory=tuple)
+    classifications: tuple[TaskImportClassificationKey, ...] = field(
+        default_factory=tuple,
+    )
+
+    def __post_init__(self):
+        for field_name in (
+            'task_ids',
+            'group_ids',
+            'topic_ids',
+            'subtopic_ids',
+            'classifications',
+        ):
+            object.__setattr__(self, field_name, tuple(getattr(self, field_name)))
+
+
+@dataclass(frozen=True)
+class TaskImportPreviewFacts:
+    existing_task_ids: frozenset[str] = field(default_factory=frozenset)
+    existing_group_ids: frozenset[str] = field(default_factory=frozenset)
+    existing_topic_ids: frozenset[str] = field(default_factory=frozenset)
+    subtopic_topic_ids: Mapping[str, str] = field(default_factory=dict)
+    existing_classifications: frozenset[TaskImportClassificationKey] = field(
+        default_factory=frozenset,
+    )
+
+    def __post_init__(self):
+        for field_name in (
+            'existing_task_ids',
+            'existing_group_ids',
+            'existing_topic_ids',
+            'existing_classifications',
+        ):
+            object.__setattr__(
+                self,
+                field_name,
+                frozenset(getattr(self, field_name)),
+            )
+        object.__setattr__(
+            self,
+            'subtopic_topic_ids',
+            dict(self.subtopic_topic_ids),
+        )

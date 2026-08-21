@@ -489,6 +489,9 @@ from infrastructure.services.django_transaction_manager import (
 from infrastructure.repositories.django_task_import_log_repo import (
     DjangoTaskImportLogRepository,
 )
+from infrastructure.repositories.django_task_import_preview_repo import (
+    DjangoTaskImportPreviewRepository,
+)
 from infrastructure.services.django_task_import_runner import (
     DjangoTaskImportRunner,
 )
@@ -1477,4 +1480,8 @@ class ContainerTests(SimpleTestCase):
         self.assertIsInstance(
             container.task_import_log_repo,
             DjangoTaskImportLogRepository,
+        )
+        self.assertIsInstance(
+            container.task_import_preview_repo,
+            DjangoTaskImportPreviewRepository,
         )

@@ -1,4 +1,4 @@
-"""Django adapter for the legacy task import components."""
+"""Django execution adapter for task-bank imports and previews."""
 
 from core_logic.entities.task_import import (
     TaskImportPreviewRequest,
@@ -6,41 +6,47 @@ from core_logic.entities.task_import import (
     TaskImportRunSummary,
 )
 from core_logic.interfaces.task_import import ITaskImportRunner
+from core_logic.services.task_import_preview_service import (
+    TaskImportPreviewService,
+)
 from infrastructure.importers.tasks import TaskImporter
+from infrastructure.repositories.django_task_import_preview_repo import (
+    DjangoTaskImportPreviewRepository,
+)
 
 
 class DjangoTaskImportRunner(ITaskImportRunner):
+    def __init__(
+        self,
+        preview_repo=None,
+        preview_service=None,
+    ):
+        self.preview_repo = preview_repo or DjangoTaskImportPreviewRepository()
+        self.preview_service = preview_service or TaskImportPreviewService()
+
     def preview_import(
         self,
         request: TaskImportPreviewRequest,
     ) -> TaskImportRunSummary:
-        return self._run_import(
-            data=request.data,
-            mode='update',
-            dry_run=True,
-            verbose=False,
-            create_missing=True,
-        )
+        return self._preview(request.data)
 
     def execute_import(
         self,
         request: TaskImportRequest,
     ) -> TaskImportRunSummary:
-        return self._run_import(
-            data=request.data,
+        if request.dry_run:
+            return self._preview(request.data)
+        importer = TaskImporter(
             mode=request.mode,
-            dry_run=request.dry_run,
             verbose=True,
             create_missing=request.create_missing,
-        )
-
-    @staticmethod
-    def _run_import(*, data, mode, dry_run, verbose, create_missing):
-        importer = TaskImporter(
-            mode=mode,
-            dry_run=dry_run,
-            verbose=verbose,
-            create_missing=create_missing,
             output=lambda _message: None,
         )
-        return importer.import_tasks_from_json(data)
+        return importer.import_tasks_from_json(request.data)
+
+    def _preview(self, data) -> TaskImportRunSummary:
+        lookup = self.preview_service.build_lookup(data)
+        facts = self.preview_repo.get_facts(lookup)
+        return TaskImportRunSummary(
+            preview=self.preview_service.build(data, facts),
+        )

@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 
 from core_logic.entities.task_import import (
     TaskImportPreviewRequest,
+    TaskImportPreviewFacts,
+    TaskImportPreviewLookup,
     TaskImportRequest,
     TaskImportRunSummary,
 )
@@ -42,3 +44,12 @@ class ITaskImportLogRepository(ABC):
     @abstractmethod
     def fail(self, log_id: str, error: str, duration_ms: int) -> None:
         """Persist a failed import result."""
+
+
+class ITaskImportPreviewRepository(ABC):
+    @abstractmethod
+    def get_facts(
+        self,
+        lookup: TaskImportPreviewLookup,
+    ) -> TaskImportPreviewFacts:
+        """Return existing database identities needed for a dry-run."""

@@ -70,7 +70,6 @@ class TaskImportRuntimeTests(SimpleTestCase):
     def _runtime(*, mode):
         return TaskImportRuntime(
             mode=mode,
-            dry_run=False,
             verbose=False,
             create_missing=True,
             output=lambda _message: None,

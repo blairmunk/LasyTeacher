@@ -107,13 +107,11 @@ class TaskImportRuntime:
         self,
         *,
         mode: str,
-        dry_run: bool,
         verbose: bool,
         create_missing: bool,
         output: Optional[Callable[[str], None]],
     ):
         self.mode = mode
-        self.dry_run = dry_run
         self.verbose = verbose
         self.create_missing = create_missing
         self.output = output

@@ -23,6 +23,9 @@ from infrastructure.repositories.django_task_export_repo import (
 from infrastructure.repositories.django_task_import_log_repo import (
     DjangoTaskImportLogRepository,
 )
+from infrastructure.repositories.django_task_import_preview_repo import (
+    DjangoTaskImportPreviewRepository,
+)
 from infrastructure.services.django_task_import_runner import (
     DjangoTaskImportRunner,
 )
@@ -35,6 +38,7 @@ class TaskTransferCompositionMixin:
         self._task_export_repo = None
         self._task_import_runner = None
         self._task_import_log_repo = None
+        self._task_import_preview_repo = None
 
     @property
     def task_export_repo(self):
@@ -45,7 +49,9 @@ class TaskTransferCompositionMixin:
     @property
     def task_import_runner(self):
         if self._task_import_runner is None:
-            self._task_import_runner = DjangoTaskImportRunner()
+            self._task_import_runner = DjangoTaskImportRunner(
+                preview_repo=self.task_import_preview_repo,
+            )
         return self._task_import_runner
 
     @property
@@ -53,6 +59,14 @@ class TaskTransferCompositionMixin:
         if self._task_import_log_repo is None:
             self._task_import_log_repo = DjangoTaskImportLogRepository()
         return self._task_import_log_repo
+
+    @property
+    def task_import_preview_repo(self):
+        if self._task_import_preview_repo is None:
+            self._task_import_preview_repo = (
+                DjangoTaskImportPreviewRepository()
+            )
+        return self._task_import_preview_repo
 
     def validate_task_import_json_use_case(self):
         return ValidateTaskImportJsonUseCase()

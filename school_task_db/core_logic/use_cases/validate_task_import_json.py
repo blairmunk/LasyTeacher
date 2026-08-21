@@ -84,10 +84,16 @@ class ValidateTaskImportJsonUseCase:
                 tasks_ok += 1
 
         group_uuids = self._validate_groups(groups_data, errors)
-        self._validate_sources(sources_data, errors, warnings)
+        source_uuids = self._validate_sources(sources_data, errors)
         self._validate_task_group_links(
             tasks,
             group_uuids,
+            errors,
+            warnings,
+        )
+        self._validate_task_source_links(
+            tasks,
+            source_uuids,
             errors,
             warnings,
         )
@@ -205,10 +211,10 @@ class ValidateTaskImportJsonUseCase:
         return group_uuids
 
     @staticmethod
-    def _validate_sources(sources_data, errors, warnings):
+    def _validate_sources(sources_data, errors):
         if not isinstance(sources_data, list):
             errors.append('"sources" должен быть массивом')
-            return
+            return set()
 
         source_uuids = set()
         for index, source in enumerate(sources_data, start=1):
@@ -220,9 +226,8 @@ class ValidateTaskImportJsonUseCase:
 
             source_uuid = source.get('id') or source.get('uuid')
             if not source_uuid:
-                warnings.append(
-                    f'Источник #{index}: отсутствует id (UUID); '
-                    'будет сопоставлен по ISBN или названию',
+                errors.append(
+                    f'Источник #{index}: отсутствует id (UUID)',
                 )
                 continue
             try:
@@ -238,6 +243,40 @@ class ValidateTaskImportJsonUseCase:
                     f'Источник #{index}: дублирующийся id {source_uuid}',
                 )
             source_uuids.add(normalized_uuid)
+        return source_uuids
+
+    @staticmethod
+    def _validate_task_source_links(tasks, source_uuids, errors, warnings):
+        for index, task in enumerate(tasks, start=1):
+            if not isinstance(task, dict) or not task.get('source'):
+                continue
+            source_ref = task['source']
+            if not isinstance(source_ref, dict):
+                errors.append(
+                    f'Задание #{index}: source должен быть '
+                    'объектом с id (UUID)',
+                )
+                continue
+            source_uuid = source_ref.get('id') or source_ref.get('uuid')
+            if not source_uuid:
+                errors.append(
+                    f'Задание #{index}: у source отсутствует id (UUID)',
+                )
+                continue
+            try:
+                normalized_uuid = str(UUID(str(source_uuid)))
+            except (TypeError, ValueError):
+                errors.append(
+                    f'Задание #{index}: у source некорректный UUID '
+                    f'"{source_uuid}"',
+                )
+                continue
+            if normalized_uuid not in source_uuids:
+                warnings.append(
+                    f'Задание #{index}: ссылка на источник '
+                    f'{normalized_uuid[-8:]}... не найдена в sources '
+                    '(будет искать в БД)',
+                )
 
     def _validate_task_group_links(
         self,

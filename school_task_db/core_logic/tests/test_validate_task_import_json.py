@@ -99,7 +99,7 @@ class ValidateTaskImportJsonUseCaseTests(TestCase):
             },
         )
 
-    def test_validates_source_uuid_and_warns_for_legacy_source(self):
+    def test_requires_valid_source_uuid(self):
         data = self.use_case.execute(
             ValidateTaskImportJsonRequest(
                 data={
@@ -115,8 +115,25 @@ class ValidateTaskImportJsonUseCaseTests(TestCase):
         self.assertFalse(data.is_valid)
         self.assertIn('Источник #1: некорректный UUID', data.errors[0])
         self.assertTrue(any(
-            'Источник #2: отсутствует id' in warning
-            for warning in data.warnings
+            'Источник #2: отсутствует id' in error
+            for error in data.errors
+        ))
+
+    def test_requires_uuid_object_for_task_source_reference(self):
+        task = {
+            'id': '550e8400-e29b-41d4-a716-446655440001',
+            'text': 'Задача',
+            'source': 'Сборник по имени',
+        }
+
+        data = self.use_case.execute(
+            ValidateTaskImportJsonRequest(data={'tasks': [task]}),
+        )
+
+        self.assertFalse(data.is_valid)
+        self.assertTrue(any(
+            'source должен быть объектом с id' in error
+            for error in data.errors
         ))
 
     def test_warns_about_missing_group_reference(self):

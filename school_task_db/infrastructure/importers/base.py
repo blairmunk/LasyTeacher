@@ -138,7 +138,8 @@ class BaseImporter:
         
         try:
             obj = get_unambiguous_by_uuid(model_class, uuid_str)
-            self._cache[cache_key] = obj
+            if obj is not None:
+                self._cache[cache_key] = obj
             return obj
         except Exception as e:
             self.log_error(f"Ошибка поиска {model_class.__name__} с UUID {uuid_str[-8:]}: {e}")

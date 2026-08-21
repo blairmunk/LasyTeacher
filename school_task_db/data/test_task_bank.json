@@ -3,6 +3,7 @@
   "description": "Replaceable sample physics bank for grades 7-9",
   "sources": [
     {
+      "id": "880e8400-e29b-41d4-a716-446655440001",
       "name": "Тестовый банк задач по физике 7-9",
       "short_name": "Тест-банк 7-9",
       "source_type": "original",
@@ -11,12 +12,14 @@
       "notes": "Заменить реальной выжимкой из сборников."
     },
     {
+      "id": "880e8400-e29b-41d4-a716-446655440002",
       "name": "Физика. Тренировочные задания ОГЭ",
       "short_name": "ОГЭ-тренажёр",
       "source_type": "exam",
       "year": 2026
     },
     {
+      "id": "880e8400-e29b-41d4-a716-446655440003",
       "name": "Учебные задачи по физике для 7-9 классов",
       "short_name": "Учебные задачи 7-9",
       "source_type": "problem_book",
@@ -85,7 +88,7 @@
       ],
       "codifier_requirements": [],
       "grade": 7,
-      "source": "Учебные задачи 7-9",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440003"},
       "source_detail": "Демонстрационный пример",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0007-0000-000000000001", "bank_role": "demo"}]
@@ -112,7 +115,7 @@
       ],
       "codifier_requirements": [],
       "grade": 7,
-      "source": "Тест-банк 7-9",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440001"},
       "source_detail": "Скорость, №2",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0007-0000-000000000001", "bank_role": "practice"}]
@@ -139,7 +142,7 @@
       ],
       "codifier_requirements": [],
       "grade": 7,
-      "source": "ОГЭ-тренажёр",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
       "source_detail": "Раздел 1, №3",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0007-0000-000000000001", "bank_role": "control"}]
@@ -166,7 +169,7 @@
       ],
       "codifier_requirements": [],
       "grade": 7,
-      "source": "ОГЭ-тренажёр",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
       "source_detail": "Раздел 1, №4",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0007-0000-000000000001", "bank_role": "control"}]
@@ -194,7 +197,7 @@
       ],
       "codifier_requirements": [],
       "grade": 7,
-      "source": "Учебные задачи 7-9",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440003"},
       "source_detail": "Демонстрационный пример",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0007-0000-000000000002", "bank_role": "demo"}]
@@ -221,7 +224,7 @@
       ],
       "codifier_requirements": [],
       "grade": 7,
-      "source": "Тест-банк 7-9",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440001"},
       "source_detail": "Плотность, №2",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0007-0000-000000000002", "bank_role": "practice"}]
@@ -248,7 +251,7 @@
       ],
       "codifier_requirements": [],
       "grade": 7,
-      "source": "ОГЭ-тренажёр",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
       "source_detail": "Раздел 1, №8",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0007-0000-000000000002", "bank_role": "control"}]
@@ -275,7 +278,7 @@
       ],
       "codifier_requirements": [],
       "grade": 7,
-      "source": "ОГЭ-тренажёр",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
       "source_detail": "Раздел 1, №9",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0007-0000-000000000002", "bank_role": "control"}]
@@ -303,7 +306,7 @@
       ],
       "codifier_requirements": [],
       "grade": 8,
-      "source": "Учебные задачи 7-9",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440003"},
       "source_detail": "Демонстрационный пример",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0008-0000-000000000001", "bank_role": "demo"}]
@@ -330,7 +333,7 @@
       ],
       "codifier_requirements": [],
       "grade": 8,
-      "source": "Тест-банк 7-9",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440001"},
       "source_detail": "Теплота, №2",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0008-0000-000000000001", "bank_role": "practice"}]
@@ -357,7 +360,7 @@
       ],
       "codifier_requirements": [],
       "grade": 8,
-      "source": "ОГЭ-тренажёр",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
       "source_detail": "Раздел 2, №7",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0008-0000-000000000001", "bank_role": "control"}]
@@ -384,7 +387,7 @@
       ],
       "codifier_requirements": [],
       "grade": 8,
-      "source": "ОГЭ-тренажёр",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
       "source_detail": "Раздел 2, №8",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0008-0000-000000000001", "bank_role": "control"}]
@@ -412,7 +415,7 @@
       ],
       "codifier_requirements": [],
       "grade": 8,
-      "source": "Учебные задачи 7-9",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440003"},
       "source_detail": "Демонстрационный пример",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0008-0000-000000000002", "bank_role": "demo"}]
@@ -439,7 +442,7 @@
       ],
       "codifier_requirements": [],
       "grade": 8,
-      "source": "Тест-банк 7-9",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440001"},
       "source_detail": "Закон Ома, №2",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0008-0000-000000000002", "bank_role": "practice"}]
@@ -466,7 +469,7 @@
       ],
       "codifier_requirements": [],
       "grade": 8,
-      "source": "ОГЭ-тренажёр",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
       "source_detail": "Раздел 3, №7",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0008-0000-000000000002", "bank_role": "control"}]
@@ -493,7 +496,7 @@
       ],
       "codifier_requirements": [],
       "grade": 8,
-      "source": "ОГЭ-тренажёр",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
       "source_detail": "Раздел 3, №8",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0008-0000-000000000002", "bank_role": "control"}]
@@ -521,7 +524,7 @@
       ],
       "codifier_requirements": [],
       "grade": 9,
-      "source": "Учебные задачи 7-9",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440003"},
       "source_detail": "Демонстрационный пример",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0009-0000-000000000001", "bank_role": "demo"}]
@@ -548,7 +551,7 @@
       ],
       "codifier_requirements": [],
       "grade": 9,
-      "source": "Тест-банк 7-9",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440001"},
       "source_detail": "Ускорение, №2",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0009-0000-000000000001", "bank_role": "practice"}]
@@ -575,7 +578,7 @@
       ],
       "codifier_requirements": [],
       "grade": 9,
-      "source": "ОГЭ-тренажёр",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
       "source_detail": "Раздел 1, №5",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0009-0000-000000000001", "bank_role": "control"}]
@@ -602,7 +605,7 @@
       ],
       "codifier_requirements": [],
       "grade": 9,
-      "source": "ОГЭ-тренажёр",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
       "source_detail": "Раздел 1, №6",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0009-0000-000000000001", "bank_role": "control"}]
@@ -630,7 +633,7 @@
       ],
       "codifier_requirements": [],
       "grade": 9,
-      "source": "Учебные задачи 7-9",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440003"},
       "source_detail": "Демонстрационный пример",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0009-0000-000000000002", "bank_role": "demo"}]
@@ -657,7 +660,7 @@
       ],
       "codifier_requirements": [],
       "grade": 9,
-      "source": "Тест-банк 7-9",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440001"},
       "source_detail": "Второй закон Ньютона, №2",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0009-0000-000000000002", "bank_role": "practice"}]
@@ -684,7 +687,7 @@
       ],
       "codifier_requirements": [],
       "grade": 9,
-      "source": "ОГЭ-тренажёр",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
       "source_detail": "Раздел 1, №10",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0009-0000-000000000002", "bank_role": "control"}]
@@ -711,7 +714,7 @@
       ],
       "codifier_requirements": [],
       "grade": 9,
-      "source": "ОГЭ-тренажёр",
+      "source": {"id": "880e8400-e29b-41d4-a716-446655440002"},
       "source_detail": "Раздел 1, №11",
       "is_verified": true,
       "groups": [{"id": "77000000-0000-0009-0000-000000000002", "bank_role": "control"}]

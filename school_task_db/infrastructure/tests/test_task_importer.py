@@ -291,7 +291,7 @@ class TaskImporterTests(TestCase):
         self.assertEqual(task.source.name, 'Исправленное название')
         self.assertEqual(task.source.author, 'Новый автор')
 
-    def test_source_import_uses_isbn_before_a_changed_name(self):
+    def test_source_import_does_not_merge_distinct_uuids_by_isbn(self):
         existing = Source.objects.create(
             name='Физика. Первое название',
             isbn='978-5-00000-001-1',
@@ -310,8 +310,12 @@ class TaskImporterTests(TestCase):
         self._import(payload)
 
         task = Task.objects.select_related('source').get()
-        self.assertEqual(Source.objects.count(), 1)
-        self.assertEqual(task.source_id, existing.pk)
+        self.assertEqual(Source.objects.count(), 2)
+        self.assertNotEqual(task.source_id, existing.pk)
+        self.assertEqual(
+            str(task.source_id),
+            '880e8400-e29b-41d4-a716-446655440002',
+        )
 
     def test_subtopic_is_created_once_and_bound_to_task_topic(self):
         task_id = '550e8400-e29b-41d4-a716-446655440001'

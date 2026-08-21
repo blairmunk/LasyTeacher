@@ -25,13 +25,6 @@ class TaskSourceImporter:
     def resolve(self, source_data: Any):
         if not source_data:
             return None
-        if isinstance(source_data, str):
-            return (
-                Source.objects.filter(name__iexact=source_data.strip()).first()
-                or Source.objects.filter(
-                    short_name__iexact=source_data.strip(),
-                ).first()
-            )
         if not isinstance(source_data, dict):
             return None
 
@@ -39,7 +32,12 @@ class TaskSourceImporter:
         if source:
             self._update(source, source_data)
             return source
-        if not self.runtime.create_missing or not source_data.get('name'):
+        source_id = source_data.get('id') or source_data.get('uuid')
+        if (
+            not self.runtime.create_missing
+            or not source_id
+            or not source_data.get('name')
+        ):
             return None
 
         try:
@@ -53,9 +51,7 @@ class TaskSourceImporter:
                 isbn=source_data.get('isbn', ''),
                 notes=source_data.get('notes', ''),
             )
-            source_id = source_data.get('id') or source_data.get('uuid')
-            if source_id:
-                create_values['id'] = source_id
+            create_values['id'] = source_id
             source = Source.objects.create(**create_values)
             self.runtime.log_success(f'Создан источник: {source}')
             return source
@@ -68,26 +64,9 @@ class TaskSourceImporter:
 
     def _find_existing(self, source_data):
         source_id = source_data.get('id') or source_data.get('uuid')
-        if source_id:
-            source = self.runtime.safe_get_by_uuid(Source, str(source_id))
-            if source:
-                return source
-        isbn = str(source_data.get('isbn') or '').strip()
-        if isbn:
-            source = Source.objects.filter(isbn__iexact=isbn).first()
-            if source:
-                return source
-        short_name = str(source_data.get('short_name') or '').strip()
-        if short_name:
-            source = Source.objects.filter(
-                short_name__iexact=short_name,
-            ).first()
-            if source:
-                return source
-        name = str(source_data.get('name') or '').strip()
-        if name:
-            return Source.objects.filter(name__iexact=name).first()
-        return None
+        if not source_id:
+            return None
+        return self.runtime.safe_get_by_uuid(Source, str(source_id))
 
     def _update(self, source, source_data):
         if self.runtime.mode != 'update':

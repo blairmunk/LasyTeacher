@@ -1,5 +1,7 @@
 """Shared Django queries for UUID fragments."""
 
+from uuid import UUID
+
 from django.db.models import CharField, Value
 from django.db.models.functions import Cast, Replace
 
@@ -25,6 +27,13 @@ def filter_by_uuid_suffix(model_class, value):
 
 def get_unambiguous_by_uuid(model_class, value):
     """Return one exact/suffix UUID match, or None for zero/many matches."""
+    try:
+        exact_uuid = UUID(str(value))
+    except (TypeError, ValueError, AttributeError):
+        exact_uuid = None
+    if exact_uuid is not None:
+        return model_class.objects.filter(pk=exact_uuid).first()
+
     matching_ids = tuple(
         filter_by_uuid_suffix(model_class, value)
         .values_list('pk', flat=True)[:2]

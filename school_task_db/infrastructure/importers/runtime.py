@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Optional
 from uuid import uuid4
 
-from core_logic.value_objects.task_import import validate_task_import_mode
 from infrastructure.repositories.django_uuid_lookup import (
     get_unambiguous_by_uuid,
 )
@@ -117,9 +116,6 @@ class TaskImportRuntime:
         self.output = output
         self.stats = TaskImportStatistics()
         self._cache = {}
-
-    def validate_mode(self):
-        validate_task_import_mode(self.mode)
 
     def write(self, message: str = ''):
         if self.output is not None:

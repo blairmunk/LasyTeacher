@@ -82,7 +82,7 @@ def execute_import_ajax(request):
 
 
 def download_sample_json(request):
-    """Скачать пример JSON-файла в формате, который ожидает TaskImporter"""
+    """Скачать пример JSON-файла в формате банка заданий."""
     sample = container.get_task_import_sample_use_case().execute()
     content = json.dumps(sample.payload, ensure_ascii=False, indent=2)
     response = HttpResponse(content, content_type='application/json; charset=utf-8')
@@ -91,7 +91,7 @@ def download_sample_json(request):
 
 
 def export_tasks_ajax(request):
-    """Экспорт заданий в JSON в формате, совместимом с TaskImporter"""
+    """Экспорт заданий в переносимом JSON-формате банка заданий."""
     export_date = time.strftime('%Y-%m-%d')
     export_data = container.export_tasks_use_case().execute(
         container.core_form_adapter.export_tasks_request_from_query(

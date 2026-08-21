@@ -1,6 +1,7 @@
-"""Task import execution and journaling ports."""
+"""Task import execution, persistence, and journaling ports."""
 
 from abc import ABC, abstractmethod
+from typing import Any, Mapping, Sequence
 
 from core_logic.entities.task_import import (
     TaskImportPreviewRequest,
@@ -25,6 +26,41 @@ class ITaskImportRunner(ABC):
         request: TaskImportRequest,
     ) -> TaskImportRunSummary:
         """Execute task import and return normalized operation facts."""
+
+
+class ITaskImportWriteSession(ABC):
+    """Stateful persistence session scoped to one task-bank import."""
+
+    @abstractmethod
+    def import_sources(self, records: Sequence[Mapping[str, Any]]) -> None:
+        """Persist source records."""
+
+    @abstractmethod
+    def import_groups(self, records: Sequence[Mapping[str, Any]]) -> None:
+        """Persist analog-group records."""
+
+    @abstractmethod
+    def import_topics(self, records: Sequence[Mapping[str, Any]]) -> None:
+        """Persist topic and subtopic records."""
+
+    @abstractmethod
+    def import_tasks(self, records: Sequence[Mapping[str, Any]]) -> None:
+        """Persist task records and their direct references."""
+
+    @abstractmethod
+    def import_task_group_relations(
+        self,
+        records: Sequence[Mapping[str, Any]],
+    ) -> None:
+        """Persist task-to-group relations after both sides exist."""
+
+    @abstractmethod
+    def import_images(self, records: Sequence[Mapping[str, Any]]) -> None:
+        """Persist task image records."""
+
+    @abstractmethod
+    def summary(self) -> TaskImportRunSummary:
+        """Return facts accumulated by this import session."""
 
 
 class ITaskImportLogRepository(ABC):

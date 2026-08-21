@@ -51,6 +51,7 @@ class TaskTransferCompositionMixin:
         if self._task_import_runner is None:
             self._task_import_runner = DjangoTaskImportRunner(
                 preview_repo=self.task_import_preview_repo,
+                transaction_manager=self.transaction_manager,
             )
         return self._task_import_runner
 

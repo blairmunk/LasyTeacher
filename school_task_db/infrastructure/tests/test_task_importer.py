@@ -4,7 +4,12 @@ from tempfile import TemporaryDirectory
 from django.test import TestCase
 
 from codifier.models import CodifierSpec, ContentEntry, Requirement
-from infrastructure.importers.tasks import TaskImporter
+from core_logic.entities.task_import import TaskImportRequest
+from core_logic.use_cases.apply_task_import import ApplyTaskImportUseCase
+from infrastructure.importers.tasks import DjangoTaskImportWriteSession
+from infrastructure.services.django_transaction_manager import (
+    DjangoTransactionManager,
+)
 from task_groups.models import TaskGroup
 from tasks.models import Source, Task, TaskImage
 
@@ -285,11 +290,21 @@ class TaskImporterTests(TestCase):
 
     @staticmethod
     def _import(payload):
-        return TaskImporter(
+        session = DjangoTaskImportWriteSession(
             mode='update',
             create_missing=True,
             output=lambda _message: None,
-        ).import_tasks_from_json(payload)
+        )
+        return ApplyTaskImportUseCase(
+            write_session=session,
+            transaction_manager=DjangoTransactionManager(),
+        ).execute(TaskImportRequest(
+            data=payload,
+            filename='test-task-bank.json',
+            file_size=0,
+            mode='update',
+            create_missing=True,
+        ))
 
     @staticmethod
     def _task_payload(*, task_id, group_id):

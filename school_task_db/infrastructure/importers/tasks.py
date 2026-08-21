@@ -1,10 +1,7 @@
-"""Transactional coordination of Django task-bank import components."""
-
-from typing import Any, Dict
-
-from django.db import transaction
+"""Django persistence session for one task-bank import."""
 
 from core_logic.entities.task_import import TaskImportRunSummary
+from core_logic.interfaces.task_import import ITaskImportWriteSession
 from infrastructure.importers.runtime import (
     TaskImportRegistry,
     TaskImportRuntime,
@@ -19,7 +16,7 @@ from infrastructure.importers.task_sources import TaskSourceImporter
 from infrastructure.importers.task_topics import TaskTopicImporter
 
 
-class TaskImporter:
+class DjangoTaskImportWriteSession(ITaskImportWriteSession):
     def __init__(
         self,
         *,
@@ -50,30 +47,25 @@ class TaskImporter:
             self.classification_importer,
         )
 
-    def import_tasks_from_json(
-        self,
-        json_data: Dict[str, Any],
-    ) -> TaskImportRunSummary:
-        self.runtime.validate_mode()
-        with transaction.atomic():
-            self.runtime.write('🚀 ИМПОРТ ЗАДАНИЙ:')
-            if 'sources' in json_data:
-                self.source_importer.import_sources(json_data['sources'])
-            if 'analog_groups' in json_data:
-                self.group_importer.import_groups(json_data['analog_groups'])
-            if 'topics' in json_data and self.runtime.create_missing:
-                self.topic_importer.import_topics(json_data['topics'])
-            if 'tasks' in json_data:
-                self.record_importer.import_tasks(json_data['tasks'])
-            self.group_importer.create_task_relations(
-                json_data.get('tasks', []),
-            )
-            if 'task_images' in json_data:
-                self.image_importer.import_images(json_data['task_images'])
+    def import_sources(self, records):
+        self.source_importer.import_sources(records)
 
-        return self._summary()
+    def import_groups(self, records):
+        self.group_importer.import_groups(records)
 
-    def _summary(self) -> TaskImportRunSummary:
+    def import_topics(self, records):
+        self.topic_importer.import_topics(records)
+
+    def import_tasks(self, records):
+        self.record_importer.import_tasks(records)
+
+    def import_task_group_relations(self, records):
+        self.group_importer.create_task_relations(records)
+
+    def import_images(self, records):
+        self.image_importer.import_images(records)
+
+    def summary(self) -> TaskImportRunSummary:
         stats = self.runtime.stats
         return TaskImportRunSummary(
             created_by_type=stats.created_by_type,

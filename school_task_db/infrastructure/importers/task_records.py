@@ -1,6 +1,7 @@
 """Django task record import component."""
 
 from core_logic.value_objects.task_import import (
+    TASK_IMPORT_ACTION_CREATE,
     TASK_IMPORT_ACTION_UPDATE,
     TaskImportConflictError,
 )
@@ -49,13 +50,21 @@ class TaskRecordImporter:
                 self._update_task(task, task_data)
                 self.classification_importer.apply(task, task_data)
                 self.runtime.stats.record_updated('tasks', task.pk)
-            self.registry.remember_task(task_uuid, task)
+            self.registry.remember_task(
+                task_uuid,
+                task,
+                action=action,
+            )
             return
 
         task = self._create_task(task_uuid, task_data)
         if task:
             self.classification_importer.apply(task, task_data)
-            self.registry.remember_task(task_uuid, task)
+            self.registry.remember_task(
+                task_uuid,
+                task,
+                action=TASK_IMPORT_ACTION_CREATE,
+            )
             self.runtime.stats.record_created('tasks', task.pk)
             self.runtime.log_success(
                 f'Создано задание: {task.get_short_uuid()}',

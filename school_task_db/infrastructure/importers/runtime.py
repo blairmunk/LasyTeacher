@@ -72,6 +72,7 @@ class TaskImportRegistry:
         self._groups = {}
         self._sources = {}
         self._tasks = {}
+        self._task_actions = {}
 
     def remember_topic(self, object_id: str, topic):
         self._topics[object_id] = topic
@@ -97,11 +98,16 @@ class TaskImportRegistry:
     def source(self, object_id: str):
         return self._sources.get(object_id)
 
-    def remember_task(self, object_id: str, task):
+    def remember_task(self, object_id: str, task, *, action: str = ''):
         self._tasks[object_id] = task
+        if action:
+            self._task_actions[object_id] = action
 
     def task(self, object_id: str):
         return self._tasks.get(object_id)
+
+    def task_action(self, object_id: str) -> str:
+        return self._task_actions.get(object_id, '')
 
     def counts(self) -> Dict[str, int]:
         return {

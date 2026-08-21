@@ -1,6 +1,7 @@
 """Django analog-group import and task membership handling."""
 
 from core_logic.value_objects.task_import import (
+    TASK_IMPORT_ACTION_SKIP,
     TASK_IMPORT_ACTION_UPDATE,
     TaskImportConflictError,
     parse_task_group_import_reference,
@@ -60,7 +61,11 @@ class TaskGroupImporter:
         for task_data in tasks_data:
             task_uuid = task_data.get('id')
             task = self.registry.task(task_uuid)
-            if not task:
+            if (
+                not task
+                or self.registry.task_action(task_uuid)
+                == TASK_IMPORT_ACTION_SKIP
+            ):
                 continue
 
             for group_ref in task_data.get('groups', []):

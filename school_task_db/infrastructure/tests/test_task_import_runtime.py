@@ -19,6 +19,7 @@ class TaskImportRegistryTests(SimpleTestCase):
         registry.remember_topic('topic-1', topic)
 
         self.assertIs(registry.task('task-1'), task)
+        self.assertEqual(registry.task_action('task-1'), '')
         self.assertIs(registry.topic('topic-1'), topic)
         self.assertIsNone(registry.group('missing'))
         self.assertEqual(
@@ -31,6 +32,15 @@ class TaskImportRegistryTests(SimpleTestCase):
                 'tasks': 1,
             },
         )
+
+    def test_tracks_task_import_action_separately_from_object(self):
+        registry = TaskImportRegistry()
+        task = object()
+
+        registry.remember_task('task-1', task, action='skip')
+
+        self.assertIs(registry.task('task-1'), task)
+        self.assertEqual(registry.task_action('task-1'), 'skip')
 
 
 class TaskImportStatisticsTests(SimpleTestCase):

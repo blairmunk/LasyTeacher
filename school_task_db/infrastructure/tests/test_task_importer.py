@@ -115,6 +115,29 @@ class TaskImporterTests(TestCase):
         self.assertEqual(relation.bank_role, 'practice')
         self.assertEqual(relation.group.difficulty, 4)
 
+    def test_skip_mode_does_not_change_existing_task_group_relations(self):
+        group_id = '770e8400-e29b-41d4-a716-446655440001'
+        second_group_id = '770e8400-e29b-41d4-a716-446655440002'
+        task_id = '550e8400-e29b-41d4-a716-446655440001'
+        payload = self._task_payload(task_id=task_id, group_id=group_id)
+        self._import(payload)
+
+        payload['analog_groups'].append({
+            'id': second_group_id,
+            'name': 'Новая группа',
+            'difficulty': 2,
+        })
+        payload['tasks'][0]['groups'] = [
+            {'id': group_id, 'bank_role': 'practice'},
+            {'id': second_group_id, 'bank_role': 'control'},
+        ]
+
+        self._import(payload, mode='skip')
+
+        relations = TaskGroup.objects.filter(task_id=task_id)
+        self.assertEqual(relations.count(), 1)
+        self.assertEqual(relations.get().bank_role, 'demo')
+
     def test_low_level_import_ignores_removed_group_name_field(self):
         task_id = '550e8400-e29b-41d4-a716-446655440001'
         payload = self._task_payload(

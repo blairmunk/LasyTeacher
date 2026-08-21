@@ -7,6 +7,9 @@ from core_logic.entities.task_import import (
     TaskImportPreviewFacts,
     TaskImportPreviewLookup,
 )
+from core_logic.value_objects.task_import import (
+    parse_task_group_import_reference,
+)
 
 
 class TaskImportPreviewService:
@@ -128,12 +131,14 @@ class TaskImportPreviewService:
                     missing_subtopics.add(subtopic_id)
 
             for reference in task.get('groups', []):
-                group_id = self._normalize_uuid(
-                    self._reference_value(reference),
-                )
-                if not group_id:
+                try:
+                    group_id = parse_task_group_import_reference(
+                        reference,
+                    ).group_id
+                except ValueError:
                     broken_group_references += 1
-                elif (
+                    continue
+                if (
                     group_id not in declared_groups
                     and group_id not in facts.existing_group_ids
                 ):

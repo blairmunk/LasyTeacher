@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from core_logic.entities.core import ImportJsonValidationData
-from core_logic.value_objects.task_print_settings import (
-    validate_task_specific_bank_role,
+from core_logic.value_objects.task_import import (
+    parse_task_group_import_reference,
 )
 from core_logic.value_objects.task_transfer_format import (
     task_transfer_format_error,
@@ -471,38 +471,11 @@ class ValidateTaskImportJsonUseCase:
 
     @staticmethod
     def _group_reference_id(group_ref, task_number, errors):
-        if isinstance(group_ref, str):
-            group_uuid = group_ref
-        elif isinstance(group_ref, dict):
-            group_uuid = (
-                group_ref.get('id') or group_ref.get('group_id') or ''
-            )
-        else:
-            errors.append(
-                f'Задание #{task_number}: связь с группой '
-                'должна быть UUID-строкой или объектом',
-            )
-            return ''
-
-        if not group_uuid:
-            errors.append(
-                f'Задание #{task_number}: у связи с группой '
-                'отсутствует id',
-            )
-            return ''
         try:
-            normalized_uuid = str(UUID(str(group_uuid)))
-        except (TypeError, ValueError):
+            reference = parse_task_group_import_reference(group_ref)
+        except ValueError as error:
             errors.append(
-                f'Задание #{task_number}: у связи с группой '
-                f'некорректный UUID "{group_uuid}"',
+                f'Задание #{task_number}: {error}',
             )
             return ''
-        if isinstance(group_ref, dict):
-            try:
-                validate_task_specific_bank_role(
-                    group_ref.get('bank_role', 'control'),
-                )
-            except ValueError as error:
-                errors.append(f'Задание #{task_number}: {error}')
-        return normalized_uuid
+        return reference.group_id

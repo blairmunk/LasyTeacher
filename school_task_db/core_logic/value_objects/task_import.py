@@ -1,4 +1,13 @@
-"""Task import modes shared by application and infrastructure layers."""
+"""Task import settings and portable reference values."""
+
+from dataclasses import dataclass
+from typing import Any
+from uuid import UUID
+
+from core_logic.value_objects.task_print_settings import (
+    TASK_BANK_ROLE_CONTROL,
+    validate_task_specific_bank_role,
+)
 
 TASK_IMPORT_MODE_STRICT = 'strict'
 TASK_IMPORT_MODE_UPDATE = 'update'
@@ -15,6 +24,44 @@ TASK_IMPORT_MODE_LABELS = {
     TASK_IMPORT_MODE_UPDATE: 'Обновление',
     TASK_IMPORT_MODE_SKIP: 'Пропуск дубликатов',
 }
+
+
+@dataclass(frozen=True)
+class TaskGroupImportReference:
+    group_id: str
+    bank_role: str = TASK_BANK_ROLE_CONTROL
+
+
+def parse_task_group_import_reference(
+    value: Any,
+) -> TaskGroupImportReference:
+    if isinstance(value, str):
+        group_id = value
+        bank_role = TASK_BANK_ROLE_CONTROL
+    elif isinstance(value, dict):
+        group_id = value.get('id') or value.get('group_id') or ''
+        bank_role = value.get('bank_role', TASK_BANK_ROLE_CONTROL)
+    else:
+        raise ValueError(
+            'связь с группой должна быть UUID-строкой '
+            'или объектом',
+        )
+
+    if not group_id:
+        raise ValueError('у связи с группой отсутствует id')
+    try:
+        normalized_group_id = str(UUID(str(group_id)))
+    except (TypeError, ValueError) as error:
+        raise ValueError(
+            f'у связи с группой некорректный UUID '
+            f'"{group_id}"',
+        ) from error
+
+    validate_task_specific_bank_role(bank_role)
+    return TaskGroupImportReference(
+        group_id=normalized_group_id,
+        bank_role=bank_role,
+    )
 
 
 def validate_task_import_mode(mode: str) -> str:

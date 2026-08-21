@@ -1,10 +1,7 @@
 """Django analog-group import and task membership handling."""
 
-from typing import Any
-
-from core_logic.value_objects.task_print_settings import (
-    TASK_BANK_ROLE_CONTROL,
-    validate_task_specific_bank_role,
+from core_logic.value_objects.task_import import (
+    parse_task_group_import_reference,
 )
 from task_groups.models import AnalogGroup, TaskGroup
 
@@ -64,34 +61,26 @@ class TaskGroupImporter:
                 continue
 
             for group_ref in task_data.get('groups', []):
-                group_uuid, bank_role = self.parse_reference(group_ref)
-                if not group_uuid:
+                try:
+                    reference = parse_task_group_import_reference(group_ref)
+                except ValueError as error:
                     self.runtime.log_warning(
                         f'Пропущена связь задания {task_uuid[-8:]} '
-                        'с группой без id',
+                        f'с группой: {error}',
                     )
                     continue
                 group = (
-                    self.registry.group(group_uuid)
-                    or self.find_by_uuid(group_uuid)
+                    self.registry.group(reference.group_id)
+                    or self.find_by_uuid(reference.group_id)
                 )
-                if group and self._save_relation(task, group, bank_role):
+                if group and self._save_relation(
+                    task,
+                    group,
+                    reference.bank_role,
+                ):
                     created_count += 1
 
         self.runtime.write(f'  ✅ Создано связей: {created_count}')
-
-    @staticmethod
-    def parse_reference(group_ref: Any):
-        if isinstance(group_ref, str):
-            return group_ref, TASK_BANK_ROLE_CONTROL
-        if isinstance(group_ref, dict):
-            bank_role = group_ref.get('bank_role', TASK_BANK_ROLE_CONTROL)
-            validate_task_specific_bank_role(bank_role)
-            return (
-                group_ref.get('id') or group_ref.get('group_id') or '',
-                bank_role,
-            )
-        return '', TASK_BANK_ROLE_CONTROL
 
     def find_by_uuid(self, group_uuid):
         return self.runtime.get_by_uuid(AnalogGroup, group_uuid)

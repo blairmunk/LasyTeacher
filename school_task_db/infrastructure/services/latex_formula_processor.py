@@ -12,8 +12,8 @@ def sanitize_latex(text):
     if not text:
         return ''
 
-    result = text.replace('\\', r'\textbackslash{}')
     replacements = {
+        '\\': r'\textbackslash{}',
         '{': r'\{',
         '}': r'\}',
         '$': r'\$',
@@ -25,10 +25,9 @@ def sanitize_latex(text):
         '~': r'\textasciitilde{}',
         '<': r'\textless{}',
         '>': r'\textgreater{}',
+        '\n': r'\\ ',
     }
-    for char, replacement in replacements.items():
-        result = result.replace(char, replacement)
-    return result.replace('\n', '\\\\ ')
+    return ''.join(replacements.get(char, char) for char in text)
 
 
 class LaTeXFormulaProcessor:
@@ -102,8 +101,12 @@ class LaTeXFormulaProcessor:
             placeholder_counter += 1
             return placeholder
 
-        temp_text = re.sub(r'\\\([^)]*\\\)', save_latex_math, temp_text)
-        temp_text = re.sub(r'\\\[[^\]]*\\\]', save_latex_math, temp_text)
+        temp_text = re.sub(
+            r'\\\(.*?\\\)|\\\[.*?\\\]',
+            save_latex_math,
+            temp_text,
+            flags=re.DOTALL,
+        )
         sanitized_text = sanitize_latex(temp_text)
 
         for placeholder, original in math_placeholders.items():

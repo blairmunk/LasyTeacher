@@ -17,6 +17,14 @@ class LatexTaskPayloadFormatterTests(SimpleTestCase):
 
         self.assertEqual(result, r'Цена \$5 \& скидка 10\%')
 
+    def test_sanitize_latex_keeps_generated_backslash_command_valid(self):
+        result = sanitize_latex(r'Команда \alpha вне формулы')
+
+        self.assertEqual(
+            result,
+            r'Команда \textbackslash{}alpha вне формулы',
+        )
+
     def test_latex_formula_processor_preserves_math_blocks(self):
         result = latex_formula_processor.render_for_latex_safe(
             'Сила & формула $F=ma$',
@@ -25,6 +33,17 @@ class LatexTaskPayloadFormatterTests(SimpleTestCase):
         self.assertEqual(
             result['content'],
             r'Сила \& формула \(F=ma\)',
+        )
+        self.assertEqual(result['errors'], [])
+
+    def test_latex_formula_processor_preserves_parentheses_inside_math(self):
+        result = latex_formula_processor.render_for_latex_safe(
+            r'Вычислите: $(3{,}5 - 1{,}2) \cdot 4 + 0{,}8$',
+        )
+
+        self.assertEqual(
+            result['content'],
+            r'Вычислите: \((3{,}5 - 1{,}2) \cdot 4 + 0{,}8\)',
         )
         self.assertEqual(result['errors'], [])
 
@@ -63,6 +82,19 @@ class LatexTaskPayloadFormatterTests(SimpleTestCase):
         )
         self.assertTrue(formatted['has_formula_errors'])
         self.assertTrue(formatted['has_formula_warnings'])
+
+    def test_formats_parenthesized_decimal_expression_for_document(self):
+        formatter = LatexTaskPayloadFormatter()
+
+        formatted = formatter.format_task_payload({
+            'text': r'Вычислите: $(3{,}5 - 1{,}2) \cdot 4 + 0{,}8$',
+        })
+
+        self.assertEqual(
+            formatted['latex_content'],
+            r'Вычислите: \((3{,}5 - 1{,}2) \cdot 4 + 0{,}8\)',
+        )
+        self.assertFalse(formatted['has_formula_errors'])
 
     def test_render_target_formatter_applies_formatter_for_matching_target(self):
         latex_formatter = FakeTaskPayloadFormatter(label='latex')

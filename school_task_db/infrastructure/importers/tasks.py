@@ -1,83 +1,101 @@
-"""
-Импортер заданий с поддержкой UUID и зависимостей
-"""
+"""Transactional coordination of Django task-bank import components."""
+
 from typing import Any, Dict
 
 from django.db import transaction
 
-from .base import BaseImporter, ImportContext
-from .task_classifications import TaskClassificationImporter
-from .task_groups import TaskGroupImporter
-from .task_images import TaskImageImporter
-from .task_preview import TaskImportPreviewAnalyzer
-from .task_records import TaskRecordImporter
-from .task_sources import TaskSourceImporter
-from .task_topics import TaskTopicImporter
+from core_logic.entities.task_import import TaskImportRunSummary
+from infrastructure.importers.runtime import (
+    TaskImportRegistry,
+    TaskImportRuntime,
+)
+from infrastructure.importers.task_classifications import (
+    TaskClassificationImporter,
+)
+from infrastructure.importers.task_groups import TaskGroupImporter
+from infrastructure.importers.task_images import TaskImageImporter
+from infrastructure.importers.task_preview import TaskImportPreviewAnalyzer
+from infrastructure.importers.task_records import TaskRecordImporter
+from infrastructure.importers.task_sources import TaskSourceImporter
+from infrastructure.importers.task_topics import TaskTopicImporter
 
 
-class TaskImporter(BaseImporter):
-    """Импортер заданий с полной поддержкой зависимостей"""
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.context = ImportContext()
-        self.image_importer = TaskImageImporter(self, self.context)
-        self.group_importer = TaskGroupImporter(self, self.context)
-        self.source_importer = TaskSourceImporter(self)
-        self.classification_importer = TaskClassificationImporter(self)
-        self.topic_importer = TaskTopicImporter(self, self.context)
+class TaskImporter:
+    def __init__(
+        self,
+        *,
+        mode: str = 'update',
+        dry_run: bool = False,
+        verbose: bool = False,
+        create_missing: bool = True,
+        output=None,
+    ):
+        self.runtime = TaskImportRuntime(
+            mode=mode,
+            dry_run=dry_run,
+            verbose=verbose,
+            create_missing=create_missing,
+            output=output,
+        )
+        self.registry = TaskImportRegistry()
+        self.image_importer = TaskImageImporter(self.runtime, self.registry)
+        self.group_importer = TaskGroupImporter(self.runtime, self.registry)
+        self.source_importer = TaskSourceImporter(self.runtime)
+        self.classification_importer = TaskClassificationImporter(
+            self.runtime,
+        )
+        self.topic_importer = TaskTopicImporter(self.runtime, self.registry)
         self.record_importer = TaskRecordImporter(
-            self,
-            self.context,
+            self.runtime,
+            self.registry,
             self.topic_importer,
             self.source_importer,
             self.classification_importer,
         )
         self.preview_analyzer = TaskImportPreviewAnalyzer(
-            self,
+            self.runtime,
             self.group_importer,
             self.topic_importer,
             self.classification_importer,
         )
-    
-    def import_tasks_from_json(self, json_data: Dict[str, Any]) -> ImportContext:
-        """Основной метод импорта заданий из JSON"""
-        
-        if self.dry_run:
-            self._write("🔍 ПРЕДВАРИТЕЛЬНЫЙ ПРОСМОТР (--dry-run)")
-            return self._preview_import(json_data)
-        
-        with transaction.atomic():
-            self._write("🚀 ИМПОРТ ЗАДАНИЙ:")
 
-            # ЭТАП 0: Импорт источников
+    def import_tasks_from_json(
+        self,
+        json_data: Dict[str, Any],
+    ) -> TaskImportRunSummary:
+        self.runtime.validate_mode()
+        if self.runtime.dry_run:
+            self.runtime.write('🔍 ПРЕДВАРИТЕЛЬНЫЙ ПРОСМОТР (--dry-run)')
+            return self._summary(
+                preview=self.preview_analyzer.analyze(json_data),
+            )
+
+        with transaction.atomic():
+            self.runtime.write('🚀 ИМПОРТ ЗАДАНИЙ:')
             if 'sources' in json_data:
                 self.source_importer.import_sources(json_data['sources'])
-            
-            # ЭТАП 1: Импорт групп аналогов
             if 'analog_groups' in json_data:
                 self.group_importer.import_groups(json_data['analog_groups'])
-            
-            # ЭТАП 2: Импорт тем (если есть и разрешено создавать)
-            if 'topics' in json_data and self.create_missing:
+            if 'topics' in json_data and self.runtime.create_missing:
                 self.topic_importer.import_topics(json_data['topics'])
-            
-            # ЭТАП 3: Импорт заданий
             if 'tasks' in json_data:
                 self.record_importer.import_tasks(json_data['tasks'])
-            
-            # ЭТАП 4: Создание связей задание-группа
             self.group_importer.create_task_relations(
                 json_data.get('tasks', []),
             )
-            
-            # ЭТАП 5: Импорт изображений (если есть)
             if 'task_images' in json_data:
                 self.image_importer.import_images(json_data['task_images'])
-        
-        return self.context
-    
-    def _preview_import(self, json_data: Dict[str, Any]) -> ImportContext:
-        """Предварительный просмотр импорта"""
-        self.context.preview_summary = self.preview_analyzer.analyze(json_data)
-        return self.context
+
+        return self._summary()
+
+    def _summary(self, preview=None) -> TaskImportRunSummary:
+        stats = self.runtime.stats
+        return TaskImportRunSummary(
+            created_by_type=stats.created_by_type,
+            updated_by_type=stats.updated_by_type,
+            skipped_by_type=stats.skipped_by_type,
+            errors=len(stats.errors),
+            error_messages=tuple(issue.message for issue in stats.errors[:50]),
+            context_counts=self.registry.counts(),
+            preview=preview or {},
+        )

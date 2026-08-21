@@ -6,12 +6,12 @@ from curriculum.models import SubTopic, Topic
 
 
 class TaskTopicImporter:
-    def __init__(self, runtime, context):
+    def __init__(self, runtime, registry):
         self.runtime = runtime
-        self.context = context
+        self.registry = registry
 
     def import_topics(self, topics_data):
-        self.runtime._write('📚 Импорт тем...')
+        self.runtime.write('📚 Импорт тем...')
         for topic_data in topics_data:
             try:
                 self._import_topic(topic_data)
@@ -48,7 +48,7 @@ class TaskTopicImporter:
             self.runtime.log_success(f'Создана тема: {topic.name}')
         if topic is None:
             return None
-        self.context.add_topic(topic_uuid, topic)
+        self.registry.remember_topic(topic_uuid, topic)
         self._import_subtopics(topic, topic_data.get('subtopics', []))
         return topic
 
@@ -60,8 +60,8 @@ class TaskTopicImporter:
         if not topic_uuid:
             return None
         return (
-            self.context.imported_topics.get(topic_uuid)
-            or self.runtime.safe_get_by_uuid(Topic, topic_uuid)
+            self.registry.topic(topic_uuid)
+            or self.runtime.get_by_uuid(Topic, topic_uuid)
         )
 
     def resolve_subtopic(self, subtopic_data: Any, topic: Topic):
@@ -71,8 +71,8 @@ class TaskTopicImporter:
         if not subtopic_uuid:
             return None
         subtopic = (
-            self.context.imported_subtopics.get(subtopic_uuid)
-            or self.runtime.safe_get_by_uuid(SubTopic, subtopic_uuid)
+            self.registry.subtopic(subtopic_uuid)
+            or self.runtime.get_by_uuid(SubTopic, subtopic_uuid)
         )
         if subtopic is None or subtopic.topic_id != topic.pk:
             return None
@@ -81,7 +81,7 @@ class TaskTopicImporter:
     def _import_subtopics(self, topic, subtopics_data):
         for subtopic_data in subtopics_data:
             subtopic_uuid = str(subtopic_data['id'])
-            subtopic = self.runtime.safe_get_by_uuid(
+            subtopic = self.runtime.get_by_uuid(
                 SubTopic,
                 subtopic_uuid,
             )
@@ -113,7 +113,7 @@ class TaskTopicImporter:
                     f'Создана подтема: {subtopic.name}',
                 )
             if subtopic:
-                self.context.add_subtopic(subtopic_uuid, subtopic)
+                self.registry.remember_subtopic(subtopic_uuid, subtopic)
 
     @staticmethod
     def _update_topic(topic, topic_data):

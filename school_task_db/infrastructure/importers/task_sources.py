@@ -10,7 +10,7 @@ class TaskSourceImporter:
         self.runtime = runtime
 
     def import_sources(self, sources_data):
-        self.runtime._write('📚 Импорт источников...')
+        self.runtime.write('📚 Импорт источников...')
         for source_data in sources_data:
             try:
                 source = self.resolve(source_data)
@@ -66,7 +66,7 @@ class TaskSourceImporter:
         source_id = source_data.get('id') or source_data.get('uuid')
         if not source_id:
             return None
-        return self.runtime.safe_get_by_uuid(Source, str(source_id))
+        return self.runtime.get_by_uuid(Source, str(source_id))
 
     def _update(self, source, source_data):
         if self.runtime.mode != 'update':

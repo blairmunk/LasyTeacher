@@ -22,9 +22,9 @@ class TaskImportPreviewAnalyzer:
         tasks_data = json_data.get('tasks', [])
         groups_data = json_data.get('analog_groups', [])
         topics_data = json_data.get('topics', [])
-        self.runtime._write(f'  📝 Заданий в файле: {len(tasks_data)}')
-        self.runtime._write(f'  📋 Групп аналогов: {len(groups_data)}')
-        self.runtime._write(f'  📚 Тем: {len(topics_data)}')
+        self.runtime.write(f'  📝 Заданий в файле: {len(tasks_data)}')
+        self.runtime.write(f'  📋 Групп аналогов: {len(groups_data)}')
+        self.runtime.write(f'  📚 Тем: {len(topics_data)}')
 
         uuid_counts = self._analyze_uuid_conflicts(json_data)
         dependency_counts = self._analyze_dependencies(json_data)
@@ -42,7 +42,7 @@ class TaskImportPreviewAnalyzer:
         }
 
     def _analyze_uuid_conflicts(self, json_data):
-        self.runtime._write('\n📊 UUID АНАЛИЗ:')
+        self.runtime.write('\n📊 UUID АНАЛИЗ:')
         task_counts = self._task_uuid_counts(json_data.get('tasks', []))
         group_counts = self._group_uuid_counts(
             json_data.get('analog_groups', []),
@@ -51,14 +51,14 @@ class TaskImportPreviewAnalyzer:
         self._write_uuid_counts('📋 ГРУППЫ', group_counts)
         images_count = len(json_data.get('task_images', []))
         if images_count:
-            self.runtime._write(f'  🖼️ ИЗОБРАЖЕНИЯ: {images_count}')
+            self.runtime.write(f'  🖼️ ИЗОБРАЖЕНИЯ: {images_count}')
         if task_counts['existing'] and self.runtime.mode == 'strict':
-            self.runtime._write(
+            self.runtime.write(
                 '  ⚠️ В режиме strict будут ошибки для '
                 f"{task_counts['existing']} существующих заданий",
             )
         if task_counts['invalid'] or group_counts['invalid']:
-            self.runtime._write('  🚨 Некорректные UUID будут пропущены')
+            self.runtime.write('  🚨 Некорректные UUID будут пропущены')
         return {'tasks': task_counts, 'groups': group_counts}
 
     @staticmethod
@@ -97,17 +97,17 @@ class TaskImportPreviewAnalyzer:
         return counts
 
     def _write_uuid_counts(self, label, counts):
-        self.runtime._write(f'  {label}:')
-        self.runtime._write(f"    🆕 Новых: {counts['new']}")
-        self.runtime._write(
+        self.runtime.write(f'  {label}:')
+        self.runtime.write(f"    🆕 Новых: {counts['new']}")
+        self.runtime.write(
             f"    🔄 Существующих: {counts['existing']}",
         )
-        self.runtime._write(
+        self.runtime.write(
             f"    ❌ Некорректных UUID: {counts['invalid']}",
         )
 
     def _analyze_dependencies(self, json_data):
-        self.runtime._write('\n🔍 АНАЛИЗ ЗАВИСИМОСТЕЙ:')
+        self.runtime.write('\n🔍 АНАЛИЗ ЗАВИСИМОСТЕЙ:')
         tasks_data = json_data.get('tasks', [])
         declared_topics = json_data.get('topics', [])
         missing_topics = self._missing_topics(tasks_data, declared_topics)
@@ -233,21 +233,21 @@ class TaskImportPreviewAnalyzer:
         if missing_topics:
             self._write_missing('📚 ОТСУТСТВУЮЩИЕ ТЕМЫ', missing_topics)
             if self.runtime.create_missing:
-                self.runtime._write('    ✅ Будут созданы автоматически')
+                self.runtime.write('    ✅ Будут созданы автоматически')
             else:
-                self.runtime._write('    ⚠️ Задания без тем будут пропущены')
+                self.runtime.write('    ⚠️ Задания без тем будут пропущены')
         if missing_subtopics:
             self._write_missing(
                 '📖 ОТСУТСТВУЮЩИЕ ПОДТЕМЫ',
                 missing_subtopics,
             )
-            self.runtime._write('    ⚠️ Задания останутся без подтем')
+            self.runtime.write('    ⚠️ Задания останутся без подтем')
         if missing_groups:
             self._write_missing('📋 ОТСУТСТВУЮЩИЕ ГРУППЫ', missing_groups)
             if self.runtime.create_missing:
-                self.runtime._write('    ✅ Будут созданы автоматически')
+                self.runtime.write('    ✅ Будут созданы автоматически')
             else:
-                self.runtime._write('    ⚠️ Связи будут пропущены')
+                self.runtime.write('    ⚠️ Связи будут пропущены')
         if broken_references:
             self._write_missing('🔗 ПРОБЛЕМНЫЕ СВЯЗИ', broken_references)
         if missing_classifications:
@@ -258,8 +258,8 @@ class TaskImportPreviewAnalyzer:
 
     def _write_missing(self, label, values):
         sorted_values = sorted(values)
-        self.runtime._write(f'  {label}: {len(sorted_values)}')
+        self.runtime.write(f'  {label}: {len(sorted_values)}')
         for value in sorted_values[:3]:
-            self.runtime._write(f'    - {value}')
+            self.runtime.write(f'    - {value}')
         if len(sorted_values) > 3:
-            self.runtime._write(f'    ... и ещё {len(sorted_values) - 3}')
+            self.runtime.write(f'    ... и ещё {len(sorted_values) - 3}')

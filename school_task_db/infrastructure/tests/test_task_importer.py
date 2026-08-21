@@ -155,7 +155,7 @@ class TaskImporterTests(TestCase):
             group_id='770e8400-e29b-41d4-a716-446655440001',
         )
 
-        context = TaskImporter(
+        summary = TaskImporter(
             mode='update',
             dry_run=True,
             create_missing=True,
@@ -163,11 +163,11 @@ class TaskImporterTests(TestCase):
         ).import_tasks_from_json(payload)
 
         self.assertIn('🔍 ПРЕДВАРИТЕЛЬНЫЙ ПРОСМОТР (--dry-run)', output)
-        self.assertEqual(context.preview_summary['file_counts']['tasks'], 1)
-        self.assertEqual(context.preview_summary['file_counts']['groups'], 1)
-        self.assertEqual(context.preview_summary['task_uuid_counts']['new'], 1)
+        self.assertEqual(summary.preview['file_counts']['tasks'], 1)
+        self.assertEqual(summary.preview['file_counts']['groups'], 1)
+        self.assertEqual(summary.preview['task_uuid_counts']['new'], 1)
         self.assertEqual(
-            context.preview_summary['dependency_counts'],
+            summary.preview['dependency_counts'],
             {
                 'missing_topics': 0,
                 'missing_subtopics': 0,
@@ -189,7 +189,7 @@ class TaskImporterTests(TestCase):
             'code': 'missing',
         }]
 
-        context = TaskImporter(
+        summary = TaskImporter(
             mode='update',
             dry_run=True,
             create_missing=True,
@@ -197,7 +197,7 @@ class TaskImporterTests(TestCase):
         ).import_tasks_from_json(payload)
 
         self.assertEqual(
-            context.preview_summary['dependency_counts'][
+            summary.preview['dependency_counts'][
                 'missing_classifications'
             ],
             1,

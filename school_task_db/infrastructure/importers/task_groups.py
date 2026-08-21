@@ -10,12 +10,12 @@ from task_groups.models import AnalogGroup, TaskGroup
 
 
 class TaskGroupImporter:
-    def __init__(self, runtime, context):
+    def __init__(self, runtime, registry):
         self.runtime = runtime
-        self.context = context
+        self.registry = registry
 
     def import_groups(self, groups_data):
-        self.runtime._write('📋 Импорт групп аналогов...')
+        self.runtime.write('📋 Импорт групп аналогов...')
         for group_data in groups_data:
             try:
                 self._import_group(group_data)
@@ -37,7 +37,7 @@ class TaskGroupImporter:
             if self.runtime.mode == 'update':
                 self._update_group(group, group_data)
                 self.runtime.stats.record_updated('groups', group.pk)
-            self.context.add_group(group_uuid, group)
+            self.registry.remember_group(group_uuid, group)
             return
         if group:
             return
@@ -48,18 +48,18 @@ class TaskGroupImporter:
             description=group_data.get('description', ''),
             difficulty=group_data.get('difficulty', 0),
         )
-        self.context.add_group(group_uuid, group)
+        self.registry.remember_group(group_uuid, group)
         self.runtime.stats.record_created('groups', group.pk)
         self.runtime.log_success(
             f'Создана группа: {group.name} [{group.get_short_uuid()}]',
         )
 
     def create_task_relations(self, tasks_data):
-        self.runtime._write('🔗 Создание связей заданий с группами...')
+        self.runtime.write('🔗 Создание связей заданий с группами...')
         created_count = 0
         for task_data in tasks_data:
             task_uuid = task_data.get('id')
-            task = self.context.imported_tasks.get(task_uuid)
+            task = self.registry.task(task_uuid)
             if not task:
                 continue
 
@@ -72,13 +72,13 @@ class TaskGroupImporter:
                     )
                     continue
                 group = (
-                    self.context.imported_groups.get(group_uuid)
+                    self.registry.group(group_uuid)
                     or self.find_by_uuid(group_uuid)
                 )
                 if group and self._save_relation(task, group, bank_role):
                     created_count += 1
 
-        self.runtime._write(f'  ✅ Создано связей: {created_count}')
+        self.runtime.write(f'  ✅ Создано связей: {created_count}')
 
     @staticmethod
     def parse_reference(group_ref: Any):
@@ -94,7 +94,7 @@ class TaskGroupImporter:
         return '', TASK_BANK_ROLE_CONTROL
 
     def find_by_uuid(self, group_uuid):
-        return self.runtime.safe_get_by_uuid(AnalogGroup, group_uuid)
+        return self.runtime.get_by_uuid(AnalogGroup, group_uuid)
 
     def _save_relation(self, task, group, bank_role):
         try:

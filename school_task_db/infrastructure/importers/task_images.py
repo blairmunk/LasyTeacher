@@ -10,12 +10,12 @@ from tasks.models import Task, TaskImage
 
 
 class TaskImageImporter:
-    def __init__(self, runtime, context):
+    def __init__(self, runtime, registry):
         self.runtime = runtime
-        self.context = context
+        self.registry = registry
 
     def import_images(self, images_data):
-        self.runtime._write('🖼️ Импорт изображений заданий...')
+        self.runtime.write('🖼️ Импорт изображений заданий...')
         for image_data in images_data:
             try:
                 self._import_image(image_data)
@@ -27,16 +27,16 @@ class TaskImageImporter:
 
     def _import_image(self, image_data: Dict[str, Any]):
         task_uuid = image_data.get('task_uuid') or image_data.get('task_id')
-        if task_uuid not in self.context.imported_tasks:
+        task = self.registry.task(task_uuid)
+        if task is None:
             suffix = task_uuid[-8:] if task_uuid else 'Unknown'
             self.runtime.log_warning(
                 f'Задание не найдено для изображения: {suffix}',
             )
             return
 
-        task = self.context.imported_tasks[task_uuid]
         image_uuid = self.runtime.generate_uuid_if_missing(image_data, 'id')
-        existing_image = self.runtime.safe_get_by_uuid(TaskImage, image_uuid)
+        existing_image = self.runtime.get_by_uuid(TaskImage, image_uuid)
         if existing_image and not self.runtime.should_create_object(
             existing_image,
             image_data,

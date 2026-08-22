@@ -1,4 +1,4 @@
-"""Общие утилиты для обработки математических формул"""
+"""Common parsing and validation for formulas embedded in task text."""
 
 import re
 import logging
@@ -6,12 +6,9 @@ from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
+
 class FormulaProcessor:
     """Процессор математических формул с валидацией и обработкой ошибок"""
-    
-    # Регулярные выражения для поиска формул
-    INLINE_MATH_PATTERN = r'\$([^$]+?)\$'
-    DISPLAY_MATH_PATTERN = r'\$\$([^$]+?)\$\$'
     
     # Опасные LaTeX команды
     DANGEROUS_COMMANDS = {
@@ -31,29 +28,20 @@ class FormulaProcessor:
     
     def has_math(self, text: str) -> bool:
         """Проверяет содержит ли текст математические формулы"""
-        if not text:
-            return False
-        return bool(re.search(self.INLINE_MATH_PATTERN, text) or 
-                   re.search(self.DISPLAY_MATH_PATTERN, text))
+        return bool(self.extract_formulas(text))
     
     def count_formulas(self, text: str) -> int:
-        """ДОБАВЛЕНО: Подсчитывает количество формул в тексте"""
-        if not text:
-            return 0
-        
-        inline_count = len(re.findall(self.INLINE_MATH_PATTERN, text))
-        display_count = len(re.findall(self.DISPLAY_MATH_PATTERN, text))
-        return inline_count + display_count
-    
-    # ... ОСТАЛЬНЫЕ МЕТОДЫ ИЗ ИСХОДНОГО ФАЙЛА БЕЗ ИЗМЕНЕНИЙ ...
-    # (extract_formulas, validate_formula, process_text_safe и т.д.)
-    
+        """Подсчитать количество формул в тексте."""
+        return len(self.extract_formulas(text))
+
     def render_for_latex_safe(self, text: str) -> Dict[str, Any]:
-        """СПЕЦИФИЧНО ДЛЯ LaTeX: Безопасное преобразование для LaTeX компиляции"""
-        raise NotImplementedError("Используйте специфичную реализацию для формата")
-    
+        """Сформировать безопасный LaTeX в форматном адаптере."""
+        raise NotImplementedError(
+            'Используйте специфичную реализацию для формата',
+        )
+
     def render_for_html_safe(self, text: str) -> Dict[str, Any]:
-        """НОВОЕ: Безопасное преобразование для HTML (MathJax)"""
+        """Сформировать безопасный HTML-текст для MathJax."""
         if not text:
             return {'content': text, 'errors': [], 'warnings': []}
         
@@ -93,44 +81,78 @@ class FormulaProcessor:
 
     def extract_formulas(self, text: str) -> List[Dict[str, Any]]:
         """Извлекает все математические формулы из текста"""
-        formulas = []
-        
         if not text:
-            return formulas
-        
-        # Поиск display формул ($$...$$)
-        for match in re.finditer(self.DISPLAY_MATH_PATTERN, text):
+            return []
+
+        formulas = []
+        cursor = 0
+        while cursor < len(text):
+            opening = self._opening_delimiter(text, cursor)
+            if opening is None:
+                cursor += 1
+                continue
+
+            opening_delimiter, closing_delimiter, formula_type = opening
+            content_start = cursor + len(opening_delimiter)
+            closing_start = self._find_closing_delimiter(
+                text,
+                content_start,
+                closing_delimiter,
+            )
+            if closing_start is None:
+                cursor += len(opening_delimiter)
+                continue
+
+            end = closing_start + len(closing_delimiter)
             formulas.append({
-                'type': 'display',
-                'content': match.group(1),
-                'original': match.group(0),
-                'position': (match.start(), match.end())
+                'type': formula_type,
+                'content': text[content_start:closing_start],
+                'original': text[cursor:end],
+                'position': (cursor, end),
             })
-        
-        # Поиск inline формул ($...$)
-        for match in re.finditer(self.INLINE_MATH_PATTERN, text):
-            # Проверяем что это не часть display формулы
-            start, end = match.span()
-            is_inside_display = False
-            
-            for display_formula in formulas:
-                if display_formula['type'] == 'display':
-                    display_start, display_end = display_formula['position']
-                    if display_start <= start < display_end:
-                        is_inside_display = True
-                        break
-            
-            if not is_inside_display:
-                formulas.append({
-                    'type': 'inline',
-                    'content': match.group(1),
-                    'original': match.group(0),
-                    'position': (match.start(), match.end())
-                })
-        
-        # Сортируем по позиции
-        formulas.sort(key=lambda x: x['position'][0])
+            cursor = end
         return formulas
+
+    def _opening_delimiter(self, text: str, position: int):
+        if self._is_escaped(text, position):
+            return None
+        if text.startswith('$$', position):
+            return '$$', '$$', 'display'
+        if text[position] == '$':
+            return '$', '$', 'inline'
+        if text.startswith(r'\(', position):
+            return r'\(', r'\)', 'inline'
+        if text.startswith(r'\[', position):
+            return r'\[', r'\]', 'display'
+        return None
+
+    def _find_closing_delimiter(
+        self,
+        text: str,
+        start: int,
+        delimiter: str,
+    ):
+        position = start
+        while position < len(text):
+            if (
+                text.startswith(delimiter, position)
+                and not self._is_escaped(text, position)
+            ):
+                if delimiter == '$' and text.startswith('$$', position):
+                    position += 2
+                    continue
+                return position
+            position += 1
+        return None
+
+    @staticmethod
+    def _is_escaped(text: str, position: int) -> bool:
+        backslashes = 0
+        position -= 1
+        while position >= 0 and text[position] == '\\':
+            backslashes += 1
+            position -= 1
+        return backslashes % 2 == 1
 
     def validate_formula(self, formula_content: str) -> Dict[str, Any]:
         """Валидирует математическую формулу"""

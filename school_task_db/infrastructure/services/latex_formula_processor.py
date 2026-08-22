@@ -27,7 +27,22 @@ def sanitize_latex(text):
         '>': r'\textgreater{}',
         '\n': r'\\ ',
     }
-    return ''.join(replacements.get(char, char) for char in text)
+    safe_escaped_characters = '$&%#_{}'
+    result = []
+    cursor = 0
+    while cursor < len(text):
+        char = text[cursor]
+        if (
+            char == '\\'
+            and cursor + 1 < len(text)
+            and text[cursor + 1] in safe_escaped_characters
+        ):
+            result.append(char + text[cursor + 1])
+            cursor += 2
+            continue
+        result.append(replacements.get(char, char))
+        cursor += 1
+    return ''.join(result)
 
 
 class LaTeXFormulaProcessor:

@@ -1,4 +1,5 @@
 import datetime as dt
+from tempfile import TemporaryDirectory
 from unittest.mock import Mock
 
 from django.contrib.auth.models import User
@@ -1201,6 +1202,8 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(missing_result.status, 'not_found')
 
     def test_task_repository_saves_task_images(self):
+        media_root = self.enterContext(TemporaryDirectory())
+        self.enterContext(self.settings(MEDIA_ROOT=media_root))
         repo = DjangoTaskImageCommandRepository()
         task = Task.objects.create(
             text='Задача с рисунком',

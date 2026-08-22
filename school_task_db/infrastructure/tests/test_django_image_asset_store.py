@@ -2,6 +2,7 @@ import hashlib
 from tempfile import TemporaryDirectory
 
 from django.core.exceptions import ValidationError
+from django.core.files.storage import FileSystemStorage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
@@ -64,6 +65,23 @@ class DjangoImageAssetStoreTests(TestCase):
             self.assertTrue(restored.file.storage.exists(restored.file.name))
             with restored.file.open('rb') as restored_file:
                 self.assertEqual(restored_file.read(), b'restorable')
+
+    def test_reuses_orphaned_checksum_file_without_random_suffix(self):
+        with TemporaryDirectory() as media_root:
+            storage = FileSystemStorage(location=media_root)
+            checksum = hashlib.sha256(b'orphaned').hexdigest()
+            target_name = f'image_assets/{checksum[:2]}/{checksum}.png'
+            storage.save(target_name, self._upload('old.png', b'orphaned'))
+
+            asset = DjangoImageAssetStore(storage=storage).get_or_create(
+                self._upload('new.png', b'orphaned'),
+            )
+
+            self.assertEqual(asset.file.name, target_name)
+            self.assertEqual(
+                storage.listdir(f'image_assets/{checksum[:2]}')[1],
+                [f'{checksum}.png'],
+            )
 
     @staticmethod
     def _upload(name, content):

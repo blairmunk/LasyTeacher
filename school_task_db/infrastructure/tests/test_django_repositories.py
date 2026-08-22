@@ -3,6 +3,8 @@ from tempfile import TemporaryDirectory
 from unittest.mock import Mock
 
 from django.contrib.auth.models import User
+from django.core.files.base import ContentFile
+from django.core.files.storage import FileSystemStorage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils import timezone
@@ -2257,6 +2259,47 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(variant_tasks[0].task.pk, str(self.original_weak.pk))
         self.assertEqual(variant_tasks[0].task.text, self.original_weak.text)
         self.assertEqual(total_max_points, 7)
+
+    def test_variant_detail_resolves_snapshot_image_from_asset_uuid(self):
+        with TemporaryDirectory() as media_root:
+            storage = FileSystemStorage(
+                location=media_root,
+                base_url='/test-media/',
+            )
+            stored_name = storage.save(
+                'image_assets/ab/current.png',
+                ContentFile(b'CURRENT'),
+            )
+            asset = ImageAsset.objects.create(
+                file=stored_name,
+                checksum='b' * 64,
+                byte_size=7,
+                mime_type='image/png',
+                original_filename='current.png',
+            )
+            variant_task = VariantTask.objects.filter(
+                variant=self.source_variant,
+            ).order_by('order').first()
+            snapshot = dict(variant_task.task_snapshot)
+            snapshot['images'] = [{
+                'image_id': '00000000-0000-0000-0000-000000000001',
+                'asset_id': str(asset.pk),
+                'file_name': 'task_images/stale.png',
+                'position': 'bottom_70',
+                'caption': 'Схема',
+                'order': 1,
+            }]
+            variant_task.task_snapshot = snapshot
+            variant_task.save(update_fields=['task_snapshot'])
+
+            rows = DjangoVariantReadRepository(
+                storage=storage,
+            ).get_variant_detail_tasks(str(self.source_variant.pk))
+
+        self.assertEqual(
+            rows[0].task.images[0].safe_url,
+            '/test-media/image_assets/ab/current.png',
+        )
 
     def test_variant_detail_resolves_student_from_source_participation(self):
         remedial_variant = Variant.objects.create(

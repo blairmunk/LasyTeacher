@@ -70,7 +70,8 @@ def _build_task_content_snapshot(task):
             TaskImageSnapshot(
                 image_id=str(image.pk),
                 asset_id=str(image.asset_id or ''),
-                file_name=image.image.name if image.image else '',
+                # Physical paths are retained only when reading old snapshots.
+                file_name='',
                 position=image.position,
                 caption=image.caption,
                 order=image.order,

@@ -25,6 +25,9 @@ from core_logic.value_objects.short_uuid import format_short_uuid
 from infrastructure.services.task_image_presentation import (
     TaskImagePresentationService,
 )
+from infrastructure.services.task_snapshot_image_files import (
+    TaskSnapshotImageFileResolver,
+)
 from works.models import Variant, VariantTask
 
 
@@ -42,6 +45,12 @@ def _variant_display_name(variant):
 
 
 class DjangoVariantReadRepository(IVariantReadRepository):
+    def __init__(self, storage=None, snapshot_image_file_resolver=None):
+        self.storage = storage or default_storage
+        self.snapshot_image_file_resolver = (
+            snapshot_image_file_resolver or TaskSnapshotImageFileResolver()
+        )
+
     def get_list_variants(self):
         return tuple(
             VariantListItem(
@@ -138,6 +147,7 @@ class DjangoVariantReadRepository(IVariantReadRepository):
         ).order_by('order')
 
         result = []
+        image_file_cache = {}
         for variant_task in variant_tasks:
             task = task_content_snapshot_from_mapping(
                 variant_task.task_snapshot,
@@ -157,7 +167,9 @@ class DjangoVariantReadRepository(IVariantReadRepository):
                             caption=image.caption,
                             position=image.position,
                             safe_url=self._snapshot_image_url(
-                                image.file_name,
+                                asset_id=image.asset_id,
+                                legacy_file_name=image.file_name,
+                                cache=image_file_cache,
                             ),
                             css_class=TaskImagePresentationService.css_class(
                                 image.position,
@@ -183,11 +195,23 @@ class DjangoVariantReadRepository(IVariantReadRepository):
         ).aggregate(total=Sum('max_points'))
         return aggregate['total'] or 0
 
-    @staticmethod
-    def _snapshot_image_url(file_name):
+    def _snapshot_image_url(
+        self,
+        *,
+        asset_id,
+        legacy_file_name,
+        cache,
+    ):
+        file_name = self.snapshot_image_file_resolver.file_name(
+            asset_id=asset_id,
+            legacy_file_name=legacy_file_name,
+            cache=cache,
+        )
         if not file_name:
             return None
         try:
-            return default_storage.url(file_name)
-        except ValueError:
+            if not self.storage.exists(file_name):
+                return None
+            return self.storage.url(file_name)
+        except (OSError, TypeError, ValueError, NotImplementedError):
             return None

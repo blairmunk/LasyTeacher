@@ -105,4 +105,4 @@ class TaskContentSnapshotClassificationTests(TestCase):
 
         self.assertEqual(snapshot.images[0].image_id, str(task_image.pk))
         self.assertEqual(snapshot.images[0].asset_id, str(asset.pk))
-        self.assertEqual(snapshot.images[0].file_name, asset.file.name)
+        self.assertEqual(snapshot.images[0].file_name, '')

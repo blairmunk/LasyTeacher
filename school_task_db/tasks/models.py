@@ -219,10 +219,8 @@ class TaskImage(BaseModel):
         ImageAsset,
         on_delete=models.PROTECT,
         related_name='task_references',
-        null=True,
-        blank=True,
         verbose_name='Файл изображения',
-        help_text='Пусто только у старых записей с потерянным файлом',
+        help_text='Неизменяемый файл, на который ссылается задание',
     )
     position = models.CharField('Расположение', max_length=20, choices=POSITION_CHOICES, 
                                blank=True, help_text='Оставьте пустым для установки позже')

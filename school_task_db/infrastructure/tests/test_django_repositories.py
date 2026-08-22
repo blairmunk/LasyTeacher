@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import IntegrityError, transaction
 from django.test import TestCase
 from django.utils import timezone
 
@@ -1270,6 +1271,18 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertFalse(TaskImage.objects.filter(pk=image.pk).exists())
         self.assertEqual(ImageAsset.objects.count(), 2)
         self.assertEqual(missing_result.status, 'not_found')
+
+    def test_task_image_requires_immutable_asset(self):
+        task = Task.objects.create(
+            text='Задача без рисунка',
+            answer='Ответ',
+            topic=self.topic,
+            task_type='computational',
+            difficulty=2,
+        )
+
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            TaskImage.objects.create(task=task)
 
     def test_task_export_repository_builds_payload(self):
         source = Source.objects.create(
